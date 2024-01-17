@@ -6,7 +6,6 @@
 
 import express from 'express';
 
-const port = process.env.APP_PORT || 44004;
 const app = express();
 const logPrefix = `EJS preload collector: (${process.pid}):\t`;
 

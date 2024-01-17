@@ -7,7 +7,7 @@
 const instana = require('../../../..')();
 const fetch = require('node-fetch');
 const delay = require('../../../../../core/test/test_util/delay');
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const { sendToParent } = require('@instana/core/test/test_util');
 const Kafka = require('node-rdkafka');
 const { v4: uuid } = require('uuid');

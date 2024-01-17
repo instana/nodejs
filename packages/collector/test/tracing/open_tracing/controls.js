@@ -11,7 +11,7 @@ const path = require('path');
 const portfinder = require('../../test_util/portfinder');
 const testUtils = require('../../../../core/test/test_util');
 const config = require('../../../../core/test/config');
-const agentPort = require('../../globalAgent').PORT;
+const agentPort = require('../../globalAgent').instance.agentPort;
 
 let expressOpentracingApp;
 const appPort = (exports.appPort = portfinder());

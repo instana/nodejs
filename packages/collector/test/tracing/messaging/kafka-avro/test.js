@@ -53,7 +53,7 @@ if (!supportedVersion(process.versions.node) || !kafkaAvroAllowedVersions) {
   mochaSuiteFn = describe;
 }
 
-const retryTime = config.getTestTimeout() * 2;
+const retryTime = 1000;
 const topic = 'kafka-avro-topic';
 
 mochaSuiteFn('tracing/messaging/kafka-avro', function () {
@@ -172,7 +172,7 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
         });
 
         return retry(() => verifyResponseAndMessage(response, consumerControls), retryTime)
-          .then(() => delay(config.getTestTimeout() / 4))
+          .then(() => delay(1000))
           .then(() => agentControls.getSpans())
           .then(spans => {
             if (spans.length > 0) {
@@ -209,7 +209,7 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
         return retry(() => {
           verifyResponseAndMessage(response, receiverControls);
         }, retryTime)
-          .then(() => delay(config.getTestTimeout() / 4))
+          .then(() => delay(1000))
           .then(() => agentControls.getSpans())
           .then(spans => {
             if (spans.length > 0) {

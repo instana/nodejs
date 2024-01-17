@@ -10,7 +10,7 @@ require('../../../..')();
 const express = require('express');
 const app = express();
 const port = require('../../../test_util/app-port')();
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const fetch = require('node-fetch');
 const logPrefix = `Memcached (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);

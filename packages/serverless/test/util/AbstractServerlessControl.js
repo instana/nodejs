@@ -12,7 +12,7 @@ const {
 const path = require('path');
 const request = require('request-promise');
 
-const retry = require('./retry');
+const retry = require('@instana/core/test/test_util/retry');
 const config = require('../config');
 
 function AbstractServerlessControl(opts = {}) {
@@ -151,7 +151,7 @@ AbstractServerlessControl.prototype.startExtensionAndWaitForIt = function startE
       {
         BACKEND_HTTPS: this.useHttps == null || this.useHttps,
         BACKEND_PORT: this.backendPort,
-        EXTENSION_PORT: this.extensionPort,
+        INSTANA_LAYER_EXTENSION_PORT: this.extensionPort,
         EXTENSION_UNRESPONSIVE: this.opts.startExtension === 'unresponsive',
         EXTENSION_PREFFLIGHT_RESPONSIVE_BUT_UNRESPONSIVE_LATER: this.opts.startExtension === 'unresponsive-later',
         HEARTBEAT_REQUEST_RESPONDS_WITH_UNEXPECTED_STATUS_CODE:

@@ -10,10 +10,12 @@ const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
+const portfinder = require('@instana/collector/test/test_util/portfinder');
+const retry = require('@instana/core/test/test_util/retry');
+
 const config = require('../../../serverless/test/config');
 const delay = require('../../../core/test/test_util/delay');
 const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
-const retry = require('../../../serverless/test/util/retry');
 
 const { fail } = expect;
 
@@ -23,10 +25,6 @@ const unqualifiedArn = `arn:aws:lambda:${awsRegion}:410797082306:function:${func
 const version = '$LATEST';
 const qualifiedArn = `${unqualifiedArn}:${version}`;
 
-const backendPort = 8443;
-const backendBaseUrl = `https://localhost:${backendPort}/serverless`;
-const downstreamDummyPort = 3456;
-const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
 // To improve distribution of tests to multiple executors on CI, the actual variants of this integration tests
@@ -35,7 +33,7 @@ const instanaAgentKey = 'aws-lambda-dummy-key';
 // excessive duplication of test code, the test files all import and use this test definition file.
 
 module.exports = function (lambdaType) {
-  this.timeout(config.getTestTimeout());
+  this.timeout(config.getTestTimeout() * 2);
   this.slow(config.getTestTimeout() / 4);
 
   return registerTests.bind(this)(path.join(__dirname, '..', 'lambdas', lambdaType));
@@ -59,12 +57,8 @@ function prelude(opts) {
   if (opts.alias) {
     env.LAMBDA_FUNCTION_ALIAS = opts.alias;
   }
-  if (opts.instanaEndpointUrl) {
-    env.INSTANA_ENDPOINT_URL = opts.instanaEndpointUrl;
-  }
-  // INSTANA_URL/instanaUrl is deprecated and will be removed before GA - use INSTANA_ENDPOINT_URL/instanaEndpointUrl
-  if (opts.instanaUrl) {
-    env.INSTANA_URL = opts.instanaUrl;
+  if (opts.instanaEndpointUrlMissing) {
+    env.INSTANA_ENDPOINT_URL = '';
   }
   if (opts.instanaAgentKey) {
     env.INSTANA_AGENT_KEY = opts.instanaAgentKey;
@@ -79,8 +73,8 @@ function prelude(opts) {
   if (opts.instanaKey) {
     env.INSTANA_KEY = opts.instanaKey;
   }
-  if (opts.proxy) {
-    env.INSTANA_ENDPOINT_PROXY = opts.proxy;
+  if (opts.proxyUrl) {
+    env.INSTANA_ENDPOINT_PROXY = opts.proxyUrl;
   }
   if (opts.withConfig) {
     env.WITH_CONFIG = 'true';
@@ -132,9 +126,8 @@ function prelude(opts) {
     handlerDefinitionPath: opts.handlerDefinitionPath,
     startBackend: opts.startBackend,
     startExtension: opts.startExtension,
-    downstreamDummyUrl,
-    proxy: opts.proxy,
     startProxy: opts.startProxy,
+    proxyPort: opts.proxyPort,
     proxyRequiresAuthorization: opts.proxyRequiresAuthorization,
     env
   });
@@ -150,7 +143,6 @@ function registerTests(handlerDefinitionPath) {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -190,7 +182,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       alias: 'anAlias',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -206,7 +197,6 @@ function registerTests(handlerDefinitionPath) {
       // - lambda function ends with success
       const control = prelude.bind(this)({
         handlerDefinitionPath,
-        instanaEndpointUrl: backendBaseUrl,
         instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKeyMissing'
       });
 
@@ -221,7 +211,6 @@ function registerTests(handlerDefinitionPath) {
       // - lambda function ends with success
       const control = prelude.bind(this)({
         handlerDefinitionPath,
-        instanaEndpointUrl: backendBaseUrl,
         instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKey'
       });
 
@@ -280,7 +269,6 @@ function registerTests(handlerDefinitionPath) {
       // - lambda function ends with success
       const control = prelude.bind(this)({
         handlerDefinitionPath,
-        instanaEndpointUrl: backendBaseUrl,
         instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKeyEncrypted'
       });
 
@@ -366,7 +354,6 @@ function registerTests(handlerDefinitionPath) {
       // - lambda function ends with success
       const control = prelude.bind(this)({
         handlerDefinitionPath,
-        instanaEndpointUrl: backendBaseUrl,
         instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKeyEncrypted',
         instanaSSMDecryption: true
       });
@@ -444,28 +431,12 @@ function registerTests(handlerDefinitionPath) {
     });
   });
 
-  describe('when deprecated env var keys are used', function () {
-    // - INSTANA_URL is configured (instead of INSTANA_ENDPOINT_URL)
-    // - INSTANA_KEY is configured (instead of INSTANA_AGENT_KEY)
-    // - back end is reachable
-    // - lambda function ends with success
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaUrl: backendBaseUrl,
-      instanaKey: instanaAgentKey
-    });
-
-    it('must capture metrics and spans', () =>
-      verify(control, { error: false, expectMetrics: true, expectSpans: true }));
-  });
-
   describe('when lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       error: 'asynchronous'
     });
@@ -480,7 +451,6 @@ function registerTests(handlerDefinitionPath) {
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       error: 'synchronous'
     });
@@ -496,7 +466,6 @@ function registerTests(handlerDefinitionPath) {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       withConfig: true
     });
@@ -512,7 +481,6 @@ function registerTests(handlerDefinitionPath) {
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       withConfig: true,
       error: 'asynchronous'
@@ -527,6 +495,7 @@ function registerTests(handlerDefinitionPath) {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
+      instanaEndpointUrlMissing: true,
       instanaAgentKey
     });
 
@@ -539,6 +508,7 @@ function registerTests(handlerDefinitionPath) {
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
+      instanaEndpointUrlMissing: true,
       instanaAgentKey,
       error: 'asynchronous'
     });
@@ -553,6 +523,7 @@ function registerTests(handlerDefinitionPath) {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
+      instanaEndpointUrlMissing: true,
       instanaAgentKey,
       withConfig: true
     });
@@ -565,8 +536,7 @@ function registerTests(handlerDefinitionPath) {
     // - INSTANA_AGENT_KEY is missing
     // - lambda function ends with success
     const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl
+      handlerDefinitionPath
     });
 
     it('must ignore the missing key gracefully', () =>
@@ -578,7 +548,6 @@ function registerTests(handlerDefinitionPath) {
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       error: 'asynchronous'
     });
 
@@ -592,7 +561,6 @@ function registerTests(handlerDefinitionPath) {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       startBackend: false
     });
@@ -607,7 +575,6 @@ function registerTests(handlerDefinitionPath) {
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       startBackend: false,
       error: 'asynchronous'
@@ -624,7 +591,6 @@ function registerTests(handlerDefinitionPath) {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       startBackend: 'unresponsive'
     });
@@ -637,7 +603,6 @@ function registerTests(handlerDefinitionPath) {
     // - back end will not respond for the first lambda handler run, but for the second one
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       startBackend: 'unresponsive'
     });
@@ -661,7 +626,6 @@ function registerTests(handlerDefinitionPath) {
       useExtension: true,
       startExtension: true,
       startBackend: true,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -684,7 +648,6 @@ function registerTests(handlerDefinitionPath) {
       startBackend: true,
       useExtension: true,
       startExtension: false,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -698,7 +661,6 @@ function registerTests(handlerDefinitionPath) {
       startExtension: 'unresponsive',
       startBackend: true,
       useExtension: true,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -735,7 +697,6 @@ function registerTests(handlerDefinitionPath) {
         startExtension: 'unresponsive',
         startBackend: true,
         useExtension: true,
-        instanaEndpointUrl: backendBaseUrl,
         instanaAgentKey
       });
 
@@ -760,7 +721,6 @@ function registerTests(handlerDefinitionPath) {
       startExtension: 'unexpected-heartbeat-response',
       startBackend: true,
       useExtension: true,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -782,7 +742,6 @@ function registerTests(handlerDefinitionPath) {
       startExtension: 'unresponsive-later',
       startBackend: true,
       useExtension: true,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -803,7 +762,6 @@ function registerTests(handlerDefinitionPath) {
       startExtension: 'unresponsive',
       startBackend: false,
       useExtension: true,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -812,12 +770,13 @@ function registerTests(handlerDefinitionPath) {
   });
 
   describe('when using a proxy without authentication', function () {
+    const proxyPort = portfinder();
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       startProxy: true,
-      proxy: 'http://localhost:3128'
+      proxyPort,
+      proxyUrl: `http://localhost:${proxyPort}`
     });
 
     it('must capture metrics and spans', () =>
@@ -825,12 +784,14 @@ function registerTests(handlerDefinitionPath) {
   });
 
   describe('when using a proxy with authentication', function () {
+    const proxyPort = portfinder();
+
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       startProxy: true,
-      proxy: 'http://user:password@localhost:3128',
+      proxyPort,
+      proxyUrl: `http://user:password@localhost:${proxyPort}`,
       proxyRequiresAuthorization: true
     });
 
@@ -839,12 +800,14 @@ function registerTests(handlerDefinitionPath) {
   });
 
   describe('when proxy authentication fails due to the wrong password', function () {
+    const proxyPort = portfinder();
+
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       startProxy: true,
-      proxy: 'http://user:wrong-password@localhost:3128',
+      proxyPort,
+      proxyUrl: `http://user:wrong-password@localhost:${proxyPort}`,
       proxyRequiresAuthorization: true
     });
 
@@ -853,12 +816,14 @@ function registerTests(handlerDefinitionPath) {
   });
 
   describe('when proxy authentication fails because no credentials have been provided', function () {
+    const proxyPort = portfinder();
+
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       startProxy: true,
-      proxy: 'http://localhost:3128',
+      proxyPort,
+      proxyUrl: `http://localhost:${proxyPort}`,
       proxyRequiresAuthorization: true
     });
 
@@ -867,11 +832,13 @@ function registerTests(handlerDefinitionPath) {
   });
 
   describe('when the proxy is not up', function () {
+    const proxyPort = portfinder();
+
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
-      proxy: 'http://localhost:3128'
+      proxyPort,
+      proxyUrl: `http://localhost:${proxyPort}`
     });
 
     it('must not impact the original handler', () =>
@@ -887,7 +854,6 @@ function registerTests(handlerDefinitionPath) {
           handlerDefinitionPath,
           trigger: 'api-gateway-proxy',
           statusCode: 200,
-          instanaEndpointUrl: backendBaseUrl,
           instanaAgentKey
         });
 
@@ -954,7 +920,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       statusCode: 201,
       traceId: '1234567890abcdef',
@@ -997,7 +962,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       traceLevel: '0'
     });
@@ -1010,7 +974,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       statusCode: 502
     });
@@ -1042,7 +1005,6 @@ function registerTests(handlerDefinitionPath) {
         const control = prelude.bind(this)({
           handlerDefinitionPath,
           trigger: 'api-gateway-proxy',
-          instanaEndpointUrl: backendBaseUrl,
           instanaAgentKey
         });
 
@@ -1080,7 +1042,6 @@ function registerTests(handlerDefinitionPath) {
         const control = prelude.bind(this)({
           handlerDefinitionPath,
           trigger: 'api-gateway-proxy',
-          instanaEndpointUrl: backendBaseUrl,
           instanaAgentKey,
           serverTiming: 'string'
         });
@@ -1115,7 +1076,6 @@ function registerTests(handlerDefinitionPath) {
         const control = prelude.bind(this)({
           handlerDefinitionPath,
           trigger: 'api-gateway-proxy',
-          instanaEndpointUrl: backendBaseUrl,
           instanaAgentKey,
           serverTiming: 'array'
         });
@@ -1163,7 +1123,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       env: {
         INSTANA_SECRETS: 'equals:param1,param2'
@@ -1188,7 +1147,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-no-proxy',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -1210,7 +1168,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'application-load-balancer',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -1250,7 +1207,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'application-load-balancer',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       traceId: '1234567890abcdef',
       spanId: 'fedcba9876543210'
@@ -1286,7 +1242,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'invoke-function',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       traceIdContext: '1234567890abcdef',
       spanIdContext: 'fedcba9876543210',
@@ -1318,7 +1273,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'invoke-function',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       traceIdContext: '1234567890abcdef',
       spanIdContext: 'fedcba9876543210',
@@ -1356,7 +1310,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'invoke-function',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       traceIdContext: '1234567890abcdef',
       spanIdContext: 'fedcba9876543210',
@@ -1373,7 +1326,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'cloudwatch-events',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -1401,7 +1353,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'cloudwatch-logs',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -1435,7 +1386,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 's3',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -1469,7 +1419,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'dynamodb',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -1497,7 +1446,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'sqs',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -1524,7 +1472,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'sqs',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       traceId: '1234567890abcdef',
       spanId: 'fedcba9876543210'
@@ -1562,7 +1509,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'sns-to-sqs',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       traceId: '1234567890abcdef',
       spanId: 'fedcba9876543210'
@@ -1599,7 +1545,6 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'function-url',
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
     it('must recognize the function URL trigger', () =>
@@ -1704,14 +1649,14 @@ function registerTests(handlerDefinitionPath) {
   }
 
   function getAndVerifySpans(control, expectations) {
-    return control.getSpans().then(spans => verifySpans(spans, expectations));
+    return control.getSpans().then(spans => verifySpans(spans, expectations, control));
   }
 
-  function verifySpans(spans, expectations) {
+  function verifySpans(spans, expectations, control) {
     const { error } = expectations;
     const entry = verifyLambdaEntry(spans, expectations);
     if (error !== 'lambda-synchronous') {
-      verifyHttpExit(spans, entry);
+      verifyHttpExit(spans, entry, control);
     }
   }
 
@@ -1773,7 +1718,7 @@ function registerTests(handlerDefinitionPath) {
     return expectExactlyOneMatching(spans, checks);
   }
 
-  function verifyHttpExit(spans, entry) {
+  function verifyHttpExit(spans, entry, control) {
     return expectExactlyOneMatching(spans, [
       span => expect(span.t).to.equal(entry.t),
       span => expect(span.p).to.equal(entry.s),
@@ -1788,7 +1733,7 @@ function registerTests(handlerDefinitionPath) {
       span => expect(span.async).to.not.exist,
       span => expect(span.data.http).to.be.an('object'),
       span => expect(span.data.http.method).to.equal('GET'),
-      span => expect(span.data.http.url).to.equal(downstreamDummyUrl),
+      span => expect(span.data.http.url).to.contain(control.downstreamDummyUrl),
       span =>
         expect(span.data.http.header).to.deep.equal({
           'x-downstream-header': 'yes'

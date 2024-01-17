@@ -17,7 +17,7 @@ const { delay, sendToParent } = require('../../../core/test/test_util');
 
 const instana = require('../..');
 
-const port = process.env.TASK_HTTP_PORT || 4215;
+const port = process.env.TASK_HTTP_PORT;
 
 const app = new http.Server();
 

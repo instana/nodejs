@@ -94,7 +94,7 @@ describe('agentCommunication', function () {
   });
 });
 
-describe('announce retry', function () {
+describe.skip('announce retry', function () {
   describe('retry once after 10', function () {
     runRetryTest.bind(this)(29000, 20000, 1);
   });

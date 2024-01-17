@@ -29,7 +29,7 @@
     "node_modules:exists": "mkdir -p node_modules",
     "test": "mocha --config=test/.mocharc.js --sort $(find test -iname '*test.js' -not -path '*node_modules*')",
     "test:debug": "WITH_STDOUT=true npm run test",
-    "test:ci": "(echo \"******* Files to be tested:\n $CI_AWS_LAMBDA_TEST_FILES\" && if [ -z \"${CI_AWS_LAMBDA_TEST_FILES}\" ]; then echo \"No test files have been assigned to this CircleCI executor.\"; else mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --sort ${CI_AWS_LAMBDA_TEST_FILES}; fi)",
+    "test:ci": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json 'test/**/*test.js'",
     "lint": "eslint src test lambdas",
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'lambdas/**/*.js'"

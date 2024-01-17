@@ -18,7 +18,7 @@ const logPrefix = 'metadata-v3';
 const logger = pino.child({ name: logPrefix, pid: process.pid });
 logger.level = 'info';
 
-const port = process.env.METADATA_MOCK_PORT || 1604;
+const port = process.env.METADATA_MOCK_PORT;
 const platformVersion = process.env.PLATFORM_VERSION || '1.3.0';
 
 const app = express();

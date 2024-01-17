@@ -379,7 +379,7 @@ mochaSuiteFn('tracing/nats', function () {
               })
               .then(res => {
                 expect(res).to.equal('OK');
-                return delay(config.getTestTimeout() / 4);
+                return delay(1000);
               })
               .then(() => agentControls.getSpans())
               .then(spans => {
@@ -421,7 +421,7 @@ mochaSuiteFn('tracing/nats', function () {
                 })
                 .then(res => {
                   expect(res).to.equal('OK');
-                  return delay(config.getTestTimeout() / 4);
+                  return delay(1000);
                 })
                 .then(() => agentControls.getSpans())
                 .then(spans => {
@@ -494,7 +494,7 @@ mochaSuiteFn('tracing/nats', function () {
             })
             .then(res => {
               expect(res).to.equal('sending reply');
-              return delay(config.getTestTimeout() / 4);
+              return delay(1000);
             })
             .then(() =>
               agentControls.getSpans().then(spans => {

@@ -1,11 +1,6 @@
 'use strict';
 
-const mochaOptions = {
-  file: ['test/initEnv.js'],
-  ignore: '**node_modules/**/*'
-};
-
-process.env.NODE_ENV = 'test';
+const mochaOptions = {};
 
 if (process.env.CI) {
   // Retry failed tests once on CI.

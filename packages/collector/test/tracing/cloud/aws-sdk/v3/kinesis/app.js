@@ -8,7 +8,7 @@ require('../../../../../..')();
 const express = require('express');
 const request = require('request-promise');
 const app = express();
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const port = require('../../../../../test_util/app-port')();
 const streamName = process.env.AWS_KINESIS_STREAM_NAME || 'nodejs-team';
 const {

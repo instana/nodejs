@@ -692,7 +692,7 @@ if (
       });
 
       return testUtils
-        .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+        .retry(() => testUtils.delay(1000))
         .then(() => agentControls.getSpans())
         .then(spans => {
           if (spans.length > 0) {

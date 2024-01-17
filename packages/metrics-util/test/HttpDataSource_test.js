@@ -9,6 +9,7 @@ const path = require('path');
 const { fork } = require('child_process');
 const { expect } = require('chai');
 
+const portfinder = require('@instana/collector/test/test_util/portfinder');
 const { delay, retry } = require('../../core/test/test_util');
 const config = require('../../serverless/test/config');
 
@@ -18,7 +19,7 @@ describe('HTTP data source', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
-  const metadataMockPort = 1606;
+  const metadataMockPort = portfinder();
   const metadataMockUrl = `http://localhost:${metadataMockPort}/metadata`;
   let messagesFromMetadataMock = [];
   let metadataMock;

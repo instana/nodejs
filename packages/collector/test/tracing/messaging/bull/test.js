@@ -45,7 +45,7 @@ const withErrorCases = [false, true];
 
 const getNextSendingOption = require('@instana/core/test/test_util/circular_list').getCircularList(sendingOptions);
 const getNextReceivingMethod = require('@instana/core/test/test_util/circular_list').getCircularList(receivingMethods);
-const retryTime = config.getTestTimeout() * 2;
+const retryTime = 1000;
 
 mochaSuiteFn('tracing/messaging/bull', function () {
   this.timeout(config.getTestTimeout() * 3);
@@ -305,7 +305,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           });
 
           return retry(() => verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk }), retryTime)
-            .then(() => delay(config.getTestTimeout() / 4))
+            .then(() => delay(1000))
             .then(() => agentControls.getSpans())
             .then(spans => {
               if (spans.length > 0) {
@@ -366,7 +366,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         return retry(async () => {
           await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
         }, retryTime)
-          .then(() => delay(config.getTestTimeout() / 4))
+          .then(() => delay(1000))
           .then(() => agentControls.getSpans())
           .then(spans => {
             if (spans.length > 0) {

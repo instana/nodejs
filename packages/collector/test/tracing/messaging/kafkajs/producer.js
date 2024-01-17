@@ -13,7 +13,7 @@ const express = require('express');
 const { Kafka } = require('kafkajs');
 
 const appPort = process.env.APP_PORT;
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const runAsStandAlone = !!process.env.RUN_AS_STAND_ALONE;
 
 const kafka = new Kafka({

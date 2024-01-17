@@ -17,10 +17,6 @@ const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functio
 const version = '$LATEST';
 const qualifiedArn = `${unqualifiedArn}:${version}`;
 
-const backendPort = 8443;
-const backendBaseUrl = `https://localhost:${backendPort}/serverless`;
-const downstreamDummyPort = 3456;
-const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
 describe('multiple data lambda handler', function () {
@@ -29,11 +25,7 @@ describe('multiple data lambda handler', function () {
     faasRuntimePath: path.join(__dirname, '../runtime_mock'),
     handlerDefinitionPath: path.join(__dirname, './lambda'),
     startBackend: true,
-    backendPort,
-    backendBaseUrl,
-    downstreamDummyUrl,
     env: {
-      INSTANA_ENDPOINT_URL: backendBaseUrl,
       INSTANA_AGENT_KEY: instanaAgentKey,
       WITH_CONFIG: 'true'
     }

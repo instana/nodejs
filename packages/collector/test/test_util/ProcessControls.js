@@ -147,6 +147,7 @@ class ProcessControls {
     if (!this.agentControls && this.useGlobalAgent) {
       this.agentControls = globalAgent.instance;
     }
+
     const agentPort = this.agentControls ? this.agentControls.agentPort : undefined;
 
     this.env = _.assign(
@@ -165,6 +166,7 @@ class ProcessControls {
     if (this.usePreInit) {
       this.env.INSTANA_EARLY_INSTRUMENTATION = 'true';
     }
+
     this.receivedIpcMessages = [];
   }
 

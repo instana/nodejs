@@ -19,10 +19,6 @@ const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functio
 const version = '$LATEST';
 const qualifiedArn = `${unqualifiedArn}:${version}`;
 
-const backendPort = 8443;
-const backendBaseUrl = `https://localhost:${backendPort}/serverless`;
-const downstreamDummyPort = 3456;
-const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
 function prelude(opts) {
@@ -44,9 +40,6 @@ function prelude(opts) {
     ITERATIONS: opts.iterations,
     LAMBDA_TIMEOUT: 300000
   };
-  if (opts.instanaEndpointUrl) {
-    env.INSTANA_ENDPOINT_URL = opts.instanaEndpointUrl;
-  }
   if (opts.instanaAgentKey) {
     env.INSTANA_AGENT_KEY = opts.instanaAgentKey;
   }
@@ -58,9 +51,6 @@ function prelude(opts) {
     faasRuntimePath: path.join(__dirname, '../runtime_mock'),
     handlerDefinitionPath: opts.handlerDefinitionPath,
     startBackend: opts.startBackend,
-    backendPort,
-    backendBaseUrl,
-    downstreamDummyUrl,
     env,
     timeout
   });
@@ -74,7 +64,6 @@ describe('long running lambdas', () => {
   describe('when the back end is responsive', function () {
     const opts = {
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       delay: 1000,
       iterations: 13
@@ -110,7 +99,6 @@ describe('long running lambdas', () => {
   describe('when the back end is down', function () {
     const opts = {
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       startBackend: false,
       // Run for 70 seconds, create a span every 250 ms.
@@ -130,7 +118,6 @@ describe('long running lambdas', () => {
   describe('when the back end is reachable but does not respond', function () {
     const opts = {
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       startBackend: 'unresponsive',
       // run for 30 seconds, create a span every second

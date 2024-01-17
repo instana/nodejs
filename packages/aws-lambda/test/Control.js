@@ -10,30 +10,32 @@ const {
   assert: { fail }
 } = require('chai');
 
-const retry = require('../../serverless/test/util/retry');
+const portfinder = require('@instana/collector/test/test_util/portfinder');
+const retry = require('@instana/core/test/test_util/retry');
 const config = require('../../serverless/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 
 function Control(opts) {
   AbstractServerlessControl.call(this, opts);
+
   // With `startExtension` you can start the extension stub on a different port.
   // parallel to the backend stub.
   if (this.opts.startExtension) {
-    this.extensionPort = 7365;
+    this.extensionPort = portfinder();
   }
 
   if (this.opts.startBackend) {
-    this.backendPort = this.opts.backendPort || 8443;
+    this.backendPort = this.opts.backendPort || portfinder();
   }
 
   this.useHttps = !this.opts.startExtension;
   const protocol = this.useHttps ? 'https' : 'http';
   this.backendBaseUrl = this.opts.backendBaseUrl || `${protocol}://localhost:${this.backendPort}/serverless`;
   this.extensionBaseUrl = `http://localhost:${this.extensionPort}`;
-  this.downstreamDummyPort = this.opts.downstreamDummyPort || 3456;
+  this.downstreamDummyPort = this.opts.downstreamDummyPort || portfinder();
   this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
-  this.proxyPort = this.opts.proxyPort || 3128;
-  this.proxyUrl = this.opts.proxyUrl || `http://localhost:${this.proxyPort}`;
+
+  this.proxyPort = this.opts.proxyPort;
 }
 
 Control.prototype = Object.create(AbstractServerlessControl.prototype);
@@ -70,7 +72,8 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
         DOWNSTREAM_DUMMY_URL: this.downstreamDummyUrl,
         INSTANA_DISABLE_CA_CHECK: this.useHttps,
         INSTANA_DEV_SEND_UNENCRYPTED: !this.useHttps,
-        WAIT_FOR_MESSAGE: true
+        WAIT_FOR_MESSAGE: true,
+        INSTANA_ENDPOINT_URL: this.backendBaseUrl
       },
       process.env,
       this.opts.env

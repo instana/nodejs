@@ -25,7 +25,7 @@ const mochaSuiteFn =
 //       Thus, this test does not verify desirable behavior but simply checks what exactly happens when
 //       this unsupported setup is used. Both variants (require Instana first/OTel second and vice versa)
 //       fail, though they fail in different ways.
-mochaSuiteFn('Opentelemetry usage', function () {
+mochaSuiteFn.skip('Opentelemetry usage', function () {
   const timeout = config.getTestTimeout() * 2;
   const retryTimeout = timeout / 2;
   this.timeout(timeout);

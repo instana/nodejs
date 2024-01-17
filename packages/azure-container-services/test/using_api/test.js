@@ -11,7 +11,7 @@ const constants = require('@instana/core').tracing.constants;
 const Control = require('../Control');
 const { expectExactlyOneMatching } = require('../../../core/test/test_util');
 const config = require('../../../serverless/test/config');
-const retry = require('../../../serverless/test/util/retry');
+const retry = require('@instana/core/test/test_util/retry');
 
 const entityId = '/subscriptions/instana/resourceGroups/East US/providers/Microsoft.Web/sites/test-app';
 const containerAppPath = path.join(__dirname, './app');
@@ -72,15 +72,15 @@ describe('Using the API', function () {
   }
 
   function getAndVerifySpans(control) {
-    return control.getSpans().then(verifySpans);
+    return control.getSpans().then(spans => verifySpans(spans, control));
   }
 
-  function verifySpans(spans) {
-    const entry = verifyHttpEntry(spans);
+  function verifySpans(spans, control) {
+    const entry = verifyHttpEntry(spans, control);
     verifyCustomExit(spans, entry);
   }
 
-  function verifyHttpEntry(spans) {
+  function verifyHttpEntry(spans, control) {
     return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.exist;
       expect(span.p).to.not.exist;
@@ -94,7 +94,7 @@ describe('Using the API', function () {
       expect(span.f.e).to.equal(entityId);
       expect(span.data.http.method).to.equal('GET');
       expect(span.data.http.url).to.equal('/');
-      expect(span.data.http.host).to.equal('127.0.0.1:4217');
+      expect(span.data.http.host).to.equal(`127.0.0.1:${control.port}`);
       expect(span.data.http.status).to.equal(200);
       expect(span.ec).to.equal(0);
     });

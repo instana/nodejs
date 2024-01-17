@@ -11,7 +11,7 @@ const KafkaAvro = require('kafka-avro');
 
 const fetch = require('node-fetch');
 const delay = require('../../../../../core/test/test_util/delay');
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const { sendToParent } = require('@instana/core/test/test_util');
 const logPrefix = `Kafka Avro Consumer (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);

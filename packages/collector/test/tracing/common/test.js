@@ -301,7 +301,8 @@ mochaSuiteFn('tracing/common', function () {
   });
 
   function setupCustomAgentControls(captureXInstanaServiceHeader) {
-    const agentControls = require('../../apps/agentStubControls');
+    const { AgentStubControls } = require('../../apps/agentStubControls');
+    const agentControls = new AgentStubControls();
     const agentConfig = captureXInstanaServiceHeader ? { extraHeaders: ['x-iNsTanA-sErViCe'] } : {};
     agentControls.registerTestHooks(agentConfig);
     return agentControls;

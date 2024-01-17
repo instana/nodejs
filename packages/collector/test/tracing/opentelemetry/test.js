@@ -8,8 +8,9 @@ const expect = require('chai').expect;
 const path = require('path');
 const semver = require('semver');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../core/test/config');
 const constants = require('@instana/core').tracing.constants;
+const config = require('../../../../core/test/config');
+const portfinder = require('../../test_util/portfinder');
 
 const {
   retry,
@@ -311,14 +312,21 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
   describe('socket.io', function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
+    const socketIOServerPort = portfinder();
 
     const server = new ProcessControls({
       appPath: path.join(__dirname, './socketio-server'),
-      useGlobalAgent: true
+      useGlobalAgent: true,
+      env: {
+        SOCKETIOSERVER_PORT: socketIOServerPort
+      }
     });
     const client = new ProcessControls({
       appPath: path.join(__dirname, './socketio-client'),
-      useGlobalAgent: true
+      useGlobalAgent: true,
+      env: {
+        SOCKETIOSERVER_PORT: socketIOServerPort
+      }
     });
 
     ProcessControls.setUpHooks(server, client);

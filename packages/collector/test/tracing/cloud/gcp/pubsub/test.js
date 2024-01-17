@@ -51,7 +51,7 @@ if (
     mochaSuiteFn = describe;
   }
 
-  const retryTime = config.getTestTimeout() * 2;
+  const retryTime = 1000;
 
   mochaSuiteFn('tracing/cloud/gcp/pubsub', function () {
     this.timeout(config.getTestTimeout() * 3);
@@ -230,7 +230,7 @@ if (
           })
           .then(response =>
             retry(() => verifyResponseAndMessage(response, subscriberControls), retryTime)
-              .then(() => delay(config.getTestTimeout() / 4))
+              .then(() => delay(1000))
               .then(() => agentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {
@@ -276,7 +276,7 @@ if (
           })
           .then(response =>
             retry(() => verifyResponseAndMessage(response, subscriberControls), retryTime)
-              .then(() => delay(config.getTestTimeout() / 4))
+              .then(() => delay(1000))
               .then(() => agentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {

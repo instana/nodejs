@@ -29,7 +29,7 @@ mochaSuiteFn('tracing/sdk - force separate context for startEntrySpan', function
     let mochaSuiteFn2 = describe;
     if (
       contextImplementation === 'AsyncLocalStorage' &&
-      !semver.satisfies(process.versions.node, '12.17 - 16.6 || ^16.14 || >=17.2')
+      !semver.satisfies(process.versions.node, '16.0 - 16.6 || ^16.14 || >=17.2')
     ) {
       // eslint-disable-next-line no-console
       console.log(

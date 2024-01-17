@@ -12,7 +12,9 @@ if (Number(process.versions.node.split('.')[0]) < 18) {
 }
 
 const app = new http.Server();
-const port = process.env.PORT || 4816;
+// eslint-disable-next-line instana/no-unsafe-require, import/no-extraneous-dependencies
+const getAppPort = require('@instana/collector/test/test_util/app-port');
+const port = getAppPort();
 
 const disableDownstreamRequests = process.env.DISABLE_DOWNSTREAM_REQUESTS === 'false';
 

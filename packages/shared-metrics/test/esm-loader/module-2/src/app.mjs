@@ -5,8 +5,8 @@
 'use strict';
 
 import express from 'express';
-
-const port = process.env.APP_PORT || 44004;
+import getAppPort from '@instana/collector/test/test_util/app-port.js';
+const port = getAppPort();
 const app = express();
 const logPrefix = `EJS preload collector: (${process.pid}):\t`;
 

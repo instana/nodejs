@@ -44,7 +44,7 @@ function start(version) {
 
   utils = require('./utils');
   const queueName = utils.generateQueueName();
-  const retryTime = config.getTestTimeout() * 5;
+
   let queueUrl;
   let receiverControls;
   let appControls;
@@ -183,13 +183,11 @@ function start(version) {
             suppressTracing: true
           });
 
-          return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (AWS SNS suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });
@@ -237,13 +235,11 @@ function start(version) {
             suppressTracing: true
           });
 
-          return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (AWS SNS suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });
@@ -251,7 +247,7 @@ function start(version) {
     function verify(controls, apiPath, withSqsParent = true) {
       return retry(
         () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, withSqsParent)),
-        retryTime
+        1000
       );
     }
 

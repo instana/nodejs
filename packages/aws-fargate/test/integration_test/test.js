@@ -9,14 +9,12 @@ const { expect, assert } = require('chai');
 const { fail } = assert;
 const path = require('path');
 const constants = require('@instana/core').tracing.constants;
+const portfinder = require('@instana/collector/test/test_util/portfinder');
 
 const Control = require('../Control');
 const { delay, expectExactlyOneMatching } = require('../../../core/test/test_util');
 const config = require('../../../serverless/test/config');
-const retry = require('../../../serverless/test/util/retry');
-
-const downstreamDummyPort = 4567;
-const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
+const retry = require('@instana/core/test/test_util/retry');
 
 const region = 'us-east-2';
 const account = '555123456789';
@@ -71,13 +69,13 @@ function prelude(opts = {}) {
     ...opts,
     env,
     containerAppPath,
-    downstreamDummyPort,
-    downstreamDummyUrl,
     instanaAgentKey
   };
-  if (opts.proxy) {
-    controlOpts.env.INSTANA_ENDPOINT_PROXY = opts.proxy;
+
+  if (opts.proxyUrl) {
+    controlOpts.env.INSTANA_ENDPOINT_PROXY = opts.proxyUrl;
   }
+
   return new Control(controlOpts).registerTestHooks();
 }
 
@@ -158,9 +156,12 @@ describe('AWS fargate integration test', function () {
   });
 
   describe('when using a proxy without authentication', function () {
+    const proxyPort = portfinder();
+
     const control = prelude.bind(this)({
       startProxy: true,
-      proxy: 'http://localhost:4128'
+      proxyPort,
+      proxyUrl: `http://localhost:${proxyPort}`
     });
 
     it('should collect metrics and trace http requests', () =>
@@ -174,9 +175,12 @@ describe('AWS fargate integration test', function () {
   });
 
   describe('when using a proxy with authentication', function () {
+    const proxyPort = portfinder();
+
     const control = prelude.bind(this)({
       startProxy: true,
-      proxy: 'http://user:password@localhost:4128',
+      proxyPort,
+      proxyUrl: `http://user:password@localhost:${proxyPort}`,
       proxyRequiresAuthorization: true
     });
 
@@ -191,9 +195,12 @@ describe('AWS fargate integration test', function () {
   });
 
   describe('when proxy authentication fails due to the wrong password', function () {
+    const proxyPort = portfinder();
+
     const control = prelude.bind(this)({
       startProxy: true,
-      proxy: 'http://user:wrong-password@localhost:4128',
+      proxyPort,
+      proxyUrl: `http://user:wrong-password@localhost:${proxyPort}`,
       proxyRequiresAuthorization: true
     });
 
@@ -208,8 +215,11 @@ describe('AWS fargate integration test', function () {
   });
 
   describe('when the proxy is not up', function () {
+    const proxyPort = portfinder();
+
     const control = prelude.bind(this)({
-      proxy: 'http://localhost:4128'
+      proxyPort,
+      proxyUrl: `http://localhost:${proxyPort}`
     });
 
     it('the fargate container must not be impacted', () =>
@@ -622,16 +632,16 @@ describe('AWS fargate integration test', function () {
   }
 
   function getAndVerifySpans(control) {
-    return control.getSpans().then(spans => verifySpans(spans));
+    return control.getSpans().then(spans => verifySpans(spans, control));
   }
 
-  function verifySpans(spans) {
-    const entry = verifyHttpEntry(spans);
-    const exit = verifyHttpExit(spans, entry);
+  function verifySpans(spans, control) {
+    const entry = verifyHttpEntry(spans, control);
+    const exit = verifyHttpExit(spans, entry, control);
     return { entry, exit };
   }
 
-  function verifyHttpEntry(spans) {
+  function verifyHttpEntry(spans, control) {
     return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.exist;
       expect(span.p).to.not.exist;
@@ -645,7 +655,7 @@ describe('AWS fargate integration test', function () {
       expect(span.f.e).to.equal(instrumentedContainerId);
       expect(span.data.http.method).to.equal('GET');
       expect(span.data.http.url).to.equal('/');
-      expect(span.data.http.host).to.equal('127.0.0.1:4215');
+      expect(span.data.http.host).to.equal(`127.0.0.1:${control.port}`);
       expect(span.data.http.status).to.equal(200);
       expect(span.data.http.header).to.deep.equal({
         'x-entry-request-header-1': 'entry request header value 1',
@@ -658,7 +668,7 @@ describe('AWS fargate integration test', function () {
     });
   }
 
-  function verifyHttpExit(spans, entry) {
+  function verifyHttpExit(spans, entry, control) {
     return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.equal(entry.t);
       expect(span.p).to.equal(entry.s);
@@ -672,7 +682,7 @@ describe('AWS fargate integration test', function () {
       expect(span.f.e).to.equal(instrumentedContainerId);
       expect(span.data.http).to.be.an('object');
       expect(span.data.http.method).to.equal('GET');
-      expect(span.data.http.url).to.equal(downstreamDummyUrl);
+      expect(span.data.http.url).to.contain(control.downstreamDummyUrl);
       expect(span.data.http.header).to.deep.equal({
         'x-exit-request-header-1': 'exit request header value 1',
         // This should be

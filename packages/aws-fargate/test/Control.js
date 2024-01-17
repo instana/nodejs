@@ -14,21 +14,22 @@ const {
 
 const config = require('../../serverless/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
-
+const portfinder = require('../../collector/test/test_util/portfinder');
 const PATH_TO_INSTANA_FARGATE_PACKAGE = path.join(__dirname, '..');
 let execArg;
+
 function Control(opts) {
   AbstractServerlessControl.call(this, opts);
-  this.port = opts.port || 4215;
+  this.port = opts.port || portfinder();
   this.baseUrl = `http://127.0.0.1:${this.port}`;
-  this.backendPort = this.opts.backendPort || 9443;
+  this.backendPort = this.opts.backendPort || portfinder();
   this.backendBaseUrl = this.opts.backendBaseUrl || `https://localhost:${this.backendPort}/serverless`;
-  this.downstreamDummyPort = this.opts.downstreamDummyPort || 4567;
+  this.downstreamDummyPort = this.opts.downstreamDummyPort || portfinder();
   this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
-  this.metadataMockPort = this.opts.metadataMockPort || 1604;
+  this.metadataMockPort = this.opts.metadataMockPort || portfinder();
   this.metadataMockUrl = this.opts.metadataMockUrl || `http://localhost:${this.metadataMockPort}`;
-  this.proxyPort = this.opts.proxyPort || 4128;
-  this.proxyUrl = this.opts.proxyUrl || `http://localhost:${this.proxyPort}`;
+  this.proxyPort = this.opts.proxyPort;
+  this.proxyUrl = this.opts.proxyUrl;
   this.platformVersion = this.opts.platformVersion || '1.3.0';
   this.instanaAgentKey = this.opts.instanaAgentKey || 'aws-fargate-dummy-key';
 }

@@ -13,6 +13,7 @@ const config = require('@instana/core/test/config');
 const { getSpansByName, expectExactlyOneMatching, retry, stringifyItems } = require('@instana/core/test/test_util');
 
 const ProcessControls = require('../../../test_util/ProcessControls');
+
 const { AgentStubControls } = require('../../../apps/agentStubControls');
 const globalAgent = require('../../../globalAgent');
 const { fail } = expect;

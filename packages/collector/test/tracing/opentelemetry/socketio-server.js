@@ -15,7 +15,7 @@ const logPrefix = `SocketIO Server App (${process.pid}):\t`;
 
 const ioserver = require('http').createServer();
 const io = require('socket.io')(ioserver);
-ioserver.listen(3000);
+ioserver.listen(process.env.SOCKETIOSERVER_PORT);
 
 let socket;
 io.on('connection', _socket => {

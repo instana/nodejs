@@ -13,8 +13,7 @@ const spawn = require('child_process').spawn;
 const portfinder = require('../test_util/portfinder');
 const testUtils = require('../../../core/test/test_util');
 const config = require('../../../core/test/config');
-const legacyAgentPort = require('./agentStubControls').agentPort;
-const globalAgentPort = require('../globalAgent').PORT;
+const agentPort = require('../globalAgent').instance.agentPort;
 
 const sslDir = path.join(__dirname, 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
@@ -29,7 +28,7 @@ exports.registerTestHooks = opts => {
 
 exports.start = function start(opts = {}, retryTime = null) {
   const env = Object.create(process.env);
-  env.AGENT_PORT = opts.useGlobalAgent ? globalAgentPort : legacyAgentPort;
+  env.AGENT_PORT = opts.useGlobalAgent ? agentPort : opts.agentControls.agentPort;
   env.APP_PORT = appPort;
   env.TRACING_ENABLED = opts.enableTracing !== false;
   env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
@@ -49,18 +48,23 @@ exports.start = function start(opts = {}, retryTime = null) {
 };
 
 function waitUntilServerIsUp(useHttps, retryTime) {
-  return testUtils.retry(
-    () =>
-      request({
-        method: 'GET',
-        url: getBaseUrl(useHttps),
-        headers: {
-          'X-INSTANA-L': '0'
-        },
-        ca: cert
-      }),
-    retryTime
-  );
+  try {
+    return testUtils.retry(
+      () =>
+        request({
+          method: 'GET',
+          url: getBaseUrl(useHttps),
+          headers: {
+            'X-INSTANA-L': '0'
+          },
+          ca: cert
+        }),
+      retryTime
+    );
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.log(`Error waiting until server (${getBaseUrl(useHttps)}) is up: ${err.message}`);
+  }
 }
 
 exports.stop = function stop() {

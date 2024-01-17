@@ -10,10 +10,8 @@ const constants = require('@instana/core').tracing.constants;
 const Control = require('../Control');
 const { expectExactlyOneMatching } = require('@instana/core/test/test_util');
 const config = require('../../../serverless/test/config');
-const retry = require('../../../serverless/test/util/retry');
+const retry = require('@instana/core/test/test_util/retry');
 const esmSupportedVersion = require('@instana/core').tracing.esmSupportedVersion;
-const downstreamDummyPort = 4569;
-const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 const entityId = '/subscriptions/instana/resourceGroups/East US/providers/Microsoft.Web/sites/test-app';
 const containerAppPath = path.join(__dirname, './app.mjs');
 const instanaAgentKey = 'azure-container-service-dummy-key';
@@ -90,16 +88,16 @@ if (esmSupportedVersion(process.versions.node)) {
     }
 
     function getAndVerifySpans(control) {
-      return control.getSpans().then(spans => verifySpans(spans));
+      return control.getSpans().then(spans => verifySpans(spans, control));
     }
 
-    function verifySpans(spans) {
-      const entry = verifyHttpEntry(spans);
-      const exit = verifyHttpExit(spans, entry);
+    function verifySpans(spans, control) {
+      const entry = verifyHttpEntry(spans, control);
+      const exit = verifyHttpExit(spans, entry, control);
       return { entry, exit };
     }
 
-    function verifyHttpEntry(spans) {
+    function verifyHttpEntry(spans, control) {
       return expectExactlyOneMatching(spans, span => {
         expect(span.t).to.exist;
         expect(span.p).to.not.exist;
@@ -113,14 +111,14 @@ if (esmSupportedVersion(process.versions.node)) {
         expect(span.f.e).to.equal(entityId);
         expect(span.data.http.method).to.equal('GET');
         expect(span.data.http.url).to.equal('/');
-        expect(span.data.http.host).to.equal('127.0.0.1:4217');
+        expect(span.data.http.host).to.contain(`127.0.0.1:${control.port}`);
         expect(span.data.http.status).to.equal(200);
         expect(span.ec).to.equal(0);
         verifyHeaders(span);
       });
     }
 
-    function verifyHttpExit(spans, entry) {
+    function verifyHttpExit(spans, entry, control) {
       return expectExactlyOneMatching(spans, span => {
         expect(span.t).to.equal(entry.t);
         expect(span.p).to.equal(entry.s);
@@ -134,7 +132,7 @@ if (esmSupportedVersion(process.versions.node)) {
         expect(span.f.e).to.equal(entityId);
         expect(span.data.http).to.be.an('object');
         expect(span.data.http.method).to.equal('GET');
-        expect(span.data.http.url).to.equal(downstreamDummyUrl);
+        expect(span.data.http.url).to.contain(control.downstreamDummyUrl);
         expect(span.ec).to.equal(0);
         verifyHeaders(span);
       });

@@ -38,8 +38,6 @@ const availableOperations = [
 
 const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
 
-const retryTime = config.getTestTimeout() * 2;
-
 function start(version) {
   let mochaSuiteFn;
 
@@ -75,7 +73,7 @@ function start(version) {
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      ProcessControls.setUpHooks(appControls);
 
       withErrorOptions.forEach(withError => {
         if (withError) {
@@ -116,7 +114,7 @@ function start(version) {
         verifyResponse(response, operation, withError);
         return retry(
           () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, withError)),
-          retryTime
+          1000
         );
       }
 
@@ -188,7 +186,7 @@ function start(version) {
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      ProcessControls.setUpHooks(appControls);
 
       describe('attempt to get result', () => {
         // we don't want to create the bucket, cause it already exists, and also don't want to delete it
@@ -199,13 +197,12 @@ function start(version) {
               method: 'GET',
               path: `/${operation}/${requestMethod}`
             });
-            return retry(() => delay(config.getTestTimeout() / 4))
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans AWS S3 disabled: ${stringifyItems(spans)}`);
-                }
-              });
+
+            await delay(1000);
+            const spans = await agentControls.getSpans();
+            if (spans.length > 0) {
+              fail(`Unexpected spans: ${stringifyItems(spans)}`);
+            }
           });
         });
       });
@@ -221,7 +218,7 @@ function start(version) {
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      ProcessControls.setUpHooks(appControls);
 
       describe('attempt to get result', () => {
         // we don't want to create the bucket, cause it already exists, and also don't want to delete it
@@ -234,13 +231,11 @@ function start(version) {
               path: `/${operation}/${requestMethod}`
             });
 
-            return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans AWS S3 suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+            await delay(1000);
+            const spans = await agentControls.getSpans();
+            if (spans.length > 0) {
+              fail(`Unexpected spans: ${stringifyItems(spans)}`);
+            }
           });
         });
       });

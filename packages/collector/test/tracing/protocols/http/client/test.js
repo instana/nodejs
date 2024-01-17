@@ -676,7 +676,7 @@ function verifySuperagentSpans(spans, clientEndpoint, serverEndpoint, clientCont
     method: 'GET',
     status: serverEndpoint === '/does-not-exist' ? 404 : 200
   });
-  verifyHttpExit({ spans, parent: entryInClient, url: `http://127.0.0.1:${globalAgent.PORT}/` });
+  verifyHttpExit({ spans, parent: entryInClient, url: `http://127.0.0.1:${globalAgent.instance.agentPort}/` });
   verifyHttpEntry({
     spans,
     parent: firstExitInClient,

@@ -66,7 +66,7 @@ function start(graphqlVersion) {
           })
           .then(response => {
             checkQueryResponse('value', false, false, response);
-            return delay(config.getTestTimeout() / 4);
+            return delay(1000);
           })
           .then(() =>
             agentControls.getSpans().then(spans => {
@@ -104,7 +104,7 @@ function start(graphqlVersion) {
           })
           .then(response => {
             checkQueryResponse('value', false, false, response);
-            return delay(config.getTestTimeout() / 4);
+            return delay(1000);
           })
           .then(() =>
             agentControls.getSpans().then(spans => {
@@ -272,7 +272,7 @@ function registerSubscriptionOperationNotTracedSuite(serverControls, clientContr
         method: 'POST',
         path: '/subscription?id=1'
       })
-      .then(() => delay(config.getTestTimeout() / 4))
+      .then(() => delay(1000))
       .then(() =>
         agentControls.getSpans().then(spans => {
           expect(getSpansByName(spans, 'graphql.server')).to.have.lengthOf(0);

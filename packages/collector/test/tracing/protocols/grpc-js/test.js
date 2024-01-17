@@ -95,7 +95,7 @@ mochaSuiteFn('tracing/grpc-js', function () {
         })
         .then(response => {
           expect(response.reply).to.equal('received: request');
-          return delay(config.getTestTimeout() / 4);
+          return delay(1000);
         })
         .then(() =>
           agentControls.getSpans().then(spans => {

@@ -9,12 +9,13 @@ const config = require('../config');
 const delay = require('./delay');
 
 module.exports = function retry(fn, time, until) {
+  // retry every second by default
   if (time == null) {
-    time = config.getTestTimeout() / 2;
+    time = 500;
   }
 
   if (until == null) {
-    until = Date.now() + time;
+    until = Date.now() + config.getTestTimeout() * 2;
   }
 
   if (Date.now() > until) {
@@ -22,6 +23,12 @@ module.exports = function retry(fn, time, until) {
   }
 
   return delay(time / 20)
-    .then(fn)
+    .then(() => {
+      try {
+        return fn();
+      } catch (err) {
+        return retry(fn, time, until);
+      }
+    })
     .catch(() => retry(fn, time, until));
 };

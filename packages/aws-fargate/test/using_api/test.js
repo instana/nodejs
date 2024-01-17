@@ -12,7 +12,7 @@ const constants = require('@instana/core').tracing.constants;
 const Control = require('../Control');
 const { delay, expectExactlyOneMatching } = require('../../../core/test/test_util');
 const config = require('../../../serverless/test/config');
-const retry = require('../../../serverless/test/util/retry');
+const retry = require('@instana/core/test/test_util/retry');
 
 const region = 'us-east-2';
 const account = '555123456789';
@@ -108,7 +108,7 @@ describe('Using the API', function () {
       expect(span.f.e).to.equal(instrumentedContainerId);
       expect(span.data.http.method).to.equal('GET');
       expect(span.data.http.url).to.equal('/');
-      expect(span.data.http.host).to.equal('127.0.0.1:4215');
+      expect(span.data.http.host).to.equal(`127.0.0.1:${control.port}`);
       expect(span.data.http.status).to.equal(200);
       expect(span.ec).to.equal(0);
       verifyHeaders(span);

@@ -56,8 +56,6 @@ if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe;
 }
 
-const retryTime = config.getTestTimeout() * 5;
-
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
   this.timeout(config.getTestTimeout() * 10);
 
@@ -75,7 +73,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
       }
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    ProcessControls.setUpHooks(appControls);
 
     withErrorOptions.forEach(withError => {
       if (withError) {
@@ -108,7 +106,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
     function verify(controls, response, apiPath, withError) {
       return retry(
         () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, withError)),
-        retryTime
+        1000
       );
     }
 
@@ -141,7 +139,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
       }
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    ProcessControls.setUpHooks(appControls);
 
     describe('attempt to get result', () => {
       // we don't want to create the bucket, cause it already exists, and also don't want to delete it
@@ -152,13 +150,12 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
             method: 'GET',
             path: `/${operation}/${requestMethod}`
           });
-          return retry(() => delay(config.getTestTimeout() / 4))
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (AWS S3 suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });
@@ -173,7 +170,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
       }
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    ProcessControls.setUpHooks(appControls);
 
     describe('attempt to get result', () => {
       // we don't want to create the bucket, cause it already exists, and also don't want to delete it
@@ -186,13 +183,11 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
             path: `/${operation}/${requestMethod}`
           });
 
-          return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (AWS S3 suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });

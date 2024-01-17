@@ -27,7 +27,7 @@
   "scripts": {
     "audit": "npm audit --omit=dev",
     "test": "mocha --config=test/.mocharc.js --require test/hooks.js --sort $(find test -iname '*test.js' -not -path '*node_modules*')",
-    "test:ci": "echo \"******* Files to be tested:\n $CI_SHARED_METRICS_TEST_FILES\" && if [ -z \"${CI_SHARED_METRICS_TEST_FILES}\" ]; then echo \"No test files have been assigned to this CircleCI executor.\"; else mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js ${CI_SHARED_METRICS_TEST_FILES}; fi",
+    "test:ci": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/**/*test.js'",
     "test:debug": "WITH_STDOUT=true npm run test",
     "lint": "eslint src test",
     "verify": "npm run lint && npm test",

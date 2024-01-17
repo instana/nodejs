@@ -41,8 +41,6 @@ if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe;
 }
 
-const retryTime = config.getTestTimeout() * 2;
-
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
   this.timeout(config.getTestTimeout() * 3);
 
@@ -75,7 +73,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
       }
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls, receiverControls);
+    ProcessControls.setUpHooks(senderControls, receiverControls);
 
     withErrorOptions.forEach(withError => {
       if (withError) {
@@ -138,7 +136,8 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
         } else {
           throw new Error(`Expected an SQS entry span but did not receive one. All spans: ${stringifyItems(_spans)}`);
         }
-      }, retryTime);
+      }, 1000);
+
       verifySpans(_senderControls, spans, apiPath, operation, withError, _receiverControls);
     }
 
@@ -183,7 +182,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
       }
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    ProcessControls.setUpHooks(appControls);
 
     describe('attempt to get result', () => {
       availableOperations.forEach(operation => {
@@ -193,13 +192,12 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
             method: 'GET',
             path: `/${operation}/${requestMethod}`
           });
-          return retry(() => delay(config.getTestTimeout() / 4))
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (AWS SNS suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });
@@ -214,7 +212,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
       }
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    ProcessControls.setUpHooks(appControls);
 
     describe('attempt to get result', () => {
       availableOperations.forEach(operation => {
@@ -226,13 +224,11 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
             path: `/${operation}/${requestMethod}`
           });
 
-          return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (AWS SNS suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });

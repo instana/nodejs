@@ -9,7 +9,7 @@ const { DataProcessor } = require('@instana/metrics-util');
 
 const identityProvider = require('../../identity_provider');
 
-const port = process.env.PORT;
+const port = process.env.APP_PORT;
 const service = process.env.K_SERVICE;
 const configuration = process.env.K_CONFIGURATION;
 

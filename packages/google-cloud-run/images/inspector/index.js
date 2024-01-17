@@ -14,7 +14,10 @@ const isWhitespace = require('is-whitespace');
 
 const metadataBaseUrl = 'http://metadata.google.internal/computeMetadata/v1/';
 const app = new http.Server();
-const port = process.env.PORT || 8080;
+
+// eslint-disable-next-line instana/no-unsafe-require, import/no-extraneous-dependencies
+const getAppPort = require('@instana/collector/test/test_util/app-port');
+const port = getAppPort();
 
 async function inspect() {
   const result = ['\n================\nInspecting Container Instance Environment:\n'];

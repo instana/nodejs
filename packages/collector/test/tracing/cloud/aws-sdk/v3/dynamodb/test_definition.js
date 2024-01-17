@@ -36,8 +36,6 @@ const availableOperations = [
   'batchWriteItem'
 ];
 
-const retryTime = config.getTestTimeout() * 2;
-
 const createTableName = () => {
   let tableName = 'nodejs-team';
 
@@ -50,7 +48,7 @@ const createTableName = () => {
   return tableName;
 };
 
-function start(version, requestMethod) {
+function start(version, requestMethod, reducedTestSuite = false) {
   if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, minimumNodeJsVersion)) {
     mochaSuiteFn = describe.skip;
   } else {
@@ -75,11 +73,16 @@ function start(version, requestMethod) {
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      ProcessControls.setUpHooks(appControls);
 
       after(() => cleanup(tableName));
 
-      availableOperations.forEach(operation => {
+      let ops = availableOperations;
+      if (reducedTestSuite) {
+        ops = ops.slice(0, 1);
+      }
+
+      ops.forEach(operation => {
         it(`operation: ${operation}/${requestMethod}`, async () => {
           const apiPath = `/${operation}/${requestMethod}`;
 
@@ -113,7 +116,7 @@ function start(version, requestMethod) {
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      ProcessControls.setUpHooks(appControls);
 
       after(() => cleanup(tableName));
 
@@ -141,7 +144,7 @@ function start(version, requestMethod) {
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      ProcessControls.setUpHooks(appControls);
 
       after(() => cleanup(tableName));
 
@@ -171,7 +174,7 @@ function start(version, requestMethod) {
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      ProcessControls.setUpHooks(appControls);
 
       after(() => cleanup(tableName));
 
@@ -188,7 +191,12 @@ function start(version, requestMethod) {
       });
 
       describe('attempt to get result', () => {
-        availableOperations.slice(1).forEach(operation => {
+        let ops = availableOperations;
+        if (reducedTestSuite) {
+          ops = ops.slice(0, 1);
+        }
+
+        ops.slice(1).forEach(operation => {
           it(`should not trace (${operation}/${requestMethod})`, async () => {
             const response = await appControls.sendRequest({
               method: 'GET',
@@ -197,13 +205,12 @@ function start(version, requestMethod) {
 
             verifyResponse(response, operation, false, tableName);
 
-            return retry(() => delay(config.getTestTimeout() / 4))
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS DynamoDB suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+            await delay(1000);
+            const spans = await agentControls.getSpans();
+
+            if (spans.length > 0) {
+              fail(`Unexpected spans (AWS DynamoDB suppressed: ${stringifyItems(spans)}`);
+            }
           });
         });
       });
@@ -221,7 +228,7 @@ function start(version, requestMethod) {
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      ProcessControls.setUpHooks(appControls);
 
       after(() => cleanup(tableName));
 
@@ -243,7 +250,12 @@ function start(version, requestMethod) {
       });
 
       describe('attempt to get result', () => {
-        availableOperations.slice(1).forEach(operation => {
+        let ops = availableOperations;
+        if (reducedTestSuite) {
+          ops = ops.slice(0, 1);
+        }
+
+        ops.slice(1).forEach(operation => {
           it(`should not trace (${operation}/${requestMethod})`, async () => {
             const response = await appControls.sendRequest({
               suppressTracing: true,
@@ -253,13 +265,12 @@ function start(version, requestMethod) {
 
             verifyResponse(response, operation, false);
 
-            return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS DynamoDB suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+            await delay(1000);
+            const spans = await agentControls.getSpans();
+
+            if (spans.length > 0) {
+              fail(`Unexpected spans (AWS DynamoDB suppressed: ${stringifyItems(spans)}`);
+            }
           });
         });
       });
@@ -271,7 +282,7 @@ function start(version, requestMethod) {
           agentControls
             .getSpans()
             .then(spans => verifySpans(controls, response, spans, apiPath, operation, withError, tableName)),
-        retryTime
+        1000
       );
     }
 

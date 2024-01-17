@@ -11,6 +11,7 @@ const { expect } = require('chai');
 const proxyquire = require('proxyquire');
 
 const { consoleLogger } = require('@instana/serverless');
+const portfinder = require('@instana/collector/test/test_util/portfinder');
 
 const { retry } = require('../../../core/test/test_util');
 const config = require('../../../serverless/test/config');
@@ -21,7 +22,7 @@ describe('transmission cycle', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
-  const metadataMockPort = 1605;
+  const metadataMockPort = portfinder();
   const metadataMockUrl = `http://localhost:${metadataMockPort}/computeMetadata/v1/`;
   let messagesFromMetadataMock = [];
   let metadataMock;

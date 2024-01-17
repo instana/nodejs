@@ -59,7 +59,6 @@ function start(version) {
 
   const { cleanup } = require('./util');
   const { checkStreamExistence } = require('./util');
-  const retryTime = config.getTestTimeout() * 5;
 
   mochaSuiteFn(`npm: ${version}`, function () {
     this.timeout(config.getTestTimeout() * 10);
@@ -77,7 +76,9 @@ function start(version) {
           AWS_KINESIS_STREAM_NAME: streamName
         }
       });
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+
+      ProcessControls.setUpHooks(appControls);
+
       withErrorOptions.forEach(withError => {
         if (withError) {
           const operations = availableOperations.filter(op => op !== 'listStreams');
@@ -110,7 +111,7 @@ function start(version) {
       function verify(controls, response, apiPath, operation, withError) {
         return retry(
           () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, operation, withError)),
-          retryTime
+          1000
         );
       }
       function verifySpans(controls, spans, apiPath, operation, withError) {
@@ -160,7 +161,8 @@ function start(version) {
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      ProcessControls.setUpHooks(appControls);
+
       describe('attempt to get result', () => {
         availableOperations.slice(1).forEach(operation => {
           const requestMethod = getNextCallMethod();
@@ -178,13 +180,11 @@ function start(version) {
               await checkStreamExistence(streamName, false);
             }
 
-            return retry(() => delay(config.getTestTimeout() / 4))
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS Kinesis suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+            await delay(1000);
+            const spans = await agentControls.getSpans();
+            if (spans.length > 0) {
+              fail(`Unexpected spans: ${stringifyItems(spans)}`);
+            }
           });
         });
       });
@@ -199,7 +199,8 @@ function start(version) {
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      ProcessControls.setUpHooks(appControls);
+
       describe('attempt to get result', () => {
         // we don't create the stream, as it was created previously
         availableOperations.slice(1).forEach(operation => {
@@ -219,13 +220,11 @@ function start(version) {
               await checkStreamExistence(streamName, false);
             }
 
-            return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS Kinesis suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+            await delay(1000);
+            const spans = await agentControls.getSpans();
+            if (spans.length > 0) {
+              fail(`Unexpected spans: ${stringifyItems(spans)}`);
+            }
           });
         });
       });

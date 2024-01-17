@@ -22,12 +22,14 @@ if (otelEndpoint) {
 require('./tracing');
 
 const express = require('express');
-const port = process.env.PORT || '8215';
 const request = require('request-promise');
 const logPrefix = `OpenTelemetry test app (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const { delay } = require('@instana/core/test/test_util');
 const { sendToParent } = require('@instana/core/test/test_util');
+
+const getAppPort = require('@instana/collector/test/test_util/app-port');
+const port = getAppPort();
 
 /**
  * OpenTelemetry instrumentation does not work properly with node-fetch:

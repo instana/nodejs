@@ -13,28 +13,36 @@ const testUtils = require('../../../../../core/test/test_util');
 
 describe('tracing/asyncAwait', function () {
   const expressAsyncAwaitControls = require('./controls');
-  const agentStubControls = require('../../../apps/agentStubControls');
+  const { AgentStubControls } = require('../../../apps/agentStubControls');
+
+  const agentStubControls = new AgentStubControls();
   const expressControls = require('../../../apps/expressControls');
 
   this.timeout(config.getTestTimeout());
 
   agentStubControls.registerTestHooks();
-  expressControls.registerTestHooks();
+  expressControls.registerTestHooks({ agentControls: agentStubControls });
 
-  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
+  beforeEach(() => {
+    return agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid());
+  });
 
   describe('custom http client wrapper with native promises', () => {
     expressAsyncAwaitControls.registerTestHooks({
+      agentControls: agentStubControls,
       upstreamPort: expressControls.appPort
     });
 
-    beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressAsyncAwaitControls.getPid()));
+    beforeEach(() => {
+      return agentStubControls.waitUntilAppIsCompletelyInitialized(expressAsyncAwaitControls.getPid());
+    });
 
     testAsyncControlFlow();
   });
 
   describe('request-promise', () => {
     expressAsyncAwaitControls.registerTestHooks({
+      agentControls: agentStubControls,
       upstreamPort: expressControls.appPort,
       useRequestPromise: true
     });

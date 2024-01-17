@@ -6,6 +6,7 @@
 'use strict';
 
 const AbstractServerlessControl = require('@instana/serverless/test/util/AbstractServerlessControl');
+const portfinder = require('@instana/collector/test/test_util/portfinder');
 const { fork } = require('child_process');
 const fetch = require('node-fetch');
 
@@ -20,15 +21,23 @@ class Control extends AbstractServerlessControl {
 
     this.otelApp = null;
     this.messagesFromTestApp = [];
-    this.backendPort = this.opts.backendPort || 10443;
+    this.backendPort = this.opts.backendPort || portfinder();
+    this.port = this.opts.port || portfinder();
     this.useHttps = true;
     const protocol = this.useHttps ? 'https' : 'http';
     this.backendBaseUrl = this.opts.backendBaseUrl || `${protocol}://localhost:${this.backendPort}/serverless`;
+    this.instanaEndpoint = `${protocol}://localhost:${this.backendPort}/`;
   }
 
   startMonitoredProcess() {
     this.otelApp = fork(this.opts.otelAppPath, {
-      env: { ...(this.opts.env || {}) }
+      env: Object.assign(
+        {
+          INSTANA_ENDPOINT_URL: this.instanaEndpoint,
+          APP_PORT: this.port
+        },
+        this.opts.env
+      )
     });
 
     this.otelApp.on('message', message => {
@@ -52,7 +61,7 @@ class Control extends AbstractServerlessControl {
     if (!opts.path) {
       throw new Error('The option path must be provided');
     }
-    const response = await fetch(`http://localhost:${this.opts.env.PORT}${opts.path}`);
+    const response = await fetch(`http://localhost:${this.port}${opts.path}`);
     return response.json();
   }
 

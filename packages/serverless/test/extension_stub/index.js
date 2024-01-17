@@ -17,7 +17,7 @@ const logPrefix = 'extension-stub';
 const logger = pino.child({ name: logPrefix, pid: process.pid });
 logger.level = process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL || 'info';
 
-const port = process.env.EXTENSION_PORT;
+const port = process.env.INSTANA_LAYER_EXTENSION_PORT;
 
 const unresponsive = process.env.EXTENSION_UNRESPONSIVE === 'true';
 const heartbeatResponsiveButUnresponsiveLater =

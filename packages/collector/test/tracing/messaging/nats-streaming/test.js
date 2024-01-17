@@ -260,13 +260,11 @@ mochaSuiteFn('tracing/nats-streaming', function () {
           suppressTracing: true
         });
 
-        return retry(() => delay(config.getTestTimeout() / 4))
-          .then(() => agentControls.getSpans())
-          .then(spans => {
-            if (spans.length > 0) {
-              expect.fail(`Unexpected spans ${stringifyItems(spans)}.`);
-            }
-          });
+        await delay(1000);
+        const spans = await agentControls.getSpans();
+        if (spans.length > 0) {
+          expect.fail(`Unexpected spans: ${stringifyItems(spans)}`);
+        }
       });
     });
   });
@@ -294,7 +292,7 @@ mochaSuiteFn('tracing/nats-streaming', function () {
         })
         .then(res => {
           expect(res).to.equal('OK');
-          return delay(config.getTestTimeout() / 4);
+          return delay(1000);
         })
         .then(() =>
           agentControls.getSpans().then(spans => {

@@ -49,7 +49,7 @@ const SINGLE_TEST_PROPS = {
   withError: false
 };
 
-const retryTime = config.getTestTimeout() * 2;
+const retryTime = 1000;
 const topic = 'rdkafka-topic';
 
 let mochaSuiteFn;
@@ -476,7 +476,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         });
 
         return retry(() => verifyResponseAndMessage(response, consumerControls), retryTime)
-          .then(() => delay(config.getTestTimeout() / 4))
+          .then(() => delay(1000))
           .then(() => agentControls.getSpans())
           .then(spans => {
             if (spans.length > 0) {
@@ -519,7 +519,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         return retry(() => {
           verifyResponseAndMessage(response, receiverControls);
         }, retryTime)
-          .then(() => delay(config.getTestTimeout() / 4))
+          .then(() => delay(1000))
           .then(() => agentControls.getSpans())
           .then(spans => {
             if (spans.length > 0) {

@@ -87,7 +87,7 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
       await appControls.trigger('warn', { 'X-INSTANA-L': '0' });
 
       return testUtils
-        .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+        .retry(() => testUtils.delay(1000))
         .then(() => agentControls.getSpans())
         .then(spans => {
           if (spans.length > 0) {

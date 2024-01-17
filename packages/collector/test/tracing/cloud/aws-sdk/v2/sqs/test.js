@@ -47,7 +47,6 @@ if (!supportedVersion(process.versions.node)) {
 } else {
   mochaSuiteFn = describe;
 }
-const retryTime = config.getTestTimeout() * 2;
 
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
   this.timeout(config.getTestTimeout() * 4);
@@ -89,9 +88,9 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       }
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls);
-    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControlsSQSConsumer);
-    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControlsBatch);
+    ProcessControls.setUpHooks(senderControls);
+    ProcessControls.setUpHooks(senderControlsSQSConsumer);
+    ProcessControls.setUpHooks(senderControlsBatch);
 
     receivingMethods.forEach(sqsReceiveMethod => {
       describe(`receiving via ${sqsReceiveMethod} API`, () => {
@@ -104,7 +103,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           }
         });
 
-        ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+        ProcessControls.setUpHooks(receiverControls);
 
         [false, 'sender'].forEach(withError => {
           const sqsSendMethod = getNextSendMethod();
@@ -143,7 +142,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           }
         });
 
-        ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+        ProcessControls.setUpHooks(receiverControls);
 
         it(
           `consecutive receiveMessage calls via ${sqsReceiveMethod} in the same event loop tick should not ` +
@@ -156,7 +155,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
               });
               // Make sure the receiver has started to poll for messages at least twice.
               expect(numberOfMessagePolls).to.be.at.least(2);
-            }, retryTime);
+            }, 1000);
 
             // There should be no spans since we do not send any SQS messages in this test and we also do not send
             // HTTP requests to the sender.
@@ -179,7 +178,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+      ProcessControls.setUpHooks(receiverControls);
 
       const apiPath = '/send-callback';
 
@@ -199,7 +198,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           // The SQS entry will be the root of a new trace because we were not able to add tracing headers.
           const sqsEntry = verifySQSEntry(receiverControls, spans, null);
           verifyHttpExit({ spans, parent: sqsEntry, pid: String(receiverControls.getPid()) });
-        }, retryTime);
+        }, 1000);
 
         await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
       });
@@ -215,7 +214,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           }
         });
 
-        ProcessControls.setUpHooksWithRetryTime(retryTime, sqsConsumerControls);
+        ProcessControls.setUpHooks(sqsConsumerControls);
 
         const apiPath = '/send-callback';
 
@@ -239,7 +238,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           }
         });
 
-        ProcessControls.setUpHooksWithRetryTime(retryTime, sqsConsumerControls);
+        ProcessControls.setUpHooks(sqsConsumerControls);
 
         const apiPath = '/send-callback';
 
@@ -266,7 +265,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
             }
           });
 
-          ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+          ProcessControls.setUpHooks(receiverControls);
 
           const sqsSendMethod = getNextSendMethod();
           const apiPath = `/send-${sqsSendMethod}`;
@@ -295,7 +294,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           }
           const spans = await agentControls.getSpans();
           verifySpans(receiverControls, _senderControls, spans, apiPath, null, withError, isBatch);
-        }, retryTime);
+        }, 1000);
       }
     }
 
@@ -307,7 +306,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           span => expect(span.p).to.equal(spanId),
           span => expect(span.k).to.equal(constants.ENTRY)
         ]);
-      }, retryTime);
+      }, 1000);
     }
 
     function verifySpans(receiverControls, _senderControls, spans, apiPath, messageId, withError, isBatch) {
@@ -393,7 +392,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       }
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls);
+    ProcessControls.setUpHooks(senderControls);
 
     const receivingMethod = getNextReceiveMethod();
     describe('sending and receiving', () => {
@@ -407,7 +406,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+      ProcessControls.setUpHooks(receiverControls);
 
       const sendingMethod = getNextSendMethod();
       it(`should not trace for sending(${sendingMethod}) / receiving(${receivingMethod})`, async () => {
@@ -416,8 +415,8 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           path: `/send-${sendingMethod}`
         });
 
-        await retry(() => verifyResponseAndMessage(response, receiverControls), retryTime);
-        await delay(config.getTestTimeout() / 4);
+        await retry(() => verifyResponseAndMessage(response, receiverControls), 1000);
+        await delay(1000);
         const spans = await agentControls.getSpans();
         if (spans.length > 0) {
           fail(`Unexpected spans (AWS SQS suppressed: ${stringifyItems(spans)}`);
@@ -435,7 +434,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       }
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls);
+    ProcessControls.setUpHooks(senderControls);
 
     const receivingMethod = getNextReceiveMethod();
     describe('tracing suppressed', () => {
@@ -448,7 +447,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+      ProcessControls.setUpHooks(receiverControls);
 
       const sendingMethod = getNextSendMethod();
       it(`doesn't trace when sending(${sendingMethod}) and receiving(${receivingMethod})`, async () => {
@@ -460,8 +459,8 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           }
         });
 
-        await retry(() => verifyResponseAndMessage(response, receiverControls), retryTime);
-        await delay(config.getTestTimeout() / 4);
+        await retry(() => verifyResponseAndMessage(response, receiverControls), 1000);
+        await delay(1000);
         const spans = await agentControls.getSpans();
         if (spans.length > 0) {
           fail(`Unexpected spans (AWS SQS suppressed: ${stringifyItems(spans)}`);
@@ -482,16 +481,18 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       }
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+    ProcessControls.setUpHooks(receiverControls);
 
     it('reports an error span', async () => {
-      await retry(() => delay(config.getTestTimeout() / 4), retryTime);
-      const spans = await agentControls.getSpans();
+      await retry(async () => {
+        await delay(250);
+        const spans = await agentControls.getSpans();
 
-      expectAtLeastOneMatching(spans, [
-        span => expect(span.ec).equal(1),
-        span => expect(span.data.sqs.error).to.equal('The specified queue does not exist for this wsdl version.')
-      ]);
+        expectAtLeastOneMatching(spans, [
+          span => expect(span.ec).equal(1),
+          span => expect(span.data.sqs.error).to.equal('The specified queue does not exist for this wsdl version.')
+        ]);
+      });
 
       await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
     });

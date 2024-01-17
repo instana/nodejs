@@ -13,17 +13,13 @@ const Control = require('../Control');
 const delay = require('../../../core/test/test_util/delay');
 const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
 const config = require('../../../serverless/test/config');
-const retry = require('../../../serverless/test/util/retry');
+const retry = require('@instana/core/test/test_util/retry');
 
 const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
 const version = '$LATEST';
 const qualifiedArn = `${unqualifiedArn}:${version}`;
 
-const backendPort = 8443;
-const backendBaseUrl = `https://localhost:${backendPort}/serverless`;
-const downstreamDummyPort = 3456;
-const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
 function prelude(opts) {
@@ -34,8 +30,8 @@ function prelude(opts) {
   if (opts.error) {
     env.LAMDBA_ERROR = opts.error;
   }
-  if (opts.instanaEndpointUrl) {
-    env.INSTANA_ENDPOINT_URL = opts.instanaEndpointUrl;
+  if (opts.instanaEndpointUrlMissing) {
+    env.INSTANA_ENDPOINT_URL = '';
   }
   if (opts.instanaAgentKey) {
     env.INSTANA_AGENT_KEY = opts.instanaAgentKey;
@@ -48,9 +44,6 @@ function prelude(opts) {
     faasRuntimePath: path.join(__dirname, '../runtime_mock'),
     handlerDefinitionPath: opts.handlerDefinitionPath,
     startBackend: true,
-    backendPort,
-    backendBaseUrl,
-    downstreamDummyUrl,
     env
   });
   control.registerTestHooks();
@@ -67,7 +60,6 @@ describe('Using the API', () => {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
@@ -80,7 +72,6 @@ describe('Using the API', () => {
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       error: true
     });
@@ -95,7 +86,6 @@ describe('Using the API', () => {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       withConfig: true
     });
@@ -110,7 +100,6 @@ describe('Using the API', () => {
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       withConfig: true,
       error: true
@@ -124,6 +113,7 @@ describe('Using the API', () => {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
+      instanaEndpointUrlMissing: true,
       instanaAgentKey
     });
 
@@ -136,6 +126,7 @@ describe('Using the API', () => {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       instanaAgentKey,
+      instanaEndpointUrlMissing: true,
       error: true
     });
 
@@ -149,6 +140,7 @@ describe('Using the API', () => {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       instanaAgentKey,
+      instanaEndpointUrlMissing: true,
       withConfig: true
     });
 

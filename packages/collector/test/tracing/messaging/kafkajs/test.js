@@ -121,7 +121,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
               await retry(async () => {
                 const messages = await getMessages(consumerControls);
                 checkMessages(messages, parameters);
-                await delay(config.getTestTimeout() / 4);
+                await delay(1000);
                 const spans = await agentControls.getSpans();
                 expect(spans).to.have.lengthOf(0);
               });
@@ -368,7 +368,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
       await retry(async () => {
         const messages = await getMessages(consumerControls);
         checkMessages(messages, parameters);
-        await delay(config.getTestTimeout() / 4);
+        await delay(1000);
         const spans = await agentControls.getSpans();
         expect(spans).to.have.lengthOf(0);
       });

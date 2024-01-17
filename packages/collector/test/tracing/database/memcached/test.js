@@ -53,7 +53,7 @@ if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe;
 }
 
-const retryTime = config.getTestTimeout() * 2;
+const retryTime = 1000;
 
 mochaSuiteFn('tracing/cache/memcached', function () {
   this.timeout(config.getTestTimeout());
@@ -187,13 +187,12 @@ mochaSuiteFn('tracing/cache/memcached', function () {
             method: 'GET',
             path: `/${operation}`
           });
-          retry(() => delay(config.getTestTimeout() / 4)).then(() => {
-            agentControls.getSpans().then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (Memcached suppressed: ${stringifyItems(spans)}`);
-              }
-            });
-          });
+
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });
@@ -207,7 +206,7 @@ mochaSuiteFn('tracing/cache/memcached', function () {
                 method: 'GET',
                 path: `/${op}`
               })
-              .then(retry(() => delay(config.getTestTimeout() / 4)))
+              .then(retry(() => delay(1000)))
               .then(() => agentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {
@@ -241,13 +240,11 @@ mochaSuiteFn('tracing/cache/memcached', function () {
             path: `/${operation}`
           });
 
-          return retry(() => delay(config.getTestTimeout() / 4)).then(
-            agentControls.getSpans().then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (Memcached suppressed: ${stringifyItems(spans)}`);
-              }
-            })
-          );
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });
@@ -262,7 +259,7 @@ mochaSuiteFn('tracing/cache/memcached', function () {
                 method: 'GET',
                 path: `/${op}`
               })
-              .then(retry(() => delay(config.getTestTimeout() / 4)))
+              .then(retry(() => delay(1000)))
               .then(() => agentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {

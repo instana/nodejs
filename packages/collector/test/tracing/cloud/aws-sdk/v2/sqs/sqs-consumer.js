@@ -17,7 +17,7 @@ const delay = require('../../../../../../../core/test/test_util/delay');
 
 AWS.config.update({ region: 'us-east-2' });
 const port = require('../../../../../test_util/app-port')();
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const withError = process.env.AWS_SQS_RECEIVER_ERROR === 'true';
 const app = express();
 

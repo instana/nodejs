@@ -60,8 +60,6 @@ if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe;
 }
 
-const retryTime = config.getTestTimeout() * 5;
-
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
   this.timeout(config.getTestTimeout() * 10);
 
@@ -79,7 +77,8 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
       }
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    ProcessControls.setUpHooks(appControls);
+
     withErrorOptions.forEach(withError => {
       if (withError) {
         describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
@@ -117,7 +116,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
     function verify(controls, response, apiPath, operation, withError) {
       return retry(
         () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, operation, withError)),
-        retryTime
+        1000
       );
     }
 
@@ -170,7 +169,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
       }
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    ProcessControls.setUpHooks(appControls);
 
     describe('attempt to get result', () => {
       // we don't create the stream, as it was created previously
@@ -190,13 +189,11 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
             await checkStreamExistence(streamName, false);
           }
 
-          return retry(() => delay(config.getTestTimeout() / 4))
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (AWS Kinesis suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });
@@ -211,7 +208,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
       }
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    ProcessControls.setUpHooks(appControls);
 
     describe('attempt to get result', () => {
       // we don't create the stream, as it was created previously
@@ -232,13 +229,11 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
             await checkStreamExistence(streamName, false);
           }
 
-          return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (AWS Kinesis suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });

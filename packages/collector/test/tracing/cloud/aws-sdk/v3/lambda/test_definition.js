@@ -31,6 +31,7 @@ async function start(version) {
     return;
   }
   const { isLocalStackDisabled } = require('./utils');
+
   if (isLocalStackDisabled()) {
     // invokeAsync currently not supported in localstack
     // https://docs.localstack.cloud/references/coverage/coverage_lambda/
@@ -44,7 +45,7 @@ async function start(version) {
       AWS_ENDPOINT: process.env.LOCALSTACK_AWS
     };
   }
-  const retryTime = config.getTestTimeout() * 10;
+
   if (!isLocalStackDisabled()) {
     const { createFunction, removeFunction } = require('./utils');
     before(async () => {
@@ -93,7 +94,7 @@ async function start(version) {
       function verify(controls, response, apiPath, operation, ctx) {
         return retry(
           () => agentControls.getSpans().then(spans => verifySpans(controls, response, spans, apiPath, operation, ctx)),
-          retryTime
+          1000
         );
       }
       function verifySpans(controls, response, spans, apiPath, operation, ctx) {
@@ -147,6 +148,7 @@ async function start(version) {
       after(async () => {
         await appControls.stop();
       });
+
       describe('attempt to get result', () => {
         availableOperations.forEach(operation => {
           const requestMethod = getNextCallMethod();
@@ -155,13 +157,12 @@ async function start(version) {
               method: 'GET',
               path: `/${operation}/${requestMethod}`
             });
-            return retry(() => delay(config.getTestTimeout() / 4))
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans AWS Lambda invoke function suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+
+            await delay(1000);
+            const spans = await agentControls.getSpans();
+            if (spans.length > 0) {
+              fail(`Unexpected spans: ${stringifyItems(spans)}`);
+            }
           });
         });
       });
@@ -199,13 +200,12 @@ async function start(version) {
               expect(clientContext.Custom['x-instana-t']).to.not.exist;
               expect(clientContext.Custom['x-instana-l']).to.equal('0');
             }
-            return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans AWS Lambda invoke function suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+
+            await delay(1000);
+            const spans = await agentControls.getSpans();
+            if (spans.length > 0) {
+              fail(`Unexpected spans: ${stringifyItems(spans)}`);
+            }
           });
         });
       });

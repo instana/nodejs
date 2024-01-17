@@ -14,7 +14,9 @@ const http = require('http');
 const fetch = require('node-fetch');
 
 const app = new http.Server();
-const port = process.env.PORT || 4816;
+// eslint-disable-next-line instana/no-unsafe-require, import/no-extraneous-dependencies
+const getAppPort = require('@instana/collector/test/test_util/app-port');
+const port = getAppPort();
 
 const disableDownstreamRequests = process.env.DISABLE_DOWNSTREAM_REQUESTS === 'false';
 

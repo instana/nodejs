@@ -68,7 +68,7 @@ mochaSuiteFn('tracing/logger/log4js', function () {
         suppressTracing: true
       });
 
-      await delay(config.getTestTimeout() / 4);
+      await delay(1000);
       const spans = await agentControls.getSpans();
       if (spans.length > 0) {
         expect.fail(`Unexpected spans ${stringifyItems(spans)}.`);

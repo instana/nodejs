@@ -38,9 +38,7 @@ describe('dependencies', function () {
     const controls = new ProcessControls({
       dirname: appDir,
       useGlobalAgent: true,
-      port: 7215,
       env: {
-        INSTANA_AGENT_PORT: 7211,
         INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false'
       }
     }).registerTestHooks();
@@ -90,9 +88,7 @@ describe('dependencies', function () {
     const controls = new ProcessControls({
       dirname: tmpDir,
       useGlobalAgent: true,
-      port: 7215,
       env: {
-        INSTANA_AGENT_PORT: 7211,
         INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false',
         INSTANA_NODES_REPO: repoRootDir
       }
@@ -143,9 +139,7 @@ describe('dependencies', function () {
     const controls = new ProcessControls({
       dirname: path.join(tmpDir, 'node_modules', 'npm-installed-test-app'),
       useGlobalAgent: true,
-      port: 7215,
       env: {
-        INSTANA_AGENT_PORT: 7211,
         INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false',
         INSTANA_NODES_REPO: repoRootDir,
         MAX_DEPENDENCIES: 200

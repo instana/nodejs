@@ -9,11 +9,6 @@ const { expect } = require('chai');
 const path = require('path');
 const Control = require('../Control');
 const config = require('../../../serverless/test/config');
-
-const backendPort = 8443;
-const backendBaseUrl = `https://localhost:${backendPort}/serverless`;
-const downstreamDummyPort = 3456;
-const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
 function prelude(opts) {
@@ -35,9 +30,6 @@ function prelude(opts) {
     ITERATIONS: opts.iterations,
     LAMBDA_TIMEOUT: 300000
   };
-  if (opts.instanaEndpointUrl) {
-    env.INSTANA_ENDPOINT_URL = opts.instanaEndpointUrl;
-  }
   if (opts.instanaAgentKey) {
     env.INSTANA_AGENT_KEY = opts.instanaAgentKey;
   }
@@ -49,9 +41,6 @@ function prelude(opts) {
     faasRuntimePath: path.join(__dirname, '../runtime_mock'),
     handlerDefinitionPath: opts.handlerDefinitionPath,
     startBackend: opts.startBackend,
-    backendPort,
-    backendBaseUrl,
-    downstreamDummyUrl,
     env,
     timeout
   });
@@ -69,7 +58,6 @@ describe('Logging', function () {
 
   const opts = {
     handlerDefinitionPath,
-    instanaEndpointUrl: backendBaseUrl,
     instanaAgentKey,
     delay: 1000,
     iterations: 13

@@ -9,7 +9,7 @@ import express from 'express';
 const app = express();
 import getAppPort from '../../../test_util/app-port.js';
 const port = getAppPort();
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 import fetch from 'node-fetch';
 import logger from '@instana/core/test/test_util/log.js';
 import Memcached from 'memcached';

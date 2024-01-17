@@ -31,8 +31,6 @@ if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe;
 }
 
-const retryTime = config.getTestTimeout() * 5;
-
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
   this.timeout(config.getTestTimeout() * 10);
   globalAgent.setUpCleanUpHooks();
@@ -47,7 +45,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
       }
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    ProcessControls.setUpHooks(appControls);
 
     withErrorOptions.forEach(withError => {
       describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
@@ -76,7 +74,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
           agentControls
             .getSpans()
             .then(spans => verifySpans(controls, response, spans, apiPath, operation, withError, ctx)),
-        retryTime
+        1000
       );
     }
     function verifySpans(controls, response, spans, apiPath, operation, withError, ctx) {
@@ -126,7 +124,9 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
         AWS_LAMBDA_FUNCTION_NAME: functionName
       }
     });
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+
+    ProcessControls.setUpHooks(appControls);
+
     describe('attempt to get result', () => {
       availableOperations.forEach(operation => {
         const requestMethod = getNextCallMethod();
@@ -135,13 +135,12 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
             method: 'GET',
             path: `/${operation}/${requestMethod}`
           });
-          return retry(() => delay(config.getTestTimeout() / 4))
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans AWS Lambda invoke function suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });
@@ -156,7 +155,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
       }
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    ProcessControls.setUpHooks(appControls);
 
     describe('attempt to get result', () => {
       availableOperations.forEach(operation => {
@@ -178,13 +177,11 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
             expect(clientContext.Custom['x-instana-l']).to.equal('0');
           }
 
-          return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans AWS Lambda invoke function suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });

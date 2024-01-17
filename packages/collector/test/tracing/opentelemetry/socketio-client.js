@@ -14,7 +14,7 @@ const port = require('../../test_util/app-port')();
 const app = express();
 const logPrefix = `SocketIO ClientApp (${process.pid}):\t`;
 
-const ioClient = socketioclient.connect('http://localhost:3000');
+const ioClient = socketioclient.connect(`http://localhost:${process.env.SOCKETIOSERVER_PORT}`);
 
 ioClient.on('test', () => {
   log('Received msg for "test"');

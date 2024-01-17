@@ -1,7 +1,6 @@
 'use strict';
 
 const mochaOptions = {
-  file: ['test/initEnv.js'],
   ignore: '**node_modules/**/*'
 };
 

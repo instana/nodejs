@@ -125,14 +125,15 @@ mochaSuiteFn('tracing/tracing metrics', function () {
   });
 
   describe('when dropping spans', () => {
-    const customeAgentControls = require('../../../apps/agentStubControls');
-    customeAgentControls.registerTestHooks({
+    const { AgentStubControls } = require('../../../apps/agentStubControls');
+    const customAgentControls = new AgentStubControls();
+    customAgentControls.registerTestHooks({
       // The trace endpoint will return an HTTP error code, triggering the removeSpansIfNecessary function.
       rejectTraces: true
     });
     const controls = new ProcessControls({
       dirname: __dirname,
-      agentControls: customeAgentControls,
+      agentControls: customAgentControls,
       tracingEnabled: true,
       env: {
         FORCE_TRANSMISSION_STARTING_AT: 500,
@@ -147,7 +148,7 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       });
       expect(response).to.equal('OK');
       await testUtils.retry(async () => {
-        const tracingMetrics = await fetchTracingMetricsForProcess(customeAgentControls, controls.getPid());
+        const tracingMetrics = await fetchTracingMetricsForProcess(customAgentControls, controls.getPid());
         expect(tracingMetrics).to.have.lengthOf.at.least(3);
         // With maxSpanBuffer = 1 we always keep 1 span in the buffer which is not dropped,  the test creates
         // 4 spans overall (one http entry and three SDK exits), hence we only expect three dropped spans.
@@ -157,7 +158,9 @@ mochaSuiteFn('tracing/tracing metrics', function () {
   });
 
   describe('when agent does not support the tracermetrics endpoint', () => {
-    const customeAgentControls = require('../../../apps/agentStubControls');
+    const { AgentStubControls } = require('../../../apps/agentStubControls');
+    const customeAgentControls = new AgentStubControls();
+
     customeAgentControls.registerTestHooks({
       tracingMetrics: false
     });

@@ -17,8 +17,8 @@ const ProcessControls = require('../test_util/ProcessControls');
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('unhandled promise rejections', function () {
-  const agentControls = require('../apps/agentStubControls');
-
+  const { AgentStubControls } = require('../apps/agentStubControls');
+  const agentControls = new AgentStubControls();
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();

@@ -162,22 +162,502 @@ shared: &shared
             bin/clean-aws.js --service=kinesis
           fi
 
+    - run:
+        name: "@instana/collector:general"
+        background: true
+        command: |
+            touch .run1-started
+
+            if npm run test:ci:collector:general; then
+                touch .run1-succeeded
+            else
+                touch .run1-failed
+                exit 1
+            fi
+    - run:
+        name: "@instana/collector:tracing:frameworks"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/frameworks"; then
+              touch .run2-started
+
+              if npm run test:ci:collector:tracing:frameworks; then
+                  touch .run2-succeeded
+              else
+                  touch .run2-failed
+                  exit 1
+              fi
+            else
+              echo "Skipping group."
+            fi
+
+    - run:
+        name: "@instana/collector:tracing:general"
+        background: true
+        command: |
+            touch .run3-started
+
+            if npm run test:ci:collector:tracing:general; then
+                touch .run3-succeeded
+            else
+                touch .run3-failed
+                exit 1
+            fi
+
+    - run:
+        name: "@instana/collector:tracing:database"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"; then
+              touch .run4-started
+
+              if npm run test:ci:collector:tracing:database; then
+                  touch .run4-succeeded
+              else
+                  touch .run4-failed
+                  exit 1
+              fi
+            else
+              echo "Skipping group."
+            fi
+
+    - run:
+        name: "@instana/collector:tracing:messaging"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/messaging"; then
+              touch .run5-started
+
+              if npm run test:ci:collector:tracing:messaging; then
+                  touch .run5-succeeded
+              else
+                  touch .run5-failed
+                  exit 1
+              fi
+            else
+              echo "Skipping group."
+            fi
+
+    - run:
+        name: "@instana/collector:tracing:protocols"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/protocols"; then
+              touch .run6-started
+
+              if npm run test:ci:collector:tracing:protocols; then
+                  touch .run6-succeeded
+              else
+                  touch .run6-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi
+
+    - run:
+        name: "@instana/collector:tracing:cloud:gcp"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/gcp"; then
+              touch .run7-started
+
+              if npm run test:ci:collector:tracing:cloud:gcp; then
+                  touch .run7-succeeded
+              else
+                  touch .run7-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi              
+
+    - run:
+        name: "@instana/collector:tracing:cloud:aws:v2"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"; then
+              touch .run8-started
+
+              if npm run test:ci:collector:tracing:cloud:aws:v2; then
+                  touch .run8-succeeded
+              else
+                  touch .run8-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi     
+
+    - run:
+        name: "@instana/collector:tracing:cloud:aws:v3"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"; then
+              touch .run9-started
+
+              if npm run test:ci:collector:tracing:cloud:aws:v3; then
+                  touch .run9-succeeded
+              else
+                  touch .run9-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi              
+
+    - run:
+        name: "@instana/collector:tracing:logger"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/loggers"; then
+              touch .run10-started
+
+              if npm run test:ci:collector:tracing:logger; then
+                  touch .run10-succeeded
+              else
+                  touch .run10-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi              
+
+    - run:
+        name: "@instana/collector:tracing:misc"
+        background: true
+        command: |
+            touch .run11-started
+
+            if npm run test:ci:collector:tracing:misc; then
+                touch .run11-succeeded
+            else
+                touch .run11-failed
+                exit 1
+            fi
+
+    - run:
+        name: "@instana/autoprofile"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/autoprofile"; then
+              touch .run12-started
+
+              if npm run test:ci:autoprofile; then
+                  touch .run12-succeeded
+              else
+                  touch .run12-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi
+
+    - run:
+        name: "@instana/aws-fargate"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/aws-fargate"; then
+              touch .run13-started
+
+              if npm run test:ci:aws-fargate; then
+                  touch .run13-succeeded
+              else
+                  touch .run13-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/aws-lambda"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/aws-lambda"; then
+              touch .run14-started
+
+              if npm run test:ci:aws-lambda; then
+                  touch .run14-succeeded
+              else
+                  touch .run14-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/azure-container-services"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/azure-container-services"; then
+              touch .run15-started
+
+              if npm run test:ci:azure-container-services; then
+                  touch .run15-succeeded
+              else
+                  touch .run15-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/core"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core"; then
+              touch .run16-started
+
+              if npm run test:ci:core; then
+                  touch .run16-succeeded
+              else
+                  touch .run16-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/google-cloud-run"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/google-cloud-run"; then
+              touch .run17-started
+
+              if npm run test:ci:google-cloud-run; then
+                  touch .run17-succeeded
+              else
+                  touch .run17-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/metrics-util"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/metrics-util"; then
+              touch .run18-started
+
+              if npm run test:ci:metrics-util; then
+                  touch .run18-succeeded
+              else
+                  touch .run18-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/opentelemetry-exporter"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/opentelemetry-exporter"; then
+              touch .run19-started
+
+              if npm run test:ci:opentelemetry-exporter; then
+                  touch .run19-succeeded
+              else
+                  touch .run19-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/opentelemetry-sampler"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/opentelemetry-sampler"; then
+              touch .run20-started
+
+              if npm run test:ci:opentelemetry-sampler; then
+                  touch .run20-succeeded
+              else
+                  touch .run20-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/serverless"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/serverless"; then
+              touch .run21-started
+
+              if npm run test:ci:serverless; then
+                  touch .run21-succeeded
+              else
+                  touch .run21-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi
+    - run:
+        name: "@instana/shared-metrics"
+        background: true
+        command: |
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/shared-metrics"; then
+              touch .run22-started
+
+              if npm run test:ci:shared-metrics; then
+                  touch .run22-succeeded
+              else
+                  touch .run22-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+
+    - run:
+        name: Wait for success of background steps
+        command: |
+          function show_spinner() {
+              local pid=$1
+              local delay=0.75
+              local spin='-\|/'
+              while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+                  local temp=${spin#?}
+                  printf " [%c]  " "$spin"
+                  local spin=$temp${spin%"$temp"}
+                  sleep $delay
+                  printf "\b\b\b\b\b\b"
+              done
+              printf "    \b\b\b\b"
+          }          
+          
+          while true; do
+              started_files=( .run*-started )
+              success_files=( .run*-succeeded )
+              failed_files=( .run*-failed )
+
+              started_count=0
+              for file in "${started_files[@]}"; do
+                  if [ -f "$file" ]; then
+                      started_count=$((started_count + 1))
+                  fi
+              done
+
+              success_count=0
+              for file in "${success_files[@]}"; do
+                  if [ -f "$file" ]; then
+                      success_count=$((success_count + 1))
+                  fi
+              done
+
+              fail_count=0
+              for file in "${failed_files[@]}"; do
+                  if [ -f "$file" ]; then
+                      fail_count=$((fail_count + 1))
+                  fi
+              done
+
+              echo "started", $started_count
+              echo "failed", $fail_count
+              echo "success", $success_count
+
+              if [ $fail_count -gt 0 ]; then
+                  echo "Build failed. Exiting loop."
+                  exit 1
+                  break
+              fi
+
+              if [ $success_count -eq $started_count ]; then
+                  echo "All files present. Exiting loop."
+                  break
+              fi
+
+              show_spinner $$ &
+              spinner_pid=$!
+              sleep 10
+              kill $spinner_pid
+          done
+
+    - run:
+        name: Cleanup
+        command: |
+          rm -f .run*-succeeded
+          rm -f .run*-failed
+          rm -f .run*-started
+
     # Run the test suites.
     # The ci_glob_setup.sh script determines which tests will be run on each CircleCI executor.
-    - run:
-        name: Run Tests
-        command: |
-          source bin/ci_glob_setup.sh
-          date
-          if [[ -z "$NODE_COVERAGE" ]]; then
-            if [[ -z "$COLLECTOR_ONLY" ]]; then
-              npm run test:ci
-            else
-              npm run test:ci:collector
-            fi
-          else
-            npm run coverage-all
-          fi
+    # - run:
+    #     name: Run Tests
+    #     command: |
+    #       source bin/ci_glob_setup.sh
+    #       date
+    #       if [[ -z "$NODE_COVERAGE" ]]; then
+    #         if [[ -z "$COLLECTOR_ONLY" ]]; then
+    #           npm run test:ci
+    #         else
+    #           npm run test:ci:collector
+    #         fi
+    #       else
+    #         npm run coverage-all
+    #       fi
 
     - store_test_results:
         path: test-results
@@ -358,6 +838,8 @@ jobs:
     resource_class: large
 
   "node-18":
+    environment:
+      CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
     docker:
       - image: cimg/node:18.18
       - <<: *zookeeper
@@ -377,8 +859,8 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: 15
-    resource_class: medium+
+    parallelism: 1
+    resource_class: xlarge
 
   "node-16":
     docker:

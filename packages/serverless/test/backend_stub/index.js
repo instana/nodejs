@@ -29,7 +29,7 @@ const options = {
   cert: fs.readFileSync(path.join(__dirname, 'cert/server.crt'))
 };
 
-const port = process.env.BACKEND_PORT || 8443;
+const port = process.env.BACKEND_PORT;
 let unresponsive = process.env.BACKEND_UNRESPONSIVE === 'true';
 
 const app = express();
