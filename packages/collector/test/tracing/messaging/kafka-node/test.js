@@ -33,14 +33,12 @@ mochaSuiteFn('tracing/kafka-node', function () {
     describe(`producing via: ${producerType}`, function () {
       const producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'producer'),
-        useGlobalAgent: true,
         env: {
           PRODUCER_TYPE: producerType
         }
       });
       const consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
-        useGlobalAgent: true
+        appPath: path.join(__dirname, 'consumer')
       });
       ProcessControls.setUpHooks(producerControls, consumerControls);
 
@@ -106,14 +104,12 @@ mochaSuiteFn('tracing/kafka-node', function () {
     describe(`consuming via: ${consumerType}`, () => {
       const producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'producer'),
-        useGlobalAgent: true,
         env: {
           PRODUCER_TYPE: 'plain'
         }
       });
       const consumerControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
-        useGlobalAgent: true,
         env: {
           CONSUMER_TYPE: consumerType
         }

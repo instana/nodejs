@@ -763,7 +763,6 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
 function startApps(http2) {
   const instanaAppControls = new ProcessControls({
     appPath: path.join(__dirname, 'app'),
-    useGlobalAgent: true,
     http2,
     env: {
       APM_VENDOR: 'instana',

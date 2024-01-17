@@ -17,7 +17,7 @@ const deepMerge = require('../../../core/src/util/deepMerge');
 const logger = bunyan.createLogger({ name: 'agent-stub', pid: process.pid });
 // logger.level('debug');
 
-const port = process.env.AGENT_PORT || 42699;
+const port = process.env.AGENT_PORT;
 const extraHeaders = process.env.EXTRA_HEADERS ? process.env.EXTRA_HEADERS.split(',') : [];
 const secretsMatcher = process.env.SECRETS_MATCHER ? process.env.SECRETS_MATCHER : 'contains-ignore-case';
 const secretsList = process.env.SECRETS_LIST ? process.env.SECRETS_LIST.split(',') : ['pass', 'secret', 'token'];

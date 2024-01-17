@@ -67,7 +67,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
   describe('tracing enabled, no suppression', function () {
     const senderControls = new ProcessControls({
       appPath: path.join(__dirname, 'sendMessage'),
-      useGlobalAgent: true,
       env: {
         AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
       }
@@ -75,7 +74,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
 
     const senderControlsSQSConsumer = new ProcessControls({
       appPath: path.join(__dirname, 'sendMessage'),
-      useGlobalAgent: true,
       env: {
         AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`
       }
@@ -83,7 +81,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
 
     const senderControlsBatch = new ProcessControls({
       appPath: path.join(__dirname, 'sendMessage'),
-      useGlobalAgent: true,
       env: {
         AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`
       }
@@ -97,7 +94,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       describe(`receiving via ${sqsReceiveMethod} API`, () => {
         const receiverControls = new ProcessControls({
           appPath: path.join(__dirname, 'receiveMessage'),
-          useGlobalAgent: true,
           env: {
             SQS_RECEIVE_METHOD: sqsReceiveMethod,
             AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
@@ -135,7 +131,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       describe(`polling via ${sqsReceiveMethod} when no messages are available`, () => {
         const receiverControls = new ProcessControls({
           appPath: path.join(__dirname, 'receiveMessage'),
-          useGlobalAgent: true,
           env: {
             SQS_RECEIVE_METHOD: sqsReceiveMethod,
             SQS_POLL_DELAY: 1,
@@ -172,7 +167,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
     describe('message header limits', function () {
       const receiverControls = new ProcessControls({
         appPath: path.join(__dirname, 'receiveMessage'),
-        useGlobalAgent: true,
         env: {
           SQS_RECEIVE_METHOD: 'async',
           AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
@@ -209,7 +203,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       describe('message processed with success', () => {
         const sqsConsumerControls = new ProcessControls({
           appPath: path.join(__dirname, 'sqs-consumer'),
-          useGlobalAgent: true,
           env: {
             AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`
           }
@@ -232,7 +225,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       describe('message not processed with success', () => {
         const sqsConsumerControls = new ProcessControls({
           appPath: path.join(__dirname, 'sqs-consumer'),
-          useGlobalAgent: true,
           env: {
             AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
             AWS_SQS_RECEIVER_ERROR: 'true'
@@ -259,7 +251,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         describe(`receiving batched messages: ${sqsReceiveMethod}`, () => {
           const receiverControls = new ProcessControls({
             appPath: path.join(__dirname, 'receiveMessage'),
-            useGlobalAgent: true,
             env: {
               SQS_RECEIVE_METHOD: sqsReceiveMethod,
               AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`
@@ -386,7 +377,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
 
     const senderControls = new ProcessControls({
       appPath: path.join(__dirname, 'sendMessage'),
-      useGlobalAgent: true,
       tracingEnabled: false,
       env: {
         AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
@@ -399,7 +389,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
     describe('sending and receiving', () => {
       const receiverControls = new ProcessControls({
         appPath: path.join(__dirname, 'receiveMessage'),
-        useGlobalAgent: true,
         tracingEnabled: false,
         env: {
           SQS_RECEIVE_METHOD: receivingMethod,
@@ -429,7 +418,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
   describe('tracing enabled but suppressed', () => {
     const senderControls = new ProcessControls({
       appPath: path.join(__dirname, 'sendMessage'),
-      useGlobalAgent: true,
       env: {
         AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
       }
@@ -441,7 +429,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
     describe('tracing suppressed', () => {
       const receiverControls = new ProcessControls({
         appPath: path.join(__dirname, 'receiveMessage'),
-        useGlobalAgent: true,
         env: {
           SQS_RECEIVE_METHOD: receivingMethod,
           AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
@@ -475,7 +462,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
   describe('tracing enabled with wrong queue name', () => {
     const receiverControls = new ProcessControls({
       appPath: path.join(__dirname, 'receiveMessage'),
-      useGlobalAgent: true,
       env: {
         SQS_RECEIVE_METHOD: 'callback',
         AWS_SQS_QUEUE_URL: `${queueURL}-non-existent`

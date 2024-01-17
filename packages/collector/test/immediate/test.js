@@ -26,7 +26,6 @@ describe('collector/src/immediate', function () {
 
   describe('an application instrumented via NODE_OPTIONS', () => {
     controls = new ProcessControls({
-      useGlobalAgent: true,
       dirname: __dirname,
       cwd: __dirname,
       env: {

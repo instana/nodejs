@@ -62,7 +62,6 @@ mochaSuiteFn('tracing/elasticsearch', function () {
 
         const controls = new ProcessControls({
           dirname: __dirname,
-          useGlobalAgent: true,
           env: {
             ELASTIC_VERSION: version
           }

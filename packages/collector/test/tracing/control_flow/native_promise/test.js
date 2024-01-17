@@ -23,8 +23,7 @@ mochaSuiteFn('tracing/native-promise', function () {
   const agentControls = globalAgent.instance;
 
   const promiseControls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+    dirname: __dirname
   });
   ProcessControls.setUpHooks(promiseControls);
 

@@ -31,9 +31,10 @@ mochaSuiteFn('tracing/pg-native', function () {
   const agentControls = globalAgent.instance;
 
   const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+    dirname: __dirname
   });
+  console.log('tracing/pg-native', globalAgent.instance.agentPort, process.env.MOCHA_WORKER_ID);
+
   ProcessControls.setUpHooks(controls);
 
   it('must trace select', () =>

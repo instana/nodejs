@@ -25,7 +25,6 @@ mochaSuiteFn('disabled tracing', function () {
 
   const expressControls = require('../../../apps/expressControls');
   expressControls.registerTestHooks({
-    useGlobalAgent: true,
     enableTracing: false
   });
 

@@ -91,7 +91,6 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
                   beforeEach(async () => {
                     consumerControls = new ProcessControls({
                       appPath: path.join(__dirname, 'consumer'),
-                      useGlobalAgent: true,
                       env: {
                         RDKAFKA_CONSUMER_AS_STREAM: consumerMethod === 'stream' ? 'true' : 'false',
                         RDKAFKA_CONSUMER_ERROR: withError
@@ -100,7 +99,6 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
 
                     producerControls = new ProcessControls({
                       appPath: path.join(__dirname, 'producer'),
-                      useGlobalAgent: true,
                       env: {
                         RDKAFKA_OBJECT_MODE: objectMode,
                         RDKAFKA_PRODUCER_DELIVERY_CB: deliveryCbEnabled === 'true'
@@ -304,7 +302,6 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
 
     const producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
       env: {
         INSTANA_KAFKA_HEADER_FORMAT: 'string'
       }
@@ -312,8 +309,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     ProcessControls.setUpHooks(producerControls);
 
     const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      useGlobalAgent: true
+      appPath: path.join(__dirname, 'consumer')
     });
     ProcessControls.setUpHooks(consumerControls);
 
@@ -376,7 +372,6 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
 
     const producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
       env: {
         INSTANA_KAFKA_TRACE_CORRELATION: 'false'
       }
@@ -384,8 +379,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     ProcessControls.setUpHooks(producerControls);
 
     const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      useGlobalAgent: true
+      appPath: path.join(__dirname, 'consumer')
     });
     ProcessControls.setUpHooks(consumerControls);
 
@@ -448,7 +442,6 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
 
     const producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
       tracingEnabled: false,
       env: {
         RDKAFKA_PRODUCER_DELIVERY_CB: 'false'
@@ -460,7 +453,6 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     describe('producing and consuming', () => {
       const consumerControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
-        useGlobalAgent: true,
         tracingEnabled: false,
         env: {
           RDKAFKA_CONSUMER_AS_STREAM: 'false'
@@ -490,7 +482,6 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   describe('tracing enabled but suppressed', () => {
     const producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
       env: {
         RDKAFKA_PRODUCER_DELIVERY_CB: 'false'
       }
@@ -501,7 +492,6 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     describe('tracing suppressed', () => {
       const receiverControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
-        useGlobalAgent: true,
         env: {
           RDKAFKA_CONSUMER_AS_STREAM: 'false'
         }

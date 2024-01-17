@@ -35,13 +35,11 @@ mochaSuiteFn('tracing/nats-streaming', function () {
     globalAgent.setUpCleanUpHooks();
 
     const publisherControls = new ProcessControls({
-      appPath: path.join(__dirname, 'publisher'),
-      useGlobalAgent: true
+      appPath: path.join(__dirname, 'publisher')
     });
 
     const subscriberControls = new ProcessControls({
-      appPath: path.join(__dirname, 'subscriber'),
-      useGlobalAgent: true
+      appPath: path.join(__dirname, 'subscriber')
     });
     ProcessControls.setUpHooks(publisherControls, subscriberControls);
 
@@ -276,12 +274,10 @@ mochaSuiteFn('tracing/nats-streaming', function () {
 
     const publisherControls = new ProcessControls({
       appPath: path.join(__dirname, 'publisher'),
-      useGlobalAgent: true,
       tracingEnabled: false
     });
     const subscriberControls = new ProcessControls({
       appPath: path.join(__dirname, 'subscriber'),
-      useGlobalAgent: true,
       tracingEnabled: false
     });
     ProcessControls.setUpHooks(publisherControls, subscriberControls);

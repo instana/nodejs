@@ -60,7 +60,6 @@ mochaSuiteFn('tracing a babel/typescript setup', function () {
 
   const controls = new ProcessControls({
     appPath: path.join(__dirname, '../../../apps/babel-typescript'),
-    useGlobalAgent: true,
     env: {
       INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: false
     }

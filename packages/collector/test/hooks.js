@@ -17,12 +17,15 @@ const fs = require('fs');
 
 exports.mochaHooks = {
   async beforeAll() {
+    this.timeout(20 * 1000);
     // eslint-disable-next-line no-console
     console.log(`@instana/collector test suite starting at ${timestamp()}.`);
     await startGlobalAgent();
   },
 
   beforeEach() {
+    this.timeout(10 * 1000);
+
     const testFile = this.currentTest.file;
 
     if (process.env.RUN_ESM) {
@@ -51,6 +54,8 @@ exports.mochaHooks = {
   },
 
   async afterAll() {
+    this.timeout(10 * 1000);
+
     await stopGlobalAgent();
   }
 };

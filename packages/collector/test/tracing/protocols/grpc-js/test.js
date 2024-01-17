@@ -158,20 +158,17 @@ function createProcesses(env = {}, opts = { isMali: false }) {
   if (!opts.isMali) {
     serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'server'),
-      useGlobalAgent: true,
       env
     });
   } else {
     serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'maliServer'),
-      useGlobalAgent: true,
       env
     });
   }
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'client'),
-    useGlobalAgent: true,
     env
   });
 

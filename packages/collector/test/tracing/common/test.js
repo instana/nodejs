@@ -26,7 +26,6 @@ mochaSuiteFn('tracing/common', function () {
     describe('with minimal delay', function () {
       this.timeout(extendedTimeout);
       const controls = new ProcessControls({
-        useGlobalAgent: true,
         dirname: __dirname,
         minimalDelay: 6000
       });
@@ -37,7 +36,6 @@ mochaSuiteFn('tracing/common', function () {
     describe('without minimal delay', function () {
       this.timeout(config.getTestTimeout());
       const controls = new ProcessControls({
-        useGlobalAgent: true,
         dirname: __dirname
       });
       ProcessControls.setUpHooks(controls);
@@ -127,7 +125,6 @@ mochaSuiteFn('tracing/common', function () {
 
     describe('with env var', function () {
       const controls = new ProcessControls({
-        useGlobalAgent: true,
         dirname: __dirname,
         env: {
           INSTANA_SERVICE_NAME: 'much-custom-very-wow service'
@@ -142,7 +139,6 @@ mochaSuiteFn('tracing/common', function () {
 
     describe('with config', function () {
       const controls = new ProcessControls({
-        useGlobalAgent: true,
         dirname: __dirname,
         env: {
           // this makes the app set the serviceName per config object
@@ -240,7 +236,6 @@ mochaSuiteFn('tracing/common', function () {
 
     describe('disable an individual tracer', () => {
       const controls = new ProcessControls({
-        useGlobalAgent: true,
         dirname: __dirname,
         env: {
           INSTANA_DISABLED_TRACERS: 'pino'
@@ -265,7 +260,6 @@ mochaSuiteFn('tracing/common', function () {
 
     describe('robustness against overriding Array.find', () => {
       const controls = new ProcessControls({
-        useGlobalAgent: true,
         dirname: __dirname,
         env: {
           SCREW_AROUND_WITH_UP_ARRAY_FIND: 'sure why not?'

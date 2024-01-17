@@ -39,7 +39,6 @@ mochaSuiteFn('[CJS] tracing/sdk/multiple_installations', function () {
   globalAgent.setUpCleanUpHooks();
 
   const controls = new ProcessControls({
-    useGlobalAgent: true,
     cwd: path.join(__dirname, 'src'),
     appPath: path.join(__dirname, 'src', 'app'),
     env: {

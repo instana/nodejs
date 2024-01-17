@@ -38,7 +38,6 @@ describe('prevent initializing @instana/collector multiple times', function () {
   const controls = new ProcessControls({
     appPath: path.join(__dirname, '..', 'apps', 'express'),
     execArgv: ['--require', pathToSeparateInstanaCollector],
-    useGlobalAgent: true,
     env: {
       INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false',
       INSTANA_LOG_LEVEL: 'error'

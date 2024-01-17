@@ -76,7 +76,6 @@ class ProcessControls {
    * @property {Array.<string>} [execArgv]
    * @property {number} [minimalDelay]
    * @property {boolean} [usePreInit]
-   * @property {boolean} [useGlobalAgent]
    * @property {boolean} [tracingEnabled]
    * @property {*} [agentControls]
    * @property {Object.<string, *} [env]
@@ -134,20 +133,12 @@ class ProcessControls {
     this.tracingEnabled = opts.tracingEnabled !== false;
     this.usePreInit = opts.usePreInit === true;
 
-    // Signals that this process intends to connect to the test suite's global agent stub on port 3211. Setting this to
-    // true will result in a before/beforeEach call which ensures that the collector is successfully connected to that
-    // agent.
-    this.useGlobalAgent = opts.useGlobalAgent;
-
-    // As an alternative to connecting to the global agent, process control instances can use an individual instance of
-    // AgentStubControls (and consequently their own agent stub process). Passing an agent control instance will result
-    // in a before/beforeEach call which ensures that the collector is successfully connected to that agent.
-    this.useGlobalAgent = opts.useGlobalAgent;
     this.agentControls = opts.agentControls;
-    if (!this.agentControls && this.useGlobalAgent) {
+    if (!this.agentControls) {
       this.agentControls = globalAgent.instance;
     }
     const agentPort = this.agentControls ? this.agentControls.agentPort : undefined;
+    this.agentPort = agentPort;
 
     this.env = _.assign(
       {},
@@ -162,6 +153,7 @@ class ProcessControls {
       },
       opts.env
     );
+
     if (this.usePreInit) {
       this.env.INSTANA_EARLY_INSTRUMENTATION = 'true';
     }

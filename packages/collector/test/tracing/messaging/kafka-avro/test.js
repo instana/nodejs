@@ -64,16 +64,14 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
 
   describe('tracing enabled, no suppression', function () {
     const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true
+      appPath: path.join(__dirname, 'producer')
     });
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, producerControls);
 
     describe('consuming message', () => {
       const consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
-        useGlobalAgent: true
+        appPath: path.join(__dirname, 'consumer')
       });
 
       ProcessControls.setUpHooksWithRetryTime(retryTime, consumerControls);
@@ -150,7 +148,6 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
 
     const producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
       tracingEnabled: false
     });
 
@@ -159,7 +156,6 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
     describe('producing and consuming', () => {
       const consumerControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
-        useGlobalAgent: true,
         tracingEnabled: false
       });
 
@@ -185,16 +181,14 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
 
   describe('tracing enabled but suppressed', () => {
     const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true
+      appPath: path.join(__dirname, 'producer')
     });
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, producerControls);
 
     describe('tracing suppressed', () => {
       const receiverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
-        useGlobalAgent: true
+        appPath: path.join(__dirname, 'consumer')
       });
 
       ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);

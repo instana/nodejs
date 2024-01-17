@@ -21,7 +21,7 @@ describe('actions/source', function () {
   const agentControls = globalAgent.instance;
 
   expressControls.registerTestHooks({
-    useGlobalAgent: true
+    agentControls
   });
 
   beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));

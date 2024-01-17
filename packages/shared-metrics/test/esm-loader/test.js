@@ -23,7 +23,6 @@ mochaSuiteFn('ESM loader', function () {
     this.timeout(config.getTestTimeout());
 
     const controls = new ProcessControls({
-      useGlobalAgent: true,
       cwd: path.join(__dirname, 'module'),
       appPath: path.join(__dirname, 'module', 'src', 'app'),
       execArgv: ['--experimental-loader=../../../../collector/esm-loader.mjs']
@@ -45,7 +44,6 @@ mochaSuiteFn('ESM loader', function () {
     this.timeout(config.getTestTimeout());
 
     const controls = new ProcessControls({
-      useGlobalAgent: true,
       cwd: path.join(__dirname, 'module'),
       appPath: path.join(__dirname, 'module-2', 'src', 'app.mjs'),
       execArgv: ['--experimental-loader', './../../../../collector/esm-loader.mjs']
@@ -67,7 +65,6 @@ mochaSuiteFn('ESM loader', function () {
     this.timeout(config.getTestTimeout());
 
     const controls = new ProcessControls({
-      useGlobalAgent: true,
       cwd: path.join(__dirname, 'module'),
       appPath: path.join(__dirname, 'module-3', 'node_modules', 'my-app', 'server.mjs'),
       execArgv: ['--experimental-loader', './../../../../collector/esm-loader.mjs']
@@ -92,7 +89,6 @@ mochaSuiteFn('ESM loader', function () {
       env: {
         NODE_OPTIONS: '--experimental-loader=../../../../collector/esm-loader.mjs'
       },
-      useGlobalAgent: true,
       cwd: path.join(__dirname, 'module'),
       appPath: path.join(__dirname, 'module-3', 'node_modules', 'my-app', 'server.mjs')
     });

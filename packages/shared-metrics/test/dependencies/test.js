@@ -37,7 +37,6 @@ describe('dependencies', function () {
 
     const controls = new ProcessControls({
       dirname: appDir,
-      useGlobalAgent: true,
       port: 7215,
       env: {
         INSTANA_AGENT_PORT: 7211,
@@ -89,7 +88,6 @@ describe('dependencies', function () {
 
     const controls = new ProcessControls({
       dirname: tmpDir,
-      useGlobalAgent: true,
       port: 7215,
       env: {
         INSTANA_AGENT_PORT: 7211,
@@ -142,7 +140,6 @@ describe('dependencies', function () {
 
     const controls = new ProcessControls({
       dirname: path.join(tmpDir, 'node_modules', 'npm-installed-test-app'),
-      useGlobalAgent: true,
       port: 7215,
       env: {
         INSTANA_AGENT_PORT: 7211,

@@ -38,8 +38,7 @@ mochaSuiteFn('tracing/sdk', function () {
 
   describe('when tracing is enabled', () => {
     const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true
+      dirname: __dirname
     });
 
     ProcessControls.setUpHooks(controls);
@@ -480,8 +479,7 @@ mochaSuiteFn('tracing/sdk', function () {
   describe('when tracing is not enabled', () => {
     const controls = new ProcessControls({
       dirname: __dirname,
-      tracingEnabled: false,
-      useGlobalAgent: true
+      tracingEnabled: false
     });
 
     ProcessControls.setUpHooks(controls);

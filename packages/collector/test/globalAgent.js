@@ -15,38 +15,8 @@
 
 const { AgentStubControls } = require('./apps/agentStubControls');
 
-// The "global" mock agent (that keeps running during the whole test suite) in package collector uses port 3211 (when
-// running in the context of @instana/collector).  Individual suites/tests/ that start an agent themselves and tear it
-// down  afterwards use 3210. Other packages that use the global agent follow a similar pattern, see
-// test-suite-ports.md. All packages that want to use the global agent need to declare the port they use here.
-const agentPorts = {
-  '@instana/collector': 3211,
-  '@instana/shared-metrics': 7211
-};
-
-// See https://docs.npmjs.com/cli/v8/using-npm/scripts#packagejson-vars
-const currentPackageName = process.env.npm_package_name;
-
-const allPackageNames = Object.keys(agentPorts);
-let foundPackage = false;
-for (let i = 0; i < allPackageNames.length; i++) {
-  if (currentPackageName === allPackageNames[i]) {
-    exports.PORT = agentPorts[allPackageNames[i]];
-    foundPackage = true;
-    break;
-  }
-}
-
-if (!foundPackage) {
-  throw new Error(
-    `The package ${currentPackageName} is not registered in the agentPorts map in ${__filename}. ` +
-      `Please add an entry for the package name ${currentPackageName}. You might want to also consult the file ` +
-      'test-suite-ports.md for that.'
-  );
-}
-
-exports.instance = new AgentStubControls(exports.PORT);
-
+exports.instance = new AgentStubControls();
+console.log('GLOBAL AGENT', exports.instance.agentPort, process.env.MOCHA_WORKER_ID);
 exports.startGlobalAgent = function start() {
   return exports.instance.startAgent({
     extraHeaders: [

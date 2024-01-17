@@ -25,7 +25,6 @@ describe('tracing/logger/pino', function () {
     mochaSuiteFn(`pino@${pinoVersion}`, function () {
       const controls = new ProcessControls({
         dirname: __dirname,
-        useGlobalAgent: true,
         env: {
           PINO_VERSION: pinoVersion
         }

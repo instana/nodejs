@@ -57,25 +57,20 @@ function testQuery(allControls, testConfig) {
 
 function startAllProcesses() {
   const accountServiceControls = new ProcessControls({
-    appPath: path.join(__dirname, 'services', 'accounts'),
-    useGlobalAgent: true
+    appPath: path.join(__dirname, 'services', 'accounts')
   });
   const inventoryServiceControls = new ProcessControls({
-    appPath: path.join(__dirname, 'services', 'inventory'),
-    useGlobalAgent: true
+    appPath: path.join(__dirname, 'services', 'inventory')
   });
   const productsServiceControls = new ProcessControls({
-    appPath: path.join(__dirname, 'services', 'products'),
-    useGlobalAgent: true
+    appPath: path.join(__dirname, 'services', 'products')
   });
   const reviewsServiceControls = new ProcessControls({
-    appPath: path.join(__dirname, 'services', 'reviews'),
-    useGlobalAgent: true
+    appPath: path.join(__dirname, 'services', 'reviews')
   });
 
   const gatewayControls = new ProcessControls({
     appPath: path.join(__dirname, 'gateway'),
-    useGlobalAgent: true,
     env: {
       SERVICE_PORT_ACCOUNTS: accountServiceControls.getPort(),
       SERVICE_PORT_INVENTORY: inventoryServiceControls.getPort(),
@@ -86,7 +81,6 @@ function startAllProcesses() {
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'client'),
-    useGlobalAgent: true,
     env: {
       SERVER_PORT: gatewayControls.getPort()
     }

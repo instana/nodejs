@@ -24,8 +24,7 @@ mochaSuiteFn('tracing/express', function () {
   globalAgent.setUpCleanUpHooks();
 
   const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+    dirname: __dirname
   });
   ProcessControls.setUpHooks(controls);
 

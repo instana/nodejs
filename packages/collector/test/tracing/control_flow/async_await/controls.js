@@ -12,7 +12,6 @@ const portfinder = require('../../../test_util/portfinder');
 
 const testUtils = require('../../../../../core/test/test_util');
 const config = require('../../../../../core/test/config');
-const agentPort = require('../../../apps/agentStubControls').agentPort;
 
 let expressApp;
 const appPort = (exports.appPort = portfinder());
@@ -22,8 +21,11 @@ exports.registerTestHooks = opts => {
     opts = opts || {};
 
     const env = Object.create(process.env);
-    env.AGENT_PORT = agentPort;
-    env.APP_PORT = appPort;
+
+    env.AGENT_PORT = process.env.AGENT_PORT;
+    exports.appPort = appPort;
+
+    env.APP_PORT = portfinder();
     env.UPSTREAM_PORT = opts.upstreamPort;
     env.USE_REQUEST_PROMISE = String(opts.useRequestPromise);
 

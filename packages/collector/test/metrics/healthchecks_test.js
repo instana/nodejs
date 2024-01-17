@@ -19,7 +19,6 @@ describe('metrics/healthchecks', function () {
   const agentControls = globalAgent.instance;
 
   expressControls.registerTestHooks({
-    useGlobalAgent: true,
     enableTracing: false
   });
 

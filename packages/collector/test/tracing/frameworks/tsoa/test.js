@@ -23,8 +23,7 @@ mochaSuiteFn('tracing/tsoa', function () {
   globalAgent.setUpCleanUpHooks();
 
   const controls = new ProcessControls({
-    appPath: path.join(__dirname, 'build/src/server'),
-    useGlobalAgent: true
+    appPath: path.join(__dirname, 'build/src/server')
   });
   ProcessControls.setUpHooks(controls);
 

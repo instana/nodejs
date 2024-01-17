@@ -1,4 +1,10 @@
+/* [object Object]
+[object Object]
+[object Object]
+[object Object] */
+
 'use strict';
+
 Object.defineProperty(exports, '__esModule', { value: true });
 require('../../../../../..')();
 const app_1 = require('./app');

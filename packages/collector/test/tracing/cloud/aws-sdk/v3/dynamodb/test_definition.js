@@ -68,7 +68,6 @@ function start(version, requestMethod) {
 
       const appControls = new ProcessControls({
         appPath: path.join(__dirname, './app'),
-        useGlobalAgent: true,
         env: {
           AWS_DYNAMODB_TABLE_NAME: tableName,
           AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version
@@ -105,7 +104,6 @@ function start(version, requestMethod) {
 
       const appControls = new ProcessControls({
         appPath: path.join(__dirname, './app'),
-        useGlobalAgent: true,
         env: {
           AWS_DYNAMODB_TABLE_NAME: tableName,
           AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version,
@@ -134,7 +132,6 @@ function start(version, requestMethod) {
 
       const appControls = new ProcessControls({
         appPath: path.join(__dirname, './app'),
-        useGlobalAgent: true,
         env: {
           AWS_DYNAMODB_TABLE_NAME: tableName,
           AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version
@@ -163,7 +160,6 @@ function start(version, requestMethod) {
 
       const appControls = new ProcessControls({
         appPath: path.join(__dirname, './app'),
-        useGlobalAgent: true,
         tracingEnabled: false,
         env: {
           AWS_DYNAMODB_TABLE_NAME: tableName,
@@ -214,7 +210,6 @@ function start(version, requestMethod) {
 
       const appControls = new ProcessControls({
         appPath: path.join(__dirname, './app'),
-        useGlobalAgent: true,
         env: {
           AWS_DYNAMODB_TABLE_NAME: tableName,
           AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version

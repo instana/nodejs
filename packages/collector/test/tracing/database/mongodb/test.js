@@ -54,7 +54,6 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
       describe(describeStr, () => {
         const controls = new ProcessControls({
           dirname: __dirname,
-          useGlobalAgent: true,
           env
         });
         ProcessControls.setUpHooks(controls);

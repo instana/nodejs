@@ -17,7 +17,6 @@ describe('cjs require collector in preload phase', function () {
   this.timeout(config.getTestTimeout());
 
   const controls = new ProcessControls({
-    useGlobalAgent: true,
     cwd: path.join(__dirname, 'module'),
     appPath: path.join(__dirname, 'module', 'src', 'app'),
     env: {

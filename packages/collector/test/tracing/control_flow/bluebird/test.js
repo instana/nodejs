@@ -23,8 +23,7 @@ mochaSuiteFn('tracing/bluebird', function () {
   const agentControls = globalAgent.instance;
 
   const bluebirdControls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+    dirname: __dirname
   });
   ProcessControls.setUpHooks(bluebirdControls);
 

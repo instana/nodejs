@@ -53,7 +53,6 @@ mochaSuiteFn('Opentelemetry usage', function () {
     const agentControls = globalAgent.instance;
 
     const controls = new ProcessControls({
-      useGlobalAgent: true,
       appPath: path.join(__dirname, 'app'),
       env: {
         INSTANA_LOAD_FIRST: true,
@@ -105,7 +104,6 @@ mochaSuiteFn('Opentelemetry usage', function () {
     const agentControls = globalAgent.instance;
 
     const controls = new ProcessControls({
-      useGlobalAgent: true,
       appPath: path.join(__dirname, 'app'),
       env: {
         INSTANA_LOAD_FIRST: false,

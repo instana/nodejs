@@ -20,8 +20,7 @@ mochaSuiteFn('tracing/graphql-subscriptions - PubSub/async iterator (pull before
   globalAgent.setUpCleanUpHooks();
 
   const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+    dirname: __dirname
   });
   ProcessControls.setUpHooks(controls);
 

@@ -43,8 +43,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       const agentControls = globalAgent.instance;
 
       const controls = new ProcessControls({
-        appPath: path.join(__dirname, './restify-app'),
-        useGlobalAgent: true
+        appPath: path.join(__dirname, './restify-app')
       });
 
       ProcessControls.setUpHooks(controls);
@@ -166,7 +165,6 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
 
       const controls = new ProcessControls({
         appPath: path.join(__dirname, './restify-app'),
-        useGlobalAgent: true,
         env: {
           INSTANA_DISABLE_USE_OPENTELEMETRY: true
         }
@@ -212,8 +210,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     const agentControls = globalAgent.instance;
 
     const controls = new ProcessControls({
-      appPath: path.join(__dirname, './fs-app'),
-      useGlobalAgent: true
+      appPath: path.join(__dirname, './fs-app')
     });
 
     ProcessControls.setUpHooks(controls);
@@ -313,12 +310,10 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     const agentControls = globalAgent.instance;
 
     const server = new ProcessControls({
-      appPath: path.join(__dirname, './socketio-server'),
-      useGlobalAgent: true
+      appPath: path.join(__dirname, './socketio-server')
     });
     const client = new ProcessControls({
-      appPath: path.join(__dirname, './socketio-client'),
-      useGlobalAgent: true
+      appPath: path.join(__dirname, './socketio-client')
     });
 
     ProcessControls.setUpHooks(server, client);

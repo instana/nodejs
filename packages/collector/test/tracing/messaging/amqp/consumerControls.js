@@ -10,7 +10,6 @@ const Promise = require('bluebird');
 const path = require('path');
 
 const config = require('../../../../../core/test/config');
-const agentPort = require('../../../globalAgent').PORT;
 
 let app;
 
@@ -19,7 +18,7 @@ exports.registerTestHooks = opts => {
     opts = opts || {};
 
     const env = Object.create(process.env);
-    env.AGENT_PORT = agentPort;
+    env.AGENT_PORT = process.env.AGENT_PORT;
     env.TRACING_ENABLED = opts.enableTracing !== false;
     env.AMQPLIB_VERSION = opts.version;
 

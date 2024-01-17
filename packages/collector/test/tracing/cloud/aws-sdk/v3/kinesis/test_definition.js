@@ -72,7 +72,6 @@ function start(version) {
     describe('tracing enabled, no suppression', function () {
       const appControls = new ProcessControls({
         appPath: path.join(__dirname, 'app'),
-        useGlobalAgent: true,
         env: {
           AWS_KINESIS_STREAM_NAME: streamName
         }
@@ -153,7 +152,6 @@ function start(version) {
 
       const appControls = new ProcessControls({
         appPath: path.join(__dirname, 'app'),
-        useGlobalAgent: true,
         tracingEnabled: false,
         env: {
           AWS_KINESIS_STREAM_NAME: streamName
@@ -193,7 +191,6 @@ function start(version) {
     describe('tracing enabled but suppressed', () => {
       const appControls = new ProcessControls({
         appPath: path.join(__dirname, 'app'),
-        useGlobalAgent: true,
         env: {
           AWS_KINESIS_STREAM_NAME: streamName
         }

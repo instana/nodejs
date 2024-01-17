@@ -100,7 +100,6 @@ mochaSuiteFn('tracing/couchbase', function () {
 
     controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
       env: {
         COUCHBASE_CONN_STR_1: connStr1,
         COUCHBASE_CONN_STR_2: connStr2

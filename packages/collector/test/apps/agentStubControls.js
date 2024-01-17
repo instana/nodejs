@@ -11,13 +11,12 @@ const path = require('path');
 const _ = require('lodash');
 
 const { retry } = require('../../../core/test/test_util');
+const portfinder = require('../test_util/portfinder');
 const config = require('../../../core/test/config');
-
-const DEFAULT_AGENT_PORT = 3210;
 
 class AgentStubControls {
   constructor(agentPort) {
-    this.agentPort = agentPort || DEFAULT_AGENT_PORT;
+    this.agentPort = agentPort || portfinder();
   }
 
   registerHooksForSuite(opts = {}) {
@@ -268,48 +267,6 @@ class AgentStubControls {
   }
 }
 
-const legacySingletonInstance = new AgentStubControls();
-
-module.exports = exports = {
-  get agentPort() {
-    return legacySingletonInstance.agentPort;
-  }
-};
-
-exports.AgentStubControls = AgentStubControls;
-
-// In a previous life, agentStubControls was a singleton module which started an agent before each individual test and
-// stopped it afterwards. This became prohibitive in terms of test suite duration. The following exports are in place
-// for legacy tests that still use this facility and have not been refactored to create an instance of AgentStubControls
-// for themselves.
-exports.registerTestHooks = opts => legacySingletonInstance.registerTestHooks(opts);
-exports.startAgent = opts => legacySingletonInstance.startAgent(opts);
-exports.stopAgent = () => legacySingletonInstance.stopAgent();
-exports.waitUntilAgentHasStarted = () => legacySingletonInstance.waitUntilAgentHasStarted();
-exports.waitUntilAppIsCompletelyInitialized = pid => legacySingletonInstance.waitUntilAppIsCompletelyInitialized(pid);
-exports.getDiscoveries = () => legacySingletonInstance.getDiscoveries();
-exports.deleteDiscoveries = () => legacySingletonInstance.deleteDiscoveries();
-exports.getReceivedData = () => legacySingletonInstance.getReceivedData();
-exports.getAggregatedMetrics = pid => legacySingletonInstance.getAggregatedMetrics(pid);
-exports.getEvents = () => legacySingletonInstance.getEvents();
-exports.getMonitoringEvents = () => legacySingletonInstance.getMonitoringEvents();
-exports.clearReceivedData = () => legacySingletonInstance.clearReceivedData();
-exports.clearReceivedTraceData = () => legacySingletonInstance.clearReceivedTraceData();
-exports.clearReceivedEvents = () => legacySingletonInstance.clearReceivedEvents();
-exports.clearReceivedProfilingData = () => legacySingletonInstance.clearReceivedProfilingData();
-exports.clearReceivedMonitoringEvents = () => legacySingletonInstance.clearReceivedMonitoringEvents();
-exports.reset = () => legacySingletonInstance.reset();
-exports.getSpans = () => legacySingletonInstance.getSpans();
-exports.getProfiles = () => legacySingletonInstance.getProfiles();
-exports.getResponses = () => legacySingletonInstance.getResponses();
-exports.getTracingMetrics = () => legacySingletonInstance.getTracingMetrics();
-exports.waitUntilAppIsCompletelyInitialized = pid => legacySingletonInstance.waitUntilAppIsCompletelyInitialized(pid);
-exports.simulateDiscovery = pid => legacySingletonInstance.simulateDiscovery(pid);
-exports.addEntityData = (pid, data) => legacySingletonInstance.addEntityData(pid, data);
-exports.addRequestForPid = (pid, r) => legacySingletonInstance.addRequestForPid(pid, r);
-exports.getLastMetricValue = (pid, _path) => legacySingletonInstance.getLastMetricValue(pid, _path);
-exports.getAllMetrics = pid => legacySingletonInstance.getAllMetrics(pid);
-
 function findLastMetricValueInResponse(pid, data, _path) {
   for (let i = data.metrics.length - 1; i >= 0; i--) {
     const metricsMessage = data.metrics[i];
@@ -329,3 +286,5 @@ function findLastMetricValueInResponse(pid, data, _path) {
 function filterByPid(pid, data) {
   return data.metrics.filter(metricsMessage => metricsMessage.pid === pid);
 }
+
+exports.AgentStubControls = AgentStubControls;

@@ -43,7 +43,6 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
     const controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
       env: {
         MONGOOSE_VERSION: version
       }

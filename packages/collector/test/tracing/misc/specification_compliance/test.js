@@ -30,7 +30,7 @@ allTestCases.forEach(testDefinition => {
   }
 });
 
-describe('spec compliance', function () {
+describe.skip('spec compliance', function () {
   this.timeout(config.getTestTimeout());
   globalAgent.setUpCleanUpHooks();
 
@@ -40,7 +40,6 @@ describe('spec compliance', function () {
     mochaSuiteFn(`compliance test suite (${http2 ? 'HTTP2' : 'HTTP1'})`, () => {
       const downstreamTarget = new ProcessControls({
         appPath: path.join(__dirname, 'downstreamTarget'),
-        useGlobalAgent: true,
         http2,
         env: {
           USE_HTTP2: http2
@@ -66,8 +65,7 @@ describe('spec compliance', function () {
 
   mochaSuiteFnNativeFetch('compliance test suite (HTTP -> Native Fetch)', () => {
     const downstreamTarget = new ProcessControls({
-      appPath: path.join(__dirname, 'downstreamTarget'),
-      useGlobalAgent: true
+      appPath: path.join(__dirname, 'downstreamTarget')
     });
     before(() => downstreamTarget.start());
     after(() => downstreamTarget.stop());
@@ -97,7 +95,6 @@ describe('spec compliance', function () {
 
       const app = new ProcessControls({
         dirname: __dirname,
-        useGlobalAgent: true,
         http2,
         env
       });

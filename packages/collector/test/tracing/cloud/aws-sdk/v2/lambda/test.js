@@ -41,7 +41,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
   describe('tracing enabled, no suppression', function () {
     const appControls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
       env: {
         AWS_LAMBDA_FUNCTION_NAME: functionName
       }
@@ -120,7 +119,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
 
     const appControls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
       tracingEnabled: false,
       env: {
         AWS_LAMBDA_FUNCTION_NAME: functionName
@@ -150,7 +148,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
   describe('tracing enabled but suppressed', () => {
     const appControls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
       env: {
         AWS_LAMBDA_FUNCTION_NAME: functionName
       }

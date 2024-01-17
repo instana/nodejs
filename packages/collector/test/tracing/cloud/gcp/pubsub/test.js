@@ -65,7 +65,6 @@ if (
 
       const publisherControls = new ProcessControls({
         appPath: path.join(__dirname, 'publisher'),
-        useGlobalAgent: true,
         env: {
           GCP_PROJECT: projectId,
           GCP_PUBSUB_TOPIC: topicName,
@@ -74,7 +73,6 @@ if (
       });
       const subscriberControls = new ProcessControls({
         appPath: path.join(__dirname, 'subscriber'),
-        useGlobalAgent: true,
         env: {
           GCP_PROJECT: projectId,
           GCP_PUBSUB_TOPIC: topicName,
@@ -200,7 +198,6 @@ if (
 
       const publisherControls = new ProcessControls({
         appPath: path.join(__dirname, 'publisher'),
-        useGlobalAgent: true,
         env: {
           GCP_PROJECT: projectId,
           GCP_PUBSUB_TOPIC: topicName,
@@ -209,7 +206,6 @@ if (
       });
       const subscriberControls = new ProcessControls({
         appPath: path.join(__dirname, 'subscriber'),
-        useGlobalAgent: true,
         env: {
           GCP_PROJECT: projectId,
           GCP_PUBSUB_TOPIC: topicName,
@@ -248,7 +244,6 @@ if (
 
       const publisherControls = new ProcessControls({
         appPath: path.join(__dirname, 'publisher'),
-        useGlobalAgent: true,
         tracingEnabled: false,
         env: {
           GCP_PROJECT: projectId,
@@ -258,7 +253,6 @@ if (
       });
       const subscriberControls = new ProcessControls({
         appPath: path.join(__dirname, 'subscriber'),
-        useGlobalAgent: true,
         tracingEnabled: false,
         env: {
           GCP_PROJECT: projectId,

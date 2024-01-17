@@ -10,7 +10,7 @@ const delay = require('./delay');
 
 module.exports = function retry(fn, time, until) {
   if (time == null) {
-    time = config.getTestTimeout() / 2;
+    time = config.getTestTimeout();
   }
 
   if (until == null) {

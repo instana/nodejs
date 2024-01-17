@@ -87,9 +87,7 @@ describe('retry loading native addons', function () {
 
   describe('metrics are activated lazily by copying precompiled binaries when they are initially missing', () => {
     const controls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      agentControls,
-      useGlobalAgent: true
+      appPath: path.join(__dirname, 'app')
       // by default, only copying precompiled binaries is enabled and recompiling them on demand is not
     }).registerTestHooks();
 

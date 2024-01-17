@@ -1,3 +1,7 @@
+/* [object Object]
+[object Object]
+[object Object]
+[object Object] */
 Object.defineProperty(exports, '__esModule', { value: true });
 exports.TraceFlags = void 0;
 /*
@@ -15,10 +19,10 @@ exports.TraceFlags = void 0;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var TraceFlags;
+let TraceFlags;
 (function (TraceFlags) {
   /** Represents no flag set. */
-  TraceFlags[(TraceFlags['NONE'] = 0)] = 'NONE';
+  TraceFlags[(TraceFlags.NONE = 0)] = 'NONE';
   /** Bit to represent whether trace is sampled in trace flags. */
-  TraceFlags[(TraceFlags['SAMPLED'] = 1)] = 'SAMPLED';
+  TraceFlags[(TraceFlags.SAMPLED = 1)] = 'SAMPLED';
 })((TraceFlags = exports.TraceFlags || (exports.TraceFlags = {})));

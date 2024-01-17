@@ -19,7 +19,7 @@ describe('tracing/asyncAwait', function () {
   this.timeout(config.getTestTimeout());
 
   agentStubControls.registerTestHooks();
-  expressControls.registerTestHooks();
+  expressControls.registerTestHooks({ agentControls: agentStubControls });
 
   beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
 

@@ -54,7 +54,6 @@ function registerSuite(agentControls, driverMode, useExecute) {
 
     const controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
       env
     });
     ProcessControls.setUpHooks(controls);
@@ -72,7 +71,6 @@ function registerSuite(agentControls, driverMode, useExecute) {
 
     const controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
       env
     });
 

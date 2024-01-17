@@ -27,7 +27,6 @@ mochaSuiteFn('tracing/spanbatching with redis', function () {
     const agentControls = globalAgent.instance;
     const controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
       env: {
         REDIS_VERSION: 'v3',
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
@@ -59,7 +58,6 @@ mochaSuiteFn('tracing/spanbatching with redis', function () {
     const agentControls = globalAgent.instance;
     const controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
       env: {
         REDIS_VERSION: 'v3',
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,

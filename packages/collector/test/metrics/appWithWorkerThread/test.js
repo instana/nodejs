@@ -64,7 +64,6 @@ mochaSuiteFn('worker threads', function () {
     return new ProcessControls({
       appPath: path.join(__dirname, 'app'),
       cwd: __dirname,
-      useGlobalAgent: true,
       env
     }).registerTestHooks();
   }

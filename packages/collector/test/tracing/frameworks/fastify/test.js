@@ -30,7 +30,6 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 
         processControls = new ProcessControls({
           appPath: path.join(__dirname, 'app'),
-          useGlobalAgent: true,
           env: {
             FASTIFY_VERSION: version
           }

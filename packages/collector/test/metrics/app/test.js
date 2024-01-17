@@ -25,8 +25,7 @@ describe('snapshot data and metrics', function () {
 
   const controls = new ProcessControls({
     appPath: path.join(__dirname, 'app'),
-    args: ['foo', 'bar', 'baz'],
-    useGlobalAgent: true
+    args: ['foo', 'bar', 'baz']
   }).registerTestHooks();
 
   before(() => {

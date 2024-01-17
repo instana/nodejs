@@ -171,7 +171,7 @@ shared: &shared
           date
           if [[ -z "$NODE_COVERAGE" ]]; then
             if [[ -z "$COLLECTOR_ONLY" ]]; then
-              npm run test:ci
+              npm run test-parallel
             else
               npm run test:ci:collector
             fi
@@ -377,7 +377,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: 15
+    parallelism: 1
     resource_class: medium+
 
   "node-16":

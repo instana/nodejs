@@ -21,8 +21,7 @@ describe('snapshot data and metrics/app deployed via npm install', function () {
   const agentControls = globalAgent.instance;
 
   const controls = new ProcessControls({
-    appPath: path.join(__dirname, 'node_modules', 'npm-installed-test-app', 'app'),
-    useGlobalAgent: true
+    appPath: path.join(__dirname, 'node_modules', 'npm-installed-test-app', 'app')
   }).registerTestHooks();
 
   it('must find main package.json and main node_modules', () =>

@@ -78,7 +78,6 @@ function start(graphqlVersion) {
     describe('disabled', () => {
       const serverControls = new ProcessControls({
         appPath: path.join(__dirname, 'rawGraphQLServer'),
-        useGlobalAgent: true,
         tracingEnabled: false,
         env: {
           GRAPHQL_VERSION: graphqlVersion
@@ -86,7 +85,6 @@ function start(graphqlVersion) {
       });
       const clientControls = new ProcessControls({
         appPath: path.join(__dirname, 'client'),
-        useGlobalAgent: true,
         tracingEnabled: false,
         env: {
           SERVER_PORT: serverControls.getPort(),
@@ -116,7 +114,6 @@ function start(graphqlVersion) {
     describe('individually disabled', () => {
       const serverControls = new ProcessControls({
         appPath: path.join(__dirname, 'rawGraphQLServer'),
-        useGlobalAgent: true,
         env: {
           INSTANA_DISABLED_TRACERS: 'graphQL',
           GRAPHQL_VERSION: graphqlVersion
@@ -124,7 +121,6 @@ function start(graphqlVersion) {
       });
       const clientControls = new ProcessControls({
         appPath: path.join(__dirname, 'client'),
-        useGlobalAgent: true,
         env: {
           SERVER_PORT: serverControls.getPort(),
           GRAPHQL_VERSION: graphqlVersion
@@ -285,7 +281,6 @@ function registerSubscriptionOperationNotTracedSuite(serverControls, clientContr
 function createProcesses(apollo, version) {
   const serverControls = new ProcessControls({
     appPath: path.join(__dirname, apollo ? 'apolloServer' : 'rawGraphQLServer'),
-    useGlobalAgent: true,
     env: {
       GRAPHQL_VERSION: version
     }
@@ -293,7 +288,6 @@ function createProcesses(apollo, version) {
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'client'),
-    useGlobalAgent: true,
     env: {
       SERVER_PORT: serverControls.getPort(),
       GRAPHQL_VERSION: version
@@ -309,7 +303,6 @@ function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia, version) {
   describe(`subscriptions (via: ${triggerUpdateVia})`, function () {
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'apolloServer'),
-      useGlobalAgent: true,
       env: {
         GRAPHQL_VERSION: version
       }
@@ -317,7 +310,6 @@ function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia, version) {
     // client 1
     const clientControls1 = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
-      useGlobalAgent: true,
       env: {
         SERVER_PORT: serverControls.getPort(),
         GRAPHQL_VERSION: version
@@ -326,7 +318,6 @@ function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia, version) {
     // client 2
     const clientControls2 = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
-      useGlobalAgent: true,
       env: {
         SERVER_PORT: serverControls.getPort(),
         GRAPHQL_VERSION: version
@@ -385,14 +376,12 @@ function registerSubscriptionUpdatesCorrectParentSpanSuite(triggerUpdateVia, ver
   describe.skip('correct parent span for subscription updates', function () {
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'apolloServer'),
-      useGlobalAgent: true,
       env: {
         GRAPHQL_VERSION: version
       }
     });
     const clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
-      useGlobalAgent: true,
       env: {
         SERVER_PORT: serverControls.getPort(),
         GRAPHQL_VERSION: version

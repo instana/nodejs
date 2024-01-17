@@ -31,13 +31,11 @@ mochaSuiteFn('tracing/native fetch', function () {
   globalAgent.setUpTestCaseCleanUpHooks();
 
   const serverControls = new ProcessControls({
-    appPath: path.join(__dirname, 'serverApp'),
-    useGlobalAgent: true
+    appPath: path.join(__dirname, 'serverApp')
   });
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'clientApp'),
-    useGlobalAgent: true,
     env: {
       SERVER_PORT: serverControls.port
     }

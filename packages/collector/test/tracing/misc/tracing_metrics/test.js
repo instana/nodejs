@@ -27,8 +27,7 @@ mochaSuiteFn('tracing/tracing metrics', function () {
 
   describe('when tracing is enabled', function () {
     const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true
+      dirname: __dirname
     });
     ProcessControls.setUpHooks(controls);
 
@@ -74,7 +73,6 @@ mochaSuiteFn('tracing/tracing metrics', function () {
   describe('when INSTANA_TRACER_METRICS_INTERVAL is configured explicitly', () => {
     const controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
       env: {
         INSTANA_TRACER_METRICS_INTERVAL: 100
       }
@@ -105,7 +103,6 @@ mochaSuiteFn('tracing/tracing metrics', function () {
   describe('when tracing is not enabled', () => {
     const controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
       tracingEnabled: false
     });
     ProcessControls.setUpHooks(controls);
@@ -125,11 +122,14 @@ mochaSuiteFn('tracing/tracing metrics', function () {
   });
 
   describe('when dropping spans', () => {
-    const customeAgentControls = require('../../../apps/agentStubControls');
+    const { AgentStubControls } = require('../../../apps/agentStubControls');
+    const customeAgentControls = new AgentStubControls();
+
     customeAgentControls.registerTestHooks({
       // The trace endpoint will return an HTTP error code, triggering the removeSpansIfNecessary function.
       rejectTraces: true
     });
+
     const controls = new ProcessControls({
       dirname: __dirname,
       agentControls: customeAgentControls,
@@ -157,10 +157,12 @@ mochaSuiteFn('tracing/tracing metrics', function () {
   });
 
   describe('when agent does not support the tracermetrics endpoint', () => {
-    const customeAgentControls = require('../../../apps/agentStubControls');
+    const { AgentStubControls } = require('../../../apps/agentStubControls');
+    const customeAgentControls = new AgentStubControls();
     customeAgentControls.registerTestHooks({
       tracingMetrics: false
     });
+
     const controls = new ProcessControls({
       dirname: __dirname,
       agentControls: customeAgentControls,

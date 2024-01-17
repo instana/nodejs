@@ -12,7 +12,6 @@ const portfinder = require('../../../test_util/portfinder');
 
 const testUtils = require('../../../../../core/test/test_util');
 const config = require('../../../../../core/test/config');
-const agentPort = require('../../../globalAgent').PORT;
 const upstreamPort = require('../../../apps/expressControls').appPort;
 
 let appProcess;
@@ -37,8 +36,10 @@ exports.registerTestHooks = (opts = {}) => {
   }
   beforeEach(() => {
     const env = Object.create(process.env);
-    env.AGENT_PORT = agentPort;
+
+    env.AGENT_PORT = process.env.AGENT_PORT;
     env.APP_PORT = appPort;
+
     env.UPSTREAM_PORT = upstreamPort;
     env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
     env.TRACING_ENABLED = opts.enableTracing !== false;

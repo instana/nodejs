@@ -130,7 +130,6 @@ mochaSuiteFn('tracing/db2', function () {
 
       controls = new ProcessControls({
         dirname: __dirname,
-        useGlobalAgent: true,
         env: {
           DB2_CONN_STR,
           DB2_CONN_STR_ALTERNATIVE,
@@ -1121,7 +1120,6 @@ mochaSuiteFn('tracing/db2', function () {
 
       controls = new ProcessControls({
         dirname: __dirname,
-        useGlobalAgent: true,
         tracingEnabled: false,
         env: {
           DB2_CONN_STR,
@@ -1235,7 +1233,6 @@ mochaSuiteFn('tracing/db2', function () {
 
       controls = new ProcessControls({
         dirname: __dirname,
-        useGlobalAgent: true,
         tracingEnabled: false,
         env: {
           DB2_CONN_STR,

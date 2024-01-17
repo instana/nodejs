@@ -63,7 +63,6 @@ async function start(version) {
       before(async () => {
         appControls = new ProcessControls({
           appPath: path.join(__dirname, 'app'),
-          useGlobalAgent: true,
           env: envConfig
         });
 
@@ -136,7 +135,6 @@ async function start(version) {
       before(async () => {
         appControls = new ProcessControls({
           appPath: path.join(__dirname, 'app'),
-          useGlobalAgent: true,
           tracingEnabled: false,
           env: envConfig
         });
@@ -171,7 +169,6 @@ async function start(version) {
       before(async () => {
         appControls = new ProcessControls({
           appPath: path.join(__dirname, 'app'),
-          useGlobalAgent: true,
           env: envConfig
         });
 

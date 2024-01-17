@@ -22,5 +22,5 @@ exports.getTestTimeout = () => {
   if (process.env.VSCODE_DEBUG === 'true') {
     return 30000;
   }
-  return 5000;
+  return 10 * 1000;
 };

@@ -1,4 +1,10 @@
+/* [object Object]
+[object Object]
+[object Object]
+[object Object] */
+
 'use strict';
+
 Object.defineProperty(exports, '__esModule', { value: true });
 exports.UsersService = void 0;
 class UsersService {
@@ -11,6 +17,7 @@ class UsersService {
       phoneNumbers: []
     };
   }
+
   create(userCreationParams) {
     return Object.assign({ id: Math.floor(Math.random() * 10000), status: 'Happy' }, userCreationParams);
   }

@@ -26,7 +26,6 @@ describe('tracing/mssql', function () {
 
       const controls = new ProcessControls({
         dirname: __dirname,
-        useGlobalAgent: true,
         env: {
           MSSQL_VERSION: mssqlVersion
         }

@@ -35,7 +35,6 @@ mochaSuiteFn('tracing/preInit', function () {
 function registerTests(usePreInit) {
   const controls = new ProcessControls({
     dirname: __dirname,
-    useGlobalAgent: true,
     usePreInit
   });
   ProcessControls.setUpHooks(controls);

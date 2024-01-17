@@ -31,8 +31,7 @@ mochaSuiteFn('tracing/ioredis', function () {
   const agentControls = globalAgent.instance;
 
   const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+    dirname: __dirname
   });
   ProcessControls.setUpHooks(controls);
 

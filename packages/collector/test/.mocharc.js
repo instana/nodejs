@@ -1,7 +1,7 @@
 'use strict';
 
 const mochaOptions = {
-  file: ['test/initEnv.js']
+  // file: ['test/initEnv.js']
 };
 
 process.env.NODE_ENV = 'test';

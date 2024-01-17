@@ -75,7 +75,6 @@ function start(version) {
     describe('tracing enabled, no suppression', function () {
       const senderControls = new ProcessControls({
         appPath: path.join(__dirname, 'sender'),
-        useGlobalAgent: true,
         env: {
           AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
           AWS_SDK_CLIENT_SQS_REQUIRE: version
@@ -84,7 +83,6 @@ function start(version) {
 
       const senderControlsSQSConsumer = new ProcessControls({
         appPath: path.join(__dirname, 'sender'),
-        useGlobalAgent: true,
         env: {
           AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
           AWS_SDK_CLIENT_SQS_REQUIRE: version
@@ -93,7 +91,6 @@ function start(version) {
 
       const senderControlsBatch = new ProcessControls({
         appPath: path.join(__dirname, 'sender'),
-        useGlobalAgent: true,
         env: {
           AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`,
           AWS_SDK_CLIENT_SQS_REQUIRE: version
@@ -108,7 +105,6 @@ function start(version) {
         describe(`receiving via ${sqsReceiveMethod} API`, () => {
           const receiverControls = new ProcessControls({
             appPath: path.join(__dirname, 'receiver'),
-            useGlobalAgent: true,
             env: {
               SQSV3_RECEIVE_METHOD: sqsReceiveMethod,
               AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
@@ -148,7 +144,6 @@ function start(version) {
         describe(`polling via ${sqsReceiveMethod} when no messages are available`, () => {
           const receiverControls = new ProcessControls({
             appPath: path.join(__dirname, 'receiver'),
-            useGlobalAgent: true,
             env: {
               SQSV3_RECEIVE_METHOD: sqsReceiveMethod,
               SQS_POLL_DELAY: 1,
@@ -188,7 +183,6 @@ function start(version) {
           describe('[handleMessage] message processed with success', () => {
             const sqsConsumerControls = new ProcessControls({
               appPath: path.join(__dirname, 'sqs-consumer'),
-              useGlobalAgent: true,
               env: {
                 AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
                 AWS_SDK_CLIENT_SQS_REQUIRE: version
@@ -235,7 +229,6 @@ function start(version) {
           describe('[handleMessageBatch] message processed with success', () => {
             const sqsConsumerControls = new ProcessControls({
               appPath: path.join(__dirname, 'sqs-consumer'),
-              useGlobalAgent: true,
               env: {
                 AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
                 AWS_SDK_CLIENT_SQS_REQUIRE: version,
@@ -283,7 +276,6 @@ function start(version) {
           describe('message not processed with success', () => {
             const sqsConsumerControls = new ProcessControls({
               appPath: path.join(__dirname, 'sqs-consumer'),
-              useGlobalAgent: true,
               env: {
                 AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
                 AWS_SDK_CLIENT_SQS_REQUIRE: version,
@@ -319,7 +311,6 @@ function start(version) {
           describe(`receiving batched messages: ${sqsReceiveMethod}`, () => {
             const receiverControls = new ProcessControls({
               appPath: path.join(__dirname, 'receiver'),
-              useGlobalAgent: true,
               env: {
                 SQSV3_RECEIVE_METHOD: sqsReceiveMethod,
                 AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`,
@@ -358,7 +349,6 @@ function start(version) {
 
       const senderControls = new ProcessControls({
         appPath: path.join(__dirname, 'sender'),
-        useGlobalAgent: true,
         tracingEnabled: false,
         env: {
           AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
@@ -372,7 +362,6 @@ function start(version) {
       describe('sending and receiving', () => {
         const receiverControls = new ProcessControls({
           appPath: path.join(__dirname, 'receiver'),
-          useGlobalAgent: true,
           tracingEnabled: false,
           env: {
             SQSV3_RECEIVE_METHOD: receivingMethod,
@@ -405,7 +394,6 @@ function start(version) {
     describe('tracing enabled but suppressed', () => {
       const senderControls = new ProcessControls({
         appPath: path.join(__dirname, 'sender'),
-        useGlobalAgent: true,
         env: {
           AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
           AWS_SDK_CLIENT_SQS_REQUIRE: version
@@ -418,7 +406,6 @@ function start(version) {
       describe('tracing suppressed', () => {
         const receiverControls = new ProcessControls({
           appPath: path.join(__dirname, 'receiver'),
-          useGlobalAgent: true,
           env: {
             SQSV3_RECEIVE_METHOD: receivingMethod,
             AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
@@ -455,7 +442,6 @@ function start(version) {
     describe('tracing enabled with wrong queue name', () => {
       const receiverControls = new ProcessControls({
         appPath: path.join(__dirname, 'receiver'),
-        useGlobalAgent: true,
         env: {
           SQSV3_RECEIVE_METHOD: 'v3',
           AWS_SQS_QUEUE_URL: `${queueURL}-non-existent`,
@@ -481,7 +467,6 @@ function start(version) {
     describe('message header limits', function () {
       const senderControls = new ProcessControls({
         appPath: path.join(__dirname, 'sender'),
-        useGlobalAgent: true,
         env: {
           AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
           AWS_SDK_CLIENT_SQS_REQUIRE: version
@@ -490,7 +475,6 @@ function start(version) {
 
       const receiverControls = new ProcessControls({
         appPath: path.join(__dirname, 'receiver'),
-        useGlobalAgent: true,
         env: {
           AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
           AWS_SDK_CLIENT_SQS_REQUIRE: version

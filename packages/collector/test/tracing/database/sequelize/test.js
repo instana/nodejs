@@ -47,7 +47,6 @@ function registerTests(usePgNative) {
     : {};
   const controls = new ProcessControls({
     dirname: __dirname,
-    useGlobalAgent: true,
     env
   });
   ProcessControls.setUpHooks(controls);

@@ -24,9 +24,8 @@ mochaSuiteFn('tracing/stackTraces', function () {
   const expressControls = require('../../../apps/expressControls');
 
   describe('with stack trace lenght of 0', () => {
-    expressControls.registerTestHooks({ useGlobalAgent: true });
+    expressControls.registerTestHooks();
     expressProxyControls.registerTestHooks({
-      useGlobalAgent: true,
       stackTraceLength: 0
     });
 
@@ -58,9 +57,8 @@ mochaSuiteFn('tracing/stackTraces', function () {
   });
 
   describe('with enabled stack traces', () => {
-    expressControls.registerTestHooks({ useGlobalAgent: true });
+    expressControls.registerTestHooks();
     expressProxyControls.registerTestHooks({
-      useGlobalAgent: true,
       stackTraceLength: 10
     });
 

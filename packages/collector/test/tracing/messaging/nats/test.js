@@ -33,7 +33,6 @@ mochaSuiteFn('tracing/nats', function () {
 
         const publisherControls = new ProcessControls({
           appPath: path.join(__dirname, 'publisher'),
-          useGlobalAgent: true,
           env: {
             NATS_VERSION: version
           }
@@ -41,7 +40,6 @@ mochaSuiteFn('tracing/nats', function () {
 
         const subscriberControls = new ProcessControls({
           appPath: path.join(__dirname, 'subscriber'),
-          useGlobalAgent: true,
           env: {
             NATS_VERSION: version
           }
@@ -438,7 +436,6 @@ mochaSuiteFn('tracing/nats', function () {
 
         const publisherControls = new ProcessControls({
           appPath: path.join(__dirname, 'publisher'),
-          useGlobalAgent: true,
           env: {
             CONNECT_ERROR: true,
             NATS_VERSION: version
@@ -469,7 +466,6 @@ mochaSuiteFn('tracing/nats', function () {
 
         const publisherControls = new ProcessControls({
           appPath: path.join(__dirname, 'publisher'),
-          useGlobalAgent: true,
           tracingEnabled: false,
           env: {
             NATS_VERSION: version
@@ -478,7 +474,6 @@ mochaSuiteFn('tracing/nats', function () {
 
         const subscriberControls = new ProcessControls({
           appPath: path.join(__dirname, 'subscriber'),
-          useGlobalAgent: true,
           tracingEnabled: false,
           env: {
             NATS_VERSION: version

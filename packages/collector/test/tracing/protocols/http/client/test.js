@@ -42,7 +42,6 @@ mochaSuiteFn('tracing/http client', function () {
 function registerTests(useHttps) {
   const serverControls = new ProcessControls({
     appPath: path.join(__dirname, 'serverApp'),
-    useGlobalAgent: true,
     env: {
       USE_HTTPS: useHttps
     }
@@ -50,7 +49,6 @@ function registerTests(useHttps) {
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'clientApp'),
-    useGlobalAgent: true,
     env: {
       SERVER_PORT: serverControls.getPort(),
       USE_HTTPS: useHttps
@@ -487,7 +485,6 @@ function registerConnectionRefusalTest(useHttps) {
   describe('connection refusal', function () {
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'serverApp'),
-      useGlobalAgent: true,
       env: {
         USE_HTTPS: useHttps
       }
@@ -495,7 +492,6 @@ function registerConnectionRefusalTest(useHttps) {
 
     const clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'clientApp'),
-      useGlobalAgent: true,
       env: {
         SERVER_PORT: serverControls.getPort(),
         USE_HTTPS: useHttps
@@ -531,13 +527,11 @@ function registerConnectionRefusalTest(useHttps) {
 
 function registerSuperagentTest() {
   const serverControls = new ProcessControls({
-    appPath: path.join(__dirname, 'serverApp'),
-    useGlobalAgent: true
+    appPath: path.join(__dirname, 'serverApp')
   });
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'superagentApp'),
-    useGlobalAgent: true,
     env: {
       SERVER_PORT: serverControls.getPort()
     }

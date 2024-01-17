@@ -46,7 +46,6 @@ mochaSuiteFn('tracing/sdk - force separate context for startEntrySpan', function
       }
       const controls = new ProcessControls({
         appPath: path.join(__dirname, 'entry_span_context_app'),
-        useGlobalAgent: true,
         env
       });
 

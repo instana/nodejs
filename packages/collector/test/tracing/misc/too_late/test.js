@@ -30,7 +30,6 @@ mochaSuiteFn('tracing/too late', function () {
   describe(`@instana/collector is initialized too late (choosing ${EXAMPLE_MODULE} as an example)`, function () {
     const controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
       env: {
         REQUIRE_BEFORE_COLLECTOR: EXAMPLE_MODULE
       }
@@ -98,8 +97,7 @@ mochaSuiteFn('tracing/too late', function () {
 
   describe('@instana/collector is initialized properly', () => {
     const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true
+      dirname: __dirname
     }).registerTestHooks();
 
     it('should not warn about being initialized too late', () =>

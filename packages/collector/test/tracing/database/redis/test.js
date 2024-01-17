@@ -34,7 +34,6 @@ describe('tracing/redis', function () {
 
       const controls = new ProcessControls({
         dirname: __dirname,
-        useGlobalAgent: true,
         env: {
           REDIS_VERSION: redisVersion
         }

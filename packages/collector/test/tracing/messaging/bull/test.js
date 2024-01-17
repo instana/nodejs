@@ -56,7 +56,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
   describe('tracing enabled, no suppression', function () {
     const senderControls = new ProcessControls({
       appPath: path.join(__dirname, 'sender'),
-      useGlobalAgent: true,
       env: {
         REDIS_SERVER: 'redis://127.0.0.1:6379',
         BULL_QUEUE_NAME: queueName,
@@ -70,7 +69,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       describe(`receiving via ${receiveMethod} API`, () => {
         const receiverControls = new ProcessControls({
           appPath: path.join(__dirname, 'receiver'),
-          useGlobalAgent: true,
           env: {
             REDIS_SERVER: 'redis://127.0.0.1:6379',
             BULL_QUEUE_NAME: queueName,
@@ -260,7 +258,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
     const senderControls = new ProcessControls({
       appPath: path.join(__dirname, 'sender'),
-      useGlobalAgent: true,
       tracingEnabled: false,
       env: {
         REDIS_SERVER: 'redis://127.0.0.1:6379',
@@ -275,7 +272,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     describe('sending and receiving', () => {
       const receiverControls = new ProcessControls({
         appPath: path.join(__dirname, 'receiver'),
-        useGlobalAgent: true,
         tracingEnabled: false,
         env: {
           REDIS_SERVER: 'redis://127.0.0.1:6379',
@@ -320,7 +316,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
   describe('tracing enabled but suppressed', () => {
     const senderControls = new ProcessControls({
       appPath: path.join(__dirname, 'sender'),
-      useGlobalAgent: true,
       env: {
         REDIS_SERVER: 'redis://127.0.0.1:6379',
         BULL_QUEUE_NAME: queueName,
@@ -334,7 +329,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     describe('tracing suppressed', () => {
       const receiverControls = new ProcessControls({
         appPath: path.join(__dirname, 'receiver'),
-        useGlobalAgent: true,
         env: {
           REDIS_SERVER: 'redis://127.0.0.1:6379',
           BULL_QUEUE_NAME: queueName,

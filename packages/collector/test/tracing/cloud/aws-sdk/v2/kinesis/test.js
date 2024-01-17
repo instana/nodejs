@@ -73,7 +73,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
   describe('tracing enabled, no suppression', function () {
     const appControls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
       env: {
         AWS_KINESIS_STREAM_NAME: streamName
       }
@@ -163,7 +162,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
 
     const appControls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
       tracingEnabled: false,
       env: {
         AWS_KINESIS_STREAM_NAME: streamName
@@ -205,7 +203,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
   describe('tracing enabled but suppressed', () => {
     const appControls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
       env: {
         AWS_KINESIS_STREAM_NAME: streamName
       }

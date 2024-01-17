@@ -1,5 +1,11 @@
+/* [object Object]
+[object Object]
+[object Object]
+[object Object] */
+
 'use strict';
-var __awaiter =
+
+const __awaiter =
   (this && this.__awaiter) ||
   function (thisArg, _arguments, P, generator) {
     function adopt(value) {
@@ -19,7 +25,7 @@ var __awaiter =
       }
       function rejected(value) {
         try {
-          step(generator['throw'](value));
+          step(generator.throw(value));
         } catch (e) {
           reject(e);
         }

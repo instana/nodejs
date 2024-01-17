@@ -25,8 +25,7 @@ describe('tracing/no-conflict-with-cls-hooked', function () {
   globalAgent.setUpCleanUpHooks();
 
   const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+    dirname: __dirname
   });
   ProcessControls.setUpHooks(controls);
 

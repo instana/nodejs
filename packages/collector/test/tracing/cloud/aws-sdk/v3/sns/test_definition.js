@@ -71,7 +71,6 @@ function start(version) {
       before(async () => {
         receiverControls = new ProcessControls({
           appPath: path.join(__dirname, '../sqs/receiver'),
-          useGlobalAgent: true,
           env: {
             AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
             AWS_SQS_QUEUE_URL: queueUrl,
@@ -81,7 +80,6 @@ function start(version) {
 
         appControls = new ProcessControls({
           appPath: path.join(__dirname, 'app'),
-          useGlobalAgent: true,
           env: {}
         });
 
@@ -145,7 +143,6 @@ function start(version) {
       before(async () => {
         receiverControls = new ProcessControls({
           appPath: path.join(__dirname, '../sqs/receiver'),
-          useGlobalAgent: true,
           env: {
             AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
             AWS_SQS_QUEUE_URL: queueUrl,
@@ -155,7 +152,6 @@ function start(version) {
 
         appControls = new ProcessControls({
           appPath: path.join(__dirname, 'app'),
-          useGlobalAgent: true,
           env: {}
         });
 
@@ -198,7 +194,6 @@ function start(version) {
       before(async () => {
         receiverControls = new ProcessControls({
           appPath: path.join(__dirname, '../sqs/receiver'),
-          useGlobalAgent: true,
           tracingEnabled: false,
           env: {
             AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
@@ -209,7 +204,6 @@ function start(version) {
 
         appControls = new ProcessControls({
           appPath: path.join(__dirname, 'app'),
-          useGlobalAgent: true,
           env: {}
         });
 

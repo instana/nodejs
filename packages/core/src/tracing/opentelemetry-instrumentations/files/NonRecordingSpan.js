@@ -25,36 +25,45 @@ class NonRecordingSpan {
   constructor(_spanContext = invalid_span_constants_1.INVALID_SPAN_CONTEXT) {
     this._spanContext = _spanContext;
   }
+
   // Returns a SpanContext.
   spanContext() {
     return this._spanContext;
   }
+
   // By default does nothing
   setAttribute(_key, _value) {
     return this;
   }
+
   // By default does nothing
   setAttributes(_attributes) {
     return this;
   }
+
   // By default does nothing
   addEvent(_name, _attributes) {
     return this;
   }
+
   // By default does nothing
   setStatus(_status) {
     return this;
   }
+
   // By default does nothing
   updateName(_name) {
     return this;
   }
+
   // By default does nothing
   end(_endTime) {}
+
   // isRecording always returns false for NonRecordingSpan.
   isRecording() {
     return false;
   }
+
   // By default does nothing
   recordException(_exception, _time) {}
 }
