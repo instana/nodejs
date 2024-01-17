@@ -20,7 +20,7 @@ const logger = pino.child({ name: logPrefix, pid: process.pid });
 logger.level = 'info';
 
 const baseUrl = '/computeMetadata/v1/';
-const port = process.env.METADATA_MOCK_PORT || 1605;
+const port = process.env.METADATA_MOCK_PORT;
 
 const projectId = 'test-gcp-project';
 const numericProjectId = 13027872031;

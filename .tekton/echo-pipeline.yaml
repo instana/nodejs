@@ -1,0 +1,42 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: simple-echo-pipeline-template
+spec:
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: TaskRun
+      metadata:
+        generateName: "pr-run-"
+      spec:
+        taskSpec:
+          steps:
+            - name: echo-step
+              image: ubuntu
+              script: echo "hello there"
+---
+
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: event-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.head_commit.id)
+    - name: gitrepositoryurl
+      value: $(body.repository.url)
+
+---
+
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: simple-echo-pipeline-listener
+spec:
+  triggers:
+  - name: "my-trigger"
+    bindings:
+    - ref: event-binding
+    template:
+      name: simple-echo-pipeline-template

@@ -24,15 +24,27 @@ describe('tracing/mssql', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
 
-      const controls = new ProcessControls({
-        dirname: __dirname,
-        useGlobalAgent: true,
-        env: {
-          MSSQL_VERSION: mssqlVersion
-        }
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          dirname: __dirname,
+          useGlobalAgent: true,
+          env: {
+            MSSQL_VERSION: mssqlVersion
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
 
-      ProcessControls.setUpHooks(controls);
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
 
       it('must trace the pipe API', () =>
         controls

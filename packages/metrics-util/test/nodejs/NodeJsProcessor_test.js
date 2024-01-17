@@ -22,7 +22,7 @@ describe('Node.js processor', function () {
 
   let dataProcessor;
 
-  beforeEach(() => {
+  before(() => {
     coreMetrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
     coreMetrics.init({
       metrics: {

@@ -7,9 +7,7 @@
 const { fork } = require('child_process');
 const path = require('path');
 const request = require('request-promise');
-const {
-  assert: { fail }
-} = require('chai');
+const portfinder = require('@instana/collector/test/test_util/portfinder');
 const config = require('../../serverless/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 
@@ -19,11 +17,11 @@ let execArg;
 class Control extends AbstractServerlessControl {
   constructor(opts) {
     super(opts);
-    this.port = opts.port || 4217;
+    this.port = opts.port || portfinder();
     this.baseUrl = `http://127.0.0.1:${this.port}`;
-    this.backendPort = this.opts.backendPort || 9445;
+    this.backendPort = this.opts.backendPort || portfinder();
     this.backendBaseUrl = this.opts.backendBaseUrl || `https://localhost:${this.backendPort}/serverless`;
-    this.downstreamDummyPort = this.opts.downstreamDummyPort || 4569;
+    this.downstreamDummyPort = this.opts.downstreamDummyPort || portfinder();
     this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
     this.instanaAgentKey = this.opts.instanaAgentKey || 'azure-dummy-key';
   }
@@ -35,19 +33,9 @@ class Control extends AbstractServerlessControl {
     this.azureContainerAppHasTerminated = false;
   }
 
-  registerTestHooks() {
-    super.registerTestHooks();
-    beforeEach(() => {
-      if (!this.opts.containerAppPath) {
-        fail('opts.containerAppPath is unspecified.');
-      }
-    });
-    return this;
-  }
-
   startMonitoredProcess() {
     const env = {
-      PORT: this.port,
+      APP_PORT: this.port,
       DOWNSTREAM_DUMMY_URL: this.downstreamDummyUrl,
       INSTANA_DISABLE_CA_CHECK: true,
       INSTANA_TRACING_TRANSMISSION_DELAY: 500,
@@ -108,6 +96,10 @@ class Control extends AbstractServerlessControl {
     opts.url = `${this.baseUrl}${opts.path}`;
     opts.json = true;
     return request(opts);
+  }
+
+  getPort() {
+    return this.port;
   }
 }
 

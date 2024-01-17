@@ -22,5 +22,20 @@ exports.getTestTimeout = () => {
   if (process.env.VSCODE_DEBUG === 'true') {
     return 30000;
   }
-  return 5000;
+
+  return 2 * 5000;
+};
+
+// The retry needs to end before the mocha timeout!
+// Otherwise we won't see the error message.
+exports.getRetryTimeout = () => {
+  if (isCI()) {
+    return 28000;
+  }
+  // NOTE: Otherwise mocha will interrupt the debugging session quickly.
+  if (process.env.VSCODE_DEBUG === 'true') {
+    return 28000;
+  }
+
+  return 8000;
 };

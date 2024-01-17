@@ -41,8 +41,6 @@ if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe;
 }
 
-const retryTime = config.getTestTimeout() * 2;
-
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
   this.timeout(config.getTestTimeout() * 3);
 
@@ -58,24 +56,39 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
   });
 
   describe('tracing enabled, no suppression', function () {
-    const senderControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        AWS_SNS_TOPIC_ARN: topicArn
-      }
+    let senderControls;
+    let receiverControls;
+
+    before(async () => {
+      senderControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          AWS_SNS_TOPIC_ARN: topicArn
+        }
+      });
+      receiverControls = new ProcessControls({
+        appPath: path.join(__dirname, '../sqs/receiveMessage'),
+        useGlobalAgent: true,
+        env: {
+          SQS_RECEIVE_METHOD: 'callback',
+          AWS_SQS_QUEUE_URL: sqsQueueUrl
+        }
+      });
+
+      await senderControls.startAndWaitForAgentConnection();
+      await receiverControls.startAndWaitForAgentConnection();
     });
 
-    const receiverControls = new ProcessControls({
-      appPath: path.join(__dirname, '../sqs/receiveMessage'),
-      useGlobalAgent: true,
-      env: {
-        SQS_RECEIVE_METHOD: 'callback',
-        AWS_SQS_QUEUE_URL: sqsQueueUrl
-      }
+    after(async () => {
+      await senderControls.stop();
+      await receiverControls.stop();
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls, receiverControls);
+    afterEach(async () => {
+      await senderControls.clearIpcMessages();
+      await receiverControls.clearIpcMessages();
+    });
 
     withErrorOptions.forEach(withError => {
       if (withError) {
@@ -138,7 +151,8 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
         } else {
           throw new Error(`Expected an SQS entry span but did not receive one. All spans: ${stringifyItems(_spans)}`);
         }
-      }, retryTime);
+      }, 1000);
+
       verifySpans(_senderControls, spans, apiPath, operation, withError, _receiverControls);
     }
 
@@ -174,16 +188,28 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
 
-    const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {
-        AWS_SNS_TOPIC_ARN: topicArn
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new ProcessControls({
+        appPath: path.join(__dirname, 'app'),
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {
+          AWS_SNS_TOPIC_ARN: topicArn
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
 
     describe('attempt to get result', () => {
       availableOperations.forEach(operation => {
@@ -193,28 +219,39 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
             method: 'GET',
             path: `/${operation}/${requestMethod}`
           });
-          return retry(() => delay(config.getTestTimeout() / 4))
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (AWS SNS suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });
   });
 
   describe('tracing enabled but suppressed', () => {
-    const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      useGlobalAgent: true,
-      env: {
-        AWS_SNS_TOPIC_ARN: topicArn
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new ProcessControls({
+        appPath: path.join(__dirname, 'app'),
+        useGlobalAgent: true,
+        env: {
+          AWS_SNS_TOPIC_ARN: topicArn
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
 
     describe('attempt to get result', () => {
       availableOperations.forEach(operation => {
@@ -226,13 +263,11 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
             path: `/${operation}/${requestMethod}`
           });
 
-          return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (AWS SNS suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });

@@ -11,52 +11,89 @@ const constants = require('@instana/core').tracing.constants;
 const Control = require('../Control');
 const { expectExactlyOneMatching } = require('../../../core/test/test_util');
 const config = require('../../../serverless/test/config');
-const retry = require('../../../serverless/test/util/retry');
+const retry = require('@instana/core/test/test_util/retry');
 
 const entityId = '/subscriptions/instana/resourceGroups/East US/providers/Microsoft.Web/sites/test-app';
 const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'azure-container-service-dummy-key';
 
-function prelude(opts = {}) {
+function prelude() {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
+
   const env = {
     WEBSITE_OWNER_NAME: 'instana+123',
     WEBSITE_RESOURCE_GROUP: 'East US',
     WEBSITE_SITE_NAME: 'test-app'
   };
-  const controlOpts = {
-    ...opts,
-    env,
-    containerAppPath,
-    instanaAgentKey,
-    startDownstreamDummy: false,
-    startBackend: true
-  };
-  return new Control(controlOpts).registerTestHooks();
+
+  return env;
 }
 
 describe('Using the API', function () {
   describe('when configured properly', function () {
-    const control = prelude.bind(this)();
-    it('should trace http requests', () =>
-      control
+    const env = prelude.bind(this)();
+    let control;
+
+    before(async () => {
+      control = new Control({
+        env,
+        containerAppPath,
+        instanaAgentKey,
+        startDownstreamDummy: false,
+        startBackend: true
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('should trace http requests', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path: '/'
         })
-        .then(response => verify(control, response)));
+        .then(response => {
+          return verify(control, response);
+        });
+    });
   });
 
   describe('when not configured properly', function () {
-    const control = prelude.bind(this)({ unconfigured: false });
-    it('should provide a no-op API', () =>
-      control
+    const env = prelude.bind(this)({});
+    let control;
+
+    before(async () => {
+      control = new Control({
+        env,
+        containerAppPath,
+        instanaAgentKey,
+        startDownstreamDummy: false,
+        startBackend: true,
+        unconfigured: false
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('should provide a no-op API', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path: '/'
         })
-        .then(response => verifyNoOp(control, response)));
+        .then(response => {
+          return verifyNoOp(control, response);
+        });
+    });
   });
 
   function verify(control, response) {
@@ -72,15 +109,15 @@ describe('Using the API', function () {
   }
 
   function getAndVerifySpans(control) {
-    return control.getSpans().then(verifySpans);
+    return control.getSpans().then(spans => verifySpans(spans, control));
   }
 
-  function verifySpans(spans) {
-    const entry = verifyHttpEntry(spans);
+  function verifySpans(spans, control) {
+    const entry = verifyHttpEntry(spans, control);
     verifyCustomExit(spans, entry);
   }
 
-  function verifyHttpEntry(spans) {
+  function verifyHttpEntry(spans, control) {
     return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.exist;
       expect(span.p).to.not.exist;
@@ -94,7 +131,7 @@ describe('Using the API', function () {
       expect(span.f.e).to.equal(entityId);
       expect(span.data.http.method).to.equal('GET');
       expect(span.data.http.url).to.equal('/');
-      expect(span.data.http.host).to.equal('127.0.0.1:4217');
+      expect(span.data.http.host).to.equal(`127.0.0.1:${control.getPort()}`);
       expect(span.data.http.status).to.equal(200);
       expect(span.ec).to.equal(0);
     });

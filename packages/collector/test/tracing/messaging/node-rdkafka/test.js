@@ -49,7 +49,7 @@ const SINGLE_TEST_PROPS = {
   withError: false
 };
 
-const retryTime = config.getTestTimeout() * 2;
+const retryTime = 1000;
 const topic = 'rdkafka-topic';
 
 let mochaSuiteFn;
@@ -301,21 +301,35 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
 
   describe('tracing enabled, header format string', function () {
     this.timeout(config.getTestTimeout() * 2);
+    let producerControls;
+    let consumerControls;
 
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
-      env: {
-        INSTANA_KAFKA_HEADER_FORMAT: 'string'
-      }
-    });
-    ProcessControls.setUpHooks(producerControls);
+    before(async () => {
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_KAFKA_HEADER_FORMAT: 'string'
+        }
+      });
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        useGlobalAgent: true
+      });
 
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      useGlobalAgent: true
+      await producerControls.startAndWaitForAgentConnection();
+      await consumerControls.startAndWaitForAgentConnection();
     });
-    ProcessControls.setUpHooks(consumerControls);
+
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+      await consumerControls.clearIpcMessages();
+    });
 
     it('must trace sending and receiving and keep trace continuity', async () => {
       const apiPath = '/produce/standard';
@@ -340,17 +354,37 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     this.timeout(config.getTestTimeout() * 2);
 
     const customAgentControls = new AgentStubControls();
-    customAgentControls.registerTestHooks({
-      kafkaConfig: { headerFormat: 'string' }
+    let producerControls;
+    let consumerControls;
+
+    before(async () => {
+      await customAgentControls.startAgent({
+        kafkaConfig: { headerFormat: 'string' }
+      });
+
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        agentControls: customAgentControls
+      });
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        agentControls: customAgentControls
+      });
+
+      await producerControls.startAndWaitForAgentConnection();
+      await consumerControls.startAndWaitForAgentConnection();
     });
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      agentControls: customAgentControls
-    }).registerTestHooks();
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      agentControls: customAgentControls
-    }).registerTestHooks();
+
+    after(async () => {
+      await customAgentControls.stopAgent();
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+      await consumerControls.clearIpcMessages();
+    });
 
     it('must trace sending and receiving but will not keep trace continuity', async () => {
       const apiPath = '/produce/standard';
@@ -374,20 +408,35 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   describe('tracing enabled, but trace correlation disabled', function () {
     this.timeout(config.getTestTimeout() * 2);
 
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
-      env: {
-        INSTANA_KAFKA_TRACE_CORRELATION: 'false'
-      }
-    });
-    ProcessControls.setUpHooks(producerControls);
+    let producerControls;
+    let consumerControls;
 
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      useGlobalAgent: true
+    before(async () => {
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_KAFKA_TRACE_CORRELATION: 'false'
+        }
+      });
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        useGlobalAgent: true
+      });
+
+      await producerControls.startAndWaitForAgentConnection();
+      await consumerControls.startAndWaitForAgentConnection();
     });
-    ProcessControls.setUpHooks(consumerControls);
+
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+      await consumerControls.clearIpcMessages();
+    });
 
     it('must trace sending and receiving but will not keep trace continuity', async () => {
       const apiPath = '/produce/standard';
@@ -412,17 +461,37 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     this.timeout(config.getTestTimeout() * 2);
 
     const customAgentControls = new AgentStubControls();
-    customAgentControls.registerTestHooks({
-      kafkaConfig: { traceCorrelation: false }
+    let producerControls;
+    let consumerControls;
+
+    before(async () => {
+      await customAgentControls.startAgent({
+        kafkaConfig: { traceCorrelation: false }
+      });
+
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        agentControls: customAgentControls
+      });
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        agentControls: customAgentControls
+      });
+
+      await producerControls.startAndWaitForAgentConnection();
+      await consumerControls.startAndWaitForAgentConnection();
     });
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      agentControls: customAgentControls
-    }).registerTestHooks();
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      agentControls: customAgentControls
-    }).registerTestHooks();
+
+    after(async () => {
+      await customAgentControls.stopAgent();
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+      await consumerControls.clearIpcMessages();
+    });
 
     it('must trace sending and receiving but will not keep trace continuity', async () => {
       const apiPath = '/produce/standard';
@@ -446,28 +515,51 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
 
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {
-        RDKAFKA_PRODUCER_DELIVERY_CB: 'false'
-      }
-    });
+    let producerControls;
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, producerControls);
-
-    describe('producing and consuming', () => {
-      const consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
+    before(async () => {
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
-          RDKAFKA_CONSUMER_AS_STREAM: 'false'
+          RDKAFKA_PRODUCER_DELIVERY_CB: 'false'
         }
       });
+      await producerControls.startAndWaitForAgentConnection();
+    });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, consumerControls);
+    after(async () => {
+      await producerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+    });
+
+    describe('producing and consuming', () => {
+      let consumerControls;
+
+      before(async () => {
+        consumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            RDKAFKA_CONSUMER_AS_STREAM: 'false'
+          }
+        });
+
+        await consumerControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await consumerControls.stop();
+      });
+
+      afterEach(async () => {
+        await consumerControls.clearIpcMessages();
+      });
 
       it('should not trace for producing as standard / consuming as standard', async () => {
         const response = await producerControls.sendRequest({
@@ -476,7 +568,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         });
 
         return retry(() => verifyResponseAndMessage(response, consumerControls), retryTime)
-          .then(() => delay(config.getTestTimeout() / 4))
+          .then(() => delay(1000))
           .then(() => agentControls.getSpans())
           .then(spans => {
             if (spans.length > 0) {
@@ -488,26 +580,49 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   });
 
   describe('tracing enabled but suppressed', () => {
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
-      env: {
-        RDKAFKA_PRODUCER_DELIVERY_CB: 'false'
-      }
-    });
+    let producerControls;
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, producerControls);
-
-    describe('tracing suppressed', () => {
-      const receiverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
+    before(async () => {
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
         useGlobalAgent: true,
         env: {
-          RDKAFKA_CONSUMER_AS_STREAM: 'false'
+          RDKAFKA_PRODUCER_DELIVERY_CB: 'false'
         }
       });
+      await producerControls.startAndWaitForAgentConnection();
+    });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+    after(async () => {
+      await producerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+    });
+
+    describe('tracing suppressed', () => {
+      let receiverControls;
+
+      before(async () => {
+        receiverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          useGlobalAgent: true,
+          env: {
+            RDKAFKA_CONSUMER_AS_STREAM: 'false'
+          }
+        });
+
+        await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
+      });
 
       it("doesn't trace when producing as standard / consuming as standard", async () => {
         const response = await producerControls.sendRequest({
@@ -519,7 +634,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         return retry(() => {
           verifyResponseAndMessage(response, receiverControls);
         }, retryTime)
-          .then(() => delay(config.getTestTimeout() / 4))
+          .then(() => delay(1000))
           .then(() => agentControls.getSpans())
           .then(spans => {
             if (spans.length > 0) {

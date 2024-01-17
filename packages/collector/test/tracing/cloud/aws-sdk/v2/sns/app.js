@@ -6,7 +6,7 @@
 'use strict';
 
 require('../../../../../..')();
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const fetch = require('node-fetch');
 const delay = require('@instana/core/test/test_util/delay');
 

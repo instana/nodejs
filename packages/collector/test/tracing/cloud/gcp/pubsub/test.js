@@ -51,7 +51,7 @@ if (
     mochaSuiteFn = describe;
   }
 
-  const retryTime = config.getTestTimeout() * 2;
+  const retryTime = 1000;
 
   mochaSuiteFn('tracing/cloud/gcp/pubsub', function () {
     this.timeout(config.getTestTimeout() * 3);
@@ -63,25 +63,42 @@ if (
       const topicName = defaultTopicName;
       const subscriptionName = defaultSubscriptionName;
 
-      const publisherControls = new ProcessControls({
-        appPath: path.join(__dirname, 'publisher'),
-        useGlobalAgent: true,
-        env: {
-          GCP_PROJECT: projectId,
-          GCP_PUBSUB_TOPIC: topicName,
-          GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-        }
+      let publisherControls;
+      let subscriberControls;
+
+      before(async () => {
+        publisherControls = new ProcessControls({
+          appPath: path.join(__dirname, 'publisher'),
+          useGlobalAgent: true,
+          env: {
+            GCP_PROJECT: projectId,
+            GCP_PUBSUB_TOPIC: topicName,
+            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
+          }
+        });
+        subscriberControls = new ProcessControls({
+          appPath: path.join(__dirname, 'subscriber'),
+          useGlobalAgent: true,
+          env: {
+            GCP_PROJECT: projectId,
+            GCP_PUBSUB_TOPIC: topicName,
+            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
+          }
+        });
+
+        await publisherControls.startAndWaitForAgentConnection();
+        await subscriberControls.startAndWaitForAgentConnection();
       });
-      const subscriberControls = new ProcessControls({
-        appPath: path.join(__dirname, 'subscriber'),
-        useGlobalAgent: true,
-        env: {
-          GCP_PROJECT: projectId,
-          GCP_PUBSUB_TOPIC: topicName,
-          GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-        }
+
+      after(async () => {
+        await publisherControls.stop();
+        await subscriberControls.stop();
       });
-      ProcessControls.setUpHooksWithRetryTime(retryTime, publisherControls, subscriberControls);
+
+      afterEach(async () => {
+        await publisherControls.clearIpcMessages();
+        await subscriberControls.clearIpcMessages();
+      });
 
       ['promise', 'callback'].forEach(apiVariant => {
         [false, 'publisher'].forEach(withError => {
@@ -198,26 +215,42 @@ if (
       const topicName = `${defaultTopicName}-suppression`;
       const subscriptionName = `${defaultSubscriptionName}-suppression`;
 
-      const publisherControls = new ProcessControls({
-        appPath: path.join(__dirname, 'publisher'),
-        useGlobalAgent: true,
-        env: {
-          GCP_PROJECT: projectId,
-          GCP_PUBSUB_TOPIC: topicName,
-          GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-        }
-      });
-      const subscriberControls = new ProcessControls({
-        appPath: path.join(__dirname, 'subscriber'),
-        useGlobalAgent: true,
-        env: {
-          GCP_PROJECT: projectId,
-          GCP_PUBSUB_TOPIC: topicName,
-          GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-        }
+      let publisherControls;
+      let subscriberControls;
+
+      before(async () => {
+        publisherControls = new ProcessControls({
+          appPath: path.join(__dirname, 'publisher'),
+          useGlobalAgent: true,
+          env: {
+            GCP_PROJECT: projectId,
+            GCP_PUBSUB_TOPIC: topicName,
+            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
+          }
+        });
+        subscriberControls = new ProcessControls({
+          appPath: path.join(__dirname, 'subscriber'),
+          useGlobalAgent: true,
+          env: {
+            GCP_PROJECT: projectId,
+            GCP_PUBSUB_TOPIC: topicName,
+            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
+          }
+        });
+
+        await publisherControls.startAndWaitForAgentConnection();
+        await subscriberControls.startAndWaitForAgentConnection();
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, publisherControls, subscriberControls);
+      after(async () => {
+        await publisherControls.stop();
+        await subscriberControls.stop();
+      });
+
+      afterEach(async () => {
+        await publisherControls.clearIpcMessages();
+        await subscriberControls.clearIpcMessages();
+      });
 
       it('should not trace when suppressed', () =>
         publisherControls
@@ -230,7 +263,7 @@ if (
           })
           .then(response =>
             retry(() => verifyResponseAndMessage(response, subscriberControls), retryTime)
-              .then(() => delay(config.getTestTimeout() / 4))
+              .then(() => delay(1000))
               .then(() => agentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {
@@ -246,27 +279,44 @@ if (
       const topicName = defaultTopicName;
       const subscriptionName = defaultSubscriptionName;
 
-      const publisherControls = new ProcessControls({
-        appPath: path.join(__dirname, 'publisher'),
-        useGlobalAgent: true,
-        tracingEnabled: false,
-        env: {
-          GCP_PROJECT: projectId,
-          GCP_PUBSUB_TOPIC: topicName,
-          GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-        }
+      let publisherControls;
+      let subscriberControls;
+
+      before(async () => {
+        publisherControls = new ProcessControls({
+          appPath: path.join(__dirname, 'publisher'),
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            GCP_PROJECT: projectId,
+            GCP_PUBSUB_TOPIC: topicName,
+            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
+          }
+        });
+        subscriberControls = new ProcessControls({
+          appPath: path.join(__dirname, 'subscriber'),
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            GCP_PROJECT: projectId,
+            GCP_PUBSUB_TOPIC: topicName,
+            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
+          }
+        });
+
+        await publisherControls.startAndWaitForAgentConnection();
+        await subscriberControls.startAndWaitForAgentConnection();
       });
-      const subscriberControls = new ProcessControls({
-        appPath: path.join(__dirname, 'subscriber'),
-        useGlobalAgent: true,
-        tracingEnabled: false,
-        env: {
-          GCP_PROJECT: projectId,
-          GCP_PUBSUB_TOPIC: topicName,
-          GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-        }
+
+      after(async () => {
+        await publisherControls.stop();
+        await subscriberControls.stop();
       });
-      ProcessControls.setUpHooksWithRetryTime(retryTime, publisherControls, subscriberControls);
+
+      afterEach(async () => {
+        await publisherControls.clearIpcMessages();
+        await subscriberControls.clearIpcMessages();
+      });
 
       it('should not trace when disabled', () =>
         publisherControls
@@ -276,7 +326,7 @@ if (
           })
           .then(response =>
             retry(() => verifyResponseAndMessage(response, subscriberControls), retryTime)
-              .then(() => delay(config.getTestTimeout() / 4))
+              .then(() => delay(1000))
               .then(() => agentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {

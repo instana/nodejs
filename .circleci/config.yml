@@ -6,9 +6,6 @@ parameters:
   workflow:
     type: string
     default: build
-  executors:
-    type: integer
-    default: 2
 
 shared: &shared
   working_directory: ~/repo
@@ -39,7 +36,7 @@ shared: &shared
   steps:
     - checkout
 
-    # The main intent for skipping the build is the other-nodejs-versions workflow which is built daily. If no new
+    # The main intent for skipping the build for the other node.js workflows which run during the night. If no new
     # commits have been merged to main, we do not need to built the same commit over and over again.
     #
     # Theoretically we could also save the build on the main branch directly after merging a PR - since we always
@@ -85,9 +82,6 @@ shared: &shared
     - restore_cache:
         keys:
           - v{{ .Environment.CACHE_VERSION }}-prisma-app-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/test/tracing/database/prisma/package-lock.json" }}
-    - restore_cache:
-        keys:
-          - v{{ .Environment.CACHE_VERSION }}-misc-test-durations-{{ .Environment.CIRCLE_JOB }}-{{ checksum "misc/test-durations/package-lock.json" }}
 
     # We do not use npm ci (short for clean install) because it removes the existing node_modules folder. But we want to
     # re-use the existing node_modules folders from CircleCI's cache. Using npm ci would defeat that purpose. For the
@@ -101,22 +95,11 @@ shared: &shared
           npm install
           git checkout package-lock.json
 
-    - run:
-        name: install dependencies of test-durations script
-        command: |
-          cd misc/test-durations
-          npm install
-          git checkout package-lock.json
-
     # Cache the node_modules folders for the next run
     - save_cache:
         paths:
           - node_modules
         key: v{{ .Environment.CACHE_VERSION }}-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package-lock.json" }}
-    - save_cache:
-        paths:
-          - misc/test-durations/node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-misc-test-durations-{{ .Environment.CIRCLE_JOB }}-{{ checksum "misc/test-durations/package-lock.json" }}
     
     # Only run audit with the most recent Node.js version - one Node version is enough.
     - run:
@@ -151,40 +134,620 @@ shared: &shared
         command: "([[ $(node -v) =~ ^v18.*$ ]] && npm run depcheck) || [[ ! $(node -v) =~ ^v18.*$ ]]"
 
     # Clean up old left over AWS resources from earlier test runs (created more more than 3 hours ago):
-    # Do not execute the script on every parallel build
     - run:
         name: Clean Up AWS Resources
         command: |
-          if [[ $(node -v) =~ ^v18.*$ && $CIRCLE_NODE_INDEX == "0" ]]; then
+          if [[ $(node -v) =~ ^v18.*$ ]]; then
             bin/clean-aws.js --service=s3
             bin/clean-aws.js --service=dynamodb
             bin/clean-aws.js --service=sqs
             bin/clean-aws.js --service=kinesis
           fi
 
-    # Run the test suites.
-    # The ci_glob_setup.sh script determines which tests will be run on each CircleCI executor.
     - run:
-        name: Run Tests
+        name: "@instana/collector:general"
+        background: true
         command: |
-          source bin/ci_glob_setup.sh
-          date
-          if [[ -z "$NODE_COVERAGE" ]]; then
-            if [[ -z "$COLLECTOR_ONLY" ]]; then
-              npm run test:ci
-            else
-              npm run test:ci:collector
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
             fi
-          else
-            npm run coverage-all
+                    
+            touch .run1-started
+
+            ulimit -c unlimited
+            if npm run test:ci:collector:general; then
+                touch .run1-succeeded
+            else
+                touch .run1-failed
+                exit 1
+            fi
+    - run:
+        name: "@instana/collector:tracing:frameworks"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+                    
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/frameworks"; then
+              touch .run2-started
+
+              ulimit -c unlimited
+              if npm run test:ci:collector:tracing:frameworks; then
+                  touch .run2-succeeded
+              else
+                  touch .run2-failed
+                  exit 1
+              fi
+            else
+              echo "Skipping group."
+            fi
+
+    - run:
+        name: "@instana/collector:tracing:general"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+                    
+            touch .run3-started
+
+            ulimit -c unlimited
+            if npm run test:ci:collector:tracing:general; then
+                touch .run3-succeeded
+            else
+                touch .run3-failed
+                exit 1
+            fi
+
+    - run:
+        name: "@instana/collector:tracing:database"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+                    
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"; then
+              touch .run4-started
+
+              ulimit -c unlimited
+              if npm run test:ci:collector:tracing:database; then
+                  touch .run4-succeeded
+              else
+                  touch .run4-failed
+                  exit 1
+              fi
+            else
+              echo "Skipping group."
+            fi
+
+    - run:
+        name: "@instana/collector:tracing:messaging"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+                    
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/messaging"; then
+              touch .run5-started
+
+              ulimit -c unlimited
+              if npm run test:ci:collector:tracing:messaging; then
+                  touch .run5-succeeded
+              else
+                  touch .run5-failed
+                  exit 1
+              fi
+            else
+              echo "Skipping group."
+            fi
+
+    - run:
+        name: "@instana/collector:tracing:protocols"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+                    
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/protocols"; then
+              touch .run6-started
+
+              ulimit -c unlimited
+              if npm run test:ci:collector:tracing:protocols; then
+                  touch .run6-succeeded
+              else
+                  touch .run6-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi
+
+    - run:
+        name: "@instana/collector:tracing:cloud:gcp"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+                    
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/gcp"; then
+              touch .run7-started
+
+              ulimit -c unlimited
+              if npm run test:ci:collector:tracing:cloud:gcp; then
+                  touch .run7-succeeded
+              else
+                  touch .run7-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi              
+
+    - run:
+        name: "@instana/collector:tracing:cloud:aws:v2"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+                  
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"; then
+              touch .run8-started
+
+              ulimit -c unlimited
+              if npm run test:ci:collector:tracing:cloud:aws:v2; then
+                  touch .run8-succeeded
+              else
+                  touch .run8-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi     
+
+    - run:
+        name: "@instana/collector:tracing:cloud:aws:v3"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+            
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"; then
+              touch .run9-started
+
+              ulimit -c unlimited
+              if npm run test:ci:collector:tracing:cloud:aws:v3; then
+                  touch .run9-succeeded
+              else
+                  touch .run9-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi              
+
+    - run:
+        name: "@instana/collector:tracing:logger"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+            
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/loggers"; then
+              touch .run10-started
+
+              ulimit -c unlimited
+              if npm run test:ci:collector:tracing:logger; then
+                  touch .run10-succeeded
+              else
+                  touch .run10-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi              
+
+    - run:
+        name: "@instana/collector:tracing:misc"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+            
+            touch .run11-started
+
+            ulimit -c unlimited
+            if npm run test:ci:collector:tracing:misc; then
+                touch .run11-succeeded
+            else
+                touch .run11-failed
+                exit 1
+            fi
+
+    - run:
+        name: "@instana/autoprofile"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+            
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/autoprofile"; then
+              touch .run12-started
+
+              ulimit -c unlimited
+              if npm run test:ci:autoprofile; then
+                  touch .run12-succeeded
+              else
+                  touch .run12-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi
+
+    - run:
+        name: "@instana/aws-fargate"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+            
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/aws-fargate"; then
+              touch .run13-started
+
+              ulimit -c unlimited
+              if npm run test:ci:aws-fargate; then
+                  touch .run13-succeeded
+              else
+                  touch .run13-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/aws-lambda"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+            
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/aws-lambda"; then
+              touch .run14-started
+
+              ulimit -c unlimited
+              if npm run test:ci:aws-lambda; then
+                  touch .run14-succeeded
+              else
+                  touch .run14-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/azure-container-services"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+                  
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/azure-container-services"; then
+              touch .run15-started
+
+              ulimit -c unlimited
+              if npm run test:ci:azure-container-services; then
+                  touch .run15-succeeded
+              else
+                  touch .run15-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/core"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+            
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core"; then
+              touch .run16-started
+
+              ulimit -c unlimited
+              if npm run test:ci:core; then
+                  touch .run16-succeeded
+              else
+                  touch .run16-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/google-cloud-run"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+            
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/google-cloud-run"; then
+              touch .run17-started
+
+              ulimit -c unlimited
+              if npm run test:ci:google-cloud-run; then
+                  touch .run17-succeeded
+              else
+                  touch .run17-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/metrics-util"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+                        
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/metrics-util"; then
+              touch .run18-started
+              
+              ulimit -c unlimited
+              if npm run test:ci:metrics-util; then
+                  touch .run18-succeeded
+              else
+                  touch .run18-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/opentelemetry-exporter"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+            
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/opentelemetry-exporter"; then
+              touch .run19-started
+
+              ulimit -c unlimited
+              if npm run test:ci:opentelemetry-exporter; then
+                  touch .run19-succeeded
+              else
+                  touch .run19-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/opentelemetry-sampler"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+            
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/opentelemetry-sampler"; then
+              touch .run20-started
+
+              ulimit -c unlimited
+              if npm run test:ci:opentelemetry-sampler; then
+                  touch .run20-succeeded
+              else
+                  touch .run20-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+    - run:
+        name: "@instana/serverless"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+            
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/serverless"; then
+              touch .run21-started
+
+              ulimit -c unlimited
+              if npm run test:ci:serverless; then
+                  touch .run21-succeeded
+              else
+                  touch .run21-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi
+    - run:
+        name: "@instana/shared-metrics"
+        background: true
+        command: |
+            if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+
+            MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+            GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)            
+
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/shared-metrics"; then
+              touch .run22-started
+              
+              ulimit -c unlimited
+              if npm run test:ci:shared-metrics; then
+                  touch .run22-succeeded
+              else
+                  touch .run22-failed
+                  exit 1
+              fi
+            else
+               echo "Skipping group."
+            fi   
+
+    - run:
+        name: Wait for success of background steps
+        command: |
+          if [[ -n "$NODE_COVERAGE" ]]; then
+            exit 0
+          fi
+                    
+          function show_spinner() {
+              local pid=$1
+              local delay=0.75
+              local spin='-\|/'
+              while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+                  local temp=${spin#?}
+                  printf " [%c]  " "$spin"
+                  local spin=$temp${spin%"$temp"}
+                  sleep $delay
+                  printf "\b\b\b\b\b\b"
+              done
+              printf "    \b\b\b\b"
+          }          
+          
+          while true; do
+              started_files=( .run*-started )
+              success_files=( .run*-succeeded )
+              failed_files=( .run*-failed )
+
+              started_count=0
+              for file in "${started_files[@]}"; do
+                  if [ -f "$file" ]; then
+                      started_count=$((started_count + 1))
+                  fi
+              done
+
+              success_count=0
+              for file in "${success_files[@]}"; do
+                  if [ -f "$file" ]; then
+                      success_count=$((success_count + 1))
+                  fi
+              done
+
+              fail_count=0
+              for file in "${failed_files[@]}"; do
+                  if [ -f "$file" ]; then
+                      fail_count=$((fail_count + 1))
+                  fi
+              done
+
+              echo "started", $started_count
+              echo "failed", $fail_count
+              echo "success", $success_count
+
+              if [ $fail_count -gt 0 ]; then
+                  echo "Build failed. Exiting loop."
+                  exit 1
+                  break
+              fi
+
+              if [ $success_count -eq $started_count ]; then
+                  echo "All files present. Exiting loop."
+                  break
+              fi
+
+              show_spinner $$ &
+              spinner_pid=$!
+              sleep 10
+              kill $spinner_pid
+          done
+
+    - run:
+        name: Run Coverage Tests
+        command: |
+          if [[ -z "$NODE_COVERAGE" ]]; then
+            exit 0
           fi
 
-    - store_test_results:
-        path: test-results
+          date
+          npm run coverage-all
 
     - run:
-        name: Analyze Test Durations
-        command: node misc/test-durations/ci
+        name: Cleanup
+        command: |
+          rm -f .run*-succeeded
+          rm -f .run*-failed
+          rm -f .run*-started
+
     # Generate ESLint JSON report for Sonarqube.
     - run:
         name: Run ESLint and generate ESLint report
@@ -192,6 +755,7 @@ shared: &shared
           if [ -n "$NODE_COVERAGE" ]; then
             npx eslint packages/ -f json > eslint-report.json || exit 0
           fi
+
     # Execute the SonarScanner to analyze the project
     - run:
         name: Run SonarQube Scanner
@@ -202,10 +766,6 @@ shared: &shared
 
     - store_artifacts:
         path: coverage
-    - store_artifacts:
-        path: test-results
-    - store_artifacts:
-        path: test-duration-breakdown
 
     - save_cache:
         paths:
@@ -311,7 +871,34 @@ memcached: &memcached
   - image: memcached:1.6.9
 
 jobs:
+  "node-18-dev":
+    environment:
+      CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
+    docker:
+      - image: cimg/node:18.18
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *schema-registry
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+      - <<: *nats
+      - <<: *nats-streaming
+      - <<: *memcached
+      - <<: *couchbase
+      - <<: *couchbase-setup
+      - <<: *localstack
+    <<: *shared
+    resource_class: xlarge
+
   "node-21":
+    environment:
+      CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
+      RUN_ALL_TESTS: true
     docker:
       - image: cimg/node:21.2
       - <<: *zookeeper
@@ -331,10 +918,12 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: << pipeline.parameters.executors >>
-    resource_class: large
+    resource_class: xlarge
 
   "node-20":
+    environment:
+      CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
+      RUN_ALL_TESTS: true
     docker:
       - image: cimg/node:20.9
       - <<: *zookeeper
@@ -354,10 +943,12 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: << pipeline.parameters.executors >>
-    resource_class: large
+    resource_class: xlarge  
 
   "node-18":
+    environment:
+      CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
+      RUN_ALL_TESTS: true
     docker:
       - image: cimg/node:18.18
       - <<: *zookeeper
@@ -377,10 +968,12 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: 15
-    resource_class: medium+
+    resource_class: xlarge
 
   "node-16":
+    environment:
+      CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
+      RUN_ALL_TESTS: true
     docker:
       - image: cimg/node:16.20
       - <<: *zookeeper
@@ -400,13 +993,13 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: << pipeline.parameters.executors >>
-    resource_class: medium+
+    resource_class: xlarge
 
   "node-18-esm":
     environment:
       RUN_ESM: true
-      COLLECTOR_ONLY: true
+      CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
+      RUN_ALL_TESTS: true
     docker:
       - image: cimg/node:18.18
       - <<: *zookeeper
@@ -426,12 +1019,13 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: << pipeline.parameters.executors >>
-    resource_class: medium+
+    resource_class: xlarge
 
   "node-14":
     environment:
       NPM_VERSION: 8.6.0
+      CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
+      RUN_ALL_TESTS: true
     docker:
       - image: cimg/node:14.21
       - <<: *zookeeper
@@ -451,12 +1045,12 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: << pipeline.parameters.executors >>
-    resource_class: medium+
+    resource_class: xlarge
 
   "node-coverage":
     environment:
         NODE_COVERAGE: true
+        CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
     docker:
       - image: cimg/node:18.18
       - <<: *zookeeper
@@ -476,14 +1070,12 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: 1
-    resource_class: large
+    resource_class: xlarge
 
 workflows:
   version: 2
 
   build:
-
     when:
       and:
 
@@ -498,29 +1090,71 @@ workflows:
         - not:
           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
-      - "node-18"
-  other-nodejs-versions:
+      - "node-18-dev"
+
+  node-21:
     when:
       or:
         # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
-        - equal: [ nightly-build-2-am, << pipeline.schedule.name >> ]
+        - equal: [ nightly-build-1, << pipeline.schedule.name >> ]
         # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
-        # by providing the parameter "workflow: other-nodejs-versions"
-        - equal: [ other-nodejs-versions, << pipeline.parameters.workflow >> ]
+        # by providing the parameter "workflow: node-21"
+        - equal: [ node-21, << pipeline.parameters.workflow >> ]
     jobs:
       - "node-21"
+
+  node-20:
+    when:
+      or:
+        # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
+        - equal: [ nightly-build-2, << pipeline.schedule.name >> ]
+        # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
+        # by providing the parameter "workflow: node-20"
+        - equal: [ node-20, << pipeline.parameters.workflow >> ]
+    jobs:
       - "node-20"
+
+  node-18:
+    when:
+      or:
+        # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
+        - equal: [ nightly-build-3, << pipeline.schedule.name >> ]
+        # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
+        # by providing the parameter "workflow: node-18"
+        - equal: [ node-18, << pipeline.parameters.workflow >> ]
+    jobs:
+      - "node-18"
+
+  node-16:
+    when:
+      or:
+        # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
+        - equal: [ nightly-build-4, << pipeline.schedule.name >> ]
+        # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
+        # by providing the parameter "workflow: node-16"
+        - equal: [ node-16, << pipeline.parameters.workflow >> ]
+    jobs:
       - "node-16"
+
+  node-14:
+    when:
+      or:
+        # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
+        - equal: [ nightly-build-5, << pipeline.schedule.name >> ]
+        # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
+        # by providing the parameter "workflow: node-14"
+        - equal: [ node-14, << pipeline.parameters.workflow >> ]
+    jobs:
       - "node-14"
 
   esm-build:
     when:
       or:
         # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
-        - equal: [ nightly-build-4-am, << pipeline.schedule.name >> ]
+        - equal: [ nightly-build-esm, << pipeline.schedule.name >> ]
         # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
         # by providing the parameter "workflow: esm-build"
-        - equal: [ esm-build, << pipeline.parameters.workflow >> ]
+        - equal: [ esm-build, << pipeline.parameters.workflow >> ]      
     jobs:
       - "node-18-esm"
 
@@ -528,9 +1162,9 @@ workflows:
     when:
       or:
         # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
-        - equal: [ weekly-build-sunday-0-am, << pipeline.schedule.name >> ]
+        - equal: [ weekly-build-sunday, << pipeline.schedule.name >> ]
         # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
         # by providing the parameter "workflow: coverage"
-        - equal: [ coverage, << pipeline.parameters.workflow >> ]
+        - equal: [ coverage, << pipeline.parameters.workflow >> ]   
     jobs:
       - "node-coverage"

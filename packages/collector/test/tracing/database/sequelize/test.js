@@ -45,12 +45,25 @@ function registerTests(usePgNative) {
         USE_PG_NATIVE: true
       }
     : {};
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true,
-    env
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true,
+      env
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(controls);
+
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
 
   it(`must fetch (pg-native: ${usePgNative})`, () =>
     controls

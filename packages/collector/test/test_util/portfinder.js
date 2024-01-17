@@ -4,20 +4,116 @@
 
 'use strict';
 
-const usedPorts = {};
-const MAX_PORT = 31000;
-const MIN_PORT = 30000;
-const getRandomNum = () => Math.floor(Math.random() * (MAX_PORT - MIN_PORT + 1) + MIN_PORT);
+const fs = require('fs');
+const path = require('path');
+const ports = {};
+const minPort = 10000;
+const pkg = require('../../package.json');
+const portRanges = {};
+const portDiff = 1000;
+let myPortRange;
 
-// Very naive way to ensure tests & apps use unique ports
-// Searching for free ports on disk is A) slow and B) needs organisation in code e.g. app1 needs port form app2
+const net = require('net');
+const waitSync = require('wait-sync');
+
+function isPortTakenSync(port) {
+  const server = net.createServer().listen(port);
+
+  let isTaken = false;
+  let isClosed = false;
+
+  server.on('error', err => {
+    isTaken = true;
+
+    if (err.code !== 'EADDRINUSE') {
+      // eslint-disable-next-line no-console
+      console.log('[portfinder] error', err);
+    }
+  });
+
+  server.on('listening', () => {
+    server.close();
+    isClosed = true;
+  });
+
+  const startTime = Date.now();
+  const timeout = 1000;
+
+  while (!isClosed && !isTaken && Date.now() - startTime < timeout) {
+    waitSync(0.1);
+  }
+
+  return isTaken || Date.now() - startTime >= timeout;
+}
+
+let i = 0;
+Object.keys(pkg.scripts).forEach(scriptName => {
+  if (scriptName.indexOf('test:ci:') !== -1) {
+    portRanges[scriptName] = {
+      start: minPort + i * portDiff + 1,
+      end: minPort + (i + 1) * portDiff
+    };
+
+    i += 1;
+  }
+});
+
+const pkgs = fs.readdirSync(path.join(__dirname, '..', '..', '..'));
+pkgs.forEach(p => {
+  portRanges[p] = {
+    start: minPort + i * portDiff + 1,
+    end: minPort + (i + 1) * portDiff
+  };
+
+  i += 1;
+});
+
+Object.keys(portRanges).every(key => {
+  if (process.env.LERNA_PACKAGE_NAME === '@instana/collector' && key.indexOf(process.env.npm_lifecycle_event) !== -1) {
+    myPortRange = portRanges[key];
+    return false;
+  } else if (process.env.LERNA_PACKAGE_NAME.indexOf(key) !== -1) {
+    myPortRange = portRanges[key];
+  }
+
+  // continue
+  return true;
+});
+
+// console.log(portRanges);
+
+function getRandomNumberBetween(x, y) {
+  return Math.floor(Math.random() * (y - x + 1)) + x;
+}
+
+const findFreePort = opts => {
+  const port = getRandomNumberBetween(opts.start, opts.end);
+  if (isPortTakenSync(port)) {
+    return findFreePort(opts);
+  }
+
+  return port;
+};
+
 module.exports = function findPort() {
-  const number = getRandomNum();
+  let port;
 
-  if (usedPorts[number]) {
+  try {
+    port = findFreePort({ start: myPortRange.start, end: myPortRange.end });
+
+    if (ports[port]) {
+      // eslint-disable-next-line no-console
+      console.log('Port is already taken by this process', port);
+      return findPort();
+    }
+
+    // eslint-disable-next-line no-console
+    // console.log('Using port', port);
+
+    ports[port] = port;
+  } catch (e) {
     return findPort();
   }
 
-  usedPorts[number] = true;
-  return number;
+  return port;
 };

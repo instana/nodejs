@@ -10,6 +10,7 @@ const { fork } = require('child_process');
 const { expect } = require('chai');
 
 const { HttpDataSource } = require('@instana/metrics-util');
+const portfinder = require('@instana/collector/test/test_util/portfinder');
 
 const { delay, retry } = require('../../../../core/test/test_util');
 const config = require('../../../../serverless/test/config');
@@ -20,7 +21,7 @@ describe('Docker processor', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
-  const metadataMockPort = 1604;
+  const metadataMockPort = portfinder();
   const metadataMockUrl = `http://localhost:${metadataMockPort}`;
   const metadataStatsMockUrl = `${metadataMockUrl}/stats`;
   let messagesFromMetadataMock = [];

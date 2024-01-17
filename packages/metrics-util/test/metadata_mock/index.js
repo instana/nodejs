@@ -18,7 +18,7 @@ const logPrefix = 'metadata-mock';
 const logger = pino.child({ name: logPrefix, pid: process.pid });
 logger.level = 'info';
 
-const port = process.env.METADATA_MOCK_PORT || 1606;
+const port = process.env.METADATA_MOCK_PORT;
 
 const app = express();
 

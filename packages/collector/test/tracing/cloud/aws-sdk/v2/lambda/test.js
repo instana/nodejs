@@ -31,23 +31,33 @@ if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe;
 }
 
-const retryTime = config.getTestTimeout() * 5;
-
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
   this.timeout(config.getTestTimeout() * 10);
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
   describe('tracing enabled, no suppression', function () {
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        AWS_LAMBDA_FUNCTION_NAME: functionName
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          AWS_LAMBDA_FUNCTION_NAME: functionName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
 
     withErrorOptions.forEach(withError => {
       describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
@@ -76,7 +86,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
           agentControls
             .getSpans()
             .then(spans => verifySpans(controls, response, spans, apiPath, operation, withError, ctx)),
-        retryTime
+        1000
       );
     }
     function verifySpans(controls, response, spans, apiPath, operation, withError, ctx) {
@@ -118,15 +128,29 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
 
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {
-        AWS_LAMBDA_FUNCTION_NAME: functionName
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {
+          AWS_LAMBDA_FUNCTION_NAME: functionName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
     });
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     describe('attempt to get result', () => {
       availableOperations.forEach(operation => {
         const requestMethod = getNextCallMethod();
@@ -135,28 +159,39 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
             method: 'GET',
             path: `/${operation}/${requestMethod}`
           });
-          return retry(() => delay(config.getTestTimeout() / 4))
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans AWS Lambda invoke function suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });
   });
 
   describe('tracing enabled but suppressed', () => {
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        AWS_LAMBDA_FUNCTION_NAME: functionName
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          AWS_LAMBDA_FUNCTION_NAME: functionName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
 
     describe('attempt to get result', () => {
       availableOperations.forEach(operation => {
@@ -178,13 +213,11 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
             expect(clientContext.Custom['x-instana-l']).to.equal('0');
           }
 
-          return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans AWS Lambda invoke function suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });

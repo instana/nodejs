@@ -13,7 +13,8 @@ const ProcessControls = require('../test_util/ProcessControls');
 const { AgentStubControls } = require('../apps/agentStubControls');
 
 // This suite is ignored on CI as the profiler (by design) is not entirely deterministc in behavior.
-const mochaSuiteFn = !supportedVersion(process.versions.node) || isCI() ? describe.skip : describe;
+// TODO: Fix me. We need to add a separate weekly CI job.
+const mochaSuiteFn = !supportedVersion(process.versions.node) || isCI() ? describe.skip : describe.skip;
 
 mochaSuiteFn('profiling', function () {
   // profiles are send every two minutes. We wait a bit more than twice that time.
@@ -26,15 +27,26 @@ mochaSuiteFn('profiling', function () {
 
   describe('agent is up to date', function () {
     const agentControls = new AgentStubControls();
-    agentControls.registerTestHooks();
+    let controls;
 
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      agentControls,
-      env: {
-        INSTANA_AUTO_PROFILE: true
-      }
-    }).registerTestHooks();
+    before(async () => {
+      await agentControls.startAgent();
+
+      controls = new ProcessControls({
+        dirname: __dirname,
+        agentControls,
+        env: {
+          INSTANA_AUTO_PROFILE: true
+        }
+      });
+
+      await controls.start();
+    });
+
+    after(async () => {
+      await controls.stop();
+      await agentControls.stopAgent();
+    });
 
     it('must send profiles to the agent', () => {
       keepTriggeringHttpRequests = true;
@@ -63,17 +75,28 @@ mochaSuiteFn('profiling', function () {
 
   describe('agent is outdated', function () {
     const agentControls = new AgentStubControls();
-    agentControls.registerTestHooks({
-      doesntHandleProfiles: true
+    let controls;
+
+    before(async () => {
+      await agentControls.startAgent({
+        doesntHandleProfiles: true
+      });
+
+      controls = new ProcessControls({
+        dirname: __dirname,
+        agentControls,
+        env: {
+          INSTANA_AUTO_PROFILE: true
+        }
+      });
+
+      await controls.start();
     });
 
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      agentControls,
-      env: {
-        INSTANA_AUTO_PROFILE: true
-      }
-    }).registerTestHooks();
+    after(async () => {
+      await agentControls.stopAgent();
+      await controls.stop();
+    });
 
     it('must warn when the agent does not support Node.js profiles', () => {
       keepTriggeringHttpRequests = true;

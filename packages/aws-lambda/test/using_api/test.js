@@ -13,17 +13,13 @@ const Control = require('../Control');
 const delay = require('../../../core/test/test_util/delay');
 const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
 const config = require('../../../serverless/test/config');
-const retry = require('../../../serverless/test/util/retry');
+const retry = require('@instana/core/test/test_util/retry');
 
 const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
 const version = '$LATEST';
 const qualifiedArn = `${unqualifiedArn}:${version}`;
 
-const backendPort = 8443;
-const backendBaseUrl = `https://localhost:${backendPort}/serverless`;
-const downstreamDummyPort = 3456;
-const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
 function prelude(opts) {
@@ -34,8 +30,8 @@ function prelude(opts) {
   if (opts.error) {
     env.LAMDBA_ERROR = opts.error;
   }
-  if (opts.instanaEndpointUrl) {
-    env.INSTANA_ENDPOINT_URL = opts.instanaEndpointUrl;
+  if (opts.instanaEndpointUrlMissing) {
+    env.INSTANA_ENDPOINT_URL = '';
   }
   if (opts.instanaAgentKey) {
     env.INSTANA_AGENT_KEY = opts.instanaAgentKey;
@@ -44,17 +40,7 @@ function prelude(opts) {
     env.WITH_CONFIG = 'true';
   }
 
-  const control = new Control({
-    faasRuntimePath: path.join(__dirname, '../runtime_mock'),
-    handlerDefinitionPath: opts.handlerDefinitionPath,
-    startBackend: true,
-    backendPort,
-    backendBaseUrl,
-    downstreamDummyUrl,
-    env
-  });
-  control.registerTestHooks();
-  return control;
+  return env;
 }
 
 describe('Using the API', () => {
@@ -65,27 +51,63 @@ describe('Using the API', () => {
     // - INSTANA_AGENT_KEY is configured
     // - back end is reachable
     // - lambda function ends with success
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
-    it('must capture metrics and spans', () => verify(control, false, true));
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must capture metrics and spans', () => {
+      return verify(control, false, true);
+    });
   });
 
   describe('when lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable
     // - lambda function ends with an error
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       error: true
     });
 
-    it('must capture metrics and spans', () => verify(control, true, true));
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must capture metrics and spans', () => {
+      return verify(control, true, true);
+    });
   });
 
   describe('with config', function () {
@@ -93,14 +115,32 @@ describe('Using the API', () => {
     // - back end is reachable
     // - client provides a config object
     // - lambda function ends with success
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       withConfig: true
     });
 
-    it('must capture metrics and spans', () => verify(control, false, true));
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must capture metrics and spans', () => {
+      return verify(control, false, true);
+    });
   });
 
   describe('with config, when lambda function yields an error', function () {
@@ -108,51 +148,129 @@ describe('Using the API', () => {
     // - back end is reachable
     // - client provides a config object
     // - lambda function ends with an error
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       withConfig: true,
       error: true
     });
 
-    it('must capture metrics and spans', () => verify(control, true, true));
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must capture metrics and spans', () => {
+      return verify(control, true, true);
+    });
   });
 
   describe('when INSTANA_ENDPOINT_URL is missing', function () {
     // - INSTANA_ENDPOINT_URL is missing
     // - lambda function ends with success
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       handlerDefinitionPath,
+      instanaEndpointUrlMissing: true,
       instanaAgentKey
     });
 
-    it('must ignore the missing URL gracefully', () => verify(control, false, false));
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must ignore the missing URL gracefully', () => {
+      return verify(control, false, false);
+    });
   });
 
   describe('when INSTANA_ENDPOINT_URL is missing and the lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is missing
     // - lambda function ends with an error
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       handlerDefinitionPath,
       instanaAgentKey,
+      instanaEndpointUrlMissing: true,
       error: true
     });
 
-    it('must ignore the missing URL gracefully', () => verify(control, true, false));
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must ignore the missing URL gracefully', () => {
+      return verify(control, true, false);
+    });
   });
 
   describe('with config, when INSTANA_ENDPOINT_URL is missing', function () {
     // - INSTANA_ENDPOINT_URL is missing
     // - client provides a config
     // - lambda function ends with success
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       handlerDefinitionPath,
       instanaAgentKey,
+      instanaEndpointUrlMissing: true,
       withConfig: true
     });
 
-    it('must ignore the missing URL gracefully', () => verify(control, false, false));
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must ignore the missing URL gracefully', () => {
+      return verify(control, false, false);
+    });
   });
 
   function verify(control, error, expectSpansAndMetrics) {

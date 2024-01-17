@@ -12,10 +12,8 @@ const constants = require('@instana/core').tracing.constants;
 const Control = require('../Control');
 const { expectExactlyOneMatching } = require('../../../core/test/test_util');
 const config = require('../../../serverless/test/config');
-const retry = require('../../../serverless/test/util/retry');
+const retry = require('@instana/core/test/test_util/retry');
 
-const downstreamDummyPort = 4567;
-const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 const region = 'us-east-2';
 const account = '555123456789';
 const instrumentedContainerName = 'nodejs-fargate-test-container';
@@ -34,10 +32,6 @@ const requestHeaders = {
 function prelude(opts = {}) {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
-  opts.platformVersion = opts.platformVersion || '1.3.0';
-  if (opts.startBackend == null) {
-    opts.startBackend = true;
-  }
 
   let env = {
     INSTANA_EXTRA_HTTP_HEADERS:
@@ -45,6 +39,7 @@ function prelude(opts = {}) {
       'x-eXit-Request-Header-1; X-EXIT-REQUEST-HEADER-2 ',
     ESM_TEST: true
   };
+
   if (opts.env) {
     env = {
       ...env,
@@ -52,36 +47,48 @@ function prelude(opts = {}) {
     };
   }
 
-  const controlOpts = {
-    ...opts,
-    env,
-    containerAppPath,
-    downstreamDummyPort,
-    downstreamDummyUrl,
-    instanaAgentKey
-  };
   if (opts.proxy) {
-    controlOpts.env.INSTANA_ENDPOINT_PROXY = opts.proxy;
+    env.INSTANA_ENDPOINT_PROXY = opts.proxy;
   }
-  return new Control(controlOpts).registerTestHooks();
+
+  return env;
 }
 
 // Run the tests only for supported node versions
 if (esmSupportedVersion(process.versions.node)) {
   describe('AWS fargate esm test', function () {
     describe('when the back end is up (platform version 1.3.0)', function () {
-      const control = prelude.bind(this)({
-        platformVersion: '1.3.0'
+      const env = prelude.bind(this)({});
+
+      let control;
+
+      before(async () => {
+        control = new Control({
+          env,
+          platformVersion: '1.3.0',
+          containerAppPath,
+          instanaAgentKey,
+          startBackend: true
+        });
+
+        await control.start();
       });
 
-      it('should collect metrics and trace http requests', () =>
-        control
+      after(async () => {
+        await control.stop();
+      });
+
+      it('should collect metrics and trace http requests', () => {
+        return control
           .sendRequest({
             method: 'GET',
             path: '/',
             headers: requestHeaders
           })
-          .then(response => verify(control, response, true)));
+          .then(response => {
+            return verify(control, response, true);
+          });
+      });
     });
 
     function verify(control, response, expectMetricsAndSpans) {
@@ -124,16 +131,16 @@ if (esmSupportedVersion(process.versions.node)) {
     }
 
     function getAndVerifySpans(control) {
-      return control.getSpans().then(spans => verifySpans(spans));
+      return control.getSpans().then(spans => verifySpans(spans, control));
     }
 
-    function verifySpans(spans) {
-      const entry = verifyHttpEntry(spans);
-      const exit = verifyHttpExit(spans, entry);
+    function verifySpans(spans, control) {
+      const entry = verifyHttpEntry(spans, control);
+      const exit = verifyHttpExit(spans, entry, control);
       return { entry, exit };
     }
 
-    function verifyHttpEntry(spans) {
+    function verifyHttpEntry(spans, control) {
       return expectExactlyOneMatching(spans, span => {
         expect(span.t).to.exist;
         expect(span.p).to.not.exist;
@@ -147,7 +154,7 @@ if (esmSupportedVersion(process.versions.node)) {
         expect(span.f.e).to.equal(instrumentedContainerId);
         expect(span.data.http.method).to.equal('GET');
         expect(span.data.http.url).to.equal('/');
-        expect(span.data.http.host).to.equal('127.0.0.1:4215');
+        expect(span.data.http.host).to.equal(`127.0.0.1:${control.getPort()}`);
         expect(span.data.http.status).to.equal(200);
         expect(span.data.http.header).to.deep.equal({
           'x-entry-request-header-1': 'entry request header value 1',
@@ -160,7 +167,7 @@ if (esmSupportedVersion(process.versions.node)) {
       });
     }
 
-    function verifyHttpExit(spans, entry) {
+    function verifyHttpExit(spans, entry, control) {
       return expectExactlyOneMatching(spans, span => {
         expect(span.t).to.equal(entry.t);
         expect(span.p).to.equal(entry.s);
@@ -173,7 +180,7 @@ if (esmSupportedVersion(process.versions.node)) {
         expect(span.f.cp).to.equal('aws');
         expect(span.f.e).to.equal(instrumentedContainerId);
         expect(span.data.http.method).to.equal('GET');
-        expect(span.data.http.url).to.equal(downstreamDummyUrl);
+        expect(span.data.http.url).to.contain(control.downstreamDummyUrl);
         expect(span.data.http.header).to.deep.equal({
           'x-exit-request-header-1': 'exit request header value 1',
           'x-exit-request-header-2': 'exit,request,header,value 2'

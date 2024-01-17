@@ -23,48 +23,6 @@ const cert = fs.readFileSync(path.join(sslDir, 'cert'));
 
 class ProcessControls {
   /**
-   * Shorthand for setUpSuiteHooks and setUpTestCaseCleanUpHooks.
-   */
-  static setUpHooks(...allControls) {
-    ProcessControls.setUpHooksWithRetryTime(null, ...allControls);
-  }
-
-  /**
-   * Shorthand for setUpSuiteHooks and setUpTestCaseCleanUpHooks.
-   */
-  static setUpHooksWithRetryTime(retryTime, ...allControls) {
-    ProcessControls.setUpSuiteHooksWithRetryTime(retryTime, ...allControls);
-    ProcessControls.setUpTestCaseCleanUpHooks(...allControls);
-  }
-
-  /**
-   * Starts the corresponding child process for all given controls before starting the suite and stops them after the
-   * suite has finished.
-   */
-  static setUpSuiteHooks(...allControls) {
-    ProcessControls.setUpSuiteHooksWithRetryTime(null, ...allControls);
-  }
-
-  /**
-   * Starts the corresponding child process for all given controls before starting the suite and stops them after the
-   * suite has finished. Ensures that app and agent is booted before the test can start.
-   */
-  static setUpSuiteHooksWithRetryTime(retryTime, ...allControls) {
-    before(() => Promise.all(allControls.map(control => control.startAndWaitForAgentConnection(retryTime))));
-    after(() => {
-      return Promise.all(allControls.map(control => control.stop()));
-    });
-  }
-
-  /**
-   * Cleans up per test-case data (IPC messages received from the child process) before and after each test case.
-   */
-  static setUpTestCaseCleanUpHooks(...allControls) {
-    beforeEach(() => Promise.all(allControls.map(control => control.clearIpcMessages())));
-    afterEach(() => Promise.all(allControls.map(control => control.clearIpcMessages())));
-  }
-
-  /**
    * @typedef {Object} ProcessControlsOptions
    * @property {string} [appPath]
    * @property {string} [cwd]
@@ -147,6 +105,7 @@ class ProcessControls {
     if (!this.agentControls && this.useGlobalAgent) {
       this.agentControls = globalAgent.instance;
     }
+
     const agentPort = this.agentControls ? this.agentControls.agentPort : undefined;
 
     this.env = _.assign(
@@ -158,32 +117,18 @@ class ProcessControls {
         INSTANA_LOG_LEVEL: 'warn',
         INSTANA_DISABLE_TRACING: !this.tracingEnabled,
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: '1',
-        INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: opts.minimalDelay != null ? opts.minimalDelay : 0
+        INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: opts.minimalDelay != null ? opts.minimalDelay : 0,
+        INSTANA_FULL_METRICS_INTERNAL_IN_S: 1,
+        INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS: 500
       },
       opts.env
     );
+
     if (this.usePreInit) {
       this.env.INSTANA_EARLY_INSTRUMENTATION = 'true';
     }
+
     this.receivedIpcMessages = [];
-  }
-
-  /**
-   * The _legacy_ convenience method used by tests that start and stop the app under test before/after each test case.
-   * If possible, this should be avoided in new tests. Instead, use the static methods of this class named setUpHooks
-   * and its to start the app under test once for a whole suite. This is crucial to keep the duration of the whole test
-   * suite on CI under control.
-   */
-  registerTestHooks(retryTime) {
-    if (this.agentControls) {
-      beforeEach(() => this.startAndWaitForAgentConnection(retryTime));
-    } else {
-      beforeEach(() => this.start(retryTime));
-    }
-
-    afterEach(() => this.stop());
-
-    return this;
   }
 
   getPort() {
@@ -220,20 +165,37 @@ class ProcessControls {
   }
 
   async waitUntilServerIsUp(retryTime, until) {
-    await testUtils.retry(
-      () =>
-        this.sendRequest({
-          method: 'GET',
-          suppressTracing: true
-        }),
-      retryTime,
-      until
-    );
+    try {
+      await testUtils.retry(
+        () =>
+          this.sendRequest({
+            method: 'GET',
+            suppressTracing: true
+          }),
+        retryTime,
+        until
+      );
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log(`[ProcessControls] error: ${err}`);
+      throw err;
+    }
   }
 
   async startAndWaitForAgentConnection(retryTime, until) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `[ProcessControls] start with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()} and appPath: ${
+        this.appPath
+      }`
+    );
+
+    await this.clearIpcMessages();
     await this.start(retryTime, until);
     await this.agentControls.waitUntilAppIsCompletelyInitialized(this.getPid());
+
+    // eslint-disable-next-line no-console
+    console.log('[ProcessControls] started');
   }
 
   async waitForAgentConnection() {

@@ -24,8 +24,15 @@ mochaSuiteFn('http with proxy', function () {
   const expressProxyControls = require('./expressProxyControls');
   const expressControls = require('../../../../apps/expressControls');
 
-  expressProxyControls.registerTestHooks({ useGlobalAgent: true });
-  expressControls.registerTestHooks({ useGlobalAgent: true });
+  before(async () => {
+    await expressControls.start({ useGlobalAgent: true });
+    await expressProxyControls.start({ useGlobalAgent: true, expressControls });
+  });
+
+  after(async () => {
+    await expressControls.stop();
+    await expressProxyControls.stop();
+  });
 
   beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
   beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
@@ -71,7 +78,7 @@ mochaSuiteFn('http with proxy', function () {
                 span => expect(span.data.http.method).to.equal('POST'),
                 span =>
                   expect(span.data.http.url).to.equal(
-                    `http://localhost:${expressControls.appPort}/proxy-call/checkout`
+                    `http://localhost:${expressControls.getPort()}/proxy-call/checkout`
                   ),
                 span => expect(span.data.http.status).to.equal(201)
               ]);
@@ -134,7 +141,7 @@ mochaSuiteFn('http with proxy', function () {
                 span => expect(span.data.http.method).to.equal('POST'),
                 span =>
                   expect(span.data.http.url).to.equal(
-                    `http://localhost:${expressControls.appPort}/proxy-call/checkout`
+                    `http://localhost:${expressControls.getPort()}/proxy-call/checkout`
                   ),
                 span => expect(span.data.http.status).to.equal(200)
               ]);
@@ -243,7 +250,7 @@ mochaSuiteFn('http with proxy', function () {
               span => expect(span.data.http.method).to.equal('POST'),
               span =>
                 expect(span.data.http.url).to.equal(
-                  `http://localhost:${expressControls.appPort}/proxy-call/call-${call}`
+                  `http://localhost:${expressControls.getPort()}/proxy-call/call-${call}`
                 ),
               span => expect(span.data.http.status).to.equal((call % 20) + 200)
             ]);

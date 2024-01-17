@@ -20,33 +20,55 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 mochaSuiteFn('tracing/http2', function () {
   this.timeout(config.getTestTimeout() * 2);
 
-  const agentControls = new AgentStubControls().registerHooksForSuite({
-    extraHeaders: [
-      //
-      'X-My-Request-Header',
-      'X-My-Response-Header',
-      'x-iNsTanA-sErViCe'
-    ],
-    secretsList: ['remove']
+  const agentControls = new AgentStubControls();
+
+  let serverControls;
+  let clientControls;
+
+  before(async () => {
+    await agentControls.startAgent({
+      extraHeaders: [
+        //
+        'X-My-Request-Header',
+        'X-My-Response-Header',
+        'x-iNsTanA-sErViCe'
+      ],
+      secretsList: ['remove']
+    });
+
+    serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'server'),
+      http2: true,
+      agentControls
+    });
+
+    clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      http2: true,
+      agentControls,
+      forcePortSearching: true,
+      env: {
+        SERVER_PORT: serverControls.getPort()
+      }
+    });
+
+    await serverControls.start();
+    await clientControls.start();
   });
 
-  const serverControls = new ProcessControls({
-    appPath: path.join(__dirname, 'server'),
-    http2: true,
-    agentControls
+  after(async () => {
+    await agentControls.stopAgent();
+    await serverControls.stop();
+    await clientControls.stop();
   });
 
-  const clientControls = new ProcessControls({
-    appPath: path.join(__dirname, 'client'),
-    http2: true,
-    agentControls,
-    forcePortSearching: true,
-    env: {
-      SERVER_PORT: serverControls.getPort()
-    }
+  beforeEach(async () => {
+    await agentControls.clearReceivedData();
   });
 
-  ProcessControls.setUpHooks(serverControls, clientControls);
+  afterEach(async () => {
+    await agentControls.clearReceivedData();
+  });
 
   [false, true].forEach(withQuery => {
     it(`must trace http2 GET with${withQuery ? '' : 'out'} query`, () =>

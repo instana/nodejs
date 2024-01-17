@@ -2,7 +2,6 @@ node_modules
 npm-debug*
 lerna-debug.log
 nodejs-license-report.csv
-test-duration-breakdown
 .nyc_output
 coverage
 /db2

@@ -23,7 +23,18 @@ describe('tracing/logger/pino', function () {
     const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
     mochaSuiteFn(`pino@${pinoVersion}`, function () {
-      const controls = new ProcessControls({
+      runTests(pinoVersion, false);
+      runTests(pinoVersion, true);
+    });
+  });
+
+  function runTests(pinoVersion, useExpressPino) {
+    const suffix = useExpressPino ? ' (express-pino)' : '';
+
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
         dirname: __dirname,
         useGlobalAgent: true,
         env: {
@@ -31,15 +42,16 @@ describe('tracing/logger/pino', function () {
         }
       });
 
-      ProcessControls.setUpHooks(controls);
-
-      runTests(false, controls);
-      runTests(true, controls);
+      await controls.startAndWaitForAgentConnection();
     });
-  });
 
-  function runTests(useExpressPino, controls) {
-    const suffix = useExpressPino ? ' (express-pino)' : '';
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
 
     it(`must not trace info${suffix}`, () =>
       trigger('info', useExpressPino, controls).then(() =>
@@ -65,7 +77,7 @@ describe('tracing/logger/pino', function () {
       });
 
       return testUtils
-        .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+        .retry(() => testUtils.delay(1000))
         .then(() => agentControls.getSpans())
         .then(spans => {
           if (spans.length > 0) {

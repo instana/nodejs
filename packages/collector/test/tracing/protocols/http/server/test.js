@@ -20,17 +20,33 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 mochaSuiteFn('tracing/http(s) server', function () {
   this.timeout(config.getTestTimeout());
 
-  const agentControls = new AgentStubControls().registerHooksForSuite({
-    extraHeaders: [
-      //
-      'X-My-Entry-Request-Header',
-      'X-My-Entry-Request-Multi-Header',
-      'X-My-Entry-Response-Header',
-      'X-My-Entry-Response-Multi-Header',
-      'X-Write-Head-Response-Header',
-      'X-Write-Head-Response-Multi-Header'
-    ],
-    secretsList: ['secret', 'Enigma', 'CIPHER']
+  const agentControls = new AgentStubControls();
+
+  before(async () => {
+    await agentControls.startAgent({
+      extraHeaders: [
+        //
+        'X-My-Entry-Request-Header',
+        'X-My-Entry-Request-Multi-Header',
+        'X-My-Entry-Response-Header',
+        'X-My-Entry-Response-Multi-Header',
+        'X-Write-Head-Response-Header',
+        'X-Write-Head-Response-Multi-Header'
+      ],
+      secretsList: ['secret', 'Enigma', 'CIPHER']
+    });
+  });
+
+  after(async () => {
+    await agentControls.stopAgent();
+  });
+
+  beforeEach(async () => {
+    await agentControls.clearReceivedData();
+  });
+
+  afterEach(async () => {
+    await agentControls.clearReceivedData();
   });
 
   describe('http', function () {
@@ -47,17 +63,28 @@ mochaSuiteFn('tracing/http(s) server', function () {
 });
 
 function registerTests(agentControls, useHttps, useHttp2CompatApi) {
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    http2: useHttp2CompatApi,
-    agentControls,
-    env: {
-      USE_HTTPS: useHttps,
-      USE_HTTP2: useHttp2CompatApi
-    }
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      http2: useHttp2CompatApi,
+      agentControls,
+      env: {
+        USE_HTTPS: useHttps,
+        USE_HTTP2: useHttp2CompatApi
+      }
+    });
+    await controls.startAndWaitForAgentConnection();
   });
 
-  ProcessControls.setUpHooks(controls);
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
 
   it(`must capture incoming calls and start a new trace (HTTPS: ${useHttps})`, () =>
     controls

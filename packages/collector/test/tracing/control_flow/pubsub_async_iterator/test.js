@@ -18,12 +18,24 @@ mochaSuiteFn('tracing/graphql-subscriptions - PubSub/async iterator (pull before
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
+  let controls;
 
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(controls);
+
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
 
   it('should keep cls context when pulling before pushing', () =>
     controls

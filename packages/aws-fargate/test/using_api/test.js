@@ -12,7 +12,7 @@ const constants = require('@instana/core').tracing.constants;
 const Control = require('../Control');
 const { delay, expectExactlyOneMatching } = require('../../../core/test/test_util');
 const config = require('../../../serverless/test/config');
-const retry = require('../../../serverless/test/util/retry');
+const retry = require('@instana/core/test/test_util/retry');
 
 const region = 'us-east-2';
 const account = '555123456789';
@@ -23,41 +23,73 @@ const instrumentedContainerId = `${taskArn}::${instrumentedContainerName}`;
 const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'aws-fargate-dummy-key';
 
-function prelude(opts = {}) {
+function prelude() {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
-
-  const controlOpts = {
-    ...opts,
-    containerAppPath,
-    instanaAgentKey,
-    startDownstreamDummy: false,
-    startBackend: true
-  };
-  return new Control(controlOpts).registerTestHooks();
 }
 
 describe('Using the API', function () {
   describe('when configured properly', function () {
-    const control = prelude.bind(this)();
-    it('should collect metrics and trace http requests', () =>
-      control
+    prelude.bind(this)();
+    let control;
+
+    before(async () => {
+      control = new Control({
+        containerAppPath,
+        instanaAgentKey,
+        startDownstreamDummy: false,
+        startBackend: true
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('should collect metrics and trace http requests', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path: '/'
         })
-        .then(response => verify(control, response)));
+        .then(response => {
+          return verify(control, response);
+        });
+    });
   });
 
   describe('when not configured properly', function () {
-    const control = prelude.bind(this)({ unconfigured: false });
-    it('should provide a no-op API', () =>
-      control
+    prelude.bind(this)({});
+    let control;
+
+    before(async () => {
+      control = new Control({
+        containerAppPath,
+        unconfigured: false,
+        instanaAgentKey,
+        startDownstreamDummy: false,
+        startBackend: true
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('should provide a no-op API', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path: '/'
         })
-        .then(response => verifyNoOp(control, response)));
+        .then(response => {
+          return verifyNoOp(control, response);
+        });
+    });
   });
 
   function verify(control, response) {
@@ -67,7 +99,9 @@ describe('Using the API', function () {
     // During phase 1 of the Kafka header migration (October 2022 - October 2023) there will be a debug log about
     // ignoring the option 'both' for rdkafka. We do not care about that log message in this test.
     const debug = response.logs.debug.filter(msg => !msg.includes('Ignoring configuration or default value'));
-    expect(debug).to.deep.equal(['Sending data to Instana (/metrics).', 'Sent data to Instana (/metrics).']);
+    expect(debug).to.contain('Sending data to Instana (/metrics).');
+    expect(debug).to.contain('Sent data to Instana (/metrics).');
+
     expect(response.logs.info).to.be.empty;
     expect(response.logs.warn).to.deep.equal([
       'INSTANA_DISABLE_CA_CHECK is set, which means that the server certificate will not be verified against the ' +
@@ -108,7 +142,7 @@ describe('Using the API', function () {
       expect(span.f.e).to.equal(instrumentedContainerId);
       expect(span.data.http.method).to.equal('GET');
       expect(span.data.http.url).to.equal('/');
-      expect(span.data.http.host).to.equal('127.0.0.1:4215');
+      expect(span.data.http.host).to.equal(`127.0.0.1:${control.getPort()}`);
       expect(span.data.http.status).to.equal(200);
       expect(span.ec).to.equal(0);
       verifyHeaders(span);

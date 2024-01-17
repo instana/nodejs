@@ -9,14 +9,12 @@ const { expect, assert } = require('chai');
 const { fail } = assert;
 const path = require('path');
 const constants = require('@instana/core').tracing.constants;
+const portfinder = require('@instana/collector/test/test_util/portfinder');
 
 const Control = require('../Control');
 const { delay, expectExactlyOneMatching } = require('../../../core/test/test_util');
 const config = require('../../../serverless/test/config');
-const retry = require('../../../serverless/test/util/retry');
-
-const downstreamDummyPort = 4567;
-const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
+const retry = require('@instana/core/test/test_util/retry');
 
 const region = 'us-east-2';
 const account = '555123456789';
@@ -50,16 +48,12 @@ function prelude(opts = {}) {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
-  opts.platformVersion = opts.platformVersion || '1.3.0';
-  if (opts.startBackend == null) {
-    opts.startBackend = true;
-  }
-
   let env = {
     INSTANA_EXTRA_HTTP_HEADERS:
       'x-entry-request-header-1; X-ENTRY-REQUEST-HEADER-2 ; x-entry-response-header-1;X-ENTRY-RESPONSE-HEADER-2 , ' +
       'x-eXit-Request-Header-1; X-EXIT-REQUEST-HEADER-2 '
   };
+
   if (opts.env) {
     env = {
       ...env,
@@ -67,74 +61,140 @@ function prelude(opts = {}) {
     };
   }
 
-  const controlOpts = {
-    ...opts,
-    env,
-    containerAppPath,
-    downstreamDummyPort,
-    downstreamDummyUrl,
-    instanaAgentKey
-  };
-  if (opts.proxy) {
-    controlOpts.env.INSTANA_ENDPOINT_PROXY = opts.proxy;
+  if (opts.proxyUrl) {
+    env.INSTANA_ENDPOINT_PROXY = opts.proxyUrl;
   }
-  return new Control(controlOpts).registerTestHooks();
+
+  return env;
 }
 
 describe('AWS fargate integration test', function () {
   describe('when the back end is up (platform version 1.3.0)', function () {
-    const control = prelude.bind(this)({
-      platformVersion: '1.3.0'
+    const env = prelude.bind(this)({});
+
+    let control;
+
+    before(async () => {
+      control = new Control({
+        env,
+        platformVersion: '1.3.0',
+        containerAppPath,
+        instanaAgentKey,
+        startBackend: true
+      });
+
+      await control.start();
     });
 
-    it('should collect metrics and trace http requests', () =>
-      control
+    after(async () => {
+      await control.stop();
+    });
+
+    it('should collect metrics and trace http requests', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path: '/',
           headers: requestHeaders
         })
-        .then(response => verify(control, response, true)));
+        .then(response => {
+          return verify(control, response, true);
+        });
+    });
   });
 
   describe('when the back end is up (platform version 1.4.0)', function () {
-    const control = prelude.bind(this)({
-      platformVersion: '1.4.0'
+    const env = prelude.bind(this)({});
+
+    let control;
+
+    before(async () => {
+      control = new Control({
+        env,
+        platformVersion: '1.4.0',
+        containerAppPath,
+        instanaAgentKey,
+        startBackend: true
+      });
+
+      await control.start();
     });
 
-    it('should collect metrics and trace http requests', () =>
-      control
+    after(async () => {
+      await control.stop();
+    });
+
+    it('should collect metrics and trace http requests', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path: '/',
           headers: requestHeaders
         })
-        .then(response => verify(control, response, true)));
+        .then(response => {
+          return verify(control, response, true);
+        });
+    });
   });
 
   describe('when the back end is down', function () {
-    const control = prelude.bind(this)({
-      startBackend: false
+    const env = prelude.bind(this)({});
+    let control;
+
+    before(async () => {
+      control = new Control({
+        env,
+        platformVersion: '1.3.0',
+        containerAppPath,
+        instanaAgentKey,
+        startBackend: false
+      });
+
+      await control.start();
     });
 
-    it('should ignore connection failures gracefully', () =>
-      control
+    after(async () => {
+      await control.stop();
+    });
+
+    it('should ignore connection failures gracefully', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path: '/',
           headers: requestHeaders
         })
-        .then(response => verify(control, response, false)));
+        .then(response => {
+          return verify(control, response, false);
+        });
+    });
   });
 
   describe('when the back end becomes available after being down initially', function () {
-    const control = prelude.bind(this)({
-      startBackend: false
+    const env = prelude.bind(this)({});
+
+    let control;
+
+    before(async () => {
+      control = new Control({
+        env,
+        platformVersion: '1.3.0',
+        containerAppPath,
+        instanaAgentKey,
+        startBackend: false
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
     });
 
     it('should buffer snapshot data, metrics and spans for a limited time until the back end becomes available', () => {
       // 1. send http request
       let response;
+
       return control
         .sendRequest({
           method: 'GET',
@@ -146,84 +206,182 @@ describe('AWS fargate integration test', function () {
           // 2. wait a bit
           return delay(750);
         })
-        .then(() =>
+        .then(() => {
           // 3. now start the back end
-          control.startBackendAndWaitForIt()
-        )
-        .then(() =>
+          return control.startBackendAndWaitForIt();
+        })
+        .then(() => {
           // 4. fargate collector should send uncompressed snapshot data and the spans as soon as the back end comes up
-          verify(control, response, true)
-        );
+          return verify(control, response, true);
+        });
     });
   });
 
   describe('when using a proxy without authentication', function () {
-    const control = prelude.bind(this)({
-      startProxy: true,
-      proxy: 'http://localhost:4128'
+    const proxyPort = portfinder();
+
+    const env = prelude.bind(this)({
+      proxyUrl: `http://localhost:${proxyPort}`
     });
 
-    it('should collect metrics and trace http requests', () =>
-      control
+    let control;
+
+    before(async () => {
+      control = new Control({
+        env,
+        platformVersion: '1.3.0',
+        containerAppPath,
+        instanaAgentKey,
+        startBackend: true,
+        startProxy: true,
+        proxyPort
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('should collect metrics and trace http requests', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path: '/',
           headers: requestHeaders
         })
-        .then(response => verify(control, response, true)));
+        .then(response => {
+          return verify(control, response, true);
+        });
+    });
   });
 
   describe('when using a proxy with authentication', function () {
-    const control = prelude.bind(this)({
+    const proxyPort = portfinder();
+
+    const env = prelude.bind(this)({
       startProxy: true,
-      proxy: 'http://user:password@localhost:4128',
-      proxyRequiresAuthorization: true
+      proxyUrl: `http://user:password@localhost:${proxyPort}`
     });
 
-    it('should collect metrics and trace http requests', () =>
-      control
+    let control;
+
+    before(async () => {
+      control = new Control({
+        env,
+        platformVersion: '1.3.0',
+        containerAppPath,
+        instanaAgentKey,
+        startBackend: true,
+        startProxy: true,
+        proxyPort,
+        proxyRequiresAuthorization: true
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('should collect metrics and trace http requests', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path: '/',
           headers: requestHeaders
         })
-        .then(response => verify(control, response, true)));
+        .then(response => {
+          return verify(control, response, true);
+        });
+    });
   });
 
   describe('when proxy authentication fails due to the wrong password', function () {
-    const control = prelude.bind(this)({
-      startProxy: true,
-      proxy: 'http://user:wrong-password@localhost:4128',
-      proxyRequiresAuthorization: true
+    const proxyPort = portfinder();
+
+    const env = prelude.bind(this)({
+      proxyUrl: `http://user:wrong-password@localhost:${proxyPort}`
     });
 
-    it('the fargate container must not be impacted', () =>
-      control
+    let control;
+
+    before(async () => {
+      control = new Control({
+        env,
+        platformVersion: '1.3.0',
+        containerAppPath,
+        instanaAgentKey,
+        startBackend: true,
+        startProxy: true,
+        proxyPort,
+        proxyRequiresAuthorization: true
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('the fargate container must not be impacted', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path: '/',
           headers: requestHeaders
         })
-        .then(response => verify(control, response, false)));
+        .then(response => {
+          return verify(control, response, false);
+        });
+    });
   });
 
   describe('when the proxy is not up', function () {
-    const control = prelude.bind(this)({
-      proxy: 'http://localhost:4128'
+    const proxyPort = portfinder();
+
+    const env = prelude.bind(this)({
+      proxyUrl: `http://localhost:${proxyPort}`
     });
 
-    it('the fargate container must not be impacted', () =>
-      control
+    let control;
+
+    before(async () => {
+      control = new Control({
+        env,
+        platformVersion: '1.3.0',
+        containerAppPath,
+        instanaAgentKey,
+        startBackend: true,
+        startProxy: false,
+        proxyPort
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('the fargate container must not be impacted', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path: '/',
           headers: requestHeaders
         })
-        .then(response => verify(control, response, false)));
+        .then(response => {
+          return verify(control, response, false);
+        });
+    });
   });
 
   describe('with default secrets configuration', function () {
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       env: {
         CLOUD_ACCESS_KEY: 'needs to be removed',
         DB_PASSWORD_ABC: 'needs to be removed',
@@ -232,8 +390,26 @@ describe('AWS fargate integration test', function () {
       }
     });
 
-    it('must filter secrets from query params', () =>
-      control
+    let control;
+
+    beforeEach(async () => {
+      control = new Control({
+        env,
+        platformVersion: '1.3.0',
+        containerAppPath,
+        instanaAgentKey,
+        startBackend: true
+      });
+
+      await control.start();
+    });
+
+    afterEach(async () => {
+      await control.stop();
+    });
+
+    it('must filter secrets from query params', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path:
@@ -245,8 +421,8 @@ describe('AWS fargate integration test', function () {
             'q2=a-value',
           headers: requestHeaders
         })
-        .then(response =>
-          verify(control, response, true).then(({ entry }) => {
+        .then(response => {
+          return verify(control, response, true).then(({ entry }) => {
             expect(entry.data.http.params).to.equal(
               'q1=whatever&' +
                 'confidential=can-stay&' +
@@ -255,18 +431,19 @@ describe('AWS fargate integration test', function () {
                 'ghiSeCrETrst=<redacted>&' +
                 'q2=a-value'
             );
-          })
-        ));
+          });
+        });
+    });
 
-    it('must filter secrets from env', () =>
-      control
+    it('must filter secrets from env', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path: '/',
           headers: requestHeaders
         })
-        .then(response =>
-          verify(control, response, true).then(({ allEntities }) => {
+        .then(response => {
+          return verify(control, response, true).then(({ allEntities }) => {
             // verify that we did not accidentally change the value of the env var that the application sees
             expect(response.env).to.deep.equal({
               CLOUD_ACCESS_KEY: 'needs to be removed',
@@ -277,21 +454,22 @@ describe('AWS fargate integration test', function () {
 
             // verify that we removed secrets from the captured env vars
             const processEntity = findEntityByName(allEntities, 'com.instana.plugin.process');
-            const env = processEntity.data.env;
-            expect(env).to.be.an('object');
-            expect(env.CLOUD_ACCESS_KEY).to.equal('<redacted>');
-            expect(env.DB_PASSWORD_ABC).to.equal('<redacted>');
-            expect(env.verysecretenvvar).to.equal('<redacted>');
-            expect(env.ANOTHER_ENV_VAR).to.equal('this can stay');
+            const envResponse = processEntity.data.env;
+            expect(envResponse).to.be.an('object');
+            expect(envResponse.CLOUD_ACCESS_KEY).to.equal('<redacted>');
+            expect(envResponse.DB_PASSWORD_ABC).to.equal('<redacted>');
+            expect(envResponse.verysecretenvvar).to.equal('<redacted>');
+            expect(envResponse.ANOTHER_ENV_VAR).to.equal('this can stay');
 
             // always redact the agent key
-            expect(env.INSTANA_AGENT_KEY).to.equal('<redacted>');
-          })
-        ));
+            expect(envResponse.INSTANA_AGENT_KEY).to.equal('<redacted>');
+          });
+        });
+    });
   });
 
   describe('with custom secrets configuration', function () {
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       env: {
         INSTANA_SECRETS: 'equals:confidential',
         CLOUD_ACCESS_KEY: 'this can stay',
@@ -303,8 +481,26 @@ describe('AWS fargate integration test', function () {
       }
     });
 
-    it('must filter secrets from query params', () =>
-      control
+    let control;
+
+    beforeEach(async () => {
+      control = new Control({
+        env,
+        platformVersion: '1.3.0',
+        containerAppPath,
+        instanaAgentKey,
+        startBackend: true
+      });
+
+      await control.start();
+    });
+
+    afterEach(async () => {
+      await control.stop();
+    });
+
+    it('must filter secrets from query params', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path:
@@ -316,8 +512,8 @@ describe('AWS fargate integration test', function () {
             'q2=a-value',
           headers: requestHeaders
         })
-        .then(response =>
-          verify(control, response, true).then(({ entry }) => {
+        .then(response => {
+          return verify(control, response, true).then(({ entry }) => {
             expect(entry.data.http.params).to.equal(
               'q1=whatever&' +
                 'confidential=<redacted>&' +
@@ -326,18 +522,19 @@ describe('AWS fargate integration test', function () {
                 'ghiSeCrETrst=can-stay&' +
                 'q2=a-value'
             );
-          })
-        ));
+          });
+        });
+    });
 
-    it('must filter secrets from env', () =>
-      control
+    it('must filter secrets from env', async () => {
+      return control
         .sendRequest({
           method: 'GET',
           path: '/',
           headers: requestHeaders
         })
-        .then(response =>
-          verify(control, response, true).then(({ allEntities }) => {
+        .then(response => {
+          return verify(control, response, true).then(({ allEntities }) => {
             // verify that we did not accidentally change the value of the env var that the application sees
             expect(response.env).to.deep.equal({
               CLOUD_ACCESS_KEY: 'this can stay',
@@ -350,23 +547,25 @@ describe('AWS fargate integration test', function () {
 
             // verify that we have removed the secrets from the captured env vars
             const processEntity = findEntityByName(allEntities, 'com.instana.plugin.process');
-            const env = processEntity.data.env;
-            expect(env).to.be.an('object');
-            expect(env.CLOUD_ACCESS_KEY).to.equal('this can stay');
-            expect(env.DB_PASSWORD_ABC).to.equal('this can stay');
-            expect(env.verysecretenvvar).to.equal('this can stay');
-            expect(env.ANOTHER_ENV_VAR).to.equal('this can stay');
-            expect(env.CONFIDENTIAL).to.equal('this can stay');
-            expect(env.confidential).to.equal('<redacted>');
+            const envResponse = processEntity.data.env;
+            expect(envResponse).to.be.an('object');
+            expect(envResponse.CLOUD_ACCESS_KEY).to.equal('this can stay');
+            expect(envResponse.DB_PASSWORD_ABC).to.equal('this can stay');
+            expect(envResponse.verysecretenvvar).to.equal('this can stay');
+            expect(envResponse.ANOTHER_ENV_VAR).to.equal('this can stay');
+            expect(envResponse.CONFIDENTIAL).to.equal('this can stay');
+            expect(envResponse.confidential).to.equal('<redacted>');
 
             // always redact the agent key
-            expect(env.INSTANA_AGENT_KEY).to.equal('<redacted>');
-          })
-        ));
+            expect(envResponse.INSTANA_AGENT_KEY).to.equal('<redacted>');
+          });
+        });
+    });
   });
 
   function verify(control, response, expectMetricsAndSpans) {
     expect(response.message).to.equal('Hello Fargate!');
+
     if (expectMetricsAndSpans) {
       return retry(async () => {
         const allEntities = await getAndVerifySnapshotDataAndMetrics(control);
@@ -387,6 +586,7 @@ describe('AWS fargate integration test', function () {
   function verifySnapshotDataAndMetrics([allEntities, allSnapshotUpdates]) {
     expect(allEntities).to.be.an('array');
     const expectedNumberOfPlugins = 7;
+
     if (allEntities.length < expectedNumberOfPlugins) {
       fail(
         // eslint-disable-next-line prefer-template
@@ -400,8 +600,8 @@ describe('AWS fargate integration test', function () {
           )
       );
     }
-    expect(allEntities).to.have.lengthOf.at.least(expectedNumberOfPlugins);
 
+    expect(allEntities).to.have.lengthOf.at.least(expectedNumberOfPlugins);
     verifyEcsTask(allEntities);
     verifyInstrumentedEcsContainer(allEntities);
     verifyInstrumentedDockerPayload(allEntities);
@@ -419,6 +619,7 @@ describe('AWS fargate integration test', function () {
     const ecsTaskPayload = allEntities.find(
       pluginPayload => pluginPayload.name === 'com.instana.plugin.aws.ecs.task' && pluginPayload.entityId === taskArn
     );
+
     expect(ecsTaskPayload).to.exist;
     const ecsTaskData = ecsTaskPayload.data;
     expect(ecsTaskData).to.exist;
@@ -622,16 +823,16 @@ describe('AWS fargate integration test', function () {
   }
 
   function getAndVerifySpans(control) {
-    return control.getSpans().then(spans => verifySpans(spans));
+    return control.getSpans().then(spans => verifySpans(spans, control));
   }
 
-  function verifySpans(spans) {
-    const entry = verifyHttpEntry(spans);
-    const exit = verifyHttpExit(spans, entry);
+  function verifySpans(spans, control) {
+    const entry = verifyHttpEntry(spans, control);
+    const exit = verifyHttpExit(spans, entry, control);
     return { entry, exit };
   }
 
-  function verifyHttpEntry(spans) {
+  function verifyHttpEntry(spans, control) {
     return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.exist;
       expect(span.p).to.not.exist;
@@ -645,7 +846,7 @@ describe('AWS fargate integration test', function () {
       expect(span.f.e).to.equal(instrumentedContainerId);
       expect(span.data.http.method).to.equal('GET');
       expect(span.data.http.url).to.equal('/');
-      expect(span.data.http.host).to.equal('127.0.0.1:4215');
+      expect(span.data.http.host).to.equal(`127.0.0.1:${control.getPort()}`);
       expect(span.data.http.status).to.equal(200);
       expect(span.data.http.header).to.deep.equal({
         'x-entry-request-header-1': 'entry request header value 1',
@@ -658,7 +859,7 @@ describe('AWS fargate integration test', function () {
     });
   }
 
-  function verifyHttpExit(spans, entry) {
+  function verifyHttpExit(spans, entry, control) {
     return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.equal(entry.t);
       expect(span.p).to.equal(entry.s);
@@ -672,7 +873,7 @@ describe('AWS fargate integration test', function () {
       expect(span.f.e).to.equal(instrumentedContainerId);
       expect(span.data.http).to.be.an('object');
       expect(span.data.http.method).to.equal('GET');
-      expect(span.data.http.url).to.equal(downstreamDummyUrl);
+      expect(span.data.http.url).to.contain(control.downstreamDummyUrl);
       expect(span.data.http.header).to.deep.equal({
         'x-exit-request-header-1': 'exit request header value 1',
         // This should be

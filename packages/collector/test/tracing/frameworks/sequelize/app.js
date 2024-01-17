@@ -25,6 +25,8 @@ const sequelize = new Sequelize({
   database: process.env.POSTGRES_DB
 });
 
+let connected = false;
+
 (async () => {
   const User = sequelize.define(
     'User',
@@ -46,6 +48,8 @@ const sequelize = new Sequelize({
     },
     { fields: ['name'] }
   );
+
+  connected = true;
 })();
 
 if (process.env.WITH_STDOUT) {
@@ -55,6 +59,7 @@ if (process.env.WITH_STDOUT) {
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
+  if (!connected) return res.sendStatus(500);
   res.sendStatus(200);
 });
 

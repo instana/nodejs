@@ -47,7 +47,7 @@ const cls = require('../../../../../../../core/src/tracing/cls');
 const logPrefix = `AWS SDK v3 DynamoDB (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const port = require('../../../../../test_util/app-port')();
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const app = express();
 const tableName = process.env.AWS_DYNAMODB_TABLE_NAME || 'nodejs-team';
 

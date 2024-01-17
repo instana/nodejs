@@ -18,17 +18,24 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 
 mochaSuiteFn('ejs require collector in preload', function () {
   this.timeout(config.getTestTimeout());
+  let controls;
 
-  const controls = new ProcessControls({
-    useGlobalAgent: true,
-    cwd: path.join(__dirname, 'module'),
-    appPath: path.join(__dirname, 'module', 'src', 'app'),
-    env: {
-      NODE_OPTIONS: '--require ./load-instana.cjs'
-    }
+  before(async () => {
+    controls = new ProcessControls({
+      useGlobalAgent: true,
+      cwd: path.join(__dirname, 'module'),
+      appPath: path.join(__dirname, 'module', 'src', 'app'),
+      env: {
+        NODE_OPTIONS: '--require ./load-instana.cjs'
+      }
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
 
-  ProcessControls.setUpHooks(controls);
+  after(async () => {
+    await controls.stop();
+  });
 
   it('should be able to find package.json', async () => {
     await testUtils.retry(() =>

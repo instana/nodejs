@@ -22,90 +22,119 @@ mochaSuiteFn('ESM loader', function () {
   describe('case 1', function () {
     this.timeout(config.getTestTimeout());
 
-    const controls = new ProcessControls({
-      useGlobalAgent: true,
-      cwd: path.join(__dirname, 'module'),
-      appPath: path.join(__dirname, 'module', 'src', 'app'),
-      execArgv: ['--experimental-loader=../../../../collector/esm-loader.mjs']
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        useGlobalAgent: true,
+        cwd: path.join(__dirname, 'module'),
+        appPath: path.join(__dirname, 'module', 'src', 'app'),
+        execArgv: ['--experimental-loader=../../../../collector/esm-loader.mjs']
+      });
+
+      await controls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooks(controls);
+    after(async () => {
+      await controls.stop();
+    });
 
     it('should be able to find package.json', async () => {
-      await testUtils.retry(() =>
-        controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
+      await testUtils.retry(() => {
+        return controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
           const name = findMetric(metrics, ['name']);
           expect(name).to.equal('esm-loader');
-        })
-      );
+        });
+      });
     });
   });
 
   describe('case 2', function () {
     this.timeout(config.getTestTimeout());
+    let controls;
 
-    const controls = new ProcessControls({
-      useGlobalAgent: true,
-      cwd: path.join(__dirname, 'module'),
-      appPath: path.join(__dirname, 'module-2', 'src', 'app.mjs'),
-      execArgv: ['--experimental-loader', './../../../../collector/esm-loader.mjs']
+    before(async () => {
+      controls = new ProcessControls({
+        useGlobalAgent: true,
+        cwd: path.join(__dirname, 'module'),
+        appPath: path.join(__dirname, 'module-2', 'src', 'app.mjs'),
+        execArgv: ['--experimental-loader', './../../../../collector/esm-loader.mjs']
+      });
+
+      await controls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooks(controls);
+    after(async () => {
+      await controls.stop();
+    });
 
     it('should be able to find package.json', async () => {
-      await testUtils.retry(() =>
-        controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
+      await testUtils.retry(() => {
+        return controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
           const name = findMetric(metrics, ['name']);
           expect(name).to.equal('esm-loader-2');
-        })
-      );
+        });
+      });
     });
   });
 
   describe('case 3', function () {
     this.timeout(config.getTestTimeout());
+    let controls;
 
-    const controls = new ProcessControls({
-      useGlobalAgent: true,
-      cwd: path.join(__dirname, 'module'),
-      appPath: path.join(__dirname, 'module-3', 'node_modules', 'my-app', 'server.mjs'),
-      execArgv: ['--experimental-loader', './../../../../collector/esm-loader.mjs']
+    before(async () => {
+      controls = new ProcessControls({
+        useGlobalAgent: true,
+        cwd: path.join(__dirname, 'module'),
+        appPath: path.join(__dirname, 'module-3', 'node_modules', 'my-app', 'server.mjs'),
+        execArgv: ['--experimental-loader', './../../../../collector/esm-loader.mjs']
+      });
+
+      await controls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooks(controls);
+    after(async () => {
+      await controls.stop();
+    });
 
     it('should be able to find package.json', async () => {
-      await testUtils.retry(() =>
-        controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
+      await testUtils.retry(() => {
+        return controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
           const name = findMetric(metrics, ['name']);
           expect(name).to.equal('my-app');
-        })
-      );
+        });
+      });
     });
   });
 
   describe('case 4 (NODE_OPTIONS)', function () {
     this.timeout(config.getTestTimeout());
+    let controls;
 
-    const controls = new ProcessControls({
-      env: {
-        NODE_OPTIONS: '--experimental-loader=../../../../collector/esm-loader.mjs'
-      },
-      useGlobalAgent: true,
-      cwd: path.join(__dirname, 'module'),
-      appPath: path.join(__dirname, 'module-3', 'node_modules', 'my-app', 'server.mjs')
+    before(async () => {
+      controls = new ProcessControls({
+        env: {
+          NODE_OPTIONS: '--experimental-loader=../../../../collector/esm-loader.mjs'
+        },
+        useGlobalAgent: true,
+        cwd: path.join(__dirname, 'module'),
+        appPath: path.join(__dirname, 'module-3', 'node_modules', 'my-app', 'server.mjs')
+      });
+
+      await controls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooks(controls);
+    after(async () => {
+      await controls.stop();
+    });
 
     it('should be able to find package.json', async () => {
-      await testUtils.retry(() =>
-        controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
+      await testUtils.retry(() => {
+        return controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
           const name = findMetric(metrics, ['name']);
           expect(name).to.equal('my-app');
-        })
-      );
+        });
+      });
     });
   });
 });

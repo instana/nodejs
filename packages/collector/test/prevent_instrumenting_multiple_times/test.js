@@ -26,24 +26,35 @@ describe('prevent initializing @instana/collector multiple times', function () {
 
   const tmpDir = mkdtempSync(path.join(os.tmpdir(), '@instana-collector-test-prevent-multiple-init'));
   const pathToSeparateInstanaCollector = path.join(tmpDir, 'node_modules', '@instana', 'collector', 'src', 'immediate');
+  let controls;
 
-  before(() => {
+  before(async () => {
     runCommandSync('npm install --production --no-optional --no-audit @instana/collector', tmpDir);
+
+    controls = new ProcessControls({
+      appPath: path.join(__dirname, '..', 'apps', 'express'),
+      execArgv: ['--require', pathToSeparateInstanaCollector],
+      useGlobalAgent: true,
+      env: {
+        INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false',
+        INSTANA_LOG_LEVEL: 'error'
+      }
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
 
   after(done => {
     rimraf(tmpDir, done);
   });
 
-  const controls = new ProcessControls({
-    appPath: path.join(__dirname, '..', 'apps', 'express'),
-    execArgv: ['--require', pathToSeparateInstanaCollector],
-    useGlobalAgent: true,
-    env: {
-      INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false',
-      INSTANA_LOG_LEVEL: 'error'
-    }
-  }).registerTestHooks();
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
 
   it('must only announce to agent once', async () => {
     await delay(100); // give potential multiple announce attempts time to be triggered

@@ -20,13 +20,25 @@ mochaSuiteFn('tracing/api', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
-  describe('when tracing is enabled', () => {
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true
-    });
-    ProcessControls.setUpHooks(controls);
 
+  describe('when tracing is enabled', () => {
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
     it('must provide details for currently active span', async () => {
       const now = Date.now();
       const response = await controls.sendRequest({
@@ -159,13 +171,24 @@ mochaSuiteFn('tracing/api', function () {
   });
 
   describe('when tracing is not enabled', () => {
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      tracingEnabled: false
-    });
-    ProcessControls.setUpHooks(controls);
+    let controls;
 
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        tracingEnabled: false
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
     it('must provide a noop span handle', async () => {
       const response = await controls.sendRequest({
         path: '/span/active'

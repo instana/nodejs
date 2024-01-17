@@ -24,7 +24,21 @@ mochaSuiteFn('worker threads', function () {
   const agentControls = globalAgent.instance;
 
   describe('with in-app require main thread but not in worker thread', () => {
-    const controls = createProcess();
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        appPath: path.join(__dirname, 'app'),
+        cwd: __dirname,
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
 
     it('will neither report metrics nor spans from a worker thread', async () => {
       await verify({
@@ -35,8 +49,23 @@ mochaSuiteFn('worker threads', function () {
   });
 
   describe('with in-app require in main thread and in worker thread', () => {
-    const controls = createProcess({
-      REQUIRE_INSTANA_IN_WORKER_THREAD: true
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        appPath: path.join(__dirname, 'app'),
+        cwd: __dirname,
+        useGlobalAgent: true,
+        env: {
+          REQUIRE_INSTANA_IN_WORKER_THREAD: true
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.stop();
     });
 
     it('must not report metrics from a worker thread', async () => {
@@ -48,8 +77,23 @@ mochaSuiteFn('worker threads', function () {
   });
 
   describe('with NODE_OPTIONS/pre-require', () => {
-    const controls = createProcess({
-      NODE_OPTIONS: '--require ../../../src/immediate'
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        appPath: path.join(__dirname, 'app'),
+        cwd: __dirname,
+        useGlobalAgent: true,
+        env: {
+          NODE_OPTIONS: '--require ../../../src/immediate'
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.stop();
     });
 
     it('must not report metrics from a worker thread', async () => {
@@ -59,15 +103,6 @@ mochaSuiteFn('worker threads', function () {
       });
     });
   });
-
-  function createProcess(env = {}) {
-    return new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      cwd: __dirname,
-      useGlobalAgent: true,
-      env
-    }).registerTestHooks();
-  }
 
   async function verify({ controls, expectSpans }) {
     let allMetrics;

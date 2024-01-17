@@ -28,11 +28,24 @@ mochaSuiteFn('tracing/logger/log4js', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(controls);
+
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
 
   [false, true].forEach(useLogMethod => runTests(useLogMethod));
 
@@ -68,7 +81,7 @@ mochaSuiteFn('tracing/logger/log4js', function () {
         suppressTracing: true
       });
 
-      await delay(config.getTestTimeout() / 4);
+      await delay(1000);
       const spans = await agentControls.getSpans();
       if (spans.length > 0) {
         expect.fail(`Unexpected spans ${stringifyItems(spans)}.`);

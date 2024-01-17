@@ -52,12 +52,25 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
         return;
       }
       describe(describeStr, () => {
-        const controls = new ProcessControls({
-          dirname: __dirname,
-          useGlobalAgent: true,
-          env
+        let controls;
+
+        before(async () => {
+          controls = new ProcessControls({
+            dirname: __dirname,
+            useGlobalAgent: true,
+            env
+          });
+
+          await controls.startAndWaitForAgentConnection();
         });
-        ProcessControls.setUpHooks(controls);
+
+        after(async () => {
+          await controls.stop();
+        });
+
+        afterEach(async () => {
+          await controls.clearIpcMessages();
+        });
 
         it('must count', () =>
           controls

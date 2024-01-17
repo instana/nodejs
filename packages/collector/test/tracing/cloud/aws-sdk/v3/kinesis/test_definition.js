@@ -59,7 +59,6 @@ function start(version) {
 
   const { cleanup } = require('./util');
   const { checkStreamExistence } = require('./util');
-  const retryTime = config.getTestTimeout() * 5;
 
   mochaSuiteFn(`npm: ${version}`, function () {
     this.timeout(config.getTestTimeout() * 10);
@@ -70,14 +69,28 @@ function start(version) {
     after(() => cleanup(streamName));
 
     describe('tracing enabled, no suppression', function () {
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
-        useGlobalAgent: true,
-        env: {
-          AWS_KINESIS_STREAM_NAME: streamName
-        }
+      let appControls;
+
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, 'app'),
+          useGlobalAgent: true,
+          env: {
+            AWS_KINESIS_STREAM_NAME: streamName
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
       });
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+
+      after(async () => {
+        await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
+      });
+
       withErrorOptions.forEach(withError => {
         if (withError) {
           const operations = availableOperations.filter(op => op !== 'listStreams');
@@ -110,7 +123,7 @@ function start(version) {
       function verify(controls, response, apiPath, operation, withError) {
         return retry(
           () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, operation, withError)),
-          retryTime
+          1000
         );
       }
       function verifySpans(controls, spans, apiPath, operation, withError) {
@@ -150,17 +163,29 @@ function start(version) {
 
     describe('tracing disabled', () => {
       this.timeout(config.getTestTimeout() * 2);
+      let appControls;
 
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
-        useGlobalAgent: true,
-        tracingEnabled: false,
-        env: {
-          AWS_KINESIS_STREAM_NAME: streamName
-        }
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, 'app'),
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            AWS_KINESIS_STREAM_NAME: streamName
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      after(async () => {
+        await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
+      });
+
       describe('attempt to get result', () => {
         availableOperations.slice(1).forEach(operation => {
           const requestMethod = getNextCallMethod();
@@ -178,28 +203,39 @@ function start(version) {
               await checkStreamExistence(streamName, false);
             }
 
-            return retry(() => delay(config.getTestTimeout() / 4))
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS Kinesis suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+            await delay(1000);
+            const spans = await agentControls.getSpans();
+            if (spans.length > 0) {
+              fail(`Unexpected spans: ${stringifyItems(spans)}`);
+            }
           });
         });
       });
     });
 
     describe('tracing enabled but suppressed', () => {
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
-        useGlobalAgent: true,
-        env: {
-          AWS_KINESIS_STREAM_NAME: streamName
-        }
+      let appControls;
+
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, 'app'),
+          useGlobalAgent: true,
+          env: {
+            AWS_KINESIS_STREAM_NAME: streamName
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      after(async () => {
+        await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
+      });
+
       describe('attempt to get result', () => {
         // we don't create the stream, as it was created previously
         availableOperations.slice(1).forEach(operation => {
@@ -219,13 +255,11 @@ function start(version) {
               await checkStreamExistence(streamName, false);
             }
 
-            return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS Kinesis suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+            await delay(1000);
+            const spans = await agentControls.getSpans();
+            if (spans.length > 0) {
+              fail(`Unexpected spans: ${stringifyItems(spans)}`);
+            }
           });
         });
       });

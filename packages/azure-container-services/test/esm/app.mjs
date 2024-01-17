@@ -4,11 +4,10 @@
 
 import http from 'http';
 import fetch from 'node-fetch';
+import getAppPort from '@instana/collector/test/test_util/app-port.js';
 
 const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;
-
-const port = process.env.PORT || 4217;
-
+const port = getAppPort();
 const app = new http.Server();
 
 app.on('request', (req, res) => {

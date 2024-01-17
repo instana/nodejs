@@ -22,11 +22,24 @@ mochaSuiteFn('tracing/logger/winston', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(controls);
+
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
 
   [false, true].forEach(useGlobalLogger =>
     [false, true].forEach(useLevelMethod =>
@@ -50,7 +63,7 @@ mochaSuiteFn('tracing/logger/winston', function () {
               });
 
               return testUtils
-                .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+                .retry(() => testUtils.delay(1000))
                 .then(() => agentControls.getSpans())
                 .then(spans => {
                   if (spans.length > 0) {

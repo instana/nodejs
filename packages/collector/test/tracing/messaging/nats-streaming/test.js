@@ -34,16 +34,32 @@ mochaSuiteFn('tracing/nats-streaming', function () {
 
     globalAgent.setUpCleanUpHooks();
 
-    const publisherControls = new ProcessControls({
-      appPath: path.join(__dirname, 'publisher'),
-      useGlobalAgent: true
+    let publisherControls;
+    let subscriberControls;
+
+    before(async () => {
+      publisherControls = new ProcessControls({
+        appPath: path.join(__dirname, 'publisher'),
+        useGlobalAgent: true
+      });
+      subscriberControls = new ProcessControls({
+        appPath: path.join(__dirname, 'subscriber'),
+        useGlobalAgent: true
+      });
+
+      await publisherControls.startAndWaitForAgentConnection();
+      await subscriberControls.startAndWaitForAgentConnection();
     });
 
-    const subscriberControls = new ProcessControls({
-      appPath: path.join(__dirname, 'subscriber'),
-      useGlobalAgent: true
+    after(async () => {
+      await publisherControls.stop();
+      await subscriberControls.stop();
     });
-    ProcessControls.setUpHooks(publisherControls, subscriberControls);
+
+    afterEach(async () => {
+      await publisherControls.clearIpcMessages();
+      await subscriberControls.clearIpcMessages();
+    });
 
     describe('publish et al.', function () {
       [false, true].forEach(withError => {
@@ -260,13 +276,11 @@ mochaSuiteFn('tracing/nats-streaming', function () {
           suppressTracing: true
         });
 
-        return retry(() => delay(config.getTestTimeout() / 4))
-          .then(() => agentControls.getSpans())
-          .then(spans => {
-            if (spans.length > 0) {
-              expect.fail(`Unexpected spans ${stringifyItems(spans)}.`);
-            }
-          });
+        await delay(1000);
+        const spans = await agentControls.getSpans();
+        if (spans.length > 0) {
+          expect.fail(`Unexpected spans: ${stringifyItems(spans)}`);
+        }
       });
     });
   });
@@ -274,17 +288,34 @@ mochaSuiteFn('tracing/nats-streaming', function () {
   describe('tracing is disabled', function () {
     this.timeout(config.getTestTimeout() * 2);
 
-    const publisherControls = new ProcessControls({
-      appPath: path.join(__dirname, 'publisher'),
-      useGlobalAgent: true,
-      tracingEnabled: false
+    let publisherControls;
+    let subscriberControls;
+
+    before(async () => {
+      publisherControls = new ProcessControls({
+        appPath: path.join(__dirname, 'publisher'),
+        useGlobalAgent: true,
+        tracingEnabled: false
+      });
+      subscriberControls = new ProcessControls({
+        appPath: path.join(__dirname, 'subscriber'),
+        useGlobalAgent: true,
+        tracingEnabled: false
+      });
+
+      await publisherControls.startAndWaitForAgentConnection();
+      await subscriberControls.startAndWaitForAgentConnection();
     });
-    const subscriberControls = new ProcessControls({
-      appPath: path.join(__dirname, 'subscriber'),
-      useGlobalAgent: true,
-      tracingEnabled: false
+
+    after(async () => {
+      await publisherControls.stop();
+      await subscriberControls.stop();
     });
-    ProcessControls.setUpHooks(publisherControls, subscriberControls);
+
+    afterEach(async () => {
+      await publisherControls.clearIpcMessages();
+      await subscriberControls.clearIpcMessages();
+    });
 
     it('should not trace when disabled', () =>
       publisherControls
@@ -294,7 +325,7 @@ mochaSuiteFn('tracing/nats-streaming', function () {
         })
         .then(res => {
           expect(res).to.equal('OK');
-          return delay(config.getTestTimeout() / 4);
+          return delay(1000);
         })
         .then(() =>
           agentControls.getSpans().then(spans => {

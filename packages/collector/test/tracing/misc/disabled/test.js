@@ -24,9 +24,13 @@ mochaSuiteFn('disabled tracing', function () {
   const agentControls = globalAgent.instance;
 
   const expressControls = require('../../../apps/expressControls');
-  expressControls.registerTestHooks({
-    useGlobalAgent: true,
-    enableTracing: false
+
+  before(async () => {
+    await expressControls.start({ useGlobalAgent: true, enableTracing: false });
+  });
+
+  after(async () => {
+    await expressControls.stop();
   });
 
   beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));

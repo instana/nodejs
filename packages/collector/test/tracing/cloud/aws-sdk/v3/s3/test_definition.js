@@ -38,8 +38,6 @@ const availableOperations = [
 
 const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
 
-const retryTime = config.getTestTimeout() * 2;
-
 function start(version) {
   let mochaSuiteFn;
 
@@ -66,16 +64,28 @@ function start(version) {
     const agentControls = globalAgent.instance;
 
     describe('tracing enabled, no suppression', function () {
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
-        useGlobalAgent: true,
-        env: {
-          AWS_S3_BUCKET_NAME: bucketName,
-          AWS_SDK_CLIENT_S3_REQUIRE: version
-        }
+      let appControls;
+
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, 'app'),
+          useGlobalAgent: true,
+          env: {
+            AWS_S3_BUCKET_NAME: bucketName,
+            AWS_SDK_CLIENT_S3_REQUIRE: version
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      after(async () => {
+        await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
+      });
 
       withErrorOptions.forEach(withError => {
         if (withError) {
@@ -116,7 +126,7 @@ function start(version) {
         verifyResponse(response, operation, withError);
         return retry(
           () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, withError)),
-          retryTime
+          1000
         );
       }
 
@@ -177,18 +187,29 @@ function start(version) {
 
     describe('tracing disabled', () => {
       this.timeout(config.getTestTimeout() * 2);
+      let appControls;
 
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
-        useGlobalAgent: true,
-        tracingEnabled: false,
-        env: {
-          AWS_S3_BUCKET_NAME: bucketName,
-          AWS_SDK_CLIENT_S3_REQUIRE: version
-        }
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, 'app'),
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            AWS_S3_BUCKET_NAME: bucketName,
+            AWS_SDK_CLIENT_S3_REQUIRE: version
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      after(async () => {
+        await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
+      });
 
       describe('attempt to get result', () => {
         // we don't want to create the bucket, cause it already exists, and also don't want to delete it
@@ -199,29 +220,40 @@ function start(version) {
               method: 'GET',
               path: `/${operation}/${requestMethod}`
             });
-            return retry(() => delay(config.getTestTimeout() / 4))
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans AWS S3 disabled: ${stringifyItems(spans)}`);
-                }
-              });
+
+            await delay(1000);
+            const spans = await agentControls.getSpans();
+            if (spans.length > 0) {
+              fail(`Unexpected spans: ${stringifyItems(spans)}`);
+            }
           });
         });
       });
     });
 
     describe('tracing enabled but suppressed', () => {
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
-        useGlobalAgent: true,
-        env: {
-          AWS_S3_BUCKET_NAME: bucketName,
-          AWS_SDK_CLIENT_S3_REQUIRE: version
-        }
+      let appControls;
+
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, 'app'),
+          useGlobalAgent: true,
+          env: {
+            AWS_S3_BUCKET_NAME: bucketName,
+            AWS_SDK_CLIENT_S3_REQUIRE: version
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      after(async () => {
+        await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
+      });
 
       describe('attempt to get result', () => {
         // we don't want to create the bucket, cause it already exists, and also don't want to delete it
@@ -234,13 +266,11 @@ function start(version) {
               path: `/${operation}/${requestMethod}`
             });
 
-            return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans AWS S3 suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+            await delay(1000);
+            const spans = await agentControls.getSpans();
+            if (spans.length > 0) {
+              fail(`Unexpected spans: ${stringifyItems(spans)}`);
+            }
           });
         });
       });

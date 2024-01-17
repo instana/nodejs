@@ -24,34 +24,39 @@ mochaSuiteFn('tracing/restore context', function () {
   globalAgent.setUpCleanUpHooks();
 
   describe('tracing enabled', () => {
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true
-    });
-    ProcessControls.setUpHooks(controls);
-    registerAllTests(controls, true);
+    registerAllTests();
   });
 
   describe('tracing disabled', () => {
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      tracingEnabled: false
-    });
-    ProcessControls.setUpHooks(controls);
-    registerAllTests(controls, false);
+    registerAllTests(false);
   });
 
-  function registerAllTests(controls, tracingEnabled) {
+  function registerAllTests(tracingEnabled = true) {
     [
       //
       'run',
       'run-promise',
       'enter-and-leave'
-    ].forEach(apiVariant => registerTest(controls, tracingEnabled, apiVariant));
+    ].forEach(apiVariant => registerTest(tracingEnabled, apiVariant));
   }
 
-  function registerTest(controls, tracingEnabled, apiVariant) {
+  function registerTest(tracingEnabled, apiVariant) {
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        tracingEnabled: tracingEnabled
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
     it(
       `must capture spans after async context loss when context is manually restored (${apiVariant}, tracing ` +
         `enabled: ${tracingEnabled}))`,

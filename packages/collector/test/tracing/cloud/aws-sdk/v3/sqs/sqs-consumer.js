@@ -20,7 +20,7 @@ const delay = require('../../../../../../../core/test/test_util/delay');
 
 const awsRegion = 'us-east-2';
 const port = require('../../../../../test_util/app-port')();
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const withError = process.env.AWS_SQS_RECEIVER_ERROR === 'true';
 const handleMessageBatch = process.env.HANDLE_MESSAGE_BATCH === 'true';
 const app = express();
