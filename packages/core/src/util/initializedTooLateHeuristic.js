@@ -14,6 +14,8 @@ logger = require('../logger').getLogger('util/initializedTooLateHeuristic', newL
 let firstCall = true;
 let hasBeenInitializedTooLate = false;
 
+// These patterns is used to check against the loaded modules to determine if a module has been loaded earlier or not.
+
 let patterns = [
   /\/@apollo\/gateway\/dist\//,
   /\/@aws-sdk\/smithy-client\//,
@@ -96,6 +98,7 @@ module.exports = function hasThePackageBeenInitializedTooLate() {
       );
     }
 
+    // Iterate through loaded modules and patterns to check if any module has been loaded too early.
     for (let i = 0; i < loadedModules.length; i++) {
       for (let j = 0; j < patterns.length; j++) {
         if (patterns[j].test(loadedModules[i])) {

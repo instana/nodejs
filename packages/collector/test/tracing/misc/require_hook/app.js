@@ -12,10 +12,10 @@ require('../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const fetch = require('node-fetch');
 const port = require('../../../test_util/app-port')();
 const app = express();
 const logPrefix = `requireHook App (${process.pid}):\t`;
+const stealthyRequire = require('stealthy-require');
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -27,16 +27,11 @@ app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/requireRequestPromiseMultipleTimes', async (req, res) => {
-  try {
-    await fetch('https://example.com/test1');
-    await fetch('https://example.com/test2');
-    await fetch('https://example.com/test3');
-    res.sendStatus(200);
-  } catch (error) {
-    console.error(error);
-    res.sendStatus(500);
-  }
+app.get('/multipleRequestsWithStealthyRequire', async (req, res) => {
+  await makeSuperagentRequest('https://example.com/1');
+  await makeSuperagentRequest('https://example.com/2');
+
+  res.sendStatus(200);
 });
 
 app.listen(port, () => {
@@ -47,4 +42,13 @@ function log() {
   const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
+}
+async function makeSuperagentRequest(url) {
+  const superagentFresh = stealthyRequire(require.cache, () => require('superagent'));
+  try {
+    const response = await superagentFresh.get(url);
+    log(`response ${response.body}`);
+  } catch (error) {
+    log(`error ${error}`);
+  }
 }
