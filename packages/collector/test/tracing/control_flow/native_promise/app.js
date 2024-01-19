@@ -6,8 +6,7 @@
 'use strict';
 
 const instana = require('../../../..')();
-
-const request = require('request');
+const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const EventEmitter = require('events');
 const express = require('express');
@@ -51,13 +50,16 @@ app.get('/rejected', (req, res) => {
 
 app.get('/childHttpCall', (req, res) => {
   new Promise((resolve, reject) => {
-    request('http://127.0.0.1:65212', (err, response) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(response);
-      }
-    });
+    fetch('http://127.0.0.1:65212')
+      .then(response => {
+        if (!response.ok) {
+          // eslint-disable-next-line prefer-promise-reject-errors
+          reject(`HTTP error! Status: ${response.status}`);
+        } else {
+          resolve(response);
+        }
+      })
+      .catch(err => reject(err));
   })
     .catch(() => delay(20))
     .then(() => {

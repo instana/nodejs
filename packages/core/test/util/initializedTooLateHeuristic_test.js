@@ -73,7 +73,7 @@ describe('[UNIT] util.initializedTooLateHeurstic', function () {
       }
 
       require.cache[resolvedPath] = {};
-      const exclude = ['bluebird', 'bunyan', 'winston', 'request'];
+      const exclude = ['bluebird', 'bunyan', 'winston'];
       const excluded = exclude.filter(n => resolvedPath.indexOf(n) !== -1);
 
       if (excluded.length) {

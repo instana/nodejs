@@ -63,7 +63,9 @@ let patterns = [
   /\/redis\/index.js/,
   /\/sqs-consumer\/dist\//,
   /\/superagent\/lib\/node\/index.js/,
-  /\/@smithy\/smithy-client\//
+  /\/@smithy\/smithy-client\//,
+  /\/request\/index.js/,
+  /\/@apollo\/federation\/dist\//
 ];
 
 const extraPatterns = [
