@@ -134,7 +134,8 @@ shared: &shared
     # error.
     - run:
         name: Lint Source Code
-        command: npm run lint
+        command: |
+           "([[ $(node -v) =~ ^v18.*$ ]] && npm run lint) || [[ ! $(node -v) =~ ^v18.*$ ]]"
 
     # Check for unused dependencies in package.json files.
     # We might get rid of this at some point if
