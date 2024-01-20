@@ -11,7 +11,7 @@ const amqp = require('amqplib');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const rp = require('request-promise');
+const fetch = require('node-fetch');
 const { v4: uuid } = require('uuid');
 const ws = require('ws');
 
@@ -94,7 +94,7 @@ app.post('/mutation', (req, res) =>
 app.post('/subscription', (req, res) => establishSubscription(req, res));
 
 app.post('/publish-update-via-http', (req, res) =>
-  rp({
+  fetch({
     method: 'POST',
     url: `${serverBaseUrl}/publish-update`,
     body: JSON.stringify({
@@ -153,7 +153,7 @@ function runQuery(req, res, resolverType) {
 }
 
 function runQueryViaHttp(query, res) {
-  return rp({
+  return fetch({
     method: 'POST',
     url: serverGraphQLEndpoint,
     body: JSON.stringify({
@@ -218,7 +218,7 @@ function runMutation(req, res, input) {
     }
   `;
 
-  return rp({
+  return fetch({
     method: 'POST',
     url: serverGraphQLEndpoint,
     body: JSON.stringify({

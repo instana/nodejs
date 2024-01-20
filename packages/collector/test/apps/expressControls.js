@@ -5,10 +5,9 @@
 
 'use strict';
 
-const errors = require('request-promise/errors');
 const fs = require('fs');
 const path = require('path');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const spawn = require('child_process').spawn;
 const portfinder = require('../test_util/portfinder');
 const testUtils = require('../../../core/test/test_util');
@@ -51,7 +50,7 @@ exports.start = function start(opts = {}, retryTime = null) {
 function waitUntilServerIsUp(useHttps, retryTime) {
   return testUtils.retry(
     () =>
-      request({
+      fetch({
         method: 'GET',
         url: getBaseUrl(useHttps),
         headers: {
@@ -70,7 +69,7 @@ exports.stop = function stop() {
 exports.getPid = () => expressApp.pid;
 
 exports.sendBasicRequest = opts =>
-  request({
+  fetch({
     method: opts.method,
     url: getBaseUrl(opts.useHttps) + opts.path,
     resolveWithFullResponse: opts.resolveWithFullResponse,
@@ -81,7 +80,7 @@ exports.sendRequest = opts => {
   opts.responseStatus = opts.responseStatus || 200;
   opts.delay = opts.delay || 0;
   opts.headers = opts.headers || {};
-  return request({
+  return fetch({
     method: opts.method,
     url: getBaseUrl(opts.useHttps) + opts.path,
     qs: {
@@ -94,30 +93,30 @@ exports.sendRequest = opts => {
     headers: opts.headers,
     resolveWithFullResponse: opts.resolveWithFullResponse,
     ca: cert
-  }).catch(errors.StatusCodeError, reason => {
-    if (reason.statusCode === opts.responseStatus) {
+  }).catch(response => {
+    if (response.status === opts.responseStatus) {
       return true;
     }
-    throw reason;
+    throw new Error(`Unexpected response status: ${response.status}`);
   });
 };
 
 exports.setHealthy = useHttps =>
-  request({
+  fetch({
     method: 'POST',
     url: `${getBaseUrl(useHttps)}/admin/set-to-healthy`,
     ca: cert
   });
 
 exports.setUnhealthy = useHttps =>
-  request({
+  fetch({
     method: 'POST',
     url: `${getBaseUrl(useHttps)}/admin/set-to-unhealthy`,
     ca: cert
   });
 
 exports.setLogger = (useHttps, logFilePath) =>
-  request({
+  fetch({
     method: 'POST',
     url: `${getBaseUrl(useHttps)}/set-logger?logFilePath=${encodeURIComponent(logFilePath)}`,
     ca: cert

@@ -11,7 +11,7 @@ require('./mockVersion');
 const instana = require('../../../..')();
 
 const express = require('express');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const NATS = require('nats');
 
 const log = require('@instana/core/test/test_util/log').getLogger('NATS Subscriber');
@@ -64,7 +64,7 @@ if (process.env.NATS_VERSION === 'latest') {
         }
 
         setTimeout(() => {
-          request(`http://127.0.0.1:${agentPort}`)
+          fetch(`http://127.0.0.1:${agentPort}`)
             .then(() => {
               log('The follow up request after receiving a message has happened.');
               span.end();
@@ -103,7 +103,7 @@ if (process.env.NATS_VERSION === 'latest') {
         }
 
         setTimeout(() => {
-          request(`http://127.0.0.1:${agentPort}`)
+          fetch(`http://127.0.0.1:${agentPort}`)
             .then(() => {
               log('The follow up request after receiving a message has happened.');
               span.end();
@@ -146,7 +146,7 @@ if (process.env.NATS_VERSION === 'latest') {
         }
       } finally {
         setTimeout(() => {
-          request(`http://127.0.0.1:${agentPort}`)
+          fetch(`http://127.0.0.1:${agentPort}`)
             .then(() => {
               log('The follow up request after receiving a message has happened.');
               span.end();

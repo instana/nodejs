@@ -5,9 +5,8 @@
 
 'use strict';
 
-const rp = require('request-promise');
+const fetch = require('node-fetch');
 const request = require('request');
-
 require('../../../..')({
   agentPort: process.env.AGENT_PORT,
   level: 'warn',
@@ -60,7 +59,7 @@ async function executeCallSequence() {
 
 async function sendRequest(requestOptions) {
   if (process.env.USE_REQUEST_PROMISE === 'true') {
-    const response = await rp({
+    const response = await fetch({
       ...requestOptions,
       simple: true,
       resolveWithFullResponse: true

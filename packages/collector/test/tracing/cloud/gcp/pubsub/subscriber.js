@@ -12,7 +12,7 @@ const instana = require('../../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 
 const { sendToParent } = require('../../../../../../core/test/test_util');
 const { createTopicAndSubscription } = require('./pubsubUtil');
@@ -44,7 +44,7 @@ async function connect() {
 
       log(`received message: ${msg.id} from ${subscription.name} with content "${content}"`);
       setTimeout(() => {
-        request(`http://127.0.0.1:${agentPort}`)
+        fetch(`http://127.0.0.1:${agentPort}`)
           .then(() => {
             log('The follow up request after receiving a message has happened.');
             span.end();

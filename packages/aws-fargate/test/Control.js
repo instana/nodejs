@@ -7,7 +7,7 @@
 
 const { fork } = require('child_process');
 const path = require('path');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const {
   assert: { fail }
 } = require('chai');
@@ -144,7 +144,7 @@ Control.prototype.sendRequest = function (opts) {
 
   opts.url = this.baseUrl + opts.path;
   opts.json = true;
-  return request(opts);
+  return fetch(opts);
 };
 
 module.exports = Control;

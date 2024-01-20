@@ -11,7 +11,7 @@ const app = express();
 const port = require('../../../../../test_util/app-port')();
 const streamName = process.env.AWS_KINESIS_STREAM_NAME || 'nodejs-team';
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const AWS = require('aws-sdk');
 const logPrefix = `AWS SDK v2 Kinesis (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
@@ -163,7 +163,7 @@ operationNames.forEach(operation => {
             httpError(res, err);
           } else {
             setTimeout(() => {
-              request(`http://127.0.0.1:${agentPort}`)
+              fetch(`http://127.0.0.1:${agentPort}`)
                 .then(() => {
                   httpSuccess(res, data);
                 })
@@ -179,7 +179,7 @@ operationNames.forEach(operation => {
     } else if (method === 'Promise') {
       execOperation(operation, null, null, withError)
         .then(data => {
-          request(`http://127.0.0.1:${agentPort}`)
+          fetch(`http://127.0.0.1:${agentPort}`)
             .then(() => {
               httpSuccess(res, data);
             })

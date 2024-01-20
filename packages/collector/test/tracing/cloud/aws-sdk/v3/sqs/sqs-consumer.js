@@ -14,7 +14,7 @@ const instana = require('../../../../../../src')();
 const express = require('express');
 const awsSdk3 = require('@aws-sdk/client-sqs');
 const { Consumer } = require('sqs-consumer');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const { sendToParent } = require('../../../../../../../core/test/test_util');
 const delay = require('../../../../../../../core/test/test_util/delay');
 
@@ -45,7 +45,7 @@ const handleMessageFn = async message => {
   sendToParent(message);
   await delay(200);
 
-  await request(`http://localhost:${agentPort}?msg=${message.Body}`);
+  await fetch(`http://localhost:${agentPort}?msg=${message.Body}`);
   log(`Sent an HTTP request after receiving message of id ${message.MessageId}`);
 
   if (withError) {
@@ -59,7 +59,7 @@ const handleMessageBatchFn = async messages => {
 
   messages.forEach(async function (m) {
     sendToParent(m);
-    await request(`http://localhost:${agentPort}?msg=${m.Body}`);
+    await fetch(`http://localhost:${agentPort}?msg=${m.Body}`);
     log(`Sent an HTTP request after receiving message of id ${m.MessageId}`);
   });
 

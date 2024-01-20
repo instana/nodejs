@@ -6,7 +6,7 @@
 
 const { fork } = require('child_process');
 const path = require('path');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const {
   assert: { fail }
 } = require('chai');
@@ -107,7 +107,7 @@ class Control extends AbstractServerlessControl {
 
     opts.url = `${this.baseUrl}${opts.path}`;
     opts.json = true;
-    return request(opts);
+    return fetch(opts);
   }
 }
 

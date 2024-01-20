@@ -5,7 +5,6 @@
 
 'use strict';
 
-const errors = require('request-promise/errors');
 const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -113,7 +112,7 @@ describe('tracing/mssql', function () {
             method: 'GET',
             path: '/error-callback'
           })
-          .catch(errors.StatusCodeError, reason => reason)
+          .catch(error => error)
           .then(response => {
             expect(response.statusCode).to.equal(500);
 
@@ -164,7 +163,7 @@ describe('tracing/mssql', function () {
             method: 'GET',
             path: '/error-promise'
           })
-          .catch(errors.StatusCodeError, reason => reason)
+          .catch(error => error)
           .then(response => {
             expect(response.statusCode).to.equal(500);
 
@@ -384,7 +383,7 @@ describe('tracing/mssql', function () {
             method: 'POST',
             path: '/insert-prepared-error-callback'
           })
-          .catch(errors.StatusCodeError, reason => reason)
+          .catch(error => error)
           .then(response => {
             expect(response.statusCode).to.equal(500);
             return retry(() =>
@@ -415,7 +414,7 @@ describe('tracing/mssql', function () {
             method: 'POST',
             path: '/insert-prepared-error-promise'
           })
-          .catch(errors.StatusCodeError, reason => reason)
+          .catch(error => error)
           .then(response => {
             expect(response.statusCode).to.equal(500);
             return retry(() =>

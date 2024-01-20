@@ -21,7 +21,7 @@ const instana = require('../../../..')({
 
 const amqp = require('amqplib/callback_api');
 const a = require('async');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const bail = require('./amqpUtil').bail;
 const exchange = require('./amqpUtil').exchange;
 const queueName = require('./amqpUtil').queueName;
@@ -84,9 +84,9 @@ function consumer(conn) {
           span.disableAutoEnd();
           if (msg !== null) {
             log(msg.content.toString());
-            // simulating asynchronous follow up steps with setTimeout and request-promise
+            // simulating asynchronous follow up steps with setTimeout
             setTimeout(() => {
-              request(`http://127.0.0.1:${agentPort}`)
+              fetch(`http://127.0.0.1:${agentPort}`)
                 .then(() => {
                   span.end();
                   channel.ack(msg);
@@ -104,9 +104,9 @@ function consumer(conn) {
           span.disableAutoEnd();
           if (msg !== null) {
             log(msg.content.toString());
-            // simulating asynchronous follow up steps with setTimeout and request-promise
+            // simulating asynchronous follow up steps with setTimeout
             setTimeout(() => {
-              request(`http://127.0.0.1:${agentPort}`)
+              fetch(`http://127.0.0.1:${agentPort}`)
                 .then(() => {
                   span.end();
                   channel.ack(msg);
@@ -130,9 +130,9 @@ function consumer(conn) {
                 log('[channel#get] ', msg.content.toString());
                 const span = instana.currentSpan();
                 span.disableAutoEnd();
-                // simulating asynchronous follow up steps with setTimeout and request-promise
+                // simulating asynchronous follow up steps with setTimeout
                 setTimeout(() => {
-                  request(`http://127.0.0.1:${agentPort}`)
+                  fetch(`http://127.0.0.1:${agentPort}`)
                     .then(() => {
                       span.end();
                       channel.ack(msg);
@@ -180,9 +180,9 @@ function consumerConfirm(conn) {
           span.disableAutoEnd();
           if (msg !== null) {
             log(msg.content.toString());
-            // simulating asynchronous follow up steps with setTimeout and request-promise
+            // simulating asynchronous follow up steps with setTimeout
             setTimeout(() => {
-              request(`http://127.0.0.1:${agentPort}`)
+              fetch(`http://127.0.0.1:${agentPort}`)
                 .then(() => {
                   span.end();
                   channel.ack(msg);

@@ -9,7 +9,7 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import { v1 } from 'uuid';
 import morgan from 'morgan';
-import requestPromise from 'request-promise';
+import fetch from 'node-fetch';
 import request from 'request-promise-native';
 import portFactory from '../../../test_util/app-port.js';
 import testUtil from '../../../../../core/test/test_util/index.js';
@@ -188,7 +188,7 @@ app.get('/', (req, res) => {
 
 app.get('/get-promise', async (req, res) => {
   const result = await collection1.get('get-key-1');
-  await requestPromise(`http://127.0.0.1:${agentPort}`);
+  await fetch(`http://127.0.0.1:${agentPort}`);
 
   res.json({ result: result.value });
 });

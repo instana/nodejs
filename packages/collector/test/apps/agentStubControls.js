@@ -6,7 +6,7 @@
 'use strict';
 
 const spawn = require('child_process').spawn;
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const path = require('path');
 const _ = require('lodash');
 
@@ -79,7 +79,7 @@ class AgentStubControls {
 
   async waitUntilAgentHasStarted() {
     await retry(() =>
-      request({
+      fetch({
         method: 'GET',
         url: `http://127.0.0.1:${this.agentPort}`
       })
@@ -108,7 +108,7 @@ class AgentStubControls {
   }
 
   getDiscoveries() {
-    return request({
+    return fetch({
       method: 'GET',
       url: `http://127.0.0.1:${this.agentPort}/discoveries`,
       json: true
@@ -116,14 +116,14 @@ class AgentStubControls {
   }
 
   rejectAnnounceAttempts(rejectedAttempts = 1) {
-    return request({
+    return fetch({
       method: 'POST',
       url: `http://127.0.0.1:${this.agentPort}/reject-announce-attempts?attempts=${rejectedAttempts}`
     });
   }
 
   deleteDiscoveries() {
-    return request({
+    return fetch({
       method: 'DELETE',
       url: `http://127.0.0.1:${this.agentPort}/discoveries`,
       json: true
@@ -131,7 +131,7 @@ class AgentStubControls {
   }
 
   getReceivedData() {
-    return request({
+    return fetch({
       method: 'GET',
       url: `http://127.0.0.1:${this.agentPort}/received/data`,
       json: true
@@ -139,7 +139,7 @@ class AgentStubControls {
   }
 
   getAggregatedMetrics(pid) {
-    return request({
+    return fetch({
       method: 'GET',
       url: `http://127.0.0.1:${this.agentPort}/received/aggregated/metrics/${pid}`,
       json: true
@@ -147,7 +147,7 @@ class AgentStubControls {
   }
 
   getEvents() {
-    return request({
+    return fetch({
       method: 'GET',
       url: `http://127.0.0.1:${this.agentPort}/received/events`,
       json: true
@@ -155,7 +155,7 @@ class AgentStubControls {
   }
 
   getMonitoringEvents() {
-    return request({
+    return fetch({
       method: 'GET',
       url: `http://127.0.0.1:${this.agentPort}/received/monitoringEvents`,
       json: true
@@ -163,14 +163,14 @@ class AgentStubControls {
   }
 
   clearReceivedMonitoringEvents() {
-    return request({
+    return fetch({
       method: 'DELETE',
       url: `http://127.0.0.1:${this.agentPort}/received/monitoringEvents`
     });
   }
 
   reset() {
-    return request({
+    return fetch({
       method: 'DELETE',
       url: `http://127.0.0.1:${this.agentPort}/`,
       json: true
@@ -178,28 +178,28 @@ class AgentStubControls {
   }
 
   clearReceivedData() {
-    return request({
+    return fetch({
       method: 'DELETE',
       url: `http://127.0.0.1:${this.agentPort}/received/data`
     });
   }
 
   clearReceivedTraceData() {
-    return request({
+    return fetch({
       method: 'DELETE',
       url: `http://127.0.0.1:${this.agentPort}/received/traces`
     });
   }
 
   clearReceivedProfilingData() {
-    return request({
+    return fetch({
       method: 'DELETE',
       url: `http://127.0.0.1:${this.agentPort}/received/profiles`
     });
   }
 
   clearReceivedEvents() {
-    return request({
+    return fetch({
       method: 'DELETE',
       url: `http://127.0.0.1:${this.agentPort}/received/events`
     });
@@ -221,7 +221,7 @@ class AgentStubControls {
   }
 
   getTracingMetrics() {
-    return request({
+    return fetch({
       method: 'GET',
       url: `http://127.0.0.1:${this.agentPort}/received/tracingMetrics`,
       json: true
@@ -229,7 +229,7 @@ class AgentStubControls {
   }
 
   simulateDiscovery(pid) {
-    return request({
+    return fetch({
       method: 'PUT',
       url: `http://127.0.0.1:${this.agentPort}/com.instana.plugin.nodejs.discovery`,
       json: true,
@@ -240,7 +240,7 @@ class AgentStubControls {
   }
 
   addEntityData(pid, data) {
-    return request({
+    return fetch({
       method: 'POST',
       url: `http://127.0.0.1:${this.agentPort}/com.instana.plugin.nodejs.${pid}`,
       json: true,
@@ -249,7 +249,7 @@ class AgentStubControls {
   }
 
   addRequestForPid(pid, r) {
-    return request({
+    return fetch({
       method: 'POST',
       url: `http://127.0.0.1:${this.agentPort}/request/${pid}`,
       json: true,

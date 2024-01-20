@@ -5,9 +5,8 @@
 
 'use strict';
 
-const errors = require('request-promise/errors');
 const path = require('path');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const spawn = require('child_process').spawn;
 
 const portfinder = require('../../../../test_util/portfinder');
@@ -41,7 +40,7 @@ exports.registerTestHooks = (opts = {}) => {
 
 function waitUntilServerIsUp() {
   return testUtils.retry(() =>
-    request({
+    fetch({
       method: 'GET',
       url: `http://localhost:${appPort}`,
       headers: {
@@ -62,7 +61,7 @@ exports.sendRequest = opts => {
     headers['X-INSTANA-L'] = '0';
   }
 
-  return request({
+  return fetch({
     method: opts.method,
     url: `http://localhost:${appPort}${opts.path}`,
     qs: {
@@ -72,10 +71,5 @@ exports.sendRequest = opts => {
       httpLib: opts.httpLib
     },
     headers
-  }).catch(
-    errors.StatusCodeError,
-    (
-      reason // treat all status code errors as likely // allowed
-    ) => reason
-  );
+  }).catch(error => error);
 };

@@ -9,7 +9,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 
 require('../../../..')();
 
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const express = require('express');
 const natsStreaming = require('node-nats-streaming');
 
@@ -77,7 +77,7 @@ app.post('/publish', (req, res) => {
 });
 
 function afterPublish(res, err) {
-  request(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}`)
     .then(() => {
       if (err) {
         return res.status(500).send(err.message ? err.message : err);

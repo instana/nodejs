@@ -7,7 +7,7 @@
 
 require('../../../../../..')();
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const delay = require('../../../../../../../core/test/test_util/delay');
 
 const AWS = require('aws-sdk');
@@ -129,7 +129,7 @@ const DynamoDBApi = {
               return reject(data);
             } else {
               setTimeout(() => {
-                request(`http://127.0.0.1:${agentPort}`)
+                fetch(`http://127.0.0.1:${agentPort}`)
                   .then(() => resolve(data))
                   .catch(err2 => reject(err2));
               });
@@ -144,7 +144,7 @@ const DynamoDBApi = {
               promiseData = data;
               return delay(200);
             })
-            .then(() => request(`http://127.0.0.1:${agentPort}`))
+            .then(() => fetch(`http://127.0.0.1:${agentPort}`))
             .then(() => {
               if (promiseData && promiseData.code) {
                 reject(promiseData);
@@ -165,7 +165,7 @@ const DynamoDBApi = {
             }
 
             await delay(200);
-            await request(`http://127.0.0.1:${agentPort}`);
+            await fetch(`http://127.0.0.1:${agentPort}`);
 
             return resolve(data);
           } catch (err) {

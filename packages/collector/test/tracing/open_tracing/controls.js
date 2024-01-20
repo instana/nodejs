@@ -6,7 +6,7 @@
 'use strict';
 
 const spawn = require('child_process').spawn;
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const path = require('path');
 const portfinder = require('../../test_util/portfinder');
 const testUtils = require('../../../../core/test/test_util');
@@ -41,7 +41,7 @@ exports.registerTestHooks = opts => {
 
 function waitUntilServerIsUp() {
   return testUtils.retry(() =>
-    request({
+    fetch({
       method: 'GET',
       url: `http://127.0.0.1:${appPort}`,
       headers: {
@@ -54,7 +54,7 @@ function waitUntilServerIsUp() {
 exports.getPid = () => expressOpentracingApp.pid;
 
 exports.sendRequest = opts =>
-  request({
+  fetch({
     method: opts.method,
     url: `http://127.0.0.1:${appPort}${opts.path}`
   });

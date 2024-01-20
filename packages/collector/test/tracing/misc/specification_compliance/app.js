@@ -12,7 +12,7 @@ require('../../../..')();
 
 const fs = require('fs');
 const path = require('path');
-const rp = require('request-promise');
+const fetch = require('node-fetch');
 const { parse } = require('url');
 
 const http2Promise = require('../../../test_util/http2Promise');
@@ -106,7 +106,7 @@ async function executeDownstreamRequestViaCoreHttp(method, url, query, resOrStre
     requestOptions.uri = `http://localhost:${downstreamPort}/downstream`;
   }
 
-  const requestPromise = useHttp2 ? http2Promise.request(requestOptions) : rp(requestOptions);
+  const requestPromise = useHttp2 ? http2Promise.request(requestOptions) : fetch(requestOptions);
   try {
     const downstreamResponse = await requestPromise;
     return endWithPayload(method, url, resOrStream, downstreamResponse);

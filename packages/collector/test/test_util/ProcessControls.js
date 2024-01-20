@@ -11,7 +11,7 @@ const _ = require('lodash');
 const fork = require('child_process').fork;
 const fs = require('fs');
 const path = require('path');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 
 const config = require('../../../core/test/config');
 const http2Promise = require('./http2Promise');
@@ -269,7 +269,7 @@ class ProcessControls {
     requestOptions.baseUrl = baseUrl;
 
     if (this.http2) {
-      return http2Promise.request(requestOptions);
+      return http2Promise.fetch(requestOptions);
     } else {
       if (opts.suppressTracing === true) {
         opts.headers = opts.headers || {};
@@ -280,7 +280,7 @@ class ProcessControls {
       opts.json = true;
       opts.ca = cert;
 
-      return request(opts);
+      return fetch(opts);
     }
   }
 

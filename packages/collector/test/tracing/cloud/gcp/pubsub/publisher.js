@@ -12,7 +12,7 @@ require('../../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 
 const asyncRoute = require('../../../../test_util/asyncExpressRoute');
 const { createTopic } = require('./pubsubUtil');
@@ -100,7 +100,7 @@ app.listen(port, () => {
 });
 
 function afterPublish(err, res, messageId) {
-  request(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}`)
     .then(() => {
       if (err) {
         return res.status(500).send(err.message);

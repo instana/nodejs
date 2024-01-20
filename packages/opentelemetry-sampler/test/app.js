@@ -23,7 +23,7 @@ require('./tracing');
 
 const express = require('express');
 const port = process.env.PORT || '8215';
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const logPrefix = `OpenTelemetry test app (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const { delay } = require('@instana/core/test/test_util');
@@ -38,7 +38,7 @@ const app = express();
 
 app.get('/otel-test', (_req, res) => {
   delay(500)
-    .then(() => request('https://www.example.com'))
+    .then(() => fetch('https://www.example.com'))
     .then(() => {
       res.status(200).json({ success: true });
     })
@@ -68,7 +68,7 @@ app.get('/get-otel-spans', (_req, res) => {
 
 app.post('/otel-post', (_req, res) => {
   delay(500)
-    .then(() => request('https://www.example.com'))
+    .then(() => fetch('https://www.example.com'))
     .then(() => {
       res.status(200).json({ success: true });
     })

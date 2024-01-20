@@ -10,7 +10,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 require('./mockVersion');
 require('../../../..')();
 
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const express = require('express');
 const NATS = require('nats');
 
@@ -172,7 +172,7 @@ function afterPublish(res, err, msg) {
     mostRecentEmittedError = null;
   }
 
-  request(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}`)
     .then(() => {
       // nats has a bug that makes the callback called twice in some situations
       if (!res.headersSent) {
@@ -208,7 +208,7 @@ app.post('/request', async (req, res) => {
     try {
       // try to publish without a subject to cause an error
       if (IS_LATEST) {
-        await natsClient.request(null, sc.encode('awaiting reply nats2'));
+        await natsClient.fetch(null, sc.encode('awaiting reply nats2'));
         afterPublish(res, null);
       } else {
         natsPublishMethod(null, 'awaiting reply', requestCallback);
@@ -225,12 +225,12 @@ app.post('/request', async (req, res) => {
       // the client will create a normal subscription for receiving the response to
       // a generated inbox subject before the request is published
       await natsClient
-        .request('publish-test-subject', sc.encode('awaiting reply'), { reply: 'test', noMux: true })
+        .fetch('publish-test-subject', sc.encode('awaiting reply'), { reply: 'test', noMux: true })
         .then(m => {
           afterPublish(res, null, sc.decode(m.data), true);
         });
     } else {
-      await natsClient.request('publish-test-subject', sc.encode('awaiting reply'), { noMux: false }).then(m => {
+      await natsClient.fetch('publish-test-subject', sc.encode('awaiting reply'), { noMux: false }).then(m => {
         afterPublish(res, null, sc.decode(m.data), true);
       });
     }

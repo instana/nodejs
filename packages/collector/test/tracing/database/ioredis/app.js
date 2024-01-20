@@ -15,7 +15,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const Redis = require('ioredis');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const port = require('../../../test_util/app-port')();
 const app = express();
 const logPrefix = `Express / Redis App (${process.pid}):\t`;
@@ -87,7 +87,7 @@ app.get('/keepTracing', (req, res) => {
     .then(redisRes => {
       redisResponse = redisRes;
       // Execute another traced call to verify that we keep the tracing context.
-      return request(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}`);
     })
     .then(() => {
       res.send(redisResponse);
@@ -111,7 +111,7 @@ app.get('/keepTracingCallback', (req, res) => {
         return;
       }
       // Execute another traced call to verify that we keep the tracing context.
-      request(`http://127.0.0.1:${agentPort}`, httpErr => {
+      fetch(`http://127.0.0.1:${agentPort}`, httpErr => {
         if (httpErr) {
           log('HTTP call failed', httpErr);
           return reject(httpErr);
@@ -180,7 +180,7 @@ app.post('/multiKeepTracing', (req, res) => {
     .then(redisRes => {
       redisResponse = redisRes;
       // Execute another traced call to verify that we keep the tracing context.
-      return request(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}`);
     })
     .then(httpRes => {
       res.send(`${httpRes};${redisResponse}`);
@@ -231,7 +231,7 @@ app.post('/pipelineKeepTracing', (req, res) => {
     .then(redisRes => {
       redisResponse = redisRes;
       // Execute another traced call to verify that we keep the tracing context.
-      return request(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}`);
     })
     .then(httpRes => {
       res.send(`${httpRes};${redisResponse}`);

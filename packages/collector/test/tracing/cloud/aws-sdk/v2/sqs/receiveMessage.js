@@ -18,7 +18,7 @@ const instana = require('../../../../../..')({
 });
 
 const express = require('express');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const { sendToParent } = require('../../../../../../../core/test/test_util');
 const delay = require('../../../../../../../core/test/test_util/delay');
 const CollectingLogger = require('../../../../../test_util/CollectingLogger');
@@ -120,7 +120,7 @@ function receivePromise() {
         })
         .promise()
         .then(() => delay(200))
-        .then(() => request(`http://127.0.0.1:${agentPort}`))
+        .then(() => fetch(`http://127.0.0.1:${agentPort}`))
         .then(() => delay(1000))
         .then(() => {
           log('The follow up request after receiving a message has happened.');
@@ -177,7 +177,7 @@ async function receiveAsync() {
           .promise();
 
         await delay(1000);
-        await request(`http://127.0.0.1:${agentPort}`);
+        await fetch(`http://127.0.0.1:${agentPort}`);
         log('The follow up request after receiving a message has happened.');
         span.end();
         return resolve();
@@ -229,7 +229,7 @@ function receiveCallback(cb) {
           } else {
             log('Messages deleted');
             setTimeout(() => {
-              request(`http://127.0.0.1:${agentPort}`)
+              fetch(`http://127.0.0.1:${agentPort}`)
                 .then(() => {
                   log('The follow up request after receiving a message has happened.');
                   span.end();

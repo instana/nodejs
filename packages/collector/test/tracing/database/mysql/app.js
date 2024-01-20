@@ -32,7 +32,7 @@ if (driverModeEnvVar === 'mysql') {
 
 const mysql = require(driver);
 
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
@@ -150,7 +150,7 @@ app.post('/valuesAndCall', (req, res) => {
     insertValuesWithPromisesAndCall(req, res);
   } else {
     insertValues(req, res, cb => {
-      request(`http://127.0.0.1:${agentPort}`, cb);
+      fetch(`http://127.0.0.1:${agentPort}`, cb);
     });
   }
 });
@@ -249,7 +249,7 @@ function insertValuesWithPromisesAndCall(req, res) {
     .then(() => {
       connection.release();
     })
-    .then(() => request(`http://127.0.0.1:${agentPort}`))
+    .then(() => fetch(`http://127.0.0.1:${agentPort}`))
     .then(() => {
       res.json(instana.opentracing.getCurrentlyActiveInstanaSpanContext());
     })

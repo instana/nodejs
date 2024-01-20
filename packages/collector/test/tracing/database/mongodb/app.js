@@ -23,7 +23,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const assert = require('assert');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const port = require('../../../test_util/app-port')();
 
 const app = express();
@@ -118,7 +118,7 @@ app.post('/insert-one', (req, res) => {
     .then(r => {
       mongoResponse = r;
       // Execute another traced call to verify that we keep the tracing context.
-      return request(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}`);
     })
     .then(() => {
       res.json(mongoResponse);
@@ -136,7 +136,7 @@ app.post('/update-one', (req, res) => {
     .then(r => {
       mongoResponse = r;
       // Execute another traced call to verify that we keep the tracing context.
-      return request(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}`);
     })
     .then(() => {
       res.json(mongoResponse);
@@ -154,7 +154,7 @@ app.post('/replace-one', (req, res) => {
     .then(r => {
       mongoResponse = r;
       // Execute another traced call to verify that we keep the tracing context.
-      return request(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}`);
     })
     .then(() => {
       res.json(mongoResponse);
@@ -172,7 +172,7 @@ app.post('/delete-one', (req, res) => {
     .then(r => {
       mongoResponse = r;
       // Execute another traced call to verify that we keep the tracing context.
-      return request(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}`);
     })
     .then(() => {
       res.json(mongoResponse);
@@ -190,7 +190,7 @@ app.get('/find-one', (req, res) => {
     .then(r => {
       mongoResponse = r;
       // Execute another traced call to verify that we keep the tracing context.
-      return request(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}`);
     })
     .then(() => {
       res.json(mongoResponse);
@@ -233,7 +233,7 @@ app.post('/long-find', (req, res) => {
     .then(r => {
       mongoResponse = r;
       // Execute another traced call to verify that we keep the tracing context.
-      return request(`http://127.0.0.1:${agentPort}?call=${call}`);
+      return fetch(`http://127.0.0.1:${agentPort}?call=${call}`);
     })
     .then(() => res.json(mongoResponse))
     .catch(e => {
@@ -256,7 +256,7 @@ app.get('/findall', async (req, res) => {
     }
 
     const resp = await collection.find(filter, findOpts).toArray();
-    await request(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}`);
     res.json(resp);
     return;
   }
@@ -274,7 +274,7 @@ app.get('/findall', async (req, res) => {
         res.status(500).json(err);
       } else {
         // Execute another traced call to verify that we keep the tracing context.
-        return request(`http://127.0.0.1:${agentPort}`)
+        return fetch(`http://127.0.0.1:${agentPort}`)
           .then(() => {
             res.json(docs);
           })

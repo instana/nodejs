@@ -11,7 +11,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 
 require('../../../..')();
 
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const express = require('express');
 const kafka = require('kafka-node');
@@ -78,7 +78,7 @@ app.post('/send-message', (req, res) => {
         res.status(500).send('Failed to send message');
         return;
       }
-      request(`http://127.0.0.1:${agentPort}`)
+      fetch(`http://127.0.0.1:${agentPort}`)
         .then(() => {
           res.sendStatus(200);
         })

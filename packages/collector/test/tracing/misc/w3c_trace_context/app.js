@@ -38,7 +38,7 @@ if (isInstana()) {
 
 const fs = require('fs');
 const path = require('path');
-const rp = require('request-promise');
+const fetch = require('node-fetch');
 const { parse } = require('url');
 
 const http2Promise = require('../../../test_util/http2Promise');
@@ -175,7 +175,7 @@ function handleRequest(incomingHeaders, method, url, resOrStream) {
       requestOptions.uri = `http://localhost:${downstreamPort}/${downstreamPath}`;
     }
 
-    const requestPromise = useHttp2 ? http2Promise.request(requestOptions) : rp(requestOptions);
+    const requestPromise = useHttp2 ? http2Promise.request(requestOptions) : fetch(requestOptions);
     return requestPromise
       .then(response => endWithPayload(method, url, resOrStream, response))
       .catch(e => endWithError(method, url, resOrStream, e));

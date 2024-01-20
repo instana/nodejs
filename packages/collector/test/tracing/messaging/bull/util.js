@@ -7,7 +7,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const { delay } = require('../../../../../core/test/test_util');
 
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
@@ -51,7 +51,7 @@ function processJob(job, done, log, info) {
     if (done) {
       setTimeout(() => {
         writeToAFileToProveThatThisParticularJobHasBeenProcessed(getJobData(job)).then(() => {
-          request(`http://127.0.0.1:${agentPort}`)
+          fetch(`http://127.0.0.1:${agentPort}`)
             .then(() => {
               log('The follow up request after receiving a message has happened.');
 
@@ -74,7 +74,7 @@ function processJob(job, done, log, info) {
     } else {
       return delay(100)
         .then(() => writeToAFileToProveThatThisParticularJobHasBeenProcessed(getJobData(job)))
-        .then(() => request(`http://127.0.0.1:${agentPort}`))
+        .then(() => fetch(`http://127.0.0.1:${agentPort}`))
         .then(() => {
           log('The follow up request after receiving a message has happened.');
           if (job.data.withError) {

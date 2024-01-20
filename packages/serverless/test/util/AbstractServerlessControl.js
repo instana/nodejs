@@ -10,7 +10,7 @@ const {
   assert: { fail }
 } = require('chai');
 const path = require('path');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 
 const retry = require('./retry');
 const config = require('../config');
@@ -325,7 +325,7 @@ AbstractServerlessControl.prototype.getMetrics = function getMetrics() {
 
 AbstractServerlessControl.prototype._getFromBackend = function _getFromBackend(url) {
   if (this.backendHasBeenStarted) {
-    return request({
+    return fetch({
       method: 'GET',
       url: `${this.backendBaseUrl}${url}`,
       json: true,
@@ -338,7 +338,7 @@ AbstractServerlessControl.prototype._getFromBackend = function _getFromBackend(u
 
 AbstractServerlessControl.prototype.resetBackend = function resetBackend() {
   if (this.backendHasBeenStarted) {
-    return request({
+    return fetch({
       method: 'DELETE',
       url: `${this.backendBaseUrl}/received`,
       strictSSL: false
@@ -353,7 +353,7 @@ AbstractServerlessControl.prototype.setResponsive = function setResponsive(respo
     responsive = true;
   }
   if (this.backendHasBeenStarted) {
-    return request({
+    return fetch({
       method: 'POST',
       url: `${this.backendBaseUrl}/responsive?responsive=${responsive}`,
       strictSSL: false
@@ -365,7 +365,7 @@ AbstractServerlessControl.prototype.setResponsive = function setResponsive(respo
 
 AbstractServerlessControl.prototype._getFromExtension = function _getFromExtension(url) {
   if (this.extensionHasBeenStarted) {
-    return request({
+    return fetch({
       method: 'GET',
       url: `${this.extensionBaseUrl}${url}`,
       json: true
@@ -377,7 +377,7 @@ AbstractServerlessControl.prototype._getFromExtension = function _getFromExtensi
 
 AbstractServerlessControl.prototype.resetExtension = function resetExtension() {
   if (this.extensionHasBeenStarted) {
-    return request({
+    return fetch({
       method: 'DELETE',
       url: `${this.extensionBaseUrl}/received`
     });
