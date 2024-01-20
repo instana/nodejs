@@ -35,7 +35,10 @@ exports.init = function init(config) {
   requireHook.onModuleLoad('request', logDeprecatedWarning);
 };
 function logDeprecatedWarning() {
-  logger.warn('The support for request has been deprecated.');
+  logger.warn(
+    // eslint-disable-next-line max-len
+    '[Deprecation Warning] The support for request library is deprecated and will be removed in the next major release. Please consider migrating to an appropriate package.'
+  );
 }
 exports.updateConfig = function updateConfig(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;

@@ -27,11 +27,17 @@ app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/multipleRequestsWithStealthyRequire', async (req, res) => {
-  await makeSuperagentRequest('https://example.com/1');
-  await makeSuperagentRequest('https://example.com/2');
+app.get('/multipleRequireWithStealthyRequire', async (req, res) => {
+  // Wrap the require calls with stealthyRequire to avoid caching
+  const firstInstanceOfGot = stealthyRequire(require.cache, () => require('got'));
+  const secondInstanceOfGot = stealthyRequire(require.cache, () => require('got'));
 
-  res.sendStatus(200);
+  // Check if the two instances of 'got' are different
+  if (firstInstanceOfGot !== secondInstanceOfGot) {
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(500);
+  }
 });
 
 app.listen(port, () => {
@@ -42,13 +48,4 @@ function log() {
   const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
-}
-async function makeSuperagentRequest(url) {
-  const superagentFresh = stealthyRequire(require.cache, () => require('superagent'));
-  try {
-    const response = await superagentFresh.get(url);
-    log(`response ${response.body}`);
-  } catch (error) {
-    log(`error ${error}`);
-  }
 }
