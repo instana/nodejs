@@ -14,7 +14,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const redis = require('redis');
-const request = require('request-promise-native');
+const fetch = require('node-fetch');
 const port = require('../../../test_util/app-port')();
 const app = express();
 const logPrefix = `Redis Batching App (${process.pid}):\t`;
@@ -66,7 +66,7 @@ app.post('/quick-successive-calls', (req, res) => {
           log(`Consecutive read access returned different results: ${redisGetResponse1} != ${redisRes2}`);
           return res.sendStatus(500);
         }
-        request(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
           res.send(redisGetResponse1);
         });
       });
@@ -90,7 +90,7 @@ app.post('/quick-successive-calls-with-errors', (req, res) => {
           log('Get unexpectedly succeeded');
           return res.sendStatus(500);
         }
-        request(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
           res.send('done');
         });
       });

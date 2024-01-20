@@ -12,7 +12,7 @@ require('../../../..')();
 const Client = require('pg-native');
 const express = require('express');
 const morgan = require('morgan');
-const request = require('request-promise-native');
+const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const port = require('../../../test_util/app-port')();
 
@@ -62,7 +62,7 @@ app.post('/select', (req, res) => {
       return res.sendStatus(500);
     }
     // Execute another traced call to verify that we keep the tracing context.
-    request(`http://127.0.0.1:${agentPort}`).then(() => {
+    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
       res.json(results);
     });
   });
@@ -70,7 +70,7 @@ app.post('/select', (req, res) => {
 
 app.post('/select-sync', (req, res) => {
   const results = client.querySync('SELECT NOW()');
-  request(`http://127.0.0.1:${agentPort}`).then(() => {
+  fetch(`http://127.0.0.1:${agentPort}`).then(() => {
     res.json(results);
   });
 });
@@ -84,7 +84,7 @@ app.post('/insert', (req, res) => {
       log('Failed to execute client insert', err);
       return res.sendStatus(500);
     }
-    request(`http://127.0.0.1:${agentPort}`).then(() => {
+    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
       res.json(results);
     });
   });
@@ -93,7 +93,7 @@ app.post('/insert', (req, res) => {
 app.post('/error', (req, res) => {
   client.query('SELECT name, email FROM nonexistanttable', (err, results) => {
     if (err) {
-      request(`http://127.0.0.1:${agentPort}`).then(() => res.status(500).json({ error: err.toString() }));
+      fetch(`http://127.0.0.1:${agentPort}`).then(() => res.status(500).json({ error: err.toString() }));
     } else {
       res.json(results);
     }
@@ -105,7 +105,7 @@ app.post('/error-sync', (req, res) => {
     const results = client.querySync('SELECT name, email FROM nonexistanttable');
     return res.json(results);
   } catch (err) {
-    request(`http://127.0.0.1:${agentPort}`).then(() => res.status(500).json({ error: err.toString() }));
+    fetch(`http://127.0.0.1:${agentPort}`).then(() => res.status(500).json({ error: err.toString() }));
   }
 });
 
@@ -120,7 +120,7 @@ app.post('/prepared-statement', (req, res) => {
         log('Failed to execute prepared statement', e2);
         return res.sendStatus(500);
       }
-      request(`http://127.0.0.1:${agentPort}`).then(() => {
+      fetch(`http://127.0.0.1:${agentPort}`).then(() => {
         res.json(results);
       });
     });
@@ -130,7 +130,7 @@ app.post('/prepared-statement', (req, res) => {
 app.post('/prepared-statement-sync', (req, res) => {
   client.prepareSync('prepared-statement-2', 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *', 2);
   const results = client.executeSync('prepared-statement-2', ['scooter', 'scooter@muppets.com']);
-  request(`http://127.0.0.1:${agentPort}`).then(() => {
+  fetch(`http://127.0.0.1:${agentPort}`).then(() => {
     res.json(results);
   });
 });
@@ -163,7 +163,7 @@ app.post('/transaction', (req, res) => {
                 log('Failed to COMMIT transaction', err4);
                 return res.status(500).json(err4);
               }
-              request(`http://127.0.0.1:${agentPort}`).then(() => res.json(result3));
+              fetch(`http://127.0.0.1:${agentPort}`).then(() => res.json(result3));
             });
           }
         );
@@ -189,13 +189,13 @@ app.post('/cancel', (req, res) => {
       // is called. So we wait a few milliseconds more and only then send the response - by then, the cancel callback
       // will have been called, too, and hasBeenCancelled has the correct value.
       setTimeout(() => {
-        request(`http://127.0.0.1:${agentPort}`).then(() => res.json({ results, hasBeenCancelled }));
+        fetch(`http://127.0.0.1:${agentPort}`).then(() => res.json({ results, hasBeenCancelled }));
       }, 100);
     } else if (err2) {
       log('Failed to execute query', err2);
       return res.sendStatus(500);
     } else {
-      request(`http://127.0.0.1:${agentPort}`).then(() => res.json({ results, hasBeenCancelled }));
+      fetch(`http://127.0.0.1:${agentPort}`).then(() => res.json({ results, hasBeenCancelled }));
     }
   });
 });

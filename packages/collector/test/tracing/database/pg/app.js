@@ -16,7 +16,7 @@ const Pool = _pg.Pool;
 const Client = _pg.Client;
 const express = require('express');
 const morgan = require('morgan');
-const request = require('request-promise-native');
+const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const port = require('../../../test_util/app-port')();
 
@@ -62,7 +62,7 @@ app.get('/select-now-pool', (req, res) => {
       return res.sendStatus(500);
     }
     // Execute another traced call to verify that we keep the tracing context.
-    request(`http://127.0.0.1:${agentPort}`).then(() => {
+    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
       res.json(results);
     });
   });
@@ -74,7 +74,7 @@ app.get('/select-now-no-pool-callback', (req, res) => {
       log('Failed to execute select now query', err);
       return res.sendStatus(500);
     }
-    request(`http://127.0.0.1:${agentPort}`).then(() => {
+    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
       res.json(results);
     });
   });
@@ -84,7 +84,7 @@ app.get('/select-now-no-pool-promise', (req, res) => {
   client
     .query('SELECT NOW()')
     .then(results => {
-      request(`http://127.0.0.1:${agentPort}`).then(() => {
+      fetch(`http://127.0.0.1:${agentPort}`).then(() => {
         res.json(results);
       });
     })
@@ -110,7 +110,7 @@ app.get('/pool-string-insert', (req, res) => {
       log('Failed to execute pool insert', err);
       return res.sendStatus(500);
     }
-    request(`http://127.0.0.1:${agentPort}`).then(() => {
+    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
       res.json(results);
     });
   });
@@ -126,7 +126,7 @@ app.get('/pool-config-select', (req, res) => {
       log('Failed to execute pool config insert', err);
       return res.sendStatus(500);
     }
-    request(`http://127.0.0.1:${agentPort}`).then(() => {
+    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
       res.json(results);
     });
   });
@@ -141,7 +141,7 @@ app.get('/pool-config-select-promise', (req, res) => {
   pool
     .query(query)
     .then(results => {
-      request(`http://127.0.0.1:${agentPort}`).then(() => {
+      fetch(`http://127.0.0.1:${agentPort}`).then(() => {
         res.json(results);
       });
     })
@@ -160,7 +160,7 @@ app.get('/client-string-insert', (req, res) => {
       log('Failed to execute client insert', err);
       return res.sendStatus(500);
     }
-    request(`http://127.0.0.1:${agentPort}`).then(() => {
+    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
       res.json(results);
     });
   });
@@ -176,7 +176,7 @@ app.get('/client-config-select', (req, res) => {
       log('Failed to execute client select', err);
       return res.sendStatus(500);
     }
-    request(`http://127.0.0.1:${agentPort}`).then(() => {
+    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
       res.json(results);
     });
   });
@@ -187,7 +187,7 @@ app.get('/table-doesnt-exist', (req, res) => {
     .query('SELECT name, email FROM nonexistanttable')
     .then(r => res.json(r))
     .catch(e => {
-      request(`http://127.0.0.1:${agentPort}`).then(() => {
+      fetch(`http://127.0.0.1:${agentPort}`).then(() => {
         res.status(500).json(e);
       });
     });
@@ -217,7 +217,7 @@ app.get('/transaction', (req, res) => {
             log('Failed to execute client transaction', err4);
             return res.status(500).json(err4);
           }
-          request(`http://127.0.0.1:${agentPort}`).then(() => res.json(result3));
+          fetch(`http://127.0.0.1:${agentPort}`).then(() => res.json(result3));
         });
       });
     });
@@ -262,7 +262,7 @@ app.get('/asynchronous-query', async (req, res) => {
       secondQuery: secondQueryResults,
       thirdQuery: thirdQueryResults
     };
-    request(`http://127.0.0.1:${agentPort}`).then(() => {
+    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
       res.json(combinedResults);
     });
   } catch (err) {

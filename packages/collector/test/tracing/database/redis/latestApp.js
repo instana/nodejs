@@ -11,7 +11,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const redis = require('redis');
-const request = require('request-promise-native');
+const fetch = require('node-fetch');
 const port = require('../../../test_util/app-port')();
 
 const cls = require('../../../../../core/src/tracing/cls');
@@ -67,8 +67,8 @@ app.post('/values', async (req, res) => {
     log('Set with key %s, value %s failed', key, value, e);
     res.sendStatus(500);
   }
-  await request(`http://127.0.0.1:${agentPort}`);
-  log('Sent agent request successfully.');
+  await fetch(`http://127.0.0.1:${agentPort}`);
+  log('Sent agent fetch successfully.');
   res.sendStatus(200);
 });
 
@@ -78,7 +78,7 @@ app.get('/values', async (req, res) => {
   try {
     const redisRes = await client.get(key);
     log('Got redis key successfully.');
-    await request(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}`);
     log('Sent agent request successfully.');
     res.send(redisRes);
   } catch (err) {
@@ -89,7 +89,7 @@ app.get('/values', async (req, res) => {
 
 app.get('/hvals', async (req, res) => {
   await client.hVals('key1');
-  await request(`http://127.0.0.1:${agentPort}`);
+  await fetch(`http://127.0.0.1:${agentPort}`);
   log('Sent agent request successfully.');
   res.sendStatus(200);
 });
@@ -101,7 +101,7 @@ app.get('/blocking', async (req, res) => {
     await client.lPush('mykey', ['1', '2']);
     await blPopPromise; // '2'
 
-    await request(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}`);
     log('Sent agent request successfully.');
 
     res.sendStatus(200);
@@ -121,7 +121,7 @@ app.get('/scan-iterator', async (req, res) => {
     }
   }
 
-  await request(`http://127.0.0.1:${agentPort}`);
+  await fetch(`http://127.0.0.1:${agentPort}`);
   log('Sent agent request successfully.');
 
   res.sendStatus(200);
@@ -131,14 +131,14 @@ app.get('/hset-hget', async (req, res) => {
   await client.hSet('someCollection1', 'key1', 'value1');
   // HGETALL = hGetAll internally, no need to add test coverage for both
   const result = await client.hGetAll('someCollection1');
-  await request(`http://127.0.0.1:${agentPort}`);
+  await fetch(`http://127.0.0.1:${agentPort}`);
   res.status(200).send(result.key1);
 });
 
 app.get('/get-without-waiting', (req, res) => {
   const key = req.query.key;
   client.get(key);
-  request(`http://127.0.0.1:${agentPort}`).then(() => {
+  fetch(`http://127.0.0.1:${agentPort}`).then(() => {
     res.sendStatus(200);
   });
 });
@@ -149,7 +149,7 @@ app.get('/set-without-waiting', (req, res) => {
 
   client.set(key, value);
 
-  request(`http://127.0.0.1:${agentPort}`).then(() => {
+  fetch(`http://127.0.0.1:${agentPort}`).then(() => {
     res.sendStatus(200);
   });
 });
@@ -160,7 +160,7 @@ app.get('/failure', async (req, res) => {
     const redisRes = await client.get(null);
     res.send(redisRes);
   } catch (err) {
-    await request(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}`);
     res.sendStatus(500);
   }
 });
@@ -168,7 +168,7 @@ app.get('/failure', async (req, res) => {
 app.get('/multi', async (req, res) => {
   try {
     await client.multi().set('key', 'value').get('key').exec();
-    await request(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}`);
     res.sendStatus(200);
   } catch (err) {
     log('Multi failed', err);
@@ -179,7 +179,7 @@ app.get('/multi', async (req, res) => {
 app.get('/multi-no-waiting', async (req, res) => {
   try {
     client.multi().set('key', 'value').get('key').exec();
-    await request(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}`);
     res.sendStatus(200);
   } catch (err) {
     log('Multi failed', err);
@@ -194,14 +194,14 @@ app.get('/multiFailure', async (req, res) => {
     res.sendStatus(500);
   } catch (err) {
     log('Multi expected to fail', err);
-    await request(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}`);
     res.sendStatus(200);
   }
 });
 
 app.get('/batchSuccess', async (req, res) => {
   await client.multi().get('1').set('2', '2').execAsPipeline();
-  await request(`http://127.0.0.1:${agentPort}`);
+  await fetch(`http://127.0.0.1:${agentPort}`);
   res.sendStatus(200);
 });
 
@@ -211,7 +211,7 @@ app.get('/batchFailure', async (req, res) => {
     res.sendStatus(500);
   } catch (err) {
     log('Batch expected to fail', err);
-    await request(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}`);
     res.sendStatus(200);
   }
 });
@@ -223,7 +223,7 @@ app.get('/callSequence', async (req, res) => {
   try {
     await client.set(key, value);
     const result = await client.get(key);
-    await request(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}`);
     res.send(result);
   } catch (err) {
     log('Set/Get with key %s, value %s failed', key, value, err);

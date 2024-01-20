@@ -15,7 +15,7 @@ require('../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const request = require('request-promise-native');
+const fetch = require('node-fetch');
 const { Client } = require('@elastic/elasticsearch');
 const port = require('../../../test_util/app-port')();
 
@@ -58,12 +58,12 @@ app.get('/get', (req, res) => {
         id: req.query.id
       })
       .then(response => {
-        request(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
           res.json({ response: commonReturnValue(response) });
         });
       })
       .catch(err => {
-        request(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
           res.json({ error: err });
         });
       });
@@ -76,7 +76,7 @@ app.get('/get', (req, res) => {
       {},
       (error, response) => {
         // Execute another traced call to verify that we keep the tracing context.
-        request(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
           res.json({ error, response: commonReturnValue(response) });
         });
       }
@@ -94,7 +94,7 @@ app.get('/search', (req, res) => {
     .then(response => {
       searchResponse = response;
       // Execute another traced call to verify that we keep the tracing context.
-      return request(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}`);
     })
     .then(() => {
       res.json({ response: commonReturnValue(searchResponse) });
