@@ -36,7 +36,7 @@
     "audit": "lerna run audit --stream",
     "commit": "cz",
     "doctoc": "doctoc README.md packages/collector/README.md",
-    "lint": "node misc/is_eol || (eslint .*.js *.js && npm run typecheck && lerna run lint --stream && eslint misc && eslint dockerfile-examples && eslint bin)",
+    "lint": "eslint .*.js *.js && npm run typecheck && lerna run lint --stream && eslint misc && eslint dockerfile-examples && eslint bin",
     "postinstall": "husky install && lerna run node_modules:exists",
     "precommit": "npm run doctoc",
     "coverage-all": "nyc --reporter=lcov lerna run test --stream",
