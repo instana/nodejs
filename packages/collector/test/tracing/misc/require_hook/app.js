@@ -32,7 +32,11 @@ app.get('/multipleRequireWithStealthyRequire', async (req, res) => {
   const firstInstanceOfGot = stealthyRequire(require.cache, () => require('got'));
   const secondInstanceOfGot = stealthyRequire(require.cache, () => require('got'));
 
-  // Check if the two instances of 'got' are different
+  // Verify that the two instances of the 'got' module are different. In this scenario, we emulate the behavior of
+  // stealthy-require, ensuring that each time we load the module, it is a fresh instance. This precaution is taken
+  // to prevent require caching, and to guarantee the loading of a new module each time, as discussed and resolved
+  // in the following PR: https://github.com/instana/nodejs/pull/71
+
   if (firstInstanceOfGot !== secondInstanceOfGot) {
     res.sendStatus(200);
   } else {
