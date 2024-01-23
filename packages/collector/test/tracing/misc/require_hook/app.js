@@ -15,6 +15,7 @@ const morgan = require('morgan');
 const port = require('../../../test_util/app-port')();
 const app = express();
 const logPrefix = `requireHook App (${process.pid}):\t`;
+const stealthyRequire = require('stealthy-require');
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -26,11 +27,21 @@ app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/requireRequestPromiseMultipleTimes', (req, res) => {
-  require('request');
-  require('request-promise'); // executes stealthy-require
-  require('request-promise-native'); // executes stealthy-require
-  res.sendStatus(200);
+app.get('/multipleRequireWithStealthyRequire', async (req, res) => {
+  // Wrap the require calls with stealthyRequire to avoid caching
+  const firstInstanceOfGot = stealthyRequire(require.cache, () => require('got'));
+  const secondInstanceOfGot = stealthyRequire(require.cache, () => require('got'));
+
+  // Verify that the two instances of the 'got' module are different. In this scenario, we emulate the behavior of
+  // stealthy-require, ensuring that each time we load the module, it is a fresh instance. This precaution is taken
+  // to prevent require caching, and to guarantee the loading of a new module each time, as discussed and resolved
+  // in the following PR: https://github.com/instana/nodejs/pull/71
+
+  if (firstInstanceOfGot !== secondInstanceOfGot) {
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(500);
+  }
 });
 
 app.listen(port, () => {

@@ -32,7 +32,7 @@ mochaSuiteFn('tracing/requireHook', function () {
       controls
         .sendRequest({
           method: 'GET',
-          path: '/requireRequestPromiseMultipleTimes'
+          path: '/multipleRequireWithStealthyRequire'
         })
         .then(() =>
           testUtils.retry(() =>

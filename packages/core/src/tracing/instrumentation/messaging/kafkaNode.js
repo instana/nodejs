@@ -26,7 +26,10 @@ exports.init = function init() {
 };
 
 function instrument(kafka) {
-  logger.warn('kafka-node is deprecated. The support will be removed in the next major release.');
+  logger.warn(
+    // eslint-disable-next-line max-len
+    '[Deprecation Warning] The kafka-node library is deprecated and will be removed in the next major release. Please consider migrating to an appropriate package.'
+  );
 
   shimmer.wrap(Object.getPrototypeOf(kafka.Producer.prototype), 'send', shimSend);
   shimmer.wrap(kafka.Consumer.prototype, 'emit', shimEmit);

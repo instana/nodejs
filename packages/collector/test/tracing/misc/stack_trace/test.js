@@ -11,6 +11,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const globalAgent = require('../../../globalAgent');
+const constants = require('@instana/core').tracing.constants;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
@@ -97,8 +98,9 @@ mochaSuiteFn('tracing/stackTraces', function () {
             agentControls.getSpans().then(spans => {
               testUtils.expectAtLeastOneMatching(spans, [
                 span => expect(span.n).to.equal('node.http.client'),
-                span => expect(span.stack[0].m).to.equal('Request.Request.start [as start]'),
-                span => expect(span.stack[0].c).to.match(/request\.js$/i)
+                span => expect(span.k).to.equal(constants.EXIT),
+                span => expect(span.stack[2].m).to.equal('fetch'),
+                span => expect(span.stack[2].c).to.contains('node-fetch')
               ]);
             })
           )

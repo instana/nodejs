@@ -343,7 +343,8 @@ function shimApolloGatewayExecuteQueryPlanFunction(originalFunction) {
 }
 function logDeprecatedWarning() {
   logger.warn(
-    'The support for @apollo-federation has been deprecated, following its official end-of-life in September 2023.'
+    // eslint-disable-next-line max-len
+    '[Deprecation Warning] The support for @apollo-federation is deprecated and will be removed in the next major release. Please consider migrating to an appropriate package.'
   );
 }
 
