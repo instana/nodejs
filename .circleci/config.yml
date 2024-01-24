@@ -406,6 +406,9 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
+            echo $MODIFIED_FILES
+            echo $GIT_COMMIT_DESC
+            
             if echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/aws-lambda"; then
               touch .run14-started
 
