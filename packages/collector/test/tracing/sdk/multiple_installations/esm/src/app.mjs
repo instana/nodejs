@@ -14,6 +14,7 @@
 //       For ESM it works because our collector is CJS.
 // TODO: #125683
 import instana from '../../../../../../src/index.js';
+import getAppPort from '@instana/collector/test/test_util/app-port.js';
 const initializedInstana = instana();
 
 // NOTE: Does not work, because this is a new instance in the require cache and this code
@@ -23,7 +24,6 @@ const initializedInstana = instana();
 import express from 'express';
 import delay from '@instana/core/test/test_util/delay.js';
 
-const getAppPort = require('@instana/collector/test/test_util/app-port.js');
 const port = getAppPort();
 const app = express();
 const logPrefix = `ESM SDK multiple installations: (${process.pid}):\t`;

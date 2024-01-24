@@ -5,7 +5,7 @@
 'use strict';
 
 import express from 'express';
-import getAppPort from '@instana/collector/test/test_util/app-port';
+import getAppPort from '@instana/collector/test/test_util/app-port.js';
 
 const port = getAppPort();
 const app = express();

@@ -51,12 +51,16 @@ pkgs.forEach(p => {
   i += 1;
 });
 
-Object.keys(portRanges).forEach(key => {
+Object.keys(portRanges).every(key => {
   if (process.env.LERNA_PACKAGE_NAME === '@instana/collector' && key.indexOf(process.env.npm_lifecycle_event) !== -1) {
     myPortRange = portRanges[key];
+    return false;
   } else if (process.env.LERNA_PACKAGE_NAME.indexOf(key) !== -1) {
     myPortRange = portRanges[key];
   }
+
+  // continue
+  return true;
 });
 
 function getRandomNumberBetween(x, y) {
