@@ -107,7 +107,7 @@ http.createServer(app).listen(port, error => {
     logger.error(error);
     return process.exit(1);
   } else {
-    logger.info('Listening on port: %s (HTTP)', port);
+    logger.info('Extension listening on port: %s (HTTP)', port);
     sendToParent('extension: started');
   }
 });

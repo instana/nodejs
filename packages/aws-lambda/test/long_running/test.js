@@ -51,6 +51,7 @@ function prelude(opts) {
     faasRuntimePath: path.join(__dirname, '../runtime_mock'),
     handlerDefinitionPath: opts.handlerDefinitionPath,
     startBackend: opts.startBackend,
+    longHandlerRun: true,
     env,
     timeout
   });

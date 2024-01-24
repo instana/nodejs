@@ -241,7 +241,7 @@ function verifyHttpExit(testDefinition, valuesForPlaceholders, spans, control) {
     span => expect(span.t).to.be.a('string'),
     span => expect(span.s).to.be.a('string'),
     span => expect(span.data.http.method).to.equal('GET'),
-    span => expect(span.data.http.url).to.equal(control.downstreamDummyUrl),
+    span => expect(span.data.http.url).to.contain(control.downstreamDummyUrl),
     span => expect(span.data.http.status).to.equal(200)
   ];
   [

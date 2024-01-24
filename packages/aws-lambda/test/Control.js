@@ -24,10 +24,7 @@ function Control(opts) {
     this.extensionPort = portfinder();
   }
 
-  if (this.opts.startBackend) {
-    this.backendPort = this.opts.backendPort || portfinder();
-  }
-
+  this.backendPort = this.opts.backendPort || portfinder();
   this.useHttps = !this.opts.startExtension;
   const protocol = this.useHttps ? 'https' : 'http';
   this.backendBaseUrl = this.opts.backendBaseUrl || `${protocol}://localhost:${this.backendPort}/serverless`;
@@ -35,6 +32,7 @@ function Control(opts) {
   this.downstreamDummyPort = this.opts.downstreamDummyPort || portfinder();
   this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
 
+  this.longHandlerRun = this.opts.longHandlerRun || false;
   this.proxyPort = this.opts.proxyPort;
 }
 
@@ -73,7 +71,8 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
         INSTANA_DISABLE_CA_CHECK: this.useHttps,
         INSTANA_DEV_SEND_UNENCRYPTED: !this.useHttps,
         WAIT_FOR_MESSAGE: true,
-        INSTANA_ENDPOINT_URL: this.backendBaseUrl
+        INSTANA_ENDPOINT_URL: this.backendBaseUrl,
+        INSTANA_LAYER_EXTENSION_PORT: this.extensionPort
       },
       process.env,
       this.opts.env
@@ -107,8 +106,13 @@ Control.prototype.runHandler = function runHandler({ context, event, eventOpts }
 };
 
 Control.prototype.waitUntilHandlerHasRun = function waitUntilHandlerHasRun() {
-  const timeout = this.opts.lambdaTimeout || this.opts.timeout / 2;
-  return retry(() => this.hasHandlerRunPromise(), timeout);
+  if (!this.opts.longHandlerRun) return retry(() => this.hasHandlerRunPromise());
+
+  return retry(
+    () => this.hasHandlerRunPromise(),
+    1000,
+    Date.now() + this.opts.env.DELAY * this.opts.env.ITERATIONS + 5000
+  );
 };
 
 Control.prototype.hasHandlerRunPromise = function hasHandlerRunPromise() {

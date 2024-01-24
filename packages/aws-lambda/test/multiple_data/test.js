@@ -9,7 +9,7 @@ const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
-const { delay, expectExactlyNMatching, expectExactlyOneMatching } = require('../../../core/test/test_util');
+const { retry, expectExactlyNMatching, expectExactlyOneMatching } = require('../../../core/test/test_util');
 const config = require('../../../serverless/test/config');
 
 const functionName = 'functionName';
@@ -21,6 +21,7 @@ const instanaAgentKey = 'aws-lambda-dummy-key';
 
 describe('multiple data lambda handler', function () {
   this.timeout(config.getTestTimeout());
+
   const control = new Control({
     faasRuntimePath: path.join(__dirname, '../runtime_mock'),
     handlerDefinitionPath: path.join(__dirname, './lambda'),
@@ -42,21 +43,20 @@ describe('multiple data lambda handler', function () {
         verifyResponse(1);
       })
       .then(() => {
-        return delay(1000 * 4);
-      })
-      .then(() => {
-        return Promise.all([
-          //
-          control.getSpans(),
-          control.getRawBundles(),
-          control.getRawSpanArrays()
-        ]).then(([spans, rawBundles, rawSpanArrays]) => {
-          verifySpans(spans);
-          expect(rawSpanArrays).to.be.an('array');
-          expect(rawSpanArrays).to.have.lengthOf(2);
-          expect(rawBundles).to.be.an('array');
-          expect(rawBundles).to.have.lengthOf.at.least(1);
-          expect(rawBundles).to.have.lengthOf.at.most(4);
+        return retry(() => {
+          return Promise.all([
+            //
+            control.getSpans(),
+            control.getRawBundles(),
+            control.getRawSpanArrays()
+          ]).then(([spans, rawBundles, rawSpanArrays]) => {
+            verifySpans(spans);
+            expect(rawSpanArrays).to.be.an('array');
+            expect(rawSpanArrays).to.have.lengthOf(2);
+            expect(rawBundles).to.be.an('array');
+            expect(rawBundles).to.have.lengthOf.at.least(1);
+            expect(rawBundles).to.have.lengthOf.at.most(4);
+          });
         });
       }));
 

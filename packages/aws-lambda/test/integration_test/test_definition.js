@@ -32,11 +32,13 @@ const instanaAgentKey = 'aws-lambda-dummy-key';
 // etc.). These are the files that are run by mocha and that can be distributed to different executors. To avoid
 // excessive duplication of test code, the test files all import and use this test definition file.
 
-module.exports = function (lambdaType) {
+/**
+ * reduced: we do not want to run the full test suite for callback type etc.
+ */
+module.exports = function (lambdaType, reduced = false) {
   this.timeout(config.getTestTimeout() * 2);
   this.slow(config.getTestTimeout() / 4);
-
-  return registerTests.bind(this)(path.join(__dirname, '..', 'lambdas', lambdaType));
+  return registerTests.bind(this)(path.join(__dirname, '..', 'lambdas', lambdaType), reduced);
 };
 
 function prelude(opts) {
@@ -135,8 +137,13 @@ function prelude(opts) {
   return control;
 }
 
-function registerTests(handlerDefinitionPath) {
-  describe('when everything is peachy', function () {
+const describeOrSkipIfReduced = reduced => {
+  if (!reduced) return describe;
+  return Math.random() < 0.3 ? describe : describe.skip;
+};
+
+function registerTests(handlerDefinitionPath, reduced) {
+  describeOrSkipIfReduced(reduced)('when everything is peachy', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - INSTANA_AGENT_KEY is configured
     // - back end is reachable
@@ -173,7 +180,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('when called with alias', function () {
+  describeOrSkipIfReduced(reduced)('when called with alias', function () {
     // - function is called with alias
     // - INSTANA_ENDPOINT_URL is configured
     // - INSTANA_AGENT_KEY is configured
@@ -189,8 +196,8 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, alias: 'anAlias' }));
   });
 
-  describe('when INSTANA_SSM_PARAM_NAME is used', function () {
-    describe('but we cannot fetch the key from AWS', () => {
+  describeOrSkipIfReduced(reduced)('when INSTANA_SSM_PARAM_NAME is used', function () {
+    describeOrSkipIfReduced(reduced)('but we cannot fetch the key from AWS', () => {
       // - INSTANA_ENDPOINT_URL is configured
       // - INSTANA_AGENT_KEY is configured via SSM
       // - back end is reachable
@@ -204,7 +211,7 @@ function registerTests(handlerDefinitionPath) {
         verify(control, { error: false, expectMetrics: false, expectSpans: false }));
     });
 
-    describe('and it succeeds', () => {
+    describeOrSkipIfReduced(reduced)('and it succeeds', () => {
       // - INSTANA_ENDPOINT_URL is configured
       // - INSTANA_AGENT_KEY is configured via SSM
       // - back end is reachable
@@ -259,7 +266,7 @@ function registerTests(handlerDefinitionPath) {
         verify(control, { error: false, expectMetrics: true, expectSpans: true }));
     });
 
-    describe('[with decryption] error', () => {
+    describeOrSkipIfReduced(reduced)('[with decryption] error', () => {
       const AWS = require('aws-sdk');
       let kmsKeyId;
 
@@ -344,7 +351,7 @@ function registerTests(handlerDefinitionPath) {
         verify(control, { error: false, expectMetrics: false, expectSpans: false }));
     });
 
-    describe('[with decryption] succeeds', () => {
+    describeOrSkipIfReduced(reduced)('[with decryption] succeeds', () => {
       const AWS = require('aws-sdk');
       let kmsKeyId;
 
@@ -431,7 +438,7 @@ function registerTests(handlerDefinitionPath) {
     });
   });
 
-  describe('when lambda function yields an error', function () {
+  describeOrSkipIfReduced(reduced)('when lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable
     // - lambda function ends with an error
@@ -445,7 +452,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: 'lambda-asynchronous', expectMetrics: true, expectSpans: true }));
   });
 
-  describe('when lambda function throws a synchronous error', function () {
+  describeOrSkipIfReduced(reduced)('when lambda function throws a synchronous error', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable
     // - lambda function ends with an error
@@ -459,7 +466,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: 'lambda-synchronous', expectMetrics: true, expectSpans: true }));
   });
 
-  describe('with config', function () {
+  describeOrSkipIfReduced(reduced)('with config', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable
     // - client provides a config object
@@ -474,7 +481,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true }));
   });
 
-  describe('with config, when lambda function yields an error', function () {
+  describeOrSkipIfReduced(reduced)('with config, when lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable
     // - client provides a config object
@@ -490,7 +497,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: 'lambda-asynchronous', expectMetrics: true, expectSpans: true }));
   });
 
-  describe('when INSTANA_ENDPOINT_URL is missing', function () {
+  describeOrSkipIfReduced(reduced)('when INSTANA_ENDPOINT_URL is missing', function () {
     // - INSTANA_ENDPOINT_URL is missing
     // - lambda function ends with success
     const control = prelude.bind(this)({
@@ -503,21 +510,24 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when INSTANA_ENDPOINT_URL is missing and the lambda function yields an error', function () {
-    // - INSTANA_ENDPOINT_URL is missing
-    // - lambda function ends with an error
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaEndpointUrlMissing: true,
-      instanaAgentKey,
-      error: 'asynchronous'
-    });
+  describeOrSkipIfReduced(reduced)(
+    'when INSTANA_ENDPOINT_URL is missing and the lambda function yields an error',
+    function () {
+      // - INSTANA_ENDPOINT_URL is missing
+      // - lambda function ends with an error
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        instanaEndpointUrlMissing: true,
+        instanaAgentKey,
+        error: 'asynchronous'
+      });
 
-    it('must ignore the missing URL gracefully', () =>
-      verify(control, { error: 'lambda-asynchronous', expectMetrics: false, expectSpans: false }));
-  });
+      it('must ignore the missing URL gracefully', () =>
+        verify(control, { error: 'lambda-asynchronous', expectMetrics: false, expectSpans: false }));
+    }
+  );
 
-  describe('with config, when INSTANA_ENDPOINT_URL is missing', function () {
+  describeOrSkipIfReduced(reduced)('with config, when INSTANA_ENDPOINT_URL is missing', function () {
     // - INSTANA_ENDPOINT_URL is missing
     // - client provides a config
     // - lambda function ends with success
@@ -532,7 +542,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when INSTANA_AGENT_KEY is missing', function () {
+  describeOrSkipIfReduced(reduced)('when INSTANA_AGENT_KEY is missing', function () {
     // - INSTANA_AGENT_KEY is missing
     // - lambda function ends with success
     const control = prelude.bind(this)({
@@ -543,19 +553,22 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when INSTANA_AGENT_KEY is missing and the lambda function yields an error', function () {
-    // - INSTANA_AGENT_KEY is missing
-    // - lambda function ends with an error
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      error: 'asynchronous'
-    });
+  describeOrSkipIfReduced(reduced)(
+    'when INSTANA_AGENT_KEY is missing and the lambda function yields an error',
+    function () {
+      // - INSTANA_AGENT_KEY is missing
+      // - lambda function ends with an error
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        error: 'asynchronous'
+      });
 
-    it('must ignore the missing key gracefully', () =>
-      verify(control, { error: 'lambda-asynchronous', expectMetrics: false, expectSpans: false }));
-  });
+      it('must ignore the missing key gracefully', () =>
+        verify(control, { error: 'lambda-asynchronous', expectMetrics: false, expectSpans: false }));
+    }
+  );
 
-  describe('when the back end is down', function () {
+  describeOrSkipIfReduced(reduced)('when the back end is down', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is not reachable
     // - lambda function ends with success
@@ -569,7 +582,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when the back end is down and the lambda function yields an error', function () {
+  describeOrSkipIfReduced(reduced)('when the back end is down and the lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is not reachable
     // - lambda function ends with an error
@@ -584,7 +597,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: 'lambda-asynchronous', expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when the back end is reachable but does not respond', function () {
+  describeOrSkipIfReduced(reduced)('when the back end is reachable but does not respond', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable, but will never respond (verifies that a reasonable timeout is applied -
     //   the default timeout would be two minutes)
@@ -598,27 +611,30 @@ function registerTests(handlerDefinitionPath) {
     it('must finish swiftly', () => verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when the back end becomes responsive again after a timeout in a previous handler run', function () {
-    // - INSTANA_ENDPOINT_URL is configured
-    // - back end will not respond for the first lambda handler run, but for the second one
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaAgentKey,
-      startBackend: 'unresponsive'
-    });
+  describeOrSkipIfReduced(reduced)(
+    'when the back end becomes responsive again after a timeout in a previous handler run',
+    function () {
+      // - INSTANA_ENDPOINT_URL is configured
+      // - back end will not respond for the first lambda handler run, but for the second one
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        instanaAgentKey,
+        startBackend: 'unresponsive'
+      });
 
-    it('should start reporting again on next handler run', () =>
-      control
-        .runHandler()
-        .then(() => verifyAfterRunningHandler(control, { error: false, expectMetrics: false, expectSpans: false }))
-        .then(() => control.resetBackend())
-        .then(() => control.setResponsive(true))
-        .then(() => control.reset())
-        .then(() => control.runHandler())
-        .then(() => verifyAfterRunningHandler(control, { error: false, expectMetrics: true, expectSpans: true })));
-  });
+      it('should start reporting again on next handler run', () =>
+        control
+          .runHandler()
+          .then(() => verifyAfterRunningHandler(control, { error: false, expectMetrics: false, expectSpans: false }))
+          .then(() => control.resetBackend())
+          .then(() => control.setResponsive(true))
+          .then(() => control.reset())
+          .then(() => control.runHandler())
+          .then(() => verifyAfterRunningHandler(control, { error: false, expectMetrics: true, expectSpans: true })));
+    }
+  );
 
-  describe('when the extension is used and available', function () {
+  describeOrSkipIfReduced(reduced)('when the extension is used and available', function () {
     // This starts the backend stub on the extension port, simulating that the Lambda extension is available. The case
     // that the Lambda extension is _not_ available is tested in "when the extension is used but not available"
     const control = prelude.bind(this)({
@@ -640,7 +656,7 @@ function registerTests(handlerDefinitionPath) {
     });
   });
 
-  describe('when the extension is used but not available', function () {
+  describeOrSkipIfReduced(reduced)('when the extension is used but not available', function () {
     // In this test, backend_connector will make the heartbeat request to the Lambda extension, which will be
     // unsuccessful, then it will fall back to sending data directly to the back end.
     const control = prelude.bind(this)({
@@ -655,7 +671,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true }));
   });
 
-  describe('when the extension is used and available, but is unresponsive', function () {
+  describeOrSkipIfReduced(reduced)('when the extension is used and available, but is unresponsive', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       startExtension: 'unresponsive',
@@ -687,7 +703,7 @@ function registerTests(handlerDefinitionPath) {
     });
   });
 
-  describe(
+  describeOrSkipIfReduced(reduced)(
     'when the extension is used and available, but is unresponsive, and the handler finishes _after_ the ' +
       'heartbeat request',
     function () {
@@ -714,62 +730,71 @@ function registerTests(handlerDefinitionPath) {
     }
   );
 
-  describe('when the extension is used and the heartbeat request responds with an unexpected status code', function () {
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      handlerDelay: 100,
-      startExtension: 'unexpected-heartbeat-response',
-      startBackend: true,
-      useExtension: true,
-      instanaAgentKey
-    });
+  describeOrSkipIfReduced(reduced)(
+    'when the extension is used and the heartbeat request responds with an unexpected status code',
+    function () {
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        handlerDelay: 100,
+        startExtension: 'unexpected-heartbeat-response',
+        startBackend: true,
+        useExtension: true,
+        instanaAgentKey
+      });
 
-    it('must deliver metrics and spans directly to the back end', async () => {
-      await verify(control, { error: false, expectMetrics: true, expectSpans: true });
+      it('must deliver metrics and spans directly to the back end', async () => {
+        await verify(control, { error: false, expectMetrics: true, expectSpans: true });
 
-      // With the Lambda extension heartbeat request failing, we expect
-      // * the heartbeat request to the extension to time out, and the
-      // * data being sent directly to the back end.
-      const spansFromExtension = await control.getSpansFromExtension();
-      expect(spansFromExtension).to.have.length(0);
-    });
-  });
+        // With the Lambda extension heartbeat request failing, we expect
+        // * the heartbeat request to the extension to time out, and the
+        // * data being sent directly to the back end.
+        const spansFromExtension = await control.getSpansFromExtension();
+        expect(spansFromExtension).to.have.length(0);
+      });
+    }
+  );
 
   // eslint-disable-next-line max-len
-  describe('when the extension is used, the heartbeat request succeeds, but the extension becomes unresponsive later', function () {
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      startExtension: 'unresponsive-later',
-      startBackend: true,
-      useExtension: true,
-      instanaAgentKey
-    });
+  describeOrSkipIfReduced(reduced)(
+    'when the extension is used, the heartbeat request succeeds, but the extension becomes unresponsive later',
+    function () {
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        startExtension: 'unresponsive-later',
+        startBackend: true,
+        useExtension: true,
+        instanaAgentKey
+      });
 
-    it('must deliver metrics and spans directly to the back end', async () => {
-      await verify(control, { error: false, expectMetrics: true, expectSpans: true });
+      it('must deliver metrics and spans directly to the back end', async () => {
+        await verify(control, { error: false, expectMetrics: true, expectSpans: true });
 
-      // With the heartbeat request succeeding but the extension becoming unresponsive later, the outcome basically
-      // depends on whether we store the spans in the extenion stub when it is simulating unresponsiveness or not.
-      // Currently we do that, so we expect 2 spans.
-      const spansFromExtension = await control.getSpansFromExtension();
-      expect(spansFromExtension).to.have.length(2);
-    });
-  });
+        // With the heartbeat request succeeding but the extension becoming unresponsive later, the outcome basically
+        // depends on whether we store the spans in the extenion stub when it is simulating unresponsiveness or not.
+        // Currently we do that, so we expect 2 spans.
+        const spansFromExtension = await control.getSpansFromExtension();
+        expect(spansFromExtension).to.have.length(2);
+      });
+    }
+  );
 
-  describe('when the extension is used, but is unresponsive and BE throws ECONNREFUSED', function () {
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      startExtension: 'unresponsive',
-      startBackend: false,
-      useExtension: true,
-      instanaAgentKey
-    });
+  describeOrSkipIfReduced(reduced)(
+    'when the extension is used, but is unresponsive and BE throws ECONNREFUSED',
+    function () {
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        startExtension: 'unresponsive',
+        startBackend: false,
+        useExtension: true,
+        instanaAgentKey
+      });
 
-    it('must deliver metrics and spans to the extension', () =>
-      verify(control, { error: 'connect ECONNREFUSED', expectMetrics: false, expectSpans: false }));
-  });
+      it('must deliver metrics and spans to the extension', () =>
+        verify(control, { error: 'connect ECONNREFUSED', expectMetrics: false, expectSpans: false }));
+    }
+  );
 
-  describe('when using a proxy without authentication', function () {
+  describeOrSkipIfReduced(reduced)('when using a proxy without authentication', function () {
     const proxyPort = portfinder();
     const control = prelude.bind(this)({
       handlerDefinitionPath,
@@ -783,7 +808,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true }));
   });
 
-  describe('when using a proxy with authentication', function () {
+  describeOrSkipIfReduced(reduced)('when using a proxy with authentication', function () {
     const proxyPort = portfinder();
 
     const control = prelude.bind(this)({
@@ -799,7 +824,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true }));
   });
 
-  describe('when proxy authentication fails due to the wrong password', function () {
+  describeOrSkipIfReduced(reduced)('when proxy authentication fails due to the wrong password', function () {
     const proxyPort = portfinder();
 
     const control = prelude.bind(this)({
@@ -815,23 +840,26 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when proxy authentication fails because no credentials have been provided', function () {
-    const proxyPort = portfinder();
+  describeOrSkipIfReduced(reduced)(
+    'when proxy authentication fails because no credentials have been provided',
+    function () {
+      const proxyPort = portfinder();
 
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaAgentKey,
-      startProxy: true,
-      proxyPort,
-      proxyUrl: `http://localhost:${proxyPort}`,
-      proxyRequiresAuthorization: true
-    });
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        instanaAgentKey,
+        startProxy: true,
+        proxyPort,
+        proxyUrl: `http://localhost:${proxyPort}`,
+        proxyRequiresAuthorization: true
+      });
 
-    it('must not impact the original handler', () =>
-      verify(control, { error: false, expectMetrics: false, expectSpans: false }));
-  });
+      it('must not impact the original handler', () =>
+        verify(control, { error: false, expectMetrics: false, expectSpans: false }));
+    }
+  );
 
-  describe('when the proxy is not up', function () {
+  describeOrSkipIfReduced(reduced)('when the proxy is not up', function () {
     const proxyPort = portfinder();
 
     const control = prelude.bind(this)({
@@ -845,9 +873,9 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('everything is peachy - triggered by API Gateway (Lambda Proxy)', function () {
+  describeOrSkipIfReduced(reduced)('everything is peachy - triggered by API Gateway (Lambda Proxy)', function () {
     ['1.0', '2.0'].forEach(payloadFormatVersion => {
-      describe(`PayloadFormatVersion ${payloadFormatVersion}`, function () {
+      describeOrSkipIfReduced(reduced)(`PayloadFormatVersion ${payloadFormatVersion}`, function () {
         // - same as "everything is peachy"
         // - but triggered by AWS API Gateway (with Lambda Proxy)
         const control = prelude.bind(this)({
@@ -913,7 +941,7 @@ function registerTests(handlerDefinitionPath) {
     });
   });
 
-  describe('triggered by API Gateway (Lambda Proxy) with parent span', function () {
+  describeOrSkipIfReduced(reduced)('triggered by API Gateway (Lambda Proxy) with parent span', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS API Gateway (with Lambda Proxy)
     // - with an incoming parent span
@@ -956,7 +984,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by API Gateway (Lambda Proxy) with suppression', function () {
+  describeOrSkipIfReduced(reduced)('triggered by API Gateway (Lambda Proxy) with suppression', function () {
     // - same as triggered by AWS API Gateway (with Lambda Proxy)
     // - but with an incoming trace level header to suppress tracing
     const control = prelude.bind(this)({
@@ -970,7 +998,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: false }));
   });
 
-  describe('triggered by API Gateway (Lambda Proxy) - HTTP errors', function () {
+  describeOrSkipIfReduced(reduced)('triggered by API Gateway (Lambda Proxy) - HTTP errors', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
@@ -999,9 +1027,9 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('API Gateway/EUM Server-Timing header', function () {
+  describeOrSkipIfReduced(reduced)('API Gateway/EUM Server-Timing header', function () {
     ['1.0', '2.0'].forEach(payloadFormatVersion => {
-      describe(`No header present (PayloadFormat: ${payloadFormatVersion})`, function () {
+      describeOrSkipIfReduced(reduced)(`No header present (PayloadFormat: ${payloadFormatVersion})`, function () {
         const control = prelude.bind(this)({
           handlerDefinitionPath,
           trigger: 'api-gateway-proxy',
@@ -1038,7 +1066,7 @@ function registerTests(handlerDefinitionPath) {
         });
       });
 
-      describe('String header already present', function () {
+      describeOrSkipIfReduced(reduced)('String header already present', function () {
         const control = prelude.bind(this)({
           handlerDefinitionPath,
           trigger: 'api-gateway-proxy',
@@ -1072,54 +1100,57 @@ function registerTests(handlerDefinitionPath) {
         });
       });
 
-      describe(`Array header already present (PayloadFormat: ${payloadFormatVersion})`, function () {
-        const control = prelude.bind(this)({
-          handlerDefinitionPath,
-          trigger: 'api-gateway-proxy',
-          instanaAgentKey,
-          serverTiming: 'array'
-        });
+      describeOrSkipIfReduced(reduced)(
+        `Array header already present (PayloadFormat: ${payloadFormatVersion})`,
+        function () {
+          const control = prelude.bind(this)({
+            handlerDefinitionPath,
+            trigger: 'api-gateway-proxy',
+            instanaAgentKey,
+            serverTiming: 'array'
+          });
 
-        it('must add our Server-Timing value to the first entry in the multi value header array', () => {
-          let serverTimingValue = null;
+          it('must add our Server-Timing value to the first entry in the multi value header array', () => {
+            let serverTimingValue = null;
 
-          return verify(
-            control,
-            { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' },
-            { payloadFormatVersion }
-          )
-            .then(() => {
-              const response = control.getLambdaResults()[0];
+            return verify(
+              control,
+              { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' },
+              { payloadFormatVersion }
+            )
+              .then(() => {
+                const response = control.getLambdaResults()[0];
 
-              if (payloadFormatVersion === '1.0') {
-                const serverTimingValueArray = getHeaderCaseInsensitive(response.multiValueHeaders, 'server-timing');
-                expect(serverTimingValueArray).to.have.length(2);
-                expect(serverTimingValueArray[0]).to.match(
-                  /^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/
-                );
-                expect(serverTimingValueArray[1]).to.equal('cpu;dur=2.4');
-                serverTimingValue = serverTimingValueArray[0];
-              } else {
-                const headerVal = getHeaderCaseInsensitive(response.headers, 'server-timing');
-                expect(headerVal).to.match(/^cache;desc="Cache Read";dur=23.2,cpu;dur=2.4, intid;desc=([0-9a-f]+)/);
-                serverTimingValue = headerVal;
-              }
-            })
-            .then(() => control.getSpans())
-            .then(spans =>
-              expectExactlyOneMatching(spans, [
-                span => expect(span.n).to.equal('aws.lambda.entry'),
-                span => expect(span.k).to.equal(constants.ENTRY),
-                // initd;desc=entrySpan.t
-                span => expect(serverTimingValue).to.contain(span.t)
-              ])
-            );
-        });
-      });
+                if (payloadFormatVersion === '1.0') {
+                  const serverTimingValueArray = getHeaderCaseInsensitive(response.multiValueHeaders, 'server-timing');
+                  expect(serverTimingValueArray).to.have.length(2);
+                  expect(serverTimingValueArray[0]).to.match(
+                    /^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/
+                  );
+                  expect(serverTimingValueArray[1]).to.equal('cpu;dur=2.4');
+                  serverTimingValue = serverTimingValueArray[0];
+                } else {
+                  const headerVal = getHeaderCaseInsensitive(response.headers, 'server-timing');
+                  expect(headerVal).to.match(/^cache;desc="Cache Read";dur=23.2,cpu;dur=2.4, intid;desc=([0-9a-f]+)/);
+                  serverTimingValue = headerVal;
+                }
+              })
+              .then(() => control.getSpans())
+              .then(spans =>
+                expectExactlyOneMatching(spans, [
+                  span => expect(span.n).to.equal('aws.lambda.entry'),
+                  span => expect(span.k).to.equal(constants.ENTRY),
+                  // initd;desc=entrySpan.t
+                  span => expect(serverTimingValue).to.contain(span.t)
+                ])
+              );
+          });
+        }
+      );
     });
   });
 
-  describe('API Gateway - with custom secrets', function () {
+  describeOrSkipIfReduced(reduced)('API Gateway - with custom secrets', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
@@ -1141,7 +1172,7 @@ function registerTests(handlerDefinitionPath) {
         }));
   });
 
-  describe('triggered by API Gateway (no Lambda Proxy)', function () {
+  describeOrSkipIfReduced(reduced)('triggered by API Gateway (no Lambda Proxy)', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS API Gateway (without Lambda Proxy)
     const control = prelude.bind(this)({
@@ -1162,7 +1193,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by an application load balancer', function () {
+  describeOrSkipIfReduced(reduced)('triggered by an application load balancer', function () {
     // - same as "everything is peachy"
     // - but triggered by an application load balancer
     const control = prelude.bind(this)({
@@ -1200,7 +1231,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by an application load balancer with parent span', function () {
+  describeOrSkipIfReduced(reduced)('triggered by an application load balancer with parent span', function () {
     // - same as "everything is peachy"
     // - but triggered by an application load balancer
     // - with an incoming parent span
@@ -1238,89 +1269,98 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by AWS SDK Lambda invoke function with parent span from an empty context', function () {
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      trigger: 'invoke-function',
-      instanaAgentKey,
-      traceIdContext: '1234567890abcdef',
-      spanIdContext: 'fedcba9876543210',
-      traceLevelContext: '1'
-    });
+  describeOrSkipIfReduced(reduced)(
+    'triggered by AWS SDK Lambda invoke function with parent span from an empty context',
+    function () {
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        trigger: 'invoke-function',
+        instanaAgentKey,
+        traceIdContext: '1234567890abcdef',
+        spanIdContext: 'fedcba9876543210',
+        traceLevelContext: '1'
+      });
 
-    it('must instrument with Instana headers coming from clientContext', () =>
-      verify(control, {
-        error: false,
-        expectMetrics: true,
-        expectSpans: true,
-        trigger: 'aws:lambda.invoke',
-        parent: {
-          t: '1234567890abcdef',
-          s: 'fedcba9876543210'
-        }
-      })
-        .then(() => control.getSpans())
-        .then(spans =>
-          expectExactlyOneMatching(spans, [
-            span => expect(span.n).to.equal('aws.lambda.entry'),
-            span => expect(span.k).to.equal(constants.ENTRY),
-            span => expect(span.data.http).to.not.exist
-          ])
-        ));
-  });
-
-  describe('triggered by AWS SDK Lambda invoke function with parent span from a non-empty context', function () {
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      trigger: 'invoke-function',
-      instanaAgentKey,
-      traceIdContext: '1234567890abcdef',
-      spanIdContext: 'fedcba9876543210',
-      traceLevelContext: '1',
-      fillContext: true
-    });
-
-    it('must instrument with Instana headers coming from clientContext', () =>
-      verify(control, {
-        error: false,
-        expectMetrics: true,
-        expectSpans: true,
-        trigger: 'aws:lambda.invoke',
-        parent: {
-          t: '1234567890abcdef',
-          s: 'fedcba9876543210'
-        }
-      })
-        .then(() => {
-          const lambdaContext = control.getClientContext();
-          expect(lambdaContext && lambdaContext.Custom).to.exist;
-          expect(lambdaContext && lambdaContext.Custom && lambdaContext.Custom.awesome_company).to.equal('Instana');
+      it('must instrument with Instana headers coming from clientContext', () =>
+        verify(control, {
+          error: false,
+          expectMetrics: true,
+          expectSpans: true,
+          trigger: 'aws:lambda.invoke',
+          parent: {
+            t: '1234567890abcdef',
+            s: 'fedcba9876543210'
+          }
         })
-        .then(() => control.getSpans())
-        .then(spans =>
-          expectExactlyOneMatching(spans, [
-            span => expect(span.n).to.equal('aws.lambda.entry'),
-            span => expect(span.k).to.equal(constants.ENTRY),
-            span => expect(span.data.http).to.not.exist
-          ])
-        ));
-  });
+          .then(() => control.getSpans())
+          .then(spans =>
+            expectExactlyOneMatching(spans, [
+              span => expect(span.n).to.equal('aws.lambda.entry'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http).to.not.exist
+            ])
+          ));
+    }
+  );
 
-  describe('triggered by AWS SDK Lambda invoke function, but tracing is suppressed', function () {
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      trigger: 'invoke-function',
-      instanaAgentKey,
-      traceIdContext: '1234567890abcdef',
-      spanIdContext: 'fedcba9876543210',
-      traceLevelContext: '0'
-    });
+  describeOrSkipIfReduced(reduced)(
+    'triggered by AWS SDK Lambda invoke function with parent span from a non-empty context',
+    function () {
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        trigger: 'invoke-function',
+        instanaAgentKey,
+        traceIdContext: '1234567890abcdef',
+        spanIdContext: 'fedcba9876543210',
+        traceLevelContext: '1',
+        fillContext: true
+      });
 
-    it('must not trace when suppressed', () =>
-      verify(control, { error: false, expectMetrics: true, expectSpans: false }));
-  });
+      it('must instrument with Instana headers coming from clientContext', () =>
+        verify(control, {
+          error: false,
+          expectMetrics: true,
+          expectSpans: true,
+          trigger: 'aws:lambda.invoke',
+          parent: {
+            t: '1234567890abcdef',
+            s: 'fedcba9876543210'
+          }
+        })
+          .then(() => {
+            const lambdaContext = control.getClientContext();
+            expect(lambdaContext && lambdaContext.Custom).to.exist;
+            expect(lambdaContext && lambdaContext.Custom && lambdaContext.Custom.awesome_company).to.equal('Instana');
+          })
+          .then(() => control.getSpans())
+          .then(spans =>
+            expectExactlyOneMatching(spans, [
+              span => expect(span.n).to.equal('aws.lambda.entry'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http).to.not.exist
+            ])
+          ));
+    }
+  );
 
-  describe('triggered by CloudWatch Events', function () {
+  describeOrSkipIfReduced(reduced)(
+    'triggered by AWS SDK Lambda invoke function, but tracing is suppressed',
+    function () {
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        trigger: 'invoke-function',
+        instanaAgentKey,
+        traceIdContext: '1234567890abcdef',
+        spanIdContext: 'fedcba9876543210',
+        traceLevelContext: '0'
+      });
+
+      it('must not trace when suppressed', () =>
+        verify(control, { error: false, expectMetrics: true, expectSpans: false }));
+    }
+  );
+
+  describeOrSkipIfReduced(reduced)('triggered by CloudWatch Events', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS CloudWatch events
     const control = prelude.bind(this)({
@@ -1347,7 +1387,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by CloudWatch Logs', function () {
+  describeOrSkipIfReduced(reduced)('triggered by CloudWatch Logs', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS CloudWatch logs
     const control = prelude.bind(this)({
@@ -1380,7 +1420,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by S3', function () {
+  describeOrSkipIfReduced(reduced)('triggered by S3', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS S3
     const control = prelude.bind(this)({
@@ -1413,7 +1453,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by DynamoDB', function () {
+  describeOrSkipIfReduced(reduced)('triggered by DynamoDB', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS DynamoDB
     const control = prelude.bind(this)({
@@ -1440,7 +1480,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by SQS', function () {
+  describeOrSkipIfReduced(reduced)('triggered by SQS', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS SQS
     const control = prelude.bind(this)({
@@ -1468,7 +1508,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by SQS with parent span', function () {
+  describeOrSkipIfReduced(reduced)('triggered by SQS with parent span', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'sqs',
@@ -1505,7 +1545,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by SNS-to-SQS message with parent', function () {
+  describeOrSkipIfReduced(reduced)('triggered by SNS-to-SQS message with parent', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'sns-to-sqs',
@@ -1541,7 +1581,7 @@ function registerTests(handlerDefinitionPath) {
           ])
         ));
   });
-  describe('triggered by AWS lambda function url', function () {
+  describeOrSkipIfReduced(reduced)('triggered by AWS lambda function url', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'function-url',

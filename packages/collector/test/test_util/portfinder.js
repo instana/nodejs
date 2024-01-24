@@ -84,7 +84,6 @@ module.exports = function findPort() {
 
     if (ports[port]) {
       // eslint-disable-next-line no-console
-      console.log(`port taken: ${port}`);
       return findPort();
     }
 
