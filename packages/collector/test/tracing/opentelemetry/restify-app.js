@@ -16,7 +16,7 @@ require('../../../src')({
 });
 
 const restify = require('restify');
-const request = require('request-promise-native');
+const fetch = require('node-fetch');
 const _pg = require('pg');
 const Pool = _pg.Pool;
 const Client = _pg.Client;
@@ -60,7 +60,7 @@ server.get('/test', function (req, res, next) {
       return res.sendStatus(500);
     }
     // Execute another traced call to verify that we keep the tracing context.
-    request(`http://127.0.0.1:${agentPort}`).then(() => {
+    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
       res.send(results);
       next();
     });

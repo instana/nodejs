@@ -10,7 +10,7 @@ import express from 'express';
 import { v1 } from 'uuid';
 import morgan from 'morgan';
 import requestPromise from 'request-promise';
-import request from 'request-promise-native';
+import fetch from 'node-fetch';
 import portFactory from '../../../test_util/app-port.js';
 import testUtil from '../../../../../core/test/test_util/index.js';
 
@@ -197,7 +197,7 @@ app.get('/get-callback', (req, res) => {
   collection1.get('get-key-2', (err, result) => {
     if (err) return res.status(500).send({ err: err.message });
 
-    request(`http://127.0.0.1:${agentPort}`).then(() => {
+    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
       res.json({ result: result.value });
     });
   });

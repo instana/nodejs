@@ -12,7 +12,7 @@ const express = require('express');
 const uuid = require('uuid');
 const morgan = require('morgan');
 const requestPromise = require('request-promise');
-const request = require('request-promise-native');
+const fetch = require('node-fetch');
 const port = require('../../../test_util/app-port')();
 const { delay } = require('../../../../../core/test/test_util');
 const agentPort = process.env.INSTANA_AGENT_PORT;
@@ -195,7 +195,7 @@ app.get('/get-callback', (req, res) => {
   collection1.get('get-key-2', (err, result) => {
     if (err) return res.status(500).send({ err: err.message });
 
-    request(`http://127.0.0.1:${agentPort}`).then(() => {
+    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
       res.json({ result: result.value });
     });
   });
