@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.2](https://github.com/instana/nodejs/compare/v3.1.1...v3.1.2) (2024-01-29)
+
+### Bug Fixes
+
+- deprecated request module ([#1004](https://github.com/instana/nodejs/issues/1004)) ([8bd41a9](https://github.com/instana/nodejs/commit/8bd41a9fd9e7650b6076837b5c40eb73dbc293ba))
+
 ## [3.1.1](https://github.com/instana/nodejs/compare/v3.1.0...v3.1.1) (2024-01-10)
 
 **Note:** Version bump only for package @instana/core
