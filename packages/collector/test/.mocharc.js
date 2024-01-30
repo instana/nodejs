@@ -2,7 +2,7 @@
 
 const mochaOptions = {
   file: ['test/initEnv.js'],
-  ignore: '**node_modules/**/*'
+  ignore: ['node_modules/**/*', 'test/**/node_modules/**/*']
 };
 
 process.env.NODE_ENV = 'test';

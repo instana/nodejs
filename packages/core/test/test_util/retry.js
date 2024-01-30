@@ -8,8 +8,12 @@
 const config = require('../config');
 const delay = require('./delay');
 
-module.exports = function retry(fn, time, until) {
-  // retry every second by default
+module.exports = function retry(fn, time, until, tries) {
+  if (!tries) {
+    tries = 0;
+  }
+
+  // retry every 500ms by default
   if (time == null) {
     time = 500;
   }
@@ -22,13 +26,12 @@ module.exports = function retry(fn, time, until) {
     return fn();
   }
 
-  return delay(time / 20)
+  return delay(tries === 0 ? 0 : time)
     .then(() => {
-      try {
-        return fn();
-      } catch (err) {
-        return retry(fn, time, until);
-      }
+      return fn();
     })
-    .catch(() => retry(fn, time, until));
+    .catch(() => {
+      tries += 1;
+      return retry(fn, time, until, tries);
+    });
 };

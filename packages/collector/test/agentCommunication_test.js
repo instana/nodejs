@@ -92,55 +92,56 @@ describe('agentCommunication', function () {
       expect(eolEvents, `Received one or more unexpected EOL events: ${JSON.stringify(eolEvents)}`).to.be.empty;
     }
   });
-});
 
-describe('announce retry', function () {
-  describe('retry once after 10', function () {
-    runRetryTest.bind(this)(29000, 20000, 1);
-  });
-
-  describe('second retry with exponential backoff', function () {
-    runRetryTest.bind(this)(59000, 40000, 2);
-  });
-
-  // takes too long to include it in the general test suite
-  describe('lots of retries with exponential backoff', function () {
-    runRetryTest.bind(this)(300000, 290000, 7);
-  });
-
-  function runRetryTest(timeout, retryTime, rejectedAttempts) {
-    this.timeout(timeout);
-
-    globalAgent.setUpCleanUpHooks();
-    const agentControls = globalAgent.instance;
-
-    const expressControls = require('./apps/expressControls');
-
-    beforeEach(async () => {
-      await agentControls.rejectAnnounceAttempts(rejectedAttempts);
-      return expressControls.start({
-        useGlobalAgent: true,
-        env: {
-          INSTANA_LOG_LEVEL: 'info'
-        }
-      });
+  // TODO: do we need this test?
+  describe('announce retry', function () {
+    describe('retry once after 10s', function () {
+      runRetryTest.bind(this)(29000, 10 * 1000, 1);
     });
-    afterEach(() => expressControls.stop());
 
-    it('must retry announce ', () =>
-      retry(
-        () =>
-          agentControls.getDiscoveries().then(discoveries => {
-            const discoveriesForPid = discoveries[expressControls.getPid()];
-            expect(discoveriesForPid.length).to.be.at.least(1);
-            const discovery = discoveriesForPid[0];
-            expect(discovery.pid).to.be.a('number');
-            expect(discovery.fd).to.be.a('string');
-            if (/linux/i.test(process.platform)) {
-              expect(discovery.inode).to.be.a('string');
-            }
-          }),
-        retryTime
-      ));
-  }
+    describe('retry twice after 25s', function () {
+      runRetryTest.bind(this)(59000, 25 * 1000, 2);
+    });
+
+    // takes too long to include it in the general test suite
+    describe.skip('lots of retries with exponential backoff', function () {
+      runRetryTest.bind(this)(300000, 45 * 1000, 7);
+    });
+
+    function runRetryTest(timeout, retryTime, rejectedAttempts) {
+      this.timeout(timeout);
+
+      beforeEach(async () => {
+        expressControls.stop();
+
+        await agentControls.rejectAnnounceAttempts(rejectedAttempts);
+        return expressControls.start({
+          useGlobalAgent: true,
+          env: {
+            INSTANA_LOG_LEVEL: 'info'
+          }
+        });
+      });
+
+      afterEach(() => expressControls.stop());
+
+      it('must retry announce ', async () => {
+        await retry(
+          () =>
+            agentControls.getDiscoveries().then(discoveries => {
+              const discoveriesForPid = discoveries[expressControls.getPid()];
+              expect(discoveriesForPid.length).to.be.at.least(1);
+              const discovery = discoveriesForPid[0];
+              expect(discovery.pid).to.be.a('number');
+              expect(discovery.fd).to.be.a('string');
+              if (/linux/i.test(process.platform)) {
+                expect(discovery.inode).to.be.a('string');
+              }
+            }),
+          retryTime,
+          Date.now() + timeout
+        );
+      });
+    }
+  });
 });
