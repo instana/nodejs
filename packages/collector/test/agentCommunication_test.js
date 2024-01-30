@@ -94,7 +94,7 @@ describe('agentCommunication', function () {
   });
 });
 
-describe.skip('announce retry', function () {
+describe('announce retry', function () {
   describe('retry once after 10', function () {
     runRetryTest.bind(this)(29000, 20000, 1);
   });
@@ -104,7 +104,7 @@ describe.skip('announce retry', function () {
   });
 
   // takes too long to include it in the general test suite
-  describe.skip('lots of retries with exponential backoff', function () {
+  describe('lots of retries with exponential backoff', function () {
     runRetryTest.bind(this)(300000, 290000, 7);
   });
 
