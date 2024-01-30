@@ -16,7 +16,7 @@ let logger = Logger.getLogger('metrics');
 /**
  * @param {import('@instana/core/src/logger').GenericLogger} _logger
  */
-exports.setLogger = function setLogger(_logger) {
+const setLogger = function (_logger) {
   logger = _logger;
 };
 
@@ -277,5 +277,6 @@ function searchInParentDir(dir, onParentDir, callback) {
 module.exports = {
   DependencyDistanceCalculator,
   MAX_DEPTH: 15,
-  __moduleRefExportedForTest: module
+  __moduleRefExportedForTest: module,
+  setLogger
 };
