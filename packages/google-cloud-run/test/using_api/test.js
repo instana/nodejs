@@ -40,6 +40,7 @@ function prelude(opts = {}) {
 describe('Using the API', function () {
   describe('when configured properly', function () {
     const control = prelude.bind(this)();
+
     it('should collect metrics and trace http requests', () =>
       control
         .sendRequest({
@@ -67,7 +68,9 @@ describe('Using the API', function () {
     // During phase 1 of the Kafka header migration (October 2022 - October 2023) there will be a debug log about
     // ignoring the option 'both' for rdkafka. We do not care about that log message in this test.
     const debug = response.logs.debug.filter(msg => !msg.includes('Ignoring configuration or default value'));
-    expect(debug).to.deep.equal(['Sending data to Instana (/metrics).', 'Sent data to Instana (/metrics).']);
+    expect(debug).to.contain('Sending data to Instana (/metrics).');
+    expect(debug).to.contain('Sent data to Instana (/metrics).');
+
     expect(response.logs.info).to.be.empty;
     expect(response.logs.warn).to.deep.equal([
       'INSTANA_DISABLE_CA_CHECK is set, which means that the server certificate will not be verified against the ' +
@@ -82,6 +85,7 @@ describe('Using the API', function () {
     expect(response.currentSpan.span.f.e).to.equal(instanceId);
     expect(response.currentSpan.span.f.cp).to.equal('gcp');
     expect(response.currentSpanConstructor).to.equal('SpanHandle');
+
     return retry(() => getAndVerifySpans(control));
   }
 

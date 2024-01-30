@@ -163,6 +163,7 @@ class ProcessControls {
       },
       opts.env
     );
+
     if (this.usePreInit) {
       this.env.INSTANA_EARLY_INSTRUMENTATION = 'true';
     }

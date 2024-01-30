@@ -6,6 +6,8 @@
 
 'use strict';
 
+let initialized = false;
+
 const initOtel = () => {
   const opentelemetry = require('@opentelemetry/sdk-node');
   const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
@@ -44,6 +46,7 @@ if (process.env.INSTANA_LOAD_FIRST === 'true') {
     }
   });
   initOtel();
+  initialized = true;
 } else {
   initOtel();
   require('../../src')({
@@ -51,6 +54,7 @@ if (process.env.INSTANA_LOAD_FIRST === 'true') {
       useOpentelemetry: false
     }
   });
+  initialized = true;
 }
 
 require('mysql');
@@ -72,6 +76,7 @@ const app = express();
 
 const logPrefix = `Opentelemetry Usage App (${process.pid}):\t`;
 app.get('/', (req, res) => {
+  if (!initialized) return res.sendStatus(500);
   res.sendStatus(200);
 });
 
