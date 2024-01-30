@@ -42,8 +42,9 @@ mochaSuiteFn('tracing a babel/typescript setup', function () {
       // The lock file collector/test/apps/babel-typescript/package-lock.json has some arbitrary (and probably outdated)
       // version of @instana/collector. We always update to the latest version before actually running the test.
       const latestCollectorVersion = require(path.join(__dirname, '..', '..', '..', '..', 'package.json')).version;
+
       executeCallback(
-        `npm install --save --omit=optional --no-audit @instana/collector@${latestCollectorVersion} && ` +
+        `npm install --no-save --omit=optional --no-audit @instana/collector@${latestCollectorVersion} && ` +
           'npm install --omit=optional --no-audit && ' +
           'npm run build',
         babelAppDir,
