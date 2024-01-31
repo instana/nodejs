@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.3](https://github.com/instana/nodejs/compare/v3.1.2...v3.1.3) (2024-01-31)
+
+### Bug Fixes
+
+- resolved logging issue for the dependency distance calculator ([#1024](https://github.com/instana/nodejs/issues/1024)) ([59de3e6](https://github.com/instana/nodejs/commit/59de3e6345bb4b64a2b5f02e01b5351182c66d83)), closes [#1019](https://github.com/instana/nodejs/issues/1019)
+
 ## [3.1.2](https://github.com/instana/nodejs/compare/v3.1.1...v3.1.2) (2024-01-29)
 
 **Note:** Version bump only for package @instana/shared-metrics
