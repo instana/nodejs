@@ -209,7 +209,8 @@
     "pg-native": "^3.0.1"
   },
   "overrides": {
-    "nx": "15.8.9"
+    "nx": "15.8.9",
+    "stream-shift": "1.0.2"
   },
   "config": {
     "commitizen": {

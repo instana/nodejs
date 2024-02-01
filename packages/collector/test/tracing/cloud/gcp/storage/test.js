@@ -7,7 +7,6 @@
 
 const { expect } = require('chai');
 const { fail } = expect;
-const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -50,14 +49,8 @@ if (
   });
 } else {
   let mochaSuiteFn;
-  // There is bug in node 21.2.0, more details please see
-  // https://github.com/googleapis/nodejs-storage/issues/2368
 
-  if (
-    !supportedVersion(process.versions.node) ||
-    !process.env.GCP_PROJECT ||
-    semver.gte(process.versions.node, '21.2.0')
-  ) {
+  if (!supportedVersion(process.versions.node) || !process.env.GCP_PROJECT) {
     mochaSuiteFn = describe.skip;
   } else {
     mochaSuiteFn = describe;
