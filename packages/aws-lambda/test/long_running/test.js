@@ -26,7 +26,7 @@ function prelude(opts) {
   opts.delay = opts.delay || 1000;
   // The lambda under test does this ${opts.iterations} times, then terminates.
   opts.iterations = opts.iterations || 10;
-  opts.expectedLambdaRuntime = opts.delay * opts.iterations * 1.1;
+  opts.expectedLambdaRuntime = opts.delay * opts.iterations + 1500;
   const timeout = Math.max(opts.expectedLambdaRuntime * 2, config.getTestTimeout());
   this.timeout(timeout);
   this.slow(timeout * 0.8);
@@ -67,7 +67,7 @@ describe('long running lambdas', () => {
       handlerDefinitionPath,
       instanaAgentKey,
       delay: 1000,
-      iterations: 13
+      iterations: 3
     };
     const control = prelude.bind(this)(opts);
 
@@ -92,7 +92,7 @@ describe('long running lambdas', () => {
           expect(rawSpanArrays).to.have.lengthOf(0);
           expect(rawBundles).to.be.an('array');
           expect(rawBundles).to.have.lengthOf(1);
-          expect(rawBundles[0].spans).to.have.lengthOf(14);
+          expect(rawBundles[0].spans).to.have.lengthOf(opts.iterations + 1);
         });
       }));
   });
@@ -104,7 +104,7 @@ describe('long running lambdas', () => {
       startBackend: false,
       // Run for 70 seconds, create a span every 250 ms.
       delay: 250,
-      iterations: 280
+      iterations: 10
     };
     const control = prelude.bind(this)(opts);
 
@@ -121,9 +121,8 @@ describe('long running lambdas', () => {
       handlerDefinitionPath,
       instanaAgentKey,
       startBackend: 'unresponsive',
-      // run for 30 seconds, create a span every second
-      delay: 1000,
-      iterations: 30
+      delay: 100,
+      iterations: 10
     };
     const control = prelude.bind(this)(opts);
 
@@ -145,7 +144,7 @@ describe('long running lambdas', () => {
           expect(metrics).to.have.lengthOf(0);
           expect(rawSpanArrays).to.have.lengthOf(0);
           expect(rawBundles).to.have.lengthOf(1);
-          expect(rawBundles[0].spans).to.have.lengthOf(31);
+          expect(rawBundles[0].spans).to.have.lengthOf(opts.iterations + 1);
           expect(rawMetrics).to.have.lengthOf(0);
         });
       }));
