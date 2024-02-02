@@ -6,9 +6,6 @@ parameters:
   workflow:
     type: string
     default: build
-  executors:
-    type: integer
-    default: 2
 
 shared: &shared
   working_directory: ~/repo
@@ -151,11 +148,10 @@ shared: &shared
         command: "([[ $(node -v) =~ ^v18.*$ ]] && npm run depcheck) || [[ ! $(node -v) =~ ^v18.*$ ]]"
 
     # Clean up old left over AWS resources from earlier test runs (created more more than 3 hours ago):
-    # Do not execute the script on every parallel build
     - run:
         name: Clean Up AWS Resources
         command: |
-          if [[ $(node -v) =~ ^v18.*$ && $CIRCLE_NODE_INDEX == "0" ]]; then
+          if [[ $(node -v) =~ ^v18.*$ ]]; then
             bin/clean-aws.js --service=s3
             bin/clean-aws.js --service=dynamodb
             bin/clean-aws.js --service=sqs
@@ -811,7 +807,6 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: << pipeline.parameters.executors >>
     resource_class: large
 
   "node-20":
@@ -834,7 +829,6 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: << pipeline.parameters.executors >>
     resource_class: large
 
   "node-18":
@@ -859,7 +853,6 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: 1
     resource_class: xlarge
 
   "node-16":
@@ -882,7 +875,6 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: << pipeline.parameters.executors >>
     resource_class: medium+
 
   "node-18-esm":
@@ -908,7 +900,6 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: << pipeline.parameters.executors >>
     resource_class: medium+
 
   "node-14":
@@ -933,7 +924,6 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: << pipeline.parameters.executors >>
     resource_class: medium+
 
   "node-coverage":
@@ -958,7 +948,6 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: 1
     resource_class: large
 
 workflows:
