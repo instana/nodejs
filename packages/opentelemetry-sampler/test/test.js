@@ -161,7 +161,7 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
       await retry(async () => {
         const spans = await appControls.getSpans();
         expect(spans.length).to.eql(0);
-      }, 500);
+      });
     });
   });
 });

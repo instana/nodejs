@@ -106,7 +106,7 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
 
         await retry(async () => {
           verifySpans(await appControls.getSpans(), appControls);
-        }, 500);
+        });
       });
     });
 

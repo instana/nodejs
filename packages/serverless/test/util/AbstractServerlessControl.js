@@ -186,7 +186,7 @@ AbstractServerlessControl.prototype.waitUntilDownstreamDummyIsUp = function wait
 // prettier-ignore
 AbstractServerlessControl.prototype.waitUntilMonitoredProcessHasStarted =
 function waitUntilMonitoredProcessHasStarted() {
-  return retry(() => this.hasMonitoredProcessStartedPromise(), this.opts.timeout / 2);
+  return retry(() => this.hasMonitoredProcessStartedPromise());
 };
 
 AbstractServerlessControl.prototype.hasMonitoredProcessStartedPromise = function hasMonitoredProcessStartedPromise() {
@@ -227,7 +227,7 @@ AbstractServerlessControl.prototype.isProcessUp = function isProcessUp(allMessag
 // prettier-ignore
 AbstractServerlessControl.prototype.waitUntilMonitoredProcessHasTerminated =
 function waitUntilMonitoredProcessHasTerminated() {
-  return retry(() => this.hasMonitoredProcessTerminatedPromise(), this.opts.timeout / 2);
+  return retry(() => this.hasMonitoredProcessTerminatedPromise());
 };
 
 // prettier-ignore
