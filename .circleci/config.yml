@@ -872,7 +872,34 @@ memcached: &memcached
   - image: memcached:1.6.9
 
 jobs:
+  "node-18-dev":
+    environment:
+      CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
+    docker:
+      - image: cimg/node:18.18
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *schema-registry
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+      - <<: *nats
+      - <<: *nats-streaming
+      - <<: *memcached
+      - <<: *couchbase
+      - <<: *couchbase-setup
+      - <<: *localstack
+    <<: *shared
+    resource_class: xlarge
+
   "node-21":
+    environment:
+      CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
+      RUN_ALL_TESTS: true
     docker:
       - image: cimg/node:21.2
       - <<: *zookeeper
@@ -897,6 +924,7 @@ jobs:
   "node-20":
     environment:
       CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
+      RUN_ALL_TESTS: true
     docker:
       - image: cimg/node:20.9
       - <<: *zookeeper
@@ -916,11 +944,12 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    resource_class: large
+    resource_class: large  
 
   "node-18":
     environment:
       CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
+      RUN_ALL_TESTS: true
     docker:
       - image: cimg/node:18.18
       - <<: *zookeeper
@@ -945,6 +974,7 @@ jobs:
   "node-16":
     environment:
       CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
+      RUN_ALL_TESTS: true
     docker:
       - image: cimg/node:16.20
       - <<: *zookeeper
@@ -970,6 +1000,7 @@ jobs:
     environment:
       RUN_ESM: true
       CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
+      RUN_ALL_TESTS: true
     docker:
       - image: cimg/node:18.18
       - <<: *zookeeper
@@ -995,6 +1026,7 @@ jobs:
     environment:
       NPM_VERSION: 8.6.0
       CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
+      RUN_ALL_TESTS: true
     docker:
       - image: cimg/node:14.21
       - <<: *zookeeper
@@ -1059,7 +1091,7 @@ workflows:
         - not:
           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
-      - "node-18"
+      - "node-18-dev"
   other-nodejs-versions:
     when:
       or:
@@ -1068,8 +1100,6 @@ workflows:
         # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
         # by providing the parameter "workflow: other-nodejs-versions"
         - equal: [ other-nodejs-versions, << pipeline.parameters.workflow >> ]
-    environment:
-      RUN_ALL_TESTS: true
     jobs:
       - "node-21"
       - "node-20"
