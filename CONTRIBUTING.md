@@ -18,6 +18,13 @@ Troubleshooting `pg_config: command not found`: The tests in this package depend
 
 Install the [`aws-cli`](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) to publish AWS layers from local.
 
+### Upgrade npm for Node.js v14
+
+If you are using Node.js v14 and would like to take advantage of the "overrides" feature in package.json, you need to upgrade npm manually since Node.js v14 ships with npm v6, and "overrides" were introduced in npm v8.3. Upgrade npm manually to the latest version using the following command:
+```
+npm install npm@latest
+```
+
 ## Executing Tests Locally
 
 Some of the tests require infrastructure components (databases etc.) to run locally. The easiest way to run all required components locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/). Start the script `bin/start-test-containers.sh` to set up all the necessary infrastructure. Once this is up, leave it running and, in second shell, start `bin/run-tests.sh`. This will set the necessary environment variables and kick off the tests.
