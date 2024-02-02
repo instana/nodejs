@@ -21,11 +21,7 @@ function isPortTakenSync(port) {
     server.close();
     return false;
   } catch (error) {
-    if (error.code === 'EADDRINUSE') {
-      return true;
-    } else {
-      throw error;
-    }
+    return true;
   }
 }
 
