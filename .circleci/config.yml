@@ -36,7 +36,7 @@ shared: &shared
   steps:
     - checkout
 
-    # The main intent for skipping the build is the other-nodejs-versions workflow which is built daily. If no new
+    # The main intent for skipping the build for the other node.js workflows which run during the night. If no new
     # commits have been merged to main, we do not need to built the same commit over and over again.
     #
     # Theoretically we could also save the build on the main branch directly after merging a PR - since we always
@@ -1098,13 +1098,13 @@ jobs:
 workflows:
   version: 2
 
-  build:
+  node-dev:
     when:
       and:
 
         # This makes sure the "Trigger Pipeline" button when started with a specific workflow parameter value
-        # (say, "coverage) does not also start the "build" workflow.
-        - equal: [ build, << pipeline.parameters.workflow >> ]
+        # (say, "coverage) does not also start the "node-dev" workflow.
+        - equal: [ node-dev, << pipeline.parameters.workflow >> ]
 
         # This makes sure that none of our triggers
         # (https://app.circleci.com/settings/project/github/instana/nodejs/triggers)
@@ -1114,19 +1114,60 @@ workflows:
           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
       - "node-18-dev"
-  other-nodejs-versions:
+
+  node-21:
     when:
       or:
         # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
         - equal: [ nightly-build-2-am, << pipeline.schedule.name >> ]
         # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
-        # by providing the parameter "workflow: other-nodejs-versions"
-        - equal: [ other-nodejs-versions, << pipeline.parameters.workflow >> ]
+        # by providing the parameter "workflow: node-21"
+        - equal: [ node-21, << pipeline.parameters.workflow >> ]
     jobs:
-      #- "node-21"
-      #- "node-20"
-      #- "node-18"
-      #- "node-16"
+      - "node-21"
+
+  node-20:
+    when:
+      or:
+        # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
+        - equal: [ nightly-build-2-am, << pipeline.schedule.name >> ]
+        # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
+        # by providing the parameter "workflow: node-20"
+        - equal: [ node-20, << pipeline.parameters.workflow >> ]
+    jobs:
+      - "node-20"
+
+  node-18:
+    when:
+      or:
+        # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
+        - equal: [ nightly-build-2-am, << pipeline.schedule.name >> ]
+        # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
+        # by providing the parameter "workflow: node-18"
+        - equal: [ node-18, << pipeline.parameters.workflow >> ]
+    jobs:
+      - "node-18"
+
+  node-16:
+    when:
+      or:
+        # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
+        - equal: [ nightly-build-2-am, << pipeline.schedule.name >> ]
+        # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
+        # by providing the parameter "workflow: node-16"
+        - equal: [ node-16, << pipeline.parameters.workflow >> ]
+    jobs:
+      - "node-16"
+
+  node-14:
+    when:
+      or:
+        # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
+        - equal: [ nightly-build-2-am, << pipeline.schedule.name >> ]
+        # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
+        # by providing the parameter "workflow: node-14"
+        - equal: [ node-14, << pipeline.parameters.workflow >> ]
+    jobs:
       - "node-14"
 
   esm-build:
