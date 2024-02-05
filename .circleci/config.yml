@@ -37,9 +37,9 @@ shared: &shared
     - checkout
 
     - run:
-      name: Increase ulimit
-      command: |
-        ulimit -c unlimited
+        name: Increase ulimit
+        command: |
+          ulimit -c unlimited
 
     # The main intent for skipping the build is the other-nodejs-versions workflow which is built daily. If no new
     # commits have been merged to main, we do not need to built the same commit over and over again.
