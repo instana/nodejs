@@ -940,7 +940,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    resource_class: large
+    resource_class: xlarge
 
   "node-20":
     environment:
@@ -965,7 +965,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    resource_class: large  
+    resource_class: xlarge  
 
   "node-18":
     environment:
@@ -1015,7 +1015,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    resource_class: medium+
+    resource_class: xlarge
 
   "node-18-esm":
     environment:
@@ -1041,7 +1041,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    resource_class: medium+
+    resource_class: xlarge
 
   "node-14":
     environment:
@@ -1067,7 +1067,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    resource_class: medium+
+    resource_class: xlarge
 
   "node-coverage":
     environment:
@@ -1092,7 +1092,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    resource_class: large
+    resource_class: xlarge
 
 workflows:
   version: 2
