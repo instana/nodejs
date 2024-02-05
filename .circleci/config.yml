@@ -1098,13 +1098,13 @@ jobs:
 workflows:
   version: 2
 
-  node-dev:
+  build:
     when:
       and:
 
         # This makes sure the "Trigger Pipeline" button when started with a specific workflow parameter value
-        # (say, "coverage) does not also start the "node-dev" workflow.
-        - equal: [ node-dev, << pipeline.parameters.workflow >> ]
+        # (say, "coverage) does not also start the "build" workflow.
+        - equal: [ build, << pipeline.parameters.workflow >> ]
 
         # This makes sure that none of our triggers
         # (https://app.circleci.com/settings/project/github/instana/nodejs/triggers)
