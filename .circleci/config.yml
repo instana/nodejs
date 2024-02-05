@@ -168,6 +168,7 @@ shared: &shared
                     
             touch .run1-started
 
+            ulimit -c unlimited
             if npm run test:ci:collector:general; then
                 touch .run1-succeeded
             else
