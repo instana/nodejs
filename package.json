@@ -65,7 +65,7 @@
     "@aws-sdk/client-sqs": "^3.470.0",
     "@aws-sdk/client-sqs-v3": "npm:@aws-sdk/client-sqs@3.24.0",
     "@aws-sdk/lib-dynamodb": "^3.395.0",
-    "@commitlint/cli": "^14.1.0",
+    "@commitlint/cli": "^18.6.0",
     "@commitlint/config-conventional": "^14.1.0",
     "@elastic/elasticsearch": "^8.6.0",
     "@elastic/elasticsearch-v7.17.0": "npm:@elastic/elasticsearch@^7.17.0",
