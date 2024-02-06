@@ -20,7 +20,7 @@ Install the [`aws-cli`](https://docs.aws.amazon.com/cli/latest/userguide/getting
 
 ### Upgrade npm for Node.js v14
 
-If you are using Node.js v14 and would like to take advantage of the "overrides" feature in package.json, you need to upgrade npm manually since Node.js v14 ships with npm v6, and "overrides" were introduced in npm v8.3. Upgrade npm manually to the latest version using the following command:
+If you are using Node.js v14 and would like to take advantage of the "overrides" feature in package.json, you need to upgrade npm manually since Node.js v14 ships with npm v6, and `overrides` were introduced in npm v8.3. Upgrade npm manually to the latest version using the following command:
 ```
 npm install npm@latest
 ```
