@@ -1,6 +1,3 @@
 {
-  "reporterEnabled": "spec, mocha-junit-reporter, test/test_util/retryReporter.js",
-  "mochaJunitReporterReporterOptions": {
-    "mochaFile": "../../test-results/core/results.xml"
-  }
+  "reporterEnabled": "spec, ../core/test/test_util/retryReporter.js"
 }

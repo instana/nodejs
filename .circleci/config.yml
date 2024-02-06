@@ -761,13 +761,7 @@ shared: &shared
           rm -f .run*-succeeded
           rm -f .run*-failed
           rm -f .run*-started
-    
-    - store_test_results:
-        path: test-results
 
-    - run:
-        name: Analyze Test Durations
-        command: node misc/test-durations/ci
     # Generate ESLint JSON report for Sonarqube.
     - run:
         name: Run ESLint and generate ESLint report
@@ -775,6 +769,7 @@ shared: &shared
           if [ -n "$NODE_COVERAGE" ]; then
             npx eslint packages/ -f json > eslint-report.json || exit 0
           fi
+
     # Execute the SonarScanner to analyze the project
     - run:
         name: Run SonarQube Scanner
@@ -785,10 +780,6 @@ shared: &shared
 
     - store_artifacts:
         path: coverage
-    - store_artifacts:
-        path: test-results
-    - store_artifacts:
-        path: test-duration-breakdown
 
     - save_cache:
         paths:
