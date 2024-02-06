@@ -39,7 +39,7 @@
     "lint": "eslint .*.js *.js && npm run typecheck && lerna run lint --stream && eslint misc && eslint dockerfile-examples && eslint bin",
     "postinstall": "husky install && lerna run node_modules:exists",
     "precommit": "npm run doctoc",
-    "coverage-all": "nyc --reporter=lcov lerna run test --stream",
+    "coverage-all": "nyc --reporter=lcov lerna run test --stream --concurrency 1",
     "coverage": "nyc --reporter=lcov lerna run test --scope=${npm_config_scope} && npm run open-coverage",
     "open-coverage": "open coverage/lcov-report/index.html",
     "prettier": "prettier --write 'misc/**/*.js' 'dockerfile-examples/**/*.js' 'bin/**/*.js' && lerna run prettier --stream",
