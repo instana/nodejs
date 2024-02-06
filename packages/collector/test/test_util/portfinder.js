@@ -16,16 +16,29 @@ let myPortRange;
 const net = require('net');
 
 function isPortTakenSync(port) {
-  try {
-    const server = net.createServer().listen(port);
-    server.close();
-    return false;
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.log('Port is already in use', port);
+  const server = net.createServer().listen(port);
 
-    return true;
+  let isTaken = false;
+  server.on('error', error => {
+    if (error.code === 'EADDRINUSE') {
+      isTaken = true;
+    }
+  });
+
+  server.close();
+
+  const startTime = Date.now();
+  const timeout = 500;
+
+  while (Date.now() - startTime < timeout) {
+    if (isTaken) {
+      // eslint-disable-next-line no-console
+      console.log('Port is already in use', port);
+      return true;
+    }
   }
+
+  return false;
 }
 
 let i = 0;
