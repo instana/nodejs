@@ -21,7 +21,7 @@ describe('core data source', function () {
   this.timeout(config.getTestTimeout());
 
   let dataSource;
-  beforeEach(() => {
+  before(() => {
     coreMetrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
     coreMetrics.init({
       metrics: {
