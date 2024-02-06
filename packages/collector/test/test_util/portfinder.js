@@ -21,6 +21,9 @@ function isPortTakenSync(port) {
     server.close();
     return false;
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.log('Port is already in use', port);
+
     return true;
   }
 }
@@ -80,8 +83,12 @@ module.exports = function findPort() {
 
     if (ports[port]) {
       // eslint-disable-next-line no-console
+      console.log('Port is already taken by this process', port);
       return findPort();
     }
+
+    // eslint-disable-next-line no-console
+    console.log('Using port', port);
 
     ports[port] = port;
   } catch (e) {

@@ -1119,7 +1119,7 @@ workflows:
     when:
       or:
         # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
-        - equal: [ nightly-build-2-am, << pipeline.schedule.name >> ]
+        - equal: [ nightly-build-1, << pipeline.schedule.name >> ]
         # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
         # by providing the parameter "workflow: node-21"
         - equal: [ node-21, << pipeline.parameters.workflow >> ]
@@ -1130,7 +1130,7 @@ workflows:
     when:
       or:
         # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
-        - equal: [ nightly-build-2-am, << pipeline.schedule.name >> ]
+        - equal: [ nightly-build-2, << pipeline.schedule.name >> ]
         # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
         # by providing the parameter "workflow: node-20"
         - equal: [ node-20, << pipeline.parameters.workflow >> ]
@@ -1141,7 +1141,7 @@ workflows:
     when:
       or:
         # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
-        - equal: [ nightly-build-2-am, << pipeline.schedule.name >> ]
+        - equal: [ nightly-build-3, << pipeline.schedule.name >> ]
         # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
         # by providing the parameter "workflow: node-18"
         - equal: [ node-18, << pipeline.parameters.workflow >> ]
@@ -1152,7 +1152,7 @@ workflows:
     when:
       or:
         # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
-        - equal: [ nightly-build-2-am, << pipeline.schedule.name >> ]
+        - equal: [ nightly-build-4, << pipeline.schedule.name >> ]
         # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
         # by providing the parameter "workflow: node-16"
         - equal: [ node-16, << pipeline.parameters.workflow >> ]
@@ -1163,7 +1163,7 @@ workflows:
     when:
       or:
         # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
-        - equal: [ nightly-build-2-am, << pipeline.schedule.name >> ]
+        - equal: [ nightly-build-5, << pipeline.schedule.name >> ]
         # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
         # by providing the parameter "workflow: node-14"
         - equal: [ node-14, << pipeline.parameters.workflow >> ]
@@ -1174,7 +1174,7 @@ workflows:
     when:
       or:
         # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
-        - equal: [ nightly-build-4-am, << pipeline.schedule.name >> ]
+        - equal: [ nightly-build-esm, << pipeline.schedule.name >> ]
         # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
         # by providing the parameter "workflow: esm-build"
         - equal: [ esm-build, << pipeline.parameters.workflow >> ]
@@ -1187,7 +1187,7 @@ workflows:
     when:
       or:
         # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
-        - equal: [ weekly-build-sunday-0-am, << pipeline.schedule.name >> ]
+        - equal: [ weekly-build-sunday, << pipeline.schedule.name >> ]
         # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
         # by providing the parameter "workflow: coverage"
         - equal: [ coverage, << pipeline.parameters.workflow >> ]
