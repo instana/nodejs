@@ -61,12 +61,20 @@ mochaSuiteFn('worker threads', function () {
   });
 
   function createProcess(env = {}) {
-    return new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      cwd: __dirname,
-      useGlobalAgent: true,
-      env
-    }).registerTestHooks();
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        appPath: path.join(__dirname, 'app'),
+        cwd: __dirname,
+        useGlobalAgent: true,
+        env
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    return controls;
   }
 
   async function verify({ controls, expectSpans }) {

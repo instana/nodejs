@@ -89,23 +89,19 @@ describe('spec compliance', function () {
     describe(`compliance test suite (${http2 ? 'HTTP2' : 'HTTP1'}, W3C trace correlation ${
       w3cTraceCorrelationDisabled ? 'disabled' : 'enabled'
     })`, () => {
-      const env = {
-        USE_HTTP2: http2,
-        USE_NATIVE_FETCH: nativeFetch,
-        DOWNSTREAM_PORT: downstreamTarget.port
-      };
-
-      let testCases;
-      if (w3cTraceCorrelationDisabled) {
-        env.INSTANA_DISABLE_W3C_TRACE_CORRELATION = 'a non-empty string';
-        testCases = testCasesWithoutW3cTraceCorrelation;
-      } else {
-        testCases = testCasesWithW3cTraceCorrelation;
-      }
-
       let app;
 
       before(async () => {
+        const env = {
+          USE_HTTP2: http2,
+          USE_NATIVE_FETCH: nativeFetch,
+          DOWNSTREAM_PORT: downstreamTarget.port
+        };
+
+        if (w3cTraceCorrelationDisabled) {
+          env.INSTANA_DISABLE_W3C_TRACE_CORRELATION = 'a non-empty string';
+        }
+
         app = new ProcessControls({
           dirname: __dirname,
           useGlobalAgent: true,
@@ -115,6 +111,13 @@ describe('spec compliance', function () {
 
         await app.startAndWaitForAgentConnection();
       });
+
+      let testCases;
+      if (w3cTraceCorrelationDisabled) {
+        testCases = testCasesWithoutW3cTraceCorrelation;
+      } else {
+        testCases = testCasesWithW3cTraceCorrelation;
+      }
 
       testCases.forEach(testDefinition => {
         const label = `${testDefinition.index}: ${testDefinition.Scenario} -> ${testDefinition['What to do?']}`;
