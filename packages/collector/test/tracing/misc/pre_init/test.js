@@ -45,6 +45,14 @@ function registerTests(usePreInit) {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   it(`must ${usePreInit ? '' : 'not'} init instrumentations early and ${
     usePreInit ? '' : 'not'
   } capture log exits`, () =>

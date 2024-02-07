@@ -29,6 +29,14 @@ mochaSuiteFn('tracing/graphql-subscriptions - PubSub/async iterator (pull before
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   it('should keep cls context when pulling before pushing', () =>
     controls
       .sendRequest({

@@ -90,6 +90,16 @@ if (
         await subscriberControls.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await publisherControls.stop();
+        await subscriberControls.stop();
+      });
+
+      afterEach(async () => {
+        await publisherControls.clearIpcMessages();
+        await subscriberControls.clearIpcMessages();
+      });
+
       ['promise', 'callback'].forEach(apiVariant => {
         [false, 'publisher'].forEach(withError => {
           const mochaTestFn = apiVariant === 'callback' && withError === 'publisher' ? it.skip : it;
@@ -232,6 +242,16 @@ if (
         await subscriberControls.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await publisherControls.stop();
+        await subscriberControls.stop();
+      });
+
+      afterEach(async () => {
+        await publisherControls.clearIpcMessages();
+        await subscriberControls.clearIpcMessages();
+      });
+
       it('should not trace when suppressed', () =>
         publisherControls
           .sendRequest({
@@ -286,6 +306,16 @@ if (
 
         await publisherControls.startAndWaitForAgentConnection();
         await subscriberControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await publisherControls.stop();
+        await subscriberControls.stop();
+      });
+
+      afterEach(async () => {
+        await publisherControls.clearIpcMessages();
+        await subscriberControls.clearIpcMessages();
       });
 
       it('should not trace when disabled', () =>

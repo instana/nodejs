@@ -359,6 +359,18 @@ function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia, version) {
       await clientControls2.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await serverControls.stop();
+      await clientControls1.stop();
+      await clientControls2.stop();
+    });
+
+    afterEach(async () => {
+      await serverControls.clearIpcMessages();
+      await clientControls1.clearIpcMessages();
+      await clientControls2.clearIpcMessages();
+    });
+
     it(`must trace updates for subscriptions (via: ${triggerUpdateVia})`, () =>
       testUpdatesInSubscriptionsAreTraced(clientControls1, clientControls2));
   });
@@ -429,6 +441,16 @@ function registerSubscriptionUpdatesCorrectParentSpanSuite(triggerUpdateVia, ver
 
       await serverControls.startAndWaitForAgentConnection();
       await clientControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await serverControls.stop();
+      await clientControls.stop();
+    });
+
+    afterEach(async () => {
+      await serverControls.clearIpcMessages();
+      await clientControls.clearIpcMessages();
     });
 
     it(`must not confuse parent context for parallel request (via: ${triggerUpdateVia})`, () =>

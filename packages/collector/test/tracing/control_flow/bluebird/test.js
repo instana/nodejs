@@ -32,6 +32,14 @@ mochaSuiteFn('tracing/bluebird', function () {
     await bluebirdControls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await bluebirdControls.stop();
+  });
+
+  afterEach(async () => {
+    await bluebirdControls.clearIpcMessages();
+  });
+
   check('/delayed');
   check('/combined');
   check('/rejected');

@@ -48,6 +48,14 @@ mochaSuiteFn('tracing/sdk', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
     ['callback', 'promise', 'async'].forEach(function (apiType) {
       registerSuite.bind(this)(apiType);
     });
@@ -492,6 +500,14 @@ mochaSuiteFn('tracing/sdk', function () {
       });
 
       await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
     });
 
     ['callback', 'promise', 'async'].forEach(function (apiType) {

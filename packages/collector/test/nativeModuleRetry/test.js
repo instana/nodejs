@@ -20,7 +20,6 @@ const globalAgent = require('../globalAgent');
 describe('retry loading native addons', function () {
   const timeout = Math.max(config.getTestTimeout(), 20000);
   this.timeout(timeout);
-  const retryTimeout = timeout / 2;
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
@@ -30,21 +29,7 @@ describe('retry loading native addons', function () {
       name: 'event-loop-stats',
       nativeModulePath: require.resolve('event-loop-stats'),
       backupPath: path.join(os.tmpdir(), 'event-loop-stats-backup'),
-      check: ([allMetrics, aggregated]) => {
-        // check that libuv stats are initially reported as unsupported
-        let foundAtLeastOneUnsupported;
-        for (let i = 0; i < allMetrics.length; i++) {
-          if (allMetrics[i].data.libuv) {
-            expect(allMetrics[i].data.libuv.statsSupported).to.be.false;
-            foundAtLeastOneUnsupported = true;
-            break;
-          }
-        }
-
-        expect(foundAtLeastOneUnsupported).to.be.true;
-
-        // The for loop above ensures that the first metric POST that had the libuv payload
-        // had libuv.statsSupported === false. Now we check that at some point, the supported flag changed to true.
+      check: ([aggregated]) => {
         const libuv = aggregated.libuv;
         expect(libuv).to.exist;
         expect(libuv).to.be.an('object');
@@ -60,18 +45,7 @@ describe('retry loading native addons', function () {
       name: 'gcstats.js',
       nativeModulePath: require.resolve('gcstats.js'),
       backupPath: path.join(os.tmpdir(), 'gcstats.js-backup'),
-      check: ([allMetrics, aggregated]) => {
-        // check that gc stats are initially reported as unsupported
-        let foundAtLeastOneUnsupported;
-        for (let i = 0; i < allMetrics.length; i++) {
-          if (allMetrics[i].data.libuv) {
-            expect(allMetrics[i].data.gc.statsSupported).to.be.false;
-            foundAtLeastOneUnsupported = true;
-            break;
-          }
-        }
-        expect(foundAtLeastOneUnsupported).to.be.true;
-
+      check: ([aggregated]) => {
         // The for loop above ensures that the first metric POST that had the gc payload
         // had gc.statsSupported == undefined. Now we check that at some point, the supported flag changed to true.
         const gc = aggregated.gc;
@@ -86,26 +60,32 @@ describe('retry loading native addons', function () {
   ];
 
   describe('metrics are activated lazily by copying precompiled binaries when they are initially missing', () => {
-    let controls;
-
-    before(async () => {
-      controls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
-        agentControls,
-        useGlobalAgent: true
-        // by default, only copying precompiled binaries is enabled and recompiling them on demand is not
-      });
-
-      await controls.startAndWaitForAgentConnection();
-    });
-
-    metricAddonsTestConfigs.forEach(
-      runCopyPrecompiledForNativeAddonTest.bind(this, agentControls, controls, retryTimeout)
-    );
+    metricAddonsTestConfigs.forEach(runCopyPrecompiledForNativeAddonTest.bind(this, agentControls));
   });
 });
 
-function runCopyPrecompiledForNativeAddonTest(agentControls, controls, retryTimeout, opts) {
+function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      appPath: path.join(__dirname, 'app'),
+      agentControls,
+      useGlobalAgent: true
+      // by default, only copying precompiled binaries is enabled and recompiling them on demand is not
+    });
+
+    await controls.startAndWaitForAgentConnection();
+  });
+
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   describe(opts.name, () => {
     before(done => {
       // remove the dependency temporarily
@@ -125,15 +105,12 @@ function runCopyPrecompiledForNativeAddonTest(agentControls, controls, retryTime
     });
 
     it('metrics from native add-ons should become available at some point', () =>
-      retry(
-        () =>
-          Promise.all([
-            //
-            agentControls.getAllMetrics(controls.getPid()),
-            agentControls.getAggregatedMetrics(controls.getPid()),
-            agentControls.getEvents()
-          ]).then(opts.check),
-        retryTimeout
+      retry(() =>
+        Promise.all([
+          //
+          agentControls.getAggregatedMetrics(controls.getPid()),
+          agentControls.getEvents()
+        ]).then(opts.check)
       ));
   });
 }

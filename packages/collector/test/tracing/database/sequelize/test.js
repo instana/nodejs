@@ -57,6 +57,14 @@ function registerTests(usePgNative) {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   it(`must fetch (pg-native: ${usePgNative})`, () =>
     controls
       .sendRequest({

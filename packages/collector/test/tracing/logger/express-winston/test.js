@@ -33,6 +33,14 @@ mochaSuiteFn('tracing/logger/express-winston', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   it('should not trace HTTP 200/info', () =>
     controls
       .sendRequest({

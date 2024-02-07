@@ -24,36 +24,34 @@ mochaSuiteFn('tracing/restore context', function () {
   globalAgent.setUpCleanUpHooks();
 
   describe('tracing enabled', () => {
-    let controls;
-
-    before(async () => {
-      controls = new ProcessControls({
-        dirname: __dirname,
-        useGlobalAgent: true
-      });
-
-      await controls.startAndWaitForAgentConnection();
-    });
-
-    registerAllTests(controls, true);
+    registerAllTests();
   });
 
   describe('tracing disabled', () => {
+    registerAllTests(false);
+  });
+
+  function registerAllTests(tracingEnabled = true) {
     let controls;
 
     before(async () => {
       controls = new ProcessControls({
         dirname: __dirname,
-        useGlobalAgent: true
+        useGlobalAgent: true,
+        tracingEnabled: tracingEnabled
       });
 
       await controls.startAndWaitForAgentConnection();
     });
 
-    registerAllTests(controls, false);
-  });
+    after(async () => {
+      await controls.stop();
+    });
 
-  function registerAllTests(controls, tracingEnabled) {
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
     [
       //
       'run',

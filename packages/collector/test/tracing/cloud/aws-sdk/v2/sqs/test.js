@@ -96,6 +96,18 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       await senderControlsBatch.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await senderControls.stop();
+      await senderControlsSQSConsumer.stop();
+      await senderControlsBatch.stop();
+    });
+
+    afterEach(async () => {
+      await senderControls.clearIpcMessages();
+      await senderControlsSQSConsumer.clearIpcMessages();
+      await senderControlsBatch.clearIpcMessages();
+    });
+
     receivingMethods.forEach(sqsReceiveMethod => {
       describe(`receiving via ${sqsReceiveMethod} API`, () => {
         let receiverControls;
@@ -111,6 +123,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           });
 
           await receiverControls.startAndWaitForAgentConnection();
+        });
+
+        after(async () => {
+          await receiverControls.stop();
+        });
+
+        afterEach(async () => {
+          await receiverControls.clearIpcMessages();
         });
 
         [false, 'sender'].forEach(withError => {
@@ -156,6 +176,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           await receiverControls.startAndWaitForAgentConnection();
         });
 
+        after(async () => {
+          await receiverControls.stop();
+        });
+
+        afterEach(async () => {
+          await receiverControls.clearIpcMessages();
+        });
+
         it(
           `consecutive receiveMessage calls via ${sqsReceiveMethod} in the same event loop tick should not ` +
             'trigger a warning',
@@ -194,6 +222,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         });
 
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
       });
 
       const apiPath = '/send-callback';
@@ -236,6 +272,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           await sqsConsumerControls.startAndWaitForAgentConnection();
         });
 
+        after(async () => {
+          await sqsConsumerControls.stop();
+        });
+
+        afterEach(async () => {
+          await sqsConsumerControls.clearIpcMessages();
+        });
+
         const apiPath = '/send-callback';
 
         it('receives message', async () => {
@@ -262,6 +306,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           });
 
           await sqsConsumerControls.startAndWaitForAgentConnection();
+        });
+
+        after(async () => {
+          await sqsConsumerControls.stop();
+        });
+
+        afterEach(async () => {
+          await sqsConsumerControls.clearIpcMessages();
         });
 
         const apiPath = '/send-callback';
@@ -293,6 +345,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
             });
 
             await receiverControls.startAndWaitForAgentConnection();
+          });
+
+          after(async () => {
+            await receiverControls.stop();
+          });
+
+          afterEach(async () => {
+            await receiverControls.clearIpcMessages();
           });
 
           const sqsSendMethod = getNextSendMethod();
@@ -426,6 +486,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       await senderControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await senderControls.stop();
+    });
+
+    afterEach(async () => {
+      await senderControls.clearIpcMessages();
+    });
+
     const receivingMethod = getNextReceiveMethod();
     describe('sending and receiving', () => {
       let receiverControls;
@@ -442,6 +510,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         });
 
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
       });
 
       const sendingMethod = getNextSendMethod();
@@ -476,6 +552,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       await senderControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await senderControls.stop();
+    });
+
+    afterEach(async () => {
+      await senderControls.clearIpcMessages();
+    });
+
     const receivingMethod = getNextReceiveMethod();
     describe('tracing suppressed', () => {
       let receiverControls;
@@ -491,6 +575,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         });
 
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
       });
 
       const sendingMethod = getNextSendMethod();
@@ -529,6 +621,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       });
 
       await receiverControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await receiverControls.stop();
+    });
+
+    afterEach(async () => {
+      await receiverControls.clearIpcMessages();
     });
 
     it('reports an error span', async () => {

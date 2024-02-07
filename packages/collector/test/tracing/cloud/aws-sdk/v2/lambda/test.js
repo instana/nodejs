@@ -51,6 +51,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     withErrorOptions.forEach(withError => {
       describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
         availableOperations.forEach(operation => {
@@ -135,6 +143,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     describe('attempt to get result', () => {
       availableOperations.forEach(operation => {
         const requestMethod = getNextCallMethod();
@@ -167,6 +183,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
       });
 
       await appControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
     });
 
     describe('attempt to get result', () => {

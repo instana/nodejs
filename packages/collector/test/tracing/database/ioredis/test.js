@@ -40,6 +40,14 @@ mochaSuiteFn('tracing/ioredis', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   it('must trace set/get calls', () =>
     controls
       .sendRequest({

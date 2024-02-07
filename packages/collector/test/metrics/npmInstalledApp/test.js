@@ -31,6 +31,14 @@ describe('snapshot data and metrics/app deployed via npm install', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   it('must find main package.json and main node_modules', () =>
     testUtils.retry(() =>
       agentControls.getAllMetrics(controls.getPid()).then(allMetrics => {

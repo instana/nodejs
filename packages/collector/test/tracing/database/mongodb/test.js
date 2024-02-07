@@ -64,6 +64,14 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
           await controls.startAndWaitForAgentConnection();
         });
 
+        after(async () => {
+          await controls.stop();
+        });
+
+        afterEach(async () => {
+          await controls.clearIpcMessages();
+        });
+
         it('must count', () =>
           controls
             .sendRequest({

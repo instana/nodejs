@@ -25,6 +25,11 @@ describe('snapshot data and metrics', function () {
   let controls;
 
   before(async () => {
+    const cwd = __dirname;
+    console.log(`Running npm install in ${cwd}.`);
+    const npmInstallOutput = execSync('npm install --no-audit', { cwd });
+    console.log(`Done with running npm install in ${cwd}: ${npmInstallOutput}`);
+
     controls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
       args: ['foo', 'bar', 'baz'],
@@ -32,11 +37,10 @@ describe('snapshot data and metrics', function () {
     });
 
     await controls.startAndWaitForAgentConnection();
+  });
 
-    const cwd = __dirname;
-    console.log(`Running npm install in ${cwd}.`);
-    const npmInstallOutput = execSync('npm install --no-audit', { cwd });
-    console.log(`Done with running npm install in ${cwd}: ${npmInstallOutput}`);
+  after(async () => {
+    await controls.stop();
   });
 
   it('must report metrics from a running process', () =>
@@ -60,6 +64,7 @@ describe('snapshot data and metrics', function () {
 
         const deps = findMetric(allMetrics, ['dependencies']);
         expect(deps).to.be.an('object');
+
         expect(Object.keys(deps)).to.have.lengthOf(1);
         expect(deps['node-fetch']).to.equal('2.6.0');
 
@@ -81,7 +86,6 @@ describe('snapshot data and metrics', function () {
         const gc = aggregated.gc;
         expect(gc).to.be.an('object');
         expect(gc.statsSupported).to.be.true;
-
         expect(findMetric(allMetrics, ['healthchecks'])).to.exist;
         expect(findMetric(allMetrics, ['heapSpaces'])).to.exist;
         expect(findMetric(allMetrics, ['http'])).to.exist;

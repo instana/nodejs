@@ -34,6 +34,14 @@ mochaSuiteFn('tracing/express', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   describe('express.js path templates', () => {
     check('/blub', '/blub', true);
     check('/sub/bar/42', '/sub/bar/:id', true);

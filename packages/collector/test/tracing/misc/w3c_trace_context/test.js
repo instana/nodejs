@@ -791,6 +791,16 @@ function startApps(http2) {
     await otherVendorAppControls.start();
   });
 
+  after(async () => {
+    await instanaAppControls.stop();
+    await otherVendorAppControls.stop();
+  });
+
+  afterEach(async () => {
+    await instanaAppControls.clearIpcMessages();
+    await otherVendorAppControls.clearIpcMessages();
+  });
+
   return {
     instanaAppControls,
     otherVendorAppControls

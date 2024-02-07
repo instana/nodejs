@@ -57,6 +57,14 @@ mochaSuiteFn('tracing/sdk - force separate context for startEntrySpan', function
         await controls.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
+
       ['non-recursive', 'recursive'].forEach(callPattern => {
         ['async', 'promise', 'callback'].forEach(apiType => {
           it(

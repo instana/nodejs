@@ -53,19 +53,7 @@ function registerSuite(agentControls, driverMode, useExecute) {
       env.USE_EXECUTE = 'true';
     }
 
-    let controls;
-
-    before(async () => {
-      controls = new ProcessControls({
-        dirname: __dirname,
-        useGlobalAgent: true,
-        env
-      });
-
-      await controls.startAndWaitForAgentConnection();
-    });
-
-    test(controls, agentControls);
+    test(env, agentControls);
   });
 
   mochaSuiteFnForDriverMode('suppressed', function () {
@@ -85,6 +73,14 @@ function registerSuite(agentControls, driverMode, useExecute) {
       });
 
       await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
     });
 
     it('should not trace', async function () {
@@ -109,7 +105,27 @@ function registerSuite(agentControls, driverMode, useExecute) {
   });
 }
 
-function test(controls, agentControls) {
+function test(env, agentControls) {
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true,
+      env
+    });
+
+    await controls.startAndWaitForAgentConnection();
+  });
+
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   it('must trace queries', () =>
     controls
       .sendRequest({

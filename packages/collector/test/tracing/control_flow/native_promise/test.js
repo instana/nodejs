@@ -32,6 +32,14 @@ mochaSuiteFn('tracing/native-promise', function () {
     await promiseControls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await promiseControls.stop();
+  });
+
+  afterEach(async () => {
+    await promiseControls.clearIpcMessages();
+  });
+
   check('/delayed');
   check('/combined');
   check('/rejected');

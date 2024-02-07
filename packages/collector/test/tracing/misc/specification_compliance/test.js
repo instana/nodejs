@@ -53,6 +53,14 @@ describe('spec compliance', function () {
         await downstreamTarget.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await downstreamTarget.stop();
+      });
+
+      afterEach(async () => {
+        await downstreamTarget.clearIpcMessages();
+      });
+
       [false, true].forEach(w3cTraceCorrelationDisabled => {
         registerSuite({ downstreamTarget, http2, w3cTraceCorrelationDisabled });
       });
@@ -78,6 +86,14 @@ describe('spec compliance', function () {
       });
 
       await downstreamTarget.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await downstreamTarget.stop();
+    });
+
+    afterEach(async () => {
+      await downstreamTarget.clearIpcMessages();
     });
 
     [false, true].forEach(w3cTraceCorrelationDisabled => {
@@ -110,6 +126,14 @@ describe('spec compliance', function () {
         });
 
         await app.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await app.stop();
+      });
+
+      afterEach(async () => {
+        await app.clearIpcMessages();
       });
 
       let testCases;

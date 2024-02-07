@@ -50,6 +50,16 @@ mochaSuiteFn('tracing/native fetch', function () {
     await clientControls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await serverControls.stop();
+    await clientControls.stop();
+  });
+
+  afterEach(async () => {
+    await serverControls.clearIpcMessages();
+    await clientControls.clearIpcMessages();
+  });
+
   // See https://developer.mozilla.org/en-US/docs/Web/API/fetch#parameters.
 
   describe('capture attributes from different resource types', () => {

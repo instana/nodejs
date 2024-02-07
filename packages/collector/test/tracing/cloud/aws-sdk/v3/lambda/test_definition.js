@@ -75,6 +75,10 @@ async function start(version) {
         await appControls.stop();
       });
 
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
+      });
+
       availableOperations.forEach(operation => {
         availableCtx.forEach(ctx => {
           const requestMethod = getNextCallMethod();
@@ -149,6 +153,10 @@ async function start(version) {
         await appControls.stop();
       });
 
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
+      });
+
       describe('attempt to get result', () => {
         availableOperations.forEach(operation => {
           const requestMethod = getNextCallMethod();
@@ -181,6 +189,10 @@ async function start(version) {
 
       after(async () => {
         await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
       });
 
       describe('attempt to get result', () => {

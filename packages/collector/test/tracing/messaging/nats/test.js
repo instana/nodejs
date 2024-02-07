@@ -54,6 +54,16 @@ mochaSuiteFn('tracing/nats', function () {
           await subscriberControls.startAndWaitForAgentConnection();
         });
 
+        after(async () => {
+          await publisherControls.stop();
+          await subscriberControls.stop();
+        });
+
+        afterEach(async () => {
+          await publisherControls.clearIpcMessages();
+          await subscriberControls.clearIpcMessages();
+        });
+
         describe('publish et al.', function () {
           [false, true].forEach(withCallback => {
             [false, true].forEach(withReply => {
@@ -455,6 +465,14 @@ mochaSuiteFn('tracing/nats', function () {
           });
         });
 
+        after(async () => {
+          await publisherControls.stop();
+        });
+
+        afterEach(async () => {
+          await publisherControls.clearIpcMessages();
+        });
+
         it('cannot connect to the nats server', async function () {
           return publisherControls
             .startAndWaitForAgentConnection()
@@ -500,6 +518,16 @@ mochaSuiteFn('tracing/nats', function () {
 
           await publisherControls.startAndWaitForAgentConnection();
           await subscriberControls.startAndWaitForAgentConnection();
+        });
+
+        after(async () => {
+          await publisherControls.stop();
+          await subscriberControls.stop();
+        });
+
+        afterEach(async () => {
+          await publisherControls.clearIpcMessages();
+          await subscriberControls.clearIpcMessages();
         });
 
         it('should not trace when disabled', () =>

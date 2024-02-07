@@ -83,6 +83,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     withErrorOptions.forEach(withError => {
       if (withError) {
         describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
@@ -179,6 +187,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     describe('attempt to get result', () => {
       // we don't create the stream, as it was created previously
       availableOperations.slice(1).forEach(operation => {
@@ -220,6 +236,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
       });
 
       await appControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
     });
 
     describe('attempt to get result', () => {

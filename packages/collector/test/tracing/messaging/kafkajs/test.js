@@ -45,6 +45,14 @@ mochaSuiteFn('tracing/kafkajs', function () {
       await consumerControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await consumerControls.stop();
+    });
+
+    afterEach(async () => {
+      await consumerControls.clearIpcMessages();
+    });
+
     const nextUseEachBatch = getCircularList([false, true]);
     const nextError = getCircularList([false, 'consumer']);
 
@@ -62,6 +70,14 @@ mochaSuiteFn('tracing/kafkajs', function () {
           });
 
           await producerControls.startAndWaitForAgentConnection();
+        });
+
+        after(async () => {
+          await producerControls.stop();
+        });
+
+        afterEach(async () => {
+          await producerControls.clearIpcMessages();
         });
 
         beforeEach(() => resetMessages(consumerControls));
@@ -159,6 +175,14 @@ mochaSuiteFn('tracing/kafkajs', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await producerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+    });
+
     [false, true].forEach(useSendBatch => registerProducerErrorTestSuite.bind(this)({ headerFormat, useSendBatch }));
 
     function registerProducerErrorTestSuite({ useSendBatch }) {
@@ -216,6 +240,16 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
       await consumerControls.startAndWaitForAgentConnection();
       await producerControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+      await consumerControls.clearIpcMessages();
     });
 
     beforeEach(() => resetMessages(consumerControls));
@@ -305,6 +339,16 @@ mochaSuiteFn('tracing/kafkajs', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+      await consumerControls.clearIpcMessages();
+    });
+
     it(
       `must trace sending and receiving and keep trace continuity (header format ${headerFormat} ` +
         'from agent config)',
@@ -349,6 +393,16 @@ mochaSuiteFn('tracing/kafkajs', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+      await consumerControls.clearIpcMessages();
+    });
+
     const headerFormat = 'correlation-disabled';
     it(
       'must trace sending and receiving but will not keep trace continuity ' +
@@ -389,6 +443,16 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
       await consumerControls.startAndWaitForAgentConnection();
       await producerControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+      await consumerControls.clearIpcMessages();
     });
 
     beforeEach(() => resetMessages(consumerControls));
@@ -441,6 +505,16 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
       await consumerControls.startAndWaitForAgentConnection();
       await producerControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+      await consumerControls.clearIpcMessages();
     });
 
     beforeEach(() => resetMessages(consumerControls));

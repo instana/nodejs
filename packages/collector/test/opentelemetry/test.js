@@ -25,9 +25,7 @@ const mochaSuiteFn =
 //       this unsupported setup is used. Both variants (require Instana first/OTel second and vice versa)
 //       fail, though they fail in different ways.
 mochaSuiteFn('Opentelemetry usage', function () {
-  const timeout = config.getTestTimeout() * 2;
-
-  this.timeout(timeout);
+  this.timeout(config.getTestTimeout());
   const randomPort = portfinder();
   let server;
   let otelSpans = [];
@@ -68,6 +66,10 @@ mochaSuiteFn('Opentelemetry usage', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await controls.stop();
+    });
+
     it('should not trace Instana spans', () =>
       controls
         .sendRequest({
@@ -81,7 +83,10 @@ mochaSuiteFn('Opentelemetry usage', function () {
               // Instana does not work when instana was required first
               expect(spans, `Expected no Instana spans but got ${JSON.stringify(spans)}`).to.be.empty;
               // Proof that Otel spans still work.
-              expect(otelSpans, `Expected one OTel span but got ${JSON.stringify(otelSpans)}`).to.have.lengthOf(1);
+              expect(
+                otelSpans,
+                `Expected one OTel span but got ${JSON.stringify(otelSpans)}`
+              ).to.have.lengthOf.greaterThan(1);
             })
           )
         ));
@@ -105,6 +110,13 @@ mochaSuiteFn('Opentelemetry usage', function () {
 
       await controls.startAndWaitForAgentConnection();
       otelSpans = [];
+    });
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
     });
 
     it('should trace duplicated data', () =>

@@ -89,6 +89,11 @@ function start(version) {
         await appControls.startAndWaitForAgentConnection();
       });
 
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
+        await appControls.clearIpcMessages();
+      });
+
       after(async () => {
         await receiverControls.stop();
         await appControls.stop();
@@ -168,6 +173,11 @@ function start(version) {
         await appControls.stop();
       });
 
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
+        await appControls.clearIpcMessages();
+      });
+
       availableStyles.forEach(style => {
         const key = 'PublishCommand';
 
@@ -218,6 +228,11 @@ function start(version) {
       after(async () => {
         await receiverControls.stop();
         await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
+        await appControls.clearIpcMessages();
       });
 
       availableStyles.forEach(style => {

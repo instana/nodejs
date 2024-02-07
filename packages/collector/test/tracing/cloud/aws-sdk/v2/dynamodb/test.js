@@ -86,6 +86,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     withErrorOptions.forEach(withError => {
       if (withError) {
         describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
@@ -165,6 +173,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     describe('attempt to get result', () => {
       availableOperations.slice(1).forEach(operation => {
         const requestMethod = getNextCallMethod();
@@ -197,6 +213,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
       });
 
       await appControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
     });
 
     describe('attempt to get result', () => {

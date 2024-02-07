@@ -62,6 +62,14 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   it(`must capture incoming calls and start a new trace (HTTPS: ${useHttps})`, () =>
     controls
       .sendRequest({

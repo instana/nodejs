@@ -33,6 +33,14 @@ mochaSuiteFn('tracing/logger/winston', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   [false, true].forEach(useGlobalLogger =>
     [false, true].forEach(useLevelMethod =>
       [

@@ -33,6 +33,14 @@ mochaSuiteFn('tracing/tsoa', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   describe('path template', function () {
     it('exists if GET request', () => {
       const requestOptions = {

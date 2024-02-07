@@ -16,7 +16,7 @@ const ProcessControls = require('../test_util/ProcessControls');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('unhandled promise rejections', function () {
+mochaSuiteFn.only('unhandled promise rejections', function () {
   const { AgentStubControls } = require('../apps/agentStubControls');
   const agentControls = new AgentStubControls();
   this.timeout(config.getTestTimeout());
@@ -35,7 +35,15 @@ mochaSuiteFn('unhandled promise rejections', function () {
       }
     });
 
-    await serverControls.startAndWaitForAgentConnection();
+    await serverControls.start();
+  });
+
+  after(async () => {
+    await serverControls.stop();
+  });
+
+  afterEach(async () => {
+    await serverControls.clearIpcMessages();
   });
 
   it('must not interfere with tracing', () =>

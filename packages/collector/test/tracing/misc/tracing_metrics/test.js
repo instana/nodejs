@@ -37,6 +37,14 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
     it('must send internal tracing metrics to agent', async () => {
       const response = await controls.sendRequest({
         method: 'POST',
@@ -91,6 +99,14 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
     it('must send internal tracing metrics every 100 ms', async () => {
       const response = await controls.sendRequest({
         method: 'POST',
@@ -123,6 +139,14 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       });
 
       await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
     });
 
     it('must not collect any tracing metrics', async () => {
@@ -163,6 +187,14 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
     it('must reveal dropped spans', async () => {
       const response = await controls.sendRequest({
         method: 'POST',
@@ -200,6 +232,14 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       });
 
       await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
     });
 
     it('must not call POST /tracermetrics multiple times', async () => {

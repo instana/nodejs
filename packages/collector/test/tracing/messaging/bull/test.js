@@ -70,6 +70,14 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await senderControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await senderControls.stop();
+    });
+
+    afterEach(async () => {
+      await senderControls.clearIpcMessages();
+    });
+
     receivingMethods.forEach(receiveMethod => {
       describe(`receiving via ${receiveMethod} API`, () => {
         let receiverControls;
@@ -89,6 +97,14 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           });
 
           await receiverControls.startAndWaitForAgentConnection();
+        });
+
+        after(async () => {
+          await receiverControls.stop();
+        });
+
+        afterEach(async () => {
+          await receiverControls.clearIpcMessages();
         });
 
         const testId = uuid();
@@ -283,6 +299,14 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await senderControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await senderControls.stop();
+    });
+
+    afterEach(async () => {
+      await senderControls.clearIpcMessages();
+    });
+
     const receiveMethod = getNextReceivingMethod();
     describe('sending and receiving', () => {
       let receiverControls;
@@ -303,6 +327,14 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         });
 
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
       });
 
       const testId = uuid();
@@ -350,6 +382,14 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await senderControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await senderControls.stop();
+    });
+
+    afterEach(async () => {
+      await senderControls.clearIpcMessages();
+    });
+
     const receiveMethod = getNextReceivingMethod();
     describe('tracing suppressed', () => {
       let receiverControls;
@@ -369,6 +409,14 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         });
 
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
       });
 
       const testId = uuid();

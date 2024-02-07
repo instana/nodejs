@@ -32,6 +32,14 @@ mochaSuiteFn('frameworks/sequilize', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   describe('parameterized queries', () => {
     it('select', () =>
       controls

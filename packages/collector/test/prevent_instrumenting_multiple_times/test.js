@@ -29,6 +29,8 @@ describe('prevent initializing @instana/collector multiple times', function () {
   let controls;
 
   before(async () => {
+    runCommandSync('npm install --production --no-optional --no-audit @instana/collector', tmpDir);
+
     controls = new ProcessControls({
       appPath: path.join(__dirname, '..', 'apps', 'express'),
       execArgv: ['--require', pathToSeparateInstanaCollector],
@@ -40,12 +42,18 @@ describe('prevent initializing @instana/collector multiple times', function () {
     });
 
     await controls.startAndWaitForAgentConnection();
-
-    runCommandSync('npm install --production --no-optional --no-audit @instana/collector', tmpDir);
   });
 
   after(done => {
     rimraf(tmpDir, done);
+  });
+
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
   });
 
   it('must only announce to agent once', async () => {

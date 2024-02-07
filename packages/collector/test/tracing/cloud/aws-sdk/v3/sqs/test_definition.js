@@ -106,6 +106,18 @@ function start(version) {
         await senderControlsBatch.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await senderControls.stop();
+        await senderControlsSQSConsumer.stop();
+        await senderControlsBatch.stop();
+      });
+
+      afterEach(async () => {
+        await senderControls.clearIpcMessages();
+        await senderControlsSQSConsumer.clearIpcMessages();
+        await senderControlsBatch.clearIpcMessages();
+      });
+
       receivingMethods.forEach(sqsReceiveMethod => {
         describe(`receiving via ${sqsReceiveMethod} API`, () => {
           let receiverControls;
@@ -122,6 +134,14 @@ function start(version) {
             });
 
             await receiverControls.startAndWaitForAgentConnection();
+          });
+
+          after(async () => {
+            await receiverControls.stop();
+          });
+
+          afterEach(async () => {
+            await receiverControls.clearIpcMessages();
           });
 
           [false, 'sender'].forEach(withError => {
@@ -169,6 +189,14 @@ function start(version) {
             await receiverControls.startAndWaitForAgentConnection();
           });
 
+          after(async () => {
+            await receiverControls.stop();
+          });
+
+          afterEach(async () => {
+            await receiverControls.clearIpcMessages();
+          });
+
           it(
             `consecutive receiveMessage calls via ${sqsReceiveMethod} in the same event loop tick should not ` +
               'trigger a warning',
@@ -209,6 +237,14 @@ function start(version) {
               });
 
               await sqsConsumerControls.startAndWaitForAgentConnection();
+            });
+
+            after(async () => {
+              await sqsConsumerControls.stop();
+            });
+
+            afterEach(async () => {
+              await sqsConsumerControls.clearIpcMessages();
             });
 
             const apiPath = '/send-message/v3';
@@ -263,6 +299,14 @@ function start(version) {
               await sqsConsumerControls.startAndWaitForAgentConnection();
             });
 
+            after(async () => {
+              await sqsConsumerControls.stop();
+            });
+
+            afterEach(async () => {
+              await sqsConsumerControls.clearIpcMessages();
+            });
+
             const apiPath = '/send-message/v3';
 
             it('receives message', async () => {
@@ -315,6 +359,14 @@ function start(version) {
               await sqsConsumerControls.startAndWaitForAgentConnection();
             });
 
+            after(async () => {
+              await sqsConsumerControls.stop();
+            });
+
+            afterEach(async () => {
+              await sqsConsumerControls.clearIpcMessages();
+            });
+
             const apiPath = '/send-message/v3';
 
             it('fails to receive a message', async () => {
@@ -353,6 +405,14 @@ function start(version) {
               });
 
               await receiverControls.startAndWaitForAgentConnection();
+            });
+
+            after(async () => {
+              await receiverControls.stop();
+            });
+
+            afterEach(async () => {
+              await receiverControls.clearIpcMessages();
             });
 
             const sqsSendMethod = getNextSendMethod();
@@ -397,6 +457,14 @@ function start(version) {
         await senderControls.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await senderControls.stop();
+      });
+
+      afterEach(async () => {
+        await senderControls.clearIpcMessages();
+      });
+
       const receivingMethod = getNextReceiveMethod();
 
       describe('sending and receiving', () => {
@@ -415,6 +483,14 @@ function start(version) {
           });
 
           await receiverControls.startAndWaitForAgentConnection();
+        });
+
+        after(async () => {
+          await receiverControls.stop();
+        });
+
+        afterEach(async () => {
+          await receiverControls.clearIpcMessages();
         });
 
         const sendingMethod = getNextSendMethod();
@@ -453,6 +529,14 @@ function start(version) {
         await senderControls.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await senderControls.stop();
+      });
+
+      afterEach(async () => {
+        await senderControls.clearIpcMessages();
+      });
+
       const receivingMethod = getNextReceiveMethod();
       describe('tracing suppressed', () => {
         let receiverControls;
@@ -469,6 +553,14 @@ function start(version) {
           });
 
           await receiverControls.startAndWaitForAgentConnection();
+        });
+
+        after(async () => {
+          await receiverControls.stop();
+        });
+
+        afterEach(async () => {
+          await receiverControls.clearIpcMessages();
         });
 
         const sendingMethod = getNextSendMethod();
@@ -513,6 +605,14 @@ function start(version) {
         await receiverControls.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
+      });
+
       it('reports an error span', async () => {
         await retry(async () => {
           await delay(250);
@@ -555,6 +655,16 @@ function start(version) {
 
         await senderControls.startAndWaitForAgentConnection();
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+        await senderControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
+        await senderControls.clearIpcMessages();
       });
 
       const sendingMethod = getNextSendMethod();

@@ -55,6 +55,14 @@ mochaSuiteFn('[ESM] tracing/sdk/multiple_installations', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   it('should trace http & sdk spans', async () => {
     await controls.sendRequest({ method: 'GET', path: '/trace' });
 

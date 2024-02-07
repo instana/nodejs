@@ -73,6 +73,14 @@ mochaSuiteFn('tracing a babel/typescript setup', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   describe('@instana/collector used in a babel-transpiled typescript app', function () {
     it('should trace when imported with workaround according to our docs', () =>
       controls

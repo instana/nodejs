@@ -38,6 +38,14 @@ describe('collector/src/immediate', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
     it('should have connected to the agent', async () => {
       // Make sure the npm process did not report to the agent even after waiting for that to happen.
       const pidsThatContactedTheAgent = await agentControls.getDiscoveries();

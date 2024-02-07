@@ -101,6 +101,15 @@ function startAllProcesses() {
     await clientControls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await accountServiceControls.stop();
+    await inventoryServiceControls.stop();
+    await productsServiceControls.stop();
+    await reviewsServiceControls.stop();
+    await gatewayControls.stop();
+    await clientControls.stop();
+  });
+
   return {
     accountServiceControls,
     inventoryServiceControls,

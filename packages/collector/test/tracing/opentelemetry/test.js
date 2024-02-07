@@ -54,6 +54,14 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         await controls.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
+
       it('should trace', () =>
         controls
           .sendRequest({
@@ -183,6 +191,14 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         await controls.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
+
       it('should trace instana spans only', () =>
         controls
           .sendRequest({
@@ -229,6 +245,14 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       });
 
       await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
     });
 
     it('should trace when there is no otel parent', () =>
@@ -347,6 +371,16 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
 
       await server.startAndWaitForAgentConnection();
       await client.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await server.stop();
+      await client.stop();
+    });
+
+    afterEach(async () => {
+      await server.clearIpcMessages();
+      await client.clearIpcMessages();
     });
 
     it('should trace', () =>

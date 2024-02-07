@@ -78,6 +78,14 @@ function start(version, requestMethod, reducedTestSuite = false) {
         await appControls.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
+      });
+
       after(() => cleanup(tableName));
 
       let ops = availableOperations;
@@ -124,6 +132,14 @@ function start(version, requestMethod, reducedTestSuite = false) {
         await appControls.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
+      });
+
       after(() => cleanup(tableName));
 
       it('should succeed', async () => {
@@ -153,6 +169,14 @@ function start(version, requestMethod, reducedTestSuite = false) {
         });
 
         await appControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
       });
 
       after(() => cleanup(tableName));
@@ -185,6 +209,14 @@ function start(version, requestMethod, reducedTestSuite = false) {
         });
 
         await appControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
       });
 
       after(() => cleanup(tableName));
@@ -242,6 +274,14 @@ function start(version, requestMethod, reducedTestSuite = false) {
         });
 
         await appControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
       });
 
       after(() => cleanup(tableName));

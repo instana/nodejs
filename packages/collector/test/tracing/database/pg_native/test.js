@@ -41,6 +41,14 @@ mochaSuiteFn('tracing/pg-native', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   it('must trace select', () =>
     controls
       .sendRequest({

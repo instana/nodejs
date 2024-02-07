@@ -19,7 +19,7 @@ module.exports = function retry(fn, time, until, tries) {
   }
 
   if (until == null) {
-    until = Date.now() + config.getTestTimeout() * 2;
+    until = Date.now() + config.getRetryTimeout();
   }
 
   if (Date.now() > until) {

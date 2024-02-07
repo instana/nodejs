@@ -64,6 +64,16 @@ function registerTests(useHttps) {
     await clientControls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await serverControls.stop();
+    await clientControls.stop();
+  });
+
+  afterEach(async () => {
+    await serverControls.clearIpcMessages();
+    await clientControls.clearIpcMessages();
+  });
+
   // HTTP requests can be triggered via http.request(...) + request.end(...) or http.get(...).
   // Both http.request and http.get accept
   // - an URL, an options object and a callback
@@ -514,6 +524,16 @@ function registerConnectionRefusalTest(useHttps) {
       await clientControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await serverControls.stop();
+      await clientControls.stop();
+    });
+
+    afterEach(async () => {
+      await serverControls.clearIpcMessages();
+      await clientControls.clearIpcMessages();
+    });
+
     it('must trace calls that fail due to connection refusal', () =>
       serverControls
         .kill()
@@ -558,6 +578,16 @@ function registerSuperagentTest() {
 
     await serverControls.startAndWaitForAgentConnection();
     await clientControls.startAndWaitForAgentConnection();
+  });
+
+  after(async () => {
+    await serverControls.stop();
+    await clientControls.stop();
+  });
+
+  afterEach(async () => {
+    await serverControls.clearIpcMessages();
+    await clientControls.clearIpcMessages();
   });
 
   it('must trace superagent callbacks', () =>

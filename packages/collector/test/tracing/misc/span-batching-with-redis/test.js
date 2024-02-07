@@ -43,6 +43,14 @@ mochaSuiteFn('tracing/spanbatching with redis', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
     runTests(controls, agentControls);
   });
 
@@ -66,6 +74,14 @@ mochaSuiteFn('tracing/spanbatching with redis', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
     runTests(controls, customAgentControls);
   });
 
@@ -86,6 +102,14 @@ mochaSuiteFn('tracing/spanbatching with redis', function () {
       });
 
       await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
     });
 
     it('must not batch calls', () =>

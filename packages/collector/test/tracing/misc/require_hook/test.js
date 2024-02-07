@@ -32,6 +32,14 @@ mochaSuiteFn('tracing/requireHook', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   describe('stealthy require', () => {
     it('must not apply caching when not necessary / or when something is fishy', () =>
       controls

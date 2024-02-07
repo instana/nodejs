@@ -32,7 +32,13 @@ mochaSuiteFn('tracing/api', function () {
 
       await controls.startAndWaitForAgentConnection();
     });
+    after(async () => {
+      await controls.stop();
+    });
 
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
     it('must provide details for currently active span', async () => {
       const now = Date.now();
       const response = await controls.sendRequest({
@@ -176,7 +182,13 @@ mochaSuiteFn('tracing/api', function () {
 
       await controls.startAndWaitForAgentConnection();
     });
+    after(async () => {
+      await controls.stop();
+    });
 
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
     it('must provide a noop span handle', async () => {
       const response = await controls.sendRequest({
         path: '/span/active'

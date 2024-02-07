@@ -66,12 +66,21 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     withErrorOptions.forEach(withError => {
       describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
         it(`should instrument ${availableOperations.join(', ')} ${withError ? 'with' : 'without'} errors`, () =>
           promisifyNonSequentialCases(verify, availableOperations, appControls, withError, getNextCallMethod));
       });
     });
+
     function verify(controls, response, apiPath, operation, withError) {
       return retry(
         () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, operation, withError)),
@@ -124,6 +133,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     describe('attempt to get result', () => {
       it(`should not trace ${availableOperations.join(', ')}`, () =>
         promisifyNonSequentialCases(
@@ -155,6 +172,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
       });
 
       await appControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
     });
 
     describe('attempt to get result', () => {

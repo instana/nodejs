@@ -34,6 +34,14 @@ mochaSuiteFn('tracing/q', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   runTest('/fcall');
   runTest('/reject-fcall');
   runTest('/deferred');

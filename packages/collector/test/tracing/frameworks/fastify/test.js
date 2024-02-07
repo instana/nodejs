@@ -40,6 +40,14 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
           await processControls.startAndWaitForAgentConnection();
         });
 
+        after(async () => {
+          await processControls.stop();
+        });
+
+        afterEach(async () => {
+          await processControls.clearIpcMessages();
+        });
+
         check('/', 200, { hello: 'world' }, '/');
         check('/hooks', 200, { hello: 'world' }, '/hooks');
         check('/hooks-early-reply', 200, { hello: 'world' }, '/hooks-early-reply');

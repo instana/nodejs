@@ -117,7 +117,8 @@ class ProcessControls {
         INSTANA_LOG_LEVEL: 'warn',
         INSTANA_DISABLE_TRACING: !this.tracingEnabled,
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: '1',
-        INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: opts.minimalDelay != null ? opts.minimalDelay : 0
+        INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: opts.minimalDelay != null ? opts.minimalDelay : 0,
+        INSTANA_FULL_METRICS_INTERNAL_IN_S: 1
       },
       opts.env
     );
@@ -127,18 +128,6 @@ class ProcessControls {
     }
 
     this.receivedIpcMessages = [];
-
-    this.setupAfterHooks();
-  }
-
-  setupAfterHooks() {
-    after(async () => {
-      await this.stop();
-    });
-
-    afterEach(async () => {
-      await this.clearIpcMessages();
-    });
   }
 
   getPort() {

@@ -31,6 +31,14 @@ mochaSuiteFn('tracing/got', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   it('GET request', () =>
     controls
       .sendRequest({

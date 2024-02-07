@@ -123,6 +123,7 @@ app.post(
         time: Date.now(),
         data: req.body
       });
+
       aggregateMetrics(req.params.pid, req.body);
     }
 
@@ -234,7 +235,9 @@ app.delete('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/received/data', (req, res) => res.json(receivedData));
+app.get('/received/data', (req, res) => {
+  res.json(receivedData);
+});
 
 app.delete('/received/data', (req, res) => {
   receivedData = resetReceivedData();

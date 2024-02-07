@@ -78,7 +78,13 @@ if (
 
       await controls.startAndWaitForAgentConnection();
     });
+    after(async () => {
+      await controls.stop();
+    });
 
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
     /**
      * auto-retry 3 times, because we run a lot into rate limiting errors
      */

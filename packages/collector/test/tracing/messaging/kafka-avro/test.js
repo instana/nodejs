@@ -74,6 +74,14 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await producerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+    });
+
     describe('consuming message', () => {
       let consumerControls;
 
@@ -84,6 +92,14 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
         });
 
         await consumerControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await consumerControls.stop();
+      });
+
+      afterEach(async () => {
+        await consumerControls.clearIpcMessages();
       });
 
       const apiPath = '/produce';
@@ -168,6 +184,14 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await producerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+    });
+
     describe('producing and consuming', () => {
       let consumerControls;
 
@@ -179,6 +203,14 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
         });
 
         await consumerControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await consumerControls.stop();
+      });
+
+      afterEach(async () => {
+        await consumerControls.clearIpcMessages();
       });
 
       it('should not trace for producing / consuming messages', async () => {
@@ -211,6 +243,14 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await producerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+    });
+
     describe('tracing suppressed', () => {
       let receiverControls;
 
@@ -221,6 +261,14 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
         });
 
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
       });
 
       it("doesn't trace when producing / consuming messages", async () => {

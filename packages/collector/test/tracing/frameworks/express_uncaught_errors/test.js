@@ -33,6 +33,14 @@ mochaSuiteFn('tracing/express with uncaught errors', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   [false, true].forEach(isRootSpan => registerTests(isRootSpan));
 
   function registerTests(isRootSpan) {

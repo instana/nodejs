@@ -35,6 +35,14 @@ describe('tracing/no-conflict-with-cls-hooked', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   it('must not lose context when the application binds the http request event emitter via cls-hooked', async () => {
     const response = await controls.sendRequest({
       method: 'POST',

@@ -25,38 +25,44 @@ mochaSuiteFn('tracing/common', function () {
   describe('delay', function () {
     describe('with minimal delay', function () {
       this.timeout(extendedTimeout);
-      let controls;
 
-      before(async () => {
-        controls = new ProcessControls({
-          useGlobalAgent: true,
-          dirname: __dirname,
-          minimalDelay: 6000
-        });
-
-        await controls.startAndWaitForAgentConnection();
-      });
-
-      registerDelayTest.call(this, globalAgent.instance, controls, true);
+      registerDelayTest.call(this, globalAgent.instance, true);
     });
 
     describe('without minimal delay', function () {
       this.timeout(config.getTestTimeout());
+
+      registerDelayTest.call(this, globalAgent.instance, false);
+    });
+
+    function registerDelayTest(agentControls, withMinimalDelay) {
       let controls;
 
       before(async () => {
-        controls = new ProcessControls({
-          useGlobalAgent: true,
-          dirname: __dirname
-        });
+        if (withMinimalDelay) {
+          controls = new ProcessControls({
+            useGlobalAgent: true,
+            dirname: __dirname,
+            minimalDelay: 6000
+          });
+        } else {
+          controls = new ProcessControls({
+            useGlobalAgent: true,
+            dirname: __dirname
+          });
+        }
 
         await controls.startAndWaitForAgentConnection();
       });
 
-      registerDelayTest.call(this, globalAgent.instance, controls, false);
-    });
+      after(async () => {
+        await controls.stop();
+      });
 
-    function registerDelayTest(agentControls, controls, withMinimalDelay) {
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
+
       it(`must respect delay (with minimal delay: ${withMinimalDelay})`, () =>
         controls
           .sendRequest({
@@ -138,62 +144,38 @@ mochaSuiteFn('tracing/common', function () {
     this.timeout(config.getTestTimeout());
 
     describe('with env var', function () {
-      let controls;
-
-      before(async () => {
-        controls = new ProcessControls({
-          useGlobalAgent: true,
-          dirname: __dirname,
-          env: {
-            INSTANA_SERVICE_NAME: 'much-custom-very-wow service'
-          }
-        });
-
-        await controls.startAndWaitForAgentConnection();
-      });
-
-      registerServiceNameTest.call(this, globalAgent.instance, controls, {
-        configMethod: 'env var',
-        expectServiceNameOnSpans: 'on-all-spans'
-      });
+      registerServiceNameTest.call(
+        this,
+        globalAgent.instance,
+        {
+          configMethod: 'env var',
+          expectServiceNameOnSpans: 'on-all-spans'
+        },
+        {
+          INSTANA_SERVICE_NAME: 'much-custom-very-wow service'
+        }
+      );
     });
 
     describe('with config', function () {
-      let controls;
-
-      before(async () => {
-        controls = new ProcessControls({
-          useGlobalAgent: true,
-          dirname: __dirname,
-          env: {
-            // this makes the app set the serviceName per config object
-            SERVICE_CONFIG: 'much-custom-very-wow service'
-          }
-        });
-
-        await controls.startAndWaitForAgentConnection();
-      });
-
-      registerServiceNameTest.call(this, globalAgent.instance, controls, {
-        configMethod: 'config object',
-        expectServiceNameOnSpans: 'on-all-spans'
-      });
+      registerServiceNameTest.call(
+        this,
+        globalAgent.instance,
+        {
+          configMethod: 'config object',
+          expectServiceNameOnSpans: 'on-all-spans'
+        },
+        {
+          // this makes the app set the serviceName per config object
+          SERVICE_CONFIG: 'much-custom-very-wow service'
+        }
+      );
     });
 
     describe('with header when agent is configured to capture the header', function () {
       const agentControls = setupCustomAgentControls(true);
-      let controls;
 
-      before(async () => {
-        controls = new ProcessControls({
-          agentControls,
-          dirname: __dirname
-        });
-
-        await controls.startAndWaitForAgentConnection();
-      });
-
-      registerServiceNameTest.call(this, agentControls, controls, {
+      registerServiceNameTest.call(this, agentControls, {
         configMethod: 'X-Instana-Service header',
         expectServiceNameOnSpans: 'on-entry-span'
       });
@@ -201,27 +183,37 @@ mochaSuiteFn('tracing/common', function () {
 
     describe('with header when agent is _not_ configured to capture the header', function () {
       const agentControls = setupCustomAgentControls(false);
-      let controls;
 
-      before(async () => {
-        controls = new ProcessControls({
-          agentControls,
-          dirname: __dirname
-        });
-
-        await controls.startAndWaitForAgentConnection();
-      });
-
-      registerServiceNameTest.call(this, agentControls, controls, {
+      registerServiceNameTest.call(this, agentControls, {
         configMethod: 'X-Instana-Service header',
         expectServiceNameOnSpans: 'no'
       });
     });
 
-    function registerServiceNameTest(agentControls, controls, { configMethod, expectServiceNameOnSpans }) {
+    function registerServiceNameTest(agentControls, { configMethod, expectServiceNameOnSpans }, env = {}) {
       if (expectServiceNameOnSpans == null || typeof expectServiceNameOnSpans !== 'string') {
         throw new Error('Please explicitly pass a string value for expectServiceNameOnSpans.');
       }
+
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          useGlobalAgent: true,
+          dirname: __dirname,
+          env
+        });
+
+        await controls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
 
       it(`must${
         expectServiceNameOnSpans === 'no' ? ' _not_ ' : ' '
@@ -291,6 +283,14 @@ mochaSuiteFn('tracing/common', function () {
         await controls.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
+
       it('can disable a single instrumentation', () =>
         controls
           .sendRequest({
@@ -319,6 +319,14 @@ mochaSuiteFn('tracing/common', function () {
         });
 
         await controls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
       });
 
       // Story time: There is a package out there that overrides Array.find with different behaviour that, once upon a

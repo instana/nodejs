@@ -42,6 +42,14 @@ mochaSuiteFn('tracing/too late', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
     it(`should warn when module ${EXAMPLE_MODULE} has been require before @instana/collector`, () =>
       controls
         .sendRequest({
@@ -112,6 +120,14 @@ mochaSuiteFn('tracing/too late', function () {
       });
 
       await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
     });
 
     it('should not warn about being initialized too late', () =>

@@ -79,6 +79,14 @@ function start(version) {
         await appControls.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
+      });
+
       withErrorOptions.forEach(withError => {
         if (withError) {
           const operationsWithoutListBuckets = availableOperations.filter(op => op !== 'listBuckets');
@@ -195,6 +203,14 @@ function start(version) {
         await appControls.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
+      });
+
       describe('attempt to get result', () => {
         // we don't want to create the bucket, cause it already exists, and also don't want to delete it
         availableOperations.slice(1, -1).forEach(operation => {
@@ -229,6 +245,14 @@ function start(version) {
         });
 
         await appControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await appControls.stop();
+      });
+
+      afterEach(async () => {
+        await appControls.clearIpcMessages();
       });
 
       describe('attempt to get result', () => {

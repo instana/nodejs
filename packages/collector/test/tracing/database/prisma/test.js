@@ -85,6 +85,14 @@ mochaSuiteFn('tracing/prisma', function () {
         await controls.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
+
       [false, true].forEach(withError => {
         it(`should capture a prisma model read action (with error: ${withError})`, async () => {
           let requestPath = '/findMany';

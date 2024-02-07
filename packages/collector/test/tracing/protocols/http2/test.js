@@ -52,6 +52,16 @@ mochaSuiteFn('tracing/http2', function () {
     await clientControls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await serverControls.stop();
+    await clientControls.stop();
+  });
+
+  afterEach(async () => {
+    await serverControls.clearIpcMessages();
+    await clientControls.clearIpcMessages();
+  });
+
   [false, true].forEach(withQuery => {
     it(`must trace http2 GET with${withQuery ? '' : 'out'} query`, () =>
       clientControls

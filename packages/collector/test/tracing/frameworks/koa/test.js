@@ -33,6 +33,14 @@ mochaSuiteFn('tracing/koa', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   describe('koa path templates', () => {
     check('/route', '/route');
     check('/route/123', '/route/:id');

@@ -51,6 +51,16 @@ mochaSuiteFn('tracing/kafka-node', function () {
         await consumerControls.startAndWaitForAgentConnection();
       });
 
+      after(async () => {
+        await producerControls.stop();
+        await consumerControls.stop();
+      });
+
+      afterEach(async () => {
+        await producerControls.clearIpcMessages();
+        await consumerControls.clearIpcMessages();
+      });
+
       it(`must trace sending messages (producer type: ${producerType})`, () =>
         send(producerControls, 'someKey', 'someMessage').then(() =>
           testUtils.retry(() =>
@@ -132,6 +142,16 @@ mochaSuiteFn('tracing/kafka-node', function () {
 
         await producerControls.startAndWaitForAgentConnection();
         await consumerControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await producerControls.stop();
+        await consumerControls.stop();
+      });
+
+      afterEach(async () => {
+        await producerControls.clearIpcMessages();
+        await consumerControls.clearIpcMessages();
       });
 
       it(`must trace receiving messages (consumer type: ${consumerType})`, () =>

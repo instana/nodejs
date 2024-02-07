@@ -23,27 +23,35 @@ describe('tracing/logger/pino', function () {
     const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
     mochaSuiteFn(`pino@${pinoVersion}`, function () {
-      let controls;
-
-      before(async () => {
-        controls = new ProcessControls({
-          dirname: __dirname,
-          useGlobalAgent: true,
-          env: {
-            PINO_VERSION: pinoVersion
-          }
-        });
-
-        await controls.startAndWaitForAgentConnection();
-      });
-
-      runTests(false, controls);
-      runTests(true, controls);
+      runTests(pinoVersion, false);
+      runTests(pinoVersion, true);
     });
   });
 
-  function runTests(useExpressPino, controls) {
+  function runTests(pinoVersion, useExpressPino) {
     const suffix = useExpressPino ? ' (express-pino)' : '';
+
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          PINO_VERSION: pinoVersion
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
 
     it(`must not trace info${suffix}`, () =>
       trigger('info', useExpressPino, controls).then(() =>

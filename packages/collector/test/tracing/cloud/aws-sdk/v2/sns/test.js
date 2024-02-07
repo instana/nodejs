@@ -80,6 +80,16 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
       await receiverControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await senderControls.stop();
+      await receiverControls.stop();
+    });
+
+    afterEach(async () => {
+      await senderControls.clearIpcMessages();
+      await receiverControls.clearIpcMessages();
+    });
+
     withErrorOptions.forEach(withError => {
       if (withError) {
         describe('getting result with error', () => {
@@ -193,6 +203,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     describe('attempt to get result', () => {
       availableOperations.forEach(operation => {
         const requestMethod = getNextCallMethod();
@@ -225,6 +243,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
       });
 
       await appControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
     });
 
     describe('attempt to get result', () => {

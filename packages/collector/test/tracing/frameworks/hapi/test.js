@@ -35,6 +35,14 @@ mochaSuiteFn('tracing/hapi', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   describe('hapi path templates', () => {
     check('/route/mandatory/value', '/route/mandatory/{param}');
     check('/route/optional/value', '/route/optional/{param?}');

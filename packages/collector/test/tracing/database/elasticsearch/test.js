@@ -73,6 +73,14 @@ mochaSuiteFn('tracing/elasticsearch', function () {
           await controls.startAndWaitForAgentConnection();
         });
 
+        after(async () => {
+          await controls.stop();
+        });
+
+        afterEach(async () => {
+          await controls.clearIpcMessages();
+        });
+
         it('must report errors caused by missing indices', () =>
           get({ id: 'thisDocumentWillNotExist', index: 'thisIndexDoesNotExist' }).then(res => {
             expect(res.error).to.exist;

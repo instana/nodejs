@@ -52,6 +52,14 @@ describe('tracing/redis', function () {
         });
       });
 
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
+
       it('must trace set/get calls', () =>
         controls
           .sendRequest({

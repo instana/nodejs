@@ -74,6 +74,14 @@ mochaSuiteFn('tracing/cache/memcached', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     withErrorOptions.forEach(withError => {
       if (!withError) {
         describe('instrumenting sequential operations with success', () => {
@@ -187,6 +195,14 @@ mochaSuiteFn('tracing/cache/memcached', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     describe('sequential operations that are not instrumented', () => {
       sequentialOps.forEach(operation => {
         it(`should not trace (${operation})`, async () => {
@@ -240,6 +256,14 @@ mochaSuiteFn('tracing/cache/memcached', function () {
       });
 
       await appControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
     });
 
     describe('sequential operations are not traced', () => {

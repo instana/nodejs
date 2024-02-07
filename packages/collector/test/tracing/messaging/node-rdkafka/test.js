@@ -321,6 +321,16 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       await consumerControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+      await consumerControls.clearIpcMessages();
+    });
+
     it('must trace sending and receiving and keep trace continuity', async () => {
       const apiPath = '/produce/standard';
       const response = await producerControls.sendRequest({
@@ -365,6 +375,16 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       await consumerControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+      await consumerControls.clearIpcMessages();
+    });
+
     it('must trace sending and receiving but will not keep trace continuity', async () => {
       const apiPath = '/produce/standard';
       const response = await producerControls.sendRequest({
@@ -405,6 +425,16 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
 
       await producerControls.startAndWaitForAgentConnection();
       await consumerControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+      await consumerControls.clearIpcMessages();
     });
 
     it('must trace sending and receiving but will not keep trace continuity', async () => {
@@ -451,6 +481,16 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       await consumerControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+      await consumerControls.clearIpcMessages();
+    });
+
     it('must trace sending and receiving but will not keep trace continuity', async () => {
       const apiPath = '/produce/standard';
       const response = await producerControls.sendRequest({
@@ -487,6 +527,14 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await producerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+    });
+
     describe('producing and consuming', () => {
       let consumerControls;
 
@@ -499,7 +547,16 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
             RDKAFKA_CONSUMER_AS_STREAM: 'false'
           }
         });
+
         await consumerControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await consumerControls.stop();
+      });
+
+      afterEach(async () => {
+        await consumerControls.clearIpcMessages();
       });
 
       it('should not trace for producing as standard / consuming as standard', async () => {
@@ -534,6 +591,14 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    after(async () => {
+      await producerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+    });
+
     describe('tracing suppressed', () => {
       let receiverControls;
 
@@ -547,6 +612,14 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         });
 
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
       });
 
       it("doesn't trace when producing as standard / consuming as standard", async () => {
