@@ -37,15 +37,19 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
   const agentControls = globalAgent.instance;
 
   describe('tracing enabled, no suppression', function () {
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        AWS_LAMBDA_FUNCTION_NAME: functionName
-      }
-    });
+    let appControls;
 
-    ProcessControls.setUpHooks(appControls);
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          AWS_LAMBDA_FUNCTION_NAME: functionName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     withErrorOptions.forEach(withError => {
       describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
@@ -116,16 +120,20 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
 
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {
-        AWS_LAMBDA_FUNCTION_NAME: functionName
-      }
-    });
+    let appControls;
 
-    ProcessControls.setUpHooks(appControls);
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {
+          AWS_LAMBDA_FUNCTION_NAME: functionName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     describe('attempt to get result', () => {
       availableOperations.forEach(operation => {
@@ -147,15 +155,19 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
   });
 
   describe('tracing enabled but suppressed', () => {
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        AWS_LAMBDA_FUNCTION_NAME: functionName
-      }
-    });
+    let appControls;
 
-    ProcessControls.setUpHooks(appControls);
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          AWS_LAMBDA_FUNCTION_NAME: functionName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     describe('attempt to get result', () => {
       availableOperations.forEach(operation => {

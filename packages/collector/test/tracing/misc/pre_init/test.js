@@ -33,12 +33,17 @@ mochaSuiteFn('tracing/preInit', function () {
 });
 
 function registerTests(usePreInit) {
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true,
-    usePreInit
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true,
+      usePreInit
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(controls);
 
   it(`must ${usePreInit ? '' : 'not'} init instrumentations early and ${
     usePreInit ? '' : 'not'

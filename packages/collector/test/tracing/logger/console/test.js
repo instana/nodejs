@@ -25,12 +25,16 @@ mochaSuiteFn('tracing/logger/console', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
-  });
+  let controls;
 
-  ProcessControls.setUpHooks(controls);
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true
+    });
+
+    await controls.startAndWaitForAgentConnection();
+  });
 
   /**
    * CASES/NOTES

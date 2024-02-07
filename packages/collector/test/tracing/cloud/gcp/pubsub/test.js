@@ -63,25 +63,32 @@ if (
       const topicName = defaultTopicName;
       const subscriptionName = defaultSubscriptionName;
 
-      const publisherControls = new ProcessControls({
-        appPath: path.join(__dirname, 'publisher'),
-        useGlobalAgent: true,
-        env: {
-          GCP_PROJECT: projectId,
-          GCP_PUBSUB_TOPIC: topicName,
-          GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-        }
+      let publisherControls;
+      let subscriberControls;
+
+      before(async () => {
+        publisherControls = new ProcessControls({
+          appPath: path.join(__dirname, 'publisher'),
+          useGlobalAgent: true,
+          env: {
+            GCP_PROJECT: projectId,
+            GCP_PUBSUB_TOPIC: topicName,
+            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
+          }
+        });
+        subscriberControls = new ProcessControls({
+          appPath: path.join(__dirname, 'subscriber'),
+          useGlobalAgent: true,
+          env: {
+            GCP_PROJECT: projectId,
+            GCP_PUBSUB_TOPIC: topicName,
+            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
+          }
+        });
+
+        await publisherControls.startAndWaitForAgentConnection();
+        await subscriberControls.startAndWaitForAgentConnection();
       });
-      const subscriberControls = new ProcessControls({
-        appPath: path.join(__dirname, 'subscriber'),
-        useGlobalAgent: true,
-        env: {
-          GCP_PROJECT: projectId,
-          GCP_PUBSUB_TOPIC: topicName,
-          GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-        }
-      });
-      ProcessControls.setUpHooksWithRetryTime(retryTime, publisherControls, subscriberControls);
 
       ['promise', 'callback'].forEach(apiVariant => {
         [false, 'publisher'].forEach(withError => {
@@ -198,26 +205,32 @@ if (
       const topicName = `${defaultTopicName}-suppression`;
       const subscriptionName = `${defaultSubscriptionName}-suppression`;
 
-      const publisherControls = new ProcessControls({
-        appPath: path.join(__dirname, 'publisher'),
-        useGlobalAgent: true,
-        env: {
-          GCP_PROJECT: projectId,
-          GCP_PUBSUB_TOPIC: topicName,
-          GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-        }
-      });
-      const subscriberControls = new ProcessControls({
-        appPath: path.join(__dirname, 'subscriber'),
-        useGlobalAgent: true,
-        env: {
-          GCP_PROJECT: projectId,
-          GCP_PUBSUB_TOPIC: topicName,
-          GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-        }
-      });
+      let publisherControls;
+      let subscriberControls;
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, publisherControls, subscriberControls);
+      before(async () => {
+        publisherControls = new ProcessControls({
+          appPath: path.join(__dirname, 'publisher'),
+          useGlobalAgent: true,
+          env: {
+            GCP_PROJECT: projectId,
+            GCP_PUBSUB_TOPIC: topicName,
+            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
+          }
+        });
+        subscriberControls = new ProcessControls({
+          appPath: path.join(__dirname, 'subscriber'),
+          useGlobalAgent: true,
+          env: {
+            GCP_PROJECT: projectId,
+            GCP_PUBSUB_TOPIC: topicName,
+            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
+          }
+        });
+
+        await publisherControls.startAndWaitForAgentConnection();
+        await subscriberControls.startAndWaitForAgentConnection();
+      });
 
       it('should not trace when suppressed', () =>
         publisherControls
@@ -246,27 +259,34 @@ if (
       const topicName = defaultTopicName;
       const subscriptionName = defaultSubscriptionName;
 
-      const publisherControls = new ProcessControls({
-        appPath: path.join(__dirname, 'publisher'),
-        useGlobalAgent: true,
-        tracingEnabled: false,
-        env: {
-          GCP_PROJECT: projectId,
-          GCP_PUBSUB_TOPIC: topicName,
-          GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-        }
+      let publisherControls;
+      let subscriberControls;
+
+      before(async () => {
+        publisherControls = new ProcessControls({
+          appPath: path.join(__dirname, 'publisher'),
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            GCP_PROJECT: projectId,
+            GCP_PUBSUB_TOPIC: topicName,
+            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
+          }
+        });
+        subscriberControls = new ProcessControls({
+          appPath: path.join(__dirname, 'subscriber'),
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            GCP_PROJECT: projectId,
+            GCP_PUBSUB_TOPIC: topicName,
+            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
+          }
+        });
+
+        await publisherControls.startAndWaitForAgentConnection();
+        await subscriberControls.startAndWaitForAgentConnection();
       });
-      const subscriberControls = new ProcessControls({
-        appPath: path.join(__dirname, 'subscriber'),
-        useGlobalAgent: true,
-        tracingEnabled: false,
-        env: {
-          GCP_PROJECT: projectId,
-          GCP_PUBSUB_TOPIC: topicName,
-          GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-        }
-      });
-      ProcessControls.setUpHooksWithRetryTime(retryTime, publisherControls, subscriberControls);
 
       it('should not trace when disabled', () =>
         publisherControls

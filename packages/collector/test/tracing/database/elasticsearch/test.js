@@ -59,16 +59,19 @@ mochaSuiteFn('tracing/elasticsearch', function () {
 
         globalAgent.setUpCleanUpHooks();
         const agentControls = globalAgent.instance;
+        let controls;
 
-        const controls = new ProcessControls({
-          dirname: __dirname,
-          useGlobalAgent: true,
-          env: {
-            ELASTIC_VERSION: version
-          }
+        before(async () => {
+          controls = new ProcessControls({
+            dirname: __dirname,
+            useGlobalAgent: true,
+            env: {
+              ELASTIC_VERSION: version
+            }
+          });
+
+          await controls.startAndWaitForAgentConnection();
         });
-
-        ProcessControls.setUpHooks(controls);
 
         it('must report errors caused by missing indices', () =>
           get({ id: 'thisDocumentWillNotExist', index: 'thisIndexDoesNotExist' }).then(res => {

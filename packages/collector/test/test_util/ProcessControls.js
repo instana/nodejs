@@ -23,48 +23,6 @@ const cert = fs.readFileSync(path.join(sslDir, 'cert'));
 
 class ProcessControls {
   /**
-   * Shorthand for setUpSuiteHooks and setUpTestCaseCleanUpHooks.
-   */
-  static setUpHooks(...allControls) {
-    ProcessControls.setUpHooksWithRetryTime(null, ...allControls);
-  }
-
-  /**
-   * Shorthand for setUpSuiteHooks and setUpTestCaseCleanUpHooks.
-   */
-  static setUpHooksWithRetryTime(retryTime, ...allControls) {
-    ProcessControls.setUpSuiteHooksWithRetryTime(retryTime, ...allControls);
-    ProcessControls.setUpTestCaseCleanUpHooks(...allControls);
-  }
-
-  /**
-   * Starts the corresponding child process for all given controls before starting the suite and stops them after the
-   * suite has finished.
-   */
-  static setUpSuiteHooks(...allControls) {
-    ProcessControls.setUpSuiteHooksWithRetryTime(null, ...allControls);
-  }
-
-  /**
-   * Starts the corresponding child process for all given controls before starting the suite and stops them after the
-   * suite has finished. Ensures that app and agent is booted before the test can start.
-   */
-  static setUpSuiteHooksWithRetryTime(retryTime, ...allControls) {
-    before(() => Promise.all(allControls.map(control => control.startAndWaitForAgentConnection(retryTime))));
-    after(() => {
-      return Promise.all(allControls.map(control => control.stop()));
-    });
-  }
-
-  /**
-   * Cleans up per test-case data (IPC messages received from the child process) before and after each test case.
-   */
-  static setUpTestCaseCleanUpHooks(...allControls) {
-    beforeEach(() => Promise.all(allControls.map(control => control.clearIpcMessages())));
-    afterEach(() => Promise.all(allControls.map(control => control.clearIpcMessages())));
-  }
-
-  /**
    * @typedef {Object} ProcessControlsOptions
    * @property {string} [appPath]
    * @property {string} [cwd]
@@ -169,24 +127,18 @@ class ProcessControls {
     }
 
     this.receivedIpcMessages = [];
+
+    this.setupAfterHooks();
   }
 
-  /**
-   * The _legacy_ convenience method used by tests that start and stop the app under test before/after each test case.
-   * If possible, this should be avoided in new tests. Instead, use the static methods of this class named setUpHooks
-   * and its to start the app under test once for a whole suite. This is crucial to keep the duration of the whole test
-   * suite on CI under control.
-   */
-  registerTestHooks(retryTime) {
-    if (this.agentControls) {
-      beforeEach(() => this.startAndWaitForAgentConnection(retryTime));
-    } else {
-      beforeEach(() => this.start(retryTime));
-    }
+  setupAfterHooks() {
+    after(async () => {
+      await this.stop();
+    });
 
-    afterEach(() => this.stop());
-
-    return this;
+    afterEach(async () => {
+      await this.clearIpcMessages();
+    });
   }
 
   getPort() {
@@ -235,6 +187,7 @@ class ProcessControls {
   }
 
   async startAndWaitForAgentConnection(retryTime, until) {
+    await this.clearIpcMessages();
     await this.start(retryTime, until);
     await this.agentControls.waitUntilAppIsCompletelyInitialized(this.getPid());
   }

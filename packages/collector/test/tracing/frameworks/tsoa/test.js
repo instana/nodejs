@@ -22,11 +22,16 @@ mochaSuiteFn('tracing/tsoa', function () {
   const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
 
-  const controls = new ProcessControls({
-    appPath: path.join(__dirname, 'build/src/server'),
-    useGlobalAgent: true
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      appPath: path.join(__dirname, 'build/src/server'),
+      useGlobalAgent: true
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(controls);
 
   describe('path template', function () {
     it('exists if GET request', () => {

@@ -38,17 +38,21 @@ mochaSuiteFn('[CJS] tracing/sdk/multiple_installations', function () {
   const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
 
-  const controls = new ProcessControls({
-    useGlobalAgent: true,
-    cwd: path.join(__dirname, 'src'),
-    appPath: path.join(__dirname, 'src', 'app'),
-    env: {
-      NODE_OPTIONS: '--require ./load-instana.js',
-      INSTANA_COLLECTOR_PATH: pathToSeparateInstanaCollector
-    }
-  });
+  let controls;
 
-  ProcessControls.setUpHooks(controls);
+  before(async () => {
+    controls = new ProcessControls({
+      useGlobalAgent: true,
+      cwd: path.join(__dirname, 'src'),
+      appPath: path.join(__dirname, 'src', 'app'),
+      env: {
+        NODE_OPTIONS: '--require ./load-instana.js',
+        INSTANA_COLLECTOR_PATH: pathToSeparateInstanaCollector
+      }
+    });
+
+    await controls.startAndWaitForAgentConnection();
+  });
 
   it('should trace http & sdk spans', async () => {
     await controls.sendRequest({ url: '/trace' });

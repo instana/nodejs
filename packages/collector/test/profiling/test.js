@@ -28,13 +28,19 @@ mochaSuiteFn('profiling', function () {
     const agentControls = new AgentStubControls();
     agentControls.registerTestHooks();
 
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      agentControls,
-      env: {
-        INSTANA_AUTO_PROFILE: true
-      }
-    }).registerTestHooks();
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        agentControls,
+        env: {
+          INSTANA_AUTO_PROFILE: true
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
 
     it('must send profiles to the agent', () => {
       keepTriggeringHttpRequests = true;
@@ -67,13 +73,19 @@ mochaSuiteFn('profiling', function () {
       doesntHandleProfiles: true
     });
 
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      agentControls,
-      env: {
-        INSTANA_AUTO_PROFILE: true
-      }
-    }).registerTestHooks();
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        agentControls,
+        env: {
+          INSTANA_AUTO_PROFILE: true
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
 
     it('must warn when the agent does not support Node.js profiles', () => {
       keepTriggeringHttpRequests = true;

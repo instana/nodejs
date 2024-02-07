@@ -31,18 +31,25 @@ mochaSuiteFn('tracing/kafka-node', function () {
 
   ['plain', 'highLevel'].forEach(producerType => {
     describe(`producing via: ${producerType}`, function () {
-      const producerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'producer'),
-        useGlobalAgent: true,
-        env: {
-          PRODUCER_TYPE: producerType
-        }
+      let producerControls;
+      let consumerControls;
+
+      before(async () => {
+        producerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'producer'),
+          useGlobalAgent: true,
+          env: {
+            PRODUCER_TYPE: producerType
+          }
+        });
+        consumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          useGlobalAgent: true
+        });
+
+        await producerControls.startAndWaitForAgentConnection();
+        await consumerControls.startAndWaitForAgentConnection();
       });
-      const consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
-        useGlobalAgent: true
-      });
-      ProcessControls.setUpHooks(producerControls, consumerControls);
 
       it(`must trace sending messages (producer type: ${producerType})`, () =>
         send(producerControls, 'someKey', 'someMessage').then(() =>
@@ -104,21 +111,28 @@ mochaSuiteFn('tracing/kafka-node', function () {
   // eslint-disable-next-line array-bracket-spacing
   ['plain' /* 'highLevel', 'consumerGroup' */].forEach(consumerType => {
     describe(`consuming via: ${consumerType}`, () => {
-      const producerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'producer'),
-        useGlobalAgent: true,
-        env: {
-          PRODUCER_TYPE: 'plain'
-        }
+      let producerControls;
+      let consumerControls;
+
+      before(async () => {
+        producerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'producer'),
+          useGlobalAgent: true,
+          env: {
+            PRODUCER_TYPE: 'plain'
+          }
+        });
+        consumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          useGlobalAgent: true,
+          env: {
+            CONSUMER_TYPE: consumerType
+          }
+        });
+
+        await producerControls.startAndWaitForAgentConnection();
+        await consumerControls.startAndWaitForAgentConnection();
       });
-      const consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
-        useGlobalAgent: true,
-        env: {
-          CONSUMER_TYPE: consumerType
-        }
-      });
-      ProcessControls.setUpHooks(producerControls, consumerControls);
 
       it(`must trace receiving messages (consumer type: ${consumerType})`, () =>
         send(producerControls, 'someKey', 'someMessage').then(() =>

@@ -63,20 +63,28 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
   const agentControls = globalAgent.instance;
 
   describe('tracing enabled, no suppression', function () {
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true
-    });
+    let producerControls;
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, producerControls);
-
-    describe('consuming message', () => {
-      const consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
+    before(async () => {
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
         useGlobalAgent: true
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, consumerControls);
+      await producerControls.startAndWaitForAgentConnection();
+    });
+
+    describe('consuming message', () => {
+      let consumerControls;
+
+      before(async () => {
+        consumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          useGlobalAgent: true
+        });
+
+        await consumerControls.startAndWaitForAgentConnection();
+      });
 
       const apiPath = '/produce';
 
@@ -148,22 +156,30 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
 
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
-      tracingEnabled: false
-    });
+    let producerControls;
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, producerControls);
-
-    describe('producing and consuming', () => {
-      const consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
+    before(async () => {
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
         useGlobalAgent: true,
         tracingEnabled: false
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, consumerControls);
+      await producerControls.startAndWaitForAgentConnection();
+    });
+
+    describe('producing and consuming', () => {
+      let consumerControls;
+
+      before(async () => {
+        consumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          useGlobalAgent: true,
+          tracingEnabled: false
+        });
+
+        await consumerControls.startAndWaitForAgentConnection();
+      });
 
       it('should not trace for producing / consuming messages', async () => {
         const response = await producerControls.sendRequest({
@@ -184,20 +200,28 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
   });
 
   describe('tracing enabled but suppressed', () => {
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true
-    });
+    let producerControls;
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, producerControls);
-
-    describe('tracing suppressed', () => {
-      const receiverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
+    before(async () => {
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
         useGlobalAgent: true
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+      await producerControls.startAndWaitForAgentConnection();
+    });
+
+    describe('tracing suppressed', () => {
+      let receiverControls;
+
+      before(async () => {
+        receiverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          useGlobalAgent: true
+        });
+
+        await receiverControls.startAndWaitForAgentConnection();
+      });
 
       it("doesn't trace when producing / consuming messages", async () => {
         const response = await producerControls.sendRequest({

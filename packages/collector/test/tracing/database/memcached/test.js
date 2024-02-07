@@ -62,13 +62,17 @@ mochaSuiteFn('tracing/cache/memcached', function () {
   const agentControls = globalAgent.instance;
 
   describe('tracing enabled, no suppression', function () {
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {}
-    });
+    let appControls;
 
-    ProcessControls.setUpHooks(appControls);
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {}
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     withErrorOptions.forEach(withError => {
       if (!withError) {
@@ -170,15 +174,18 @@ mochaSuiteFn('tracing/cache/memcached', function () {
 
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() / 2);
+    let appControls;
 
-    const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {}
+    before(async () => {
+      appControls = new ProcessControls({
+        appPath: path.join(__dirname, 'app'),
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {}
+      });
+
+      await appControls.startAndWaitForAgentConnection();
     });
-
-    ProcessControls.setUpHooks(appControls);
 
     describe('sequential operations that are not instrumented', () => {
       sequentialOps.forEach(operation => {
@@ -223,13 +230,17 @@ mochaSuiteFn('tracing/cache/memcached', function () {
   });
 
   describe('tracing enabled but suppressed', () => {
-    const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      useGlobalAgent: true,
-      env: {}
-    });
+    let appControls;
 
-    ProcessControls.setUpHooks(appControls);
+    before(async () => {
+      appControls = new ProcessControls({
+        appPath: path.join(__dirname, 'app'),
+        useGlobalAgent: true,
+        env: {}
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     describe('sequential operations are not traced', () => {
       sequentialOps.forEach(operation => {

@@ -50,16 +50,21 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
   this.timeout(config.getTestTimeout() * 3);
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
-  describe('tracing enabled, no suppression', function () {
-    const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'combined_products'),
-      useGlobalAgent: true,
-      env: {
-        AWS_LAMBDA_FUNCTION_NAME: functionName
-      }
-    });
 
-    ProcessControls.setUpHooks(appControls);
+  describe('tracing enabled, no suppression', function () {
+    let appControls;
+
+    before(async () => {
+      appControls = new ProcessControls({
+        appPath: path.join(__dirname, 'combined_products'),
+        useGlobalAgent: true,
+        env: {
+          AWS_LAMBDA_FUNCTION_NAME: functionName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     withErrorOptions.forEach(withError => {
       describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
@@ -103,16 +108,21 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
 
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
-    const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'combined_products'),
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {
-        AWS_LAMBDA_FUNCTION_NAME: functionName
-      }
-    });
 
-    ProcessControls.setUpHooks(appControls);
+    let appControls;
+
+    before(async () => {
+      appControls = new ProcessControls({
+        appPath: path.join(__dirname, 'combined_products'),
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {
+          AWS_LAMBDA_FUNCTION_NAME: functionName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     describe('attempt to get result', () => {
       it(`should not trace ${availableOperations.join(', ')}`, () =>
@@ -133,15 +143,19 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
   });
 
   describe('tracing enabled but suppressed', () => {
-    const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'combined_products'),
-      useGlobalAgent: true,
-      env: {
-        AWS_LAMBDA_FUNCTION_NAME: functionName
-      }
-    });
+    let appControls;
 
-    ProcessControls.setUpHooks(appControls);
+    before(async () => {
+      appControls = new ProcessControls({
+        appPath: path.join(__dirname, 'combined_products'),
+        useGlobalAgent: true,
+        env: {
+          AWS_LAMBDA_FUNCTION_NAME: functionName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     describe('attempt to get result', () => {
       it(`should not trace ${availableOperations.join(', ')}`, () =>

@@ -20,10 +20,16 @@ describe('snapshot data and metrics/app deployed via npm install', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  const controls = new ProcessControls({
-    appPath: path.join(__dirname, 'node_modules', 'npm-installed-test-app', 'app'),
-    useGlobalAgent: true
-  }).registerTestHooks();
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      appPath: path.join(__dirname, 'node_modules', 'npm-installed-test-app', 'app'),
+      useGlobalAgent: true
+    });
+
+    await controls.startAndWaitForAgentConnection();
+  });
 
   it('must find main package.json and main node_modules', () =>
     testUtils.retry(() =>

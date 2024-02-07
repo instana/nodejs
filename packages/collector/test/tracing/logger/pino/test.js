@@ -23,15 +23,19 @@ describe('tracing/logger/pino', function () {
     const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
     mochaSuiteFn(`pino@${pinoVersion}`, function () {
-      const controls = new ProcessControls({
-        dirname: __dirname,
-        useGlobalAgent: true,
-        env: {
-          PINO_VERSION: pinoVersion
-        }
-      });
+      let controls;
 
-      ProcessControls.setUpHooks(controls);
+      before(async () => {
+        controls = new ProcessControls({
+          dirname: __dirname,
+          useGlobalAgent: true,
+          env: {
+            PINO_VERSION: pinoVersion
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
+      });
 
       runTests(false, controls);
       runTests(true, controls);

@@ -47,17 +47,20 @@ mochaSuiteFn('tracing/http(s) server', function () {
 });
 
 function registerTests(agentControls, useHttps, useHttp2CompatApi) {
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    http2: useHttp2CompatApi,
-    agentControls,
-    env: {
-      USE_HTTPS: useHttps,
-      USE_HTTP2: useHttp2CompatApi
-    }
-  });
+  let controls;
 
-  ProcessControls.setUpHooks(controls);
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      http2: useHttp2CompatApi,
+      agentControls,
+      env: {
+        USE_HTTPS: useHttps,
+        USE_HTTP2: useHttp2CompatApi
+      }
+    });
+    await controls.startAndWaitForAgentConnection();
+  });
 
   it(`must capture incoming calls and start a new trace (HTTPS: ${useHttps})`, () =>
     controls

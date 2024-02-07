@@ -31,22 +31,28 @@ mochaSuiteFn('tracing/nats', function () {
       describe('tracing is enabled', function () {
         globalAgent.setUpCleanUpHooks();
 
-        const publisherControls = new ProcessControls({
-          appPath: path.join(__dirname, 'publisher'),
-          useGlobalAgent: true,
-          env: {
-            NATS_VERSION: version
-          }
-        });
+        let publisherControls;
+        let subscriberControls;
 
-        const subscriberControls = new ProcessControls({
-          appPath: path.join(__dirname, 'subscriber'),
-          useGlobalAgent: true,
-          env: {
-            NATS_VERSION: version
-          }
+        before(async () => {
+          publisherControls = new ProcessControls({
+            appPath: path.join(__dirname, 'publisher'),
+            useGlobalAgent: true,
+            env: {
+              NATS_VERSION: version
+            }
+          });
+          subscriberControls = new ProcessControls({
+            appPath: path.join(__dirname, 'subscriber'),
+            useGlobalAgent: true,
+            env: {
+              NATS_VERSION: version
+            }
+          });
+
+          await publisherControls.startAndWaitForAgentConnection();
+          await subscriberControls.startAndWaitForAgentConnection();
         });
-        ProcessControls.setUpHooks(publisherControls, subscriberControls);
 
         describe('publish et al.', function () {
           [false, true].forEach(withCallback => {
@@ -436,13 +442,17 @@ mochaSuiteFn('tracing/nats', function () {
       describe.skip('connect', () => {
         this.timeout(config.getTestTimeout() * 10);
 
-        const publisherControls = new ProcessControls({
-          appPath: path.join(__dirname, 'publisher'),
-          useGlobalAgent: true,
-          env: {
-            CONNECT_ERROR: true,
-            NATS_VERSION: version
-          }
+        let publisherControls;
+
+        before(async () => {
+          publisherControls = new ProcessControls({
+            appPath: path.join(__dirname, 'publisher'),
+            useGlobalAgent: true,
+            env: {
+              CONNECT_ERROR: true,
+              NATS_VERSION: version
+            }
+          });
         });
 
         it('cannot connect to the nats server', async function () {
@@ -467,24 +477,30 @@ mochaSuiteFn('tracing/nats', function () {
       describe('tracing/nats disabled', function () {
         this.timeout(config.getTestTimeout() * 2);
 
-        const publisherControls = new ProcessControls({
-          appPath: path.join(__dirname, 'publisher'),
-          useGlobalAgent: true,
-          tracingEnabled: false,
-          env: {
-            NATS_VERSION: version
-          }
-        });
+        let publisherControls;
+        let subscriberControls;
 
-        const subscriberControls = new ProcessControls({
-          appPath: path.join(__dirname, 'subscriber'),
-          useGlobalAgent: true,
-          tracingEnabled: false,
-          env: {
-            NATS_VERSION: version
-          }
+        before(async () => {
+          publisherControls = new ProcessControls({
+            appPath: path.join(__dirname, 'publisher'),
+            useGlobalAgent: true,
+            tracingEnabled: false,
+            env: {
+              NATS_VERSION: version
+            }
+          });
+          subscriberControls = new ProcessControls({
+            appPath: path.join(__dirname, 'subscriber'),
+            useGlobalAgent: true,
+            tracingEnabled: false,
+            env: {
+              NATS_VERSION: version
+            }
+          });
+
+          await publisherControls.startAndWaitForAgentConnection();
+          await subscriberControls.startAndWaitForAgentConnection();
         });
-        ProcessControls.setUpHooks(publisherControls, subscriberControls);
 
         it('should not trace when disabled', () =>
           publisherControls

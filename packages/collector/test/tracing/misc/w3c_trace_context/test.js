@@ -761,32 +761,35 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
 });
 
 function startApps(http2) {
-  const instanaAppControls = new ProcessControls({
-    appPath: path.join(__dirname, 'app'),
-    useGlobalAgent: true,
-    http2,
-    env: {
-      APM_VENDOR: 'instana',
-      DOWNSTREAM_PORT: otherVendorAppPort,
-      USE_HTTP2: http2
-    }
-  });
-  ProcessControls.setUpHooks(instanaAppControls);
+  let instanaAppControls;
+  let otherVendorAppControls;
 
-  const otherVendorAppControls = new ProcessControls({
-    appPath: path.join(__dirname, 'app'),
-    port: otherVendorAppPort,
-    http2,
-    // not passing agent controls because this app will not connect to the agent
-    env: {
-      APM_VENDOR: 'other-spec-compliant',
-      DOWNSTREAM_PORT: instanaAppControls.getPort(),
-      USE_HTTP2: http2
-    }
-  });
+  before(async () => {
+    instanaAppControls = new ProcessControls({
+      appPath: path.join(__dirname, 'app'),
+      useGlobalAgent: true,
+      http2,
+      env: {
+        APM_VENDOR: 'instana',
+        DOWNSTREAM_PORT: otherVendorAppPort,
+        USE_HTTP2: http2
+      }
+    });
+    otherVendorAppControls = new ProcessControls({
+      appPath: path.join(__dirname, 'app'),
+      port: otherVendorAppPort,
+      http2,
+      // not passing agent controls because this app will not connect to the agent
+      env: {
+        APM_VENDOR: 'other-spec-compliant',
+        DOWNSTREAM_PORT: instanaAppControls.getPort(),
+        USE_HTTP2: http2
+      }
+    });
 
-  before(() => otherVendorAppControls.start());
-  after(() => otherVendorAppControls.stop());
+    await instanaAppControls.startAndWaitForAgentConnection();
+    await otherVendorAppControls.start();
+  });
 
   return {
     instanaAppControls,

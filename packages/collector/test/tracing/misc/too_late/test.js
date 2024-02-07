@@ -28,13 +28,19 @@ mochaSuiteFn('tracing/too late', function () {
   const EXAMPLE_MODULE = 'mysql';
 
   describe(`@instana/collector is initialized too late (choosing ${EXAMPLE_MODULE} as an example)`, function () {
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        REQUIRE_BEFORE_COLLECTOR: EXAMPLE_MODULE
-      }
-    }).registerTestHooks();
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          REQUIRE_BEFORE_COLLECTOR: EXAMPLE_MODULE
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
 
     it(`should warn when module ${EXAMPLE_MODULE} has been require before @instana/collector`, () =>
       controls
@@ -97,10 +103,16 @@ mochaSuiteFn('tracing/too late', function () {
   });
 
   describe('@instana/collector is initialized properly', () => {
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true
-    }).registerTestHooks();
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
 
     it('should not warn about being initialized too late', () =>
       controls

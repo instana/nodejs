@@ -21,11 +21,16 @@ mochaSuiteFn('frameworks/typeorm', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(controls);
 
   it('parameterized queries', () =>
     controls

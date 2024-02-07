@@ -34,16 +34,22 @@ mochaSuiteFn('tracing/nats-streaming', function () {
 
     globalAgent.setUpCleanUpHooks();
 
-    const publisherControls = new ProcessControls({
-      appPath: path.join(__dirname, 'publisher'),
-      useGlobalAgent: true
-    });
+    let publisherControls;
+    let subscriberControls;
 
-    const subscriberControls = new ProcessControls({
-      appPath: path.join(__dirname, 'subscriber'),
-      useGlobalAgent: true
+    before(async () => {
+      publisherControls = new ProcessControls({
+        appPath: path.join(__dirname, 'publisher'),
+        useGlobalAgent: true
+      });
+      subscriberControls = new ProcessControls({
+        appPath: path.join(__dirname, 'subscriber'),
+        useGlobalAgent: true
+      });
+
+      await publisherControls.startAndWaitForAgentConnection();
+      await subscriberControls.startAndWaitForAgentConnection();
     });
-    ProcessControls.setUpHooks(publisherControls, subscriberControls);
 
     describe('publish et al.', function () {
       [false, true].forEach(withError => {
@@ -272,17 +278,24 @@ mochaSuiteFn('tracing/nats-streaming', function () {
   describe('tracing is disabled', function () {
     this.timeout(config.getTestTimeout() * 2);
 
-    const publisherControls = new ProcessControls({
-      appPath: path.join(__dirname, 'publisher'),
-      useGlobalAgent: true,
-      tracingEnabled: false
+    let publisherControls;
+    let subscriberControls;
+
+    before(async () => {
+      publisherControls = new ProcessControls({
+        appPath: path.join(__dirname, 'publisher'),
+        useGlobalAgent: true,
+        tracingEnabled: false
+      });
+      subscriberControls = new ProcessControls({
+        appPath: path.join(__dirname, 'subscriber'),
+        useGlobalAgent: true,
+        tracingEnabled: false
+      });
+
+      await publisherControls.startAndWaitForAgentConnection();
+      await subscriberControls.startAndWaitForAgentConnection();
     });
-    const subscriberControls = new ProcessControls({
-      appPath: path.join(__dirname, 'subscriber'),
-      useGlobalAgent: true,
-      tracingEnabled: false
-    });
-    ProcessControls.setUpHooks(publisherControls, subscriberControls);
 
     it('should not trace when disabled', () =>
       publisherControls

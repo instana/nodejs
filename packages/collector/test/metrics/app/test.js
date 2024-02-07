@@ -22,14 +22,17 @@ describe('snapshot data and metrics', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
+  let controls;
 
-  const controls = new ProcessControls({
-    appPath: path.join(__dirname, 'app'),
-    args: ['foo', 'bar', 'baz'],
-    useGlobalAgent: true
-  }).registerTestHooks();
+  before(async () => {
+    controls = new ProcessControls({
+      appPath: path.join(__dirname, 'app'),
+      args: ['foo', 'bar', 'baz'],
+      useGlobalAgent: true
+    });
 
-  before(() => {
+    await controls.startAndWaitForAgentConnection();
+
     const cwd = __dirname;
     console.log(`Running npm install in ${cwd}.`);
     const npmInstallOutput = execSync('npm install --no-audit', { cwd });

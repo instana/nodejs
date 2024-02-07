@@ -142,7 +142,6 @@ mochaSuiteFn('tracing/db2', function () {
         }
       });
 
-      ProcessControls.setUpTestCaseCleanUpHooks(controls);
       await controls.startAndWaitForAgentConnection(retryTime);
     });
 
@@ -1134,7 +1133,6 @@ mochaSuiteFn('tracing/db2', function () {
         }
       });
 
-      ProcessControls.setUpTestCaseCleanUpHooks(controls);
       await controls.startAndWaitForAgentConnection(retryTime);
     });
 
@@ -1248,7 +1246,6 @@ mochaSuiteFn('tracing/db2', function () {
         }
       });
 
-      ProcessControls.setUpTestCaseCleanUpHooks(controls);
       await controls.startAndWaitForAgentConnection(retryTime);
     });
 

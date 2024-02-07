@@ -69,15 +69,19 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
   after(() => cleanup(streamName));
 
   describe('tracing enabled, no suppression', function () {
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        AWS_KINESIS_STREAM_NAME: streamName
-      }
-    });
+    let appControls;
 
-    ProcessControls.setUpHooks(appControls);
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          AWS_KINESIS_STREAM_NAME: streamName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     withErrorOptions.forEach(withError => {
       if (withError) {
@@ -160,16 +164,20 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
 
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {
-        AWS_KINESIS_STREAM_NAME: streamName
-      }
-    });
+    let appControls;
 
-    ProcessControls.setUpHooks(appControls);
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {
+          AWS_KINESIS_STREAM_NAME: streamName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     describe('attempt to get result', () => {
       // we don't create the stream, as it was created previously
@@ -200,15 +208,19 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
   });
 
   describe('tracing enabled but suppressed', () => {
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        AWS_KINESIS_STREAM_NAME: streamName
-      }
-    });
+    let appControls;
 
-    ProcessControls.setUpHooks(appControls);
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          AWS_KINESIS_STREAM_NAME: streamName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     describe('attempt to get result', () => {
       // we don't create the stream, as it was created previously

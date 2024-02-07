@@ -25,22 +25,34 @@ mochaSuiteFn('tracing/common', function () {
   describe('delay', function () {
     describe('with minimal delay', function () {
       this.timeout(extendedTimeout);
-      const controls = new ProcessControls({
-        useGlobalAgent: true,
-        dirname: __dirname,
-        minimalDelay: 6000
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          useGlobalAgent: true,
+          dirname: __dirname,
+          minimalDelay: 6000
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
-      ProcessControls.setUpHooks(controls);
+
       registerDelayTest.call(this, globalAgent.instance, controls, true);
     });
 
     describe('without minimal delay', function () {
       this.timeout(config.getTestTimeout());
-      const controls = new ProcessControls({
-        useGlobalAgent: true,
-        dirname: __dirname
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          useGlobalAgent: true,
+          dirname: __dirname
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
-      ProcessControls.setUpHooks(controls);
+
       registerDelayTest.call(this, globalAgent.instance, controls, false);
     });
 
@@ -126,14 +138,20 @@ mochaSuiteFn('tracing/common', function () {
     this.timeout(config.getTestTimeout());
 
     describe('with env var', function () {
-      const controls = new ProcessControls({
-        useGlobalAgent: true,
-        dirname: __dirname,
-        env: {
-          INSTANA_SERVICE_NAME: 'much-custom-very-wow service'
-        }
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          useGlobalAgent: true,
+          dirname: __dirname,
+          env: {
+            INSTANA_SERVICE_NAME: 'much-custom-very-wow service'
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
-      ProcessControls.setUpHooks(controls);
+
       registerServiceNameTest.call(this, globalAgent.instance, controls, {
         configMethod: 'env var',
         expectServiceNameOnSpans: 'on-all-spans'
@@ -141,15 +159,21 @@ mochaSuiteFn('tracing/common', function () {
     });
 
     describe('with config', function () {
-      const controls = new ProcessControls({
-        useGlobalAgent: true,
-        dirname: __dirname,
-        env: {
-          // this makes the app set the serviceName per config object
-          SERVICE_CONFIG: 'much-custom-very-wow service'
-        }
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          useGlobalAgent: true,
+          dirname: __dirname,
+          env: {
+            // this makes the app set the serviceName per config object
+            SERVICE_CONFIG: 'much-custom-very-wow service'
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
-      ProcessControls.setUpHooks(controls);
+
       registerServiceNameTest.call(this, globalAgent.instance, controls, {
         configMethod: 'config object',
         expectServiceNameOnSpans: 'on-all-spans'
@@ -158,10 +182,17 @@ mochaSuiteFn('tracing/common', function () {
 
     describe('with header when agent is configured to capture the header', function () {
       const agentControls = setupCustomAgentControls(true);
-      const controls = new ProcessControls({
-        agentControls,
-        dirname: __dirname
-      }).registerTestHooks();
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          agentControls,
+          dirname: __dirname
+        });
+
+        await controls.startAndWaitForAgentConnection();
+      });
+
       registerServiceNameTest.call(this, agentControls, controls, {
         configMethod: 'X-Instana-Service header',
         expectServiceNameOnSpans: 'on-entry-span'
@@ -170,10 +201,17 @@ mochaSuiteFn('tracing/common', function () {
 
     describe('with header when agent is _not_ configured to capture the header', function () {
       const agentControls = setupCustomAgentControls(false);
-      const controls = new ProcessControls({
-        agentControls,
-        dirname: __dirname
-      }).registerTestHooks();
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          agentControls,
+          dirname: __dirname
+        });
+
+        await controls.startAndWaitForAgentConnection();
+      });
+
       registerServiceNameTest.call(this, agentControls, controls, {
         configMethod: 'X-Instana-Service header',
         expectServiceNameOnSpans: 'no'
@@ -239,14 +277,19 @@ mochaSuiteFn('tracing/common', function () {
     this.timeout(config.getTestTimeout());
 
     describe('disable an individual tracer', () => {
-      const controls = new ProcessControls({
-        useGlobalAgent: true,
-        dirname: __dirname,
-        env: {
-          INSTANA_DISABLED_TRACERS: 'pino'
-        }
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          useGlobalAgent: true,
+          dirname: __dirname,
+          env: {
+            INSTANA_DISABLED_TRACERS: 'pino'
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
-      ProcessControls.setUpHooks(controls);
 
       it('can disable a single instrumentation', () =>
         controls
@@ -264,14 +307,19 @@ mochaSuiteFn('tracing/common', function () {
     });
 
     describe('robustness against overriding Array.find', () => {
-      const controls = new ProcessControls({
-        useGlobalAgent: true,
-        dirname: __dirname,
-        env: {
-          SCREW_AROUND_WITH_UP_ARRAY_FIND: 'sure why not?'
-        }
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          useGlobalAgent: true,
+          dirname: __dirname,
+          env: {
+            SCREW_AROUND_WITH_UP_ARRAY_FIND: 'sure why not?'
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
-      ProcessControls.setUpHooks(controls);
 
       // Story time: There is a package out there that overrides Array.find with different behaviour that, once upon a
       // time, as a random side effect, disabled our auto tracing. This is a regression test to make sure we are now

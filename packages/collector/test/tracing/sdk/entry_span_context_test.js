@@ -44,13 +44,18 @@ mochaSuiteFn('tracing/sdk - force separate context for startEntrySpan', function
       if (contextImplementation === 'legacy cls-hooked') {
         env.INSTANA_FORCE_LEGACY_CLS = true;
       }
-      const controls = new ProcessControls({
-        appPath: path.join(__dirname, 'entry_span_context_app'),
-        useGlobalAgent: true,
-        env
-      });
 
-      ProcessControls.setUpHooks(controls);
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          appPath: path.join(__dirname, 'entry_span_context_app'),
+          useGlobalAgent: true,
+          env
+        });
+
+        await controls.startAndWaitForAgentConnection();
+      });
 
       ['non-recursive', 'recursive'].forEach(callPattern => {
         ['async', 'promise', 'callback'].forEach(apiType => {

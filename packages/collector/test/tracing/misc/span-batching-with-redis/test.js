@@ -26,16 +26,22 @@ mochaSuiteFn('tracing/spanbatching with redis', function () {
 
   describe('enabled via env var', function () {
     const agentControls = globalAgent.instance;
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        REDIS_VERSION: 'v3',
-        INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
-        INSTANA_DEV_BATCH_THRESHOLD: 250, // make sure redis calls are batched even when stuff is slow
-        INSTANA_SPANBATCHING_ENABLED: 'true' // TODO remove this when switching to opt-in
-      }
-    }).registerTestHooks();
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          REDIS_VERSION: 'v3',
+          INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
+          INSTANA_DEV_BATCH_THRESHOLD: 250, // make sure redis calls are batched even when stuff is slow
+          INSTANA_SPANBATCHING_ENABLED: 'true' // TODO remove this when switching to opt-in
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
 
     runTests(controls, agentControls);
   });
@@ -43,30 +49,44 @@ mochaSuiteFn('tracing/spanbatching with redis', function () {
   describe('enabled via agent config', function () {
     const customAgentControls = new AgentStubControls();
     customAgentControls.registerTestHooks({ enableSpanBatching: true });
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      agentControls: customAgentControls,
-      env: {
-        REDIS_VERSION: 'v3',
-        INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
-        INSTANA_DEV_BATCH_THRESHOLD: 250 // make sure redis calls are batched even when stuff is slow
-      }
-    }).registerTestHooks();
+
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        agentControls: customAgentControls,
+        env: {
+          REDIS_VERSION: 'v3',
+          INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
+          INSTANA_DEV_BATCH_THRESHOLD: 250 // make sure redis calls are batched even when stuff is slow
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
 
     runTests(controls, customAgentControls);
   });
 
   describe('span batching is not enabled', function () {
     const agentControls = globalAgent.instance;
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        REDIS_VERSION: 'v3',
-        INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
-        INSTANA_DEV_BATCH_THRESHOLD: 250 // make sure redis calls are batched even when stuff is slow
-      }
-    }).registerTestHooks();
+
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          REDIS_VERSION: 'v3',
+          INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
+          INSTANA_DEV_BATCH_THRESHOLD: 250 // make sure redis calls are batched even when stuff is slow
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
 
     it('must not batch calls', () =>
       controls

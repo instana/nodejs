@@ -31,15 +31,19 @@ describe('tracing/redis', function () {
 
     mochaSuiteFn(`redis@${redisVersion}`, function () {
       globalAgent.setUpCleanUpHooks();
+      let controls;
 
-      const controls = new ProcessControls({
-        dirname: __dirname,
-        useGlobalAgent: true,
-        env: {
-          REDIS_VERSION: redisVersion
-        }
+      before(async () => {
+        controls = new ProcessControls({
+          dirname: __dirname,
+          useGlobalAgent: true,
+          env: {
+            REDIS_VERSION: redisVersion
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
-      ProcessControls.setUpHooks(controls);
 
       before(async () => {
         await controls.sendRequest({

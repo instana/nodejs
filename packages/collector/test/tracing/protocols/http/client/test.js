@@ -40,24 +40,29 @@ mochaSuiteFn('tracing/http client', function () {
 });
 
 function registerTests(useHttps) {
-  const serverControls = new ProcessControls({
-    appPath: path.join(__dirname, 'serverApp'),
-    useGlobalAgent: true,
-    env: {
-      USE_HTTPS: useHttps
-    }
-  });
+  let serverControls;
+  let clientControls;
 
-  const clientControls = new ProcessControls({
-    appPath: path.join(__dirname, 'clientApp'),
-    useGlobalAgent: true,
-    env: {
-      SERVER_PORT: serverControls.getPort(),
-      USE_HTTPS: useHttps
-    }
-  });
+  before(async () => {
+    serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'serverApp'),
+      useGlobalAgent: true,
+      env: {
+        USE_HTTPS: useHttps
+      }
+    });
+    clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'clientApp'),
+      useGlobalAgent: true,
+      env: {
+        SERVER_PORT: serverControls.getPort(),
+        USE_HTTPS: useHttps
+      }
+    });
 
-  ProcessControls.setUpHooks(serverControls, clientControls);
+    await serverControls.startAndWaitForAgentConnection();
+    await clientControls.startAndWaitForAgentConnection();
+  });
 
   // HTTP requests can be triggered via http.request(...) + request.end(...) or http.get(...).
   // Both http.request and http.get accept
@@ -485,24 +490,29 @@ function registerTests(useHttps) {
 function registerConnectionRefusalTest(useHttps) {
   // This needs to be in a suite of its own because the test terminates the server app.
   describe('connection refusal', function () {
-    const serverControls = new ProcessControls({
-      appPath: path.join(__dirname, 'serverApp'),
-      useGlobalAgent: true,
-      env: {
-        USE_HTTPS: useHttps
-      }
-    });
+    let serverControls;
+    let clientControls;
 
-    const clientControls = new ProcessControls({
-      appPath: path.join(__dirname, 'clientApp'),
-      useGlobalAgent: true,
-      env: {
-        SERVER_PORT: serverControls.getPort(),
-        USE_HTTPS: useHttps
-      }
-    });
+    before(async () => {
+      serverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'serverApp'),
+        useGlobalAgent: true,
+        env: {
+          USE_HTTPS: useHttps
+        }
+      });
+      clientControls = new ProcessControls({
+        appPath: path.join(__dirname, 'clientApp'),
+        useGlobalAgent: true,
+        env: {
+          SERVER_PORT: serverControls.getPort(),
+          USE_HTTPS: useHttps
+        }
+      });
 
-    ProcessControls.setUpHooks(serverControls, clientControls);
+      await serverControls.startAndWaitForAgentConnection();
+      await clientControls.startAndWaitForAgentConnection();
+    });
 
     it('must trace calls that fail due to connection refusal', () =>
       serverControls
@@ -530,20 +540,25 @@ function registerConnectionRefusalTest(useHttps) {
 }
 
 function registerSuperagentTest() {
-  const serverControls = new ProcessControls({
-    appPath: path.join(__dirname, 'serverApp'),
-    useGlobalAgent: true
-  });
+  let serverControls;
+  let clientControls;
 
-  const clientControls = new ProcessControls({
-    appPath: path.join(__dirname, 'superagentApp'),
-    useGlobalAgent: true,
-    env: {
-      SERVER_PORT: serverControls.getPort()
-    }
-  });
+  before(async () => {
+    serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'serverApp'),
+      useGlobalAgent: true
+    });
+    clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'superagentApp'),
+      useGlobalAgent: true,
+      env: {
+        SERVER_PORT: serverControls.getPort()
+      }
+    });
 
-  ProcessControls.setUpHooks(serverControls, clientControls);
+    await serverControls.startAndWaitForAgentConnection();
+    await clientControls.startAndWaitForAgentConnection();
+  });
 
   it('must trace superagent callbacks', () =>
     clientControls

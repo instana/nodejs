@@ -26,11 +26,16 @@ mochaSuiteFn('tracing/tracing metrics', function () {
   const agentControls = globalAgent.instance;
 
   describe('when tracing is enabled', function () {
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
     });
-    ProcessControls.setUpHooks(controls);
 
     it('must send internal tracing metrics to agent', async () => {
       const response = await controls.sendRequest({
@@ -72,14 +77,19 @@ mochaSuiteFn('tracing/tracing metrics', function () {
   });
 
   describe('when INSTANA_TRACER_METRICS_INTERVAL is configured explicitly', () => {
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        INSTANA_TRACER_METRICS_INTERVAL: 100
-      }
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          INSTANA_TRACER_METRICS_INTERVAL: 100
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
     });
-    ProcessControls.setUpHooks(controls);
 
     it('must send internal tracing metrics every 100 ms', async () => {
       const response = await controls.sendRequest({
@@ -103,12 +113,17 @@ mochaSuiteFn('tracing/tracing metrics', function () {
   });
 
   describe('when tracing is not enabled', () => {
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      tracingEnabled: false
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        tracingEnabled: false
+      });
+
+      await controls.startAndWaitForAgentConnection();
     });
-    ProcessControls.setUpHooks(controls);
 
     it('must not collect any tracing metrics', async () => {
       const response = await controls.sendRequest({
@@ -131,15 +146,22 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       // The trace endpoint will return an HTTP error code, triggering the removeSpansIfNecessary function.
       rejectTraces: true
     });
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      agentControls: customAgentControls,
-      tracingEnabled: true,
-      env: {
-        FORCE_TRANSMISSION_STARTING_AT: 500,
-        MAX_BUFFERED_SPANS: 1
-      }
-    }).registerTestHooks();
+
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        agentControls: customAgentControls,
+        tracingEnabled: true,
+        env: {
+          FORCE_TRANSMISSION_STARTING_AT: 500,
+          MAX_BUFFERED_SPANS: 1
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
 
     it('must reveal dropped spans', async () => {
       const response = await controls.sendRequest({
@@ -164,14 +186,21 @@ mochaSuiteFn('tracing/tracing metrics', function () {
     customeAgentControls.registerTestHooks({
       tracingMetrics: false
     });
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      agentControls: customeAgentControls,
-      tracingEnabled: true,
-      env: {
-        INSTANA_TRACER_METRICS_INTERVAL: 100
-      }
-    }).registerTestHooks();
+
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        agentControls: customeAgentControls,
+        tracingEnabled: true,
+        env: {
+          INSTANA_TRACER_METRICS_INTERVAL: 100
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
 
     it('must not call POST /tracermetrics multiple times', async () => {
       const response = await controls.sendRequest({

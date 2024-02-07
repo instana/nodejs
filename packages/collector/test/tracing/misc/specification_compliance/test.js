@@ -38,16 +38,20 @@ describe('spec compliance', function () {
     const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
     mochaSuiteFn(`compliance test suite (${http2 ? 'HTTP2' : 'HTTP1'})`, () => {
-      const downstreamTarget = new ProcessControls({
-        appPath: path.join(__dirname, 'downstreamTarget'),
-        useGlobalAgent: true,
-        http2,
-        env: {
-          USE_HTTP2: http2
-        }
+      let downstreamTarget;
+
+      before(async () => {
+        downstreamTarget = new ProcessControls({
+          appPath: path.join(__dirname, 'downstreamTarget'),
+          useGlobalAgent: true,
+          http2,
+          env: {
+            USE_HTTP2: http2
+          }
+        });
+
+        await downstreamTarget.startAndWaitForAgentConnection();
       });
-      before(() => downstreamTarget.start());
-      after(() => downstreamTarget.stop());
 
       [false, true].forEach(w3cTraceCorrelationDisabled => {
         registerSuite({ downstreamTarget, http2, w3cTraceCorrelationDisabled });
@@ -65,12 +69,16 @@ describe('spec compliance', function () {
   }
 
   mochaSuiteFnNativeFetch('compliance test suite (HTTP -> Native Fetch)', () => {
-    const downstreamTarget = new ProcessControls({
-      appPath: path.join(__dirname, 'downstreamTarget'),
-      useGlobalAgent: true
+    let downstreamTarget;
+
+    before(async () => {
+      downstreamTarget = new ProcessControls({
+        appPath: path.join(__dirname, 'downstreamTarget'),
+        useGlobalAgent: true
+      });
+
+      await downstreamTarget.startAndWaitForAgentConnection();
     });
-    before(() => downstreamTarget.start());
-    after(() => downstreamTarget.stop());
 
     [false, true].forEach(w3cTraceCorrelationDisabled => {
       registerSuite({ nativeFetch: true, w3cTraceCorrelationDisabled, downstreamTarget });
@@ -95,14 +103,18 @@ describe('spec compliance', function () {
         testCases = testCasesWithW3cTraceCorrelation;
       }
 
-      const app = new ProcessControls({
-        dirname: __dirname,
-        useGlobalAgent: true,
-        http2,
-        env
-      });
+      let app;
 
-      ProcessControls.setUpHooks(app);
+      before(async () => {
+        app = new ProcessControls({
+          dirname: __dirname,
+          useGlobalAgent: true,
+          http2,
+          env
+        });
+
+        await app.startAndWaitForAgentConnection();
+      });
 
       testCases.forEach(testDefinition => {
         const label = `${testDefinition.index}: ${testDefinition.Scenario} -> ${testDefinition['What to do?']}`;

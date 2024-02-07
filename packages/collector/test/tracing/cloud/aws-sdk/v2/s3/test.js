@@ -65,15 +65,19 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
   const agentControls = globalAgent.instance;
 
   describe('tracing enabled, no suppression', function () {
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        AWS_S3_BUCKET_NAME: bucketName
-      }
-    });
+    let appControls;
 
-    ProcessControls.setUpHooks(appControls);
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          AWS_S3_BUCKET_NAME: bucketName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     withErrorOptions.forEach(withError => {
       if (withError) {
@@ -130,16 +134,20 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
 
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {
-        AWS_S3_BUCKET_NAME: bucketName
-      }
-    });
+    let appControls;
 
-    ProcessControls.setUpHooks(appControls);
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {
+          AWS_S3_BUCKET_NAME: bucketName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     describe('attempt to get result', () => {
       // we don't want to create the bucket, cause it already exists, and also don't want to delete it
@@ -162,15 +170,19 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
   });
 
   describe('tracing enabled but suppressed', () => {
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        AWS_S3_BUCKET_NAME: bucketName
-      }
-    });
+    let appControls;
 
-    ProcessControls.setUpHooks(appControls);
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          AWS_S3_BUCKET_NAME: bucketName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     describe('attempt to get result', () => {
       // we don't want to create the bucket, cause it already exists, and also don't want to delete it

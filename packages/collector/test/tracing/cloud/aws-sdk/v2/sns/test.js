@@ -56,24 +56,29 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
   });
 
   describe('tracing enabled, no suppression', function () {
-    const senderControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        AWS_SNS_TOPIC_ARN: topicArn
-      }
-    });
+    let senderControls;
+    let receiverControls;
 
-    const receiverControls = new ProcessControls({
-      appPath: path.join(__dirname, '../sqs/receiveMessage'),
-      useGlobalAgent: true,
-      env: {
-        SQS_RECEIVE_METHOD: 'callback',
-        AWS_SQS_QUEUE_URL: sqsQueueUrl
-      }
-    });
+    before(async () => {
+      senderControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          AWS_SNS_TOPIC_ARN: topicArn
+        }
+      });
+      receiverControls = new ProcessControls({
+        appPath: path.join(__dirname, '../sqs/receiveMessage'),
+        useGlobalAgent: true,
+        env: {
+          SQS_RECEIVE_METHOD: 'callback',
+          AWS_SQS_QUEUE_URL: sqsQueueUrl
+        }
+      });
 
-    ProcessControls.setUpHooks(senderControls, receiverControls);
+      await senderControls.startAndWaitForAgentConnection();
+      await receiverControls.startAndWaitForAgentConnection();
+    });
 
     withErrorOptions.forEach(withError => {
       if (withError) {
@@ -173,16 +178,20 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
 
-    const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {
-        AWS_SNS_TOPIC_ARN: topicArn
-      }
-    });
+    let appControls;
 
-    ProcessControls.setUpHooks(appControls);
+    before(async () => {
+      appControls = new ProcessControls({
+        appPath: path.join(__dirname, 'app'),
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {
+          AWS_SNS_TOPIC_ARN: topicArn
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     describe('attempt to get result', () => {
       availableOperations.forEach(operation => {
@@ -204,15 +213,19 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
   });
 
   describe('tracing enabled but suppressed', () => {
-    const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      useGlobalAgent: true,
-      env: {
-        AWS_SNS_TOPIC_ARN: topicArn
-      }
-    });
+    let appControls;
 
-    ProcessControls.setUpHooks(appControls);
+    before(async () => {
+      appControls = new ProcessControls({
+        appPath: path.join(__dirname, 'app'),
+        useGlobalAgent: true,
+        env: {
+          AWS_SNS_TOPIC_ARN: topicArn
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
+    });
 
     describe('attempt to get result', () => {
       availableOperations.forEach(operation => {

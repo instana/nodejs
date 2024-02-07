@@ -48,16 +48,22 @@ function registerSuite(agentControls, driverMode, useExecute) {
     const env = {
       DRIVER_MODE: driverMode
     };
+
     if (useExecute) {
       env.USE_EXECUTE = 'true';
     }
 
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env
+      });
+
+      await controls.startAndWaitForAgentConnection();
     });
-    ProcessControls.setUpHooks(controls);
 
     test(controls, agentControls);
   });
@@ -69,14 +75,17 @@ function registerSuite(agentControls, driverMode, useExecute) {
     if (useExecute) {
       env.USE_EXECUTE = 'true';
     }
+    let controls;
 
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env
+      });
+
+      await controls.startAndWaitForAgentConnection();
     });
-
-    ProcessControls.setUpHooks(controls);
 
     it('should not trace', async function () {
       await controls.sendRequest({

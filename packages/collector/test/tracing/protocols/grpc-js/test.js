@@ -154,28 +154,32 @@ mochaSuiteFn('tracing/grpc-js', function () {
 
 function createProcesses(env = {}, opts = { isMali: false }) {
   let serverControls;
+  let clientControls;
 
-  if (!opts.isMali) {
-    serverControls = new ProcessControls({
-      appPath: path.join(__dirname, 'server'),
+  before(async () => {
+    if (!opts.isMali) {
+      serverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'server'),
+        useGlobalAgent: true,
+        env
+      });
+    } else {
+      serverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'maliServer'),
+        useGlobalAgent: true,
+        env
+      });
+    }
+    clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
       useGlobalAgent: true,
       env
     });
-  } else {
-    serverControls = new ProcessControls({
-      appPath: path.join(__dirname, 'maliServer'),
-      useGlobalAgent: true,
-      env
-    });
-  }
 
-  const clientControls = new ProcessControls({
-    appPath: path.join(__dirname, 'client'),
-    useGlobalAgent: true,
-    env
+    await serverControls.startAndWaitForAgentConnection();
+    await clientControls.startAndWaitForAgentConnection();
   });
 
-  ProcessControls.setUpHooks(serverControls, clientControls);
   return { serverControls, clientControls };
 }
 

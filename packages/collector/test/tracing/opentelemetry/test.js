@@ -43,12 +43,16 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
 
-      const controls = new ProcessControls({
-        appPath: path.join(__dirname, './restify-app'),
-        useGlobalAgent: true
-      });
+      let controls;
 
-      ProcessControls.setUpHooks(controls);
+      before(async () => {
+        controls = new ProcessControls({
+          appPath: path.join(__dirname, './restify-app'),
+          useGlobalAgent: true
+        });
+
+        await controls.startAndWaitForAgentConnection();
+      });
 
       it('should trace', () =>
         controls
@@ -165,15 +169,19 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
 
-      const controls = new ProcessControls({
-        appPath: path.join(__dirname, './restify-app'),
-        useGlobalAgent: true,
-        env: {
-          INSTANA_DISABLE_USE_OPENTELEMETRY: true
-        }
-      });
+      let controls;
 
-      ProcessControls.setUpHooks(controls);
+      before(async () => {
+        controls = new ProcessControls({
+          appPath: path.join(__dirname, './restify-app'),
+          useGlobalAgent: true,
+          env: {
+            INSTANA_DISABLE_USE_OPENTELEMETRY: true
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
+      });
 
       it('should trace instana spans only', () =>
         controls
@@ -212,12 +220,16 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
-    const controls = new ProcessControls({
-      appPath: path.join(__dirname, './fs-app'),
-      useGlobalAgent: true
-    });
+    let controls;
 
-    ProcessControls.setUpHooks(controls);
+    before(async () => {
+      controls = new ProcessControls({
+        appPath: path.join(__dirname, './fs-app'),
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
 
     it('should trace when there is no otel parent', () =>
       controls
@@ -314,22 +326,28 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     const agentControls = globalAgent.instance;
     const socketIOServerPort = portfinder();
 
-    const server = new ProcessControls({
-      appPath: path.join(__dirname, './socketio-server'),
-      useGlobalAgent: true,
-      env: {
-        SOCKETIOSERVER_PORT: socketIOServerPort
-      }
-    });
-    const client = new ProcessControls({
-      appPath: path.join(__dirname, './socketio-client'),
-      useGlobalAgent: true,
-      env: {
-        SOCKETIOSERVER_PORT: socketIOServerPort
-      }
-    });
+    let server;
+    let client;
 
-    ProcessControls.setUpHooks(server, client);
+    before(async () => {
+      server = new ProcessControls({
+        appPath: path.join(__dirname, './socketio-server'),
+        useGlobalAgent: true,
+        env: {
+          SOCKETIOSERVER_PORT: socketIOServerPort
+        }
+      });
+      client = new ProcessControls({
+        appPath: path.join(__dirname, './socketio-client'),
+        useGlobalAgent: true,
+        env: {
+          SOCKETIOSERVER_PORT: socketIOServerPort
+        }
+      });
+
+      await server.startAndWaitForAgentConnection();
+      await client.startAndWaitForAgentConnection();
+    });
 
     it('should trace', () =>
       server

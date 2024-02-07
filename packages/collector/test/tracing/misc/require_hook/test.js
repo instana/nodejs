@@ -21,11 +21,16 @@ mochaSuiteFn('tracing/requireHook', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(controls);
 
   describe('stealthy require', () => {
     it('must not apply caching when not necessary / or when something is fishy', () =>

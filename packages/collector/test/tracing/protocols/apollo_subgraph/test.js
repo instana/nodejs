@@ -51,60 +51,54 @@ function testQuery(allControls, testConfig) {
 }
 
 function startAllProcesses() {
-  const accountServiceControls = new ProcessControls({
-    appPath: path.join(__dirname, 'services', 'accounts'),
-    useGlobalAgent: true
-  });
-  const inventoryServiceControls = new ProcessControls({
-    appPath: path.join(__dirname, 'services', 'inventory'),
-    useGlobalAgent: true
-  });
-  const productsServiceControls = new ProcessControls({
-    appPath: path.join(__dirname, 'services', 'products'),
-    useGlobalAgent: true
-  });
-  const reviewsServiceControls = new ProcessControls({
-    appPath: path.join(__dirname, 'services', 'reviews'),
-    useGlobalAgent: true
-  });
-
-  const gatewayControls = new ProcessControls({
-    appPath: path.join(__dirname, 'gateway'),
-    useGlobalAgent: true,
-    env: {
-      SERVICE_PORT_ACCOUNTS: accountServiceControls.getPort(),
-      SERVICE_PORT_INVENTORY: inventoryServiceControls.getPort(),
-      SERVICE_PORT_PRODUCTS: productsServiceControls.getPort(),
-      SERVICE_PORT_REVIEWS: reviewsServiceControls.getPort()
-    }
-  });
-
-  const clientControls = new ProcessControls({
-    appPath: path.join(__dirname, 'client'),
-    useGlobalAgent: true,
-    env: {
-      SERVER_PORT: gatewayControls.getPort()
-    }
-  });
-
-  // Not using ProcessControls.setUpHooks(...) here because it starts all processes simultaneously, but for Apollo
-  // Subgraph it is necessary to start the processes sequentially and in order.
+  let accountServiceControls;
+  let inventoryServiceControls;
+  let productsServiceControls;
+  let reviewsServiceControls;
+  let gatewayControls;
+  let clientControls;
 
   before(async () => {
+    accountServiceControls = new ProcessControls({
+      appPath: path.join(__dirname, 'services', 'accounts'),
+      useGlobalAgent: true
+    });
+    inventoryServiceControls = new ProcessControls({
+      appPath: path.join(__dirname, 'services', 'inventory'),
+      useGlobalAgent: true
+    });
+    productsServiceControls = new ProcessControls({
+      appPath: path.join(__dirname, 'services', 'products'),
+      useGlobalAgent: true
+    });
+    reviewsServiceControls = new ProcessControls({
+      appPath: path.join(__dirname, 'services', 'reviews'),
+      useGlobalAgent: true
+    });
+    gatewayControls = new ProcessControls({
+      appPath: path.join(__dirname, 'gateway'),
+      useGlobalAgent: true,
+      env: {
+        SERVICE_PORT_ACCOUNTS: accountServiceControls.getPort(),
+        SERVICE_PORT_INVENTORY: inventoryServiceControls.getPort(),
+        SERVICE_PORT_PRODUCTS: productsServiceControls.getPort(),
+        SERVICE_PORT_REVIEWS: reviewsServiceControls.getPort()
+      }
+    });
+    clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      useGlobalAgent: true,
+      env: {
+        SERVER_PORT: gatewayControls.getPort()
+      }
+    });
+
     await accountServiceControls.startAndWaitForAgentConnection();
     await inventoryServiceControls.startAndWaitForAgentConnection();
     await productsServiceControls.startAndWaitForAgentConnection();
     await reviewsServiceControls.startAndWaitForAgentConnection();
     await gatewayControls.startAndWaitForAgentConnection();
     await clientControls.startAndWaitForAgentConnection();
-  });
-  after(async () => {
-    await accountServiceControls.stop();
-    await inventoryServiceControls.stop();
-    await productsServiceControls.stop();
-    await reviewsServiceControls.stop();
-    await gatewayControls.stop();
-    await clientControls.stop();
   });
 
   return {

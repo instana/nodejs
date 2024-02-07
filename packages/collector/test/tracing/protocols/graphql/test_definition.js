@@ -76,25 +76,31 @@ function start(graphqlVersion) {
     });
 
     describe('disabled', () => {
-      const serverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'rawGraphQLServer'),
-        useGlobalAgent: true,
-        tracingEnabled: false,
-        env: {
-          GRAPHQL_VERSION: graphqlVersion
-        }
-      });
-      const clientControls = new ProcessControls({
-        appPath: path.join(__dirname, 'client'),
-        useGlobalAgent: true,
-        tracingEnabled: false,
-        env: {
-          SERVER_PORT: serverControls.getPort(),
-          GRAPHQL_VERSION: graphqlVersion
-        }
-      });
+      let serverControls;
+      let clientControls;
 
-      ProcessControls.setUpHooks(serverControls, clientControls);
+      before(async () => {
+        serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'rawGraphQLServer'),
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            GRAPHQL_VERSION: graphqlVersion
+          }
+        });
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'client'),
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            SERVER_PORT: serverControls.getPort(),
+            GRAPHQL_VERSION: graphqlVersion
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
 
       it('should not trace when disabled', () =>
         clientControls
@@ -114,24 +120,30 @@ function start(graphqlVersion) {
     });
 
     describe('individually disabled', () => {
-      const serverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'rawGraphQLServer'),
-        useGlobalAgent: true,
-        env: {
-          INSTANA_DISABLED_TRACERS: 'graphQL',
-          GRAPHQL_VERSION: graphqlVersion
-        }
-      });
-      const clientControls = new ProcessControls({
-        appPath: path.join(__dirname, 'client'),
-        useGlobalAgent: true,
-        env: {
-          SERVER_PORT: serverControls.getPort(),
-          GRAPHQL_VERSION: graphqlVersion
-        }
-      });
+      let serverControls;
+      let clientControls;
 
-      ProcessControls.setUpHooks(serverControls, clientControls);
+      before(async () => {
+        serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'rawGraphQLServer'),
+          useGlobalAgent: true,
+          env: {
+            INSTANA_DISABLED_TRACERS: 'graphQL',
+            GRAPHQL_VERSION: graphqlVersion
+          }
+        });
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'client'),
+          useGlobalAgent: true,
+          env: {
+            SERVER_PORT: serverControls.getPort(),
+            GRAPHQL_VERSION: graphqlVersion
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
 
       it('should not trace graphql when that tracer is disabled individually but still trace all other calls', () =>
         clientControls
@@ -283,57 +295,69 @@ function registerSubscriptionOperationNotTracedSuite(serverControls, clientContr
 }
 
 function createProcesses(apollo, version) {
-  const serverControls = new ProcessControls({
-    appPath: path.join(__dirname, apollo ? 'apolloServer' : 'rawGraphQLServer'),
-    useGlobalAgent: true,
-    env: {
-      GRAPHQL_VERSION: version
-    }
-  });
+  let serverControls;
+  let clientControls;
 
-  const clientControls = new ProcessControls({
-    appPath: path.join(__dirname, 'client'),
-    useGlobalAgent: true,
-    env: {
-      SERVER_PORT: serverControls.getPort(),
-      GRAPHQL_VERSION: version
-    }
-  });
+  before(async () => {
+    serverControls = new ProcessControls({
+      appPath: path.join(__dirname, apollo ? 'apolloServer' : 'rawGraphQLServer'),
+      useGlobalAgent: true,
+      env: {
+        GRAPHQL_VERSION: version
+      }
+    });
+    clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      useGlobalAgent: true,
+      env: {
+        SERVER_PORT: serverControls.getPort(),
+        GRAPHQL_VERSION: version
+      }
+    });
 
-  ProcessControls.setUpHooks(serverControls, clientControls);
+    await serverControls.startAndWaitForAgentConnection();
+    await clientControls.startAndWaitForAgentConnection();
+  });
 
   return { serverControls, clientControls };
 }
 
 function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia, version) {
   describe(`subscriptions (via: ${triggerUpdateVia})`, function () {
-    const serverControls = new ProcessControls({
-      appPath: path.join(__dirname, 'apolloServer'),
-      useGlobalAgent: true,
-      env: {
-        GRAPHQL_VERSION: version
-      }
-    });
-    // client 1
-    const clientControls1 = new ProcessControls({
-      appPath: path.join(__dirname, 'client'),
-      useGlobalAgent: true,
-      env: {
-        SERVER_PORT: serverControls.getPort(),
-        GRAPHQL_VERSION: version
-      }
-    });
-    // client 2
-    const clientControls2 = new ProcessControls({
-      appPath: path.join(__dirname, 'client'),
-      useGlobalAgent: true,
-      env: {
-        SERVER_PORT: serverControls.getPort(),
-        GRAPHQL_VERSION: version
-      }
-    });
+    let serverControls;
+    let clientControls1;
+    let clientControls2;
 
-    ProcessControls.setUpHooks(serverControls, clientControls1, clientControls2);
+    before(async () => {
+      serverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'apolloServer'),
+        useGlobalAgent: true,
+        env: {
+          GRAPHQL_VERSION: version
+        }
+      });
+      clientControls1 = new ProcessControls({
+        appPath: path.join(__dirname, 'client'),
+        useGlobalAgent: true,
+        env: {
+          SERVER_PORT: serverControls.getPort(),
+          GRAPHQL_VERSION: version
+        }
+      });
+
+      clientControls2 = new ProcessControls({
+        appPath: path.join(__dirname, 'client'),
+        useGlobalAgent: true,
+        env: {
+          SERVER_PORT: serverControls.getPort(),
+          GRAPHQL_VERSION: version
+        }
+      });
+
+      await serverControls.startAndWaitForAgentConnection();
+      await clientControls1.startAndWaitForAgentConnection();
+      await clientControls2.startAndWaitForAgentConnection();
+    });
 
     it(`must trace updates for subscriptions (via: ${triggerUpdateVia})`, () =>
       testUpdatesInSubscriptionsAreTraced(clientControls1, clientControls2));
@@ -383,23 +407,29 @@ function registerSubscriptionUpdatesCorrectParentSpanSuite(triggerUpdateVia, ver
   // (which represent the subscription update calls from the GraphQL server to the subscribed clients) are
   // attached to the first HTTP entry span, instead of the entry spans that actually triggered them.
   describe.skip('correct parent span for subscription updates', function () {
-    const serverControls = new ProcessControls({
-      appPath: path.join(__dirname, 'apolloServer'),
-      useGlobalAgent: true,
-      env: {
-        GRAPHQL_VERSION: version
-      }
-    });
-    const clientControls = new ProcessControls({
-      appPath: path.join(__dirname, 'client'),
-      useGlobalAgent: true,
-      env: {
-        SERVER_PORT: serverControls.getPort(),
-        GRAPHQL_VERSION: version
-      }
-    });
+    let serverControls;
+    let clientControls;
 
-    ProcessControls.setUpHooks(serverControls, clientControls);
+    before(async () => {
+      serverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'apolloServer'),
+        useGlobalAgent: true,
+        env: {
+          GRAPHQL_VERSION: version
+        }
+      });
+      clientControls = new ProcessControls({
+        appPath: path.join(__dirname, 'client'),
+        useGlobalAgent: true,
+        env: {
+          SERVER_PORT: serverControls.getPort(),
+          GRAPHQL_VERSION: version
+        }
+      });
+
+      await serverControls.startAndWaitForAgentConnection();
+      await clientControls.startAndWaitForAgentConnection();
+    });
 
     it(`must not confuse parent context for parallel request (via: ${triggerUpdateVia})`, () =>
       testParallelRequests(clientControls));

@@ -39,17 +39,21 @@ mochaSuiteFn('[ESM] tracing/sdk/multiple_installations', function () {
   const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
 
-  const controls = new ProcessControls({
-    useGlobalAgent: true,
-    cwd: path.join(__dirname, 'src'),
-    appPath: path.join(__dirname, 'src', 'app.mjs'),
-    env: {
-      NODE_OPTIONS: '--experimental-loader ./load-instana.mjs',
-      INSTANA_COLLECTOR_PATH: pathToSeparateInstanaCollector
-    }
-  });
+  let controls;
 
-  ProcessControls.setUpHooks(controls);
+  before(async () => {
+    controls = new ProcessControls({
+      useGlobalAgent: true,
+      cwd: path.join(__dirname, 'src'),
+      appPath: path.join(__dirname, 'src', 'app.mjs'),
+      env: {
+        NODE_OPTIONS: '--experimental-loader ./load-instana.mjs',
+        INSTANA_COLLECTOR_PATH: pathToSeparateInstanaCollector
+      }
+    });
+
+    await controls.startAndWaitForAgentConnection();
+  });
 
   it('should trace http & sdk spans', async () => {
     await controls.sendRequest({ method: 'GET', path: '/trace' });

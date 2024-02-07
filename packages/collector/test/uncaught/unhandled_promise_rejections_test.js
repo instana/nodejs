@@ -23,14 +23,20 @@ mochaSuiteFn('unhandled promise rejections', function () {
 
   agentControls.registerTestHooks();
 
-  const serverControls = new ProcessControls({
-    appPath: path.join(__dirname, 'apps', 'server'),
-    dontKillInAfterHook: false,
-    agentControls,
-    env: {
-      ENABLE_REPORT_UNHANDLED_REJECTIONS: true
-    }
-  }).registerTestHooks();
+  let serverControls;
+
+  before(async () => {
+    serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'apps', 'server'),
+      dontKillInAfterHook: false,
+      agentControls,
+      env: {
+        ENABLE_REPORT_UNHANDLED_REJECTIONS: true
+      }
+    });
+
+    await serverControls.startAndWaitForAgentConnection();
+  });
 
   it('must not interfere with tracing', () =>
     serverControls

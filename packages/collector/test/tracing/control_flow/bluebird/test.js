@@ -21,12 +21,16 @@ mochaSuiteFn('tracing/bluebird', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
+  let bluebirdControls;
 
-  const bluebirdControls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+  before(async () => {
+    bluebirdControls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true
+    });
+
+    await bluebirdControls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(bluebirdControls);
 
   check('/delayed');
   check('/combined');

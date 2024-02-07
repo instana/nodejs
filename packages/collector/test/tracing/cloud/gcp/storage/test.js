@@ -68,13 +68,16 @@ if (
 
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
+    let controls;
 
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
     });
-
-    ProcessControls.setUpHooks(controls);
 
     /**
      * auto-retry 3 times, because we run a lot into rate limiting errors

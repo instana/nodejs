@@ -28,7 +28,7 @@ function isPortTakenSync(port) {
   server.close();
 
   const startTime = Date.now();
-  const timeout = 500;
+  const timeout = 250;
 
   while (Date.now() - startTime < timeout) {
     if (isTaken) {
@@ -101,7 +101,7 @@ module.exports = function findPort() {
     }
 
     // eslint-disable-next-line no-console
-    console.log('Using port', port);
+    // console.log('Using port', port);
 
     ports[port] = port;
   } catch (e) {

@@ -34,25 +34,35 @@ mochaSuiteFn('tracing/kafkajs', function () {
   const agentControls = globalAgent.instance;
 
   describe('tracing enabled ', function () {
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      useGlobalAgent: true
+    let consumerControls;
+
+    before(async () => {
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        useGlobalAgent: true
+      });
+
+      await consumerControls.startAndWaitForAgentConnection();
     });
-    ProcessControls.setUpHooks(consumerControls);
 
     const nextUseEachBatch = getCircularList([false, true]);
     const nextError = getCircularList([false, 'consumer']);
 
     ['binary', 'string', 'both'].forEach(headerFormat => {
       describe(`header format: ${headerFormat}`, function () {
-        const producerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'producer'),
-          useGlobalAgent: true,
-          env: {
-            INSTANA_KAFKA_HEADER_FORMAT: headerFormat
-          }
+        let producerControls;
+
+        before(async () => {
+          producerControls = new ProcessControls({
+            appPath: path.join(__dirname, 'producer'),
+            useGlobalAgent: true,
+            env: {
+              INSTANA_KAFKA_HEADER_FORMAT: headerFormat
+            }
+          });
+
+          await producerControls.startAndWaitForAgentConnection();
         });
-        ProcessControls.setUpHooks(producerControls);
 
         beforeEach(() => resetMessages(consumerControls));
         afterEach(() => resetMessages(consumerControls));
@@ -134,14 +144,20 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
   describe('with error in producer ', function () {
     const headerFormat = 'string';
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
-      env: {
-        INSTANA_KAFKA_HEADER_FORMAT: headerFormat
-      }
+
+    let producerControls;
+
+    before(async () => {
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_KAFKA_HEADER_FORMAT: headerFormat
+        }
+      });
+
+      await producerControls.startAndWaitForAgentConnection();
     });
-    ProcessControls.setUpHooks(producerControls);
 
     [false, true].forEach(useSendBatch => registerProducerErrorTestSuite.bind(this)({ headerFormat, useSendBatch }));
 
@@ -182,20 +198,25 @@ mochaSuiteFn('tracing/kafkajs', function () {
   });
 
   describe('tracing enabled, but trace correlation disabled', function () {
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      useGlobalAgent: true
-    });
-    ProcessControls.setUpHooks(consumerControls);
+    let consumerControls;
+    let producerControls;
 
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
-      env: {
-        INSTANA_KAFKA_TRACE_CORRELATION: 'false'
-      }
+    before(async () => {
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        useGlobalAgent: true
+      });
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_KAFKA_TRACE_CORRELATION: 'false'
+        }
+      });
+
+      await consumerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection();
     });
-    ProcessControls.setUpHooks(producerControls);
 
     beforeEach(() => resetMessages(consumerControls));
     afterEach(() => resetMessages(consumerControls));
@@ -262,17 +283,27 @@ mochaSuiteFn('tracing/kafkajs', function () {
   describe('header format from agent config', function () {
     const headerFormat = 'string';
     const customAgentControls = new AgentStubControls();
+
     customAgentControls.registerTestHooks({
       kafkaConfig: { headerFormat }
     });
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      agentControls: customAgentControls
-    }).registerTestHooks();
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      agentControls: customAgentControls
-    }).registerTestHooks();
+
+    let consumerControls;
+    let producerControls;
+
+    before(async () => {
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        agentControls: customAgentControls
+      });
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        agentControls: customAgentControls
+      });
+
+      await consumerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection();
+    });
 
     it(
       `must trace sending and receiving and keep trace continuity (header format ${headerFormat} ` +
@@ -301,15 +332,22 @@ mochaSuiteFn('tracing/kafkajs', function () {
       kafkaConfig: { traceCorrelation: false }
     });
 
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      agentControls: customAgentControls
-    }).registerTestHooks();
+    let consumerControls;
+    let producerControls;
 
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      agentControls: customAgentControls
-    }).registerTestHooks();
+    before(async () => {
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        agentControls: customAgentControls
+      });
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        agentControls: customAgentControls
+      });
+
+      await consumerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection();
+    });
 
     const headerFormat = 'correlation-disabled';
     it(
@@ -334,17 +372,24 @@ mochaSuiteFn('tracing/kafkajs', function () {
   });
 
   describe('tracing disabled', () => {
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
-      tracingEnabled: false
+    let consumerControls;
+    let producerControls;
+
+    before(async () => {
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        useGlobalAgent: true,
+        tracingEnabled: false
+      });
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        useGlobalAgent: true,
+        tracingEnabled: false
+      });
+
+      await consumerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection();
     });
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      useGlobalAgent: true,
-      tracingEnabled: false
-    });
-    ProcessControls.setUpHooks(producerControls, consumerControls);
 
     beforeEach(() => resetMessages(consumerControls));
     afterEach(() => resetMessages(consumerControls));
@@ -378,20 +423,25 @@ mochaSuiteFn('tracing/kafkajs', function () {
   describe('must cope with non-standard length trace and span IDs', () => {
     // regression test for https://github.com/instana/nodejs/issues/833
 
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      useGlobalAgent: true
-    });
+    let consumerControls;
+    let producerControls;
 
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
-      env: {
-        INSTANA_KAFKA_HEADER_FORMAT: 'both'
-      }
-    });
+    before(async () => {
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        useGlobalAgent: true
+      });
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_KAFKA_HEADER_FORMAT: 'both'
+        }
+      });
 
-    ProcessControls.setUpHooks(consumerControls, producerControls);
+      await consumerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection();
+    });
 
     beforeEach(() => resetMessages(consumerControls));
     afterEach(() => resetMessages(consumerControls));

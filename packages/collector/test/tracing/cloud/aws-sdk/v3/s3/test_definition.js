@@ -64,16 +64,20 @@ function start(version) {
     const agentControls = globalAgent.instance;
 
     describe('tracing enabled, no suppression', function () {
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
-        useGlobalAgent: true,
-        env: {
-          AWS_S3_BUCKET_NAME: bucketName,
-          AWS_SDK_CLIENT_S3_REQUIRE: version
-        }
-      });
+      let appControls;
 
-      ProcessControls.setUpHooks(appControls);
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, 'app'),
+          useGlobalAgent: true,
+          env: {
+            AWS_S3_BUCKET_NAME: bucketName,
+            AWS_SDK_CLIENT_S3_REQUIRE: version
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
+      });
 
       withErrorOptions.forEach(withError => {
         if (withError) {
@@ -175,18 +179,21 @@ function start(version) {
 
     describe('tracing disabled', () => {
       this.timeout(config.getTestTimeout() * 2);
+      let appControls;
 
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
-        useGlobalAgent: true,
-        tracingEnabled: false,
-        env: {
-          AWS_S3_BUCKET_NAME: bucketName,
-          AWS_SDK_CLIENT_S3_REQUIRE: version
-        }
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, 'app'),
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            AWS_S3_BUCKET_NAME: bucketName,
+            AWS_SDK_CLIENT_S3_REQUIRE: version
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
       });
-
-      ProcessControls.setUpHooks(appControls);
 
       describe('attempt to get result', () => {
         // we don't want to create the bucket, cause it already exists, and also don't want to delete it
@@ -209,16 +216,20 @@ function start(version) {
     });
 
     describe('tracing enabled but suppressed', () => {
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
-        useGlobalAgent: true,
-        env: {
-          AWS_S3_BUCKET_NAME: bucketName,
-          AWS_SDK_CLIENT_S3_REQUIRE: version
-        }
-      });
+      let appControls;
 
-      ProcessControls.setUpHooks(appControls);
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, 'app'),
+          useGlobalAgent: true,
+          env: {
+            AWS_S3_BUCKET_NAME: bucketName,
+            AWS_SDK_CLIENT_S3_REQUIRE: version
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
+      });
 
       describe('attempt to get result', () => {
         // we don't want to create the bucket, cause it already exists, and also don't want to delete it

@@ -63,17 +63,20 @@ function start(version, requestMethod, reducedTestSuite = false) {
 
     describe('tracing enabled, no suppression', function () {
       const tableName = createTableName();
+      let appControls;
 
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, './app'),
-        useGlobalAgent: true,
-        env: {
-          AWS_DYNAMODB_TABLE_NAME: tableName,
-          AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version
-        }
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, './app'),
+          useGlobalAgent: true,
+          env: {
+            AWS_DYNAMODB_TABLE_NAME: tableName,
+            AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
       });
-
-      ProcessControls.setUpHooks(appControls);
 
       after(() => cleanup(tableName));
 
@@ -105,18 +108,21 @@ function start(version, requestMethod, reducedTestSuite = false) {
 
     describe('with @aws-sdk/lib-dynamodb', function () {
       const tableName = createTableName();
+      let appControls;
 
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, './app'),
-        useGlobalAgent: true,
-        env: {
-          AWS_DYNAMODB_TABLE_NAME: tableName,
-          AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version,
-          USE_LIB_DYNAMODB: true
-        }
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, './app'),
+          useGlobalAgent: true,
+          env: {
+            AWS_DYNAMODB_TABLE_NAME: tableName,
+            AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version,
+            USE_LIB_DYNAMODB: true
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
       });
-
-      ProcessControls.setUpHooks(appControls);
 
       after(() => cleanup(tableName));
 
@@ -134,17 +140,20 @@ function start(version, requestMethod, reducedTestSuite = false) {
 
     describe('should handle errors', function () {
       const tableName = createTableName();
+      let appControls;
 
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, './app'),
-        useGlobalAgent: true,
-        env: {
-          AWS_DYNAMODB_TABLE_NAME: tableName,
-          AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version
-        }
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, './app'),
+          useGlobalAgent: true,
+          env: {
+            AWS_DYNAMODB_TABLE_NAME: tableName,
+            AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
       });
-
-      ProcessControls.setUpHooks(appControls);
 
       after(() => cleanup(tableName));
 
@@ -161,20 +170,22 @@ function start(version, requestMethod, reducedTestSuite = false) {
 
     describe('tracing disabled', () => {
       this.timeout(config.getTestTimeout() * 2);
-
       const tableName = createTableName();
+      let appControls;
 
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, './app'),
-        useGlobalAgent: true,
-        tracingEnabled: false,
-        env: {
-          AWS_DYNAMODB_TABLE_NAME: tableName,
-          AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version
-        }
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, './app'),
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            AWS_DYNAMODB_TABLE_NAME: tableName,
+            AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
       });
-
-      ProcessControls.setUpHooks(appControls);
 
       after(() => cleanup(tableName));
 
@@ -218,17 +229,20 @@ function start(version, requestMethod, reducedTestSuite = false) {
 
     describe('tracing enabled but suppressed', () => {
       const tableName = createTableName();
+      let appControls;
 
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, './app'),
-        useGlobalAgent: true,
-        env: {
-          AWS_DYNAMODB_TABLE_NAME: tableName,
-          AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version
-        }
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, './app'),
+          useGlobalAgent: true,
+          env: {
+            AWS_DYNAMODB_TABLE_NAME: tableName,
+            AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
       });
-
-      ProcessControls.setUpHooks(appControls);
 
       after(() => cleanup(tableName));
 

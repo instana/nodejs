@@ -21,12 +21,16 @@ mochaSuiteFn('tracing/native-promise', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
+  let promiseControls;
 
-  const promiseControls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+  before(async () => {
+    promiseControls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true
+    });
+
+    await promiseControls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(promiseControls);
 
   check('/delayed');
   check('/combined');

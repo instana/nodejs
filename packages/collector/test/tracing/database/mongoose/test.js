@@ -41,15 +41,19 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        MONGOOSE_VERSION: version
-      }
-    });
+    let controls;
 
-    ProcessControls.setUpHooks(controls);
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          MONGOOSE_VERSION: version
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
 
     it('must trace create calls', () =>
       controls

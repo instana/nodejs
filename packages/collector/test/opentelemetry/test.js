@@ -89,18 +89,19 @@ mochaSuiteFn('Opentelemetry usage', function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
-    const controls = new ProcessControls({
-      useGlobalAgent: true,
-      appPath: path.join(__dirname, 'app'),
-      env: {
-        INSTANA_LOAD_FIRST: false,
-        SPAN_RECEIVER_PORT: randomPort
-      }
-    });
+    let controls;
 
-    ProcessControls.setUpHooks(controls);
+    before(async () => {
+      controls = new ProcessControls({
+        useGlobalAgent: true,
+        appPath: path.join(__dirname, 'app'),
+        env: {
+          INSTANA_LOAD_FIRST: false,
+          SPAN_RECEIVER_PORT: randomPort
+        }
+      });
 
-    before(() => {
+      await controls.startAndWaitForAgentConnection();
       otelSpans = [];
     });
 

@@ -29,12 +29,16 @@ mochaSuiteFn('tracing/ioredis', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
+  let controls;
 
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(controls);
 
   it('must trace set/get calls', () =>
     controls

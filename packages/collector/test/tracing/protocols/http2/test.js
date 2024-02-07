@@ -30,23 +30,27 @@ mochaSuiteFn('tracing/http2', function () {
     secretsList: ['remove']
   });
 
-  const serverControls = new ProcessControls({
-    appPath: path.join(__dirname, 'server'),
-    http2: true,
-    agentControls
-  });
+  let serverControls;
+  let clientControls;
 
-  const clientControls = new ProcessControls({
-    appPath: path.join(__dirname, 'client'),
-    http2: true,
-    agentControls,
-    forcePortSearching: true,
-    env: {
-      SERVER_PORT: serverControls.getPort()
-    }
+  before(async () => {
+    serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'server'),
+      http2: true,
+      agentControls
+    });
+    serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      http2: true,
+      agentControls,
+      forcePortSearching: true,
+      env: {
+        SERVER_PORT: serverControls.getPort()
+      }
+    });
+    await serverControls.startAndWaitForAgentConnection();
+    await clientControls.startAndWaitForAgentConnection();
   });
-
-  ProcessControls.setUpHooks(serverControls, clientControls);
 
   [false, true].forEach(withQuery => {
     it(`must trace http2 GET with${withQuery ? '' : 'out'} query`, () =>

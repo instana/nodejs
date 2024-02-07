@@ -37,12 +37,16 @@ mochaSuiteFn('tracing/sdk', function () {
   });
 
   describe('when tracing is enabled', () => {
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true
-    });
+    let controls;
 
-    ProcessControls.setUpHooks(controls);
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
 
     ['callback', 'promise', 'async'].forEach(function (apiType) {
       registerSuite.bind(this)(apiType);
@@ -478,13 +482,17 @@ mochaSuiteFn('tracing/sdk', function () {
   });
 
   describe('when tracing is not enabled', () => {
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      tracingEnabled: false,
-      useGlobalAgent: true
-    });
+    let controls;
 
-    ProcessControls.setUpHooks(controls);
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        tracingEnabled: false,
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
 
     ['callback', 'promise', 'async'].forEach(function (apiType) {
       registerSuite.bind(this)(apiType);

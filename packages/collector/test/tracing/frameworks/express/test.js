@@ -23,11 +23,16 @@ mochaSuiteFn('tracing/express', function () {
   const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
 
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(controls);
 
   describe('express.js path templates', () => {
     check('/blub', '/blub', true);
