@@ -27,7 +27,7 @@ const sendSpans = async () => {
   });
 };
 
-describe.only('[UNIT] backend connector', () => {
+describe('[UNIT] backend connector', () => {
   describe('Lambda Heartbeat', function () {
     this.timeout(config.getTestTimeout());
 
