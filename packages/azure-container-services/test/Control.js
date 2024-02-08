@@ -110,6 +110,10 @@ class Control extends AbstractServerlessControl {
     opts.json = true;
     return request(opts);
   }
+
+  getPort() {
+    return this.port;
+  }
 }
 
 module.exports = Control;
