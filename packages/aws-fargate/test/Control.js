@@ -118,10 +118,7 @@ Control.prototype.hasMonitoredProcessTerminated = function hasMonitoredProcessTe
 };
 
 Control.prototype.killMonitoredProcess = function killMonitoredProcess() {
-  if (!this.hasMonitoredProcessTerminated()) {
-    return this.killChildProcess(this.fargateContainerApp);
-  }
-  return Promise.resolve();
+  return this.killChildProcess(this.fargateContainerApp);
 };
 
 Control.prototype.sendRequest = function (opts) {

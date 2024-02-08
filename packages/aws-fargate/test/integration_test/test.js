@@ -392,7 +392,7 @@ describe('AWS fargate integration test', function () {
 
     let control;
 
-    before(async () => {
+    beforeEach(async () => {
       control = new Control({
         env,
         platformVersion: '1.3.0',
@@ -404,7 +404,7 @@ describe('AWS fargate integration test', function () {
       await control.start();
     });
 
-    after(async () => {
+    afterEach(async () => {
       await control.stop();
     });
 
@@ -565,6 +565,7 @@ describe('AWS fargate integration test', function () {
 
   function verify(control, response, expectMetricsAndSpans) {
     expect(response.message).to.equal('Hello Fargate!');
+
     if (expectMetricsAndSpans) {
       return retry(async () => {
         const allEntities = await getAndVerifySnapshotDataAndMetrics(control);
@@ -585,6 +586,7 @@ describe('AWS fargate integration test', function () {
   function verifySnapshotDataAndMetrics([allEntities, allSnapshotUpdates]) {
     expect(allEntities).to.be.an('array');
     const expectedNumberOfPlugins = 7;
+
     if (allEntities.length < expectedNumberOfPlugins) {
       fail(
         // eslint-disable-next-line prefer-template
@@ -598,8 +600,8 @@ describe('AWS fargate integration test', function () {
           )
       );
     }
-    expect(allEntities).to.have.lengthOf.at.least(expectedNumberOfPlugins);
 
+    expect(allEntities).to.have.lengthOf.at.least(expectedNumberOfPlugins);
     verifyEcsTask(allEntities);
     verifyInstrumentedEcsContainer(allEntities);
     verifyInstrumentedDockerPayload(allEntities);
@@ -617,6 +619,7 @@ describe('AWS fargate integration test', function () {
     const ecsTaskPayload = allEntities.find(
       pluginPayload => pluginPayload.name === 'com.instana.plugin.aws.ecs.task' && pluginPayload.entityId === taskArn
     );
+
     expect(ecsTaskPayload).to.exist;
     const ecsTaskData = ecsTaskPayload.data;
     expect(ecsTaskData).to.exist;

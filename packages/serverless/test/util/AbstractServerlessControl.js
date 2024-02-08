@@ -99,7 +99,12 @@ AbstractServerlessControl.prototype.start = async function () {
 };
 
 AbstractServerlessControl.prototype.stop = async function () {
-  await this.kill();
+  try {
+    await this.kill();
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.log('[AbstractServerlessControl] error', err);
+  }
 };
 
 AbstractServerlessControl.prototype.startBackendAndWaitForIt = function startBackendAndWaitForIt() {
@@ -262,7 +267,12 @@ AbstractServerlessControl.prototype.killAdditionalAuxiliaryProcesses = function 
 AbstractServerlessControl.prototype.killChildProcess = function killChildProcess(childProcess) {
   return new Promise(resolve => {
     if (childProcess) {
-      childProcess.once('exit', resolve);
+      childProcess.once('exit', () => {
+        // eslint-disable-next-line no-console
+        console.log('[AbstractServerlessControl] killed', childProcess.pid);
+        resolve();
+      });
+
       childProcess.kill();
     } else {
       resolve();
@@ -324,6 +334,9 @@ AbstractServerlessControl.prototype.resetBackend = function resetBackend() {
       method: 'DELETE',
       url: `${this.backendBaseUrl}/received`,
       strictSSL: false
+    }).then(() => {
+      // eslint-disable-next-line no-console
+      console.log('[AbstractServerlessControl] reseted backend');
     });
   } else {
     return Promise.resolve([]);
