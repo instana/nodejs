@@ -39,117 +39,120 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
     ['binary', 'string', 'both'].forEach(headerFormat => {
       describe(`header format: ${headerFormat}`, function () {
-        let producerControls;
-        let consumerControls;
+        [false, true].forEach(useSendBatch => {
+          const useEachBatch = nextUseEachBatch();
+          const error = nextError();
 
-        before(async () => {
-          consumerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'consumer'),
-            useGlobalAgent: true
+          let producerControls;
+          let consumerControls;
+
+          before(async () => {
+            consumerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'consumer'),
+              useGlobalAgent: true
+            });
+
+            producerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'producer'),
+              useGlobalAgent: true,
+              env: {
+                INSTANA_KAFKA_HEADER_FORMAT: headerFormat
+              }
+            });
+
+            await consumerControls.startAndWaitForAgentConnection();
+            await producerControls.startAndWaitForAgentConnection();
           });
 
-          producerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'producer'),
-            useGlobalAgent: true,
-            env: {
-              INSTANA_KAFKA_HEADER_FORMAT: headerFormat
+          after(async () => {
+            await producerControls.stop();
+            await consumerControls.stop();
+          });
+
+          beforeEach(async () => {
+            await resetMessages(consumerControls);
+          });
+
+          afterEach(async () => {
+            await resetMessages(consumerControls);
+          });
+
+          describe(
+            `kafkajs (header format: ${headerFormat}, ${useSendBatch ? 'sendBatch' : 'sendMessage'} => ` +
+              `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
+            () => {
+              it(`must trace sending and receiving and keep trace continuity (header format: ${headerFormat}, ${
+                useSendBatch ? 'sendBatch' : 'sendMessage'
+              } => ${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`, async () => {
+                const parameters = {
+                  headerFormat,
+                  error,
+                  useSendBatch,
+                  useEachBatch
+                };
+
+                await producerControls.sendRequest({
+                  method: 'POST',
+                  path: '/send-messages',
+                  simple: true,
+                  body: {
+                    key: 'someKey',
+                    value: 'someMessage',
+                    error,
+                    useSendBatch,
+                    useEachBatch
+                  }
+                });
+
+                await retry(async () => {
+                  const messages = await getMessages(consumerControls);
+                  checkMessages(messages, parameters);
+                  const spans = await agentControls.getSpans();
+                  const httpEntry = verifyHttpEntry(spans);
+                  verifyKafkaExits(spans, httpEntry, parameters);
+                  verifyFollowUpHttpExit(spans, httpEntry);
+                });
+              });
+
+              if (error === false) {
+                // we do not need dedicated suppression tests for error conditions
+                it(`must not trace when suppressed (header format: ${headerFormat})`, async () => {
+                  const parameters = { headerFormat, error, useSendBatch, useEachBatch };
+
+                  await producerControls.sendRequest({
+                    method: 'POST',
+                    path: '/send-messages',
+                    simple: true,
+                    suppressTracing: true,
+                    body: {
+                      key: 'someKey',
+                      value: 'someMessage',
+                      error,
+                      useSendBatch,
+                      useEachBatch
+                    }
+                  });
+
+                  await retry(async () => {
+                    const messages = await getMessages(consumerControls);
+                    checkMessages(messages, parameters);
+                    await delay(1000);
+                    const spans = await agentControls.getSpans();
+                    expect(spans).to.have.lengthOf(0);
+                  });
+                });
+              }
             }
-          });
-
-          await consumerControls.startAndWaitForAgentConnection();
-          await producerControls.startAndWaitForAgentConnection();
+          );
         });
-
-        after(async () => {
-          await producerControls.stop();
-          await consumerControls.stop();
-        });
-
-        beforeEach(() => resetMessages(consumerControls));
-        afterEach(() => resetMessages(consumerControls));
-
-        [false, true].forEach(useSendBatch =>
-          registerTracingEnabledTestSuite.bind(this)({
-            headerFormat,
-            nextError,
-            useSendBatch,
-            nextUseEachBatch,
-            producerControls,
-            consumerControls
-          })
-        );
       });
     });
-
-    function registerTracingEnabledTestSuite({ headerFormat, useSendBatch, producerControls, consumerControls }) {
-      const useEachBatch = nextUseEachBatch();
-      const error = nextError();
-
-      describe(
-        `kafkajs (header format: ${headerFormat}, ${useSendBatch ? 'sendBatch' : 'sendMessage'} => ` +
-          `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
-        () => {
-          it(`must trace sending and receiving and keep trace continuity (header format: ${headerFormat}, ${
-            useSendBatch ? 'sendBatch' : 'sendMessage'
-          } => ${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`, async () => {
-            const parameters = {
-              headerFormat,
-              error,
-              useSendBatch,
-              useEachBatch
-            };
-            await send({
-              key: 'someKey',
-              value: 'someMessage',
-              error,
-              useSendBatch,
-              useEachBatch,
-              producerControls
-            });
-
-            await retry(async () => {
-              const messages = await getMessages(consumerControls);
-              checkMessages(messages, parameters);
-              const spans = await agentControls.getSpans();
-              const httpEntry = verifyHttpEntry(spans);
-              verifyKafkaExits(spans, httpEntry, parameters);
-              verifyFollowUpHttpExit(spans, httpEntry);
-            });
-          });
-
-          if (error === false) {
-            // we do not need dedicated suppression tests for error conditions
-            it(`must not trace when suppressed (header format: ${headerFormat})`, async () => {
-              const parameters = { headerFormat, error, useSendBatch, useEachBatch };
-              await send({
-                key: 'someKey',
-                value: 'someMessage',
-                error,
-                useSendBatch,
-                useEachBatch,
-                suppressTracing: true,
-                producerControls
-              });
-              await retry(async () => {
-                const messages = await getMessages(consumerControls);
-                checkMessages(messages, parameters);
-                await delay(1000);
-                const spans = await agentControls.getSpans();
-                expect(spans).to.have.lengthOf(0);
-              });
-            });
-          }
-        }
-      );
-    }
   });
 
   describe('with error in producer ', function () {
     const headerFormat = 'string';
 
-    [false, true].forEach(useSendBatch => registerProducerErrorTestSuite.bind(this)({ headerFormat, useSendBatch }));
-
-    function registerProducerErrorTestSuite({ useSendBatch }) {
+    [false, true].forEach(useSendBatch => {
       const error = 'producer';
       const useEachBatch = false;
 
@@ -185,13 +188,17 @@ mochaSuiteFn('tracing/kafkajs', function () {
               useEachBatch
             };
 
-            await send({
-              key: 'someKey',
-              value: 'someMessage',
-              error,
-              useSendBatch,
-              useEachBatch,
-              producerControls
+            await producerControls.sendRequest({
+              method: 'POST',
+              path: '/send-messages',
+              simple: true,
+              body: {
+                key: 'someKey',
+                value: 'someMessage',
+                error,
+                useSendBatch,
+                useEachBatch
+              }
             });
 
             await retry(async () => {
@@ -203,17 +210,13 @@ mochaSuiteFn('tracing/kafkajs', function () {
           });
         }
       );
-    }
+    });
   });
 
   describe('tracing enabled, but trace correlation disabled', function () {
     const nextUseEachBatch = getCircularList([false, true]);
 
-    [false, true].forEach(useSendBatch =>
-      registerCorrelationDisabledTestSuite.bind(this)({ useSendBatch, nextUseEachBatch })
-    );
-
-    function registerCorrelationDisabledTestSuite({ useSendBatch }) {
+    [false, true].forEach(useSendBatch => {
       const useEachBatch = nextUseEachBatch();
       let consumerControls;
       let producerControls;
@@ -240,8 +243,13 @@ mochaSuiteFn('tracing/kafkajs', function () {
         await consumerControls.stop();
       });
 
-      beforeEach(() => resetMessages(consumerControls));
-      afterEach(() => resetMessages(consumerControls));
+      beforeEach(async () => {
+        await resetMessages(consumerControls);
+      });
+
+      afterEach(async () => {
+        await resetMessages(consumerControls);
+      });
 
       it(`must trace sending and receiving but will not keep trace continuity (${
         useSendBatch ? 'sendBatch' : 'sendMessage'
@@ -252,12 +260,16 @@ mochaSuiteFn('tracing/kafkajs', function () {
           useEachBatch
         };
 
-        await send({
-          key: 'someKey',
-          value: 'someMessage',
-          useSendBatch,
-          useEachBatch,
-          producerControls
+        await producerControls.sendRequest({
+          method: 'POST',
+          path: '/send-messages',
+          simple: true,
+          body: {
+            key: 'someKey',
+            value: 'someMessage',
+            useSendBatch,
+            useEachBatch
+          }
         });
 
         await retry(async () => {
@@ -273,13 +285,17 @@ mochaSuiteFn('tracing/kafkajs', function () {
       it('must not trace Kafka exits when suppressed (but will trace Kafka entries)', async () => {
         const parameters = { headerFormat: 'correlation-disabled', useSendBatch, useEachBatch };
 
-        await send({
-          key: 'someKey',
-          value: 'someMessage',
-          useSendBatch,
-          useEachBatch,
-          producerControls,
-          suppressTracing: true
+        await producerControls.sendRequest({
+          method: 'POST',
+          path: '/send-messages',
+          simple: true,
+          suppressTracing: true,
+          body: {
+            key: 'someKey',
+            value: 'someMessage',
+            useSendBatch,
+            useEachBatch
+          }
         });
 
         await retry(async () => {
@@ -295,7 +311,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
           verifyKafkaRootEntries(spans, parameters);
         });
       });
-    }
+    });
   });
 
   describe('header format from agent config', function () {
@@ -332,11 +348,16 @@ mochaSuiteFn('tracing/kafkajs', function () {
       `must trace sending and receiving and keep trace continuity (header format ${headerFormat} ` +
         'from agent config)',
       async () => {
-        await send({
-          key: 'someKey',
-          value: 'someMessage',
-          producerControls
+        await producerControls.sendRequest({
+          method: 'POST',
+          path: '/send-messages',
+          simple: true,
+          body: {
+            key: 'someKey',
+            value: 'someMessage'
+          }
         });
+
         await retry(async () => {
           const messages = await getMessages(consumerControls);
           checkMessages(messages, { headerFormat });
@@ -385,11 +406,16 @@ mochaSuiteFn('tracing/kafkajs', function () {
       'must trace sending and receiving but will not keep trace continuity ' +
         '(trace correlation disabled from agent config)',
       async () => {
-        await send({
-          key: 'someKey',
-          value: 'someMessage',
-          producerControls
+        await producerControls.sendRequest({
+          method: 'POST',
+          path: '/send-messages',
+          simple: true,
+          body: {
+            key: 'someKey',
+            value: 'someMessage'
+          }
         });
+
         await retry(async () => {
           const messages = await getMessages(consumerControls);
           checkMessages(messages, { headerFormat });
@@ -427,8 +453,13 @@ mochaSuiteFn('tracing/kafkajs', function () {
       await consumerControls.stop();
     });
 
-    beforeEach(() => resetMessages(consumerControls));
-    afterEach(() => resetMessages(consumerControls));
+    beforeEach(async () => {
+      await resetMessages(consumerControls);
+    });
+
+    afterEach(async () => {
+      await resetMessages(consumerControls);
+    });
 
     it('must not trace when disabled', async () => {
       const parameters = {
@@ -438,14 +469,19 @@ mochaSuiteFn('tracing/kafkajs', function () {
         useEachBatch: false
       };
 
-      await send({
-        key: 'someKey',
-        value: 'someMessage',
+      await producerControls.sendRequest({
+        method: 'POST',
+        path: '/send-messages',
+        simple: true,
         error: false,
-        useSendBatch: false,
-        useEachBatch: false,
-        producerControls
+        body: {
+          key: 'someKey',
+          value: 'someMessage',
+          useSendBatch: false,
+          useEachBatch: false
+        }
       });
+
       await retry(async () => {
         const messages = await getMessages(consumerControls);
         checkMessages(messages, parameters);
@@ -484,8 +520,13 @@ mochaSuiteFn('tracing/kafkajs', function () {
       await consumerControls.stop();
     });
 
-    beforeEach(() => resetMessages(consumerControls));
-    afterEach(() => resetMessages(consumerControls));
+    beforeEach(async () => {
+      await resetMessages(consumerControls);
+    });
+
+    afterEach(async () => {
+      await resetMessages(consumerControls);
+    });
 
     it('must pad short incoming trace and span IDs', async () => {
       await producerControls.sendRequest({
@@ -515,25 +556,6 @@ mochaSuiteFn('tracing/kafkajs', function () {
       });
     });
   });
-
-  // eslint-disable-next-line object-curly-newline
-  function send({ key, value, error, useSendBatch, useEachBatch, suppressTracing, producerControls }) {
-    const req = {
-      method: 'POST',
-      path: '/send-messages',
-      simple: true,
-      suppressTracing,
-      body: {
-        key,
-        value,
-        error,
-        useSendBatch,
-        useEachBatch
-      }
-    };
-
-    return producerControls.sendRequest(req);
-  }
 
   function resetMessages(consumer) {
     return consumer.sendRequest({
