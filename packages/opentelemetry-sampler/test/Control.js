@@ -6,9 +6,6 @@
 
 const { fork } = require('child_process');
 const fetch = require('node-fetch');
-const {
-  assert: { fail }
-} = require('chai');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 const portfinder = require('../../collector/test/test_util/portfinder');
 
