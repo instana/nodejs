@@ -8,9 +8,6 @@
 const { fork } = require('child_process');
 const path = require('path');
 const request = require('request-promise');
-const {
-  assert: { fail }
-} = require('chai');
 
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 const config = require('../../serverless/test/config');
