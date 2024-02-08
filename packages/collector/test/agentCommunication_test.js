@@ -41,12 +41,13 @@ describe('agentCommunication', function () {
       })
     ));
 
-  it('must send data to the agent', () =>
-    retry(() =>
+  it('must send data to the agent', async () => {
+    return retry(() => {
       agentControls.getLastMetricValue(expressControls.getPid(), ['pid']).then(pid => {
         expect(pid).to.equal(expressControls.getPid());
-      })
-    ));
+      });
+    });
+  });
 
   it('must reannounce itself to the agent once discoveries are cleared', () =>
     retry(() =>
