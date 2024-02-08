@@ -66,7 +66,7 @@ const handler = function handler(event, context, callback) {
   const req = http.request(
     {
       host: downstream.hostname,
-      port: downstream.getPort(),
+      port: downstream.port,
       path: downstream.path,
       method: 'GET',
       headers: { 'X-Downstream-Header': 'yes' }

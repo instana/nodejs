@@ -32,33 +32,492 @@ function start(graphqlVersion) {
   describe(`${graphqlVersion}`, () => {
     globalAgent.setUpCleanUpHooks();
 
-    describe('raw GraphQL', () => {
-      const { serverControls, clientControls } = createProcesses(false, graphqlVersion);
+    const useAlias = Math.random >= 0.5;
 
-      registerAllQuerySuiteVariations(serverControls, clientControls, false, 'http');
-      registerAllQuerySuiteVariations(serverControls, clientControls, false, 'amqp');
-      registerMutationSuite(serverControls, clientControls, false);
-      registerSubscriptionOperationNotTracedSuite(serverControls, clientControls, false);
+    ['raw', 'apollo'].forEach(type => {
+      describe(`${type} queries`, function () {
+        ['amqp', 'http'].forEach(communicationProtocol => {
+          if (type === 'apollo' && communicationProtocol === 'amqp') {
+            return it.skip('Test scenario Apollo & AMPQ is not supported.');
+          }
+
+          [false, true].forEach(withError => {
+            [false, true].forEach(queryShorthand => {
+              // eslint-disable-next-line max-len
+              const title = `withError: ${withError} queryShorthand: ${queryShorthand} useAlias: ${useAlias} communicationProtocol: ${communicationProtocol}`;
+
+              describe(title, function () {
+                let serverControls;
+                let clientControls;
+
+                before(async () => {
+                  serverControls = new ProcessControls({
+                    appPath: path.join(__dirname, type === 'raw' ? 'rawGraphQLServer' : 'apolloServer'),
+                    useGlobalAgent: true,
+                    env: {
+                      GRAPHQL_VERSION: graphqlVersion
+                    }
+                  });
+                  clientControls = new ProcessControls({
+                    appPath: path.join(__dirname, 'client'),
+                    useGlobalAgent: true,
+                    env: {
+                      SERVER_PORT: serverControls.getPort(),
+                      GRAPHQL_VERSION: graphqlVersion
+                    }
+                  });
+
+                  await serverControls.startAndWaitForAgentConnection();
+                  await clientControls.startAndWaitForAgentConnection();
+                });
+
+                it('must trace a query with a value resolver', () => {
+                  const resolverType = 'value';
+                  const multipleEntities = null;
+
+                  const queryParams = [
+                    withError ? 'withError=yes' : null,
+                    queryShorthand ? 'queryShorthand=yes' : null,
+                    multipleEntities ? 'multipleEntities=yes' : null,
+                    useAlias ? 'useAlias=yes' : null,
+                    `communicationProtocol=${communicationProtocol}`
+                  ]
+                    .filter(param => !!param)
+                    .join('&');
+
+                  const url = queryParams ? `/${resolverType}?${queryParams}` : `/${resolverType}`;
+
+                  return clientControls
+                    .sendRequest({
+                      method: 'POST',
+                      path: url
+                    })
+                    .then(response => {
+                      const entityName = withError ? `${resolverType}Error` : resolverType;
+                      const entityNameWithAlias = useAlias ? `${entityName}Alias` : entityName;
+
+                      checkQueryResponse(entityNameWithAlias, withError, null, response);
+
+                      return retry(() => {
+                        return agentControls.getSpans().then(spans => {
+                          return verifySpansForQuery(
+                            {
+                              resolverType,
+                              entityName,
+                              withError,
+                              queryShorthand,
+                              multipleEntities,
+                              communicationProtocol
+                            },
+                            spans
+                          );
+                        });
+                      });
+                    });
+                });
+
+                it('must trace a query with a promise resolver', () => {
+                  const resolverType = 'promise';
+                  const multipleEntities = null;
+
+                  const queryParams = [
+                    withError ? 'withError=yes' : null,
+                    queryShorthand ? 'queryShorthand=yes' : null,
+                    multipleEntities ? 'multipleEntities=yes' : null,
+                    useAlias ? 'useAlias=yes' : null,
+                    `communicationProtocol=${communicationProtocol}`
+                  ]
+                    .filter(param => !!param)
+                    .join('&');
+
+                  const url = queryParams ? `/${resolverType}?${queryParams}` : `/${resolverType}`;
+
+                  return clientControls
+                    .sendRequest({
+                      method: 'POST',
+                      path: url
+                    })
+                    .then(response => {
+                      const entityName = withError ? `${resolverType}Error` : resolverType;
+                      const entityNameWithAlias = useAlias ? `${entityName}Alias` : entityName;
+
+                      checkQueryResponse(entityNameWithAlias, withError, null, response);
+
+                      return retry(() =>
+                        agentControls.getSpans().then(
+                          verifySpansForQuery.bind(null, {
+                            resolverType,
+                            entityName,
+                            withError,
+                            queryShorthand,
+                            multipleEntities,
+                            communicationProtocol
+                          })
+                        )
+                      );
+                    });
+                });
+
+                it('must trace a query which resolves to an array of promises', () => {
+                  const resolverType = 'array';
+                  const multipleEntities = null;
+
+                  const queryParams = [
+                    withError ? 'withError=yes' : null,
+                    queryShorthand ? 'queryShorthand=yes' : null,
+                    multipleEntities ? 'multipleEntities=yes' : null,
+                    useAlias ? 'useAlias=yes' : null,
+                    `communicationProtocol=${communicationProtocol}`
+                  ]
+                    .filter(param => !!param)
+                    .join('&');
+
+                  const url = queryParams ? `/${resolverType}?${queryParams}` : `/${resolverType}`;
+
+                  return clientControls
+                    .sendRequest({
+                      method: 'POST',
+                      path: url
+                    })
+                    .then(response => {
+                      const entityName = withError ? `${resolverType}Error` : resolverType;
+                      const entityNameWithAlias = useAlias ? `${entityName}Alias` : entityName;
+
+                      checkQueryResponse(entityNameWithAlias, withError, null, response);
+
+                      return retry(() =>
+                        agentControls.getSpans().then(
+                          verifySpansForQuery.bind(null, {
+                            resolverType,
+                            entityName,
+                            withError,
+                            queryShorthand,
+                            multipleEntities,
+                            communicationProtocol
+                          })
+                        )
+                      );
+                    });
+                });
+
+                it('must trace a query with multiple entities', () => {
+                  const resolverType = 'array';
+                  const multipleEntities = true;
+
+                  const queryParams = [
+                    withError ? 'withError=yes' : null,
+                    queryShorthand ? 'queryShorthand=yes' : null,
+                    multipleEntities ? 'multipleEntities=yes' : null,
+                    useAlias ? 'useAlias=yes' : null,
+                    `communicationProtocol=${communicationProtocol}`
+                  ]
+                    .filter(param => !!param)
+                    .join('&');
+
+                  const url = queryParams ? `/${resolverType}?${queryParams}` : `/${resolverType}`;
+
+                  return clientControls
+                    .sendRequest({
+                      method: 'POST',
+                      path: url
+                    })
+                    .then(response => {
+                      const entityName = withError ? `${resolverType}Error` : resolverType;
+                      const entityNameWithAlias = useAlias ? `${entityName}Alias` : entityName;
+
+                      checkQueryResponse(entityNameWithAlias, withError, null, response);
+
+                      return retry(() =>
+                        agentControls.getSpans().then(
+                          verifySpansForQuery.bind(null, {
+                            resolverType,
+                            entityName,
+                            withError,
+                            queryShorthand,
+                            multipleEntities,
+                            communicationProtocol
+                          })
+                        )
+                      );
+                    });
+                });
+              });
+            });
+          });
+        });
+
+        describe(`${type}: mutations`, function () {
+          let serverControls;
+          let clientControls;
+
+          before(async () => {
+            serverControls = new ProcessControls({
+              appPath: path.join(__dirname, type === 'raw' ? 'rawGraphQLServer' : 'apolloServer'),
+              useGlobalAgent: true,
+              env: {
+                GRAPHQL_VERSION: graphqlVersion
+              }
+            });
+            clientControls = new ProcessControls({
+              appPath: path.join(__dirname, 'client'),
+              useGlobalAgent: true,
+              env: {
+                SERVER_PORT: serverControls.getPort(),
+                GRAPHQL_VERSION: graphqlVersion
+              }
+            });
+
+            await serverControls.startAndWaitForAgentConnection();
+            await clientControls.startAndWaitForAgentConnection();
+          });
+
+          it('must trace a mutation', () => {
+            const url = '/mutation';
+
+            return clientControls
+              .sendRequest({
+                method: 'POST',
+                path: url
+              })
+              .then(response => {
+                checkMutationResponse(response);
+                return retry(() => agentControls.getSpans().then(verifySpansForMutation));
+              });
+          });
+        });
+
+        describe(`${type}: subscriptions`, function () {
+          let serverControls;
+          let clientControls;
+
+          before(async () => {
+            serverControls = new ProcessControls({
+              appPath: path.join(__dirname, type === 'raw' ? 'rawGraphQLServer' : 'apolloServer'),
+              useGlobalAgent: true,
+              env: {
+                GRAPHQL_VERSION: graphqlVersion
+              }
+            });
+
+            clientControls = new ProcessControls({
+              appPath: path.join(__dirname, 'client'),
+              useGlobalAgent: true,
+              env: {
+                SERVER_PORT: serverControls.getPort(),
+                GRAPHQL_VERSION: graphqlVersion
+              }
+            });
+
+            await serverControls.startAndWaitForAgentConnection();
+            await clientControls.startAndWaitForAgentConnection();
+          });
+
+          it('must not trace the subscription establishment', () => {
+            return clientControls
+              .sendRequest({
+                method: 'POST',
+                path: '/subscription?id=1'
+              })
+              .then(() => delay(1000))
+              .then(() => {
+                return agentControls.getSpans().then(spans => {
+                  expect(getSpansByName(spans, 'graphql.server')).to.have.lengthOf(0);
+                  expect(getSpansByName(spans, 'log.pino')).to.have.lengthOf(0);
+                });
+              });
+          });
+        });
+      });
     });
 
-    describe('Apollo', () => {
-      const { serverControls, clientControls } = createProcesses(true, graphqlVersion);
-      registerAllQuerySuiteVariations(serverControls, clientControls, true, 'http');
-      registerMutationSuite(serverControls, clientControls, true);
-      registerSubscriptionOperationNotTracedSuite(serverControls, clientControls, true);
+    ['http', 'graphql'].forEach(triggerUpdateVia => {
+      describe(`(ApolloServer) subscriptions (via: ${triggerUpdateVia})`, function () {
+        let serverControls;
+        let clientControls1;
+        let clientControls2;
+
+        before(async () => {
+          serverControls = new ProcessControls({
+            appPath: path.join(__dirname, 'apolloServer'),
+            useGlobalAgent: true,
+            env: {
+              GRAPHQL_VERSION: graphqlVersion
+            }
+          });
+          clientControls1 = new ProcessControls({
+            appPath: path.join(__dirname, 'client'),
+            useGlobalAgent: true,
+            env: {
+              SERVER_PORT: serverControls.getPort(),
+              GRAPHQL_VERSION: graphqlVersion
+            }
+          });
+
+          clientControls2 = new ProcessControls({
+            appPath: path.join(__dirname, 'client'),
+            useGlobalAgent: true,
+            env: {
+              SERVER_PORT: serverControls.getPort(),
+              GRAPHQL_VERSION: graphqlVersion
+            }
+          });
+
+          await serverControls.startAndWaitForAgentConnection();
+          await clientControls1.startAndWaitForAgentConnection();
+          await clientControls2.startAndWaitForAgentConnection();
+        });
+
+        after(async () => {
+          await serverControls.stop();
+          await clientControls1.stop();
+          await clientControls2.stop();
+        });
+
+        it(`must trace updates for subscriptions (via: ${triggerUpdateVia})`, () => {
+          return (
+            Promise.all([
+              // subscribe first client
+              clientControls1.sendRequest({
+                method: 'POST',
+                path: '/subscription?id=1'
+              }),
+              // subscribe second client
+              clientControls2.sendRequest({
+                method: 'POST',
+                path: '/subscription?id=1'
+              })
+            ])
+              // wait a second so that subscriptions are fully established
+              .then(() => delay(1000))
+              .then(() => {
+                // send update via one arbitrary client
+                switch (triggerUpdateVia) {
+                  case 'http':
+                    return clientControls1.sendRequest({
+                      method: 'POST',
+                      path: '/publish-update-via-http'
+                    });
+                  case 'graphql':
+                    return clientControls2.sendRequest({
+                      method: 'POST',
+                      path: '/publish-update-via-graphql'
+                    });
+                  default:
+                    throw new Error(`Unknown triggerUpdateVia option: ${triggerUpdateVia}`);
+                }
+              })
+              .then(() => {
+                return checkSubscriptionUpdatesAndSpans(clientControls1, clientControls2, triggerUpdateVia);
+              })
+          );
+        });
+      });
     });
 
-    ['http', 'graphql'].forEach(triggerUpdateVia =>
-      registerSubscriptionUpdatesAreTracedSuite.bind(this)(triggerUpdateVia, graphqlVersion)
-    );
+    // eslint-disable-next-line max-len
+    // This test is currently disabled because it describes a known issue. When the application under monitoring receives
+    // eslint-disable-next-line max-len
+    // multiple concurrent requests with GraphQL mutations, and if there are subscribed clients, all graphql.client/ spans
+    // (which represent the subscription update calls from the GraphQL server to the subscribed clients) are
+    // attached to the first HTTP entry span, instead of the entry spans that actually triggered them.
+    describe.skip('(ApolloServer) correct parent span for subscription updates', function () {
+      let serverControls;
+      let clientControls;
+      const triggerUpdateVia = 'http';
 
-    registerSubscriptionUpdatesCorrectParentSpanSuite('http', graphqlVersion);
+      before(async () => {
+        serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'apolloServer'),
+          useGlobalAgent: true,
+          env: {
+            GRAPHQL_VERSION: graphqlVersion
+          }
+        });
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'client'),
+          useGlobalAgent: true,
+          env: {
+            SERVER_PORT: serverControls.getPort(),
+            GRAPHQL_VERSION: graphqlVersion
+          }
+        });
 
-    describe('suppressed', () => {
-      const { clientControls } = createProcesses(true, graphqlVersion);
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
 
-      it('should not trace', () =>
-        clientControls
+      after(async () => {
+        await serverControls.stop();
+        await clientControls.stop();
+      });
+
+      it(`must not confuse parent context for parallel request (via: ${triggerUpdateVia})`, async () => {
+        await clientControls.sendRequest({
+          method: 'POST',
+          path: '/subscription?id=1'
+        });
+
+        // wait a second so that subscriptions are fully established
+        await delay(1000);
+
+        const requests = [
+          {
+            method: 'POST',
+            path: '/publish-update-via-http?id=1',
+            body: { id: 1, name: 'Name 1' }
+          },
+          {
+            method: 'POST',
+            path: '/publish-update-via-http?id=2',
+            body: { id: 2, name: 'Name 2' }
+          },
+          {
+            method: 'POST',
+            path: '/publish-update-via-http?id=3',
+            body: { id: 3, name: 'Name 3' }
+          }
+        ];
+
+        // send three parallel updates
+        await Promise.all(requests.map(requestConfig => clientControls.sendRequest(requestConfig)));
+
+        await checkSubscriptionUpdateAndSpanForParallelRequests(clientControls);
+      });
+    });
+
+    describe('suppressed', function () {
+      let serverControls;
+      let clientControls;
+
+      before(async () => {
+        serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'apolloServer'),
+          useGlobalAgent: true,
+          env: {
+            GRAPHQL_VERSION: graphqlVersion
+          }
+        });
+
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'client'),
+          useGlobalAgent: true,
+          env: {
+            SERVER_PORT: serverControls.getPort(),
+            GRAPHQL_VERSION: graphqlVersion
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await serverControls.stop();
+        await clientControls.stop();
+      });
+
+      it('should not trace', () => {
+        return clientControls
           .sendRequest({
             method: 'POST',
             path: '/value',
@@ -68,14 +527,15 @@ function start(graphqlVersion) {
             checkQueryResponse('value', false, false, response);
             return delay(1000);
           })
-          .then(() =>
-            agentControls.getSpans().then(spans => {
+          .then(() => {
+            return agentControls.getSpans().then(spans => {
               expect(spans).to.have.lengthOf(0);
-            })
-          ));
+            });
+          });
+      });
     });
 
-    describe('disabled', () => {
+    describe('disabled', function () {
       let serverControls;
       let clientControls;
 
@@ -102,8 +562,13 @@ function start(graphqlVersion) {
         await clientControls.startAndWaitForAgentConnection();
       });
 
-      it('should not trace when disabled', () =>
-        clientControls
+      after(async () => {
+        await serverControls.stop();
+        await clientControls.stop();
+      });
+
+      it('should not trace when disabled', () => {
+        return clientControls
           .sendRequest({
             method: 'POST',
             path: '/value'
@@ -112,11 +577,12 @@ function start(graphqlVersion) {
             checkQueryResponse('value', false, false, response);
             return delay(1000);
           })
-          .then(() =>
-            agentControls.getSpans().then(spans => {
+          .then(() => {
+            return agentControls.getSpans().then(spans => {
               expect(spans).to.have.lengthOf(0);
-            })
-          ));
+            });
+          });
+      });
     });
 
     describe('individually disabled', () => {
@@ -145,16 +611,17 @@ function start(graphqlVersion) {
         await clientControls.startAndWaitForAgentConnection();
       });
 
-      it('should not trace graphql when that tracer is disabled individually but still trace all other calls', () =>
-        clientControls
+      it('should not trace graphql when that tracer is disabled individually but still trace all other calls', () => {
+        return clientControls
           .sendRequest({
             method: 'POST',
             path: '/value'
           })
           .then(response => {
             checkQueryResponse('value', false, false, response);
-            return retry(() =>
-              agentControls.getSpans().then(spans => {
+
+            return retry(() => {
+              return agentControls.getSpans().then(spans => {
                 const httpEntryInClientApp = verifyHttpEntry(null, /\/value/, spans);
                 const httpExitInClientApp = verifyHttpExit(httpEntryInClientApp, /\/graphql/, spans);
                 const httpEntryInServerApp = verifyHttpEntry(httpExitInClientApp, /\/graphql/, spans);
@@ -164,332 +631,12 @@ function start(graphqlVersion) {
                 // processing has worked (as we have verified via checkQueryResponse).
                 expect(getSpansByName(spans, 'graphql.server')).to.be.empty;
                 expect(getSpansByName(spans, 'graphql.client')).to.be.empty;
-              })
-            );
-          }));
-    });
-  });
-}
-
-function registerAllQuerySuiteVariations(serverControls, clientControls, apollo, communicationProtocol) {
-  const useAlias = Math.random >= 0.5;
-  [false, true].forEach(withError =>
-    [false, true].forEach(queryShorthand =>
-      registerQuerySuite.bind(this)(serverControls, clientControls, {
-        apollo,
-        withError,
-        queryShorthand,
-        useAlias,
-        communicationProtocol
-      })
-    )
-  );
-}
-
-function registerQuerySuite(
-  serverControls,
-  clientControls,
-  { apollo, withError, queryShorthand, useAlias, communicationProtocol }
-) {
-  const titleSuffix =
-    `(${apollo ? 'apollo' : 'raw'}, ` +
-    `${withError ? 'with error' : 'without error'}, ` +
-    `${queryShorthand ? 'query shorthand' : 'no query shorthand'}, ` +
-    `${useAlias ? 'alias' : 'no alias'}, ` +
-    `over ${communicationProtocol})`;
-
-  describe(`queries ${titleSuffix}`, function () {
-    it(`must trace a query with a value resolver ${titleSuffix}`, () => testQuery('value'));
-
-    it(`must trace a query with a promise resolver ${titleSuffix}`, () => testQuery('promise'));
-
-    it(`must trace a query which resolves to an array of promises ${titleSuffix}`, () => testQuery('array'));
-
-    it(`must trace a query with multiple entities ${titleSuffix}`, () => testQuery('promise', true));
-  });
-
-  function testQuery(resolverType, multipleEntities) {
-    if (apollo && communicationProtocol === 'amqp') {
-      // We do trace this combination (Apollo & AMQP), but the Apollo test app does not connect to AMQP so this
-      // scenario is not covered in the regular test suite.
-      throw new Error('Test scenario not supported: Apollo & AMQP');
-    }
-
-    const queryParams = [
-      withError ? 'withError=yes' : null,
-      queryShorthand ? 'queryShorthand=yes' : null,
-      multipleEntities ? 'multipleEntities=yes' : null,
-      useAlias ? 'useAlias=yes' : null,
-      `communicationProtocol=${communicationProtocol}`
-    ]
-      .filter(param => !!param)
-      .join('&');
-
-    const url = queryParams ? `/${resolverType}?${queryParams}` : `/${resolverType}`;
-
-    return clientControls
-      .sendRequest({
-        method: 'POST',
-        path: url
-      })
-      .then(response => {
-        const entityName = withError ? `${resolverType}Error` : resolverType;
-        const entityNameWithAlias = useAlias ? `${entityName}Alias` : entityName;
-
-        checkQueryResponse(entityNameWithAlias, withError, multipleEntities, response);
-        return retry(() =>
-          agentControls.getSpans().then(
-            verifySpansForQuery.bind(null, {
-              resolverType,
-              entityName,
-              withError,
-              queryShorthand,
-              multipleEntities,
-              communicationProtocol
-            })
-          )
-        );
-      });
-  }
-}
-
-function registerMutationSuite(serverControls, clientControls, apollo) {
-  describe(`mutations (${apollo ? 'apollo' : 'raw'})`, function () {
-    it(`must trace a mutation (${apollo ? 'apollo' : 'raw'})`, () => testMutation());
-  });
-
-  function testMutation() {
-    const url = '/mutation';
-    return clientControls
-      .sendRequest({
-        method: 'POST',
-        path: url
-      })
-      .then(response => {
-        checkMutationResponse(response);
-        return retry(() => agentControls.getSpans().then(verifySpansForMutation));
-      });
-  }
-}
-
-function registerSubscriptionOperationNotTracedSuite(serverControls, clientControls, apollo) {
-  describe(`subscriptions (${apollo ? 'apollo' : 'raw'})`, function () {
-    it(`must not trace the subscription establishment (${apollo ? 'apollo' : 'raw'})`, () =>
-      testSubscriptionIsNotTraced());
-  });
-
-  function testSubscriptionIsNotTraced() {
-    return clientControls
-      .sendRequest({
-        method: 'POST',
-        path: '/subscription?id=1'
-      })
-      .then(() => delay(1000))
-      .then(() =>
-        agentControls.getSpans().then(spans => {
-          expect(getSpansByName(spans, 'graphql.server')).to.have.lengthOf(0);
-          expect(getSpansByName(spans, 'log.pino')).to.have.lengthOf(0);
-        })
-      );
-  }
-}
-
-function createProcesses(apollo, version) {
-  let serverControls;
-  let clientControls;
-
-  before(async () => {
-    serverControls = new ProcessControls({
-      appPath: path.join(__dirname, apollo ? 'apolloServer' : 'rawGraphQLServer'),
-      useGlobalAgent: true,
-      env: {
-        GRAPHQL_VERSION: version
-      }
-    });
-    clientControls = new ProcessControls({
-      appPath: path.join(__dirname, 'client'),
-      useGlobalAgent: true,
-      env: {
-        SERVER_PORT: serverControls.getPort(),
-        GRAPHQL_VERSION: version
-      }
-    });
-
-    await serverControls.startAndWaitForAgentConnection();
-    await clientControls.startAndWaitForAgentConnection();
-  });
-
-  return { serverControls, clientControls };
-}
-
-function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia, version) {
-  describe(`subscriptions (via: ${triggerUpdateVia})`, function () {
-    let serverControls;
-    let clientControls1;
-    let clientControls2;
-
-    before(async () => {
-      serverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'apolloServer'),
-        useGlobalAgent: true,
-        env: {
-          GRAPHQL_VERSION: version
-        }
-      });
-      clientControls1 = new ProcessControls({
-        appPath: path.join(__dirname, 'client'),
-        useGlobalAgent: true,
-        env: {
-          SERVER_PORT: serverControls.getPort(),
-          GRAPHQL_VERSION: version
-        }
-      });
-
-      clientControls2 = new ProcessControls({
-        appPath: path.join(__dirname, 'client'),
-        useGlobalAgent: true,
-        env: {
-          SERVER_PORT: serverControls.getPort(),
-          GRAPHQL_VERSION: version
-        }
-      });
-
-      await serverControls.startAndWaitForAgentConnection();
-      await clientControls1.startAndWaitForAgentConnection();
-      await clientControls2.startAndWaitForAgentConnection();
-    });
-
-    after(async () => {
-      await serverControls.stop();
-      await clientControls1.stop();
-      await clientControls2.stop();
-    });
-
-    afterEach(async () => {
-      await serverControls.clearIpcMessages();
-      await clientControls1.clearIpcMessages();
-      await clientControls2.clearIpcMessages();
-    });
-
-    it(`must trace updates for subscriptions (via: ${triggerUpdateVia})`, () =>
-      testUpdatesInSubscriptionsAreTraced(clientControls1, clientControls2));
-  });
-
-  function testUpdatesInSubscriptionsAreTraced(client1, client2) {
-    return (
-      Promise.all([
-        // subscribe first client
-        client1.sendRequest({
-          method: 'POST',
-          path: '/subscription?id=1'
-        }),
-        // subscribe second client
-        client2.sendRequest({
-          method: 'POST',
-          path: '/subscription?id=1'
-        })
-      ])
-        // wait a second so that subscriptions are fully established
-        .then(() => delay(1000))
-        .then(() => {
-          // send update via one arbitrary client
-          switch (triggerUpdateVia) {
-            case 'http':
-              return client1.sendRequest({
-                method: 'POST',
-                path: '/publish-update-via-http'
               });
-            case 'graphql':
-              return client1.sendRequest({
-                method: 'POST',
-                path: '/publish-update-via-graphql'
-              });
-            default:
-              throw new Error(`Unknown triggerUpdateVia option: ${triggerUpdateVia}`);
-          }
-        })
-        .then(() => checkSubscriptionUpdatesAndSpans(client1, client2, triggerUpdateVia))
-    );
-  }
-}
-
-function registerSubscriptionUpdatesCorrectParentSpanSuite(triggerUpdateVia, version) {
-  // This test is currently disabled because it describes a known issue. When the application under monitoring receives
-  // multiple concurrent requests with GraphQL mutations, and if there are subscribed clients, all graphql.client/ spans
-  // (which represent the subscription update calls from the GraphQL server to the subscribed clients) are
-  // attached to the first HTTP entry span, instead of the entry spans that actually triggered them.
-  describe.skip('correct parent span for subscription updates', function () {
-    let serverControls;
-    let clientControls;
-
-    before(async () => {
-      serverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'apolloServer'),
-        useGlobalAgent: true,
-        env: {
-          GRAPHQL_VERSION: version
-        }
+            });
+          });
       });
-      clientControls = new ProcessControls({
-        appPath: path.join(__dirname, 'client'),
-        useGlobalAgent: true,
-        env: {
-          SERVER_PORT: serverControls.getPort(),
-          GRAPHQL_VERSION: version
-        }
-      });
-
-      await serverControls.startAndWaitForAgentConnection();
-      await clientControls.startAndWaitForAgentConnection();
     });
-
-    after(async () => {
-      await serverControls.stop();
-      await clientControls.stop();
-    });
-
-    afterEach(async () => {
-      await serverControls.clearIpcMessages();
-      await clientControls.clearIpcMessages();
-    });
-
-    it(`must not confuse parent context for parallel request (via: ${triggerUpdateVia})`, () =>
-      testParallelRequests(clientControls));
   });
-
-  async function testParallelRequests(client) {
-    await // subscribe client
-    client.sendRequest({
-      method: 'POST',
-      path: '/subscription?id=1'
-    });
-
-    // wait a second so that subscriptions are fully established
-    await delay(1000);
-
-    const requests = [
-      {
-        method: 'POST',
-        path: '/publish-update-via-http?id=1',
-        body: { id: 1, name: 'Name 1' }
-      },
-      {
-        method: 'POST',
-        path: '/publish-update-via-http?id=2',
-        body: { id: 2, name: 'Name 2' }
-      },
-      {
-        method: 'POST',
-        path: '/publish-update-via-http?id=3',
-        body: { id: 3, name: 'Name 3' }
-      }
-    ];
-
-    // send three parallel updates
-    await Promise.all(requests.map(requestConfig => client.sendRequest(requestConfig)));
-
-    await checkSubscriptionUpdateAndSpanForParallelRequests(client);
-  }
 }
 
 function checkQueryResponse(entityNameWithAlias, withError, multipleEntities, response) {

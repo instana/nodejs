@@ -17,112 +17,110 @@ const globalAgent = require('../../../globalAgent');
 const agentControls = globalAgent.instance;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+
 mochaSuiteFn('tracing gateway with apollo-subgraph', function () {
   this.timeout(config.getTestTimeout() * 5);
   globalAgent.setUpCleanUpHooks();
-  const allControls = startAllProcesses();
 
-  [true, false].forEach(withError => registerQuerySuite.bind(this)(allControls, { withError }));
+  [true, false].forEach(withError => {
+    describe(`queries (with error: ${withError})`, function () {
+      let accountServiceControls;
+      let inventoryServiceControls;
+      let productsServiceControls;
+      let reviewsServiceControls;
+      let gatewayControls;
+      let clientControls;
+
+      before(async () => {
+        accountServiceControls = new ProcessControls({
+          appPath: path.join(__dirname, 'services', 'accounts'),
+          useGlobalAgent: true
+        });
+        inventoryServiceControls = new ProcessControls({
+          appPath: path.join(__dirname, 'services', 'inventory'),
+          useGlobalAgent: true
+        });
+        productsServiceControls = new ProcessControls({
+          appPath: path.join(__dirname, 'services', 'products'),
+          useGlobalAgent: true
+        });
+        reviewsServiceControls = new ProcessControls({
+          appPath: path.join(__dirname, 'services', 'reviews'),
+          useGlobalAgent: true
+        });
+        gatewayControls = new ProcessControls({
+          appPath: path.join(__dirname, 'gateway'),
+          useGlobalAgent: true,
+          env: {
+            SERVICE_PORT_ACCOUNTS: accountServiceControls.getPort(),
+            SERVICE_PORT_INVENTORY: inventoryServiceControls.getPort(),
+            SERVICE_PORT_PRODUCTS: productsServiceControls.getPort(),
+            SERVICE_PORT_REVIEWS: reviewsServiceControls.getPort()
+          }
+        });
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'client'),
+          useGlobalAgent: true,
+          env: {
+            SERVER_PORT: gatewayControls.getPort()
+          }
+        });
+
+        await accountServiceControls.startAndWaitForAgentConnection();
+        await inventoryServiceControls.startAndWaitForAgentConnection();
+        await productsServiceControls.startAndWaitForAgentConnection();
+        await reviewsServiceControls.startAndWaitForAgentConnection();
+        await gatewayControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await accountServiceControls.stop();
+        await inventoryServiceControls.stop();
+        await productsServiceControls.stop();
+        await reviewsServiceControls.stop();
+        await gatewayControls.stop();
+        await clientControls.stop();
+      });
+
+      it(`must trace a query (with error: ${withError})`, () => {
+        const queryParams = withError ? 'withError=yes' : null;
+        const url = queryParams ? `/query?${queryParams}` : '/query';
+
+        return clientControls
+          .sendRequest({
+            method: 'POST',
+            path: url
+          })
+          .then(response => {
+            verifyQueryResponse(response, { withError });
+
+            return testUtils.retry(() => {
+              return agentControls.getSpans().then(spans => {
+                return verifySpansForQuery(
+                  {
+                    gatewayControls,
+                    clientControls,
+                    inventoryServiceControls,
+                    accountServiceControls,
+                    reviewsServiceControls,
+                    productsServiceControls
+                  },
+                  { withError },
+                  spans
+                );
+              });
+            });
+          });
+      });
+    });
+  });
 });
-
-function registerQuerySuite(allControls, testConfig) {
-  const { withError } = testConfig;
-  describe(`queries (with error: ${withError})`, function () {
-    it(`must trace a query (with error: ${withError})`, () => testQuery(allControls, testConfig));
-  });
-}
-
-function testQuery(allControls, testConfig) {
-  const { clientControls } = allControls;
-  const { withError } = testConfig;
-  const queryParams = withError ? 'withError=yes' : null;
-  const url = queryParams ? `/query?${queryParams}` : '/query';
-  return clientControls
-    .sendRequest({
-      method: 'POST',
-      path: url
-    })
-    .then(response => {
-      verifyQueryResponse(response, testConfig);
-      return testUtils.retry(() =>
-        agentControls.getSpans().then(verifySpansForQuery.bind(null, allControls, testConfig))
-      );
-    });
-}
-
-function startAllProcesses() {
-  let accountServiceControls;
-  let inventoryServiceControls;
-  let productsServiceControls;
-  let reviewsServiceControls;
-  let gatewayControls;
-  let clientControls;
-
-  before(async () => {
-    accountServiceControls = new ProcessControls({
-      appPath: path.join(__dirname, 'services', 'accounts'),
-      useGlobalAgent: true
-    });
-    inventoryServiceControls = new ProcessControls({
-      appPath: path.join(__dirname, 'services', 'inventory'),
-      useGlobalAgent: true
-    });
-    productsServiceControls = new ProcessControls({
-      appPath: path.join(__dirname, 'services', 'products'),
-      useGlobalAgent: true
-    });
-    reviewsServiceControls = new ProcessControls({
-      appPath: path.join(__dirname, 'services', 'reviews'),
-      useGlobalAgent: true
-    });
-    gatewayControls = new ProcessControls({
-      appPath: path.join(__dirname, 'gateway'),
-      useGlobalAgent: true,
-      env: {
-        SERVICE_PORT_ACCOUNTS: accountServiceControls.getPort(),
-        SERVICE_PORT_INVENTORY: inventoryServiceControls.getPort(),
-        SERVICE_PORT_PRODUCTS: productsServiceControls.getPort(),
-        SERVICE_PORT_REVIEWS: reviewsServiceControls.getPort()
-      }
-    });
-    clientControls = new ProcessControls({
-      appPath: path.join(__dirname, 'client'),
-      useGlobalAgent: true,
-      env: {
-        SERVER_PORT: gatewayControls.getPort()
-      }
-    });
-
-    await accountServiceControls.startAndWaitForAgentConnection();
-    await inventoryServiceControls.startAndWaitForAgentConnection();
-    await productsServiceControls.startAndWaitForAgentConnection();
-    await reviewsServiceControls.startAndWaitForAgentConnection();
-    await gatewayControls.startAndWaitForAgentConnection();
-    await clientControls.startAndWaitForAgentConnection();
-  });
-
-  after(async () => {
-    await accountServiceControls.stop();
-    await inventoryServiceControls.stop();
-    await productsServiceControls.stop();
-    await reviewsServiceControls.stop();
-    await gatewayControls.stop();
-    await clientControls.stop();
-  });
-
-  return {
-    accountServiceControls,
-    inventoryServiceControls,
-    productsServiceControls,
-    reviewsServiceControls,
-    gatewayControls,
-    clientControls
-  };
-}
 
 function verifyQueryResponse(response, testConfig) {
   const { withError } = testConfig;
   expect(response).to.be.an('object');
+
   if (withError) {
     expect(response.errors).to.have.lengthOf(1);
   } else {
@@ -142,19 +140,29 @@ function verifyQueryResponse(response, testConfig) {
 }
 
 function verifySpansForQuery(allControls, testConfig, spans) {
-  const { gatewayControls, clientControls } = allControls;
+  const {
+    gatewayControls,
+    reviewsServiceControls,
+    productsServiceControls,
+    clientControls,
+    inventoryServiceControls,
+    accountServiceControls
+  } = allControls;
+
   const { withError } = testConfig;
   const httpEntryInClientApp = verifyHttpEntry(clientControls, spans);
   const httpExitFromClientApp = verifyHttpExit(httpEntryInClientApp, clientControls, gatewayControls.getPort(), spans);
   const graphQLQueryEntryInGateway = verifyGraphQLGatewayEntry(httpExitFromClientApp, allControls, testConfig, spans);
+
   // The gateway sends a GraphQL request to each service, thus there There are four HTTP exits from the gateway and four
   // corresponding GraphQL entries - one for each service involved.
   const httpExitFromGatewayToAccounts = verifyHttpExit(
     graphQLQueryEntryInGateway,
     gatewayControls,
-    allControls.accountServiceControls.getPort(),
+    accountServiceControls.getPort(),
     spans
   );
+
   verifyGraphQLAccountEntry(httpExitFromGatewayToAccounts, allControls, testConfig, spans);
 
   // In the error test we throw an error in the accounts service. The gateway then aborts processing this GraphQL
@@ -164,7 +172,7 @@ function verifySpansForQuery(allControls, testConfig, spans) {
     const httpExitFromGatewayToInventory = verifyHttpExit(
       graphQLQueryEntryInGateway,
       gatewayControls,
-      allControls.inventoryServiceControls.getPort(),
+      inventoryServiceControls.getPort(),
       spans
     );
     verifyGraphQLInventoryEntry(httpExitFromGatewayToInventory, allControls, testConfig, spans);
@@ -172,7 +180,7 @@ function verifySpansForQuery(allControls, testConfig, spans) {
     const httpExitFromGatewayToProducts = verifyHttpExit(
       graphQLQueryEntryInGateway,
       gatewayControls,
-      allControls.productsServiceControls.getPort(),
+      productsServiceControls.getPort(),
       spans
     );
     verifyGraphQLProductsEntry(httpExitFromGatewayToProducts, allControls, testConfig, spans);
@@ -180,7 +188,7 @@ function verifySpansForQuery(allControls, testConfig, spans) {
     const httpExitFromGatewayToReviews = verifyHttpExit(
       graphQLQueryEntryInGateway,
       gatewayControls,
-      allControls.reviewsServiceControls.getPort(),
+      reviewsServiceControls.getPort(),
       spans
     );
     verifyGraphQLReviewsEntry(httpExitFromGatewayToReviews, allControls, testConfig, spans);
