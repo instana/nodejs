@@ -21,21 +21,28 @@ const instanaAgentKey = 'aws-lambda-dummy-key';
 
 describe('multiple data lambda handler', function () {
   this.timeout(config.getTestTimeout());
+  let control;
 
-  const control = new Control({
-    faasRuntimePath: path.join(__dirname, '../runtime_mock'),
-    handlerDefinitionPath: path.join(__dirname, './lambda'),
-    startBackend: true,
-    env: {
-      INSTANA_AGENT_KEY: instanaAgentKey,
-      WITH_CONFIG: 'true'
-    }
+  before(async () => {
+    control = new Control({
+      faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+      handlerDefinitionPath: path.join(__dirname, './lambda'),
+      startBackend: true,
+      env: {
+        INSTANA_AGENT_KEY: instanaAgentKey,
+        WITH_CONFIG: 'true'
+      }
+    });
+
+    await control.start();
   });
 
-  control.registerTestHooks();
+  after(async () => {
+    await control.stop();
+  });
 
-  it('must capture metrics and all spans', () =>
-    control
+  it('must capture metrics and all spans', () => {
+    return control
       .runHandler()
       .then(() => {
         const duration = Date.now() - control.startedAt;
@@ -58,7 +65,8 @@ describe('multiple data lambda handler', function () {
             expect(rawBundles).to.have.lengthOf.at.most(4);
           });
         });
-      }));
+      });
+  });
 
   function verifyResponse(numberOfResults) {
     /* eslint-disable no-console */

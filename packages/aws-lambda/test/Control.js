@@ -6,10 +6,6 @@
 'use strict';
 
 const { fork } = require('child_process');
-const {
-  assert: { fail }
-} = require('chai');
-
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 const retry = require('@instana/core/test/test_util/retry');
 const config = require('../../serverless/test/config');
@@ -46,18 +42,6 @@ Control.prototype.reset = function reset() {
   this.lambdaResults = [];
   this.expectedHandlerRuns = 0;
   this.startedAt = 0;
-};
-
-Control.prototype.registerTestHooks = function registerTestHooks() {
-  AbstractServerlessControl.prototype.registerTestHooks.call(this);
-  beforeEach(() => {
-    if (!this.opts.faasRuntimePath) {
-      fail('opts.faasRuntimePath is unspecified.');
-    } else if (!this.opts.handlerDefinitionPath) {
-      fail('opts.handlerDefinitionPath is unspecified.');
-    }
-  });
-  return this;
 };
 
 Control.prototype.startMonitoredProcess = function startMonitoredProcess() {

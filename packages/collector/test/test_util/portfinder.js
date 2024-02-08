@@ -75,6 +75,8 @@ Object.keys(portRanges).every(key => {
   return true;
 });
 
+// console.log(portRanges);
+
 function getRandomNumberBetween(x, y) {
   return Math.floor(Math.random() * (y - x + 1)) + x;
 }

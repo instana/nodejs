@@ -22,19 +22,28 @@ const instanaAgentKey = 'aws-lambda-dummy-key';
 
 describe('multiple lambda handler calls', function () {
   this.timeout(config.getTestTimeout());
-  const control = new Control({
-    faasRuntimePath: path.join(__dirname, '../runtime_mock'),
-    handlerDefinitionPath: path.join(__dirname, './lambda'),
-    startBackend: true,
-    env: {
-      INSTANA_AGENT_KEY: instanaAgentKey,
-      WITH_CONFIG: 'true'
-    }
-  });
-  control.registerTestHooks();
+  let control;
 
-  it('must capture metrics and spans', () =>
-    control
+  before(async () => {
+    control = new Control({
+      faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+      handlerDefinitionPath: path.join(__dirname, './lambda'),
+      startBackend: true,
+      env: {
+        INSTANA_AGENT_KEY: instanaAgentKey,
+        WITH_CONFIG: 'true'
+      }
+    });
+
+    await control.start();
+  });
+
+  after(async () => {
+    await control.stop();
+  });
+
+  it('must capture metrics and spans', () => {
+    return control
       .runHandler()
       .then(() => {
         const duration = Date.now() - control.startedAt;
@@ -42,14 +51,18 @@ describe('multiple lambda handler calls', function () {
         verifyResponse(1);
         return delay(200);
       })
-      .then(() => control.runHandler())
+      .then(() => {
+        return control.runHandler();
+      })
       .then(() => {
         const duration = Date.now() - control.startedAt;
         expect(duration).to.be.at.most(1000);
         verifyResponse(2);
         return delay(200);
       })
-      .then(() => control.runHandler())
+      .then(() => {
+        return control.runHandler();
+      })
       .then(() => {
         const duration = Date.now() - control.startedAt;
         expect(duration).to.be.at.most(1000);
@@ -67,7 +80,8 @@ describe('multiple lambda handler calls', function () {
           expect(rawBundles).to.have.lengthOf.at.least(3);
           expect(rawBundles).to.have.lengthOf.at.most(4);
         });
-      }));
+      });
+  });
 
   function verifyResponse(numberOfResults) {
     /* eslint-disable no-console */

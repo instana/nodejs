@@ -61,16 +61,31 @@ function registerSuite(w3cTraceCorrelationDisabled) {
       testCases = testCasesWithW3cTraceCorrelation;
     }
 
-    const control = new Control({
-      faasRuntimePath: path.join(__dirname, '../runtime_mock'),
-      handlerDefinitionPath: path.join(__dirname, './lambda.js'),
-      startBackend: true,
-      env
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: path.join(__dirname, './lambda.js'),
+        startBackend: true,
+        env
+      });
+
+      await control.start();
     });
-    control.registerTestHooks();
+
+    beforeEach(async () => {
+      control.reset();
+      await control.resetBackend();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
 
     testCases.forEach(testDefinition => {
       const label = `${testDefinition.index}: ${testDefinition.Scenario} -> ${testDefinition['What to do?']}`;
+
       it(label, async () => {
         const valuesForPlaceholders = {};
         let headers = {};

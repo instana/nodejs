@@ -40,14 +40,7 @@ function prelude(opts) {
     env.WITH_CONFIG = 'true';
   }
 
-  const control = new Control({
-    faasRuntimePath: path.join(__dirname, '../runtime_mock'),
-    handlerDefinitionPath: opts.handlerDefinitionPath,
-    startBackend: true,
-    env
-  });
-  control.registerTestHooks();
-  return control;
+  return env;
 }
 
 describe('Using the API', () => {
@@ -58,25 +51,63 @@ describe('Using the API', () => {
     // - INSTANA_AGENT_KEY is configured
     // - back end is reachable
     // - lambda function ends with success
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       handlerDefinitionPath,
       instanaAgentKey
     });
 
-    it('must capture metrics and spans', () => verify(control, false, true));
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must capture metrics and spans', () => {
+      return verify(control, false, true);
+    });
   });
 
   describe('when lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable
     // - lambda function ends with an error
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       handlerDefinitionPath,
       instanaAgentKey,
       error: true
     });
 
-    it('must capture metrics and spans', () => verify(control, true, true));
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must capture metrics and spans', () => {
+      return verify(control, true, true);
+    });
   });
 
   describe('with config', function () {
@@ -84,13 +115,32 @@ describe('Using the API', () => {
     // - back end is reachable
     // - client provides a config object
     // - lambda function ends with success
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       handlerDefinitionPath,
       instanaAgentKey,
       withConfig: true
     });
 
-    it('must capture metrics and spans', () => verify(control, false, true));
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must capture metrics and spans', () => {
+      return verify(control, false, true);
+    });
   });
 
   describe('with config, when lambda function yields an error', function () {
@@ -98,53 +148,129 @@ describe('Using the API', () => {
     // - back end is reachable
     // - client provides a config object
     // - lambda function ends with an error
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       handlerDefinitionPath,
       instanaAgentKey,
       withConfig: true,
       error: true
     });
 
-    it('must capture metrics and spans', () => verify(control, true, true));
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must capture metrics and spans', () => {
+      return verify(control, true, true);
+    });
   });
 
   describe('when INSTANA_ENDPOINT_URL is missing', function () {
     // - INSTANA_ENDPOINT_URL is missing
     // - lambda function ends with success
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       handlerDefinitionPath,
       instanaEndpointUrlMissing: true,
       instanaAgentKey
     });
 
-    it('must ignore the missing URL gracefully', () => verify(control, false, false));
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must ignore the missing URL gracefully', () => {
+      return verify(control, false, false);
+    });
   });
 
   describe('when INSTANA_ENDPOINT_URL is missing and the lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is missing
     // - lambda function ends with an error
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       handlerDefinitionPath,
       instanaAgentKey,
       instanaEndpointUrlMissing: true,
       error: true
     });
 
-    it('must ignore the missing URL gracefully', () => verify(control, true, false));
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must ignore the missing URL gracefully', () => {
+      return verify(control, true, false);
+    });
   });
 
   describe('with config, when INSTANA_ENDPOINT_URL is missing', function () {
     // - INSTANA_ENDPOINT_URL is missing
     // - client provides a config
     // - lambda function ends with success
-    const control = prelude.bind(this)({
+    const env = prelude.bind(this)({
       handlerDefinitionPath,
       instanaAgentKey,
       instanaEndpointUrlMissing: true,
       withConfig: true
     });
 
-    it('must ignore the missing URL gracefully', () => verify(control, false, false));
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must ignore the missing URL gracefully', () => {
+      return verify(control, false, false);
+    });
   });
 
   function verify(control, error, expectSpansAndMetrics) {

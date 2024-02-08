@@ -20,6 +20,7 @@ const version = '$LATEST';
 const qualifiedArn = `${unqualifiedArn}:${version}`;
 
 const instanaAgentKey = 'aws-lambda-dummy-key';
+let timeout;
 
 function prelude(opts) {
   // The lambda under test creates an SDK span every ${opts.delay} milliseconds.
@@ -27,13 +28,11 @@ function prelude(opts) {
   // The lambda under test does this ${opts.iterations} times, then terminates.
   opts.iterations = opts.iterations || 10;
   opts.expectedLambdaRuntime = opts.delay * opts.iterations + 1500;
-  const timeout = Math.max(opts.expectedLambdaRuntime * 2, config.getTestTimeout());
+
+  timeout = Math.max(opts.expectedLambdaRuntime * 2, config.getTestTimeout());
+
   this.timeout(timeout);
   this.slow(timeout * 0.8);
-
-  if (opts.startBackend == null) {
-    opts.startBackend = true;
-  }
 
   const env = {
     DELAY: opts.delay,
@@ -47,16 +46,7 @@ function prelude(opts) {
     env.WITH_CONFIG = 'true';
   }
 
-  const control = new Control({
-    faasRuntimePath: path.join(__dirname, '../runtime_mock'),
-    handlerDefinitionPath: opts.handlerDefinitionPath,
-    startBackend: opts.startBackend,
-    longHandlerRun: true,
-    env,
-    timeout
-  });
-  control.registerTestHooks();
-  return control;
+  return env;
 }
 
 describe('long running lambdas', () => {
@@ -69,13 +59,33 @@ describe('long running lambdas', () => {
       delay: 1000,
       iterations: 3
     };
-    const control = prelude.bind(this)(opts);
 
-    it('must capture metrics and spans', () =>
-      control.runHandler().then(() => {
+    const env = prelude.bind(this)(opts);
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        longHandlerRun: true,
+        env,
+        timeout
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must capture metrics and spans', () => {
+      return control.runHandler().then(() => {
         const duration = Date.now() - control.startedAt;
         verifyResponse(control);
         expect(duration).to.be.at.most(opts.expectedLambdaRuntime);
+
         return Promise.all([
           //
           control.getSpans(),
@@ -94,40 +104,76 @@ describe('long running lambdas', () => {
           expect(rawBundles).to.have.lengthOf(1);
           expect(rawBundles[0].spans).to.have.lengthOf(opts.iterations + 1);
         });
-      }));
+      });
+    });
   });
 
   describe('when the back end is down', function () {
     const opts = {
       handlerDefinitionPath,
       instanaAgentKey,
-      startBackend: false,
       // Run for 70 seconds, create a span every 250 ms.
       delay: 250,
       iterations: 10
     };
-    const control = prelude.bind(this)(opts);
+    const env = prelude.bind(this)(opts);
+    let control;
 
-    it('must ignore the failed requests gracefully', () =>
-      control.runHandler().then(() => {
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: false,
+        longHandlerRun: true,
+        env,
+        timeout
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must ignore the failed requests gracefully', () => {
+      return control.runHandler().then(() => {
         const duration = Date.now() - control.startedAt;
         verifyResponse(control);
         expect(duration).to.be.at.most(opts.expectedLambdaRuntime);
-      }));
+      });
+    });
   });
 
   describe('when the back end is reachable but does not respond', function () {
     const opts = {
       handlerDefinitionPath,
       instanaAgentKey,
-      startBackend: 'unresponsive',
       delay: 100,
       iterations: 10
     };
-    const control = prelude.bind(this)(opts);
+    const env = prelude.bind(this)(opts);
+    let control;
 
-    it('must stop trying after first timed out request', () =>
-      control.runHandler().then(() => {
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: 'unresponsive',
+        longHandlerRun: true,
+        env,
+        timeout
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must stop trying after first timed out request', () => {
+      return control.runHandler().then(() => {
         const duration = Date.now() - control.startedAt;
         verifyResponse(control);
         expect(duration).to.be.at.most(opts.expectedLambdaRuntime);
@@ -147,7 +193,8 @@ describe('long running lambdas', () => {
           expect(rawBundles[0].spans).to.have.lengthOf(opts.iterations + 1);
           expect(rawMetrics).to.have.lengthOf(0);
         });
-      }));
+      });
+    });
   });
 
   function verifyResponse(control) {

@@ -10,6 +10,7 @@ const path = require('path');
 const Control = require('../Control');
 const config = require('../../../serverless/test/config');
 const instanaAgentKey = 'aws-lambda-dummy-key';
+const timeout = 1000 * 5;
 
 function prelude(opts) {
   // The lambda under test creates an SDK span every ${opts.delay} milliseconds.
@@ -17,13 +18,9 @@ function prelude(opts) {
   // The lambda under test does this ${opts.iterations} times, then terminates.
   opts.iterations = opts.iterations || 10;
   opts.expectedLambdaRuntime = opts.delay * opts.iterations * 1.1;
-  const timeout = 1000 * 5;
+
   this.timeout(timeout);
   this.slow(timeout * 0.8);
-
-  if (opts.startBackend == null) {
-    opts.startBackend = true;
-  }
 
   const env = {
     DELAY: opts.delay,
@@ -37,16 +34,7 @@ function prelude(opts) {
     env.WITH_CONFIG = 'true';
   }
 
-  const control = new Control({
-    faasRuntimePath: path.join(__dirname, '../runtime_mock'),
-    handlerDefinitionPath: opts.handlerDefinitionPath,
-    startBackend: opts.startBackend,
-    env,
-    timeout
-  });
-
-  control.registerTestHooks();
-  return control;
+  return env;
 }
 
 // NOTE: This test will fail if you initialise core before serverless.
@@ -62,7 +50,26 @@ describe('Logging', function () {
     delay: 1000,
     iterations: 13
   };
-  const control = prelude.bind(this)(opts);
+
+  const env = prelude.bind(this)(opts);
+
+  let control;
+
+  before(async () => {
+    control = new Control({
+      faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+      handlerDefinitionPath,
+      startBackend: true,
+      env,
+      timeout
+    });
+
+    await control.start();
+  });
+
+  after(async () => {
+    await control.stop();
+  });
 
   it('does not capture serverless console logger usages', async () => {
     await control.runHandler();
