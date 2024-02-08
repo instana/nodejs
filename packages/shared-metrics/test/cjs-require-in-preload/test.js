@@ -15,17 +15,24 @@ const ProcessControls = require('../../../collector/test/test_util/ProcessContro
 
 describe('cjs require collector in preload phase', function () {
   this.timeout(config.getTestTimeout());
+  let controls;
 
-  const controls = new ProcessControls({
-    useGlobalAgent: true,
-    cwd: path.join(__dirname, 'module'),
-    appPath: path.join(__dirname, 'module', 'src', 'app'),
-    env: {
-      NODE_OPTIONS: '--require ./load-instana.js'
-    }
+  before(async () => {
+    controls = new ProcessControls({
+      useGlobalAgent: true,
+      cwd: path.join(__dirname, 'module'),
+      appPath: path.join(__dirname, 'module', 'src', 'app'),
+      env: {
+        NODE_OPTIONS: '--require ./load-instana.js'
+      }
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
 
-  ProcessControls.setUpHooks(controls);
+  after(async () => {
+    await controls.stop();
+  });
 
   it('should be able to find package.json', async () => {
     await testUtils.retry(() =>

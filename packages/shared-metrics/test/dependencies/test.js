@@ -31,17 +31,28 @@ describe('dependencies', function () {
 
   describe('with a package.json file', () => {
     const appDir = path.join(__dirname, 'app-with-package-json');
+
     before(() => {
       runCommandSync('npm install --production --no-optional --no-audit', appDir);
     });
 
-    const controls = new ProcessControls({
-      dirname: appDir,
-      useGlobalAgent: true,
-      env: {
-        INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false'
-      }
-    }).registerTestHooks();
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: appDir,
+        useGlobalAgent: true,
+        env: {
+          INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false'
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
 
     it('should limit dependencies when there is a package.json file', () =>
       retry(() =>
@@ -85,14 +96,24 @@ describe('dependencies', function () {
       unlinkSync(path.join(tmpDir, 'package.json'));
     });
 
-    const controls = new ProcessControls({
-      dirname: tmpDir,
-      useGlobalAgent: true,
-      env: {
-        INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false',
-        INSTANA_NODES_REPO: repoRootDir
-      }
-    }).registerTestHooks();
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: tmpDir,
+        useGlobalAgent: true,
+        env: {
+          INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false',
+          INSTANA_NODES_REPO: repoRootDir
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
 
     after(done => {
       rimraf(tmpDir, done);
