@@ -483,7 +483,7 @@ describe('AWS fargate integration test', function () {
 
     let control;
 
-    before(async () => {
+    beforeEach(async () => {
       control = new Control({
         env,
         platformVersion: '1.3.0',
@@ -495,7 +495,7 @@ describe('AWS fargate integration test', function () {
       await control.start();
     });
 
-    after(async () => {
+    afterEach(async () => {
       await control.stop();
     });
 
