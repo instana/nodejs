@@ -94,18 +94,6 @@ class Control extends AbstractServerlessControl {
     return this.killChildProcess(this.otelApp);
   }
 
-  registerTestHooks() {
-    super.registerTestHooks();
-
-    beforeEach(() => {
-      if (!this.opts.otelAppPath) {
-        fail('opts.otelAppPath is unspecified.');
-      }
-    });
-
-    return this;
-  }
-
   getPort() {
     return this.port;
   }

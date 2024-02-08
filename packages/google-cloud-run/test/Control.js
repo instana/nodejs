@@ -41,16 +41,6 @@ Control.prototype.reset = function reset() {
   this.googleCloudRunAppHasTerminated = false;
 };
 
-Control.prototype.registerTestHooks = function registerTestHooks() {
-  AbstractServerlessControl.prototype.registerTestHooks.call(this);
-  beforeEach(() => {
-    if (!this.opts.containerAppPath) {
-      fail('opts.containerAppPath is unspecified.');
-    }
-  });
-  return this;
-};
-
 Control.prototype.startAdditionalAuxiliaryProcesses = function startAdditionalAuxiliaryProcesses() {
   this.metadataMock = fork(path.join(__dirname, './metadata_mock'), {
     stdio: config.getAppStdio(),

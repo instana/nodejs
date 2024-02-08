@@ -36,16 +36,6 @@ class Control extends AbstractServerlessControl {
     this.azureContainerAppHasTerminated = false;
   }
 
-  registerTestHooks() {
-    super.registerTestHooks();
-    beforeEach(() => {
-      if (!this.opts.containerAppPath) {
-        fail('opts.containerAppPath is unspecified.');
-      }
-    });
-    return this;
-  }
-
   startMonitoredProcess() {
     const env = {
       APP_PORT: this.port,

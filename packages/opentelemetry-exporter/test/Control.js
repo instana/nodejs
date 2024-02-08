@@ -86,18 +86,6 @@ class Control extends AbstractServerlessControl {
   killMonitoredProcess() {
     return this.killChildProcess(this.otelApp);
   }
-
-  registerTestHooks() {
-    super.registerTestHooks();
-
-    beforeEach(() => {
-      if (!this.opts.otelAppPath) {
-        fail('opts.otelAppPath is unspecified.');
-      }
-    });
-
-    return this;
-  }
 }
 
 exports.Control = Control;

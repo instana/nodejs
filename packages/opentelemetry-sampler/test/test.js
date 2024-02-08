@@ -27,16 +27,24 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
   this.timeout(getTestTimeout() * 3);
 
   describe('should trace & export into Instana format', function () {
-    const appControls = new Control({
-      startBackend: true,
-      otelAppPath: './test/app',
-      env: {
-        INSTANA_DISABLE_CA_CHECK: 'true',
-        INSTANA_AGENT_KEY: 'some key'
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new Control({
+        startBackend: true,
+        otelAppPath: './test/app',
+        env: {
+          INSTANA_DISABLE_CA_CHECK: 'true',
+          INSTANA_AGENT_KEY: 'some key'
+        }
+      });
+
+      await appControls.start();
     });
 
-    appControls.registerTestHooks();
+    after(async () => {
+      await appControls.stop();
+    });
 
     it('when tracing is not suppressed', async () => {
       await appControls.sendRequest({
@@ -68,18 +76,26 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
   describe('should trace with Otel format', function () {
     const exporterEndpoint = 'http://example.com';
 
-    const appControls = new Control({
-      startBackend: true,
-      otelAppPath: './test/app',
-      env: {
-        INSTANA_DISABLE_CA_CHECK: 'true',
-        INSTANA_AGENT_KEY: 'some key',
-        OTEL_EXPORTER_OTLP_ENDPOINT: exporterEndpoint,
-        OTEL_EXPORTER_OTLP_INSECURE: 'true'
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new Control({
+        startBackend: true,
+        otelAppPath: './test/app',
+        env: {
+          INSTANA_DISABLE_CA_CHECK: 'true',
+          INSTANA_AGENT_KEY: 'some key',
+          OTEL_EXPORTER_OTLP_ENDPOINT: exporterEndpoint,
+          OTEL_EXPORTER_OTLP_INSECURE: 'true'
+        }
+      });
+
+      await appControls.start();
     });
 
-    appControls.registerTestHooks();
+    after(async () => {
+      await appControls.stop();
+    });
 
     it('when tracing is not suppressed', async () => {
       await appControls.sendRequest({
@@ -112,18 +128,26 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
   describe('should not trace with Otel format', function () {
     const exporterEndpoint = 'http://example.com';
 
-    const appControls = new Control({
-      startBackend: true,
-      otelAppPath: './test/app',
-      env: {
-        INSTANA_DISABLE_CA_CHECK: 'true',
-        INSTANA_AGENT_KEY: 'some key',
-        OTEL_EXPORTER_OTLP_ENDPOINT: exporterEndpoint,
-        OTEL_EXPORTER_OTLP_INSECURE: 'true'
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new Control({
+        startBackend: true,
+        otelAppPath: './test/app',
+        env: {
+          INSTANA_DISABLE_CA_CHECK: 'true',
+          INSTANA_AGENT_KEY: 'some key',
+          OTEL_EXPORTER_OTLP_ENDPOINT: exporterEndpoint,
+          OTEL_EXPORTER_OTLP_INSECURE: 'true'
+        }
+      });
+
+      await appControls.start();
     });
 
-    appControls.registerTestHooks();
+    after(async () => {
+      await appControls.stop();
+    });
 
     it('when tracing is suppressed', async () => {
       await appControls.sendRequest({
@@ -141,16 +165,24 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
   });
 
   describe('should not trace', function () {
-    const appControls = new Control({
-      startBackend: true,
-      otelAppPath: './test/app',
-      env: {
-        INSTANA_DISABLE_CA_CHECK: 'true',
-        INSTANA_AGENT_KEY: 'some key'
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new Control({
+        startBackend: true,
+        otelAppPath: './test/app',
+        env: {
+          INSTANA_DISABLE_CA_CHECK: 'true',
+          INSTANA_AGENT_KEY: 'some key'
+        }
+      });
+
+      await appControls.start();
     });
 
-    appControls.registerTestHooks();
+    after(async () => {
+      await appControls.stop();
+    });
 
     it('when tracing is suppressed', async () => {
       await appControls.sendRequest({

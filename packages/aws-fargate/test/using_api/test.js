@@ -23,41 +23,73 @@ const instrumentedContainerId = `${taskArn}::${instrumentedContainerName}`;
 const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'aws-fargate-dummy-key';
 
-function prelude(opts = {}) {
+function prelude() {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
-
-  const controlOpts = {
-    ...opts,
-    containerAppPath,
-    instanaAgentKey,
-    startDownstreamDummy: false,
-    startBackend: true
-  };
-  return new Control(controlOpts).registerTestHooks();
 }
 
 describe('Using the API', function () {
   describe('when configured properly', function () {
-    const control = prelude.bind(this)();
-    it('should collect metrics and trace http requests', () =>
-      control
+    prelude.bind(this)();
+    let control;
+
+    before(async () => {
+      control = new Control({
+        containerAppPath,
+        instanaAgentKey,
+        startDownstreamDummy: false,
+        startBackend: true
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('should collect metrics and trace http requests', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path: '/'
         })
-        .then(response => verify(control, response)));
+        .then(response => {
+          return verify(control, response);
+        });
+    });
   });
 
   describe('when not configured properly', function () {
-    const control = prelude.bind(this)({ unconfigured: false });
-    it('should provide a no-op API', () =>
-      control
+    prelude.bind(this)({});
+    let control;
+
+    before(async () => {
+      control = new Control({
+        containerAppPath,
+        unconfigured: false,
+        instanaAgentKey,
+        startDownstreamDummy: false,
+        startBackend: true
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('should provide a no-op API', () => {
+      return control
         .sendRequest({
           method: 'GET',
           path: '/'
         })
-        .then(response => verifyNoOp(control, response)));
+        .then(response => {
+          return verifyNoOp(control, response);
+        });
+    });
   });
 
   function verify(control, response) {

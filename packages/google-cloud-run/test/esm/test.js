@@ -28,57 +28,91 @@ const host = `gcp:cloud-run:revision:${revision}`;
 const containerAppPath = path.join(__dirname, './app.mjs');
 const instanaAgentKey = 'google-cloud-run-dummy-key';
 const testStartedAt = Date.now();
+
 function prelude(opts = {}) {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
-  if (opts.startBackend == null) {
-    opts.startBackend = true;
-  }
   let env = {
     ESM_TEST: true
   };
+
   if (opts.env) {
     env = {
       ...env,
       ...opts.env
     };
   }
-  const controlOpts = {
-    ...opts,
-    env,
-    containerAppPath,
-    instanaAgentKey
-  };
-  return new Control(controlOpts).registerTestHooks();
+
+  return env;
 }
 // Run the tests only for supported node versions
 if (esmSupportedVersion(process.versions.node)) {
   describe('Google Cloud Run esm test', function () {
     describe('when the back end is up', function () {
-      const control = prelude.bind(this)();
+      const env = prelude.bind(this)();
 
-      it('should collect metrics and trace http requests', () =>
-        control
-          .sendRequest({
-            method: 'GET',
-            path: '/'
-          })
-          .then(response => verify(control, response, true)));
-    });
-    describe('when the back end is down', function () {
-      const control = prelude.bind(this)({
-        startBackend: false
+      let appControls;
+
+      before(async () => {
+        appControls = new Control({
+          containerAppPath,
+          instanaAgentKey,
+          startBackend: true,
+          env
+        });
+
+        await appControls.start();
       });
 
-      it('should ignore connection failures gracefully', () =>
-        control
+      after(async () => {
+        await appControls.stop();
+      });
+
+      it('should collect metrics and trace http requests', () => {
+        return appControls
           .sendRequest({
             method: 'GET',
             path: '/'
           })
-          .then(response => verify(control, response, false)));
+          .then(response => {
+            return verify(appControls, response, true);
+          });
+      });
     });
+
+    describe('when the back end is down', function () {
+      const env = prelude.bind(this)({});
+
+      let appControls;
+
+      before(async () => {
+        appControls = new Control({
+          containerAppPath,
+          instanaAgentKey,
+          startBackend: false,
+          env
+        });
+
+        await appControls.start();
+      });
+
+      after(async () => {
+        await appControls.stop();
+      });
+
+      it('should ignore connection failures gracefully', () => {
+        return appControls
+          .sendRequest({
+            method: 'GET',
+            path: '/'
+          })
+          .then(response => {
+            return verify(appControls, response, false);
+          });
+      });
+    });
+
     function verify(control, response, expectMetricsAndSpans) {
       expect(response.message).to.equal('Hello Google Cloud Run!');
       if (expectMetricsAndSpans) {

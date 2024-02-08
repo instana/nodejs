@@ -29,58 +29,102 @@ const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'google-cloud-run-dummy-key';
 const testStartedAt = Date.now();
 
-function prelude(opts = {}) {
+function prelude() {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
-
-  if (opts.startBackend == null) {
-    opts.startBackend = true;
-  }
-
-  const controlOpts = {
-    ...opts,
-    containerAppPath,
-    instanaAgentKey
-  };
-  return new Control(controlOpts).registerTestHooks();
 }
 
 describe('Google Cloud Run integration test', function () {
   describe('when the back end is up', function () {
-    const control = prelude.bind(this)();
+    prelude.bind(this)();
 
-    it('should collect metrics and trace http requests', () =>
-      control
+    let appControls;
+
+    before(async () => {
+      appControls = new Control({
+        containerAppPath,
+        instanaAgentKey,
+        startDownstreamDummy: true,
+        startBackend: true
+      });
+
+      await appControls.start();
+    });
+
+    after(async () => {
+      await appControls.stop();
+    });
+
+    it('should collect metrics and trace http requests', () => {
+      return appControls
         .sendRequest({
           method: 'GET',
           path: '/'
         })
-        .then(response => verify(control, response, true)));
+        .then(response => {
+          return verify(appControls, response, true);
+        });
+    });
   });
 
   describe('when the back end is down', function () {
-    const control = prelude.bind(this)({
-      startBackend: false
+    prelude.bind(this)({});
+
+    let appControls;
+
+    before(async () => {
+      appControls = new Control({
+        containerAppPath,
+        instanaAgentKey,
+        startDownstreamDummy: true,
+
+        startBackend: false
+      });
+
+      await appControls.start();
     });
 
-    it('should ignore connection failures gracefully', () =>
-      control
+    after(async () => {
+      await appControls.stop();
+    });
+
+    it('should ignore connection failures gracefully', () => {
+      return appControls
         .sendRequest({
           method: 'GET',
           path: '/'
         })
-        .then(response => verify(control, response, false)));
+        .then(response => {
+          return verify(appControls, response, false);
+        });
+    });
   });
 
   describe('when the back end becomes available after being down initially', function () {
-    const control = prelude.bind(this)({
-      startBackend: false
+    prelude.bind(this)({});
+
+    let appControls;
+
+    before(async () => {
+      appControls = new Control({
+        containerAppPath,
+        instanaAgentKey,
+        startDownstreamDummy: true,
+        startBackend: false
+      });
+
+      await appControls.start();
+    });
+
+    after(async () => {
+      await appControls.stop();
     });
 
     it('should buffer snapshot data, metrics and spans for a limited time until the back end becomes available', () => {
       // 1. send http request
       let response;
-      return control
+
+      return appControls
         .sendRequest({
           method: 'GET',
           path: '/'
@@ -92,28 +136,44 @@ describe('Google Cloud Run integration test', function () {
         })
         .then(() =>
           // 3. now start the back end
-          control.startBackendAndWaitForIt()
+          appControls.startBackendAndWaitForIt()
         )
-        .then(() =>
+        .then(() => {
           // 4. cloud run collector should send uncompressed snapshot data and the spans as soon as the
           // back end comes up
-          verify(control, response, true)
-        );
+          return verify(appControls, response, true);
+        });
     });
   });
 
   describe('with default secrets configuration', function () {
-    const control = prelude.bind(this)({
-      env: {
-        CLOUD_ACCESS_KEY: 'needs to be removed',
-        DB_PASSWORD_ABC: 'needs to be removed',
-        verysecretenvvar: 'needs to be removed',
-        ANOTHER_ENV_VAR: 'this can stay'
-      }
+    prelude.bind(this)({});
+
+    let appControls;
+
+    before(async () => {
+      appControls = new Control({
+        containerAppPath,
+        instanaAgentKey,
+        startDownstreamDummy: true,
+        startBackend: true,
+        env: {
+          CLOUD_ACCESS_KEY: 'needs to be removed',
+          DB_PASSWORD_ABC: 'needs to be removed',
+          verysecretenvvar: 'needs to be removed',
+          ANOTHER_ENV_VAR: 'this can stay'
+        }
+      });
+
+      await appControls.start();
     });
 
-    it('must filter secrets from query params', () =>
-      control
+    after(async () => {
+      await appControls.stop();
+    });
+
+    it('must filter secrets from query params', () => {
+      return appControls
         .sendRequest({
           method: 'GET',
           path:
@@ -124,8 +184,8 @@ describe('Google Cloud Run integration test', function () {
             'ghiSeCrETrst=needs-to-be-removed&' +
             'q2=a-value'
         })
-        .then(response =>
-          verify(control, response, true).then(({ entry }) => {
+        .then(response => {
+          return verify(appControls, response, true).then(({ entry }) => {
             expect(entry.data.http.params).to.equal(
               'q1=whatever&' +
                 'confidential=can-stay&' +
@@ -134,17 +194,18 @@ describe('Google Cloud Run integration test', function () {
                 'ghiSeCrETrst=<redacted>&' +
                 'q2=a-value'
             );
-          })
-        ));
+          });
+        });
+    });
 
-    it('must filter secrets from env', () =>
-      control
+    it('must filter secrets from env', async () => {
+      return appControls
         .sendRequest({
           method: 'GET',
           path: '/'
         })
-        .then(response =>
-          verify(control, response, true).then(({ allEntities }) => {
+        .then(response => {
+          return verify(appControls, response, true).then(({ allEntities }) => {
             // verify that we did not accidentally change the value of the env var that the application sees
             expect(response.env).to.deep.equal({
               CLOUD_ACCESS_KEY: 'needs to be removed',
@@ -164,25 +225,42 @@ describe('Google Cloud Run integration test', function () {
 
             // always redact the agent key
             expect(env.INSTANA_AGENT_KEY).to.equal('<redacted>');
-          })
-        ));
+          });
+        });
+    });
   });
 
   describe('with custom secrets configuration', function () {
-    const control = prelude.bind(this)({
-      env: {
-        INSTANA_SECRETS: 'equals:confidential',
-        CLOUD_ACCESS_KEY: 'this can stay',
-        DB_PASSWORD_ABC: 'this can stay',
-        verysecretenvvar: 'this can stay',
-        ANOTHER_ENV_VAR: 'this can stay',
-        CONFIDENTIAL: 'this can stay', // we asked for case sensitive comparison
-        confidential: 'needs to be removed'
-      }
+    prelude.bind(this)({});
+
+    let appControls;
+
+    before(async () => {
+      appControls = new Control({
+        containerAppPath,
+        instanaAgentKey,
+        startDownstreamDummy: true,
+        startBackend: true,
+        env: {
+          INSTANA_SECRETS: 'equals:confidential',
+          CLOUD_ACCESS_KEY: 'this can stay',
+          DB_PASSWORD_ABC: 'this can stay',
+          verysecretenvvar: 'this can stay',
+          ANOTHER_ENV_VAR: 'this can stay',
+          CONFIDENTIAL: 'this can stay', // we asked for case sensitive comparison
+          confidential: 'needs to be removed'
+        }
+      });
+
+      await appControls.start();
     });
 
-    it('must filter secrets from query params', () =>
-      control
+    after(async () => {
+      await appControls.stop();
+    });
+
+    it('must filter secrets from query params', () => {
+      return appControls
         .sendRequest({
           method: 'GET',
           path:
@@ -193,8 +271,8 @@ describe('Google Cloud Run integration test', function () {
             'ghiSeCrETrst=can-stay&' +
             'q2=a-value'
         })
-        .then(response =>
-          verify(control, response, true).then(({ entry }) => {
+        .then(response => {
+          return verify(appControls, response, true).then(({ entry }) => {
             expect(entry.data.http.params).to.equal(
               'q1=whatever&' +
                 'confidential=<redacted>&' +
@@ -203,17 +281,18 @@ describe('Google Cloud Run integration test', function () {
                 'ghiSeCrETrst=can-stay&' +
                 'q2=a-value'
             );
-          })
-        ));
+          });
+        });
+    });
 
-    it('must filter secrets from env', () =>
-      control
+    it('must filter secrets from env', async () => {
+      return appControls
         .sendRequest({
           method: 'GET',
           path: '/'
         })
-        .then(response =>
-          verify(control, response, true).then(({ allEntities }) => {
+        .then(response => {
+          return verify(appControls, response, true).then(({ allEntities }) => {
             // verify that we did not accidentally change the value of the env var that the application sees
             expect(response.env).to.deep.equal({
               CLOUD_ACCESS_KEY: 'this can stay',
@@ -237,8 +316,9 @@ describe('Google Cloud Run integration test', function () {
 
             // always redact the agent key
             expect(env.INSTANA_AGENT_KEY).to.equal('<redacted>');
-          })
-        ));
+          });
+        });
+    });
   });
 
   function verify(control, response, expectMetricsAndSpans) {

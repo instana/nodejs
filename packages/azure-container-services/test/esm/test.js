@@ -11,68 +11,115 @@ const Control = require('../Control');
 const { expectExactlyOneMatching } = require('@instana/core/test/test_util');
 const config = require('../../../serverless/test/config');
 const retry = require('@instana/core/test/test_util/retry');
+const { delay } = require('bluebird');
 const esmSupportedVersion = require('@instana/core').tracing.esmSupportedVersion;
 const entityId = '/subscriptions/instana/resourceGroups/East US/providers/Microsoft.Web/sites/test-app';
 const containerAppPath = path.join(__dirname, './app.mjs');
 const instanaAgentKey = 'azure-container-service-dummy-key';
 
-function prelude(opts = {}) {
+function prelude() {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
-
-  if (opts.startBackend == null) {
-    opts.startBackend = true;
-  }
-  const controlOpts = {
-    ...opts,
-    containerAppPath,
-    instanaAgentKey
-  };
-  return new Control(controlOpts).registerTestHooks();
 }
+
 // Run the tests only for supported node versions
 if (esmSupportedVersion(process.versions.node)) {
   describe('Azure Container Service esm test', function () {
     describe('when the back end is up', function () {
-      const control = prelude.bind(this)({
-        env: {
-          ESM_TEST: true,
-          WEBSITE_OWNER_NAME: 'instana+123',
-          WEBSITE_RESOURCE_GROUP: 'East US',
-          WEBSITE_SITE_NAME: 'test-app'
-        }
+      prelude.bind(this)({});
+      let control;
+
+      before(async () => {
+        control = new Control({
+          containerAppPath,
+          instanaAgentKey,
+          startBackend: true,
+          env: {
+            ESM_TEST: true,
+            WEBSITE_OWNER_NAME: 'instana+123',
+            WEBSITE_RESOURCE_GROUP: 'East US',
+            WEBSITE_SITE_NAME: 'test-app'
+          }
+        });
+
+        await control.start();
       });
-      it('should trace http requests', () =>
-        control
+
+      after(async () => {
+        await control.stop();
+      });
+
+      it('should trace http requests', () => {
+        return control
           .sendRequest({
             method: 'GET',
             path: '/'
           })
-          .then(response => verify(control, response, true)));
+          .then(response => {
+            return verify(control, response, true);
+          });
+      });
     });
 
     describe('when the back end is down', function () {
-      const control = prelude.bind(this)({
-        startBackend: false
+      prelude.bind(this)({});
+      let control;
+
+      before(async () => {
+        control = new Control({
+          containerAppPath,
+          instanaAgentKey,
+          startBackend: false
+        });
+
+        await control.start();
       });
 
-      it('should ignore connection failures gracefully', () =>
-        control
+      after(async () => {
+        await control.stop();
+      });
+
+      it('should ignore connection failures gracefully', () => {
+        return control
           .sendRequest({
             method: 'GET',
             path: '/'
           })
-          .then(response => verify(control, response, false)));
+          .then(response => {
+            return verify(control, response, false);
+          });
+      });
     });
-    describe('when requirent environment variables are not present', function () {
-      const control = prelude.bind(this)();
-      it('should not trace', () =>
-        control
+
+    describe('when required environment variables are not present', function () {
+      prelude.bind(this)();
+      let control;
+
+      before(async () => {
+        control = new Control({
+          containerAppPath,
+          instanaAgentKey,
+          startBackend: false
+        });
+
+        await control.start();
+      });
+
+      after(async () => {
+        await control.stop();
+      });
+
+      it('should not trace', () => {
+        return control
           .sendRequest({
             method: 'GET',
             path: '/'
           })
-          .then(verifyNoSpans(control)));
+          .then(() => delay(1000))
+          .then(() => {
+            return verifyNoSpans(control);
+          });
+      });
     });
 
     function verify(control, response, expectSpans) {

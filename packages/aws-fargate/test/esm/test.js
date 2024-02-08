@@ -33,17 +33,13 @@ function prelude(opts = {}) {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
-  opts.platformVersion = opts.platformVersion || '1.3.0';
-  if (opts.startBackend == null) {
-    opts.startBackend = true;
-  }
-
   let env = {
     INSTANA_EXTRA_HTTP_HEADERS:
       'x-entry-request-header-1; X-ENTRY-REQUEST-HEADER-2 ; x-entry-response-header-1;X-ENTRY-RESPONSE-HEADER-2 , ' +
       'x-eXit-Request-Header-1; X-EXIT-REQUEST-HEADER-2 ',
     ESM_TEST: true
   };
+
   if (opts.env) {
     env = {
       ...env,
@@ -51,34 +47,48 @@ function prelude(opts = {}) {
     };
   }
 
-  const controlOpts = {
-    ...opts,
-    env,
-    containerAppPath,
-    instanaAgentKey
-  };
   if (opts.proxy) {
-    controlOpts.env.INSTANA_ENDPOINT_PROXY = opts.proxy;
+    env.INSTANA_ENDPOINT_PROXY = opts.proxy;
   }
-  return new Control(controlOpts).registerTestHooks();
+
+  return env;
 }
 
 // Run the tests only for supported node versions
 if (esmSupportedVersion(process.versions.node)) {
   describe('AWS fargate esm test', function () {
     describe('when the back end is up (platform version 1.3.0)', function () {
-      const control = prelude.bind(this)({
-        platformVersion: '1.3.0'
+      const env = prelude.bind(this)({});
+
+      let control;
+
+      before(async () => {
+        control = new Control({
+          env,
+          platformVersion: '1.3.0',
+          containerAppPath,
+          instanaAgentKey,
+          startBackend: true
+        });
+
+        await control.start();
       });
 
-      it('should collect metrics and trace http requests', () =>
-        control
+      after(async () => {
+        await control.stop();
+      });
+
+      it('should collect metrics and trace http requests', () => {
+        return control
           .sendRequest({
             method: 'GET',
             path: '/',
             headers: requestHeaders
           })
-          .then(response => verify(control, response, true)));
+          .then(response => {
+            return verify(control, response, true);
+          });
+      });
     });
 
     function verify(control, response, expectMetricsAndSpans) {

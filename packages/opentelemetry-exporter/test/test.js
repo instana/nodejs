@@ -85,16 +85,24 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
 
   describe('Communication to the backend', () => {
     describe('When backend is started', () => {
-      const appControls = new Control({
-        startBackend: true,
-        otelAppPath: './test/app',
-        env: {
-          INSTANA_DISABLE_CA_CHECK: 'true',
-          INSTANA_AGENT_KEY: 'some key'
-        }
+      let appControls;
+
+      before(async () => {
+        appControls = new Control({
+          startBackend: true,
+          otelAppPath: './test/app',
+          env: {
+            INSTANA_DISABLE_CA_CHECK: 'true',
+            INSTANA_AGENT_KEY: 'some key'
+          }
+        });
+
+        await appControls.start();
       });
 
-      appControls.registerTestHooks();
+      after(async () => {
+        await appControls.stop();
+      });
 
       it('sends spans to the backend', async () => {
         // We need some time so OTel tracing starts
@@ -111,15 +119,23 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
     });
 
     describe('When backend is not started', () => {
-      const appControls = new Control({
-        startBackend: false,
-        otelAppPath: './test/app',
-        env: {
-          INSTANA_AGENT_KEY: 'some key'
-        }
+      let appControls;
+
+      before(async () => {
+        appControls = new Control({
+          startBackend: false,
+          otelAppPath: './test/app',
+          env: {
+            INSTANA_AGENT_KEY: 'some key'
+          }
+        });
+
+        await appControls.start();
       });
 
-      appControls.registerTestHooks();
+      after(async () => {
+        await appControls.stop();
+      });
 
       it('fails to send spans to the backend', async () => {
         // We need some time so OTel tracing starts
@@ -137,17 +153,25 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
     });
 
     describe('When environment variables are not properly set', () => {
-      const appControls = new Control({
-        INSTANA_DISABLE_CA_CHECK: 'true',
-        startBackend: true,
-        otelAppPath: './test/app',
-        env: {
-          INSTANA_ENDPOINT_URL: 'malformed URL',
-          INSTANA_AGENT_KEY: 'some key'
-        }
+      let appControls;
+
+      before(async () => {
+        appControls = new Control({
+          INSTANA_DISABLE_CA_CHECK: 'true',
+          startBackend: true,
+          otelAppPath: './test/app',
+          env: {
+            INSTANA_ENDPOINT_URL: 'malformed URL',
+            INSTANA_AGENT_KEY: 'some key'
+          }
+        });
+
+        await appControls.start();
       });
 
-      appControls.registerTestHooks();
+      after(async () => {
+        await appControls.stop();
+      });
 
       it('fails to send spans to the backend', async () => {
         // We need some time so OTel tracing starts

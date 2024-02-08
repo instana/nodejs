@@ -8,9 +8,6 @@
 const { fork } = require('child_process');
 const path = require('path');
 const request = require('request-promise');
-const {
-  assert: { fail }
-} = require('chai');
 
 const config = require('../../serverless/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
@@ -42,16 +39,6 @@ Control.prototype.reset = function reset() {
   this.messagesFromMetadataMock = [];
   this.fargateContainerAppHasStarted = false;
   this.fargateContainerAppHasTerminated = false;
-};
-
-Control.prototype.registerTestHooks = function registerTestHooks() {
-  AbstractServerlessControl.prototype.registerTestHooks.call(this);
-  beforeEach(() => {
-    if (!this.opts.containerAppPath) {
-      fail('opts.containerAppPath is unspecified.');
-    }
-  });
-  return this;
 };
 
 Control.prototype.startAdditionalAuxiliaryProcesses = function startAdditionalAuxiliaryProcesses() {
