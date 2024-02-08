@@ -60,10 +60,6 @@ mochaSuiteFn('tracing/common', function () {
         await controls.stop();
       });
 
-      afterEach(async () => {
-        await controls.clearIpcMessages();
-      });
-
       it(`must respect delay (with minimal delay: ${withMinimalDelay})`, () =>
         controls
           .sendRequest({
@@ -90,25 +86,23 @@ mochaSuiteFn('tracing/common', function () {
           })
           // verify that spans arrive after the minimum delay
           .then(() =>
-            retry(
-              () =>
-                agentControls.getSpans().then(spans => {
-                  expect(spans).to.have.lengthOf(1);
-                  const span = spans[0];
-                  expect(span.n).to.equal('node.http.server');
-                  expect(span.k).to.equal(constants.ENTRY);
-                  expect(span.async).to.not.exist;
-                  expect(span.error).to.not.exist;
-                  expect(span.ec).to.equal(0);
-                  expect(span.t).to.be.a('string');
-                  expect(span.s).to.be.a('string');
-                  expect(span.p).to.not.exist;
-                  expect(span.data.http.method).to.equal('GET');
-                  expect(span.data.http.url).to.equal('/');
-                  expect(span.data.http.status).to.equal(200);
-                  expect(span.data.http.host).to.equal(`localhost:${controls.getPort()}`);
-                }),
-              Math.max(extendedTimeout / 2, 10000)
+            retry(() =>
+              agentControls.getSpans().then(spans => {
+                expect(spans).to.have.lengthOf(1);
+                const span = spans[0];
+                expect(span.n).to.equal('node.http.server');
+                expect(span.k).to.equal(constants.ENTRY);
+                expect(span.async).to.not.exist;
+                expect(span.error).to.not.exist;
+                expect(span.ec).to.equal(0);
+                expect(span.t).to.be.a('string');
+                expect(span.s).to.be.a('string');
+                expect(span.p).to.not.exist;
+                expect(span.data.http.method).to.equal('GET');
+                expect(span.data.http.url).to.equal('/');
+                expect(span.data.http.status).to.equal(200);
+                expect(span.data.http.host).to.equal(`localhost:${controls.getPort()}`);
+              })
             )
           )
       );
@@ -215,12 +209,12 @@ mochaSuiteFn('tracing/common', function () {
 
       before(async () => {
         controls = new ProcessControls({
-          useGlobalAgent: true,
+          agentControls,
           dirname: __dirname,
           env
         });
 
-        await controls.startAndWaitForAgentConnection();
+        await controls.start();
       });
 
       after(async () => {

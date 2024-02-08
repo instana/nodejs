@@ -12,15 +12,18 @@ const testUtils = require('../../../core/test/test_util');
 const globalAgent = require('../globalAgent');
 
 describe('actions/getModuleAnalysis', function () {
-  const expressControls = require('../apps/expressControls');
-
   this.timeout(config.getTestTimeout());
 
+  const expressControls = require('../apps/expressControls');
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  expressControls.registerTestHooks({
-    useGlobalAgent: true
+  before(async () => {
+    await expressControls.start({ useGlobalAgent: true });
+  });
+
+  after(async () => {
+    await expressControls.stop();
   });
 
   beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));

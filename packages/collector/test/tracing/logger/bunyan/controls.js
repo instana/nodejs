@@ -13,11 +13,13 @@ const portfinder = require('../../../test_util/portfinder');
 const testUtils = require('../../../../../core/test/test_util');
 const config = require('../../../../../core/test/config');
 
-const upstreamPort = require('../../../apps/expressControls').appPort;
-const agentPort = require('../../../globalAgent').instance.agentPort;
+const expressControls = require('../../../apps/expressControls');
+const agentControls = require('../../../globalAgent').instance;
 
 let appProcess;
-const appPort = (exports.appPort = portfinder());
+let appPort;
+
+// TODO: transform into class
 
 exports.registerTestHooks = (opts = {}) => {
   let appName = 'app.js';
@@ -38,9 +40,10 @@ exports.registerTestHooks = (opts = {}) => {
   }
   beforeEach(() => {
     const env = Object.create(process.env);
-    env.AGENT_PORT = agentPort;
-    env.APP_PORT = appPort;
-    env.UPSTREAM_PORT = upstreamPort;
+    env.AGENT_PORT = agentControls.getPort();
+    env.APP_PORT = portfinder();
+    appPort = env.APP_PORT;
+    env.UPSTREAM_PORT = expressControls.getPort();
     env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
     env.TRACING_ENABLED = opts.enableTracing !== false;
 

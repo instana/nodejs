@@ -12,47 +12,46 @@ const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 
 describe('tracing/asyncAwait', function () {
-  const expressAsyncAwaitControls = require('./controls');
-  const { AgentStubControls } = require('../../../apps/agentStubControls');
-
-  const agentStubControls = new AgentStubControls();
-  const expressControls = require('../../../apps/expressControls');
-  expressControls.registerTestHooks({ agentControls: agentStubControls });
-
   this.timeout(config.getTestTimeout());
 
-  before(async () => {
-    await agentStubControls.startAgent();
-  });
-  after(async () => {
-    await agentStubControls.stopAgent();
-  });
+  const expressAsyncAwaitControls = require('./controls');
+  const { AgentStubControls } = require('../../../apps/agentStubControls');
+  const expressControls = require('../../../apps/expressControls');
 
-  beforeEach(() => {
-    return agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid());
-  });
+  const agentStubControls = new AgentStubControls();
 
   describe('custom http client wrapper with native promises', () => {
-    expressAsyncAwaitControls.registerTestHooks({
-      agentControls: agentStubControls,
-      upstreamPort: expressControls.appPort
+    before(async () => {
+      await agentStubControls.startAgent();
+      await expressControls.start({ agentControls: agentStubControls });
+      await expressAsyncAwaitControls.start({ agentControls: agentStubControls, expressControls });
     });
 
-    beforeEach(() => {
-      return agentStubControls.waitUntilAppIsCompletelyInitialized(expressAsyncAwaitControls.getPid());
+    after(async () => {
+      await agentStubControls.stopAgent();
+      await expressControls.stop();
+      await expressAsyncAwaitControls.stop();
     });
 
     testAsyncControlFlow();
   });
 
   describe('request-promise', () => {
-    expressAsyncAwaitControls.registerTestHooks({
-      agentControls: agentStubControls,
-      upstreamPort: expressControls.appPort,
-      useRequestPromise: true
+    before(async () => {
+      await agentStubControls.startAgent();
+      await expressControls.start({ agentControls: agentStubControls });
+      await expressAsyncAwaitControls.start({
+        agentControls: agentStubControls,
+        expressControls,
+        useRequestPromise: true
+      });
     });
 
-    beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressAsyncAwaitControls.getPid()));
+    after(async () => {
+      await agentStubControls.stopAgent();
+      await expressControls.stop();
+      await expressAsyncAwaitControls.stop();
+    });
 
     testAsyncControlFlow();
   });

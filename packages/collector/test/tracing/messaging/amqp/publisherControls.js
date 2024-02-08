@@ -12,18 +12,19 @@ const portfinder = require('../../../test_util/portfinder');
 
 const testUtils = require('../../../../../core/test/test_util');
 const config = require('../../../../../core/test/config');
-const agentPort = require('../../../globalAgent').instance.agentPort;
+const agentControls = require('../../../globalAgent').instance;
 
 let app;
-const appPort = (exports.appPort = portfinder());
+let appPort;
 
 exports.registerTestHooks = opts => {
   beforeEach(() => {
     opts = opts || {};
 
     const env = Object.create(process.env);
-    env.AGENT_PORT = agentPort;
-    env.APP_PORT = appPort;
+    env.AGENT_PORT = agentControls.getPort();
+    env.APP_PORT = portfinder();
+    appPort = env.APP_PORT;
     env.TRACING_ENABLED = opts.enableTracing !== false;
     env.AMQPLIB_VERSION = opts.version;
 

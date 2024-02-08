@@ -17,9 +17,15 @@ describe('agentCommunication', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
-
   const expressControls = require('./apps/expressControls');
-  expressControls.registerTestHooks({ useGlobalAgent: true });
+
+  before(async () => {
+    await expressControls.start({ useGlobalAgent: true });
+  });
+
+  after(async () => {
+    await expressControls.stop();
+  });
 
   it('must announce itself to the agent', () =>
     retry(() =>

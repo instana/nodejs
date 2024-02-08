@@ -67,7 +67,7 @@ class AgentStubControls {
     const url = `http://127.0.0.1:${this.agentPort}`;
 
     // eslint-disable-next-line no-console
-    console.log(`AgentStubControls:waitUntilAgentHasStarted: ${url}`);
+    console.log(`[AgentStubControls] starting: ${url}`);
 
     try {
       await retry(() =>
@@ -78,7 +78,7 @@ class AgentStubControls {
       );
 
       // eslint-disable-next-line no-console
-      console.log('AgentStubControls:waitUntilAgentHasStarted done');
+      console.log('[AgentStubControls] started');
     } catch (err) {
       // eslint-disable-next-line no-console
       console.log(`agentStubControls: error waiting until server (${url}) is up: ${err.message}`);

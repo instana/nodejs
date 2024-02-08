@@ -12,47 +12,63 @@ const portfinder = require('../../../test_util/portfinder');
 
 const testUtils = require('../../../../../core/test/test_util');
 const config = require('../../../../../core/test/config');
-const agentPort = require('../../../globalAgent').instance.agentPort;
+const agentControls = require('../../../globalAgent').instance;
 
 let expressApp;
-const appPort = (exports.appPort = portfinder());
+let appPort;
 
-exports.registerTestHooks = opts => {
-  beforeEach(() => {
-    opts = opts || {};
+// TODO: transform into class
+exports.start = opts => {
+  opts = opts || {};
 
-    const env = Object.create(process.env);
-    env.AGENT_PORT = opts.useGlobalAgent ? agentPort : opts.agentControls.agentPort;
-    env.APP_PORT = appPort;
-    env.UPSTREAM_PORT = opts.upstreamPort;
-    env.USE_REQUEST_PROMISE = String(opts.useRequestPromise);
+  const env = Object.create(process.env);
+  env.AGENT_PORT = opts.useGlobalAgent ? agentControls.getPort() : opts.agentControls.getPort();
+  env.APP_PORT = portfinder();
 
-    expressApp = spawn('node', [path.join(__dirname, 'app.js')], {
-      stdio: config.getAppStdio(),
-      env
-    });
+  appPort = env.APP_PORT;
 
-    return waitUntilServerIsUp();
+  env.UPSTREAM_PORT = opts.expressControls ? opts.expressControls.getPort() : null;
+  env.USE_REQUEST_PROMISE = String(opts.useRequestPromise);
+
+  // eslint-disable-next-line no-console
+  console.log(
+    // eslint-disable-next-line max-len
+    `[AsyncAwaitControls] starting with port: ${appPort}, upstreamPort: ${env.UPSTREAM_PORT} and agentPort: ${env.AGENT_PORT}`
+  );
+
+  expressApp = spawn('node', [path.join(__dirname, 'app.js')], {
+    stdio: config.getAppStdio(),
+    env
   });
 
-  afterEach(() => {
-    expressApp.kill();
-  });
+  return waitUntilServerIsUp();
+};
+
+exports.stop = async () => {
+  await expressApp.kill();
 };
 
 function waitUntilServerIsUp() {
-  return testUtils.retry(() =>
-    request({
-      method: 'GET',
-      url: `http://127.0.0.1:${appPort}`,
-      headers: {
-        'X-INSTANA-L': '0'
-      }
-    })
-  );
+  return testUtils
+    .retry(() =>
+      request({
+        method: 'GET',
+        url: `http://127.0.0.1:${appPort}`,
+        headers: {
+          'X-INSTANA-L': '0'
+        }
+      })
+    )
+    .then(resp => {
+      // eslint-disable-next-line no-console
+      console.log('[AsyncAwaitControls] started');
+
+      return resp;
+    });
 }
 
 exports.getPid = () => expressApp.pid;
+exports.getPort = () => appPort;
 
 exports.sendRequest = () =>
   request({

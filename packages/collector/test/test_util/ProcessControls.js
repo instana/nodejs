@@ -165,21 +165,27 @@ class ProcessControls {
   }
 
   async waitUntilServerIsUp(retryTime, until) {
-    await testUtils.retry(
-      () =>
-        this.sendRequest({
-          method: 'GET',
-          suppressTracing: true
-        }),
-      retryTime,
-      until
-    );
+    try {
+      await testUtils.retry(
+        () =>
+          this.sendRequest({
+            method: 'GET',
+            suppressTracing: true
+          }),
+        retryTime,
+        until
+      );
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log(`[ProcessControls] error: ${err}`);
+      throw err;
+    }
   }
 
   async startAndWaitForAgentConnection(retryTime, until) {
     // eslint-disable-next-line no-console
     console.log(
-      `ProcessControls:startAndWaitForAgentConnection with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()} and appPath: ${
+      `[ProcessControls] start with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()} and appPath: ${
         this.appPath
       }`
     );
@@ -189,7 +195,7 @@ class ProcessControls {
     await this.agentControls.waitUntilAppIsCompletelyInitialized(this.getPid());
 
     // eslint-disable-next-line no-console
-    console.log('ProcessControls:startAndWaitForAgentConnection done');
+    console.log('[ProcessControls] started');
   }
 
   async waitForAgentConnection() {

@@ -58,10 +58,6 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         await controls.stop();
       });
 
-      afterEach(async () => {
-        await controls.clearIpcMessages();
-      });
-
       it('should trace', () =>
         controls
           .sendRequest({
@@ -350,18 +346,19 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     const agentControls = globalAgent.instance;
     const socketIOServerPort = portfinder();
 
-    let server;
-    let client;
+    let serverControls;
+    let clientControls;
 
     before(async () => {
-      server = new ProcessControls({
+      serverControls = new ProcessControls({
         appPath: path.join(__dirname, './socketio-server'),
         useGlobalAgent: true,
         env: {
           SOCKETIOSERVER_PORT: socketIOServerPort
         }
       });
-      client = new ProcessControls({
+
+      clientControls = new ProcessControls({
         appPath: path.join(__dirname, './socketio-client'),
         useGlobalAgent: true,
         env: {
@@ -369,22 +366,17 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         }
       });
 
-      await server.startAndWaitForAgentConnection();
-      await client.startAndWaitForAgentConnection();
+      await clientControls.startAndWaitForAgentConnection();
+      await serverControls.startAndWaitForAgentConnection();
     });
 
     after(async () => {
-      await server.stop();
-      await client.stop();
-    });
-
-    afterEach(async () => {
-      await server.clearIpcMessages();
-      await client.clearIpcMessages();
+      await serverControls.stop();
+      await clientControls.stop();
     });
 
     it('should trace', () =>
-      server
+      serverControls
         .sendRequest({
           method: 'GET',
           path: '/io-emit'
@@ -397,14 +389,14 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
               const httpEntry = verifyHttpRootEntry({
                 spans,
                 apiPath: '/io-emit',
-                pid: String(server.getPid())
+                pid: String(serverControls.getPid())
               });
 
               verifyEntrySpan({
                 spanName: 'otel',
                 spans,
                 withError: false,
-                pid: String(server.getPid()),
+                pid: String(serverControls.getPid()),
                 dataProperty: 'tags',
                 extraTests: span => {
                   expect(span.data.tags.name).to.contain('test_reply receive');
@@ -422,7 +414,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                 spans,
                 parent: httpEntry,
                 withError: false,
-                pid: String(server.getPid()),
+                pid: String(serverControls.getPid()),
                 dataProperty: 'tags',
                 extraTests: span => {
                   expect(span.data.tags.name).to.contain('send');
@@ -440,7 +432,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         ));
 
     it('should trace', () =>
-      server
+      serverControls
         .sendRequest({
           method: 'GET',
           path: '/io-send'
@@ -453,7 +445,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
               const httpEntry = verifyHttpRootEntry({
                 spans,
                 apiPath: '/io-send',
-                pid: String(server.getPid())
+                pid: String(serverControls.getPid())
               });
 
               verifyExitSpan({
@@ -461,7 +453,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                 spans,
                 parent: httpEntry,
                 withError: false,
-                pid: String(server.getPid()),
+                pid: String(serverControls.getPid()),
                 dataProperty: 'tags',
                 extraTests: span => {
                   expect(span.data.tags.name).to.contain('send');
@@ -479,7 +471,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         ));
 
     it('[suppressed] should not trace', () =>
-      server
+      serverControls
         .sendRequest({
           method: 'GET',
           path: '/io-emit',
