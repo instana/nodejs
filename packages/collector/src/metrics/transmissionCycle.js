@@ -13,8 +13,10 @@ logger = require('../logger').getLogger('metrics/sender', newLogger => {
   logger = newLogger;
 });
 
-const resendFullDataEveryXTransmissions =
-  process.env.INSTANA_FULL_METRICS_INTERNAL_IN_S || 300; /* about every 5 minutes */
+const resendFullDataEveryXTransmissions = process.env.INSTANA_FULL_METRICS_INTERNAL_IN_S
+  ? Number(process.env.INSTANA_FULL_METRICS_INTERNAL_IN_S)
+  : 300; /* about every 5 minutes */
+
 let transmissionsSinceLastFullDataEmit = 0;
 
 /** @type {import('./')} */

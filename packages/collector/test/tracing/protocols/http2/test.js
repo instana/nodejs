@@ -20,20 +20,22 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 mochaSuiteFn('tracing/http2', function () {
   this.timeout(config.getTestTimeout() * 2);
 
-  const agentControls = new AgentStubControls().registerHooksForSuite({
-    extraHeaders: [
-      //
-      'X-My-Request-Header',
-      'X-My-Response-Header',
-      'x-iNsTanA-sErViCe'
-    ],
-    secretsList: ['remove']
-  });
+  const agentControls = new AgentStubControls();
 
   let serverControls;
   let clientControls;
 
   before(async () => {
+    await agentControls.startAgent({
+      extraHeaders: [
+        //
+        'X-My-Request-Header',
+        'X-My-Response-Header',
+        'x-iNsTanA-sErViCe'
+      ],
+      secretsList: ['remove']
+    });
+
     serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'server'),
       http2: true,
@@ -53,13 +55,19 @@ mochaSuiteFn('tracing/http2', function () {
   });
 
   after(async () => {
+    await agentControls.stopAgent();
     await serverControls.stop();
     await clientControls.stop();
+  });
+
+  beforeEach(async () => {
+    await agentControls.clearReceivedData();
   });
 
   afterEach(async () => {
     await serverControls.clearIpcMessages();
     await clientControls.clearIpcMessages();
+    await agentControls.clearReceivedData();
   });
 
   [false, true].forEach(withQuery => {

@@ -13,11 +13,18 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 
 mochaSuiteFn('agentStub', function () {
   const { AgentStubControls } = require('./agentStubControls');
-  const agentStubControls = new AgentStubControls();
+  let agentStubControls;
 
   this.timeout(config.getTestTimeout());
 
-  agentStubControls.registerTestHooks();
+  before(async () => {
+    agentStubControls = new AgentStubControls();
+    await agentStubControls.startAgent();
+  });
+
+  after(async () => {
+    await agentStubControls.stopAgent();
+  });
 
   it('must respond without any discoveries upon start', () =>
     agentStubControls.getDiscoveries().then(discoveries => {

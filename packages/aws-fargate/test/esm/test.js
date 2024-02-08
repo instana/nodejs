@@ -144,7 +144,7 @@ if (esmSupportedVersion(process.versions.node)) {
         expect(span.f.e).to.equal(instrumentedContainerId);
         expect(span.data.http.method).to.equal('GET');
         expect(span.data.http.url).to.equal('/');
-        expect(span.data.http.host).to.equal(`127.0.0.1:${control.port}`);
+        expect(span.data.http.host).to.equal(`127.0.0.1:${control.getPort()}`);
         expect(span.data.http.status).to.equal(200);
         expect(span.data.http.header).to.deep.equal({
           'x-entry-request-header-1': 'entry request header value 1',

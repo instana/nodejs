@@ -65,12 +65,18 @@ mochaSuiteFn('agent connection', function () {
   const originalPort = agentOpts.port;
   let agentConnection;
 
-  agentControls.registerTestHooks();
+  before(async () => {
+    await agentControls.startAgent();
+  });
+  after(async () => {
+    await agentControls.stopAgent();
+  });
 
-  beforeEach(() => {
-    agentOpts.port = agentControls.agentPort;
+  beforeEach(async () => {
+    agentOpts.port = agentControls.getPort();
     agentConnection = require('../src/agentConnection');
-    return agentControls.simulateDiscovery(process.pid);
+    await agentControls.simulateDiscovery(process.pid);
+    await agentControls.clearReceivedData();
   });
 
   afterEach(() => {

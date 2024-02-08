@@ -32,6 +32,15 @@ mochaSuiteFn('tracing/restore context', function () {
   });
 
   function registerAllTests(tracingEnabled = true) {
+    [
+      //
+      'run',
+      'run-promise',
+      'enter-and-leave'
+    ].forEach(apiVariant => registerTest(tracingEnabled, apiVariant));
+  }
+
+  function registerTest(tracingEnabled, apiVariant) {
     let controls;
 
     before(async () => {
@@ -48,19 +57,6 @@ mochaSuiteFn('tracing/restore context', function () {
       await controls.stop();
     });
 
-    afterEach(async () => {
-      await controls.clearIpcMessages();
-    });
-
-    [
-      //
-      'run',
-      'run-promise',
-      'enter-and-leave'
-    ].forEach(apiVariant => registerTest(controls, tracingEnabled, apiVariant));
-  }
-
-  function registerTest(controls, tracingEnabled, apiVariant) {
     it(
       `must capture spans after async context loss when context is manually restored (${apiVariant}, tracing ` +
         `enabled: ${tracingEnabled}))`,

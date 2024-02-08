@@ -317,15 +317,14 @@ mochaSuiteFn('tracing/kafkajs', function () {
   describe('header format from agent config', function () {
     const headerFormat = 'string';
     const customAgentControls = new AgentStubControls();
-
-    customAgentControls.registerTestHooks({
-      kafkaConfig: { headerFormat }
-    });
-
     let consumerControls;
     let producerControls;
 
     before(async () => {
+      await customAgentControls.startAgent({
+        kafkaConfig: { headerFormat }
+      });
+
       consumerControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
         agentControls: customAgentControls
@@ -340,6 +339,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
     });
 
     after(async () => {
+      await customAgentControls.stopAgent();
       await producerControls.stop();
       await consumerControls.stop();
     });
@@ -372,14 +372,15 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
   describe('disable trace correlation from agent config', function () {
     const customAgentControls = new AgentStubControls();
-    customAgentControls.registerTestHooks({
-      kafkaConfig: { traceCorrelation: false }
-    });
 
     let consumerControls;
     let producerControls;
 
     before(async () => {
+      await customAgentControls.startAgent({
+        kafkaConfig: { traceCorrelation: false }
+      });
+
       consumerControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
         agentControls: customAgentControls
@@ -394,6 +395,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
     });
 
     after(async () => {
+      await customAgentControls.stopAgent();
       await producerControls.stop();
       await consumerControls.stop();
     });

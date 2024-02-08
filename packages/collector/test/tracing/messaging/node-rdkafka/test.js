@@ -354,14 +354,14 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     this.timeout(config.getTestTimeout() * 2);
 
     const customAgentControls = new AgentStubControls();
-    customAgentControls.registerTestHooks({
-      kafkaConfig: { headerFormat: 'string' }
-    });
-
     let producerControls;
     let consumerControls;
 
     before(async () => {
+      await customAgentControls.startAgent({
+        kafkaConfig: { headerFormat: 'string' }
+      });
+
       producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'producer'),
         agentControls: customAgentControls
@@ -376,6 +376,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     });
 
     after(async () => {
+      await customAgentControls.stopAgent();
       await producerControls.stop();
       await consumerControls.stop();
     });
@@ -460,14 +461,14 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     this.timeout(config.getTestTimeout() * 2);
 
     const customAgentControls = new AgentStubControls();
-    customAgentControls.registerTestHooks({
-      kafkaConfig: { traceCorrelation: false }
-    });
-
     let producerControls;
     let consumerControls;
 
     before(async () => {
+      await customAgentControls.startAgent({
+        kafkaConfig: { traceCorrelation: false }
+      });
+
       producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'producer'),
         agentControls: customAgentControls
@@ -482,6 +483,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     });
 
     after(async () => {
+      await customAgentControls.stopAgent();
       await producerControls.stop();
       await consumerControls.stop();
     });

@@ -14,6 +14,7 @@ const delay = require('../../../../core/test/test_util/delay');
 const { getSpansByName, retry, stringifyItems } = require('../../../../core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
+const { AgentStubControls } = require('../../apps/agentStubControls');
 
 const extendedTimeout = Math.max(config.getTestTimeout(), 10000);
 
@@ -173,7 +174,15 @@ mochaSuiteFn('tracing/common', function () {
     });
 
     describe('with header when agent is configured to capture the header', function () {
-      const agentControls = setupCustomAgentControls(true);
+      const agentControls = new AgentStubControls();
+      const agentConfig = { extraHeaders: ['x-iNsTanA-sErViCe'] };
+
+      before(async () => {
+        await agentControls.startAgent(agentConfig);
+      });
+      after(async () => {
+        await agentControls.stopAgent();
+      });
 
       registerServiceNameTest.call(this, agentControls, {
         configMethod: 'X-Instana-Service header',
@@ -182,7 +191,14 @@ mochaSuiteFn('tracing/common', function () {
     });
 
     describe('with header when agent is _not_ configured to capture the header', function () {
-      const agentControls = setupCustomAgentControls(false);
+      const agentControls = new AgentStubControls();
+
+      before(async () => {
+        await agentControls.startAgent();
+      });
+      after(async () => {
+        await agentControls.stopAgent();
+      });
 
       registerServiceNameTest.call(this, agentControls, {
         configMethod: 'X-Instana-Service header',
@@ -355,12 +371,4 @@ mochaSuiteFn('tracing/common', function () {
           ));
     });
   });
-
-  function setupCustomAgentControls(captureXInstanaServiceHeader) {
-    const { AgentStubControls } = require('../../apps/agentStubControls');
-    const agentControls = new AgentStubControls();
-    const agentConfig = captureXInstanaServiceHeader ? { extraHeaders: ['x-iNsTanA-sErViCe'] } : {};
-    agentControls.registerTestHooks(agentConfig);
-    return agentControls;
-  }
 });

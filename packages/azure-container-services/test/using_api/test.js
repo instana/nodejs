@@ -94,7 +94,7 @@ describe('Using the API', function () {
       expect(span.f.e).to.equal(entityId);
       expect(span.data.http.method).to.equal('GET');
       expect(span.data.http.url).to.equal('/');
-      expect(span.data.http.host).to.equal(`127.0.0.1:${control.port}`);
+      expect(span.data.http.host).to.equal(`127.0.0.1:${control.getPort()}`);
       expect(span.data.http.status).to.equal(200);
       expect(span.ec).to.equal(0);
     });

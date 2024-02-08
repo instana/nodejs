@@ -118,7 +118,8 @@ class ProcessControls {
         INSTANA_DISABLE_TRACING: !this.tracingEnabled,
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: '1',
         INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: opts.minimalDelay != null ? opts.minimalDelay : 0,
-        INSTANA_FULL_METRICS_INTERNAL_IN_S: 1
+        INSTANA_FULL_METRICS_INTERNAL_IN_S: 1,
+        INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS: 500
       },
       opts.env
     );
@@ -176,9 +177,19 @@ class ProcessControls {
   }
 
   async startAndWaitForAgentConnection(retryTime, until) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `ProcessControls:startAndWaitForAgentConnection with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()} and appPath: ${
+        this.appPath
+      }`
+    );
+
     await this.clearIpcMessages();
     await this.start(retryTime, until);
     await this.agentControls.waitUntilAppIsCompletelyInitialized(this.getPid());
+
+    // eslint-disable-next-line no-console
+    console.log('ProcessControls:startAndWaitForAgentConnection done');
   }
 
   async waitForAgentConnection() {

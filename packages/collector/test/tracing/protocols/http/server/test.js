@@ -20,17 +20,33 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 mochaSuiteFn('tracing/http(s) server', function () {
   this.timeout(config.getTestTimeout());
 
-  const agentControls = new AgentStubControls().registerHooksForSuite({
-    extraHeaders: [
-      //
-      'X-My-Entry-Request-Header',
-      'X-My-Entry-Request-Multi-Header',
-      'X-My-Entry-Response-Header',
-      'X-My-Entry-Response-Multi-Header',
-      'X-Write-Head-Response-Header',
-      'X-Write-Head-Response-Multi-Header'
-    ],
-    secretsList: ['secret', 'Enigma', 'CIPHER']
+  const agentControls = new AgentStubControls();
+
+  before(async () => {
+    await agentControls.startAgent({
+      extraHeaders: [
+        //
+        'X-My-Entry-Request-Header',
+        'X-My-Entry-Request-Multi-Header',
+        'X-My-Entry-Response-Header',
+        'X-My-Entry-Response-Multi-Header',
+        'X-Write-Head-Response-Header',
+        'X-Write-Head-Response-Multi-Header'
+      ],
+      secretsList: ['secret', 'Enigma', 'CIPHER']
+    });
+  });
+
+  after(async () => {
+    await agentControls.stopAgent();
+  });
+
+  beforeEach(async () => {
+    await agentControls.clearReceivedData();
+  });
+
+  afterEach(async () => {
+    await agentControls.clearReceivedData();
   });
 
   describe('http', function () {

@@ -46,10 +46,6 @@ mochaSuiteFn('tracing/too late', function () {
       await controls.stop();
     });
 
-    afterEach(async () => {
-      await controls.clearIpcMessages();
-    });
-
     it(`should warn when module ${EXAMPLE_MODULE} has been require before @instana/collector`, () =>
       controls
         .sendRequest({

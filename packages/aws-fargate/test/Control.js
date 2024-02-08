@@ -148,4 +148,8 @@ Control.prototype.sendRequest = function (opts) {
   return request(opts);
 };
 
+Control.prototype.getPort = function () {
+  return this.port;
+};
+
 module.exports = Control;

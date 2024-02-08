@@ -11,6 +11,10 @@ logger = require('../logger').getLogger('util/initializedTooLate', newLogger => 
   logger = newLogger;
 });
 
+const FIRE_MONITORING_EVENT_DURATION_IN_MS = process.env.INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS
+  ? Number(process.env.INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS)
+  : 600000;
+
 const hasThePackageBeenInitializedTooLate = require('@instana/core').util.hasThePackageBeenInitializedTooLate;
 const agentConnection = require('../agentConnection');
 
@@ -32,7 +36,7 @@ exports.check = function check() {
     }
 
     fireMonitoringEvent();
-    setInterval(fireMonitoringEvent, 600000).unref();
+    setInterval(fireMonitoringEvent, FIRE_MONITORING_EVENT_DURATION_IN_MS).unref();
   }
 };
 

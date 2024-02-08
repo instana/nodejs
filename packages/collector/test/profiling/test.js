@@ -27,11 +27,11 @@ mochaSuiteFn.skip('profiling', function () {
 
   describe('agent is up to date', function () {
     const agentControls = new AgentStubControls();
-    agentControls.registerTestHooks();
-
     let controls;
 
     before(async () => {
+      await agentControls.startAgent();
+
       controls = new ProcessControls({
         dirname: __dirname,
         agentControls,
@@ -45,6 +45,7 @@ mochaSuiteFn.skip('profiling', function () {
 
     after(async () => {
       await controls.stop();
+      await agentControls.stopAgent();
     });
 
     it('must send profiles to the agent', () => {
@@ -74,13 +75,13 @@ mochaSuiteFn.skip('profiling', function () {
 
   describe('agent is outdated', function () {
     const agentControls = new AgentStubControls();
-    agentControls.registerTestHooks({
-      doesntHandleProfiles: true
-    });
-
     let controls;
 
     before(async () => {
+      await agentControls.startAgent({
+        doesntHandleProfiles: true
+      });
+
       controls = new ProcessControls({
         dirname: __dirname,
         agentControls,
@@ -93,6 +94,7 @@ mochaSuiteFn.skip('profiling', function () {
     });
 
     after(async () => {
+      await agentControls.stopAgent();
       await controls.stop();
     });
 

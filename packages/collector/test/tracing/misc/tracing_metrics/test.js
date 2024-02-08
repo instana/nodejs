@@ -20,7 +20,6 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 
 mochaSuiteFn('tracing/tracing metrics', function () {
   this.timeout(config.getTestTimeout() * 2);
-  const retryTimeout = this.timeout() * 0.8;
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
@@ -41,15 +40,12 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       await controls.stop();
     });
 
-    afterEach(async () => {
-      await controls.clearIpcMessages();
-    });
-
     it('must send internal tracing metrics to agent', async () => {
       const response = await controls.sendRequest({
         method: 'POST',
         path: '/create-spans'
       });
+
       expect(response).to.equal('OK');
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
@@ -58,11 +54,12 @@ mochaSuiteFn('tracing/tracing metrics', function () {
         expectExit(spans, httpEntry, 'exit-2');
         expectExit(spans, httpEntry, 'exit-3');
       });
+
       await testUtils.retry(async () => {
         const tracingMetrics = await fetchTracingMetricsForProcess(agentControls, controls.getPid());
         expect(tracingMetrics).to.have.lengthOf.at.least(3);
         expectCumulativeTracingMetrics(tracingMetrics, 4, 4, 0);
-      }, retryTimeout);
+      });
     });
 
     it('must reveal non-finished spans', async () => {
@@ -80,7 +77,7 @@ mochaSuiteFn('tracing/tracing metrics', function () {
         const tracingMetrics = await fetchTracingMetricsForProcess(agentControls, controls.getPid());
         expect(tracingMetrics).to.have.lengthOf.at.least(3);
         expectCumulativeTracingMetrics(tracingMetrics, 3, 2, 0);
-      }, retryTimeout);
+      });
     });
   });
 
@@ -101,10 +98,6 @@ mochaSuiteFn('tracing/tracing metrics', function () {
 
     after(async () => {
       await controls.stop();
-    });
-
-    afterEach(async () => {
-      await controls.clearIpcMessages();
     });
 
     it('must send internal tracing metrics every 100 ms', async () => {
@@ -145,10 +138,6 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       await controls.stop();
     });
 
-    afterEach(async () => {
-      await controls.clearIpcMessages();
-    });
-
     it('must not collect any tracing metrics', async () => {
       const response = await controls.sendRequest({
         method: 'POST',
@@ -159,21 +148,22 @@ mochaSuiteFn('tracing/tracing metrics', function () {
         const tracingMetrics = await fetchTracingMetricsForProcess(agentControls, controls.getPid());
         expect(tracingMetrics).to.have.lengthOf.at.least(3);
         expectCumulativeTracingMetrics(tracingMetrics, 0, 0, 0);
-      }, retryTimeout);
+      });
     });
   });
 
   describe('when dropping spans', () => {
     const { AgentStubControls } = require('../../../apps/agentStubControls');
     const customAgentControls = new AgentStubControls();
-    customAgentControls.registerTestHooks({
-      // The trace endpoint will return an HTTP error code, triggering the removeSpansIfNecessary function.
-      rejectTraces: true
-    });
 
     let controls;
 
     before(async () => {
+      await customAgentControls.startAgent({
+        // The trace endpoint will return an HTTP error code, triggering the removeSpansIfNecessary function.
+        rejectTraces: true
+      });
+
       controls = new ProcessControls({
         dirname: __dirname,
         agentControls: customAgentControls,
@@ -184,15 +174,12 @@ mochaSuiteFn('tracing/tracing metrics', function () {
         }
       });
 
-      await controls.startAndWaitForAgentConnection();
+      await controls.start();
     });
 
     after(async () => {
+      await customAgentControls.stopAgent();
       await controls.stop();
-    });
-
-    afterEach(async () => {
-      await controls.clearIpcMessages();
     });
 
     it('must reveal dropped spans', async () => {
@@ -207,21 +194,20 @@ mochaSuiteFn('tracing/tracing metrics', function () {
         // With maxSpanBuffer = 1 we always keep 1 span in the buffer which is not dropped,  the test creates
         // 4 spans overall (one http entry and three SDK exits), hence we only expect three dropped spans.
         expectCumulativeTracingMetrics(tracingMetrics, 4, 4, 3);
-      }, retryTimeout);
+      });
     });
   });
 
   describe('when agent does not support the tracermetrics endpoint', () => {
     const { AgentStubControls } = require('../../../apps/agentStubControls');
     const customeAgentControls = new AgentStubControls();
-
-    customeAgentControls.registerTestHooks({
-      tracingMetrics: false
-    });
-
     let controls;
 
     before(async () => {
+      await customeAgentControls.startAgent({
+        tracingMetrics: false
+      });
+
       controls = new ProcessControls({
         dirname: __dirname,
         agentControls: customeAgentControls,
@@ -236,10 +222,7 @@ mochaSuiteFn('tracing/tracing metrics', function () {
 
     after(async () => {
       await controls.stop();
-    });
-
-    afterEach(async () => {
-      await controls.clearIpcMessages();
+      await customeAgentControls.stopAgent();
     });
 
     it('must not call POST /tracermetrics multiple times', async () => {
@@ -247,7 +230,9 @@ mochaSuiteFn('tracing/tracing metrics', function () {
         method: 'POST',
         path: '/create-spans'
       });
+
       expect(response).to.equal('OK');
+
       await testUtils.retry(async () => {
         const spans = await customeAgentControls.getSpans();
         const httpEntry = expectHttpEntry(spans, '/create-spans');

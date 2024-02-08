@@ -65,6 +65,10 @@ class Control extends AbstractServerlessControl {
     return response.json();
   }
 
+  getPort() {
+    return this.port;
+  }
+
   hasMonitoredProcessTerminated() {
     return this.messagesFromTestApp.indexOf('runtime: terminating') >= 0;
   }

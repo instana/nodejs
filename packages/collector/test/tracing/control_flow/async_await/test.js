@@ -17,11 +17,16 @@ describe('tracing/asyncAwait', function () {
 
   const agentStubControls = new AgentStubControls();
   const expressControls = require('../../../apps/expressControls');
+  expressControls.registerTestHooks({ agentControls: agentStubControls });
 
   this.timeout(config.getTestTimeout());
 
-  agentStubControls.registerTestHooks();
-  expressControls.registerTestHooks({ agentControls: agentStubControls });
+  before(async () => {
+    await agentStubControls.startAgent();
+  });
+  after(async () => {
+    await agentStubControls.stopAgent();
+  });
 
   beforeEach(() => {
     return agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid());

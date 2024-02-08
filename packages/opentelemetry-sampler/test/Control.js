@@ -105,6 +105,10 @@ class Control extends AbstractServerlessControl {
 
     return this;
   }
+
+  getPort() {
+    return this.port;
+  }
 }
 
 exports.Control = Control;

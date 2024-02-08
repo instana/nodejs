@@ -15,13 +15,11 @@ const config = require('../../../../../core/test/config');
 const { delay, expectExactlyOneMatching, retryUntilSpansMatch } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
-
-const agentControls = globalAgent.instance;
-
 const allTestCases = require('./tracer_compliance_test_cases.json'); /* .slice(0, 1); */ // in lieu of .only
 
 const testCasesWithW3cTraceCorrelation = [];
 const testCasesWithoutW3cTraceCorrelation = [];
+
 allTestCases.forEach(testDefinition => {
   if (testDefinition.INSTANA_DISABLE_W3C_TRACE_CORRELATION) {
     testCasesWithoutW3cTraceCorrelation.push(testDefinition);
@@ -34,35 +32,14 @@ describe('spec compliance', function () {
   this.timeout(config.getTestTimeout());
   globalAgent.setUpCleanUpHooks();
 
+  const agentControls = globalAgent.instance;
+
   [false, true].forEach(http2 => {
     const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
     mochaSuiteFn(`compliance test suite (${http2 ? 'HTTP2' : 'HTTP1'})`, () => {
-      let downstreamTarget;
-
-      before(async () => {
-        downstreamTarget = new ProcessControls({
-          appPath: path.join(__dirname, 'downstreamTarget'),
-          useGlobalAgent: true,
-          http2,
-          env: {
-            USE_HTTP2: http2
-          }
-        });
-
-        await downstreamTarget.startAndWaitForAgentConnection();
-      });
-
-      after(async () => {
-        await downstreamTarget.stop();
-      });
-
-      afterEach(async () => {
-        await downstreamTarget.clearIpcMessages();
-      });
-
       [false, true].forEach(w3cTraceCorrelationDisabled => {
-        registerSuite({ downstreamTarget, http2, w3cTraceCorrelationDisabled });
+        registerSuite({ http2, w3cTraceCorrelationDisabled, nativeFetch: false });
       });
     });
   });
@@ -77,63 +54,53 @@ describe('spec compliance', function () {
   }
 
   mochaSuiteFnNativeFetch('compliance test suite (HTTP -> Native Fetch)', () => {
-    let downstreamTarget;
-
-    before(async () => {
-      downstreamTarget = new ProcessControls({
-        appPath: path.join(__dirname, 'downstreamTarget'),
-        useGlobalAgent: true
-      });
-
-      await downstreamTarget.startAndWaitForAgentConnection();
-    });
-
-    after(async () => {
-      await downstreamTarget.stop();
-    });
-
-    afterEach(async () => {
-      await downstreamTarget.clearIpcMessages();
-    });
-
     [false, true].forEach(w3cTraceCorrelationDisabled => {
-      registerSuite({ nativeFetch: true, w3cTraceCorrelationDisabled, downstreamTarget });
+      registerSuite({ nativeFetch: true, w3cTraceCorrelationDisabled, http2: false });
     });
   });
 
-  function registerSuite({ http2, nativeFetch, w3cTraceCorrelationDisabled, downstreamTarget }) {
+  function registerSuite({ http2, nativeFetch, w3cTraceCorrelationDisabled }) {
     describe(`compliance test suite (${http2 ? 'HTTP2' : 'HTTP1'}, W3C trace correlation ${
       w3cTraceCorrelationDisabled ? 'disabled' : 'enabled'
     })`, () => {
-      let app;
+      let appControls;
+      let downstreamTarget;
 
       before(async () => {
+        downstreamTarget = new ProcessControls({
+          appPath: path.join(__dirname, 'downstreamTarget'),
+          useGlobalAgent: true,
+          http2,
+          env: {
+            USE_HTTP2: http2
+          }
+        });
+
+        await downstreamTarget.start();
+
         const env = {
           USE_HTTP2: http2,
           USE_NATIVE_FETCH: nativeFetch,
-          DOWNSTREAM_PORT: downstreamTarget.port
+          DOWNSTREAM_PORT: downstreamTarget.getPort()
         };
 
         if (w3cTraceCorrelationDisabled) {
           env.INSTANA_DISABLE_W3C_TRACE_CORRELATION = 'a non-empty string';
         }
 
-        app = new ProcessControls({
+        appControls = new ProcessControls({
           dirname: __dirname,
           useGlobalAgent: true,
           http2,
           env
         });
 
-        await app.startAndWaitForAgentConnection();
+        await appControls.startAndWaitForAgentConnection();
       });
 
       after(async () => {
-        await app.stop();
-      });
-
-      afterEach(async () => {
-        await app.clearIpcMessages();
+        await downstreamTarget.stop();
+        await appControls.stop();
       });
 
       let testCases;
@@ -183,7 +150,7 @@ describe('spec compliance', function () {
             headers,
             resolveWithFullResponse: true
           };
-          const response = await app.sendRequest(request);
+          const response = await appControls.sendRequest(request);
           const expectedServerTimingValue = testDefinition['Server-Timing'];
           const actualServerTimingValue = response.headers['server-timing'];
           if (expectedServerTimingValue && expectedServerTimingValue.includes('$')) {
@@ -208,6 +175,7 @@ describe('spec compliance', function () {
           } else {
             throw new Error('Weird response?', response.body);
           }
+
           verifyHttpHeadersOnDownstreamRequest(testDefinition, valuesForPlaceholders, responseBody);
 
           if (suppressed) {
@@ -216,12 +184,12 @@ describe('spec compliance', function () {
             expect(spans).to.have.lengthOf(0);
           } else {
             await retryUntilSpansMatch(agentControls, spans => {
-              verifyHttpEntry(testDefinition, valuesForPlaceholders, spans, '/start', app);
+              verifyHttpEntry(testDefinition, valuesForPlaceholders, spans, '/start', appControls);
               verifyHttpExit(
                 testDefinition,
                 valuesForPlaceholders,
                 spans,
-                `localhost:${downstreamTarget.port}/downstream`
+                `localhost:${downstreamTarget.getPort()}/downstream`
               );
             });
           }

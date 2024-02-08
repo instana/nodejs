@@ -19,23 +19,6 @@ class AgentStubControls {
     this.agentPort = agentPort || portFinder();
   }
 
-  registerHooksForSuite(opts = {}) {
-    before(() => this.startAgent(opts));
-    after(() => this.stopAgent(opts));
-
-    beforeEach(() => this.clearReceivedData());
-    afterEach(() => this.clearReceivedData());
-
-    return this;
-  }
-
-  registerTestHooks(opts = {}) {
-    beforeEach(() => this.startAgent(opts));
-    afterEach(() => this.stopAgent(opts));
-
-    return this;
-  }
-
   async startAgent(opts = {}) {
     const env = Object.create(process.env);
     env.AGENT_PORT = this.agentPort;
@@ -76,8 +59,15 @@ class AgentStubControls {
     this.agentStub.kill();
   }
 
+  getPort() {
+    return this.agentPort;
+  }
+
   async waitUntilAgentHasStarted() {
     const url = `http://127.0.0.1:${this.agentPort}`;
+
+    // eslint-disable-next-line no-console
+    console.log(`AgentStubControls:waitUntilAgentHasStarted: ${url}`);
 
     try {
       await retry(() =>
@@ -86,6 +76,9 @@ class AgentStubControls {
           url
         })
       );
+
+      // eslint-disable-next-line no-console
+      console.log('AgentStubControls:waitUntilAgentHasStarted done');
     } catch (err) {
       // eslint-disable-next-line no-console
       console.log(`agentStubControls: error waiting until server (${url}) is up: ${err.message}`);
