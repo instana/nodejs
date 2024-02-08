@@ -235,7 +235,7 @@ describe('Google Cloud Run integration test', function () {
 
     let appControls;
 
-    before(async () => {
+    beforeEach(async () => {
       appControls = new Control({
         containerAppPath,
         instanaAgentKey,
@@ -255,7 +255,7 @@ describe('Google Cloud Run integration test', function () {
       await appControls.start();
     });
 
-    after(async () => {
+    afterEach(async () => {
       await appControls.stop();
     });
 
