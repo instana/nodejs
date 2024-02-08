@@ -78,6 +78,9 @@ app.post('/send-message', (req, res) => {
         res.status(500).send('Failed to send message');
         return;
       }
+
+      log('Message was sent.');
+
       request(`http://127.0.0.1:${agentPort}`)
         .then(() => {
           res.sendStatus(200);

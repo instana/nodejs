@@ -88,6 +88,7 @@ setTimeout(() => {
   // Apparently the kafka-node API has no way of getting notified when the consumer has successfully connected to the
   // broker, so we just assume it should have happened after 1500 ms.
   connected = true;
+  log('Consumer is now ready.');
 }, 1500);
 
 consumer.on('error', err => {
@@ -105,6 +106,8 @@ consumer.on('error', err => {
 });
 
 consumer.on('message', ({ topic, key, value }) => {
+  log('Received a message');
+
   const span = instana.currentSpan();
   span.disableAutoEnd();
   receivedMessages.push({ topic, key, value });

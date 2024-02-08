@@ -47,8 +47,8 @@ mochaSuiteFn('tracing/kafka-node', function () {
           useGlobalAgent: true
         });
 
-        await producerControls.startAndWaitForAgentConnection();
         await consumerControls.startAndWaitForAgentConnection();
+        await producerControls.startAndWaitForAgentConnection();
       });
 
       after(async () => {
@@ -56,15 +56,10 @@ mochaSuiteFn('tracing/kafka-node', function () {
         await consumerControls.stop();
       });
 
-      afterEach(async () => {
-        await producerControls.clearIpcMessages();
-        await consumerControls.clearIpcMessages();
-      });
-
-      it(`must trace sending messages (producer type: ${producerType})`, () =>
-        send(producerControls, 'someKey', 'someMessage').then(() =>
-          testUtils.retry(() =>
-            getErrors(consumerControls)
+      it(`must trace sending messages (producer type: ${producerType})`, () => {
+        return send(producerControls, 'someKey', 'someMessage').then(() => {
+          return testUtils.retry(() => {
+            return getErrors(consumerControls)
               .then(errors => {
                 expect(errors).to.be.an('array');
                 expect(errors).to.be.empty;
@@ -108,9 +103,10 @@ mochaSuiteFn('tracing/kafka-node', function () {
                   span => expect(span.t).to.equal(entrySpan.t),
                   span => expect(span.p).to.equal(entrySpan.s)
                 ]);
-              })
-          )
-        ));
+              });
+          });
+        });
+      });
     });
   });
 
@@ -147,11 +143,6 @@ mochaSuiteFn('tracing/kafka-node', function () {
       after(async () => {
         await producerControls.stop();
         await consumerControls.stop();
-      });
-
-      afterEach(async () => {
-        await producerControls.clearIpcMessages();
-        await consumerControls.clearIpcMessages();
       });
 
       it(`must trace receiving messages (consumer type: ${consumerType})`, () =>
