@@ -40,12 +40,12 @@ mochaSuiteFn('ESM loader', function () {
     });
 
     it('should be able to find package.json', async () => {
-      await testUtils.retry(() =>
-        controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
+      await testUtils.retry(() => {
+        return controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
           const name = findMetric(metrics, ['name']);
           expect(name).to.equal('esm-loader');
-        })
-      );
+        });
+      });
     });
   });
 
@@ -69,12 +69,12 @@ mochaSuiteFn('ESM loader', function () {
     });
 
     it('should be able to find package.json', async () => {
-      await testUtils.retry(() =>
-        controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
+      await testUtils.retry(() => {
+        return controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
           const name = findMetric(metrics, ['name']);
           expect(name).to.equal('esm-loader-2');
-        })
-      );
+        });
+      });
     });
   });
 
@@ -98,12 +98,12 @@ mochaSuiteFn('ESM loader', function () {
     });
 
     it('should be able to find package.json', async () => {
-      await testUtils.retry(() =>
-        controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
+      await testUtils.retry(() => {
+        return controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
           const name = findMetric(metrics, ['name']);
           expect(name).to.equal('my-app');
-        })
-      );
+        });
+      });
     });
   });
 
@@ -129,12 +129,12 @@ mochaSuiteFn('ESM loader', function () {
     });
 
     it('should be able to find package.json', async () => {
-      await testUtils.retry(() =>
-        controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
+      await testUtils.retry(() => {
+        return controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
           const name = findMetric(metrics, ['name']);
           expect(name).to.equal('my-app');
-        })
-      );
+        });
+      });
     });
   });
 });
