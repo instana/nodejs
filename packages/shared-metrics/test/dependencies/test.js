@@ -157,15 +157,25 @@ describe('dependencies', function () {
       symlinkSync(path.join(repoRootDir, 'packages', 'collector'), collectorPath);
     });
 
-    const controls = new ProcessControls({
-      dirname: path.join(tmpDir, 'node_modules', 'npm-installed-test-app'),
-      useGlobalAgent: true,
-      env: {
-        INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false',
-        INSTANA_NODES_REPO: repoRootDir,
-        MAX_DEPENDENCIES: 200
-      }
-    }).registerTestHooks();
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: path.join(tmpDir, 'node_modules', 'npm-installed-test-app'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false',
+          INSTANA_NODES_REPO: repoRootDir,
+          MAX_DEPENDENCIES: 200
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
 
     after(done => {
       rimraf(tmpDir, done);
