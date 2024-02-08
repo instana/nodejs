@@ -41,7 +41,8 @@ mochaSuiteFn('tracing/http2', function () {
       http2: true,
       agentControls
     });
-    serverControls = new ProcessControls({
+
+    clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
       http2: true,
       agentControls,
@@ -50,8 +51,9 @@ mochaSuiteFn('tracing/http2', function () {
         SERVER_PORT: serverControls.getPort()
       }
     });
-    await serverControls.startAndWaitForAgentConnection();
-    await clientControls.startAndWaitForAgentConnection();
+
+    await serverControls.start();
+    await clientControls.start();
   });
 
   after(async () => {
@@ -65,8 +67,6 @@ mochaSuiteFn('tracing/http2', function () {
   });
 
   afterEach(async () => {
-    await serverControls.clearIpcMessages();
-    await clientControls.clearIpcMessages();
     await agentControls.clearReceivedData();
   });
 
