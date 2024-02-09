@@ -129,7 +129,6 @@
     "commitizen": "^4.2.4",
     "couchbase": "^4.2.2",
     "cz-conventional-changelog": "^3.3.0",
-    "deasync": "^0.1.29",
     "depcheck": "^1.4.3",
     "dev-null": "^0.1.1",
     "doctoc": "^2.1.0",
@@ -217,6 +216,7 @@
     "typescript": "^5.0.4",
     "underscore": "^1.13.1",
     "uuid": "^9.0.1",
+    "wait-sync": "^1.0.1",
     "winston": "^3.3.3",
     "ws": "^8.11.0",
     "yargs": "^17.5.1"

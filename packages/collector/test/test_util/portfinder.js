@@ -14,7 +14,7 @@ const portDiff = 1000;
 let myPortRange;
 
 const net = require('net');
-const deasync = require('deasync');
+const waitSync = require('wait-sync');
 
 function isPortTakenSync(port) {
   const server = net.createServer().listen(port);
@@ -40,7 +40,7 @@ function isPortTakenSync(port) {
   const timeout = 1000;
 
   while (!isClosed && !isTaken && Date.now() - startTime < timeout) {
-    deasync.runLoopOnce();
+    waitSync(0.1);
   }
 
   return isTaken || Date.now() - startTime >= timeout;
