@@ -117,10 +117,7 @@ Control.prototype.hasMonitoredProcessTerminated = function hasMonitoredProcessTe
 };
 
 Control.prototype.killMonitoredProcess = function killMonitoredProcess() {
-  if (!this.hasMonitoredProcessTerminated()) {
-    return this.killChildProcess(this.cloudRunContainerApp);
-  }
-  return Promise.resolve();
+  return this.killChildProcess(this.cloudRunContainerApp);
 };
 
 Control.prototype.sendRequest = function (opts) {

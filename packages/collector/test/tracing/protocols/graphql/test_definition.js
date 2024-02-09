@@ -71,6 +71,11 @@ function start(graphqlVersion) {
                   await clientControls.startAndWaitForAgentConnection();
                 });
 
+                after(async () => {
+                  await serverControls.stop();
+                  await clientControls.stop();
+                });
+
                 it('must trace a query with a value resolver', () => {
                   const resolverType = 'value';
                   const multipleEntities = null;
@@ -269,6 +274,11 @@ function start(graphqlVersion) {
 
             await serverControls.startAndWaitForAgentConnection();
             await clientControls.startAndWaitForAgentConnection();
+          });
+
+          after(async () => {
+            await serverControls.stop();
+            await clientControls.stop();
           });
 
           it('must trace a mutation', () => {
@@ -609,6 +619,11 @@ function start(graphqlVersion) {
 
         await serverControls.startAndWaitForAgentConnection();
         await clientControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await serverControls.stop();
+        await clientControls.stop();
       });
 
       it('should not trace graphql when that tracer is disabled individually but still trace all other calls', () => {
