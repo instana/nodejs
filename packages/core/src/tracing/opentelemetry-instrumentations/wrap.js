@@ -19,7 +19,8 @@ const constants = require('../constants');
 const instrumentations = {
   '@opentelemetry/instrumentation-fs': { name: 'fs' },
   '@opentelemetry/instrumentation-restify': { name: 'restify' },
-  '@opentelemetry/instrumentation-socket.io': { name: 'socket.io' }
+  '@opentelemetry/instrumentation-socket.io': { name: 'socket.io' },
+  '@opentelemetry/instrumentation-tedious': { name: 'tedious' }
 };
 
 module.exports.minimumNodeJsVersion = '14.0.0';

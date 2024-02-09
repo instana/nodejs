@@ -487,6 +487,86 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           )
         ));
   });
+  describe('tedious', function () {
+    describe('opentelemetry is enabled', function () {
+      globalAgent.setUpCleanUpHooks();
+      const agentControls = globalAgent.instance;
+
+      const controls = new ProcessControls({
+        appPath: path.join(__dirname, './tedious-app'),
+        useGlobalAgent: true
+      });
+
+      ProcessControls.setUpHooks(controls);
+
+      it('should trace get', () =>
+        controls
+          .sendRequest({
+            method: 'GET',
+            path: '/packages'
+          })
+          .then(() => delay(DELAY_TIMEOUT_IN_MS))
+          .then(() =>
+            retry(() =>
+              agentControls.getSpans().then(spans => {
+                expect(spans.length).to.equal(2);
+
+                const httpEntry = verifyHttpRootEntry({
+                  spans,
+                  apiPath: '/packages',
+                  pid: String(controls.getPid())
+                });
+
+                verifyExitSpan({
+                  spanName: 'otel',
+                  spans,
+                  parent: httpEntry,
+                  withError: false,
+                  pid: String(controls.getPid()),
+                  dataProperty: 'tags',
+                  extraTests: span => {
+                    expect(span.data.tags.name).to.eql('execSql azure-nodejs-test');
+                    expect(span.data.tags['db.system']).to.eql('mssql');
+                    expect(span.data.tags['db.name']).to.eql('azure-nodejs-test');
+                    expect(span.data.tags['db.user']).to.eql('admin@instana@nodejs-db-server');
+                    expect(span.data.tags['db.statement']).to.eql('SELECT * FROM packages');
+                    expect(span.data.tags['net.peer.name']).to.eql('nodejs-db-server.database.windows.net');
+                    checkTelemetryResourceAttrs(span);
+                  }
+                });
+
+                verifyExitSpan({
+                  spanName: 'otel',
+                  spans,
+                  parent: httpEntry,
+                  withError: false,
+                  pid: String(controls.getPid()),
+                  dataProperty: 'tags',
+                  extraTests: span => {
+                    expect(span.data.tags.name).to.eql('execSql azure-nodejs-test');
+                    expect(span.data.tags['db.system']).to.eql('mssql');
+                    expect(span.data.tags['db.name']).to.eql('azure-nodejs-test');
+                    expect(span.data.tags['db.user']).to.eql('admin@instana@nodejs-db-server');
+                    expect(span.data.tags['db.statement']).to.eql('SELECT * FROM packages');
+                    expect(span.data.tags['net.peer.name']).to.eql('nodejs-db-server.database.windows.net');
+                    checkTelemetryResourceAttrs(span);
+                  }
+                });
+              })
+            )
+          ));
+
+      it('[suppressed] should not trace', () =>
+        controls
+          .sendRequest({
+            method: 'GET',
+            path: '/packages',
+            suppressTracing: true
+          })
+          .then(() => delay(DELAY_TIMEOUT_IN_MS))
+          .then(() => retry(() => agentControls.getSpans().then(spans => expect(spans).to.be.empty))));
+    });
+  });
 });
 
 function checkTelemetryResourceAttrs(span) {
