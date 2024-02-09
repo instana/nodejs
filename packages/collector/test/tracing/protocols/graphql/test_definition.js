@@ -322,6 +322,11 @@ function start(graphqlVersion) {
             await clientControls.startAndWaitForAgentConnection();
           });
 
+          after(async () => {
+            await serverControls.stop();
+            await clientControls.stop();
+          });
+
           it('must not trace the subscription establishment', () => {
             return clientControls
               .sendRequest({
