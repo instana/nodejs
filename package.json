@@ -129,6 +129,7 @@
     "commitizen": "^4.2.4",
     "couchbase": "^4.2.2",
     "cz-conventional-changelog": "^3.3.0",
+    "deasync": "^0.1.29",
     "depcheck": "^1.4.3",
     "dev-null": "^0.1.1",
     "doctoc": "^2.1.0",

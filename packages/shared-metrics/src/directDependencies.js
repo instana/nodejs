@@ -35,6 +35,7 @@ exports.deactivate = function deactivate() {
 
 exports.activate = function activate() {
   logger.debug(`activate ${attempts}`);
+
   attempts++;
   util.applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, packageJsonPath) => {
     if (err) {
@@ -59,7 +60,7 @@ exports.activate = function activate() {
  * @param {string} packageJsonPath
  */
 function addDirectDependenciesFromMainPackageJson(packageJsonPath) {
-  logger.debug('addDirectDependenciesFromMainPackageJson');
+  logger.debug(`addDirectDependenciesFromMainPackageJson: ${packageJsonPath}`);
 
   const started = Date.now();
   fs.readFile(packageJsonPath, { encoding: 'utf8' }, (err, contents) => {

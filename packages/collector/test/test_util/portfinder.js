@@ -14,31 +14,36 @@ const portDiff = 1000;
 let myPortRange;
 
 const net = require('net');
+const deasync = require('deasync');
 
 function isPortTakenSync(port) {
   const server = net.createServer().listen(port);
 
   let isTaken = false;
-  server.on('error', error => {
-    if (error.code === 'EADDRINUSE') {
-      isTaken = true;
+  let isClosed = false;
+
+  server.on('error', err => {
+    isTaken = true;
+
+    if (err.code !== 'EADDRINUSE') {
+      // eslint-disable-next-line no-console
+      console.log('[portfinder] error', err);
     }
   });
 
-  server.close();
+  server.on('listening', () => {
+    server.close();
+    isClosed = true;
+  });
 
   const startTime = Date.now();
-  const timeout = 250;
+  const timeout = 1000;
 
-  while (Date.now() - startTime < timeout) {
-    if (isTaken) {
-      // eslint-disable-next-line no-console
-      console.log('Port is already in use', port);
-      return true;
-    }
+  while (!isClosed && !isTaken && Date.now() - startTime < timeout) {
+    deasync.runLoopOnce();
   }
 
-  return false;
+  return isTaken || Date.now() - startTime >= timeout;
 }
 
 let i = 0;

@@ -732,7 +732,7 @@ shared: &shared
           done
 
     - run:
-        name: Run Tests
+        name: Run Coverage Tests
         command: |
           if [[ -z "$NODE_COVERAGE" ]]; then
             exit 0
@@ -1154,9 +1154,7 @@ workflows:
         - equal: [ nightly-build-esm, << pipeline.schedule.name >> ]
         # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
         # by providing the parameter "workflow: esm-build"
-        - equal: [ esm-build, << pipeline.parameters.workflow >> ]
-    environment:
-      RUN_ALL_TESTS: true        
+        - equal: [ esm-build, << pipeline.parameters.workflow >> ]      
     jobs:
       - "node-18-esm"
 
@@ -1167,8 +1165,6 @@ workflows:
         - equal: [ weekly-build-sunday, << pipeline.schedule.name >> ]
         # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
         # by providing the parameter "workflow: coverage"
-        - equal: [ coverage, << pipeline.parameters.workflow >> ]
-    environment:
-      RUN_ALL_TESTS: true        
+        - equal: [ coverage, << pipeline.parameters.workflow >> ]   
     jobs:
       - "node-coverage"

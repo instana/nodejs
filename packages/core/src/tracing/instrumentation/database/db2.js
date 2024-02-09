@@ -31,8 +31,6 @@ exports.init = function init() {
  *
  * queryStream works out of the box, because they use `queryResult` internally
  * https://github.com/ibmdb/node-ibm_db/blob/master/lib/odbc.js#L1068
- *
- * This is a test.
  */
 function instrument(db2) {
   shimmer.wrap(db2.Database.prototype, 'open', instrumentOpen);
