@@ -16,7 +16,8 @@ spec:
               script: |
                 echo "Git Revision: $(params.repository)"
                 echo "Git Repository URL: $(params.revision)"
-                echo "Event: $(event)"       
+                echo "Git Revision: $(params.gitrevision)"
+                echo "Body: $(body)"       
             - name: echo-step
               image: ubuntu
               script: echo "hello there"
@@ -32,6 +33,8 @@ spec:
       value: "https://github.com/instana/nodejs"
     - name: revision
       value: "master"
+    - name: gitrevision
+      value: $(body.head_commit.id)
 
 ---
 
