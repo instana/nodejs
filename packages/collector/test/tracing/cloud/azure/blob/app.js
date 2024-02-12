@@ -17,7 +17,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 const app = express();
 const logPrefix = `Express / azure blob App (${process.pid}):\t`;
 const fs = require('fs');
-const request = require('request-promise-native');
+const fetch = require('node-fetch');
 const filePath = `${__dirname}/sample.pdf`;
 const localFilePath = `${__dirname}/out.pdf`;
 const binaryData = fs.readFileSync(filePath);
@@ -251,7 +251,7 @@ app.get('/upload', async (req, res) => {
   blockBlobClient
     .upload(pdfData, pdfData.length)
     .then(() => {
-      request(`http://127.0.0.1:${agentPort}`).then(() => {
+      fetch(`http://127.0.0.1:${agentPort}`).then(() => {
         res.json('success');
       });
     })
