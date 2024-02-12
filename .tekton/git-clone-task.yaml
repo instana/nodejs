@@ -13,7 +13,7 @@ spec:
       default: secure-properties
     - name: ibmcloud-apikey-secret-key
       description: field in the secret that contains the api key used to login to ibmcloud
-      default: apikey
+      default: toolchain-apikey
     - name: git-access-token
       description: |
         (optional) token to access the git repository. If this token is provided, there will not be an attempt
