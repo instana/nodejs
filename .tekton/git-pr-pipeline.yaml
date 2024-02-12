@@ -226,6 +226,6 @@ metadata:
 spec:
   triggers:
     - bindings:
-      - name: github-pr-binding
-    template:
-      name: pr-template
+        name: github-pr-binding
+      template:
+        name: pr-template
