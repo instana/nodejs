@@ -14,8 +14,9 @@ spec:
             - name: debug-step
               image: ubuntu
               script: |
-                echo "Git Revision: $(params.branch)"
-                echo "Git Repository URL: $(params.pr_branch)"          
+                echo "Git Revision: $(params.repository)"
+                echo "Git Repository URL: $(params.revision)"
+                echo "Event: $(event)"       
             - name: echo-step
               image: ubuntu
               script: echo "hello there"
@@ -27,10 +28,10 @@ metadata:
   name: event-binding
 spec:
   params:
-    - name: branch
-      value: $(event.object_attributes.target_branch)
-    - name: pr_branch
-      value: $(event.object_attributes.source_branch)      
+    - name: repository
+      value: "https://github.com/instana/nodejs"
+    - name: revision
+      value: "master"
 
 ---
 
