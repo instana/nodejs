@@ -14,10 +14,7 @@ spec:
             - name: debug-step
               image: ubuntu
               script: |
-                echo "Git Revision: $(params.repository)"
-                echo "Git Repository URL: $(params.revision)"
-                echo "Git Revision: $(params.gitrevision)"
-                echo "Body: $(body)"       
+                echo "Params: $(params)"
             - name: echo-step
               image: ubuntu
               script: echo "hello there"
@@ -29,12 +26,30 @@ metadata:
   name: event-binding
 spec:
   params:
+    - name: branch
+      value: $(event.pull_request.base.ref)
+    - name: target-branch
+      value: $(event.pull_request.base.ref)
+    - name: commit-id
+      value: $(event.pull_request.head.sha)
+    - name: commit-timestamp
+      value: $(event.pull_request.head.repo.pushed_at)
+    - name: target-commit-id
+      value: $(event.pull_request.base.sha)
+    - name: pr-url
+      value: $(event.pull_request.url)
+    - name: pr-number
+      value: $(event.pull_request.number)
+    - name: pr-name
+      value: $(event.pull_request.user.login)
     - name: repository
-      value: "https://github.com/instana/nodejs"
-    - name: revision
-      value: "master"
-    - name: gitrevision
-      value: $(body.head_commit.id)
+      value: $(event.repository.html_url)
+    - name: scm-type
+      value: "github-ent"
+    - name: pr-repository
+      value: $(event.pull_request.head.repo.html_url)
+    - name: pr-branch
+      value: $(event.pull_request.head.ref)
 
 ---
 
