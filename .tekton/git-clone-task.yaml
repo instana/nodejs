@@ -306,6 +306,8 @@ spec:
             fi
         done
         echo "Repository $REPOSITORY successfully cloned"
+        echo "PWD: $(pwd)"
+
         set -e
 
         current_dir=$(pwd)
