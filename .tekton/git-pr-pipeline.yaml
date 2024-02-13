@@ -60,10 +60,7 @@ spec:
           workspace: artifacts
     - name: run-tests
       taskRef:
-        name: run-tests
-      workspaces:
-        - name: output
-          workspace: artifacts        
+        name: run-tests   
 
 ---
 
