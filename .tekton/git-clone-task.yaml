@@ -318,9 +318,6 @@ spec:
         fi
         cd $DIRECTORY_NAME
 
-        echo $($pwd)
-        echo $(ls -la)
-
         if [ "$REVISION" ]; then
           # Point the HEAD to the specific revision
           git checkout -q $REVISION
@@ -405,6 +402,10 @@ spec:
           echo "\"GIT_TOKEN\":\"${GIT_TOKEN}\"" >> "${ARTIFACTS_PATH}/${JSON_FILE_GIT_CREDENTIALS}"
           echo "}" >> "${ARTIFACTS_PATH}/${JSON_FILE_GIT_CREDENTIALS}"
         fi
+
+        echo "cwd: $($cwd)"
+        echo "pwd: $($pwd)"
+        echo $(ls -la)
 
         # Record task results
         echo -n "${REPOSITORY}" > $(results.git-repository.path)
