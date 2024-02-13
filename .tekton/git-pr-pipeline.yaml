@@ -62,15 +62,8 @@ spec:
       taskRef:
         name: start-mysql-server
     - name: check-mysql
-      image: ubuntu
-      script:
-        - apt-get update && apt-get install -y netcat
-        - if nc -z -v -w5 mysql 3306; then
-            echo "MySQL connection successful!";
-          else
-            echo "MySQL connection failed!";
-            exit 1;
-          fi
+      taskRef:
+        name: mysql-check
 
 ---
 
