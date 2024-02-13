@@ -101,6 +101,9 @@ spec:
           - ReadWriteOnce
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
+      podTemplate:
+        securityContext:
+          fsGroup: 65532
       metadata:
         name: pipelinerun-$(uid)
       spec:
