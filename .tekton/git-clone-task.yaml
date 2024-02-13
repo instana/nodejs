@@ -26,7 +26,7 @@ spec:
       description: the git repo url
     - name: branch
       description: the git branch
-      default: master
+      default: main
     - name: revision
       description: |
         the git revision/commit to update the git HEAD to.
