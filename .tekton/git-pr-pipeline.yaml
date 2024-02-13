@@ -99,8 +99,6 @@ spec:
       description: target branch
     - name: target-commit-id
       description: target commit id
-    - name: apikey
-      description: the ibmcloud api key
     - name: commit-id
       description: commit id
     - name: commit-timestamp
@@ -226,6 +224,6 @@ metadata:
 spec:
   triggers:
     - bindings:
-        name: github-pr-binding
+        - name: github-pr-binding
       template:
         name: pr-template
