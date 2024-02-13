@@ -5,8 +5,16 @@
 'use strict';
 
 const constants = require('../constants');
+const semver = require('semver');
 
 module.exports.init = () => {
+  // Opentelemetry only supports tedious version >=1.11.0 and <=15, please refer the following link
+  // for more details: https://www.npmjs.com/package/@opentelemetry/instrumentation-tedious#supported-versions
+  // eslint-disable-next-line instana/no-unsafe-require, import/no-extraneous-dependencies
+  const tediousVersion = require('tedious/package.json').version;
+  if (semver.gte(tediousVersion, '16.0.0')) {
+    return;
+  }
   const { TediousInstrumentation } = require('@opentelemetry/instrumentation-tedious');
 
   const instrumentation = new TediousInstrumentation();

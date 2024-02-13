@@ -4,7 +4,6 @@
 
 'use strict';
 
-/* eslint-disable no-console */
 require('../../..')({
   tracing: {
     useOpentelemetry: true
@@ -17,6 +16,10 @@ const Connection = require('tedious').Connection;
 const Request = require('tedious').Request;
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
+
+// To obtain the credentials for the Azure SQL Database, you can find them in 1password. Search for
+// "Team Node.js: Azure SQL credentials". The credentials are stored in the
+// "nodejs-tracer-azure-sql-cred.json" file.
 
 const config = {
   server: process.env.AZURE_SQL_SERVER,
@@ -47,18 +50,8 @@ const executeStatement = (query, isBatch, res) => {
       }
     });
 
-    const columnsData = [];
-
-    request.on('row', columns => {
-      const rowData = {};
-      columns.forEach(column => {
-        rowData[column.metadata.colName] = column.value;
-      });
-      columnsData.push(rowData);
-    });
-
     request.on('requestCompleted', () => {
-      res.json({ columns: columnsData });
+      res.send('OK');
       connection.close();
     });
 
@@ -95,5 +88,6 @@ app.post('/packages/batch', (req, res) => {
   executeStatement(batchQuery, true, res);
 });
 app.listen(port, () => {
+  // eslint-disable-next-line no-console
   console.warn(`Listening on port: ${port}`);
 });

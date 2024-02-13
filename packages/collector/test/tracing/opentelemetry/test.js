@@ -477,7 +477,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           path: '/io-emit',
           suppressTracing: true
         })
-        .then(() => delay(1000))
+        .then(() => delay(DELAY_TIMEOUT_IN_MS))
         .then(() =>
           retry(() =>
             agentControls.getSpans().then(spans => {
@@ -542,8 +542,8 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         sendRequestAndVerifySpans(
           'POST',
           '/packages/batch',
-          // eslint-disable-next-line max-len
-          "\n  INSERT INTO packages (id, name, version) VALUES (11, 'BatchPackage1', 1);\n  INSERT INTO packages (id, name, version) VALUES (11, 'BatchPackage2', 2);\n"
+          "\n  INSERT INTO packages (id, name, version) VALUES (11, 'BatchPackage1', 1);\n  " +
+            "INSERT INTO packages (id, name, version) VALUES (11, 'BatchPackage2', 2);\n"
         )
           .then(() => {
             done();
