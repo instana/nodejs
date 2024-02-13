@@ -16,7 +16,15 @@ spec:
         - name: MYSQL_PASSWORD
           value: nodepw
         - name: MYSQL_ROOT_HOST
-          value: 0.0.0.0      
+          value: 0.0.0.0
+      command:
+        - "/bin/sh"
+        - "-c"
+      args:
+        - |
+          # Add any initialization steps for your database if needed
+          # For example: Run database migrations, seed data, etc.
+          echo "MySQL database is running, perform initialization steps here."
   steps:
     - name: ping-port
       image: ubuntu
@@ -24,7 +32,7 @@ spec:
         #!/bin/bash
         apt-get update && apt-get install -y netcat
 
-        if nc -z -v -w5 mysql 3306; then
+        if nc -z -v -w5 localhost 3306; then
           echo "MySQL connection successful!";
         else
           echo "MySQL connection failed!";
