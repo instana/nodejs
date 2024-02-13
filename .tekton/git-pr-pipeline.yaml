@@ -21,7 +21,8 @@ spec:
     - name: pr-branch
       value: $(params.pr-branch)
   workspaces:
-    - name: artifacts      
+    - name: output
+      mountPath: /artifacts
   tasks:
     - name: extract-repository-url
       taskRef:

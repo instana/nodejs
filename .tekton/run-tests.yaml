@@ -27,7 +27,7 @@ spec:
           echo "MySQL database is running, perform initialization steps here."
   workspaces:
     - name: output
-      mountPath: /artifacts 
+      mountPath: /artifacts
   steps:
     - name: ping-port
       image: ubuntu
@@ -42,8 +42,6 @@ spec:
         #!/bin/bash
         ARTIFACTS_PATH="$(workspaces.output.path)"
         chmod -R 777 ARTIFACTS_PATH
-
-        cd $ARTIFACTS_PATH
 
         echo $PWD
         echo $(ls -la)
