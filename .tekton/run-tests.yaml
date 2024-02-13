@@ -37,13 +37,10 @@ spec:
         timeout 60s /bin/bash -c 'while ! nc -z -v -w1 localhost 3306; do sleep 1; done'
         echo "MySQL connection successful!"
     - name: tests
-      image: cimg/node:18.18
+      image: node:18
       script: |
         #!/bin/bash
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
-
-        echo $PWD
-        echo $(ls -la)
         npm install
         npm run test:ci:collector:general     
