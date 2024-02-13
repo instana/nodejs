@@ -60,7 +60,7 @@ spec:
           workspace: artifacts
     - name: start-mysql
       taskRef:
-        name: ping-port
+        name: start-mysql-server
 
 ---
 
