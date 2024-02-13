@@ -26,6 +26,8 @@ spec:
           # For example: Run database migrations, seed data, etc.
           echo "MySQL database is running, perform initialization steps here."
   workspaces:
+    - name: npm-cache
+      emptyDir: {}
     - name: output
       mountPath: /artifacts
   steps:
@@ -42,5 +44,13 @@ spec:
         #!/bin/bash
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
+
+        if [ -d "node_modules" ]; then
+          cp -r /workspace/npm-cache/node_modules .
+        fi
+
         npm install
+
+        cp -r node_modules /workspace/npm-cache
+
         npm run test:ci:collector:general     
