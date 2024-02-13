@@ -43,7 +43,7 @@ spec:
         - name: repository
           value: $(tasks.extract-repository-url.results.extracted-value)
         - name: branch
-          value: $(params.branch)
+          value: "experimental/tasks-ci"
         - name: revision
           value: $(params.revision)
         - name: pipeline-debug
