@@ -16,9 +16,4 @@ spec:
         - name: MYSQL_PASSWORD
           value: nodepw
         - name: MYSQL_ROOT_HOST
-          value: 0.0.0.0      
-      command:
-        - "sh"
-      args:
-        - "-c"
-        - "mysqld_safe &"
+          value: 0.0.0.0
