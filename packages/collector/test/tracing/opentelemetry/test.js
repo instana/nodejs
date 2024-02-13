@@ -477,7 +477,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           path: '/io-emit',
           suppressTracing: true
         })
-        .then(() => delay(DELAY_TIMEOUT_IN_MS))
+        .then(() => delay(1000))
         .then(() =>
           retry(() =>
             agentControls.getSpans().then(spans => {
@@ -491,7 +491,6 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
-
       const controls = new ProcessControls({
         appPath: path.join(__dirname, './tedious-app'),
         useGlobalAgent: true
@@ -499,11 +498,11 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
 
       ProcessControls.setUpHooks(controls);
 
-      it('should trace get', () =>
+      const sendRequestAndVerifySpans = (method, endpoint, expectedStatement) =>
         controls
           .sendRequest({
-            method: 'GET',
-            path: '/packages'
+            method,
+            path: endpoint
           })
           .then(() => delay(DELAY_TIMEOUT_IN_MS))
           .then(() =>
@@ -513,7 +512,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
 
                 const httpEntry = verifyHttpRootEntry({
                   spans,
-                  apiPath: '/packages',
+                  apiPath: endpoint,
                   pid: String(controls.getPid())
                 });
 
@@ -525,36 +524,34 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                   pid: String(controls.getPid()),
                   dataProperty: 'tags',
                   extraTests: span => {
-                    expect(span.data.tags.name).to.eql('execSql azure-nodejs-test');
+                    const queryType = endpoint === '/packages/batch' ? 'execSqlBatch' : 'execSql';
+                    expect(span.data.tags.name).to.eql(`${queryType} azure-nodejs-test`);
                     expect(span.data.tags['db.system']).to.eql('mssql');
                     expect(span.data.tags['db.name']).to.eql('azure-nodejs-test');
                     expect(span.data.tags['db.user']).to.eql('admin@instana@nodejs-db-server');
-                    expect(span.data.tags['db.statement']).to.eql('SELECT * FROM packages');
-                    expect(span.data.tags['net.peer.name']).to.eql('nodejs-db-server.database.windows.net');
-                    checkTelemetryResourceAttrs(span);
-                  }
-                });
-
-                verifyExitSpan({
-                  spanName: 'otel',
-                  spans,
-                  parent: httpEntry,
-                  withError: false,
-                  pid: String(controls.getPid()),
-                  dataProperty: 'tags',
-                  extraTests: span => {
-                    expect(span.data.tags.name).to.eql('execSql azure-nodejs-test');
-                    expect(span.data.tags['db.system']).to.eql('mssql');
-                    expect(span.data.tags['db.name']).to.eql('azure-nodejs-test');
-                    expect(span.data.tags['db.user']).to.eql('admin@instana@nodejs-db-server');
-                    expect(span.data.tags['db.statement']).to.eql('SELECT * FROM packages');
+                    expect(span.data.tags['db.statement']).to.eql(expectedStatement);
                     expect(span.data.tags['net.peer.name']).to.eql('nodejs-db-server.database.windows.net');
                     checkTelemetryResourceAttrs(span);
                   }
                 });
               })
             )
-          ));
+          );
+      it('should trace select queries', () => sendRequestAndVerifySpans('GET', '/packages', 'SELECT * FROM packages'));
+      it('should trace batch queries', function (done) {
+        sendRequestAndVerifySpans(
+          'POST',
+          '/packages/batch',
+          // eslint-disable-next-line max-len
+          "\n  INSERT INTO packages (id, name, version) VALUES (11, 'BatchPackage1', 1);\n  INSERT INTO packages (id, name, version) VALUES (11, 'BatchPackage2', 2);\n"
+        )
+          .then(() => {
+            done();
+          })
+          .catch(err => done(err));
+      });
+      it('should trace delete queries', () =>
+        sendRequestAndVerifySpans('DELETE', '/packages', 'DELETE FROM packages WHERE id = 11'));
 
       it('[suppressed] should not trace', () =>
         controls

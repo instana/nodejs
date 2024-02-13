@@ -32,7 +32,7 @@ const config = {
   }
 };
 
-const executeStatement = (query, res) => {
+const executeStatement = (query, isBatch, res) => {
   const connection = new Connection(config);
 
   connection.on('connect', err => {
@@ -62,7 +62,11 @@ const executeStatement = (query, res) => {
       connection.close();
     });
 
-    connection.execSql(request);
+    if (isBatch) {
+      connection.execSqlBatch(request);
+    } else {
+      connection.execSql(request);
+    }
   });
 
   connection.connect();
@@ -74,9 +78,22 @@ app.get('/', (req, res) => {
 
 app.get('/packages', (req, res) => {
   const query = 'SELECT * FROM packages';
-  executeStatement(query, res);
+  executeStatement(query, false, res);
 });
 
+app.delete('/packages', (req, res) => {
+  const id = 11;
+  const query = `DELETE FROM packages WHERE id = ${id}`;
+  executeStatement(query, false, res);
+});
+
+app.post('/packages/batch', (req, res) => {
+  const batchQuery = `
+  INSERT INTO packages (id, name, version) VALUES (11, 'BatchPackage1', 1);
+  INSERT INTO packages (id, name, version) VALUES (11, 'BatchPackage2', 2);
+`;
+  executeStatement(batchQuery, true, res);
+});
 app.listen(port, () => {
   console.warn(`Listening on port: ${port}`);
 });
