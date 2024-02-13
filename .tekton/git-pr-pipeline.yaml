@@ -116,6 +116,7 @@ spec:
           - name: artifacts
             persistentVolumeClaim:
               claimName: pipelinerun-$(uid)-pvc
+          - name: npm-cache
         params:
           - name: repository
             value: $(params.repository)
