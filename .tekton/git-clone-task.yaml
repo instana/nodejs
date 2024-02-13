@@ -403,8 +403,8 @@ spec:
           echo "}" >> "${ARTIFACTS_PATH}/${JSON_FILE_GIT_CREDENTIALS}"
         fi
 
-        echo "cwd: $($cwd)"
-        echo "pwd: $($pwd)"
+        echo "cwd: $(pwd)"
+        echo "pwd: $PWD"
         echo $(ls -la)
 
         # Record task results

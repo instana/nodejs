@@ -25,6 +25,9 @@ spec:
           # Add any initialization steps for your database if needed
           # For example: Run database migrations, seed data, etc.
           echo "MySQL database is running, perform initialization steps here."
+  workspaces:
+    - name: output
+      mountPath: /artifacts 
   steps:
     - name: ping-port
       image: ubuntu
@@ -37,7 +40,10 @@ spec:
       image: cimg/node:18.18
       script: |
         #!/bin/bash
-        cd .
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+
+        echo $PWD
         echo $(ls -la)
         npm install
         npm run test:ci:collector:general     

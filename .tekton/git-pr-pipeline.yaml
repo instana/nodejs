@@ -61,6 +61,9 @@ spec:
     - name: run-tests
       taskRef:
         name: run-tests   
+      workspaces:
+        - name: output
+          workspace: artifacts
 
 ---
 
