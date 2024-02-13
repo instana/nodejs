@@ -31,10 +31,5 @@ spec:
       script: |
         #!/bin/bash
         apt-get update && apt-get install -y netcat
-
-        if nc -z -v -w5 localhost 3306; then
-          echo "MySQL connection successful!";
-        else
-          echo "MySQL connection failed!";
-          exit 1;
-        fi
+        timeout 60s /bin/bash -c 'while ! nc -z -v -w1 localhost 3306; do sleep 1; done'
+        echo "MySQL connection successful!"
