@@ -1,8 +1,12 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: start-mysql-server
+  name: run-tests
 spec:
+  workspaces:
+    - name: output
+      description: The git repo will be cloned onto the volume backing this workspace
+      mountPath: /artifacts
   sidecars:
     - name: start-mysql
       image: mysql:8.0.1
@@ -33,3 +37,10 @@ spec:
         apt-get update && apt-get install -y netcat
         timeout 60s /bin/bash -c 'while ! nc -z -v -w1 localhost 3306; do sleep 1; done'
         echo "MySQL connection successful!"
+  steps:
+    - name: tests
+      image: cimg/node:18.18
+      script: |
+        #!/bin/bash
+        npm install
+        npm run test:ci:collector:general
