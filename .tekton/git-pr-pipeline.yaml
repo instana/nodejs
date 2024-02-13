@@ -22,6 +22,8 @@ spec:
       value: $(params.pr-branch)
   workspaces:
     - name: artifacts
+    - name: npm-cache
+      emptyDir: {}
   tasks:
     - name: extract-repository-url
       taskRef:
