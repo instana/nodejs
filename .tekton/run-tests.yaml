@@ -42,6 +42,7 @@ spec:
         #!/bin/bash
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
+        chmod -R 777 .
 
         echo $PWD
         echo $(ls -la)
