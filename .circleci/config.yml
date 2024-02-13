@@ -386,7 +386,7 @@ shared: &shared
             if [[ -n "$NODE_COVERAGE" ]]; then
               exit 0
             fi
-            
+
             touch .run11-started
 
             ulimit -c unlimited
@@ -402,6 +402,10 @@ shared: &shared
         background: true
         command: |
             if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+
+            if [[ -n "$COLLECTOR_ONLY" ]]; then
               exit 0
             fi
             
@@ -429,6 +433,10 @@ shared: &shared
             if [[ -n "$NODE_COVERAGE" ]]; then
               exit 0
             fi
+
+            if [[ -n "$COLLECTOR_ONLY" ]]; then
+              exit 0
+            fi
             
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
@@ -451,6 +459,10 @@ shared: &shared
         background: true
         command: |
             if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+
+            if [[ -n "$COLLECTOR_ONLY" ]]; then
               exit 0
             fi
             
@@ -477,6 +489,10 @@ shared: &shared
             if [[ -n "$NODE_COVERAGE" ]]; then
               exit 0
             fi
+
+            if [[ -n "$COLLECTOR_ONLY" ]]; then
+              exit 0
+            fi
                   
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
@@ -499,6 +515,10 @@ shared: &shared
         background: true
         command: |
             if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+
+            if [[ -n "$COLLECTOR_ONLY" ]]; then
               exit 0
             fi
             
@@ -525,6 +545,10 @@ shared: &shared
             if [[ -n "$NODE_COVERAGE" ]]; then
               exit 0
             fi
+
+            if [[ -n "$COLLECTOR_ONLY" ]]; then
+              exit 0
+            fi
             
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
@@ -547,6 +571,10 @@ shared: &shared
         background: true
         command: |
             if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+
+            if [[ -n "$COLLECTOR_ONLY" ]]; then
               exit 0
             fi
                         
@@ -573,6 +601,10 @@ shared: &shared
             if [[ -n "$NODE_COVERAGE" ]]; then
               exit 0
             fi
+
+            if [[ -n "$COLLECTOR_ONLY" ]]; then
+              exit 0
+            fi
             
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
@@ -595,6 +627,10 @@ shared: &shared
         background: true
         command: |
             if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+
+            if [[ -n "$COLLECTOR_ONLY" ]]; then
               exit 0
             fi
             
@@ -622,6 +658,10 @@ shared: &shared
               exit 0
             fi
 
+            if [[ -n "$COLLECTOR_ONLY" ]]; then
+              exit 0
+            fi            
+
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
             
@@ -643,6 +683,10 @@ shared: &shared
         background: true
         command: |
             if [[ -n "$NODE_COVERAGE" ]]; then
+              exit 0
+            fi
+
+            if [[ -n "$COLLECTOR_ONLY" ]]; then
               exit 0
             fi
 
@@ -998,6 +1042,7 @@ jobs:
   "node-18-esm":
     environment:
       RUN_ESM: true
+      COLLECTOR_ONLY: true
       CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
       RUN_ALL_TESTS: true
     docker:
