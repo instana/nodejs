@@ -305,8 +305,8 @@ spec:
               break
             fi
         done
+
         echo "Repository $REPOSITORY successfully cloned"
-        echo "PWD: $(pwd)"
 
         set -e
 
@@ -317,6 +317,10 @@ spec:
           DIRECTORY_NAME=$(basename "${GIT_REPOSITORY##*/}" .git)
         fi
         cd $DIRECTORY_NAME
+
+        echo $($pwd)
+        echo $(ls -la)
+
         if [ "$REVISION" ]; then
           # Point the HEAD to the specific revision
           git checkout -q $REVISION
