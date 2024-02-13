@@ -37,6 +37,7 @@
     "commit": "cz",
     "doctoc": "doctoc README.md packages/collector/README.md",
     "lint": "eslint .*.js *.js && npm run typecheck && lerna run lint --stream && eslint misc && eslint dockerfile-examples && eslint bin",
+    "tekton:lint": "npx @ibm/tekton-lint .tekton/*.yaml",
     "postinstall": "husky install && lerna run node_modules:exists",
     "precommit": "npm run doctoc",
     "coverage-all": "nyc --reporter=lcov lerna run test --stream --concurrency 1",
