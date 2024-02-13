@@ -61,9 +61,6 @@ spec:
     - name: start-mysql
       taskRef:
         name: start-mysql-server
-    - name: check-mysql
-      taskRef:
-        name: mysql-check
 
 ---
 
