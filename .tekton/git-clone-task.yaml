@@ -84,7 +84,6 @@ spec:
       description: the directory where the cloned repository content is located
   workspaces:
     - name: output
-      description: The git repo will be cloned onto the volume backing this workspace
       mountPath: /artifacts
   stepTemplate:
     env:
@@ -199,6 +198,11 @@ spec:
         echo "GIT_REPOSITORY=$REPOSITORY" > /steps/next-step-env.properties
         echo "GIT_AUTH_USER=$GIT_AUTH_USER" >> /steps/next-step-env.properties
         echo "GIT_TOKEN=$GIT_TOKEN" >> /steps/next-step-env.properties
+      volumeMounts:
+        - mountPath: /cd-config
+          name: cd-config-volume
+        - mountPath: /steps
+          name: steps-volume                  
     - name: clone-repo
       image: $(params.git-client-image)
       env:
@@ -408,3 +412,15 @@ spec:
         echo -n "${GIT_COMMIT}" > $(results.git-commit.path)
         echo -n "${GIT_AUTH_USER}" > $(results.git-user.path)
         echo -n "${DIRECTORY_NAME}" > $(results.clone-directory.path)
+      volumeMounts:
+        - mountPath: /steps
+          name: steps-volume        
+  volumes:
+    - name: steps-volume
+      emptyDir: {}
+    - name: cd-config-volume
+      configMap:
+        name: toolchain
+        items:
+          - key: toolchain.json
+            path: toolchain.json        
