@@ -37,7 +37,6 @@ spec:
         apt-get update && apt-get install -y netcat
         timeout 60s /bin/bash -c 'while ! nc -z -v -w1 localhost 3306; do sleep 1; done'
         echo "MySQL connection successful!"
-  steps:
     - name: tests
       image: cimg/node:18.18
       script: |
