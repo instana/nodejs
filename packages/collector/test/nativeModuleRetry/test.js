@@ -5,12 +5,12 @@
 
 'use strict';
 
-const async = require('async');
+const util = require('util');
 const { expect } = require('chai');
-const fs = require('fs');
+const fs = require('node:fs/promises');
 const os = require('os');
 const path = require('path');
-const rimraf = require('rimraf');
+const rimraf = util.promisify(require('rimraf'));
 
 const config = require('../../../core/test/config');
 const { retry } = require('../../../core/test/test_util');
@@ -67,6 +67,37 @@ describe('retry loading native addons', function () {
 function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
   let controls;
 
+  const rename = async (oldPath, newPath) => {
+    try {
+      await fs.rename(oldPath, newPath);
+    } catch (err) {
+      if (err.code === 'EXDEV') {
+        await copyFolder(oldPath, newPath);
+        await fs.rmdir(oldPath, { recursive: true });
+      } else {
+        throw err;
+      }
+    }
+  };
+
+  async function copyFolder(src, dest) {
+    await fs.mkdir(dest, { recursive: true });
+    const entries = await fs.readdir(src, { withFileTypes: true });
+
+    const copyPromises = entries.map(async entry => {
+      const srcPath = `${src}/${entry.name}`;
+      const destPath = `${dest}/${entry.name}`;
+
+      if (entry.isDirectory()) {
+        await copyFolder(srcPath, destPath);
+      } else {
+        await fs.copyFile(srcPath, destPath);
+      }
+    });
+
+    await Promise.all(copyPromises);
+  }
+
   before(async () => {
     controls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
@@ -87,21 +118,14 @@ function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
   });
 
   describe(opts.name, () => {
-    before(done => {
+    before(async () => {
       // remove the dependency temporarily
-      async.series([fs.rename.bind(null, opts.nativeModulePath, opts.backupPath)], done);
+      await rename(opts.nativeModulePath, opts.backupPath);
     });
 
-    after(done => {
-      // restore the dependency after running the test
-      async.series(
-        [
-          //
-          rimraf.bind(null, opts.nativeModulePath),
-          fs.rename.bind(null, opts.backupPath, opts.nativeModulePath)
-        ],
-        done
-      );
+    after(async () => {
+      await rimraf(opts.nativeModulePath);
+      await rename(opts.backupPath, opts.nativeModulePath);
     });
 
     it('metrics from native add-ons should become available at some point', () =>
