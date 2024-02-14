@@ -118,7 +118,7 @@ spec:
               claimName: pipelinerun-$(uid)-pvc
           - name: npm-cache
             persistentVolumeClaim:
-              claimName: pipelinerun-$(uid)-npm-cache-pvc
+              claimName: pipelinerun-$(uid)-pvc
         params:
           - name: repository
             value: $(params.repository)

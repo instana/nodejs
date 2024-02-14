@@ -50,4 +50,4 @@ spec:
         npm config set cache $NPM_CACHE_PATH
         npm install
 
-        npm run test:ci:collector:general     
+        npm run test:ci:collector:general
