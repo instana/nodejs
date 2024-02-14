@@ -10,7 +10,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const { expectExactlyOneMatching } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 
 const entityId = '/subscriptions/instana/resourceGroups/East US/providers/Microsoft.Web/sites/test-app';
@@ -47,6 +47,11 @@ describe('Using the API', function () {
       await control.start();
     });
 
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
+    });
+
     after(async () => {
       await control.stop();
     });
@@ -78,6 +83,11 @@ describe('Using the API', function () {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
     });
 
     after(async () => {

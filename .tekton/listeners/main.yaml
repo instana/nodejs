@@ -1,0 +1,39 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: main-binding
+spec:
+  envFrom:
+    - configMapRef:
+        name: environment-properties
+  params:
+    - name: branch
+      value: "main"
+    - name: target-branch
+      value: "main"  
+    - name: type
+      value: "main"
+    - name: repository
+      value: $(event.repository.html_url)
+    - name: commit-id
+      value: $(event.after)
+    - name: node-version
+      value: $(params.node-version)
+      default: ""
+    - name: pl-name
+      value: $(event.after)
+    - name: pipeline-ref
+      value: "default-pipeline"      
+
+---
+
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: main-listener
+spec:
+  triggers:
+    - bindings:
+        - name: main-binding
+      template:
+        name: custom-template

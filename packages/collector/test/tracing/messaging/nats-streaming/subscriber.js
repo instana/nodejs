@@ -16,7 +16,7 @@ const natsStreaming = require('node-nats-streaming');
 const app = express();
 const port = require('../../../test_util/app-port')();
 const client = natsStreaming.connect('test-cluster', 'test-client-subscriber', {
-  url: 'nats://localhost:4223'
+  url: process.env.NATS_STREAMING
 });
 let connected = false;
 

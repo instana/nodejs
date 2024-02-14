@@ -51,6 +51,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await appControls.stop();
     });
@@ -143,6 +147,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await appControls.stop();
     });
@@ -183,6 +191,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
       });
 
       await appControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {

@@ -35,6 +35,10 @@ mochaSuiteFn('ESM loader', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await controls.agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await controls.stop();
     });
@@ -62,6 +66,10 @@ mochaSuiteFn('ESM loader', function () {
       });
 
       await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await controls.agentControls.clearReceivedTraceData();
     });
 
     after(async () => {
@@ -93,6 +101,10 @@ mochaSuiteFn('ESM loader', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await controls.agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await controls.stop();
     });
@@ -122,6 +134,10 @@ mochaSuiteFn('ESM loader', function () {
       });
 
       await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await controls.agentControls.clearReceivedTraceData();
     });
 
     after(async () => {

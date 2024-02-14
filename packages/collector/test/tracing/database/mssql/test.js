@@ -37,6 +37,10 @@ describe('tracing/mssql', function () {
         await controls.startAndWaitForAgentConnection(10000);
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await controls.stop();
       });

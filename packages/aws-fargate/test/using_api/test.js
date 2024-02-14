@@ -11,7 +11,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const { delay, expectExactlyOneMatching } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 
 const region = 'us-east-2';
@@ -25,7 +25,6 @@ const instanaAgentKey = 'aws-fargate-dummy-key';
 
 function prelude() {
   this.timeout(config.getTestTimeout());
-  this.slow(config.getTestTimeout() / 2);
 }
 
 describe('Using the API', function () {
@@ -42,6 +41,11 @@ describe('Using the API', function () {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
     });
 
     after(async () => {
@@ -76,6 +80,11 @@ describe('Using the API', function () {
       await control.start();
     });
 
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
+    });
+
     after(async () => {
       await control.stop();
     });
@@ -93,30 +102,32 @@ describe('Using the API', function () {
   });
 
   function verify(control, response) {
-    expect(response).to.be.an('object');
-    expect(response.message).to.equal('Hello Fargate!');
+    return retry(async () => {
+      expect(response).to.be.an('object');
+      expect(response.message).to.equal('Hello Fargate!');
 
-    // During phase 1 of the Kafka header migration (October 2022 - October 2023) there will be a debug log about
-    // ignoring the option 'both' for rdkafka. We do not care about that log message in this test.
-    const debug = response.logs.debug.filter(msg => !msg.includes('Ignoring configuration or default value'));
-    expect(debug).to.contain('Sending data to Instana (/metrics).');
-    expect(debug).to.contain('Sent data to Instana (/metrics).');
+      // During phase 1 of the Kafka header migration (October 2022 - October 2023) there will be a debug log about
+      // ignoring the option 'both' for rdkafka. We do not care about that log message in this test.
+      const debug = response.logs.debug.filter(msg => !msg.includes('Ignoring configuration or default value'));
+      expect(debug).to.contain('Sending data to Instana (/metrics).');
+      expect(debug).to.contain('Sent data to Instana (/metrics).');
 
-    expect(response.logs.info).to.be.empty;
-    expect(response.logs.warn).to.deep.equal([
-      'INSTANA_DISABLE_CA_CHECK is set, which means that the server certificate will not be verified against the ' +
-        'list of known CAs. This makes your service vulnerable to MITM attacks when connecting to Instana. This ' +
-        'setting should never be used in production, unless you use our on-premises product and are unable to ' +
-        'operate the Instana back end with a certificate with a known root CA.'
-    ]);
-    expect(response.logs.error).to.be.empty;
+      expect(response.logs.info).to.be.empty;
+      expect(response.logs.warn).to.deep.equal([
+        'INSTANA_DISABLE_CA_CHECK is set, which means that the server certificate will not be verified against the ' +
+          'list of known CAs. This makes your service vulnerable to MITM attacks when connecting to Instana. This ' +
+          'setting should never be used in production, unless you use our on-premises product and are unable to ' +
+          'operate the Instana back end with a certificate with a known root CA.'
+      ]);
+      expect(response.logs.error).to.be.empty;
 
-    expect(response.currentSpan.span.n).to.equal('node.http.server');
-    expect(response.currentSpan.span.f.hl).to.be.true;
-    expect(response.currentSpan.span.f.e).to.equal(instrumentedContainerId);
-    expect(response.currentSpan.span.f.cp).to.equal('aws');
-    expect(response.currentSpanConstructor).to.equal('SpanHandle');
-    return retry(() => getAndVerifySpans(control));
+      expect(response.currentSpan.span.n).to.equal('node.http.server');
+      expect(response.currentSpan.span.f.hl).to.be.true;
+      expect(response.currentSpan.span.f.e).to.equal(instrumentedContainerId);
+      expect(response.currentSpan.span.f.cp).to.equal('aws');
+      expect(response.currentSpanConstructor).to.equal('SpanHandle');
+      await getAndVerifySpans(control);
+    });
   }
 
   function getAndVerifySpans(control) {

@@ -11,9 +11,12 @@
 // In particular, these hook sets up the global profiler instance that is used in some tests.
 
 const AutoProfiler = require('../lib/auto_profiler').AutoProfiler;
+const config = require('@instana/core/test/config');
 
 exports.mochaHooks = {
   beforeEach() {
+    this.timeout(config.getTestTimeout());
+
     global.profiler = new AutoProfiler();
 
     global.profiler.sendProfiles = function (profiles, callback) {
@@ -31,6 +34,7 @@ exports.mochaHooks = {
   },
 
   afterEach() {
+    this.timeout(config.getTestTimeout());
     global.profiler.destroy();
     global.profiler = undefined;
   }

@@ -53,6 +53,10 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         await controls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await controls.stop();
       });
@@ -186,6 +190,10 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         await controls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await controls.stop();
       });
@@ -240,6 +248,10 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       });
 
       await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {
@@ -367,6 +379,10 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
 
       await clientControls.startAndWaitForAgentConnection();
       await serverControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {
@@ -506,6 +522,10 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         await controls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await controls.stop();
       });
@@ -590,6 +610,10 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         });
 
         await controls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {

@@ -98,6 +98,10 @@ describe('spec compliance', function () {
         await appControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await downstreamTarget.stop();
         await appControls.stop();

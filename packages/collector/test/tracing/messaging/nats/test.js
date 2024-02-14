@@ -54,6 +54,10 @@ mochaSuiteFn('tracing/nats', function () {
           await subscriberControls.startAndWaitForAgentConnection();
         });
 
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
         after(async () => {
           await publisherControls.stop();
           await subscriberControls.stop();
@@ -465,6 +469,10 @@ mochaSuiteFn('tracing/nats', function () {
           });
         });
 
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
         after(async () => {
           await publisherControls.stop();
         });
@@ -518,6 +526,10 @@ mochaSuiteFn('tracing/nats', function () {
 
           await publisherControls.startAndWaitForAgentConnection();
           await subscriberControls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
         });
 
         after(async () => {

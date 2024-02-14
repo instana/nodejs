@@ -36,6 +36,10 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await controls.stop();
     });
@@ -96,6 +100,10 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await controls.stop();
     });
@@ -132,6 +140,10 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       });
 
       await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {
@@ -177,6 +189,10 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       await controls.start();
     });
 
+    beforeEach(async () => {
+      await customAgentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await customAgentControls.stopAgent();
       await controls.stop();
@@ -218,6 +234,10 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       });
 
       await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await customeAgentControls.clearReceivedTraceData();
     });
 
     after(async () => {

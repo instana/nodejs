@@ -171,6 +171,12 @@ describe('util/requireHook', () => {
 
     describe('real modules', () => {
       it('must support loading of specific files within a module', () => {
+        Object.keys(require.cache).forEach(key => {
+          if (key.indexOf('express') !== -1) {
+            delete require.cache[key];
+          }
+        });
+
         requireHook.init();
         const pattern = requireHook.buildFileNamePattern(['node_modules', 'express', 'lib', 'router', 'route.js']);
         requireHook.onFileLoad(pattern, hook);

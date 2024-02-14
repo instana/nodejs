@@ -31,6 +31,10 @@ mochaSuiteFn('tracing/got', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   after(async () => {
     await controls.stop();
   });

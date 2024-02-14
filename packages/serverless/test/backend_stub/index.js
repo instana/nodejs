@@ -147,7 +147,7 @@ app.get('/serverless/received/metrics', (req, res) => res.json(receivedData.metr
 
 app.get('/serverless/received/aggregated/metrics', (req, res) => res.json(receivedData.aggregatedMetrics));
 
-app.delete('/received/metrics', (req, res) => {
+app.delete('/serverless/received/metrics', (req, res) => {
   receivedData.metrics = [];
   receivedData.aggregatedMetrics = [];
   return res.sendStatus('204');

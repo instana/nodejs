@@ -37,13 +37,8 @@ const availableOperations = [
 ];
 
 const createTableName = () => {
-  let tableName = 'nodejs-team';
-
-  if (process.env.AWS_DYNAMODB_TABLE_NAME) {
-    tableName = `${process.env.AWS_DYNAMODB_TABLE_NAME}v3-${semver.major(process.versions.node)}-${uuid()}`;
-  } else {
-    tableName = `${tableName}-${uuid()}`;
-  }
+  const tablePrefix = 'nodejs-team';
+  const tableName = `${tablePrefix}-v3-${semver.major(process.versions.node)}-${uuid()}`;
 
   return tableName;
 };
@@ -78,6 +73,9 @@ function start(version, requestMethod, reducedTestSuite = false) {
         await appControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
       after(async () => {
         await appControls.stop();
       });
@@ -132,6 +130,14 @@ function start(version, requestMethod, reducedTestSuite = false) {
         await appControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await appControls.stop();
       });
@@ -169,6 +175,10 @@ function start(version, requestMethod, reducedTestSuite = false) {
         });
 
         await appControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -209,6 +219,10 @@ function start(version, requestMethod, reducedTestSuite = false) {
         });
 
         await appControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -274,6 +288,10 @@ function start(version, requestMethod, reducedTestSuite = false) {
         });
 
         await appControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {

@@ -118,7 +118,8 @@ class ProcessControls {
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: '1',
         INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: opts.minimalDelay != null ? opts.minimalDelay : 0,
         INSTANA_FULL_METRICS_INTERNAL_IN_S: 1,
-        INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS: 500
+        INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS: 500,
+        INSTANA_RETRY_AGENT_CONNECTION_IN_MS: 500
       },
       opts.env
     );
@@ -175,6 +176,9 @@ class ProcessControls {
         retryTime,
         until
       );
+
+      // eslint-disable-next-line no-console
+      console.log('[ProcessControls] Server is up.');
     } catch (err) {
       // eslint-disable-next-line no-console
       console.log(`[ProcessControls] error: ${err}`);

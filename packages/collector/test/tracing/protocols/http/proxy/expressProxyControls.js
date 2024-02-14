@@ -39,6 +39,7 @@ exports.start = async (opts = {}) => {
 
   env.UPSTREAM_PORT = opts.expressControls ? opts.expressControls.getPort() : null;
   env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
+  env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;
 
   expressProxyApp = spawn('node', [path.join(__dirname, 'expressProxy.js')], {
     stdio: config.getAppStdio(),

@@ -209,7 +209,7 @@ app.listen(port, () => {
   log(`Listening on port: ${port}`);
 });
 
-amqp.connect('amqp://127.0.0.1', (err, conn) => {
+amqp.connect(process.env.AMQP, (err, conn) => {
   if (err) {
     return bail(err);
   }

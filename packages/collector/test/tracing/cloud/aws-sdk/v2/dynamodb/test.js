@@ -22,11 +22,8 @@ const {
 } = require('@instana/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 
-let tableName = 'nodejs-team';
-
-if (process.env.AWS_DYNAMODB_TABLE_NAME) {
-  tableName = `${process.env.AWS_DYNAMODB_TABLE_NAME}${semver.major(process.versions.node)}-${uuid()}`;
-}
+const tablePrefix = 'nodejs-team';
+const tableName = `${tablePrefix}-v2-${semver.major(process.versions.node)}-${uuid()}`;
 
 let mochaSuiteFn;
 
@@ -84,6 +81,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
       });
 
       await appControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {
@@ -173,6 +174,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await appControls.stop();
     });
@@ -213,6 +218,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
       });
 
       await appControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {

@@ -150,7 +150,6 @@ couchbase.connect(
 
     await bootstrapCluster();
     connected = true;
-    connected2 = true;
 
     log('Bootstrapping done.');
   }
@@ -181,8 +180,8 @@ if (process.env.WITH_STDOUT) {
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
-  if (!connected || !connected2) return res.sendStatus(500);
-  res.sendStatus(200);
+  if (connected && connected2) return res.sendStatus(200);
+  return res.sendStatus(500);
 });
 
 app.get('/get-promise', async (req, res) => {

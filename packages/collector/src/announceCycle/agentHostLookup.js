@@ -39,7 +39,9 @@ logger = require('../logger').getLogger('announceCycle/agentHostLookup', newLogg
 /* eslint-enable max-len */
 
 const requestTimeout = 5000;
-const retryTimeoutMillis = 60 * 1000;
+const retryTimeoutMillis = process.env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS
+  ? Number(process.env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS)
+  : 60 * 1000;
 
 module.exports = {
   enter,

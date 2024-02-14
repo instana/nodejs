@@ -50,13 +50,10 @@ function start(version) {
   mochaSuiteFn(`npm: ${version}`, function () {
     this.timeout(config.getTestTimeout() * 3);
 
-    let bucketName = 'nodejs-team';
-
-    if (process.env.AWS_S3_BUCKET_NAME) {
-      bucketName = `${process.env.AWS_S3_BUCKET_NAME}-v3-${semver.major(process.versions.node)}-${uuid()}`;
-    } else {
-      bucketName = `${bucketName}-${uuid()}`;
-    }
+    const bucketPrefix = 'nodejs-team';
+    const bucketName = `${bucketPrefix}-v2-${semver.major(process.versions.node)}-${uuid()}-${Math.floor(
+      Math.random() * 1000
+    )}`;
 
     after(() => cleanup(bucketName));
 
@@ -77,6 +74,10 @@ function start(version) {
         });
 
         await appControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -203,6 +204,10 @@ function start(version) {
         await appControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await appControls.stop();
       });
@@ -245,6 +250,10 @@ function start(version) {
         });
 
         await appControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {

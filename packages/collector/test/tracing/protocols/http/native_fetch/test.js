@@ -50,6 +50,10 @@ mochaSuiteFn('tracing/native fetch', function () {
     await clientControls.startAndWaitForAgentConnection();
   });
 
+  beforeEach(async () => {
+    await globalAgent.instance.clearReceivedTraceData();
+  });
+
   after(async () => {
     await serverControls.stop();
     await clientControls.stop();

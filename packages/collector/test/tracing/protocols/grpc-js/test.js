@@ -43,6 +43,10 @@ mochaSuiteFn('tracing/grpc-js', function () {
       await clientControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await serverControls.stop();
       await clientControls.stop();
@@ -117,6 +121,10 @@ mochaSuiteFn('tracing/grpc-js', function () {
       await clientControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await serverControls.stop();
       await clientControls.stop();
@@ -150,6 +158,10 @@ mochaSuiteFn('tracing/grpc-js', function () {
 
       await serverControls.startAndWaitForAgentConnection();
       await clientControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {
@@ -207,6 +219,10 @@ mochaSuiteFn('tracing/grpc-js', function () {
       await clientControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await serverControls.stop();
       await clientControls.stop();
@@ -255,6 +271,10 @@ mochaSuiteFn('tracing/grpc-js', function () {
 
       await serverControls.startAndWaitForAgentConnection();
       await clientControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {

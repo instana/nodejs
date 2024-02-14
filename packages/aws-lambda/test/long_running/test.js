@@ -12,7 +12,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 
 const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
@@ -76,6 +76,11 @@ describe('long running lambdas', () => {
       await control.start();
     });
 
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
     after(async () => {
       await control.stop();
     });
@@ -132,6 +137,11 @@ describe('long running lambdas', () => {
       await control.start();
     });
 
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
     after(async () => {
       await control.stop();
     });
@@ -166,6 +176,11 @@ describe('long running lambdas', () => {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
     });
 
     after(async () => {

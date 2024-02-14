@@ -47,7 +47,7 @@ const amqpResponseHandlers = {};
 
 // We establish an AMQP connection to test GraphQL queries over non-HTTP protocols.
 amqp
-  .connect('amqp://localhost')
+  .connect(process.env.AMQP)
   .then(connection => connection.createChannel())
   .then(_channel => {
     channel = _channel;

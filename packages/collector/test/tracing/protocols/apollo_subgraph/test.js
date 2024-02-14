@@ -74,6 +74,10 @@ mochaSuiteFn('tracing gateway with apollo-subgraph', function () {
         await clientControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await accountServiceControls.stop();
         await inventoryServiceControls.stop();

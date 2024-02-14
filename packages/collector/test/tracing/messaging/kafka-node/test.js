@@ -51,6 +51,14 @@ mochaSuiteFn('tracing/kafka-node', function () {
         await producerControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await producerControls.stop();
         await consumerControls.stop();
@@ -138,6 +146,10 @@ mochaSuiteFn('tracing/kafka-node', function () {
 
         await producerControls.startAndWaitForAgentConnection();
         await consumerControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {

@@ -1,0 +1,47 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: github-pr-binding
+spec:
+  envFrom:
+    - configMapRef:
+        name: environment-properties
+  params:
+    - name: branch
+      value: $(event.pull_request.head.ref)
+    - name: target-branch
+      value: $(event.pull_request.head.ref)
+    - name: type
+      value: "pull-request"
+    - name: pr-number
+      value: $(event.pull_request.number)
+    - name: pr-name
+      value: $(event.pull_request.user.login)
+    - name: repository
+      value: $(event.repository.html_url)
+    - name: pr-repository
+      value: $(event.pull_request.head.repo.html_url)
+    - name: pr-branch
+      value: $(event.pull_request.head.ref)
+    - name: commit-id
+      value: $(event.pull_request.head.sha)
+    - name: node-version
+      value: "$(params.node-version)"
+      default: ""
+    - name: pl-name
+      value: $(event.pull_request.head.sha)
+    - name: pipeline-ref
+      value: "default-pipeline"
+
+---
+
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: github-pr-listener
+spec:
+  triggers:
+    - bindings:
+        - name: github-pr-binding
+      template:
+        name: custom-template

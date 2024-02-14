@@ -71,6 +71,10 @@ function start(graphqlVersion) {
                   await clientControls.startAndWaitForAgentConnection();
                 });
 
+                beforeEach(async () => {
+                  await agentControls.clearReceivedTraceData();
+                });
+
                 after(async () => {
                   await serverControls.stop();
                   await clientControls.stop();
@@ -276,6 +280,10 @@ function start(graphqlVersion) {
             await clientControls.startAndWaitForAgentConnection();
           });
 
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+
           after(async () => {
             await serverControls.stop();
             await clientControls.stop();
@@ -320,6 +328,10 @@ function start(graphqlVersion) {
 
             await serverControls.startAndWaitForAgentConnection();
             await clientControls.startAndWaitForAgentConnection();
+          });
+
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
           });
 
           after(async () => {
@@ -380,6 +392,10 @@ function start(graphqlVersion) {
           await serverControls.startAndWaitForAgentConnection();
           await clientControls1.startAndWaitForAgentConnection();
           await clientControls2.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
         });
 
         after(async () => {
@@ -461,6 +477,10 @@ function start(graphqlVersion) {
         await clientControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await serverControls.stop();
         await clientControls.stop();
@@ -526,6 +546,10 @@ function start(graphqlVersion) {
         await clientControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await serverControls.stop();
         await clientControls.stop();
@@ -577,6 +601,10 @@ function start(graphqlVersion) {
         await clientControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await serverControls.stop();
         await clientControls.stop();
@@ -624,6 +652,10 @@ function start(graphqlVersion) {
 
         await serverControls.startAndWaitForAgentConnection();
         await clientControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {

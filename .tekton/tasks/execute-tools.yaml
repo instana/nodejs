@@ -1,0 +1,94 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: execute-tools
+spec:
+  params:
+    - name: node-version
+      value: $(params.node-version)
+  workspaces:
+    - name: output
+      mountPath: /artifacts
+  steps:
+    - name: audit
+      image: node:$(params.node-version)
+      script: |
+        #!/bin/bash
+        
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+
+        npm run audit
+
+        if [ $? -eq 0 ]; then
+          touch audit.succeeded
+        else
+          touch audit.failed
+          exit 1
+        fi        
+    - name: lint
+      image: node:$(params.node-version)
+      script: |
+        #!/bin/bash
+
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+
+        npm run lint
+
+        if [ $? -eq 0 ]; then
+          touch lint.succeeded
+        else
+          touch lint.failed
+          exit 1
+        fi
+    - name: commitlint
+      image: node:$(params.node-version)
+      script: |
+        #!/bin/bash
+
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+
+        if [[ $(node -v) =~ ^v18.*$ ]]; then
+          node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)
+
+          if [ $? -eq 0 ]; then
+            touch commitlint.succeeded
+          else
+            touch commitlint.failed
+            exit 1
+          fi
+        fi
+    - name: depcheck
+      image: node:$(params.node-version)
+      script: |
+        #!/bin/bash
+
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+
+        if [[ $(node -v) =~ ^v18.*$ ]]; then
+           npm run depcheck
+
+          if [ $? -eq 0 ]; then
+            touch depcheck.succeeded
+          else
+            touch depcheck.failed
+            exit 1
+          fi 
+        fi
+    - name: clean-aws
+      image: node:$(params.node-version)      
+      script: |
+        #!/bin/bash
+
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+        
+        if [[ $(node -v) =~ ^v18.*$ ]]; then
+          bin/clean-aws.js --service=s3
+          bin/clean-aws.js --service=dynamodb
+          bin/clean-aws.js --service=sqs
+          bin/clean-aws.js --service=kinesis
+        fi

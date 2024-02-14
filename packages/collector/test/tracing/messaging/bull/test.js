@@ -70,6 +70,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await senderControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await senderControls.stop();
     });
@@ -97,6 +101,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           });
 
           await receiverControls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
         });
 
         after(async () => {
@@ -299,6 +307,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await senderControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await senderControls.stop();
     });
@@ -327,6 +339,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         });
 
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -382,6 +398,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await senderControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await senderControls.stop();
     });
@@ -409,6 +429,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         });
 
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {

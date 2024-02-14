@@ -1,0 +1,6 @@
+    - name: {{name}}
+      image: {{image}}
+      {{args}}
+      {{env}}      
+      {{command}}
+      {{readinessProbe}}

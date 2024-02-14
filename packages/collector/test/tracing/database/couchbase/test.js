@@ -11,7 +11,6 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const {
-  isCI,
   retry,
   delay,
   expectExactlyOneMatching,
@@ -21,8 +20,9 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 const DELAY_TIMEOUT_IN_MS = 500;
-let connStr1 = process.env.COUCHBASE;
-let connStr2 = process.env.COUCHBASE_ALTERNATIVE;
+const connStr1 = process.env.COUCHBASE;
+const connStr2 = process.env.COUCHBASE_ALTERNATIVE;
+const webUi = process.env.COUCHBASE_WEB_UI;
 
 const verifyCouchbaseSpan = (controls, entrySpan, options = {}) => [
   span => expect(span.t).to.equal(entrySpan.t),
@@ -74,6 +74,71 @@ const verifySpans = (agentControls, controls, options = {}) =>
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
 
+let tries = 0;
+const maxTries = 100;
+
+async function configureCouchbase() {
+  const requestOptions = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${btoa('node:nodepwd')}` // Add this header for requests requiring authorization
+    }
+  };
+
+  try {
+    // Set memory quotas
+    await fetch(`${webUi}/pools/default`, {
+      ...requestOptions,
+      body: 'memoryQuota=512&indexMemoryQuota=512'
+    });
+
+    // Setup services
+    await fetch(`${webUi}/node/controller/setupServices`, {
+      ...requestOptions,
+      body: 'services=kv%2Ceventing%2Cindex%2Cn1ql%2Ccbas%2Cfts'
+    });
+
+    // Configure web settings
+    await fetch(`${webUi}/settings/web`, {
+      ...requestOptions,
+      body: 'port=8091&username=node&password=nodepwd'
+    });
+
+    // Configure indexes settings
+    await fetch(`${webUi}/settings/indexes`, {
+      ...requestOptions,
+      body: 'storageMode=memory_optimized'
+    });
+
+    // Create bucket 'projects'
+    await fetch(`${webUi}/pools/default/buckets`, {
+      ...requestOptions,
+      body: 'name=projects&bucketType=couchbase&ramQuota=128&flushEnabled=1'
+    });
+
+    // Create bucket 'companies'
+    await fetch(`${webUi}/pools/default/buckets`, {
+      ...requestOptions,
+      body: 'name=companies&bucketType=ephemeral&ramQuota=128&flushEnabled=1'
+    });
+
+    // eslint-disable-next-line no-console
+    console.error('Initializing couchbase done');
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(`Initializing couchbase ${err.message}`);
+
+    if (tries > maxTries) {
+      throw err;
+    }
+
+    tries += 1;
+    await delay(1000);
+    return configureCouchbase();
+  }
+}
+
 // NOTE: it takes 1-2 minutes till the couchbase server can be reached via docker
 mochaSuiteFn('tracing/couchbase', function () {
   this.timeout(config.getTestTimeout() * 4);
@@ -84,19 +149,7 @@ mochaSuiteFn('tracing/couchbase', function () {
   let controls;
 
   before(async () => {
-    // NOTE: The CircleCI container is called "couchbase". It's hostname is therefore "couchbase", not "localhost".
-    //       The "couchbase-setup" container is able to initialize the cluster etc. via the domain name "couchbase".
-    const dns = require('dns');
-    const dnsPromises = dns.promises;
-
-    if (isCI()) {
-      const data = await dnsPromises.lookup('couchbase', { family: 4 });
-      if (data && data.address) {
-        connStr2 = `couchbase://${data.address}`;
-      }
-
-      connStr1 = 'couchbase://couchbase';
-    }
+    await configureCouchbase();
 
     controls = new ProcessControls({
       dirname: __dirname,
@@ -110,9 +163,9 @@ mochaSuiteFn('tracing/couchbase', function () {
     // The operations for bootstrapping & cleanup can take a while.
     await controls.startAndWaitForAgentConnection(1000, Date.now() + 30 * 1000);
   });
-  // Add a delay before tests start to ensure that the environment is set up properly.
-  before(async () => {
-    await delay(DELAY_TIMEOUT_IN_MS * 10);
+
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
   });
 
   after(async () => {

@@ -9,8 +9,8 @@ const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
-const { retry, expectExactlyNMatching, expectExactlyOneMatching } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const { retry, expectExactlyNMatching, expectExactlyOneMatching, delay } = require('../../../core/test/test_util');
+const config = require('@instana/core/test/config');
 
 const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
@@ -37,6 +37,15 @@ describe('multiple data lambda handler', function () {
     await control.start();
   });
 
+  beforeEach(async () => {
+    // wait a little to ensure no more spans are sent from the handler
+    // the handler sends some async request in the background
+    await delay(2000);
+
+    await control.reset();
+    await control.resetBackendSpansAndMetrics();
+  });
+
   after(async () => {
     await control.stop();
   });
@@ -46,7 +55,7 @@ describe('multiple data lambda handler', function () {
       .runHandler()
       .then(() => {
         const duration = Date.now() - control.startedAt;
-        expect(duration).to.be.at.most(1000 * 2);
+        expect(duration).to.be.at.most(1000 * 4);
         verifyResponse(1);
       })
       .then(() => {

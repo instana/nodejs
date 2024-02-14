@@ -12,7 +12,7 @@ const constants = require('@instana/core').tracing.constants;
 const Control = require('../Control');
 const delay = require('../../../core/test/test_util/delay');
 const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 
 const functionName = 'functionName';
@@ -69,6 +69,11 @@ describe('Using the API', () => {
       await control.start();
     });
 
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
     after(async () => {
       await control.stop();
     });
@@ -99,6 +104,11 @@ describe('Using the API', () => {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
     });
 
     after(async () => {
@@ -132,6 +142,11 @@ describe('Using the API', () => {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
     });
 
     after(async () => {
@@ -168,6 +183,11 @@ describe('Using the API', () => {
       await control.start();
     });
 
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
     after(async () => {
       await control.stop();
     });
@@ -197,6 +217,11 @@ describe('Using the API', () => {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
     });
 
     after(async () => {
@@ -231,6 +256,11 @@ describe('Using the API', () => {
       await control.start();
     });
 
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
     after(async () => {
       await control.stop();
     });
@@ -262,6 +292,11 @@ describe('Using the API', () => {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
     });
 
     after(async () => {

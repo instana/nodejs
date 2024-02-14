@@ -14,7 +14,7 @@ const { consoleLogger } = require('@instana/serverless');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 
 const { retry } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 
 let transmissionCycle;
 

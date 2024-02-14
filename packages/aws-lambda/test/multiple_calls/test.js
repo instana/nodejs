@@ -11,7 +11,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const { delay, expectExactlyNMatching } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 
 const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
@@ -36,6 +36,11 @@ describe('multiple lambda handler calls', function () {
     });
 
     await control.start();
+  });
+
+  beforeEach(async () => {
+    await control.reset();
+    await control.resetBackendSpansAndMetrics();
   });
 
   after(async () => {

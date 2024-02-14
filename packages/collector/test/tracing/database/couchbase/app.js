@@ -125,7 +125,7 @@ couchbase.connect(
   async (err, _cluster) => {
     if (err) throw err;
 
-    log('Connected to couchbase. Bootstrapping...');
+    log('Connected to couchbase 1. Bootstrapping...');
 
     cluster = _cluster;
     bucketMng = cluster.buckets();
@@ -147,10 +147,9 @@ couchbase.connect(
     collection2 = scope2.collection('_default');
 
     await bootstrapCluster();
-    connected = true;
-    connected2 = true;
 
-    log('Bootstrapping done.');
+    log('Bootstrapping 1 done.');
+    connected = true;
   }
 );
 
@@ -166,6 +165,8 @@ couchbase.connect(
 
     cluster2 = _cluster;
     connected2 = true;
+
+    log('Connected to couchbase 2. Bootstrapping...');
   }
 );
 
@@ -179,8 +180,8 @@ if (process.env.WITH_STDOUT) {
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
-  if (!connected || !connected2) return res.sendStatus(500);
-  res.sendStatus(200);
+  if (connected && connected2) return res.sendStatus(200);
+  return res.sendStatus(500);
 });
 
 app.get('/get-promise', async (req, res) => {

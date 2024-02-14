@@ -40,6 +40,10 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
           await processControls.startAndWaitForAgentConnection();
         });
 
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
         after(async () => {
           await processControls.stop();
         });

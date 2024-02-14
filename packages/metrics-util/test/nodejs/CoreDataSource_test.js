@@ -11,7 +11,7 @@ const semver = require('semver');
 const { metrics: coreMetrics } = require('@instana/core');
 
 const { delay, retry } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 
 const sharedMetrics = require('@instana/shared-metrics');
 

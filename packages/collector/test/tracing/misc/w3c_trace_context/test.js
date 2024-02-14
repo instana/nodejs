@@ -69,6 +69,10 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
         await otherVendorAppControls.start();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await instanaAppControls.stop();
         await otherVendorAppControls.stop();

@@ -56,6 +56,10 @@ mochaSuiteFn('tracing/common', function () {
         await controls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await controls.stop();
       });
@@ -217,6 +221,10 @@ mochaSuiteFn('tracing/common', function () {
         await controls.start();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await controls.stop();
       });
@@ -293,6 +301,10 @@ mochaSuiteFn('tracing/common', function () {
         await controls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await globalAgent.instance.clearReceivedTraceData();
+      });
+
       after(async () => {
         await controls.stop();
       });
@@ -329,6 +341,10 @@ mochaSuiteFn('tracing/common', function () {
         });
 
         await controls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await globalAgent.instance.clearReceivedTraceData();
       });
 
       after(async () => {

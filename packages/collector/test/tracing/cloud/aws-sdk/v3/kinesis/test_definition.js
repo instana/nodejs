@@ -20,11 +20,10 @@ const {
   verifyHttpExit
 } = require('@instana/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
-let streamName = process.env.AWS_KINESIS_STREAM_NAME || 'nodejs-team';
 
-if (process.env.AWS_KINESIS_STREAM_NAME) {
-  streamName = `${process.env.AWS_KINESIS_STREAM_NAME}${semver.major(process.versions.node)}-${uuid()}`;
-}
+const streamPrefix = 'nodejs-team';
+const streamName = `${streamPrefix}-v3-${semver.major(process.versions.node)}-${uuid()}`;
+
 const withErrorOptions = [true, false];
 
 const operationsInfo = {
@@ -81,6 +80,10 @@ function start(version) {
         });
 
         await appControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -178,6 +181,10 @@ function start(version) {
         await appControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await appControls.stop();
       });
@@ -226,6 +233,10 @@ function start(version) {
         });
 
         await appControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {

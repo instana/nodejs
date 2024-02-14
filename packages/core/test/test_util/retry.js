@@ -13,9 +13,9 @@ module.exports = function retry(fn, time, until, tries) {
     tries = 0;
   }
 
-  // retry every 500ms by default
+  // retry every 100ms by default
   if (time == null) {
-    time = 500;
+    time = 100;
   }
 
   if (until == null) {

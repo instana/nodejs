@@ -44,6 +44,10 @@ describe('prevent initializing @instana/collector multiple times', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   after(done => {
     rimraf(tmpDir, done);
   });

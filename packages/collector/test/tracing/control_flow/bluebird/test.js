@@ -32,6 +32,10 @@ mochaSuiteFn('tracing/bluebird', function () {
     await bluebirdControls.startAndWaitForAgentConnection();
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   after(async () => {
     await bluebirdControls.stop();
   });

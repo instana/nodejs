@@ -15,16 +15,15 @@ const morgan = require('morgan');
 const path = require('path');
 const { Storage } = require('@google-cloud/storage');
 const { v4: uuid } = require('uuid');
-
-const { isCI } = require('@instana/core/test/test_util');
-
 const logPrefix = `Google Cloud Storage Client (${process.pid}):\t`;
 
-const options = { projectId: process.env.GCP_PROJECT };
-if (isCI() && process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT) {
+const options = { projectId: process.env.GCP_PROJECT, retryOptions: { maxRetries: 5 } };
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT) {
   options.credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT);
-} else if (!isCI()) {
+} else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
   options.keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+} else {
+  throw new Error('Credentials are missing.');
 }
 
 const storage = new Storage(options);

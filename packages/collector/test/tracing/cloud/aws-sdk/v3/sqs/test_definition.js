@@ -106,6 +106,10 @@ function start(version) {
         await senderControlsBatch.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await senderControls.stop();
         await senderControlsSQSConsumer.stop();
@@ -134,6 +138,10 @@ function start(version) {
             });
 
             await receiverControls.startAndWaitForAgentConnection();
+          });
+
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
           });
 
           after(async () => {
@@ -189,6 +197,10 @@ function start(version) {
             await receiverControls.startAndWaitForAgentConnection();
           });
 
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+
           after(async () => {
             await receiverControls.stop();
           });
@@ -239,6 +251,9 @@ function start(version) {
               await sqsConsumerControls.startAndWaitForAgentConnection();
             });
 
+            beforeEach(async () => {
+              await agentControls.clearReceivedTraceData();
+            });
             after(async () => {
               await sqsConsumerControls.stop();
             });
@@ -297,6 +312,10 @@ function start(version) {
               });
 
               await sqsConsumerControls.startAndWaitForAgentConnection();
+            });
+
+            beforeEach(async () => {
+              await agentControls.clearReceivedTraceData();
             });
 
             after(async () => {
@@ -359,6 +378,10 @@ function start(version) {
               await sqsConsumerControls.startAndWaitForAgentConnection();
             });
 
+            beforeEach(async () => {
+              await agentControls.clearReceivedTraceData();
+            });
+
             after(async () => {
               await sqsConsumerControls.stop();
             });
@@ -405,6 +428,10 @@ function start(version) {
               });
 
               await receiverControls.startAndWaitForAgentConnection();
+            });
+
+            beforeEach(async () => {
+              await agentControls.clearReceivedTraceData();
             });
 
             after(async () => {
@@ -457,6 +484,10 @@ function start(version) {
         await senderControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await senderControls.stop();
       });
@@ -483,6 +514,10 @@ function start(version) {
           });
 
           await receiverControls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
         });
 
         after(async () => {
@@ -529,6 +564,10 @@ function start(version) {
         await senderControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await senderControls.stop();
       });
@@ -553,6 +592,10 @@ function start(version) {
           });
 
           await receiverControls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
         });
 
         after(async () => {
@@ -605,6 +648,10 @@ function start(version) {
         await receiverControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await receiverControls.stop();
       });
@@ -655,6 +702,10 @@ function start(version) {
 
         await senderControls.startAndWaitForAgentConnection();
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {

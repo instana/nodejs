@@ -46,6 +46,7 @@ exports.registerTestHooks = (opts = {}) => {
     env.UPSTREAM_PORT = expressControls.getPort();
     env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
     env.TRACING_ENABLED = opts.enableTracing !== false;
+    env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;
 
     appProcess = spawn('node', [path.join(__dirname, appName)], {
       stdio: config.getAppStdio(),

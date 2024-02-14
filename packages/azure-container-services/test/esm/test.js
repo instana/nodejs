@@ -9,7 +9,7 @@ const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 const Control = require('../Control');
 const { expectExactlyOneMatching } = require('@instana/core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 const { delay } = require('bluebird');
 const esmSupportedVersion = require('@instana/core').tracing.esmSupportedVersion;
@@ -45,6 +45,11 @@ if (esmSupportedVersion(process.versions.node)) {
         await control.start();
       });
 
+      beforeEach(async () => {
+        await control.reset();
+        await control.resetBackendSpans();
+      });
+
       after(async () => {
         await control.stop();
       });
@@ -75,6 +80,11 @@ if (esmSupportedVersion(process.versions.node)) {
         await control.start();
       });
 
+      beforeEach(async () => {
+        await control.reset();
+        await control.resetBackendSpans();
+      });
+
       after(async () => {
         await control.stop();
       });
@@ -103,6 +113,11 @@ if (esmSupportedVersion(process.versions.node)) {
         });
 
         await control.start();
+      });
+
+      beforeEach(async () => {
+        await control.reset();
+        await control.resetBackendSpans();
       });
 
       after(async () => {

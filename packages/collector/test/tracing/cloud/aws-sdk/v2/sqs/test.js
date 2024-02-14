@@ -96,6 +96,18 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       await senderControlsBatch.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await senderControls.stop();
       await senderControlsSQSConsumer.stop();
@@ -123,6 +135,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           });
 
           await receiverControls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
         });
 
         after(async () => {
@@ -176,6 +192,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           await receiverControls.startAndWaitForAgentConnection();
         });
 
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
         after(async () => {
           await receiverControls.stop();
         });
@@ -222,6 +242,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         });
 
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -272,6 +296,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           await sqsConsumerControls.startAndWaitForAgentConnection();
         });
 
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
         after(async () => {
           await sqsConsumerControls.stop();
         });
@@ -306,6 +334,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           });
 
           await sqsConsumerControls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
         });
 
         after(async () => {
@@ -345,6 +377,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
             });
 
             await receiverControls.startAndWaitForAgentConnection();
+          });
+
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
           });
 
           after(async () => {
@@ -486,6 +526,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       await senderControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await senderControls.stop();
     });
@@ -510,6 +554,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         });
 
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -552,6 +600,9 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       await senderControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
     after(async () => {
       await senderControls.stop();
     });
@@ -577,6 +628,9 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         await receiverControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
       after(async () => {
         await receiverControls.stop();
       });
@@ -621,6 +675,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       });
 
       await receiverControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {

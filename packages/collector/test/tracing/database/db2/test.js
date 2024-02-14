@@ -145,6 +145,10 @@ mochaSuiteFn('tracing/db2', function () {
       await controls.startAndWaitForAgentConnection(retryTime);
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await controls.sendRequest({
         method: 'DELETE',
@@ -1136,6 +1140,10 @@ mochaSuiteFn('tracing/db2', function () {
       await controls.startAndWaitForAgentConnection(retryTime);
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await controls.sendRequest({
         method: 'DELETE',
@@ -1249,6 +1257,9 @@ mochaSuiteFn('tracing/db2', function () {
       await controls.startAndWaitForAgentConnection(retryTime);
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
     after(async () => {
       await controls.sendRequest({
         method: 'DELETE',

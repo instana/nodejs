@@ -11,7 +11,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const { expectExactlyOneMatching } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 
 const region = 'us-east-2';
@@ -72,6 +72,11 @@ if (esmSupportedVersion(process.versions.node)) {
         });
 
         await control.start();
+      });
+
+      beforeEach(async () => {
+        await control.reset();
+        await control.resetBackendSpans();
       });
 
       after(async () => {

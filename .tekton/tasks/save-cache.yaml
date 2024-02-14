@@ -1,0 +1,69 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: save-cache
+spec:
+  params:
+    - name: continuous-delivery-context-secret
+      default: secure-properties
+    - name: ibmcloud-apikey-secret-key
+      default: apikey
+    - name: target-branch
+      value: $(params.target-branch)
+    - name: node-version
+      value: $(params.node-version)      
+  workspaces:
+    - name: output
+      mountPath: /artifacts
+  steps:
+    - name: save-cache
+      image: node:$(params.node-version)
+      env:
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: $(params.ibmcloud-apikey-secret-key)
+              optional: true
+      script: |
+        #!/bin/bash
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+
+        if [ ! -e "node-modules.tar.zst" ]; then
+          echo "Saving node_modules cache..."
+
+          curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+          ibmcloud plugin install cloud-object-storage -f -r 'IBM Cloud'
+          ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey $API_KEY
+
+          apt-get update -y
+          apt-get install zstd -y
+
+          tar -cf - node_modules | zstd -o node-modules.tar.zst
+
+          checksum=$(sha256sum package-lock.json | awk '{print $1}')
+          ibmcloud cos upload --bucket npm-cache --key node-modules-$(params.target-branch)-$checksum --file ./node-modules.tar.zst
+
+          echo "Uploaded root node_modules cache"
+          
+          # Iterate over packages/*/ directories
+          for package_dir in packages/*; do   
+            if [ -d "$ARTIFACTS_PATH/$package_dir" ]; then
+              cd $ARTIFACTS_PATH/$package_dir
+              package_name=$(basename "$package_dir")
+              pkg_name="node-modules-$(params.target-branch)-$package_name-$checksum"
+              rm -rf $pkg_name.tar.zst
+
+              echo "Saving cache for $pkg_name"
+
+              tar -cf - node_modules | zstd -o "$pkg_name.tar.zst"              
+              ibmcloud cos upload --bucket npm-cache --key $pkg_name --file "./$pkg_name.tar.zst"
+            fi
+          done
+
+          echo "Saved node_modules cache..."
+        else
+          echo "Nope, we do not cache."
+          echo $(ls -lah)
+        fi

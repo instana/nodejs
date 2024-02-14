@@ -64,6 +64,10 @@ function registerTests(useHttps) {
     await clientControls.startAndWaitForAgentConnection();
   });
 
+  beforeEach(async () => {
+    await globalAgent.instance.clearReceivedTraceData();
+  });
+
   after(async () => {
     await serverControls.stop();
     await clientControls.stop();
@@ -538,6 +542,10 @@ function registerConnectionRefusalTest(useHttps) {
       await clientControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await globalAgent.instance.clearReceivedTraceData();
+    });
+
     after(async () => {
       await serverControls.stop();
       await clientControls.stop();
@@ -592,6 +600,10 @@ function registerSuperagentTest() {
 
     await serverControls.startAndWaitForAgentConnection();
     await clientControls.startAndWaitForAgentConnection();
+  });
+
+  beforeEach(async () => {
+    await globalAgent.instance.clearReceivedTraceData();
   });
 
   after(async () => {

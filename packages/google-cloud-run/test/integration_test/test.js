@@ -12,7 +12,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const { delay, expectExactlyOneMatching } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 
 const region = 'us-central1';
@@ -50,6 +50,10 @@ describe('Google Cloud Run integration test', function () {
 
       await appControls.start();
     });
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
+    });
 
     after(async () => {
       await appControls.stop();
@@ -83,6 +87,10 @@ describe('Google Cloud Run integration test', function () {
 
       await appControls.start();
     });
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
+    });
 
     after(async () => {
       await appControls.stop();
@@ -114,6 +122,10 @@ describe('Google Cloud Run integration test', function () {
       });
 
       await appControls.start();
+    });
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
     });
 
     after(async () => {

@@ -39,6 +39,10 @@ describe('tracing/no-conflict-with-cls-hooked', function () {
     await controls.stop();
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   afterEach(async () => {
     await controls.clearIpcMessages();
   });

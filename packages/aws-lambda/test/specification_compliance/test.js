@@ -12,7 +12,7 @@ const querystring = require('querystring');
 const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const delay = require('../../../core/test/test_util/delay');
 const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
 const retry = require('@instana/core/test/test_util/retry');
@@ -76,7 +76,7 @@ function registerSuite(w3cTraceCorrelationDisabled) {
 
     beforeEach(async () => {
       control.reset();
-      await control.resetBackend();
+      await control.resetBackendSpansAndMetrics();
     });
 
     after(async () => {

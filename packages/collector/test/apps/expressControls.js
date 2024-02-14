@@ -31,6 +31,7 @@ exports.start = function start(opts = {}, retryTime = null) {
   env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
   env.USE_HTTPS = opts.useHttps === true;
   env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS = 0;
+  env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;
   env.INSTANA_LOG_LEVEL = 'warn';
   if (opts.env && opts.env.INSTANA_LOG_LEVEL) {
     env.INSTANA_LOG_LEVEL = opts.env.INSTANA_LOG_LEVEL;

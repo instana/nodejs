@@ -321,6 +321,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       await consumerControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await producerControls.stop();
       await consumerControls.stop();
@@ -375,6 +379,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       await consumerControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await customAgentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await customAgentControls.stopAgent();
       await producerControls.stop();
@@ -426,6 +434,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
 
       await producerControls.startAndWaitForAgentConnection();
       await consumerControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {
@@ -482,6 +494,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       await consumerControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await customAgentControls.stopAgent();
       await producerControls.stop();
@@ -529,6 +545,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await producerControls.stop();
     });
@@ -551,6 +571,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         });
 
         await consumerControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -593,6 +617,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await producerControls.stop();
     });
@@ -614,6 +642,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         });
 
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {

@@ -13,12 +13,15 @@
 
 const { startGlobalAgent, stopGlobalAgent } = require('./globalAgent');
 const isCI = require('@instana/core/test/test_util/is_ci');
+const config = require('@instana/core/test/config');
 const fs = require('fs');
 
 exports.mochaHooks = {
   async beforeAll() {
     // eslint-disable-next-line no-console
     console.log(`@instana/collector test suite starting at ${timestamp()}.`);
+    this.timeout(config.getTestTimeout());
+
     await startGlobalAgent();
   },
 
@@ -51,6 +54,7 @@ exports.mochaHooks = {
   },
 
   async afterAll() {
+    this.timeout(config.getTestTimeout());
     await stopGlobalAgent();
   }
 };

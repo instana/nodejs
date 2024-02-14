@@ -8,7 +8,7 @@
 const { expect } = require('chai');
 const path = require('path');
 const Control = require('../Control');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const instanaAgentKey = 'aws-lambda-dummy-key';
 const timeout = 1000 * 5;
 
@@ -65,6 +65,11 @@ describe('Logging', function () {
     });
 
     await control.start();
+  });
+
+  beforeEach(async () => {
+    await control.reset();
+    await control.resetBackendSpansAndMetrics();
   });
 
   after(async () => {

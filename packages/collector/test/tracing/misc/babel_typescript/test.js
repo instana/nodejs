@@ -24,7 +24,7 @@ const agentControls = globalAgent.instance;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing a babel/typescript setup', function () {
-  this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
+  this.timeout(config.getTestTimeout() * 6);
 
   globalAgent.setUpCleanUpHooks();
 
@@ -71,6 +71,10 @@ mochaSuiteFn('tracing a babel/typescript setup', function () {
     });
 
     await controls.startAndWaitForAgentConnection();
+  });
+
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
   });
 
   after(async () => {

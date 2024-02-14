@@ -36,7 +36,7 @@ const app = express();
 
 // promise based amqp publisher
 amqp
-  .connect('amqp://127.0.0.1')
+  .connect(process.env.AMQP)
   .then(_connection => {
     connection = _connection;
     return connection.createChannel();

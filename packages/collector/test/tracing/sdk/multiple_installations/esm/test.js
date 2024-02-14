@@ -55,6 +55,10 @@ mochaSuiteFn('[ESM] tracing/sdk/multiple_installations', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   after(async () => {
     await controls.stop();
   });

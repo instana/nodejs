@@ -8,7 +8,7 @@ const { fork } = require('child_process');
 const path = require('path');
 const fetch = require('node-fetch');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
-const config = require('../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 
 const PATH_TO_INSTANA_AZURE_PACKAGE = path.join(__dirname, '..');

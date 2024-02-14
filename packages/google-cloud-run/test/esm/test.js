@@ -11,7 +11,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const { expectExactlyOneMatching } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 const esmSupportedVersion = require('@instana/core').tracing.esmSupportedVersion;
 
@@ -65,6 +65,11 @@ if (esmSupportedVersion(process.versions.node)) {
         await appControls.start();
       });
 
+      beforeEach(async () => {
+        await appControls.reset();
+        await appControls.resetBackendSpans();
+      });
+
       after(async () => {
         await appControls.stop();
       });
@@ -95,6 +100,10 @@ if (esmSupportedVersion(process.versions.node)) {
         });
 
         await appControls.start();
+      });
+      beforeEach(async () => {
+        await appControls.reset();
+        await appControls.resetBackendSpans();
       });
 
       after(async () => {

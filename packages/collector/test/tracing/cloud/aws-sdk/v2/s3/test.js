@@ -22,14 +22,10 @@ const {
 } = require('@instana/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 
-let bucketName = 'nodejs-team';
-
-if (process.env.AWS_S3_BUCKET_NAME) {
-  bucketName = `${process.env.AWS_S3_BUCKET_NAME}-v2-${semver.major(process.versions.node)}-${uuid()}`;
-}
-
-const randomNumber = Math.floor(Math.random() * 1000);
-bucketName = `${bucketName}-${randomNumber}`;
+const bucketPrefix = 'nodejs-team';
+const bucketName = `${bucketPrefix}-v2-${semver.major(process.versions.node)}-${uuid()}-${Math.floor(
+  Math.random() * 1000
+)}`;
 
 let mochaSuiteFn;
 
@@ -77,6 +73,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
       });
 
       await appControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {
@@ -157,6 +157,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await appControls.stop();
     });
@@ -198,6 +202,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
       });
 
       await appControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {

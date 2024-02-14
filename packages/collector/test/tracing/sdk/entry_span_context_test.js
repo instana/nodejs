@@ -57,6 +57,10 @@ mochaSuiteFn('tracing/sdk - force separate context for startEntrySpan', function
         await controls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await controls.stop();
       });

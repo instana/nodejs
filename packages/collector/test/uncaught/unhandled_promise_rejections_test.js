@@ -39,6 +39,10 @@ mochaSuiteFn('unhandled promise rejections', function () {
     await serverControls.start();
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   after(async () => {
     await serverControls.stop();
     await agentControls.stopAgent();

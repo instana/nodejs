@@ -13,7 +13,7 @@ const { HttpDataSource } = require('@instana/metrics-util');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 
 const { delay, retry } = require('../../../../core/test/test_util');
-const config = require('../../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 
 const InstrumentedDockerProcessor = require('../../../src/metrics/docker/InstrumentedDockerProcessor');
 

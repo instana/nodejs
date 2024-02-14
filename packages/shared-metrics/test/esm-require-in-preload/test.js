@@ -33,6 +33,10 @@ mochaSuiteFn('ejs require collector in preload', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  beforeEach(async () => {
+    await controls.agentControls.clearReceivedTraceData();
+  });
+
   after(async () => {
     await controls.stop();
   });

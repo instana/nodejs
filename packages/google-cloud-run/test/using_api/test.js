@@ -11,7 +11,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const { delay, expectExactlyOneMatching, retry } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 
 const instanceId =
   // eslint-disable-next-line max-len
@@ -43,6 +43,10 @@ describe('Using the API', function () {
       });
 
       await appControls.start();
+    });
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
     });
 
     after(async () => {
@@ -76,6 +80,11 @@ describe('Using the API', function () {
       });
 
       await appControls.start();
+    });
+
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
     });
 
     after(async () => {

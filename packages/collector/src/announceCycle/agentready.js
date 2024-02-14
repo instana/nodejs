@@ -90,6 +90,8 @@ function enter(_ctx) {
 
   initializedTooLate.check();
 
+  logger.debug(`isMainThread: ${isMainThread}`);
+
   if (isMainThread) {
     uncaught.activate();
     metrics.activate();

@@ -12,6 +12,8 @@ process.env.NODE_ENV = 'test';
 
 if (process.env.CI) {
   // Retry failed tests once on CI.
+  // This requires each test to add a beforeEach to clean the state,
+  // otherwise we test against existing spans.
   mochaOptions.retries = 1;
 }
 

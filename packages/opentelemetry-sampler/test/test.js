@@ -42,6 +42,11 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
       await appControls.start();
     });
 
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
+    });
+
     after(async () => {
       await appControls.stop();
     });
@@ -91,6 +96,11 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
       });
 
       await appControls.start();
+    });
+
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
     });
 
     after(async () => {
@@ -145,6 +155,11 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
       await appControls.start();
     });
 
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
+    });
+
     after(async () => {
       await appControls.stop();
     });
@@ -178,6 +193,11 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
       });
 
       await appControls.start();
+    });
+
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
     });
 
     after(async () => {

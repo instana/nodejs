@@ -40,6 +40,8 @@ updates:
       - dependency-name: "uuid"
       - dependency-name: "wait-sync"
       - dependency-name: "yargs"
+    pull-request-branch-name:
+      separator: "-"
     schedule:
       interval: weekly
     open-pull-requests-limit: 4
