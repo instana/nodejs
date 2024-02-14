@@ -45,7 +45,7 @@ spec:
         - name: repository
           value: $(tasks.extract-repository-url.results.extracted-value)
         - name: branch
-          value: "feat/migrate-to-tekton"
+          value: "main"
         - name: revision
           value: $(params.revision)
         - name: pipeline-debug

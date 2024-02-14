@@ -43,7 +43,7 @@ spec:
       script: |
         #!/bin/bash
         ARTIFACTS_PATH="$(workspaces.output.path)"
-        NPM_CACHE_PATH="$(workspaces.npm-cache.path)"
+        NPM_CACHE_PATH="$(workspaces.npm-cache.path)"      
 
         echo $ARTIFACTS_PATH
         echo $NPM_CACHE_PATH
@@ -55,10 +55,13 @@ spec:
 
         cd $ARTIFACTS_PATH
 
+        cp -R $NPM_CACHE_PATH node_modules
+
         echo "pwd: $PWD"
         echo $(ls -la)
 
-        npm config set cache $NPM_CACHE_PATH
         npm install
+
+        cp -R node_modules $NPM_CACHE_PATH
 
         npm run test:ci:collector:general
