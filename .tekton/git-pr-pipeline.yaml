@@ -94,7 +94,7 @@ spec:
     - apiVersion: v1
       kind: PersistentVolumeClaim
       metadata:
-        name: $(params.pr-branch)-$(uid)-artifacts
+        name: $(params.pr-branch)-artifacts
       spec:
         resources:
           requests:
@@ -119,14 +119,14 @@ spec:
         securityContext:
           fsGroup: 65532
       metadata:
-        name: $(params.pr-branch)-$(uid)
+        name: $(params.pr-branch)
       spec:
         pipelineRef:
           name: pr-pipeline
         workspaces:
           - name: artifacts
             persistentVolumeClaim:
-              claimName: $(params.pr-branch)-$(uid)-artifacts
+              claimName: $(params.pr-branch)-artifacts
           - name: npm-cache
             persistentVolumeClaim:
               claimName: team-nodejs-npm-cache
