@@ -115,10 +115,10 @@ spec:
         workspaces:
           - name: artifacts
             persistentVolumeClaim:
-              claimName: pipelinerun-$(uid)-pvc
+              claimName: pipelinerun-$(uid)-pvc-artifacts
           - name: npm-cache
             persistentVolumeClaim:
-              claimName: pipelinerun-$(uid)-pvc
+              claimName: pipelinerun-$(uid)-pvc-npm-cache
         params:
           - name: repository
             value: $(params.repository)
