@@ -5,12 +5,10 @@
 
 'use strict';
 
-// const util = require('util');
 const { expect } = require('chai');
 const fs = require('node:fs/promises');
 const os = require('os');
 const path = require('path');
-// const rimraf = util.promisify(require('rimraf'));
 
 const config = require('../../../core/test/config');
 const { retry } = require('../../../core/test/test_util');
@@ -27,7 +25,7 @@ describe('retry loading native addons', function () {
   const metricAddonsTestConfigs = [
     {
       name: 'event-loop-stats',
-      nativeModulePath: require.resolve('event-loop-stats'),
+      nativeModuleFolder: path.dirname(require.resolve('event-loop-stats/package.json')),
       backupPath: path.join(os.tmpdir(), 'event-loop-stats-backup'),
       check: ([aggregated]) => {
         const libuv = aggregated.libuv;
@@ -43,7 +41,7 @@ describe('retry loading native addons', function () {
     },
     {
       name: 'gcstats.js',
-      nativeModulePath: require.resolve('gcstats.js'),
+      nativeModuleFolder: path.dirname(require.resolve('gcstats.js/package.json')),
       backupPath: path.join(os.tmpdir(), 'gcstats.js-backup'),
       check: ([aggregated]) => {
         // The for loop above ensures that the first metric POST that had the gc payload
@@ -120,12 +118,11 @@ function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
   describe(opts.name, () => {
     before(async () => {
       // remove the dependency temporarily
-      await rename(opts.nativeModulePath, opts.backupPath);
+      await rename(opts.nativeModuleFolder, opts.backupPath);
     });
 
     after(async () => {
-      // await rimraf(opts.nativeModulePath);
-      await rename(opts.backupPath, opts.nativeModulePath);
+      await rename(opts.backupPath, opts.nativeModuleFolder);
     });
 
     it('metrics from native add-ons should become available at some point', () =>
