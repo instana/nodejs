@@ -228,6 +228,7 @@ spec:
         #!/bin/sh
         set -e
 
+
         echo "PR BRANCH: $PR_BRANCH"
         echo "PR REVISION: $PR_REVISION"
         echo "PR REPOSITORY: $PR_REPOSITORY"
