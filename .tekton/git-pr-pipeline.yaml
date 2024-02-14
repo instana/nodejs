@@ -102,6 +102,17 @@ spec:
         volumeMode: Filesystem
         accessModes:
           - ReadWriteOnce
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: team-nodejs-npm-cache
+      spec:
+        resources:
+          requests:
+            storage: 5Gi
+        volumeMode: Filesystem
+        accessModes:
+          - ReadWriteOnce
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
       podTemplate:
