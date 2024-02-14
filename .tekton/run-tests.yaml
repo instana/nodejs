@@ -47,13 +47,16 @@ spec:
 
         echo $ARTIFACTS_PATH
         echo $NPM_CACHE_PATH
-        
+
         cd $NPM_CACHE_PATH
 
         echo "pwd: $PWD"
         echo $(ls -la)
 
         cd $ARTIFACTS_PATH
+
+        echo "pwd: $PWD"
+        echo $(ls -la)
 
         npm config set cache $NPM_CACHE_PATH
         npm install
