@@ -60,8 +60,6 @@ if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe;
 }
 
-const retryTime = config.getTestTimeout() * 5;
-
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
   this.timeout(config.getTestTimeout() * 10);
 
@@ -71,15 +69,28 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
   after(() => cleanup(streamName));
 
   describe('tracing enabled, no suppression', function () {
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        AWS_KINESIS_STREAM_NAME: streamName
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          AWS_KINESIS_STREAM_NAME: streamName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     withErrorOptions.forEach(withError => {
       if (withError) {
         describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
@@ -117,7 +128,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
     function verify(controls, response, apiPath, operation, withError) {
       return retry(
         () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, operation, withError)),
-        retryTime
+        1000
       );
     }
 
@@ -161,16 +172,28 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
 
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {
-        AWS_KINESIS_STREAM_NAME: streamName
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {
+          AWS_KINESIS_STREAM_NAME: streamName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
 
     describe('attempt to get result', () => {
       // we don't create the stream, as it was created previously
@@ -190,28 +213,38 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
             await checkStreamExistence(streamName, false);
           }
 
-          return retry(() => delay(config.getTestTimeout() / 4))
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (AWS Kinesis suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });
   });
 
   describe('tracing enabled but suppressed', () => {
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        AWS_KINESIS_STREAM_NAME: streamName
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          AWS_KINESIS_STREAM_NAME: streamName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
 
     describe('attempt to get result', () => {
       // we don't create the stream, as it was created previously
@@ -232,13 +265,11 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
             await checkStreamExistence(streamName, false);
           }
 
-          return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (AWS Kinesis suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });

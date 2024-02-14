@@ -47,7 +47,6 @@ if (!supportedVersion(process.versions.node)) {
 } else {
   mochaSuiteFn = describe;
 }
-const retryTime = config.getTestTimeout() * 2;
 
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
   this.timeout(config.getTestTimeout() * 4);
@@ -65,46 +64,74 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
   const agentControls = globalAgent.instance;
 
   describe('tracing enabled, no suppression', function () {
-    const senderControls = new ProcessControls({
-      appPath: path.join(__dirname, 'sendMessage'),
-      useGlobalAgent: true,
-      env: {
-        AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
-      }
+    let senderControls;
+    let senderControlsSQSConsumer;
+    let senderControlsBatch;
+
+    before(async () => {
+      senderControls = new ProcessControls({
+        appPath: path.join(__dirname, 'sendMessage'),
+        useGlobalAgent: true,
+        env: {
+          AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
+        }
+      });
+      senderControlsSQSConsumer = new ProcessControls({
+        appPath: path.join(__dirname, 'sendMessage'),
+        useGlobalAgent: true,
+        env: {
+          AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`
+        }
+      });
+      senderControlsBatch = new ProcessControls({
+        appPath: path.join(__dirname, 'sendMessage'),
+        useGlobalAgent: true,
+        env: {
+          AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`
+        }
+      });
+
+      await senderControls.startAndWaitForAgentConnection();
+      await senderControlsSQSConsumer.startAndWaitForAgentConnection();
+      await senderControlsBatch.startAndWaitForAgentConnection();
     });
 
-    const senderControlsSQSConsumer = new ProcessControls({
-      appPath: path.join(__dirname, 'sendMessage'),
-      useGlobalAgent: true,
-      env: {
-        AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`
-      }
+    after(async () => {
+      await senderControls.stop();
+      await senderControlsSQSConsumer.stop();
+      await senderControlsBatch.stop();
     });
 
-    const senderControlsBatch = new ProcessControls({
-      appPath: path.join(__dirname, 'sendMessage'),
-      useGlobalAgent: true,
-      env: {
-        AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`
-      }
+    afterEach(async () => {
+      await senderControls.clearIpcMessages();
+      await senderControlsSQSConsumer.clearIpcMessages();
+      await senderControlsBatch.clearIpcMessages();
     });
-
-    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls);
-    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControlsSQSConsumer);
-    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControlsBatch);
 
     receivingMethods.forEach(sqsReceiveMethod => {
       describe(`receiving via ${sqsReceiveMethod} API`, () => {
-        const receiverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'receiveMessage'),
-          useGlobalAgent: true,
-          env: {
-            SQS_RECEIVE_METHOD: sqsReceiveMethod,
-            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
-          }
+        let receiverControls;
+
+        before(async () => {
+          receiverControls = new ProcessControls({
+            appPath: path.join(__dirname, 'receiveMessage'),
+            useGlobalAgent: true,
+            env: {
+              SQS_RECEIVE_METHOD: sqsReceiveMethod,
+              AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
+            }
+          });
+
+          await receiverControls.startAndWaitForAgentConnection();
         });
 
-        ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+        after(async () => {
+          await receiverControls.stop();
+        });
+
+        afterEach(async () => {
+          await receiverControls.clearIpcMessages();
+        });
 
         [false, 'sender'].forEach(withError => {
           const sqsSendMethod = getNextSendMethod();
@@ -133,17 +160,29 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       });
 
       describe(`polling via ${sqsReceiveMethod} when no messages are available`, () => {
-        const receiverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'receiveMessage'),
-          useGlobalAgent: true,
-          env: {
-            SQS_RECEIVE_METHOD: sqsReceiveMethod,
-            SQS_POLL_DELAY: 1,
-            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
-          }
+        let receiverControls;
+
+        before(async () => {
+          receiverControls = new ProcessControls({
+            appPath: path.join(__dirname, 'receiveMessage'),
+            useGlobalAgent: true,
+            env: {
+              SQS_RECEIVE_METHOD: sqsReceiveMethod,
+              SQS_POLL_DELAY: 1,
+              AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
+            }
+          });
+
+          await receiverControls.startAndWaitForAgentConnection();
         });
 
-        ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+        after(async () => {
+          await receiverControls.stop();
+        });
+
+        afterEach(async () => {
+          await receiverControls.clearIpcMessages();
+        });
 
         it(
           `consecutive receiveMessage calls via ${sqsReceiveMethod} in the same event loop tick should not ` +
@@ -156,7 +195,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
               });
               // Make sure the receiver has started to poll for messages at least twice.
               expect(numberOfMessagePolls).to.be.at.least(2);
-            }, retryTime);
+            }, 1000);
 
             // There should be no spans since we do not send any SQS messages in this test and we also do not send
             // HTTP requests to the sender.
@@ -170,16 +209,28 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
     });
 
     describe('message header limits', function () {
-      const receiverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'receiveMessage'),
-        useGlobalAgent: true,
-        env: {
-          SQS_RECEIVE_METHOD: 'async',
-          AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
-        }
+      let receiverControls;
+
+      before(async () => {
+        receiverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'receiveMessage'),
+          useGlobalAgent: true,
+          env: {
+            SQS_RECEIVE_METHOD: 'async',
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
+          }
+        });
+
+        await receiverControls.startAndWaitForAgentConnection();
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
+      });
 
       const apiPath = '/send-callback';
 
@@ -199,7 +250,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           // The SQS entry will be the root of a new trace because we were not able to add tracing headers.
           const sqsEntry = verifySQSEntry(receiverControls, spans, null);
           verifyHttpExit({ spans, parent: sqsEntry, pid: String(receiverControls.getPid()) });
-        }, retryTime);
+        }, 1000);
 
         await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
       });
@@ -207,15 +258,27 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
 
     describe('sqs-consumer API', () => {
       describe('message processed with success', () => {
-        const sqsConsumerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'sqs-consumer'),
-          useGlobalAgent: true,
-          env: {
-            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`
-          }
+        let sqsConsumerControls;
+
+        before(async () => {
+          sqsConsumerControls = new ProcessControls({
+            appPath: path.join(__dirname, 'sqs-consumer'),
+            useGlobalAgent: true,
+            env: {
+              AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`
+            }
+          });
+
+          await sqsConsumerControls.startAndWaitForAgentConnection();
         });
 
-        ProcessControls.setUpHooksWithRetryTime(retryTime, sqsConsumerControls);
+        after(async () => {
+          await sqsConsumerControls.stop();
+        });
+
+        afterEach(async () => {
+          await sqsConsumerControls.clearIpcMessages();
+        });
 
         const apiPath = '/send-callback';
 
@@ -230,16 +293,28 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       });
 
       describe('message not processed with success', () => {
-        const sqsConsumerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'sqs-consumer'),
-          useGlobalAgent: true,
-          env: {
-            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
-            AWS_SQS_RECEIVER_ERROR: 'true'
-          }
+        let sqsConsumerControls;
+
+        before(async () => {
+          sqsConsumerControls = new ProcessControls({
+            appPath: path.join(__dirname, 'sqs-consumer'),
+            useGlobalAgent: true,
+            env: {
+              AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
+              AWS_SQS_RECEIVER_ERROR: 'true'
+            }
+          });
+
+          await sqsConsumerControls.startAndWaitForAgentConnection();
         });
 
-        ProcessControls.setUpHooksWithRetryTime(retryTime, sqsConsumerControls);
+        after(async () => {
+          await sqsConsumerControls.stop();
+        });
+
+        afterEach(async () => {
+          await sqsConsumerControls.clearIpcMessages();
+        });
 
         const apiPath = '/send-callback';
 
@@ -257,16 +332,28 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
     describe('messages sent in batch', () => {
       receivingMethods.forEach(sqsReceiveMethod => {
         describe(`receiving batched messages: ${sqsReceiveMethod}`, () => {
-          const receiverControls = new ProcessControls({
-            appPath: path.join(__dirname, 'receiveMessage'),
-            useGlobalAgent: true,
-            env: {
-              SQS_RECEIVE_METHOD: sqsReceiveMethod,
-              AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`
-            }
+          let receiverControls;
+
+          before(async () => {
+            receiverControls = new ProcessControls({
+              appPath: path.join(__dirname, 'receiveMessage'),
+              useGlobalAgent: true,
+              env: {
+                SQS_RECEIVE_METHOD: sqsReceiveMethod,
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`
+              }
+            });
+
+            await receiverControls.startAndWaitForAgentConnection();
           });
 
-          ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+          after(async () => {
+            await receiverControls.stop();
+          });
+
+          afterEach(async () => {
+            await receiverControls.clearIpcMessages();
+          });
 
           const sqsSendMethod = getNextSendMethod();
           const apiPath = `/send-${sqsSendMethod}`;
@@ -295,7 +382,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           }
           const spans = await agentControls.getSpans();
           verifySpans(receiverControls, _senderControls, spans, apiPath, null, withError, isBatch);
-        }, retryTime);
+        }, 1000);
       }
     }
 
@@ -307,7 +394,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           span => expect(span.p).to.equal(spanId),
           span => expect(span.k).to.equal(constants.ENTRY)
         ]);
-      }, retryTime);
+      }, 1000);
     }
 
     function verifySpans(receiverControls, _senderControls, spans, apiPath, messageId, withError, isBatch) {
@@ -384,30 +471,54 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
 
-    const senderControls = new ProcessControls({
-      appPath: path.join(__dirname, 'sendMessage'),
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {
-        AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
-      }
-    });
+    let senderControls;
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls);
-
-    const receivingMethod = getNextReceiveMethod();
-    describe('sending and receiving', () => {
-      const receiverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'receiveMessage'),
+    before(async () => {
+      senderControls = new ProcessControls({
+        appPath: path.join(__dirname, 'sendMessage'),
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
-          SQS_RECEIVE_METHOD: receivingMethod,
           AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+      await senderControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await senderControls.stop();
+    });
+
+    afterEach(async () => {
+      await senderControls.clearIpcMessages();
+    });
+
+    const receivingMethod = getNextReceiveMethod();
+    describe('sending and receiving', () => {
+      let receiverControls;
+
+      before(async () => {
+        receiverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'receiveMessage'),
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            SQS_RECEIVE_METHOD: receivingMethod,
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
+          }
+        });
+
+        await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
+      });
 
       const sendingMethod = getNextSendMethod();
       it(`should not trace for sending(${sendingMethod}) / receiving(${receivingMethod})`, async () => {
@@ -416,8 +527,8 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           path: `/send-${sendingMethod}`
         });
 
-        await retry(() => verifyResponseAndMessage(response, receiverControls), retryTime);
-        await delay(config.getTestTimeout() / 4);
+        await retry(() => verifyResponseAndMessage(response, receiverControls), 1000);
+        await delay(1000);
         const spans = await agentControls.getSpans();
         if (spans.length > 0) {
           fail(`Unexpected spans (AWS SQS suppressed: ${stringifyItems(spans)}`);
@@ -427,28 +538,52 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
   });
 
   describe('tracing enabled but suppressed', () => {
-    const senderControls = new ProcessControls({
-      appPath: path.join(__dirname, 'sendMessage'),
-      useGlobalAgent: true,
-      env: {
-        AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
-      }
-    });
+    let senderControls;
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls);
-
-    const receivingMethod = getNextReceiveMethod();
-    describe('tracing suppressed', () => {
-      const receiverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'receiveMessage'),
+    before(async () => {
+      senderControls = new ProcessControls({
+        appPath: path.join(__dirname, 'sendMessage'),
         useGlobalAgent: true,
         env: {
-          SQS_RECEIVE_METHOD: receivingMethod,
           AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+      await senderControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await senderControls.stop();
+    });
+
+    afterEach(async () => {
+      await senderControls.clearIpcMessages();
+    });
+
+    const receivingMethod = getNextReceiveMethod();
+    describe('tracing suppressed', () => {
+      let receiverControls;
+
+      before(async () => {
+        receiverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'receiveMessage'),
+          useGlobalAgent: true,
+          env: {
+            SQS_RECEIVE_METHOD: receivingMethod,
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
+          }
+        });
+
+        await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
+      });
 
       const sendingMethod = getNextSendMethod();
       it(`doesn't trace when sending(${sendingMethod}) and receiving(${receivingMethod})`, async () => {
@@ -460,8 +595,8 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           }
         });
 
-        await retry(() => verifyResponseAndMessage(response, receiverControls), retryTime);
-        await delay(config.getTestTimeout() / 4);
+        await retry(() => verifyResponseAndMessage(response, receiverControls), 1000);
+        await delay(1000);
         const spans = await agentControls.getSpans();
         if (spans.length > 0) {
           fail(`Unexpected spans (AWS SQS suppressed: ${stringifyItems(spans)}`);
@@ -473,25 +608,39 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
   });
 
   describe('tracing enabled with wrong queue name', () => {
-    const receiverControls = new ProcessControls({
-      appPath: path.join(__dirname, 'receiveMessage'),
-      useGlobalAgent: true,
-      env: {
-        SQS_RECEIVE_METHOD: 'callback',
-        AWS_SQS_QUEUE_URL: `${queueURL}-non-existent`
-      }
+    let receiverControls;
+
+    before(async () => {
+      receiverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'receiveMessage'),
+        useGlobalAgent: true,
+        env: {
+          SQS_RECEIVE_METHOD: 'callback',
+          AWS_SQS_QUEUE_URL: `${queueURL}-non-existent`
+        }
+      });
+
+      await receiverControls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+    after(async () => {
+      await receiverControls.stop();
+    });
+
+    afterEach(async () => {
+      await receiverControls.clearIpcMessages();
+    });
 
     it('reports an error span', async () => {
-      await retry(() => delay(config.getTestTimeout() / 4), retryTime);
-      const spans = await agentControls.getSpans();
+      await retry(async () => {
+        await delay(250);
+        const spans = await agentControls.getSpans();
 
-      expectAtLeastOneMatching(spans, [
-        span => expect(span.ec).equal(1),
-        span => expect(span.data.sqs.error).to.equal('The specified queue does not exist for this wsdl version.')
-      ]);
+        expectAtLeastOneMatching(spans, [
+          span => expect(span.ec).equal(1),
+          span => expect(span.data.sqs.error).to.equal('The specified queue does not exist for this wsdl version.')
+        ]);
+      });
 
       await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
     });

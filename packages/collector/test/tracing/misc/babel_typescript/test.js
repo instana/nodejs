@@ -59,14 +59,27 @@ mochaSuiteFn('tracing a babel/typescript setup', function () {
 
   this.timeout(config.getTestTimeout());
 
-  const controls = new ProcessControls({
-    appPath: path.join(__dirname, '../../../apps/babel-typescript'),
-    useGlobalAgent: true,
-    env: {
-      INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: false
-    }
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      appPath: path.join(__dirname, '../../../apps/babel-typescript'),
+      useGlobalAgent: true,
+      env: {
+        INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: false
+      }
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(controls);
+
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
 
   describe('@instana/collector used in a babel-transpiled typescript app', function () {
     it('should trace when imported with workaround according to our docs', () =>

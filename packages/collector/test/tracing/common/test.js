@@ -14,6 +14,7 @@ const delay = require('../../../../core/test/test_util/delay');
 const { getSpansByName, retry, stringifyItems } = require('../../../../core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
+const { AgentStubControls } = require('../../apps/agentStubControls');
 
 const extendedTimeout = Math.max(config.getTestTimeout(), 10000);
 
@@ -25,26 +26,40 @@ mochaSuiteFn('tracing/common', function () {
   describe('delay', function () {
     describe('with minimal delay', function () {
       this.timeout(extendedTimeout);
-      const controls = new ProcessControls({
-        useGlobalAgent: true,
-        dirname: __dirname,
-        minimalDelay: 6000
-      });
-      ProcessControls.setUpHooks(controls);
-      registerDelayTest.call(this, globalAgent.instance, controls, true);
+
+      registerDelayTest.call(this, globalAgent.instance, true);
     });
 
     describe('without minimal delay', function () {
       this.timeout(config.getTestTimeout());
-      const controls = new ProcessControls({
-        useGlobalAgent: true,
-        dirname: __dirname
-      });
-      ProcessControls.setUpHooks(controls);
-      registerDelayTest.call(this, globalAgent.instance, controls, false);
+
+      registerDelayTest.call(this, globalAgent.instance, false);
     });
 
-    function registerDelayTest(agentControls, controls, withMinimalDelay) {
+    function registerDelayTest(agentControls, withMinimalDelay) {
+      let controls;
+
+      before(async () => {
+        if (withMinimalDelay) {
+          controls = new ProcessControls({
+            useGlobalAgent: true,
+            dirname: __dirname,
+            minimalDelay: 6000
+          });
+        } else {
+          controls = new ProcessControls({
+            useGlobalAgent: true,
+            dirname: __dirname
+          });
+        }
+
+        await controls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
       it(`must respect delay (with minimal delay: ${withMinimalDelay})`, () =>
         controls
           .sendRequest({
@@ -71,25 +86,23 @@ mochaSuiteFn('tracing/common', function () {
           })
           // verify that spans arrive after the minimum delay
           .then(() =>
-            retry(
-              () =>
-                agentControls.getSpans().then(spans => {
-                  expect(spans).to.have.lengthOf(1);
-                  const span = spans[0];
-                  expect(span.n).to.equal('node.http.server');
-                  expect(span.k).to.equal(constants.ENTRY);
-                  expect(span.async).to.not.exist;
-                  expect(span.error).to.not.exist;
-                  expect(span.ec).to.equal(0);
-                  expect(span.t).to.be.a('string');
-                  expect(span.s).to.be.a('string');
-                  expect(span.p).to.not.exist;
-                  expect(span.data.http.method).to.equal('GET');
-                  expect(span.data.http.url).to.equal('/');
-                  expect(span.data.http.status).to.equal(200);
-                  expect(span.data.http.host).to.equal(`localhost:${controls.getPort()}`);
-                }),
-              Math.max(extendedTimeout / 2, 10000)
+            retry(() =>
+              agentControls.getSpans().then(spans => {
+                expect(spans).to.have.lengthOf(1);
+                const span = spans[0];
+                expect(span.n).to.equal('node.http.server');
+                expect(span.k).to.equal(constants.ENTRY);
+                expect(span.async).to.not.exist;
+                expect(span.error).to.not.exist;
+                expect(span.ec).to.equal(0);
+                expect(span.t).to.be.a('string');
+                expect(span.s).to.be.a('string');
+                expect(span.p).to.not.exist;
+                expect(span.data.http.method).to.equal('GET');
+                expect(span.data.http.url).to.equal('/');
+                expect(span.data.http.status).to.equal(200);
+                expect(span.data.http.host).to.equal(`localhost:${controls.getPort()}`);
+              })
             )
           )
       );
@@ -126,64 +139,91 @@ mochaSuiteFn('tracing/common', function () {
     this.timeout(config.getTestTimeout());
 
     describe('with env var', function () {
-      const controls = new ProcessControls({
-        useGlobalAgent: true,
-        dirname: __dirname,
-        env: {
+      registerServiceNameTest.call(
+        this,
+        globalAgent.instance,
+        {
+          configMethod: 'env var',
+          expectServiceNameOnSpans: 'on-all-spans'
+        },
+        {
           INSTANA_SERVICE_NAME: 'much-custom-very-wow service'
         }
-      });
-      ProcessControls.setUpHooks(controls);
-      registerServiceNameTest.call(this, globalAgent.instance, controls, {
-        configMethod: 'env var',
-        expectServiceNameOnSpans: 'on-all-spans'
-      });
+      );
     });
 
     describe('with config', function () {
-      const controls = new ProcessControls({
-        useGlobalAgent: true,
-        dirname: __dirname,
-        env: {
+      registerServiceNameTest.call(
+        this,
+        globalAgent.instance,
+        {
+          configMethod: 'config object',
+          expectServiceNameOnSpans: 'on-all-spans'
+        },
+        {
           // this makes the app set the serviceName per config object
           SERVICE_CONFIG: 'much-custom-very-wow service'
         }
-      });
-      ProcessControls.setUpHooks(controls);
-      registerServiceNameTest.call(this, globalAgent.instance, controls, {
-        configMethod: 'config object',
-        expectServiceNameOnSpans: 'on-all-spans'
-      });
+      );
     });
 
     describe('with header when agent is configured to capture the header', function () {
-      const agentControls = setupCustomAgentControls(true);
-      const controls = new ProcessControls({
-        agentControls,
-        dirname: __dirname
-      }).registerTestHooks();
-      registerServiceNameTest.call(this, agentControls, controls, {
+      const agentControls = new AgentStubControls();
+      const agentConfig = { extraHeaders: ['x-iNsTanA-sErViCe'] };
+
+      before(async () => {
+        await agentControls.startAgent(agentConfig);
+      });
+      after(async () => {
+        await agentControls.stopAgent();
+      });
+
+      registerServiceNameTest.call(this, agentControls, {
         configMethod: 'X-Instana-Service header',
         expectServiceNameOnSpans: 'on-entry-span'
       });
     });
 
     describe('with header when agent is _not_ configured to capture the header', function () {
-      const agentControls = setupCustomAgentControls(false);
-      const controls = new ProcessControls({
-        agentControls,
-        dirname: __dirname
-      }).registerTestHooks();
-      registerServiceNameTest.call(this, agentControls, controls, {
+      const agentControls = new AgentStubControls();
+
+      before(async () => {
+        await agentControls.startAgent();
+      });
+      after(async () => {
+        await agentControls.stopAgent();
+      });
+
+      registerServiceNameTest.call(this, agentControls, {
         configMethod: 'X-Instana-Service header',
         expectServiceNameOnSpans: 'no'
       });
     });
 
-    function registerServiceNameTest(agentControls, controls, { configMethod, expectServiceNameOnSpans }) {
+    function registerServiceNameTest(agentControls, { configMethod, expectServiceNameOnSpans }, env = {}) {
       if (expectServiceNameOnSpans == null || typeof expectServiceNameOnSpans !== 'string') {
         throw new Error('Please explicitly pass a string value for expectServiceNameOnSpans.');
       }
+
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          agentControls,
+          dirname: __dirname,
+          env
+        });
+
+        await controls.start();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
 
       it(`must${
         expectServiceNameOnSpans === 'no' ? ' _not_ ' : ' '
@@ -239,14 +279,27 @@ mochaSuiteFn('tracing/common', function () {
     this.timeout(config.getTestTimeout());
 
     describe('disable an individual tracer', () => {
-      const controls = new ProcessControls({
-        useGlobalAgent: true,
-        dirname: __dirname,
-        env: {
-          INSTANA_DISABLED_TRACERS: 'pino'
-        }
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          useGlobalAgent: true,
+          dirname: __dirname,
+          env: {
+            INSTANA_DISABLED_TRACERS: 'pino'
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
-      ProcessControls.setUpHooks(controls);
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
 
       it('can disable a single instrumentation', () =>
         controls
@@ -264,14 +317,27 @@ mochaSuiteFn('tracing/common', function () {
     });
 
     describe('robustness against overriding Array.find', () => {
-      const controls = new ProcessControls({
-        useGlobalAgent: true,
-        dirname: __dirname,
-        env: {
-          SCREW_AROUND_WITH_UP_ARRAY_FIND: 'sure why not?'
-        }
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          useGlobalAgent: true,
+          dirname: __dirname,
+          env: {
+            SCREW_AROUND_WITH_UP_ARRAY_FIND: 'sure why not?'
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
-      ProcessControls.setUpHooks(controls);
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
 
       // Story time: There is a package out there that overrides Array.find with different behaviour that, once upon a
       // time, as a random side effect, disabled our auto tracing. This is a regression test to make sure we are now
@@ -299,11 +365,4 @@ mochaSuiteFn('tracing/common', function () {
           ));
     });
   });
-
-  function setupCustomAgentControls(captureXInstanaServiceHeader) {
-    const agentControls = require('../../apps/agentStubControls');
-    const agentConfig = captureXInstanaServiceHeader ? { extraHeaders: ['x-iNsTanA-sErViCe'] } : {};
-    agentControls.registerTestHooks(agentConfig);
-    return agentControls;
-  }
 });

@@ -53,7 +53,7 @@ if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe;
 }
 
-const retryTime = config.getTestTimeout() * 2;
+const retryTime = 1000;
 
 mochaSuiteFn('tracing/cache/memcached', function () {
   this.timeout(config.getTestTimeout());
@@ -62,13 +62,25 @@ mochaSuiteFn('tracing/cache/memcached', function () {
   const agentControls = globalAgent.instance;
 
   describe('tracing enabled, no suppression', function () {
-    const appControls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {}
+    let appControls;
+
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {}
+      });
+
+      await appControls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooks(appControls);
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
 
     withErrorOptions.forEach(withError => {
       if (!withError) {
@@ -170,15 +182,26 @@ mochaSuiteFn('tracing/cache/memcached', function () {
 
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() / 2);
+    let appControls;
 
-    const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {}
+    before(async () => {
+      appControls = new ProcessControls({
+        appPath: path.join(__dirname, 'app'),
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {}
+      });
+
+      await appControls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooks(appControls);
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
 
     describe('sequential operations that are not instrumented', () => {
       sequentialOps.forEach(operation => {
@@ -187,13 +210,12 @@ mochaSuiteFn('tracing/cache/memcached', function () {
             method: 'GET',
             path: `/${operation}`
           });
-          retry(() => delay(config.getTestTimeout() / 4)).then(() => {
-            agentControls.getSpans().then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (Memcached suppressed: ${stringifyItems(spans)}`);
-              }
-            });
-          });
+
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });
@@ -207,7 +229,7 @@ mochaSuiteFn('tracing/cache/memcached', function () {
                 method: 'GET',
                 path: `/${op}`
               })
-              .then(retry(() => delay(config.getTestTimeout() / 4)))
+              .then(retry(() => delay(1000)))
               .then(() => agentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {
@@ -224,13 +246,25 @@ mochaSuiteFn('tracing/cache/memcached', function () {
   });
 
   describe('tracing enabled but suppressed', () => {
-    const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      useGlobalAgent: true,
-      env: {}
+    let appControls;
+
+    before(async () => {
+      appControls = new ProcessControls({
+        appPath: path.join(__dirname, 'app'),
+        useGlobalAgent: true,
+        env: {}
+      });
+
+      await appControls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooks(appControls);
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
 
     describe('sequential operations are not traced', () => {
       sequentialOps.forEach(operation => {
@@ -241,13 +275,11 @@ mochaSuiteFn('tracing/cache/memcached', function () {
             path: `/${operation}`
           });
 
-          return retry(() => delay(config.getTestTimeout() / 4)).then(
-            agentControls.getSpans().then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (Memcached suppressed: ${stringifyItems(spans)}`);
-              }
-            })
-          );
+          await delay(1000);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans: ${stringifyItems(spans)}`);
+          }
         });
       });
     });
@@ -262,7 +294,7 @@ mochaSuiteFn('tracing/cache/memcached', function () {
                 method: 'GET',
                 path: `/${op}`
               })
-              .then(retry(() => delay(config.getTestTimeout() / 4)))
+              .then(retry(() => delay(1000)))
               .then(() => agentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {

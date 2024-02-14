@@ -17,7 +17,7 @@ const logPrefix = 'downstream-dummy';
 const logger = pino.child({ name: logPrefix, pid: process.pid });
 logger.level = 'info';
 
-const port = process.env.DOWNSTREAM_DUMMY_PORT || 3456;
+const port = process.env.DOWNSTREAM_DUMMY_PORT;
 const app = express();
 
 if (process.env.WITH_STDOUT) {

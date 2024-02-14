@@ -46,31 +46,45 @@ if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe;
 }
 
-const retryTime = config.getTestTimeout() * 2;
-
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
   this.timeout(config.getTestTimeout() * 3);
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
+
   describe('tracing enabled, no suppression', function () {
-    const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'combined_products'),
-      useGlobalAgent: true,
-      env: {
-        AWS_LAMBDA_FUNCTION_NAME: functionName
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new ProcessControls({
+        appPath: path.join(__dirname, 'combined_products'),
+        useGlobalAgent: true,
+        env: {
+          AWS_LAMBDA_FUNCTION_NAME: functionName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
     });
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     withErrorOptions.forEach(withError => {
       describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
         it(`should instrument ${availableOperations.join(', ')} ${withError ? 'with' : 'without'} errors`, () =>
           promisifyNonSequentialCases(verify, availableOperations, appControls, withError, getNextCallMethod));
       });
     });
+
     function verify(controls, response, apiPath, operation, withError) {
       return retry(
         () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, operation, withError)),
-        retryTime
+        1000
       );
     }
     function verifySpans(controls, spans, apiPath, operation, withError) {
@@ -103,26 +117,40 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
 
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
-    const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'combined_products'),
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {
-        AWS_LAMBDA_FUNCTION_NAME: functionName
-      }
+
+    let appControls;
+
+    before(async () => {
+      appControls = new ProcessControls({
+        appPath: path.join(__dirname, 'combined_products'),
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {
+          AWS_LAMBDA_FUNCTION_NAME: functionName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
     });
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     describe('attempt to get result', () => {
       it(`should not trace ${availableOperations.join(', ')}`, () =>
         promisifyNonSequentialCases(
-          () =>
-            retry(() => delay(config.getTestTimeout() / 4))
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans suppressed: ${stringifyItems(spans)}`);
-                }
-              }),
+          async () => {
+            await delay(1000);
+            const spans = await agentControls.getSpans();
+            if (spans.length > 0) {
+              fail(`Unexpected spans suppressed: ${stringifyItems(spans)}`);
+            }
+          },
           availableOperations,
           appControls,
           false,
@@ -132,25 +160,38 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
   });
 
   describe('tracing enabled but suppressed', () => {
-    const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'combined_products'),
-      useGlobalAgent: true,
-      env: {
-        AWS_LAMBDA_FUNCTION_NAME: functionName
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new ProcessControls({
+        appPath: path.join(__dirname, 'combined_products'),
+        useGlobalAgent: true,
+        env: {
+          AWS_LAMBDA_FUNCTION_NAME: functionName
+        }
+      });
+
+      await appControls.startAndWaitForAgentConnection();
     });
-    ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
     describe('attempt to get result', () => {
       it(`should not trace ${availableOperations.join(', ')}`, () =>
         promisifyNonSequentialCases(
-          () =>
-            retry(() => delay(config.getTestTimeout() / 4), retryTime)
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans suppressed: ${stringifyItems(spans)}`);
-                }
-              }),
+          async () => {
+            await delay(1000);
+            const spans = await agentControls.getSpans();
+            if (spans.length > 0) {
+              fail(`Unexpected spans suppressed: ${stringifyItems(spans)}`);
+            }
+          },
           availableOperations,
           appControls,
           false,

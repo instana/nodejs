@@ -48,18 +48,12 @@ function registerSuite(agentControls, driverMode, useExecute) {
     const env = {
       DRIVER_MODE: driverMode
     };
+
     if (useExecute) {
       env.USE_EXECUTE = 'true';
     }
 
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env
-    });
-    ProcessControls.setUpHooks(controls);
-
-    test(controls, agentControls);
+    test(env, agentControls);
   });
 
   mochaSuiteFnForDriverMode('suppressed', function () {
@@ -69,14 +63,25 @@ function registerSuite(agentControls, driverMode, useExecute) {
     if (useExecute) {
       env.USE_EXECUTE = 'true';
     }
+    let controls;
 
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env
+      });
+
+      await controls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooks(controls);
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
 
     it('should not trace', async function () {
       await controls.sendRequest({
@@ -89,7 +94,7 @@ function registerSuite(agentControls, driverMode, useExecute) {
       });
 
       return testUtils
-        .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+        .retry(() => testUtils.delay(1000))
         .then(() => agentControls.getSpans())
         .then(spans => {
           if (spans.length > 0) {
@@ -100,7 +105,27 @@ function registerSuite(agentControls, driverMode, useExecute) {
   });
 }
 
-function test(controls, agentControls) {
+function test(env, agentControls) {
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true,
+      env
+    });
+
+    await controls.startAndWaitForAgentConnection();
+  });
+
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
   it('must trace queries', () =>
     controls
       .sendRequest({

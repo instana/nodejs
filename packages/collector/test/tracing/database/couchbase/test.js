@@ -107,8 +107,6 @@ mochaSuiteFn('tracing/couchbase', function () {
       }
     });
 
-    ProcessControls.setUpTestCaseCleanUpHooks(controls);
-
     // The operations for bootstrapping & cleanup can take a while.
     await controls.startAndWaitForAgentConnection(1000, Date.now() + 30 * 1000);
   });

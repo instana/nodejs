@@ -13,7 +13,9 @@ const constants = require('./constants');
 let logger = require('./console_logger');
 
 const layerExtensionHostname = 'localhost';
-const layerExtensionPort = 7365;
+const layerExtensionPort = process.env.INSTANA_LAYER_EXTENSION_PORT
+  ? Number(process.env.INSTANA_LAYER_EXTENSION_PORT)
+  : 7365;
 let useLambdaExtension = false;
 
 const timeoutEnvVar = 'INSTANA_TIMEOUT';

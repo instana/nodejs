@@ -15,7 +15,7 @@ const { v4: uuid } = require('uuid');
 const delay = require('../../../../../core/test/test_util/delay');
 
 const appPort = process.env.APP_PORT;
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const runAsStandAlone = !!process.env.RUN_AS_STAND_ALONE;
 
 const kafka = new Kafka({
@@ -49,15 +49,13 @@ let receivedMessages = [];
       const span = instana.currentSpan();
       span.disableAutoEnd();
 
-      if (runAsStandAlone) {
-        log(
-          'incoming message',
-          topic,
-          message,
-          message.key && message.key.toString(),
-          message.value && message.value.toString()
-        );
-      }
+      log(
+        'incoming message',
+        topic,
+        message,
+        message.key && message.key.toString(),
+        message.value && message.value.toString()
+      );
 
       try {
         if (message.value.toString() === 'Boom!') {
@@ -98,27 +96,25 @@ let receivedMessages = [];
   await batchConsumer.connect();
   await batchConsumer.subscribe({ topic: 'test-batch-topic-1', fromBeginning: false });
   await batchConsumer.subscribe({ topic: 'test-batch-topic-2', fromBeginning: false });
+
   await batchConsumer.run({
     eachBatch: async ({ batch, resolveOffset, heartbeat }) => {
       const span = instana.currentSpan();
       span.disableAutoEnd();
 
-      if (runAsStandAlone) {
-        log('incoming batch', batch.topic, batch.messages.length);
-      }
+      log('incoming batch', batch.topic, batch.messages.length);
 
       try {
         for (let i = 0; i < batch.messages.length; i++) {
           const message = batch.messages[i];
-          if (runAsStandAlone) {
-            log(
-              'batch message',
-              batch.topic,
-              message.key && message.key.toString(),
-              message.value && message.value.toString(),
-              message.headers
-            );
-          }
+
+          log(
+            'batch message',
+            batch.topic,
+            message.key && message.key.toString(),
+            message.value && message.value.toString(),
+            message.headers
+          );
 
           if (message.value.toString() === 'Boom!') {
             throw new Error('Boom!');

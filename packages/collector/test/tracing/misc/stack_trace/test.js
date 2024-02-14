@@ -25,10 +25,14 @@ mochaSuiteFn('tracing/stackTraces', function () {
   const expressControls = require('../../../apps/expressControls');
 
   describe('with stack trace lenght of 0', () => {
-    expressControls.registerTestHooks({ useGlobalAgent: true });
-    expressProxyControls.registerTestHooks({
-      useGlobalAgent: true,
-      stackTraceLength: 0
+    before(async () => {
+      await expressControls.start({ useGlobalAgent: true });
+      await expressProxyControls.start({ useGlobalAgent: true, expressControls, stackTraceLength: 0 });
+    });
+
+    after(async () => {
+      await expressControls.stop();
+      await expressProxyControls.stop();
     });
 
     beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
@@ -59,10 +63,14 @@ mochaSuiteFn('tracing/stackTraces', function () {
   });
 
   describe('with enabled stack traces', () => {
-    expressControls.registerTestHooks({ useGlobalAgent: true });
-    expressProxyControls.registerTestHooks({
-      useGlobalAgent: true,
-      stackTraceLength: 10
+    before(async () => {
+      await expressControls.start({ useGlobalAgent: true });
+      await expressProxyControls.start({ useGlobalAgent: true, expressControls, stackTraceLength: 10 });
+    });
+
+    after(async () => {
+      await expressControls.stop();
+      await expressProxyControls.stop();
     });
 
     beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));

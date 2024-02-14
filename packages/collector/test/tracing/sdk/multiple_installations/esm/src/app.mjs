@@ -14,6 +14,7 @@
 //       For ESM it works because our collector is CJS.
 // TODO: #125683
 import instana from '../../../../../../src/index.js';
+import getAppPort from '@instana/collector/test/test_util/app-port.js';
 const initializedInstana = instana();
 
 // NOTE: Does not work, because this is a new instance in the require cache and this code
@@ -23,18 +24,14 @@ const initializedInstana = instana();
 import express from 'express';
 import delay from '@instana/core/test/test_util/delay.js';
 
-const port = process.env.APP_PORT;
+const port = getAppPort();
 const app = express();
 const logPrefix = `ESM SDK multiple installations: (${process.pid}):\t`;
+let sendSDKSpans = false;
 
-async function createSDKSpans() {
-  // NOTE: We need the delay here to ensure that the collector is fully initialized.
-  //       Otherwise we will get NoopSpanHandle instances because tracing is not ready yet.
-  //       For customers the delay can be tiny (~500ms), but for the test we need to choose a bigger
-  //       delay, because we need to ensure that the test has already started and won't call
-  //       beforeEach(() => this.clearReceivedData());
-  // TODO: ticket #125682
-  await delay(2000);
+(async function createSDKSpans() {
+  if (!sendSDKSpans) return setTimeout(createSDKSpans, 1000);
+  await delay(500);
 
   await initializedInstana.sdk.async.startEntrySpan('entryspan');
   // console.log(initializedInstana.currentSpan());
@@ -48,14 +45,16 @@ async function createSDKSpans() {
   }
 
   initializedInstana.sdk.async.completeEntrySpan();
-}
+})();
 
 app.get('/', (req, res) => res.status(200).send('OK'));
-app.get('/trace', (req, res) => res.status(200).send('OK'));
+app.get('/trace', (req, res) => {
+  sendSDKSpans = true;
+  res.status(200).send('OK');
+});
 
 app.listen(port, () => {
   log(`Listening on port: ${port}`);
-  createSDKSpans();
 });
 
 function log() {

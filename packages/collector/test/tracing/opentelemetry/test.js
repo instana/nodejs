@@ -8,8 +8,9 @@ const expect = require('chai').expect;
 const path = require('path');
 const semver = require('semver');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../core/test/config');
 const constants = require('@instana/core').tracing.constants;
+const config = require('../../../../core/test/config');
+const portfinder = require('../../test_util/portfinder');
 
 const {
   retry,
@@ -42,12 +43,20 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
 
-      const controls = new ProcessControls({
-        appPath: path.join(__dirname, './restify-app'),
-        useGlobalAgent: true
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          appPath: path.join(__dirname, './restify-app'),
+          useGlobalAgent: true
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
 
-      ProcessControls.setUpHooks(controls);
+      after(async () => {
+        await controls.stop();
+      });
 
       it('should trace', () =>
         controls
@@ -164,15 +173,27 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
 
-      const controls = new ProcessControls({
-        appPath: path.join(__dirname, './restify-app'),
-        useGlobalAgent: true,
-        env: {
-          INSTANA_DISABLE_USE_OPENTELEMETRY: true
-        }
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          appPath: path.join(__dirname, './restify-app'),
+          useGlobalAgent: true,
+          env: {
+            INSTANA_DISABLE_USE_OPENTELEMETRY: true
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
 
-      ProcessControls.setUpHooks(controls);
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
 
       it('should trace instana spans only', () =>
         controls
@@ -211,12 +232,24 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
-    const controls = new ProcessControls({
-      appPath: path.join(__dirname, './fs-app'),
-      useGlobalAgent: true
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        appPath: path.join(__dirname, './fs-app'),
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooks(controls);
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
 
     it('should trace when there is no otel parent', () =>
       controls
@@ -311,20 +344,39 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
   describe('socket.io', function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
+    const socketIOServerPort = portfinder();
 
-    const server = new ProcessControls({
-      appPath: path.join(__dirname, './socketio-server'),
-      useGlobalAgent: true
-    });
-    const client = new ProcessControls({
-      appPath: path.join(__dirname, './socketio-client'),
-      useGlobalAgent: true
+    let serverControls;
+    let clientControls;
+
+    before(async () => {
+      serverControls = new ProcessControls({
+        appPath: path.join(__dirname, './socketio-server'),
+        useGlobalAgent: true,
+        env: {
+          SOCKETIOSERVER_PORT: socketIOServerPort
+        }
+      });
+
+      clientControls = new ProcessControls({
+        appPath: path.join(__dirname, './socketio-client'),
+        useGlobalAgent: true,
+        env: {
+          SOCKETIOSERVER_PORT: socketIOServerPort
+        }
+      });
+
+      await clientControls.startAndWaitForAgentConnection();
+      await serverControls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooks(server, client);
+    after(async () => {
+      await serverControls.stop();
+      await clientControls.stop();
+    });
 
     it('should trace', () =>
-      server
+      serverControls
         .sendRequest({
           method: 'GET',
           path: '/io-emit'
@@ -337,14 +389,14 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
               const httpEntry = verifyHttpRootEntry({
                 spans,
                 apiPath: '/io-emit',
-                pid: String(server.getPid())
+                pid: String(serverControls.getPid())
               });
 
               verifyEntrySpan({
                 spanName: 'otel',
                 spans,
                 withError: false,
-                pid: String(server.getPid()),
+                pid: String(serverControls.getPid()),
                 dataProperty: 'tags',
                 extraTests: span => {
                   expect(span.data.tags.name).to.contain('test_reply receive');
@@ -362,7 +414,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                 spans,
                 parent: httpEntry,
                 withError: false,
-                pid: String(server.getPid()),
+                pid: String(serverControls.getPid()),
                 dataProperty: 'tags',
                 extraTests: span => {
                   expect(span.data.tags.name).to.contain('send');
@@ -380,7 +432,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         ));
 
     it('should trace', () =>
-      server
+      serverControls
         .sendRequest({
           method: 'GET',
           path: '/io-send'
@@ -393,7 +445,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
               const httpEntry = verifyHttpRootEntry({
                 spans,
                 apiPath: '/io-send',
-                pid: String(server.getPid())
+                pid: String(serverControls.getPid())
               });
 
               verifyExitSpan({
@@ -401,7 +453,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                 spans,
                 parent: httpEntry,
                 withError: false,
-                pid: String(server.getPid()),
+                pid: String(serverControls.getPid()),
                 dataProperty: 'tags',
                 extraTests: span => {
                   expect(span.data.tags.name).to.contain('send');
@@ -419,7 +471,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         ));
 
     it('[suppressed] should not trace', () =>
-      server
+      serverControls
         .sendRequest({
           method: 'GET',
           path: '/io-emit',

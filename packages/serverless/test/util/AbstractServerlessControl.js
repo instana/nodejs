@@ -12,7 +12,7 @@ const {
 const path = require('path');
 const request = require('request-promise');
 
-const retry = require('./retry');
+const retry = require('@instana/core/test/test_util/retry');
 const config = require('../config');
 
 function AbstractServerlessControl(opts = {}) {
@@ -28,99 +28,83 @@ AbstractServerlessControl.prototype.reset = function reset() {
   this.messagesFromProxy = [];
 };
 
-AbstractServerlessControl.prototype.registerTestHooks = function registerTestHooks() {
-  if (typeof this.startMonitoredProcess !== 'function') {
-    fail('Control does not implement startMonitoredProcess.');
+AbstractServerlessControl.prototype.start = async function () {
+  this.reset();
+
+  let backendPromise;
+  if (this.opts.startBackend) {
+    backendPromise = this.startBackendAndWaitForIt();
+  } else {
+    backendPromise = Promise.resolve();
   }
-  if (
-    typeof this.hasMonitoredProcessStartedPromise !== 'function' &&
-    typeof this.hasMonitoredProcessStarted !== 'function'
-  ) {
-    fail('Control neither implements hasMonitoredProcessStartedPromise nor hasMonitoredProcessStarted.');
-  }
-  if (typeof this.hasMonitoredProcessTerminated !== 'function') {
-    fail('Control does not implement hasMonitoredProcessTerminated.');
-  }
-  if (typeof this.killMonitoredProcess !== 'function') {
-    fail('Control does not implement killMonitoredProcess.');
+  let extensionPromise;
+  if (this.opts.startExtension) {
+    extensionPromise = this.startExtensionAndWaitForIt();
+  } else {
+    extensionPromise = Promise.resolve();
   }
 
-  beforeEach(() => {
-    this.reset();
+  let downstreamDummyPromise;
+  if (this.opts.startDownstreamDummy !== false) {
+    this.downstreamDummy = fork(path.join(__dirname, '../downstream_dummy'), {
+      stdio: config.getAppStdio(),
+      env: Object.assign(
+        {
+          DOWNSTREAM_DUMMY_PORT: this.downstreamDummyPort
+        },
+        process.env,
+        this.opts.env
+      )
+    });
+    this.downstreamDummy.on('message', message => {
+      this.messagesFromDownstreamDummy.push(message);
+    });
+    downstreamDummyPromise = this.waitUntilDownstreamDummyIsUp();
+  } else {
+    downstreamDummyPromise = Promise.resolve();
+  }
 
-    let backendPromise;
-    if (this.opts.startBackend) {
-      backendPromise = this.startBackendAndWaitForIt();
-    } else {
-      backendPromise = Promise.resolve();
+  let proxyPromise;
+  if (this.opts.startProxy) {
+    const env = {
+      PROXY_PORT: this.proxyPort
+    };
+    if (this.opts.proxyRequiresAuthorization) {
+      env.PROXY_REQUIRES_AUTHORIZATION = 'true';
     }
-    let extensionPromise;
-    if (this.opts.startExtension) {
-      extensionPromise = this.startExtensionAndWaitForIt();
-    } else {
-      extensionPromise = Promise.resolve();
-    }
+    this.proxy = fork(path.join(__dirname, '../proxy'), {
+      stdio: config.getAppStdio(),
+      env: Object.assign(env, process.env, this.opts.env)
+    });
+    this.proxy.on('message', message => {
+      this.messagesFromProxy.push(message);
+    });
+    proxyPromise = this.waitUntilProcessIsUp('proxy', this.messagesFromProxy, 'proxy: started');
+  } else {
+    proxyPromise = Promise.resolve();
+  }
 
-    let downstreamDummyPromise;
-    if (this.opts.startDownstreamDummy !== false) {
-      this.downstreamDummy = fork(path.join(__dirname, '../downstream_dummy'), {
-        stdio: config.getAppStdio(),
-        env: Object.assign(
-          {
-            DOWNSTREAM_DUMMY_PORT: this.downstreamDummyPort
-          },
-          process.env,
-          this.opts.env
-        )
-      });
-      this.downstreamDummy.on('message', message => {
-        this.messagesFromDownstreamDummy.push(message);
-      });
-      downstreamDummyPromise = this.waitUntilDownstreamDummyIsUp();
-    } else {
-      downstreamDummyPromise = Promise.resolve();
-    }
-
-    let proxyPromise;
-    if (this.opts.startProxy) {
-      const env = {
-        PROXY_PORT: this.proxyPort
-      };
-      if (this.opts.proxyRequiresAuthorization) {
-        env.PROXY_REQUIRES_AUTHORIZATION = 'true';
-      }
-      this.proxy = fork(path.join(__dirname, '../proxy'), {
-        stdio: config.getAppStdio(),
-        env: Object.assign(env, process.env, this.opts.env)
-      });
-      this.proxy.on('message', message => {
-        this.messagesFromProxy.push(message);
-      });
-      proxyPromise = this.waitUntilProcessIsUp('proxy', this.messagesFromProxy, 'proxy: started');
-    } else {
-      proxyPromise = Promise.resolve();
-    }
-
-    const allAuxiliaryProcesses = [extensionPromise, backendPromise, downstreamDummyPromise, proxyPromise].concat(
-      this.startAdditionalAuxiliaryProcesses()
-    );
-    return Promise.all(allAuxiliaryProcesses)
-      .then(() => {
-        this.startMonitoredProcess();
-        return this.waitUntilMonitoredProcessHasStarted();
-      })
-      .catch(e => {
-        fail(`A child process did not start properly: ${e}`);
-      });
-  });
-
-  afterEach(() =>
-    this.kill()
-      .then(() => this.reset())
-      .catch(e => {
-        fail(`A child process did not terminate properly: ${e}`);
-      })
+  const allAuxiliaryProcesses = [extensionPromise, backendPromise, downstreamDummyPromise, proxyPromise].concat(
+    this.startAdditionalAuxiliaryProcesses()
   );
+
+  return Promise.all(allAuxiliaryProcesses)
+    .then(() => {
+      this.startMonitoredProcess();
+      return this.waitUntilMonitoredProcessHasStarted();
+    })
+    .catch(e => {
+      fail(`A child process did not start properly: ${e}`);
+    });
+};
+
+AbstractServerlessControl.prototype.stop = async function () {
+  try {
+    await this.kill();
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.log('[AbstractServerlessControl] error', err);
+  }
 };
 
 AbstractServerlessControl.prototype.startBackendAndWaitForIt = function startBackendAndWaitForIt() {
@@ -151,7 +135,7 @@ AbstractServerlessControl.prototype.startExtensionAndWaitForIt = function startE
       {
         BACKEND_HTTPS: this.useHttps == null || this.useHttps,
         BACKEND_PORT: this.backendPort,
-        EXTENSION_PORT: this.extensionPort,
+        INSTANA_LAYER_EXTENSION_PORT: this.extensionPort,
         EXTENSION_UNRESPONSIVE: this.opts.startExtension === 'unresponsive',
         EXTENSION_PREFFLIGHT_RESPONSIVE_BUT_UNRESPONSIVE_LATER: this.opts.startExtension === 'unresponsive-later',
         HEARTBEAT_REQUEST_RESPONDS_WITH_UNEXPECTED_STATUS_CODE:
@@ -186,7 +170,7 @@ AbstractServerlessControl.prototype.waitUntilDownstreamDummyIsUp = function wait
 // prettier-ignore
 AbstractServerlessControl.prototype.waitUntilMonitoredProcessHasStarted =
 function waitUntilMonitoredProcessHasStarted() {
-  return retry(() => this.hasMonitoredProcessStartedPromise(), this.opts.timeout / 2);
+  return retry(() => this.hasMonitoredProcessStartedPromise());
 };
 
 AbstractServerlessControl.prototype.hasMonitoredProcessStartedPromise = function hasMonitoredProcessStartedPromise() {
@@ -227,7 +211,7 @@ AbstractServerlessControl.prototype.isProcessUp = function isProcessUp(allMessag
 // prettier-ignore
 AbstractServerlessControl.prototype.waitUntilMonitoredProcessHasTerminated =
 function waitUntilMonitoredProcessHasTerminated() {
-  return retry(() => this.hasMonitoredProcessTerminatedPromise(), this.opts.timeout / 2);
+  return retry(() => this.hasMonitoredProcessTerminatedPromise());
 };
 
 // prettier-ignore
@@ -283,7 +267,12 @@ AbstractServerlessControl.prototype.killAdditionalAuxiliaryProcesses = function 
 AbstractServerlessControl.prototype.killChildProcess = function killChildProcess(childProcess) {
   return new Promise(resolve => {
     if (childProcess) {
-      childProcess.once('exit', resolve);
+      childProcess.once('exit', () => {
+        // eslint-disable-next-line no-console
+        console.log('[AbstractServerlessControl] killed', childProcess.pid);
+        resolve();
+      });
+
       childProcess.kill();
     } else {
       resolve();
@@ -338,10 +327,16 @@ AbstractServerlessControl.prototype._getFromBackend = function _getFromBackend(u
 
 AbstractServerlessControl.prototype.resetBackend = function resetBackend() {
   if (this.backendHasBeenStarted) {
+    // eslint-disable-next-line no-console
+    console.log('[AbstractServerlessControl] resetting backend');
+
     return request({
       method: 'DELETE',
       url: `${this.backendBaseUrl}/received`,
       strictSSL: false
+    }).then(() => {
+      // eslint-disable-next-line no-console
+      console.log('[AbstractServerlessControl] reseted backend');
     });
   } else {
     return Promise.resolve([]);

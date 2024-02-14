@@ -61,14 +61,23 @@ if (
 
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
+    let controls;
 
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+    after(async () => {
+      await controls.stop();
     });
 
-    ProcessControls.setUpHooks(controls);
-
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
     /**
      * auto-retry 3 times, because we run a lot into rate limiting errors
      */
@@ -685,7 +694,7 @@ if (
       });
 
       return testUtils
-        .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+        .retry(() => testUtils.delay(1000))
         .then(() => agentControls.getSpans())
         .then(spans => {
           if (spans.length > 0) {

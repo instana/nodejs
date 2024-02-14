@@ -34,7 +34,7 @@ const teeLogger = new TeeLogger(instanaLogger, collectingLogger);
 instana.setLogger(teeLogger);
 
 const port = require('../../../../../test_util/app-port')();
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const sqsV3ReceiveMethod = process.env.SQSV3_RECEIVE_METHOD || 'v3';
 const queueURL = process.env.AWS_SQS_QUEUE_URL;
 const awsRegion = 'us-east-2';

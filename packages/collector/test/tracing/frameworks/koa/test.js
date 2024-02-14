@@ -22,11 +22,24 @@ mochaSuiteFn('tracing/koa', function () {
   const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
 
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(controls);
+
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
 
   describe('koa path templates', () => {
     check('/route', '/route');

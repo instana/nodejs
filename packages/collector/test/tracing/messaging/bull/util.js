@@ -10,7 +10,7 @@ const path = require('path');
 const request = require('request-promise');
 const { delay } = require('../../../../../core/test/test_util');
 
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 
 /**
  * @typedef {Object} QueueData

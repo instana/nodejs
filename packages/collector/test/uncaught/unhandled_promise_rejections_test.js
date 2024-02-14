@@ -17,20 +17,36 @@ const ProcessControls = require('../test_util/ProcessControls');
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('unhandled promise rejections', function () {
-  const agentControls = require('../apps/agentStubControls');
-
   this.timeout(config.getTestTimeout());
 
-  agentControls.registerTestHooks();
+  const { AgentStubControls } = require('../apps/agentStubControls');
+  const agentControls = new AgentStubControls();
 
-  const serverControls = new ProcessControls({
-    appPath: path.join(__dirname, 'apps', 'server'),
-    dontKillInAfterHook: false,
-    agentControls,
-    env: {
-      ENABLE_REPORT_UNHANDLED_REJECTIONS: true
-    }
-  }).registerTestHooks();
+  let serverControls;
+
+  before(async () => {
+    await agentControls.startAgent();
+
+    serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'apps', 'server'),
+      dontKillInAfterHook: false,
+      agentControls,
+      env: {
+        ENABLE_REPORT_UNHANDLED_REJECTIONS: true
+      }
+    });
+
+    await serverControls.start();
+  });
+
+  after(async () => {
+    await serverControls.stop();
+    await agentControls.stopAgent();
+  });
+
+  afterEach(async () => {
+    await serverControls.clearIpcMessages();
+  });
 
   it('must not interfere with tracing', () =>
     serverControls

@@ -7,34 +7,16 @@
 
 const spawn = require('child_process').spawn;
 const request = require('request-promise');
+const portFinder = require('../test_util/portfinder');
 const path = require('path');
 const _ = require('lodash');
 
 const { retry } = require('../../../core/test/test_util');
 const config = require('../../../core/test/config');
 
-const DEFAULT_AGENT_PORT = 3210;
-
 class AgentStubControls {
   constructor(agentPort) {
-    this.agentPort = agentPort || DEFAULT_AGENT_PORT;
-  }
-
-  registerHooksForSuite(opts = {}) {
-    before(() => this.startAgent(opts));
-    after(() => this.stopAgent(opts));
-
-    beforeEach(() => this.clearReceivedData());
-    afterEach(() => this.clearReceivedData());
-
-    return this;
-  }
-
-  registerTestHooks(opts = {}) {
-    beforeEach(() => this.startAgent(opts));
-    afterEach(() => this.stopAgent(opts));
-
-    return this;
+    this.agentPort = agentPort || portFinder();
   }
 
   async startAgent(opts = {}) {
@@ -77,13 +59,30 @@ class AgentStubControls {
     this.agentStub.kill();
   }
 
+  getPort() {
+    return this.agentPort;
+  }
+
   async waitUntilAgentHasStarted() {
-    await retry(() =>
-      request({
-        method: 'GET',
-        url: `http://127.0.0.1:${this.agentPort}`
-      })
-    );
+    const url = `http://127.0.0.1:${this.agentPort}`;
+
+    // eslint-disable-next-line no-console
+    console.log(`[AgentStubControls] starting: ${url}`);
+
+    try {
+      await retry(() =>
+        request({
+          method: 'GET',
+          url
+        })
+      );
+
+      // eslint-disable-next-line no-console
+      console.log('[AgentStubControls] started');
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log(`agentStubControls: error waiting until server (${url}) is up: ${err.message}`);
+    }
   }
 
   async waitUntilAppIsCompletelyInitialized(originalPid) {
@@ -268,47 +267,7 @@ class AgentStubControls {
   }
 }
 
-const legacySingletonInstance = new AgentStubControls();
-
-module.exports = exports = {
-  get agentPort() {
-    return legacySingletonInstance.agentPort;
-  }
-};
-
 exports.AgentStubControls = AgentStubControls;
-
-// In a previous life, agentStubControls was a singleton module which started an agent before each individual test and
-// stopped it afterwards. This became prohibitive in terms of test suite duration. The following exports are in place
-// for legacy tests that still use this facility and have not been refactored to create an instance of AgentStubControls
-// for themselves.
-exports.registerTestHooks = opts => legacySingletonInstance.registerTestHooks(opts);
-exports.startAgent = opts => legacySingletonInstance.startAgent(opts);
-exports.stopAgent = () => legacySingletonInstance.stopAgent();
-exports.waitUntilAgentHasStarted = () => legacySingletonInstance.waitUntilAgentHasStarted();
-exports.waitUntilAppIsCompletelyInitialized = pid => legacySingletonInstance.waitUntilAppIsCompletelyInitialized(pid);
-exports.getDiscoveries = () => legacySingletonInstance.getDiscoveries();
-exports.deleteDiscoveries = () => legacySingletonInstance.deleteDiscoveries();
-exports.getReceivedData = () => legacySingletonInstance.getReceivedData();
-exports.getAggregatedMetrics = pid => legacySingletonInstance.getAggregatedMetrics(pid);
-exports.getEvents = () => legacySingletonInstance.getEvents();
-exports.getMonitoringEvents = () => legacySingletonInstance.getMonitoringEvents();
-exports.clearReceivedData = () => legacySingletonInstance.clearReceivedData();
-exports.clearReceivedTraceData = () => legacySingletonInstance.clearReceivedTraceData();
-exports.clearReceivedEvents = () => legacySingletonInstance.clearReceivedEvents();
-exports.clearReceivedProfilingData = () => legacySingletonInstance.clearReceivedProfilingData();
-exports.clearReceivedMonitoringEvents = () => legacySingletonInstance.clearReceivedMonitoringEvents();
-exports.reset = () => legacySingletonInstance.reset();
-exports.getSpans = () => legacySingletonInstance.getSpans();
-exports.getProfiles = () => legacySingletonInstance.getProfiles();
-exports.getResponses = () => legacySingletonInstance.getResponses();
-exports.getTracingMetrics = () => legacySingletonInstance.getTracingMetrics();
-exports.waitUntilAppIsCompletelyInitialized = pid => legacySingletonInstance.waitUntilAppIsCompletelyInitialized(pid);
-exports.simulateDiscovery = pid => legacySingletonInstance.simulateDiscovery(pid);
-exports.addEntityData = (pid, data) => legacySingletonInstance.addEntityData(pid, data);
-exports.addRequestForPid = (pid, r) => legacySingletonInstance.addRequestForPid(pid, r);
-exports.getLastMetricValue = (pid, _path) => legacySingletonInstance.getLastMetricValue(pid, _path);
-exports.getAllMetrics = pid => legacySingletonInstance.getAllMetrics(pid);
 
 function findLastMetricValueInResponse(pid, data, _path) {
   for (let i = data.metrics.length - 1; i >= 0; i--) {

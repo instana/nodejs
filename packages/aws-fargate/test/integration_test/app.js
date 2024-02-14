@@ -12,7 +12,7 @@ const { sendToParent } = require('../../../core/test/test_util');
 
 const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;
 
-const port = process.env.TASK_HTTP_PORT || 4215;
+const port = process.env.TASK_HTTP_PORT;
 
 const app = new http.Server();
 

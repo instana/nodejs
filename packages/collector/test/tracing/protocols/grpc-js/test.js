@@ -24,8 +24,34 @@ mochaSuiteFn('tracing/grpc-js', function () {
 
   globalAgent.setUpCleanUpHooks();
 
-  describe('success', () => {
-    const { serverControls, clientControls } = createProcesses();
+  describe('success', function () {
+    let serverControls;
+    let clientControls;
+
+    before(async function () {
+      serverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'server'),
+        useGlobalAgent: true
+      });
+
+      clientControls = new ProcessControls({
+        appPath: path.join(__dirname, 'client'),
+        useGlobalAgent: true
+      });
+
+      await serverControls.startAndWaitForAgentConnection();
+      await clientControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await serverControls.stop();
+      await clientControls.stop();
+    });
+
+    afterEach(async () => {
+      await serverControls.clearIpcMessages();
+      await clientControls.clearIpcMessages();
+    });
 
     it('must trace an unary call', () => {
       const expectedReply = 'received: request';
@@ -72,8 +98,34 @@ mochaSuiteFn('tracing/grpc-js', function () {
 
   const maliMochaSuiteFn = semver.satisfies(process.versions.node, '>=14.0.0') ? describe : describe.skip;
 
-  maliMochaSuiteFn('with mali server', () => {
-    const { serverControls, clientControls } = createProcesses({}, { isMali: true });
+  maliMochaSuiteFn('with mali server', function () {
+    let serverControls;
+    let clientControls;
+
+    before(async function () {
+      serverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'maliServer'),
+        useGlobalAgent: true
+      });
+
+      clientControls = new ProcessControls({
+        appPath: path.join(__dirname, 'client'),
+        useGlobalAgent: true
+      });
+
+      await serverControls.startAndWaitForAgentConnection();
+      await clientControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await serverControls.stop();
+      await clientControls.stop();
+    });
+
+    afterEach(async () => {
+      await serverControls.clearIpcMessages();
+      await clientControls.clearIpcMessages();
+    });
 
     it('must trace an unary call', () => {
       const expectedReply = 'received: request';
@@ -81,8 +133,34 @@ mochaSuiteFn('tracing/grpc-js', function () {
     });
   });
 
-  describe('suppressed', () => {
-    const { clientControls } = createProcesses();
+  describe('suppressed', function () {
+    let serverControls;
+    let clientControls;
+
+    before(async function () {
+      serverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'server'),
+        useGlobalAgent: true
+      });
+
+      clientControls = new ProcessControls({
+        appPath: path.join(__dirname, 'client'),
+        useGlobalAgent: true
+      });
+
+      await serverControls.startAndWaitForAgentConnection();
+      await clientControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await serverControls.stop();
+      await clientControls.stop();
+    });
+
+    afterEach(async () => {
+      await serverControls.clearIpcMessages();
+      await clientControls.clearIpcMessages();
+    });
 
     it('[suppressed] should not trace', () =>
       clientControls
@@ -95,7 +173,7 @@ mochaSuiteFn('tracing/grpc-js', function () {
         })
         .then(response => {
           expect(response.reply).to.equal('received: request');
-          return delay(config.getTestTimeout() / 4);
+          return delay(1000);
         })
         .then(() =>
           agentControls.getSpans().then(spans => {
@@ -104,9 +182,39 @@ mochaSuiteFn('tracing/grpc-js', function () {
         ));
   });
 
-  describe('individually disabled', () => {
-    const { clientControls } = createProcesses({
-      INSTANA_DISABLED_TRACERS: 'grpcjs'
+  describe('individually disabled', function () {
+    let serverControls;
+    let clientControls;
+
+    before(async function () {
+      serverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'server'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_DISABLED_TRACERS: 'grpcjs'
+        }
+      });
+
+      clientControls = new ProcessControls({
+        appPath: path.join(__dirname, 'client'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_DISABLED_TRACERS: 'grpcjs'
+        }
+      });
+
+      await serverControls.startAndWaitForAgentConnection();
+      await clientControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await serverControls.stop();
+      await clientControls.stop();
+    });
+
+    afterEach(async () => {
+      await serverControls.clearIpcMessages();
+      await clientControls.clearIpcMessages();
     });
 
     it('should not trace when GRPC tracing is individually disabled', () =>
@@ -117,6 +225,9 @@ mochaSuiteFn('tracing/grpc-js', function () {
         })
         .then(response => {
           expect(response.reply).to.equal('received: request');
+          return delay(500);
+        })
+        .then(() => {
           return retry(() =>
             agentControls.getSpans().then(spans => {
               expectExactlyOneMatching(spans, checkHttpEntry({ url: '/unary-call' }));
@@ -127,8 +238,34 @@ mochaSuiteFn('tracing/grpc-js', function () {
         }));
   });
 
-  describe('multiple hosts', () => {
-    const { clientControls } = createProcesses();
+  describe('multiple hosts', function () {
+    let serverControls;
+    let clientControls;
+
+    before(async function () {
+      serverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'server'),
+        useGlobalAgent: true
+      });
+
+      clientControls = new ProcessControls({
+        appPath: path.join(__dirname, 'client'),
+        useGlobalAgent: true
+      });
+
+      await serverControls.startAndWaitForAgentConnection();
+      await clientControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await serverControls.stop();
+      await clientControls.stop();
+    });
+
+    afterEach(async () => {
+      await serverControls.clearIpcMessages();
+      await clientControls.clearIpcMessages();
+    });
 
     it('call two different hosts', async () => {
       const url = '/two-different-hosts';
@@ -151,33 +288,6 @@ mochaSuiteFn('tracing/grpc-js', function () {
     });
   });
 });
-
-function createProcesses(env = {}, opts = { isMali: false }) {
-  let serverControls;
-
-  if (!opts.isMali) {
-    serverControls = new ProcessControls({
-      appPath: path.join(__dirname, 'server'),
-      useGlobalAgent: true,
-      env
-    });
-  } else {
-    serverControls = new ProcessControls({
-      appPath: path.join(__dirname, 'maliServer'),
-      useGlobalAgent: true,
-      env
-    });
-  }
-
-  const clientControls = new ProcessControls({
-    appPath: path.join(__dirname, 'client'),
-    useGlobalAgent: true,
-    env
-  });
-
-  ProcessControls.setUpHooks(serverControls, clientControls);
-  return { serverControls, clientControls };
-}
 
 function runTest(url, serverControls, clientControls, expectedReply, cancel, erroneous) {
   return clientControls

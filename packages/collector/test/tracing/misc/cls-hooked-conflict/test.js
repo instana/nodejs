@@ -24,11 +24,24 @@ describe('tracing/no-conflict-with-cls-hooked', function () {
 
   globalAgent.setUpCleanUpHooks();
 
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(controls);
+
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
 
   it('must not lose context when the application binds the http request event emitter via cls-hooked', async () => {
     const response = await controls.sendRequest({

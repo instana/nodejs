@@ -12,11 +12,19 @@ const expect = require('chai').expect;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('agentStub', function () {
-  const agentStubControls = require('./agentStubControls');
+  const { AgentStubControls } = require('./agentStubControls');
+  let agentStubControls;
 
   this.timeout(config.getTestTimeout());
 
-  agentStubControls.registerTestHooks();
+  before(async () => {
+    agentStubControls = new AgentStubControls();
+    await agentStubControls.startAgent();
+  });
+
+  after(async () => {
+    await agentStubControls.stopAgent();
+  });
 
   it('must respond without any discoveries upon start', () =>
     agentStubControls.getDiscoveries().then(discoveries => {

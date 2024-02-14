@@ -24,11 +24,24 @@ mochaSuiteFn('tracing/hapi', function () {
   const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
 
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
+  let controls;
+
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true
+    });
+
+    await controls.startAndWaitForAgentConnection();
   });
-  ProcessControls.setUpHooks(controls);
+
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
 
   describe('hapi path templates', () => {
     check('/route/mandatory/value', '/route/mandatory/{param}');

@@ -25,15 +25,26 @@ describe('collector/src/immediate', function () {
   this.timeout(config.getTestTimeout());
 
   describe('an application instrumented via NODE_OPTIONS', () => {
-    controls = new ProcessControls({
-      useGlobalAgent: true,
-      dirname: __dirname,
-      cwd: __dirname,
-      env: {
-        NODE_OPTIONS: '--require ../../src/immediate'
-      }
+    before(async () => {
+      controls = new ProcessControls({
+        useGlobalAgent: true,
+        dirname: __dirname,
+        cwd: __dirname,
+        env: {
+          NODE_OPTIONS: '--require ../../src/immediate'
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
     });
-    ProcessControls.setUpHooks(controls);
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
 
     it('should have connected to the agent', async () => {
       // Make sure the npm process did not report to the agent even after waiting for that to happen.

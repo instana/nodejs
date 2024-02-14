@@ -34,124 +34,149 @@ mochaSuiteFn('tracing/kafkajs', function () {
   const agentControls = globalAgent.instance;
 
   describe('tracing enabled ', function () {
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      useGlobalAgent: true
-    });
-    ProcessControls.setUpHooks(consumerControls);
-
     const nextUseEachBatch = getCircularList([false, true]);
     const nextError = getCircularList([false, 'consumer']);
 
     ['binary', 'string', 'both'].forEach(headerFormat => {
       describe(`header format: ${headerFormat}`, function () {
-        const producerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'producer'),
-          useGlobalAgent: true,
-          env: {
-            INSTANA_KAFKA_HEADER_FORMAT: headerFormat
-          }
+        [false, true].forEach(useSendBatch => {
+          const useEachBatch = nextUseEachBatch();
+          const error = nextError();
+
+          describe(
+            `kafkajs (header format: ${headerFormat}, ${useSendBatch ? 'sendBatch' : 'sendMessage'} => ` +
+              `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
+            () => {
+              let producerControls;
+              let consumerControls;
+
+              before(async () => {
+                consumerControls = new ProcessControls({
+                  appPath: path.join(__dirname, 'consumer'),
+                  useGlobalAgent: true
+                });
+
+                producerControls = new ProcessControls({
+                  appPath: path.join(__dirname, 'producer'),
+                  useGlobalAgent: true,
+                  env: {
+                    INSTANA_KAFKA_HEADER_FORMAT: headerFormat
+                  }
+                });
+
+                await consumerControls.startAndWaitForAgentConnection();
+                await producerControls.startAndWaitForAgentConnection();
+              });
+
+              after(async () => {
+                await producerControls.stop();
+                await consumerControls.stop();
+              });
+
+              beforeEach(async () => {
+                await resetMessages(consumerControls);
+              });
+
+              afterEach(async () => {
+                await resetMessages(consumerControls);
+              });
+
+              it(`must trace sending and receiving and keep trace continuity (header format: ${headerFormat}, ${
+                useSendBatch ? 'sendBatch' : 'sendMessage'
+              } => ${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`, async () => {
+                const parameters = {
+                  headerFormat,
+                  error,
+                  useSendBatch,
+                  useEachBatch
+                };
+
+                await producerControls.sendRequest({
+                  method: 'POST',
+                  path: '/send-messages',
+                  simple: true,
+                  body: {
+                    key: 'someKey',
+                    value: 'someMessage',
+                    error,
+                    useSendBatch,
+                    useEachBatch
+                  }
+                });
+
+                await retry(async () => {
+                  const messages = await getMessages(consumerControls);
+                  checkMessages(messages, parameters);
+                  const spans = await agentControls.getSpans();
+                  const httpEntry = verifyHttpEntry(spans);
+                  verifyKafkaExits(spans, httpEntry, parameters);
+                  verifyFollowUpHttpExit(spans, httpEntry);
+                });
+              });
+
+              if (error === false) {
+                // we do not need dedicated suppression tests for error conditions
+                it(`must not trace when suppressed (header format: ${headerFormat})`, async () => {
+                  const parameters = { headerFormat, error, useSendBatch, useEachBatch };
+
+                  await producerControls.sendRequest({
+                    method: 'POST',
+                    path: '/send-messages',
+                    simple: true,
+                    suppressTracing: true,
+                    body: {
+                      key: 'someKey',
+                      value: 'someMessage',
+                      error,
+                      useSendBatch,
+                      useEachBatch
+                    }
+                  });
+
+                  await retry(async () => {
+                    const messages = await getMessages(consumerControls);
+                    checkMessages(messages, parameters);
+                    await delay(1000);
+                    const spans = await agentControls.getSpans();
+                    expect(spans).to.have.lengthOf(0);
+                  });
+                });
+              }
+            }
+          );
         });
-        ProcessControls.setUpHooks(producerControls);
-
-        beforeEach(() => resetMessages(consumerControls));
-        afterEach(() => resetMessages(consumerControls));
-
-        [false, true].forEach(useSendBatch =>
-          registerTracingEnabledTestSuite.bind(this)({
-            headerFormat,
-            nextError,
-            useSendBatch,
-            nextUseEachBatch,
-            producerControls
-          })
-        );
       });
     });
-
-    function registerTracingEnabledTestSuite({ headerFormat, useSendBatch, producerControls }) {
-      const useEachBatch = nextUseEachBatch();
-      const error = nextError();
-
-      describe(
-        `kafkajs (header format: ${headerFormat}, ${useSendBatch ? 'sendBatch' : 'sendMessage'} => ` +
-          `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
-        () => {
-          it(`must trace sending and receiving and keep trace continuity (header format: ${headerFormat}, ${
-            useSendBatch ? 'sendBatch' : 'sendMessage'
-          } => ${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`, async () => {
-            const parameters = {
-              headerFormat,
-              error,
-              useSendBatch,
-              useEachBatch
-            };
-            await send({
-              key: 'someKey',
-              value: 'someMessage',
-              error,
-              useSendBatch,
-              useEachBatch,
-              producerControls
-            });
-
-            await retry(async () => {
-              const messages = await getMessages(consumerControls);
-              checkMessages(messages, parameters);
-              const spans = await agentControls.getSpans();
-              const httpEntry = verifyHttpEntry(spans);
-              verifyKafkaExits(spans, httpEntry, parameters);
-              verifyFollowUpHttpExit(spans, httpEntry);
-            });
-          });
-
-          if (error === false) {
-            // we do not need dedicated suppression tests for error conditions
-            it(`must not trace when suppressed (header format: ${headerFormat})`, async () => {
-              const parameters = { headerFormat, error, useSendBatch, useEachBatch };
-              await send({
-                key: 'someKey',
-                value: 'someMessage',
-                error,
-                useSendBatch,
-                useEachBatch,
-                suppressTracing: true,
-                producerControls
-              });
-              await retry(async () => {
-                const messages = await getMessages(consumerControls);
-                checkMessages(messages, parameters);
-                await delay(config.getTestTimeout() / 4);
-                const spans = await agentControls.getSpans();
-                expect(spans).to.have.lengthOf(0);
-              });
-            });
-          }
-        }
-      );
-    }
   });
 
   describe('with error in producer ', function () {
     const headerFormat = 'string';
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
-      env: {
-        INSTANA_KAFKA_HEADER_FORMAT: headerFormat
-      }
-    });
-    ProcessControls.setUpHooks(producerControls);
+    const error = 'producer';
+    const useEachBatch = false;
 
-    [false, true].forEach(useSendBatch => registerProducerErrorTestSuite.bind(this)({ headerFormat, useSendBatch }));
-
-    function registerProducerErrorTestSuite({ useSendBatch }) {
-      const error = 'producer';
-      const useEachBatch = false;
+    [false, true].forEach(useSendBatch => {
       describe(
         `kafkajs (header format: ${headerFormat}, ${useSendBatch ? 'sendBatch' : 'sendMessage'} => ` +
           `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
         () => {
+          let producerControls;
+
+          before(async () => {
+            producerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'producer'),
+              useGlobalAgent: true,
+              env: {
+                INSTANA_KAFKA_HEADER_FORMAT: headerFormat
+              }
+            });
+
+            await producerControls.startAndWaitForAgentConnection();
+          });
+
+          after(async () => {
+            await producerControls.stop();
+          });
+
           it(`must trace attempts to send a message when an error happens in the producer (${
             useSendBatch ? 'sendBatch' : 'sendMessage'
           }, error: ${error})`, async () => {
@@ -161,14 +186,20 @@ mochaSuiteFn('tracing/kafkajs', function () {
               useSendBatch,
               useEachBatch
             };
-            await send({
-              key: 'someKey',
-              value: 'someMessage',
-              error,
-              useSendBatch,
-              useEachBatch,
-              producerControls
+
+            await producerControls.sendRequest({
+              method: 'POST',
+              path: '/send-messages',
+              simple: true,
+              body: {
+                key: 'someKey',
+                value: 'someMessage',
+                error,
+                useSendBatch,
+                useEachBatch
+              }
             });
+
             await retry(async () => {
               const spans = await agentControls.getSpans();
               const httpEntry = verifyHttpEntry(spans);
@@ -178,111 +209,155 @@ mochaSuiteFn('tracing/kafkajs', function () {
           });
         }
       );
-    }
+    });
   });
 
   describe('tracing enabled, but trace correlation disabled', function () {
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      useGlobalAgent: true
-    });
-    ProcessControls.setUpHooks(consumerControls);
-
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
-      env: {
-        INSTANA_KAFKA_TRACE_CORRELATION: 'false'
-      }
-    });
-    ProcessControls.setUpHooks(producerControls);
-
-    beforeEach(() => resetMessages(consumerControls));
-    afterEach(() => resetMessages(consumerControls));
-
     const nextUseEachBatch = getCircularList([false, true]);
 
-    [false, true].forEach(useSendBatch =>
-      registerCorrelationDisabledTestSuite.bind(this)({ useSendBatch, nextUseEachBatch })
-    );
-
-    function registerCorrelationDisabledTestSuite({ useSendBatch }) {
+    [false, true].forEach(useSendBatch => {
       const useEachBatch = nextUseEachBatch();
-      it(`must trace sending and receiving but will not keep trace continuity (${
-        useSendBatch ? 'sendBatch' : 'sendMessage'
-      } => ${useEachBatch ? 'eachBatch' : 'eachMessage'})`, async () => {
-        const parameters = {
-          headerFormat: 'correlation-disabled',
-          useSendBatch,
-          useEachBatch
-        };
-        await send({
-          key: 'someKey',
-          value: 'someMessage',
-          useSendBatch,
-          useEachBatch,
-          producerControls
-        });
-        await retry(async () => {
-          const messages = await getMessages(consumerControls);
-          checkMessages(messages, parameters);
-          const spans = await agentControls.getSpans();
-          const httpEntry = verifyHttpEntry(spans);
-          verifyKafkaExits(spans, httpEntry, parameters);
-          verifyFollowUpHttpExit(spans, httpEntry);
-        });
-      });
 
-      it('must not trace Kafka exits when suppressed (but will trace Kafka entries)', async () => {
-        const parameters = { headerFormat: 'correlation-disabled', useSendBatch, useEachBatch };
-        await send({
-          key: 'someKey',
-          value: 'someMessage',
-          useSendBatch,
-          useEachBatch,
-          producerControls,
-          suppressTracing: true
+      describe(`useEachBatch: ${useEachBatch}, useSendBatch: ${useSendBatch}`, function () {
+        let consumerControls;
+        let producerControls;
+
+        before(async () => {
+          consumerControls = new ProcessControls({
+            appPath: path.join(__dirname, 'consumer'),
+            useGlobalAgent: true
+          });
+          producerControls = new ProcessControls({
+            appPath: path.join(__dirname, 'producer'),
+            useGlobalAgent: true,
+            env: {
+              INSTANA_KAFKA_TRACE_CORRELATION: 'false'
+            }
+          });
+
+          await consumerControls.startAndWaitForAgentConnection();
+          await producerControls.startAndWaitForAgentConnection();
         });
-        await retry(async () => {
-          const messages = await getMessages(consumerControls);
-          checkMessages(messages, parameters);
-          const spans = await agentControls.getSpans();
-          // There should be no HTTP entries and also no Kafka exits.
-          expect(getSpansByName(spans, 'node.http.server')).to.be.empty;
-          expect(getSpansByName(spans, 'kafka').filter(span => span.k === 2)).to.be.empty;
-          // However, since we disabled Kafka trace correlation headers, the suppression flag is not added to
-          // Kafka message, thus, each incoming Kafka message will start a new trace with a Kafka entry as its
-          // root span.
-          verifyKafkaRootEntries(spans, parameters);
+
+        after(async () => {
+          await producerControls.stop();
+          await consumerControls.stop();
+        });
+
+        beforeEach(async () => {
+          await resetMessages(consumerControls);
+        });
+
+        afterEach(async () => {
+          await resetMessages(consumerControls);
+        });
+
+        it('must trace sending and receiving but will not keep trace continuity', async () => {
+          const parameters = {
+            headerFormat: 'correlation-disabled',
+            useSendBatch,
+            useEachBatch
+          };
+
+          await producerControls.sendRequest({
+            method: 'POST',
+            path: '/send-messages',
+            simple: true,
+            body: {
+              key: 'someKey',
+              value: 'someMessage',
+              useSendBatch,
+              useEachBatch
+            }
+          });
+
+          await retry(async () => {
+            const messages = await getMessages(consumerControls);
+            checkMessages(messages, parameters);
+            const spans = await agentControls.getSpans();
+            const httpEntry = verifyHttpEntry(spans);
+            verifyKafkaExits(spans, httpEntry, parameters);
+            verifyFollowUpHttpExit(spans, httpEntry);
+          });
+        });
+
+        it('must not trace Kafka exits when suppressed (but will trace Kafka entries)', async () => {
+          const parameters = { headerFormat: 'correlation-disabled', useSendBatch, useEachBatch };
+
+          await producerControls.sendRequest({
+            method: 'POST',
+            path: '/send-messages',
+            simple: true,
+            suppressTracing: true,
+            body: {
+              key: 'someKey',
+              value: 'someMessage',
+              useSendBatch,
+              useEachBatch
+            }
+          });
+
+          await retry(async () => {
+            const messages = await getMessages(consumerControls);
+            checkMessages(messages, parameters);
+            const spans = await agentControls.getSpans();
+            // There should be no HTTP entries and also no Kafka exits.
+            expect(getSpansByName(spans, 'node.http.server')).to.be.empty;
+            expect(getSpansByName(spans, 'kafka').filter(span => span.k === 2)).to.be.empty;
+            // However, since we disabled Kafka trace correlation headers, the suppression flag is not added to
+            // Kafka message, thus, each incoming Kafka message will start a new trace with a Kafka entry as its
+            // root span.
+            verifyKafkaRootEntries(spans, parameters);
+          });
         });
       });
-    }
+    });
   });
 
   describe('header format from agent config', function () {
     const headerFormat = 'string';
     const customAgentControls = new AgentStubControls();
-    customAgentControls.registerTestHooks({
-      kafkaConfig: { headerFormat }
+    let consumerControls;
+    let producerControls;
+
+    before(async () => {
+      await customAgentControls.startAgent({
+        kafkaConfig: { headerFormat }
+      });
+
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        agentControls: customAgentControls
+      });
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        agentControls: customAgentControls
+      });
+
+      await consumerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection();
     });
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      agentControls: customAgentControls
-    }).registerTestHooks();
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      agentControls: customAgentControls
-    }).registerTestHooks();
+
+    after(async () => {
+      await customAgentControls.stopAgent();
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
 
     it(
       `must trace sending and receiving and keep trace continuity (header format ${headerFormat} ` +
         'from agent config)',
       async () => {
-        await send({
-          key: 'someKey',
-          value: 'someMessage',
-          producerControls
+        await producerControls.sendRequest({
+          method: 'POST',
+          path: '/send-messages',
+          simple: true,
+          body: {
+            key: 'someKey',
+            value: 'someMessage'
+          }
         });
+
         await retry(async () => {
           const messages = await getMessages(consumerControls);
           checkMessages(messages, { headerFormat });
@@ -297,30 +372,50 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
   describe('disable trace correlation from agent config', function () {
     const customAgentControls = new AgentStubControls();
-    customAgentControls.registerTestHooks({
-      kafkaConfig: { traceCorrelation: false }
+
+    let consumerControls;
+    let producerControls;
+
+    before(async () => {
+      await customAgentControls.startAgent({
+        kafkaConfig: { traceCorrelation: false }
+      });
+
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        agentControls: customAgentControls
+      });
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        agentControls: customAgentControls
+      });
+
+      await consumerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection();
     });
 
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      agentControls: customAgentControls
-    }).registerTestHooks();
-
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      agentControls: customAgentControls
-    }).registerTestHooks();
+    after(async () => {
+      await customAgentControls.stopAgent();
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
 
     const headerFormat = 'correlation-disabled';
+
     it(
       'must trace sending and receiving but will not keep trace continuity ' +
         '(trace correlation disabled from agent config)',
       async () => {
-        await send({
-          key: 'someKey',
-          value: 'someMessage',
-          producerControls
+        await producerControls.sendRequest({
+          method: 'POST',
+          path: '/send-messages',
+          simple: true,
+          body: {
+            key: 'someKey',
+            value: 'someMessage'
+          }
         });
+
         await retry(async () => {
           const messages = await getMessages(consumerControls);
           checkMessages(messages, { headerFormat });
@@ -334,20 +429,37 @@ mochaSuiteFn('tracing/kafkajs', function () {
   });
 
   describe('tracing disabled', () => {
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
-      tracingEnabled: false
-    });
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      useGlobalAgent: true,
-      tracingEnabled: false
-    });
-    ProcessControls.setUpHooks(producerControls, consumerControls);
+    let consumerControls;
+    let producerControls;
 
-    beforeEach(() => resetMessages(consumerControls));
-    afterEach(() => resetMessages(consumerControls));
+    before(async () => {
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        useGlobalAgent: true,
+        tracingEnabled: false
+      });
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        useGlobalAgent: true,
+        tracingEnabled: false
+      });
+
+      await consumerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
+
+    beforeEach(async () => {
+      await resetMessages(consumerControls);
+    });
+
+    afterEach(async () => {
+      await resetMessages(consumerControls);
+    });
 
     it('must not trace when disabled', async () => {
       const parameters = {
@@ -357,18 +469,23 @@ mochaSuiteFn('tracing/kafkajs', function () {
         useEachBatch: false
       };
 
-      await send({
-        key: 'someKey',
-        value: 'someMessage',
+      await producerControls.sendRequest({
+        method: 'POST',
+        path: '/send-messages',
+        simple: true,
         error: false,
-        useSendBatch: false,
-        useEachBatch: false,
-        producerControls
+        body: {
+          key: 'someKey',
+          value: 'someMessage',
+          useSendBatch: false,
+          useEachBatch: false
+        }
       });
+
       await retry(async () => {
         const messages = await getMessages(consumerControls);
         checkMessages(messages, parameters);
-        await delay(config.getTestTimeout() / 4);
+        await delay(1000);
         const spans = await agentControls.getSpans();
         expect(spans).to.have.lengthOf(0);
       });
@@ -378,23 +495,38 @@ mochaSuiteFn('tracing/kafkajs', function () {
   describe('must cope with non-standard length trace and span IDs', () => {
     // regression test for https://github.com/instana/nodejs/issues/833
 
-    const consumerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'consumer'),
-      useGlobalAgent: true
+    let consumerControls;
+    let producerControls;
+
+    before(async () => {
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        useGlobalAgent: true
+      });
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_KAFKA_HEADER_FORMAT: 'both'
+        }
+      });
+
+      await consumerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection();
     });
 
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      useGlobalAgent: true,
-      env: {
-        INSTANA_KAFKA_HEADER_FORMAT: 'both'
-      }
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
     });
 
-    ProcessControls.setUpHooks(consumerControls, producerControls);
+    beforeEach(async () => {
+      await resetMessages(consumerControls);
+    });
 
-    beforeEach(() => resetMessages(consumerControls));
-    afterEach(() => resetMessages(consumerControls));
+    afterEach(async () => {
+      await resetMessages(consumerControls);
+    });
 
     it('must pad short incoming trace and span IDs', async () => {
       await producerControls.sendRequest({
@@ -424,24 +556,6 @@ mochaSuiteFn('tracing/kafkajs', function () {
       });
     });
   });
-
-  // eslint-disable-next-line object-curly-newline
-  function send({ key, value, error, useSendBatch, useEachBatch, suppressTracing, producerControls }) {
-    const req = {
-      method: 'POST',
-      path: '/send-messages',
-      simple: true,
-      suppressTracing,
-      body: {
-        key,
-        value,
-        error,
-        useSendBatch,
-        useEachBatch
-      }
-    };
-    return producerControls.sendRequest(req);
-  }
 
   function resetMessages(consumer) {
     return consumer.sendRequest({

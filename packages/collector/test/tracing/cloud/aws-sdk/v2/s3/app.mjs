@@ -5,7 +5,7 @@
 
 'use strict';
 
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 import request from 'request-promise';
 import delay from '../../../../../../../core/test/test_util/delay.js';
 import AWS from 'aws-sdk';

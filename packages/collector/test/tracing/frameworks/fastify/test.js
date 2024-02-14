@@ -28,15 +28,25 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
       describe('path templates', () => {
         globalAgent.setUpCleanUpHooks();
 
-        processControls = new ProcessControls({
-          appPath: path.join(__dirname, 'app'),
-          useGlobalAgent: true,
-          env: {
-            FASTIFY_VERSION: version
-          }
+        before(async () => {
+          processControls = new ProcessControls({
+            appPath: path.join(__dirname, 'app'),
+            useGlobalAgent: true,
+            env: {
+              FASTIFY_VERSION: version
+            }
+          });
+
+          await processControls.startAndWaitForAgentConnection();
         });
 
-        ProcessControls.setUpHooks(processControls);
+        after(async () => {
+          await processControls.stop();
+        });
+
+        afterEach(async () => {
+          await processControls.clearIpcMessages();
+        });
 
         check('/', 200, { hello: 'world' }, '/');
         check('/hooks', 200, { hello: 'world' }, '/hooks');

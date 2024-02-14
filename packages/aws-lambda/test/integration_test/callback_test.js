@@ -7,5 +7,5 @@
 const lambdaType = 'callback';
 
 describe(`aws/lambda/${lambdaType}`, function () {
-  require('./test_definition').call(this, lambdaType);
+  require('./test_definition').call(this, lambdaType, true);
 });

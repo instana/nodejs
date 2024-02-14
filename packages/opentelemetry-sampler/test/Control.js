@@ -4,13 +4,10 @@
 
 'use strict';
 
-const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 const { fork } = require('child_process');
 const fetch = require('node-fetch');
-
-const {
-  assert: { fail }
-} = require('chai');
+const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
+const portfinder = require('../../collector/test/test_util/portfinder');
 
 class Control extends AbstractServerlessControl {
   constructor(opts) {
@@ -19,15 +16,25 @@ class Control extends AbstractServerlessControl {
 
     this.otelApp = null;
     this.messagesFromTestApp = [];
-    this.backendPort = this.opts.backendPort || 10455;
+
+    this.backendPort = this.opts.backendPort || portfinder();
+    this.port = this.opts.port || portfinder();
+
     this.useHttps = true;
     const protocol = this.useHttps ? 'https' : 'http';
     this.backendBaseUrl = this.opts.backendBaseUrl || `${protocol}://localhost:${this.backendPort}/serverless`;
+    this.instanaEndpoint = `${protocol}://localhost:${this.backendPort}/serverless`;
   }
 
   startMonitoredProcess() {
     this.otelApp = fork(this.opts.otelAppPath, {
-      env: { ...(this.opts.env || {}) }
+      env: Object.assign(
+        {
+          INSTANA_ENDPOINT_URL: this.instanaEndpoint,
+          APP_PORT: this.port
+        },
+        this.opts.env
+      )
     });
 
     this.otelApp.on('message', message => {
@@ -59,7 +66,7 @@ class Control extends AbstractServerlessControl {
       opts.extraHeaders || {}
     );
 
-    const response = await fetch(`http://localhost:${this.opts.env.PORT}${opts.path}`, {
+    const response = await fetch(`http://localhost:${this.port}${opts.path}`, {
       headers
     });
 
@@ -84,16 +91,8 @@ class Control extends AbstractServerlessControl {
     return this.killChildProcess(this.otelApp);
   }
 
-  registerTestHooks() {
-    super.registerTestHooks();
-
-    beforeEach(() => {
-      if (!this.opts.otelAppPath) {
-        fail('opts.otelAppPath is unspecified.');
-      }
-    });
-
-    return this;
+  getPort() {
+    return this.port;
   }
 }
 

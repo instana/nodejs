@@ -27,20 +27,24 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
   this.timeout(getTestTimeout() * 3);
 
   describe('should trace & export into Instana format', function () {
-    const backendPort = 10455;
-    const appControls = new Control({
-      backendPort,
-      startBackend: true,
-      otelAppPath: './test/app',
-      env: {
-        INSTANA_DISABLE_CA_CHECK: 'true',
-        PORT: 8215,
-        INSTANA_ENDPOINT_URL: `https://localhost:${backendPort}/`,
-        INSTANA_AGENT_KEY: 'some key'
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new Control({
+        startBackend: true,
+        otelAppPath: './test/app',
+        env: {
+          INSTANA_DISABLE_CA_CHECK: 'true',
+          INSTANA_AGENT_KEY: 'some key'
+        }
+      });
+
+      await appControls.start();
     });
 
-    appControls.registerTestHooks();
+    after(async () => {
+      await appControls.stop();
+    });
 
     it('when tracing is not suppressed', async () => {
       await appControls.sendRequest({
@@ -65,28 +69,33 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
         ];
         expect(spanNames).to.eql(spans.map(s => s.data.operation));
         expect(spans.length).to.eql(7);
-      }, 500);
+      });
     });
   });
 
   describe('should trace with Otel format', function () {
     const exporterEndpoint = 'http://example.com';
-    const backendPort = 10455;
-    const appControls = new Control({
-      backendPort,
-      startBackend: true,
-      otelAppPath: './test/app',
-      env: {
-        INSTANA_DISABLE_CA_CHECK: 'true',
-        PORT: 8215,
-        INSTANA_ENDPOINT_URL: `https://localhost:${backendPort}/`,
-        INSTANA_AGENT_KEY: 'some key',
-        OTEL_EXPORTER_OTLP_ENDPOINT: exporterEndpoint,
-        OTEL_EXPORTER_OTLP_INSECURE: 'true'
-      }
+
+    let appControls;
+
+    before(async () => {
+      appControls = new Control({
+        startBackend: true,
+        otelAppPath: './test/app',
+        env: {
+          INSTANA_DISABLE_CA_CHECK: 'true',
+          INSTANA_AGENT_KEY: 'some key',
+          OTEL_EXPORTER_OTLP_ENDPOINT: exporterEndpoint,
+          OTEL_EXPORTER_OTLP_INSECURE: 'true'
+        }
+      });
+
+      await appControls.start();
     });
 
-    appControls.registerTestHooks();
+    after(async () => {
+      await appControls.stop();
+    });
 
     it('when tracing is not suppressed', async () => {
       await appControls.sendRequest({
@@ -118,22 +127,27 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
 
   describe('should not trace with Otel format', function () {
     const exporterEndpoint = 'http://example.com';
-    const backendPort = 10455;
-    const appControls = new Control({
-      backendPort,
-      startBackend: true,
-      otelAppPath: './test/app',
-      env: {
-        INSTANA_DISABLE_CA_CHECK: 'true',
-        PORT: 8215,
-        INSTANA_ENDPOINT_URL: `https://localhost:${backendPort}/`,
-        INSTANA_AGENT_KEY: 'some key',
-        OTEL_EXPORTER_OTLP_ENDPOINT: exporterEndpoint,
-        OTEL_EXPORTER_OTLP_INSECURE: 'true'
-      }
+
+    let appControls;
+
+    before(async () => {
+      appControls = new Control({
+        startBackend: true,
+        otelAppPath: './test/app',
+        env: {
+          INSTANA_DISABLE_CA_CHECK: 'true',
+          INSTANA_AGENT_KEY: 'some key',
+          OTEL_EXPORTER_OTLP_ENDPOINT: exporterEndpoint,
+          OTEL_EXPORTER_OTLP_INSECURE: 'true'
+        }
+      });
+
+      await appControls.start();
     });
 
-    appControls.registerTestHooks();
+    after(async () => {
+      await appControls.stop();
+    });
 
     it('when tracing is suppressed', async () => {
       await appControls.sendRequest({
@@ -151,20 +165,24 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
   });
 
   describe('should not trace', function () {
-    const backendPort = 10455;
-    const appControls = new Control({
-      backendPort,
-      startBackend: true,
-      otelAppPath: './test/app',
-      env: {
-        INSTANA_DISABLE_CA_CHECK: 'true',
-        PORT: 8215,
-        INSTANA_ENDPOINT_URL: `https://localhost:${backendPort}/`,
-        INSTANA_AGENT_KEY: 'some key'
-      }
+    let appControls;
+
+    before(async () => {
+      appControls = new Control({
+        startBackend: true,
+        otelAppPath: './test/app',
+        env: {
+          INSTANA_DISABLE_CA_CHECK: 'true',
+          INSTANA_AGENT_KEY: 'some key'
+        }
+      });
+
+      await appControls.start();
     });
 
-    appControls.registerTestHooks();
+    after(async () => {
+      await appControls.stop();
+    });
 
     it('when tracing is suppressed', async () => {
       await appControls.sendRequest({
@@ -175,7 +193,7 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
       await retry(async () => {
         const spans = await appControls.getSpans();
         expect(spans.length).to.eql(0);
-      }, 500);
+      });
     });
   });
 });

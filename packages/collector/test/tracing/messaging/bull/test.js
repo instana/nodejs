@@ -45,7 +45,7 @@ const withErrorCases = [false, true];
 
 const getNextSendingOption = require('@instana/core/test/test_util/circular_list').getCircularList(sendingOptions);
 const getNextReceivingMethod = require('@instana/core/test/test_util/circular_list').getCircularList(receivingMethods);
-const retryTime = config.getTestTimeout() * 2;
+const retryTime = 1000;
 
 mochaSuiteFn('tracing/messaging/bull', function () {
   this.timeout(config.getTestTimeout() * 3);
@@ -54,34 +54,58 @@ mochaSuiteFn('tracing/messaging/bull', function () {
   const agentControls = globalAgent.instance;
 
   describe('tracing enabled, no suppression', function () {
-    const senderControls = new ProcessControls({
-      appPath: path.join(__dirname, 'sender'),
-      useGlobalAgent: true,
-      env: {
-        REDIS_SERVER: 'redis://127.0.0.1:6379',
-        BULL_QUEUE_NAME: queueName,
-        BULL_JOB_NAME: 'steve'
-      }
+    let senderControls;
+
+    before(async () => {
+      senderControls = new ProcessControls({
+        appPath: path.join(__dirname, 'sender'),
+        useGlobalAgent: true,
+        env: {
+          REDIS_SERVER: 'redis://127.0.0.1:6379',
+          BULL_QUEUE_NAME: queueName,
+          BULL_JOB_NAME: 'steve'
+        }
+      });
+
+      await senderControls.startAndWaitForAgentConnection();
     });
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls);
+    after(async () => {
+      await senderControls.stop();
+    });
+
+    afterEach(async () => {
+      await senderControls.clearIpcMessages();
+    });
 
     receivingMethods.forEach(receiveMethod => {
       describe(`receiving via ${receiveMethod} API`, () => {
-        const receiverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'receiver'),
-          useGlobalAgent: true,
-          env: {
-            REDIS_SERVER: 'redis://127.0.0.1:6379',
-            BULL_QUEUE_NAME: queueName,
-            BULL_RECEIVE_TYPE: receiveMethod,
-            BULL_JOB_NAME: 'steve',
-            BULL_JOB_NAME_ENABLED: 'true',
-            BULL_CONCURRENCY_ENABLED: 'true'
-          }
+        let receiverControls;
+
+        before(async () => {
+          receiverControls = new ProcessControls({
+            appPath: path.join(__dirname, 'receiver'),
+            useGlobalAgent: true,
+            env: {
+              REDIS_SERVER: 'redis://127.0.0.1:6379',
+              BULL_QUEUE_NAME: queueName,
+              BULL_RECEIVE_TYPE: receiveMethod,
+              BULL_JOB_NAME: 'steve',
+              BULL_JOB_NAME_ENABLED: 'true',
+              BULL_CONCURRENCY_ENABLED: 'true'
+            }
+          });
+
+          await receiverControls.startAndWaitForAgentConnection();
         });
 
-        ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+        after(async () => {
+          await receiverControls.stop();
+        });
+
+        afterEach(async () => {
+          await receiverControls.clearIpcMessages();
+        });
 
         const testId = uuid();
 
@@ -258,36 +282,60 @@ mochaSuiteFn('tracing/messaging/bull', function () {
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
 
-    const senderControls = new ProcessControls({
-      appPath: path.join(__dirname, 'sender'),
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {
-        REDIS_SERVER: 'redis://127.0.0.1:6379',
-        BULL_QUEUE_NAME: queueName,
-        BULL_JOB_NAME: 'steve'
-      }
-    });
+    let senderControls;
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls);
-
-    const receiveMethod = getNextReceivingMethod();
-    describe('sending and receiving', () => {
-      const receiverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'receiver'),
+    before(async () => {
+      senderControls = new ProcessControls({
+        appPath: path.join(__dirname, 'sender'),
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
           REDIS_SERVER: 'redis://127.0.0.1:6379',
           BULL_QUEUE_NAME: queueName,
-          BULL_RECEIVE_TYPE: receiveMethod,
-          BULL_JOB_NAME: 'steve',
-          BULL_JOB_NAME_ENABLED: 'true',
-          BULL_CONCURRENCY_ENABLED: 'true'
+          BULL_JOB_NAME: 'steve'
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+      await senderControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await senderControls.stop();
+    });
+
+    afterEach(async () => {
+      await senderControls.clearIpcMessages();
+    });
+
+    const receiveMethod = getNextReceivingMethod();
+    describe('sending and receiving', () => {
+      let receiverControls;
+
+      before(async () => {
+        receiverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'receiver'),
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            REDIS_SERVER: 'redis://127.0.0.1:6379',
+            BULL_QUEUE_NAME: queueName,
+            BULL_RECEIVE_TYPE: receiveMethod,
+            BULL_JOB_NAME: 'steve',
+            BULL_JOB_NAME_ENABLED: 'true',
+            BULL_CONCURRENCY_ENABLED: 'true'
+          }
+        });
+
+        await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
+      });
 
       const testId = uuid();
 
@@ -305,7 +353,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           });
 
           return retry(() => verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk }), retryTime)
-            .then(() => delay(config.getTestTimeout() / 4))
+            .then(() => delay(1000))
             .then(() => agentControls.getSpans())
             .then(spans => {
               if (spans.length > 0) {
@@ -318,34 +366,58 @@ mochaSuiteFn('tracing/messaging/bull', function () {
   });
 
   describe('tracing enabled but suppressed', () => {
-    const senderControls = new ProcessControls({
-      appPath: path.join(__dirname, 'sender'),
-      useGlobalAgent: true,
-      env: {
-        REDIS_SERVER: 'redis://127.0.0.1:6379',
-        BULL_QUEUE_NAME: queueName,
-        BULL_JOB_NAME: 'steve'
-      }
-    });
+    let senderControls;
 
-    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls);
-
-    const receiveMethod = getNextReceivingMethod();
-    describe('tracing suppressed', () => {
-      const receiverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'receiver'),
+    before(async () => {
+      senderControls = new ProcessControls({
+        appPath: path.join(__dirname, 'sender'),
         useGlobalAgent: true,
         env: {
           REDIS_SERVER: 'redis://127.0.0.1:6379',
           BULL_QUEUE_NAME: queueName,
-          BULL_RECEIVE_TYPE: receiveMethod,
-          BULL_JOB_NAME: 'steve',
-          BULL_JOB_NAME_ENABLED: 'true',
-          BULL_CONCURRENCY_ENABLED: 'true'
+          BULL_JOB_NAME: 'steve'
         }
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+      await senderControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await senderControls.stop();
+    });
+
+    afterEach(async () => {
+      await senderControls.clearIpcMessages();
+    });
+
+    const receiveMethod = getNextReceivingMethod();
+    describe('tracing suppressed', () => {
+      let receiverControls;
+
+      before(async () => {
+        receiverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'receiver'),
+          useGlobalAgent: true,
+          env: {
+            REDIS_SERVER: 'redis://127.0.0.1:6379',
+            BULL_QUEUE_NAME: queueName,
+            BULL_RECEIVE_TYPE: receiveMethod,
+            BULL_JOB_NAME: 'steve',
+            BULL_JOB_NAME_ENABLED: 'true',
+            BULL_CONCURRENCY_ENABLED: 'true'
+          }
+        });
+
+        await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
+      });
 
       const testId = uuid();
 
@@ -366,7 +438,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         return retry(async () => {
           await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
         }, retryTime)
-          .then(() => delay(config.getTestTimeout() / 4))
+          .then(() => delay(1000))
           .then(() => agentControls.getSpans())
           .then(spans => {
             if (spans.length > 0) {

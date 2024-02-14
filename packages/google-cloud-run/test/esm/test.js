@@ -12,10 +12,8 @@ const constants = require('@instana/core').tracing.constants;
 const Control = require('../Control');
 const { expectExactlyOneMatching } = require('../../../core/test/test_util');
 const config = require('../../../serverless/test/config');
-const retry = require('../../../serverless/test/util/retry');
+const retry = require('@instana/core/test/test_util/retry');
 const esmSupportedVersion = require('@instana/core').tracing.esmSupportedVersion;
-const downstreamDummyPort = 4568;
-const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 
 const region = 'us-central1';
 const instanceId =
@@ -30,59 +28,91 @@ const host = `gcp:cloud-run:revision:${revision}`;
 const containerAppPath = path.join(__dirname, './app.mjs');
 const instanaAgentKey = 'google-cloud-run-dummy-key';
 const testStartedAt = Date.now();
+
 function prelude(opts = {}) {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
-  if (opts.startBackend == null) {
-    opts.startBackend = true;
-  }
   let env = {
     ESM_TEST: true
   };
+
   if (opts.env) {
     env = {
       ...env,
       ...opts.env
     };
   }
-  const controlOpts = {
-    ...opts,
-    env,
-    containerAppPath,
-    downstreamDummyPort,
-    downstreamDummyUrl,
-    instanaAgentKey
-  };
-  return new Control(controlOpts).registerTestHooks();
+
+  return env;
 }
 // Run the tests only for supported node versions
 if (esmSupportedVersion(process.versions.node)) {
   describe('Google Cloud Run esm test', function () {
     describe('when the back end is up', function () {
-      const control = prelude.bind(this)();
+      const env = prelude.bind(this)();
 
-      it('should collect metrics and trace http requests', () =>
-        control
-          .sendRequest({
-            method: 'GET',
-            path: '/'
-          })
-          .then(response => verify(control, response, true)));
-    });
-    describe('when the back end is down', function () {
-      const control = prelude.bind(this)({
-        startBackend: false
+      let appControls;
+
+      before(async () => {
+        appControls = new Control({
+          containerAppPath,
+          instanaAgentKey,
+          startBackend: true,
+          env
+        });
+
+        await appControls.start();
       });
 
-      it('should ignore connection failures gracefully', () =>
-        control
+      after(async () => {
+        await appControls.stop();
+      });
+
+      it('should collect metrics and trace http requests', () => {
+        return appControls
           .sendRequest({
             method: 'GET',
             path: '/'
           })
-          .then(response => verify(control, response, false)));
+          .then(response => {
+            return verify(appControls, response, true);
+          });
+      });
     });
+
+    describe('when the back end is down', function () {
+      const env = prelude.bind(this)({});
+
+      let appControls;
+
+      before(async () => {
+        appControls = new Control({
+          containerAppPath,
+          instanaAgentKey,
+          startBackend: false,
+          env
+        });
+
+        await appControls.start();
+      });
+
+      after(async () => {
+        await appControls.stop();
+      });
+
+      it('should ignore connection failures gracefully', () => {
+        return appControls
+          .sendRequest({
+            method: 'GET',
+            path: '/'
+          })
+          .then(response => {
+            return verify(appControls, response, false);
+          });
+      });
+    });
+
     function verify(control, response, expectMetricsAndSpans) {
       expect(response.message).to.equal('Hello Google Cloud Run!');
       if (expectMetricsAndSpans) {
@@ -194,16 +224,16 @@ if (esmSupportedVersion(process.versions.node)) {
     }
 
     function getAndVerifySpans(control) {
-      return control.getSpans().then(spans => verifySpans(spans));
+      return control.getSpans().then(spans => verifySpans(spans, control));
     }
 
-    function verifySpans(spans) {
-      const entry = verifyHttpEntry(spans);
-      const exit = verifyHttpExit(spans, entry);
+    function verifySpans(spans, control) {
+      const entry = verifyHttpEntry(spans, control);
+      const exit = verifyHttpExit(spans, entry, control);
       return { entry, exit };
     }
 
-    function verifyHttpEntry(spans) {
+    function verifyHttpEntry(spans, control) {
       return expectExactlyOneMatching(spans, span => {
         expect(span.t).to.exist;
         expect(span.p).to.not.exist;
@@ -217,14 +247,14 @@ if (esmSupportedVersion(process.versions.node)) {
         expect(span.f.e).to.equal(instanceId);
         expect(span.data.http.method).to.equal('GET');
         expect(span.data.http.url).to.equal('/');
-        expect(span.data.http.host).to.equal('127.0.0.1:4216');
+        expect(span.data.http.host).to.equal(`127.0.0.1:${control.getPort()}`);
         expect(span.data.http.status).to.equal(200);
         expect(span.ec).to.equal(0);
         verifyHeaders(span);
       });
     }
 
-    function verifyHttpExit(spans, entry) {
+    function verifyHttpExit(spans, entry, control) {
       return expectExactlyOneMatching(spans, span => {
         expect(span.t).to.equal(entry.t);
         expect(span.p).to.equal(entry.s);
@@ -238,7 +268,7 @@ if (esmSupportedVersion(process.versions.node)) {
         expect(span.f.e).to.equal(instanceId);
         expect(span.data.http).to.be.an('object');
         expect(span.data.http.method).to.equal('GET');
-        expect(span.data.http.url).to.equal(downstreamDummyUrl);
+        expect(span.data.http.url).to.contain(control.downstreamDummyUrl);
         expect(span.ec).to.equal(0);
         verifyHeaders(span);
       });

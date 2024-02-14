@@ -29,7 +29,7 @@ mochaSuiteFn('tracing/sdk - force separate context for startEntrySpan', function
     let mochaSuiteFn2 = describe;
     if (
       contextImplementation === 'AsyncLocalStorage' &&
-      !semver.satisfies(process.versions.node, '12.17 - 16.6 || ^16.14 || >=17.2')
+      !semver.satisfies(process.versions.node, '16.0 - 16.6 || ^16.14 || >=17.2')
     ) {
       // eslint-disable-next-line no-console
       console.log(
@@ -44,13 +44,26 @@ mochaSuiteFn('tracing/sdk - force separate context for startEntrySpan', function
       if (contextImplementation === 'legacy cls-hooked') {
         env.INSTANA_FORCE_LEGACY_CLS = true;
       }
-      const controls = new ProcessControls({
-        appPath: path.join(__dirname, 'entry_span_context_app'),
-        useGlobalAgent: true,
-        env
+
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          appPath: path.join(__dirname, 'entry_span_context_app'),
+          useGlobalAgent: true,
+          env
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
 
-      ProcessControls.setUpHooks(controls);
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
 
       ['non-recursive', 'recursive'].forEach(callPattern => {
         ['async', 'promise', 'callback'].forEach(apiType => {

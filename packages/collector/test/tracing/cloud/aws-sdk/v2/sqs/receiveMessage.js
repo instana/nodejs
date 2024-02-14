@@ -32,7 +32,7 @@ const teeLogger = new TeeLogger(instanaLogger, collectingLogger);
 instana.setLogger(teeLogger);
 
 const port = require('../../../../../test_util/app-port')();
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const queueURL = process.env.AWS_SQS_QUEUE_URL;
 
 // Keep the default value above 5, as tests can fail if not all messages are fetched.

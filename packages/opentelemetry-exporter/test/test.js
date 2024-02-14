@@ -85,20 +85,24 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
 
   describe('Communication to the backend', () => {
     describe('When backend is started', () => {
-      const backendPort = 10433;
-      const appControls = new Control({
-        backendPort,
-        startBackend: true,
-        otelAppPath: './test/app',
-        env: {
-          INSTANA_DISABLE_CA_CHECK: 'true',
-          PORT: 6215,
-          INSTANA_ENDPOINT_URL: `https://localhost:${backendPort}/`,
-          INSTANA_AGENT_KEY: 'some key'
-        }
+      let appControls;
+
+      before(async () => {
+        appControls = new Control({
+          startBackend: true,
+          otelAppPath: './test/app',
+          env: {
+            INSTANA_DISABLE_CA_CHECK: 'true',
+            INSTANA_AGENT_KEY: 'some key'
+          }
+        });
+
+        await appControls.start();
       });
 
-      appControls.registerTestHooks();
+      after(async () => {
+        await appControls.stop();
+      });
 
       it('sends spans to the backend', async () => {
         // We need some time so OTel tracing starts
@@ -110,24 +114,28 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
 
         await retry(async () => {
           verifySpans(await appControls.getSpans(), appControls);
-        }, 500);
+        });
       });
     });
 
     describe('When backend is not started', () => {
-      const backendPort = 10433;
-      const appControls = new Control({
-        backendPort,
-        startBackend: false,
-        otelAppPath: './test/app',
-        env: {
-          PORT: 6215,
-          INSTANA_ENDPOINT_URL: `https://localhost:${backendPort}/`,
-          INSTANA_AGENT_KEY: 'some key'
-        }
+      let appControls;
+
+      before(async () => {
+        appControls = new Control({
+          startBackend: false,
+          otelAppPath: './test/app',
+          env: {
+            INSTANA_AGENT_KEY: 'some key'
+          }
+        });
+
+        await appControls.start();
       });
 
-      appControls.registerTestHooks();
+      after(async () => {
+        await appControls.stop();
+      });
 
       it('fails to send spans to the backend', async () => {
         // We need some time so OTel tracing starts
@@ -140,25 +148,30 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
         await retry(async () => {
           const spans = await appControls.getSpans();
           expect(spans.length).to.be.eq(0);
-        }, 500);
+        });
       });
     });
 
     describe('When environment variables are not properly set', () => {
-      const backendPort = 10433;
-      const appControls = new Control({
-        INSTANA_DISABLE_CA_CHECK: 'true',
-        backendPort,
-        startBackend: true,
-        otelAppPath: './test/app',
-        env: {
-          PORT: 6215,
-          INSTANA_ENDPOINT_URL: 'malformed URL',
-          INSTANA_AGENT_KEY: 'some key'
-        }
+      let appControls;
+
+      before(async () => {
+        appControls = new Control({
+          INSTANA_DISABLE_CA_CHECK: 'true',
+          startBackend: true,
+          otelAppPath: './test/app',
+          env: {
+            INSTANA_ENDPOINT_URL: 'malformed URL',
+            INSTANA_AGENT_KEY: 'some key'
+          }
+        });
+
+        await appControls.start();
       });
 
-      appControls.registerTestHooks();
+      after(async () => {
+        await appControls.stop();
+      });
 
       it('fails to send spans to the backend', async () => {
         // We need some time so OTel tracing starts
@@ -171,7 +184,7 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
         await retry(async () => {
           const spans = await appControls.getSpans();
           expect(spans.length).to.be.eq(0);
-        }, 500);
+        });
       });
     });
   });

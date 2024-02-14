@@ -58,18 +58,25 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 mochaSuiteFn('agent connection', function () {
   this.timeout(config.getTestTimeout());
 
-  const agentControls = require('./apps/agentStubControls');
+  const { AgentStubControls } = require('./apps/agentStubControls');
+  const agentControls = new AgentStubControls();
 
   const agentOpts = require('../src/agent/opts');
   const originalPort = agentOpts.port;
   let agentConnection;
 
-  agentControls.registerTestHooks();
+  before(async () => {
+    await agentControls.startAgent();
+  });
+  after(async () => {
+    await agentControls.stopAgent();
+  });
 
-  beforeEach(() => {
-    agentOpts.port = agentControls.agentPort;
+  beforeEach(async () => {
+    agentOpts.port = agentControls.getPort();
     agentConnection = require('../src/agentConnection');
-    return agentControls.simulateDiscovery(process.pid);
+    await agentControls.simulateDiscovery(process.pid);
+    await agentControls.clearReceivedData();
   });
 
   afterEach(() => {

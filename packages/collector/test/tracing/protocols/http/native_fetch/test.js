@@ -30,20 +30,35 @@ mochaSuiteFn('tracing/native fetch', function () {
 
   globalAgent.setUpTestCaseCleanUpHooks();
 
-  const serverControls = new ProcessControls({
-    appPath: path.join(__dirname, 'serverApp'),
-    useGlobalAgent: true
+  let serverControls;
+  let clientControls;
+
+  before(async () => {
+    serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'serverApp'),
+      useGlobalAgent: true
+    });
+    clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'clientApp'),
+      useGlobalAgent: true,
+      env: {
+        SERVER_PORT: serverControls.port
+      }
+    });
+
+    await serverControls.startAndWaitForAgentConnection();
+    await clientControls.startAndWaitForAgentConnection();
   });
 
-  const clientControls = new ProcessControls({
-    appPath: path.join(__dirname, 'clientApp'),
-    useGlobalAgent: true,
-    env: {
-      SERVER_PORT: serverControls.port
-    }
+  after(async () => {
+    await serverControls.stop();
+    await clientControls.stop();
   });
 
-  ProcessControls.setUpHooks(serverControls, clientControls);
+  afterEach(async () => {
+    await serverControls.clearIpcMessages();
+    await clientControls.clearIpcMessages();
+  });
 
   // See https://developer.mozilla.org/en-US/docs/Web/API/fetch#parameters.
 

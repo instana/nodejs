@@ -8,27 +8,25 @@
 const { fork } = require('child_process');
 const path = require('path');
 const request = require('request-promise');
-const {
-  assert: { fail }
-} = require('chai');
 
 const config = require('../../serverless/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
-
+const portfinder = require('../../collector/test/test_util/portfinder');
 const PATH_TO_INSTANA_FARGATE_PACKAGE = path.join(__dirname, '..');
 let execArg;
+
 function Control(opts) {
   AbstractServerlessControl.call(this, opts);
-  this.port = opts.port || 4215;
+  this.port = opts.port || portfinder();
   this.baseUrl = `http://127.0.0.1:${this.port}`;
-  this.backendPort = this.opts.backendPort || 9443;
+  this.backendPort = this.opts.backendPort || portfinder();
   this.backendBaseUrl = this.opts.backendBaseUrl || `https://localhost:${this.backendPort}/serverless`;
-  this.downstreamDummyPort = this.opts.downstreamDummyPort || 4567;
+  this.downstreamDummyPort = this.opts.downstreamDummyPort || portfinder();
   this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
-  this.metadataMockPort = this.opts.metadataMockPort || 1604;
+  this.metadataMockPort = this.opts.metadataMockPort || portfinder();
   this.metadataMockUrl = this.opts.metadataMockUrl || `http://localhost:${this.metadataMockPort}`;
-  this.proxyPort = this.opts.proxyPort || 4128;
-  this.proxyUrl = this.opts.proxyUrl || `http://localhost:${this.proxyPort}`;
+  this.proxyPort = this.opts.proxyPort;
+  this.proxyUrl = this.opts.proxyUrl;
   this.platformVersion = this.opts.platformVersion || '1.3.0';
   this.instanaAgentKey = this.opts.instanaAgentKey || 'aws-fargate-dummy-key';
 }
@@ -41,16 +39,6 @@ Control.prototype.reset = function reset() {
   this.messagesFromMetadataMock = [];
   this.fargateContainerAppHasStarted = false;
   this.fargateContainerAppHasTerminated = false;
-};
-
-Control.prototype.registerTestHooks = function registerTestHooks() {
-  AbstractServerlessControl.prototype.registerTestHooks.call(this);
-  beforeEach(() => {
-    if (!this.opts.containerAppPath) {
-      fail('opts.containerAppPath is unspecified.');
-    }
-  });
-  return this;
 };
 
 Control.prototype.startAdditionalAuxiliaryProcesses = function startAdditionalAuxiliaryProcesses() {
@@ -130,10 +118,7 @@ Control.prototype.hasMonitoredProcessTerminated = function hasMonitoredProcessTe
 };
 
 Control.prototype.killMonitoredProcess = function killMonitoredProcess() {
-  if (!this.hasMonitoredProcessTerminated()) {
-    return this.killChildProcess(this.fargateContainerApp);
-  }
-  return Promise.resolve();
+  return this.killChildProcess(this.fargateContainerApp);
 };
 
 Control.prototype.sendRequest = function (opts) {
@@ -145,6 +130,10 @@ Control.prototype.sendRequest = function (opts) {
   opts.url = this.baseUrl + opts.path;
   opts.json = true;
   return request(opts);
+};
+
+Control.prototype.getPort = function () {
+  return this.port;
 };
 
 module.exports = Control;

@@ -11,9 +11,8 @@ const fetch = require('node-fetch');
 const { sendToParent } = require('../../../core/test/test_util');
 
 const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;
-
-const port = process.env.PORT || 4216;
-
+const getAppPort = require('@instana/collector/test/test_util/app-port');
+const port = getAppPort();
 const app = new http.Server();
 
 app.on('request', (req, res) => {

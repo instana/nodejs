@@ -13,7 +13,7 @@ const express = require('express');
 const { Kafka } = require('kafkajs');
 
 const appPort = process.env.APP_PORT;
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const runAsStandAlone = !!process.env.RUN_AS_STAND_ALONE;
 
 const kafka = new Kafka({
@@ -59,7 +59,7 @@ app.post('/send-messages', (req, res) => {
   send(req.body)
     .then(() => (runAsStandAlone ? Promise.resolve() : request(`http://127.0.0.1:${agentPort}`)))
     .then(() => res.sendStatus(200))
-    .then(() => console.log('Messages have been sent.')) // eslint-disable-line
+    .then(() => log('Messages have been sent.')) // eslint-disable-line
     .catch(err => {
       if (error === 'producer') {
         log('Send error has been triggered.', err.message);

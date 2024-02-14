@@ -39,14 +39,46 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
 
   function registerSuite(http2) {
     describe(`tracing/W3C Trace Context (${http2 ? 'HTTP2' : 'HTTP1'})`, () => {
-      const allControls = startApps(http2);
-      const { instanaAppControls, otherVendorAppControls } = allControls;
+      let instanaAppControls;
+      let otherVendorAppControls;
+
+      before(async () => {
+        instanaAppControls = new ProcessControls({
+          appPath: path.join(__dirname, 'app'),
+          useGlobalAgent: true,
+          http2,
+          env: {
+            APM_VENDOR: 'instana',
+            DOWNSTREAM_PORT: otherVendorAppPort,
+            USE_HTTP2: http2
+          }
+        });
+        otherVendorAppControls = new ProcessControls({
+          appPath: path.join(__dirname, 'app'),
+          port: otherVendorAppPort,
+          http2,
+          // not passing agent controls because this app will not connect to the agent
+          env: {
+            APM_VENDOR: 'other-spec-compliant',
+            DOWNSTREAM_PORT: instanaAppControls.getPort(),
+            USE_HTTP2: http2
+          }
+        });
+
+        await instanaAppControls.startAndWaitForAgentConnection();
+        await otherVendorAppControls.start();
+      });
+
+      after(async () => {
+        await instanaAppControls.stop();
+        await otherVendorAppControls.stop();
+      });
 
       describe('Instana -> Other Vendor', () => {
         // First request to Instana does not have spec headers, so we expect a trace to be started.
         // We expect correct spec headers to be passed downstream by the Instana service. The trace ID in the spec
         // headers should be the one from the trace that Instana starts.
-        it('Instana should start a spec trace and pass the correct spec headers downstream', () =>
+        it('Instana should start a spec trace and pass the correct spec headers downstream', () => {
           startRequest({ app: instanaAppControls, depth: 1 }).then(response => {
             const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
             return retryUntilSpansMatch(agentControls, spans => {
@@ -59,7 +91,8 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
               expect(traceparent).to.match(new RegExp(`00-${LEFT_PAD_16}${instanaTraceId}-${instanaExitSpanId}-03`));
               expect(tracestate).to.match(new RegExp(`in=${instanaTraceId};${instanaExitSpanId}`));
             });
-          }));
+          });
+        });
 
         // First request to Instana already has spec headers, simulating a (spec) trace in progress. We expect the
         // Instana tracer to respect the incoming IDs, but limit the trace ID to 64 bit for backwards compatibility with
@@ -759,40 +792,6 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
     });
   }
 });
-
-function startApps(http2) {
-  const instanaAppControls = new ProcessControls({
-    appPath: path.join(__dirname, 'app'),
-    useGlobalAgent: true,
-    http2,
-    env: {
-      APM_VENDOR: 'instana',
-      DOWNSTREAM_PORT: otherVendorAppPort,
-      USE_HTTP2: http2
-    }
-  });
-  ProcessControls.setUpHooks(instanaAppControls);
-
-  const otherVendorAppControls = new ProcessControls({
-    appPath: path.join(__dirname, 'app'),
-    port: otherVendorAppPort,
-    http2,
-    // not passing agent controls because this app will not connect to the agent
-    env: {
-      APM_VENDOR: 'other-spec-compliant',
-      DOWNSTREAM_PORT: instanaAppControls.getPort(),
-      USE_HTTP2: http2
-    }
-  });
-
-  before(() => otherVendorAppControls.start());
-  after(() => otherVendorAppControls.stop());
-
-  return {
-    instanaAppControls,
-    otherVendorAppControls
-  };
-}
 
 function startRequest({ app, depth = 2, withSpecHeaders = null, otherMode = 'participate', withInstanaHeaders }) {
   const request = {

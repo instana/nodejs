@@ -6,34 +6,30 @@
 'use strict';
 
 const { fork } = require('child_process');
-const {
-  assert: { fail }
-} = require('chai');
-
-const retry = require('../../serverless/test/util/retry');
+const portfinder = require('@instana/collector/test/test_util/portfinder');
+const retry = require('@instana/core/test/test_util/retry');
 const config = require('../../serverless/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 
 function Control(opts) {
   AbstractServerlessControl.call(this, opts);
+
   // With `startExtension` you can start the extension stub on a different port.
   // parallel to the backend stub.
   if (this.opts.startExtension) {
-    this.extensionPort = 7365;
+    this.extensionPort = portfinder();
   }
 
-  if (this.opts.startBackend) {
-    this.backendPort = this.opts.backendPort || 8443;
-  }
-
+  this.backendPort = this.opts.backendPort || portfinder();
   this.useHttps = !this.opts.startExtension;
   const protocol = this.useHttps ? 'https' : 'http';
   this.backendBaseUrl = this.opts.backendBaseUrl || `${protocol}://localhost:${this.backendPort}/serverless`;
   this.extensionBaseUrl = `http://localhost:${this.extensionPort}`;
-  this.downstreamDummyPort = this.opts.downstreamDummyPort || 3456;
+  this.downstreamDummyPort = this.opts.downstreamDummyPort || portfinder();
   this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
-  this.proxyPort = this.opts.proxyPort || 3128;
-  this.proxyUrl = this.opts.proxyUrl || `http://localhost:${this.proxyPort}`;
+
+  this.longHandlerRun = this.opts.longHandlerRun || false;
+  this.proxyPort = this.opts.proxyPort;
 }
 
 Control.prototype = Object.create(AbstractServerlessControl.prototype);
@@ -48,18 +44,6 @@ Control.prototype.reset = function reset() {
   this.startedAt = 0;
 };
 
-Control.prototype.registerTestHooks = function registerTestHooks() {
-  AbstractServerlessControl.prototype.registerTestHooks.call(this);
-  beforeEach(() => {
-    if (!this.opts.faasRuntimePath) {
-      fail('opts.faasRuntimePath is unspecified.');
-    } else if (!this.opts.handlerDefinitionPath) {
-      fail('opts.handlerDefinitionPath is unspecified.');
-    }
-  });
-  return this;
-};
-
 Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
   this.faasRuntime = fork(this.opts.faasRuntimePath, {
     stdio: config.getAppStdio(),
@@ -70,7 +54,9 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
         DOWNSTREAM_DUMMY_URL: this.downstreamDummyUrl,
         INSTANA_DISABLE_CA_CHECK: this.useHttps,
         INSTANA_DEV_SEND_UNENCRYPTED: !this.useHttps,
-        WAIT_FOR_MESSAGE: true
+        WAIT_FOR_MESSAGE: true,
+        INSTANA_ENDPOINT_URL: this.backendBaseUrl,
+        INSTANA_LAYER_EXTENSION_PORT: this.extensionPort
       },
       process.env,
       this.opts.env
@@ -104,8 +90,13 @@ Control.prototype.runHandler = function runHandler({ context, event, eventOpts }
 };
 
 Control.prototype.waitUntilHandlerHasRun = function waitUntilHandlerHasRun() {
-  const timeout = this.opts.lambdaTimeout || this.opts.timeout / 2;
-  return retry(() => this.hasHandlerRunPromise(), timeout);
+  if (!this.opts.longHandlerRun) return retry(() => this.hasHandlerRunPromise());
+
+  return retry(
+    () => this.hasHandlerRunPromise(),
+    1000,
+    Date.now() + this.opts.env.DELAY * this.opts.env.ITERATIONS + 5000
+  );
 };
 
 Control.prototype.hasHandlerRunPromise = function hasHandlerRunPromise() {

@@ -31,21 +31,33 @@ describe('tracing/redis', function () {
 
     mochaSuiteFn(`redis@${redisVersion}`, function () {
       globalAgent.setUpCleanUpHooks();
+      let controls;
 
-      const controls = new ProcessControls({
-        dirname: __dirname,
-        useGlobalAgent: true,
-        env: {
-          REDIS_VERSION: redisVersion
-        }
+      before(async () => {
+        controls = new ProcessControls({
+          dirname: __dirname,
+          useGlobalAgent: true,
+          env: {
+            REDIS_VERSION: redisVersion
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
-      ProcessControls.setUpHooks(controls);
 
       before(async () => {
         await controls.sendRequest({
           method: 'POST',
           path: '/clearkeys'
         });
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
       });
 
       it('must trace set/get calls', () =>
@@ -673,13 +685,11 @@ describe('tracing/redis', function () {
           suppressTracing: true
         });
 
-        return retry(() => delay(config.getTestTimeout() / 4))
-          .then(() => agentControls.getSpans())
-          .then(spans => {
-            if (spans.length > 0) {
-              expect.fail(`Unexpected spans ${stringifyItems(spans)}.`);
-            }
-          });
+        await delay(1000);
+        const spans = await agentControls.getSpans();
+        if (spans.length > 0) {
+          expect.fail(`Unexpected spans: ${stringifyItems(spans)}`);
+        }
       });
 
       it('[suppressed] should not trace multi', async function () {
@@ -689,13 +699,11 @@ describe('tracing/redis', function () {
           suppressTracing: true
         });
 
-        return retry(() => delay(config.getTestTimeout() / 4))
-          .then(() => agentControls.getSpans())
-          .then(spans => {
-            if (spans.length > 0) {
-              expect.fail(`Unexpected spans ${stringifyItems(spans)}.`);
-            }
-          });
+        await delay(1000);
+        const spans = await agentControls.getSpans();
+        if (spans.length > 0) {
+          expect.fail(`Unexpected spans: ${stringifyItems(spans)}`);
+        }
       });
 
       it('call two different hosts', async () => {

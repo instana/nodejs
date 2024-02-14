@@ -15,14 +15,10 @@ const Control = require('../Control');
 const config = require('../../../serverless/test/config');
 const delay = require('../../../core/test/test_util/delay');
 const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
-const retry = require('../../../serverless/test/util/retry');
+const retry = require('@instana/core/test/test_util/retry');
 
 const { fail } = expect;
 
-const backendPort = 8443;
-const backendBaseUrl = `https://localhost:${backendPort}/serverless`;
-const downstreamDummyPort = 3456;
-const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
 // eslint-disable-next-line max-len
@@ -49,7 +45,6 @@ describe('AWS Lambda spec compliance', function () {
 function registerSuite(w3cTraceCorrelationDisabled) {
   describe('compliance test suite', () => {
     const env = {
-      INSTANA_ENDPOINT_URL: backendBaseUrl,
       INSTANA_AGENT_KEY: instanaAgentKey,
       LAMBDA_TRIGGER: 'api-gateway-proxy',
       INSTANA_SECRETS: 'contains-ignore-case:password,secret,token',
@@ -66,19 +61,31 @@ function registerSuite(w3cTraceCorrelationDisabled) {
       testCases = testCasesWithW3cTraceCorrelation;
     }
 
-    const control = new Control({
-      faasRuntimePath: path.join(__dirname, '../runtime_mock'),
-      handlerDefinitionPath: path.join(__dirname, './lambda.js'),
-      startBackend: true,
-      backendPort,
-      backendBaseUrl,
-      downstreamDummyUrl,
-      env
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: path.join(__dirname, './lambda.js'),
+        startBackend: true,
+        env
+      });
+
+      await control.start();
     });
-    control.registerTestHooks();
+
+    beforeEach(async () => {
+      control.reset();
+      await control.resetBackend();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
 
     testCases.forEach(testDefinition => {
       const label = `${testDefinition.index}: ${testDefinition.Scenario} -> ${testDefinition['What to do?']}`;
+
       it(label, async () => {
         const valuesForPlaceholders = {};
         let headers = {};
@@ -150,7 +157,7 @@ function registerSuite(w3cTraceCorrelationDisabled) {
           await retry(async () => {
             const spans = await control.getSpans();
             verifyHttpEntry(testDefinition, valuesForPlaceholders, spans, '/start');
-            verifyHttpExit(testDefinition, valuesForPlaceholders, spans);
+            verifyHttpExit(testDefinition, valuesForPlaceholders, spans, control);
           });
         }
       });
@@ -241,7 +248,7 @@ function verifyHttpEntry(testDefinition, valuesForPlaceholders, spans, url) {
   return expectExactlyOneMatching(spans, expectations);
 }
 
-function verifyHttpExit(testDefinition, valuesForPlaceholders, spans) {
+function verifyHttpExit(testDefinition, valuesForPlaceholders, spans, control) {
   const expectations = [
     span => expect(span.n).to.equal('node.http.client'),
     span => expect(span.k).to.equal(constants.EXIT),
@@ -249,7 +256,7 @@ function verifyHttpExit(testDefinition, valuesForPlaceholders, spans) {
     span => expect(span.t).to.be.a('string'),
     span => expect(span.s).to.be.a('string'),
     span => expect(span.data.http.method).to.equal('GET'),
-    span => expect(span.data.http.url).to.equal(`http://localhost:${downstreamDummyPort}/`),
+    span => expect(span.data.http.url).to.contain(control.downstreamDummyUrl),
     span => expect(span.data.http.status).to.equal(200)
   ];
   [

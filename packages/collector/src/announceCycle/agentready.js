@@ -27,6 +27,9 @@ const { isNodeVersionEOL } = require('../util/eol');
 const ONE_MINUTE = 60 * 1000;
 const EOL_EVENT_REFRESH_INTERVAL = 6 * 60 * ONE_MINUTE; // 6 hours
 const EOL_EVENT_DURATION = 6 * 60 * ONE_MINUTE + ONE_MINUTE; // 6 hours + 1 minute
+const FIRE_MONITORING_EVENT_DURATION_IN_MS = process.env.INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS
+  ? Number(process.env.INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS)
+  : 600000;
 
 /** @type {*} */
 let autoprofile;
@@ -54,8 +57,9 @@ if (agentOpts.autoProfile) {
         'collector: ' +
         'https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#native-add-ons'
     );
+
     fireMonitoringEvent();
-    setInterval(fireMonitoringEvent, 600000).unref();
+    setInterval(fireMonitoringEvent, FIRE_MONITORING_EVENT_DURATION_IN_MS).unref();
   }
 }
 

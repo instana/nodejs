@@ -31,23 +31,35 @@ mochaSuiteFn('tracing/kafka-node', function () {
 
   ['plain', 'highLevel'].forEach(producerType => {
     describe(`producing via: ${producerType}`, function () {
-      const producerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'producer'),
-        useGlobalAgent: true,
-        env: {
-          PRODUCER_TYPE: producerType
-        }
-      });
-      const consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
-        useGlobalAgent: true
-      });
-      ProcessControls.setUpHooks(producerControls, consumerControls);
+      let producerControls;
+      let consumerControls;
 
-      it(`must trace sending messages (producer type: ${producerType})`, () =>
-        send(producerControls, 'someKey', 'someMessage').then(() =>
-          testUtils.retry(() =>
-            getErrors(consumerControls)
+      before(async () => {
+        producerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'producer'),
+          useGlobalAgent: true,
+          env: {
+            PRODUCER_TYPE: producerType
+          }
+        });
+        consumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          useGlobalAgent: true
+        });
+
+        await consumerControls.startAndWaitForAgentConnection();
+        await producerControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await producerControls.stop();
+        await consumerControls.stop();
+      });
+
+      it(`must trace sending messages (producer type: ${producerType})`, () => {
+        return send(producerControls, 'someKey', 'someMessage').then(() => {
+          return testUtils.retry(() => {
+            return getErrors(consumerControls)
               .then(errors => {
                 expect(errors).to.be.an('array');
                 expect(errors).to.be.empty;
@@ -91,9 +103,10 @@ mochaSuiteFn('tracing/kafka-node', function () {
                   span => expect(span.t).to.equal(entrySpan.t),
                   span => expect(span.p).to.equal(entrySpan.s)
                 ]);
-              })
-          )
-        ));
+              });
+          });
+        });
+      });
     });
   });
 
@@ -104,21 +117,33 @@ mochaSuiteFn('tracing/kafka-node', function () {
   // eslint-disable-next-line array-bracket-spacing
   ['plain' /* 'highLevel', 'consumerGroup' */].forEach(consumerType => {
     describe(`consuming via: ${consumerType}`, () => {
-      const producerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'producer'),
-        useGlobalAgent: true,
-        env: {
-          PRODUCER_TYPE: 'plain'
-        }
+      let producerControls;
+      let consumerControls;
+
+      before(async () => {
+        producerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'producer'),
+          useGlobalAgent: true,
+          env: {
+            PRODUCER_TYPE: 'plain'
+          }
+        });
+        consumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          useGlobalAgent: true,
+          env: {
+            CONSUMER_TYPE: consumerType
+          }
+        });
+
+        await producerControls.startAndWaitForAgentConnection();
+        await consumerControls.startAndWaitForAgentConnection();
       });
-      const consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
-        useGlobalAgent: true,
-        env: {
-          CONSUMER_TYPE: consumerType
-        }
+
+      after(async () => {
+        await producerControls.stop();
+        await consumerControls.stop();
       });
-      ProcessControls.setUpHooks(producerControls, consumerControls);
 
       it(`must trace receiving messages (consumer type: ${consumerType})`, () =>
         send(producerControls, 'someKey', 'someMessage').then(() =>
