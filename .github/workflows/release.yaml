@@ -21,14 +21,6 @@ on:
         options:
         - false
         - true
-      skipCiStatusCheck:
-        description: "Skip CI status check"
-        required: false
-        default: false
-        type: choice
-        options:
-        - false
-        - true
 
 jobs:
   publish-release:
@@ -39,7 +31,6 @@ jobs:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       FROM_PACKAGE: ${{ inputs.fromPackage }}
       DRY_RUN: ${{ inputs.dryRun }}
-      SKIP_CI_STATUS_CHECK: ${{ inputs.skipCiStatusCheck }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -57,13 +48,7 @@ jobs:
         run: |
           node --version
           npm --version
-
-      - name: Check CircleCI status
-        run: |
-          if [[ $SKIP_CI_STATUS_CHECK != true ]]; then
-            bin/check-circle-ci-status.js
-          fi
-
+          
       - run: npm ci
 
       - name: Disallow major releases
@@ -133,11 +118,6 @@ jobs:
                     "short": true
                   },
                   {
-                    "title": "Skip CircleCI check?",
-                    "value": "${{ env.SKIP_CI_STATUS_CHECK }}",
-                    "short": true
-                  },
-                  {
                     "title": "Publish with from-package?",
                     "value": "${{ env.FROM_PACKAGE }}",
                     "short": true
@@ -191,11 +171,6 @@ jobs:
                   {
                     "title": "Dry Run?",
                     "value": "${{ env.DRY_RUN }}",
-                    "short": true
-                  },
-                  {
-                    "title": "Skip CircleCI check?",
-                    "value": "${{ env.SKIP_CI_STATUS_CHECK }}",
                     "short": true
                   },
                   {
