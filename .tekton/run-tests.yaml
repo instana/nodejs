@@ -45,6 +45,9 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         NPM_CACHE_PATH="$(workspaces.npm-cache.path)"
 
+        cd $NPM_CACHE_PATH
+        echo $(ls -la)
+
         cd $ARTIFACTS_PATH
 
         npm config set cache $NPM_CACHE_PATH
