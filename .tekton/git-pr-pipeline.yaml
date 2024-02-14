@@ -94,7 +94,7 @@ spec:
     - apiVersion: v1
       kind: PersistentVolumeClaim
       metadata:
-        name: pipelinerun-$(uid)-pvc
+        name: pipelinerun-$(uid)-artifacts
       spec:
         resources:
           requests:
@@ -126,7 +126,7 @@ spec:
         workspaces:
           - name: artifacts
             persistentVolumeClaim:
-              claimName: pipelinerun-$(uid)-pvc-artifacts
+              claimName: pipelinerun-$(uid)-artifacts
           - name: npm-cache
             persistentVolumeClaim:
               claimName: team-nodejs-npm-cache
