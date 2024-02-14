@@ -119,7 +119,7 @@ spec:
         securityContext:
           fsGroup: 65532
       metadata:
-        name: $(params.pr-branch)
+        name: $(params.pr-branch)-$(uid)
       spec:
         pipelineRef:
           name: pr-pipeline
