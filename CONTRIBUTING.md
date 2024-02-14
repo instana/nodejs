@@ -27,9 +27,11 @@ npm install -g npm@latest
 
 ## Executing Tests Locally
 
-Some of the tests require infrastructure components (databases etc.) to run locally. The easiest way to run all required components locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/). Start the script `bin/start-test-containers.sh` to set up all the necessary infrastructure. Once this is up, leave it running and, in second shell, start `bin/run-tests.sh`. This will set the necessary environment variables and kick off the tests.
+Some of the tests require infrastructure components (databases etc.) to run locally. The easiest way to run all required components locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/). Start the script `bin/start-test-containers.sh` to set up all the necessary infrastructure. 
 
-If you want to see the Node.js collector's debug output while running the tests, make sure the environment variable `WITH_STDOUT` is set to a non-empty string. You can also use `npm run test:debug` instead of `npm test` to achieve this.
+It's not recommended to run all tests using `bin/run-tests.sh` - it takes too long. Take a look at the root package.json and run a specific test group or run e.g. `bin/run-collector-tests.sh` with the mocha `.only` attribute.
+
+If you want to see the Node.js collector's debug output while running the tests, make sure the environment variable `WITH_STDOUT` is set to a non-empty string.
 
 ## Adding Tests
 
@@ -58,6 +60,7 @@ At the end of the execution it will open the coverage report in the browser and 
 the result.
 
 Circle CI executes `npm run coverage-all` once per week to generate a full coverage report.
+
 It's not recommended to run `coverage-all` locally, because it can take up to 1 1/2h.
 
 ## How to Contribute
@@ -160,10 +163,6 @@ These rules apply first and foremost to production dependencies (that is, `depen
 
 When adding a new package to this monorepo, there are a few things to consider.
 
-### CircleCI Caching
-
-Reminder for all new packages: Check if `.circleci/config.yml` has `save_cache`/`restore_cache` entries for the new package.
-
 ### Package.json
 
 For all new packages, make sure that a handful of npm scripts are part of package.json.
@@ -172,9 +171,8 @@ These scripts can be used by lerna, specially during CI builds:
 ```javascript
 "scripts": {
     "audit": "npm audit --omit=dev",
-    "test": "NODE_ENV=debug mocha --sort $(find test -iname '*test.js' -not -path '*node_modules*')",
+    "test": "NODE_ENV=debug mocha --sort $(find test -iname '*test.js')",
     "test:debug": "WITH_STDOUT=true npm run test",
-    "test:ci": "echo \"******* Files to be tested:\n $CI_CORE_TEST_FILES\" && if [ -z \"${CI_CORE_TEST_FILES}\" ]; then echo \"No test files have been assigned to this CircleCI executor.\"; else mocha --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js --sort ${CI_CORE_TEST_FILES}; fi",
     "lint": "eslint src test",
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
@@ -198,12 +196,11 @@ The process to publish a new minor or patch release (that is, new versions of al
 - you do not need to change any settings (dry run etc.) the default values are fine
 - click on the "Run workflow" button to trigger the action
 
-The Github action will try to publish new versions for all packages from the most recent commit of the `main` branch. It will check if there is at least one successful CircleCI build for that commit hash for the main `build` workflow as well as for the `other-nodejs-versions` workflow. If that check fails, the Github action will abort. Otherwise it will go on to publish new releases to npm accordingly.
+The Github action will try to publish new versions for all packages from the most recent commit of the `main` branch. 
 
 Parameters for the release Github action:
 * "Use lerna publish from-package": Instead of executing `lerna publish`, the action will execute `lerna publish from-package`. See [below](#separate-lerna-version-and-lerna-publish) for the use case for this parameter. If in doubt, leave it unchanged (that is, `false`).
 * "Dry Run": With this option set to true, the Github action will not actually create a release but only apply all changes (package.json and package-lock.json files, CHANGELOG files). The action log will show the resulting diff at the end. The changes will not be committed. This can be used to preview the changes the release action would apply. If this option is `true`, the option "Use lerna publish from-package" has no effect.
-* "Skip CI status check": With this option set to true, the Github action will skip the preliminary check for successful CircleCI builds. This option should only be used for test purposes together with "Dry Run", or if actual lives depend on us publishing a release _right now_, without waiting for CircleCI.
 
 Lerna will determine if this is going to be a minor or patch version from the commit comments of all commits since the last release. It will also automatically update the CHANGELOG.md files in the root of the repository and also in all individual packages, based on those commits.
 
