@@ -491,12 +491,20 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
-      const controls = new ProcessControls({
-        appPath: path.join(__dirname, './tedious-app'),
-        useGlobalAgent: true
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          appPath: path.join(__dirname, './tedious-app'),
+          useGlobalAgent: true
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
 
-      ProcessControls.setUpHooks(controls);
+      after(async () => {
+        await controls.stop();
+      });
 
       const sendRequestAndVerifySpans = (method, endpoint, expectedStatement) =>
         controls
