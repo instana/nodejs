@@ -5,12 +5,12 @@
 
 'use strict';
 
-const util = require('util');
+// const util = require('util');
 const { expect } = require('chai');
 const fs = require('node:fs/promises');
 const os = require('os');
 const path = require('path');
-const rimraf = util.promisify(require('rimraf'));
+// const rimraf = util.promisify(require('rimraf'));
 
 const config = require('../../../core/test/config');
 const { retry } = require('../../../core/test/test_util');
@@ -124,7 +124,7 @@ function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
     });
 
     after(async () => {
-      await rimraf(opts.nativeModulePath);
+      // await rimraf(opts.nativeModulePath);
       await rename(opts.backupPath, opts.nativeModulePath);
     });
 
