@@ -1,0 +1,20 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: test-task
+  namespace: tekton-pipelines
+spec:
+  workspaces:
+  - name: cache
+  steps:
+    - name: echo
+      image: node:18
+      workingDir: /workspace/source
+      script: |
+        #!/bin/bash
+
+        echo $(workspaces.cache.path)
+        
+        echo $(ls -la $(workspaces.cache.path))
+        cd $(workspaces.cache.path)
+        touch .this-is-a-test

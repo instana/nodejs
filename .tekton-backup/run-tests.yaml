@@ -1,0 +1,89 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: run-tests
+  namespace: tekton-pipelines
+spec:
+  sidecars:
+    - name: start-mysql
+      image: mysql:8.0.1
+      env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: nodepw
+        - name: MYSQL_DATABASE
+          value: nodedb
+        - name: MYSQL_USER
+          value: node
+        - name: MYSQL_PASSWORD
+          value: nodepw
+        - name: MYSQL_ROOT_HOST
+          value: 0.0.0.0
+      command:
+        - "/bin/sh"
+        - "-c"
+      args:
+        - |
+          # Add any initialization steps for your database if needed
+          # For example: Run database migrations, seed data, etc.
+          echo "MySQL database is running, perform initialization steps here."
+  volumes:
+    - name: shared-storage
+      persistentVolumeClaim:
+        claimName: team-nodejs-ci-shared-pvc
+  steps:
+    - name: read-from-cache
+      image: node:18
+      script: |
+        #!/bin/bash
+
+        echo $(ls -la /)
+        echo $(ls -la /mnt/)
+        echo $(ls -la /workspace/)
+        echo $(ls -la /artifacts/)
+        echo $(ls -la /home/)
+        echo $(ls -la /npm-cache/)
+
+        NPM_CACHE_PATH="/npm-cache"
+        echo "Reading from cache"
+        echo $NPM_CACHE_PATH
+
+        cd $NPM_CACHE_PATH
+        echo $(ls -la)
+    - name: add-to-cache
+      image: node:18
+      script: |
+        #!/bin/bash
+
+        NPM_CACHE_PATH="/npm-cache"
+        echo "Adding to cache"
+
+        cd $NPM_CACHE_PATH
+        touch .cached
+        echo $(ls -la)
+    - name: ping-port
+      image: ubuntu
+      script: |
+        #!/bin/bash
+        apt-get update && apt-get install -y netcat
+        timeout 60s /bin/bash -c 'while ! nc -z -v -w1 localhost 3306; do sleep 1; done'
+        echo "MySQL connection successful!"
+    - name: tests
+      image: node:18
+      script: |
+        #!/bin/bash
+
+        NPM_CACHE_PATH="/npm-cache"
+        echo $(ls -la $NPM_CACHE_PATH)
+        cp -R $NPM_CACHE_PATH/* /artifacts/node_modules || true
+
+        cd /artifacts
+
+        npm install
+
+        echo "Saving node_modules cache...."
+        cp -R /artifacts/node_modules $NPM_CACHE_PATH
+        echo "Saved node_modules cache...."
+
+        echo $(ls -la $NPM_CACHE_PATH)
+
+        npm run test:ci:collector:general      

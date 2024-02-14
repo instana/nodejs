@@ -1,0 +1,13 @@
+apiVersion: tekton.dev/v1beta1
+kind: PersistentVolumeClaim
+metadata:
+  name: repo-artifacts
+spec:
+  resources:
+    requests:
+      storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ibmc-vpc-block-retain-10iops-tier

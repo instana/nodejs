@@ -1,0 +1,235 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: pr-pipeline
+  namespace: tekton-pipelines
+spec:
+  params:
+    - name: repository
+      description: the git repo
+    - name: branch
+      description: branch
+    - name: revision
+      description: the git revision/commit for the git repo
+      default: ""
+    - name: pipeline-debug
+      description: toggles debug mode for the pipeline
+    - name: ibmcloud-api
+      description: the ibmcloud api
+      default: https://cloud.ibm.com
+    - name: pr-repository
+      value: $(params.pr-repository)
+    - name: pr-branch
+      value: $(params.pr-branch)
+    - name: commit-id
+      value: $(params.commit-id)
+    - name: pr-number
+      value: $(params.pr-number)
+  workspaces:
+    - name: my-cache
+  tasks:  
+    - name: test
+      taskRef:
+        name: test-task
+      workspaces:
+      - name: cache
+        workspace: my-cache
+
+    # - name: extract-repository-url
+    #   taskRef:
+    #     name: toolchain-extract-value
+    #   params:
+    #     - name: expression
+    #       # if a params.repository is given, it takes precedence
+    #       value: '. as $toolchain | ["$(params.repository)"] | if .[0]=="" then $toolchain | .services[] | select(.toolchain_binding.name=="repo") | .dashboard_url else .[0] end'
+    #     - name: pipeline-debug
+    #       value: $(params.pipeline-debug)
+    # - name: git-fetch-repo
+    #   taskRef:
+    #     name: git-clone-repo
+    #   runAfter:
+    #     - extract-repository-url        
+    #   params:
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: ibmcloud-apikey-secret-key
+    #       value: "apikey"
+    #     - name: repository
+    #       value: $(tasks.extract-repository-url.results.extracted-value)
+    #     - name: branch
+    #       value: "main"
+    #     - name: revision
+    #       value: $(params.revision)
+    #     - name: pr-number
+    #       value: $(params.pr-number)          
+    #     - name: pipeline-debug
+    #       value: $(params.pipeline-debug)
+    #     - name: ibmcloud-api
+    #       value: $(params.ibmcloud-api)
+    #     - name: pr-repository
+    #       value: $(params.pr-repository)
+    #     - name: pr-branch
+    #       value: $(params.pr-branch)
+    #   volumeMounts:
+    #     - name: workspace-volume
+    #       mountPath: /home/artifcats
+    # - name: set-tests-running
+    #   runAfter:
+    #     - git-fetch-repo
+    #   taskRef:
+    #     name: git-set-commit-status
+    #   volumeMounts:
+    #     - name: workspace-volume
+    #       mountPath: /home/artifcats
+    #   params:
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: context
+    #       value: "node-18-dev"
+    #     - name: description
+    #       value: "test"
+    #     - name: state
+    #       value: "pending"
+    #     - name: pipeline-debug
+    #       value: $(params.pipeline-debug)             
+    # - name: run-tests
+    #   taskRef:
+    #     name: run-tests
+    #   runAfter:
+    #     - git-fetch-repo        
+    #   volumeMounts:
+    #     - name: workspace-volume
+    #       mountPath: /home/artifcats
+    # - name: set-tests-finished
+    #   taskRef:
+    #     name: git-set-commit-status
+    #   runAfter:
+    #     - run-tests
+    #   volumeMounts:
+    #     - name: workspace-volume
+    #       mountPath: /home/artifcats
+    #   params:
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: context
+    #       value: "node-18-dev"
+    #     - name: description
+    #       value: "test"
+    #     - name: state
+    #       value: "success"
+    #     - name: pipeline-debug
+    #       value: $(params.pipeline-debug)
+
+---
+
+apiVersion: tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: pr-template
+  namespace: tekton-pipelines
+spec:
+  params:
+    - name: repository
+      description: The git repo
+    - name: branch
+      description: branch
+    - name: pipeline-debug
+      description: toggles debug mode for the pipeline
+      default: "0"
+    - name: ibmcloud-api
+      description: the ibmcloud api
+      default: https://cloud.ibm.com
+    - name: pr-repository
+      description: The forked git repo from where the PR is made
+    - name: pr-branch
+      description: The branch in the forked git repo from where the PR is made
+    - name: pr-number
+      description: The branch in the forked git repo from where the PR is made
+    - name: commit-id
+      description: SHA
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: repo-artifacts
+      spec:
+        resources:
+          requests:
+            storage: 5Gi
+        accessModes:
+          - ReadWriteOnce
+        volumeMode: Filesystem
+        persistentVolumeReclaimPolicy: Retain
+        storageClassName: my-custom-storageclass
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      podTemplate:
+        securityContext:
+          fsGroup: 65532
+      metadata:
+        name: $(params.pr-branch)-$(params.commit-id)
+        namespace: tekton-pipelines
+      spec:
+        workspaces:
+          - name: my-cache
+            persistentVolumeClaim:
+              claimName: repo-artifacts      
+        pipelineRef:
+          name: pr-pipeline
+        params:
+          - name: repository
+            value: $(params.repository)
+          - name: branch
+            value: $(params.branch)
+          - name: pipeline-debug
+            value: $(params.pipeline-debug)
+          - name: ibmcloud-api
+            value: $(params.ibmcloud-api)
+          - name: pr-repository
+            value: $(params.pr-repository)
+          - name: pr-branch
+            value: $(params.pr-branch)
+          - name: pr-number
+            value: $(params.pr-number)
+          - name: commit-id
+            value: $(params.commit-id)
+---
+
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: github-pr-binding
+  namespace: tekton-pipelines
+spec:
+  params:
+    - name: branch
+      value: $(event.pull_request.base.ref)
+    - name: pr-number
+      value: $(event.pull_request.number)
+    - name: pr-name
+      value: $(event.pull_request.user.login)
+    - name: repository
+      value: $(event.repository.html_url)
+    - name: pr-repository
+      value: $(event.pull_request.head.repo.html_url)
+    - name: pr-branch
+      value: $(event.pull_request.head.ref)
+    - name: commit-id
+      value: $(event.pull_request.head.sha)
+---
+
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: github-pr-listener
+  namespace: tekton-pipelines
+spec:
+  triggers:
+    - bindings:
+        - name: github-pr-binding
+      template:
+        name: pr-template

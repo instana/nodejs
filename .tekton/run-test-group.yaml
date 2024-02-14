@@ -1,0 +1,71 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: run-test-group
+spec:
+  sidecars:
+    - name: start-mysql
+      image: mysql:8.0.1
+      env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: nodepw
+        - name: MYSQL_DATABASE
+          value: nodedb
+        - name: MYSQL_USER
+          value: node
+        - name: MYSQL_PASSWORD
+          value: nodepw
+        - name: MYSQL_ROOT_HOST
+          value: 0.0.0.0
+    - name: elasticsearch
+      image: docker.elastic.co/elasticsearch/elasticsearch:8.6.1
+      env:
+        - name: "discovery.type"
+          value: single-node
+        - name: "ES_JAVA_OPTS"
+          value: "-Xms500m -Xmx500m"
+        - name: xpack.security.enabled
+          value: false
+  results:
+    - name: my-result
+      description: group resulsts
+  params:
+    - name: node-version
+      value: $(params.node-version)
+    - name: group
+      value: $(params.group)
+  workspaces:
+    - name: output
+      mountPath: /artifacts
+  steps:
+    - name: wait-for-containers
+      image: ubuntu
+      script: |
+        #!/bin/bash
+        apt-get update && apt-get install -y netcat
+
+        timeout 10s
+
+        /bin/bash -c 'while ! nc -z -v -w1 localhost 3306; do sleep 1; done'
+        # /bin/bash -c 'while ! nc -z -v -w1 127.0.0.1 9200; do sleep 1; done'
+    - name: run-test-group
+      image: node:$(params.node-version)
+      runAfter:
+        - wait-for-containers
+      script: |
+        #!/bin/bash
+
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+
+        # Replace the following line with your actual test command
+        npm run $(params.group)
+
+        if [ $? -eq 0 ]; then
+          echo "Test command succeeded"
+          echo -n "success" > "$(results.my-result.path)"
+        else
+          echo "Test command failed"
+          echo -n "failure" > "$(results.my-result.path)"
+          exit 1  # Set the overall exit code to indicate failure
+        fi
