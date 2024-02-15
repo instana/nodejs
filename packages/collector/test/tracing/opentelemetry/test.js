@@ -487,6 +487,130 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           )
         ));
   });
+  describe('tedious', function () {
+    describe('opentelemetry is enabled', function () {
+      globalAgent.setUpCleanUpHooks();
+      const agentControls = globalAgent.instance;
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          appPath: path.join(__dirname, './tedious-app'),
+          useGlobalAgent: true,
+          env: {
+            OTEL_ENABLED: true
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      const sendRequestAndVerifySpans = (method, endpoint, expectedStatement) =>
+        controls
+          .sendRequest({
+            method,
+            path: endpoint
+          })
+          .then(() => delay(DELAY_TIMEOUT_IN_MS))
+          .then(() =>
+            retry(() =>
+              agentControls.getSpans().then(spans => {
+                expect(spans.length).to.equal(2);
+
+                const httpEntry = verifyHttpRootEntry({
+                  spans,
+                  apiPath: endpoint,
+                  pid: String(controls.getPid())
+                });
+
+                verifyExitSpan({
+                  spanName: 'otel',
+                  spans,
+                  parent: httpEntry,
+                  withError: false,
+                  pid: String(controls.getPid()),
+                  dataProperty: 'tags',
+                  extraTests: span => {
+                    const queryType = endpoint === '/packages/batch' ? 'execSqlBatch' : 'execSql';
+                    expect(span.data.tags.name).to.eql(`${queryType} azure-nodejs-test`);
+                    expect(span.data.tags['db.system']).to.eql('mssql');
+                    expect(span.data.tags['db.name']).to.eql('azure-nodejs-test');
+                    expect(span.data.tags['db.user']).to.eql('admin@instana@nodejs-db-server');
+                    expect(span.data.tags['db.statement']).to.eql(expectedStatement);
+                    expect(span.data.tags['net.peer.name']).to.eql('nodejs-db-server.database.windows.net');
+                    checkTelemetryResourceAttrs(span);
+                  }
+                });
+              })
+            )
+          );
+      it('should trace select queries', () => sendRequestAndVerifySpans('GET', '/packages', 'SELECT * FROM packages'));
+      it('should trace batch queries', function (done) {
+        sendRequestAndVerifySpans(
+          'POST',
+          '/packages/batch',
+          "\n  INSERT INTO packages (id, name, version) VALUES (11, 'BatchPackage1', 1);\n  " +
+            "INSERT INTO packages (id, name, version) VALUES (11, 'BatchPackage2', 2);\n"
+        )
+          .then(() => {
+            done();
+          })
+          .catch(err => done(err));
+      });
+      it('should trace delete queries', () =>
+        sendRequestAndVerifySpans('DELETE', '/packages', 'DELETE FROM packages WHERE id = 11'));
+
+      it('[suppressed] should not trace', () =>
+        controls
+          .sendRequest({
+            method: 'GET',
+            path: '/packages',
+            suppressTracing: true
+          })
+          .then(() => delay(DELAY_TIMEOUT_IN_MS))
+          .then(() => retry(() => agentControls.getSpans().then(spans => expect(spans).to.be.empty))));
+    });
+    describe('opentelemetry is disabled', function () {
+      globalAgent.setUpCleanUpHooks();
+      const agentControls = globalAgent.instance;
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          appPath: path.join(__dirname, './tedious-app'),
+          useGlobalAgent: true,
+          env: {
+            OTEL_ENABLED: false
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+      it('should not trace', () => {
+        controls
+          .sendRequest({
+            method: 'GET',
+            path: '/packages'
+          })
+          .then(() => delay(DELAY_TIMEOUT_IN_MS))
+          .then(() =>
+            retry(() => {
+              return agentControls.getSpans().then(spans => {
+                expect(spans).to.be.empty;
+              });
+            })
+          );
+      });
+    });
+  });
 });
 
 function checkTelemetryResourceAttrs(span) {
