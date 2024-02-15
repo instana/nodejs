@@ -496,7 +496,10 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       before(async () => {
         controls = new ProcessControls({
           appPath: path.join(__dirname, './tedious-app'),
-          useGlobalAgent: true
+          useGlobalAgent: true,
+          env: {
+            OTEL_ENABLED: true
+          }
         });
 
         await controls.startAndWaitForAgentConnection();
@@ -570,6 +573,42 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           })
           .then(() => delay(DELAY_TIMEOUT_IN_MS))
           .then(() => retry(() => agentControls.getSpans().then(spans => expect(spans).to.be.empty))));
+    });
+    describe('opentelemetry is disabled', function () {
+      globalAgent.setUpCleanUpHooks();
+      const agentControls = globalAgent.instance;
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          appPath: path.join(__dirname, './tedious-app'),
+          useGlobalAgent: true,
+          env: {
+            OTEL_ENABLED: false
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+      it('should not trace', () => {
+        controls
+          .sendRequest({
+            method: 'GET',
+            path: '/packages'
+          })
+          .then(() => delay(DELAY_TIMEOUT_IN_MS))
+          .then(() =>
+            retry(() => {
+              return agentControls.getSpans().then(spans => {
+                expect(spans).to.be.empty;
+              });
+            })
+          );
+      });
     });
   });
 });

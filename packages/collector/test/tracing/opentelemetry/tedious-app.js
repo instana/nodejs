@@ -6,7 +6,7 @@
 
 require('../../..')({
   tracing: {
-    useOpentelemetry: true
+    useOpentelemetry: process.env.OTEL_ENABLED
   }
 });
 const express = require('express');
