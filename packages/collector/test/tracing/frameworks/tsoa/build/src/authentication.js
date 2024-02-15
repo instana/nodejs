@@ -1,42 +1,11 @@
-'use strict';
-var __awaiter =
-  (this && this.__awaiter) ||
-  function (thisArg, _arguments, P, generator) {
-    function adopt(value) {
-      return value instanceof P
-        ? value
-        : new P(function (resolve) {
-            resolve(value);
-          });
-    }
-    return new (P || (P = Promise))(function (resolve, reject) {
-      function fulfilled(value) {
-        try {
-          step(generator.next(value));
-        } catch (e) {
-          reject(e);
-        }
-      }
-      function rejected(value) {
-        try {
-          step(generator['throw'](value));
-        } catch (e) {
-          reject(e);
-        }
-      }
-      function step(result) {
-        result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-      }
-      step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-  };
-Object.defineProperty(exports, '__esModule', { value: true });
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.expressAuthentication = void 0;
 class CustomError extends Error {
-  constructor(msg) {
-    super(msg);
-    this.status = 401;
-  }
+    constructor(msg) {
+        super(msg);
+        this.status = 401;
+    }
 }
 /*
 export function expressAuthentication(request: express.Request, securityName: string, scopes?: string[]): Promise<any> {
@@ -51,12 +20,10 @@ export function expressAuthentication(request: express.Request, securityName: st
   });
 }
 */
-function expressAuthentication(request, securityName, scopes) {
-  return __awaiter(this, void 0, void 0, function* () {
+async function expressAuthentication(request, securityName, scopes) {
     if (securityName === 'yyy') {
-      const err = new CustomError('no way');
-      throw err;
+        const err = new CustomError('no way');
+        throw err;
     }
-  });
 }
 exports.expressAuthentication = expressAuthentication;

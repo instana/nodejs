@@ -1,4 +1,5 @@
 {
+	"openapi": "3.0.0",
 	"components": {
 		"examples": {},
 		"headers": {},
@@ -74,7 +75,6 @@
 		"title": "",
 		"contact": {}
 	},
-	"openapi": "3.0.0",
 	"paths": {
 		"/api/users/auth-error": {
 			"get": {
