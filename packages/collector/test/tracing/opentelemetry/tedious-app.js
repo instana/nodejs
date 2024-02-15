@@ -22,16 +22,18 @@ app.use(bodyParser.json());
 
 const azureConfig = process.env.AZURE_SQL_CONFIG ? JSON.parse(process.env.AZURE_SQL_CONFIG, 'utf-8') : null;
 const config = {
-  server: azureConfig.AZURE_SQL_SERVER ? azureConfig.AZURE_SQL_SERVER : process.env.AZURE_SQL_SERVER,
+  server: azureConfig && azureConfig.AZURE_SQL_SERVER ? azureConfig.AZURE_SQL_SERVER : process.env.AZURE_SQL_SERVER,
   authentication: {
     type: 'default',
     options: {
-      userName: azureConfig.AZURE_SQL_USERNAME ? azureConfig.AZURE_SQL_USERNAME : process.env.AZURE_SQL_USERNAME,
-      password: azureConfig.AZURE_SQL_PWD ? azureConfig.AZURE_SQL_PWD : process.env.AZURE_SQL_PWD
+      userName:
+        azureConfig && azureConfig.AZURE_SQL_USERNAME ? azureConfig.AZURE_SQL_USERNAME : process.env.AZURE_SQL_USERNAME,
+      password: azureConfig && azureConfig.AZURE_SQL_PWD ? azureConfig.AZURE_SQL_PWD : process.env.AZURE_SQL_PWD
     }
   },
   options: {
-    database: azureConfig.AZURE_SQL_DATABASE ? azureConfig.AZURE_SQL_DATABASE : process.env.AZURE_SQL_DATABASE
+    database:
+      azureConfig && azureConfig.AZURE_SQL_DATABASE ? azureConfig.AZURE_SQL_DATABASE : process.env.AZURE_SQL_DATABASE
   }
 };
 
