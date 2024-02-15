@@ -5,6 +5,7 @@
 'use strict';
 
 const path = require('path');
+const semver = require('semver');
 const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
@@ -14,7 +15,9 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+// NOTE: tsoa v6 dropped Node < 18 support.
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing/tsoa', function () {
   this.timeout(config.getTestTimeout());
