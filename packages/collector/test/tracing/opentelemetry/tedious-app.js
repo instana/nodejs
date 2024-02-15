@@ -16,24 +16,29 @@ const Connection = require('tedious').Connection;
 const Request = require('tedious').Request;
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
-
+let config;
 // To obtain the credentials for the Azure SQL Database, you can find them in 1password. Search for
 // "Team Node.js: Azure SQL credentials". The credentials are stored in the
-// "nodejs-tracer-azure-sql-cred.json" file.
+// "nodejs-tracer-azure-sql-cred.txt" file. Set the content to AZURE_SQL_CONFIG.
 
-const config = {
-  server: process.env.AZURE_SQL_SERVER,
-  authentication: {
-    type: 'default',
+const azureConfig = process.env.AZURE_SQL_CONFIG ? JSON.parse(process.env.AZURE_SQL_CONFIG) : null;
+if (azureConfig) {
+  config = azureConfig;
+} else {
+  config = {
+    server: process.env.AZURE_SQL_SERVER,
+    authentication: {
+      type: 'default',
+      options: {
+        userName: process.env.AZURE_SQL_USERNAME,
+        password: process.env.AZURE_SQL_PWD
+      }
+    },
     options: {
-      userName: process.env.AZURE_SQL_USERNAME,
-      password: process.env.AZURE_SQL_PWD
+      database: process.env.AZURE_SQL_DATABASE
     }
-  },
-  options: {
-    database: process.env.AZURE_SQL_DATABASE
-  }
-};
+  };
+}
 
 const executeStatement = (query, isBatch, res) => {
   const connection = new Connection(config);
