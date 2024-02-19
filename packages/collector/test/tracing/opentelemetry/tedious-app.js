@@ -39,41 +39,56 @@ const config = {
 
 const executeStatement = (query, isBatch, res) => {
   const connection = new Connection(config);
-  let retryAttempted = false;
-  connection.on('connect', err => {
-    if (err) {
-      // eslint-disable-next-line no-console
-      console.log('Error while connecting:', err);
-      if (!retryAttempted) {
-        retryAttempted = true;
-        setTimeout(() => {
-          // Retry the connection after the specified delay
-          connection.connect();
-        }, 500);
+  const maxRetries = 3;
+  let retryCount = 0;
+
+  const connectAndExecute = () => {
+    return new Promise((resolve, reject) => {
+      connection.on('connect', err => {
+        if (err) {
+          if (retryCount < maxRetries) {
+            retryCount++;
+            // eslint-disable-next-line no-console
+            console.log(`Connection attempt ${retryCount} failed. Retrying...`);
+            setTimeout(() => {
+              connectAndExecute().then(resolve).catch(reject);
+            }, 1000);
+          } else {
+            reject(err);
+          }
+        } else {
+          resolve();
+        }
+      });
+
+      connection.connect();
+    });
+  };
+
+  connectAndExecute()
+    .then(() => {
+      const request = new Request(query, error => {
+        if (error) {
+          res.status(500).send('Internal Server Error');
+        }
+      });
+
+      request.on('requestCompleted', () => {
+        res.send('OK');
+        connection.close();
+      });
+
+      if (isBatch) {
+        connection.execSqlBatch(request);
       } else {
-        res.status(500).send('Internal Server Error');
+        connection.execSql(request);
       }
-    }
-
-    const request = new Request(query, error => {
-      if (error) {
-        res.status(500).send('Internal Server Error');
-      }
+    })
+    .catch(error => {
+      // eslint-disable-next-line no-console
+      console.log('Error while connecting:', error);
+      res.status(500).send('Internal Server Error');
     });
-
-    request.on('requestCompleted', () => {
-      res.send('OK');
-      connection.close();
-    });
-
-    if (isBatch) {
-      connection.execSqlBatch(request);
-    } else {
-      connection.execSql(request);
-    }
-  });
-
-  connection.connect();
 };
 
 app.get('/', (req, res) => {
