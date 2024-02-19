@@ -36,63 +36,44 @@ const config = {
       azureConfig && azureConfig.AZURE_SQL_DATABASE ? azureConfig.AZURE_SQL_DATABASE : process.env.AZURE_SQL_DATABASE
   }
 };
+let connected = false;
+const connection = new Connection(config);
+
+connection.on('connect', err => {
+  if (err) {
+    // eslint-disable-next-line no-console
+    console.warn('connection error', err);
+  } else {
+    connected = true;
+  }
+});
+connection.connect();
 
 const executeStatement = (query, isBatch, res) => {
-  const connection = new Connection(config);
-  const maxRetries = 3;
-  let retryCount = 0;
-
-  const connectAndExecute = () => {
-    return new Promise((resolve, reject) => {
-      connection.on('connect', err => {
-        if (err) {
-          if (retryCount < maxRetries) {
-            retryCount++;
-            // eslint-disable-next-line no-console
-            console.log(`Connection attempt ${retryCount} failed. Retrying...`);
-            setTimeout(() => {
-              connectAndExecute().then(resolve).catch(reject);
-            }, 1000);
-          } else {
-            reject(err);
-          }
-        } else {
-          resolve();
-        }
-      });
-
-      connection.connect();
-    });
-  };
-
-  connectAndExecute()
-    .then(() => {
-      const request = new Request(query, error => {
-        if (error) {
-          res.status(500).send('Internal Server Error');
-        }
-      });
-
-      request.on('requestCompleted', () => {
-        res.send('OK');
-        connection.close();
-      });
-
-      if (isBatch) {
-        connection.execSqlBatch(request);
-      } else {
-        connection.execSql(request);
-      }
-    })
-    .catch(error => {
-      // eslint-disable-next-line no-console
-      console.log('Error while connecting:', error);
+  const request = new Request(query, error => {
+    if (error) {
+      connection.close();
       res.status(500).send('Internal Server Error');
-    });
+    }
+  });
+
+  request.on('requestCompleted', () => {
+    res.send('OK');
+  });
+
+  if (isBatch) {
+    connection.execSqlBatch(request);
+  } else {
+    connection.execSql(request);
+  }
 };
 
 app.get('/', (req, res) => {
-  res.sendStatus(200);
+  if (!connected) {
+    res.sendStatus(500);
+  } else {
+    res.sendStatus(200);
+  }
 });
 
 app.get('/packages', (req, res) => {
