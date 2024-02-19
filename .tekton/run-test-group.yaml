@@ -65,3 +65,4 @@ spec:
           echo "Test command failed"
           touch $(params.group).failed
           exit 1
+        fi
