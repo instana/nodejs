@@ -161,21 +161,15 @@ spec:
           value: "test:ci:collector:tracing:logger"
       workspaces:
         - name: output
-          workspace: artifacts
-    - name: calculate-state
+          workspace: artifacts          
+    - name: test-results
       runAfter:
         - test-ci-collector-tracing-logger
-        - test-ci-collector-general
       taskRef:
         name: tasks-results
-      params:
-        - name: test1
-          value: "$(tasks.test-ci-collector-tracing-logger.status)"
-        - name: test2
-          value: "$(tasks.test-ci-collector-general.status)"
       workspaces:
         - name: output
-          workspace: artifacts              
+          workspace: artifacts  
   finally: 
     - name: set-tests-running-final
       taskRef:
@@ -193,6 +187,6 @@ spec:
         - name: description
           value: "test"
         - name: state
-          value: "$(tasks.calculate-state.status)"
+          value: "Failed"
         - name: pipeline-debug
           value: $(params.pipeline-debug)

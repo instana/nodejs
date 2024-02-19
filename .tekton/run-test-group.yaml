@@ -26,9 +26,6 @@ spec:
           value: "-Xms500m -Xmx500m"
         - name: xpack.security.enabled
           value: false
-  results:
-    - name: my-result
-      description: group resulsts
   params:
     - name: node-version
       value: $(params.node-version)
@@ -63,9 +60,8 @@ spec:
 
         if [ $? -eq 0 ]; then
           echo "Test command succeeded"
-          echo -n "success" > "$(results.my-result.path)"
+          touch $(params.group).succeeded
         else
           echo "Test command failed"
-          echo -n "failure" > "$(results.my-result.path)"
-          exit 1  # Set the overall exit code to indicate failure
-        fi
+          touch $(params.group).failed
+          exit 1

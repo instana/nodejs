@@ -3,11 +3,6 @@ kind: Task
 metadata:
   name: tasks-results
 spec:
-  params:
-    - name: test1
-      value: $(params.test1)
-    - name: test2
-      value: $(params.test2)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -17,13 +12,7 @@ spec:
       script: |
         #!/bin/bash
 
-        test1="$(params.test1)"
-        test2="$(params.test2)"
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
 
-        if [ "$test1" == "Succeeded" ] && [ "$test2" == "Succeeded" ]; then
-            echo "All tests passed".
-            exit 0
-        else
-            echo "Tests failed."
-            exit 1
-        fi
+        echo $(ls -lah)
