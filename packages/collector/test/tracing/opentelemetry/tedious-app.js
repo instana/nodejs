@@ -36,39 +36,44 @@ const config = {
       azureConfig && azureConfig.AZURE_SQL_DATABASE ? azureConfig.AZURE_SQL_DATABASE : process.env.AZURE_SQL_DATABASE
   }
 };
+let connected = false;
+const connection = new Connection(config);
+
+connection.on('connect', err => {
+  if (err) {
+    // eslint-disable-next-line no-console
+    console.warn('connection error', err);
+  } else {
+    connected = true;
+  }
+});
+connection.connect();
 
 const executeStatement = (query, isBatch, res) => {
-  const connection = new Connection(config);
-
-  connection.on('connect', err => {
-    if (err) {
-      res.status(500).send('Internal Server Error');
-      return;
-    }
-
-    const request = new Request(query, error => {
-      if (error) {
-        res.status(500).send('Internal Server Error');
-      }
-    });
-
-    request.on('requestCompleted', () => {
-      res.send('OK');
+  const request = new Request(query, error => {
+    if (error) {
       connection.close();
-    });
-
-    if (isBatch) {
-      connection.execSqlBatch(request);
-    } else {
-      connection.execSql(request);
+      res.status(500).send('Internal Server Error');
     }
   });
 
-  connection.connect();
+  request.on('requestCompleted', () => {
+    res.send('OK');
+  });
+
+  if (isBatch) {
+    connection.execSqlBatch(request);
+  } else {
+    connection.execSql(request);
+  }
 };
 
 app.get('/', (req, res) => {
-  res.sendStatus(200);
+  if (!connected) {
+    res.sendStatus(500);
+  } else {
+    res.sendStatus(200);
+  }
 });
 
 app.get('/packages', (req, res) => {
