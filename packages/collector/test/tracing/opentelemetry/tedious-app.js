@@ -39,11 +39,20 @@ const config = {
 
 const executeStatement = (query, isBatch, res) => {
   const connection = new Connection(config);
-
+  let retryAttempted = false;
   connection.on('connect', err => {
     if (err) {
-      res.status(500).send('Internal Server Error');
-      return;
+      // eslint-disable-next-line no-console
+      console.log('Error while connecting:', err);
+      if (!retryAttempted) {
+        retryAttempted = true;
+        setTimeout(() => {
+          // Retry the connection after the specified delay
+          connection.connect();
+        }, 500);
+      } else {
+        res.status(500).send('Internal Server Error');
+      }
     }
 
     const request = new Request(query, error => {
