@@ -20,7 +20,7 @@ spec:
     - name: node-version
       value: $(params.node_version)
     - name: pl-name
-      value: "nightly"      
+      value: "nightly-$(params.node_version)"      
 
 ---
 

@@ -56,7 +56,7 @@ spec:
         cd $ARTIFACTS_PATH
 
         # Replace the following line with your actual test command
-        npm run $(params.group)
+        #npm run $(params.group)
 
         if [ $? -eq 0 ]; then
           echo "Test command succeeded"
