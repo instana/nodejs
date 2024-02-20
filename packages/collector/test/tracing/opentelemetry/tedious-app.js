@@ -4,6 +4,8 @@
 
 'use strict';
 
+/* eslint-disable no-console */
+
 require('../../..')({
   tracing: {
     useOpentelemetry: process.env.OTEL_ENABLED
@@ -39,15 +41,30 @@ const config = {
 let connected = false;
 const connection = new Connection(config);
 
+const retryDelayInSeconds = 100;
+const maxRetries = 2;
+let currentRetry = 0;
+
+const connectWithRetry = () => {
+  connection.connect();
+};
+
 connection.on('connect', err => {
   if (err) {
-    // eslint-disable-next-line no-console
-    console.warn('connection error', err);
+    console.warn('Connection error', err);
+    if (currentRetry < maxRetries) {
+      currentRetry++;
+      console.warn(`Retrying connection after ${retryDelayInSeconds} seconds (Retry ${currentRetry}/${maxRetries})`);
+      setTimeout(connectWithRetry, retryDelayInSeconds * 1000);
+    } else {
+      console.error('Maximum retries reached. Unable to establish a connection.');
+    }
   } else {
     connected = true;
+    console.warn('Connected to the database');
   }
 });
-connection.connect();
+connectWithRetry();
 
 const executeStatement = (query, isBatch, res) => {
   const request = new Request(query, error => {
