@@ -41,7 +41,7 @@ const config = {
 let connected = false;
 const connection = new Connection(config);
 
-const retryDelayInSeconds = 100;
+const retryDelay = 100;
 const maxRetries = 2;
 let currentRetry = 0;
 
@@ -54,8 +54,8 @@ connection.on('connect', err => {
     console.warn('Connection error', err);
     if (currentRetry < maxRetries) {
       currentRetry++;
-      console.warn(`Retrying connection after ${retryDelayInSeconds} seconds (Retry ${currentRetry}/${maxRetries})`);
-      setTimeout(connectWithRetry, retryDelayInSeconds * 1000);
+      console.warn(`Retrying connection after ${retryDelay} seconds (Retry ${currentRetry}/${maxRetries})`);
+      setTimeout(connectWithRetry, retryDelay * 100);
     } else {
       console.error('Maximum retries reached. Unable to establish a connection.');
     }
@@ -69,7 +69,7 @@ connectWithRetry();
 const executeStatement = (query, isBatch, res) => {
   const request = new Request(query, error => {
     if (error) {
-      connection.close();
+      console.error('error on executeStatement.', error);
       res.status(500).send('Internal Server Error');
     }
   });
