@@ -39,37 +39,44 @@ const config = {
   }
 };
 let connected = false;
-const connection = new Connection(config);
-
+let connection;
 const retryDelay = 100;
 const maxRetries = 2;
 let currentRetry = 0;
 
-const connectWithRetry = () => {
-  connection.connect();
-};
-
-connection.on('connect', err => {
-  if (err) {
-    console.warn('Connection error', err);
-    if (currentRetry < maxRetries) {
-      currentRetry++;
-      console.warn(`Retrying connection after ${retryDelay} seconds (Retry ${currentRetry}/${maxRetries})`);
-      setTimeout(connectWithRetry, retryDelay * 100);
-    } else {
-      console.error('Maximum retries reached. Unable to establish a connection.');
+(async () => {
+  const connectWithRetry = async () => {
+    if (!connection) {
+      connection = new Connection(config);
     }
-  } else {
-    connected = true;
-    console.warn('Connected to the database');
-  }
-});
-connectWithRetry();
+    connection.connect();
+
+    connection.on('connect', async err => {
+      if (err) {
+        console.warn('Connection error', err);
+        if (currentRetry < maxRetries) {
+          currentRetry++;
+          console.warn(`Retrying connection after ${retryDelay} ms (Retry ${currentRetry}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          await connectWithRetry();
+        } else {
+          console.error('Maximum retries reached. Unable to establish a connection.');
+          connection.close();
+        }
+      } else {
+        connected = true;
+        console.warn('Connected to the database');
+      }
+    });
+  };
+
+  await connectWithRetry();
+})();
 
 const executeStatement = (query, isBatch, res) => {
   const request = new Request(query, error => {
     if (error) {
-      console.error('error on executeStatement.', error);
+      console.error('Error on executeStatement.', error);
       res.status(500).send('Internal Server Error');
     }
   });
