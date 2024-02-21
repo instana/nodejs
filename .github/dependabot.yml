@@ -3,6 +3,43 @@ updates:
   - package-ecosystem: npm
     directory: /
     target-branch: main
+    ignore:
+      - dependency-name: "@commitlint*"
+      - dependency-name: "@types*"
+      - dependency-name: "admin"
+      - dependency-name: "admin-plugin-healthcheck"
+      - dependency-name: "adm-zip"
+      - dependency-name: "async"
+      - dependency-name: "body-parser"
+      - dependency-name: "chai*"
+      - dependency-name: "basic-auth-parser"
+      - dependency-name: "commitizen"
+      - dependency-name: "cz-conventional-changelog"
+      - dependency-name: "depcheck"
+      - dependency-name: "dev-null"
+      - dependency-name: "doctoc"
+      - dependency-name: "eslint*"
+      - dependency-name: "express-winston"
+      - dependency-name: "husky"
+      - dependency-name: "lerna"
+      - dependency-name: "lodash"
+      - dependency-name: "mkdirp"
+      - dependency-name: "mocha*"
+      - dependency-name: "mock-require"
+      - dependency-name: "nyc"
+      - dependency-name: "prettier"
+      - dependency-name: "proxy*"
+      - dependency-name: "read-pkg-up"
+      - dependency-name: "recursive-copy"
+      - dependency-name: "rimraf"
+      - dependency-name: "sinon*"
+      - dependency-name: "stealthy-require"
+      - dependency-name: "superagent"
+      - dependency-name: "typescript"
+      - dependency-name: "underscore"
+      - dependency-name: "uuid"
+      - dependency-name: "wait-sync"
+      - dependency-name: "yargs"
     schedule:
       interval: weekly
     open-pull-requests-limit: 4
