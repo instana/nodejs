@@ -45,7 +45,7 @@ const retryDelay = 100;
 const maxRetries = 2;
 let currentRetry = 0;
 
-const connectWithRetry = () => {
+(function connectWithRetry() {
   if (!connection) {
     connection = new Connection(config);
   }
@@ -67,9 +67,7 @@ const connectWithRetry = () => {
       console.warn('Connected to the database');
     }
   });
-};
-
-connectWithRetry();
+})();
 
 const executeStatement = (query, isBatch, res) => {
   const request = new Request(query, error => {
