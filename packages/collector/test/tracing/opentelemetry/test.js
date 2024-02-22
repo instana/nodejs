@@ -589,7 +589,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           }
         });
 
-        await controls.startAndWaitForAgentConnection();
+        await controls.startAndWaitForAgentConnection(retryTime);
       });
 
       after(async () => {

@@ -35,7 +35,8 @@ const config = {
   },
   options: {
     database:
-      azureConfig && azureConfig.AZURE_SQL_DATABASE ? azureConfig.AZURE_SQL_DATABASE : process.env.AZURE_SQL_DATABASE
+      azureConfig && azureConfig.AZURE_SQL_DATABASE ? azureConfig.AZURE_SQL_DATABASE : process.env.AZURE_SQL_DATABASE,
+    connectTimeout: 30000
   }
 };
 let connected = false;
@@ -58,7 +59,7 @@ let currentRetry = 0;
       if (currentRetry < maxRetries) {
         currentRetry++;
         console.warn(`Retrying connection after ${retryDelay} ms (Retry ${currentRetry}/${maxRetries})`);
-        setTimeout(connectWithRetry, retryDelay * 10);
+        setTimeout(connectWithRetry, retryDelay * 5);
       } else {
         console.error('Maximum retries reached. Unable to establish a connection.');
         connection.close();
