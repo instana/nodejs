@@ -172,7 +172,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/frameworks"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/frameworks"; then
               touch .run2-started
 
               ulimit -c unlimited
@@ -215,7 +215,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"; then
               touch .run4-started
 
               ulimit -c unlimited
@@ -240,7 +240,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/messaging"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/messaging"; then
               touch .run5-started
 
               ulimit -c unlimited
@@ -265,7 +265,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/protocols"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/protocols"; then
               touch .run6-started
 
               ulimit -c unlimited
@@ -290,7 +290,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/gcp"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/gcp"; then
               touch .run7-started
 
               ulimit -c unlimited
@@ -315,7 +315,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"; then
               touch .run8-started
 
               ulimit -c unlimited
@@ -340,7 +340,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"; then
               touch .run9-started
 
               ulimit -c unlimited
@@ -365,7 +365,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/loggers"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/loggers"; then
               touch .run10-started
 
               ulimit -c unlimited
@@ -412,7 +412,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/autoprofile"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/autoprofile"; then
               touch .run12-started
 
               ulimit -c unlimited
@@ -441,7 +441,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/aws-fargate"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/aws-fargate"; then
               touch .run13-started
 
               ulimit -c unlimited
@@ -469,7 +469,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/aws-lambda"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/aws-lambda"; then
               touch .run14-started
 
               ulimit -c unlimited
@@ -497,7 +497,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/azure-container-services"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/azure-container-services"; then
               touch .run15-started
 
               ulimit -c unlimited
@@ -525,7 +525,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/core"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/core"; then
               touch .run16-started
 
               ulimit -c unlimited
@@ -553,7 +553,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/google-cloud-run"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/google-cloud-run"; then
               touch .run17-started
 
               ulimit -c unlimited
@@ -581,7 +581,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/metrics-util"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/metrics-util"; then
               touch .run18-started
               
               ulimit -c unlimited
@@ -609,7 +609,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/opentelemetry-exporter"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/opentelemetry-exporter"; then
               touch .run19-started
 
               ulimit -c unlimited
@@ -637,7 +637,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/opentelemetry-sampler"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/opentelemetry-sampler"; then
               touch .run20-started
 
               ulimit -c unlimited
@@ -665,7 +665,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)
             
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/serverless"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/serverless"; then
               touch .run21-started
 
               ulimit -c unlimited
@@ -693,7 +693,7 @@ shared: &shared
             MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
             GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA1)            
 
-            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$MODIFIED_FILES" | grep -q "packages/shared-metrics"; then
+            if [ -n "$RUN_ALL_TESTS" ] || echo "$GIT_COMMIT_DESC" | grep -q '\[ci all-tests\]' || echo "$GIT_COMMIT_DESC" | grep -q 'dependabot' || echo "$MODIFIED_FILES" | grep -q "packages/shared-metrics"; then
               touch .run22-started
               
               ulimit -c unlimited
