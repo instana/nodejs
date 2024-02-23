@@ -2,6 +2,7 @@ node_modules
 npm-debug*
 lerna-debug.log
 nodejs-license-report.csv
+docker-compose.yaml
 .nyc_output
 coverage
 /db2
