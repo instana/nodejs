@@ -25,13 +25,11 @@ const {
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 const DELAY_TIMEOUT_IN_MS = 500;
-const testTimeout = Math.max(50000, config.getTestTimeout());
-const retryTime = 20000;
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '14.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('opentelemetry/instrumentations', function () {
-  this.timeout(testTimeout);
+  this.timeout(config.getTestTimeout());
 
   describe('restify', function () {
     // No support for Node v18 yet.
@@ -505,7 +503,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           }
         });
 
-        await controls.startAndWaitForAgentConnection(retryTime);
+        await controls.startAndWaitForAgentConnection();
       });
 
       after(async () => {
@@ -591,7 +589,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           }
         });
 
-        await controls.startAndWaitForAgentConnection(retryTime);
+        await controls.startAndWaitForAgentConnection();
       });
 
       after(async () => {
