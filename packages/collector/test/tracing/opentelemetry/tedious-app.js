@@ -36,7 +36,7 @@ const config = {
   options: {
     database:
       azureConfig && azureConfig.AZURE_SQL_DATABASE ? azureConfig.AZURE_SQL_DATABASE : process.env.AZURE_SQL_DATABASE,
-    connectTimeout: 20000
+    connectTimeout: 25000
   }
 };
 let connected = false;

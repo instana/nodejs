@@ -25,7 +25,7 @@ const {
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 const DELAY_TIMEOUT_IN_MS = 500;
-const testTimeout = Math.max(70000, config.getTestTimeout());
+const testTimeout = Math.max(90000, config.getTestTimeout());
 const retryTime = 40000;
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '14.0.0') ? describe : describe.skip;
