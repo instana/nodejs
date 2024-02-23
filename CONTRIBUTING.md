@@ -27,7 +27,13 @@ npm install -g npm@latest
 
 ## Executing Tests Locally
 
-Some of the tests require infrastructure components (databases etc.) to run locally. The easiest way to run all required components locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/). Start the script `bin/start-test-containers.sh` to set up all the necessary infrastructure. 
+Some of the tests require infrastructure components (databases etc.) to run locally. The easiest way to run all required components locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/). Start the script `node bin/start-test-containers.js` to run all containers (not recommended).
+
+Instead:
+
+```sh
+node bin/start-test-containers.js --mongo --redis
+```
 
 It's not recommended to run all tests using `bin/run-tests.sh` - it takes too long. Take a look at the root package.json and run a specific test group or run e.g. `bin/run-collector-tests.sh` with the mocha `.only` attribute.
 
