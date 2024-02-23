@@ -489,7 +489,9 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           )
         ));
   });
-  describe('tedious', function () {
+  // Skipping the tests for now, there is a existing timeout issue while connectiong the azure sql,
+  // see github issue https://github.com/tediousjs/tedious/issues/1277
+  describe.skip('tedious', function () {
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
