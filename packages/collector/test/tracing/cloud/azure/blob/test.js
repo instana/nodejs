@@ -65,17 +65,29 @@ if (!storageAccount || !accountKey) {
       await deleteContainer(containerClient);
     });
     describe('tracing enabled', function () {
-      const controls = new ProcessControls({
-        dirname: __dirname,
-        useGlobalAgent: true,
-        env: {
-          AZURE_CONTAINER_NAME: containerName,
-          AZURE_CONNECTION_STRING: connStr,
-          AZURE_STORAGE_ACCOUNT: storageAccount,
-          AZURE_ACCOUNT_KEY: accountKey
-        }
+      let controls;
+      before(async () => {
+        controls = new ProcessControls({
+          dirname: __dirname,
+          useGlobalAgent: true,
+          env: {
+            AZURE_CONTAINER_NAME: containerName,
+            AZURE_CONNECTION_STRING: connStr,
+            AZURE_STORAGE_ACCOUNT: storageAccount,
+            AZURE_ACCOUNT_KEY: accountKey
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
-      ProcessControls.setUpHooks(controls);
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
 
       it('uploads block data', async () => {
         await controls.sendRequest({
@@ -401,18 +413,30 @@ if (!storageAccount || !accountKey) {
       }
     });
     describe('tracing disabled', () => {
-      const controls = new ProcessControls({
-        dirname: __dirname,
-        useGlobalAgent: true,
-        tracingEnabled: false,
-        env: {
-          AZURE_CONTAINER_NAME: containerName,
-          AZURE_CONNECTION_STRING: connStr,
-          AZURE_STORAGE_ACCOUNT: storageAccount,
-          AZURE_ACCOUNT_KEY: accountKey
-        }
+      let controls;
+      before(async () => {
+        controls = new ProcessControls({
+          dirname: __dirname,
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            AZURE_CONTAINER_NAME: containerName,
+            AZURE_CONNECTION_STRING: connStr,
+            AZURE_STORAGE_ACCOUNT: storageAccount,
+            AZURE_ACCOUNT_KEY: accountKey
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
-      ProcessControls.setUpHooks(controls);
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
 
       describe('attempt to get result', () => {
         it('should not trace', async () => {
@@ -431,17 +455,29 @@ if (!storageAccount || !accountKey) {
       });
     });
     describe('tracing enabled, but supressed', () => {
-      const controls = new ProcessControls({
-        dirname: __dirname,
-        useGlobalAgent: true,
-        env: {
-          AZURE_CONTAINER_NAME: containerName,
-          AZURE_CONNECTION_STRING: connStr,
-          AZURE_STORAGE_ACCOUNT: storageAccount,
-          AZURE_ACCOUNT_KEY: accountKey
-        }
+      let controls;
+      before(async () => {
+        controls = new ProcessControls({
+          dirname: __dirname,
+          useGlobalAgent: true,
+          env: {
+            AZURE_CONTAINER_NAME: containerName,
+            AZURE_CONNECTION_STRING: connStr,
+            AZURE_STORAGE_ACCOUNT: storageAccount,
+            AZURE_ACCOUNT_KEY: accountKey
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
       });
-      ProcessControls.setUpHooks(controls);
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
 
       describe('attempt to get result', () => {
         it('should not trace', async () => {
