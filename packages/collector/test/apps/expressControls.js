@@ -112,10 +112,14 @@ exports.sendRequest = opts => {
     resolveWithFullResponse: opts.resolveWithFullResponse
   })
     .then(response => {
+      const contentType = response.headers.get('content-type');
+      if (contentType && (contentType.includes('text/html') || contentType.includes('text/plain'))) {
+        return response.text();
+      }
       return response.json();
     })
     .catch(response => {
-      if (response.status === opts.responseStatus) {
+      if (response && response.status === opts.responseStatus) {
         return true;
       }
       throw new Error(`Unexpected response status: ${response.status}`);

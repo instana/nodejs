@@ -5,9 +5,8 @@
 
 'use strict';
 
-const errors = require('request-promise/errors');
+const fetch = require('node-fetch');
 const path = require('path');
-const request = require('request-promise');
 const spawn = require('child_process').spawn;
 
 const portfinder = require('../../../../test_util/portfinder');
@@ -21,13 +20,11 @@ let expressProxyApp;
 
 function waitUntilServerIsUp() {
   return testUtils.retry(() =>
-    request({
-      method: 'GET',
-      url: `http://localhost:${appPort}`,
+    fetch(`http://localhost:${appPort}`, {
       headers: {
         'X-INSTANA-L': '0'
       }
-    })
+    }).then(response => response.text())
   );
 }
 
@@ -63,21 +60,20 @@ exports.sendRequest = opts => {
   if (opts.suppressTracing === true) {
     headers['X-INSTANA-L'] = '0';
   }
-
-  return request({
+  const queryParams = new URLSearchParams({
+    responseStatus: opts.responseStatus,
+    delay: opts.delay,
+    url: opts.target,
+    httpLib: opts.httpLib
+  });
+  const url = `http://localhost:${appPort}${opts.path}?${queryParams.toString()}`;
+  return fetch(url, {
     method: opts.method,
     url: `http://localhost:${appPort}${opts.path}`,
-    qs: {
-      responseStatus: opts.responseStatus,
-      delay: opts.delay,
-      url: opts.target,
-      httpLib: opts.httpLib
-    },
     headers
-  }).catch(
-    errors.StatusCodeError,
-    (
-      reason // treat all status code errors as likely // allowed
-    ) => reason
-  );
+  })
+    .then(response => response.text())
+    .catch(error => {
+      throw error;
+    });
 };

@@ -554,6 +554,7 @@ function constructPath({
 }
 
 function verifyResponse(response, expectedMethod = 'GET', expectedHeaders = null) {
+  response = JSON.parse(response);
   expect(response.method).to.equal(expectedMethod);
   expect(response.headers).to.be.an('object');
   if (expectedHeaders) {

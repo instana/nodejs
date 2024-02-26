@@ -110,6 +110,10 @@ mochaSuiteFn('tracing/couchbase', function () {
     // The operations for bootstrapping & cleanup can take a while.
     await controls.startAndWaitForAgentConnection(1000, Date.now() + 30 * 1000);
   });
+  // Add a delay before tests start to ensure that the environment is set up properly.
+  before(async () => {
+    await delay(DELAY_TIMEOUT_IN_MS * 10);
+  });
 
   after(async () => {
     await controls.stop();

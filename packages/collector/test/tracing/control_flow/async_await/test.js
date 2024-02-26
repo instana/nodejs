@@ -36,26 +36,6 @@ describe('tracing/asyncAwait', function () {
     testAsyncControlFlow();
   });
 
-  describe('request-promise', () => {
-    before(async () => {
-      await agentStubControls.startAgent();
-      await expressControls.start({ agentControls: agentStubControls });
-      await expressAsyncAwaitControls.start({
-        agentControls: agentStubControls,
-        expressControls,
-        useRequestPromise: true
-      });
-    });
-
-    after(async () => {
-      await agentStubControls.stopAgent();
-      await expressControls.stop();
-      await expressAsyncAwaitControls.stop();
-    });
-
-    testAsyncControlFlow();
-  });
-
   function testAsyncControlFlow() {
     it('must follow async control flow', () =>
       expressAsyncAwaitControls.sendRequest().then(() =>

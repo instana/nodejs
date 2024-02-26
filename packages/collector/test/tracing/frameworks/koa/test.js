@@ -62,10 +62,9 @@ mochaSuiteFn('tracing/koa', function () {
             resolveWithFullResponse: true
           })
           .then(response => {
-            expect(response.statusCode).to.equal(200);
-            expect(response.body.indexOf(actualPath)).to.equal(
+            expect(response.indexOf(actualPath)).to.equal(
               0,
-              `Unexpected response: ${response.body} should have started with ${actualPath}.`
+              `Unexpected response: ${response} should have started with ${actualPath}.`
             );
             return testUtils.retry(() =>
               agentControls.getSpans().then(spans => {

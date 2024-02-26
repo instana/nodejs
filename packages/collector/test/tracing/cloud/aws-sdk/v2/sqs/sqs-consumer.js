@@ -11,7 +11,7 @@ const instana = require('../../../../../../src')();
 const express = require('express');
 const AWS = require('aws-sdk');
 const { Consumer } = require('sqs-consumer');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const { sendToParent } = require('../../../../../../../core/test/test_util');
 const delay = require('../../../../../../../core/test/test_util/delay');
 
@@ -43,7 +43,7 @@ const consumerApp = Consumer.create({
     await delay(1000);
     sendToParent(message);
     await delay(200);
-    await request(`http://localhost:${agentPort}?msg=${message.Body}`);
+    await fetch(`http://localhost:${agentPort}?msg=${message.Body}`);
     log(`Sent an HTTP request after receiving message of id ${message.MessageId}`);
 
     if (withError) {

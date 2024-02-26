@@ -42,7 +42,7 @@ if (driverModeEnvVar === 'mysql') {
   client = mysql2promise;
 }
 
-import request from 'request-promise';
+import fetch from 'node-fetch';
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
@@ -159,7 +159,10 @@ app.post('/valuesAndCall', (req, res) => {
     insertValuesWithPromisesAndCall(req, res);
   } else {
     insertValues(req, res, cb => {
-      request(`http://127.0.0.1:${agentPort}`, cb);
+      fetch(`http://127.0.0.1:${agentPort}`)
+        .then(response => response.json())
+        .then(data => cb(null, data))
+        .catch(err => cb(err, null));
     });
   }
 });
@@ -256,7 +259,8 @@ function insertValuesWithPromisesAndCall(req, res) {
     .then(() => {
       connection.release();
     })
-    .then(() => request(`http://127.0.0.1:${agentPort}`))
+    .then(() => fetch(`http://127.0.0.1:${agentPort}`))
+    .then(response => response.json())
     .then(() => {
       res.json(instana.opentracing.getCurrentlyActiveInstanaSpanContext());
     })

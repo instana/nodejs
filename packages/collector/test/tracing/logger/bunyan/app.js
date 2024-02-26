@@ -19,7 +19,7 @@ instana({
   }
 });
 
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
@@ -104,7 +104,7 @@ app.get('/child-error', (req, res) => {
 });
 
 function finish(res) {
-  request(`http://127.0.0.1:${agentPort}`).then(() => {
+  fetch(`http://127.0.0.1:${agentPort}`).then(() => {
     res.sendStatus(200);
   });
 }

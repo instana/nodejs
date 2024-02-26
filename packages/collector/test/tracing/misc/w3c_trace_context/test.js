@@ -308,6 +308,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
         it('Instana should not start a trace when receiving X-INSTANA-L=0 and no spec headers', () =>
           startRequest({ app: instanaAppControls, depth: 1, withInstanaHeaders: 'suppress' })
             .then(response => {
+              response = response && response.body ? JSON.parse(response.body) : response;
               expect(response.instanaHeaders).to.be.an('object');
               expect(response.instanaHeaders.t).to.not.exist;
               expect(response.instanaHeaders.s).to.not.exist;
@@ -428,6 +429,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
               withInstanaHeaders: 'suppress'
             })
               .then(response => {
+                response = response && response.body ? JSON.parse(response.body) : response;
                 expect(response.instanaHeaders).to.be.an('object');
                 expect(response.instanaHeaders.t).to.not.exist;
                 expect(response.instanaHeaders.s).to.not.exist;
@@ -460,6 +462,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
               withInstanaHeaders: 'suppress'
             })
               .then(response => {
+                response = response && response.body ? JSON.parse(response.body) : response;
                 expect(response.instanaHeaders).to.be.an('object');
                 expect(response.instanaHeaders.t).to.not.exist;
                 expect(response.instanaHeaders.s).to.not.exist;
@@ -492,6 +495,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
             () =>
               startRequest({ app: instanaAppControls, depth: 1, withInstanaHeaders: 'suppress' })
                 .then(response => {
+                  response = response && response.body ? JSON.parse(response.body) : response;
                   expect(response.instanaHeaders).to.be.an('object');
                   expect(response.instanaHeaders.t).to.not.exist;
                   expect(response.instanaHeaders.s).to.not.exist;
@@ -608,7 +612,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
           startRequest({ app: instanaAppControls, depth: 2, otherMode: 'soft-restart' }).then(response => {
             const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
             const { traceIdFromTraceParent, parentIdFromTraceParent } = extractIdsFromTraceParent(traceparent);
-
+            response = response && response.body ? JSON.parse(response.body) : response;
             return retryUntilSpansMatch(agentControls, spans => {
               const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start', instanaAppControls });
               const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntryRoot, '/continue');
@@ -661,7 +665,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
           startRequest({ app: instanaAppControls, depth: 2, otherMode: 'hard-restart' }).then(response => {
             const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
             const { traceIdFromTraceParent, parentIdFromTraceParent } = extractIdsFromTraceParent(traceparent);
-
+            response = response && response.body ? JSON.parse(response.body) : response;
             return retryUntilSpansMatch(agentControls, spans => {
               const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start', instanaAppControls });
               verifyHttpExit(spans, instanaHttpEntryRoot, '/continue');
@@ -704,9 +708,10 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
 
         it('the trace will break after a detour when the foreign service does not implement W3C trace context', () =>
           startRequest({ app: instanaAppControls, depth: 2, otherMode: 'non-compliant' }).then(response => {
+            response = response && response.body ? JSON.parse(response.body) : response;
             expect(response.w3cTraceContext).to.be.an('object');
             expect(response.w3cTraceContext.receivedHeaders).to.deep.equal({});
-
+            response = response && response.body ? JSON.parse(response.body) : response;
             return retryUntilSpansMatch(agentControls, spans => {
               const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start', instanaAppControls });
               verifyHttpExit(spans, instanaHttpEntryRoot, '/continue');
@@ -854,6 +859,7 @@ function startRequest({ app, depth = 2, withSpecHeaders = null, otherMode = 'par
  * the chain.
  */
 function getSpecHeadersFromFinalHttpRequest(response) {
+  response = response && response.body ? JSON.parse(response.body) : response;
   expect(response.w3cTraceContext).to.be.an('object');
   expect(response.w3cTraceContext.receivedHeaders).to.be.an('object');
   const traceparent = response.w3cTraceContext.receivedHeaders.traceparent;
@@ -881,6 +887,7 @@ function verifyTraceContextAgainstTerminalSpan({
   // The W3C trace context that was active during processing the last HTTP entry. This is different from
   // response.w3cTraceContext.receivedHeaders because we update the trace context (in particular, the parent ID) after
   // generating the span ID for this HTTP entry.
+  response = response && response.body ? JSON.parse(response.body) : response;
   expect(response.w3cTraceContext.active).to.be.an('object');
   const instanaTraceIdInActiveTraceContext = response.w3cTraceContext.active.instanaTraceId;
   const instanaParentIdInActiveTraceContext = response.w3cTraceContext.active.instanaParentId;

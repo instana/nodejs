@@ -20,7 +20,7 @@ const instana = require('../../../..')({
 });
 
 const amqp = require('amqplib');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const exchange = require('./amqpUtil').exchange;
 const queueName = require('./amqpUtil').queueName;
 const queueNameGet = require('./amqpUtil').queueNameGet;
@@ -56,9 +56,9 @@ amqp
         log(msg.content.toString());
         const span = instana.currentSpan();
         span.disableAutoEnd();
-        // simulating asynchronous follow up steps with setTimeout and request-promise
+        // simulating asynchronous follow up steps with setTimeout
         setTimeout(() => {
-          request(`http://127.0.0.1:${agentPort}`)
+          fetch(`http://127.0.0.1:${agentPort}`)
             .then(() => {
               span.end();
               channel.ack(msg);
@@ -82,9 +82,9 @@ amqp
         log(msg.content.toString());
         const span = instana.currentSpan();
         span.disableAutoEnd();
-        // simulating asynchronous follow up steps with setTimeout and request-promise
+        // simulating asynchronous follow up steps with setTimeout
         setTimeout(() => {
-          request(`http://127.0.0.1:${agentPort}`)
+          fetch(`http://127.0.0.1:${agentPort}`)
             .then(() => {
               span.end();
               channel.ack(msg);
@@ -113,10 +113,10 @@ amqp
               log('[channel#get] ', msg.content.toString());
               const span = instana.currentSpan();
               span.disableAutoEnd();
-              // simulating asynchronous follow up steps with setTimeout and request-promise
+              // simulating asynchronous follow up steps with setTimeout
               setTimeout(
                 () =>
-                  request(`http://127.0.0.1:${agentPort}`)
+                  fetch(`http://127.0.0.1:${agentPort}`)
                     .then(() => {
                       span.end();
                       channel.ack(msg);
@@ -147,9 +147,9 @@ amqp
         log(msg.content.toString());
         const span = instana.currentSpan();
         span.disableAutoEnd();
-        // simulating asynchronous follow up steps with setTimeout and request-promise
+        // simulating asynchronous follow up steps with setTimeout
         setTimeout(() => {
-          request(`http://127.0.0.1:${agentPort}`)
+          fetch(`http://127.0.0.1:${agentPort}`)
             .then(() => {
               span.end();
               confirmChannel.ack(msg);

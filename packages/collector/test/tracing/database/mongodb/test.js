@@ -77,9 +77,10 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
             .sendRequest({
               method: 'POST',
               path: '/count',
-              body: {
-                foo: 'bar'
-              }
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ foo: 'bar' })
             })
             .then(res => {
               expect(res).to.be.a('number');
@@ -104,9 +105,12 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
             .sendRequest({
               method: 'POST',
               path: '/insert-one',
-              body: {
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
                 foo: 'bar'
-              }
+              })
             })
             .then(() =>
               retry(() =>
@@ -125,14 +129,17 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
               controls.sendRequest({
                 method: 'POST',
                 path: '/update-one',
-                body: {
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
                   filter: { unique },
                   update: {
                     $set: {
                       content: 'updated content'
                     }
                   }
-                }
+                })
               })
             )
             .then(() => findDoc(controls, unique))
@@ -179,13 +186,16 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
               controls.sendRequest({
                 method: 'POST',
                 path: '/replace-one',
-                body: {
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
                   filter: { unique },
                   doc: {
                     unique,
                     somethingElse: 'replaced'
                   }
-                }
+                })
               })
             )
             .then(() => findDoc(controls, unique))
@@ -229,9 +239,12 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
               controls.sendRequest({
                 method: 'POST',
                 path: '/delete-one',
-                body: {
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
                   filter: { unique }
-                }
+                })
               })
             )
             .then(() => findDoc(controls, unique))
@@ -265,11 +278,14 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
         it('must trace find requests', () =>
           controls
             .sendRequest({
-              method: 'GET',
+              method: 'POST',
               path: '/find-one',
-              body: {
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
                 bla: 'blub'
-              }
+              })
             })
             .then(() =>
               retry(() =>
@@ -353,10 +369,13 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
               controls.sendRequest({
                 method: 'POST',
                 path: '/insert-one',
-                body: {
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
                   unique,
                   type: `item-${i}`
-                }
+                })
               })
             )
           )
@@ -388,20 +407,26 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
     return controls.sendRequest({
       method: 'POST',
       path: '/insert-one',
-      body: {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
         unique,
         content: 'some content'
-      }
+      })
     });
   }
 
   function findDoc(controls, unique) {
     return controls.sendRequest({
-      method: 'GET',
+      method: 'POST',
       path: '/find-one',
-      body: {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
         unique
-      }
+      })
     });
   }
 

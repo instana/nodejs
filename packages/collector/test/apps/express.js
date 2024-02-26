@@ -56,7 +56,7 @@ app.post('/admin/set-to-unhealthy', (req, res) => {
   healthcheckFunction = () => {
     throw new Error('Explicit healthcheck failure');
   };
-  res.send('OK');
+  res.send({ status: 'OK' });
 });
 
 app.post('/admin/set-to-healthy', (req, res) => {

@@ -10,7 +10,7 @@
 
 const instana = require('../../../..')();
 
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const EventEmitter = require('events');
 const Promise = require('bluebird');
@@ -55,7 +55,7 @@ app.get('/rejected', (req, res) => {
 });
 
 app.get('/childHttpCall', (req, res) => {
-  request('http://127.0.0.1:65212')
+  fetch('http://127.0.0.1:65212')
     .catch(() => Promise.delay(20))
     .then(() => {
       sendActiveTraceContext(res);

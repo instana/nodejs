@@ -336,10 +336,9 @@ AbstractServerlessControl.prototype.resetBackend = function resetBackend() {
       method: 'DELETE',
       url: `${this.backendBaseUrl}/received`,
       strictSSL: false
-    }).then(response => {
+    }).then(() => {
       // eslint-disable-next-line no-console
       console.log('[AbstractServerlessControl] reseted backend');
-      return response.json();
     });
   } else {
     return Promise.resolve([]);
@@ -373,11 +372,9 @@ AbstractServerlessControl.prototype._getFromExtension = function _getFromExtensi
 
 AbstractServerlessControl.prototype.resetExtension = function resetExtension() {
   if (this.extensionHasBeenStarted) {
-    return fetch(`${this.extensionBaseUrl}/received`, { method: 'DELETE' })
-      .then(response => response.json())
-      .catch(() => {
-        return [];
-      });
+    return fetch(`${this.extensionBaseUrl}/received`, { method: 'DELETE' }).catch(() => {
+      return [];
+    });
   } else {
     return Promise.resolve([]);
   }

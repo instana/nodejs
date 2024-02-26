@@ -11,7 +11,7 @@ const amqp = require('amqplib');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const rp = require('request-promise');
+const fetch = require('node-fetch');
 const { v4: uuid } = require('uuid');
 const ws = require('ws');
 
@@ -94,7 +94,7 @@ app.post('/mutation', (req, res) =>
 app.post('/subscription', (req, res) => establishSubscription(req, res));
 
 app.post('/publish-update-via-http', (req, res) =>
-  rp({
+  fetch(`${serverBaseUrl}/publish-update`, {
     method: 'POST',
     url: `${serverBaseUrl}/publish-update`,
     body: JSON.stringify({
@@ -106,6 +106,7 @@ app.post('/publish-update-via-http', (req, res) =>
       'Content-Type': 'application/json'
     }
   })
+    .then(response => response.json())
     .then(response => {
       res.send(response);
     })
@@ -153,7 +154,7 @@ function runQuery(req, res, resolverType) {
 }
 
 function runQueryViaHttp(query, res) {
-  return rp({
+  return fetch(serverGraphQLEndpoint, {
     method: 'POST',
     url: serverGraphQLEndpoint,
     body: JSON.stringify({
@@ -163,6 +164,7 @@ function runQueryViaHttp(query, res) {
       'Content-Type': 'application/json'
     }
   })
+    .then(response => response.json())
     .then(response => {
       res.send(response);
     })
@@ -176,8 +178,8 @@ function runQueryViaAmqp(query, res) {
   const correlationId = uuid();
 
   amqpResponseHandlers[correlationId] = msg => {
-    const response = msg.content.toString();
-    res.send(response);
+    const response = JSON.parse(msg.content.toString());
+    res.json(response);
   };
 
   channel.consume(
@@ -218,7 +220,7 @@ function runMutation(req, res, input) {
     }
   `;
 
-  return rp({
+  return fetch(serverGraphQLEndpoint, {
     method: 'POST',
     url: serverGraphQLEndpoint,
     body: JSON.stringify({
@@ -229,6 +231,7 @@ function runMutation(req, res, input) {
       'Content-Type': 'application/json'
     }
   })
+    .then(response => response.json())
     .then(response => {
       res.send(response);
     })

@@ -7,7 +7,7 @@
 
 'use strict';
 
-import request from 'request-promise';
+import fetch from 'node-fetch';
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
@@ -113,7 +113,7 @@ app.get('/log', (req, res) => {
 });
 
 function finish(res) {
-  request(`http://127.0.0.1:${agentPort}`).then(() => {
+  fetch(`http://127.0.0.1:${agentPort}`).then(() => {
     res.sendStatus(200);
   });
 }

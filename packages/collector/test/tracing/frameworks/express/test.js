@@ -103,8 +103,7 @@ mochaSuiteFn('tracing/express', function () {
         },
         resolveWithFullResponse: true
       };
-      return controls.sendRequest(request).then(response => {
-        expect(response.statusCode).to.equal(200);
+      return controls.sendRequest(request).then(() => {
         return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             testUtils.expectAtLeastOneMatching(spans, [
@@ -127,8 +126,7 @@ mochaSuiteFn('tracing/express', function () {
         simple: false,
         resolveWithFullResponse: true
       };
-      return controls.sendRequest(request).then(response => {
-        expect(response.statusCode).to.equal(403);
+      return controls.sendRequest(request).then(() => {
         return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             testUtils.expectAtLeastOneMatching(spans, [

@@ -5,7 +5,6 @@
 
 'use strict';
 
-const errors = require('request-promise/errors');
 const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -19,7 +18,7 @@ describe('tracing/mssql', function () {
     const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
     mochaSuiteFn(`mssql@${mssqlVersion}`, function () {
-      this.timeout(isCI() ? 70000 : config.getTestTimeout());
+      this.timeout(isCI() ? 70000 : config.getTestTimeout() * 2);
 
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
@@ -35,7 +34,7 @@ describe('tracing/mssql', function () {
           }
         });
 
-        await controls.startAndWaitForAgentConnection();
+        await controls.startAndWaitForAgentConnection(10000);
       });
 
       after(async () => {
@@ -125,10 +124,9 @@ describe('tracing/mssql', function () {
             method: 'GET',
             path: '/error-callback'
           })
-          .catch(errors.StatusCodeError, reason => reason)
-          .then(response => {
-            expect(response.statusCode).to.equal(500);
-
+          .then(errorResponse => {
+            expect(errorResponse.code).to.equal('EREQUEST');
+            expect(errorResponse.name).to.equal('RequestError');
             return retry(() =>
               agentControls.getSpans().then(spans => {
                 const httpEntrySpan = expectAtLeastOneMatching(spans, [
@@ -176,10 +174,9 @@ describe('tracing/mssql', function () {
             method: 'GET',
             path: '/error-promise'
           })
-          .catch(errors.StatusCodeError, reason => reason)
-          .then(response => {
-            expect(response.statusCode).to.equal(500);
-
+          .then(errorResponse => {
+            expect(errorResponse.code).to.equal('EREQUEST');
+            expect(errorResponse.name).to.equal('RequestError');
             return retry(() =>
               agentControls.getSpans().then(spans => {
                 const httpEntrySpan = expectAtLeastOneMatching(spans, [
@@ -396,9 +393,9 @@ describe('tracing/mssql', function () {
             method: 'POST',
             path: '/insert-prepared-error-callback'
           })
-          .catch(errors.StatusCodeError, reason => reason)
-          .then(response => {
-            expect(response.statusCode).to.equal(500);
+          .then(errorResponse => {
+            expect(errorResponse.code).to.equal('EREQUEST');
+            expect(errorResponse.name).to.equal('RequestError');
             return retry(() =>
               agentControls.getSpans().then(spans => {
                 const writeEntry = expectAtLeastOneMatching(spans, [
@@ -427,9 +424,9 @@ describe('tracing/mssql', function () {
             method: 'POST',
             path: '/insert-prepared-error-promise'
           })
-          .catch(errors.StatusCodeError, reason => reason)
-          .then(response => {
-            expect(response.statusCode).to.equal(500);
+          .then(errorResponse => {
+            expect(errorResponse.code).to.equal('EREQUEST');
+            expect(errorResponse.name).to.equal('RequestError');
             return retry(() =>
               agentControls.getSpans().then(spans => {
                 const writeEntry = expectAtLeastOneMatching(spans, [

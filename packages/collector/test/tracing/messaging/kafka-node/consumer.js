@@ -14,7 +14,7 @@ const instana = require('../../../..')();
 
 const express = require('express');
 const kafka = require('kafka-node');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const { v4: uuid } = require('uuid');
 
 let connected = false;
@@ -97,9 +97,9 @@ consumer.on('error', err => {
   span.disableAutoEnd();
   receivedErrors.push(err);
 
-  // simulating asynchronous follow up steps with setTimeout and request-promise
+  // simulating asynchronous follow up steps with setTimeout
   setTimeout(() => {
-    request(`http://127.0.0.1:${agentPort}`).finally(() => {
+    fetch(`http://127.0.0.1:${agentPort}`).finally(() => {
       span.end(1);
     });
   }, 100);
@@ -112,9 +112,9 @@ consumer.on('message', ({ topic, key, value }) => {
   span.disableAutoEnd();
   receivedMessages.push({ topic, key, value });
 
-  // simulating asynchronous follow up steps with setTimeout and request-promise
+  // simulating asynchronous follow up steps with setTimeout
   setTimeout(() => {
-    request(`http://127.0.0.1:${agentPort}`).finally(() => {
+    fetch(`http://127.0.0.1:${agentPort}`).finally(() => {
       span.end();
     });
   }, 100);

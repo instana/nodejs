@@ -322,20 +322,6 @@ additionalLibraries:
   link: https://nodejs.org/docs/latest/api/http2.html
   packageNameForLatestAvailableVersion: node
 
-- name: request
-  category: http
-  supportedSinceVersion: v1.10.0
-  support:
-    lowerBound: 2.74.0
-    upperBound: 2.88.2
-
-- name: request-promise
-  category: http
-  supportedSinceVersion: v1.10.0
-  support:
-    lowerBound: 4.1.1
-    upperBound: 4.2.6
-
 - name: async
   category: control_flow
   supportedSinceVersion: v1.10.0

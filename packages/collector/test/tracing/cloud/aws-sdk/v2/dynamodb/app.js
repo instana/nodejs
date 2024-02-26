@@ -7,7 +7,7 @@
 
 require('../../../../../..')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const delay = require('../../../../../../../core/test/test_util/delay');
 
 const AWS = require('aws-sdk');
@@ -128,10 +128,14 @@ const DynamoDBApi = {
             } else if (data && data.code) {
               return reject(data);
             } else {
-              setTimeout(() => {
-                request(`http://127.0.0.1:${agentPort}`)
-                  .then(() => resolve(data))
-                  .catch(err2 => reject(err2));
+              setTimeout(async () => {
+                try {
+                  const response = await fetch(`http://127.0.0.1:${agentPort}`);
+                  const jsonData = await response.json();
+                  resolve(jsonData);
+                } catch (err2) {
+                  reject(err2);
+                }
               });
             }
           });
@@ -144,12 +148,16 @@ const DynamoDBApi = {
               promiseData = data;
               return delay(200);
             })
-            .then(() => request(`http://127.0.0.1:${agentPort}`))
-            .then(() => {
+            .then(async () => {
+              const response = await fetch(`http://127.0.0.1:${agentPort}`);
+              const jsonData = await response.json();
+              return jsonData;
+            })
+            .then(jsonData => {
               if (promiseData && promiseData.code) {
                 reject(promiseData);
               } else {
-                resolve(promiseData);
+                resolve(jsonData);
               }
             })
             .catch(err => {
@@ -165,19 +173,19 @@ const DynamoDBApi = {
             }
 
             await delay(200);
-            await request(`http://127.0.0.1:${agentPort}`);
-
-            return resolve(data);
+            const response = await fetch(`http://127.0.0.1:${agentPort}`);
+            const jsonData = await response.json();
+            resolve(jsonData);
           } catch (err) {
             return reject(err);
           }
+          break;
         default:
           reject(new Error(`${method} is not a valid method. Try one of these: ${availableMethods.join(', ')}`));
       }
     });
   }
 };
-
 const app = express();
 const port = require('../../../../../test_util/app-port')();
 

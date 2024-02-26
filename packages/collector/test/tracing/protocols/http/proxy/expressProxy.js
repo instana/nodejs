@@ -33,7 +33,7 @@ app.use((req, res) => {
   const delay = parseInt(req.query.delay || 0, 10);
   setTimeout(() => {
     let url;
-    if (req.query.url) {
+    if (req.query.url && req.query.url !== 'undefined') {
       url = req.query.url;
     } else {
       url = `http://localhost:${process.env.UPSTREAM_PORT}/proxy-call${req.url}`;

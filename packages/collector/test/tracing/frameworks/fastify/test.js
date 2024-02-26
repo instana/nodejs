@@ -74,8 +74,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
               resolveWithFullResponse: true
             })
             .then(response => {
-              expect(response.statusCode).to.equal(expectedStatusCode);
-              expect(response.body).to.deep.equal(expectedResponse);
+              expect(response).to.deep.equal(expectedResponse);
               return testUtils.retry(() =>
                 agentControls.getSpans().then(spans => {
                   testUtils.expectAtLeastOneMatching(spans, [

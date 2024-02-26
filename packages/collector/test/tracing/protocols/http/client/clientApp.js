@@ -13,7 +13,7 @@ const express = require('express');
 const fs = require('fs');
 const morgan = require('morgan');
 const path = require('path');
-const rp = require('request-promise');
+const fetch = require('node-fetch');
 const port = require('../../../../test_util/app-port')();
 const httpModule = process.env.USE_HTTPS === 'true' ? require('https') : require('http');
 const protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
@@ -130,9 +130,8 @@ app.get('/get-options-only', (req, res) => {
 });
 
 app.get('/timeout', (req, res) => {
-  rp({
+  fetch(`${baseUrl}/timeout`, {
     method: 'GET',
-    url: `${baseUrl}/timeout`,
     timeout: 500,
     ca: cert
   })

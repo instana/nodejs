@@ -196,7 +196,7 @@ function verifySpans(spans, appControls) {
   // 2 x express middleware, 1 x request handler
   // 1 x tlc connect, 1 x tls connect
   expectExactlyNMatching(spans, 6, [
-   span => expect(span.ec).to.eq(0),
+    span => expect(span.ec).to.eq(0),
     span => expect(span.f.e).to.eq(appControls.getTestAppPid()),
     span => expect(span.n).to.eq('otel'),
     span => expect(span.s).to.exist,
