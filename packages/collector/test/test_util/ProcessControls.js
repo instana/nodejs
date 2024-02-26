@@ -22,7 +22,6 @@ const sslDir = path.join(__dirname, '..', 'apps', 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
 // To address the certificate authorization issue with node-fetch, process.env.NODE_TLS_REJECT_UNAUTHORIZED
 // was set to '0'. Refer to the problem discussed in https://github.com/node-fetch/node-fetch/issues/19
-// todo
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 class ProcessControls {
   /**

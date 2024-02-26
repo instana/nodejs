@@ -233,7 +233,7 @@ mochaSuiteFn('tracing/elasticsearch', function () {
               expect(res.response.body.hits).to.be.an('object');
               expect(res.response.body.hits.total.value).to.equal(1);
               expect(res.response.body.hits.hits).to.be.an('array');
-              //  expect(res.response.body.hits.hits[0]._source.title).to.equal(titleA);
+              expect(res.response.body.hits.hits[0]._source.title).to.equal(titleA);
 
               return retry(() =>
                 agentControls.getSpans().then(spans => {
@@ -652,12 +652,11 @@ mochaSuiteFn('tracing/elasticsearch', function () {
           }
         }
 
-        // eslint-disable-next-line no-unused-vars
         function verifyIndexOrEndpoint(span, expectedIndex = 'modern_index', expectedEndpoint = '/modern_index/_doc') {
           if (instrumentationFlavor === 'api') {
             expect(span.data.elasticsearch.index).to.equal(expectedIndex);
           } else if (instrumentationFlavor === 'transport') {
-            // expect(span.data.elasticsearch.endpoint).to.contain(expectedEndpoint);
+            expect(span.data.elasticsearch.endpoint).to.contain(expectedEndpoint);
           } else {
             fail(`Unknown instrumentation flavor: ${instrumentationFlavor}`);
           }

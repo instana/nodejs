@@ -52,7 +52,7 @@ app.use(
 );
 
 app.get('/', (req, res) => {
-  res.send({ version: '1.1.999' });
+  res.json({ version: '1.1.999' });
 });
 
 app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
@@ -199,7 +199,7 @@ app.post('/tracermetrics', function handleTracermetrics(req, res) {
   if (!tracingMetrics) {
     res.sendStatus(404);
   } else {
-    res.send({ status: 'OK' });
+    res.send('OK');
   }
 });
 
@@ -207,14 +207,14 @@ app.post('/com.instana.plugin.generic.event', function postEvent(req, res) {
   if (!dropAllData) {
     receivedData.events.push(req.body);
   }
-  res.send({ status: 'OK' });
+  res.send('OK');
 });
 
 app.post('/com.instana.plugin.generic.agent-monitoring-event', function postMonitoringEvent(req, res) {
   if (!dropAllData) {
     receivedData.monitoringEvents.push(req.body);
   }
-  res.send({ status: 'OK' });
+  res.send('OK');
 });
 
 function checkExistenceOfKnownPid(fn) {
@@ -235,11 +235,13 @@ app.delete('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/received/data', (req, res) => res.send(receivedData));
+app.get('/received/data', (req, res) => {
+  res.json(receivedData);
+});
 
 app.delete('/received/data', (req, res) => {
   receivedData = resetReceivedData();
-  res.send({ status: 'OK' });
+  res.sendStatus(200);
 });
 
 app.get('/received/aggregated/metrics/:pid', (req, res) => res.json(receivedData.aggregatedMetrics[req.params.pid]));
@@ -282,13 +284,13 @@ app.post('/reject-announce-attempts', (req, res) => {
   } else {
     rejectAnnounceAttempts = 1;
   }
-  res.send({ status: 'OK' });
+  res.send('OK');
 });
 
 app.delete('/discoveries', (req, res) => {
   rejectAnnounceAttempts = 0;
   discoveries = {};
-  res.send({ status: 'OK' });
+  res.send('OK');
 });
 
 app.post('/request/:pid', (req, res) => {
