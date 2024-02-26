@@ -12,7 +12,7 @@ require('../../../..')();
 
 const fs = require('fs');
 const path = require('path');
-const rp = require('request-promise');
+const fetch = require('node-fetch');
 const { parse } = require('url');
 
 const http2Promise = require('../../../test_util/http2Promise');
@@ -99,16 +99,28 @@ async function executeDownstreamRequestViaCoreHttp(method, url, query, resOrStre
       'X-Request-Header-App-To-Downstream': 'Value 2'
     }
   };
+  let request;
   if (useHttp2) {
     requestOptions.baseUrl = `https://localhost:${downstreamPort}`;
     requestOptions.path = '/downstream';
+    request = http2Promise.request(requestOptions);
   } else {
     requestOptions.uri = `http://localhost:${downstreamPort}/downstream`;
+    request = fetch(requestOptions.uri, requestOptions)
+      .then(result => {
+        const contentType = result.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          return result.json();
+        } else {
+          return result.text();
+        }
+      })
+      .then(request1 => {
+        return request1;
+      });
   }
-
-  const requestPromise = useHttp2 ? http2Promise.request(requestOptions) : rp(requestOptions);
   try {
-    const downstreamResponse = await requestPromise;
+    const downstreamResponse = await request;
     return endWithPayload(method, url, resOrStream, downstreamResponse);
   } catch (e) {
     return endWithError(method, url, resOrStream, e);

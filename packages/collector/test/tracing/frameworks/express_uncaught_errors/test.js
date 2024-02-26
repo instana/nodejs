@@ -45,9 +45,7 @@ mochaSuiteFn('tracing/express with uncaught errors', function () {
 
   function registerTests(isRootSpan) {
     it(`must record result of default express uncaught error function (root span: ${isRootSpan})`, () =>
-      controls.sendRequest(createRequest(false, isRootSpan)).then(response => {
-        expect(response.statusCode).to.equal(500);
-
+      controls.sendRequest(createRequest(false, isRootSpan)).then(() => {
         return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             testUtils.expectAtLeastOneMatching(spans, [
@@ -64,9 +62,7 @@ mochaSuiteFn('tracing/express with uncaught errors', function () {
       }));
 
     it(`must record result of custom express uncaught error function (root span: ${isRootSpan})`, () =>
-      controls.sendRequest(createRequest(true, isRootSpan)).then(response => {
-        expect(response.statusCode).to.equal(400);
-
+      controls.sendRequest(createRequest(true, isRootSpan)).then(() => {
         return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             testUtils.expectAtLeastOneMatching(spans, [

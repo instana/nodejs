@@ -54,7 +54,7 @@ app.get('/get', (req, res) => {
   if (isLatest) {
     client
       .get({
-        index: req.query.index || 'modern_index',
+        index: req.query.index && req.query.index !== 'undefined' ? req.query.index : 'modern_index',
         id: req.query.id
       })
       .then(response => {
@@ -70,7 +70,7 @@ app.get('/get', (req, res) => {
   } else {
     client.get(
       {
-        index: req.query.index || 'modern_index',
+        index: req.query.index && req.query.index !== 'undefined' ? req.query.index : 'modern_index',
         id: req.query.id
       },
       {},
@@ -88,7 +88,7 @@ app.get('/search', (req, res) => {
   let searchResponse;
   client
     .search({
-      index: req.query.index || 'modern_index',
+      index: req.query.index && req.query.index !== 'undefined' ? req.query.index : 'modern_index',
       q: req.query.q
     })
     .then(response => {
@@ -115,8 +115,14 @@ app.get('/mget1', (req, res) => {
       .mget({
         body: {
           docs: [
-            { _index: req.query.index || 'modern_index', _id: ids[0] },
-            { _index: req.query.index || 'modern_index', _id: ids[1] }
+            {
+              _index: req.query.index && req.query.index !== 'undefined' ? req.query.index : 'modern_index',
+              _id: ids[0]
+            },
+            {
+              _index: req.query.index && req.query.index !== 'undefined' ? req.query.index : 'modern_index',
+              _id: ids[1]
+            }
           ]
         }
       })
@@ -131,8 +137,14 @@ app.get('/mget1', (req, res) => {
       {
         body: {
           docs: [
-            { _index: req.query.index || 'modern_index', _id: ids[0] },
-            { _index: req.query.index || 'modern_index', _id: ids[1] }
+            {
+              _index: req.query.index && req.query.index !== 'undefined' ? req.query.index : 'modern_index',
+              _id: ids[0]
+            },
+            {
+              _index: req.query.index && req.query.index !== 'undefined' ? req.query.index : 'modern_index',
+              _id: ids[1]
+            }
           ]
         }
       },
@@ -156,7 +168,7 @@ app.get('/mget2', (req, res) => {
   if (isLatest) {
     client
       .mget({
-        index: req.query.index || 'modern_index',
+        index: req.query.index && req.query.index !== 'undefined' ? req.query.index : 'modern_index',
         body: {
           ids
         }
@@ -170,7 +182,7 @@ app.get('/mget2', (req, res) => {
   } else {
     client.mget(
       {
-        index: req.query.index || 'modern_index',
+        index: req.query.index && req.query.index !== 'undefined' ? req.query.index : 'modern_index',
         body: {
           ids
         }
@@ -194,9 +206,9 @@ app.get('/msearch', (req, res) => {
 
   const query = {
     body: [
-      { index: req.query.index || 'modern_index' },
+      { index: req.query.index && req.query.index !== 'undefined' ? req.query.index : 'modern_index' },
       { query: { query_string: { query: req.query.q[0] } } },
-      { index: req.query.index || 'modern_index' },
+      { index: req.query.index && req.query.index !== 'undefined' ? req.query.index : 'modern_index' },
       { query: { query_string: { query: req.query.q[1] } } }
     ]
   };
@@ -216,7 +228,7 @@ app.post('/index', (req, res) => {
 
   client
     .index({
-      index: req.query.index || 'modern_index',
+      index: req.query.index && req.query.index !== 'undefined' ? req.query.index : 'modern_index',
       body: req.body
     })
     .then(response =>

@@ -296,7 +296,7 @@ app.delete('/discoveries', (req, res) => {
 app.post('/request/:pid', (req, res) => {
   requests[req.params.pid] = requests[req.params.pid] || [];
   requests[req.params.pid].push(req.body);
-  res.send('OK');
+  res.send({ status: 'OK' });
 });
 
 app.listen(port, () => {

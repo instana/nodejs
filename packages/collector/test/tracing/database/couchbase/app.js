@@ -11,7 +11,6 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const uuid = require('uuid');
 const morgan = require('morgan');
-const requestPromise = require('request-promise');
 const fetch = require('node-fetch');
 const port = require('../../../test_util/app-port')();
 const { delay } = require('../../../../../core/test/test_util');
@@ -186,7 +185,7 @@ app.get('/', (req, res) => {
 
 app.get('/get-promise', async (req, res) => {
   const result = await collection1.get('get-key-1');
-  await requestPromise(`http://127.0.0.1:${agentPort}`);
+  await fetch(`http://127.0.0.1:${agentPort}`);
 
   res.json({ result: result.value });
 });

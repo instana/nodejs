@@ -275,10 +275,17 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, controls, '/', 'GET', 200, false, false);
             expect(span.data.http.header).to.be.an('object');
-            expect(span.data.http.header).to.deep.equal({
-              'x-my-entry-request-header': requestHeaderValue,
-              'x-my-entry-request-multi-header': 'value1, value2'
-            });
+            if (this.title === 'http2 compat mode') {
+              expect(span.data.http.header).to.deep.equal({
+                'x-my-entry-request-header': requestHeaderValue,
+                'x-my-entry-request-multi-header': 'value1, value2'
+              });
+            } else {
+              expect(span.data.http.header).to.deep.equal({
+                'x-my-entry-request-header': requestHeaderValue,
+                'x-my-entry-request-multi-header': 'value1,value2'
+              });
+            }
           })
         )
       );
@@ -344,12 +351,21 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, controls, '/', 'GET', 200, false, false);
             expect(span.data.http.header).to.be.an('object');
-            expect(span.data.http.header).to.deep.equal({
-              'x-my-entry-request-header': requestHeaderValue,
-              'x-my-entry-request-multi-header': 'value1, value2',
-              'x-my-entry-response-header': expectedResponeHeaderValue,
-              'x-my-entry-response-multi-header': 'value1, value2'
-            });
+            if (this.title === 'http2 compat mode') {
+              expect(span.data.http.header).to.deep.equal({
+                'x-my-entry-request-header': requestHeaderValue,
+                'x-my-entry-request-multi-header': 'value1, value2',
+                'x-my-entry-response-header': expectedResponeHeaderValue,
+                'x-my-entry-response-multi-header': 'value1, value2'
+              });
+            } else {
+              expect(span.data.http.header).to.deep.equal({
+                'x-my-entry-request-header': requestHeaderValue,
+                'x-my-entry-request-multi-header': 'value1,value2',
+                'x-my-entry-response-header': expectedResponeHeaderValue,
+                'x-my-entry-response-multi-header': 'value1, value2'
+              });
+            }
           })
         )
       );
@@ -375,14 +391,25 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, controls, '/', 'GET', 200, false, false);
             expect(span.data.http.header).to.be.an('object');
-            expect(span.data.http.header).to.deep.equal({
-              'x-my-entry-request-header': requestHeaderValue,
-              'x-my-entry-request-multi-header': 'value1, value2',
-              'x-my-entry-response-header': expectedResponeHeaderValue1,
-              'x-my-entry-response-multi-header': 'value1, value2',
-              'x-write-head-response-header': expectedResponeHeaderValue2,
-              'x-write-head-response-multi-header': 'value1, value2'
-            });
+            if (this.title === 'http2 compat mode') {
+              expect(span.data.http.header).to.deep.equal({
+                'x-my-entry-request-header': requestHeaderValue,
+                'x-my-entry-request-multi-header': 'value1, value2',
+                'x-my-entry-response-header': expectedResponeHeaderValue1,
+                'x-my-entry-response-multi-header': 'value1, value2',
+                'x-write-head-response-header': expectedResponeHeaderValue2,
+                'x-write-head-response-multi-header': 'value1, value2'
+              });
+            } else {
+              expect(span.data.http.header).to.deep.equal({
+                'x-my-entry-request-header': requestHeaderValue,
+                'x-my-entry-request-multi-header': 'value1,value2',
+                'x-my-entry-response-header': expectedResponeHeaderValue1,
+                'x-my-entry-response-multi-header': 'value1, value2',
+                'x-write-head-response-header': expectedResponeHeaderValue2,
+                'x-write-head-response-multi-header': 'value1, value2'
+              });
+            }
           })
         )
       );
@@ -463,7 +490,10 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         resolveWithFullResponse: true
       })
       .then(response => {
-        expect(response.headers['set-cookie']).to.deep.equal([expectedCookie]);
+        const responseHeaders =
+          response.headers['set-cookie'] ||
+          (response.headers.get('set-cookie') ? [response.headers.get('set-cookie')] : null);
+        expect(responseHeaders).to.deep.equal([expectedCookie]);
       });
   });
 
@@ -478,7 +508,10 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         fail('Expected the HTTP call to time out.');
       })
       .catch(err => {
-        if (err.error && (err.error.code === 'ESOCKETTIMEDOUT' || err.error.code === 'ETIMEDOUT')) {
+        if (
+          (err.error && (err.error.code === 'ESOCKETTIMEDOUT' || err.error.code === 'ETIMEDOUT')) ||
+          err.type === 'request-timeout'
+        ) {
           // We actually expect the request to time out. But we still want to verify that an entry span has been created
           // for it.
           return retry(() =>
@@ -508,7 +541,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         fail('Expected the HTTP connection to be closed by the server.');
       })
       .catch(err => {
-        if (err.error && err.error.code === 'ECONNRESET') {
+        if ((err.error && err.error.code === 'ECONNRESET') || err.code === 'ECONNRESET') {
           // We actually expect the request to time out. But we still want to verify that an entry span has been created
           // for it.
           return retry(() =>
@@ -537,7 +570,8 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
           resolveWithFullResponse: true
         })
         .then(res => {
-          expect(res.headers['server-timing']).to.match(/^intid;desc=[a-f0-9]+$/);
+          const responseHeaders = res.headers['server-timing'] || res.headers.get('server-timing');
+          expect(responseHeaders).to.match(/^intid;desc=[a-f0-9]+$/);
         }));
 
     it('must also expose trace id as Server-Timing header when X-INSTANA-T and -S are incoming', () =>
@@ -552,7 +586,8 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
           }
         })
         .then(res => {
-          expect(res.headers['server-timing']).to.equal('intid;desc=84e588b697868fee');
+          const responseHeaders = res.headers['server-timing'] || res.headers.get('server-timing');
+          expect(responseHeaders).to.equal('intid;desc=84e588b697868fee');
         }));
 
     it('must expose trace id as Server-Timing header: Custom server-timing string', () =>
@@ -563,7 +598,8 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
           resolveWithFullResponse: true
         })
         .then(res => {
-          expect(res.headers['server-timing']).to.match(/^myServerTimingKey, intid;desc=[a-f0-9]+$/);
+          const responseHeaders = res.headers['server-timing'] || res.headers.get('server-timing');
+          expect(responseHeaders).to.match(/^myServerTimingKey, intid;desc=[a-f0-9]+$/);
         }));
 
     it('must expose trace id as Server-Timing header: Custom server-timing array', () =>
@@ -574,7 +610,8 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
           resolveWithFullResponse: true
         })
         .then(res => {
-          expect(res.headers['server-timing']).to.match(/^key1, key2;dur=42, intid;desc=[a-f0-9]+$/);
+          const responseHeaders = res.headers['server-timing'] || res.headers.get('server-timing');
+          expect(responseHeaders).to.match(/^key1, key2;dur=42, intid;desc=[a-f0-9]+$/);
         }));
 
     it(
@@ -588,7 +625,8 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
             resolveWithFullResponse: true
           })
           .then(res => {
-            expect(res.headers['server-timing']).to.equal('myServerTimingKey, intid;desc=1234567890abcdef');
+            const responseHeaders = res.headers['server-timing'] || res.headers.get('server-timing');
+            expect(responseHeaders).to.equal('myServerTimingKey, intid;desc=1234567890abcdef');
           })
     );
 
@@ -603,7 +641,8 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
             resolveWithFullResponse: true
           })
           .then(res => {
-            expect(res.headers['server-timing']).to.equal('key1, key2;dur=42, intid;desc=1234567890abcdef');
+            const responseHeaders = res.headers['server-timing'] || res.headers.get('server-timing');
+            expect(responseHeaders).to.equal('key1, key2;dur=42, intid;desc=1234567890abcdef');
           })
     );
   });

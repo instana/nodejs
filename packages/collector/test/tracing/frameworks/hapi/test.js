@@ -60,8 +60,7 @@ mochaSuiteFn('tracing/hapi', function () {
             resolveWithFullResponse: true
           })
           .then(response => {
-            expect(response.statusCode).to.equal(200);
-            expect(response.body).to.equal(expectedTemplate);
+            expect(response).to.equal(expectedTemplate);
             return testUtils.retry(() =>
               agentControls.getSpans().then(spans => {
                 testUtils.expectAtLeastOneMatching(spans, [

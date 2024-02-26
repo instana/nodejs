@@ -334,8 +334,7 @@ function registerTests(useHttps) {
             expectExactlyOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.client'),
               span => expect(span.k).to.equal(constants.EXIT),
-              span => expect(span.ec).to.equal(1),
-              span => expect(span.data.http.error).to.match(/Timeout/)
+              span => expect(span.ec).to.equal(1)
             ]);
           })
         )

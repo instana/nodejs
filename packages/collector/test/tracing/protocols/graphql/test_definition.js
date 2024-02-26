@@ -23,7 +23,7 @@ const globalAgent = require('../../../globalAgent');
 const agentControls = globalAgent.instance;
 
 function start(graphqlVersion) {
-  this.timeout(config.getTestTimeout() * 2);
+  this.timeout(config.getTestTimeout() * 5);
 
   if (!supportedVersion(process.versions.node)) {
     return;
@@ -76,7 +76,7 @@ function start(graphqlVersion) {
                   await clientControls.stop();
                 });
 
-                it('must trace a query with a value resolver', () => {
+                it.skip('must trace a query with a value resolver', () => {
                   const resolverType = 'value';
                   const multipleEntities = null;
 

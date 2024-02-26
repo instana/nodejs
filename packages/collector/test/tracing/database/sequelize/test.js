@@ -91,9 +91,12 @@ function registerTests(usePgNative) {
       .sendRequest({
         method: 'POST',
         path: '/regents',
-        body: {
+        body: JSON.stringify({
           firstName: 'Martina',
           lastName: '-'
+        }),
+        headers: {
+          'Content-Type': 'application/json'
         }
       })
       .then(() =>

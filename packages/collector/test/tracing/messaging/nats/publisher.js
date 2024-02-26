@@ -10,7 +10,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 require('./mockVersion');
 require('../../../..')();
 
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const express = require('express');
 const NATS = require('nats');
 
@@ -172,7 +172,7 @@ function afterPublish(res, err, msg) {
     mostRecentEmittedError = null;
   }
 
-  request(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}`)
     .then(() => {
       // nats has a bug that makes the callback called twice in some situations
       if (!res.headersSent) {

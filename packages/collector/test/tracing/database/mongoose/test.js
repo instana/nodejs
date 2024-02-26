@@ -88,18 +88,24 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
         .sendRequest({
           method: 'POST',
           path: '/insert',
-          body: {
+          body: JSON.stringify({
             name: randomName,
             age: 42
+          }),
+          headers: {
+            'Content-Type': 'application/json'
           }
         })
         .then(() =>
           controls.sendRequest({
             method: 'POST',
             path: '/find',
-            body: {
+            body: JSON.stringify({
               name: randomName,
               age: 42
+            }),
+            headers: {
+              'Content-Type': 'application/json'
             }
           })
         )

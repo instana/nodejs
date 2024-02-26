@@ -6,7 +6,7 @@
 
 const { fork } = require('child_process');
 const path = require('path');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 const config = require('../../serverless/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
@@ -95,7 +95,9 @@ class Control extends AbstractServerlessControl {
 
     opts.url = `${this.baseUrl}${opts.path}`;
     opts.json = true;
-    return request(opts);
+    return fetch(opts.url, opts).then(response => {
+      return response.json();
+    });
   }
 
   getPort() {

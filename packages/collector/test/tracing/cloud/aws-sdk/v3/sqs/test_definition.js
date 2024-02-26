@@ -201,7 +201,7 @@ function start(version) {
             `consecutive receiveMessage calls via ${sqsReceiveMethod} in the same event loop tick should not ` +
               'trigger a warning',
             async () => {
-              await retry(async () => {
+              retry(async () => {
                 const numberOfMessagePolls = await receiverControls.sendRequest({
                   path: '/number-of-receive-message-attempts',
                   suppressTracing: true

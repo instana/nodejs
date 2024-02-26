@@ -11,7 +11,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 
 require('../../../..')();
 
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
@@ -65,7 +65,7 @@ app.get('/timeout', (req, res) => {
 });
 
 app.get('/exit-span', (req, res) => {
-  request('http://127.0.0.1:65212').catch(err => {
+  fetch('http://127.0.0.1:65212').catch(err => {
     console.error(err, 'console.error - should be traced');
     finish(res);
   });
@@ -107,7 +107,7 @@ app.get('/error-object-and-extra-string-field', (req, res) => {
 });
 
 function finish(res) {
-  request(`http://127.0.0.1:${agentPort}`).then(() => {
+  fetch(`http://127.0.0.1:${agentPort}`).then(() => {
     res.sendStatus(200);
   });
 }

@@ -9,7 +9,7 @@ const { expect } = require('chai');
 const { spawn } = require('child_process');
 const _ = require('lodash');
 const portfinder = require('../test_util/portfinder');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 
 const config = require('../../../core/test/config');
 const { delay, retry } = require('../../../core/test/test_util');
@@ -86,12 +86,14 @@ describe('collector/src/immediate', function () {
 
       // Wait until the application under test is up.
       appUnderTestPid = await retry(() =>
-        request({
+        fetch(`http://localhost:${appPort}/pid`, {
           url: `http://localhost:${appPort}/pid`,
           method: 'GET',
           headers: {
             'X-INSTANA-L': '0'
           }
+        }).then(response => {
+          return response.json();
         })
       );
       const npmPid = npmProcess.pid;

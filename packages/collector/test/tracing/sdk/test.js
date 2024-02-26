@@ -250,7 +250,7 @@ mochaSuiteFn('tracing/sdk', function () {
               path: `/${apiType}/create-overlapping-intermediates`
             })
             .then(response => {
-              expect(response).does.not.exist;
+              expect(response.body).to.be.eq('');
 
               return retry(() =>
                 agentControls.getSpans().then(spans => {

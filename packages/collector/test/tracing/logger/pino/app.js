@@ -10,7 +10,7 @@
 require('./mockVersion');
 require('../../../..')();
 
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
@@ -199,7 +199,7 @@ app.get('/express-pino-error-random-object-and-string', (req, res) => {
 });
 
 function finish(res) {
-  request(`http://127.0.0.1:${agentPort}`).then(() => {
+  fetch(`http://127.0.0.1:${agentPort}`).then(() => {
     res.sendStatus(200);
   });
 }

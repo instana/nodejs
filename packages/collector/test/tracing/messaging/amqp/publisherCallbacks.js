@@ -29,7 +29,7 @@ const queueNameConfirm = require('./amqpUtil').queueNameConfirm;
 let channel;
 let confirmChannel;
 
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const express = require('express');
 const port = require('../../../test_util/app-port')();
@@ -128,7 +128,7 @@ app.post('/publish', (req, res) => {
   // https://github.com/squaremo/amqp.node/issues/89#issuecomment-62632326
   channel.publish(exchange, '', Buffer.from(req.body.message));
 
-  request(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}`)
     .then(() => {
       res.status(201).send('OK');
     })
@@ -144,7 +144,7 @@ app.post('/send-to-queue', (req, res) => {
   // https://github.com/squaremo/amqp.node/issues/89#issuecomment-62632326
   channel.sendToQueue(queueName, Buffer.from(req.body.message));
 
-  request(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}`)
     .then(() => {
       res.status(201).send('OK');
     })
@@ -160,7 +160,7 @@ app.post('/send-to-get-queue', (req, res) => {
   // https://github.com/squaremo/amqp.node/issues/89#issuecomment-62632326
   channel.sendToQueue(queueNameGet, Buffer.from(req.body.message));
 
-  request(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}`)
     .then(() => {
       res.status(201).send('OK');
     })
@@ -178,7 +178,7 @@ app.post('/publish-to-confirm-channel-without-callback', (req, res) => {
   // https://github.com/amqp-node/amqplib/blob/v0.10.3/lib/channel_model.js#L265
   confirmChannel.publish(exchange, '', Buffer.from(req.body.message));
 
-  request(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}`)
     .then(() => {
       res.status(201).send('OK');
     })
@@ -194,7 +194,7 @@ app.post('/send-to-confirm-queue', (req, res) => {
       log(err);
       return res.sendStatus(500);
     }
-    request(`http://127.0.0.1:${agentPort}`)
+    fetch(`http://127.0.0.1:${agentPort}`)
       .then(() => {
         res.status(201).send('OK');
       })

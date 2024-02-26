@@ -6,7 +6,7 @@
 'use strict';
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
-import request from 'request-promise';
+import fetch from 'node-fetch';
 import delay from '../../../../../../../core/test/test_util/delay.js';
 import AWS from 'aws-sdk';
 import express from 'express';
@@ -109,7 +109,7 @@ const S3Api = {
               return reject(err);
             } else {
               setTimeout(() => {
-                request(`http://127.0.0.1:${agentPort}`)
+                fetch(`http://127.0.0.1:${agentPort}`)
                   .then(() => resolve(data))
                   .catch(err2 => {
                     logger(
@@ -132,7 +132,7 @@ const S3Api = {
               promiseData = data;
               return delay(200);
             })
-            .then(() => request(`http://127.0.0.1:${agentPort}`))
+            .then(() => fetch(`http://127.0.0.1:${agentPort}`))
             .then(() => {
               resolve(promiseData);
             })
@@ -153,7 +153,7 @@ const S3Api = {
             logger(`/${operation}/${method} got data from AWS SDK`);
 
             await delay(200);
-            await request(`http://127.0.0.1:${agentPort}`);
+            await fetch(`http://127.0.0.1:${agentPort}`);
 
             return resolve(data);
           } catch (err) {

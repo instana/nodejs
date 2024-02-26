@@ -10,7 +10,7 @@ const instana = require('../../../..')();
 const fs = require('fs');
 const path = require('path');
 
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const EventEmitter = require('events');
 const express = require('express');
@@ -193,7 +193,7 @@ app.get('/with-event-emitter', (req, res) => {
 
 app.get('/entry-exit', (req, res) => {
   const deferred = Q.defer();
-  request(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}`)
     .then(() => deferred.resolve())
     .catch(e => deferred.reject(e));
   return deferred.promise.then(() => sendResponse(res)).catch(e => sendResponse(res, e));

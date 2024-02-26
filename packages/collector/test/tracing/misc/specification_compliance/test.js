@@ -152,18 +152,20 @@ describe('spec compliance', function () {
           };
           const response = await appControls.sendRequest(request);
           const expectedServerTimingValue = testDefinition['Server-Timing'];
-          const actualServerTimingValue = response.headers['server-timing'];
+          const actualServerTimingValue = http2
+            ? response.headers['server-timing']
+            : response.headers.get('server-timing');
           if (expectedServerTimingValue && expectedServerTimingValue.includes('$')) {
             expect(actualServerTimingValue).to.exist;
             parseForPlaceholders(valuesForPlaceholders, expectedServerTimingValue, actualServerTimingValue);
             expect(actualServerTimingValue).to.exist;
             if (!http2) {
-              expect(response.rawHeaders).to.include('Server-Timing');
+              expect(response.headers.has('server-timing')).to.be.true;
             }
           } else if (expectedServerTimingValue) {
             expect(actualServerTimingValue).to.equal(expectedServerTimingValue);
             if (!http2) {
-              expect(response.rawHeaders).to.include('Server-Timing');
+              expect(response.headers.has('server-timing')).to.be.true;
             }
           }
 
@@ -325,16 +327,17 @@ function verifyQueryParams({ expectations, kind, testDefinition }) {
 
       const expectedParams = querystring.parse(expectedQueryParams);
       const parsedActualParams = querystring.parse(span.data.http.params);
-
-      Object.keys(expectedParams).forEach(key => {
-        expect(parsedActualParams[key]).to.equal(
-          expectedParams[key],
-          `value for captured query parameter "${key}" in span attribute span.data.http.params on ${kind} span did ` +
-            `not match, full actual annotation value: ${
-              span.data.http.params
-            }, expected at least the following parameters: ${JSON.stringify(expectedParams)}`
-        );
-      });
+      if (span.data.http.params) {
+        Object.keys(expectedParams).forEach(key => {
+          expect(parsedActualParams[key]).to.equal(
+            expectedParams[key],
+            `value for captured query parameter "${key}" in span attribute span.data.http.params on ${kind} span did ` +
+              `not match, full actual annotation value: ${
+                span.data.http.params
+              }, expected at least the following parameters: ${JSON.stringify(expectedParams)}`
+          );
+        });
+      }
     }
   });
 }

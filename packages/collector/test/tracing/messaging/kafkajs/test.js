@@ -95,12 +95,15 @@ mochaSuiteFn('tracing/kafkajs', function () {
                   method: 'POST',
                   path: '/send-messages',
                   simple: true,
-                  body: {
+                  body: JSON.stringify({
                     key: 'someKey',
                     value: 'someMessage',
                     error,
                     useSendBatch,
                     useEachBatch
+                  }),
+                  headers: {
+                    'Content-Type': 'application/json'
                   }
                 });
 
@@ -124,12 +127,15 @@ mochaSuiteFn('tracing/kafkajs', function () {
                     path: '/send-messages',
                     simple: true,
                     suppressTracing: true,
-                    body: {
+                    body: JSON.stringify({
                       key: 'someKey',
                       value: 'someMessage',
                       error,
                       useSendBatch,
                       useEachBatch
+                    }),
+                    headers: {
+                      'Content-Type': 'application/json'
                     }
                   });
 
@@ -191,12 +197,15 @@ mochaSuiteFn('tracing/kafkajs', function () {
               method: 'POST',
               path: '/send-messages',
               simple: true,
-              body: {
+              body: JSON.stringify({
                 key: 'someKey',
                 value: 'someMessage',
                 error,
                 useSendBatch,
                 useEachBatch
+              }),
+              headers: {
+                'Content-Type': 'application/json'
               }
             });
 
@@ -263,11 +272,14 @@ mochaSuiteFn('tracing/kafkajs', function () {
             method: 'POST',
             path: '/send-messages',
             simple: true,
-            body: {
+            body: JSON.stringify({
               key: 'someKey',
               value: 'someMessage',
               useSendBatch,
               useEachBatch
+            }),
+            headers: {
+              'Content-Type': 'application/json'
             }
           });
 
@@ -289,11 +301,14 @@ mochaSuiteFn('tracing/kafkajs', function () {
             path: '/send-messages',
             simple: true,
             suppressTracing: true,
-            body: {
+            body: JSON.stringify({
               key: 'someKey',
               value: 'someMessage',
               useSendBatch,
               useEachBatch
+            }),
+            headers: {
+              'Content-Type': 'application/json'
             }
           });
 
@@ -352,9 +367,12 @@ mochaSuiteFn('tracing/kafkajs', function () {
           method: 'POST',
           path: '/send-messages',
           simple: true,
-          body: {
+          body: JSON.stringify({
             key: 'someKey',
             value: 'someMessage'
+          }),
+          headers: {
+            'Content-Type': 'application/json'
           }
         });
 
@@ -410,9 +428,12 @@ mochaSuiteFn('tracing/kafkajs', function () {
           method: 'POST',
           path: '/send-messages',
           simple: true,
-          body: {
+          body: JSON.stringify({
             key: 'someKey',
             value: 'someMessage'
+          }),
+          headers: {
+            'Content-Type': 'application/json'
           }
         });
 
@@ -474,11 +495,14 @@ mochaSuiteFn('tracing/kafkajs', function () {
         path: '/send-messages',
         simple: true,
         error: false,
-        body: {
+        body: JSON.stringify({
           key: 'someKey',
           value: 'someMessage',
           useSendBatch: false,
           useEachBatch: false
+        }),
+        headers: {
+          'Content-Type': 'application/json'
         }
       });
 
@@ -533,11 +557,12 @@ mochaSuiteFn('tracing/kafkajs', function () {
         method: 'POST',
         path: '/send-messages',
         simple: true,
-        body: {
+        body: JSON.stringify({
           key: 'someKey',
           value: 'someMessage'
-        },
+        }),
         headers: {
+          'Content-Type': 'application/json',
           'X-INSTANA-T': '1234',
           'X-INSTANA-S': '5678'
         }

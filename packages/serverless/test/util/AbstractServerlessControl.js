@@ -10,7 +10,7 @@ const {
   assert: { fail }
 } = require('chai');
 const path = require('path');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 
 const retry = require('@instana/core/test/test_util/retry');
 const config = require('../config');
@@ -314,12 +314,12 @@ AbstractServerlessControl.prototype.getMetrics = function getMetrics() {
 
 AbstractServerlessControl.prototype._getFromBackend = function _getFromBackend(url) {
   if (this.backendHasBeenStarted) {
-    return request({
+    return fetch(`${this.backendBaseUrl}${url}`, {
       method: 'GET',
       url: `${this.backendBaseUrl}${url}`,
       json: true,
       strictSSL: false
-    });
+    }).then(response => response.json());
   } else {
     return Promise.resolve([]);
   }
@@ -330,7 +330,7 @@ AbstractServerlessControl.prototype.resetBackend = function resetBackend() {
     // eslint-disable-next-line no-console
     console.log('[AbstractServerlessControl] resetting backend');
 
-    return request({
+    return fetch(`${this.backendBaseUrl}/received`, {
       method: 'DELETE',
       url: `${this.backendBaseUrl}/received`,
       strictSSL: false
@@ -348,11 +348,13 @@ AbstractServerlessControl.prototype.setResponsive = function setResponsive(respo
     responsive = true;
   }
   if (this.backendHasBeenStarted) {
-    return request({
-      method: 'POST',
-      url: `${this.backendBaseUrl}/responsive?responsive=${responsive}`,
-      strictSSL: false
-    });
+    return fetch(`${this.backendBaseUrl}/responsive?responsive=${responsive}`, {
+      method: 'POST'
+    })
+      .then(response => response.json())
+      .catch(() => {
+        return [];
+      });
   } else {
     return Promise.resolve([]);
   }
@@ -360,11 +362,7 @@ AbstractServerlessControl.prototype.setResponsive = function setResponsive(respo
 
 AbstractServerlessControl.prototype._getFromExtension = function _getFromExtension(url) {
   if (this.extensionHasBeenStarted) {
-    return request({
-      method: 'GET',
-      url: `${this.extensionBaseUrl}${url}`,
-      json: true
-    });
+    return fetch(`${this.extensionBaseUrl}${url}`, { method: 'GET' }).then(response => response.json());
   } else {
     return Promise.resolve([]);
   }
@@ -372,9 +370,8 @@ AbstractServerlessControl.prototype._getFromExtension = function _getFromExtensi
 
 AbstractServerlessControl.prototype.resetExtension = function resetExtension() {
   if (this.extensionHasBeenStarted) {
-    return request({
-      method: 'DELETE',
-      url: `${this.extensionBaseUrl}/received`
+    return fetch(`${this.extensionBaseUrl}/received`, { method: 'DELETE' }).catch(() => {
+      return [];
     });
   } else {
     return Promise.resolve([]);

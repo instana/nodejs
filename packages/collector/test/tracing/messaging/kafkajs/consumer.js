@@ -9,7 +9,7 @@ const instana = require('../../../..')();
 
 const express = require('express');
 const { Kafka } = require('kafkajs');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const { v4: uuid } = require('uuid');
 
 const delay = require('../../../../../core/test/test_util/delay');
@@ -77,7 +77,7 @@ let receivedMessages = [];
         // simulating asynchronous follow up steps
         await delay(100);
         if (!runAsStandAlone) {
-          await request(`http://127.0.0.1:${agentPort}`);
+          await fetch(`http://127.0.0.1:${agentPort}`);
         }
         span.end();
         if (runAsStandAlone) {
@@ -140,7 +140,7 @@ let receivedMessages = [];
         // simulating asynchronous follow up steps
         await delay(100);
         if (!runAsStandAlone) {
-          await request(`http://127.0.0.1:${agentPort}`);
+          await fetch(`http://127.0.0.1:${agentPort}`);
         }
         span.end();
         if (runAsStandAlone) {

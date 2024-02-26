@@ -11,7 +11,7 @@ const _ = require('lodash');
 const fork = require('child_process').fork;
 const fs = require('fs');
 const path = require('path');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 
 const config = require('../../../core/test/config');
 const http2Promise = require('./http2Promise');
@@ -20,7 +20,6 @@ const globalAgent = require('../globalAgent');
 const portFinder = require('./portfinder');
 const sslDir = path.join(__dirname, '..', 'apps', 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
-
 class ProcessControls {
   /**
    * @typedef {Object} ProcessControlsOptions
@@ -225,7 +224,7 @@ class ProcessControls {
    *   }
    * }} The request options
    */
-  sendRequest(opts = {}) {
+  async sendRequest(opts = {}) {
     const requestOptions = Object.assign({}, opts);
     const baseUrl = this.getBaseUrl(opts);
     requestOptions.baseUrl = baseUrl;
@@ -239,10 +238,43 @@ class ProcessControls {
       }
 
       opts.url = baseUrl + (opts.path || '');
+      if (opts.qs) {
+        const queryParams = Object.entries(opts.qs)
+          .map(([key, value]) => {
+            if (Array.isArray(value)) {
+              return value.map(v => `${encodeURIComponent(key)}=${encodeURIComponent(v)}`).join('&');
+            } else {
+              return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+            }
+          })
+          .join('&');
+        opts.url = opts.url.includes('?') ? `${opts.url}&${queryParams}` : `${opts.url}?${queryParams}`;
+      }
       opts.json = true;
       opts.ca = cert;
+      let response;
+      try {
+        const result = await fetch(opts.url, opts);
+        const contentType = result.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          response = await result.json();
+        } else if (contentType && (contentType.includes('text/html') || contentType.includes('text/plain'))) {
+          response = await result.text();
+        } else {
+          response = {
+            body: await result.text(),
+            status: result.status,
+            headers: result.headers
+          };
+        }
 
-      return request(opts);
+        return response;
+      } catch (error) {
+        if (error.code === 'ECONNRESET' || error.type === 'request-timeout' || error.code === 'ECONNREFUSED') {
+          throw error;
+        }
+        return response;
+      }
     }
   }
 

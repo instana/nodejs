@@ -69,11 +69,14 @@ mochaSuiteFn('tracing/tsoa', function () {
       const requestOptions = {
         method: 'POST',
         path: '/api/users',
-        body: {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
           email: 'test@instana.test',
           name: 'Test 1',
           phoneNumbers: []
-        }
+        })
       };
 
       return controls.sendRequest(requestOptions).then(() =>

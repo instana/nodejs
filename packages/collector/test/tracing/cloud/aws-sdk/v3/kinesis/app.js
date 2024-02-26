@@ -6,7 +6,7 @@
 
 require('../../../../../..')();
 const express = require('express');
-const request = require('request-promise');
+const fetch = require('node-fetch');
 const app = express();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const port = require('../../../../../test_util/app-port')();
@@ -199,7 +199,7 @@ operationNames.forEach(operation => {
     const method = req.params.method;
     try {
       const data = await executeOperation(operation, withError, method);
-      await request(`http://127.0.0.1:${agentPort}`);
+      await fetch(`http://127.0.0.1:${agentPort}`);
       httpSuccess(res, data);
     } catch (err) {
       httpError(res, err);

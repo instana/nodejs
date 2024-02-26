@@ -220,11 +220,14 @@ mochaSuiteFn('tracing/kafka-node', function () {
       method: 'POST',
       path: '/send-message',
       simple: true,
-      body: {
+      body: JSON.stringify({
         useSendBatch,
         useEachBatch,
         key,
         value
+      }),
+      headers: {
+        'Content-Type': 'application/json'
       }
     });
   }

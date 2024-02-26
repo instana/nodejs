@@ -124,9 +124,9 @@ mochaSuiteFn('tracing/elasticsearch', function () {
 
         it('must report successful indexing requests', () =>
           index({
-            body: {
+            body: JSON.stringify({
               title: 'A'
-            }
+            })
           }).then(res => {
             if (res.error) {
               fail(`Unexpected errors:${JSON.stringify(res.error, null, 2)}`);
@@ -150,9 +150,9 @@ mochaSuiteFn('tracing/elasticsearch', function () {
           const titleA = `a${Date.now()}`;
 
           return index({
-            body: {
+            body: JSON.stringify({
               title: titleA
-            }
+            })
           })
             .then(res1 => {
               expect(res1.error).to.not.exist;
@@ -202,17 +202,17 @@ mochaSuiteFn('tracing/elasticsearch', function () {
           const titleB = `b${Date.now()}`;
 
           return index({
-            body: {
+            body: JSON.stringify({
               title: titleA
-            },
+            }),
             parentSpanId: '0000000000000042',
             traceId: '0000000000000042'
           })
             .then(() =>
               index({
-                body: {
+                body: JSON.stringify({
                   title: titleB
-                },
+                }),
                 parentSpanId: '0000000000000043',
                 traceId: '0000000000000043'
               })
@@ -278,9 +278,9 @@ mochaSuiteFn('tracing/elasticsearch', function () {
           let response2;
 
           return index({
-            body: {
+            body: JSON.stringify({
               title: titleA
-            },
+            }),
             parentSpanId: '0000000000000042',
             traceId: '0000000000000042'
           })
@@ -290,9 +290,9 @@ mochaSuiteFn('tracing/elasticsearch', function () {
               idA = res.response.body._id;
 
               return index({
-                body: {
+                body: JSON.stringify({
                   title: titleB
-                },
+                }),
                 parentSpanId: '0000000000000043',
                 traceId: '0000000000000043'
               });
@@ -303,9 +303,9 @@ mochaSuiteFn('tracing/elasticsearch', function () {
               idB = res.response.body._id;
 
               return index({
-                body: {
+                body: JSON.stringify({
                   title: titleC
-                },
+                }),
                 parentSpanId: '0000000000000044',
                 traceId: '0000000000000044'
               });
@@ -381,26 +381,26 @@ mochaSuiteFn('tracing/elasticsearch', function () {
           const titleC = `c${Date.now()}`;
 
           return index({
-            body: {
+            body: JSON.stringify({
               title: titleA
-            },
+            }),
             parentSpanId: '0000000000000042',
             traceId: '0000000000000042'
           })
             .then(() =>
               index({
-                body: {
+                body: JSON.stringify({
                   title: titleB
-                },
+                }),
                 parentSpanId: '0000000000000043',
                 traceId: '0000000000000043'
               })
             )
             .then(() =>
               index({
-                body: {
+                body: JSON.stringify({
                   title: titleC
-                },
+                }),
                 parentSpanId: '0000000000000044',
                 traceId: '0000000000000044'
               })
@@ -453,9 +453,9 @@ mochaSuiteFn('tracing/elasticsearch', function () {
 
         it('must not consider queries as failed when there are no hits', () =>
           index({
-            body: {
+            body: JSON.stringify({
               title: 'A'
-            }
+            })
           })
             .then(() =>
               retry(() =>
@@ -586,6 +586,12 @@ mochaSuiteFn('tracing/elasticsearch', function () {
               headers['X-INSTANA-S'] = opts.parentSpanId;
             }
             opts.headers = headers;
+          }
+          if (opts.body) {
+            opts.headers = {
+              ...opts.headers,
+              'Content-Type': 'application/json'
+            };
           }
           return controls.sendRequest(opts);
         }

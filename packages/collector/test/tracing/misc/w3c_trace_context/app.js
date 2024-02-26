@@ -38,7 +38,7 @@ if (isInstana()) {
 
 const fs = require('fs');
 const path = require('path');
-const rp = require('request-promise');
+const fetch = require('node-fetch');
 const { parse } = require('url');
 
 const http2Promise = require('../../../test_util/http2Promise');
@@ -172,11 +172,13 @@ function handleRequest(incomingHeaders, method, url, resOrStream) {
       requestOptions.baseUrl = `https://localhost:${downstreamPort}`;
       requestOptions.path = `/${downstreamPath}`;
     } else {
-      requestOptions.uri = `http://localhost:${downstreamPort}/${downstreamPath}`;
+      const queryString = Object.keys(query).length > 0 ? `?${new URLSearchParams(query).toString()}` : '';
+      requestOptions.uri = `http://localhost:${downstreamPort}/${downstreamPath}${queryString}`;
     }
-
-    const requestPromise = useHttp2 ? http2Promise.request(requestOptions) : rp(requestOptions);
-    return requestPromise
+    const request = useHttp2
+      ? http2Promise.request(requestOptions)
+      : fetch(requestOptions.uri, requestOptions).then(response => response.text());
+    return request
       .then(response => endWithPayload(method, url, resOrStream, response))
       .catch(e => endWithError(method, url, resOrStream, e));
   } else if (pathname === '/end') {

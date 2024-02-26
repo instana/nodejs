@@ -158,7 +158,7 @@ if (esmSupportedVersion(process.versions.node)) {
         expect(span.data.http.status).to.equal(200);
         expect(span.data.http.header).to.deep.equal({
           'x-entry-request-header-1': 'entry request header value 1',
-          'x-entry-request-header-2': 'entry, request, header, value 2',
+          'x-entry-request-header-2': 'entry,request,header,value 2',
           'x-entry-response-header-1': 'entry response header value 1',
           'x-entry-response-header-2': 'entry, response, header, value 2'
         });

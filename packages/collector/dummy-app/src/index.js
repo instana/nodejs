@@ -28,7 +28,7 @@ if (config.collectorEnabled) {
 const downstreamUrl = process.env.DOWNSTREAM_URL;
 
 const express = require('express');
-const requestPromise = require('request-promise');
+const fetch = require('node-fetch');
 
 const app = express();
 
@@ -40,7 +40,7 @@ app.get('/', (req, res) => {
   if (!downstreamUrl) {
     res.send('OK');
   } else {
-    requestPromise('http://localhost:8000/v1/helloworld')
+    fetch('http://localhost:8000/v1/helloworld')
       .then(downstreamResponse => {
         if (config.logRequests) {
           console.log(`downstream request successful (${new Date()})`);
