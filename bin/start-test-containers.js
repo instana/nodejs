@@ -18,12 +18,17 @@ const args = process.argv.slice(2);
 const baseYaml = fs.readFileSync('./docker-compose-base.yaml', 'utf8');
 const baseConfig = yaml.load(baseYaml);
 
-const filteredServices = Object.keys(baseConfig.services)
-  .filter(service => args.includes(`--${service}`))
-  .reduce((acc, service) => {
-    acc[service] = baseConfig.services[service];
-    return acc;
-  }, {});
+let filteredServices;
+if (args.length > 0) {
+  filteredServices = Object.keys(baseConfig.services)
+    .filter(service => args.includes(`--${service}`))
+    .reduce((acc, service) => {
+      acc[service] = baseConfig.services[service];
+      return acc;
+    }, {});
+} else {
+  filteredServices = baseConfig.services;
+}
 
 const filteredConfig = { version: baseConfig.version, services: filteredServices };
 const filteredYaml = yaml.dump(filteredConfig);
