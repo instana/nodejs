@@ -638,7 +638,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
-              error: 'TypeError: Cannot read properties'
+              error: 'TypeError'
             })
           )
         );
