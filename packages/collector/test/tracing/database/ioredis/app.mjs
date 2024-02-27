@@ -97,35 +97,32 @@ app.get('/keepTracing', (req, res) => {
     });
 });
 
-app.get('/keepTracingCallback', (req, res) => {
-  // this uses a self created promise and a mix promise and callback styles,
-  // in particular, it uses the ioredis optional callback argument.
+app.get('/keepTracingCallback', async (req, res) => {
   const key = req.query.key;
-  return new Promise((resolve, reject) => {
-    // using ioredis client with callback instead of a promise here
-    client.get(key, (err, redisRes) => {
-      if (err) {
-        log('Get with key %s failed', key, err);
-        reject(err);
-        return;
-      }
-      // Execute another traced call to verify that we keep the tracing context.
-      fetch(`http://127.0.0.1:${agentPort}`, (httpErr, httpRes) => {
-        if (httpErr) {
-          log('HTTP call failed', httpErr);
-          return reject(httpErr);
+  try {
+    const redisRes = await new Promise((resolve, reject) => {
+      // using ioredis client with callback instead of a promise here
+      client.get(key, (err, result) => {
+        if (err) {
+          log('Get with key %s failed', key, err);
+          reject(err);
+        } else {
+          resolve(result);
         }
-        return resolve(redisRes);
       });
     });
-  })
-    .then(result => {
-      res.send(result);
-    })
-    .catch(err => {
-      log('Unexpected error for key %s', key, err);
-      res.sendStatus(500);
-    });
+
+    // Execute another traced call to verify that we keep the tracing context.
+    const response = await fetch(`http://127.0.0.1:${agentPort}`);
+    if (!response.ok) {
+      log('HTTP call failed', response.statusText);
+      throw new Error(response.statusText);
+    }
+    res.send(redisRes);
+  } catch (err) {
+    log('Unexpected error for key %s', key, err);
+    res.sendStatus(500);
+  }
 });
 
 app.get('/failure', (req, res) => {
