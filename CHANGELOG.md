@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.2.0](https://github.com/instana/nodejs/compare/v3.1.3...v3.2.0) (2024-02-27)
+
+### Bug Fixes
+
+- depreacted request-promise module ([#1017](https://github.com/instana/nodejs/issues/1017)) ([6bb88dd](https://github.com/instana/nodejs/commit/6bb88dd4ca08d2482ff917fb3b9f884f4e4bdf8e))
+
+### Features
+
+- added otel instrumentation for tedious ([#1030](https://github.com/instana/nodejs/issues/1030)) ([87de73d](https://github.com/instana/nodejs/commit/87de73dd5b290a76663405822dc7845315e1d18d))
+- added support for ibm_db 3.x ([#1048](https://github.com/instana/nodejs/issues/1048)) ([0ec7cc9](https://github.com/instana/nodejs/commit/0ec7cc92184bb67a3feec285898a5580469f00e0))
+- added support for ibm_db v3 ([5d1b9fe](https://github.com/instana/nodejs/commit/5d1b9fecf258e730d3a4fb570daf53b8f61eb0d7))
+
+### Reverts
+
+- Revert "feat: added support for ibm_db 3.x (#1048)" (#1052) ([6aa0fa8](https://github.com/instana/nodejs/commit/6aa0fa8a137b7d726c273801cf40e2548251923c)), closes [#1048](https://github.com/instana/nodejs/issues/1048) [#1052](https://github.com/instana/nodejs/issues/1052)
+
 ## [3.1.3](https://github.com/instana/nodejs/compare/v3.1.2...v3.1.3) (2024-01-31)
 
 ### Bug Fixes
