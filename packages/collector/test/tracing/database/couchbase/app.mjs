@@ -10,7 +10,6 @@ import express from 'express';
 import { v1 } from 'uuid';
 import morgan from 'morgan';
 import fetch from 'node-fetch';
-import fetch from 'node-fetch';
 import portFactory from '../../../test_util/app-port.js';
 import testUtil from '../../../../../core/test/test_util/index.js';
 
