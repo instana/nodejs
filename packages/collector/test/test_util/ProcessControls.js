@@ -20,6 +20,7 @@ const globalAgent = require('../globalAgent');
 const portFinder = require('./portfinder');
 const sslDir = path.join(__dirname, '..', 'apps', 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
+const isLatestEsmSupportedVersion = require('@instana/core').tracing.isLatestEsmSupportedVersion;
 class ProcessControls {
   /**
    * @typedef {Object} ProcessControlsOptions
@@ -60,7 +61,9 @@ class ProcessControls {
           const esmApp = files.find(f => f.indexOf('.mjs') !== -1);
 
           if (esmApp) {
-            opts.execArgv = [`--experimental-loader=${path.join(__dirname, '..', '..', 'esm-loader.mjs')}`];
+            opts.execArgv = isLatestEsmSupportedVersion
+              ? ['--import', `${path.join(__dirname, '..', 'register-esm.mjs')}`]
+              : [`--experimental-loader=${path.join(__dirname, '..', '..', 'esm-loader.mjs')}`];
             opts.appPath = path.join(opts.dirname, 'app.mjs');
           }
         } catch (err) {

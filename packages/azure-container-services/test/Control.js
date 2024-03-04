@@ -10,6 +10,7 @@ const fetch = require('node-fetch');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 const config = require('../../serverless/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
+const isLatestEsmSupportedVersion = require('@instana/core').tracing.isLatestEsmSupportedVersion;
 
 const PATH_TO_INSTANA_AZURE_PACKAGE = path.join(__dirname, '..');
 let execArg;
@@ -49,10 +50,12 @@ class Control extends AbstractServerlessControl {
       env.INSTANA_AGENT_KEY = this.instanaAgentKey;
     }
 
+    const loaderPath = isLatestEsmSupportedVersion(process.versions.node)
+      ? ['--import', `${path.join(__dirname, '..', 'register-esm.mjs')}`]
+      : [`--experimental-loader=${path.join(__dirname, '..', 'esm-loader.mjs')}`];
+
     if (this.opts.containerAppPath && this.opts.env && this.opts.env.ESM_TEST) {
-      execArg = this.opts.containerAppPath.endsWith('.mjs')
-        ? [`--experimental-loader=${path.join(__dirname, '..', 'esm-loader.mjs')}`]
-        : ['--require', PATH_TO_INSTANA_AZURE_PACKAGE];
+      execArg = this.opts.containerAppPath.endsWith('.mjs') ? loaderPath : ['--require', PATH_TO_INSTANA_AZURE_PACKAGE];
     } else {
       execArg = ['--require', PATH_TO_INSTANA_AZURE_PACKAGE];
     }

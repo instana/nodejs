@@ -12,7 +12,7 @@ const fetch = require('node-fetch');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 const config = require('../../serverless/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
-
+const isLatestEsmSupportedVersion = require('@instana/core').tracing.isLatestEsmSupportedVersion;
 const PATH_TO_INSTANA_GOOGLE_CLOUD_RUN_PACKAGE = path.join(__dirname, '..');
 
 function Control(opts) {
@@ -80,9 +80,14 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
     env.INSTANA_ENDPOINT_URL = this.backendBaseUrl;
     env.INSTANA_AGENT_KEY = this.instanaAgentKey;
   }
+
+  const loaderPath = isLatestEsmSupportedVersion(process.versions.node)
+    ? ['--import', `${path.join(__dirname, '..', 'register-esm.mjs')}`]
+    : [`--experimental-loader=${path.join(__dirname, '..', 'esm-loader.mjs')}`];
+
   if (!this.opts.containerAppPath && this.opts.env && this.opts.env.ESM_TEST) {
     if (this.opts.containerAppPath.endsWith('.mjs')) {
-      execArg = [`--experimental-loader=${path.join(__dirname, '..', 'esm-loader.mjs')}`];
+      execArg = loaderPath;
     } else {
       execArg = ['--require', PATH_TO_INSTANA_GOOGLE_CLOUD_RUN_PACKAGE];
     }
