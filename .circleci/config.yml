@@ -919,7 +919,7 @@ jobs:
     environment:
       CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
     docker:
-      - image: cimg/node:18.18
+      - image: cimg/node:18.19
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
@@ -994,7 +994,7 @@ jobs:
       CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
       RUN_ALL_TESTS: true
     docker:
-      - image: cimg/node:18.18
+      - image: cimg/node:18.19
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
@@ -1046,7 +1046,7 @@ jobs:
       CIRCLE_COMPARE_URL: << pipeline.project.git_url >>/compare/<< pipeline.git.base_revision >>..<<pipeline.git.revision>>
       RUN_ALL_TESTS: true
     docker:
-      - image: cimg/node:18.18
+      - image: cimg/node:18.19
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo

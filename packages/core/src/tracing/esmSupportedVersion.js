@@ -21,6 +21,6 @@ exports.esmSupportedVersion = function esmSupportedVersion(version) {
  * @returns {boolean} - True if the version is the latest that supports ESM, false otherwise.
  */
 exports.isLatestEsmSupportedVersion = function isLatestEsmSupportedVersion(version) {
-  // Reference: https://github.com/nodejs/node/pull/44710
+  // Reference: https://nodejs.org/en/blog/release/v18.19.0#esm-and-customization-hook-changes
   return semver.gte(version, '18.19.0');
 };
