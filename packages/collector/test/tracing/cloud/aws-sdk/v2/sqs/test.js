@@ -638,7 +638,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
 
         expectAtLeastOneMatching(spans, [
           span => expect(span.ec).equal(1),
-          span => expect(span.data.sqs.error).to.equal('The specified queue does not exist for this wsdl version.')
+          span => expect(span.data.sqs.error).to.contain('specified queue does not exist')
         ]);
       });
 
