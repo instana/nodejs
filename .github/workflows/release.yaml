@@ -140,11 +140,11 @@ jobs:
                 "color": "good",
                 "fields": [
                   {
-                    "title": "Release Note",
-                    "value": "<${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.read_version_number.outputs.version }}>"
+                    "title": "Release Notes",
+                    "value": "<${{ github.server_url }}/${{ github.repository }}/releases>"
                   },
                   {
-                  "value": "Hey <@savitha.aneesh@ibm.com> <@subhalakshmi.moosad@ibm.com>, a new release has happened on {{ github.event.release.created_at }}! Please update the release notes. Thank you!"
+                  "value": "Hey <@savitha.aneesh@ibm.com> <@subhalakshmi.moosad@ibm.com>, a new release has happened for Node.js Tracer! Please update the release notes. Thank you!"
                   }
                 ]
               }]
