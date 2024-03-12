@@ -288,11 +288,7 @@ app.post('/upload-s3', (req, res) => {
   });
 });
 app.get('/matrix-params/:params', (req, res) => {
-  try {
-    res.sendStatus(200);
-  } catch (error) {
-    res.sendStatus(500);
-  }
+  res.sendStatus(200);
 });
 
 function createUrl(req, urlPath) {
