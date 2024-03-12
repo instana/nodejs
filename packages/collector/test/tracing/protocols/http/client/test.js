@@ -494,6 +494,21 @@ function registerTests(useHttps) {
         expect(response.key).to.exist;
         expect(response.Key).to.exist;
       }));
+  it('must capture complete request path even if it contain `;`', () =>
+    clientControls
+      .sendRequest({ method: 'GET', path: '/matrix-params/ACDKey=1:00000:00000;ANI=00000111;DN=00000111' })
+      .then(() =>
+        retry(() =>
+          globalAgent.instance.getSpans().then(spans => {
+            expectExactlyOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http.url).to.eq('/matrix-params/ACDKey=1:00000:00000;ANI=00000111;DN=00000111'),
+              span => expect(span.data.http.status).to.eq(200)
+            ]);
+          })
+        )
+      ));
 }
 
 function registerConnectionRefusalTest(useHttps) {

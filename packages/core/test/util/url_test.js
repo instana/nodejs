@@ -19,8 +19,8 @@ describe('util/url', () => {
       expect(sanitizeUrl('https://google.com/search?foo=bar')).to.equal('https://google.com/search');
     });
 
-    it('must strip matrix parameters', () => {
-      expect(sanitizeUrl('https://google.com/search;foo=bar')).to.equal('https://google.com/search');
+    it('must not strip matrix parameters', () => {
+      expect(sanitizeUrl('https://google.com/search;foo=bar')).to.equal('https://google.com/search;foo=bar');
     });
 
     it('must keep the URL intact when no parameters exist', () => {
@@ -28,7 +28,9 @@ describe('util/url', () => {
     });
 
     it('must discard of mix of various parameter types', () => {
-      expect(sanitizeUrl('https://google.com/search/;foo=bar?query=true#blub')).to.equal('https://google.com/search/');
+      expect(sanitizeUrl('https://google.com/search/;foo=bar?query=true#blub')).to.equal(
+        'https://google.com/search/;foo=bar'
+      );
     });
 
     it('must redact embedded credentials', () => {
@@ -39,7 +41,7 @@ describe('util/url', () => {
 
     it('must redact embedded credentials and remove params', () => {
       expect(sanitizeUrl('http://user:password@example.org/route;matrix=value?query=true#anchor')).to.equal(
-        'http://<redacted>:<redacted>@example.org/route'
+        'http://<redacted>:<redacted>@example.org/route;matrix=value'
       );
     });
 
@@ -54,6 +56,11 @@ describe('util/url', () => {
     it('must not mistakenly interprete paths with : and @ as credentials', () => {
       expect(sanitizeUrl('http://example.org/colon:/param=email@domain.tld')).to.equal(
         'http://example.org/colon:/param=email@domain.tld'
+      );
+    });
+    it('must keep URL with matrix parameters and query string', () => {
+      expect(sanitizeUrl('http://example.org/ACDKey=1:00000:00000;ANI=00000111;DN=00000111')).to.equal(
+        'http://example.org/ACDKey=1:00000:00000;ANI=00000111;DN=00000111'
       );
     });
   });

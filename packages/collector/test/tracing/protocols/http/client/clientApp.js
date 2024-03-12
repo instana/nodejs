@@ -287,6 +287,9 @@ app.post('/upload-s3', (req, res) => {
     }
   });
 });
+app.get('/matrix-params/:params', (req, res) => {
+  res.sendStatus(200);
+});
 
 function createUrl(req, urlPath) {
   const pathWithQuery = req.query.withQuery ? `${urlPath}?q1=some&pass=verysecret&q2=value` : urlPath;
