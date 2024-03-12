@@ -140,8 +140,11 @@ jobs:
                 "color": "good",
                 "fields": [
                   {
-                    "title": "Changelog",
-                    "value": "<${{ github.server_url }}/${{ github.repository }}/blob/main/CHANGELOG.md>"
+                    "title": "Release Notes",
+                    "value": "<${{ github.server_url }}/${{ github.repository }}/releases>"
+                  },
+                  {
+                  "value": "Hey <@savitha.aneesh@ibm.com> <@subhalakshmi.moosad@ibm.com>, a new release has happened for Node.js Tracer! Please update the release notes. Thank you!"
                   }
                 ]
               }]
