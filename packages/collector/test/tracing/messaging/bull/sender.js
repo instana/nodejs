@@ -6,6 +6,7 @@
 'use strict';
 
 require('../../../..')();
+
 const logPrefix = `Bull (${process.pid}):\t`;
 const Queue = require('bull');
 const redisServer = process.env.REDIS_SERVER || 'redis://127.0.0.1:6379';
@@ -15,7 +16,6 @@ const port = require('../../../test_util/app-port')();
 const bullJobName = process.env.BULL_JOB_NAME || 'steve';
 
 const app = express();
-
 const sender = new Queue(queueName, redisServer);
 
 function getJobData(testId, bulkIndex, withError) {
@@ -86,7 +86,7 @@ app.post('/send', (request, response) => {
 
   sender[addFunction].apply(sender, functionParams);
 
-  response.send({
+  response.json({
     status: `Job${repeat || bulk ? 's' : ''} sent`
   });
 });

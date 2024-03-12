@@ -66,7 +66,7 @@ app.get('/find-one', async (req, res) => {
     attributes: ['name']
   });
 
-  res.json();
+  res.json({});
 });
 
 app.get('/raw', async (req, res) => {
@@ -76,7 +76,7 @@ app.get('/raw', async (req, res) => {
     bind: ['parapeter']
   });
 
-  res.json();
+  res.json({});
 });
 
 app.get('/insert', async (req, res) => {
@@ -87,7 +87,7 @@ app.get('/insert', async (req, res) => {
     { fields: ['name'] }
   );
 
-  res.json();
+  res.json({});
 });
 
 app.listen(port, () => {

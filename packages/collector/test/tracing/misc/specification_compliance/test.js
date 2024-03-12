@@ -150,11 +150,14 @@ describe('spec compliance', function () {
             headers,
             resolveWithFullResponse: true
           };
+
           const response = await appControls.sendRequest(request);
+
           const expectedServerTimingValue = testDefinition['Server-Timing'];
           const actualServerTimingValue = http2
             ? response.headers['server-timing']
             : response.headers.get('server-timing');
+
           if (expectedServerTimingValue && expectedServerTimingValue.includes('$')) {
             expect(actualServerTimingValue).to.exist;
             parseForPlaceholders(valuesForPlaceholders, expectedServerTimingValue, actualServerTimingValue);

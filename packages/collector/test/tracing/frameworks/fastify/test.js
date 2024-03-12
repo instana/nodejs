@@ -70,8 +70,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
             .sendRequest({
               method: 'GET',
               path: actualPath,
-              simple: false,
-              resolveWithFullResponse: true
+              simple: false
             })
             .then(response => {
               expect(response).to.deep.equal(expectedResponse);

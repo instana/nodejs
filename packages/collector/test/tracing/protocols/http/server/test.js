@@ -656,8 +656,9 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         resolveWithFullResponse: true
       })
       .then(response => {
-        expect(response.body).to.match(/^Instana Trace ID: [a-f0-9]{16}$/);
-        const traceId = /^Instana Trace ID: ([a-f0-9]{16})$/.exec(response.body)[1];
+        expect(response).to.match(/^Instana Trace ID: [a-f0-9]{16}$/);
+
+        const traceId = /^Instana Trace ID: ([a-f0-9]{16})$/.exec(response)[1];
         return retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(

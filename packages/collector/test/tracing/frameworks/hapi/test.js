@@ -56,8 +56,7 @@ mochaSuiteFn('tracing/hapi', function () {
           .sendRequest({
             method: 'GET',
             path: actualPath,
-            simple: false,
-            resolveWithFullResponse: true
+            simple: false
           })
           .then(response => {
             expect(response).to.equal(expectedTemplate);

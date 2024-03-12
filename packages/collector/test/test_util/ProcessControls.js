@@ -169,7 +169,8 @@ class ProcessControls {
         () =>
           this.sendRequest({
             method: 'GET',
-            suppressTracing: true
+            suppressTracing: true,
+            checkStatusCode: true
           }),
         retryTime,
         until
@@ -225,21 +226,31 @@ class ProcessControls {
    * }} The request options
    */
   async sendRequest(opts = {}) {
-    const requestOptions = Object.assign({}, opts);
+    const requestOpts = Object.assign({}, opts);
+    const resolveWithFullResponse = requestOpts.resolveWithFullResponse;
+    const checkStatusCode = requestOpts.checkStatusCode;
+
+    // NOTE: http2Promise.request has an inbuild property called "resolveWithFullResponse"
+    //       fetch does not have, manual implementation.
+    delete requestOpts.resolveWithFullResponse;
+    delete requestOpts.checkStatusCode;
+
     const baseUrl = this.getBaseUrl(opts);
-    requestOptions.baseUrl = baseUrl;
 
     if (this.http2) {
-      return http2Promise.request(requestOptions);
+      requestOpts.baseUrl = baseUrl;
+      requestOpts.resolveWithFullResponse = resolveWithFullResponse;
+      return http2Promise.request(requestOpts);
     } else {
-      if (opts.suppressTracing === true) {
-        opts.headers = opts.headers || {};
-        opts.headers['X-INSTANA-L'] = '0';
+      if (requestOpts.suppressTracing === true) {
+        requestOpts.headers = requestOpts.headers || {};
+        requestOpts.headers['X-INSTANA-L'] = '0';
       }
 
-      opts.url = baseUrl + (opts.path || '');
-      if (opts.qs) {
-        const queryParams = Object.entries(opts.qs)
+      requestOpts.url = baseUrl + (requestOpts.path || '');
+
+      if (requestOpts.qs) {
+        const queryParams = Object.entries(requestOpts.qs)
           .map(([key, value]) => {
             if (Array.isArray(value)) {
               return value.map(v => `${encodeURIComponent(key)}=${encodeURIComponent(v)}`).join('&');
@@ -248,33 +259,44 @@ class ProcessControls {
             }
           })
           .join('&');
-        opts.url = opts.url.includes('?') ? `${opts.url}&${queryParams}` : `${opts.url}?${queryParams}`;
-      }
-      opts.json = true;
-      opts.ca = cert;
-      let response;
-      try {
-        const result = await fetch(opts.url, opts);
-        const contentType = result.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          response = await result.json();
-        } else if (contentType && (contentType.includes('text/html') || contentType.includes('text/plain'))) {
-          response = await result.text();
-        } else {
-          response = {
-            body: await result.text(),
-            status: result.status,
-            headers: result.headers
-          };
-        }
 
-        return response;
-      } catch (error) {
-        if (error.code === 'ECONNRESET' || error.type === 'request-timeout' || error.code === 'ECONNREFUSED') {
-          throw error;
-        }
-        return response;
+        requestOpts.url = requestOpts.url.includes('?')
+          ? `${requestOpts.url}&${queryParams}`
+          : `${requestOpts.url}?${queryParams}`;
       }
+
+      requestOpts.json = true;
+      requestOpts.ca = cert;
+
+      let response;
+
+      const result = await fetch(requestOpts.url, requestOpts);
+      const contentType = result.headers.get('content-type');
+
+      if (contentType && contentType.includes('application/json')) {
+        response = await result.json();
+      } else if (contentType && (contentType.includes('text/html') || contentType.includes('text/plain'))) {
+        response = await result.text();
+      } else {
+        // CASE: Some tests do not use express and then the header is missing
+        //       Some tests use `res.send`, which is not a JSON response.
+        response = await result.text();
+      }
+
+      if (checkStatusCode) {
+        if (result.status < 200 || result.status >= 300) {
+          throw new Error(response);
+        }
+      }
+
+      if (resolveWithFullResponse) {
+        return {
+          headers: result.headers,
+          body: response
+        };
+      }
+
+      return response;
     }
   }
 

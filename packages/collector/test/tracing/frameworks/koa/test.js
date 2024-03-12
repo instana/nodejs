@@ -58,8 +58,7 @@ mochaSuiteFn('tracing/koa', function () {
           .sendRequest({
             method: 'GET',
             path: actualPath,
-            simple: false,
-            resolveWithFullResponse: true
+            simple: false
           })
           .then(response => {
             expect(response.indexOf(actualPath)).to.equal(

@@ -236,7 +236,7 @@ app.post('/long-find', (req, res) => {
       // Execute another traced call to verify that we keep the tracing context.
       return fetch(`http://127.0.0.1:${agentPort}?call=${call}`);
     })
-    .then(() => res.json(mongoResponse))
+    .then(() => res.json(mongoResponse || {}))
     .catch(e => {
       log('Failed to find document', e);
       res.sendStatus(500);
