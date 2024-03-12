@@ -10,7 +10,7 @@ const { isProcessAvailable } = require('@instana/core/src/util/moduleAvailable')
 
 if (!isProcessAvailable()) {
   // eslint-disable-next-line no-console
-  console.error('The Node.js core module process is not availanle. This process will not be monitored by Instana.');
+  console.error('The Node.js core module process is not available. This process will not be monitored by Instana.');
   module.exports = function noOp() {};
   // @ts-ignore TS1108 (return can only be used within a function body)
   return;
