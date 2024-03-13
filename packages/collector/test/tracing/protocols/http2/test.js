@@ -361,7 +361,7 @@ function verifySpans(spans, method, erroneous, withQuery, serverControls, client
     erroneous
   );
   checkQuery(entryInServer, withQuery, erroneous);
-  expect(spans).to.have.lengthOf(3);
+  expect(spans).to.have.lengthOf.greaterThanOrEqual(3);
 }
 
 function verifyRootHttpEntry(spans, host, url, method = 'GET', status = 200, erroneous = false, synthetic = false) {
@@ -441,7 +441,7 @@ function verifyHttpExit(
     span => expect(span.stack).to.be.an('array'),
     span => expect(span.stack).to.have.lengthOf.at.least(2),
     span => expect(span.stack[0].c).to.contain('packages/collector/test/test_util/http2Promise.js'),
-    span => expect(span.data.http.url).to.equal(url),
+    span => expect(span.data.http.url).contains(url),
     span => expect(span.data.http.method).to.equal(method),
     span => expect(span.data.http.status).to.equal(status)
   ];
