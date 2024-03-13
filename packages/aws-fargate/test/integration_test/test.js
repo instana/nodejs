@@ -226,7 +226,10 @@ describe('AWS fargate integration test', function () {
           // 2. wait a bit
           return delay(750);
         })
-        .then(() => {
+        .then(async () => {
+          // If the test get's retried, we need to kill the BE before.
+          await control.killBackend();
+
           // 3. now start the back end
           return control.startBackendAndWaitForIt();
         })
