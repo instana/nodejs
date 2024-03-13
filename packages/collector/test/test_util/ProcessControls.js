@@ -167,12 +167,13 @@ class ProcessControls {
   async waitUntilServerIsUp(retryTime, until) {
     try {
       await testUtils.retry(
-        () =>
-          this.sendRequest({
+        async () => {
+          await this.sendRequest({
             method: 'GET',
             suppressTracing: true,
             checkStatusCode: true
-          }),
+          });
+        },
         retryTime,
         until
       );
@@ -196,7 +197,7 @@ class ProcessControls {
 
     await this.clearIpcMessages();
     await this.start(retryTime, until);
-    await this.agentControls.waitUntilAppIsCompletelyInitialized(this.getPid());
+    await this.agentControls.waitUntilAppIsCompletelyInitialized(this.getPid(), retryTime, until);
 
     // eslint-disable-next-line no-console
     console.log('[ProcessControls] started');

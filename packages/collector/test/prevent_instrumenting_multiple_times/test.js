@@ -16,10 +16,8 @@ const globalAgent = require('../globalAgent');
 const ProcessControls = require('../test_util/ProcessControls');
 
 describe('prevent initializing @instana/collector multiple times', function () {
-  // The tests in this suite include running npm install and on CI we have observed that this can take roughly
-  // two minutes (!) sometimes, so we go with a large timeout. Base timeout on CI is 30 seconds, with
-  // factor 6 this allows for test durations up to three minutes.
-  this.timeout(config.getTestTimeout() * 6);
+  const timeout = config.getTestTimeout() * 6;
+  this.timeout(timeout);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
@@ -41,7 +39,7 @@ describe('prevent initializing @instana/collector multiple times', function () {
       }
     });
 
-    await controls.startAndWaitForAgentConnection();
+    await controls.startAndWaitForAgentConnection(1000, Date.now() + timeout);
   });
 
   beforeEach(async () => {

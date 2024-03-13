@@ -85,7 +85,7 @@ class AgentStubControls {
     }
   }
 
-  async waitUntilAppIsCompletelyInitialized(originalPid) {
+  async waitUntilAppIsCompletelyInitialized(originalPid, retryTime, until) {
     let pid;
     if (typeof originalPid === 'number') {
       pid = String(originalPid);
@@ -95,14 +95,17 @@ class AgentStubControls {
       throw new Error(`PID ${originalPid} has invalid type ${typeof originalPid}.`);
     }
 
-    await retry(() =>
-      this.getDiscoveries().then(discoveries => {
-        const reportingPids = Object.keys(discoveries);
-        if (reportingPids.includes(pid)) {
-          return true;
-        }
-        throw new Error(`PID ${pid} never sent any data to the agent.`);
-      })
+    await retry(
+      () =>
+        this.getDiscoveries().then(discoveries => {
+          const reportingPids = Object.keys(discoveries);
+          if (reportingPids.includes(pid)) {
+            return true;
+          }
+          throw new Error(`PID ${pid} never sent any data to the agent.`);
+        }),
+      retryTime,
+      until
     );
   }
 
