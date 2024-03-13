@@ -146,10 +146,13 @@ describe('Google Cloud Run integration test', function () {
           // 2. wait a bit
           return delay(750);
         })
-        .then(() =>
+        .then(async () => {
+          // If the test get's retried, we need to kill the BE before.
+          await appControls.killBackend();
+
           // 3. now start the back end
-          appControls.startBackendAndWaitForIt()
-        )
+          return appControls.startBackendAndWaitForIt();
+        })
         .then(() => {
           // 4. cloud run collector should send uncompressed snapshot data and the spans as soon as the
           // back end comes up

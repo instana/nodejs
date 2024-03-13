@@ -55,7 +55,7 @@ app.post('/storage-createBucket-bucket-delete-promise', async (req, res) => {
     res.sendStatus(200);
   } catch (e) {
     log(e);
-    res.sendStatus(e.code || 500);
+    res.sendStatus(500);
   }
 });
 
@@ -63,12 +63,12 @@ app.post('/storage-createBucket-bucket-delete-callback', (req, res) => {
   storage.createBucket(randomBucketName(), (errCreate, bucket) => {
     if (errCreate) {
       log(errCreate);
-      return res.sendStatus(errCreate.code || 500);
+      return res.sendStatus(500);
     }
     bucket.delete(errDelete => {
       if (errDelete) {
         log(errDelete);
-        return res.sendStatus(errDelete.code || 500);
+        return res.sendStatus(500);
       }
       res.sendStatus(200);
     });
@@ -83,7 +83,7 @@ app.post('/bucket-create-bucket-delete-promise', async (req, res) => {
     res.sendStatus(200);
   } catch (e) {
     log(e);
-    res.sendStatus(e.code || 500);
+    res.sendStatus(500);
   }
 });
 
@@ -91,12 +91,12 @@ app.post('/bucket-create-bucket-delete-callback', (req, res) => {
   storage.createBucket(randomBucketName(), (errCreate, bucket) => {
     if (errCreate) {
       log(errCreate);
-      return res.sendStatus(errCreate.code || 500);
+      return res.sendStatus(500);
     }
     bucket.delete(errDelete => {
       if (errDelete) {
         log(errDelete);
-        return res.sendStatus(errDelete.code || 500);
+        return res.sendStatus(500);
       }
       res.sendStatus(200);
     });
@@ -109,7 +109,7 @@ app.post('/storage-get-buckets-promise', async (req, res) => {
     res.sendStatus(200);
   } catch (e) {
     log(e);
-    res.sendStatus(e.code || 500);
+    res.sendStatus(500);
   }
 });
 
@@ -117,7 +117,7 @@ app.post('/storage-get-buckets-callback', (req, res) => {
   storage.getBuckets(err => {
     if (err) {
       log(err);
-      return res.sendStatus(err.code || 500);
+      return res.sendStatus(500);
     }
     res.sendStatus(200);
   });
@@ -129,7 +129,7 @@ app.post('/storage-get-service-account-promise', async (req, res) => {
     res.sendStatus(200);
   } catch (e) {
     log(e);
-    res.sendStatus(e.code || 500);
+    res.sendStatus(500);
   }
 });
 
@@ -137,7 +137,7 @@ app.post('/storage-get-service-account-callback', (req, res) => {
   storage.getServiceAccount(err => {
     if (err) {
       log(err);
-      return res.sendStatus(err.code || 500);
+      return res.sendStatus(500);
     }
     res.sendStatus(200);
   });
@@ -157,7 +157,7 @@ app.post('/bucket-set-and-remove-retention-period-promise', async (req, res) => 
     res.sendStatus(200);
   } catch (e) {
     log(e);
-    res.sendStatus(e.code || 500);
+    res.sendStatus(500);
   }
 });
 
@@ -168,22 +168,22 @@ app.post('/bucket-set-and-remove-retention-period-callback', (req, res) => {
   storage.createBucket(randomBucketName(), (errCreate, bucket) => {
     if (errCreate) {
       log(errCreate);
-      return res.sendStatus(errCreate.code || 500);
+      return res.sendStatus(500);
     }
     bucket.setRetentionPeriod([1], errSet => {
       if (errSet) {
         log(errSet);
-        return res.sendStatus(errSet.code || 500);
+        return res.sendStatus(500);
       }
       bucket.removeRetentionPeriod(errRemove => {
         if (errRemove) {
           log(errRemove);
-          return res.sendStatus(errRemove.code || 500);
+          return res.sendStatus(500);
         }
         bucket.delete(errDelete => {
           if (errDelete) {
             log(errDelete);
-            return res.sendStatus(errDelete.code || 500);
+            return res.sendStatus(500);
           }
           res.sendStatus(200);
         });
@@ -358,7 +358,7 @@ bucketRoutes.forEach(({ pathPrefix, actions }) => {
       res.sendStatus(200);
     } catch (e) {
       log(e);
-      res.sendStatus(e.code || 500);
+      res.sendStatus(500);
     }
   });
 
@@ -372,7 +372,7 @@ bucketRoutes.forEach(({ pathPrefix, actions }) => {
       err => {
         if (err) {
           log(err);
-          return res.sendStatus(err.code || 500);
+          return res.sendStatus(500);
         }
         return res.sendStatus(200);
       }
@@ -527,7 +527,7 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
       res.sendStatus(200);
     } catch (e) {
       log(e);
-      res.sendStatus(e.code || 500);
+      res.sendStatus(500);
     }
   });
 
@@ -537,7 +537,7 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
     bucket.upload(localFileName, { destination: uploadName, gzip: true }, (errUpload, file) => {
       if (errUpload) {
         log(errUpload);
-        return res.sendStatus(errUpload.code || 500);
+        return res.sendStatus(500);
       }
 
       async_.series(
@@ -548,7 +548,7 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
         err => {
           if (err) {
             log(err);
-            return res.sendStatus(err.code || 500);
+            return res.sendStatus(500);
           }
           return res.sendStatus(200);
         }
@@ -567,13 +567,13 @@ app.post('/file-read-stream', async (req, res) => {
       .createReadStream()
       .on('error', err => {
         log(err);
-        res.sendStatus(err.code || 500);
+        res.sendStatus(500);
       })
       .on('end', () => res.sendStatus(200))
       .pipe(fs.createWriteStream(localTarget));
   } catch (err) {
     log(err);
-    res.sendStatus(err.code || 500);
+    res.sendStatus(500);
   }
 });
 
@@ -584,7 +584,7 @@ app.post('/file-write-stream', async (req, res) => {
     .pipe(file.createWriteStream({ resumable: false }))
     .on('error', err => {
       log(err);
-      res.sendStatus(err.code || 500);
+      res.sendStatus(500);
     })
     .on('finish', () => {
       res.sendStatus(200);
@@ -603,7 +603,7 @@ app.post('/hmac-keys-promise', async (req, res) => {
     res.sendStatus(200);
   } catch (e) {
     log(e);
-    res.sendStatus(e.code || 500);
+    res.sendStatus(500);
   }
 });
 
@@ -611,7 +611,7 @@ app.post('/hmac-keys-callback', (req, res) => {
   storage.createHmacKey(serviceAccountEmail, (errCreate, hmacKey) => {
     if (errCreate) {
       log(errCreate);
-      return res.sendStatus(errCreate.code || 500);
+      return res.sendStatus(500);
     }
     hmacKey.setMetadata(
       {
@@ -620,22 +620,22 @@ app.post('/hmac-keys-callback', (req, res) => {
       errSetMd => {
         if (errSetMd) {
           log(errSetMd);
-          return res.sendStatus(errSetMd.code || 500);
+          return res.sendStatus(500);
         }
         hmacKey.getMetadata(errGetMd => {
           if (errGetMd) {
             log(errGetMd);
-            return res.sendStatus(errGetMd.code || 500);
+            return res.sendStatus(500);
           }
           hmacKey.get('ACCESS_KEY', errGet => {
             if (errGet) {
               log(errGet);
-              return res.sendStatus(errGet.code || 500);
+              return res.sendStatus(500);
             }
             hmacKey.delete(errDelete => {
               if (errDelete) {
                 log(errDelete);
-                return res.sendStatus(errDelete.code || 500);
+                return res.sendStatus(500);
               }
               res.sendStatus(200);
             });
