@@ -214,7 +214,7 @@ if (esmSupportedVersion(process.versions.node)) {
   });
 } else {
   // Skip the tests for unsupported Node.js version
-  describe('Azure Container Service', function () {
+  describe('Azure Container Service, esm test', function () {
     it('should skip tests for unsupported Node.js version', function () {
       // eslint-disable-next-line no-console
       console.log(`Skipping tests. Node.js version ${process.versions.node} is not supported.`);
