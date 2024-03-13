@@ -53,11 +53,11 @@ mochaSuiteFn('unhandled promise rejections', function () {
       .sendRequest({
         method: 'GET',
         path: '/reject-with-error-reason',
-        simple: false,
-        resolveWithFullResponse: true
+        simple: false
       })
       .then(response => {
-        expect(response.body).to.equal('Rejected.');
+        expect(response).to.equal('Rejected.');
+
         return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             testUtils.expectAtLeastOneMatching(spans, [
@@ -77,11 +77,11 @@ mochaSuiteFn('unhandled promise rejections', function () {
       .sendRequest({
         method: 'GET',
         path: '/reject-with-error-reason',
-        simple: false,
-        resolveWithFullResponse: true
+        simple: false
       })
       .then(response => {
-        expect(response.body).to.equal('Rejected.');
+        expect(response).to.equal('Rejected.');
+
         return testUtils.retry(() =>
           agentControls.getEvents().then(events => {
             testUtils.expectAtLeastOneMatching(events, [
@@ -107,11 +107,11 @@ mochaSuiteFn('unhandled promise rejections', function () {
         .sendRequest({
           method: 'GET',
           path: '/reject-with-string-reason',
-          simple: false,
-          resolveWithFullResponse: true
+          simple: false
         })
         .then(response => {
-          expect(response.body).to.equal('Rejected.');
+          expect(response).to.equal('Rejected.');
+
           return testUtils.retry(() =>
             agentControls.getEvents().then(events => {
               testUtils.expectAtLeastOneMatching(events, [
@@ -136,11 +136,11 @@ mochaSuiteFn('unhandled promise rejections', function () {
       .sendRequest({
         method: 'GET',
         path: '/reject-with-null-reason',
-        simple: false,
-        resolveWithFullResponse: true
+        simple: false
       })
       .then(response => {
-        expect(response.body).to.equal('Rejected.');
+        expect(response).to.equal('Rejected.');
+
         return testUtils.retry(() =>
           agentControls.getEvents().then(events => {
             testUtils.expectAtLeastOneMatching(events, [

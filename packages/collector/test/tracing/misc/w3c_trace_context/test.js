@@ -851,6 +851,8 @@ function startRequest({ app, depth = 2, withSpecHeaders = null, otherMode = 'par
   } else if (withInstanaHeaders != null) {
     throw new Error(`Invalid withInstanaHeaders value: ${withInstanaHeaders}.`);
   }
+
+  request.resolveWithFullResponse = true;
   return app.sendRequest(request);
 }
 

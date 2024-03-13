@@ -452,6 +452,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
 async function verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk }) {
   expect(response).to.be.an('object');
+
   if (isRepeatable || isBulk) {
     expect(response.status).to.equal('Jobs sent');
   } else {

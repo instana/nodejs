@@ -84,7 +84,7 @@ app.get('/find-one', async (req, res) => {
   const repo = AppDataSource.getRepository(UserTypeOrm);
   await repo.findOne({ where: { name: 'parapeter' } });
 
-  res.json();
+  res.json({});
 });
 
 app.listen(port, () => {

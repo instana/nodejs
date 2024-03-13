@@ -41,7 +41,7 @@ app.get('/', async (req, res) => {
 app.get('/request', async (req, res) => {
   await got.get(`http://127.0.0.1:${agentPort}`);
 
-  res.json();
+  res.json({});
 });
 
 app.listen(port, () => {
