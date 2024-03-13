@@ -598,7 +598,7 @@ function verifySpans({
   if (withClientError === 'unreachable') {
     expectedUrlInHttpExit = 'http://localhost:1023/unreachable';
   } else if (withClientError === 'malformed-url') {
-    expectedUrlInHttpExit = `http://127.0.0.1:${serverControls.port}malformed-url`;
+    expectedUrlInHttpExit = `http:127.0.0.1:${serverControls.port}malformed-url`;
   }
   const exitInClient = verifyHttpExit({
     spans,
