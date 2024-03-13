@@ -652,8 +652,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
       .sendRequest({
         method: 'GET',
         path: '/inject-instana-trace-id',
-        responseStatus: 200,
-        resolveWithFullResponse: true
+        responseStatus: 200
       })
       .then(response => {
         expect(response).to.match(/^Instana Trace ID: [a-f0-9]{16}$/);

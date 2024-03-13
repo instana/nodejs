@@ -53,8 +53,7 @@ mochaSuiteFn('unhandled promise rejections', function () {
       .sendRequest({
         method: 'GET',
         path: '/reject-with-error-reason',
-        simple: false,
-        resolveWithFullResponse: true
+        simple: false
       })
       .then(response => {
         expect(response).to.equal('Rejected.');
@@ -78,8 +77,7 @@ mochaSuiteFn('unhandled promise rejections', function () {
       .sendRequest({
         method: 'GET',
         path: '/reject-with-error-reason',
-        simple: false,
-        resolveWithFullResponse: true
+        simple: false
       })
       .then(response => {
         expect(response).to.equal('Rejected.');
@@ -109,8 +107,7 @@ mochaSuiteFn('unhandled promise rejections', function () {
         .sendRequest({
           method: 'GET',
           path: '/reject-with-string-reason',
-          simple: false,
-          resolveWithFullResponse: true
+          simple: false
         })
         .then(response => {
           expect(response).to.equal('Rejected.');
@@ -139,8 +136,7 @@ mochaSuiteFn('unhandled promise rejections', function () {
       .sendRequest({
         method: 'GET',
         path: '/reject-with-null-reason',
-        simple: false,
-        resolveWithFullResponse: true
+        simple: false
       })
       .then(response => {
         expect(response).to.equal('Rejected.');

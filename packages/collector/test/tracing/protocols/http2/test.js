@@ -308,8 +308,7 @@ mochaSuiteFn('tracing/http2', function () {
     serverControls
       .sendRequest({
         method: 'GET',
-        path: '/inject-trace-id',
-        resolveWithFullResponse: true
+        path: '/inject-trace-id'
       })
       .then(response => {
         expect(response).to.match(/^Instana Trace ID: [a-f0-9]{16}$/);
