@@ -318,3 +318,14 @@ More information can be found [here](https://docs.aws.amazon.com/cli/latest/user
 cd packages/aws-lambda/layer/bin/
 REGIONS=<region> SKIP_DOCKER_IMAGE=true BUILD_LAYER_WITH=local LAYER_NAME=experimental-instana-nodejs-with-extension ./publish-layer.sh
 ```
+## ESM Support
+
+Use the following command to enable experimental ESM support:
+
+Node.js >= v18.19
+
+`node --import ../esm-loader.mjs  entry-point`
+
+For Node.js versions ≥14.0 and <18.19
+
+`node --experimental-loader ../esm-loader.mjs  entry-point`

@@ -13,6 +13,7 @@ const config = require('@instana/core/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 const portfinder = require('../../collector/test/test_util/portfinder');
 const PATH_TO_INSTANA_FARGATE_PACKAGE = path.join(__dirname, '..');
+const isLatestEsmSupportedVersion = require('@instana/core').tracing.isLatestEsmSupportedVersion;
 let execArg;
 
 function Control(opts) {
@@ -84,9 +85,14 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
     env.INSTANA_ENDPOINT_URL = this.backendBaseUrl;
     env.INSTANA_AGENT_KEY = this.instanaAgentKey;
   }
+
+  const loaderPath = isLatestEsmSupportedVersion(process.versions.node)
+    ? ['--import', `${path.join(__dirname, '..', 'esm-loader.mjs')}`]
+    : [`--experimental-loader=${path.join(__dirname, '..', 'esm-loader.mjs')}`];
+
   if (this.opts.containerAppPath && this.opts.env && this.opts.env.ESM_TEST) {
     if (this.opts.containerAppPath.endsWith('.mjs')) {
-      execArg = [`--experimental-loader=${path.join(__dirname, '..', 'esm-loader.mjs')}`];
+      execArg = loaderPath;
     } else {
       execArg = ['--require', PATH_TO_INSTANA_FARGATE_PACKAGE];
     }
