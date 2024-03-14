@@ -60,6 +60,8 @@ function init() {
       instanaCore.init(config, backendConnector, identityProvider);
       metrics.activate(backendConnector);
       tracing.activate();
+
+      logger.debug('@instana/aws-fargate initialized.');
     } catch (e) {
       logger.error('Initializing @instana/aws-fargate failed. This fargate task will not be monitored.', e);
     }

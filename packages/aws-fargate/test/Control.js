@@ -105,7 +105,11 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
   });
 
   this.fargateContainerApp.on('message', message => {
-    this.messagesFromFargateTask.push(message);
+    // CASE: even if fargate sends the listening message, it could be that the
+    //       fargate pkg is not fully initialized and then does not trace spans.
+    setTimeout(() => {
+      this.messagesFromFargateTask.push(message);
+    }, 500);
   });
 };
 
