@@ -154,6 +154,10 @@ class ProcessControls {
     this.process = this.args ? fork(this.appPath, this.args, forkConfig) : fork(this.appPath, forkConfig);
 
     this.process.on('message', message => {
+      if (message === 'collector.initialized') {
+        this.process.collectorInitialized = true;
+      }
+
       that.receivedIpcMessages.push(message);
     });
 
@@ -177,6 +181,8 @@ class ProcessControls {
         retryTime,
         until
       );
+
+      if (!this.process.collectorInitialized) throw new Error('Collector not fullly initialized.');
 
       // eslint-disable-next-line no-console
       console.log('[ProcessControls] Server is up.');

@@ -38,7 +38,8 @@ exports.registerTestHooks = (opts = {}) => {
         throw new Error(`Unknown instanaLoggingMode: ${opts.instanaLoggingMode}`);
     }
   }
-  beforeEach(() => {
+
+  beforeEach(async () => {
     const env = Object.create(process.env);
     env.AGENT_PORT = agentControls.getPort();
     env.APP_PORT = portfinder();
@@ -53,7 +54,13 @@ exports.registerTestHooks = (opts = {}) => {
       env
     });
 
-    return waitUntilServerIsUp();
+    appProcess.on('message', msg => {
+      if (msg === 'collector.initialized') {
+        appProcess.collectorInitialized = true;
+      }
+    });
+
+    await waitUntilServerIsUp();
   });
 
   afterEach(() => {
@@ -62,14 +69,16 @@ exports.registerTestHooks = (opts = {}) => {
 };
 
 function waitUntilServerIsUp() {
-  return testUtils.retry(() =>
-    fetch(`http://127.0.0.1:${appPort}`, {
+  return testUtils.retry(async () => {
+    await fetch(`http://127.0.0.1:${appPort}`, {
       method: 'GET',
       headers: {
         'X-INSTANA-L': '0'
       }
-    })
-  );
+    });
+
+    if (!appProcess.collectorInitialized) throw new Error('Collector not fullly initialized.');
+  });
 }
 
 exports.getPid = () => appProcess.pid;

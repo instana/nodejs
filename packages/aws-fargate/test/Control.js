@@ -105,16 +105,16 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
   });
 
   this.fargateContainerApp.on('message', message => {
-    // CASE: even if fargate sends the listening message, it could be that the
-    //       fargate pkg is not fully initialized and then does not trace spans.
-    setTimeout(() => {
-      this.messagesFromFargateTask.push(message);
-    }, 500);
+    this.messagesFromFargateTask.push(message);
   });
 };
 
 Control.prototype.hasMonitoredProcessStarted = function hasMonitoredProcessStarted() {
-  return this.messagesFromFargateTask.indexOf('fargate-task: listening') >= 0 && !this.fargateContainerAppHasTerminated;
+  return (
+    this.messagesFromFargateTask.indexOf('fargate-task: listening') >= 0 &&
+    this.messagesFromFargateTask.indexOf('aws-fargate.initialized') >= 0 &&
+    !this.fargateContainerAppHasTerminated
+  );
 };
 
 Control.prototype.hasMonitoredProcessTerminated = function hasMonitoredProcessTerminated() {

@@ -28,10 +28,6 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
   describe('trace log calls', () => {
     appControls.registerTestHooks();
 
-    beforeEach(async () => {
-      await agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid());
-    });
-
     it('must not trace info', () =>
       appControls.trigger('info').then(() =>
         testUtils.retry(() =>
@@ -107,10 +103,6 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
         instanaLoggingMode: 'instana-creates-bunyan-logger'
       });
 
-      beforeEach(async () => {
-        await agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid());
-      });
-
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
 
@@ -119,20 +111,12 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
         instanaLoggingMode: 'instana-receives-bunyan-logger'
       });
 
-      beforeEach(async () => {
-        await agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid());
-      });
-
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
 
     describe('Instana receives a non-Bunyan logger', () => {
       appControls.registerTestHooks({
         instanaLoggingMode: 'instana-receives-non-bunyan-logger'
-      });
-
-      beforeEach(async () => {
-        await agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid());
       });
 
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());

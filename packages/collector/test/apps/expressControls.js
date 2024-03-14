@@ -48,24 +48,30 @@ exports.start = function start(opts = {}, retryTime = null) {
     env
   });
 
+  expressApp.on('message', message => {
+    if (message === 'collector.initialized') {
+      expressApp.collectorInitialized = true;
+    }
+  });
+
   return waitUntilServerIsUp(opts.useHttps, retryTime);
 };
 
 function waitUntilServerIsUp(useHttps, retryTime) {
   try {
     return testUtils
-      .retry(
-        () =>
-          fetch(getBaseUrl(useHttps), {
-            method: 'GET',
-            url: getBaseUrl(useHttps),
-            headers: {
-              'X-INSTANA-L': '0'
-            },
-            ca: cert
-          }),
-        retryTime
-      )
+      .retry(async () => {
+        await fetch(getBaseUrl(useHttps), {
+          method: 'GET',
+          url: getBaseUrl(useHttps),
+          headers: {
+            'X-INSTANA-L': '0'
+          },
+          ca: cert
+        });
+
+        if (!expressApp.collectorInitialized) throw new Error('Collector not fullly initialized.');
+      }, retryTime)
       .then(resp => {
         // eslint-disable-next-line no-console
         console.log('[ExpressControls:start] started');

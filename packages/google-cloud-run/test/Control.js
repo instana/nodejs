@@ -101,17 +101,14 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
   });
 
   this.cloudRunContainerApp.on('message', message => {
-    // CASE: even if process sends the listening message, it could be that the
-    //       gc pkg is not fully initialized and then does not trace spans.
-    setTimeout(() => {
-      this.messagesFromCloudRunContainer.push(message);
-    }, 500);
+    this.messagesFromCloudRunContainer.push(message);
   });
 };
 
 Control.prototype.hasMonitoredProcessStarted = function hasMonitoredProcessStarted() {
   return (
     this.messagesFromCloudRunContainer.indexOf('cloud-run-service: listening') >= 0 &&
+    this.messagesFromCloudRunContainer.indexOf('google-cloud-run.initialized') >= 0 &&
     !this.googleCloudRunAppHasTerminated
   );
 };

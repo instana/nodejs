@@ -62,6 +62,9 @@ function init() {
       tracing.activate();
 
       logger.debug('@instana/aws-fargate initialized.');
+
+      // eslint-disable-next-line no-unused-expressions
+      process.send && process.send('aws-fargate.initialized');
     } catch (e) {
       logger.error('Initializing @instana/aws-fargate failed. This fargate task will not be monitored.', e);
     }
