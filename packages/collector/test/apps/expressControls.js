@@ -61,7 +61,7 @@ function waitUntilServerIsUp(useHttps, retryTime) {
   try {
     return testUtils
       .retry(async () => {
-        await fetch(getBaseUrl(useHttps), {
+        const resp = await fetch(getBaseUrl(useHttps), {
           method: 'GET',
           url: getBaseUrl(useHttps),
           headers: {
@@ -71,6 +71,8 @@ function waitUntilServerIsUp(useHttps, retryTime) {
         });
 
         if (!expressApp.collectorInitialized) throw new Error('Collector not fullly initialized.');
+
+        return resp;
       }, retryTime)
       .then(resp => {
         // eslint-disable-next-line no-console
