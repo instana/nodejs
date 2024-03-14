@@ -177,12 +177,12 @@ class ProcessControls {
             suppressTracing: true,
             checkStatusCode: true
           });
+
+          if (!this.process.collectorInitialized) throw new Error('Collector not fullly initialized.');
         },
         retryTime,
         until
       );
-
-      if (!this.process.collectorInitialized) throw new Error('Collector not fullly initialized.');
 
       // eslint-disable-next-line no-console
       console.log('[ProcessControls] Server is up.');
