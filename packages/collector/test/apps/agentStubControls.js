@@ -11,7 +11,7 @@ const portFinder = require('../test_util/portfinder');
 const path = require('path');
 const _ = require('lodash');
 
-const { retry } = require('../../../core/test/test_util');
+const { retry, delay } = require('../../../core/test/test_util');
 const config = require('../../../core/test/config');
 
 class AgentStubControls {
@@ -177,7 +177,13 @@ class AgentStubControls {
     });
   }
 
-  clearReceivedTraceData() {
+  async clearReceivedTraceData() {
+    // always wait 1000ms before we reset the data in case a retry happens
+    // and we want to ensure that no more data is incoming from the app.
+    await delay(1000);
+
+    // eslint-disable-next-line no-console
+    console.log('[AgentStubControls] clearReceivedTraceData');
     return fetch(`http://127.0.0.1:${this.agentPort}/received/traces`, {
       method: 'DELETE'
     });

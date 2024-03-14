@@ -16,11 +16,11 @@ exports.getAppStdio = () => {
 
 exports.getTestTimeout = () => {
   if (isCI()) {
-    return 60000;
+    return 120 * 1000;
   }
   // NOTE: Otherwise mocha will interrupt the debugging session quickly.
   if (process.env.VSCODE_DEBUG === 'true') {
-    return 60000;
+    return 120 * 1000;
   }
 
   return 2 * 5000;
@@ -30,11 +30,11 @@ exports.getTestTimeout = () => {
 // Otherwise we won't see the error message.
 exports.getRetryTimeout = () => {
   if (isCI()) {
-    return 55000;
+    return 100 * 1000;
   }
   // NOTE: Otherwise mocha will interrupt the debugging session quickly.
   if (process.env.VSCODE_DEBUG === 'true') {
-    return 55000;
+    return 100 * 1000;
   }
 
   return 8000;

@@ -231,7 +231,7 @@ describe('AWS fargate integration test', function () {
           await control.killBackend();
 
           // 3. now start the back end
-          return control.startBackendAndWaitForIt();
+          await control.startBackendAndWaitForIt();
         })
         .then(() => {
           // 4. fargate collector should send uncompressed snapshot data and the spans as soon as the back end comes up

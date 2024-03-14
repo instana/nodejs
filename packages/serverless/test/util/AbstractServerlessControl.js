@@ -13,7 +13,9 @@ const path = require('path');
 const fetch = require('node-fetch');
 
 const retry = require('@instana/core/test/test_util/retry');
+const delay = require('@instana/core/test/test_util/delay');
 const config = require('@instana/core/test/config');
+
 // To address the certificate authorization issue with node-fetch, process.env.NODE_TLS_REJECT_UNAUTHORIZED
 // was set to '0'. Refer to the problem discussed in https://github.com/node-fetch/node-fetch/issues/19
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -110,7 +112,9 @@ AbstractServerlessControl.prototype.stop = async function () {
   }
 };
 
-AbstractServerlessControl.prototype.startBackendAndWaitForIt = function startBackendAndWaitForIt() {
+AbstractServerlessControl.prototype.startBackendAndWaitForIt = async function startBackendAndWaitForIt() {
+  await delay(2000);
+
   this.backendHasBeenStarted = true;
   this.backend = fork(path.join(__dirname, '../backend_stub'), {
     stdio: config.getAppStdio(),
