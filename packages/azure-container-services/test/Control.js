@@ -18,6 +18,7 @@ class Control extends AbstractServerlessControl {
   constructor(opts) {
     super(opts);
     this.port = opts.port || portfinder();
+    this.azureContainerUninitialized = opts.azureContainerUninitialized;
     this.baseUrl = `http://127.0.0.1:${this.port}`;
     this.backendPort = this.opts.backendPort || portfinder();
     this.backendBaseUrl = this.opts.backendBaseUrl || `https://localhost:${this.backendPort}/serverless`;
@@ -75,9 +76,19 @@ class Control extends AbstractServerlessControl {
   }
 
   hasMonitoredProcessStarted() {
-    return (
-      this.messagesFromAzureContainer.includes('azure-app-service: listening') && !this.azureContainerAppHasTerminated
-    );
+    if (this.azureContainerUninitialized) {
+      return (
+        this.messagesFromAzureContainer.indexOf('azure-app-service: listening') >= 0 &&
+        this.messagesFromAzureContainer.indexOf('azure-app-service.initialized') === -1 &&
+        !this.azureContainerAppHasTerminated
+      );
+    } else {
+      return (
+        this.messagesFromAzureContainer.indexOf('azure-app-service: listening') >= 0 &&
+        this.messagesFromAzureContainer.indexOf('azure-app-service.initialized') >= 0 &&
+        !this.azureContainerAppHasTerminated
+      );
+    }
   }
 
   hasMonitoredProcessTerminated() {

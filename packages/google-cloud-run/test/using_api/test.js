@@ -76,7 +76,8 @@ describe('Using the API', function () {
         instanaAgentKey,
         startDownstreamDummy: false,
         startBackend: true,
-        unconfigured: false
+        unconfigured: false,
+        googleCloudRunUninitialized: true
       });
 
       await appControls.start();

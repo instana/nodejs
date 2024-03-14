@@ -18,6 +18,7 @@ let execArg;
 function Control(opts) {
   AbstractServerlessControl.call(this, opts);
   this.port = opts.port || portfinder();
+  this.fargateUninitialized = opts.fargateUninitialized;
   this.baseUrl = `http://127.0.0.1:${this.port}`;
   this.backendPort = this.opts.backendPort || portfinder();
   this.backendBaseUrl = this.opts.backendBaseUrl || `https://localhost:${this.backendPort}/serverless`;
@@ -110,11 +111,19 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
 };
 
 Control.prototype.hasMonitoredProcessStarted = function hasMonitoredProcessStarted() {
-  return (
-    this.messagesFromFargateTask.indexOf('fargate-task: listening') >= 0 &&
-    this.messagesFromFargateTask.indexOf('aws-fargate.initialized') >= 0 &&
-    !this.fargateContainerAppHasTerminated
-  );
+  if (this.fargateUninitialized) {
+    return (
+      this.messagesFromFargateTask.indexOf('fargate-task: listening') >= 0 &&
+      this.messagesFromFargateTask.indexOf('aws-fargate.initialized') === -1 &&
+      !this.fargateContainerAppHasTerminated
+    );
+  } else {
+    return (
+      this.messagesFromFargateTask.indexOf('fargate-task: listening') >= 0 &&
+      this.messagesFromFargateTask.indexOf('aws-fargate.initialized') >= 0 &&
+      !this.fargateContainerAppHasTerminated
+    );
+  }
 };
 
 Control.prototype.hasMonitoredProcessTerminated = function hasMonitoredProcessTerminated() {

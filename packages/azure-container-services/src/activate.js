@@ -39,6 +39,11 @@ function init() {
     backendConnector.init(identityProvider, logger, false, true, 950);
     instanaCore.init(config, backendConnector, identityProvider);
     tracing.activate();
+
+    logger.debug('@instana/azure-container-services initialized.');
+
+    // eslint-disable-next-line no-unused-expressions
+    process.send && process.send('azure-app-service.initialized');
   } catch (e) {
     logger.error(
       'Initializing @instana/azure-container-services failed. This azure container service will not be monitored.',

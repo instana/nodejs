@@ -74,7 +74,8 @@ describe('Using the API', function () {
         unconfigured: false,
         instanaAgentKey,
         startDownstreamDummy: false,
-        startBackend: true
+        startBackend: true,
+        fargateUninitialized: true
       });
 
       await control.start();

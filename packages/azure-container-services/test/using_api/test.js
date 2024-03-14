@@ -79,7 +79,8 @@ describe('Using the API', function () {
         instanaAgentKey,
         startDownstreamDummy: false,
         startBackend: true,
-        unconfigured: false
+        unconfigured: false,
+        azureContainerUninitialized: true
       });
 
       await control.start();
