@@ -74,7 +74,9 @@ if (esmSupportedVersion(process.versions.node)) {
         control = new Control({
           containerAppPath,
           instanaAgentKey,
-          startBackend: false
+          startBackend: false,
+          // The initialization fails.
+          azureContainerUninitialized: true
         });
 
         await control.start();
@@ -109,7 +111,8 @@ if (esmSupportedVersion(process.versions.node)) {
         control = new Control({
           containerAppPath,
           instanaAgentKey,
-          startBackend: false
+          startBackend: false,
+          azureContainerUninitialized: true
         });
 
         await control.start();

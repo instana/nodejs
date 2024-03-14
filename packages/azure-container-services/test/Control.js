@@ -91,12 +91,8 @@ class Control extends AbstractServerlessControl {
     }
   }
 
-  hasMonitoredProcessTerminated() {
-    return !this.azureContainerAppHasStarted || this.azureContainerAppHasTerminated;
-  }
-
   killMonitoredProcess() {
-    return this.hasMonitoredProcessTerminated() ? Promise.resolve() : this.killChildProcess(this.azureContainerApp);
+    return this.killChildProcess(this.azureContainerApp);
   }
 
   sendRequest(opts) {
