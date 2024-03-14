@@ -744,12 +744,12 @@ function checkSubscriptionUpdatesAndSpans(client1, client2, triggerUpdateVia) {
     expect(receivedUpdatesClient1).to.not.be.empty;
     const receivedUpdatesClient2 = client2.getIpcMessages();
     expect(receivedUpdatesClient2).to.not.be.empty;
-    const msg1 = receivedUpdatesClient1[0];
+    const msg1 = receivedUpdatesClient1[1];
     expect(msg1).to.equal(
       'character updated: ' +
         '{"data":{"characterUpdated":{"id":"1","name":"Updated Name","profession":"Updated Profession"}}}'
     );
-    const msg2 = receivedUpdatesClient2[0];
+    const msg2 = receivedUpdatesClient2[1];
     expect(msg2).to.equal(
       'character updated: ' +
         '{"data":{"characterUpdated":{"id":"1","name":"Updated Name","profession":"Updated Profession"}}}'

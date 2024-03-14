@@ -70,6 +70,8 @@ class ProcessControls {
       }
     }
 
+    this.collectorUninitialized = opts.collectorUninitialized;
+
     // absolute path to .js file that should be executed
     this.appPath = opts.appPath;
     // optional working directory for the child process
@@ -178,6 +180,7 @@ class ProcessControls {
             checkStatusCode: true
           });
 
+          if (this.collectorUninitialized) return;
           if (!this.process.collectorInitialized) throw new Error('Collector not fullly initialized.');
         },
         retryTime,
@@ -185,7 +188,7 @@ class ProcessControls {
       );
 
       // eslint-disable-next-line no-console
-      console.log('[ProcessControls] Server is up.');
+      console.log('[ProcessControls] server is up.');
     } catch (err) {
       // eslint-disable-next-line no-console
       console.log(`[ProcessControls] error: ${err}`);

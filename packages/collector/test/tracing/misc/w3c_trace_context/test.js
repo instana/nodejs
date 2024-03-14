@@ -62,7 +62,8 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
             APM_VENDOR: 'other-spec-compliant',
             DOWNSTREAM_PORT: instanaAppControls.getPort(),
             USE_HTTP2: http2
-          }
+          },
+          collectorUninitialized: true
         });
 
         await instanaAppControls.startAndWaitForAgentConnection();
