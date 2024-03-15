@@ -40,7 +40,35 @@ const SPAN_NAME = 'sqs';
 
 class InstanaAWSSQS extends InstanaAWSProduct {
   init(requireHook, shimmer) {
+    // < 3.481.0
+    // refs https://github.com/instana/nodejs/commit/6ae90e74fee5c47cc4ade67d21c4885d34c08847
+    // Background: sqs.receiveMessage returned a different promise than smithy.send (which is called internally)
     requireHook.onFileLoad(/@aws-sdk\/client-sqs\/dist-cjs\/SQS\.js/, function (module) {
+      shimmer.wrap(module.SQS.prototype, 'receiveMessage', function (originalReceiveMsgFn) {
+        return function instanaReceiveMessage() {
+          return cls.ns.runAndReturn(() => {
+            const ctx = cls.getAsyncContext();
+            this._instanaCtx = ctx;
+            const promise = originalReceiveMsgFn.apply(this, arguments);
+
+            promise.then = cls.ns.bind(promise.then);
+
+            if (promise.catch) {
+              promise.catch = cls.ns.bind(promise.catch);
+            }
+            if (promise.finally) {
+              promise.finally = cls.ns.bind(promise.finally);
+            }
+
+            return promise;
+          });
+        };
+      });
+    });
+
+    // >= 3.481
+    // https://github.com/aws/aws-sdk-js-v3/pull/5604
+    requireHook.onFileLoad(/@aws-sdk\/client-sqs\/dist-cjs\/index\.js/, function (module) {
       shimmer.wrap(module.SQS.prototype, 'receiveMessage', function (originalReceiveMsgFn) {
         return function instanaReceiveMessage() {
           return cls.ns.runAndReturn(() => {
