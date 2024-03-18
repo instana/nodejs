@@ -144,7 +144,7 @@ jobs:
                     "value": "<${{ github.server_url }}/${{ github.repository }}/releases>"
                   },
                   {
-                  "value": "Hey <@savitha.aneesh@ibm.com> <@subhalakshmi.moosad@ibm.com>, a new release has happened for Node.js Tracer! Please update the release notes. Thank you!"
+                  "value": "Hey @tracer-release-notes-content-team, a new release has happened for Node.js Tracer! Please update the release notes. Thank you!"
                   }
                 ]
               }]
