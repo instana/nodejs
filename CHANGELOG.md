@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.2.1](https://github.com/instana/nodejs/compare/v3.2.0...v3.2.1) (2024-03-18)
+
+### Bug Fixes
+
+- **collector:** gracefully shutdown if core module process is not ava… ([#1070](https://github.com/instana/nodejs/issues/1070)) ([3d8196d](https://github.com/instana/nodejs/commit/3d8196d7253c8460e5f704470133f402fc558964))
+- matrix parameters included in URLs ([#1069](https://github.com/instana/nodejs/issues/1069)) ([f1d2862](https://github.com/instana/nodejs/commit/f1d2862613bec31ee45bd7c0380dd2719d36f53f))
+- **sqs:** spans not being captured caused by @aws-sdk/client-sqs@3.481.0 ([#1076](https://github.com/instana/nodejs/issues/1076)) ([aa71aa6](https://github.com/instana/nodejs/commit/aa71aa642b0914e760a7c93a8155f7f780feafaa))
+
+### Features
+
+- added support for sqs-consumer v8, v9 ([#1075](https://github.com/instana/nodejs/issues/1075)) ([832238e](https://github.com/instana/nodejs/commit/832238eb625950360fe2911ffc59d28a65399207))
+
 # [3.2.0](https://github.com/instana/nodejs/compare/v3.1.3...v3.2.0) (2024-02-27)
 
 ### Bug Fixes
