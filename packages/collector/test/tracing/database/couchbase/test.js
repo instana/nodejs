@@ -165,6 +165,7 @@ mochaSuiteFn('tracing/couchbase', function () {
   });
 
   beforeEach(async () => {
+    await delay(2000);
     await agentControls.clearReceivedTraceData();
   });
 

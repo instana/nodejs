@@ -158,9 +158,9 @@ class ProcessControls {
     this.process.on('message', message => {
       if (message === 'collector.initialized') {
         this.process.collectorInitialized = true;
+      } else {
+        that.receivedIpcMessages.push(message);
       }
-
-      that.receivedIpcMessages.push(message);
     });
 
     await this.waitUntilServerIsUp(retryTime, until);
