@@ -185,27 +185,39 @@ app.get('/', (req, res) => {
 });
 
 app.get('/get-promise', async (req, res) => {
-  const result = await collection1.get('get-key-1');
-  await fetch(`http://127.0.0.1:${agentPort}`);
+  try {
+    const result = await collection1.get('get-key-1');
+    await fetch(`http://127.0.0.1:${agentPort}`);
 
-  res.json({ result: result.value });
+    res.json({ result: result.value });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 });
 
 app.get('/get-callback', (req, res) => {
   collection1.get('get-key-2', (err, result) => {
     if (err) return res.status(500).send({ err: err.message });
 
-    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
-      res.json({ result: result.value });
-    });
+    fetch(`http://127.0.0.1:${agentPort}`)
+      .then(() => {
+        res.json({ result: result.value });
+      })
+      .catch(err1 => {
+        res.status(500).json({ err: err1.message });
+      });
   });
 });
 
 app.get('/get-buckets-promise', async (req, res) => {
-  await collection1.get('get-key-1');
-  await collection2.insert('insert-key-5', 'val');
+  try {
+    await collection1.get('get-key-1');
+    await collection2.insert('insert-key-5', 'val');
 
-  res.json({ success: true });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 });
 
 app.get('/get-buckets-callback', (req, res) => {
@@ -220,8 +232,12 @@ app.get('/get-buckets-callback', (req, res) => {
 });
 
 app.get('/exists-promise', async (req, res) => {
-  const result = await collection1.exists('get-key-1');
-  res.json({ result: result.exists });
+  try {
+    const result = await collection1.exists('get-key-1');
+    res.json({ result: result.exists });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 });
 
 app.get('/exists-callback', (req, res) => {
@@ -232,8 +248,12 @@ app.get('/exists-callback', (req, res) => {
 });
 
 app.post('/getAndTouch-promise', async (req, res) => {
-  await collection1.getAndTouch('getandtouch-key-1', 5);
-  res.json({ success: true });
+  try {
+    await collection1.getAndTouch('getandtouch-key-1', 5);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 });
 
 app.post('/getAndTouch-callback', (req, res) => {
@@ -244,9 +264,13 @@ app.post('/getAndTouch-callback', (req, res) => {
 });
 
 app.post('/replace-promise', async (req, res) => {
-  await collection1.replace('replace-key-1', 'replacedvalue');
-  const result = await collection1.get('replace-key-1');
-  res.json({ result: result.value });
+  try {
+    await collection1.replace('replace-key-1', 'replacedvalue');
+    const result = await collection1.get('replace-key-1');
+    res.json({ result: result.value });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 });
 
 app.post('/replace-callback', (req, res) => {
@@ -261,8 +285,12 @@ app.post('/replace-callback', (req, res) => {
 });
 
 app.get('/lookupIn-promise', async (req, res) => {
-  const result = await collection1.lookupIn('lookup-key-1', [couchbase.LookupInSpec.get('bar')]);
-  res.json({ result: result.content[0].value });
+  try {
+    const result = await collection1.lookupIn('lookup-key-1', [couchbase.LookupInSpec.get('bar')]);
+    res.json({ result: result.content[0].value });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 });
 
 app.get('/lookupIn-callback', (req, res) => {
@@ -273,8 +301,12 @@ app.get('/lookupIn-callback', (req, res) => {
 });
 
 app.post('/mutateIn-promise', async (req, res) => {
-  await collection1.mutateIn('mutate-key-1', [couchbase.MutateInSpec.increment('foo', 3)]);
-  res.json({ success: true });
+  try {
+    await collection1.mutateIn('mutate-key-1', [couchbase.MutateInSpec.increment('foo', 3)]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 });
 
 app.post('/mutateIn-callback', (req, res) => {
@@ -286,9 +318,12 @@ app.post('/mutateIn-callback', (req, res) => {
 });
 
 app.post('/insert-promise', async (req, res) => {
-  await collection1.insert('insert-key-5', { name: 'insertvalue' });
-
-  res.json({ success: true });
+  try {
+    await collection1.insert('insert-key-5', { name: 'insertvalue' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 });
 
 app.post('/insert-callback', (req, res) => {
@@ -300,9 +335,12 @@ app.post('/insert-callback', (req, res) => {
 });
 
 app.post('/upsert-promise', async (req, res) => {
-  await collection1.upsert('upsert-key-1', { name: 'upsertvalue' });
-
-  res.json({ success: true });
+  try {
+    await collection1.upsert('upsert-key-1', { name: 'upsertvalue' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 });
 
 app.post('/upsert-callback', (req, res) => {
@@ -324,8 +362,12 @@ app.post('/remove-promise', async (req, res) => {
       res.json({ errMsg: removeErr.message });
     }
   } else {
-    await collection1.remove('remove-key-1');
-    res.json({ success: true });
+    try {
+      await collection1.remove('remove-key-1');
+      res.json({ success: true });
+    } catch (err1) {
+      res.status(500).json({ err: err1.message });
+    }
   }
 });
 app.post('/remove-callback', (req, res) => {
@@ -345,24 +387,36 @@ app.post('/remove-callback', (req, res) => {
 });
 
 app.post('/searchindexes-promise', async (req, res) => {
-  const idx1 = `s_${uuid.v1()}`;
+  try {
+    const idx1 = `s_${uuid.v1()}`;
 
-  await upsertIndex(idx1);
+    await upsertIndex(idx1);
 
-  await cluster.searchIndexes().getIndex(idx1);
-  await cluster.searchIndexes().getAllIndexes();
-  await cluster.searchIndexes().dropIndex(idx1);
+    await cluster.searchIndexes().getIndex(idx1);
+    await cluster.searchIndexes().getAllIndexes();
+    await cluster.searchIndexes().dropIndex(idx1);
 
-  res.json({ success: true });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 });
 
 app.post('/searchindexes-callback', (req, res) => {
   const idx1 = `s_${uuid.v1()}`;
 
-  upsertIndex(idx1, () => {
-    cluster.searchIndexes().getIndex(idx1, () => {
-      cluster.searchIndexes().getAllIndexes(() => {
-        cluster.searchIndexes().dropIndex(idx1, () => {
+  upsertIndex(idx1, err => {
+    if (err) return res.status(500).json({ err: err.message });
+
+    cluster.searchIndexes().getIndex(idx1, err1 => {
+      if (err1) return res.status(500).json({ err: err1.message });
+
+      cluster.searchIndexes().getAllIndexes(err2 => {
+        if (err2) return res.status(500).json({ err: err2.message });
+
+        cluster.searchIndexes().dropIndex(idx1, err3 => {
+          if (err3) return res.status(500).json({ err: err3.message });
+
           res.json({ success: true });
         });
       });
@@ -375,31 +429,35 @@ app.post('/analyticsindexes-promise', async (req, res) => {
   const dsName = `d_${uuid.v1()}`;
   const idxName = `i_${uuid.v1()}`;
 
-  await cluster.analyticsIndexes().createDataverse(dvName, {
-    ignoreIfExists: true
-  });
+  try {
+    await cluster.analyticsIndexes().createDataverse(dvName, {
+      ignoreIfExists: true
+    });
 
-  await cluster.analyticsIndexes().createDataset(bucket1.name, dsName, {
-    dataverseName: dvName
-  });
-  await cluster.analyticsIndexes().createIndex(
-    dsName,
-    idxName,
-    { name: 'string' },
-    {
+    await cluster.analyticsIndexes().createDataset(bucket1.name, dsName, {
       dataverseName: dvName
-    }
-  );
-  await cluster.analyticsIndexes().getAllDatasets();
-  await cluster.analyticsIndexes().getAllIndexes();
-  await cluster.analyticsIndexes().dropIndex(dsName, idxName, {
-    dataverseName: dvName
-  });
-  await cluster.analyticsIndexes().dropDataset(dsName, {
-    dataverseName: dvName
-  });
-  await cluster.analyticsIndexes().dropDataverse(dvName);
-  res.json({ success: true });
+    });
+    await cluster.analyticsIndexes().createIndex(
+      dsName,
+      idxName,
+      { name: 'string' },
+      {
+        dataverseName: dvName
+      }
+    );
+    await cluster.analyticsIndexes().getAllDatasets();
+    await cluster.analyticsIndexes().getAllIndexes();
+    await cluster.analyticsIndexes().dropIndex(dsName, idxName, {
+      dataverseName: dvName
+    });
+    await cluster.analyticsIndexes().dropDataset(dsName, {
+      dataverseName: dvName
+    });
+    await cluster.analyticsIndexes().dropDataverse(dvName);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 });
 
 app.post('/analyticsindexes-callback', (req, res) => {
@@ -412,14 +470,18 @@ app.post('/analyticsindexes-callback', (req, res) => {
     {
       ignoreIfExists: true
     },
-    () => {
+    err => {
+      if (err) return res.status(500).json({ err: err.message });
+
       cluster.analyticsIndexes().createDataset(
         bucket1.name,
         dsName,
         {
           dataverseName: dvName
         },
-        () => {
+        err2 => {
+          if (err2) return res.status(500).json({ err: err2.message });
+
           cluster.analyticsIndexes().createIndex(
             dsName,
             idxName,
@@ -427,22 +489,32 @@ app.post('/analyticsindexes-callback', (req, res) => {
             {
               dataverseName: dvName
             },
-            () => {
-              cluster.analyticsIndexes().getAllDatasets(() => {
-                cluster.analyticsIndexes().getAllIndexes(() => {
+            err3 => {
+              if (err3) return res.status(500).json({ err: err3.message });
+
+              cluster.analyticsIndexes().getAllDatasets(err4 => {
+                if (err4) return res.status(500).json({ err: err4.message });
+
+                cluster.analyticsIndexes().getAllIndexes(err5 => {
+                  if (err5) return res.status(500).json({ err: err5.message });
+
                   cluster.analyticsIndexes().dropIndex(
                     dsName,
                     idxName,
                     {
                       dataverseName: dvName
                     },
-                    () => {
+                    err6 => {
+                      if (err6) return res.status(500).json({ err: err6.message });
+
                       cluster.analyticsIndexes().dropDataset(
                         dsName,
                         {
                           dataverseName: dvName
                         },
-                        () => {
+                        err7 => {
+                          if (err7) return res.status(500).json({ err: err7.message });
+
                           cluster.analyticsIndexes().dropDataverse(dvName, () => {
                             res.json({ success: true });
                           });
@@ -463,22 +535,31 @@ app.post('/analyticsindexes-callback', (req, res) => {
 app.get('/searchquery-promise', async (req, res) => {
   const idx1 = `s_${uuid.v1()}`;
 
-  await upsertIndex(idx1);
+  try {
+    await upsertIndex(idx1);
 
-  // returns zero rows, we do not care
-  await cluster.searchQuery(idx1, couchbase.SearchQuery.term('something').field('something'), {
-    explain: true,
-    fields: ['name']
-  });
+    // returns zero rows, we do not care
+    await cluster.searchQuery(idx1, couchbase.SearchQuery.term('something').field('something'), {
+      explain: true,
+      fields: ['name']
+    });
 
-  await cluster.searchIndexes().dropIndex(idx1);
+    await cluster.searchIndexes().dropIndex(idx1);
 
-  res.json({ success: true });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 });
 
 app.get('/searchquery-callback', async (req, res) => {
   const idx1 = `s_${uuid.v1()}`;
-  await upsertIndex(idx1);
+
+  try {
+    await upsertIndex(idx1);
+  } catch (err1) {
+    return res.status(500).json({ err: err1.message });
+  }
 
   // returns zero rows, we do not care
   cluster.searchQuery(
@@ -491,7 +572,12 @@ app.get('/searchquery-callback', async (req, res) => {
     async err => {
       if (err) return res.status(500).send({ err: err.message });
 
-      await cluster.searchIndexes().dropIndex(idx1);
+      try {
+        await cluster.searchIndexes().dropIndex(idx1);
+      } catch (err2) {
+        return res.status(500).json({ err: err2.message });
+      }
+
       res.json({ success: true });
     }
   );
@@ -523,30 +609,35 @@ app.post('/queryindexes-promise', async (req, res) => {
   const idx1 = `s_${uuid.v1()}`;
   const idx2 = `s_${uuid.v1()}`;
 
-  // createPrimaryIndex uses a different notation
-  // https://github.com/couchbase/couchnode/blob/e855b094cd1b0140ffefc40f32a828b9134d181c/lib/queryindexmanager.ts#L896
-  await cluster.queryIndexes().createPrimaryIndex(bucket1.name, { name: idx1 });
-  await cluster.queryIndexes().createIndex(bucket2.name, idx2, ['name']);
-
-  const qs = `SELECT * FROM ${bucket1.name} WHERE name='${idx1}'`;
-  await cluster.query(qs);
-
-  const qs1 = `SELECT * FROM ${collection2.name} WHERE name='${idx2}'`;
-  await scope2.query(qs1);
-
   try {
-    const qs2 = `SELECT * FROM TABLE_DOES_NOT_EXIST WHERE name='${idx2}'`;
-    await scope2.query(qs2);
+    // createPrimaryIndex uses a different notation
+    // eslint-disable-next-line max-len
+    // https://github.com/couchbase/couchnode/blob/e855b094cd1b0140ffefc40f32a828b9134d181c/lib/queryindexmanager.ts#L896
+    await cluster.queryIndexes().createPrimaryIndex(bucket1.name, { name: idx1 });
+    await cluster.queryIndexes().createIndex(bucket2.name, idx2, ['name']);
+
+    const qs = `SELECT * FROM ${bucket1.name} WHERE name='${idx1}'`;
+    await cluster.query(qs);
+
+    const qs1 = `SELECT * FROM ${collection2.name} WHERE name='${idx2}'`;
+    await scope2.query(qs1);
+
+    try {
+      const qs2 = `SELECT * FROM TABLE_DOES_NOT_EXIST WHERE name='${idx2}'`;
+      await scope2.query(qs2);
+    } catch (err) {
+      // ignore
+    }
+
+    await cluster.queryIndexes().dropIndex(bucket1.name, idx1);
+    await cluster.queryIndexes().dropPrimaryIndex(bucket2.name, { name: idx2 });
+
+    await cluster.queryIndexes().getAllIndexes(bucket2.name);
+
+    res.json({ success: true });
   } catch (err) {
-    // ignore
+    res.status(500).json({ err: err.message });
   }
-
-  await cluster.queryIndexes().dropIndex(bucket1.name, idx1);
-  await cluster.queryIndexes().dropPrimaryIndex(bucket2.name, { name: idx2 });
-
-  await cluster.queryIndexes().getAllIndexes(bucket2.name);
-
-  res.json({ success: true });
 });
 
 app.post('/queryindexes-callback', (req, res) => {
@@ -557,14 +648,30 @@ app.post('/queryindexes-callback', (req, res) => {
   const qs1 = `SELECT * FROM ${collection2.name} WHERE name='${idx2}'`;
   const qs2 = `SELECT * FROM TABLE_DOES_NOT_EXIST WHERE name='${idx2}'`;
 
-  cluster.queryIndexes().createPrimaryIndex(bucket1.name, { name: idx1 }, () => {
-    cluster.queryIndexes().createIndex(bucket2.name, idx2, ['name'], () => {
-      cluster.query(qs, () => {
-        scope2.query(qs1, () => {
-          scope2.query(qs2, () => {
-            cluster.queryIndexes().dropIndex(bucket1.name, idx1, () => {
-              cluster.queryIndexes().dropPrimaryIndex(bucket2.name, { name: idx2 }, () => {
-                cluster.queryIndexes().getAllIndexes(bucket2.name, () => {
+  cluster.queryIndexes().createPrimaryIndex(bucket1.name, { name: idx1 }, err => {
+    if (err) return res.status(500).json({ err: err.message });
+
+    cluster.queryIndexes().createIndex(bucket2.name, idx2, ['name'], err1 => {
+      if (err1) return res.status(500).json({ err: err1.message });
+
+      cluster.query(qs, err2 => {
+        if (err2) return res.status(500).json({ err: err2.message });
+
+        scope2.query(qs1, err3 => {
+          if (err3) return res.status(500).json({ err: err3.message });
+
+          scope2.query(qs2, err4 => {
+            if (err4) return res.status(500).json({ err: err4.message });
+
+            cluster.queryIndexes().dropIndex(bucket1.name, idx1, err5 => {
+              if (err5) return res.status(500).json({ err: err5.message });
+
+              cluster.queryIndexes().dropPrimaryIndex(bucket2.name, { name: idx2 }, err6 => {
+                if (err6) return res.status(500).json({ err: err6.message });
+
+                cluster.queryIndexes().getAllIndexes(bucket2.name, err7 => {
+                  if (err7) return res.status(500).json({ err: err7.message });
+
                   res.json({ success: true });
                 });
               });
@@ -579,82 +686,92 @@ app.post('/queryindexes-callback', (req, res) => {
 app.get('/multiple-connections-promise', async (req, res) => {
   const idx1 = `s_${uuid.v1()}`;
 
-  await cluster.queryIndexes().createPrimaryIndex(bucket1.name, { name: idx1 });
+  try {
+    await cluster.queryIndexes().createPrimaryIndex(bucket1.name, { name: idx1 });
 
-  const qs = `SELECT * FROM ${bucket1.name} WHERE name='${idx1}'`;
-  await cluster.query(qs);
-  await cluster2.query(qs);
+    const qs = `SELECT * FROM ${bucket1.name} WHERE name='${idx1}'`;
+    await cluster.query(qs);
+    await cluster2.query(qs);
 
-  await cluster.queryIndexes().dropIndex(bucket1.name, idx1);
+    await cluster.queryIndexes().dropIndex(bucket1.name, idx1);
 
-  res.json({ success: true });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 });
 
 app.get('/datastructures-list-promise', async (req, res) => {
   const key = `s_${uuid.v1()}`;
-
   const listObj = collection1.list(key);
 
-  //  mutateIn
-  await listObj.push('test2');
-  await listObj.unshift('test1');
+  try {
+    //  mutateIn
+    await listObj.push('test2');
+    await listObj.unshift('test1');
 
-  // get
-  await listObj.getAll();
+    // get
+    await listObj.getAll();
 
-  // lookupIn
-  await listObj.getAt(1);
+    // lookupIn
+    await listObj.getAt(1);
 
-  const iteratedItems = [];
+    const iteratedItems = [];
 
-  // get
-  await listObj.forEach(item => {
-    iteratedItems.push(item);
-  });
+    // get
+    await listObj.forEach(item => {
+      iteratedItems.push(item);
+    });
 
-  // get
-  await listObj.indexOf('test2');
+    // get
+    await listObj.indexOf('test2');
 
-  // lookupin
-  await listObj.size();
+    // lookupin
+    await listObj.size();
 
-  // mutateIn
-  await listObj.removeAt(1);
+    // mutateIn
+    await listObj.removeAt(1);
 
-  res.json({ iteratedItems });
+    res.json({ iteratedItems });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 });
 
 app.get('/datastructures-map-promise', async (req, res) => {
   const key = `s_${uuid.v1()}`;
-
   const mapObj = collection1.map(key);
 
-  //  mutateIn
-  await mapObj.set('foo', 'test1');
-  await mapObj.set('bar', 'test2');
+  try {
+    //  mutateIn
+    await mapObj.set('foo', 'test1');
+    await mapObj.set('bar', 'test2');
 
-  // get
-  await mapObj.getAll();
+    // get
+    await mapObj.getAll();
 
-  // get
-  await mapObj.get('foo');
+    // get
+    await mapObj.get('foo');
 
-  // get
-  const iteratedItems = [];
-  await mapObj.forEach(item => {
-    iteratedItems.push(item);
-  });
+    // get
+    const iteratedItems = [];
+    await mapObj.forEach(item => {
+      iteratedItems.push(item);
+    });
 
-  // lookupin
-  await mapObj.exists('foo');
+    // lookupin
+    await mapObj.exists('foo');
 
-  // lookupin
-  await mapObj.size();
+    // lookupin
+    await mapObj.size();
 
-  // mutateIn
-  await mapObj.remove('bar');
+    // mutateIn
+    await mapObj.remove('bar');
 
-  res.json({ iteratedItems });
+    res.json({ iteratedItems });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 });
 
 app.listen(port, () => {
