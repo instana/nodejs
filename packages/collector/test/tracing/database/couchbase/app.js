@@ -167,6 +167,7 @@ couchbase.connect(
     connected2 = true;
 
     log('Connected to couchbase 2. Bootstrapping...');
+    log('Bootstrapping 2 done.');
   }
 );
 
@@ -660,13 +661,13 @@ app.post('/queryindexes-callback', (req, res) => {
         scope2.query(qs1, err3 => {
           if (err3) return res.status(500).json({ err: err3.message });
 
-          scope2.query(qs2, err4 => {
-            if (err4) return res.status(500).json({ err: err4.message });
+          scope2.query(qs2, () => {
+            // ignore this error because we expect it to fail
 
-            cluster.queryIndexes().dropIndex(bucket1.name, idx1, err5 => {
+            cluster.queryIndexes().dropIndex(bucket2.name, idx2, err5 => {
               if (err5) return res.status(500).json({ err: err5.message });
 
-              cluster.queryIndexes().dropPrimaryIndex(bucket2.name, { name: idx2 }, err6 => {
+              cluster.queryIndexes().dropPrimaryIndex(bucket1.name, { name: idx1 }, err6 => {
                 if (err6) return res.status(500).json({ err: err6.message });
 
                 cluster.queryIndexes().getAllIndexes(bucket2.name, err7 => {
