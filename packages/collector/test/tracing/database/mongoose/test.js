@@ -20,12 +20,15 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
 // v5 uses mongodb v3
 // v6 uses mongodb v4
-// latest (v7) uses mongodb v5
+// v7 uses mongodb v5
+// v8 uses mongodb v6
 
-['latest', 'v6', 'v5'].forEach(version => {
+['latest', 'v7', 'v6', 'v5'].forEach(version => {
   let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
   if (version === 'latest') {
+    mochaSuiteFn = semver.lt(process.versions.node, '16.0.0') ? describe.skip : mochaSuiteFn;
+  } else if (version === 'v7') {
     mochaSuiteFn = semver.lt(process.versions.node, '14.0.0') ? describe.skip : mochaSuiteFn;
   } else if (version === 'v6') {
     mochaSuiteFn = semver.lt(process.versions.node, '12.0.0') ? describe.skip : mochaSuiteFn;
