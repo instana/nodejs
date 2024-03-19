@@ -6,9 +6,8 @@
 'use strict';
 
 const spawn = require('child_process').spawn;
-const Promise = require('bluebird');
 const path = require('path');
-
+const testUtils = require('../../../../../core/test/test_util');
 const config = require('../../../../../core/test/config');
 const agentPort = require('../../../globalAgent').instance.agentPort;
 
@@ -29,12 +28,24 @@ exports.registerTestHooks = opts => {
       env
     });
 
-    return Promise.delay(1500);
+    app.on('message', message => {
+      if (message === 'collector.initialized') {
+        app.collectorInitialized = true;
+      }
+    });
+
+    return waitUntilServerIsUp();
   });
 
   afterEach(() => {
     app.kill();
   });
 };
+
+function waitUntilServerIsUp() {
+  return testUtils.retry(() => {
+    if (!app.collectorInitialized) throw new Error('Collector not fullly initialized.');
+  });
+}
 
 exports.getPid = () => app.pid;

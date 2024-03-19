@@ -34,6 +34,12 @@ exports.registerTestHooks = opts => {
       env
     });
 
+    app.on('message', message => {
+      if (message === 'collector.initialized') {
+        app.collectorInitialized = true;
+      }
+    });
+
     return waitUntilServerIsUp();
   });
 
@@ -43,14 +49,16 @@ exports.registerTestHooks = opts => {
 };
 
 function waitUntilServerIsUp() {
-  return testUtils.retry(() =>
-    fetch(`http://127.0.0.1:${appPort}`, {
+  return testUtils.retry(async () => {
+    await fetch(`http://127.0.0.1:${appPort}`, {
       method: 'GET',
       headers: {
         'X-INSTANA-L': '0'
       }
-    })
-  );
+    });
+
+    if (!app.collectorInitialized) throw new Error('Collector not fullly initialized.');
+  });
 }
 
 exports.getPid = () => app.pid;

@@ -50,10 +50,11 @@ spec:
         export AZURE_SQL_DATABASE="azure-nodejs-test"
 
         npm run coverage-all
-        npx eslint packages/ -f json > eslint-report.json || exit 0
-        npx sonarqube-scanner
 
         if [ $? -eq 0 ]; then
+          npx eslint packages/ -f json > eslint-report.json || exit 0
+          npx sonarqube-scanner
+
           exit 0
         else
           exit 1
