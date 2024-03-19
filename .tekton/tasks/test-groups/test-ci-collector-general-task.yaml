@@ -38,6 +38,8 @@ spec:
       value: $(params.revision)
     - name: continuous-delivery-context-secret
       value: $(params.continuous-delivery-context-secret)
+    - name: esm
+      value: $(params.esm)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -97,6 +99,14 @@ spec:
         export AZURE_SQL_USERNAME="admin@instana@nodejs-db-server"
         export AZURE_SQL_SERVER="nodejs-db-server.database.windows.net"
         export AZURE_SQL_DATABASE="azure-nodejs-test"
+        if [ "$(params.esm)" == "true" ]; then
+          export RUN_ESM=true
+          if ! echo "test:ci:collector:general" | grep -q 'ci:collector'; then
+            echo "Skipping tests because groupName does not contain 'ci:collector'."
+            touch "test:ci:collector:general.succeeded"
+            exit 0
+          fi
+        fi
         npm run "test:ci:collector:general"
         if [ $? -eq 0 ]; then
           touch "test:ci:collector:general.succeeded"

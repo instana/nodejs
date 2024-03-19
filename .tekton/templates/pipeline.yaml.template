@@ -30,6 +30,8 @@ spec:
       value: $(params.target-branch)
     - name: type
       value: $(params.type)
+    - name: esm
+      value: $(params.esm)
   workspaces:
     - name: artifacts
   tasks:

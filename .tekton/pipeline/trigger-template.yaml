@@ -35,6 +35,9 @@ spec:
       value: $(params.pl-name)
     - name: pipeline-ref
       value: $(params.pipeline-ref)
+    - name: esm
+      value: $(params.esm)
+      default: "false"
   resourcetemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
@@ -98,3 +101,5 @@ spec:
             value: $(params.target-branch)
           - name: type
             value: $(params.type)
+          - name: esm
+            value: $(params.esm)

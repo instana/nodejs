@@ -12,6 +12,8 @@
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts

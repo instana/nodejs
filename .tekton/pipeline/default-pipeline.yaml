@@ -30,6 +30,8 @@ spec:
       value: $(params.target-branch)
     - name: type
       value: $(params.type)
+    - name: esm
+      value: $(params.esm)
   workspaces:
     - name: artifacts
   tasks:
@@ -158,6 +160,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -175,6 +179,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -192,6 +198,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -209,6 +217,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -226,6 +236,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -243,6 +255,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -260,6 +274,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -277,6 +293,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -294,6 +312,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -311,6 +331,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -328,6 +350,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -345,6 +369,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -362,6 +388,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -379,6 +407,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -396,6 +426,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -413,6 +445,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -430,6 +464,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -447,6 +483,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -464,6 +502,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -481,6 +521,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -498,6 +540,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
@@ -515,6 +559,8 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
       workspaces:
         - name: output
           workspace: artifacts
