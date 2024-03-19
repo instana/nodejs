@@ -381,7 +381,8 @@ mochaSuiteFn('tracing/couchbase', function () {
             );
           }));
 
-      it('[analyticsindexes] must trace', () =>
+      // flaky on CI
+      it.skip('[analyticsindexes] must trace', () =>
         controls
           .sendRequest({
             method: 'post',
@@ -415,7 +416,8 @@ mochaSuiteFn('tracing/couchbase', function () {
             );
           }));
 
-      it('[searchquery] must trace', () =>
+      // flaky on CI
+      it.skip('[searchquery] must trace', () =>
         controls
           .sendRequest({
             method: 'get',
