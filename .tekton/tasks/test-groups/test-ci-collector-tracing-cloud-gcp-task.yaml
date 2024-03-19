@@ -92,8 +92,8 @@ spec:
             touch "test:ci:collector:tracing:cloud:gcp.succeeded"
             break
           else
-            touch "test:ci:collector:tracing:cloud:gcp.failed"
             if [ $retry -eq 2 ]; then
+              touch "test:ci:collector:tracing:cloud:gcp.failed"
               exit 1
             fi
             retry=$((retry + 1))

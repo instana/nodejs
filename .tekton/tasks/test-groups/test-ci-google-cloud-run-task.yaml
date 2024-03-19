@@ -92,8 +92,8 @@ spec:
             touch "test:ci:google-cloud-run.succeeded"
             break
           else
-            touch "test:ci:google-cloud-run.failed"
             if [ $retry -eq 2 ]; then
+              touch "test:ci:google-cloud-run.failed"
               exit 1
             fi
             retry=$((retry + 1))

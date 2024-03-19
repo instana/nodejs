@@ -92,8 +92,8 @@ spec:
             touch "test:ci:autoprofile.succeeded"
             break
           else
-            touch "test:ci:autoprofile.failed"
             if [ $retry -eq 2 ]; then
+              touch "test:ci:autoprofile.failed"
               exit 1
             fi
             retry=$((retry + 1))

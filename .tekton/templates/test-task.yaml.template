@@ -101,10 +101,11 @@ spec:
             touch "{{groupName}}.succeeded"
             break
           else
-            touch "{{groupName}}.failed"
             if [ $retry -eq 2 ]; then
+              touch "{{groupName}}.failed"
               exit 1
             fi
+
             retry=$((retry + 1))
           fi
         done

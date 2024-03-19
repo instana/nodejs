@@ -92,8 +92,8 @@ spec:
             touch "test:ci:aws-fargate.succeeded"
             break
           else
-            touch "test:ci:aws-fargate.failed"
             if [ $retry -eq 2 ]; then
+              touch "test:ci:aws-fargate.failed"
               exit 1
             fi
             retry=$((retry + 1))

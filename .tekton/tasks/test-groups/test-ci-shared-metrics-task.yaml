@@ -92,8 +92,8 @@ spec:
             touch "test:ci:shared-metrics.succeeded"
             break
           else
-            touch "test:ci:shared-metrics.failed"
             if [ $retry -eq 2 ]; then
+              touch "test:ci:shared-metrics.failed"
               exit 1
             fi
             retry=$((retry + 1))

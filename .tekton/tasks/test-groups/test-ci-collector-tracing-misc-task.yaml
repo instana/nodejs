@@ -94,8 +94,8 @@ spec:
             touch "test:ci:collector:tracing:misc.succeeded"
             break
           else
-            touch "test:ci:collector:tracing:misc.failed"
             if [ $retry -eq 2 ]; then
+              touch "test:ci:collector:tracing:misc.failed"
               exit 1
             fi
             retry=$((retry + 1))
