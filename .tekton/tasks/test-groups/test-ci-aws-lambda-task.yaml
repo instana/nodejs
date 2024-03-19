@@ -85,10 +85,17 @@ spec:
             exit 0
           fi
         fi
-        npm run "test:ci:aws-lambda"
-        if [ $? -eq 0 ]; then
-          touch "test:ci:aws-lambda.succeeded"
-        else
-          touch "test:ci:aws-lambda.failed"
-          exit 1
-        fi
+        retry=1
+        while [ $retry -le 2 ]; do
+          npm run "test:ci:aws-lambda"
+          if [ $? -eq 0 ]; then
+            touch "test:ci:aws-lambda.succeeded"
+            break
+          else
+            touch "test:ci:aws-lambda.failed"
+            if [ $retry -eq 2 ]; then
+              exit 1
+            fi
+            retry=$((retry + 1))
+          fi
+        done

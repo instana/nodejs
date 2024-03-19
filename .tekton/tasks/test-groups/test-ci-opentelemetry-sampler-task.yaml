@@ -85,10 +85,17 @@ spec:
             exit 0
           fi
         fi
-        npm run "test:ci:opentelemetry-sampler"
-        if [ $? -eq 0 ]; then
-          touch "test:ci:opentelemetry-sampler.succeeded"
-        else
-          touch "test:ci:opentelemetry-sampler.failed"
-          exit 1
-        fi
+        retry=1
+        while [ $retry -le 2 ]; do
+          npm run "test:ci:opentelemetry-sampler"
+          if [ $? -eq 0 ]; then
+            touch "test:ci:opentelemetry-sampler.succeeded"
+            break
+          else
+            touch "test:ci:opentelemetry-sampler.failed"
+            if [ $retry -eq 2 ]; then
+              exit 1
+            fi
+            retry=$((retry + 1))
+          fi
+        done

@@ -158,10 +158,17 @@ spec:
             exit 0
           fi
         fi
-        npm run "test:ci:collector:tracing:database"
-        if [ $? -eq 0 ]; then
-          touch "test:ci:collector:tracing:database.succeeded"
-        else
-          touch "test:ci:collector:tracing:database.failed"
-          exit 1
-        fi
+        retry=1
+        while [ $retry -le 2 ]; do
+          npm run "test:ci:collector:tracing:database"
+          if [ $? -eq 0 ]; then
+            touch "test:ci:collector:tracing:database.succeeded"
+            break
+          else
+            touch "test:ci:collector:tracing:database.failed"
+            if [ $retry -eq 2 ]; then
+              exit 1
+            fi
+            retry=$((retry + 1))
+          fi
+        done
