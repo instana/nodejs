@@ -17,11 +17,6 @@ const testUtils = require('@instana/core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 const isLatestEsmSupportedVersion = require('@instana/core').tracing.isLatestEsmSupportedVersion;
-
-const nodeOptions = isLatestEsmSupportedVersion(process.versions.node)
-  ? '--import ./esm-loader.mjs'
-  : '--experimental-loader ./load-instana.mjs';
-
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
 
@@ -47,6 +42,9 @@ mochaSuiteFn('[ESM] tracing/sdk/multiple_installations', function () {
   let controls;
 
   before(async () => {
+    const nodeOptions = isLatestEsmSupportedVersion(process.versions.node)
+      ? '--import ./load-instana.mjs'
+      : '--experimental-loader ./load-instana.mjs';
     controls = new ProcessControls({
       useGlobalAgent: true,
       cwd: path.join(__dirname, 'src'),
