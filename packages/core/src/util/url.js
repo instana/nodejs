@@ -15,6 +15,9 @@ const secrets = require('../secrets');
 exports.sanitizeUrl = function sanitizeUrl(urlString) {
   let normalizedUrl;
   try {
+    if (!URL.canParse(urlString)) {
+      return urlString && urlString.replace(/\?.*/g, "$'");
+    }
     const url = new URL(urlString);
 
     if (!url.protocol && !url.host && !url.pathname) {
