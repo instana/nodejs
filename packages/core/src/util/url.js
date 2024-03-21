@@ -19,6 +19,7 @@ exports.sanitizeUrl = function sanitizeUrl(urlString) {
     const url = new URL(urlString);
 
     // If URL has no protocol, host, or path, return the original URL.
+    // TODO: This case need adjustment for complete sanitization of the URL.
     if (!url.protocol && !url.host && !url.pathname) {
       return urlString;
     }
@@ -30,10 +31,11 @@ exports.sanitizeUrl = function sanitizeUrl(urlString) {
   } catch (e) {
     // If URL parsing fails and it's a relative URL, return its path.
     // For example, if the input is "/foo?a=b", the returned value will be "/foo".
-    if (urlString.startsWith('/')) {
+    if (typeof urlString === 'string' && urlString.startsWith('/')) {
       return new URL(urlString, 'https://example.org/').pathname;
     } else {
-      return '';
+      // This case  need adjustment for complete sanitization of the URL, reference 159741
+      return urlString;
     }
   }
   return normalizedUrl;
