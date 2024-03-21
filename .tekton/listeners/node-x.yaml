@@ -21,7 +21,7 @@ spec:
       value: $(params.node-version)
       default: ""
     - name: pl-name
-      value: "nightly"
+      value: "nightly-$(params.node-version)"
     - name: pipeline-ref
       value: "default-pipeline"
 
