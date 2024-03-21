@@ -6,8 +6,6 @@
 'use strict';
 
 require('./mockVersion');
-const isLatest = process.env.MONGOOSE_VERSION === 'latest';
-
 require('../../../..')();
 
 const bodyParser = require('body-parser');
@@ -47,7 +45,7 @@ mongoose.model(
 );
 const Person = mongoose.model('Person');
 
-if (isLatest) {
+if (process.env.MONGOOSE_VERSION === 'latest' || process.env.MONGOOSE_VERSION === 'v7') {
   (async () => {
     try {
       await mongoose.connect(connectString);

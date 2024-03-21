@@ -5,8 +5,6 @@
 
 'use strict';
 
-const isLatest = process.env.MONGOOSE_VERSION === 'latest';
-
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import express from 'express';
@@ -45,7 +43,7 @@ mongoose.model(
 );
 const Person = mongoose.model('Person');
 
-if (isLatest) {
+if (process.env.MONGOOSE_VERSION === 'latest' || process.env.MONGOOSE_VERSION === 'v7') {
   (async () => {
     try {
       await mongoose.connect(connectString);
