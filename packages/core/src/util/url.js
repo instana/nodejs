@@ -9,6 +9,7 @@ const { URL } = require('url');
 const secrets = require('../secrets');
 
 /**
+ * Sanitizes the incoming URL by removing query parameters and redacting basic auth credentials if present.
  * @param {string} urlString the URL that will be sanitized
  * @returns {string} the URL, without query parameters, matrix parameters and with basic auth credentials redacted
  */
@@ -17,15 +18,25 @@ exports.sanitizeUrl = function sanitizeUrl(urlString) {
   try {
     const url = new URL(urlString);
 
+    // If URL has no protocol, host, or path, return the original URL.
+    // TODO: This case need adjustment for complete sanitization of the URL.
     if (!url.protocol && !url.host && !url.pathname) {
       return urlString;
     }
 
+    // Normalize the URL with redacted credentials.
     normalizedUrl = `${nullToEmptyString(url.protocol)}${url.protocol || url.host ? '//' : ''}${
       url.username || url.password ? '<redacted>:<redacted>@' : ''
     }${nullToEmptyString(url.host)}${nullToEmptyString(url.pathname)}`;
   } catch (e) {
-    return urlString;
+    // If URL parsing fails and it's a relative URL, return its path.
+    // For example, if the input is "/foo?a=b", the returned value will be "/foo".
+    if (typeof urlString === 'string' && urlString.startsWith('/')) {
+      return new URL(urlString, 'https://example.org/').pathname;
+    } else {
+      // This case  need adjustment for complete sanitization of the URL, reference 159741
+      return urlString;
+    }
   }
   return normalizedUrl;
 };

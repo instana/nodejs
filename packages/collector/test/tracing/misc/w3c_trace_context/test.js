@@ -996,7 +996,7 @@ function verifyHttpExit(spans, parentSpan, url) {
     span => expect(span.s).to.be.a('string'),
     span => expect(span.p).to.equal(parentSpan.s),
     span => expect(span.data.http.method).to.equal('GET'),
-    span => expect(span.data.http.url).contains(`${otherVendorAppPort}${url}`),
+    span => expect(span.data.http.url).to.match(RegExp(`^.*:${otherVendorAppPort}${url}$`)),
     span => expect(span.data.http.status).to.equal(200),
     span => expect(span.fp).to.not.exist
   ]);
