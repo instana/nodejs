@@ -10,7 +10,7 @@
   "author": "Bastian Krol <bastian.krol@ibm.com>",
   "license": "MIT",
   "dependencies": {
-    "@prisma/client": "^4.5.0"
+    "@prisma/client": "^5.11.0"
   },
   "devDependencies": {
     "prisma": "^5.11.0"
