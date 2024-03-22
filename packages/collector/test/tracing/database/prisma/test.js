@@ -172,7 +172,7 @@ mochaSuiteFn('tracing/prisma', function () {
 
   function verifyReadResponse(response, withError) {
     if (withError) {
-      expect(response).to.include('Unknown arg `email` in where.email');
+      expect(response).to.include('PrismaClientValidationError');
     } else {
       expect(response).to.be.an('array');
       expect(response).to.have.length(1);
