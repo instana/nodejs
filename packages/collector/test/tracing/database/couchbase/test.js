@@ -80,7 +80,7 @@ const maxTries = 100;
 async function configureCouchbase() {
   function encode(str) {
     // NOTE: btoa is not availbale < 16
-    if (btoa) {
+    if (global.btoa) {
       return btoa(str);
     }
     return Buffer.from(str).toString('base64');
