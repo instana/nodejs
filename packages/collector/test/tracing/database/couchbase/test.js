@@ -90,7 +90,7 @@ async function configureCouchbase() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${encode('node:nodepwd')}` // Add this header for requests requiring authorization
+      Authorization: `Basic ${encode('node:nodepwd')}`
     }
   };
 
@@ -112,6 +112,10 @@ async function configureCouchbase() {
       ...requestOptions,
       body: 'port=8091&username=node&password=nodepwd'
     });
+
+    // NOTE: we need this delay because otherwise we could get a socket timeout
+    //       from couchbase because we reset the credentials in the previous call
+    await delay(5000);
 
     // Configure indexes settings
     await fetch(`${webUi}/settings/indexes`, {
