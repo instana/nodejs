@@ -4,6 +4,24 @@ metadata:
   name: test-ci-collector-tracing-general
 spec:
   sidecars:
+    - name: postgres
+      image: postgres
+      env:
+          - name: "POSTGRES_USER"
+            value: "node"
+          - name: "POSTGRES_PASSWORD"
+            value: "nodepw"
+          - name: "POSTGRES_DB"
+            value: "nodedb"
+      readinessProbe:
+          exec:
+            command:
+            - "sh"
+            - "-c"
+            - "pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb"
+          initialDelaySeconds: 3
+          periodSeconds: 2
+          timeoutSeconds: 10
   envFrom:
     - configMapRef:
         name: environment-properties  

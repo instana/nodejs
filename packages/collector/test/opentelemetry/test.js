@@ -18,14 +18,16 @@ const globalAgent = require('../globalAgent');
 
 // NOTE: only run on the latest node version
 const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0')
+    ? describe.skip
+    : describe.skip;
 
 // NOTE: Using @instana/collector and the OpenTelemetry SDK in the same process is not supported.
 //       Thus, this test does not verify desirable behavior but simply checks what exactly happens when
 //       this unsupported setup is used. Both variants (require Instana first/OTel second and vice versa)
 //       fail, though they fail in different ways.
 // TODO: fix me later
-mochaSuiteFn.skip('Opentelemetry usage', function () {
+mochaSuiteFn('Opentelemetry usage', function () {
   this.timeout(config.getTestTimeout());
   const randomPort = portfinder();
   let server;

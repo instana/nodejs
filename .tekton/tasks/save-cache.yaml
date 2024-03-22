@@ -43,7 +43,7 @@ spec:
           tar -cf - node_modules | zstd -o node-modules.tar.zst
 
           checksum=$(sha256sum package-lock.json | awk '{print $1}')
-          ibmcloud cos upload --bucket npm-cache --key node-modules-$(params.target-branch)-$checksum --file ./node-modules.tar.zst
+          ibmcloud cos upload --bucket npm-cache --key node-modules-$(params.target-branch)-$(params.node-version)-$checksum --file ./node-modules.tar.zst
 
           echo "Uploaded root node_modules cache"
           
@@ -52,7 +52,7 @@ spec:
             if [ -d "$ARTIFACTS_PATH/$package_dir" ]; then
               cd $ARTIFACTS_PATH/$package_dir
               package_name=$(basename "$package_dir")
-              pkg_name="node-modules-$(params.target-branch)-$package_name-$checksum"
+              pkg_name="node-modules-$(params.target-branch)-$(params.node-version)-$package_name-$checksum"
               rm -rf $pkg_name.tar.zst
 
               echo "Saving cache for $pkg_name"
