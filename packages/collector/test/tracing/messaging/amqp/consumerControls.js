@@ -31,6 +31,8 @@ exports.registerTestHooks = opts => {
     app.on('message', message => {
       if (message === 'collector.initialized') {
         app.collectorInitialized = true;
+      } else if (message === 'amqp.initialized') {
+        app.amqpInitialized = true;
       }
     });
 
@@ -45,6 +47,7 @@ exports.registerTestHooks = opts => {
 function waitUntilServerIsUp() {
   return testUtils.retry(() => {
     if (!app.collectorInitialized) throw new Error('Collector not fullly initialized.');
+    if (!app.amqpInitialized) throw new Error('amqp not ready.');
   });
 }
 

@@ -165,6 +165,7 @@ amqp
   )
   .then(() => {
     log('amqp connection established');
+    process.send && process.send('amqp.initialized');
   })
   .catch(console.warn);
 

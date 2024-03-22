@@ -78,7 +78,7 @@ function consumer(conn) {
         if (err) {
           return bail(err);
         }
-        log('amqp connection established');
+
         channel.consume(queueForExchangeName, msg => {
           const span = instana.currentSpan();
           span.disableAutoEnd();
@@ -99,6 +99,7 @@ function consumer(conn) {
             }, 100);
           }
         });
+
         channel.consume(queueName, msg => {
           const span = instana.currentSpan();
           span.disableAutoEnd();
@@ -119,6 +120,7 @@ function consumer(conn) {
             }, 100);
           }
         });
+
         // poll a queue via get
         setInterval(
           () =>
@@ -147,6 +149,9 @@ function consumer(conn) {
             }),
           500
         );
+
+        log('amqp connection established');
+        process.send && process.send('amqp.initialized');
       }
     ); // a.waterfall
   }
