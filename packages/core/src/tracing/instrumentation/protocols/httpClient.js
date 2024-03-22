@@ -301,7 +301,8 @@ function instrument(coreModule, forceHttps) {
       });
 
       clientRequest.on('error', err => {
-        let errorMessage = err.message;
+        let errorMessage = err.message || err.code;
+
         if (isTimeout) {
           errorMessage = 'Timeout exceeded';
 
