@@ -26,6 +26,8 @@ spec:
       value: $(params.pr-number)
     - name: node-version
       value: $(params.node-version)
+    - name: npm-version
+      value: $(params.npm-version)
     - name: target-branch
       value: $(params.target-branch)
     - name: type
@@ -43,7 +45,9 @@ spec:
           workspace: artifacts        
       params:
         - name: node-version
-          value: $(params.node-version)      
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)  
     - name: extract-repository-url
       taskRef:
         name: toolchain-extract-value
@@ -115,6 +119,8 @@ spec:
           value: $(params.target-branch)
         - name: node-version
           value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
       workspaces:
         - name: output
           workspace: artifacts
@@ -142,7 +148,7 @@ spec:
         name: execute-tools
       params:
         - name: node-version
-          value: $(params.node-version)      
+          value: $(params.node-version)   
       workspaces:
         - name: output
           workspace: artifacts

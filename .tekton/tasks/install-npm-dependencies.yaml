@@ -12,6 +12,8 @@ spec:
       value: $(params.target-branch)
     - name: node-version
       value: $(params.node-version)      
+    - name: npm-version
+      value: $(params.npm-version)      
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -29,6 +31,10 @@ spec:
         #!/bin/bash
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
+
+        if [ -n "$(params.npm-version)" ]; then
+          sudo npm install npm@$(params.npm-version) -g
+        fi        
 
         echo "Restoring node_modules cache..."
         curl -fsSL https://clis.cloud.ibm.com/install/linux | sh

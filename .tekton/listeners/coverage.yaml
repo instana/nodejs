@@ -20,6 +20,9 @@ spec:
     - name: node-version
       value: $(params.node-version)
       default: ""
+    - name: npm-version
+      value: $(params.npm-version)
+      default: ""      
     - name: pl-name
       value: "coverage"
     - name: pipeline-ref
