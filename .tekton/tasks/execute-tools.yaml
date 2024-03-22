@@ -6,6 +6,8 @@ spec:
   params:
     - name: node-version
       value: $(params.node-version)
+    - name: npm-version
+      value: $(params.npm-version)      
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -17,6 +19,10 @@ spec:
         
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
+
+        if [ -n "$(params.npm-version)" ]; then
+          npm install npm@$(params.npm-version) -g
+        fi        
 
         npm run audit
 
@@ -34,6 +40,10 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        if [ -n "$(params.npm-version)" ]; then
+          npm install npm@$(params.npm-version) -g
+        fi        
+
         npm run lint
 
         if [ $? -eq 0 ]; then
@@ -49,6 +59,10 @@ spec:
 
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
+
+        if [ -n "$(params.npm-version)" ]; then
+          npm install npm@$(params.npm-version) -g
+        fi        
 
         if [[ $(node -v) =~ ^v18.*$ ]]; then
           node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)
@@ -68,6 +82,10 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        if [ -n "$(params.npm-version)" ]; then
+          npm install npm@$(params.npm-version) -g
+        fi        
+
         if [[ $(node -v) =~ ^v18.*$ ]]; then
            npm run depcheck
 
@@ -85,6 +103,10 @@ spec:
 
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
+
+        if [ -n "$(params.npm-version)" ]; then
+          npm install npm@$(params.npm-version) -g
+        fi        
         
         if [[ $(node -v) =~ ^v18.*$ ]]; then
           bin/clean-aws.js --service=s3
