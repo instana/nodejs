@@ -31,7 +31,16 @@ const groups = {
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/gcp"'
   },
   'test:ci:collector:tracing:messaging': {
-    sidecars: ['zookeeper', 'kafka', 'redis', 'nats', 'nats-streaming', 'nats-streaming-2', 'rabbitmq'],
+    sidecars: [
+      'zookeeper',
+      'kafka',
+      'schema-registry',
+      'redis',
+      'nats',
+      'nats-streaming',
+      'nats-streaming-2',
+      'rabbitmq'
+    ],
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/messaging"'
   },
   'test:ci:collector:tracing:protocols': {
