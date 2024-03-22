@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.3.0](https://github.com/instana/nodejs/compare/v3.2.1...v3.3.0) (2024-03-22)
+
+### Bug Fixes
+
+- resolved relative URL issue in sanitizeUrl method ([a2fac29](https://github.com/instana/nodejs/commit/a2fac29a619d83aa9cc8af69a717a4a8b603da2f))
+
+### Features
+
+- added support for mongoose v8 ([#1083](https://github.com/instana/nodejs/issues/1083)) ([3996301](https://github.com/instana/nodejs/commit/3996301c6ce7614b7097f5fdf9007ff82eba6dc5))
+
 ## [3.2.1](https://github.com/instana/nodejs/compare/v3.2.0...v3.2.1) (2024-03-18)
 
 ### Bug Fixes
