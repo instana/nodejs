@@ -13,6 +13,6 @@
     "@prisma/client": "^4.5.0"
   },
   "devDependencies": {
-    "prisma": "^4.5.0"
+    "prisma": "^5.11.0"
   }
 }
