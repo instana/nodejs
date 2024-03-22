@@ -78,11 +78,19 @@ let tries = 0;
 const maxTries = 100;
 
 async function configureCouchbase() {
+  function encode(str) {
+    // NOTE: btoa is not availbale < 16
+    if (btoa) {
+      return btoa(str);
+    }
+    return Buffer.from(str).toString('base64');
+  }
+
   const requestOptions = {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${btoa('node:nodepwd')}` // Add this header for requests requiring authorization
+      Authorization: `Basic ${encode('node:nodepwd')}` // Add this header for requests requiring authorization
     }
   };
 
