@@ -34,11 +34,21 @@ spec:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
               key: "AWS_SECRET_ACCESS_KEY"              
+        - name: DB2_CONNECTION_STR
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "DB2_CONNECTION_STR"
         - name: GOOGLE_APPLICATION_CREDENTIALS_CONTENT
           valueFrom:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
-              key: "GOOGLE_APPLICATION_CREDENTIALS_CONTENT"              
+              key: "GOOGLE_APPLICATION_CREDENTIALS_CONTENT"
+        - name: AZURE_SQL_PWD
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AZURE_SQL_PWD"            
       image: node:$(params.node-version)
       script: |
         #!/bin/bash
