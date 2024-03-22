@@ -20,7 +20,7 @@ spec:
         echo "Node: $(node --version)"
 
         if [ -n "$(params.npm-version)" ]; then
-          sudo npm install npm@$(params.npm-version) -g
+          npm install npm@$(params.npm-version) -g
         fi
 
         echo "NPM: $(npm --version)"

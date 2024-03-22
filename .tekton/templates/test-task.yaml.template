@@ -63,7 +63,7 @@ spec:
         GIT_COMMIT_DESC=""
 
         if [ -n "$(params.npm-version)" ]; then
-          sudo npm install npm@$(params.npm-version) -g
+          npm install npm@$(params.npm-version) -g
         fi
 
         if [ -n "$(params.revision)" ]; then

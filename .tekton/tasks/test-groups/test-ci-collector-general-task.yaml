@@ -83,7 +83,7 @@ spec:
         MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
         if [ -n "$(params.npm-version)" ]; then
-          sudo npm install npm@$(params.npm-version) -g
+          npm install npm@$(params.npm-version) -g
         fi
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"

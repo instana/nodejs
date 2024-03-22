@@ -186,7 +186,7 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         if [ -n "$(params.npm-version)" ]; then
-          sudo npm install npm@$(params.npm-version) -g
+          npm install npm@$(params.npm-version) -g
         fi
         export CI=true
         export GCP_PROJECT="k8s-brewery"
