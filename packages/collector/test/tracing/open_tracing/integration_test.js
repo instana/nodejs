@@ -19,15 +19,14 @@ describe('tracing/opentracing/integration', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
-
   const expressOpentracingControls = require('./controls');
+
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
 
   describe('with automatic tracing', () => {
     expressOpentracingControls.registerTestHooks();
-
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
 
     beforeEach(async () => {
       await agentControls.waitUntilAppIsCompletelyInitialized(expressOpentracingControls.getPid());

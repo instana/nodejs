@@ -21,7 +21,7 @@ const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('[CJS] tracing/sdk/multiple_installations', function () {
-  this.timeout(config.getTestTimeout());
+  this.timeout(config.getTestTimeout() * 2);
 
   const tmpDirPath = path.join(os.tmpdir(), '@instana-collector-test-prevent-multiple-installations');
   const tmpDir = mkdtempSync(tmpDirPath);

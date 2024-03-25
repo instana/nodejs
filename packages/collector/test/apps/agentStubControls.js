@@ -164,10 +164,12 @@ class AgentStubControls {
     });
   }
 
-  reset() {
-    return fetch(`http://127.0.0.1:${this.agentPort}/`, {
-      method: 'DELETE',
-      json: true
+  async reset() {
+    return retry(async () => {
+      await fetch(`http://127.0.0.1:${this.agentPort}/`, {
+        method: 'DELETE',
+        json: true
+      });
     });
   }
 
@@ -182,14 +184,16 @@ class AgentStubControls {
     // and we want to ensure that no more data is incoming from the app.
     await delay(1000);
 
-    // eslint-disable-next-line no-console
-    // console.log('[AgentStubControls] clearReceivedTraceData');
-    await fetch(`http://127.0.0.1:${this.agentPort}/received/traces`, {
-      method: 'DELETE'
-    });
+    return retry(async () => {
+      // eslint-disable-next-line no-console
+      // console.log('[AgentStubControls] clearReceivedTraceData');
+      await fetch(`http://127.0.0.1:${this.agentPort}/received/traces`, {
+        method: 'DELETE'
+      });
 
-    // eslint-disable-next-line no-console
-    // console.log('[AgentStubControls] clearReceivedTraceData done');
+      // eslint-disable-next-line no-console
+      // console.log('[AgentStubControls] clearReceivedTraceData done');
+    });
   }
 
   clearReceivedProfilingData() {

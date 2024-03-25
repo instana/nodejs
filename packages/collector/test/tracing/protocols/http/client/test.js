@@ -21,7 +21,9 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 mochaSuiteFn('tracing/http client', function () {
   this.timeout(config.getTestTimeout() * 2);
 
-  globalAgent.setUpTestCaseCleanUpHooks();
+  beforeEach(async () => {
+    await globalAgent.instance.clearReceivedTraceData();
+  });
 
   describe('http', function () {
     registerTests.call(this, false);

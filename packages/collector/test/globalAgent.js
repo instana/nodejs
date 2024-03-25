@@ -46,7 +46,6 @@ exports.stopGlobalAgent = function start() {
  */
 exports.setUpCleanUpHooks = function setUpCleanUpHooks() {
   exports.setUpSuiteCleanUpHooks();
-  exports.setUpTestCaseCleanUpHooks();
 };
 
 /**

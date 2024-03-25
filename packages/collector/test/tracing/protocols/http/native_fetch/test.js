@@ -28,7 +28,7 @@ if (!supportedVersion(process.versions.node)) {
 mochaSuiteFn('tracing/native fetch', function () {
   this.timeout(config.getTestTimeout() * 2);
 
-  globalAgent.setUpTestCaseCleanUpHooks();
+  globalAgent.setUpCleanUpHooks();
 
   let serverControls;
   let clientControls;
