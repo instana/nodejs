@@ -17,6 +17,7 @@ const app = express();
 const logPrefix = `Sequilize App (${process.pid}):\t`;
 
 import { Sequelize, DataTypes } from 'sequelize';
+let connected = false;
 const sequelize = new Sequelize({
   dialect: 'postgres',
   host: process.env.POSTGRES_HOST,
@@ -46,6 +47,8 @@ const sequelize = new Sequelize({
     },
     { fields: ['name'] }
   );
+
+  connected = true;
 })();
 
 if (process.env.WITH_STDOUT) {
@@ -55,6 +58,8 @@ if (process.env.WITH_STDOUT) {
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
+  if (!connected) return res.sendStatus(500);
+
   res.sendStatus(200);
 });
 
