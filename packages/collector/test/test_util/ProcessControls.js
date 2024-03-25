@@ -44,7 +44,6 @@ class ProcessControls {
    * @param {ProcessControlsOptions} opts
    */
   constructor(opts = {}) {
-    console.log('CONSTRUCTOR');
     if (!opts.appPath && !opts.dirname) {
       throw new Error('Missing mandatory config option, either appPath or dirname needs to be provided.');
     }

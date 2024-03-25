@@ -26,12 +26,11 @@ const foreignParentId = '1020304050607080';
 const LEFT_PAD_16 = '0000000000000000';
 const upstreamInstanaTraceId = 'ffeeddccbbaa9988';
 const upstreamInstanaParentId = '7766554433221100';
-
+let otherVendorAppPort;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/W3C Trace Context', function () {
   this.timeout(config.getTestTimeout() * 2);
-  let otherVendorAppPort;
   globalAgent.setUpCleanUpHooks();
 
   [false, true].forEach(registerSuite);
