@@ -37,7 +37,7 @@ mochaSuiteFn('tracing/tracing metrics', function () {
     });
 
     beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
+      await agentControls.clearReceivedData();
     });
 
     after(async () => {
