@@ -111,6 +111,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
                     await producerControls.startAndWaitForAgentConnection();
                   });
 
+                  beforeEach(async () => {
+                    await agentControls.clearReceivedData();
+                  });
+
                   afterEach(async () => {
                     await consumerControls.stop();
                     await producerControls.stop();

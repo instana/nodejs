@@ -123,7 +123,7 @@ mochaSuiteFn('tracing/too late', function () {
     });
 
     beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
+      await agentControls.clearReceivedData();
     });
 
     after(async () => {
