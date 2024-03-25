@@ -40,7 +40,7 @@ function prelude(opts) {
   return env;
 }
 
-describe('Using the API', () => {
+describe('Using the API', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 4);
 
