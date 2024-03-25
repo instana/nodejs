@@ -208,11 +208,9 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     objectMode,
     producerMethod
   ) {
-    // CASE: Consumer error entry span has no parent
-    // CASE: consumer error means -> we not even produce a kafka msg
+    // CASE: We do not even produce a msg for this case
     if (withError === 'streamErrorReceiver') {
-      verifyRdKafkaEntry(receiverControls, spans, null, messageId, withError, 'empty');
-      expect(spans.length).to.equal(1);
+      expect(spans.length).to.equal(0);
       return;
     }
 
