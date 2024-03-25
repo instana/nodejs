@@ -29,11 +29,13 @@ const mochaSuiteFn =
 // TODO: fix me later
 mochaSuiteFn('Opentelemetry usage', function () {
   this.timeout(config.getTestTimeout());
-  const randomPort = portfinder();
   let server;
   let otelSpans = [];
+  let randomPort;
 
   before(async () => {
+    randomPort = portfinder();
+
     const app = express();
     app.use(express.json({ limit: '50mb' }));
     app.post('/v1/traces', function (req, res) {

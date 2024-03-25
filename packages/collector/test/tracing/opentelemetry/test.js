@@ -355,12 +355,14 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
   describe('socket.io', function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
-    const socketIOServerPort = portfinder();
+    let socketIOServerPort;
 
     let serverControls;
     let clientControls;
 
     before(async () => {
+      socketIOServerPort = portfinder();
+
       serverControls = new ProcessControls({
         appPath: path.join(__dirname, './socketio-server'),
         useGlobalAgent: true,

@@ -19,14 +19,17 @@ describe('HTTP data source', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
-  const metadataMockPort = portfinder();
-  const metadataMockUrl = `http://localhost:${metadataMockPort}/metadata`;
+  let metadataMockPort;
+  let metadataMockUrl;
   let messagesFromMetadataMock = [];
   let metadataMock;
 
   const dataSource = new HttpDataSource(metadataMockUrl);
 
   before(() => {
+    metadataMockPort = portfinder();
+    metadataMockUrl = `http://localhost:${metadataMockPort}/metadata`;
+
     messagesFromMetadataMock = [];
     metadataMock = fork(path.join(__dirname, './metadata_mock'), {
       stdio: config.getAppStdio(),

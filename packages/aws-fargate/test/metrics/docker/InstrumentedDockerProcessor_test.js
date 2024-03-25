@@ -21,15 +21,17 @@ describe('Docker processor', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
-  const metadataMockPort = portfinder();
-  const metadataMockUrl = `http://localhost:${metadataMockPort}`;
-  const metadataStatsMockUrl = `${metadataMockUrl}/stats`;
+  let metadataMockUrl;
+  let metadataStatsMockUrl;
   let messagesFromMetadataMock = [];
   let metadataMock;
 
   let dataProcessor;
 
   before(() => {
+    const metadataMockPort = portfinder();
+    metadataMockUrl = `http://localhost:${metadataMockPort}`;
+    metadataStatsMockUrl = `${metadataMockUrl}/stats`;
     messagesFromMetadataMock = [];
     metadataMock = fork(path.join(__dirname, '../../metadata_mock'), {
       stdio: config.getAppStdio(),

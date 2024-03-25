@@ -4,17 +4,33 @@
 
 'use strict';
 
+/*
 const fs = require('fs');
 const path = require('path');
-const ports = {};
 const minPort = 10000;
 const pkg = require('../../package.json');
 const portRanges = {};
 const portDiff = 1000;
 let myPortRange;
+*/
 
+const ports = {};
+const { execSync } = require('child_process');
+
+/*
 const net = require('net');
-const waitSync = require('wait-sync');
+// const deasync = require('deasync');
+// const fibers = require('fibers');
+
+function busyWait(milliseconds) {
+  const start = Date.now();
+  while (Date.now() - start < milliseconds) {
+    // Busy-waiting
+    for (let i = 0; i < 1000000; i++) {
+      // This loop keeps CPU busy
+    }
+  }
+}
 
 function isPortTakenSync(port) {
   const server = net.createServer().listen(port);
@@ -40,7 +56,13 @@ function isPortTakenSync(port) {
   const timeout = 1000;
 
   while (!isClosed && !isTaken && Date.now() - startTime < timeout) {
-    waitSync(0.1);
+    console.log('BLOCKING, WAITING FOR PORT', isClosed, isTaken);
+    busyWait(1000);
+    // eslint-disable-next-line no-undef
+    // Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
+
+    // sleep.sleep(1);
+    // deasync.sleep(100);
   }
 
   return isTaken || Date.now() - startTime >= timeout;
@@ -94,24 +116,36 @@ const findFreePort = opts => {
 
   return port;
 };
+*/
 
-module.exports = function findPort() {
+// const callerPath = require('caller-path');
+module.exports = function findPort(minPort) {
   let port;
 
   try {
-    port = findFreePort({ start: myPortRange.start, end: myPortRange.end });
+    const min = 3000;
+    const max = 9000;
+    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+
+    port = execSync('node portfinder-async.js', {
+      cwd: __dirname,
+      env: Object.assign({ MIN_PORT: minPort || randomNumber }, process.env)
+    })
+      .toString()
+      .trim();
+
+    port = Number(port);
 
     if (ports[port]) {
       // eslint-disable-next-line no-console
       console.log('Port is already taken by this process', port);
-      return findPort();
+      return findPort(port + Math.round(Math.random(100) * 100));
     }
 
-    // eslint-disable-next-line no-console
-    // console.log('Using port', port);
-
     ports[port] = port;
-  } catch (e) {
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.log('Error when looking for port', err);
     return findPort();
   }
 

@@ -1385,18 +1385,18 @@ function registerTests(handlerDefinitionPath, reduced) {
   );
 
   describeOrSkipIfReduced(reduced)('when using a proxy without authentication', function () {
-    const proxyPort = portfinder();
-
-    const env = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaAgentKey,
-      proxyPort,
-      proxyUrl: `http://localhost:${proxyPort}`
-    });
-
     let control;
 
     before(async () => {
+      const proxyPort = portfinder();
+
+      const env = prelude.bind(this)({
+        handlerDefinitionPath,
+        instanaAgentKey,
+        proxyPort,
+        proxyUrl: `http://localhost:${proxyPort}`
+      });
+
       control = new Control({
         faasRuntimePath: path.join(__dirname, '../runtime_mock'),
         handlerDefinitionPath,
@@ -1424,18 +1424,18 @@ function registerTests(handlerDefinitionPath, reduced) {
   });
 
   describeOrSkipIfReduced(reduced)('when using a proxy with authentication', function () {
-    const proxyPort = portfinder();
-
-    const env = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaAgentKey,
-      proxyPort,
-      proxyUrl: `http://user:password@localhost:${proxyPort}`
-    });
-
     let control;
 
     before(async () => {
+      const proxyPort = portfinder();
+
+      const env = prelude.bind(this)({
+        handlerDefinitionPath,
+        instanaAgentKey,
+        proxyPort,
+        proxyUrl: `http://user:password@localhost:${proxyPort}`
+      });
+
       control = new Control({
         faasRuntimePath: path.join(__dirname, '../runtime_mock'),
         handlerDefinitionPath,
@@ -1464,18 +1464,18 @@ function registerTests(handlerDefinitionPath, reduced) {
   });
 
   describeOrSkipIfReduced(reduced)('when proxy authentication fails due to the wrong password', function () {
-    const proxyPort = portfinder();
-
-    const env = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaAgentKey,
-      proxyPort,
-      proxyUrl: `http://user:wrong-password@localhost:${proxyPort}`
-    });
-
     let control;
 
     before(async () => {
+      const proxyPort = portfinder();
+
+      const env = prelude.bind(this)({
+        handlerDefinitionPath,
+        instanaAgentKey,
+        proxyPort,
+        proxyUrl: `http://user:wrong-password@localhost:${proxyPort}`
+      });
+
       control = new Control({
         faasRuntimePath: path.join(__dirname, '../runtime_mock'),
         handlerDefinitionPath,
@@ -1506,18 +1506,18 @@ function registerTests(handlerDefinitionPath, reduced) {
   describeOrSkipIfReduced(reduced)(
     'when proxy authentication fails because no credentials have been provided',
     function () {
-      const proxyPort = portfinder();
-
-      const env = prelude.bind(this)({
-        handlerDefinitionPath,
-        instanaAgentKey,
-        proxyPort,
-        proxyUrl: `http://localhost:${proxyPort}`
-      });
-
       let control;
 
       before(async () => {
+        const proxyPort = portfinder();
+
+        const env = prelude.bind(this)({
+          handlerDefinitionPath,
+          instanaAgentKey,
+          proxyPort,
+          proxyUrl: `http://localhost:${proxyPort}`
+        });
+
         control = new Control({
           faasRuntimePath: path.join(__dirname, '../runtime_mock'),
           handlerDefinitionPath,
@@ -1547,18 +1547,18 @@ function registerTests(handlerDefinitionPath, reduced) {
   );
 
   describeOrSkipIfReduced(reduced)('when the proxy is not up', function () {
-    const proxyPort = portfinder();
-
-    const env = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaAgentKey,
-      proxyPort,
-      proxyUrl: `http://localhost:${proxyPort}`
-    });
-
     let control;
 
     before(async () => {
+      const proxyPort = portfinder();
+
+      const env = prelude.bind(this)({
+        handlerDefinitionPath,
+        instanaAgentKey,
+        proxyPort,
+        proxyUrl: `http://localhost:${proxyPort}`
+      });
+
       control = new Control({
         faasRuntimePath: path.join(__dirname, '../runtime_mock'),
         handlerDefinitionPath,

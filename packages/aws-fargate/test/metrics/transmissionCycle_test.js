@@ -22,16 +22,17 @@ describe('transmission cycle', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
-  const metadataMockPort = portfinder();
-  const metadataMockUrl = `http://localhost:${metadataMockPort}`;
   let messagesFromMetadataMock = [];
   let metadataMock;
-
+  let metadataMockUrl;
   let metricsSent;
   let onReadyPayload;
   let onReadyError;
 
   before(() => {
+    const metadataMockPort = portfinder();
+    metadataMockUrl = `http://localhost:${metadataMockPort}`;
+
     messagesFromMetadataMock = [];
     metadataMock = fork(path.join(__dirname, '../metadata_mock'), {
       stdio: config.getAppStdio(),

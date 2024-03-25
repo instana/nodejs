@@ -20,6 +20,7 @@ const globalAgent = require('../globalAgent');
 const portFinder = require('./portfinder');
 const sslDir = path.join(__dirname, '..', 'apps', 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
+
 class ProcessControls {
   /**
    * @typedef {Object} ProcessControlsOptions
@@ -43,6 +44,7 @@ class ProcessControls {
    * @param {ProcessControlsOptions} opts
    */
   constructor(opts = {}) {
+    console.log('CONSTRUCTOR');
     if (!opts.appPath && !opts.dirname) {
       throw new Error('Missing mandatory config option, either appPath or dirname needs to be provided.');
     }

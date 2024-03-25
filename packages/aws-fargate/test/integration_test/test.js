@@ -241,15 +241,15 @@ describe('AWS fargate integration test', function () {
   });
 
   describe('when using a proxy without authentication', function () {
-    const proxyPort = portfinder();
-
-    const env = prelude.bind(this)({
-      proxyUrl: `http://localhost:${proxyPort}`
-    });
-
     let control;
 
     before(async () => {
+      const proxyPort = portfinder();
+
+      const env = prelude.bind(this)({
+        proxyUrl: `http://localhost:${proxyPort}`
+      });
+
       control = new Control({
         env,
         platformVersion: '1.3.0',
@@ -286,16 +286,16 @@ describe('AWS fargate integration test', function () {
   });
 
   describe('when using a proxy with authentication', function () {
-    const proxyPort = portfinder();
-
-    const env = prelude.bind(this)({
-      startProxy: true,
-      proxyUrl: `http://user:password@localhost:${proxyPort}`
-    });
-
     let control;
 
     before(async () => {
+      const proxyPort = portfinder();
+
+      const env = prelude.bind(this)({
+        startProxy: true,
+        proxyUrl: `http://user:password@localhost:${proxyPort}`
+      });
+
       control = new Control({
         env,
         platformVersion: '1.3.0',
@@ -333,15 +333,15 @@ describe('AWS fargate integration test', function () {
   });
 
   describe('when proxy authentication fails due to the wrong password', function () {
-    const proxyPort = portfinder();
-
-    const env = prelude.bind(this)({
-      proxyUrl: `http://user:wrong-password@localhost:${proxyPort}`
-    });
-
     let control;
 
     before(async () => {
+      const proxyPort = portfinder();
+
+      const env = prelude.bind(this)({
+        proxyUrl: `http://user:wrong-password@localhost:${proxyPort}`
+      });
+
       control = new Control({
         env,
         platformVersion: '1.3.0',
@@ -379,15 +379,15 @@ describe('AWS fargate integration test', function () {
   });
 
   describe('when the proxy is not up', function () {
-    const proxyPort = portfinder();
-
-    const env = prelude.bind(this)({
-      proxyUrl: `http://localhost:${proxyPort}`
-    });
-
     let control;
 
     before(async () => {
+      const proxyPort = portfinder();
+
+      const env = prelude.bind(this)({
+        proxyUrl: `http://localhost:${proxyPort}`
+      });
+
       control = new Control({
         env,
         platformVersion: '1.3.0',

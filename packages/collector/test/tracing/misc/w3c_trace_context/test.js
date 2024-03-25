@@ -18,7 +18,6 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
-const otherVendorAppPort = portfinder();
 
 const foreignTraceIdLeftHalf = 'f0e1567890123456';
 const foreignTraceIdRightHalf = '78901234567bcdea';
@@ -32,7 +31,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 
 mochaSuiteFn('tracing/W3C Trace Context', function () {
   this.timeout(config.getTestTimeout() * 2);
-
+  let otherVendorAppPort;
   globalAgent.setUpCleanUpHooks();
 
   [false, true].forEach(registerSuite);
@@ -43,6 +42,8 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
       let otherVendorAppControls;
 
       before(async () => {
+        otherVendorAppPort = portfinder();
+
         instanaAppControls = new ProcessControls({
           appPath: path.join(__dirname, 'app'),
           useGlobalAgent: true,
