@@ -23,12 +23,12 @@ describe('HTTP data source', function () {
   let metadataMockUrl;
   let messagesFromMetadataMock = [];
   let metadataMock;
-
-  const dataSource = new HttpDataSource(metadataMockUrl);
+  let dataSource;
 
   before(() => {
     metadataMockPort = portfinder();
     metadataMockUrl = `http://localhost:${metadataMockPort}/metadata`;
+    dataSource = new HttpDataSource(metadataMockUrl);
 
     messagesFromMetadataMock = [];
     metadataMock = fork(path.join(__dirname, './metadata_mock'), {
