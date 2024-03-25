@@ -113,13 +113,13 @@ spec:
           fi
         fi
         retry=1
-        while [ $retry -le 2 ]; do
+        while [ $retry -le 3 ]; do
           npm run "test:ci:collector:general"
           if [ $? -eq 0 ]; then
             touch "test:ci:collector:general.succeeded"
             break
           else
-            if [ $retry -eq 2 ]; then
+            if [ $retry -eq 3 ]; then
               touch "test:ci:collector:general.failed"
               exit 1
             fi

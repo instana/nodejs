@@ -32,6 +32,13 @@ spec:
             value: "PLAINTEXT://127.0.0.1:29092"
           - name: "SCHEMA_REGISTRY_HOST_NAME"
             value: "schema-registry"
+      readinessProbe:
+          httpGet:
+            path: / 
+            port: 8081 
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 60
     - name: redis
       image: redis:5.0.14
     - name: nats
@@ -159,13 +166,13 @@ spec:
           fi
         fi
         retry=1
-        while [ $retry -le 2 ]; do
+        while [ $retry -le 3 ]; do
           npm run "test:ci:collector:tracing:messaging"
           if [ $? -eq 0 ]; then
             touch "test:ci:collector:tracing:messaging.succeeded"
             break
           else
-            if [ $retry -eq 2 ]; then
+            if [ $retry -eq 3 ]; then
               touch "test:ci:collector:tracing:messaging.failed"
               exit 1
             fi

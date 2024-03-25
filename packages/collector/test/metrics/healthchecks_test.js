@@ -22,6 +22,10 @@ describe('metrics/healthchecks', function () {
     await expressControls.start({ useGlobalAgent: true, enableTracing: false });
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   after(async () => {
     await expressControls.stop();
   });

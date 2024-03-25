@@ -24,6 +24,10 @@ describe('actions/source', function () {
     await expressControls.start({ useGlobalAgent: true });
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   after(async () => {
     await expressControls.stop();
   });

@@ -183,13 +183,13 @@ class AgentStubControls {
     await delay(1000);
 
     // eslint-disable-next-line no-console
-    console.log('[AgentStubControls] clearReceivedTraceData');
+    // console.log('[AgentStubControls] clearReceivedTraceData');
     await fetch(`http://127.0.0.1:${this.agentPort}/received/traces`, {
       method: 'DELETE'
     });
 
     // eslint-disable-next-line no-console
-    console.log('[AgentStubControls] clearReceivedTraceData done');
+    // console.log('[AgentStubControls] clearReceivedTraceData done');
   }
 
   clearReceivedProfilingData() {

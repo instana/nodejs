@@ -35,6 +35,10 @@ mochaSuiteFn('tracing/stackTraces', function () {
       await expressProxyControls.stop();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
     beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
 

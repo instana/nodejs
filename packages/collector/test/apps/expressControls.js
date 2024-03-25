@@ -54,10 +54,10 @@ exports.start = function start(opts = {}, retryTime = null) {
     }
   });
 
-  return waitUntilServerIsUp(opts.useHttps, retryTime);
+  return waitUntilServerIsUp(opts.useHttps, retryTime, opts.collectorUninitialized);
 };
 
-function waitUntilServerIsUp(useHttps, retryTime) {
+function waitUntilServerIsUp(useHttps, retryTime, collectorUninitialized) {
   try {
     return testUtils
       .retry(async () => {
@@ -70,6 +70,7 @@ function waitUntilServerIsUp(useHttps, retryTime) {
           ca: cert
         });
 
+        if (collectorUninitialized) return resp;
         if (!expressApp.collectorInitialized) throw new Error('Collector not fullly initialized.');
 
         return resp;

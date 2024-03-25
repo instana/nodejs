@@ -22,11 +22,14 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
-
   const appControls = require('./controls');
 
   describe('trace log calls', () => {
     appControls.registerTestHooks();
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
 
     it('must not trace info', () =>
       appControls.trigger('info').then(() =>

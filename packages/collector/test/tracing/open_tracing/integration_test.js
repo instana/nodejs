@@ -26,6 +26,10 @@ describe('tracing/opentracing/integration', function () {
     expressOpentracingControls.registerTestHooks();
 
     beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    beforeEach(async () => {
       await agentControls.waitUntilAppIsCompletelyInitialized(expressOpentracingControls.getPid());
     });
 

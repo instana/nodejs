@@ -57,12 +57,3 @@ exports.setUpSuiteCleanUpHooks = function setUpSuiteCleanUpHooks() {
   before(() => exports.instance.reset());
   after(() => exports.instance.reset());
 };
-
-/**
- * Discard spans (and also profiles) before and after each test. Call this in the outermost describe in test suites that
- * use the global agent.
- */
-exports.setUpTestCaseCleanUpHooks = function setUpTestCaseCleanUpHooks() {
-  beforeEach(() => exports.instance.clearReceivedData());
-  afterEach(() => exports.instance.clearReceivedData());
-};

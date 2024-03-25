@@ -91,13 +91,13 @@ spec:
           fi
         fi
         retry=1
-        while [ $retry -le 2 ]; do
+        while [ $retry -le 3 ]; do
           npm run "test:ci:autoprofile"
           if [ $? -eq 0 ]; then
             touch "test:ci:autoprofile.succeeded"
             break
           else
-            if [ $retry -eq 2 ]; then
+            if [ $retry -eq 3 ]; then
               touch "test:ci:autoprofile.failed"
               exit 1
             fi

@@ -34,6 +34,10 @@ mochaSuiteFn('http with proxy', function () {
     await expressProxyControls.stop();
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
   beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
 

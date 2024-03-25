@@ -37,6 +37,8 @@ spec:
             value: "stanCanHazMsSQL1"
           - name: "MSSQL_PID"
             value: "Express"
+    - name: zookeeper
+      image: wurstmeister/zookeeper:latest
     - name: kafka
       image: wurstmeister/kafka:2.12-2.2.1
       env:
@@ -93,8 +95,13 @@ spec:
             value: "PLAINTEXT://127.0.0.1:29092"
           - name: "SCHEMA_REGISTRY_HOST_NAME"
             value: "schema-registry"
-    - name: zookeeper
-      image: wurstmeister/zookeeper:latest
+      readinessProbe:
+          httpGet:
+            path: / 
+            port: 8081 
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 60
     - name: memcached
       image: memcached:1.6.9
     - name: nats
