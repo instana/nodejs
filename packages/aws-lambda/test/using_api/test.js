@@ -23,9 +23,6 @@ const qualifiedArn = `${unqualifiedArn}:${version}`;
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
 function prelude(opts) {
-  this.timeout(config.getTestTimeout());
-  this.slow(config.getTestTimeout() / 4);
-
   const env = {};
   if (opts.error) {
     env.LAMDBA_ERROR = opts.error;
@@ -44,6 +41,9 @@ function prelude(opts) {
 }
 
 describe('Using the API', () => {
+  this.timeout(config.getTestTimeout());
+  this.slow(config.getTestTimeout() / 4);
+
   const handlerDefinitionPath = path.join(__dirname, './lambda');
 
   describe('when everything is peachy', function () {

@@ -30,9 +30,6 @@ const instanaAgentKey = 'google-cloud-run-dummy-key';
 const testStartedAt = Date.now();
 
 function prelude(opts = {}) {
-  this.timeout(config.getTestTimeout());
-  this.slow(config.getTestTimeout() / 2);
-
   let env = {
     ESM_TEST: true
   };
@@ -49,6 +46,9 @@ function prelude(opts = {}) {
 // Run the tests only for supported node versions
 if (esmSupportedVersion(process.versions.node)) {
   describe('Google Cloud Run esm test', function () {
+    this.timeout(config.getTestTimeout());
+    this.slow(config.getTestTimeout() / 2);
+
     describe('when the back end is up', function () {
       const env = prelude.bind(this)();
 

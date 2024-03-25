@@ -19,9 +19,6 @@ function prelude(opts) {
   opts.iterations = opts.iterations || 10;
   opts.expectedLambdaRuntime = opts.delay * opts.iterations * 1.1;
 
-  this.timeout(timeout);
-  this.slow(timeout * 0.8);
-
   const env = {
     DELAY: opts.delay,
     ITERATIONS: opts.iterations,

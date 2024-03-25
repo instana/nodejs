@@ -45,9 +45,6 @@ const requestHeaders = {
 };
 
 function prelude(opts = {}) {
-  this.timeout(config.getTestTimeout());
-  this.slow(config.getTestTimeout() / 2);
-
   let env = {
     INSTANA_EXTRA_HTTP_HEADERS:
       'x-entry-request-header-1; X-ENTRY-REQUEST-HEADER-2 ; x-entry-response-header-1;X-ENTRY-RESPONSE-HEADER-2 , ' +
@@ -69,6 +66,9 @@ function prelude(opts = {}) {
 }
 
 describe('AWS fargate integration test', function () {
+  this.timeout(config.getTestTimeout());
+  this.slow(config.getTestTimeout() / 2);
+
   describe('when the back end is up (platform version 1.3.0)', function () {
     const env = prelude.bind(this)({});
 

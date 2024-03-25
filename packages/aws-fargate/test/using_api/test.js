@@ -23,11 +23,11 @@ const instrumentedContainerId = `${taskArn}::${instrumentedContainerName}`;
 const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'aws-fargate-dummy-key';
 
-function prelude() {
-  this.timeout(config.getTestTimeout());
-}
+function prelude() {}
 
 describe('Using the API', function () {
+  this.timeout(config.getTestTimeout());
+
   describe('when configured properly', function () {
     prelude.bind(this)();
     let control;

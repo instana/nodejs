@@ -18,9 +18,6 @@ const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'azure-container-service-dummy-key';
 
 function prelude() {
-  this.timeout(config.getTestTimeout());
-  this.slow(config.getTestTimeout() / 2);
-
   const env = {
     WEBSITE_OWNER_NAME: 'instana+123',
     WEBSITE_RESOURCE_GROUP: 'East US',
@@ -31,6 +28,9 @@ function prelude() {
 }
 
 describe('Using the API', function () {
+  this.timeout(config.getTestTimeout());
+  this.slow(config.getTestTimeout() / 2);
+
   describe('when configured properly', function () {
     const env = prelude.bind(this)();
     let control;

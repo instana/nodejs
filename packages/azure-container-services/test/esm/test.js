@@ -17,16 +17,13 @@ const entityId = '/subscriptions/instana/resourceGroups/East US/providers/Micros
 const containerAppPath = path.join(__dirname, './app.mjs');
 const instanaAgentKey = 'azure-container-service-dummy-key';
 
-function prelude() {
-  this.timeout(config.getTestTimeout());
-  this.slow(config.getTestTimeout() / 2);
-}
-
 // Run the tests only for supported node versions
 if (esmSupportedVersion(process.versions.node)) {
   describe('Azure Container Service esm test', function () {
+    this.timeout(config.getTestTimeout());
+    this.slow(config.getTestTimeout() / 2);
+
     describe('when the back end is up', function () {
-      prelude.bind(this)({});
       let control;
 
       before(async () => {
@@ -67,7 +64,6 @@ if (esmSupportedVersion(process.versions.node)) {
     });
 
     describe('when the back end is down', function () {
-      prelude.bind(this)({});
       let control;
 
       before(async () => {
@@ -104,7 +100,6 @@ if (esmSupportedVersion(process.versions.node)) {
     });
 
     describe('when required environment variables are not present', function () {
-      prelude.bind(this)();
       let control;
 
       before(async () => {

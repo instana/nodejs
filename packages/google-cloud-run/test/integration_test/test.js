@@ -29,15 +29,11 @@ const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'google-cloud-run-dummy-key';
 const testStartedAt = Date.now();
 
-function prelude() {
+describe('Google Cloud Run integration test', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
-}
 
-describe('Google Cloud Run integration test', function () {
   describe('when the back end is up', function () {
-    prelude.bind(this)();
-
     let appControls;
 
     before(async () => {
@@ -72,8 +68,6 @@ describe('Google Cloud Run integration test', function () {
   });
 
   describe('when the back end is down', function () {
-    prelude.bind(this)({});
-
     let appControls;
 
     before(async () => {
@@ -109,8 +103,6 @@ describe('Google Cloud Run integration test', function () {
   });
 
   describe('when the back end becomes available after being down initially', function () {
-    prelude.bind(this)({});
-
     let appControls;
 
     before(async () => {
@@ -162,8 +154,6 @@ describe('Google Cloud Run integration test', function () {
   });
 
   describe('with default secrets configuration', function () {
-    prelude.bind(this)({});
-
     let appControls;
 
     beforeEach(async () => {
@@ -246,8 +236,6 @@ describe('Google Cloud Run integration test', function () {
   });
 
   describe('with custom secrets configuration', function () {
-    prelude.bind(this)({});
-
     let appControls;
 
     beforeEach(async () => {

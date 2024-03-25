@@ -23,15 +23,11 @@ const host = `gcp:cloud-run:revision:${revision}`;
 const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'google-cloud-run-dummy-key';
 
-function prelude() {
+describe('Using the API', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
-}
 
-describe('Using the API', function () {
   describe('when configured properly', function () {
-    prelude.bind(this)();
-
     let appControls;
 
     before(async () => {
@@ -66,8 +62,6 @@ describe('Using the API', function () {
   });
 
   describe('when not configured properly', function () {
-    prelude.bind(this)({});
-
     let appControls;
 
     before(async () => {
