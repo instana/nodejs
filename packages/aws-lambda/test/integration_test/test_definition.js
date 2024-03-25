@@ -36,13 +36,12 @@ const instanaAgentKey = 'aws-lambda-dummy-key';
  * reduced: we do not want to run the full test suite for callback type etc.
  */
 module.exports = function (lambdaType, reduced = false) {
+  this.timeout(config.getTestTimeout() * 2);
+  this.slow(config.getTestTimeout() / 4);
   return registerTests.bind(this)(path.join(__dirname, '..', 'lambdas', lambdaType), reduced);
 };
 
 function prelude(opts) {
-  this.timeout(config.getTestTimeout() * 2);
-  this.slow(config.getTestTimeout() / 4);
-
   const env = {
     INSTANA_EXTRA_HTTP_HEADERS:
       'x-request-header-1; X-REQUEST-HEADER-2 ; x-response-header-1;X-RESPONSE-HEADER-2 , x-downstream-header  ',
