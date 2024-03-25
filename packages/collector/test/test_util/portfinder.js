@@ -132,7 +132,10 @@ module.exports = function findPort(minPort) {
       env: Object.assign({ MIN_PORT: minPort || randomNumber }, process.env)
     })
       .toString()
-      .trim();
+      .trim()
+      // eslint-disable-next-line no-control-regex
+      .replace(/\x1B\[\d+m/g, '')
+      .replace(/\D/g, '');
 
     port = Number(port);
 
