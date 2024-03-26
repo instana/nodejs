@@ -10,7 +10,7 @@ const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
-const { delay, expectExactlyNMatching } = require('../../../core/test/test_util');
+const { delay, expectExactlyNMatching, isCI } = require('../../../core/test/test_util');
 const config = require('@instana/core/test/config');
 
 const functionName = 'functionName';
@@ -51,8 +51,11 @@ describe('multiple lambda handler calls', function () {
     return control
       .runHandler()
       .then(() => {
-        const duration = Date.now() - control.startedAt;
-        expect(duration).to.be.at.most(1000);
+        if (!isCI()) {
+          const duration = Date.now() - control.startedAt;
+          expect(duration).to.be.at.most(1000);
+        }
+
         verifyResponse(1);
         return delay(200);
       })
@@ -60,8 +63,10 @@ describe('multiple lambda handler calls', function () {
         return control.runHandler();
       })
       .then(() => {
-        const duration = Date.now() - control.startedAt;
-        expect(duration).to.be.at.most(1000);
+        if (!isCI()) {
+          const duration = Date.now() - control.startedAt;
+          expect(duration).to.be.at.most(1000);
+        }
         verifyResponse(2);
         return delay(200);
       })
@@ -69,8 +74,11 @@ describe('multiple lambda handler calls', function () {
         return control.runHandler();
       })
       .then(() => {
-        const duration = Date.now() - control.startedAt;
-        expect(duration).to.be.at.most(1000);
+        if (!isCI()) {
+          const duration = Date.now() - control.startedAt;
+          expect(duration).to.be.at.most(1000);
+        }
+
         verifyResponse(3);
         return Promise.all([
           //

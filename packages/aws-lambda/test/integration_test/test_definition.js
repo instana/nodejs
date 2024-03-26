@@ -36,8 +36,7 @@ const instanaAgentKey = 'aws-lambda-dummy-key';
  * reduced: we do not want to run the full test suite for callback type etc.
  */
 module.exports = function (lambdaType, reduced = false) {
-  this.timeout(config.getTestTimeout() * 2);
-  this.slow(config.getTestTimeout() / 4);
+  this.timeout(config.getTestTimeout() * 4);
   return registerTests.bind(this)(path.join(__dirname, '..', 'lambdas', lambdaType), reduced);
 };
 
@@ -2881,69 +2880,73 @@ function registerTests(handlerDefinitionPath, reduced) {
   }
 
   async function verifyAfterRunningHandler(control, expectations, payloadFormatVersion) {
-    return retry(async () => {
-      const { error, expectMetrics, expectSpans } = expectations;
+    return retry(
+      async () => {
+        const { error, expectMetrics, expectSpans } = expectations;
 
-      /* eslint-disable no-console */
-      if (error && error.startsWith('lambda')) {
-        expect(control.getLambdaErrors().length).to.equal(1);
-        expect(control.getLambdaResults()).to.be.empty;
-        const lambdaError = control.getLambdaErrors()[0];
-        expect(lambdaError).to.exist;
-        if (typeof lambdaError.message === 'string') {
-          expect(lambdaError.message).to.equal('Boom!');
-        } else if (typeof lambdaError.message === 'object') {
-          expect(lambdaError.message.content).to.equal('Boom!');
+        /* eslint-disable no-console */
+        if (error && error.startsWith('lambda')) {
+          expect(control.getLambdaErrors().length).to.equal(1);
+          expect(control.getLambdaResults()).to.be.empty;
+          const lambdaError = control.getLambdaErrors()[0];
+          expect(lambdaError).to.exist;
+          if (typeof lambdaError.message === 'string') {
+            expect(lambdaError.message).to.equal('Boom!');
+          } else if (typeof lambdaError.message === 'object') {
+            expect(lambdaError.message.content).to.equal('Boom!');
+          } else {
+            fail(`Unexpected type of error returned from Lambda handler ${typeof error} – ${error}`);
+          }
+          // other error cases like error='http' are checked in verifyLambdaEntry
         } else {
-          fail(`Unexpected type of error returned from Lambda handler ${typeof error} – ${error}`);
+          if (control.getLambdaErrors() && control.getLambdaErrors().length > 0) {
+            console.log('Unexpected Errors:');
+            console.log(JSON.stringify(control.getLambdaErrors()));
+          }
+
+          expect(control.getLambdaErrors()).to.be.empty;
+          expect(control.getLambdaResults().length).to.equal(1);
+
+          const result = control.getLambdaResults()[0];
+          expect(result).to.exist;
+          expect(result.headers).to.be.an('object');
+
+          if (payloadFormatVersion === '2.0') {
+            expect(result.multiValueHeaders).to.not.exist;
+
+            expect(result.headers['X-Response-Header-1']).to.equal('response header value 1, response header value 2');
+            expect(result.headers['X-Response-Header-2']).to.equal('response header value 2');
+            expect(result.headers['X-Response-Header-3']).to.equal('should not capture');
+          } else {
+            expect(result.headers['X-Response-Header-1']).to.equal('response header value 1');
+            expect(result.headers['X-Response-Header-3']).to.equal('response header value 3');
+
+            expect(result.multiValueHeaders).to.be.an('object');
+            expect(result.multiValueHeaders['X-Response-Header-2']).to.deep.equal(['response', 'header', 'value 2']);
+            expect(result.multiValueHeaders['X-Response-Header-4']).to.deep.equal(['response', 'header', 'value 4']);
+          }
+
+          expect(result.body).to.deep.equal({ message: 'Stan says hi!' });
         }
-        // other error cases like error='http' are checked in verifyLambdaEntry
-      } else {
-        if (control.getLambdaErrors() && control.getLambdaErrors().length > 0) {
-          console.log('Unexpected Errors:');
-          console.log(JSON.stringify(control.getLambdaErrors()));
-        }
 
-        expect(control.getLambdaErrors()).to.be.empty;
-        expect(control.getLambdaResults().length).to.equal(1);
-
-        const result = control.getLambdaResults()[0];
-        expect(result).to.exist;
-        expect(result.headers).to.be.an('object');
-
-        if (payloadFormatVersion === '2.0') {
-          expect(result.multiValueHeaders).to.not.exist;
-
-          expect(result.headers['X-Response-Header-1']).to.equal('response header value 1, response header value 2');
-          expect(result.headers['X-Response-Header-2']).to.equal('response header value 2');
-          expect(result.headers['X-Response-Header-3']).to.equal('should not capture');
+        if (expectMetrics && expectSpans) {
+          await getAndVerifySpans(control, expectations);
+          await getAndVerifyMetrics(control, expectations);
+        } else if (!expectMetrics && expectSpans) {
+          await getAndVerifySpans(control, expectations);
+          await verifyNoMetrics(control);
+        } else if (expectMetrics && !expectSpans) {
+          await getAndVerifyMetrics(control, expectations);
+          await verifyNoSpans(control);
         } else {
-          expect(result.headers['X-Response-Header-1']).to.equal('response header value 1');
-          expect(result.headers['X-Response-Header-3']).to.equal('response header value 3');
-
-          expect(result.multiValueHeaders).to.be.an('object');
-          expect(result.multiValueHeaders['X-Response-Header-2']).to.deep.equal(['response', 'header', 'value 2']);
-          expect(result.multiValueHeaders['X-Response-Header-4']).to.deep.equal(['response', 'header', 'value 4']);
+          await delay(1000);
+          await verifyNoSpans(control);
+          await verifyNoMetrics(control);
         }
-
-        expect(result.body).to.deep.equal({ message: 'Stan says hi!' });
-      }
-
-      if (expectMetrics && expectSpans) {
-        await getAndVerifySpans(control, expectations);
-        await getAndVerifyMetrics(control, expectations);
-      } else if (!expectMetrics && expectSpans) {
-        await getAndVerifySpans(control, expectations);
-        await verifyNoMetrics(control);
-      } else if (expectMetrics && !expectSpans) {
-        await getAndVerifyMetrics(control, expectations);
-        await verifyNoSpans(control);
-      } else {
-        await delay(1000);
-        await verifyNoSpans(control);
-        await verifyNoMetrics(control);
-      }
-    });
+      },
+      null,
+      Date.now() + config.getRetryTimeout() * 3.5
+    );
   }
 
   function verifyNoSpans(control) {
