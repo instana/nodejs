@@ -6,6 +6,12 @@ spec:
   sidecars:
     - name: zookeeper
       image: wurstmeister/zookeeper:latest
+      readinessProbe:
+          tcpSocket:
+            port: 2181 
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 30
     - name: kafka
       image: wurstmeister/kafka:2.12-2.2.1
       env:
@@ -26,9 +32,9 @@ spec:
       readinessProbe:
           tcpSocket:
             port: 9092 
-          initialDelaySeconds: 5
+          initialDelaySeconds: 30
           periodSeconds: 2
-          timeoutSeconds: 30
+          timeoutSeconds: 60
     - name: schema-registry
       image: confluentinc/cp-schema-registry:4.1.0
       env:

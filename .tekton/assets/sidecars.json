@@ -34,7 +34,15 @@
     },
     {
       "name": "zookeeper",
-      "image": "wurstmeister/zookeeper:latest"
+      "image": "wurstmeister/zookeeper:latest",
+      "readinessProbe": {
+        "tcpSocket": {
+          "port": 2181
+        },
+        "initialDelaySeconds": 5,
+        "periodSeconds": 2,
+        "timeoutSeconds": 30
+      }
     },
     {
       "name": "kafka",
@@ -55,9 +63,9 @@
         "tcpSocket": {
           "port": 9092
         },
-        "initialDelaySeconds": 5,
+        "initialDelaySeconds": 30,
         "periodSeconds": 2,
-        "timeoutSeconds": 30
+        "timeoutSeconds": 60
       }
     },
     {
