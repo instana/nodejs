@@ -56,6 +56,12 @@ spec:
             value: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
           - name: "KAFKA_ZOOKEEPER_CONNECT"
             value: "127.0.0.1:2181"
+      readinessProbe:
+          tcpSocket:
+            port: 9092 
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 30
     - name: postgres
       image: postgres
       env:
