@@ -13,7 +13,7 @@ const { HttpDataSource } = require('@instana/metrics-util');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 
 const { delay, retry } = require('../../../../core/test/test_util');
-const config = require('../../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 
 const InstrumentedDockerProcessor = require('../../../src/metrics/docker/InstrumentedDockerProcessor');
 
@@ -21,15 +21,17 @@ describe('Docker processor', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
-  const metadataMockPort = portfinder();
-  const metadataMockUrl = `http://localhost:${metadataMockPort}`;
-  const metadataStatsMockUrl = `${metadataMockUrl}/stats`;
+  let metadataMockUrl;
+  let metadataStatsMockUrl;
   let messagesFromMetadataMock = [];
   let metadataMock;
 
   let dataProcessor;
 
   before(() => {
+    const metadataMockPort = portfinder();
+    metadataMockUrl = `http://localhost:${metadataMockPort}`;
+    metadataStatsMockUrl = `${metadataMockUrl}/stats`;
     messagesFromMetadataMock = [];
     metadataMock = fork(path.join(__dirname, '../../metadata_mock'), {
       stdio: config.getAppStdio(),

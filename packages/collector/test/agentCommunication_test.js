@@ -23,6 +23,10 @@ describe('agentCommunication', function () {
     await expressControls.start({ useGlobalAgent: true });
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   after(async () => {
     await expressControls.stop();
   });
@@ -122,8 +126,9 @@ describe('agentCommunication', function () {
         expressControls.stop();
 
         await agentControls.rejectAnnounceAttempts(rejectedAttempts);
-        return expressControls.start({
+        await expressControls.start({
           useGlobalAgent: true,
+          collectorUninitialized: true,
           env: {
             INSTANA_LOG_LEVEL: 'info'
           }

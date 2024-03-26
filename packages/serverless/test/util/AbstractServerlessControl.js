@@ -13,10 +13,13 @@ const path = require('path');
 const fetch = require('node-fetch');
 
 const retry = require('@instana/core/test/test_util/retry');
-const config = require('../config');
+const delay = require('@instana/core/test/test_util/delay');
+const config = require('@instana/core/test/config');
+
 // To address the certificate authorization issue with node-fetch, process.env.NODE_TLS_REJECT_UNAUTHORIZED
 // was set to '0'. Refer to the problem discussed in https://github.com/node-fetch/node-fetch/issues/19
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 function AbstractServerlessControl(opts = {}) {
   this.opts = opts;
   this.opts.timeout = this.opts.timeout || config.getTestTimeout();
@@ -109,7 +112,9 @@ AbstractServerlessControl.prototype.stop = async function () {
   }
 };
 
-AbstractServerlessControl.prototype.startBackendAndWaitForIt = function startBackendAndWaitForIt() {
+AbstractServerlessControl.prototype.startBackendAndWaitForIt = async function startBackendAndWaitForIt() {
+  await delay(2000);
+
   this.backendHasBeenStarted = true;
   this.backend = fork(path.join(__dirname, '../backend_stub'), {
     stdio: config.getAppStdio(),
@@ -271,7 +276,7 @@ AbstractServerlessControl.prototype.killChildProcess = function killChildProcess
     if (childProcess) {
       childProcess.once('exit', () => {
         // eslint-disable-next-line no-console
-        console.log('[AbstractServerlessControl] killed', childProcess.pid);
+        console.log('[AbstractServerlessControl] killed pid', childProcess.pid);
         resolve();
       });
 
@@ -310,10 +315,6 @@ AbstractServerlessControl.prototype.getRawSpanArrays = function getRawSpanArrays
   return this._getFromBackend('/received/raw/spanArrays');
 };
 
-AbstractServerlessControl.prototype.getMetrics = function getMetrics() {
-  return this._getFromBackend('/received/metrics');
-};
-
 AbstractServerlessControl.prototype._getFromBackend = function _getFromBackend(url) {
   if (this.backendHasBeenStarted) {
     return fetch(`${this.backendBaseUrl}${url}`, {
@@ -336,10 +337,72 @@ AbstractServerlessControl.prototype.resetBackend = function resetBackend() {
       method: 'DELETE',
       url: `${this.backendBaseUrl}/received`,
       strictSSL: false
-    }).then(() => {
-      // eslint-disable-next-line no-console
-      console.log('[AbstractServerlessControl] reseted backend');
-    });
+    })
+      .then(() => {
+        // eslint-disable-next-line no-console
+        console.log('[AbstractServerlessControl] reseted backend');
+      })
+      .catch(err => {
+        // eslint-disable-next-line no-console
+        console.log('[AbstractServerlessControl] reseted backend error', err.message);
+      });
+  } else {
+    return Promise.resolve([]);
+  }
+};
+
+AbstractServerlessControl.prototype.resetBackendSpans = async function resetBackendSpans() {
+  if (this.backendHasBeenStarted) {
+    // eslint-disable-next-line no-console
+    console.log('[AbstractServerlessControl] resetting backend spans and metrics serverless');
+
+    await fetch(`${this.backendBaseUrl}/received/spans`, {
+      method: 'DELETE',
+      strictSSL: false
+    })
+      .then(() => {
+        // eslint-disable-next-line no-console
+        console.log('[AbstractServerlessControl] reseted backend spans');
+      })
+      .catch(err => {
+        // eslint-disable-next-line no-console
+        console.log('[AbstractServerlessControl] reseted backend spans error', err.message);
+      });
+  } else {
+    return Promise.resolve([]);
+  }
+};
+
+AbstractServerlessControl.prototype.resetBackendSpansAndMetrics = async function resetBackendSpansAndMetrics() {
+  if (this.backendHasBeenStarted) {
+    // eslint-disable-next-line no-console
+    console.log('[AbstractServerlessControl] resetting backend spans and metrics serverless');
+
+    await fetch(`${this.backendBaseUrl}/received/spans`, {
+      method: 'DELETE',
+      strictSSL: false
+    })
+      .then(() => {
+        // eslint-disable-next-line no-console
+        console.log('[AbstractServerlessControl] reseted backend spans');
+      })
+      .catch(err => {
+        // eslint-disable-next-line no-console
+        console.log('[AbstractServerlessControl] reseted backend spans error', err.message);
+      });
+
+    await fetch(`${this.backendBaseUrl}/received/metrics`, {
+      method: 'DELETE',
+      strictSSL: false
+    })
+      .then(() => {
+        // eslint-disable-next-line no-console
+        console.log('[AbstractServerlessControl] reseted backend metrics');
+      })
+      .catch(err => {
+        // eslint-disable-next-line no-console
+        console.log('[AbstractServerlessControl] reseted backend metrics error', err.message);
+      });
   } else {
     return Promise.resolve([]);
   }

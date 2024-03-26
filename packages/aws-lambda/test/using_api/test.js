@@ -12,7 +12,7 @@ const constants = require('@instana/core').tracing.constants;
 const Control = require('../Control');
 const delay = require('../../../core/test/test_util/delay');
 const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 
 const functionName = 'functionName';
@@ -23,9 +23,6 @@ const qualifiedArn = `${unqualifiedArn}:${version}`;
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
 function prelude(opts) {
-  this.timeout(config.getTestTimeout());
-  this.slow(config.getTestTimeout() / 4);
-
   const env = {};
   if (opts.error) {
     env.LAMDBA_ERROR = opts.error;
@@ -43,7 +40,10 @@ function prelude(opts) {
   return env;
 }
 
-describe('Using the API', () => {
+describe('Using the API', function () {
+  this.timeout(config.getTestTimeout());
+  this.slow(config.getTestTimeout() / 4);
+
   const handlerDefinitionPath = path.join(__dirname, './lambda');
 
   describe('when everything is peachy', function () {
@@ -67,6 +67,11 @@ describe('Using the API', () => {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
     });
 
     after(async () => {
@@ -101,6 +106,11 @@ describe('Using the API', () => {
       await control.start();
     });
 
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
     after(async () => {
       await control.stop();
     });
@@ -132,6 +142,11 @@ describe('Using the API', () => {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
     });
 
     after(async () => {
@@ -168,6 +183,11 @@ describe('Using the API', () => {
       await control.start();
     });
 
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
     after(async () => {
       await control.stop();
     });
@@ -197,6 +217,11 @@ describe('Using the API', () => {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
     });
 
     after(async () => {
@@ -231,6 +256,11 @@ describe('Using the API', () => {
       await control.start();
     });
 
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
     after(async () => {
       await control.stop();
     });
@@ -262,6 +292,11 @@ describe('Using the API', () => {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
     });
 
     after(async () => {

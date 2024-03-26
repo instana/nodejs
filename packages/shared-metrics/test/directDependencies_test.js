@@ -9,7 +9,7 @@ const expect = require('chai').expect;
 
 const testUtils = require('@instana/core/test/test_util');
 const directDependencies = require('../src/directDependencies');
-const config = require('../../serverless/test/config');
+const config = require('@instana/core/test/config');
 
 describe('metrics.directDependencies', function () {
   this.timeout(config.getTestTimeout());

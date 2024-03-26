@@ -80,6 +80,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
       await receiverControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await senderControls.stop();
       await receiverControls.stop();
@@ -203,6 +211,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await appControls.stop();
     });
@@ -243,6 +255,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
       });
 
       await appControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {

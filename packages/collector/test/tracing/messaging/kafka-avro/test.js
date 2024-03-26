@@ -74,6 +74,10 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await producerControls.stop();
     });
@@ -92,6 +96,10 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
         });
 
         await consumerControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -184,6 +192,10 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await producerControls.stop();
     });
@@ -203,6 +215,10 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
         });
 
         await consumerControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -243,6 +259,10 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await producerControls.stop();
     });
@@ -261,6 +281,10 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
         });
 
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {

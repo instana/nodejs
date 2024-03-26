@@ -21,19 +21,11 @@ const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('[CJS] tracing/sdk/multiple_installations', function () {
-  this.timeout(Math.max(config.getTestTimeout() * 3, 30000));
+  this.timeout(config.getTestTimeout() * 2);
 
   const tmpDirPath = path.join(os.tmpdir(), '@instana-collector-test-prevent-multiple-installations');
   const tmpDir = mkdtempSync(tmpDirPath);
   const pathToSeparateInstanaCollector = path.join(tmpDir, 'node_modules', '@instana', 'collector');
-
-  before(() => {
-    testUtils.runCommandSync('npm install --production --no-optional --no-audit @instana/collector', tmpDir);
-  });
-
-  after(done => {
-    rimraf(tmpDir, done);
-  });
 
   const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
@@ -41,6 +33,8 @@ mochaSuiteFn('[CJS] tracing/sdk/multiple_installations', function () {
   let controls;
 
   before(async () => {
+    testUtils.runCommandSync('npm install --production --no-optional --no-audit @instana/collector', tmpDir);
+
     controls = new ProcessControls({
       useGlobalAgent: true,
       cwd: path.join(__dirname, 'src'),
@@ -52,6 +46,14 @@ mochaSuiteFn('[CJS] tracing/sdk/multiple_installations', function () {
     });
 
     await controls.startAndWaitForAgentConnection();
+  });
+
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
+  after(done => {
+    rimraf(tmpDir, done);
   });
 
   after(async () => {

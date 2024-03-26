@@ -32,6 +32,10 @@ mochaSuiteFn('tracing/native-promise', function () {
     await promiseControls.startAndWaitForAgentConnection();
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   after(async () => {
     await promiseControls.stop();
   });

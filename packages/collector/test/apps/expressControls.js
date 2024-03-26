@@ -31,6 +31,7 @@ exports.start = function start(opts = {}, retryTime = null) {
   env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
   env.USE_HTTPS = opts.useHttps === true;
   env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS = 0;
+  env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;
   env.INSTANA_LOG_LEVEL = 'warn';
   if (opts.env && opts.env.INSTANA_LOG_LEVEL) {
     env.INSTANA_LOG_LEVEL = opts.env.INSTANA_LOG_LEVEL;
@@ -47,24 +48,33 @@ exports.start = function start(opts = {}, retryTime = null) {
     env
   });
 
-  return waitUntilServerIsUp(opts.useHttps, retryTime);
+  expressApp.on('message', message => {
+    if (message === 'instana.collector.initialized') {
+      expressApp.collectorInitialized = true;
+    }
+  });
+
+  return waitUntilServerIsUp(opts.useHttps, retryTime, opts.collectorUninitialized);
 };
 
-function waitUntilServerIsUp(useHttps, retryTime) {
+function waitUntilServerIsUp(useHttps, retryTime, collectorUninitialized) {
   try {
     return testUtils
-      .retry(
-        () =>
-          fetch(getBaseUrl(useHttps), {
-            method: 'GET',
-            url: getBaseUrl(useHttps),
-            headers: {
-              'X-INSTANA-L': '0'
-            },
-            ca: cert
-          }),
-        retryTime
-      )
+      .retry(async () => {
+        const resp = await fetch(getBaseUrl(useHttps), {
+          method: 'GET',
+          url: getBaseUrl(useHttps),
+          headers: {
+            'X-INSTANA-L': '0'
+          },
+          ca: cert
+        });
+
+        if (collectorUninitialized) return resp;
+        if (!expressApp.collectorInitialized) throw new Error('Collector not fullly initialized.');
+
+        return resp;
+      }, retryTime)
       .then(resp => {
         // eslint-disable-next-line no-console
         console.log('[ExpressControls:start] started');

@@ -29,6 +29,7 @@ const defaultSubscriptionName = `nodejs-test-subscription-${semver.parse(process
  *
  * You can find the credentials in 1pwd.
  */
+
 if (
   !process.env.GCP_PROJECT ||
   !(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT)
@@ -88,6 +89,10 @@ if (
 
         await publisherControls.startAndWaitForAgentConnection();
         await subscriberControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -242,6 +247,10 @@ if (
         await subscriberControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await publisherControls.stop();
         await subscriberControls.stop();
@@ -306,6 +315,10 @@ if (
 
         await publisherControls.startAndWaitForAgentConnection();
         await subscriberControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {

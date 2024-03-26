@@ -89,6 +89,14 @@ function start(version) {
         await appControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       afterEach(async () => {
         await receiverControls.clearIpcMessages();
         await appControls.clearIpcMessages();
@@ -168,6 +176,10 @@ function start(version) {
         await appControls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await receiverControls.stop();
         await appControls.stop();
@@ -223,6 +235,10 @@ function start(version) {
 
         await receiverControls.startAndWaitForAgentConnection();
         await appControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {

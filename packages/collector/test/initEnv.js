@@ -6,7 +6,6 @@
 'use strict';
 
 const semver = require('semver');
-const { isCI } = require('../../core/test/test_util');
 
 // NOTE: default docker compose hosts, ports and credentials
 const DEFAULT_ENV_VALUES = {
@@ -17,16 +16,20 @@ const DEFAULT_ENV_VALUES = {
   KAFKA: '127.0.0.1:9092',
   REDIS: '127.0.0.1:6379',
   REDIS_ALTERNATIVE: 'localhost:6379',
-  COUCHBASE: 'couchbase://127.0.0.1',
-  COUCHBASE_ALTERNATIVE: 'couchbase://localhost',
+  COUCHBASE: 'couchbase://127.0.0.1:11210',
+  COUCHBASE_ALTERNATIVE: 'couchbase://127.0.0.1',
+  COUCHBASE_WEB_UI: 'http://127.0.0.1:8091',
   LOCALSTACK_AWS: 'localstack://127.0.0.1:4566',
   MYSQL_HOST: '127.0.0.1',
   MYSQL_PORT: '3306',
   MYSQL_USER: 'node',
   MYSQL_PW: 'nodepw',
   MYSQL_DB: 'nodedb',
+  AMQP: 'amqp://127.0.0.1',
   NATS: 'nats://127.0.0.1:4222',
   NATS_ALTERNATIVE: 'nats://localhost:4222',
+  NATS_STREAMING: 'nats://127.0.0.1:4223',
+  NATS_STREAMING_ALTERNATIVE: 'nats://127.0.0.1:4224',
   POSTGRES_USER: 'node',
   POSTGRES_PASSWORD: 'nodepw',
   POSTGRES_DB: 'nodedb',
@@ -37,10 +40,6 @@ const DEFAULT_ENV_VALUES = {
   MSSQL_USER: 'sa',
   MSSQL_PW: 'stanCanHazMsSQL1'
 };
-
-if (isCI()) {
-  DEFAULT_ENV_VALUES.LOCALSTACK_AWS = 'localstack://localstack:4566';
-}
 
 // CASE: if env variable is not set from outside, fallback to defaults
 Object.keys(DEFAULT_ENV_VALUES).forEach(key => {

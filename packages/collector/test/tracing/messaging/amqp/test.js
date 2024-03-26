@@ -50,6 +50,10 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
       version
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     beforeEach(() =>
       Promise.all([
         agentControls.waitUntilAppIsCompletelyInitialized(consumerControls.getPid()),

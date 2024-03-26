@@ -8,7 +8,7 @@
 const { expect } = require('chai');
 
 const { delay, retry } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 
 const ProcessProcessor = require('../../src/process/ProcessProcessor');
 

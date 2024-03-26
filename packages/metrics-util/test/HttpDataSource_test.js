@@ -11,7 +11,7 @@ const { expect } = require('chai');
 
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 const { delay, retry } = require('../../core/test/test_util');
-const config = require('../../serverless/test/config');
+const config = require('@instana/core/test/config');
 
 const HttpDataSource = require('../src/HttpDataSource');
 
@@ -19,14 +19,17 @@ describe('HTTP data source', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
-  const metadataMockPort = portfinder();
-  const metadataMockUrl = `http://localhost:${metadataMockPort}/metadata`;
+  let metadataMockPort;
+  let metadataMockUrl;
   let messagesFromMetadataMock = [];
   let metadataMock;
-
-  const dataSource = new HttpDataSource(metadataMockUrl);
+  let dataSource;
 
   before(() => {
+    metadataMockPort = portfinder();
+    metadataMockUrl = `http://localhost:${metadataMockPort}/metadata`;
+    dataSource = new HttpDataSource(metadataMockUrl);
+
     messagesFromMetadataMock = [];
     metadataMock = fork(path.join(__dirname, './metadata_mock'), {
       stdio: config.getAppStdio(),

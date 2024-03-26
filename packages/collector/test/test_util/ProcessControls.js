@@ -20,6 +20,7 @@ const globalAgent = require('../globalAgent');
 const portFinder = require('./portfinder');
 const sslDir = path.join(__dirname, '..', 'apps', 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
+
 class ProcessControls {
   /**
    * @typedef {Object} ProcessControlsOptions
@@ -70,6 +71,8 @@ class ProcessControls {
       }
     }
 
+    this.collectorUninitialized = opts.collectorUninitialized;
+
     // absolute path to .js file that should be executed
     this.appPath = opts.appPath;
     // optional working directory for the child process
@@ -118,7 +121,8 @@ class ProcessControls {
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: '1',
         INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: opts.minimalDelay != null ? opts.minimalDelay : 0,
         INSTANA_FULL_METRICS_INTERNAL_IN_S: 1,
-        INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS: 500
+        INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS: 500,
+        INSTANA_RETRY_AGENT_CONNECTION_IN_MS: 500
       },
       opts.env
     );
@@ -153,7 +157,11 @@ class ProcessControls {
     this.process = this.args ? fork(this.appPath, this.args, forkConfig) : fork(this.appPath, forkConfig);
 
     this.process.on('message', message => {
-      that.receivedIpcMessages.push(message);
+      if (message === 'instana.collector.initialized') {
+        this.process.collectorInitialized = true;
+      } else {
+        that.receivedIpcMessages.push(message);
+      }
     });
 
     await this.waitUntilServerIsUp(retryTime, until);
@@ -166,15 +174,22 @@ class ProcessControls {
   async waitUntilServerIsUp(retryTime, until) {
     try {
       await testUtils.retry(
-        () =>
-          this.sendRequest({
+        async () => {
+          await this.sendRequest({
             method: 'GET',
             suppressTracing: true,
             checkStatusCode: true
-          }),
+          });
+
+          if (this.collectorUninitialized) return;
+          if (!this.process.collectorInitialized) throw new Error('Collector not fullly initialized.');
+        },
         retryTime,
         until
       );
+
+      // eslint-disable-next-line no-console
+      console.log('[ProcessControls] server is up.');
     } catch (err) {
       // eslint-disable-next-line no-console
       console.log(`[ProcessControls] error: ${err}`);
@@ -192,7 +207,7 @@ class ProcessControls {
 
     await this.clearIpcMessages();
     await this.start(retryTime, until);
-    await this.agentControls.waitUntilAppIsCompletelyInitialized(this.getPid());
+    await this.agentControls.waitUntilAppIsCompletelyInitialized(this.getPid(), retryTime, until);
 
     // eslint-disable-next-line no-console
     console.log('[ProcessControls] started');

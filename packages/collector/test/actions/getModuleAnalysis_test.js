@@ -22,6 +22,10 @@ describe('actions/getModuleAnalysis', function () {
     await expressControls.start({ useGlobalAgent: true });
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   after(async () => {
     await expressControls.stop();
   });

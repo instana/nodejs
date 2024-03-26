@@ -1,0 +1,42 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: node-x-binding
+spec:
+  envFrom:
+    - configMapRef:
+        name: environment-properties
+  params:
+    - name: branch
+      value: $(params.target-branch)
+    - name: target-branch
+      value: $(params.target-branch)
+    - name: type
+      value: "nightly"
+    - name: repository
+      value: $(params.repository-url)
+    - name: commit-id
+      value: ""
+    - name: node-version
+      value: $(params.node-version)
+      default: ""
+    - name: npm-version
+      value: $(params.npm-version)
+      default: ""      
+    - name: pl-name
+      value: "nightly-$(params.node-version)"
+    - name: pipeline-ref
+      value: "default-pipeline"
+
+---
+
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: node-x-listener
+spec:
+  triggers:
+    - bindings:
+        - name: node-x-binding
+      template:
+        name: custom-template

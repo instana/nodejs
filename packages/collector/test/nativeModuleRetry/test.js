@@ -5,12 +5,10 @@
 
 'use strict';
 
-const async = require('async');
 const { expect } = require('chai');
-const fs = require('fs');
+const fs = require('node:fs/promises');
 const os = require('os');
 const path = require('path');
-const rimraf = require('rimraf');
 
 const config = require('../../../core/test/config');
 const { retry } = require('../../../core/test/test_util');
@@ -27,7 +25,7 @@ describe('retry loading native addons', function () {
   const metricAddonsTestConfigs = [
     {
       name: 'event-loop-stats',
-      nativeModulePath: require.resolve('event-loop-stats'),
+      nativeModuleFolder: path.dirname(require.resolve('event-loop-stats/package.json')),
       backupPath: path.join(os.tmpdir(), 'event-loop-stats-backup'),
       check: ([aggregated]) => {
         const libuv = aggregated.libuv;
@@ -43,7 +41,7 @@ describe('retry loading native addons', function () {
     },
     {
       name: 'gcstats.js',
-      nativeModulePath: require.resolve('gcstats.js'),
+      nativeModuleFolder: path.dirname(require.resolve('gcstats.js/package.json')),
       backupPath: path.join(os.tmpdir(), 'gcstats.js-backup'),
       check: ([aggregated]) => {
         // The for loop above ensures that the first metric POST that had the gc payload
@@ -67,6 +65,37 @@ describe('retry loading native addons', function () {
 function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
   let controls;
 
+  const rename = async (oldPath, newPath) => {
+    try {
+      await fs.rename(oldPath, newPath);
+    } catch (err) {
+      if (err.code === 'EXDEV') {
+        await copyFolder(oldPath, newPath);
+        await fs.rmdir(oldPath, { recursive: true });
+      } else {
+        throw err;
+      }
+    }
+  };
+
+  async function copyFolder(src, dest) {
+    await fs.mkdir(dest, { recursive: true });
+    const entries = await fs.readdir(src, { withFileTypes: true });
+
+    const copyPromises = entries.map(async entry => {
+      const srcPath = `${src}/${entry.name}`;
+      const destPath = `${dest}/${entry.name}`;
+
+      if (entry.isDirectory()) {
+        await copyFolder(srcPath, destPath);
+      } else {
+        await fs.copyFile(srcPath, destPath);
+      }
+    });
+
+    await Promise.all(copyPromises);
+  }
+
   before(async () => {
     controls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
@@ -78,6 +107,10 @@ function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
     await controls.startAndWaitForAgentConnection();
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   after(async () => {
     await controls.stop();
   });
@@ -87,21 +120,13 @@ function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
   });
 
   describe(opts.name, () => {
-    before(done => {
+    before(async () => {
       // remove the dependency temporarily
-      async.series([fs.rename.bind(null, opts.nativeModulePath, opts.backupPath)], done);
+      await rename(opts.nativeModuleFolder, opts.backupPath);
     });
 
-    after(done => {
-      // restore the dependency after running the test
-      async.series(
-        [
-          //
-          rimraf.bind(null, opts.nativeModulePath),
-          fs.rename.bind(null, opts.backupPath, opts.nativeModulePath)
-        ],
-        done
-      );
+    after(async () => {
+      await rename(opts.backupPath, opts.nativeModuleFolder);
     });
 
     it('metrics from native add-ons should become available at some point', () =>

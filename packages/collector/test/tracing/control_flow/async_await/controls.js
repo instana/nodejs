@@ -41,6 +41,12 @@ exports.start = opts => {
     env
   });
 
+  expressApp.on('message', message => {
+    if (message === 'instana.collector.initialized') {
+      expressApp.collectorInitialized = true;
+    }
+  });
+
   return waitUntilServerIsUp();
 };
 
@@ -50,14 +56,16 @@ exports.stop = async () => {
 
 function waitUntilServerIsUp() {
   return testUtils
-    .retry(() =>
-      fetch(`http://127.0.0.1:${appPort}`, {
+    .retry(async () => {
+      await fetch(`http://127.0.0.1:${appPort}`, {
         method: 'GET',
         headers: {
           'X-INSTANA-L': '0'
         }
-      })
-    )
+      });
+
+      if (!expressApp.collectorInitialized) throw new Error('Collector not fullly initialized.');
+    })
     .then(resp => {
       // eslint-disable-next-line no-console
       console.log('[AsyncAwaitControls] started');

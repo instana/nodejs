@@ -75,6 +75,10 @@ function registerSuite(agentControls, driverMode, useExecute) {
       await controls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await controls.stop();
     });
@@ -116,6 +120,10 @@ function test(env, agentControls) {
     });
 
     await controls.startAndWaitForAgentConnection();
+  });
+
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
   });
 
   after(async () => {

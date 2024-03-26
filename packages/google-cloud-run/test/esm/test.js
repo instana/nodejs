@@ -11,7 +11,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const { expectExactlyOneMatching } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 const esmSupportedVersion = require('@instana/core').tracing.esmSupportedVersion;
 
@@ -30,9 +30,6 @@ const instanaAgentKey = 'google-cloud-run-dummy-key';
 const testStartedAt = Date.now();
 
 function prelude(opts = {}) {
-  this.timeout(config.getTestTimeout());
-  this.slow(config.getTestTimeout() / 2);
-
   let env = {
     ESM_TEST: true
   };
@@ -49,6 +46,9 @@ function prelude(opts = {}) {
 // Run the tests only for supported node versions
 if (esmSupportedVersion(process.versions.node)) {
   describe('Google Cloud Run esm test', function () {
+    this.timeout(config.getTestTimeout());
+    this.slow(config.getTestTimeout() / 2);
+
     describe('when the back end is up', function () {
       const env = prelude.bind(this)();
 
@@ -63,6 +63,11 @@ if (esmSupportedVersion(process.versions.node)) {
         });
 
         await appControls.start();
+      });
+
+      beforeEach(async () => {
+        await appControls.reset();
+        await appControls.resetBackendSpans();
       });
 
       after(async () => {
@@ -95,6 +100,10 @@ if (esmSupportedVersion(process.versions.node)) {
         });
 
         await appControls.start();
+      });
+      beforeEach(async () => {
+        await appControls.reset();
+        await appControls.resetBackendSpans();
       });
 
       after(async () => {

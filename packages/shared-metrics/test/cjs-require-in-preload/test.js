@@ -30,6 +30,10 @@ describe('cjs require collector in preload phase', function () {
     await controls.startAndWaitForAgentConnection();
   });
 
+  beforeEach(async () => {
+    await controls.agentControls.clearReceivedTraceData();
+  });
+
   after(async () => {
     await controls.stop();
   });

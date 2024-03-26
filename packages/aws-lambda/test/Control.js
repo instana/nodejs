@@ -8,7 +8,7 @@
 const { fork } = require('child_process');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 const retry = require('@instana/core/test/test_util/retry');
-const config = require('../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 
 function Control(opts) {
@@ -45,25 +45,32 @@ Control.prototype.reset = function reset() {
 };
 
 Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
+  const envs = {
+    HANDLER_DEFINITION_PATH: this.opts.handlerDefinitionPath,
+    DOWNSTREAM_DUMMY_URL: this.downstreamDummyUrl,
+    INSTANA_DISABLE_CA_CHECK: this.useHttps,
+    INSTANA_DEV_SEND_UNENCRYPTED: !this.useHttps,
+    WAIT_FOR_MESSAGE: true,
+    INSTANA_ENDPOINT_URL: this.backendBaseUrl,
+    INSTANA_LAYER_EXTENSION_PORT: this.extensionPort,
+    INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS: 500,
+    INSTANA_AWS_SSM_TIMEOUT_IN_MS: 1000 * 5
+  };
+
+  if (!this.opts.startExtension) {
+    envs.INSTANA_DISABLE_LAMBDA_EXTENSION = true;
+  }
+
   this.faasRuntime = fork(this.opts.faasRuntimePath, {
     stdio: config.getAppStdio(),
     // eslint-disable-next-line prefer-object-spread
-    env: Object.assign(
-      {
-        HANDLER_DEFINITION_PATH: this.opts.handlerDefinitionPath,
-        DOWNSTREAM_DUMMY_URL: this.downstreamDummyUrl,
-        INSTANA_DISABLE_CA_CHECK: this.useHttps,
-        INSTANA_DEV_SEND_UNENCRYPTED: !this.useHttps,
-        WAIT_FOR_MESSAGE: true,
-        INSTANA_ENDPOINT_URL: this.backendBaseUrl,
-        INSTANA_LAYER_EXTENSION_PORT: this.extensionPort
-      },
-      process.env,
-      this.opts.env
-    )
+    env: Object.assign(envs, process.env, this.opts.env)
   });
 
   this.faasRuntime.on('message', message => {
+    // eslint-disable-next-line no-console
+    console.log('[Control] received message from faasRuntime', message.type || message);
+
     if (message.type === 'lambda-result') {
       if (message.error) {
         this.lambdaErrors.push(message.payload);
@@ -83,6 +90,8 @@ Control.prototype.hasMonitoredProcessStarted = function hasMonitoredProcessStart
 };
 
 Control.prototype.runHandler = function runHandler({ context, event, eventOpts } = {}) {
+  // eslint-disable-next-line no-console
+  console.log('[Control] runHandler');
   this.startedAt = Date.now();
   this.faasRuntime.send({ cmd: 'run-handler', context, event, eventOpts });
   this.expectedHandlerRuns++;
@@ -101,6 +110,8 @@ Control.prototype.waitUntilHandlerHasRun = function waitUntilHandlerHasRun() {
 
 Control.prototype.hasHandlerRunPromise = function hasHandlerRunPromise() {
   if (this.hasHandlerRun()) {
+    // eslint-disable-next-line no-console
+    console.log('[Control] handler finished');
     return Promise.resolve();
   } else {
     return Promise.reject(

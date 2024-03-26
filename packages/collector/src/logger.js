@@ -50,7 +50,6 @@ exports.init = function init(config, isReInit) {
       __in: 1
     });
   }
-
   if (isBunyan(parentLogger)) {
     // in case we are using a bunyan logger we also forward logs to the agent
     /** @type {bunyan} */ (parentLogger).addStream({

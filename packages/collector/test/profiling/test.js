@@ -43,6 +43,10 @@ mochaSuiteFn('profiling', function () {
       await controls.start();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await controls.stop();
       await agentControls.stopAgent();
@@ -91,6 +95,10 @@ mochaSuiteFn('profiling', function () {
       });
 
       await controls.start();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {

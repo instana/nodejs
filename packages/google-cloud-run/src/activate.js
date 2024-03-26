@@ -60,6 +60,11 @@ function init() {
       instanaCore.init(config, backendConnector, identityProvider);
       metrics.activate(backendConnector);
       tracing.activate();
+
+      logger.debug('@instana/google-cloud-run initialized.');
+
+      // eslint-disable-next-line no-unused-expressions
+      process.send && process.send('instana.google-cloud-run.initialized');
     } catch (e) {
       logger.error(
         'Initializing @instana/google-cloud-run failed. This Cloud Run container instance will not be monitored.',

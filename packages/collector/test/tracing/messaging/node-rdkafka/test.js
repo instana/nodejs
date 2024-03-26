@@ -111,6 +111,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
                     await producerControls.startAndWaitForAgentConnection();
                   });
 
+                  beforeEach(async () => {
+                    await agentControls.clearReceivedData();
+                  });
+
                   afterEach(async () => {
                     await consumerControls.stop();
                     await producerControls.stop();
@@ -204,11 +208,9 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     objectMode,
     producerMethod
   ) {
-    // CASE: Consumer error entry span has no parent
-    // CASE: consumer error means -> we not even produce a kafka msg
+    // CASE: We do not even produce a msg for this case
     if (withError === 'streamErrorReceiver') {
-      verifyRdKafkaEntry(receiverControls, spans, null, messageId, withError, 'empty');
-      expect(spans.length).to.equal(1);
+      expect(spans.length).to.equal(0);
       return;
     }
 
@@ -321,6 +323,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       await consumerControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await producerControls.stop();
       await consumerControls.stop();
@@ -375,6 +381,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       await consumerControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await customAgentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await customAgentControls.stopAgent();
       await producerControls.stop();
@@ -426,6 +436,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
 
       await producerControls.startAndWaitForAgentConnection();
       await consumerControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {
@@ -482,6 +496,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       await consumerControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await customAgentControls.stopAgent();
       await producerControls.stop();
@@ -529,6 +547,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await producerControls.stop();
     });
@@ -551,6 +573,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         });
 
         await consumerControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -593,6 +619,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await producerControls.stop();
     });
@@ -614,6 +644,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         });
 
         await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -660,6 +694,8 @@ function verifyResponseAndMessage(response, consumerControls, withError, objectM
 
   expect(receivedMessages).to.have.lengthOf.at.least(1);
   const message = receivedMessages.filter(({ headers }) => {
+    if (!headers) return;
+
     const header = headers.filter(_header => _header.message_counter != null)[0];
 
     const messageCounter = Buffer.from(header.message_counter.data).toString();

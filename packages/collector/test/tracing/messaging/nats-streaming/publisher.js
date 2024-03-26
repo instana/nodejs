@@ -15,10 +15,10 @@ const natsStreaming = require('node-nats-streaming');
 
 const app = express();
 const client = natsStreaming.connect('test-cluster', 'test-client-publisher-1', {
-  url: 'nats://localhost:4223'
+  url: process.env.NATS_STREAMING
 });
 const client2 = natsStreaming.connect('test-cluster', 'test-client-publisher-2', {
-  url: 'nats://127.0.0.1:4223'
+  url: process.env.NATS_STREAMING_ALTERNATIVE
 });
 const port = require('../../../test_util/app-port')();
 

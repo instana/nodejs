@@ -53,6 +53,10 @@ mochaSuiteFn('tracing/restore context', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await controls.stop();
     });

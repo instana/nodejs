@@ -9,7 +9,7 @@
 
 const { expect } = require('chai');
 
-const config = require('../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const { delay, retry } = require('../../core/test/test_util');
 
 const DataSource = require('../src/DataSource');

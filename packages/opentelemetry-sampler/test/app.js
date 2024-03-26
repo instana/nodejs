@@ -79,7 +79,14 @@ app.post('/otel-post', (_req, res) => {
     });
 });
 
-app.listen(port, () => {
+const http = require('http');
+const server = http.createServer(app);
+
+server.listen(port, () => {
   log(`webserver started at port ${port}`);
   sendToParent('runtime: started');
+});
+
+server.on('error', err => {
+  sendToParent('error', err.message);
 });

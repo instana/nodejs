@@ -78,6 +78,10 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
     await controls.startAndWaitForAgentConnection();
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   after(async () => {
     await controls.stop();
   });

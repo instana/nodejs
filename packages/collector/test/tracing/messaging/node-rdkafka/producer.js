@@ -169,6 +169,8 @@ let streamProducer = getProducer(true);
 
 // method is either standard or stream
 app.get('/produce/:method', async (req, res) => {
+  log('GET /produce/:method');
+
   const method = req.params.method || 'standard';
   const bufferErrorSender = req.query.bufferErrorSender === 'true';
 

@@ -29,6 +29,10 @@ mochaSuiteFn('tracing/graphql-subscriptions - PubSub/async iterator (pull before
     await controls.startAndWaitForAgentConnection();
   });
 
+  beforeEach(async () => {
+    await globalAgent.instance.clearReceivedTraceData();
+  });
+
   after(async () => {
     await controls.stop();
   });

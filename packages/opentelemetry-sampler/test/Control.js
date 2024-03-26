@@ -27,6 +27,9 @@ class Control extends AbstractServerlessControl {
   }
 
   startMonitoredProcess() {
+    // eslint-disable-next-line no-console
+    console.log('[Control] startMonitoredProcess');
+
     this.otelApp = fork(this.opts.otelAppPath, {
       env: Object.assign(
         {
@@ -38,6 +41,8 @@ class Control extends AbstractServerlessControl {
     });
 
     this.otelApp.on('message', message => {
+      // eslint-disable-next-line no-console
+      console.log('[Control] message', message);
       this.messagesFromTestApp.push(message);
     });
   }

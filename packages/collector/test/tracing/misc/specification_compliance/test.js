@@ -73,7 +73,8 @@ describe('spec compliance', function () {
           http2,
           env: {
             USE_HTTP2: http2
-          }
+          },
+          collectorUninitialized: true
         });
 
         await downstreamTarget.start();
@@ -96,6 +97,10 @@ describe('spec compliance', function () {
         });
 
         await appControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {

@@ -11,7 +11,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const { delay, expectExactlyOneMatching, retry } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 
 const instanceId =
   // eslint-disable-next-line max-len
@@ -23,15 +23,11 @@ const host = `gcp:cloud-run:revision:${revision}`;
 const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'google-cloud-run-dummy-key';
 
-function prelude() {
+describe('Using the API', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
-}
 
-describe('Using the API', function () {
   describe('when configured properly', function () {
-    prelude.bind(this)();
-
     let appControls;
 
     before(async () => {
@@ -43,6 +39,10 @@ describe('Using the API', function () {
       });
 
       await appControls.start();
+    });
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
     });
 
     after(async () => {
@@ -62,8 +62,6 @@ describe('Using the API', function () {
   });
 
   describe('when not configured properly', function () {
-    prelude.bind(this)({});
-
     let appControls;
 
     before(async () => {
@@ -72,10 +70,16 @@ describe('Using the API', function () {
         instanaAgentKey,
         startDownstreamDummy: false,
         startBackend: true,
-        unconfigured: false
+        unconfigured: false,
+        googleCloudRunUninitialized: true
       });
 
       await appControls.start();
+    });
+
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
     });
 
     after(async () => {

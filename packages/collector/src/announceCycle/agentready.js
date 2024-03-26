@@ -90,6 +90,8 @@ function enter(_ctx) {
 
   initializedTooLate.check();
 
+  logger.debug(`isMainThread: ${isMainThread}`);
+
   if (isMainThread) {
     uncaught.activate();
     metrics.activate();
@@ -128,6 +130,9 @@ function enter(_ctx) {
   }
 
   logger.info('The Instana Node.js collector is now fully initialized and connected to the Instana host agent.');
+
+  // eslint-disable-next-line no-unused-expressions
+  process.send && process.send('instana.collector.initialized');
 }
 
 function leave() {

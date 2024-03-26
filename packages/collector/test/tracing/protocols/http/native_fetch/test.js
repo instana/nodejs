@@ -28,7 +28,7 @@ if (!supportedVersion(process.versions.node)) {
 mochaSuiteFn('tracing/native fetch', function () {
   this.timeout(config.getTestTimeout() * 2);
 
-  globalAgent.setUpTestCaseCleanUpHooks();
+  globalAgent.setUpCleanUpHooks();
 
   let serverControls;
   let clientControls;
@@ -48,6 +48,10 @@ mochaSuiteFn('tracing/native fetch', function () {
 
     await serverControls.startAndWaitForAgentConnection();
     await clientControls.startAndWaitForAgentConnection();
+  });
+
+  beforeEach(async () => {
+    await globalAgent.instance.clearReceivedTraceData();
   });
 
   after(async () => {

@@ -14,7 +14,7 @@ const { consoleLogger } = require('@instana/serverless');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 
 const { retry } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 
 let transmissionCycle;
 
@@ -22,8 +22,8 @@ describe('transmission cycle', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
-  const metadataMockPort = portfinder();
-  const metadataMockUrl = `http://localhost:${metadataMockPort}/computeMetadata/v1/`;
+  let metadataMockPort;
+  let metadataMockUrl;
   let messagesFromMetadataMock = [];
   let metadataMock;
 
@@ -32,6 +32,9 @@ describe('transmission cycle', function () {
   let onReadyError;
 
   before(() => {
+    metadataMockPort = portfinder();
+    metadataMockUrl = `http://localhost:${metadataMockPort}/computeMetadata/v1/`;
+
     messagesFromMetadataMock = [];
     metadataMock = fork(path.join(__dirname, '../metadata_mock'), {
       stdio: config.getAppStdio(),

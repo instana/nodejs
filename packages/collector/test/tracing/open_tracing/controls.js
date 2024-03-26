@@ -32,6 +32,12 @@ exports.registerTestHooks = opts => {
       env
     });
 
+    expressOpentracingApp.on('message', message => {
+      if (message === 'instana.collector.initialized') {
+        expressOpentracingApp.collectorInitialized = true;
+      }
+    });
+
     return waitUntilServerIsUp();
   });
 
@@ -41,15 +47,17 @@ exports.registerTestHooks = opts => {
 };
 
 function waitUntilServerIsUp() {
-  return testUtils.retry(() =>
-    fetch(`http://127.0.0.1:${appPort}`, {
+  return testUtils.retry(async () => {
+    await fetch(`http://127.0.0.1:${appPort}`, {
       method: 'GET',
       url: `http://127.0.0.1:${appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
-    })
-  );
+    });
+
+    if (!expressOpentracingApp.collectorInitialized) throw new Error('Collector not fullly initialized.');
+  });
 }
 
 exports.getPid = () => expressOpentracingApp.pid;

@@ -11,7 +11,7 @@ const portFinder = require('../test_util/portfinder');
 const path = require('path');
 const _ = require('lodash');
 
-const { retry } = require('../../../core/test/test_util');
+const { retry, delay } = require('../../../core/test/test_util');
 const config = require('../../../core/test/config');
 
 class AgentStubControls {
@@ -85,7 +85,7 @@ class AgentStubControls {
     }
   }
 
-  async waitUntilAppIsCompletelyInitialized(originalPid) {
+  async waitUntilAppIsCompletelyInitialized(originalPid, retryTime, until) {
     let pid;
     if (typeof originalPid === 'number') {
       pid = String(originalPid);
@@ -95,14 +95,17 @@ class AgentStubControls {
       throw new Error(`PID ${originalPid} has invalid type ${typeof originalPid}.`);
     }
 
-    await retry(() =>
-      this.getDiscoveries().then(discoveries => {
-        const reportingPids = Object.keys(discoveries);
-        if (reportingPids.includes(pid)) {
-          return true;
-        }
-        throw new Error(`PID ${pid} never sent any data to the agent.`);
-      })
+    await retry(
+      () =>
+        this.getDiscoveries().then(discoveries => {
+          const reportingPids = Object.keys(discoveries);
+          if (reportingPids.includes(pid)) {
+            return true;
+          }
+          throw new Error(`PID ${pid} never sent any data to the agent.`);
+        }),
+      retryTime,
+      until
     );
   }
 
@@ -161,10 +164,12 @@ class AgentStubControls {
     });
   }
 
-  reset() {
-    return fetch(`http://127.0.0.1:${this.agentPort}/`, {
-      method: 'DELETE',
-      json: true
+  async reset() {
+    return retry(async () => {
+      await fetch(`http://127.0.0.1:${this.agentPort}/`, {
+        method: 'DELETE',
+        json: true
+      });
     });
   }
 
@@ -174,9 +179,20 @@ class AgentStubControls {
     });
   }
 
-  clearReceivedTraceData() {
-    return fetch(`http://127.0.0.1:${this.agentPort}/received/traces`, {
-      method: 'DELETE'
+  async clearReceivedTraceData() {
+    // always wait 1000ms before we reset the data in case a retry happens
+    // and we want to ensure that no more data is incoming from the app.
+    await delay(1000);
+
+    return retry(async () => {
+      // eslint-disable-next-line no-console
+      // console.log('[AgentStubControls] clearReceivedTraceData');
+      await fetch(`http://127.0.0.1:${this.agentPort}/received/traces`, {
+        method: 'DELETE'
+      });
+
+      // eslint-disable-next-line no-console
+      // console.log('[AgentStubControls] clearReceivedTraceData done');
     });
   }
 

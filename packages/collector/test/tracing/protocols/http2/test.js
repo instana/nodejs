@@ -56,6 +56,10 @@ mochaSuiteFn('tracing/http2', function () {
     await clientControls.start();
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   after(async () => {
     await agentControls.stopAgent();
     await serverControls.stop();

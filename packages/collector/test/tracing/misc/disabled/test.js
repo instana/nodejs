@@ -33,6 +33,10 @@ mochaSuiteFn('disabled tracing', function () {
     await expressControls.stop();
   });
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
 
   it('must not send any spans to the agent', () =>

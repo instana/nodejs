@@ -51,6 +51,10 @@ mochaSuiteFn('tracing/nats-streaming', function () {
       await subscriberControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await publisherControls.stop();
       await subscriberControls.stop();
@@ -126,7 +130,7 @@ mochaSuiteFn('tracing/nats-streaming', function () {
                     } else {
                       expect(span.data.nats.subject).to.equal('publish-test-subject');
                     }
-                    expect(span.data.nats.address).to.equal('nats://localhost:4223');
+                    expect(span.data.nats.address).to.equal(process.env.NATS_STREAMING);
                     if (withError) {
                       expect(span.data.nats.error).to.equal('stan: invalid publish request');
                     } else {
@@ -167,7 +171,7 @@ mochaSuiteFn('tracing/nats-streaming', function () {
             span => expect(span.k).to.equal(constants.EXIT),
             span => expect(span.n).to.equal('nats.streaming'),
             span => expect(span.data.nats.sort).to.equal('publish'),
-            span => expect(span.data.nats.address).to.equal('nats://127.0.0.1:4223')
+            span => expect(span.data.nats.address).to.equal(process.env.NATS_STREAMING)
           ]);
           expectExactlyOneMatching(spans, [
             span => expect(span.t).to.equal(entrySpan.t),
@@ -175,7 +179,7 @@ mochaSuiteFn('tracing/nats-streaming', function () {
             span => expect(span.k).to.equal(constants.EXIT),
             span => expect(span.n).to.equal('nats.streaming'),
             span => expect(span.data.nats.sort).to.equal('publish'),
-            span => expect(span.data.nats.address).to.equal('nats://localhost:4223')
+            span => expect(span.data.nats.address).to.equal(process.env.NATS_STREAMING_ALTERNATIVE)
           ]);
         });
       });
@@ -240,7 +244,7 @@ mochaSuiteFn('tracing/nats-streaming', function () {
                     expect(span.data.nats).to.be.an('object');
                     expect(span.data.nats.sort).to.equal('consume');
                     expect(span.data.nats.subject).to.equal('subscribe-test-subject');
-                    expect(span.data.nats.address).to.equal('nats://localhost:4223');
+                    expect(span.data.nats.address).to.equal(process.env.NATS_STREAMING);
                     if (withError) {
                       expect(span.data.nats.error).to.equal(`Boom: ${uniqueId}`);
                     } else {
@@ -305,6 +309,10 @@ mochaSuiteFn('tracing/nats-streaming', function () {
 
       await publisherControls.startAndWaitForAgentConnection();
       await subscriberControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {

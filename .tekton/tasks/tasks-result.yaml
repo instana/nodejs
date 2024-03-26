@@ -1,0 +1,30 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: tasks-results
+spec:
+  workspaces:
+    - name: output
+      mountPath: /artifacts
+  params:
+    - name: properties-file
+      default: build.properties
+  steps:
+    - name: print-all-results
+      image: ubuntu
+      env:
+        - name: PROPERTIES_FILE
+          value: $(params.properties-file)
+      script: |
+        #!/bin/bash
+        
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+
+        if find "$ARTIFACTS_PATH" -maxdepth 1 -type f -name '*.failed' | grep -q .; then
+          echo "PIPELINE_RESULT=Failed"
+          echo "PIPELINE_RESULT=Failed" >> $ARTIFACTS_PATH/$PROPERTIES_FILE
+        else
+          echo "PIPELINE_RESULT=Succeeded"
+          echo "PIPELINE_RESULT=Succeeded" >> $ARTIFACTS_PATH/$PROPERTIES_FILE
+        fi

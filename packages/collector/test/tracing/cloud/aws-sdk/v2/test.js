@@ -66,6 +66,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await appControls.stop();
     });
@@ -133,6 +137,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
       await appControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await appControls.stop();
     });
@@ -172,6 +180,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
       });
 
       await appControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {

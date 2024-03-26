@@ -8,7 +8,7 @@ const { fork } = require('child_process');
 const path = require('path');
 const fetch = require('node-fetch');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
-const config = require('../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 
 const PATH_TO_INSTANA_AZURE_PACKAGE = path.join(__dirname, '..');
@@ -18,6 +18,7 @@ class Control extends AbstractServerlessControl {
   constructor(opts) {
     super(opts);
     this.port = opts.port || portfinder();
+    this.azureContainerUninitialized = opts.azureContainerUninitialized;
     this.baseUrl = `http://127.0.0.1:${this.port}`;
     this.backendPort = this.opts.backendPort || portfinder();
     this.backendBaseUrl = this.opts.backendBaseUrl || `https://localhost:${this.backendPort}/serverless`;
@@ -75,17 +76,23 @@ class Control extends AbstractServerlessControl {
   }
 
   hasMonitoredProcessStarted() {
-    return (
-      this.messagesFromAzureContainer.includes('azure-app-service: listening') && !this.azureContainerAppHasTerminated
-    );
-  }
-
-  hasMonitoredProcessTerminated() {
-    return !this.azureContainerAppHasStarted || this.azureContainerAppHasTerminated;
+    if (this.azureContainerUninitialized) {
+      return (
+        this.messagesFromAzureContainer.indexOf('azure-app-service: listening') >= 0 &&
+        this.messagesFromAzureContainer.indexOf('instana.azure-app-service.initialized') === -1 &&
+        !this.azureContainerAppHasTerminated
+      );
+    } else {
+      return (
+        this.messagesFromAzureContainer.indexOf('azure-app-service: listening') >= 0 &&
+        this.messagesFromAzureContainer.indexOf('instana.azure-app-service.initialized') >= 0 &&
+        !this.azureContainerAppHasTerminated
+      );
+    }
   }
 
   killMonitoredProcess() {
-    return this.hasMonitoredProcessTerminated() ? Promise.resolve() : this.killChildProcess(this.azureContainerApp);
+    return this.killChildProcess(this.azureContainerApp);
   }
 
   sendRequest(opts) {

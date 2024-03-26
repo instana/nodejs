@@ -11,7 +11,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const { expectExactlyOneMatching } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 
 const region = 'us-east-2';
@@ -30,9 +30,6 @@ const requestHeaders = {
 };
 
 function prelude(opts = {}) {
-  this.timeout(config.getTestTimeout());
-  this.slow(config.getTestTimeout() / 2);
-
   let env = {
     INSTANA_EXTRA_HTTP_HEADERS:
       'x-entry-request-header-1; X-ENTRY-REQUEST-HEADER-2 ; x-entry-response-header-1;X-ENTRY-RESPONSE-HEADER-2 , ' +
@@ -57,6 +54,9 @@ function prelude(opts = {}) {
 // Run the tests only for supported node versions
 if (esmSupportedVersion(process.versions.node)) {
   describe('AWS fargate esm test', function () {
+    this.timeout(config.getTestTimeout());
+    this.slow(config.getTestTimeout() / 2);
+
     describe('when the back end is up (platform version 1.3.0)', function () {
       const env = prelude.bind(this)({});
 
@@ -72,6 +72,11 @@ if (esmSupportedVersion(process.versions.node)) {
         });
 
         await control.start();
+      });
+
+      beforeEach(async () => {
+        await control.reset();
+        await control.resetBackendSpans();
       });
 
       after(async () => {

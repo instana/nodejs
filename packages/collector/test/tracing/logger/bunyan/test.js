@@ -22,13 +22,14 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
-
   const appControls = require('./controls');
 
   describe('trace log calls', () => {
     appControls.registerTestHooks();
 
-    beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid()));
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
 
     it('must not trace info', () =>
       appControls.trigger('info').then(() =>
@@ -56,8 +57,9 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
 
     it("must capture an error object's message", () => runTest('error-object-only', true, 'This is an error.'));
 
-    it("must capture a nested error object's message", () =>
-      runTest('nested-error-object-only', true, 'This is a nested error.'));
+    it("must capture a nested error object's message", async () => {
+      await runTest('nested-error-object-only', true, 'This is a nested error.');
+    });
 
     it('must serialize random object', () => runTest('error-random-object-only', true, '{"foo":"[Object]"}'));
 
@@ -104,8 +106,6 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
         instanaLoggingMode: 'instana-creates-bunyan-logger'
       });
 
-      beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid()));
-
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
 
@@ -113,8 +113,6 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
       appControls.registerTestHooks({
         instanaLoggingMode: 'instana-receives-bunyan-logger'
       });
-
-      beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid()));
 
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
@@ -124,39 +122,39 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
         instanaLoggingMode: 'instana-receives-non-bunyan-logger'
       });
 
-      beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid()));
-
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
   });
 
   function runTest(url, expectErroneous, message, lengthOfMessage, numberOfSpans) {
-    return appControls.trigger(url).then(() =>
-      testUtils.retry(() =>
-        agentControls.getSpans().then(spans => {
-          const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
-            span => expect(span.n).to.equal('node.http.server'),
-            span => expect(span.f.e).to.equal(String(appControls.getPid())),
-            span => expect(span.f.h).to.equal('agent-stub-uuid')
-          ]);
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            checkBunyanSpan(span, entrySpan, expectErroneous, message, lengthOfMessage);
-          });
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            checkNextExitSpan(span, entrySpan);
-          });
+    return appControls.trigger(url).then(async () => {
+      return testUtils.retry(async () => {
+        const spans = await agentControls.getSpans();
 
-          // verify that nothing logged by Instana has been traced
-          const allBunyanSpans = testUtils.getSpansByName(spans, 'log.bunyan');
-          expect(allBunyanSpans.length).to.equal(1);
+        // entry + exit + bunyan log (+ fs call)
+        // NOTE: Bunyan uses process.stdout directly
+        //       Length of 3 just ensures that our console.* instrumentation isn't counted when customer uses Bunyan
+        expect(spans.length).to.eql(numberOfSpans || 3);
 
-          // entry + exit + bunyan log (+ fs call)
-          // NOTE: Bunyan uses process.stdout directly
-          //       Length of 3 just ensures that our console.* instrumentation isn't counted when customer uses Bunyan
-          expect(spans.length).to.eql(numberOfSpans || 3);
-        })
-      )
-    );
+        const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+          span => expect(span.n).to.equal('node.http.server'),
+          span => expect(span.f.e).to.equal(String(appControls.getPid())),
+          span => expect(span.f.h).to.equal('agent-stub-uuid')
+        ]);
+
+        testUtils.expectAtLeastOneMatching(spans, span => {
+          checkBunyanSpan(span, entrySpan, expectErroneous, message, lengthOfMessage);
+        });
+
+        testUtils.expectAtLeastOneMatching(spans, span => {
+          checkNextExitSpan(span, entrySpan);
+        });
+
+        // verify that nothing logged by Instana has been traced
+        const allBunyanSpans = testUtils.getSpansByName(spans, 'log.bunyan');
+        expect(allBunyanSpans.length).to.equal(1);
+      });
+    });
   }
 
   function checkBunyanSpan(span, parent, erroneous, message, lengthOfMessage) {

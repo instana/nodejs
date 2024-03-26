@@ -21,7 +21,9 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 mochaSuiteFn('tracing/http client', function () {
   this.timeout(config.getTestTimeout() * 2);
 
-  globalAgent.setUpTestCaseCleanUpHooks();
+  beforeEach(async () => {
+    await globalAgent.instance.clearReceivedTraceData();
+  });
 
   describe('http', function () {
     registerTests.call(this, false);
@@ -62,6 +64,10 @@ function registerTests(useHttps) {
 
     await serverControls.startAndWaitForAgentConnection();
     await clientControls.startAndWaitForAgentConnection();
+  });
+
+  beforeEach(async () => {
+    await globalAgent.instance.clearReceivedTraceData();
   });
 
   after(async () => {
@@ -538,6 +544,10 @@ function registerConnectionRefusalTest(useHttps) {
       await clientControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await globalAgent.instance.clearReceivedTraceData();
+    });
+
     after(async () => {
       await serverControls.stop();
       await clientControls.stop();
@@ -592,6 +602,10 @@ function registerSuperagentTest() {
 
     await serverControls.startAndWaitForAgentConnection();
     await clientControls.startAndWaitForAgentConnection();
+  });
+
+  beforeEach(async () => {
+    await globalAgent.instance.clearReceivedTraceData();
   });
 
   after(async () => {

@@ -15,9 +15,6 @@ const { getSpansByName, retry, stringifyItems } = require('../../../../core/test
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 const { AgentStubControls } = require('../../apps/agentStubControls');
-
-const extendedTimeout = Math.max(config.getTestTimeout(), 10000);
-
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/common', function () {
@@ -25,7 +22,7 @@ mochaSuiteFn('tracing/common', function () {
 
   describe('delay', function () {
     describe('with minimal delay', function () {
-      this.timeout(extendedTimeout);
+      this.timeout(config.getTestTimeout());
 
       registerDelayTest.call(this, globalAgent.instance, true);
     });
@@ -54,6 +51,10 @@ mochaSuiteFn('tracing/common', function () {
         }
 
         await controls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -217,6 +218,10 @@ mochaSuiteFn('tracing/common', function () {
         await controls.start();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       after(async () => {
         await controls.stop();
       });
@@ -293,6 +298,10 @@ mochaSuiteFn('tracing/common', function () {
         await controls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await globalAgent.instance.clearReceivedTraceData();
+      });
+
       after(async () => {
         await controls.stop();
       });
@@ -329,6 +338,10 @@ mochaSuiteFn('tracing/common', function () {
         });
 
         await controls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await globalAgent.instance.clearReceivedTraceData();
       });
 
       after(async () => {

@@ -45,6 +45,10 @@ describe('tracing/redis', function () {
         await controls.startAndWaitForAgentConnection();
       });
 
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
       before(async () => {
         await controls.sendRequest({
           method: 'POST',

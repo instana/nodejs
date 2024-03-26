@@ -41,6 +41,10 @@ mochaSuiteFn('tracing/spanbatching with redis', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await controls.stop();
     });
@@ -92,6 +96,10 @@ mochaSuiteFn('tracing/spanbatching with redis', function () {
       });
 
       await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {
@@ -210,6 +218,10 @@ mochaSuiteFn('tracing/spanbatching with redis', function () {
       });
 
       await controls.start();
+    });
+
+    beforeEach(async () => {
+      await customAgentControls.clearReceivedTraceData();
     });
 
     after(async () => {

@@ -9,7 +9,7 @@ const { fork } = require('child_process');
 const path = require('path');
 const fetch = require('node-fetch');
 
-const config = require('../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 const portfinder = require('../../collector/test/test_util/portfinder');
 const PATH_TO_INSTANA_FARGATE_PACKAGE = path.join(__dirname, '..');
@@ -18,6 +18,7 @@ let execArg;
 function Control(opts) {
   AbstractServerlessControl.call(this, opts);
   this.port = opts.port || portfinder();
+  this.fargateUninitialized = opts.fargateUninitialized;
   this.baseUrl = `http://127.0.0.1:${this.port}`;
   this.backendPort = this.opts.backendPort || portfinder();
   this.backendBaseUrl = this.opts.backendBaseUrl || `https://localhost:${this.backendPort}/serverless`;
@@ -110,7 +111,19 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
 };
 
 Control.prototype.hasMonitoredProcessStarted = function hasMonitoredProcessStarted() {
-  return this.messagesFromFargateTask.indexOf('fargate-task: listening') >= 0 && !this.fargateContainerAppHasTerminated;
+  if (this.fargateUninitialized) {
+    return (
+      this.messagesFromFargateTask.indexOf('fargate-task: listening') >= 0 &&
+      this.messagesFromFargateTask.indexOf('instana.aws-fargate.initialized') === -1 &&
+      !this.fargateContainerAppHasTerminated
+    );
+  } else {
+    return (
+      this.messagesFromFargateTask.indexOf('fargate-task: listening') >= 0 &&
+      this.messagesFromFargateTask.indexOf('instana.aws-fargate.initialized') >= 0 &&
+      !this.fargateContainerAppHasTerminated
+    );
+  }
 };
 
 Control.prototype.hasMonitoredProcessTerminated = function hasMonitoredProcessTerminated() {

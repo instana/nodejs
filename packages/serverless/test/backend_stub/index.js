@@ -52,7 +52,9 @@ app.use(
 app.post('/serverless/bundle', acceptBundle);
 
 function acceptBundle(req, res) {
-  logger.debug({ msg: 'incoming bundle', body: req.body });
+  logger.info('POST /serverless/bundle');
+  logger.debug(req.body);
+
   receivedData.rawBundles.push(req.body);
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
@@ -88,7 +90,9 @@ app.post('/serverless/metrics', acceptMetrics);
 app.post('/metrics', acceptMetrics);
 
 function acceptMetrics(req, res) {
-  logger.debug({ msg: 'incoming metrics', body: req.body });
+  logger.info('POST /metrics');
+  logger.debug(req.body);
+
   receivedData.rawMetrics.push(req.body);
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
@@ -116,7 +120,9 @@ app.post('/serverless/traces', acceptTraces);
 app.post('/traces', acceptTraces);
 
 function acceptTraces(req, res) {
-  logger.debug({ msg: 'incoming spans', body: req.body });
+  logger.info('POST /traces');
+  logger.debug(req.body);
+
   receivedData.rawSpanArrays.push(req.body);
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
@@ -147,7 +153,7 @@ app.get('/serverless/received/metrics', (req, res) => res.json(receivedData.metr
 
 app.get('/serverless/received/aggregated/metrics', (req, res) => res.json(receivedData.aggregatedMetrics));
 
-app.delete('/received/metrics', (req, res) => {
+app.delete('/serverless/received/metrics', (req, res) => {
   receivedData.metrics = [];
   receivedData.aggregatedMetrics = [];
   return res.sendStatus('204');

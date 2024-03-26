@@ -31,7 +31,7 @@ if (process.env.WITH_STDOUT) {
 }
 
 amqp
-  .connect('amqp://localhost')
+  .connect(process.env.AMQP)
   .then(connection => connection.createChannel())
   .then(_channel => {
     channel = _channel;

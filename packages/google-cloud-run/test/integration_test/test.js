@@ -12,7 +12,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const { delay, expectExactlyOneMatching } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 
 const region = 'us-central1';
@@ -29,15 +29,11 @@ const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'google-cloud-run-dummy-key';
 const testStartedAt = Date.now();
 
-function prelude() {
+describe('Google Cloud Run integration test', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
-}
 
-describe('Google Cloud Run integration test', function () {
   describe('when the back end is up', function () {
-    prelude.bind(this)();
-
     let appControls;
 
     before(async () => {
@@ -49,6 +45,10 @@ describe('Google Cloud Run integration test', function () {
       });
 
       await appControls.start();
+    });
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
     });
 
     after(async () => {
@@ -68,8 +68,6 @@ describe('Google Cloud Run integration test', function () {
   });
 
   describe('when the back end is down', function () {
-    prelude.bind(this)({});
-
     let appControls;
 
     before(async () => {
@@ -82,6 +80,10 @@ describe('Google Cloud Run integration test', function () {
       });
 
       await appControls.start();
+    });
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
     });
 
     after(async () => {
@@ -101,8 +103,6 @@ describe('Google Cloud Run integration test', function () {
   });
 
   describe('when the back end becomes available after being down initially', function () {
-    prelude.bind(this)({});
-
     let appControls;
 
     before(async () => {
@@ -114,6 +114,10 @@ describe('Google Cloud Run integration test', function () {
       });
 
       await appControls.start();
+    });
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
     });
 
     after(async () => {
@@ -134,10 +138,13 @@ describe('Google Cloud Run integration test', function () {
           // 2. wait a bit
           return delay(750);
         })
-        .then(() =>
+        .then(async () => {
+          // If the test get's retried, we need to kill the BE before.
+          await appControls.killBackend();
+
           // 3. now start the back end
-          appControls.startBackendAndWaitForIt()
-        )
+          return appControls.startBackendAndWaitForIt();
+        })
         .then(() => {
           // 4. cloud run collector should send uncompressed snapshot data and the spans as soon as the
           // back end comes up
@@ -147,8 +154,6 @@ describe('Google Cloud Run integration test', function () {
   });
 
   describe('with default secrets configuration', function () {
-    prelude.bind(this)({});
-
     let appControls;
 
     beforeEach(async () => {
@@ -231,8 +236,6 @@ describe('Google Cloud Run integration test', function () {
   });
 
   describe('with custom secrets configuration', function () {
-    prelude.bind(this)({});
-
     let appControls;
 
     beforeEach(async () => {

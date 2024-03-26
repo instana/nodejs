@@ -17,24 +17,6 @@ services:
       - '8091-8096:8091-8096'
       - '11210:11210'
 
-  couchbase-setup:
-    image: amd64/centos:7
-    platform: linux/amd64
-    depends_on:
-      - couchbase
-    restart: "no"
-    entrypoint:
-      - "bash"
-      - "-ecx"
-      - |
-          sleep 30 && \
-          curl -v -X POST http://couchbase:8091/pools/default -d memoryQuota=512 -d indexMemoryQuota=512 && \
-          curl -v http://couchbase:8091/node/controller/setupServices -d services=kv%2Ceventing%2Cindex%2Cn1ql%2Ccbas%2Cfts && \
-          curl -v http://couchbase:8091/settings/web -d port=8091 -d username=node -d password=nodepwd && \
-          curl -i -u node:nodepwd -X POST http://couchbase:8091/settings/indexes -d 'storageMode=memory_optimized' && \
-          curl -v -u node:nodepwd -X POST http://couchbase:8091/pools/default/buckets -d name=projects -d bucketType=couchbase -d ramQuota=128 -d flushEnabled=1 && \
-          curl -v -u node:nodepwd -X POST http://couchbase:8091/pools/default/buckets -d name=companies -d bucketType=ephemeral -d ramQuota=128 -d flushEnabled=1
-
   # Elasticsearch 7 compatible with client v7
   # elasticsearch:
   #  image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2

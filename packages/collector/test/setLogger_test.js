@@ -20,13 +20,15 @@ mochaSuiteFn('setLogger', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
-
   const expressControls = require('./apps/expressControls');
-
   const dummyLogFile = path.join(os.tmpdir(), 'instana-nodejs-dummy-test.log');
 
   before(async () => {
     await expressControls.start({ useGlobalAgent: true });
+  });
+
+  beforeEach(async () => {
+    await globalAgent.instance.clearReceivedTraceData();
   });
 
   after(async () => {

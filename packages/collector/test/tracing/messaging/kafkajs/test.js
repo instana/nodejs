@@ -68,6 +68,10 @@ mochaSuiteFn('tracing/kafkajs', function () {
                 await producerControls.startAndWaitForAgentConnection();
               });
 
+              beforeEach(async () => {
+                await agentControls.clearReceivedTraceData();
+              });
+
               after(async () => {
                 await producerControls.stop();
                 await consumerControls.stop();
@@ -179,6 +183,10 @@ mochaSuiteFn('tracing/kafkajs', function () {
             await producerControls.startAndWaitForAgentConnection();
           });
 
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+
           after(async () => {
             await producerControls.stop();
           });
@@ -246,6 +254,10 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
           await consumerControls.startAndWaitForAgentConnection();
           await producerControls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
         });
 
         after(async () => {
@@ -353,6 +365,10 @@ mochaSuiteFn('tracing/kafkajs', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await customAgentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await customAgentControls.stopAgent();
       await producerControls.stop();
@@ -412,6 +428,10 @@ mochaSuiteFn('tracing/kafkajs', function () {
       await producerControls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await customAgentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await customAgentControls.stopAgent();
       await producerControls.stop();
@@ -467,6 +487,10 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
       await consumerControls.startAndWaitForAgentConnection();
       await producerControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {
@@ -537,6 +561,10 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
       await consumerControls.startAndWaitForAgentConnection();
       await producerControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {

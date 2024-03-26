@@ -18,7 +18,6 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
-const otherVendorAppPort = portfinder();
 
 const foreignTraceIdLeftHalf = 'f0e1567890123456';
 const foreignTraceIdRightHalf = '78901234567bcdea';
@@ -27,12 +26,11 @@ const foreignParentId = '1020304050607080';
 const LEFT_PAD_16 = '0000000000000000';
 const upstreamInstanaTraceId = 'ffeeddccbbaa9988';
 const upstreamInstanaParentId = '7766554433221100';
-
+let otherVendorAppPort;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/W3C Trace Context', function () {
   this.timeout(config.getTestTimeout() * 2);
-
   globalAgent.setUpCleanUpHooks();
 
   [false, true].forEach(registerSuite);
@@ -43,6 +41,8 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
       let otherVendorAppControls;
 
       before(async () => {
+        otherVendorAppPort = portfinder();
+
         instanaAppControls = new ProcessControls({
           appPath: path.join(__dirname, 'app'),
           useGlobalAgent: true,
@@ -62,11 +62,16 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
             APM_VENDOR: 'other-spec-compliant',
             DOWNSTREAM_PORT: instanaAppControls.getPort(),
             USE_HTTP2: http2
-          }
+          },
+          collectorUninitialized: true
         });
 
         await instanaAppControls.startAndWaitForAgentConnection();
         await otherVendorAppControls.start();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {

@@ -32,7 +32,7 @@ let confirmChannel;
 
 // promise based consumer
 amqp
-  .connect('amqp://127.0.0.1')
+  .connect(process.env.AMQP)
   .then(_connection => {
     connection = _connection;
     return connection.createChannel();
@@ -165,6 +165,7 @@ amqp
   )
   .then(() => {
     log('amqp connection established');
+    process.send && process.send('amqp.initialized');
   })
   .catch(console.warn);
 

@@ -10,7 +10,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const { expectExactlyOneMatching } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 
 const entityId = '/subscriptions/instana/resourceGroups/East US/providers/Microsoft.Web/sites/test-app';
@@ -18,9 +18,6 @@ const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'azure-container-service-dummy-key';
 
 function prelude() {
-  this.timeout(config.getTestTimeout());
-  this.slow(config.getTestTimeout() / 2);
-
   const env = {
     WEBSITE_OWNER_NAME: 'instana+123',
     WEBSITE_RESOURCE_GROUP: 'East US',
@@ -31,6 +28,9 @@ function prelude() {
 }
 
 describe('Using the API', function () {
+  this.timeout(config.getTestTimeout());
+  this.slow(config.getTestTimeout() / 2);
+
   describe('when configured properly', function () {
     const env = prelude.bind(this)();
     let control;
@@ -45,6 +45,11 @@ describe('Using the API', function () {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
     });
 
     after(async () => {
@@ -74,10 +79,16 @@ describe('Using the API', function () {
         instanaAgentKey,
         startDownstreamDummy: false,
         startBackend: true,
-        unconfigured: false
+        unconfigured: false,
+        azureContainerUninitialized: true
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
     });
 
     after(async () => {

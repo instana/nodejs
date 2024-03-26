@@ -69,16 +69,6 @@ Circle CI executes `npm run coverage-all` once per week to generate a full cover
 
 It's not recommended to run `coverage-all` locally, because it can take up to 1 1/2h.
 
-## CI / CD
-
-By default (on the main branch and on pull requests) we do not run all tests.
-We only run the test groups, where we have detected file changes.
-
-The only exceptions are: dependabot pull requests. We run all tests for new package updates.
-
-If you want to run all tests, add to your commit message: `[ci all-tests]`.
-We run all tests every night for all Node.js versions.
-
 ## How to Contribute
 
 This is an open source project, and we appreciate your help!

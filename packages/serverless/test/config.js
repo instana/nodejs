@@ -13,10 +13,3 @@ exports.getAppStdio = function getAppStdio() {
   }
   return [process.stdin, 'ignore', process.stderr, 'ipc'];
 };
-
-exports.getTestTimeout = function getTestTimeout() {
-  if (isCI()) {
-    return 30000;
-  }
-  return 5000;
-};

@@ -17,6 +17,9 @@ const port = process.env.TASK_HTTP_PORT;
 const app = new http.Server();
 
 app.on('request', (req, res) => {
+  // eslint-disable-next-line no-console
+  console.log('[Fargate App] Got request');
+
   fetch(downstreamDummyUrl, {
     headers: {
       'X-Exit-Request-Header-1': 'exit request header value 1',
@@ -47,5 +50,5 @@ app.on('request', (req, res) => {
 app.listen(port, () => {
   sendToParent('fargate-task: listening');
   // eslint-disable-next-line no-console
-  console.log(`Listening on port ${port}.`);
+  console.log(`[Fargate App] Listening on port ${port}.`);
 });

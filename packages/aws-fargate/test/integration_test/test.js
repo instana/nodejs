@@ -13,7 +13,7 @@ const portfinder = require('@instana/collector/test/test_util/portfinder');
 
 const Control = require('../Control');
 const { delay, expectExactlyOneMatching } = require('../../../core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 
 const region = 'us-east-2';
@@ -45,9 +45,6 @@ const requestHeaders = {
 };
 
 function prelude(opts = {}) {
-  this.timeout(config.getTestTimeout());
-  this.slow(config.getTestTimeout() / 2);
-
   let env = {
     INSTANA_EXTRA_HTTP_HEADERS:
       'x-entry-request-header-1; X-ENTRY-REQUEST-HEADER-2 ; x-entry-response-header-1;X-ENTRY-RESPONSE-HEADER-2 , ' +
@@ -69,6 +66,9 @@ function prelude(opts = {}) {
 }
 
 describe('AWS fargate integration test', function () {
+  this.timeout(config.getTestTimeout());
+  this.slow(config.getTestTimeout() / 2);
+
   describe('when the back end is up (platform version 1.3.0)', function () {
     const env = prelude.bind(this)({});
 
@@ -84,6 +84,11 @@ describe('AWS fargate integration test', function () {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
     });
 
     after(async () => {
@@ -120,6 +125,11 @@ describe('AWS fargate integration test', function () {
       await control.start();
     });
 
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
+    });
+
     after(async () => {
       await control.stop();
     });
@@ -151,6 +161,11 @@ describe('AWS fargate integration test', function () {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
     });
 
     after(async () => {
@@ -187,6 +202,11 @@ describe('AWS fargate integration test', function () {
       await control.start();
     });
 
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
+    });
+
     after(async () => {
       await control.stop();
     });
@@ -206,9 +226,12 @@ describe('AWS fargate integration test', function () {
           // 2. wait a bit
           return delay(750);
         })
-        .then(() => {
+        .then(async () => {
+          // If the test get's retried, we need to kill the BE before.
+          await control.killBackend();
+
           // 3. now start the back end
-          return control.startBackendAndWaitForIt();
+          await control.startBackendAndWaitForIt();
         })
         .then(() => {
           // 4. fargate collector should send uncompressed snapshot data and the spans as soon as the back end comes up
@@ -218,15 +241,15 @@ describe('AWS fargate integration test', function () {
   });
 
   describe('when using a proxy without authentication', function () {
-    const proxyPort = portfinder();
-
-    const env = prelude.bind(this)({
-      proxyUrl: `http://localhost:${proxyPort}`
-    });
-
     let control;
 
     before(async () => {
+      const proxyPort = portfinder();
+
+      const env = prelude.bind(this)({
+        proxyUrl: `http://localhost:${proxyPort}`
+      });
+
       control = new Control({
         env,
         platformVersion: '1.3.0',
@@ -238,6 +261,11 @@ describe('AWS fargate integration test', function () {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
     });
 
     after(async () => {
@@ -258,16 +286,16 @@ describe('AWS fargate integration test', function () {
   });
 
   describe('when using a proxy with authentication', function () {
-    const proxyPort = portfinder();
-
-    const env = prelude.bind(this)({
-      startProxy: true,
-      proxyUrl: `http://user:password@localhost:${proxyPort}`
-    });
-
     let control;
 
     before(async () => {
+      const proxyPort = portfinder();
+
+      const env = prelude.bind(this)({
+        startProxy: true,
+        proxyUrl: `http://user:password@localhost:${proxyPort}`
+      });
+
       control = new Control({
         env,
         platformVersion: '1.3.0',
@@ -280,6 +308,11 @@ describe('AWS fargate integration test', function () {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
     });
 
     after(async () => {
@@ -300,15 +333,15 @@ describe('AWS fargate integration test', function () {
   });
 
   describe('when proxy authentication fails due to the wrong password', function () {
-    const proxyPort = portfinder();
-
-    const env = prelude.bind(this)({
-      proxyUrl: `http://user:wrong-password@localhost:${proxyPort}`
-    });
-
     let control;
 
     before(async () => {
+      const proxyPort = portfinder();
+
+      const env = prelude.bind(this)({
+        proxyUrl: `http://user:wrong-password@localhost:${proxyPort}`
+      });
+
       control = new Control({
         env,
         platformVersion: '1.3.0',
@@ -321,6 +354,11 @@ describe('AWS fargate integration test', function () {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
     });
 
     after(async () => {
@@ -341,15 +379,15 @@ describe('AWS fargate integration test', function () {
   });
 
   describe('when the proxy is not up', function () {
-    const proxyPort = portfinder();
-
-    const env = prelude.bind(this)({
-      proxyUrl: `http://localhost:${proxyPort}`
-    });
-
     let control;
 
     before(async () => {
+      const proxyPort = portfinder();
+
+      const env = prelude.bind(this)({
+        proxyUrl: `http://localhost:${proxyPort}`
+      });
+
       control = new Control({
         env,
         platformVersion: '1.3.0',
@@ -361,6 +399,11 @@ describe('AWS fargate integration test', function () {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
     });
 
     after(async () => {
@@ -402,6 +445,11 @@ describe('AWS fargate integration test', function () {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
     });
 
     afterEach(async () => {
@@ -493,6 +541,11 @@ describe('AWS fargate integration test', function () {
       });
 
       await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
     });
 
     afterEach(async () => {

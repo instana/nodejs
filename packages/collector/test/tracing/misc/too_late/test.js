@@ -42,6 +42,10 @@ mochaSuiteFn('tracing/too late', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await controls.stop();
     });
@@ -116,6 +120,10 @@ mochaSuiteFn('tracing/too late', function () {
       });
 
       await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedData();
     });
 
     after(async () => {

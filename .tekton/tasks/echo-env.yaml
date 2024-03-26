@@ -1,0 +1,26 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: echo-env
+spec:
+  params:
+    - name: node-version
+      value: $(params.node-version)
+    - name: npm-version
+      value: $(params.npm-version)
+  workspaces:
+    - name: output
+      mountPath: /artifacts
+  steps:
+    - name: execute
+      image: node:$(params.node-version)
+      script: |
+        #!/bin/bash
+
+        echo "Node: $(node --version)"
+
+        if [ -n "$(params.npm-version)" ]; then
+          npm install npm@$(params.npm-version) -g
+        fi
+
+        echo "NPM: $(npm --version)"

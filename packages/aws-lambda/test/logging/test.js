@@ -8,7 +8,7 @@
 const { expect } = require('chai');
 const path = require('path');
 const Control = require('../Control');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const instanaAgentKey = 'aws-lambda-dummy-key';
 const timeout = 1000 * 5;
 
@@ -18,9 +18,6 @@ function prelude(opts) {
   // The lambda under test does this ${opts.iterations} times, then terminates.
   opts.iterations = opts.iterations || 10;
   opts.expectedLambdaRuntime = opts.delay * opts.iterations * 1.1;
-
-  this.timeout(timeout);
-  this.slow(timeout * 0.8);
 
   const env = {
     DELAY: opts.delay,
@@ -65,6 +62,11 @@ describe('Logging', function () {
     });
 
     await control.start();
+  });
+
+  beforeEach(async () => {
+    await control.reset();
+    await control.resetBackendSpansAndMetrics();
   });
 
   after(async () => {

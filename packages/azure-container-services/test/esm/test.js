@@ -9,7 +9,7 @@ const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 const Control = require('../Control');
 const { expectExactlyOneMatching } = require('@instana/core/test/test_util');
-const config = require('../../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 const { delay } = require('bluebird');
 const esmSupportedVersion = require('@instana/core').tracing.esmSupportedVersion;
@@ -17,16 +17,13 @@ const entityId = '/subscriptions/instana/resourceGroups/East US/providers/Micros
 const containerAppPath = path.join(__dirname, './app.mjs');
 const instanaAgentKey = 'azure-container-service-dummy-key';
 
-function prelude() {
-  this.timeout(config.getTestTimeout());
-  this.slow(config.getTestTimeout() / 2);
-}
-
 // Run the tests only for supported node versions
 if (esmSupportedVersion(process.versions.node)) {
   describe('Azure Container Service esm test', function () {
+    this.timeout(config.getTestTimeout());
+    this.slow(config.getTestTimeout() / 2);
+
     describe('when the back end is up', function () {
-      prelude.bind(this)({});
       let control;
 
       before(async () => {
@@ -43,6 +40,11 @@ if (esmSupportedVersion(process.versions.node)) {
         });
 
         await control.start();
+      });
+
+      beforeEach(async () => {
+        await control.reset();
+        await control.resetBackendSpans();
       });
 
       after(async () => {
@@ -62,17 +64,23 @@ if (esmSupportedVersion(process.versions.node)) {
     });
 
     describe('when the back end is down', function () {
-      prelude.bind(this)({});
       let control;
 
       before(async () => {
         control = new Control({
           containerAppPath,
           instanaAgentKey,
-          startBackend: false
+          startBackend: false,
+          // The initialization fails.
+          azureContainerUninitialized: true
         });
 
         await control.start();
+      });
+
+      beforeEach(async () => {
+        await control.reset();
+        await control.resetBackendSpans();
       });
 
       after(async () => {
@@ -92,17 +100,22 @@ if (esmSupportedVersion(process.versions.node)) {
     });
 
     describe('when required environment variables are not present', function () {
-      prelude.bind(this)();
       let control;
 
       before(async () => {
         control = new Control({
           containerAppPath,
           instanaAgentKey,
-          startBackend: false
+          startBackend: false,
+          azureContainerUninitialized: true
         });
 
         await control.start();
+      });
+
+      beforeEach(async () => {
+        await control.reset();
+        await control.resetBackendSpans();
       });
 
       after(async () => {

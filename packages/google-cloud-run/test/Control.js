@@ -10,7 +10,7 @@ const path = require('path');
 const fetch = require('node-fetch');
 
 const portfinder = require('@instana/collector/test/test_util/portfinder');
-const config = require('../../serverless/test/config');
+const config = require('@instana/core/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 
 const PATH_TO_INSTANA_GOOGLE_CLOUD_RUN_PACKAGE = path.join(__dirname, '..');
@@ -18,6 +18,7 @@ const PATH_TO_INSTANA_GOOGLE_CLOUD_RUN_PACKAGE = path.join(__dirname, '..');
 function Control(opts) {
   AbstractServerlessControl.call(this, opts);
   this.port = opts.port || portfinder();
+  this.googleCloudRunUninitialized = opts.googleCloudRunUninitialized;
   this.baseUrl = `http://127.0.0.1:${this.port}`;
   this.backendPort = this.opts.backendPort || portfinder();
   this.backendBaseUrl = this.opts.backendBaseUrl || `https://localhost:${this.backendPort}/serverless`;
@@ -106,10 +107,19 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
 };
 
 Control.prototype.hasMonitoredProcessStarted = function hasMonitoredProcessStarted() {
-  return (
-    this.messagesFromCloudRunContainer.indexOf('cloud-run-service: listening') >= 0 &&
-    !this.googleCloudRunAppHasTerminated
-  );
+  if (this.googleCloudRunUninitialized) {
+    return (
+      this.messagesFromCloudRunContainer.indexOf('cloud-run-service: listening') >= 0 &&
+      this.messagesFromCloudRunContainer.indexOf('instana.google-cloud-run.initialized') === -1 &&
+      !this.googleCloudRunAppHasTerminated
+    );
+  } else {
+    return (
+      this.messagesFromCloudRunContainer.indexOf('cloud-run-service: listening') >= 0 &&
+      this.messagesFromCloudRunContainer.indexOf('instana.google-cloud-run.initialized') >= 0 &&
+      !this.googleCloudRunAppHasTerminated
+    );
+  }
 };
 
 Control.prototype.hasMonitoredProcessTerminated = function hasMonitoredProcessTerminated() {

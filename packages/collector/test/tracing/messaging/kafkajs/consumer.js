@@ -20,7 +20,7 @@ const runAsStandAlone = !!process.env.RUN_AS_STAND_ALONE;
 
 const kafka = new Kafka({
   clientId: 'test-producer',
-  brokers: ['127.0.0.1:9092'],
+  brokers: [process.env.KAFKA],
   retry: {
     initialRetryTime: 500,
     retries: 5

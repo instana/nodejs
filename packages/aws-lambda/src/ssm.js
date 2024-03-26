@@ -109,7 +109,7 @@ module.exports.waitAndGetInstanaKey = callback => {
   }
 
   const endInMs = Date.now();
-  const awsTimeoutInMs = 1000;
+  const awsTimeoutInMs = process.env.INSTANA_AWS_SSM_TIMEOUT_IN_MS ? Number(process.env.INSTANA_AWS_SSM_TIMEOUT) : 1000;
 
   // CASE: the time between ssm lib initialisation and waitAndGetInstanaKey call
   //       (which is the end of the customers lambda handler) is already too big to wait for the AWS response

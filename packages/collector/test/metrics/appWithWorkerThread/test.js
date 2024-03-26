@@ -36,6 +36,10 @@ mochaSuiteFn('worker threads', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await controls.stop();
     });
@@ -64,6 +68,10 @@ mochaSuiteFn('worker threads', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     after(async () => {
       await controls.stop();
     });
@@ -90,6 +98,10 @@ mochaSuiteFn('worker threads', function () {
       });
 
       await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {
