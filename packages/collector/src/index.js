@@ -72,7 +72,7 @@ function init(_config) {
 
     if (collectorIndexCacheKey) {
       // eslint-disable-next-line no-unused-expressions
-      process.send && process.send('collector.initialized');
+      process.send && process.send('instana.collector.initialized');
 
       return require.cache[collectorIndexCacheKey].exports;
     } else {

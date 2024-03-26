@@ -110,13 +110,13 @@ Control.prototype.hasMonitoredProcessStarted = function hasMonitoredProcessStart
   if (this.googleCloudRunUninitialized) {
     return (
       this.messagesFromCloudRunContainer.indexOf('cloud-run-service: listening') >= 0 &&
-      this.messagesFromCloudRunContainer.indexOf('google-cloud-run.initialized') === -1 &&
+      this.messagesFromCloudRunContainer.indexOf('instana.google-cloud-run.initialized') === -1 &&
       !this.googleCloudRunAppHasTerminated
     );
   } else {
     return (
       this.messagesFromCloudRunContainer.indexOf('cloud-run-service: listening') >= 0 &&
-      this.messagesFromCloudRunContainer.indexOf('google-cloud-run.initialized') >= 0 &&
+      this.messagesFromCloudRunContainer.indexOf('instana.google-cloud-run.initialized') >= 0 &&
       !this.googleCloudRunAppHasTerminated
     );
   }

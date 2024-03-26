@@ -79,13 +79,13 @@ class Control extends AbstractServerlessControl {
     if (this.azureContainerUninitialized) {
       return (
         this.messagesFromAzureContainer.indexOf('azure-app-service: listening') >= 0 &&
-        this.messagesFromAzureContainer.indexOf('azure-app-service.initialized') === -1 &&
+        this.messagesFromAzureContainer.indexOf('instana.azure-app-service.initialized') === -1 &&
         !this.azureContainerAppHasTerminated
       );
     } else {
       return (
         this.messagesFromAzureContainer.indexOf('azure-app-service: listening') >= 0 &&
-        this.messagesFromAzureContainer.indexOf('azure-app-service.initialized') >= 0 &&
+        this.messagesFromAzureContainer.indexOf('instana.azure-app-service.initialized') >= 0 &&
         !this.azureContainerAppHasTerminated
       );
     }

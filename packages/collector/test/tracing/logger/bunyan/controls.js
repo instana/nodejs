@@ -55,7 +55,7 @@ exports.registerTestHooks = (opts = {}) => {
     });
 
     appProcess.on('message', msg => {
-      if (msg === 'collector.initialized') {
+      if (msg === 'instana.collector.initialized') {
         appProcess.collectorInitialized = true;
       }
     });

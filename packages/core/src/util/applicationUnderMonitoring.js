@@ -205,7 +205,6 @@ function searchForPackageJsonInDirectoryTreeUpwards(dir, cb) {
 
   fs.stat(pathToCheck, (err, stats) => {
     if (err) {
-      // eslint-disable-next-line no-console
       if (err.code === 'ENOENT') {
         return searchInParentDir(dir, searchForPackageJsonInDirectoryTreeUpwards, cb);
       } else {

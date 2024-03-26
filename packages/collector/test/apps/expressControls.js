@@ -49,7 +49,7 @@ exports.start = function start(opts = {}, retryTime = null) {
   });
 
   expressApp.on('message', message => {
-    if (message === 'collector.initialized') {
+    if (message === 'instana.collector.initialized') {
       expressApp.collectorInitialized = true;
     }
   });

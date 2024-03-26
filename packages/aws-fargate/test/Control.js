@@ -114,13 +114,13 @@ Control.prototype.hasMonitoredProcessStarted = function hasMonitoredProcessStart
   if (this.fargateUninitialized) {
     return (
       this.messagesFromFargateTask.indexOf('fargate-task: listening') >= 0 &&
-      this.messagesFromFargateTask.indexOf('aws-fargate.initialized') === -1 &&
+      this.messagesFromFargateTask.indexOf('instana.aws-fargate.initialized') === -1 &&
       !this.fargateContainerAppHasTerminated
     );
   } else {
     return (
       this.messagesFromFargateTask.indexOf('fargate-task: listening') >= 0 &&
-      this.messagesFromFargateTask.indexOf('aws-fargate.initialized') >= 0 &&
+      this.messagesFromFargateTask.indexOf('instana.aws-fargate.initialized') >= 0 &&
       !this.fargateContainerAppHasTerminated
     );
   }

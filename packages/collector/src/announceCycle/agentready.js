@@ -132,7 +132,7 @@ function enter(_ctx) {
   logger.info('The Instana Node.js collector is now fully initialized and connected to the Instana host agent.');
 
   // eslint-disable-next-line no-unused-expressions
-  process.send && process.send('collector.initialized');
+  process.send && process.send('instana.collector.initialized');
 }
 
 function leave() {

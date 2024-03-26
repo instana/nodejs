@@ -157,7 +157,7 @@ class ProcessControls {
     this.process = this.args ? fork(this.appPath, this.args, forkConfig) : fork(this.appPath, forkConfig);
 
     this.process.on('message', message => {
-      if (message === 'collector.initialized') {
+      if (message === 'instana.collector.initialized') {
         this.process.collectorInitialized = true;
       } else {
         that.receivedIpcMessages.push(message);

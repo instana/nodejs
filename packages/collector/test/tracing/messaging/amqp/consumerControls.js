@@ -29,7 +29,7 @@ exports.registerTestHooks = opts => {
     });
 
     app.on('message', message => {
-      if (message === 'collector.initialized') {
+      if (message === 'instana.collector.initialized') {
         app.collectorInitialized = true;
       } else if (message === 'amqp.initialized') {
         app.amqpInitialized = true;

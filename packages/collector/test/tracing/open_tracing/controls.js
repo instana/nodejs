@@ -33,7 +33,7 @@ exports.registerTestHooks = opts => {
     });
 
     expressOpentracingApp.on('message', message => {
-      if (message === 'collector.initialized') {
+      if (message === 'instana.collector.initialized') {
         expressOpentracingApp.collectorInitialized = true;
       }
     });
