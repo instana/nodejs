@@ -322,10 +322,10 @@ REGIONS=<region> SKIP_DOCKER_IMAGE=true BUILD_LAYER_WITH=local LAYER_NAME=experi
 
 Use the following command to enable experimental ESM support:
 
-Node.js >= v18.19
+- For Node.js versions greater than or equal to 18.19:
 
-`node --import ../esm-loader.mjs  entry-point`
+    node --import ../register.mjs  entry-point
 
-For Node.js versions ≥14.0 and <18.19
+- For Node.js versions less than 18.19:
 
-`node --experimental-loader ../esm-loader.mjs  entry-point`
+    node --experimental-loader ../esm-loader.mjs  entry-point
