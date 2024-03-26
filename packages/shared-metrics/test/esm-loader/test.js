@@ -14,7 +14,7 @@ const isLatestEsmSupportedVersion = require('@instana/core').tracing.isLatestEsm
 
 const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
 const loaderPath = isLatestEsmSupportedVersion(process.versions.node)
-  ? ['--import', '../../../../collector/esm-loader.mjs']
+  ? ['--import', '../../../../collector/register.mjs']
   : ['--experimental-loader=../../../../collector/esm-loader.mjs'];
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
@@ -122,7 +122,7 @@ mochaSuiteFn('ESM loader', function () {
     this.timeout(config.getTestTimeout());
     let controls;
     const nodeOption = isLatestEsmSupportedVersion(process.versions.node)
-      ? '--import ../../../../collector/esm-loader.mjs'
+      ? '--import ../../../../collector/register.mjs'
       : '--experimental-loader=../../../../collector/esm-loader.mjs';
     before(async () => {
       controls = new ProcessControls({

@@ -167,7 +167,7 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
         // @ts-ignore
         (process._preload_modules && process._preload_modules.length > 0) ||
         (process.env.NODE_OPTIONS &&
-          (process.env.NODE_OPTIONS.indexOf('--experimental-loader') !== -1 ||
+          (process.env.NODE_OPTIONS.indexOf('--register') !== -1 ||
             process.env.NODE_OPTIONS.indexOf('--import') !== -1)) ||
         (process.execArgv &&
           process.execArgv.length > 0 &&
@@ -175,7 +175,7 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
             process.execArgv[0].indexOf('esm-loader.mjs')) !== -1 ||
             (process.execArgv[0].indexOf('--experimental-loader') !== -1 &&
               process.execArgv[1].indexOf('esm-loader.mjs') !== -1))) ||
-        (process.execArgv[0].indexOf('--import') !== -1 && process.execArgv[0].indexOf('esm-loader.mjs') !== -1)
+        (process.execArgv[0].indexOf('--import') !== -1 && process.execArgv[0].indexOf('register.mjs') !== -1)
       ) {
         // @ts-ignore
         mainModule = {
