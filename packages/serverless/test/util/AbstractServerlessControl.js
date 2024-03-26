@@ -276,7 +276,7 @@ AbstractServerlessControl.prototype.killChildProcess = function killChildProcess
     if (childProcess) {
       childProcess.once('exit', () => {
         // eslint-disable-next-line no-console
-        console.log('[AbstractServerlessControl] killed', childProcess.pid);
+        console.log('[AbstractServerlessControl] killed pid', childProcess.pid);
         resolve();
       });
 
