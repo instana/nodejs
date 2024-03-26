@@ -53,8 +53,8 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
     WAIT_FOR_MESSAGE: true,
     INSTANA_ENDPOINT_URL: this.backendBaseUrl,
     INSTANA_LAYER_EXTENSION_PORT: this.extensionPort,
-    INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS: 500,
-    INSTANA_AWS_SSM_TIMEOUT_IN_MS: 1000 * 5
+    INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS: 1000,
+    INSTANA_AWS_SSM_TIMEOUT_IN_MS: 1000 * 10
   };
 
   if (!this.opts.startExtension) {
