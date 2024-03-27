@@ -1,17 +1,9 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: test-ci-collector-tracing-protocols
+  name: test-ci-collector-tracing-logger-coverage
 spec:
   sidecars:
-    - name: rabbitmq
-      image: rabbitmq:3.7.7
-      readinessProbe:
-          tcpSocket:
-            port: 5672 
-          initialDelaySeconds: 7
-          periodSeconds: 2
-          timeoutSeconds: 60
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -26,8 +18,10 @@ spec:
       value: $(params.revision)
     - name: continuous-delivery-context-secret
       value: $(params.continuous-delivery-context-secret)
-    - name: esm
-      value: $(params.esm)
+    - name: ibmcloud-apikey-secret-key
+      default: apikey
+    - name: target-branch
+      value: $(params.target-branch)      
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -86,9 +80,9 @@ spec:
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
         echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
-        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/protocols"; then
+        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/loggers"; then
           echo "Skipping group."
-          touch "test:ci:collector:tracing:protocols.succeeded"
+          touch "test:ci:collector:tracing:logger.succeeded"
           exit 0
         fi
         export CI=true
@@ -98,20 +92,20 @@ spec:
         export AZURE_SQL_DATABASE="azure-nodejs-test"
         retry=1
         while [ $retry -le 3 ]; do
-          npm run coverage-ci --npm_command="test:ci:collector:tracing:protocols"
+          npm run coverage-ci --npm_command="test:ci:collector:tracing:logger"
           if [ $? -eq 0 ]; then
-            touch "test:ci:collector:tracing:protocols.succeeded"
+            touch "test:ci:collector:tracing:logger.succeeded"
             apt-get update -y
             apt-get install zstd -y
-            tar -cf - coverage/tmp | zstd -o test:ci:collector:tracing:protocols.tar.zst   
+            tar -cf - coverage/tmp | zstd -o test:ci:collector:tracing:logger.tar.zst   
             curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
             ibmcloud plugin install cloud-object-storage -f -r 'IBM Cloud'
             ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey $API_KEY
-            ibmcloud cos upload --bucket coverage --key $(params.target-branch)-$BASE_REVISION --file ./test:ci:collector:tracing:protocols.tar.zst
+            ibmcloud cos upload --bucket coverage --key $(params.target-branch)-$BASE_REVISION --file ./test:ci:collector:tracing:logger.tar.zst
             break
           else
             if [ $retry -eq 3 ]; then
-              touch "test:ci:collector:tracing:protocols.failed"
+              touch "test:ci:collector:tracing:logger.failed"
               exit 1
             fi
             retry=$((retry + 1))

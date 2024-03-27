@@ -32,8 +32,6 @@ spec:
       value: $(params.target-branch)
     - name: type
       value: $(params.type)
-    - name: esm
-      value: $(params.esm)
   workspaces:
     - name: artifacts
   tasks:
@@ -154,11 +152,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-autoprofile-task
+    - name: test-ci-autoprofile-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-autoprofile
+        name: test-ci-autoprofile-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -170,16 +168,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-aws-fargate-task
+    - name: test-ci-aws-fargate-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-aws-fargate
+        name: test-ci-aws-fargate-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -191,16 +191,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-aws-lambda-task
+    - name: test-ci-aws-lambda-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-aws-lambda
+        name: test-ci-aws-lambda-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -212,16 +214,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-azure-container-services-task
+    - name: test-ci-azure-container-services-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-azure-container-services
+        name: test-ci-azure-container-services-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -233,16 +237,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-general-task
+    - name: test-ci-collector-general-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-general
+        name: test-ci-collector-general-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -254,16 +260,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-cloud-aws-v2-task
+    - name: test-ci-collector-tracing-cloud-aws-v2-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-cloud-aws-v2
+        name: test-ci-collector-tracing-cloud-aws-v2-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -275,16 +283,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-cloud-aws-v3-task
+    - name: test-ci-collector-tracing-cloud-aws-v3-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-cloud-aws-v3
+        name: test-ci-collector-tracing-cloud-aws-v3-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -296,16 +306,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-cloud-gcp-task
+    - name: test-ci-collector-tracing-cloud-gcp-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-cloud-gcp
+        name: test-ci-collector-tracing-cloud-gcp-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -317,16 +329,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-database-task
+    - name: test-ci-collector-tracing-database-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-database
+        name: test-ci-collector-tracing-database-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -338,16 +352,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-frameworks-task
+    - name: test-ci-collector-tracing-frameworks-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-frameworks
+        name: test-ci-collector-tracing-frameworks-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -359,16 +375,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-general-task
+    - name: test-ci-collector-tracing-general-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-general
+        name: test-ci-collector-tracing-general-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -380,16 +398,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-logger-task
+    - name: test-ci-collector-tracing-logger-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-logger
+        name: test-ci-collector-tracing-logger-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -401,16 +421,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-messaging-task
+    - name: test-ci-collector-tracing-messaging-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-messaging
+        name: test-ci-collector-tracing-messaging-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -422,16 +444,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-misc-task
+    - name: test-ci-collector-tracing-misc-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-misc
+        name: test-ci-collector-tracing-misc-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -443,16 +467,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-protocols-task
+    - name: test-ci-collector-tracing-protocols-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-protocols
+        name: test-ci-collector-tracing-protocols-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -464,16 +490,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-core-task
+    - name: test-ci-core-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-core
+        name: test-ci-core-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -485,16 +513,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-google-cloud-run-task
+    - name: test-ci-google-cloud-run-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-google-cloud-run
+        name: test-ci-google-cloud-run-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -506,16 +536,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-metrics-util-task
+    - name: test-ci-metrics-util-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-metrics-util
+        name: test-ci-metrics-util-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -527,16 +559,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-opentelemetry-exporter-task
+    - name: test-ci-opentelemetry-exporter-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-opentelemetry-exporter
+        name: test-ci-opentelemetry-exporter-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -548,16 +582,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-opentelemetry-sampler-task
+    - name: test-ci-opentelemetry-sampler-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-opentelemetry-sampler
+        name: test-ci-opentelemetry-sampler-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -569,16 +605,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-serverless-task
+    - name: test-ci-serverless-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-serverless
+        name: test-ci-serverless-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -590,16 +628,18 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-shared-metrics-task
+    - name: test-ci-shared-metrics-coverage-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-shared-metrics
+        name: test-ci-shared-metrics-coverage
       params:
         - name: node-version
           value: $(params.node-version)
@@ -611,8 +651,10 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts

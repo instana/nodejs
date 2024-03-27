@@ -1,9 +1,27 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: test-ci-collector-tracing-cloud-aws-v2
+  name: test-ci-collector-tracing-general-coverage
 spec:
   sidecars:
+    - name: postgres
+      image: postgres
+      env:
+          - name: "POSTGRES_USER"
+            value: "node"
+          - name: "POSTGRES_PASSWORD"
+            value: "nodepw"
+          - name: "POSTGRES_DB"
+            value: "nodedb"
+      readinessProbe:
+          exec:
+            command:
+            - "sh"
+            - "-c"
+            - "pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb"
+          initialDelaySeconds: 3
+          periodSeconds: 2
+          timeoutSeconds: 10
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -18,8 +36,10 @@ spec:
       value: $(params.revision)
     - name: continuous-delivery-context-secret
       value: $(params.continuous-delivery-context-secret)
-    - name: esm
-      value: $(params.esm)
+    - name: ibmcloud-apikey-secret-key
+      default: apikey
+    - name: target-branch
+      value: $(params.target-branch)      
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -78,9 +98,9 @@ spec:
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
         echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
-        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"; then
+        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && true; then
           echo "Skipping group."
-          touch "test:ci:collector:tracing:cloud:aws:v2.succeeded"
+          touch "test:ci:collector:tracing:general.succeeded"
           exit 0
         fi
         export CI=true
@@ -90,20 +110,20 @@ spec:
         export AZURE_SQL_DATABASE="azure-nodejs-test"
         retry=1
         while [ $retry -le 3 ]; do
-          npm run coverage-ci --npm_command="test:ci:collector:tracing:cloud:aws:v2"
+          npm run coverage-ci --npm_command="test:ci:collector:tracing:general"
           if [ $? -eq 0 ]; then
-            touch "test:ci:collector:tracing:cloud:aws:v2.succeeded"
+            touch "test:ci:collector:tracing:general.succeeded"
             apt-get update -y
             apt-get install zstd -y
-            tar -cf - coverage/tmp | zstd -o test:ci:collector:tracing:cloud:aws:v2.tar.zst   
+            tar -cf - coverage/tmp | zstd -o test:ci:collector:tracing:general.tar.zst   
             curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
             ibmcloud plugin install cloud-object-storage -f -r 'IBM Cloud'
             ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey $API_KEY
-            ibmcloud cos upload --bucket coverage --key $(params.target-branch)-$BASE_REVISION --file ./test:ci:collector:tracing:cloud:aws:v2.tar.zst
+            ibmcloud cos upload --bucket coverage --key $(params.target-branch)-$BASE_REVISION --file ./test:ci:collector:tracing:general.tar.zst
             break
           else
             if [ $retry -eq 3 ]; then
-              touch "test:ci:collector:tracing:cloud:aws:v2.failed"
+              touch "test:ci:collector:tracing:general.failed"
               exit 1
             fi
             retry=$((retry + 1))

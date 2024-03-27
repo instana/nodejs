@@ -1,82 +1,9 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: test-ci-collector-tracing-database
+  name: test-ci-google-cloud-run-coverage
 spec:
   sidecars:
-    - name: memcached
-      image: memcached:1.6.9
-    - name: mongodb
-      image: mongo:4.1.13
-    - name: elasticsearch
-      image: docker.elastic.co/elasticsearch/elasticsearch:8.6.1
-      env:
-          - name: "discovery.type"
-            value: "single-node"
-          - name: "ES_JAVA_OPTS"
-            value: "-Xms500m -Xmx500m"
-          - name: "xpack.security.enabled"
-            value: "false"
-    - name: redis
-      image: redis:5.0.14
-    - name: couchbase
-      image: couchbase/server:7.1.4
-      readinessProbe:
-          httpGet:
-            path: / 
-            port: 8091 
-          initialDelaySeconds: 15
-          periodSeconds: 2
-          timeoutSeconds: 60
-    - name: mysql
-      image: mysql:8.0.1
-      env:
-          - name: "MYSQL_ROOT_PASSWORD"
-            value: "nodepw"
-          - name: "MYSQL_DATABASE"
-            value: "nodedb"
-          - name: "MYSQL_USER"
-            value: "node"
-          - name: "MYSQL_PASSWORD"
-            value: "nodepw"
-          - name: "MYSQL_ROOT_HOST"
-            value: "0.0.0.0"
-      readinessProbe:
-          exec:
-            command:
-            - "sh"
-            - "-c"
-            - "mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1'"
-          initialDelaySeconds: 3
-          periodSeconds: 2
-          timeoutSeconds: 10
-    - name: postgres
-      image: postgres
-      env:
-          - name: "POSTGRES_USER"
-            value: "node"
-          - name: "POSTGRES_PASSWORD"
-            value: "nodepw"
-          - name: "POSTGRES_DB"
-            value: "nodedb"
-      readinessProbe:
-          exec:
-            command:
-            - "sh"
-            - "-c"
-            - "pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb"
-          initialDelaySeconds: 3
-          periodSeconds: 2
-          timeoutSeconds: 10
-    - name: mssql
-      image: mcr.microsoft.com/mssql/server:2022-RC1-ubuntu-20.04
-      env:
-          - name: "ACCEPT_EULA"
-            value: "Y"
-          - name: "SA_PASSWORD"
-            value: "stanCanHazMsSQL1"
-          - name: "MSSQL_PID"
-            value: "Express"
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -91,8 +18,10 @@ spec:
       value: $(params.revision)
     - name: continuous-delivery-context-secret
       value: $(params.continuous-delivery-context-secret)
-    - name: esm
-      value: $(params.esm)
+    - name: ibmcloud-apikey-secret-key
+      default: apikey
+    - name: target-branch
+      value: $(params.target-branch)      
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -151,9 +80,9 @@ spec:
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
         echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
-        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"; then
+        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/google-cloud-run"; then
           echo "Skipping group."
-          touch "test:ci:collector:tracing:database.succeeded"
+          touch "test:ci:google-cloud-run.succeeded"
           exit 0
         fi
         export CI=true
@@ -163,20 +92,20 @@ spec:
         export AZURE_SQL_DATABASE="azure-nodejs-test"
         retry=1
         while [ $retry -le 3 ]; do
-          npm run coverage-ci --npm_command="test:ci:collector:tracing:database"
+          npm run coverage-ci --npm_command="test:ci:google-cloud-run"
           if [ $? -eq 0 ]; then
-            touch "test:ci:collector:tracing:database.succeeded"
+            touch "test:ci:google-cloud-run.succeeded"
             apt-get update -y
             apt-get install zstd -y
-            tar -cf - coverage/tmp | zstd -o test:ci:collector:tracing:database.tar.zst   
+            tar -cf - coverage/tmp | zstd -o test:ci:google-cloud-run.tar.zst   
             curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
             ibmcloud plugin install cloud-object-storage -f -r 'IBM Cloud'
             ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey $API_KEY
-            ibmcloud cos upload --bucket coverage --key $(params.target-branch)-$BASE_REVISION --file ./test:ci:collector:tracing:database.tar.zst
+            ibmcloud cos upload --bucket coverage --key $(params.target-branch)-$BASE_REVISION --file ./test:ci:google-cloud-run.tar.zst
             break
           else
             if [ $retry -eq 3 ]; then
-              touch "test:ci:collector:tracing:database.failed"
+              touch "test:ci:google-cloud-run.failed"
               exit 1
             fi
             retry=$((retry + 1))
