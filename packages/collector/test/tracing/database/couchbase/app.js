@@ -142,6 +142,9 @@ couchbase.connect(
         await bucketMng.flushBucket('projects');
         await bucketMng.flushBucket('companies');
       } catch (bucketErr) {
+        // eslint-disable-next-line no-console
+        console.log(`Flush buckets failed: ${bucketErr.message}`);
+
         if (retries > 3) {
           return;
         }
