@@ -136,9 +136,24 @@ couchbase.connect(
     cluster = _cluster;
     bucketMng = cluster.buckets();
 
+    let retries = 0;
+    const flushBuckets = async function () {
+      try {
+        await bucketMng.flushBucket('projects');
+        await bucketMng.flushBucket('companies');
+      } catch (bucketErr) {
+        if (retries > 3) {
+          return;
+        }
+        // "Flush failed with unexpected error" protection
+        await delay(1000);
+        retries += 1;
+        return flushBuckets();
+      }
+    };
+
     // clear all data
-    await bucketMng.flushBucket('projects');
-    await bucketMng.flushBucket('companies');
+    await flushBuckets();
 
     // cluster.bucket calls `conn.openBucket`
     bucket1 = cluster.bucket('projects');
