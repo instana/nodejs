@@ -53,7 +53,6 @@ let config;
  * @param {import('./util/normalizeConfig').CollectorConfig} [_config]
  */
 function init(_config) {
-  console.log('collector init');
   // @ts-ignore: Property '__INSTANA_INITIALIZED' does not exist on type global
   if (global.__INSTANA_INITIALIZED) {
     // Prevent initializing @instana/collector multiple times for the same process: @instana/collector has already been
