@@ -92,12 +92,12 @@ spec:
         export AZURE_SQL_DATABASE="azure-nodejs-test"
         retry=1
         while [ $retry -le 3 ]; do
-          npm run coverage-ci --npm_command="test:ci:collector:tracing:logger"
+          npm run coverage-ci --npm_command="test:ci:collector:tracing:logger" --report_dir="test-ci-collector-tracing-logger-coverage"
           if [ $? -eq 0 ]; then
             touch "test:ci:collector:tracing:logger.succeeded"
             apt-get update -y
             apt-get install zstd -y
-            tar -cf - coverage/tmp | zstd -o test-ci-collector-tracing-logger-coverage.tar.zst   
+            tar -cf - coverage/test-ci-collector-tracing-logger-coverage/tmp | zstd -o test-ci-collector-tracing-logger-coverage.tar.zst   
             curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
             ibmcloud plugin install cloud-object-storage -f -r 'IBM Cloud'
             ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey $API_KEY

@@ -92,12 +92,12 @@ spec:
         export AZURE_SQL_DATABASE="azure-nodejs-test"
         retry=1
         while [ $retry -le 3 ]; do
-          npm run coverage-ci --npm_command="test:ci:serverless"
+          npm run coverage-ci --npm_command="test:ci:serverless" --report_dir="test-ci-serverless-coverage"
           if [ $? -eq 0 ]; then
             touch "test:ci:serverless.succeeded"
             apt-get update -y
             apt-get install zstd -y
-            tar -cf - coverage/tmp | zstd -o test-ci-serverless-coverage.tar.zst   
+            tar -cf - coverage/test-ci-serverless-coverage/tmp | zstd -o test-ci-serverless-coverage.tar.zst   
             curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
             ibmcloud plugin install cloud-object-storage -f -r 'IBM Cloud'
             ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey $API_KEY
