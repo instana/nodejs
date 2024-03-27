@@ -168,10 +168,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -191,10 +187,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -214,10 +206,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -237,10 +225,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -260,10 +244,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -283,10 +263,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -306,10 +282,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -329,10 +301,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -352,10 +320,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -375,10 +339,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -398,10 +358,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -421,10 +377,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -444,10 +396,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -467,10 +415,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -490,10 +434,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -513,10 +453,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -536,10 +472,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -559,10 +491,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -582,10 +510,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -605,10 +529,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -628,10 +548,6 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
@@ -651,34 +567,20 @@ spec:
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
 
-    - name: publish-coverage
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: execute-tools
-      params:
-        - name: node-version
-          value: $(params.node-version)   
-        - name: npm-version
-          value: $(params.npm-version)   
-      workspaces:
-        - name: output
-          workspace: artifacts
   finally: 
-    - name: test-results
+    - name: test-results-coverage
       taskRef:
-        name: tasks-results
+        name: tasks-results-coverage
       workspaces:
         - name: output
           workspace: artifacts
+      params:
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
     - name: set-tests-running-final
       taskRef:
         name: git-set-commit-status

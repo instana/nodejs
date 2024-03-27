@@ -18,10 +18,6 @@ spec:
       value: $(params.revision)
     - name: continuous-delivery-context-secret
       value: $(params.continuous-delivery-context-secret)
-    - name: ibmcloud-apikey-secret-key
-      default: apikey
-    - name: target-branch
-      value: $(params.target-branch)      
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -53,12 +49,6 @@ spec:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
               key: "AZURE_SQL_PWD"
-        - name: API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: $(params.continuous-delivery-context-secret)
-              key: $(params.ibmcloud-apikey-secret-key)
-              optional: true
       image: node:$(params.node-version)
       script: |
         #!/bin/bash
@@ -95,13 +85,6 @@ spec:
           npm run coverage-ci --npm_command="test:ci:autoprofile" --report_dir="test-ci-autoprofile-coverage"
           if [ $? -eq 0 ]; then
             touch "test:ci:autoprofile.succeeded"
-            apt-get update -y
-            apt-get install zstd -y
-            tar -cf - coverage/test-ci-autoprofile-coverage/tmp | zstd -o test-ci-autoprofile-coverage.tar.zst   
-            curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
-            ibmcloud plugin install cloud-object-storage -f -r 'IBM Cloud'
-            ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey $API_KEY
-            ibmcloud cos upload --bucket coverage --key $(params.target-branch)-$BASE_REVISION-test-ci-autoprofile-coverage --file ./test-ci-autoprofile-coverage.tar.zst
             break
           else
             if [ $retry -eq 3 ]; then
