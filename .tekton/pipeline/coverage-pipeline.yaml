@@ -579,6 +579,9 @@ spec:
         - name: output
           workspace: artifacts
       params:
+        - name: node-version
+          value: $(params.node-version)          
+      params:
         - name: continuous-delivery-context-secret
           value: "secure-properties"
     - name: set-tests-running-final

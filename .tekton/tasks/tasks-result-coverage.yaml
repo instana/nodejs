@@ -9,11 +9,13 @@ spec:
   params:
     - name: properties-file
       default: build.properties
+    - name: node-version
+      value: $(params.node-version)
     - name: continuous-delivery-context-secret
       value: $(params.continuous-delivery-context-secret)      
   steps:
     - name: print-all-results
-      image: ubuntu
+      image: node:$(params.node-version)
       env:
         - name: PROPERTIES_FILE
           value: $(params.properties-file)
