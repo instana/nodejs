@@ -97,11 +97,11 @@ spec:
             touch "test:ci:collector:tracing:cloud:aws:v2.succeeded"
             apt-get update -y
             apt-get install zstd -y
-            tar -cf - coverage/tmp | zstd -o test:ci:collector:tracing:cloud:aws:v2.tar.zst   
+            tar -cf - coverage/tmp | zstd -o test-ci-collector-tracing-cloud-aws-v2-coverage.tar.zst   
             curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
             ibmcloud plugin install cloud-object-storage -f -r 'IBM Cloud'
             ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey $API_KEY
-            ibmcloud cos upload --bucket coverage --key $(params.target-branch)-$BASE_REVISION --file ./test:ci:collector:tracing:cloud:aws:v2.tar.zst
+            ibmcloud cos upload --bucket coverage --key $(params.target-branch)-$BASE_REVISION-test-ci-collector-tracing-cloud-aws-v2-coverage --file ./test-ci-collector-tracing-cloud-aws-v2-coverage.tar.zst
             break
           else
             if [ $retry -eq 3 ]; then
