@@ -46,6 +46,8 @@ spec:
           echo "PIPELINE_RESULT=Succeeded" >> $ARTIFACTS_PATH/$PROPERTIES_FILE          
         fi
 
+        npm i -g npx
+        
         find ./coverage -name "*.json" -exec cp {} ./coverage/tmp \;
         npx c8 report --all --reporter=lcov
 
