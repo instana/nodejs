@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 let templateContent = fs.readFileSync('./templates/coverage-pipeline.yaml.template', 'utf-8');
-const taskTemplateContent = fs.readFileSync('./templates/pipeline-test-task.yaml.template', 'utf-8');
+const taskTemplateContent = fs.readFileSync('./templates/coverage-pipeline-test-task.yaml.template', 'utf-8');
 
 const files = fs.readdirSync('./tasks/test-groups-coverage');
 const names = files.map(f => f.replace('-task.yaml', ''));

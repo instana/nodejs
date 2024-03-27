@@ -18,8 +18,10 @@ spec:
       value: $(params.revision)
     - name: continuous-delivery-context-secret
       value: $(params.continuous-delivery-context-secret)
-    - name: esm
-      value: $(params.esm)
+    - name: ibmcloud-apikey-secret-key
+      default: apikey
+    - name: target-branch
+      value: $(params.target-branch)      
   workspaces:
     - name: output
       mountPath: /artifacts

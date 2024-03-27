@@ -110,7 +110,7 @@ const sidecars = require('./assets/sidecars.json');
 for (const [groupName, { sidecars: groupSidecars, condition }] of Object.entries(groups)) {
   const templateContent = fs.readFileSync('./templates/test-task-coverage.yaml.template', 'utf-8');
   const sidecarTemplate = fs.readFileSync('./templates/sidecar.yaml.template', 'utf-8');
-  const sanitizedGroupName = groupName.replace(/:/g, '-');
+  const sanitizedGroupName = `${groupName.replace(/:/g, '-')}-coverage`;
 
   const groupSidecarDetails = groupSidecars
     .map(sidecarName => {
