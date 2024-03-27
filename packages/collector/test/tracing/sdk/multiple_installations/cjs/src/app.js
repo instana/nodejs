@@ -4,6 +4,12 @@
 
 'use strict';
 
+// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
+process.on('SIGTERM', () => {
+  process.disconnect();
+  process.exit(0);
+});
+
 // NOTE: Works because this is already the same collector instance. Node.js will automatically
 //       return the cached instance.
 // const instana = require(process.env.INSTANA_COLLECTOR_PATH);

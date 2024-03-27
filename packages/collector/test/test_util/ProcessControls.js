@@ -154,7 +154,7 @@ class ProcessControls {
       forkConfig.execArgv = this.execArgv;
     }
 
-    this.process = this.args ? fork(this.appPath, this.args, forkConfig) : fork(this.appPath, forkConfig);
+    this.process = this.args ? fork(this.appPath, this.args || [], forkConfig) : fork(this.appPath, forkConfig);
 
     this.process.on('message', message => {
       if (message === 'instana.collector.initialized') {

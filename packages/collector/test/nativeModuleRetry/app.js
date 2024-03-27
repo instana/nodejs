@@ -5,6 +5,12 @@
 
 'use strict';
 
+// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
+process.on('SIGTERM', () => {
+  process.disconnect();
+  process.exit(0);
+});
+
 const instana = require('../..');
 // In prodction, @instana/shared-metrics is in a path like node_modules/@instana/shared-metrics and nativeModuleRetry
 // relies on that structure. In this test scenario, it is in packages/shared-metrics and we need to work around this.

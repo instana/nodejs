@@ -18,7 +18,7 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn.only('tracing/mysql', function () {
+mochaSuiteFn('tracing/mysql', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
