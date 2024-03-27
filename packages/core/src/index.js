@@ -66,7 +66,6 @@ function preInit() {
  * @param {import('../../collector/src/pidStore')} processIdentityProvider
  */
 function init(config, downstreamConnection, processIdentityProvider) {
-  console.log('core init');
   log.init(/** @type {log.LoggerConfig} */ (config));
   util.hasThePackageBeenInitializedTooLate();
   config = normalizeConfig(config);

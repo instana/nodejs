@@ -13,6 +13,7 @@ const constants = require('../../constants');
 const cls = require('../../cls');
 
 let isActive = false;
+// eslint-disable-next-line no-console
 console.log('NODE_V8_COVERAGE', process.env.NODE_V8_COVERAGE);
 exports.spanName = 'mysql';
 exports.batchable = true;
