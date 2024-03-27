@@ -27,4 +27,6 @@ spec:
         else
           echo "PIPELINE_RESULT=Succeeded"
           echo "PIPELINE_RESULT=Succeeded" >> $ARTIFACTS_PATH/$PROPERTIES_FILE
+
+          
         fi

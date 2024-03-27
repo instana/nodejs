@@ -14,10 +14,6 @@
           value: $(params.commit-id)
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: ibmcloud-apikey-secret-key
-          value: "apikey"
-        - name: target-branch
-          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts
