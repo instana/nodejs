@@ -43,11 +43,11 @@ spec:
           echo "PIPELINE_RESULT=Failed" >> $ARTIFACTS_PATH/$PROPERTIES_FILE
         else
           echo "PIPELINE_RESULT=Succeeded"
-          echo "PIPELINE_RESULT=Succeeded" >> $ARTIFACTS_PATH/$PROPERTIES_FILE
-
-          find ./coverage -name "*.json" -exec cp {} ./coverage/tmp \;
-          npx c8 report --all --reporter=lcov
-
-          npx eslint packages/ -f json > eslint-report.json || exit 0
-          npx sonarqube-scanner
+          echo "PIPELINE_RESULT=Succeeded" >> $ARTIFACTS_PATH/$PROPERTIES_FILE          
         fi
+
+        find ./coverage -name "*.json" -exec cp {} ./coverage/tmp \;
+        npx c8 report --all --reporter=lcov
+
+        npx eslint packages/ -f json > eslint-report.json || exit 0
+        npx sonarqube-scanner
