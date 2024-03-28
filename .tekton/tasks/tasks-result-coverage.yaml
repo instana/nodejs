@@ -48,11 +48,12 @@ spec:
           echo "PIPELINE_RESULT=Succeeded" >> $ARTIFACTS_PATH/$PROPERTIES_FILE          
         fi
         
-        echo $(ls -la)
+        mkdir coverage/tmp
 
-        echo $(ls -la coverage/)
+        find coverage -name "*.json" -exec cp {} coverage/tmp \;
 
-        find ./coverage -name "*.json" -exec cp {} ./coverage/tmp \;
+        echo $(ls -la coverage/tmp)
+
         npx c8 report --all --reporter=lcov
 
         npx eslint packages/ -f json > eslint-report.json || exit 0
