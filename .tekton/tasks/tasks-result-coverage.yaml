@@ -49,12 +49,13 @@ spec:
         fi
         
         mkdir coverage/tmp
-
         find coverage -name "*.json" -exec cp {} coverage/tmp \;
 
-        echo $(ls -la coverage/tmp)
-
+        echo "Run c8 report..."
         npx c8 report --all --reporter=lcov
 
         npx eslint packages/ -f json > eslint-report.json || exit 0
-        npx sonarqube-scanner
+
+        npm install -g sonarqube-scanner
+        echo "Run sonarqube..."
+        sonar-scanner
