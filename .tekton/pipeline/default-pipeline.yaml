@@ -34,6 +34,10 @@ spec:
       value: $(params.type)
     - name: esm
       value: $(params.esm)
+    - name: coverage
+      value: $(params.coverage)
+    - name: test-results-task
+      value: $(params.test-results-task)
   workspaces:
     - name: artifacts
   tasks:
@@ -172,6 +176,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -193,6 +199,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -214,6 +222,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -235,6 +245,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -256,6 +268,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -277,6 +291,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -298,6 +314,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -319,6 +337,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -340,6 +360,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -361,6 +383,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -382,6 +406,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -403,6 +429,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -424,6 +452,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -445,6 +475,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -466,6 +498,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -487,6 +521,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -508,6 +544,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -529,6 +567,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -550,6 +590,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -571,6 +613,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -592,6 +636,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -613,14 +659,16 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
 
   finally: 
-    - name: test-results
+    - name: $(params.test-results-task)
       taskRef:
-        name: tasks-results
+        name: $(params.test-results-task)
       workspaces:
         - name: output
           workspace: artifacts

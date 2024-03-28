@@ -26,7 +26,11 @@ spec:
     - name: pl-name
       value: "coverage"
     - name: pipeline-ref
-      value: "coverage-pipeline"
+      value: "default-pipeline"
+    - name: coverage
+      value: "true"
+    - name: test-results-task
+      value: "test-results-coverage"
       
 ---
 
