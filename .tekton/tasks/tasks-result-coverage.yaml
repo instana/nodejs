@@ -54,8 +54,11 @@ spec:
         echo "Run c8 report..."
         npx c8 report --all --reporter=lcov
 
-        npx eslint packages/ -f json > eslint-report.json || exit 0
+        echo "Run eslint report..."
+        npx eslint packages/ -f json > eslint-report.json || true
 
+        echo "Install sonarcube scanner..."
         npm install -g sonarqube-scanner
+        
         echo "Run sonarqube..."
         sonar-scanner
