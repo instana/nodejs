@@ -35,33 +35,7 @@ const connStr2 =
   process.env.DB2_CONN_STR_ALTERNATIVE || 'HOSTNAME=127.0.0.1;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
 
 /**
- * We are unable to start a DB2 container on circleci, because db2 needs privileged permissions.
- * Extractor type "machine" does not work, because we already using "docker" type, see
- * https://circleci.com/docs/2.0/executor-types/.
- * We've decided to use the IBM DB2 cloud service.
- *
- * Example connection string for circleci ENV:
- * DATABASE=bludb;HOSTNAME=*.databases.appdomain.cloud;UID=msv01866;PWD=xxx;PORT=31198;PROTOCOL=TCPIP;SECURITY=SSL
- *
- * database, hostname and port:
- *   - Go to https://cloud.ibm.com/resources. Click on your instance.
- *   - Click "Go to UI"
- *   - Click on the right panel on "administration".
- *
- * username and password:
- *   - Go to https://cloud.ibm.com/resources. Click on your instance.
- *   - Click on service credential
- *   - Create service credential
- *   - Copy User & Pws from the JSON
- *
- *
- * We are unable to create databases.
- * 1. locally with docker: https://github.com/ibmdb/node-ibm_db/issues/848
- * 2. remote on circleci: SQL1092N  The requested command or operation failed
- *                        because the user ID does not have the authority to perform
- *                        the requested command or operation.  User ID: "MSV01866".
- *
- * That's why we use random names for tables.
+ * See app.js for background information to db2.
  */
 
 let connection;

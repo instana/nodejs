@@ -1,5 +1,4 @@
-# This github action publishes a release on-demand. It can be triggered manually. Before actually publishing a release,
-# it will check whether there are successful CircleCI builds for the commit that is to be released.
+# This github action publishes a release on-demand.
 name: release-on-demand
 
 on:

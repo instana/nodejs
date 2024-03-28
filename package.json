@@ -40,7 +40,7 @@
     "tekton:lint": "npx @ibm/tekton-lint .tekton/**/**/*.yaml .tekton/**/*.yaml .tekton/*.yaml",
     "postinstall": "husky install && lerna run node_modules:exists",
     "precommit": "npm run doctoc",
-    "coverage": "rm -rf ./coverage && c8 --all --reporter=lcov lerna run test:coverage --scope=${npm_config_scope} && npm run open-coverage",
+    "coverage": "rm -rf ./coverage && c8 --all --reporter=lcov npm run ${npm_config_npm_command} && npm run open-coverage",
     "coverage-ci": "c8 --all --reporter=lcov --report-dir=./coverage/${npm_config_report_dir} npm run ${npm_config_npm_command}",
     "open-coverage": "open coverage/lcov-report/index.html",
     "prettier": "prettier --write 'misc/**/*.js' 'dockerfile-examples/**/*.js' 'bin/**/*.js' && lerna run prettier --stream",
