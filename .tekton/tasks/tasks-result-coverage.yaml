@@ -49,7 +49,7 @@ spec:
         fi
         
         mkdir coverage/tmp
-        find coverage -name "*.json" -exec cp {} "$(pwd)/coverage/tmp" \;
+        node bin/prepare-coverage.js
 
         echo "Run c8 report..."
         npx c8 report --all --reporter=lcov
