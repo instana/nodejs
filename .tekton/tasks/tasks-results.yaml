@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: tasks-results-coverage
+  name: tasks-results
 spec:
   workspaces:
     - name: output
@@ -13,6 +13,8 @@ spec:
       value: $(params.node-version)
     - name: continuous-delivery-context-secret
       value: $(params.continuous-delivery-context-secret)      
+    - name: coverage
+      value: $(params.coverage)      
   steps:
     - name: print-all-results
       image: node:$(params.node-version)
@@ -48,17 +50,19 @@ spec:
           echo "PIPELINE_RESULT=Succeeded" >> $ARTIFACTS_PATH/$PROPERTIES_FILE          
         fi
         
-        mkdir coverage/tmp
-        node bin/prepare-coverage.js
+        if [ "$(params.coverage)" == "true" ]; then
+          mkdir coverage/tmp
+          node bin/prepare-coverage.js
 
-        echo "Run c8 report..."
-        npx c8 report --all --reporter=lcov
+          echo "Run c8 report..."
+          npx c8 report --all --reporter=lcov
 
-        echo "Run eslint report..."
-        npx eslint packages/ -f json > eslint-report.json || true
+          echo "Run eslint report..."
+          npx eslint packages/ -f json > eslint-report.json || true
 
-        echo "Install sonarcube scanner..."
-        npm install -g sonarqube-scanner
+          echo "Install sonarcube scanner..."
+          npm install -g sonarqube-scanner
 
-        echo "Run sonarqube..."
-        sonar-scanner
+          echo "Run sonarqube..."
+          sonar-scanner
+        fi

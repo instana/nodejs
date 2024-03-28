@@ -44,7 +44,7 @@ spec:
       default: "false"
       value: $(params.coverage)
     - name: test-results-task
-      default: "test-results"
+      default: "tasks-result"
       value: $(params.test-results-task)      
   resourcetemplates:
     - apiVersion: v1
