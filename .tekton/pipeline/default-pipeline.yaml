@@ -36,8 +36,6 @@ spec:
       value: $(params.esm)
     - name: coverage
       value: $(params.coverage)
-    - name: test-results-task
-      value: $(params.test-results-task)
   workspaces:
     - name: artifacts
   tasks:
@@ -666,12 +664,19 @@ spec:
           workspace: artifacts
 
   finally: 
-    - name: $(params.test-results-task)
+    - name: tasks-results
       taskRef:
-        name: $(params.test-results-task)
+        name: tasks-results
       workspaces:
         - name: output
           workspace: artifacts
+      params:
+        - name: node-version
+          value: $(params.node-version)      
+        - name: coverage
+          value: $(params.coverage)    
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"          
     - name: set-tests-running-final
       taskRef:
         name: git-set-commit-status

@@ -30,7 +30,7 @@ spec:
     - name: coverage
       value: "true"
     - name: test-results-task
-      value: "test-results-coverage"
+      value: "tasks-result-coverage"
       
 ---
 
