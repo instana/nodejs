@@ -34,6 +34,8 @@ spec:
       value: $(params.type)
     - name: esm
       value: $(params.esm)
+    - name: coverage
+      value: $(params.coverage)
   workspaces:
     - name: artifacts
   tasks:
@@ -172,6 +174,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -193,6 +197,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -214,6 +220,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -235,6 +243,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -256,6 +266,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -277,6 +289,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -298,6 +312,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -319,6 +335,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -340,6 +358,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -361,6 +381,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -382,6 +404,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -403,6 +427,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -424,6 +450,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -445,6 +473,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -466,6 +496,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -487,6 +519,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -508,6 +542,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -529,6 +565,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -550,6 +588,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -571,6 +611,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -592,6 +634,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
@@ -613,17 +657,26 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts
 
   finally: 
-    - name: test-results
+    - name: tasks-results
       taskRef:
         name: tasks-results
       workspaces:
         - name: output
           workspace: artifacts
+      params:
+        - name: node-version
+          value: $(params.node-version)      
+        - name: coverage
+          value: $(params.coverage)    
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"          
     - name: set-tests-running-final
       taskRef:
         name: git-set-commit-status

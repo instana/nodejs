@@ -5,6 +5,12 @@
 
 'use strict';
 
+// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
+process.on('SIGTERM', () => {
+  process.disconnect();
+  process.exit(0);
+});
+
 import Hapi from '@hapi/hapi';
 import getAppPort from '../../../test_util/app-port.js';
 const port = getAppPort();

@@ -5,6 +5,12 @@
 
 'use strict';
 
+// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
+process.on('SIGTERM', () => {
+  process.disconnect();
+  process.exit(0);
+});
+
 /**
  * This application can either act as a service instrumented by Instana or as a service instrumented by different, W3C
  * trace context compliant vendor. In the latter case, it can either forward the trace or participate in it.

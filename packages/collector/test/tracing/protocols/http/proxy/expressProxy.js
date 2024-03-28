@@ -5,6 +5,12 @@
 
 'use strict';
 
+// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
+process.on('SIGTERM', () => {
+  process.disconnect();
+  process.exit(0);
+});
+
 // This is a tiny express app which responds to all methods and has configurable
 // latency and response codes. This can be used a baselines for many tests, e.g.
 // to test distributed tracing.

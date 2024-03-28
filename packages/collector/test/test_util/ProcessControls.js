@@ -154,7 +154,7 @@ class ProcessControls {
       forkConfig.execArgv = this.execArgv;
     }
 
-    this.process = this.args ? fork(this.appPath, this.args, forkConfig) : fork(this.appPath, forkConfig);
+    this.process = this.args ? fork(this.appPath, this.args || [], forkConfig) : fork(this.appPath, forkConfig);
 
     this.process.on('message', message => {
       if (message === 'instana.collector.initialized') {
@@ -338,52 +338,14 @@ class ProcessControls {
       return Promise.resolve();
     }
 
-    let killPromiseHasBeenResolved = false;
     return new Promise(resolve => {
       this.process.once('exit', () => {
         this.process.pid = null;
-        killPromiseHasBeenResolved = true;
         resolve();
       });
 
       // Sends SIGTERM to the child process to terminate it gracefully.
       this.process.kill();
-
-      // The code above is usually good enough to terminate the child process gracefully and return a resolved promise.
-      // However, Prisma and nyc (Istanbul's command line interface) both do fancy things with signal handling in
-      // Node.js. Thus, when running packages/collector/test/tracing/database/prisma/test.js _via nyc_ (as we do in the
-      // weekly test coverage job on CI), the Prisma app ignores the SIGTERM for some reason and just keeps running.
-      //
-      // This can be reproduced locally via
-      //
-      // cd packages/collector && WITH_STDOUT=true npm_package_name=@instana/collector ../../node_modules/.bin/nyc mocha --config=test/.mocharc.js --require test/hooks.js test/tracing/database/prisma/test.js
-      //
-      // This seems to be related to the hooks installed by Prisma in
-      // packages/collector/test/tracing/database/prisma/node_modules/@prisma/client/runtime/index.js, line 26888:
-      // (that is, the line `this.installHook("SIGTERM", true)` and friends). To resolve this conflict, we forcefully
-      // kill the child process by sending SIGKILL after one second, when SIGTERM does not have the desired effect of
-      // terminating the child process.
-      //
-      // All of this has been reported as an issue to the Prisma project: https://github.com/prisma/prisma/issues/18063.
-      setTimeout(() => {
-        if (!killPromiseHasBeenResolved) {
-          // eslint-disable-next-line no-console
-          console.log(
-            `[ProcessControls] ${this} - Child process ${this.process.pid} appears to not have terminated after one second after sending SIGTERM, sending SIGKILL now.`
-          );
-          this.process.kill('SIGKILL');
-
-          setTimeout(() => {
-            if (!killPromiseHasBeenResolved) {
-              // eslint-disable-next-line no-console
-              console.log(
-                `[ProcessControls] ${this} - The promise to kill process ${this.process.pid} has still not been resolved, even after sending SIGKILL. Resolving the promise now unconditionally to unblock the Mocha after hook.`
-              );
-              resolve();
-            }
-          }, 1000).unref();
-        }
-      }, 1000).unref();
     });
   }
 

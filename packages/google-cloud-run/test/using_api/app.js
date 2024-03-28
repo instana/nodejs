@@ -7,6 +7,12 @@
 
 'use strict';
 
+// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
+process.on('SIGTERM', () => {
+  process.disconnect();
+  process.exit(0);
+});
+
 /*
  * This app uses all methods the Instana API has to offer to verify they are available and work when tracing Google
  * Cloud Run services.

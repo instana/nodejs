@@ -4,6 +4,12 @@
 
 'use strict';
 
+// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
+process.on('SIGTERM', () => {
+  process.disconnect();
+  process.exit(0);
+});
+
 const nock = require('nock');
 const otelEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
 let otelSpans = [];

@@ -150,7 +150,7 @@ services:
     ports:
       - 58885:50000
     environment:
-      - PERSISTENT_HOME=true
+      - PERSISTENT_HOME=false
       - DBNAME=nodedb
       - BLU=false
       - HADR_ENABLED=false

@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: coverage-pipeline
+  name: default-pipeline
 spec:
   params:
     - name: repository
@@ -27,11 +27,15 @@ spec:
     - name: node-version
       value: $(params.node-version)
     - name: npm-version
-      value: $(params.npm-version)      
+      value: $(params.npm-version)
     - name: target-branch
       value: $(params.target-branch)
     - name: type
       value: $(params.type)
+    - name: esm
+      value: $(params.esm)
+    - name: coverage
+      value: $(params.coverage)
   workspaces:
     - name: artifacts
   tasks:
@@ -45,7 +49,7 @@ spec:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)   
+          value: $(params.npm-version)  
     - name: extract-repository-url
       taskRef:
         name: toolchain-extract-value
@@ -96,7 +100,7 @@ spec:
         - name: revision
           value: $(params.commit-id)
         - name: context
-          value: "coverage-node-$(params.node-version)"
+          value: "node-$(params.node-version)"
         - name: description
           value: "test"
         - name: state
@@ -139,26 +143,34 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-coverage
+    - name: execute-tools
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-coverage
+        name: execute-tools
       params:
         - name: node-version
-          value: $(params.node-version)
+          value: $(params.node-version)   
         - name: npm-version
-          value: $(params.npm-version)           
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
+          value: $(params.npm-version)   
       workspaces:
         - name: output
           workspace: artifacts
-  finally:
+{{test-tasks}}
+  finally: 
+    - name: tasks-results
+      taskRef:
+        name: tasks-results
+      workspaces:
+        - name: output
+          workspace: artifacts
+      params:
+        - name: node-version
+          value: $(params.node-version)      
+        - name: coverage
+          value: $(params.coverage)    
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"          
     - name: set-tests-running-final
       taskRef:
         name: git-set-commit-status
@@ -174,7 +186,7 @@ spec:
           value: "node-$(params.node-version)"
         - name: description
           value: "test"
-        - name: state
-          value: "$(tasks.test-coverage.status)"
+        - name: state-var
+          value: "PIPELINE_RESULT"
         - name: pipeline-debug
           value: $(params.pipeline-debug)

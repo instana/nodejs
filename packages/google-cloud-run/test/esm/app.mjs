@@ -2,6 +2,12 @@
  * (c) Copyright IBM Corp. 2023
  */
 
+// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
+process.on('SIGTERM', () => {
+  process.disconnect();
+  process.exit(0);
+});
+
 import http from 'http';
 import fetch from 'node-fetch';
 import getAppPort from '@instana/collector/test/test_util/app-port.js';

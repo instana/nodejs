@@ -40,6 +40,9 @@ spec:
     - name: esm
       value: $(params.esm)
       default: "false"
+    - name: coverage
+      default: "false"
+      value: $(params.coverage)
   resourcetemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
@@ -107,3 +110,5 @@ spec:
             value: $(params.type)
           - name: esm
             value: $(params.esm)
+          - name: coverage
+            value: $(params.coverage)

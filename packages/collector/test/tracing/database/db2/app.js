@@ -4,6 +4,12 @@
 
 'use strict';
 
+// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
+process.on('SIGTERM', () => {
+  process.disconnect();
+  process.exit(0);
+});
+
 require('../../../..')();
 
 const { promisify } = require('util');
@@ -24,12 +30,11 @@ const connStr2 =
   process.env.DB2_CONN_STR_ALTERNATIVE || 'HOSTNAME=127.0.0.1;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
 
 /**
- * We are unable to start a DB2 container on circleci, because db2 needs privileged permissions.
- * Extractor type "machine" does not work, because we already using "docker" type, see
- * https://circleci.com/docs/2.0/executor-types/.
- * We've decided to use the IBM DB2 cloud service.
+ * TODO: enable db2 container on Tekton
  *
- * Example connection string for circleci ENV:
+ * We are currently using the IBM DB2 cloud service, because we had trouble on Circleci.
+ *
+ * Example connection string for ENV:
  * DATABASE=bludb;HOSTNAME=*.databases.appdomain.cloud;UID=msv01866;PWD=xxx;PORT=31198;PROTOCOL=TCPIP;SECURITY=SSL
  *
  * database, hostname and port:
@@ -46,9 +51,9 @@ const connStr2 =
  *
  * We are unable to create databases.
  * 1. locally with docker: https://github.com/ibmdb/node-ibm_db/issues/848
- * 2. remote on circleci: SQL1092N  The requested command or operation failed
- *                        because the user ID does not have the authority to perform
- *                        the requested command or operation.  User ID: "MSV01866".
+ * 2. remote on CI: SQL1092N  The requested command or operation failed
+ *                  because the user ID does not have the authority to perform
+ *                  the requested command or operation.  User ID: "MSV01866".
  *
  * That's why we use random names for tables.
  */

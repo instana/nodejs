@@ -4,10 +4,6 @@
 
 'use strict';
 
-// Maintenance note: Test coverage reports for this file might not be accurate. See the comment in ProcessControls.js
-// about the conflict between nyc and Prisma. The workaround might lead to killing the Prisma app under test
-// via SIGKILL, which will deprive Istanbul of the opportunity to report test coverage for Prisma correctly.
-
 const shimmer = require('../../shimmer');
 
 let logger;

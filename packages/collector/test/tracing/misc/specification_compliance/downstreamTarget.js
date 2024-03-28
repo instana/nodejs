@@ -5,6 +5,12 @@
 
 'use strict';
 
+// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
+process.on('SIGTERM', () => {
+  process.disconnect();
+  process.exit(0);
+});
+
 const useHttp2 = process.env.USE_HTTP2 ? process.env.USE_HTTP2 === 'true' : false;
 
 const fs = require('fs');

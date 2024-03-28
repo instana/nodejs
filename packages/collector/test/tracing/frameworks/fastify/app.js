@@ -5,6 +5,12 @@
 
 'use strict';
 
+// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
+process.on('SIGTERM', () => {
+  process.disconnect();
+  process.exit(0);
+});
+
 const FASTIFY_VERSION = process.env.FASTIFY_VERSION || 'latest';
 const FASTIFY_REQUIRE = FASTIFY_VERSION === 'latest' ? 'fastify' : `fastify-${FASTIFY_VERSION}`;
 
