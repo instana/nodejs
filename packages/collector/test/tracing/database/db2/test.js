@@ -38,7 +38,7 @@ const DELAY_TIMEOUT_IN_MS = 2000;
 const DB2_CLOSE_TIMEOUT_IN_MS = 1000;
 
 const testTimeout = Math.max(50000, config.getTestTimeout());
-const retryTime = 30000;
+const retryTime = 10 * 1000;
 
 const generateTableName = () => {
   const randomStr = Array(8)
@@ -135,7 +135,7 @@ mochaSuiteFn('tracing/db2', function () {
         }
       });
 
-      await controls.startAndWaitForAgentConnection(retryTime);
+      await controls.startAndWaitForAgentConnection(retryTime, Date.now() + testTimeout - 5000);
     });
 
     beforeEach(async () => {
@@ -391,7 +391,8 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              stmt: `SELECT * FROM ${TABLE_NAME_1}`
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`,
+              numberOfSpans: 3
             })
           )
         );
@@ -406,7 +407,8 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              stmt: `SELECT * FROM ${TABLE_NAME_1}`
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`,
+              numberOfSpans: 3
             })
           )
         );
@@ -424,6 +426,7 @@ mochaSuiteFn('tracing/db2', function () {
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
               error: 'Error: [IBM][CLI Driver] CLI0115E  Invalid cursor state. SQLSTATE=24000',
+              numberOfSpans: 3,
               verifyCustom: (entrySpan, spans) => {
                 testUtils.expectAtLeastOneMatching(spans, [
                   span => expect(span.t).to.equal(entrySpan.t),
@@ -463,6 +466,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
+              numberOfSpans: 3,
               verifyCustom: (entrySpan, spans) => {
                 const realParent = testUtils.expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
@@ -523,6 +527,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
+              numberOfSpans: 3,
               verifyCustom: (entrySpan, spans) => {
                 testUtils.expectExactlyNMatching(spans, 2, [
                   span => expect(span.t).to.equal(entrySpan.t),
@@ -555,6 +560,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
+              numberOfSpans: 3,
               stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`,
               verifyCustom: (entrySpan, spans) => {
                 testUtils.expectAtLeastOneMatching(spans, [
@@ -650,6 +656,8 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
+              // 6x db2 and 1 entry
+              numberOfSpans: 7,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `drop table ${TABLE_NAME_2} if exists`,
@@ -869,8 +877,9 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
+              numberOfSpans: 14,
               // Spans:
-              // 11 queries splitted from the file
+              // 10 queries splitted from the file
               // 4 fs operations on top (ours + from db2 internally fs-extra)
               // https://github.com/ibmdb/node-ibm_db/blob/fb25937524d74d25917e9aa67fb4737971317986/lib/odbc.js#L916
               // If the Otel integration is disabled, we expect 11 spans.
@@ -919,6 +928,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
+              numberOfSpans: 15,
               // 11 Instana spans + 5 Otel Spans
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
@@ -965,6 +975,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
+              numberOfSpans: 15,
               // 11 Instana spans + 5 Otel fs spans
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
@@ -1130,7 +1141,7 @@ mochaSuiteFn('tracing/db2', function () {
         }
       });
 
-      await controls.startAndWaitForAgentConnection(retryTime);
+      await controls.startAndWaitForAgentConnection(retryTime, Date.now() + testTimeout - 5000);
     });
 
     beforeEach(async () => {
@@ -1247,7 +1258,7 @@ mochaSuiteFn('tracing/db2', function () {
         }
       });
 
-      await controls.startAndWaitForAgentConnection(retryTime);
+      await controls.startAndWaitForAgentConnection(retryTime, Date.now() + testTimeout - 5000);
     });
 
     beforeEach(async () => {
