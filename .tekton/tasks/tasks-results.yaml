@@ -55,7 +55,7 @@ spec:
           node bin/prepare-coverage.js
 
           echo "Run c8 report..."
-          npx c8 report --all --reporter=lcov
+          npx c8 report --all --reporter=lcov --temp-directory=coverage/tmp
 
           echo "Run eslint report..."
           npx eslint packages/ -f json > eslint-report.json || true
