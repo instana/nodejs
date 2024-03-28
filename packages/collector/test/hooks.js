@@ -42,7 +42,7 @@ exports.mochaHooks = {
       // Troubleshooting issues on CI often involves timing-based questions like:
       // * Why was this test application not able to connect to the database container? Did the DB container take too
       //   long to start up?
-      // * Why has this CircleCI executor been killed during npm install before tests even started?
+      // * Why has this CI task been killed during npm install before tests even started?
       //
       // Answering these questions is made a lot harder than necessary due to the lack of timestamps in the test output.
       // This hook will print the current time at the start of each test, hopefully aiding troubleshooting these pesky
