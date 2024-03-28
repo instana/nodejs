@@ -29,8 +29,6 @@ spec:
       value: "default-pipeline"
     - name: coverage
       value: "true"
-    - name: test-results-task
-      value: "tasks-result-coverage"
       
 ---
 
