@@ -57,7 +57,7 @@ spec:
           echo "Run c8 report..."
           npx c8 report --all --reporter=lcov --temp-directory=coverage/tmp
 
-          echo $(ls -la coverage)
+          echo $(cat coverage/lcov.info)
 
           echo "Run eslint report..."
           npx eslint packages/ -f json > eslint-report.json || true
