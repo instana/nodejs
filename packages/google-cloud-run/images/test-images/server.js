@@ -5,8 +5,13 @@
 
 'use strict';
 
-const http = require('http');
+// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
+process.on('SIGTERM', () => {
+  process.disconnect();
+  process.exit(0);
+});
 
+const http = require('http');
 const fetch = require('node-fetch');
 
 const app = new http.Server();
