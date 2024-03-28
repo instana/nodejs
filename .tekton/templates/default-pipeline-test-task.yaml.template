@@ -16,6 +16,8 @@
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
       workspaces:
         - name: output
           workspace: artifacts

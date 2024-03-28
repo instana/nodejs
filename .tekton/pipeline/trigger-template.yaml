@@ -40,6 +40,12 @@ spec:
     - name: esm
       value: $(params.esm)
       default: "false"
+    - name: coverage
+      default: "false"
+      value: $(params.coverage)
+    - name: test-results-task
+      default: "test-results"
+      value: $(params.test-results-task)      
   resourcetemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
@@ -107,3 +113,7 @@ spec:
             value: $(params.type)
           - name: esm
             value: $(params.esm)
+          - name: coverage
+            value: $(params.coverage)            
+          - name: test-results-task
+            value: $(params.test-results-task)
