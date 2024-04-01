@@ -22,5 +22,7 @@ exports.esmSupportedVersion = function esmSupportedVersion(version) {
  */
 exports.isLatestEsmSupportedVersion = function isLatestEsmSupportedVersion(version) {
   // Reference: https://nodejs.org/en/blog/release/v18.19.0#esm-and-customization-hook-changes
+  // Node.js v18.19 and above the loaders are off threaded
+  // https://instana.slack.com/archives/G0118PFNN20/p1708556683665099
   return semver.gte(version, '18.19.0');
 };
