@@ -15,7 +15,8 @@
   "files": [
     "src",
     "CHANGELOG.md",
-    "esm-loader.mjs"
+    "esm-loader.mjs",
+    "register.mjs"
   ],
   "publishConfig": {
     "access": "public"
