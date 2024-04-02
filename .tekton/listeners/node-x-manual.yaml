@@ -28,6 +28,8 @@ spec:
       value: "manual-$(params.node-version)"
     - name: pipeline-ref
       value: "default-pipeline"
+    - name: esm
+      value: $(params.esm)
 
 ---
 
