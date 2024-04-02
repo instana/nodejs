@@ -2,12 +2,18 @@
  * (c) Copyright IBM Corp. 2024
  */
 
-import { register } from 'node:module';
+/**
+ * ESM hooks supplied via loaders (--experimental-loader=@instana/collector/esm-loader.mjs) now run in a dedicated thread,
+ * isolated from the main thread. Reference: https://github.com/nodejs/node/pull/44710
+ * We loaded the tracer in the main thread with --import, we can extend the ESM hook with register method
+ * in the future to extend the ESM support.
+ *
+ * Usage:
+ * ENV NODE_OPTIONS='--import /instana/node_modules/@instana/azure-container-services/register.mjs server.js
+ */
 
-// Registering the current module using its absolute path
-// This step is essential for Node.js to properly resolve and load ESM modules
-// loaders are off threaded! https://instana.slack.com/archives/G0118PFNN20/p1708556683665099
-register(import.meta.url);
-// Initializes the trace here, as this is the main thread.
-// As soon as we enter the register function, it's off-threaded.
+// import { register } from 'node:module';
+// register(./loader.mjs, import.meta.url);
+
+// Importing the Instana trace initialization module here, as this is the main thread.
 import './src/index.js';
