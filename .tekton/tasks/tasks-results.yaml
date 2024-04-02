@@ -51,14 +51,6 @@ spec:
         fi
         
         if [ "$(params.coverage)" == "true" ]; then
-          # mkdir coverage/tmp
-          # node bin/prepare-coverage.js
-
-          # echo "Run c8 report..."
-          # npx c8 report --omit-relative --all --reporter=lcov --exclude-node-modules
-
-          # echo $(cat coverage/lcov.info)
-
           echo "Run eslint report..."
           npx eslint packages/ -f json > eslint-report.json || true
 

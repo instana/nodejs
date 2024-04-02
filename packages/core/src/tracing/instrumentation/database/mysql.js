@@ -13,6 +13,7 @@ const constants = require('../../constants');
 const cls = require('../../cls');
 
 let isActive = false;
+
 exports.spanName = 'mysql';
 exports.batchable = true;
 

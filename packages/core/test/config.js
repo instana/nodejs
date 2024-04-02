@@ -8,11 +8,10 @@
 const isCI = require('./test_util/is_ci');
 
 exports.getAppStdio = () => {
-  process.env.WITH_STDOUT = true;
-  // if (process.env.WITH_STDOUT || isCI()) {
-  return [process.stdin, process.stdout, process.stderr, 'ipc'];
-  // }
-  // return [process.stdin, 'ignore', process.stderr, 'ipc'];
+  if (process.env.WITH_STDOUT || isCI()) {
+    return [process.stdin, process.stdout, process.stderr, 'ipc'];
+  }
+  return [process.stdin, 'ignore', process.stderr, 'ipc'];
 };
 
 exports.getTestTimeout = () => {
