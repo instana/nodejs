@@ -5,10 +5,12 @@
 'use strict';
 
 /**
- * We currently only instrument CJS modules. As soon as we want
- * to instrument ES modules (such as `got` v12), the requireHook will
- * no longer work. Therefor we would need to wrap the target ES module
- * with our instrumentations using the resolve & load hook.
+ * IMPORTANT NOTE: From Node.js version 18.19 and above, the ESM loaders operate off-thread.
+ * Consequently, ESM instrumentation using '--experimental-loader' becomes obsolete.
+ * Instead, we recommend using '--import' for loading instrumentation and relocating the 
+ * Instana collector loading to './register' file.
+ * Please note that '--import' flag is unavailable in earlier versions, hence we maintain both setups.
+ * We will incorporate the native ESM support by using 'import-in-the-middle'.
  *
  * Usage:
  * ENV NODE_OPTIONS='--experimental-loader=/instana/node_modules/
@@ -22,11 +24,3 @@
  */
 
 import './src/index.js';
-/*
-export async function resolve(specifier, context, nextResolve) {
-  return nextResolve(specifier, context, nextResolve);
-}
-export async function load(url, context, nextLoad) {
-  return nextLoad(url, context, nextLoad);
-}
-*/
