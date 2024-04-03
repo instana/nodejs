@@ -69,6 +69,11 @@ const verifySpans = (agentControls, controls, options = {}) =>
       return;
     }
 
+    spans.forEach(s => {
+      // eslint-disable-next-line no-console
+      console.log(s.data);
+    });
+
     expect(spans.length).to.equal(options.numberOfSpans || 2);
 
     if (options.verifyCustom) return options.verifyCustom(entrySpan, spans);
@@ -929,7 +934,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               numberOfSpans: 15,
-              // 11 Instana spans + 5 Otel Spans
+              // 10 Instana spans + 5 Otel Spans
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,
