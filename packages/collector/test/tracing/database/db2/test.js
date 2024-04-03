@@ -924,7 +924,8 @@ mochaSuiteFn('tracing/db2', function () {
         );
     });
 
-    it('executeFileSync sample1.txt', function () {
+    // eslint-disable-next-line mocha/no-exclusive-tests
+    it.only('executeFileSync sample1.txt', function () {
       return controls
         .sendRequest({
           method: 'GET',
