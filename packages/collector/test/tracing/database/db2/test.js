@@ -69,17 +69,6 @@ const verifySpans = (agentControls, controls, options = {}) =>
       return;
     }
 
-    spans.forEach(s => {
-      // eslint-disable-next-line no-console
-      console.log(s.n, s.k);
-      try {
-        // eslint-disable-next-line no-console
-        console.log(s.data.db2.stmt);
-      } catch (err) {
-        //
-      }
-    });
-
     expect(spans.length).to.equal(options.numberOfSpans || 2);
 
     if (options.verifyCustom) return options.verifyCustom(entrySpan, spans);
