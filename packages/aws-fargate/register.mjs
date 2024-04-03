@@ -3,7 +3,7 @@
  */
 
 /**
- * ESM hooks supplied via loaders (--experimental-loader=@instana/collector/esm-loader.mjs) now run in a dedicated thread,
+ * ESM hooks supplied via loaders (--experimental-loader=@instana/collector/esm-loader.mjs) run in a dedicated thread from v20 and above,
  * isolated from the main thread. Reference: https://github.com/nodejs/node/pull/44710
  * We loaded the tracer in the main thread with --import, we can extend the ESM hook with register method
  * in the future to extend the ESM support.
