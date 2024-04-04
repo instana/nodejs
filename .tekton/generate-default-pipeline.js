@@ -5,8 +5,8 @@
 'use strict';
 
 const fs = require('fs');
-let templateContent = fs.readFileSync('./templates/pipeline.yaml.template', 'utf-8');
-const taskTemplateContent = fs.readFileSync('./templates/pipeline-test-task.yaml.template', 'utf-8');
+let templateContent = fs.readFileSync('./templates/default-pipeline.yaml.template', 'utf-8');
+const taskTemplateContent = fs.readFileSync('./templates/default-pipeline-test-task.yaml.template', 'utf-8');
 
 const files = fs.readdirSync('./tasks/test-groups');
 const names = files.map(f => f.replace('-task.yaml', ''));

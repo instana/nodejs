@@ -56,18 +56,16 @@ Setting `RUN_ESM=true` locally will run use the ESM app instead of the CJS app w
 
 ## Executing code coverage tool
 
-If you are actively developing a feature and you would like to know which lines and files you have already covered in your tests, it's recommended to use `.only` for the target test file and then run:
+If you are actively developing a feature and you would like to know which lines and files you have already covered in your tests, you can run:
 
 ```
-npm run coverage --scope @instana/collector
+npm run coverage --npm_command="test:ci:opentelemetry-exporter"
 ```
 
 At the end of the execution it will open the coverage report in the browser and you can navigate through
 the result.
 
-Circle CI executes `npm run coverage-all` once per week to generate a full coverage report.
-
-It's not recommended to run `coverage-all` locally, because it can take up to 1 1/2h.
+On Tekton we run `npm run coverage-ci` once per week to generate a full coverage report.
 
 ## How to Contribute
 

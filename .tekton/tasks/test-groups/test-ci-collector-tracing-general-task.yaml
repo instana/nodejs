@@ -38,6 +38,8 @@ spec:
       value: $(params.continuous-delivery-context-secret)
     - name: esm
       value: $(params.esm)
+    - name: coverage
+      value: $(params.coverage)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -110,7 +112,11 @@ spec:
         fi
         retry=1
         while [ $retry -le 3 ]; do
-          npm run "test:ci:collector:tracing:general"
+          if [ "$(params.coverage)" == "true" ]; then
+            npm run coverage-ci --npm_command="test:ci:collector:tracing:general" --report_dir="test-ci-collector-tracing-general"
+          else
+            npm run "test:ci:collector:tracing:general"
+          fi          
           if [ $? -eq 0 ]; then
             touch "test:ci:collector:tracing:general.succeeded"
             break

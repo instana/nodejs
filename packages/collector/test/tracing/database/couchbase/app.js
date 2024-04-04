@@ -4,6 +4,12 @@
 
 'use strict';
 
+// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
+process.on('SIGTERM', () => {
+  process.disconnect();
+  process.exit(0);
+});
+
 require('../../../..')();
 
 const couchbase = require('couchbase');
@@ -130,9 +136,27 @@ couchbase.connect(
     cluster = _cluster;
     bucketMng = cluster.buckets();
 
+    let retries = 0;
+    const flushBuckets = async function () {
+      try {
+        await bucketMng.flushBucket('projects');
+        await bucketMng.flushBucket('companies');
+      } catch (bucketErr) {
+        // eslint-disable-next-line no-console
+        console.log(`Flush buckets failed: ${bucketErr.message}`);
+
+        if (retries > 3) {
+          return;
+        }
+        // "Flush failed with unexpected error" protection
+        await delay(1000);
+        retries += 1;
+        return flushBuckets();
+      }
+    };
+
     // clear all data
-    await bucketMng.flushBucket('projects');
-    await bucketMng.flushBucket('companies');
+    await flushBuckets();
 
     // cluster.bucket calls `conn.openBucket`
     bucket1 = cluster.bucket('projects');
