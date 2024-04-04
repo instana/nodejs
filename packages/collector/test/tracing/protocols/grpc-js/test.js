@@ -19,292 +19,328 @@ const agentControls = globalAgent.instance;
 
 const mochaSuiteFn = semver.satisfies(process.versions.node, '>=8.13.0') ? describe : describe.skip;
 
-mochaSuiteFn('tracing/grpc-js', function () {
-  this.timeout(config.getTestTimeout());
+/**
+ * @grpc/grpc-js 1.10 is no longer compatible with mali server
+ *   - https://github.com/malijs/mali/issues/376
+ *   - mali seems unmaintained. no release since > 2y
+ */
+['latest', 'v1'].forEach(version => {
+  mochaSuiteFn(`tracing/grpc-js@${version}`, function () {
+    this.timeout(config.getTestTimeout());
 
-  globalAgent.setUpCleanUpHooks();
+    globalAgent.setUpCleanUpHooks();
 
-  describe('success', function () {
-    let serverControls;
-    let clientControls;
+    describe('success', function () {
+      let serverControls;
+      let clientControls;
 
-    before(async function () {
-      serverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'server'),
-        useGlobalAgent: true
-      });
-
-      clientControls = new ProcessControls({
-        appPath: path.join(__dirname, 'client'),
-        useGlobalAgent: true
-      });
-
-      await serverControls.startAndWaitForAgentConnection();
-      await clientControls.startAndWaitForAgentConnection();
-    });
-
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
-    after(async () => {
-      await serverControls.stop();
-      await clientControls.stop();
-    });
-
-    afterEach(async () => {
-      await serverControls.clearIpcMessages();
-      await clientControls.clearIpcMessages();
-    });
-
-    it('must trace an unary call', () => {
-      const expectedReply = 'received: request';
-      return runTest('/unary-call', serverControls, clientControls, expectedReply);
-    });
-
-    it('must mark unary call as erroneous', () =>
-      runTest('/unary-call', serverControls, clientControls, null, false, true));
-
-    it('must cancel an unary call', () => runTest('/unary-call', serverControls, clientControls, null, true, false));
-
-    it('must trace server-side streaming', () => {
-      const expectedReply = ['received: request', 'streaming', 'more', 'data'];
-      return runTest('/server-stream', serverControls, clientControls, expectedReply);
-    });
-
-    it('must mark server-side streaming as erroneous', () =>
-      runTest('/server-stream', serverControls, clientControls, null, false, true));
-
-    it('must cancel server-side streaming', () =>
-      runTest('/server-stream', serverControls, clientControls, null, true, false));
-
-    it('must trace client-side streaming', () => {
-      const expectedReply = 'first; second; third';
-      return runTest('/client-stream', serverControls, clientControls, expectedReply);
-    });
-
-    it('must mark client-side streaming as erroneous', () =>
-      runTest('/client-stream', serverControls, clientControls, null, false, true));
-
-    it('must cancel client-side streaming', () =>
-      runTest('/client-stream', serverControls, clientControls, null, true, false));
-
-    it('must trace bidi streaming', () => {
-      const expectedReply = ['received: first', 'received: second', 'received: third', 'STOP'];
-      return runTest('/bidi-stream', serverControls, clientControls, expectedReply);
-    });
-
-    it('must mark bidi streaming as erroneous', () =>
-      runTest('/bidi-stream', serverControls, clientControls, null, false, true));
-
-    it('must cancel bidi streaming', () => runTest('/bidi-stream', serverControls, clientControls, null, true, false));
-  });
-
-  const maliMochaSuiteFn = semver.satisfies(process.versions.node, '>=14.0.0') ? describe : describe.skip;
-
-  maliMochaSuiteFn('with mali server', function () {
-    let serverControls;
-    let clientControls;
-
-    before(async function () {
-      serverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'maliServer'),
-        useGlobalAgent: true
-      });
-
-      clientControls = new ProcessControls({
-        appPath: path.join(__dirname, 'client'),
-        useGlobalAgent: true
-      });
-
-      await serverControls.startAndWaitForAgentConnection();
-      await clientControls.startAndWaitForAgentConnection();
-    });
-
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
-    after(async () => {
-      await serverControls.stop();
-      await clientControls.stop();
-    });
-
-    afterEach(async () => {
-      await serverControls.clearIpcMessages();
-      await clientControls.clearIpcMessages();
-    });
-
-    it('must trace an unary call', () => {
-      const expectedReply = 'received: request';
-      return runTest('/unary-call', serverControls, clientControls, expectedReply);
-    });
-  });
-
-  describe('suppressed', function () {
-    let serverControls;
-    let clientControls;
-
-    before(async function () {
-      serverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'server'),
-        useGlobalAgent: true
-      });
-
-      clientControls = new ProcessControls({
-        appPath: path.join(__dirname, 'client'),
-        useGlobalAgent: true
-      });
-
-      await serverControls.startAndWaitForAgentConnection();
-      await clientControls.startAndWaitForAgentConnection();
-    });
-
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
-    after(async () => {
-      await serverControls.stop();
-      await clientControls.stop();
-    });
-
-    afterEach(async () => {
-      await serverControls.clearIpcMessages();
-      await clientControls.clearIpcMessages();
-    });
-
-    it('[suppressed] should not trace', () =>
-      clientControls
-        .sendRequest({
-          method: 'POST',
-          path: '/unary-call',
-          headers: {
-            'X-INSTANA-L': '0'
+      before(async function () {
+        serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'server'),
+          useGlobalAgent: true,
+          env: {
+            INSTANA_GRPC_VERSION: version
           }
-        })
-        .then(response => {
-          expect(response.reply).to.equal('received: request');
-          return delay(1000);
-        })
-        .then(() =>
-          agentControls.getSpans().then(spans => {
-            expect(spans).to.have.lengthOf(0);
+        });
+
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'client'),
+          useGlobalAgent: true,
+          env: {
+            INSTANA_GRPC_VERSION: version
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await serverControls.stop();
+        await clientControls.stop();
+      });
+
+      afterEach(async () => {
+        await serverControls.clearIpcMessages();
+        await clientControls.clearIpcMessages();
+      });
+
+      it('must trace an unary call', () => {
+        const expectedReply = 'received: request';
+        return runTest('/unary-call', serverControls, clientControls, expectedReply);
+      });
+
+      it('must mark unary call as erroneous', () =>
+        runTest('/unary-call', serverControls, clientControls, null, false, true));
+
+      it('must cancel an unary call', () => runTest('/unary-call', serverControls, clientControls, null, true, false));
+
+      it('must trace server-side streaming', () => {
+        const expectedReply = ['received: request', 'streaming', 'more', 'data'];
+        return runTest('/server-stream', serverControls, clientControls, expectedReply);
+      });
+
+      it('must mark server-side streaming as erroneous', () =>
+        runTest('/server-stream', serverControls, clientControls, null, false, true));
+
+      it('must cancel server-side streaming', () =>
+        runTest('/server-stream', serverControls, clientControls, null, true, false));
+
+      it('must trace client-side streaming', () => {
+        const expectedReply = 'first; second; third';
+        return runTest('/client-stream', serverControls, clientControls, expectedReply);
+      });
+
+      it('must mark client-side streaming as erroneous', () =>
+        runTest('/client-stream', serverControls, clientControls, null, false, true));
+
+      it('must cancel client-side streaming', () =>
+        runTest('/client-stream', serverControls, clientControls, null, true, false));
+
+      it('must trace bidi streaming', () => {
+        const expectedReply = ['received: first', 'received: second', 'received: third', 'STOP'];
+        return runTest('/bidi-stream', serverControls, clientControls, expectedReply);
+      });
+
+      it('must mark bidi streaming as erroneous', () =>
+        runTest('/bidi-stream', serverControls, clientControls, null, false, true));
+
+      it('must cancel bidi streaming', () =>
+        runTest('/bidi-stream', serverControls, clientControls, null, true, false));
+    });
+
+    // See https://github.com/malijs/mali/issues/376
+    const maliMochaSuiteFn =
+      semver.satisfies(process.versions.node, '>=14.0.0') && version !== 'latest' ? describe : describe.skip;
+
+    maliMochaSuiteFn('with mali server', function () {
+      let serverControls;
+      let clientControls;
+
+      before(async function () {
+        serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'maliServer'),
+          useGlobalAgent: true,
+          env: {
+            INSTANA_GRPC_VERSION: version
+          }
+        });
+
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'client'),
+          useGlobalAgent: true,
+          env: {
+            INSTANA_GRPC_VERSION: version
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await serverControls.stop();
+        await clientControls.stop();
+      });
+
+      afterEach(async () => {
+        await serverControls.clearIpcMessages();
+        await clientControls.clearIpcMessages();
+      });
+
+      it('must trace an unary call', () => {
+        const expectedReply = 'received: request';
+        return runTest('/unary-call', serverControls, clientControls, expectedReply);
+      });
+    });
+
+    describe('suppressed', function () {
+      let serverControls;
+      let clientControls;
+
+      before(async function () {
+        serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'server'),
+          useGlobalAgent: true,
+          env: {
+            INSTANA_GRPC_VERSION: version
+          }
+        });
+
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'client'),
+          useGlobalAgent: true,
+          env: {
+            INSTANA_GRPC_VERSION: version
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await serverControls.stop();
+        await clientControls.stop();
+      });
+
+      afterEach(async () => {
+        await serverControls.clearIpcMessages();
+        await clientControls.clearIpcMessages();
+      });
+
+      it('[suppressed] should not trace', () =>
+        clientControls
+          .sendRequest({
+            method: 'POST',
+            path: '/unary-call',
+            headers: {
+              'X-INSTANA-L': '0'
+            }
           })
-        ));
-  });
-
-  describe('individually disabled', function () {
-    let serverControls;
-    let clientControls;
-
-    before(async function () {
-      serverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'server'),
-        useGlobalAgent: true,
-        env: {
-          INSTANA_DISABLED_TRACERS: 'grpcjs'
-        }
-      });
-
-      clientControls = new ProcessControls({
-        appPath: path.join(__dirname, 'client'),
-        useGlobalAgent: true,
-        env: {
-          INSTANA_DISABLED_TRACERS: 'grpcjs'
-        }
-      });
-
-      await serverControls.startAndWaitForAgentConnection();
-      await clientControls.startAndWaitForAgentConnection();
-    });
-
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
-    after(async () => {
-      await serverControls.stop();
-      await clientControls.stop();
-    });
-
-    afterEach(async () => {
-      await serverControls.clearIpcMessages();
-      await clientControls.clearIpcMessages();
-    });
-
-    it('should not trace when GRPC tracing is individually disabled', () =>
-      clientControls
-        .sendRequest({
-          method: 'POST',
-          path: '/unary-call'
-        })
-        .then(response => {
-          expect(response.reply).to.equal('received: request');
-          return delay(500);
-        })
-        .then(() => {
-          return retry(() =>
+          .then(response => {
+            expect(response.reply).to.equal('received: request');
+            return delay(1000);
+          })
+          .then(() =>
             agentControls.getSpans().then(spans => {
-              expectExactlyOneMatching(spans, checkHttpEntry({ url: '/unary-call' }));
-              expect(getSpansByName(spans, 'rpc-client')).to.be.empty;
-              expect(getSpansByName(spans, 'rpc-server')).to.be.empty;
+              expect(spans).to.have.lengthOf(0);
             })
-          );
-        }));
-  });
-
-  describe('multiple hosts', function () {
-    let serverControls;
-    let clientControls;
-
-    before(async function () {
-      serverControls = new ProcessControls({
-        appPath: path.join(__dirname, 'server'),
-        useGlobalAgent: true
-      });
-
-      clientControls = new ProcessControls({
-        appPath: path.join(__dirname, 'client'),
-        useGlobalAgent: true
-      });
-
-      await serverControls.startAndWaitForAgentConnection();
-      await clientControls.startAndWaitForAgentConnection();
+          ));
     });
 
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
+    describe('individually disabled', function () {
+      let serverControls;
+      let clientControls;
 
-    after(async () => {
-      await serverControls.stop();
-      await clientControls.stop();
-    });
+      before(async function () {
+        serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'server'),
+          useGlobalAgent: true,
+          env: {
+            INSTANA_DISABLED_TRACERS: 'grpcjs',
+            INSTANA_GRPC_VERSION: version
+          }
+        });
 
-    afterEach(async () => {
-      await serverControls.clearIpcMessages();
-      await clientControls.clearIpcMessages();
-    });
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'client'),
+          useGlobalAgent: true,
+          env: {
+            INSTANA_DISABLED_TRACERS: 'grpcjs',
+            INSTANA_GRPC_VERSION: version
+          }
+        });
 
-    it('call two different hosts', async () => {
-      const url = '/two-different-hosts';
-      const response = await clientControls.sendRequest({
-        method: 'POST',
-        path: url
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
       });
 
-      expect(response.reply1).to.equal('received: request');
-      expect(response.reply2).to.equal('received: request');
-
-      let spans;
-      await retry(async () => {
-        spans = await agentControls.getSpans();
-        expect(spans.length).to.eql(7);
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
-      const httpEntry = expectExactlyOneMatching(spans, checkHttpEntry({ url }));
-      expectExactlyOneMatching(spans, checkGrpcClientSpan({ httpEntry, clientControls, url, host: 'localhost' }));
-      expectExactlyOneMatching(spans, checkGrpcClientSpan({ httpEntry, clientControls, url, host: '127.0.0.1' }));
+
+      after(async () => {
+        await serverControls.stop();
+        await clientControls.stop();
+      });
+
+      afterEach(async () => {
+        await serverControls.clearIpcMessages();
+        await clientControls.clearIpcMessages();
+      });
+
+      it('should not trace when GRPC tracing is individually disabled', () =>
+        clientControls
+          .sendRequest({
+            method: 'POST',
+            path: '/unary-call'
+          })
+          .then(response => {
+            expect(response.reply).to.equal('received: request');
+            return delay(500);
+          })
+          .then(() => {
+            return retry(() =>
+              agentControls.getSpans().then(spans => {
+                expectExactlyOneMatching(spans, checkHttpEntry({ url: '/unary-call' }));
+                expect(getSpansByName(spans, 'rpc-client')).to.be.empty;
+                expect(getSpansByName(spans, 'rpc-server')).to.be.empty;
+              })
+            );
+          }));
+    });
+
+    describe('multiple hosts', function () {
+      let serverControls;
+      let clientControls;
+
+      before(async function () {
+        serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'server'),
+          useGlobalAgent: true,
+          env: {
+            INSTANA_GRPC_VERSION: version
+          }
+        });
+
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'client'),
+          useGlobalAgent: true,
+          env: {
+            INSTANA_GRPC_VERSION: version
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await serverControls.stop();
+        await clientControls.stop();
+      });
+
+      afterEach(async () => {
+        await serverControls.clearIpcMessages();
+        await clientControls.clearIpcMessages();
+      });
+
+      it('call two different hosts', async () => {
+        const url = '/two-different-hosts';
+        const response = await clientControls.sendRequest({
+          method: 'POST',
+          path: url
+        });
+
+        expect(response.reply1).to.equal('received: request');
+        expect(response.reply2).to.equal('received: request');
+
+        let spans;
+        await retry(async () => {
+          spans = await agentControls.getSpans();
+          expect(spans.length).to.eql(7);
+        });
+        const httpEntry = expectExactlyOneMatching(spans, checkHttpEntry({ url }));
+        expectExactlyOneMatching(spans, checkGrpcClientSpan({ httpEntry, clientControls, url, host: 'localhost' }));
+        expectExactlyOneMatching(spans, checkGrpcClientSpan({ httpEntry, clientControls, url, host: '127.0.0.1' }));
+      });
     });
   });
 });

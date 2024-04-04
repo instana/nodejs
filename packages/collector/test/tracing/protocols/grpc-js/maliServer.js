@@ -10,6 +10,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('./mockVersion');
 const port = require('../../../test_util/app-port')();
 
 require('../../../..')();
