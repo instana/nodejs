@@ -43,6 +43,9 @@ spec:
     - name: coverage
       default: "false"
       value: $(params.coverage)
+    - name: context
+      default: "node-$(params.node-version)"
+      value: $(params.context)
   resourcetemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
@@ -112,3 +115,5 @@ spec:
             value: $(params.esm)
           - name: coverage
             value: $(params.coverage)
+          - name: context
+            value: $(params.context)
