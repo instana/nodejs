@@ -36,6 +36,8 @@ spec:
       value: $(params.esm)
     - name: coverage
       value: $(params.coverage)
+    - name: context
+      value: $(params.context)
   workspaces:
     - name: artifacts
   tasks:
@@ -100,7 +102,7 @@ spec:
         - name: revision
           value: $(params.commit-id)
         - name: context
-          value: "node-$(params.node-version)"
+          value: $(params.context)
         - name: description
           value: "test"
         - name: state
@@ -689,7 +691,7 @@ spec:
         - name: revision
           value: $(params.commit-id)
         - name: context
-          value: "node-$(params.node-version)"
+          value: $(params.context)
         - name: description
           value: "test"
         - name: state-var
