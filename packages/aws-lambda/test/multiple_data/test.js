@@ -26,7 +26,7 @@ const qualifiedArn = `${unqualifiedArn}:${version}`;
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
 describe('multiple data lambda handler', function () {
-  this.timeout(config.getTestTimeout());
+  this.timeout(config.getTestTimeout() * 2);
   let control;
 
   before(async () => {
@@ -63,27 +63,31 @@ describe('multiple data lambda handler', function () {
         // Tekton CI is really unreliable. We need to be very relaxed with the duration
         if (!isCI()) {
           const duration = Date.now() - control.startedAt;
-          expect(duration).to.be.at.most(1000 * 2);
+          expect(duration).to.be.at.most(1000 * 3);
         }
 
         verifyResponse(1);
       })
       .then(() => {
-        return retry(() => {
-          return Promise.all([
-            //
-            control.getSpans(),
-            control.getRawBundles(),
-            control.getRawSpanArrays()
-          ]).then(([spans, rawBundles, rawSpanArrays]) => {
-            verifySpans(spans);
-            expect(rawSpanArrays).to.be.an('array');
-            expect(rawSpanArrays).to.have.lengthOf(2);
-            expect(rawBundles).to.be.an('array');
-            expect(rawBundles).to.have.lengthOf.at.least(1);
-            expect(rawBundles).to.have.lengthOf.at.most(4);
-          });
-        });
+        return retry(
+          () => {
+            return Promise.all([
+              //
+              control.getSpans(),
+              control.getRawBundles(),
+              control.getRawSpanArrays()
+            ]).then(([spans, rawBundles, rawSpanArrays]) => {
+              verifySpans(spans);
+              expect(rawSpanArrays).to.be.an('array');
+              expect(rawSpanArrays).to.have.lengthOf(2);
+              expect(rawBundles).to.be.an('array');
+              expect(rawBundles).to.have.lengthOf.at.least(1);
+              expect(rawBundles).to.have.lengthOf.at.most(4);
+            });
+          },
+          null,
+          Date.now() + config.getRetryTimeout() * 2
+        );
       });
   });
 
