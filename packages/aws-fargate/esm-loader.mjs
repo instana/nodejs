@@ -8,7 +8,7 @@
  * IMPORTANT NOTE: From Node.js version 18.19 and above, the ESM loaders operate off-thread.
  * Consequently, ESM instrumentation using '--experimental-loader' becomes deprecated.
  * Instead, we are using '--import' for loading instrumentation and relocated the Instana collector
- * loading to './register' file.
+ * loading to './esm-register' file.
  * Please note that '--import' flag is unavailable in earlier versions, hence we maintain both setups.
  * We will incorporate the native ESM support by using 'import-in-the-middle' ith register method.
  *

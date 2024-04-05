@@ -12,7 +12,7 @@
     "src",
     "CHANGELOG.md",
     "esm-loader.mjs",
-    "register.mjs"
+    "esm-register.mjs"
   ],
   "publishConfig": {
     "access": "public"

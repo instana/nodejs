@@ -11,7 +11,7 @@
   "files": [
     "src",
     "esm-loader.mjs",
-    "register.mjs"
+    "esm-register.mjs"
   ],
   "publishConfig": {
     "access": "public"

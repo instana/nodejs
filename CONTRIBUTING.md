@@ -329,7 +329,7 @@ Use the following command to enable experimental ESM support:
 - For Node.js versions greater than or equal to 18.19:
 
 ```sh
-node --import  /path/to/instana/node_modules/@instana/collector/register.mjs entry-point
+node --import  /path/to/instana/node_modules/@instana/collector/esm-register.mjs entry-point
 ```
 - For Node.js versions less than 18.19:
 

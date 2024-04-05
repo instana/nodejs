@@ -83,7 +83,7 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
   }
 
   const loaderPath = isLatestEsmSupportedVersion(process.versions.node)
-    ? ['--import', `${path.join(__dirname, '..', 'register.mjs')}`]
+    ? ['--import', `${path.join(__dirname, '..', 'esm-register.mjs')}`]
     : [`--experimental-loader=${path.join(__dirname, '..', 'esm-loader.mjs')}`];
 
   if (!this.opts.containerAppPath && this.opts.env && this.opts.env.ESM_TEST) {

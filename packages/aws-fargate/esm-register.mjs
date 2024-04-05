@@ -8,13 +8,13 @@
  * see https://github.com/nodejs/node/pull/44710.
  * Previously, loading the Instana collector within the loader and after the update ESM support
  * no longer working with v18.19 and above. To address this, we've opted to load the Instana
- * collector in the main thread using --import. 
+ * collector in the main thread using --import.
  * Additionally, we aim to incorporate native ESM
  * support by utilizing the node register method, enabling customization of the ESM loader
  * with 'import-in-the-middle'.
  *
  * Usage:
- *  ENV NODE_OPTIONS='--import /instana/node_modules/@instana/aws-fargate/register.mjs
+ *  ENV NODE_OPTIONS='--import /instana/node_modules/@instana/aws-fargate/esm-register.mjs
  */
 // We plan to utilize this for adding native ESM support in the near future
 // import { register } from 'node:module';
