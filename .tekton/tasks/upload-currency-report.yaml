@@ -3,9 +3,6 @@ kind: Task
 metadata:
   name: upload-currency-report
 spec:
-  envFrom:
-    - configMapRef:
-        name: environment-properties
   params:
     - name: continuous-delivery-context-secret
       default: secure-properties
@@ -13,8 +10,6 @@ spec:
       value: $(params.target-branch)
     - name: node-version
       value: $(params.node-version)
-    - name: npm-version
-      value: $(params.npm-version)
   workspaces:
     - name: output
       mountPath: /artifacts
