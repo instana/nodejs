@@ -1,0 +1,458 @@
+[
+  {
+    "name": "@apollo/gateway",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "@apollo/subgraph",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "@aws-sdk/client-dynamodb",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": true,
+    "isBeta": false
+  },
+  {
+    "name": "@aws-sdk/client-kinesis",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": true,
+    "isBeta": false
+  },
+  {
+    "name": "@aws-sdk/client-lambda",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": true,
+    "isBeta": false
+  },
+  {
+    "name": "@aws-sdk/client-s3",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": true,
+    "isBeta": false
+  },
+  {
+    "name": "@aws-sdk/client-sns",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": true,
+    "isBeta": false
+  },
+  {
+    "name": "@aws-sdk/client-sqs",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": true,
+    "isBeta": false
+  },
+  {
+    "name": "@aws-sdk/lib-dynamodb",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": true,
+    "isBeta": false
+  },
+  {
+    "name": "@elastic/elasticsearch",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "@google-cloud/pubsub",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": true,
+    "isBeta": false
+  },
+  {
+    "name": "@google-cloud/storage",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": true,
+    "isBeta": false
+  },
+  {
+    "name": "@grpc/grpc-js",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "@grpc/proto-loader",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "@hapi/hapi",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "amqplib",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "aws-sdk",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": true,
+    "isBeta": false
+  },
+  {
+    "name": "bull",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "couchbase",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "express",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "fastify",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "google-protobuf",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "got",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "graphql",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "graphql-subscriptions",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "graphql-tag",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "graphql-ws",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "ioredis",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "kafka-node",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "kafkajs",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "koa",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "koa-router",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "log4js",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "mali",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "memcached",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "mongodb",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "mongoose",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "mssql",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "mysql",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "mysql2",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "nats",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "node-fetch",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "node-nats-streaming",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "pg",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "pino",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "redis",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "restify",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "sequelize",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "socket.io",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "socket.io-client",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "sqs-consumer",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "tedious",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "winston",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "ibm_db",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "kafka-avro",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "node-rdkafka",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "pg-native",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  }
+]

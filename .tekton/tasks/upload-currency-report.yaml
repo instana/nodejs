@@ -1,0 +1,55 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: upload-currency-report
+spec:
+  envFrom:
+    - configMapRef:
+        name: environment-properties
+  params:
+    - name: continuous-delivery-context-secret
+      default: secure-properties
+    - name: target-branch
+      value: $(params.target-branch)
+    - name: node-version
+      value: $(params.node-version)
+    - name: npm-version
+      value: $(params.npm-version)
+  workspaces:
+    - name: output
+      mountPath: /artifacts
+  steps:
+    - name: execute
+      image: node:$(params.node-version)
+      env:
+        - name: GH_ENTERPRISE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "GH_ENTERPRISE_TOKEN"
+      script: |
+        #!/bin/bash
+
+        #if [ "$(params.target-branch)" != "main" ]; then
+        #  echo "Skipping uploading the currency report. Not main branch."
+        #  return
+        #fi
+
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+
+        node bin/generate-currency-report.js
+
+        git clone `https://oauth2:$GH_ENTERPRISE_TOKEN@github.ibm.com/instana/tracer-reports.git` tracer-reports
+        cd tracer-reports
+        
+        git pull origin main
+        cp ../currency-report.md ./automated/currency/nodejs/report.md
+
+        git config user.name "IBM/Instana/Team Node.js"
+        git config user.email katharina.irrgang@ibm.com
+        
+        git commit "chore: updated node.js currency report"
+        git push origin main
+
+

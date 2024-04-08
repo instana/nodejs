@@ -145,6 +145,21 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
+    - name: upload-currency-report
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: upload-currency-report
+      params:
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: target-branch
+          value: $(params.target-branch)
+        - name: node-version
+          value: $(params.node-version)
+      workspaces:
+        - name: output
+          workspace: artifacts
     - name: execute-tools
       runAfter:
         - install-npm-dependencies
