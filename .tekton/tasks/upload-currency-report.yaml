@@ -46,7 +46,9 @@ spec:
         git config user.name "IBM/Instana/Team Node.js"
         git config user.email katharina.irrgang@ibm.com
         
-        git commit "chore: updated node.js currency report"
+        git add .
+        
+        git commit -m "chore: updated node.js currency report"
         git push origin main
 
 
