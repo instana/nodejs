@@ -26,18 +26,11 @@ const {
   tracing: { constants }
 } = require('@instana/core');
 
-const {
-  tracing: { supportedVersion }
-} = require('@instana/core');
-
-const semver = require('semver');
 const config = require('../../../../../core/test/config');
 const { expectExactlyOneMatching, retry, delay, stringifyItems } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
-
-let mochaSuiteFn;
 
 /**
  * See https://github.com/waldophotos/kafka-avro/issues/113
@@ -45,18 +38,13 @@ let mochaSuiteFn;
  * Installing kafka-avro via optionalDependencies throws an error,
  * see https://github.com/instana/nodejs/pull/486#discussion_r818509109
  */
-const kafkaAvroAllowedVersions = semver.lt(process.versions.node, '16.0.0');
-
-if (!supportedVersion(process.versions.node) || !kafkaAvroAllowedVersions) {
-  mochaSuiteFn = describe.skip;
-} else {
-  mochaSuiteFn = describe;
-}
-
 const retryTime = 1000;
 const topic = 'kafka-avro-topic';
 
-mochaSuiteFn('tracing/messaging/kafka-avro', function () {
+// NOTE: flaky on CI
+// NOTE: kafka-avro is unmaintained. Only works for Node < 16.
+// https://github.com/waldophotos/kafka-avro
+describe.skip('tracing/messaging/kafka-avro', function () {
   this.timeout(1000 * 180);
 
   globalAgent.setUpCleanUpHooks();
