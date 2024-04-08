@@ -72,7 +72,7 @@ const verifySpans = (agentControls, controls, options = {}) =>
   });
 
 const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '16.0.0') ? describe : describe.skip;
 
 let tries = 0;
 const maxTries = 100;
