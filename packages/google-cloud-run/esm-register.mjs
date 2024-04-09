@@ -16,9 +16,9 @@
  * ENV NODE_OPTIONS='--import /instana/node_modules/@instana/google-cloud-run/esm-register.mjs
  */
 
+// Importing the Instana trace initialization module here, as this is executed in the main thread.
+import './src/index.js';
+
 // We plan to utilize this for adding native ESM support in the near future
 // import { register } from 'node:module';
 // register(./loader.mjs, import.meta.url);
-
-// Importing the Instana trace initialization module here, as this is executed in the main thread.
-import './src/index.js';

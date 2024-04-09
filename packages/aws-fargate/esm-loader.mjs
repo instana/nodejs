@@ -10,7 +10,7 @@
  * Instead, we are using '--import' for loading instrumentation and relocated the Instana collector
  * loading to './esm-register' file.
  * Please note that '--import' flag is unavailable in earlier versions, hence we maintain both setups.
- * We will incorporate the native ESM support by using 'import-in-the-middle' ith register method.
+ * In future we will incorporate the native ESM support with register method.
  *
  * Usage:
  * ENV NODE_OPTIONS='--experimental-loader=/instana/node_modules/

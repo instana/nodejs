@@ -15,10 +15,11 @@
  * Usage:
  * node --import @instana/collector/esm-register.mjs server.js
  */
-// We plan to utilize this for adding native ESM support in the near future
-// import { register } from 'node:module';
-// register(./loader.mjs, import.meta.url);
 
 // Importing the Instana trace initialization module here, as this is executed in the main thread.
 import instana from './src/index.js';
 instana();
+
+// We plan to utilize this for adding native ESM support in the near future
+// import { register } from 'node:module';
+// register(./loader.mjs, import.meta.url);
