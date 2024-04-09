@@ -518,5 +518,13 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false
+  },
+  {
+    "name": "prisma",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
   }
 ]
