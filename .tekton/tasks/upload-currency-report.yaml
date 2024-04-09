@@ -6,8 +6,8 @@ spec:
   params:
     - name: continuous-delivery-context-secret
       default: secure-properties
-    - name: target-branch
-      value: $(params.target-branch)
+    - name: type
+      value: $(params.type)
     - name: node-version
       value: $(params.node-version)
   workspaces:
@@ -25,10 +25,10 @@ spec:
       script: |
         #!/bin/bash
 
-        #if [ "$(params.target-branch)" != "main" ]; then
-        #  echo "Skipping uploading the currency report. Not main branch."
-        #  return
-        #fi
+        if [ "$(params.type)" != "main" ]; then
+          echo "Skipping uploading the currency report. Not main pipeline."
+          return
+        fi
 
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH

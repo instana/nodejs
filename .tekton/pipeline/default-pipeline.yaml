@@ -153,10 +153,10 @@ spec:
       params:
         - name: continuous-delivery-context-secret
           value: "secure-properties"
-        - name: target-branch
-          value: $(params.target-branch)
         - name: node-version
           value: $(params.node-version)
+        - name: type
+          value: $(params.type)
       workspaces:
         - name: output
           workspace: artifacts

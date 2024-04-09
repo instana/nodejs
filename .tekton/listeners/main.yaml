@@ -22,7 +22,7 @@ spec:
       default: ""
     - name: npm-version
       value: $(params.npm-version)
-      default: ""      
+      default: ""
     - name: pl-name
       value: $(event.after)
     - name: pipeline-ref
