@@ -5,9 +5,17 @@
 'use strict';
 
 const path = require('path');
+const semver = require('semver');
 const { execSync } = require('child_process');
 const currencies = require(path.join(__dirname, '..', '..', 'currencies.json'));
 const utils = require('./utils');
+const MAJOR_UPDATES_MODE = process.env.MAJOR_UPDATES_MODE || false;
+const BRANCH = process.env.BRANCH;
+let branchName = BRANCH;
+
+if (!MAJOR_UPDATES_MODE) {
+  execSync(`git checkout -b ${BRANCH}`);
+}
 
 currencies.forEach(currency => {
   if (currency.ignoreUpdates) {
@@ -39,6 +47,19 @@ currencies.forEach(currency => {
     return;
   }
 
+  if (!MAJOR_UPDATES_MODE && semver.major(latestVersion) !== semver.major(installedVersion)) {
+    console.log(`Skipping ${currency.name}. Major updates not allowed.`);
+    return;
+  }
+
+  if (MAJOR_UPDATES_MODE) {
+    execSync('git checkout main');
+    execSync('npm i');
+
+    branchName = `${BRANCH}-${currency.name.replace(/[^a-zA-Z0-9]/g, '')}`;
+    execSync(`git checkout -b ${branchName}`);
+  }
+
   if (isRootDependency) {
     console.log(`npm i -D ${currency.name}@${latestVersion}`);
     execSync(`npm i -D ${currency.name}@${latestVersion}`, { stdio: 'inherit' });
@@ -48,6 +69,24 @@ currencies.forEach(currency => {
     execSync(`npm i -D ${currency.name}@${latestVersion} -w ${subpkg}`, { stdio: 'inherit' });
   }
 
-  execSync('git add package*');
-  execSync(`git commit -m "build: bumped ${currency.name}@${latestVersion}"`);
+  if (MAJOR_UPDATES_MODE) {
+    execSync('git add package*');
+    execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`);
+    execSync(`git push origin ${branchName}`);
+    execSync(
+      // eslint-disable-next-line max-len
+      `gh pr create --base main --head ${branchName} --title "[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}" --body "Tada!"`
+    );
+  } else {
+    execSync('git add package*');
+    execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`);
+  }
 });
+
+if (!MAJOR_UPDATES_MODE) {
+  execSync(`git push origin ${branchName}`);
+  execSync(
+    // eslint-disable-next-line max-len
+    `gh pr create --base main --head ${branchName} --title "[Currency Bot] Bumped patch/minor dependencies" --body "Tada!"`
+  );
+}

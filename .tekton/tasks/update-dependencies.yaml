@@ -27,7 +27,6 @@ spec:
           return
         fi
 
-        git checkout -b currency-bot
-        node bin/currency/update-currencies.js    
-        git push origin currency-bot
-        gh pr create --base main --head currency-bot --title "[Currency Bot] Bumped dependencies" --body "Tada!"
+        MAJOR_UPDATES_MODE=false BRANCH=currency-bot node bin/currency/update-currencies.js
+        MAJOR_UPDATES_MODE=true BRANCH=currency-bot-major node bin/currency/update-currencies.js
+        

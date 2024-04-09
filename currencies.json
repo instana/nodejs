@@ -5,7 +5,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "@apollo/subgraph",
@@ -13,7 +14,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "@aws-sdk/client-dynamodb",
@@ -21,7 +23,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "@aws-sdk/client-kinesis",
@@ -29,7 +32,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "@aws-sdk/client-lambda",
@@ -37,7 +41,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "@aws-sdk/client-s3",
@@ -45,7 +50,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "@aws-sdk/client-sns",
@@ -53,7 +59,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "@aws-sdk/client-sqs",
@@ -61,7 +68,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "@aws-sdk/lib-dynamodb",
@@ -69,7 +77,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "@elastic/elasticsearch",
@@ -77,7 +86,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "@google-cloud/pubsub",
@@ -85,7 +95,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "@google-cloud/storage",
@@ -93,7 +104,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "@grpc/grpc-js",
@@ -101,7 +113,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "@grpc/proto-loader",
@@ -109,7 +122,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "@hapi/hapi",
@@ -117,7 +131,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "amqplib",
@@ -125,7 +140,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "superagent",
@@ -133,7 +149,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "aws-sdk",
@@ -141,7 +158,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "bull",
@@ -149,7 +167,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "couchbase",
@@ -157,7 +176,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "express",
@@ -165,7 +185,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "core-http(s)-server",
@@ -173,7 +194,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "core-http2(s)-server",
@@ -181,7 +203,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "core-http(s)-client",
@@ -189,7 +212,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "core-http2(s)-client",
@@ -197,7 +221,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "fastify",
@@ -205,7 +230,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "google-protobuf",
@@ -213,7 +239,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "got",
@@ -230,7 +257,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "graphql-subscriptions",
@@ -238,7 +266,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "graphql-tag",
@@ -246,7 +275,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "graphql-ws",
@@ -254,7 +284,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "ioredis",
@@ -262,7 +293,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "kafka-node",
@@ -270,7 +302,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "kafkajs",
@@ -278,7 +311,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "koa",
@@ -286,7 +320,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "koa-router",
@@ -294,7 +329,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "log4js",
@@ -302,7 +338,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "mali",
@@ -310,7 +347,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "memcached",
@@ -318,7 +356,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "mongodb",
@@ -326,7 +365,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "mongoose",
@@ -334,7 +374,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "mssql",
@@ -342,7 +383,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "mysql",
@@ -350,7 +392,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "mysql2",
@@ -358,7 +401,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "nats",
@@ -366,7 +410,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "node-fetch",
@@ -374,7 +419,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "node-nats-streaming",
@@ -382,7 +428,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "pg",
@@ -390,7 +437,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "pino",
@@ -398,7 +446,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "redis",
@@ -406,7 +455,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "restify",
@@ -414,7 +464,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "sequelize",
@@ -422,7 +473,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "socket.io",
@@ -430,7 +482,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "socket.io-client",
@@ -438,7 +491,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "sqs-consumer",
@@ -446,7 +500,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "tedious",
@@ -454,7 +509,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "winston",
@@ -462,7 +518,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "ibm_db",
@@ -470,7 +527,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "kafka-avro",
@@ -478,7 +536,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "node-rdkafka",
@@ -486,7 +545,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "pg-native",
@@ -494,7 +554,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "q",
@@ -502,7 +563,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "core-timers",
@@ -510,7 +572,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "core-fs",
@@ -518,7 +581,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "prisma",
@@ -526,7 +590,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "typeorm",
@@ -534,7 +599,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "bunyan",
@@ -542,7 +608,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   },
   {
     "name": "bluebird",
@@ -550,6 +617,7 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": false
   }
 ]
