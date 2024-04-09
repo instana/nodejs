@@ -76,7 +76,7 @@ Finally, use the Azure web portal to include that test application image in a Az
 ### Using the Image in a Azure App Service
 
 * Navigate to the Azure portal at https://portal.azure.com.
-* Access the Azure app service by visiting https://portal.azure.com/#view/HubsExtension/BrowseResource/resourceType/Microsoft.Web%2Fsites and create a new web app.
+* Access the Azure app service by visiting [App Services](https://portal.azure.com/#view/HubsExtension/BrowseResource/resourceType/Microsoft.Web%2Fsites) and create a new web app.
 * Fill in the required information in the "Basics" tab, including the name, region, and choose the docker container as the 'Publish' option.
 * Head to the "Docker" tab, enter the Docker image details, select the Azure Container Registry where your Docker image is stored, and choose the specific Docker image.
 * Click on "Review + create" and then proceed to click "Create" to initiate the deployment of the Azure web app.
@@ -84,6 +84,6 @@ Finally, use the Azure web portal to include that test application image in a Az
 * In the "Configuration" section of the web app, enter the Instana URL and environment key to specify the environment to which the app will report later.
 * Go to the Instana environment you are reporting to (for example [test/pink](https://test-instana.pink.instana.rocks/#/physical?q=entity.type%3Acloudrun)) and inspect the data.
 * Test tracing:
-    * You can find the service's public URL on its [details tab](https://console.cloud.google.com/run/detail/us-central1/cloud-run-nodejs-test/general?project=k8s-brewery).
+    * You can find the service's public URL on its details tab.
     * Execute a few requests: `watch curl https://$PUBLIC_SERVICE_URL`.
     * Inspect the resulting calls in Instana.
