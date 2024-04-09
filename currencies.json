@@ -526,5 +526,29 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false
+  },
+  {
+    "name": "typeorm",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "bunyan",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "bluebird",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
   }
 ]

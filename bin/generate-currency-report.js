@@ -7,7 +7,7 @@
 const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
-const pkg = require(path.join(__dirname, '..', 'package.json'));
+const pkgjson = require(path.join(__dirname, '..', 'package.json'));
 let currencies = require(path.join(__dirname, '..', 'currencies.json'));
 
 currencies = currencies.sort(function (a, b) {
@@ -25,9 +25,24 @@ currencies = currencies.sort(function (a, b) {
 });
 
 currencies = currencies.map(currency => {
-  let lastSupportedVersion = pkg.devDependencies[currency.name] || pkg.optionalDependencies[currency.name];
+  let lastSupportedVersion = pkgjson.devDependencies[currency.name] || pkgjson.optionalDependencies[currency.name];
   let latestVersion;
   let upToDate;
+
+  if (!lastSupportedVersion) {
+    const dirs = fs.readdirSync(path.join(__dirname, '..', 'packages'));
+
+    lastSupportedVersion = dirs
+      .map(dir => {
+        try {
+          const subpkgjson = require(path.join(__dirname, '..', 'packages', dir, 'package.json'));
+          return subpkgjson.devDependencies?.[currency.name] || subpkgjson.optionalDependencies?.[currency.name];
+        } catch (error) {
+          return undefined;
+        }
+      })
+      .find(version => version !== undefined);
+  }
 
   // CASE: core pkg
   if (!lastSupportedVersion) {
