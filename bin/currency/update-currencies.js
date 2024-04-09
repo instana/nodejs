@@ -43,7 +43,6 @@ currencies.forEach(currency => {
     execSync(`npm i -D ${currency.name}@${latestVersion} -w ${subpkg}`, { stdio: 'inherit' });
   }
 
-  execSync('git add package.json');
-  execSync('git add package-lock.json');
+  execSync('git add package*');
   execSync(`git commit -m "build: bumped ${currency.name}@${latestVersion}"`);
 });
