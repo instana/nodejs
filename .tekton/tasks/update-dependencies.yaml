@@ -28,10 +28,9 @@ spec:
         fi
 
         git checkout -b currency-bot
-        node bin/currency/update-currencies.js      
-        git add package*
-        
-        git commit -m "build: updated currencies to the latest version"
+        node bin/currency/update-currencies.js    
         git push origin currency-bot
+        gh pr create --base main --head currency-bot --title "[Currency Bot] Bumped dependencies" --body "Tada!"
+
 
 
