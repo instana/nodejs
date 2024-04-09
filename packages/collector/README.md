@@ -33,7 +33,7 @@ For monitoring JavaScript applications that:
 
 - Run on Microsoft Azure, see [Azure App Services](https://www.ibm.com/docs/en/instana-observability/current?topic=services-azure-app-service-tracing-nodejs).
 
-- Run on Google Cloud, see [Google Cloud Run](ttps://www.ibm.com/docs/en/instana-observability/current?topic=agents-google-cloud-run#nodejs).
+- Run on Google Cloud, see [Google Cloud Run](https://www.ibm.com/docs/en/instana-observability/current?topic=agents-google-cloud-run#nodejs).
 
 ## Installation And Usage
 
