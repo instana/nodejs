@@ -10,6 +10,11 @@ const currencies = require(path.join(__dirname, '..', '..', 'currencies.json'));
 const utils = require('./utils');
 
 currencies.forEach(currency => {
+  if (currency.ignoreUpdates) {
+    console.log(`Skipping ${currency.name}. ignoreUpdates is set.`);
+    return;
+  }
+
   let installedVersion = utils.getRootDependencyVersion(currency.name);
   let isRootDependency = true;
 

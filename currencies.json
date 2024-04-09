@@ -221,7 +221,8 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false
+    "isBeta": false,
+    "ignoreUpdates": true
   },
   {
     "name": "graphql",
