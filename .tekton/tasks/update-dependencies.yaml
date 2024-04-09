@@ -1,0 +1,40 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: update-dependencies
+spec:
+  params:
+    - name: continuous-delivery-context-secret
+      default: secure-properties
+    - name: type
+      value: $(params.type)
+    - name: node-version
+      value: $(params.node-version)
+  workspaces:
+    - name: output
+      mountPath: /artifacts
+  steps:
+    - name: execute
+      image: node:$(params.node-version)
+      script: |
+        #!/bin/bash
+
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+
+        if git show-ref -q --heads currency-bot; then
+          echo 'Branch exists. Skipping currency bot.'
+          return
+        fi
+
+        npm install -g npm-check-updates
+
+        git checkout -b currency-bot
+        ncu --deep -u
+
+        git add .
+        
+        git commit -m "build: updated currencies to the latest version"
+        git push origin currency-bot
+
+
