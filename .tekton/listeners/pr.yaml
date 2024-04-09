@@ -32,7 +32,7 @@ spec:
       value: $(params.npm-version)
       default: ""      
     - name: pl-name
-      value: $(event.pull_request.head.sha)
+      value: $(event.pull_request.number)
     - name: pipeline-ref
       value: "default-pipeline"
 
