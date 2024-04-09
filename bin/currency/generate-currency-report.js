@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
 const utils = require('./utils');
-let currencies = require(path.join(__dirname, '..', 'currencies.json'));
+let currencies = require(path.join(__dirname, '..', '..', 'currencies.json'));
 
 currencies = currencies.sort(function (a, b) {
   const nameA = a.name.toUpperCase();

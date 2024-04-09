@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 
 module.exports.getRootDependencyVersion = name => {
-  const pkgjson = require(path.join(__dirname, '..', 'package.json'));
+  const pkgjson = require(path.join(__dirname, '..', '..', 'package.json'));
   return pkgjson.devDependencies[name] || pkgjson.optionalDependencies[name];
 };
 
@@ -36,7 +36,7 @@ module.exports.getPackageDependencyVersion = name => {
   return dirs
     .map(dir => {
       try {
-        const subpkgjson = require(path.join(__dirname, '..', 'packages', dir, 'package.json'));
+        const subpkgjson = require(path.join(__dirname, '..', '..', 'packages', dir, 'package.json'));
         return subpkgjson.devDependencies?.[name] || subpkgjson.optionalDependencies?.[name];
       } catch (error) {
         return undefined;

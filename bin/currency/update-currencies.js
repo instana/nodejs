@@ -6,7 +6,7 @@
 
 const path = require('path');
 const { execSync } = require('child_process');
-const currencies = require(path.join(__dirname, '..', 'currencies.json'));
+const currencies = require(path.join(__dirname, '..', '..', 'currencies.json'));
 const utils = require('./utils');
 
 currencies.forEach(currency => {
@@ -22,6 +22,9 @@ currencies.forEach(currency => {
     console.log(`Skipping ${currency.name}. Seems to be a core dependency.`);
     return;
   }
+
+  installedVersion = installedVersion.replace(/[^0-9.]/g, '');
+
   const latestVersion = execSync(`npm info ${currency.name} version`).toString().trim();
 
   if (latestVersion === installedVersion) {
@@ -33,11 +36,11 @@ currencies.forEach(currency => {
 
   if (isRootDependency) {
     console.log(`npm i -D ${currency.name}@${latestVersion}`);
-    execSync(`npm i -D ${currency.name}@${latestVersion}`);
+    execSync(`npm i -D ${currency.name}@${latestVersion}`, { stdio: 'inherit' });
   } else {
     const subpkg = utils.getPackageName(currency.name);
     console.log(`npm i -D ${currency.name}@${latestVersion} -w ${subpkg}`);
-    execSync(`npm i -D ${currency.name}@${latestVersion} -w ${subpkg}`);
+    execSync(`npm i -D ${currency.name}@${latestVersion} -w ${subpkg}`, { stdio: 'inherit' });
   }
 
   execSync('git add package.json');
