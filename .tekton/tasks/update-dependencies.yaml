@@ -27,12 +27,9 @@ spec:
           return
         fi
 
-        npm install -g npm-check-updates
-
         git checkout -b currency-bot
-        ncu --deep -u
-
-        git add .
+        node bin/update-currencies.js      
+        git add package*
         
         git commit -m "build: updated currencies to the latest version"
         git push origin currency-bot

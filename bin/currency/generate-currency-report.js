@@ -7,7 +7,7 @@
 const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
-const pkgjson = require(path.join(__dirname, '..', 'package.json'));
+const utils = require('./utils');
 let currencies = require(path.join(__dirname, '..', 'currencies.json'));
 
 currencies = currencies.sort(function (a, b) {
@@ -25,37 +25,25 @@ currencies = currencies.sort(function (a, b) {
 });
 
 currencies = currencies.map(currency => {
-  let lastSupportedVersion = pkgjson.devDependencies[currency.name] || pkgjson.optionalDependencies[currency.name];
+  let installedVersion = utils.getRootDependencyVersion(currency.name);
   let latestVersion;
   let upToDate;
 
-  if (!lastSupportedVersion) {
-    const dirs = fs.readdirSync(path.join(__dirname, '..', 'packages'));
-
-    lastSupportedVersion = dirs
-      .map(dir => {
-        try {
-          const subpkgjson = require(path.join(__dirname, '..', 'packages', dir, 'package.json'));
-          return subpkgjson.devDependencies?.[currency.name] || subpkgjson.optionalDependencies?.[currency.name];
-        } catch (error) {
-          return undefined;
-        }
-      })
-      .find(version => version !== undefined);
+  if (!installedVersion) {
+    installedVersion = utils.getPackageDependencyVersion(currency.name);
   }
 
   // CASE: core pkg
-  if (!lastSupportedVersion) {
-    lastSupportedVersion = latestVersion = 'latest';
+  if (!installedVersion) {
+    installedVersion = latestVersion = 'latest';
     upToDate = true;
   } else {
-    lastSupportedVersion = lastSupportedVersion.replace(/[^0-9.]/g, '');
-
+    installedVersion = installedVersion.replace(/[^0-9.]/g, '');
     latestVersion = execSync(`npm info ${currency.name} version`).toString().trim();
-    upToDate = latestVersion === lastSupportedVersion;
+    upToDate = latestVersion === installedVersion;
   }
 
-  currency = { ...currency, latestVersion, lastSupportedVersion, upToDate };
+  currency = { ...currency, latestVersion, lastSupportedVersion: installedVersion, upToDate };
   return currency;
 });
 
