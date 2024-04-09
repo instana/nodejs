@@ -128,6 +128,14 @@
     "isBeta": false
   },
   {
+    "name": "superagent",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
     "name": "aws-sdk",
     "policy": "30-days",
     "lastSupportedVersion": "",
@@ -154,6 +162,38 @@
   {
     "name": "express",
     "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "core-http(s)-server",
+    "policy": "0-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "core-http2(s)-server",
+    "policy": "0-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "core-http(s)-client",
+    "policy": "0-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "core-http2(s)-client",
+    "policy": "0-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -450,6 +490,30 @@
   {
     "name": "pg-native",
     "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "q",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "core-timers",
+    "policy": "0-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false
+  },
+  {
+    "name": "core-fs",
+    "policy": "0-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,

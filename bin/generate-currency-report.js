@@ -10,12 +10,35 @@ const { execSync } = require('child_process');
 const pkg = require(path.join(__dirname, '..', 'package.json'));
 let currencies = require(path.join(__dirname, '..', 'currencies.json'));
 
+currencies = currencies.sort(function (a, b) {
+  const nameA = a.name.toUpperCase();
+  const nameB = b.name.toUpperCase();
+
+  if (nameA < nameB) {
+    return -1;
+  }
+  if (nameA > nameB) {
+    return 1;
+  }
+
+  return 0;
+});
+
 currencies = currencies.map(currency => {
   let lastSupportedVersion = pkg.devDependencies[currency.name] || pkg.optionalDependencies[currency.name];
-  lastSupportedVersion = lastSupportedVersion.replace(/[^0-9.]/g, '');
+  let latestVersion;
+  let upToDate;
 
-  const latestVersion = execSync(`npm info ${currency.name} version`).toString().trim();
-  const upToDate = latestVersion === lastSupportedVersion;
+  // CASE: core pkg
+  if (!lastSupportedVersion) {
+    lastSupportedVersion = latestVersion = 'latest';
+    upToDate = true;
+  } else {
+    lastSupportedVersion = lastSupportedVersion.replace(/[^0-9.]/g, '');
+
+    latestVersion = execSync(`npm info ${currency.name} version`).toString().trim();
+    upToDate = latestVersion === lastSupportedVersion;
+  }
 
   currency = { ...currency, latestVersion, lastSupportedVersion, upToDate };
   return currency;
@@ -26,7 +49,7 @@ function jsonToMarkdown(data) {
     // eslint-disable-next-line max-len
     `#### This page is auto-generated. Any change will be overwritten after the next sync. Please apply changes directly at https://github.com/instana/nodejs. Generated on ${new Date().toDateString()}.` +
     '\n\n' +
-    '# Node.js packages' +
+    '# Node.js supported core & third party packages' +
     '\n\n' +
     // eslint-disable-next-line max-len
     '| Package name | Support Policy | Last Supported Version | Latest Version | Cloud Native | Up-to-date | Beta version |\n';
