@@ -11,10 +11,14 @@ const currencies = require(path.join(__dirname, '..', '..', 'currencies.json'));
 const utils = require('./utils');
 const MAJOR_UPDATES_MODE = process.env.MAJOR_UPDATES_MODE || false;
 const BRANCH = process.env.BRANCH;
+
+if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
 let branchName = BRANCH;
 
 if (!MAJOR_UPDATES_MODE) {
-  execSync(`git checkout -b ${BRANCH}`);
+  execSync('git checkout main');
+  execSync('npm i');
+  execSync(`git checkout -b ${branchName}`);
 }
 
 currencies.forEach(currency => {
@@ -53,6 +57,11 @@ currencies.forEach(currency => {
   }
 
   if (MAJOR_UPDATES_MODE) {
+    if (semver.major(latestVersion) === semver.major(installedVersion)) {
+      console.log(`Skipping ${currency.name}. No major update available.`);
+      return;
+    }
+
     execSync('git checkout main');
     execSync('npm i');
 
