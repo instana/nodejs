@@ -190,7 +190,7 @@
     "node-fetch": "^2.6.1",
     "node-nats-streaming": "^0.3.2",
     "pg": "^8.11.5",
-    "pino": "^8.19.0",
+    "pino": "^8.20.0",
     "pino-http": "^9.0.0",
     "pino-pretty": "^10.0.0",
     "pino-v6": "npm:pino@^6.13.3",
