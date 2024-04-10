@@ -27,6 +27,8 @@ spec:
           return
         fi
 
+        git status
+        
         echo "Running patch and minor updates..."
         MAJOR_UPDATES_MODE=false BRANCH=currency-bot node bin/currency/update-currencies.js
 
