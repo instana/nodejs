@@ -23,7 +23,7 @@ if (!MAJOR_UPDATES_MODE) {
   execSync(`git checkout -b ${branchName}`, { cwd });
 }
 
-currencies.slice(0, 5).forEach(currency => {
+currencies.forEach(currency => {
   console.log(`Checking currency update for ${currency.name}`);
 
   if (currency.ignoreUpdates) {
