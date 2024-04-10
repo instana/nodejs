@@ -71,6 +71,16 @@ currencies.forEach(currency => {
     execSync('npm i --no-audit', { cwd });
 
     branchName = `${BRANCH}-${currency.name.replace(/[^a-zA-Z0-9]/g, '')}`;
+
+    try {
+      execSync(`git ls-remote --exit-code --heads origin ${branchName}`, { cwd });
+      console.log(`Skipping ${currency.name}. Branch exists.`);
+      return;
+    } catch (err) {
+      // ignore err
+      // CASE: branch does not exist, continue
+    }
+
     execSync(`git checkout -b ${branchName}`, { cwd });
   }
 
