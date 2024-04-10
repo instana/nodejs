@@ -9,7 +9,7 @@ const semver = require('semver');
 const { execSync } = require('child_process');
 const currencies = require(path.join(__dirname, '..', '..', 'currencies.json'));
 const utils = require('./utils');
-const MAJOR_UPDATES_MODE = process.env.MAJOR_UPDATES_MODE || false;
+const MAJOR_UPDATES_MODE = process.env.MAJOR_UPDATES_MODE ? Boolean(process.env.MAJOR_UPDATES_MODE) : false;
 const BRANCH = process.env.BRANCH;
 
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
