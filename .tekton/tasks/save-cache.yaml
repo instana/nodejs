@@ -40,6 +40,10 @@ spec:
           apt-get update -y
           apt-get install zstd -y
 
+          # remove any cached npm files before zipping
+          find node_modules -type f -name '.*' -exec rm -f {} +
+          find node_modules -type d -name '.*' -exec rm -rf {} +
+
           tar -cf - node_modules | zstd -o node-modules.tar.zst
 
           checksum=$(sha256sum package-lock.json | awk '{print $1}')
