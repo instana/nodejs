@@ -27,6 +27,8 @@ spec:
           return
         fi
 
+        npm i
+        
         git fetch --all
         git pull --all
         
