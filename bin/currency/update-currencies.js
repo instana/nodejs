@@ -19,7 +19,7 @@ let branchName = BRANCH;
 if (!MAJOR_UPDATES_MODE) {
   console.log('Preparing patch/minor updates...');
   execSync('git checkout main', { cwd });
-  execSync('npm i', { cwd });
+  execSync('npm i --no-audit', { cwd });
   execSync(`git checkout -b ${branchName}`, { cwd });
 }
 
@@ -68,23 +68,23 @@ currencies.forEach(currency => {
 
     console.log(`Major update available for ${currency.name}.`);
     execSync('git checkout main', { cwd });
-    execSync('npm i', { cwd });
+    execSync('npm i --no-audit', { cwd });
 
     branchName = `${BRANCH}-${currency.name.replace(/[^a-zA-Z0-9]/g, '')}`;
     execSync(`git checkout -b ${branchName}`, { cwd });
   }
 
   if (isRootDependency) {
-    console.log(`npm i -D ${currency.name}@${latestVersion}`);
-    execSync(`npm i -D ${currency.name}@${latestVersion}`, { stdio: 'inherit', cwd });
+    console.log(`npm i -D ${currency.name}@${latestVersion} --no-audit`);
+    execSync(`npm i -D ${currency.name}@${latestVersion} --no-audit`, { stdio: 'inherit', cwd });
   } else {
     const subpkg = utils.getPackageName(currency.name);
-    console.log(`npm i -D ${currency.name}@${latestVersion} -w ${subpkg}`);
-    execSync(`npm i -D ${currency.name}@${latestVersion} -w ${subpkg}`, { stdio: 'inherit', cwd });
+    console.log(`npm i -D ${currency.name}@${latestVersion} -w ${subpkg} --no-audit`);
+    execSync(`npm i -D ${currency.name}@${latestVersion} -w ${subpkg} --no-audit`, { stdio: 'inherit', cwd });
   }
 
   if (MAJOR_UPDATES_MODE) {
-    execSync('git add package*', { cwd });
+    execSync('git add *package.json package-lock.json', { cwd });
     execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
     execSync(`git push origin ${branchName} --no-verify`, { cwd });
     execSync(
@@ -93,7 +93,7 @@ currencies.forEach(currency => {
       { cwd }
     );
   } else {
-    execSync('git add package*', { cwd });
+    execSync('git add *package.json package-lock.json', { cwd });
     execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
   }
 });
