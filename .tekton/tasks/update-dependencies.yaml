@@ -16,6 +16,12 @@ spec:
   steps:
     - name: execute       
       image: node:$(params.node-version)
+      env:
+        - name: GH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "GH_PUBLIC_TOKEN"      
       script: |
         #!/bin/bash
 
@@ -31,8 +37,10 @@ spec:
         && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
         && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
         && apt update \
-        && apt install gh -y
-      
+        && apt install gh -y    
+
+        gh auth login --with-token
+        
         # TODO: remove these files before uploading the cache otherwise npm i fails!
         find node_modules -type f -name '.*' -exec rm -f {} +
         find node_modules -type d -name '.*' -exec rm -rf {} +
