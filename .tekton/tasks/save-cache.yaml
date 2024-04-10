@@ -40,9 +40,9 @@ spec:
           apt-get update -y
           apt-get install zstd -y
 
-          # remove any cached npm files before zipping
-          find node_modules -type f -name '.*' -exec rm -f {} +
-          find node_modules -type d -name '.*' -exec rm -rf {} +
+          # Remove any cached npm files before zipping
+          find node_modules -type f -name '.*' ! \( -path "node_modules/.bin" -o -path "node_modules/.package-lock.json" \) -exec rm -f {} +
+          find node_modules -type d -name '.*' ! \( -path "node_modules/.bin" -o -path "node_modules/.package-lock.json" \) -exec rm -rf {} +
 
           tar -cf - node_modules | zstd -o node-modules.tar.zst
 
