@@ -62,7 +62,7 @@ class ProcessControls {
 
           if (esmApp) {
             opts.execArgv = isLatestEsmSupportedVersion(process.versions.node)
-              ? ['--import', `${path.join(__dirname, '..', '..', 'esm-register.mjs')}`]
+              ? [`--import=${path.join(__dirname, '..', '..', 'esm-register.mjs')}`]
               : [`--experimental-loader=${path.join(__dirname, '..', '..', 'esm-loader.mjs')}`];
             opts.appPath = path.join(opts.dirname, 'app.mjs');
           }
