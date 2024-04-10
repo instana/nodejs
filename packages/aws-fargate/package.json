@@ -10,7 +10,8 @@
   "main": "src/index.js",
   "files": [
     "src",
-    "esm-loader.mjs"
+    "esm-loader.mjs",
+    "esm-register.mjs"
   ],
   "publishConfig": {
     "access": "public"

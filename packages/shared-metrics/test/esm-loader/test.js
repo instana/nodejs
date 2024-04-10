@@ -6,30 +6,29 @@
 
 const path = require('path');
 const _ = require('lodash');
-const semver = require('semver');
 const expect = require('chai').expect;
 const { supportedVersion } = require('@instana/core').tracing;
 const testUtils = require('@instana/core/test/test_util');
 const config = require('@instana/core/test/config');
+const isLatestEsmSupportedVersion = require('@instana/core').tracing.isLatestEsmSupportedVersion;
 
 const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
-
-// NOTE: ESM loader & Node v20 do not work together. https://github.com/nodejs/help/issues/4190
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.lt(process.versions.node, '20.0.0') ? describe : describe.skip;
+const loaderPath = isLatestEsmSupportedVersion(process.versions.node)
+  ? ['--import', '../../../../collector/esm-register.mjs']
+  : ['--experimental-loader=../../../../collector/esm-loader.mjs'];
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('ESM loader', function () {
   describe('case 1', function () {
     this.timeout(config.getTestTimeout());
 
     let controls;
-
     before(async () => {
       controls = new ProcessControls({
         useGlobalAgent: true,
         cwd: path.join(__dirname, 'module'),
         appPath: path.join(__dirname, 'module', 'src', 'app'),
-        execArgv: ['--experimental-loader=../../../../collector/esm-loader.mjs']
+        execArgv: loaderPath
       });
 
       await controls.startAndWaitForAgentConnection();
@@ -62,7 +61,7 @@ mochaSuiteFn('ESM loader', function () {
         useGlobalAgent: true,
         cwd: path.join(__dirname, 'module'),
         appPath: path.join(__dirname, 'module-2', 'src', 'app.mjs'),
-        execArgv: ['--experimental-loader', './../../../../collector/esm-loader.mjs']
+        execArgv: loaderPath
       });
 
       await controls.startAndWaitForAgentConnection();
@@ -95,7 +94,7 @@ mochaSuiteFn('ESM loader', function () {
         useGlobalAgent: true,
         cwd: path.join(__dirname, 'module'),
         appPath: path.join(__dirname, 'module-3', 'node_modules', 'my-app', 'server.mjs'),
-        execArgv: ['--experimental-loader', './../../../../collector/esm-loader.mjs']
+        execArgv: loaderPath
       });
 
       await controls.startAndWaitForAgentConnection();
@@ -122,11 +121,13 @@ mochaSuiteFn('ESM loader', function () {
   describe('case 4 (NODE_OPTIONS)', function () {
     this.timeout(config.getTestTimeout());
     let controls;
-
+    const nodeOption = isLatestEsmSupportedVersion(process.versions.node)
+      ? '--import ../../../../collector/esm-register.mjs'
+      : '--experimental-loader=../../../../collector/esm-loader.mjs';
     before(async () => {
       controls = new ProcessControls({
         env: {
-          NODE_OPTIONS: '--experimental-loader=../../../../collector/esm-loader.mjs'
+          NODE_OPTIONS: nodeOption
         },
         useGlobalAgent: true,
         cwd: path.join(__dirname, 'module'),

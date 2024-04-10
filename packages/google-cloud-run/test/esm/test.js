@@ -300,7 +300,7 @@ if (esmSupportedVersion(process.versions.node)) {
   });
 } else {
   // Skip the tests for unsupported Node.js version
-  describe('Google Cloud Run', function () {
+  describe('[ESM] Google Cloud Run', function () {
     it('should skip tests for unsupported Node.js version', function () {
       // eslint-disable-next-line no-console
       console.log(`Skipping tests. Node.js version ${process.versions.node} is not supported.`);
