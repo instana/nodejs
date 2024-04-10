@@ -1,0 +1,55 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: update-dependencies
+spec:
+  params:
+    - name: continuous-delivery-context-secret
+      default: secure-properties
+    - name: type
+      value: $(params.type)
+    - name: node-version
+      value: $(params.node-version)
+  workspaces:
+    - name: output
+      mountPath: /artifacts
+  steps:
+    - name: execute       
+      image: node:$(params.node-version)
+      env:
+        - name: GH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "GH_PUBLIC_TOKEN"      
+      script: |
+        #!/bin/bash
+
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+        
+        git config user.name "Katharina Irrgang"
+        git config user.email katharina.irrgang@ibm.com
+
+        mkdir -p -m 755 /etc/apt/keyrings && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+        && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+        && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+        && apt update \
+        && apt install gh -y    
+
+        gh auth login --with-token
+
+        git ls-remote --exit-code --heads origin currency-bot >/dev/null 2>&1
+        EXIT_CODE=$?
+
+        if [[ $EXIT_CODE != '0' ]]; then          
+          echo "Running patch and minor updates..."
+          MAJOR_UPDATES_MODE=false BRANCH=currency-bot node bin/currency/update-currencies.js    
+        else
+          echo "Skipping patch/minor updates. Branch exists."
+        fi        
+
+        echo "Running major updates..."
+        MAJOR_UPDATES_MODE=true BRANCH=currency-bot-major node bin/currency/update-currencies.js
+
+        

@@ -1,7 +1,7 @@
 apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerBinding
 metadata:
-  name: node-x-binding
+  name: currency-bot-binding
 spec:
   envFrom:
     - configMapRef:
@@ -12,31 +12,32 @@ spec:
     - name: target-branch
       value: $(params.target-branch)
     - name: type
-      value: "node-x"
+      value: "currency-bot"
     - name: repository
       value: $(params.repository-url)
     - name: commit-id
-      value: ""
+      value: $(param.commit-id)
+      default: ""
     - name: node-version
       value: $(params.node-version)
       default: ""
     - name: npm-version
       value: $(params.npm-version)
-      default: ""      
+      default: "" 
     - name: pl-name
-      value: "nightly-$(params.node-version)"
+      value: "currency-bot-$(params.node-version)"
     - name: pipeline-ref
-      value: "default-pipeline"
+      value: "currency-bot-pipeline"
 
 ---
 
 apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener
 metadata:
-  name: node-x-listener
+  name: currency-bot-listener
 spec:
   triggers:
     - bindings:
-        - name: node-x-binding
+        - name: currency-bot-binding
       template:
         name: custom-template
