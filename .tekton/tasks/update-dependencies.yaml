@@ -59,6 +59,6 @@ spec:
           exit 0;
         fi
 
-        # echo "Running major updates..."
-        # MAJOR_UPDATES_MODE=true BRANCH=currency-bot-major node bin/currency/update-currencies.js
+        echo "Running major updates..."
+        MAJOR_UPDATES_MODE=true BRANCH=currency-bot-major node bin/currency/update-currencies.js
         
