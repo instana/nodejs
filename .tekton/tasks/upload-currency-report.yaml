@@ -43,8 +43,8 @@ spec:
         git pull origin main
         cp ../currency-report.md ./automated/currency/nodejs/report.md
 
-        git config user.name "IBM/Instana/Team Node.js"
-        git config user.email katharina.irrgang@ibm.com
+        git config user.name "Instanacd PAT for GitHub Enterprise"
+        git config user.email instana.ibm.github.enterprise@ibm.com
         
         git add .
         
