@@ -26,7 +26,7 @@ spec:
         #!/bin/bash
 
         if [ "$(params.type)" != "main" ]; then
-          echo "Skipping uploading the currency report. Not main pipeline."
+          echo "Skipping uploading the currency report. This is not the main pipeline."
           return
         fi
 
