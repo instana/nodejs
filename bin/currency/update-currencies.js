@@ -18,7 +18,7 @@ let branchName = BRANCH;
 
 if (!MAJOR_UPDATES_MODE) {
   console.log('Preparing patch/minor updates...');
-  execSync('git checkout origin/main', { cwd });
+  execSync('git checkout main', { cwd });
   execSync('npm i', { cwd });
   execSync(`git checkout -b ${branchName}`, { cwd });
 }
@@ -65,7 +65,7 @@ currencies.forEach(currency => {
     }
 
     console.log(`Major update available for ${currency.name}.`);
-    execSync('git checkout origin/main', { cwd });
+    execSync('git checkout main', { cwd });
     execSync('npm i', { cwd });
 
     branchName = `${BRANCH}-${currency.name.replace(/[^a-zA-Z0-9]/g, '')}`;
@@ -87,7 +87,7 @@ currencies.forEach(currency => {
     execSync(`git push origin ${branchName} --no-verify`, { cwd });
     execSync(
       // eslint-disable-next-line max-len
-      `gh pr create --base origin/main --head ${branchName} --title "[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}" --body "Tada!"`,
+      `gh pr create --base main --head ${branchName} --title "[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}" --body "Tada!"`,
       { cwd }
     );
   } else {
@@ -100,7 +100,7 @@ if (!MAJOR_UPDATES_MODE) {
   execSync(`git push origin ${branchName} --no-verify`, { cwd });
   execSync(
     // eslint-disable-next-line max-len
-    `gh pr create --base origin/main --head ${branchName} --title "[Currency Bot] Bumped patch/minor dependencies" --body "Tada!"`,
+    `gh pr create --base main --head ${branchName} --title "[Currency Bot] Bumped patch/minor dependencies" --body "Tada!"`,
     { cwd }
   );
 }
