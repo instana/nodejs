@@ -27,10 +27,7 @@ spec:
           return
         fi
 
-        npm cache clean --force
-
-        git fetch --all
-        git pull --all
+        npm rebuild
         
         echo "Running patch and minor updates..."
         MAJOR_UPDATES_MODE=false BRANCH=currency-bot node bin/currency/update-currencies.js
