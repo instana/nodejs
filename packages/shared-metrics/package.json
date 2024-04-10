@@ -64,7 +64,7 @@
     "event-loop-lag": "^1.4.0",
     "recursive-copy": "^2.0.13",
     "semver": "^7.5.4",
-    "tar": "^6.1.11"
+    "tar": "^6.2.1"
   },
   "devDependencies": {
     "@types/tar": "^6.1.6"
