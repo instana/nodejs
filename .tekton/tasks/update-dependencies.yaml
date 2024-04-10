@@ -28,6 +28,7 @@ spec:
         fi
 
         git fetch --all
+        git pull --all
         
         echo "Running patch and minor updates..."
         MAJOR_UPDATES_MODE=false BRANCH=currency-bot node bin/currency/update-currencies.js
