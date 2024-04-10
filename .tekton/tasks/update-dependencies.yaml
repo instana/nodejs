@@ -33,7 +33,7 @@ spec:
 
         if [[ $EXIT_CODE == '0' ]]; then
           echo "Git branch 'currency-bot' exists in the remote repository"
-          return;
+          exit 0;
         fi
 
         mkdir -p -m 755 /etc/apt/keyrings && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
@@ -55,8 +55,8 @@ spec:
         EXIT_CODE=$?
 
         if [[ $EXIT_CODE == '0' ]]; then
-          echo "Git branch 'currency-bot' exists in the remote repository"
-          return;
+          echo "Git branch 'currency-bot-major' exists in the remote repository"
+          exit 0;
         fi
 
         # echo "Running major updates..."
