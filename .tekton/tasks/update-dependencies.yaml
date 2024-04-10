@@ -28,8 +28,9 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
-        if git show-ref -q --heads currency-bot; then
-          echo 'Branch exists. Skipping currency bot.'
+        if [ `git branch --list currency-bot` ]
+        then
+          echo "Branch name currency-bot already exists."
           return
         fi
 
@@ -40,7 +41,7 @@ spec:
         && apt install gh -y    
 
         gh auth login --with-token
-        
+
         # TODO: remove these files before uploading the cache otherwise npm i fails!
         find node_modules -type f -name '.*' -exec rm -f {} +
         find node_modules -type d -name '.*' -exec rm -rf {} +
