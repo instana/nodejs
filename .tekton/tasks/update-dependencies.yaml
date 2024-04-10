@@ -28,6 +28,8 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        git fetch --all
+        
         if [ `git branch --list currency-bot` ]
         then
           echo "Branch name currency-bot already exists."
