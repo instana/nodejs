@@ -28,16 +28,7 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         
-        git ls-remote --exit-code --heads origin currency-bot >/dev/null 2>&1
-        EXIT_CODE=$?
-
-        if [[ $EXIT_CODE == '0' ]]; then
-          echo "Git branch 'currency-bot' exists in the remote repository"
-          exit 0;
-        fi
-
-        # TODO: replace with bot token asap
-        git config user.name "Katharina Irrgang
+        git config user.name "Katharina Irrgang"
         git config user.email katharina.irrgang@ibm.com
 
         mkdir -p -m 755 /etc/apt/keyrings && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
@@ -47,18 +38,25 @@ spec:
         && apt install gh -y    
 
         gh auth login --with-token
-        
-        echo "Running patch and minor updates..."
-        MAJOR_UPDATES_MODE=false BRANCH=currency-bot node bin/currency/update-currencies.js
+
+        git ls-remote --exit-code --heads origin currency-bot >/dev/null 2>&1
+        EXIT_CODE=$?
+
+        if [[ $EXIT_CODE != '0' ]]; then          
+          echo "Running patch and minor updates..."
+          MAJOR_UPDATES_MODE=false BRANCH=currency-bot node bin/currency/update-currencies.js    
+        else
+          echo "Skipping patch/minor updates. Branch exists."
+        fi        
 
         git ls-remote --exit-code --heads origin currency-bot-major >/dev/null 2>&1
         EXIT_CODE=$?
 
-        if [[ $EXIT_CODE == '0' ]]; then
-          echo "Git branch 'currency-bot-major' exists in the remote repository"
-          exit 0;
+        if [[ $EXIT_CODE != '0' ]]; then
+          echo "Running major updates..."
+          MAJOR_UPDATES_MODE=true BRANCH=currency-bot-major node bin/currency/update-currencies.js
+        else
+          echo "Skipping major updates. Branch exists."
         fi
 
-        echo "Running major updates..."
-        MAJOR_UPDATES_MODE=true BRANCH=currency-bot-major node bin/currency/update-currencies.js
         
