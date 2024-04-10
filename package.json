@@ -188,7 +188,7 @@
     "mysql2": "^3.9.4",
     "nats": "^2.22.0",
     "nats-v1": "npm:nats@^1.4.12",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^3.3.2",
     "node-nats-streaming": "^0.3.2",
     "pg": "^8.11.5",
     "pino": "^8.20.0",
