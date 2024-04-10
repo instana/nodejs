@@ -27,13 +27,13 @@ spec:
 
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
-
-        git fetch --all
         
-        if [ `git branch --list currency-bot` ]
-        then
-          echo "Branch name currency-bot already exists."
-          return
+        git ls-remote --exit-code --heads origin currency-bot >/dev/null 2>&1
+        EXIT_CODE=$?
+
+        if [[ $EXIT_CODE == '0' ]]; then
+          echo "Git branch 'currency-bot' exists in the remote repository"
+          return;
         fi
 
         mkdir -p -m 755 /etc/apt/keyrings && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
@@ -50,6 +50,14 @@ spec:
         
         echo "Running patch and minor updates..."
         MAJOR_UPDATES_MODE=false BRANCH=currency-bot node bin/currency/update-currencies.js
+
+        git ls-remote --exit-code --heads origin currency-bot-major >/dev/null 2>&1
+        EXIT_CODE=$?
+
+        if [[ $EXIT_CODE == '0' ]]; then
+          echo "Git branch 'currency-bot' exists in the remote repository"
+          return;
+        fi
 
         # echo "Running major updates..."
         # MAJOR_UPDATES_MODE=true BRANCH=currency-bot-major node bin/currency/update-currencies.js
