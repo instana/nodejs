@@ -27,8 +27,8 @@ spec:
           return
         fi
 
-        npm i
-        
+        npm cache clean --force
+
         git fetch --all
         git pull --all
         
