@@ -16,7 +16,8 @@
  * ENV NODE_OPTIONS='--import /instana/node_modules/@instana/azure-container-services/esm-register.mjs server.js
  */
 
-// Importing the Instana trace initialization module here, as this is executed in the main thread.
+// Import the initialization module for azure-container-services collector; it self-initializes upon import
+// and it should be executed in the main thread.
 import './src/index.js';
 
 // We plan to utilize this for adding native ESM support in the near future

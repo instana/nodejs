@@ -16,7 +16,7 @@
  * node --import @instana/collector/esm-register.mjs server.js
  */
 
-// Importing the Instana trace initialization module here, as this is executed in the main thread.
+// Import the initialization module for Instana collector and it should be executed in the main thread.
 import instana from './src/index.js';
 instana();
 
