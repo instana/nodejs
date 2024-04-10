@@ -49,14 +49,7 @@ spec:
           echo "Skipping patch/minor updates. Branch exists."
         fi        
 
-        git ls-remote --exit-code --heads origin currency-bot-major >/dev/null 2>&1
-        EXIT_CODE=$?
-
-        if [[ $EXIT_CODE != '0' ]]; then
-          echo "Running major updates..."
-          MAJOR_UPDATES_MODE=true BRANCH=currency-bot-major node bin/currency/update-currencies.js
-        else
-          echo "Skipping major updates. Branch exists."
-        fi
+        echo "Running major updates..."
+        MAJOR_UPDATES_MODE=true BRANCH=currency-bot-major node bin/currency/update-currencies.js
 
         
