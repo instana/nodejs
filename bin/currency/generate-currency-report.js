@@ -71,4 +71,4 @@ function jsonToMarkdown(data) {
 }
 
 const markdown = jsonToMarkdown(currencies);
-fs.writeFileSync(path.join(__dirname, '..', 'currency-report.md'), markdown);
+fs.writeFileSync(path.join(__dirname, '..', '..', 'currency-report.md'), markdown);
