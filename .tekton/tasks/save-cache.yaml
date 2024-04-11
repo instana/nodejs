@@ -41,8 +41,8 @@ spec:
           apt-get install zstd -y
 
           # Remove any cached npm files before zipping
+          find node_modules \( -name '.*' ! \( -path "node_modules/.bin" -o -path "node_modules/.package-lock.json" -o -path "node_modules/.cache*" \) \) -exec rm -rf {} +
           find node_modules -type f -name '.*' ! \( -path "node_modules/.bin" -o -path "node_modules/.package-lock.json" \) -exec rm -f {} +
-          find node_modules -type d -name '.*' ! \( -path "node_modules/.bin" -o -path "node_modules/.package-lock.json" \) -exec rm -rf {} +
 
           tar -cf - node_modules | zstd -o node-modules.tar.zst
 
