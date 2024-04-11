@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.3.1](https://github.com/instana/nodejs/compare/v3.3.0...v3.3.1) (2024-04-11)
+
+### Bug Fixes
+
+- resolved esm loader issue for manual instrumentation node v18.19.0 and above ([#1063](https://github.com/instana/nodejs/issues/1063)) ([d69aff8](https://github.com/instana/nodejs/commit/d69aff86016a8b671a4ca97956d910b0ad51c99a))
+
 # [3.3.0](https://github.com/instana/nodejs/compare/v3.2.1...v3.3.0) (2024-03-22)
 
 ### Bug Fixes
