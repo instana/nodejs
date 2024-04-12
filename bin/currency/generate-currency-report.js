@@ -6,6 +6,8 @@
 
 const path = require('path');
 const fs = require('fs');
+// eslint-disable-next-line import/no-extraneous-dependencies
+const semver = require('semver');
 const { execSync } = require('child_process');
 const utils = require('./utils');
 let currencies = require(path.join(__dirname, '..', '..', 'currencies.json'));
@@ -40,7 +42,8 @@ currencies = currencies.map(currency => {
   } else {
     installedVersion = installedVersion.replace(/[^0-9.]/g, '');
     latestVersion = execSync(`npm info ${currency.name} version`).toString().trim();
-    upToDate = latestVersion === installedVersion;
+    const diff = semver.diff(latestVersion, installedVersion);
+    upToDate = diff === 'patch' || diff === null;
   }
 
   currency = { ...currency, latestVersion, lastSupportedVersion: installedVersion, upToDate };
