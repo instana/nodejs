@@ -26,10 +26,6 @@
     {
       "name": "Arya Mohanan",
       "email": "arya.mohanan@ibm.com"
-    },
-    {
-      "name": "Willian Carvalho",
-      "email": "willian.carvalho@instana.com"
     }
   ],
   "scripts": {
@@ -84,6 +80,7 @@
     "@aws-sdk/client-sqs": "^3.552.0",
     "@aws-sdk/client-sqs-v3": "npm:@aws-sdk/client-sqs@3.24.0",
     "@aws-sdk/lib-dynamodb": "^3.552.0",
+    "@azure/storage-blob": "^12.17.0",
     "@commitlint/cli": "^14.1.0",
     "@commitlint/config-conventional": "^14.1.0",
     "@elastic/elasticsearch": "^8.13.1",

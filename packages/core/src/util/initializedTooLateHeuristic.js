@@ -19,6 +19,7 @@ let hasBeenInitializedTooLate = false;
 let patterns = [
   /\/@apollo\/gateway\/dist\//,
   /\/@aws-sdk\/smithy-client\//,
+  /\/@azure\/storage-blob\/dist\//,
   /\/@elastic\/elasticsearch\/index.js/,
   /\/@google-cloud\/pubsub\/build\/src\/publisher\/index.js/,
   /\/@google-cloud\/pubsub\/build\/src\/subscriber.js/,

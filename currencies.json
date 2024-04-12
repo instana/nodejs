@@ -619,5 +619,14 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false
+  },
+  {
+    "name": "@azure/storage-blob",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false
   }
 ]
