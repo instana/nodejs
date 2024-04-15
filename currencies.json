@@ -420,7 +420,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": true
   },
   {
     "name": "node-nats-streaming",
@@ -465,7 +465,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": true
   },
   {
     "name": "sequelize",
@@ -510,7 +510,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": true
   },
   {
     "name": "winston",
