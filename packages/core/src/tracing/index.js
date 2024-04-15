@@ -165,6 +165,14 @@ exports.preInit = function preInit(preliminaryConfig) {
  * @param {CollectorPIDStore} _processIdentityProvider
  */
 exports.init = function init(_config, downstreamConnection, _processIdentityProvider) {
+  if (hasExperimentalLoaderFlag()) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      "Instana no longer supports the '--experimental-loader' flag starting from Node.js 18.19.0. " +
+        `The current Node.js version is ${process.version}. To be monitored by Instana, please use ` +
+        "the '--import' flag instead. Refer to the Instana documentation for further details."
+    );
+  }
   config = _config;
   processIdentityProvider = _processIdentityProvider;
 
