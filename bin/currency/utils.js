@@ -12,6 +12,16 @@ module.exports.getRootDependencyVersion = name => {
   return pkgjson.devDependencies[name] || pkgjson.optionalDependencies[name];
 };
 
+module.exports.getDevDependencyVersion = name => {
+  const pkgjson = require(path.join(__dirname, '..', '..', 'package.json'));
+  return pkgjson.devDependencies[name];
+};
+
+module.exports.getOptionalDependencyVersion = name => {
+  const pkgjson = require(path.join(__dirname, '..', '..', 'package.json'));
+  return pkgjson.optionalDependencies[name];
+};
+
 module.exports.getPackageName = name => {
   const dirs = fs.readdirSync(path.join(__dirname, '..', '..', 'packages'));
   let targetPkg;

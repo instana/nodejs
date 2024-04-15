@@ -32,12 +32,19 @@ currencies.forEach(currency => {
     return;
   }
 
-  let installedVersion = utils.getRootDependencyVersion(currency.name);
+  let isDevDependency = true;
   let isRootDependency = true;
+  let installedVersion = utils.getDevDependencyVersion(currency.name);
+
+  if (!installedVersion) {
+    installedVersion = utils.getOptionalDependencyVersion(currency.name);
+    isDevDependency = false;
+  }
 
   if (!installedVersion) {
     installedVersion = utils.getPackageDependencyVersion(currency.name);
     isRootDependency = false;
+    isDevDependency = true;
   }
 
   if (!installedVersion) {
@@ -86,12 +93,17 @@ currencies.forEach(currency => {
   }
 
   if (isRootDependency) {
-    console.log(`npm i -D ${currency.name}@${latestVersion} --no-audit`);
-    execSync(`npm i -D ${currency.name}@${latestVersion} --no-audit`, { stdio: 'inherit', cwd });
+    if (isDevDependency) {
+      console.log(`npm i --save-dev ${currency.name}@${latestVersion} --no-audit`);
+      execSync(`npm i --save-dev ${currency.name}@${latestVersion} --no-audit`, { stdio: 'inherit', cwd });
+    } else {
+      console.log(`npm i --save-optional ${currency.name}@${latestVersion} --no-audit`);
+      execSync(`npm i --save-optional ${currency.name}@${latestVersion} --no-audit`, { stdio: 'inherit', cwd });
+    }
   } else {
     const subpkg = utils.getPackageName(currency.name);
-    console.log(`npm i -D ${currency.name}@${latestVersion} -w ${subpkg} --no-audit`);
-    execSync(`npm i -D ${currency.name}@${latestVersion} -w ${subpkg} --no-audit`, { stdio: 'inherit', cwd });
+    console.log(`npm i --save-dev ${currency.name}@${latestVersion} -w ${subpkg} --no-audit`);
+    execSync(`npm i --save-dev ${currency.name}@${latestVersion} -w ${subpkg} --no-audit`, { stdio: 'inherit', cwd });
   }
 
   if (MAJOR_UPDATES_MODE) {
