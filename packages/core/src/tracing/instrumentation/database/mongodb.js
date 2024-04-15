@@ -134,11 +134,6 @@ function shimCmapGetMore(original) {
 }
 
 function instrumentedCmapQuery(ctx, originalQuery, originalArgs) {
-  const { originalCallback, callbackIndex } = tracingUtil.findCallback(originalArgs);
-  if (callbackIndex < 0) {
-    return originalQuery.apply(ctx, originalArgs);
-  }
-
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
@@ -162,19 +157,13 @@ function instrumentedCmapQuery(ctx, originalQuery, originalArgs) {
       service,
       namespace
     };
+
     readJsonOrFilter(cmd, span);
-
-    originalArgs[callbackIndex] = createWrappedCallback(span, originalCallback);
-
-    return originalQuery.apply(ctx, originalArgs);
+    return handleCallbackOrPromise(ctx, originalArgs, originalQuery, span);
   });
 }
 
 function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command) {
-  const { originalCallback, callbackIndex } = tracingUtil.findCallback(originalArgs);
-  if (callbackIndex < 0) {
-    return originalMethod.apply(ctx, originalArgs);
-  }
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
@@ -210,18 +199,11 @@ function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command) {
       readJsonOrFilter(originalArgs[1], span);
     }
 
-    originalArgs[callbackIndex] = createWrappedCallback(span, originalCallback);
-
-    return originalMethod.apply(ctx, originalArgs);
+    return handleCallbackOrPromise(ctx, originalArgs, originalMethod, span);
   });
 }
 
 function instrumentedCmapGetMore(ctx, originalMethod, originalArgs) {
-  const { originalCallback, callbackIndex } = tracingUtil.findCallback(originalArgs);
-  if (callbackIndex < 0) {
-    return originalMethod.apply(ctx, originalArgs);
-  }
-
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
@@ -240,9 +222,7 @@ function instrumentedCmapGetMore(ctx, originalMethod, originalArgs) {
       namespace
     };
 
-    originalArgs[callbackIndex] = createWrappedCallback(span, originalCallback);
-
-    return originalMethod.apply(ctx, originalArgs);
+    return handleCallbackOrPromise(ctx, originalArgs, originalMethod, span);
   });
 }
 
@@ -266,13 +246,6 @@ function shimLegacyWrite(original) {
 }
 
 function instrumentedLegacyWrite(ctx, originalWrite, originalArgs) {
-  // pool.js#write throws a sync error if there is no callback, so we can safely assume there is one. If there was no
-  // callback, we wouldn't be able to finish the span, so we won't start one.
-  const { originalCallback, callbackIndex } = tracingUtil.findCallback(originalArgs);
-  if (callbackIndex < 0) {
-    return originalWrite.apply(ctx, originalArgs);
-  }
-
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedLegacyWrite);
@@ -359,11 +332,9 @@ function instrumentedLegacyWrite(ctx, originalWrite, originalArgs) {
       service,
       namespace
     };
+
     readJsonOrFilterFromMessage(message, span);
-
-    originalArgs[callbackIndex] = createWrappedCallback(span, originalCallback);
-
-    return originalWrite.apply(ctx, originalArgs);
+    return handleCallbackOrPromise(ctx, originalArgs, originalWrite, span);
   });
 }
 
@@ -463,6 +434,34 @@ function createWrappedCallback(span, originalCallback) {
 
     return originalCallback.apply(this, arguments);
   });
+}
+
+function handleCallbackOrPromise(ctx, originalArgs, originalFunction, span) {
+  const { originalCallback, callbackIndex } = tracingUtil.findCallback(originalArgs);
+  if (callbackIndex !== -1) {
+    originalArgs[callbackIndex] = createWrappedCallback(span, originalCallback);
+    return originalFunction.apply(ctx, originalArgs);
+  }
+
+  const resultPromise = originalFunction.apply(ctx, originalArgs);
+
+  if (resultPromise && resultPromise.then) {
+    resultPromise
+      .then(result => {
+        span.d = Date.now() - span.ts;
+        span.transmit();
+        return result;
+      })
+      .catch(err => {
+        span.ec = 1;
+        span.data.mongo.error = tracingUtil.getErrorDetails(err);
+        span.d = Date.now() - span.ts;
+        span.transmit();
+        return err;
+      });
+  }
+
+  return resultPromise;
 }
 
 exports.activate = function activate() {
