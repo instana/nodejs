@@ -15,7 +15,11 @@ const tracingUtil = require('./tracingUtil');
 const spanBuffer = require('./spanBuffer');
 const supportedVersion = require('./supportedVersion');
 const { otelInstrumentations } = require('./opentelemetry-instrumentations');
-const { esmSupportedVersion, isLatestEsmSupportedVersion } = require('./esmSupportedVersion');
+const {
+  esmSupportedVersion,
+  isLatestEsmSupportedVersion,
+  hasExperimentalLoaderFlag
+} = require('./esmSupportedVersion');
 
 let tracingEnabled = false;
 let tracingActivated = false;
@@ -123,6 +127,7 @@ exports.supportedVersion = supportedVersion;
 exports.util = tracingUtil;
 exports.esmSupportedVersion = esmSupportedVersion;
 exports.isLatestEsmSupportedVersion = isLatestEsmSupportedVersion;
+exports.hasExperimentalLoaderFlag = hasExperimentalLoaderFlag;
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} cfg

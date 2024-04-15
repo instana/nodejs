@@ -6,6 +6,7 @@
 'use strict';
 
 const { isNodeJsTooOld, minimumNodeJsVersion } = require('@instana/core/src/util/nodeJsVersionCheck');
+const hasExperimentalLoaderFlag = require('@instana/core').tracing.hasExperimentalLoaderFlag;
 
 if (isNodeJsTooOld()) {
   // eslint-disable-next-line no-console
@@ -17,6 +18,14 @@ if (isNodeJsTooOld()) {
   return;
 }
 
+if (hasExperimentalLoaderFlag()) {
+  // eslint-disable-next-line no-console
+  console.error(
+    "Instana no longer supports the '--experimental-loader' flag starting from Node.js 18.19.0. The current Node.js " +
+      `version is ${process.version}. To be monitored by Instana, please use the '--import' flag instead. ` +
+      'Refer to the Instana documentation for further details.'
+  );
+}
 const { util: coreUtil } = require('@instana/core');
 const { environment: environmentUtil } = require('@instana/serverless');
 
