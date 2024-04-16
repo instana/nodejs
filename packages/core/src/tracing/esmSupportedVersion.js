@@ -26,3 +26,16 @@ exports.isLatestEsmSupportedVersion = function isLatestEsmSupportedVersion(versi
   // https://instana.slack.com/archives/G0118PFNN20/p1708556683665099
   return semver.gte(version, '18.19.0');
 };
+
+/**
+ * Check if the experimental loader flag is enabled and if the current Node.js version supports it.
+ * @returns {boolean} - True if the experimental loader is enabled and supported, false otherwise.
+ * Node.js v18.19 and above we are not supporting --experimental-loader flag
+ */
+exports.hasExperimentalLoaderFlag = function hasExperimentalLoaderFlag() {
+  const experimentalLoaderFlagIsSet =
+    (process.env.NODE_OPTIONS && process.env.NODE_OPTIONS.includes('--experimental-loader')) ||
+    (process.execArgv[0] && process.execArgv[0].includes('--experimental-loader'));
+
+  return experimentalLoaderFlagIsSet && exports.isLatestEsmSupportedVersion(process.versions.node);
+};

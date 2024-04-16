@@ -15,7 +15,11 @@ const tracingUtil = require('./tracingUtil');
 const spanBuffer = require('./spanBuffer');
 const supportedVersion = require('./supportedVersion');
 const { otelInstrumentations } = require('./opentelemetry-instrumentations');
-const { esmSupportedVersion, isLatestEsmSupportedVersion } = require('./esmSupportedVersion');
+const {
+  esmSupportedVersion,
+  isLatestEsmSupportedVersion,
+  hasExperimentalLoaderFlag
+} = require('./esmSupportedVersion');
 
 let tracingEnabled = false;
 let tracingActivated = false;
@@ -160,6 +164,17 @@ exports.preInit = function preInit(preliminaryConfig) {
  * @param {CollectorPIDStore} _processIdentityProvider
  */
 exports.init = function init(_config, downstreamConnection, _processIdentityProvider) {
+  // Consider removing this in the next major release(v4.x) of the @instana package.
+  if (hasExperimentalLoaderFlag()) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      'Node.js introduced breaking changes in versions 18.19.0 and above, leading to the discontinuation of support ' +
+        `for the --experimental-loader flag by Instana. The current Node.js version is ${process.version}. ` +
+        "To ensure tracing by Instana, please use the '--import' flag instead. For more information, " +
+        'refer to the Instana documentation: ' +
+        'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
+    );
+  }
   config = _config;
   processIdentityProvider = _processIdentityProvider;
 
