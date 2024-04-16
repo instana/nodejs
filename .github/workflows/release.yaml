@@ -143,7 +143,7 @@ jobs:
                     "value": "<${{ github.server_url }}/${{ github.repository }}/releases>"
                   },
                   {
-                  "value": "Hey <@S06P7LN011S>, a new release has happened for Node.js Tracer! Please update the release notes. Thank you!"
+                  "value": "Hey <!subteam^S06P7LN011S>, a new release has happened for Node.js Tracer! Please update the release notes. Thank you!"
                   }
                 ]
               }]
