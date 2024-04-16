@@ -127,7 +127,6 @@ exports.supportedVersion = supportedVersion;
 exports.util = tracingUtil;
 exports.esmSupportedVersion = esmSupportedVersion;
 exports.isLatestEsmSupportedVersion = isLatestEsmSupportedVersion;
-exports.hasExperimentalLoaderFlag = hasExperimentalLoaderFlag;
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} cfg
@@ -168,9 +167,11 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
   if (hasExperimentalLoaderFlag()) {
     // eslint-disable-next-line no-console
     console.warn(
-      "Instana no longer supports the '--experimental-loader' flag starting from Node.js 18.19.0. " +
-        `The current Node.js version is ${process.version}. To be monitored by Instana, please use ` +
-        "the '--import' flag instead. Refer to the Instana documentation for further details."
+      'Node.js introduced breaking changes in versions 18.19.0 and above, leading to the discontinuation of support ' +
+        `for the experimental loader flag by Instana. The current Node.js version is ${process.version}. ` +
+        "To ensure monitoring by Instana, please use the '--import' flag instead. For more information, " +
+        'refer to the Instana documentation: ' +
+        'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
     );
   }
   config = _config;
