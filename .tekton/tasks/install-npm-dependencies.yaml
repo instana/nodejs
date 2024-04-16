@@ -45,6 +45,8 @@ spec:
         apt-get install zstd -y
 
         checksum=$(sha256sum package-lock.json | awk '{print $1}')
+        ibmcloud cos delete --bucket npm-cache --key node-modules-main-21-$checksum.tar.zst --force || true
+
         ibmcloud cos download --bucket npm-cache --key node-modules-$(params.target-branch)-$(params.node-version)-$checksum ./node-modules.tar.zst              
 
         # Check the exit code of the download command
