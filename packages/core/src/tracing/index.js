@@ -164,12 +164,13 @@ exports.preInit = function preInit(preliminaryConfig) {
  * @param {CollectorPIDStore} _processIdentityProvider
  */
 exports.init = function init(_config, downstreamConnection, _processIdentityProvider) {
+  // Consider removing this in the next major release(v4.x) of the @instana package.
   if (hasExperimentalLoaderFlag()) {
     // eslint-disable-next-line no-console
     console.warn(
       'Node.js introduced breaking changes in versions 18.19.0 and above, leading to the discontinuation of support ' +
-        `for the experimental loader flag by Instana. The current Node.js version is ${process.version}. ` +
-        "To ensure monitoring by Instana, please use the '--import' flag instead. For more information, " +
+        `for the --experimental-loader flag by Instana. The current Node.js version is ${process.version}. ` +
+        "To ensure tracing by Instana, please use the '--import' flag instead. For more information, " +
         'refer to the Instana documentation: ' +
         'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
     );
