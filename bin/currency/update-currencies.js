@@ -53,7 +53,17 @@ currencies.forEach(currency => {
   }
 
   installedVersion = installedVersion.replace(/[^0-9.]/g, '');
-  const latestVersion = execSync(`npm info ${currency.name} version`).toString().trim();
+  let latestVersion;
+
+  if (!MAJOR_UPDATES_MODE) {
+    latestVersion = execSync(
+      `npm info ${currency.name}@^${semver.major(installedVersion)} version --json | jq -r '.[-1]'`
+    )
+      .toString()
+      .trim();
+  } else {
+    latestVersion = execSync(`npm info ${currency.name} version`).toString().trim();
+  }
 
   if (latestVersion === installedVersion) {
     console.log(
