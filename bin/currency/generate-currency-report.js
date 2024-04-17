@@ -7,6 +7,8 @@
 const path = require('path');
 const fs = require('fs');
 // eslint-disable-next-line import/no-extraneous-dependencies
+const moment = require('moment');
+// eslint-disable-next-line import/no-extraneous-dependencies
 const semver = require('semver');
 const { execSync } = require('child_process');
 const utils = require('./utils');
@@ -30,7 +32,8 @@ currencies = currencies.map(currency => {
   let installedVersion = utils.getRootDependencyVersion(currency.name);
   let latestVersion;
   let upToDate;
-  let publishedAt = '-';
+  let latestVersionPublishedAt = 'N/A';
+  let daysBehind = '0';
 
   if (!installedVersion) {
     installedVersion = utils.getPackageDependencyVersion(currency.name);
@@ -47,15 +50,43 @@ currencies = currencies.map(currency => {
     upToDate = diff === 'patch' || diff === null;
 
     try {
-      publishedAt = new Date(
+      latestVersionPublishedAt = new Date(
         JSON.parse(execSync(`npm show ${currency.name} time --json`).toString())[latestVersion]
-      ).toDateString();
+      );
     } catch (err) {
       // ignore
     }
+
+    if (!upToDate) {
+      try {
+        const releaseList = JSON.parse(execSync(`npm show ${currency.name} time --json`).toString());
+        const index = Object.keys(releaseList).indexOf(installedVersion);
+        const key = Object.keys(releaseList)[index + 1];
+
+        if (key === latestVersion) {
+          daysBehind = moment(new Date()).startOf('day').diff(moment(latestVersionPublishedAt).startOf('day'), 'days');
+        } else {
+          daysBehind = moment(latestVersionPublishedAt)
+            .startOf('day')
+            .diff(moment(new Date(releaseList[key])).startOf('day'), 'days');
+        }
+      } catch (err) {
+        console.log(err);
+        // ignore
+      }
+    }
   }
 
-  currency = { ...currency, latestVersion, lastSupportedVersion: installedVersion, upToDate, publishedAt };
+  currency = {
+    ...currency,
+    latestVersion,
+    lastSupportedVersion: installedVersion,
+    upToDate,
+    publishedAt: latestVersionPublishedAt.toDateString
+      ? latestVersionPublishedAt.toDateString()
+      : latestVersionPublishedAt,
+    daysBehind
+  };
   return currency;
 });
 
@@ -67,16 +98,16 @@ function jsonToMarkdown(data) {
     '# Node.js supported core & third party packages' +
     '\n\n' +
     // eslint-disable-next-line max-len
-    '| Package name | Support Policy | Last Supported Version | Latest Version | Latest Version Published At | Cloud Native | Up-to-date | Beta version |\n';
+    '| Package name | Last Supported Version | Latest Version | Latest Version Published At | Support Policy | Days behind | Up-to-date | Note | Cloud Native | Beta version |\n';
 
   markdown +=
     // eslint-disable-next-line max-len
-    '|--------------|----------------|------------------------|----------------|-----------------------------|--------------|------------|--------------|\n';
+    '|--------------|------------------------|----------------|-----------------------------|----------------|-------------|------------|------|--------------|--------------|\n';
 
   // eslint-disable-next-line no-restricted-syntax
   for (const entry of data) {
     // eslint-disable-next-line max-len
-    markdown += `| ${entry.name} | ${entry.policy} | ${entry.lastSupportedVersion} | ${entry.latestVersion} | ${entry.publishedAt} | ${entry.cloudNative} | ${entry.upToDate} | ${entry.isBeta} |\n`;
+    markdown += `| ${entry.name} | ${entry.lastSupportedVersion} | ${entry.latestVersion} | ${entry.publishedAt} | ${entry.policy} | ${entry.daysBehind} day/s | ${entry.upToDate} | ${entry.note} | ${entry.cloudNative} | ${entry.isBeta} |\n`;
   }
 
   return markdown;

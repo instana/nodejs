@@ -6,7 +6,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "@apollo/subgraph",
@@ -15,7 +16,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "@aws-sdk/client-dynamodb",
@@ -24,7 +26,8 @@
     "latestVersion": "",
     "cloudNative": true,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "@aws-sdk/client-kinesis",
@@ -33,7 +36,8 @@
     "latestVersion": "",
     "cloudNative": true,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "@aws-sdk/client-lambda",
@@ -42,7 +46,8 @@
     "latestVersion": "",
     "cloudNative": true,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "@aws-sdk/client-s3",
@@ -51,7 +56,8 @@
     "latestVersion": "",
     "cloudNative": true,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "@aws-sdk/client-sns",
@@ -60,7 +66,8 @@
     "latestVersion": "",
     "cloudNative": true,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "@aws-sdk/client-sqs",
@@ -69,7 +76,8 @@
     "latestVersion": "",
     "cloudNative": true,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "@aws-sdk/lib-dynamodb",
@@ -78,7 +86,8 @@
     "latestVersion": "",
     "cloudNative": true,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "@elastic/elasticsearch",
@@ -87,7 +96,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "@google-cloud/pubsub",
@@ -96,7 +106,8 @@
     "latestVersion": "",
     "cloudNative": true,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "@google-cloud/storage",
@@ -105,7 +116,8 @@
     "latestVersion": "",
     "cloudNative": true,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "@grpc/grpc-js",
@@ -114,7 +126,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "@grpc/proto-loader",
@@ -123,7 +136,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "@hapi/hapi",
@@ -132,7 +146,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "amqplib",
@@ -141,7 +156,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "superagent",
@@ -150,7 +166,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "aws-sdk",
@@ -159,7 +176,8 @@
     "latestVersion": "",
     "cloudNative": true,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "bull",
@@ -168,7 +186,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "couchbase",
@@ -177,7 +196,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "express",
@@ -186,7 +206,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "core-http(s)-server",
@@ -195,7 +216,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "core-http2(s)-server",
@@ -204,7 +226,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "core-http(s)-client",
@@ -213,7 +236,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "core-http2(s)-client",
@@ -222,7 +246,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "fastify",
@@ -231,7 +256,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "google-protobuf",
@@ -240,7 +266,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "got",
@@ -249,7 +276,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": true
+    "ignoreUpdates": true,
+    "note": "Native ESM Module (https://jsw.ibm.com/browse/INSTA-2068)"
   },
   {
     "name": "graphql",
@@ -258,7 +286,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "graphql-subscriptions",
@@ -267,7 +296,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "graphql-tag",
@@ -276,7 +306,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "graphql-ws",
@@ -285,7 +316,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "ioredis",
@@ -294,7 +326,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "kafka-node",
@@ -303,7 +336,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "kafkajs",
@@ -312,7 +346,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "koa",
@@ -321,7 +356,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "koa-router",
@@ -330,7 +366,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "log4js",
@@ -339,7 +376,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "mali",
@@ -348,7 +386,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "memcached",
@@ -357,7 +396,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "mongodb",
@@ -366,7 +406,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "mongoose",
@@ -375,7 +416,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "mssql",
@@ -384,7 +426,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "mysql",
@@ -393,7 +436,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "mysql2",
@@ -402,7 +446,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "nats",
@@ -411,7 +456,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "node-fetch",
@@ -420,7 +466,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": true
+    "ignoreUpdates": true,
+    "note": "Native ESM Module (https://jsw.ibm.com/browse/INSTA-2068)"
   },
   {
     "name": "node-nats-streaming",
@@ -429,7 +476,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "pg",
@@ -438,7 +486,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "pino",
@@ -447,7 +496,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "redis",
@@ -456,7 +506,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "restify",
@@ -465,7 +516,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": true
+    "ignoreUpdates": true,
+    "note": "Otel (https://jsw.ibm.com/browse/INSTA-1841)"
   },
   {
     "name": "sequelize",
@@ -474,7 +526,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "socket.io",
@@ -483,7 +536,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "socket.io-client",
@@ -492,7 +546,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "sqs-consumer",
@@ -501,7 +556,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "tedious",
@@ -510,7 +566,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": true
+    "ignoreUpdates": true,
+    "note": "Otel (https://jsw.ibm.com/browse/INSTA-1561)"
   },
   {
     "name": "winston",
@@ -519,7 +576,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "ibm_db",
@@ -528,7 +586,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "kafka-avro",
@@ -537,7 +596,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "node-rdkafka",
@@ -546,7 +606,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "pg-native",
@@ -555,7 +616,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "q",
@@ -564,7 +626,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "core-timers",
@@ -573,7 +636,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "core-fs",
@@ -582,7 +646,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "prisma",
@@ -591,7 +656,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "typeorm",
@@ -600,7 +666,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "bunyan",
@@ -609,7 +676,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "bluebird",
@@ -618,7 +686,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "@azure/storage-blob",
@@ -627,6 +696,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false
+    "ignoreUpdates": false,
+    "note": ""
   }
 ]
