@@ -30,6 +30,7 @@ currencies = currencies.map(currency => {
   let installedVersion = utils.getRootDependencyVersion(currency.name);
   let latestVersion;
   let upToDate;
+  let publishedAt = '-';
 
   if (!installedVersion) {
     installedVersion = utils.getPackageDependencyVersion(currency.name);
@@ -44,9 +45,17 @@ currencies = currencies.map(currency => {
     latestVersion = execSync(`npm info ${currency.name} version`).toString().trim();
     const diff = semver.diff(latestVersion, installedVersion);
     upToDate = diff === 'patch' || diff === null;
+
+    try {
+      publishedAt = new Date(
+        JSON.parse(execSync(`npm show ${currency.name} time --json`).toString())[latestVersion]
+      ).toDateString();
+    } catch (err) {
+      // ignore
+    }
   }
 
-  currency = { ...currency, latestVersion, lastSupportedVersion: installedVersion, upToDate };
+  currency = { ...currency, latestVersion, lastSupportedVersion: installedVersion, upToDate, publishedAt };
   return currency;
 });
 
@@ -58,16 +67,16 @@ function jsonToMarkdown(data) {
     '# Node.js supported core & third party packages' +
     '\n\n' +
     // eslint-disable-next-line max-len
-    '| Package name | Support Policy | Last Supported Version | Latest Version | Cloud Native | Up-to-date | Beta version |\n';
+    '| Package name | Support Policy | Last Supported Version | Latest Version | Latest Version Published At | Cloud Native | Up-to-date | Beta version |\n';
 
   markdown +=
     // eslint-disable-next-line max-len
-    '|--------------|----------------|------------------------|----------------|--------------|------------|--------------|\n';
+    '|--------------|----------------|------------------------|----------------|-----------------------------|--------------|------------|--------------|\n';
 
   // eslint-disable-next-line no-restricted-syntax
   for (const entry of data) {
     // eslint-disable-next-line max-len
-    markdown += `| ${entry.name} | ${entry.policy} | ${entry.lastSupportedVersion} | ${entry.latestVersion} | ${entry.cloudNative} | ${entry.upToDate} | ${entry.isBeta} |\n`;
+    markdown += `| ${entry.name} | ${entry.policy} | ${entry.lastSupportedVersion} | ${entry.latestVersion} | ${entry.publishedAt} | ${entry.cloudNative} | ${entry.upToDate} | ${entry.isBeta} |\n`;
   }
 
   return markdown;
