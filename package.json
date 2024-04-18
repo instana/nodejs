@@ -182,7 +182,7 @@
     "mssql": "^10.0.2",
     "mssql-v9": "npm:mssql@^9.0.1",
     "mysql": "^2.18.1",
-    "mysql2": "^3.9.4",
+    "mysql2": "^3.9.6",
     "nats": "^2.22.0",
     "nats-v1": "npm:nats@^1.4.12",
     "node-fetch": "^2.6.1",
