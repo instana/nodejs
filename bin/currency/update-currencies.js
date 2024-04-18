@@ -56,9 +56,14 @@ currencies.forEach(currency => {
   let latestVersion;
 
   if (!MAJOR_UPDATES_MODE) {
-    const versionArray = JSON.parse(
+    let versionArray = JSON.parse(
       execSync(`npm info ${currency.name}@^${semver.major(installedVersion)} version --json`).toString()
     );
+
+    if (!Array.isArray(versionArray)) {
+      versionArray = [versionArray];
+    }
+
     latestVersion = versionArray[versionArray.length - 1];
   } else {
     latestVersion = execSync(`npm info ${currency.name} version`).toString().trim();
