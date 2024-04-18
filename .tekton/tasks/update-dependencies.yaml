@@ -37,8 +37,6 @@ spec:
         && apt update \
         && apt install gh -y
 
-        apt-get install jq -y
-
         gh auth login --with-token
 
         git ls-remote --exit-code --heads origin currency-bot >/dev/null 2>&1
