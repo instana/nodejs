@@ -27,7 +27,7 @@ if (!MAJOR_UPDATES_MODE) {
 currencies.forEach(currency => {
   console.log(`Checking currency update for ${currency.name}`);
 
-  if (currency.ignoreUpdates) {
+  if (MAJOR_UPDATES_MODE && currency.ignoreUpdates) {
     console.log(`Skipping ${currency.name}. ignoreUpdates is set.`);
     return;
   }
