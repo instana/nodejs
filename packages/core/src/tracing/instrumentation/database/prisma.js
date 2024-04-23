@@ -35,7 +35,24 @@ function instrumentClientConstructor(prismaClientModule) {
     class InstanaPrismaClient extends prismaClientModule.PrismaClient {
       constructor() {
         super(...arguments);
+        // TODO: You can override the URL via the PrismaClient(...)
 
+        // Prisma >= v5
+        if (this._engineConfig) {
+          try {
+            const envVarName = this._engineConfig.inlineDatasources.db.url.fromEnvVar;
+            providerAndDataSourceUriMap.set(this._engine, {
+              provider: this._engineConfig.activeProvider,
+              dataSourceUrl: redactPassword(this._engineConfig.activeProvider, process.env[envVarName])
+            });
+
+            return;
+          } catch (err) {
+            logger.debug('Cannot read engine config. Database URL will not be captured on spans.');
+          }
+        }
+
+        // Prisma < v5
         // Unfortunately, resolving the configuration is an asynchronous operation.
         // If the first model access happens in the same event loop iteration as creating the client, the span for that
         // Prisma operation will not have the provider or target URL available.
