@@ -24,10 +24,10 @@ const appDir = __dirname;
 const schemaTargetFile = path.join(appDir, 'prisma', 'schema.prisma');
 const migrationsTargetDir = path.join(appDir, 'prisma', 'migrations');
 
-describe.only('tracing/prisma', function () {
+describe('tracing/prisma', function () {
   this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
 
-  ['v4'].forEach(version => {
+  ['latest', 'v4', 'v450'].forEach(version => {
     providers.forEach(provider => {
       let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
       mochaSuiteFn = version === 'latest' && semver.lt(process.versions.node, '16.0.0') ? describe.skip : describe;
@@ -56,10 +56,7 @@ describe.only('tracing/prisma', function () {
           }
 
           try {
-            await executeAsync(
-              version === 'latest' ? 'npm i @prisma/client@latest' : `npm i @prisma/client@${versionToInstall}`,
-              appDir
-            );
+            await executeAsync(`npm i @prisma/client@${versionToInstall}`, appDir);
           } catch (err) {
             // ignore
           }
@@ -96,10 +93,7 @@ describe.only('tracing/prisma', function () {
         before(async () => {
           controls = new ProcessControls({
             dirname: __dirname,
-            useGlobalAgent: true,
-            env: {
-              PRISMA_VERSION: version
-            }
+            useGlobalAgent: true
           });
 
           await controls.startAndWaitForAgentConnection();
@@ -140,6 +134,7 @@ describe.only('tracing/prisma', function () {
               verifyPrismaExit({
                 controls,
                 spans,
+                version,
                 parent: httpEntry,
                 model: 'Person',
                 action: withError ? 'findFirst' : 'findMany',
@@ -168,6 +163,7 @@ describe.only('tracing/prisma', function () {
             verifyPrismaExit({
               controls,
               spans,
+              version,
               parent: httpEntry,
               model: 'Person',
               action: 'create',
@@ -176,6 +172,7 @@ describe.only('tracing/prisma', function () {
             verifyPrismaExit({
               controls,
               spans,
+              version,
               parent: httpEntry,
               model: 'Person',
               action: 'update',
@@ -184,6 +181,7 @@ describe.only('tracing/prisma', function () {
             verifyPrismaExit({
               controls,
               spans,
+              version,
               parent: httpEntry,
               model: 'Person',
               action: 'deleteMany',
@@ -218,7 +216,7 @@ describe.only('tracing/prisma', function () {
     expect(deleteResult.count).to.equal(1);
   }
 
-  function verifyPrismaExit({ controls, spans, parent, model, action, provider, withError }) {
+  function verifyPrismaExit({ controls, spans, parent, model, action, provider, withError, version }) {
     let expectedUrl;
     switch (provider) {
       case 'sqlite':
@@ -239,9 +237,13 @@ describe.only('tracing/prisma', function () {
       extraTests: [
         span => expect(span.data.prisma.model).to.equal(model),
         span => expect(span.data.prisma.action).to.equal(action),
-        span => expect(span.data.prisma.url).to.equal(expectedUrl),
+        span =>
+          // Explanation in https://github.com/instana/nodejs/pull/1114
+          version !== 'v4'
+            ? expect(span.data.prisma.url).to.equal(expectedUrl)
+            : expect(span.data.prisma.url).to.equal(''),
         span => {
-          if (provider !== 'sqlite') {
+          if (provider !== 'sqlite' && version !== 'v4') {
             expect(span.data.prisma.url).to.contain('_redacted_');
           }
         },
