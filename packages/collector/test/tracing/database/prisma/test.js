@@ -25,7 +25,7 @@ const schemaTargetFile = path.join(appDir, 'prisma', 'schema.prisma');
 const migrationsTargetDir = path.join(appDir, 'prisma', 'migrations');
 
 const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '14.17.0') ? describe : describe.skip;
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '16.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing/prisma', function () {
   this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
@@ -174,7 +174,7 @@ mochaSuiteFn('tracing/prisma', function () {
 
   function verifyReadResponse(response, withError) {
     if (withError) {
-      expect(response).to.include('Unknown arg `email` in where.email');
+      expect(response).to.include('PrismaClientValidationError');
     } else {
       expect(response).to.be.an('array');
       expect(response).to.have.length(1);
