@@ -25,21 +25,19 @@ const schemaTargetFile = path.join(appDir, 'prisma', 'schema.prisma');
 const migrationsTargetDir = path.join(appDir, 'prisma', 'migrations');
 
 const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '16.0.0') ? describe : describe.skip;
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '14.17.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing/prisma', function () {
   this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
 
   before(async () => {
-    // We need to run npm install for the prisma application and install @prisma/client locally, because we need the
-    // prisma client tooling to be installed locally. We need to run `prisma generate` and `prisma migrate deploy` (via
-    // the npm scripts defined in the local package.json file) for each provider -- see the `before` hook for each
-    // provider below. Prisma is somewhat finicky with paths and makes specific assumptions: Basically it expects
-    // `prisma/schema.prisma` to exist in the project's root directory and the `prisma` and `@prisma/client` modules to
-    // be installed into node_modules relative to that file. This is why we do not install `@prisma/client` in our
-    // root dependencies, as we do for other modules under test.
-    // See also: https://www.prisma.io/docs/reference/api-reference/command-reference#generate
-    await executeAsync('npm install --no-audit', appDir);
+    await executeAsync('mkdir -p node_modules', appDir);
+
+    try {
+      await executeAsync('ln -s ../../../../../../../node_modules/prisma prisma', path.join(appDir, 'node_modules'));
+    } catch (err) {
+      // ignore
+    }
   });
 
   providers.forEach(provider => {
@@ -61,10 +59,10 @@ mochaSuiteFn('tracing/prisma', function () {
 
         // Run the prisma client tooling to generate the database client access code.
         // See https://www.prisma.io/docs/reference/api-reference/command-reference#generate
-        await executeAsync('npm run generate', appDir);
+        await executeAsync('npx prisma generate', appDir);
 
         // Run database migrations to create the table.
-        await executeAsync('npm run migrate', appDir);
+        await executeAsync('npx prisma migrate dev', appDir);
       });
 
       after(async () => {
@@ -176,7 +174,7 @@ mochaSuiteFn('tracing/prisma', function () {
 
   function verifyReadResponse(response, withError) {
     if (withError) {
-      expect(response).to.include('PrismaClientValidationError');
+      expect(response).to.include('Unknown arg `email` in where.email');
     } else {
       expect(response).to.be.an('array');
       expect(response).to.have.length(1);
