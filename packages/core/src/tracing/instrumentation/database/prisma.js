@@ -30,6 +30,7 @@ function instrumentPrismaClient(prismaClientModule) {
 }
 
 function instrumentClientConstructor(prismaClientModule) {
+  console.log(prismaClientModule);
   // Additionally instrument the constructor to get access to database URL and type.
   if (typeof prismaClientModule.PrismaClient === 'function') {
     class InstanaPrismaClient extends prismaClientModule.PrismaClient {
@@ -45,18 +46,15 @@ function instrumentClientConstructor(prismaClientModule) {
               provider: this._engineConfig.activeProvider,
               dataSourceUrl: redactPassword(this._engineConfig.activeProvider, process.env[envVarName])
             });
-
-            return;
           } catch (err) {
             logger.debug('Cannot read engine config. Database URL will not be captured on spans.');
           }
-        }
+        } else if (this._engine && typeof this._engine.getConfig === 'function') {
+          // Prisma < v5
+          // Unfortunately, resolving the configuration is an asynchronous operation.
+          // If the first model access happens in the same event loop iteration as creating the client,
+          // the span for that Prisma operation will not have the provider or target URL available.
 
-        // Prisma < v5
-        // Unfortunately, resolving the configuration is an asynchronous operation.
-        // If the first model access happens in the same event loop iteration as creating the client, the span for that
-        // Prisma operation will not have the provider or target URL available.
-        if (this._engine && typeof this._engine.getConfig === 'function') {
           const configPromise = this._engine.getConfig();
           if (typeof configPromise.then === 'function') {
             configPromise.then(configResult => {

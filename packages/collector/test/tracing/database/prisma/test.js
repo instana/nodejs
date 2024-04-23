@@ -24,95 +24,145 @@ const appDir = __dirname;
 const schemaTargetFile = path.join(appDir, 'prisma', 'schema.prisma');
 const migrationsTargetDir = path.join(appDir, 'prisma', 'migrations');
 
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '16.0.0') ? describe : describe.skip;
-
-mochaSuiteFn('tracing/prisma', function () {
+describe.only('tracing/prisma', function () {
   this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
 
-  before(async () => {
-    await executeAsync('mkdir -p node_modules', appDir);
+  ['v4'].forEach(version => {
+    providers.forEach(provider => {
+      let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+      mochaSuiteFn = version === 'latest' && semver.lt(process.versions.node, '16.0.0') ? describe.skip : describe;
 
-    try {
-      await executeAsync('ln -s ../../../../../../../node_modules/prisma prisma', path.join(appDir, 'node_modules'));
-    } catch (err) {
-      // ignore
-    }
-  });
+      mochaSuiteFn(`[${version}] with provider ${provider}`, () => {
+        if (provider === 'postgresql' && !process.env.PRISMA_POSTGRES_URL) {
+          throw new Error('PRISMA_POSTGRES_URL is not set.');
+        }
 
-  providers.forEach(provider => {
-    describe(`with provider ${provider}`, () => {
-      if (provider === 'postgresql' && !process.env.PRISMA_POSTGRES_URL) {
-        throw new Error('PRISMA_POSTGRES_URL is not set.');
-      }
+        before(async () => {
+          await executeAsync('rm -rf node_modules', appDir);
+          await executeAsync('mkdir -p node_modules', appDir);
 
-      // Set up Prisma stuff for the provider we want to test with (either sqlite or postgresql).
-      before(async () => {
-        const schemaSourceFile = path.join(appDir, 'prisma', `schema.prisma.${provider}`);
+          let versionToInstall;
 
-        await fs.rm(schemaTargetFile, { force: true });
-        await fs.copyFile(schemaSourceFile, schemaTargetFile);
+          if (version === 'latest') {
+            versionToInstall = require('../../../../../../node_modules/prisma/package.json').version;
+          } else {
+            versionToInstall = require(`../../../../../../node_modules/prisma-${version}/package.json`).version;
+          }
 
-        const migrationsSourceDir = path.join(appDir, 'prisma', `migrations-${provider}`);
-        await rimraf(migrationsTargetDir);
-        await recursiveCopy(migrationsSourceDir, migrationsTargetDir);
+          try {
+            await executeAsync(`npm install prisma@${versionToInstall}`, appDir);
+          } catch (err) {
+            // ignore
+          }
 
-        // Run the prisma client tooling to generate the database client access code.
-        // See https://www.prisma.io/docs/reference/api-reference/command-reference#generate
-        await executeAsync('npx prisma generate', appDir);
-
-        // Run database migrations to create the table.
-        await executeAsync('npx prisma migrate dev', appDir);
-      });
-
-      after(async () => {
-        await fs.rm(schemaTargetFile, { force: true });
-        await rimraf(migrationsTargetDir);
-      });
-
-      globalAgent.setUpCleanUpHooks();
-      const agentControls = globalAgent.instance;
-      let controls;
-
-      before(async () => {
-        controls = new ProcessControls({
-          dirname: __dirname,
-          useGlobalAgent: true
+          try {
+            await executeAsync(
+              version === 'latest' ? 'npm i @prisma/client@latest' : `npm i @prisma/client@${versionToInstall}`,
+              appDir
+            );
+          } catch (err) {
+            // ignore
+          }
         });
 
-        await controls.startAndWaitForAgentConnection();
-      });
+        // Set up Prisma stuff for the provider we want to test with (either sqlite or postgresql).
+        before(async () => {
+          const schemaSourceFile = path.join(appDir, 'prisma', `schema.prisma.${provider}`);
 
-      beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
-      });
+          await fs.rm(schemaTargetFile, { force: true });
+          await fs.copyFile(schemaSourceFile, schemaTargetFile);
 
-      after(async () => {
-        await controls.stop();
-      });
+          const migrationsSourceDir = path.join(appDir, 'prisma', `migrations-${provider}`);
+          await rimraf(migrationsTargetDir);
+          await recursiveCopy(migrationsSourceDir, migrationsTargetDir);
 
-      afterEach(async () => {
-        await controls.clearIpcMessages();
-      });
+          // Run the prisma client tooling to generate the database client access code.
+          // See https://www.prisma.io/docs/reference/api-reference/command-reference#generate
+          await executeAsync('npx prisma generate', appDir);
 
-      [false, true].forEach(withError => {
-        it(`should capture a prisma model read action (with error: ${withError})`, async () => {
-          let requestPath = '/findMany';
-          if (withError) {
-            requestPath += '?error=true';
-          }
-          const response = await controls.sendRequest({
-            method: 'GET',
-            path: requestPath
+          // Run database migrations to create the table.
+          await executeAsync('npx prisma migrate dev', appDir);
+        });
+
+        after(async () => {
+          await fs.rm(schemaTargetFile, { force: true });
+          await rimraf(migrationsTargetDir);
+        });
+
+        globalAgent.setUpCleanUpHooks();
+        const agentControls = globalAgent.instance;
+        let controls;
+
+        before(async () => {
+          controls = new ProcessControls({
+            dirname: __dirname,
+            useGlobalAgent: true,
+            env: {
+              PRISMA_VERSION: version
+            }
           });
 
-          verifyReadResponse(response, withError);
+          await controls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
+        after(async () => {
+          await controls.stop();
+        });
+
+        afterEach(async () => {
+          await controls.clearIpcMessages();
+        });
+
+        [false, true].forEach(withError => {
+          it(`should capture a prisma model read action (with error: ${withError})`, async () => {
+            let requestPath = '/findMany';
+            if (withError) {
+              requestPath += '?error=true';
+            }
+            const response = await controls.sendRequest({
+              method: 'GET',
+              path: requestPath
+            });
+
+            verifyReadResponse(response, version, withError);
+
+            await retry(async () => {
+              const spans = await agentControls.getSpans();
+              const httpEntry = verifyHttpRootEntry({
+                spans,
+                apiPath: '/findMany',
+                pid: String(controls.getPid())
+              });
+              verifyPrismaExit({
+                controls,
+                spans,
+                parent: httpEntry,
+                model: 'Person',
+                action: withError ? 'findFirst' : 'findMany',
+                provider,
+                withError
+              });
+            });
+          });
+        });
+
+        it('should capture a prisma write', async () => {
+          const response = await controls.sendRequest({
+            method: 'POST',
+            path: '/update'
+          });
+
+          verifyWriteResponse(response);
 
           await retry(async () => {
             const spans = await agentControls.getSpans();
             const httpEntry = verifyHttpRootEntry({
               spans,
-              apiPath: '/findMany',
+              apiPath: '/update',
               pid: String(controls.getPid())
             });
             verifyPrismaExit({
@@ -120,61 +170,38 @@ mochaSuiteFn('tracing/prisma', function () {
               spans,
               parent: httpEntry,
               model: 'Person',
-              action: withError ? 'findFirst' : 'findMany',
-              provider,
-              withError
+              action: 'create',
+              provider
             });
-          });
-        });
-      });
-
-      it('should capture a prisma write', async () => {
-        const response = await controls.sendRequest({
-          method: 'POST',
-          path: '/update'
-        });
-
-        verifyWriteResponse(response);
-
-        await retry(async () => {
-          const spans = await agentControls.getSpans();
-          const httpEntry = verifyHttpRootEntry({
-            spans,
-            apiPath: '/update',
-            pid: String(controls.getPid())
-          });
-          verifyPrismaExit({
-            controls,
-            spans,
-            parent: httpEntry,
-            model: 'Person',
-            action: 'create',
-            provider
-          });
-          verifyPrismaExit({
-            controls,
-            spans,
-            parent: httpEntry,
-            model: 'Person',
-            action: 'update',
-            provider
-          });
-          verifyPrismaExit({
-            controls,
-            spans,
-            parent: httpEntry,
-            model: 'Person',
-            action: 'deleteMany',
-            provider
+            verifyPrismaExit({
+              controls,
+              spans,
+              parent: httpEntry,
+              model: 'Person',
+              action: 'update',
+              provider
+            });
+            verifyPrismaExit({
+              controls,
+              spans,
+              parent: httpEntry,
+              model: 'Person',
+              action: 'deleteMany',
+              provider
+            });
           });
         });
       });
     });
   });
 
-  function verifyReadResponse(response, withError) {
+  function verifyReadResponse(response, version, withError) {
     if (withError) {
-      expect(response).to.include('PrismaClientValidationError');
+      if (version === 'latest') {
+        expect(response).to.include('PrismaClientValidationError');
+      } else {
+        expect(response).to.include('Unknown arg `email` in where.email');
+      }
     } else {
       expect(response).to.be.an('array');
       expect(response).to.have.length(1);
