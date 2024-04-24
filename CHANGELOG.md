@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.5.0](https://github.com/instana/nodejs/compare/v3.4.0...v3.5.0) (2024-04-24)
+
+### Features
+
+- added support for prisma v5 ([#1114](https://github.com/instana/nodejs/issues/1114)) ([7cf8d90](https://github.com/instana/nodejs/commit/7cf8d90bd57b06110ea49e567be9f8a4d860b5a5))
+
 # [3.4.0](https://github.com/instana/nodejs/compare/v3.3.1...v3.4.0) (2024-04-16)
 
 ### Features
