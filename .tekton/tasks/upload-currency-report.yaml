@@ -27,28 +27,27 @@ spec:
 
         if [ "$(params.type)" != "main" ]; then
           echo "Skipping uploading the currency report. This is not the main pipeline."
-          return
+        else
+          ARTIFACTS_PATH="$(workspaces.output.path)"
+          cd $ARTIFACTS_PATH
+
+          echo "Generating report..."
+          node bin/currency/generate-currency-report.js
+          echo "Generated report..."
+
+          git clone https://oauth2:$GH_ENTERPRISE_TOKEN@github.ibm.com/instana/tracer-reports.git tracer-reports
+          cd tracer-reports
+          
+          git pull origin main
+          cp ../currency-report.md ./automated/currency/nodejs/report.md
+
+          git config user.name "Instanacd PAT for GitHub Enterprise"
+          git config user.email instana.ibm.github.enterprise@ibm.com
+          
+          git add .
+          
+          git commit -m "chore: updated node.js currency report"
+          git push origin main
         fi
-
-        ARTIFACTS_PATH="$(workspaces.output.path)"
-        cd $ARTIFACTS_PATH
-
-        echo "Generating report..."
-        node bin/currency/generate-currency-report.js
-        echo "Generated report..."
-
-        git clone https://oauth2:$GH_ENTERPRISE_TOKEN@github.ibm.com/instana/tracer-reports.git tracer-reports
-        cd tracer-reports
-        
-        git pull origin main
-        cp ../currency-report.md ./automated/currency/nodejs/report.md
-
-        git config user.name "Instanacd PAT for GitHub Enterprise"
-        git config user.email instana.ibm.github.enterprise@ibm.com
-        
-        git add .
-        
-        git commit -m "chore: updated node.js currency report"
-        git push origin main
 
 
