@@ -167,21 +167,12 @@ These rules apply first and foremost to production dependencies (that is, `depen
 
 When adding a new package to this monorepo, there are a few things to consider.
 
-### Package.json
+Example PR to add a new package:
+https://github.com/instana/nodejs/pull/932
 
-For all new packages, make sure that a handful of npm scripts are part of package.json.
-These scripts can be used by lerna, specially during CI builds:
+## Naming
 
-```javascript
-"scripts": {
-    "audit": "npm audit --omit=dev",
-    "test": "NODE_ENV=debug mocha --sort $(find test -iname '*test.js')",
-    "test:debug": "WITH_STDOUT=true npm run test",
-    "lint": "eslint src test",
-    "verify": "npm run lint && npm test",
-    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
-}
-```
+Please choose a strong and meaninful name for the package. Discuss the name within the team.
 
 ### Set Publishing Access For The New Package
 
