@@ -23,38 +23,12 @@ const morgan = require('morgan');
 const pino = require('pino');
 const port = require('../../../test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
-let pinoOptions;
-
-if (process.env.PINO_VERSION === '8') {
-  pinoOptions = {
-    customLevels: {
-      customInfo: 31,
-      customError: 51
-    }
-  };
-} else {
-  pinoOptions = {
-    customLevels: {
-      customInfo: 31,
-      customError: 51
-    },
-    transport: {
-      pipeline: [
-        {
-          target: 'pino-pretty'
-        }
-      ]
-    }
-  };
-
-  /*
-  NOTE: This syntax does the same than the syntax above
-        Except: customLevels cannot be set
-  pinoOptions = pino.transport({
-    target: 'pino-pretty'
-  });
-  */
-}
+const pinoOptions = {
+  customLevels: {
+    customInfo: 31,
+    customError: 51
+  }
+};
 
 const plainVanillaPino = pino(pinoOptions);
 const expressPino = require('pino-http')(pinoOptions);
