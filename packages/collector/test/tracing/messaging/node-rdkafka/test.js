@@ -54,7 +54,7 @@ const topic = 'rdkafka-topic';
 
 let mochaSuiteFn;
 
-if (!supportedVersion(process.versions.node) || semver.lte(process.versions.node, '14.0.0')) {
+if (!supportedVersion(process.versions.node) || semver.lte(process.versions.node, '16.0.0')) {
   mochaSuiteFn = describe.skip;
 } else {
   mochaSuiteFn = describe;
