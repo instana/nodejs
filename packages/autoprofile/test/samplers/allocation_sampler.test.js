@@ -8,8 +8,10 @@
 const assert = require('assert');
 const async = require('async');
 const AllocationSampler = require('../../lib/samplers/allocation_sampler').AllocationSampler;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-describe('AllocationSampler', () => {
+mochaSuiteFn('AllocationSampler', () => {
   let profiler;
 
   beforeEach(() => {
@@ -18,11 +20,6 @@ describe('AllocationSampler', () => {
 
   describe('startSampler()', () => {
     it('should record allocation profile', done => {
-      if (!profiler.matchVersion('v8.6.0', null)) {
-        done();
-        return;
-      }
-
       const sampler = new AllocationSampler(profiler);
       if (!sampler.test()) {
         done();

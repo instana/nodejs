@@ -278,14 +278,7 @@ BUILD_FOR_MACOS=true ./rebuild-precompiled-addons.sh
 
 #### autoprofile package
 
-Please run these commands to generate the prebuilds for our own autoprofiler:
-
-```sh
-cd packages/autoprofile
-precompile/build-all-addons.js
-```
-
-NOTE: It is recommended to comment out the ABI versions you don't want to generate/regenerate in the `build-all-addons` script. Alternatively, if you want to regenerate all builds that's fine too, but it takes longer.
+Please read `packages/autoprofile/CONTRIBUTING.md`.
 
 ## Support for Cloud Services
 

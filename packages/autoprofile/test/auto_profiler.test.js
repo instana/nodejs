@@ -6,8 +6,10 @@
 'use strict';
 
 const assert = require('assert');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-describe('AutoProfiler', () => {
+mochaSuiteFn('AutoProfiler', () => {
   let profiler;
   let origFlush;
 
@@ -46,20 +48,6 @@ describe('AutoProfiler', () => {
         assert.equal(profiler.profileRecorder.queue.length, 1);
         done();
       });
-    });
-  });
-
-  describe('matchVersion()', () => {
-    beforeEach(() => {
-      profiler = global.profiler;
-    });
-
-    it('should match version', done => {
-      assert.equal(profiler.matchVersion(null, null), true);
-      assert.equal(profiler.matchVersion('0.0.0', 'v100.100.100'), true);
-      assert.equal(profiler.matchVersion('v100.100.100', 'v110.110.110'), false);
-
-      done();
     });
   });
 });

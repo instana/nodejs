@@ -8,8 +8,10 @@
 const assert = require('assert');
 const CallSite = require('../lib/profile').CallSite;
 const Profile = require('../lib/profile').Profile;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-describe('Profile', () => {
+mochaSuiteFn('Profile', () => {
   let profiler;
 
   beforeEach(() => {

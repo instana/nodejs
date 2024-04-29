@@ -9,8 +9,9 @@ const { Writable } = require('stream');
 const assert = require('assert');
 const http = require('http');
 const fs = require('fs');
-
 const AsyncSampler = require('../../lib/samplers/async_sampler').AsyncSampler;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 class DevNull extends Writable {
   constructor(opts) {
@@ -25,7 +26,7 @@ class DevNull extends Writable {
 
 const devNull = new DevNull();
 
-describe('AsyncSampler', () => {
+mochaSuiteFn('AsyncSampler', () => {
   let profiler;
 
   beforeEach(() => {

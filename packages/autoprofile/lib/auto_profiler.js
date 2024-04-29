@@ -6,8 +6,10 @@
 'use strict';
 
 const path = require('path');
-const pkg = require(path.join(__dirname, '/../package.json'));
+const pkg = require(path.join(__dirname, '..', 'package.json'));
 const os = require('os');
+const semver = require('semver');
+const nodeGypBuild = require('node-gyp-build');
 const Utils = require('./utils').Utils;
 const ProfileRecorder = require('./profile_recorder').ProfileRecorder;
 const SamplerScheduler = require('./sampler_scheduler').SamplerScheduler;
@@ -20,8 +22,6 @@ let profiler = null;
 class AutoProfiler {
   constructor() {
     this.AGENT_FRAME_REGEXP = /node_modules\/@instana\//;
-
-    this.version = pkg.version;
 
     this.addon = undefined;
 
@@ -86,15 +86,14 @@ class AutoProfiler {
     }
   }
 
-  loadAddon(addonPath) {
+  loadAddon() {
     try {
-      this.addon = require(addonPath);
-      return true;
+      // NOTE: will either load the prebuild or the build from build/release
+      //       During the installation process the build is skipped if a prebuild exists.
+      this.addon = nodeGypBuild(path.join(__dirname, '..'));
     } catch (err) {
-      // not found
+      this.error(`Could not load native autoprofiler addon: ${err.message}`);
     }
-
-    return false;
   }
 
   start(opts) {
@@ -108,28 +107,10 @@ class AutoProfiler {
       this.options = {};
     }
 
-    if (!this.matchVersion('v4.0.0', null)) {
-      this.error('Supported Node.js version 4.0.0 or higher');
+    if (!semver.satisfies(process.versions.node, pkg.engines.node)) {
+      this.error(`This node.js version ${process.versions.node} is not supported.`);
       return;
     }
-
-    // disable CPU profiler by default for 7.0.0-8.9.3 because of the memory leak.
-    if (
-      this.options.disableCpuSampler === undefined &&
-      (this.matchVersion('v7.0.0', 'v8.9.3') || this.matchVersion('v9.0.0', 'v9.2.1'))
-    ) {
-      this.log('CPU profiler disabled.');
-      this.options.disableCpuSampler = true;
-    }
-
-    // disable allocation profiler by default up to version 8.5.0 because of segfaults.
-    if (this.options.disableAllocationSampler === undefined && this.matchVersion(null, 'v8.5.0')) {
-      this.log('Allocation profiler disabled.');
-      this.options.disableAllocationSampler = true;
-    }
-
-    // load native addon
-    let addonFound = false;
 
     const platform = os.platform();
     const arch = process.arch;
@@ -144,27 +125,11 @@ class AutoProfiler {
       }
     }
 
-    let addonPath;
-    if (family) {
-      addonPath = path.join(__dirname, '..', 'addons', platform, arch, family, abi, 'autoprofile.node');
-    } else {
-      addonPath = path.join(__dirname, '..', 'addons', platform, arch, abi, 'autoprofile.node');
-    }
+    this.debug(`System: ${platform}, ${family}, ${arch}, ${abi}`);
+    this.loadAddon();
 
-    if (this.loadAddon(addonPath)) {
-      addonFound = true;
-      this.log(`Using pre-built native addon from ${addonPath}.`);
-    } else {
-      this.log(`Could not find pre-built addon at ${addonPath}.`);
-    }
-
-    if (!addonFound) {
-      if (this.loadAddon('../build/Release/autoprofile-addon.node')) {
-        this.log('Using built native addon.');
-      } else {
-        this.error('Finding/loading of native addon failed. Profiler will not start.');
-        return;
-      }
+    if (!this.addon) {
+      return;
     }
 
     if (this.profilerDestroyed) {
@@ -284,27 +249,6 @@ class AutoProfiler {
 
       callback();
     });
-  }
-
-  matchVersion(min, max) {
-    const versionRegexp = /v?(\d+)\.(\d+)\.(\d+)/;
-
-    let m = versionRegexp.exec(process.version);
-    const currN = 1e9 * parseInt(m[1], 10) + 1e6 * parseInt(m[2], 10) + 1e3 * parseInt(m[3], 10);
-
-    let minN = 0;
-    if (min) {
-      m = versionRegexp.exec(min);
-      minN = 1e9 * parseInt(m[1], 10) + 1e6 * parseInt(m[2], 10) + 1e3 * parseInt(m[3], 10);
-    }
-
-    let maxN = Infinity;
-    if (max) {
-      m = versionRegexp.exec(max);
-      maxN = 1e9 * parseInt(m[1], 10) + 1e6 * parseInt(m[2], 10) + 1e3 * parseInt(m[3], 10);
-    }
-
-    return currN >= minN && currN <= maxN;
   }
 
   debug(message) {

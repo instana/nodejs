@@ -24,13 +24,13 @@
     "url": "git+https://github.com/instana/nodejs.git"
   },
   "scripts": {
-    "audit": "npm audit ----omit=dev",
+    "audit": "npm audit --omit=dev",
     "node_modules:exists": "mkdir -p node_modules",
-    "install": "node node-gyp-fallback.js",
-    "test": "mocha --config=test/.mocharc.js --require test/hooks.js --sort $(find test -iname '*test.js')",
+    "install": "node-gyp-build",
+    "test": "mocha --config=test/.mocharc.js --require test/hooks.js --sort $(find test -iname '*test.js' -not -path '*node_modules*')",
     "test:debug": "WITH_STDOUT=true npm run test",
-    "test:ci": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/**/*test.js'",
-    "lint": "eslint lib test precompile",
+    "test:ci": "echo \"******* Files to be tested:\n $CI_AUTOPROFILE_TEST_FILES\" && if [ -z \"${CI_AUTOPROFILE_TEST_FILES}\" ]; then echo \"No test files have been assigned to this CircleCI executor.\"; else mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js --sort ${CI_AUTOPROFILE_TEST_FILES}; fi",
+    "lint": "eslint lib test",
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'lib/**/*.js' 'test/**/*.js'"
   },
@@ -51,15 +51,19 @@
   "dependencies": {
     "@instana/core": "3.6.0",
     "detect-libc": "^2.0.2",
-    "nan": "^2.14.2"
+    "nan": "^2.14.2",
+    "node-gyp-build": "^4.7.1",
+    "semver": "^7.5.4"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   },
   "main": "index.js",
   "files": [
     "src",
     "lib",
-    "addons/linux",
+    "prebuilds",
     "binding.gyp",
-    "node-gyp-fallback.js",
     "CHANGELOG.md"
   ],
   "publishConfig": {
