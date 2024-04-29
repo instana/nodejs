@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.6.0](https://github.com/instana/nodejs/compare/v3.5.0...v3.6.0) (2024-04-29)
+
+### Features
+
+- added support for node-rdkafka v3 ([#1123](https://github.com/instana/nodejs/issues/1123)) ([a519d75](https://github.com/instana/nodejs/commit/a519d75bec6798f0891365752b15c8df9a80a9db))
+- added support for pino v9 ([#1130](https://github.com/instana/nodejs/issues/1130)) ([6a6565c](https://github.com/instana/nodejs/commit/6a6565c7463bb820d6495d07728dba0b12aa5156))
+- added support for sqs-consumer v10 ([#1134](https://github.com/instana/nodejs/issues/1134)) ([c929727](https://github.com/instana/nodejs/commit/c929727beca86c3084d94380ccc160c22c7a2a38))
+
 # [3.5.0](https://github.com/instana/nodejs/compare/v3.4.0...v3.5.0) (2024-04-24)
 
 ### Features
