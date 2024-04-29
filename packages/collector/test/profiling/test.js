@@ -14,7 +14,7 @@ const { AgentStubControls } = require('../apps/agentStubControls');
 
 // This suite is ignored on CI as the profiler (by design) is not entirely deterministc in behavior.
 // TODO: Fix me. We need to add a separate weekly CI job.
-const mochaSuiteFn = !supportedVersion(process.versions.node) || isCI() ? describe.skip : describe.skip;
+const mochaSuiteFn = !supportedVersion(process.versions.node) || isCI() ? describe.skip : describe;
 
 mochaSuiteFn('profiling', function () {
   // profiles are send every two minutes. We wait a bit more than twice that time.
