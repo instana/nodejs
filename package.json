@@ -186,7 +186,6 @@
     "nats": "^2.23.0",
     "nats-v1": "npm:nats@^1.4.12",
     "node-fetch": "^2.7.0",
-    "node-abi": "^3.54.0",
     "node-gyp": "^10.0.1",
     "node-nats-streaming": "^0.3.2",
     "pg": "^8.11.5",

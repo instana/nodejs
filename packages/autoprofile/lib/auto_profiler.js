@@ -89,6 +89,7 @@ class AutoProfiler {
   loadAddon() {
     try {
       // NOTE: will either load the prebuild or the build from build/release
+      //       During the installation process the build is skipped if a prebuild exists.
       this.addon = nodeGypBuild(path.join(__dirname, '..'));
     } catch (err) {
       this.error(`Could not load native autoprofiler addon: ${err.message}`);
