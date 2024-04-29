@@ -211,7 +211,7 @@
     "sinon-chai": "^3.7.0",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5",
-    "sqs-consumer": "^9.1.0",
+    "sqs-consumer": "^10.1.0",
     "sqs-consumer-v5": "npm:sqs-consumer@^5.7.0",
     "stealthy-require": "1.1.1",
     "superagent": "^8.1.2",
