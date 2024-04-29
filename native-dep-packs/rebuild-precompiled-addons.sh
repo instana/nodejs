@@ -10,14 +10,12 @@ cd `dirname $BASH_SOURCE`
 
 # Maintenance Note:
 # This should be kept in sync with packages/autoprofile/precompile/build-all-addons.js-> ABI_VERSIONS.
-# https://github.com/nodejs/node/blob/main/doc/abi_version_registry.json
 declare -A ABI_VERSIONS=( \
-#  ["83"]="14.21.3" \
-#  ["93"]="16.20.2" \
-#  ["108"]="18.18.2" \
-#  ["115"]="20.3.0" \
-#  ["120"]="21.2.0" \
-  ["127"]="22.0.0" \
+  ["83"]="14.21.3" \
+  ["93"]="16.20.2" \
+  ["108"]="18.18.2" \
+  ["115"]="20.3.0" \
+  ["120"]="21.2.0" \
   )
 
 LIBC_VARIANTS=( \
