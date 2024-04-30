@@ -28,8 +28,7 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         
-        git config user.name "Katharina Irrgang"
-        git config user.email katharina.irrgang@ibm.com
+        git config user.name "Instanacd PAT for GitHub Public"
 
         mkdir -p -m 755 /etc/apt/keyrings && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
         && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
