@@ -265,6 +265,7 @@ https://github.com/instana/nodejs/pull/529
 We deliver prebuilds of native dependencies for every supported Node version in our releases.
 
 You can find the ABI (NODE_MODULE_VERSION) [here](https://nodejs.org/en/download/releases/).
+They removed the ABI versions from this page. You can read it from [this link](https://github.com/nodejs/node/blob/main/doc/abi_version_registry.json) for now.
 
 #### shared-metrics package
 
