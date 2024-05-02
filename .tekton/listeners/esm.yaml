@@ -32,6 +32,8 @@ spec:
       value: "true"
     - name: context
       value: "node-$(params.node-version)-esm"
+    - name: skip-cache
+      value: $(params.skip-cache)
 
 ---
 

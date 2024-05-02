@@ -35,6 +35,8 @@ spec:
       value: $(event.pull_request.number)
     - name: pipeline-ref
       value: "default-pipeline"
+    - name: skip-cache
+      value: $(params.skip-cache)      
 
 ---
 

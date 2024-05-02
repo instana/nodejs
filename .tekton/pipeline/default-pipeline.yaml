@@ -38,6 +38,8 @@ spec:
       value: $(params.coverage)
     - name: context
       value: $(params.context)
+    - name: skip-cache
+      value: $(params.skip-cache)
   workspaces:
     - name: artifacts
   tasks:
@@ -124,7 +126,9 @@ spec:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)          
+          value: $(params.npm-version)
+        - name: skip-cache
+          value: $(params.skip-cache)                  
       workspaces:
         - name: output
           workspace: artifacts

@@ -27,6 +27,8 @@ spec:
       value: "nightly-$(params.node-version)"
     - name: pipeline-ref
       value: "default-pipeline"
+    - name: skip-cache
+      value: $(params.skip-cache)      
 
 ---
 

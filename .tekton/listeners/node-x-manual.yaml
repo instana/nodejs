@@ -30,6 +30,8 @@ spec:
       value: "default-pipeline"
     - name: esm
       value: $(params.esm)
+    - name: skip-cache
+      value: $(params.skip-cache)      
 
 ---
 

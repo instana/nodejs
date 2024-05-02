@@ -43,6 +43,9 @@ spec:
     - name: coverage
       default: "false"
       value: $(params.coverage)
+    - name: skip-cache
+      default: "false"
+      value: $(params.skip-cache)
     - name: context
       default: "node-$(params.node-version)"
       value: $(params.context)
@@ -117,3 +120,5 @@ spec:
             value: $(params.coverage)
           - name: context
             value: $(params.context)
+          - name: skip-cache
+            value: $(params.skip-cache)            

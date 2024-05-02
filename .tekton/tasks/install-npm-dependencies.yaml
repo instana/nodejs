@@ -13,7 +13,9 @@ spec:
     - name: node-version
       value: $(params.node-version)      
     - name: npm-version
-      value: $(params.npm-version)      
+      value: $(params.npm-version)
+    - name: skip-cache
+      value: $(params.skip-cache)      
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -34,71 +36,29 @@ spec:
 
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
-        fi        
+        fi
 
-        echo "Restoring node_modules cache..."
-        curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
-        ibmcloud plugin install cloud-object-storage -f -r 'IBM Cloud'
-        ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey $API_KEY
-
-        apt-get update -y
-        apt-get install zstd -y
-
-        checksum=$(sha256sum package-lock.json | awk '{print $1}')
-        ibmcloud cos download --bucket npm-cache --key node-modules-$(params.target-branch)-$(params.node-version)-$checksum ./node-modules.tar.zst              
-
-        # Check the exit code of the download command
-        if [ $? -eq 0 ]; then
-          npmInstall=false        
-          echo "Download successful."
-
-          zstd -d node-modules.tar.zst -o node-modules.tar
-          tar -xf node-modules.tar
-
-          # Iterate over packages/*/ directories
-          for package_dir in packages/*; do
-            if [ -d "$ARTIFACTS_PATH/$package_dir" ]; then
-              cd $ARTIFACTS_PATH/$package_dir
-              package_name=$(basename "$package_dir")
-
-              # Download the cache for the specific package
-              pkg_name="node-modules-$(params.target-branch)-$(params.node-version)-$package_name-$checksum"
-
-              echo "Downloading cache for $pkg_name"
-
-              ibmcloud cos download --bucket npm-cache --key $pkg_name $pkg_name.tar.zst
-              
-              if [ $? -eq 0 ]; then
-                # Decompress and extract the cache
-                echo "Download successful."
-
-                zstd -d $pkg_name.tar.zst -o "node-modules.tar"
-                tar -xf "node-modules.tar"
-              else
-                npmInstall=true
-              fi
-            fi
-          done
-
-          cd $ARTIFACTS_PATH
-
-          echo "npm install: $npmInstall"
-
-          if [ "$npmInstall" == true ]; then
-            npm install
-
-            rm -rf node-modules.tar.zst
-            rm -rf node-modules.tar
-          fi
-
-          echo "Restored node_modules cache..."
+        if [ "$(params.skip-cache)" == "true" ]; then
+          echo "Skipping npm cache..."
+          echo "Installing npm dependencies..."
+          npm install --loglevel verbose
         else
-          ibmcloud cos download --bucket npm-cache --key node-modules-main-$(params.node-version)-$checksum ./node-modules.tar.zst
+          echo "Restoring node_modules cache..."
+          curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+          ibmcloud plugin install cloud-object-storage -f -r 'IBM Cloud'
+          ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey $API_KEY
 
+          apt-get update -y
+          apt-get install zstd -y
+
+          checksum=$(sha256sum package-lock.json | awk '{print $1}')
+          ibmcloud cos download --bucket npm-cache --key node-modules-$(params.target-branch)-$(params.node-version)-$checksum ./node-modules.tar.zst              
+
+          # Check the exit code of the download command
           if [ $? -eq 0 ]; then
-            npmInstall=false
-            echo "Download successful. Restoring node_modules cache..."
-            
+            npmInstall=false        
+            echo "Download successful."
+
             zstd -d node-modules.tar.zst -o node-modules.tar
             tar -xf node-modules.tar
 
@@ -106,37 +66,85 @@ spec:
             for package_dir in packages/*; do
               if [ -d "$ARTIFACTS_PATH/$package_dir" ]; then
                 cd $ARTIFACTS_PATH/$package_dir
-
                 package_name=$(basename "$package_dir")
 
                 # Download the cache for the specific package
                 pkg_name="node-modules-$(params.target-branch)-$(params.node-version)-$package_name-$checksum"
-                echo "Downloading cache for $pkg_name"                
-                ibmcloud cos download --bucket npm-cache --key $pkg_name $pkg_name.tar.zst
 
+                echo "Downloading cache for $pkg_name"
+
+                ibmcloud cos download --bucket npm-cache --key $pkg_name $pkg_name.tar.zst
+                
                 if [ $? -eq 0 ]; then
                   # Decompress and extract the cache
                   echo "Download successful."
+
                   zstd -d $pkg_name.tar.zst -o "node-modules.tar"
                   tar -xf "node-modules.tar"
                 else
                   npmInstall=true
-                fi                
+                fi
               fi
             done
 
             cd $ARTIFACTS_PATH
 
-            rm -rf node-modules.tar.zst
-            rm -rf node-modules.tar
+            echo "npm install: $npmInstall"
 
             if [ "$npmInstall" == true ]; then
               npm install --loglevel verbose
+
+              rm -rf node-modules.tar.zst
+              rm -rf node-modules.tar
             fi
 
             echo "Restored node_modules cache..."
           else
-            echo "Download from main was not successful. Installing node_modules..."
-            npm install --loglevel verbose
+            ibmcloud cos download --bucket npm-cache --key node-modules-main-$(params.node-version)-$checksum ./node-modules.tar.zst
+
+            if [ $? -eq 0 ]; then
+              npmInstall=false
+              echo "Download successful. Restoring node_modules cache..."
+              
+              zstd -d node-modules.tar.zst -o node-modules.tar
+              tar -xf node-modules.tar
+
+              # Iterate over packages/*/ directories
+              for package_dir in packages/*; do
+                if [ -d "$ARTIFACTS_PATH/$package_dir" ]; then
+                  cd $ARTIFACTS_PATH/$package_dir
+
+                  package_name=$(basename "$package_dir")
+
+                  # Download the cache for the specific package
+                  pkg_name="node-modules-$(params.target-branch)-$(params.node-version)-$package_name-$checksum"
+                  echo "Downloading cache for $pkg_name"                
+                  ibmcloud cos download --bucket npm-cache --key $pkg_name $pkg_name.tar.zst
+
+                  if [ $? -eq 0 ]; then
+                    # Decompress and extract the cache
+                    echo "Download successful."
+                    zstd -d $pkg_name.tar.zst -o "node-modules.tar"
+                    tar -xf "node-modules.tar"
+                  else
+                    npmInstall=true
+                  fi                
+                fi
+              done
+
+              cd $ARTIFACTS_PATH
+
+              rm -rf node-modules.tar.zst
+              rm -rf node-modules.tar
+
+              if [ "$npmInstall" == true ]; then
+                npm install --loglevel verbose
+              fi
+
+              echo "Restored node_modules cache..."
+            else
+              echo "Download from main was not successful. Installing node_modules..."
+              npm install --loglevel verbose
+            fi
           fi
         fi

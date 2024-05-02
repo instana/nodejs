@@ -104,6 +104,8 @@ spec:
           value: $(params.node-version)
         - name: npm-version
           value: $(params.npm-version)          
+        - name: skip-cache
+          value: "false"
       workspaces:
         - name: output
           workspace: artifacts
