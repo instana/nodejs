@@ -46,7 +46,9 @@ currencies = currencies.map(currency => {
   } else {
     installedVersion = installedVersion.replace(/[^0-9.]/g, '');
     latestVersion = execSync(`npm info ${currency.name} version`).toString().trim();
+
     const diff = semver.diff(latestVersion, installedVersion);
+
     upToDate = diff === 'patch' || diff === null;
 
     try {
@@ -61,14 +63,25 @@ currencies = currencies.map(currency => {
       try {
         const releaseList = JSON.parse(execSync(`npm show ${currency.name} time --json`).toString());
         const index = Object.keys(releaseList).indexOf(installedVersion);
-        const key = Object.keys(releaseList)[index + 1];
+        // NOTE: +1 is the next release of the current installed version!
+        let key = Object.keys(releaseList)[index + 1];
 
         if (key === latestVersion) {
           daysBehind = moment(new Date()).startOf('day').diff(moment(latestVersionPublishedAt).startOf('day'), 'days');
         } else {
-          daysBehind = moment(latestVersionPublishedAt)
-            .startOf('day')
-            .diff(moment(new Date(releaseList[key])).startOf('day'), 'days');
+          // CASE: no release happened after the previous release
+          //       e.g. 2.x release happened after 3.x release (valid use case)
+          // eslint-disable-next-line no-lonely-if
+          if (!key) {
+            key = Object.keys(releaseList)[index];
+            daysBehind = moment(new Date())
+              .startOf('day')
+              .diff(moment(new Date(releaseList[key])).startOf('day'), 'days');
+          } else {
+            daysBehind = moment(latestVersionPublishedAt)
+              .startOf('day')
+              .diff(moment(new Date(releaseList[key])).startOf('day'), 'days');
+          }
         }
       } catch (err) {
         console.log(err);
