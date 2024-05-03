@@ -277,7 +277,7 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": true,
-    "note": "Native ESM Module (https://jsw.ibm.com/browse/INSTA-2068)"
+    "note": "[Native ESM Module](https://jsw.ibm.com/browse/INSTA-2068)"
   },
   {
     "name": "graphql",
@@ -467,7 +467,7 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": true,
-    "note": "Native ESM Module (https://jsw.ibm.com/browse/INSTA-2068)"
+    "note": "[Native ESM Module](https://jsw.ibm.com/browse/INSTA-2068)"
   },
   {
     "name": "node-nats-streaming",
@@ -517,7 +517,7 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": true,
-    "note": "Otel (https://jsw.ibm.com/browse/INSTA-1841)"
+    "note": "[Otel](https://jsw.ibm.com/browse/INSTA-1841)"
   },
   {
     "name": "sequelize",
@@ -567,7 +567,7 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": true,
-    "note": "Otel (https://jsw.ibm.com/browse/INSTA-1561)"
+    "note": "[Otel](https://jsw.ibm.com/browse/INSTA-1561)"
   },
   {
     "name": "winston",
