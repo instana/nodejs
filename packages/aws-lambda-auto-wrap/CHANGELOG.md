@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.7.0](https://github.com/instana/nodejs/compare/v3.6.0...v3.7.0) (2024-05-03)
+
+**Note:** Version bump only for package instana-aws-lambda-auto-wrap
+
 # [3.6.0](https://github.com/instana/nodejs/compare/v3.5.0...v3.6.0) (2024-04-29)
 
 **Note:** Version bump only for package instana-aws-lambda-auto-wrap

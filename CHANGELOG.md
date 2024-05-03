@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.7.0](https://github.com/instana/nodejs/compare/v3.6.0...v3.7.0) (2024-05-03)
+
+### Features
+
+- added support for Node v22 ([#1132](https://github.com/instana/nodejs/issues/1132)) ([6d08f43](https://github.com/instana/nodejs/commit/6d08f4359ecc6a936f68988609a311b2422b4f79))
+- **autoprofile:** added prebuilds for darwin/arm64 linux/arm64 linux/arm ([#1135](https://github.com/instana/nodejs/issues/1135)) ([26f85b0](https://github.com/instana/nodejs/commit/26f85b08984e1155ca1df63db28fb1c6adcf752e))
+
 # [3.6.0](https://github.com/instana/nodejs/compare/v3.5.0...v3.6.0) (2024-04-29)
 
 ### Features
