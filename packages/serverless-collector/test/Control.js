@@ -12,7 +12,7 @@ const config = require('@instana/core/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 const isLatestEsmSupportedVersion = require('@instana/core').tracing.isLatestEsmSupportedVersion;
 
-const PATH_TO_INSTANA_SERVERLESS_PACKAGE = path.join(__dirname, '..');
+const SERVERLESS_COLLECTOR_PATH = path.join(__dirname, '..');
 let execArg;
 
 class Control extends AbstractServerlessControl {
@@ -56,9 +56,9 @@ class Control extends AbstractServerlessControl {
       : [`--experimental-loader=${path.join(__dirname, '..', 'esm-loader.mjs')}`];
 
     if (this.opts.containerAppPath && this.opts.env && this.opts.env.ESM_TEST) {
-      execArg = this.opts.containerAppPath.endsWith('.mjs') ? loaderPath : ['--require', PATH_TO_INSTANA_SERVERLESS_PACKAGE];
+      execArg = this.opts.containerAppPath.endsWith('.mjs') ? loaderPath : ['--require', SERVERLESS_COLLECTOR_PATH];
     } else {
-      execArg = ['--require', PATH_TO_INSTANA_SERVERLESS_PACKAGE];
+      execArg = ['--require', SERVERLESS_COLLECTOR_PATH];
     }
 
     this.serverlessApp = fork(this.opts.containerAppPath, {
