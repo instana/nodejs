@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.8.0](https://github.com/instana/nodejs/compare/v3.7.0...v3.8.0) (2024-05-06)
+
+### Features
+
+- added support for restify v9, v10, v11 ([#1140](https://github.com/instana/nodejs/issues/1140)) ([fb132d2](https://github.com/instana/nodejs/commit/fb132d2bf898cc943d9415e766a048cfd0846cb2))
+- added support for superagent v9 ([#1128](https://github.com/instana/nodejs/issues/1128)) ([0d38805](https://github.com/instana/nodejs/commit/0d3880550af9ea36ae54d0530dd3a94880e79059))
+
 # [3.7.0](https://github.com/instana/nodejs/compare/v3.6.0...v3.7.0) (2024-05-03)
 
 ### Features
