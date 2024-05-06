@@ -4,15 +4,9 @@
 
 'use strict';
 
-const semver = require('semver');
 const constants = require('../constants');
 
 module.exports.init = () => {
-  // No support for Node v18 yet.
-  // https://github.com/restify/node-restify/issues/1925
-  // https://github.com/open-telemetry/opentelemetry-js-contrib/issues/1339
-  if (!semver.lt(process.versions.node, '18.0.0')) return;
-
   const { RestifyInstrumentation } = require('@opentelemetry/instrumentation-restify');
 
   const instrumentation = new RestifyInstrumentation();

@@ -6,7 +6,6 @@
 
 const expect = require('chai').expect;
 const path = require('path');
-const semver = require('semver');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../core/test/config');
@@ -25,19 +24,12 @@ const {
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 const DELAY_TIMEOUT_IN_MS = 500;
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '14.0.0') ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('opentelemetry/instrumentations', function () {
   this.timeout(config.getTestTimeout());
 
   describe('restify', function () {
-    // No support for Node v18 yet.
-    // https://github.com/restify/node-restify/issues/1925
-    // https://github.com/open-telemetry/opentelemetry-js-contrib/issues/1339
-    const skip = semver.lt(process.versions.node, '18.0.0') !== true;
-    if (skip) return it.skip(`skipping ${process.versions.node}`);
-
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
@@ -87,7 +79,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                   dataProperty: 'tags',
                   extraTests: span => {
                     expect(span.data.tags.name).to.eql('request handler - /test');
-                    expect(span.data.tags['restify.version']).to.eql('8.6.1');
+                    expect(span.data.tags['restify.version']).to.eql('11.1.0');
                     expect(span.data.tags['restify.type']).to.eql('request_handler');
                     expect(span.data.tags['restify.method']).to.eql('get');
                     expect(span.data.tags['http.route']).to.eql('/test');
@@ -118,7 +110,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                     extraTests: span => {
                       expect(span.data.tags.name).to.eql(`middleware - ${name}`);
                       expect(span.data.tags['restify.name']).to.eql(name);
-                      expect(span.data.tags['restify.version']).to.eql('8.6.1');
+                      expect(span.data.tags['restify.version']).to.eql('11.1.0');
                       expect(span.data.tags['restify.type']).to.eql('middleware');
                       expect(span.data.tags['restify.method']).to.eql('use');
                       expect(span.data.tags['http.route']).to.eql('/test');
@@ -138,7 +130,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                   extraTests: span => {
                     expect(span.data.tags.name).to.eql('request handler - /test');
                     expect(span.data.tags['restify.name']).to.not.exist;
-                    expect(span.data.tags['restify.version']).to.eql('8.6.1');
+                    expect(span.data.tags['restify.version']).to.eql('11.1.0');
                     expect(span.data.tags['restify.type']).to.eql('request_handler');
                     expect(span.data.tags['restify.method']).to.eql('get');
                     expect(span.data.tags['http.route']).to.eql('/test');
