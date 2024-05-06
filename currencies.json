@@ -516,8 +516,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": true,
-    "note": "[Otel](https://jsw.ibm.com/browse/INSTA-1841)"
+    "ignoreUpdates": false,
+    "note": ""
   },
   {
     "name": "sequelize",
