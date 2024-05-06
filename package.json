@@ -62,6 +62,7 @@
     "test:ci:opentelemetry-exporter": "lerna run test:ci --stream --scope=@instana/opentelemetry-exporter",
     "test:ci:opentelemetry-sampler": "lerna run test:ci --stream --scope=@instana/opentelemetry-sampler",
     "test:ci:serverless": "lerna run test:ci --stream --scope=@instana/serverless",
+    "test:ci:serverless-collector": "lerna run test:ci --stream --scope=@instana/serverless-collector",
     "test:ci:shared-metrics": "lerna run test:ci --stream --scope=@instana/shared-metrics",
     "typecheck": "tsc",
     "verify": "lerna run verify --stream",
