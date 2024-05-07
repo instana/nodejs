@@ -16,7 +16,7 @@ if (isNodeJsTooOld()) {
     `The package @instana/azure-container-services requires at least Node.js ${minimumNodeJsVersion} but this` +
       `process is running on Node.js ${process.version}. This azure container service will not be monitored by Instana.`
   );
-  module.exports = exports = require('./noop');
+  return;
 }
 
 const { util: coreUtil } = require('@instana/core');
