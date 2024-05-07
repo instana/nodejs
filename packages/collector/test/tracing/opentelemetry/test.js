@@ -8,6 +8,7 @@ const expect = require('chai').expect;
 const path = require('path');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
+const { isCI } = require('@instana/core/test/test_util');
 const config = require('../../../../core/test/config');
 const portfinder = require('../../test_util/portfinder');
 
@@ -496,9 +497,11 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           )
         ));
   });
-  // Skipping the tests for now, there is a existing timeout issue while connectiong the azure sql,
+
+  // Skipping the tests on CI for now, because there is a existing timeout issue while connectiong the azure sql,
   // see github issue https://github.com/tediousjs/tedious/issues/1277
-  describe.skip('tedious', function () {
+  const runTedious = isCI() ? describe.skip : describe;
+  runTedious('tedious', function () {
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;

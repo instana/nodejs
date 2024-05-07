@@ -17,34 +17,45 @@ require('../../..')({
     useOpentelemetry: process.env.OTEL_ENABLED
   }
 });
+
 const express = require('express');
-const app = express();
+const fs = require('fs');
+const { isCI } = require('@instana/core/test/test_util');
 const port = require('../../test_util/app-port')();
 const Connection = require('tedious').Connection;
 const Request = require('tedious').Request;
 const bodyParser = require('body-parser');
-app.use(bodyParser.json());
-// To obtain the credentials for the Azure SQL Database, you can find them in 1password. Search for
-// "Team Node.js: Azure SQL credentials". The credentials are stored in the
-// "nodejs-tracer-azure-sql-cred.json" file. Set the content to AZURE_SQL_CONFIG.
+const app = express();
 
-const azureConfig = process.env.AZURE_SQL_CONFIG ? JSON.parse(process.env.AZURE_SQL_CONFIG, 'utf-8') : null;
+app.use(bodyParser.json());
+
+// Locally:
+// To obtain the credentials for the Azure SQL Database, you can find them in 1password. Search for
+// "Team Node.js: Azure SQL credentials", download the file and copy this to your CMD line:
+// export AZURE_SQL_CONFIG=~/Downloads/nodejs-tracer-azure-sql.json
+if (!isCI() && !process.env.AZURE_SQL_CONFIG) {
+  throw new Error('Please set the env variable `AZURE_SQL_CONFIG`.');
+}
+
+const azureConfig = process.env.AZURE_SQL_CONFIG
+  ? JSON.parse(fs.readFileSync(process.env.AZURE_SQL_CONFIG, 'utf-8'))
+  : null;
+
 const config = {
-  server: azureConfig && azureConfig.AZURE_SQL_SERVER ? azureConfig.AZURE_SQL_SERVER : process.env.AZURE_SQL_SERVER,
+  server: azureConfig?.AZURE_SQL_SERVER || process.env.AZURE_SQL_SERVER,
   authentication: {
     type: 'default',
     options: {
-      userName:
-        azureConfig && azureConfig.AZURE_SQL_USERNAME ? azureConfig.AZURE_SQL_USERNAME : process.env.AZURE_SQL_USERNAME,
-      password: azureConfig && azureConfig.AZURE_SQL_PWD ? azureConfig.AZURE_SQL_PWD : process.env.AZURE_SQL_PWD
+      userName: azureConfig?.AZURE_SQL_USERNAME || process.env.AZURE_SQL_USERNAME,
+      password: azureConfig?.AZURE_SQL_PWD || process.env.AZURE_SQL_PWD
     }
   },
   options: {
-    database:
-      azureConfig && azureConfig.AZURE_SQL_DATABASE ? azureConfig.AZURE_SQL_DATABASE : process.env.AZURE_SQL_DATABASE,
+    database: azureConfig?.AZURE_SQL_DATABASE || process.env.AZURE_SQL_DATABASE,
     connectTimeout: 20000
   }
 };
+
 let connected = false;
 let connection;
 
