@@ -21,10 +21,13 @@
 
 This repository hosts Instana's Node.js packages. If you are an Instana user, you are probably looking for the package [@instana/collector](packages/collector/README.md) to add Instana monitoring and tracing to your Node.js applications.
 
-The following packages are meant for direct consumption by Instana users, all  other packages in this repo are for internal use only:
+The following packages are meant for direct consumption by Instana users:
+
+* `@instana/collector`: See <https://www.ibm.com/docs/en/instana-observability/current?topic=technologies-monitoring-nodejs>.
+* `@instana/serverless-collector`: See <https://www.ibm.com/docs/en/instana-observability/current?topic=technologies-monitoring-nodejs>.
+
 * `@instana/aws-fargate`: See <https://www.ibm.com/docs/en/instana-observability/current?topic=agents-aws-fargate#nodejs>.
 * `@instana/aws-lambda`: See <https://www.ibm.com/docs/en/instana-observability/current?topic=lambda-aws-native-tracing-nodejs>.
-* `@instana/collector`: See <https://www.ibm.com/docs/en/instana-observability/current?topic=technologies-monitoring-nodejs>.
 * `@instana/google-cloud-run`: See <https://www.ibm.com/docs/en/instana-observability/current?topic=agents-google-cloud-run#nodejs>.
 * `@instana/azure-container-services`: See <https://www.ibm.com/docs/en/instana-observability/current?topic=services-azure-app-service-tracing-nodejs>.
 
