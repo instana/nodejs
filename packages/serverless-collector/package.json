@@ -1,6 +1,6 @@
 {
   "name": "@instana/serverless-collector",
-  "version": "3.7.0",
+  "version": "3.8.0",
   "description": "Instana tracing for Node.js based serverless services",
   "author": {
     "name": "Joice Joy",
@@ -45,6 +45,14 @@
     {
       "name": "Joice Joy",
       "email": "joice.joy@ibm.com"
+    },
+    {
+      "name": "Arya Mohanan",
+      "email": "arya.mohanan@ibm.com"
+    },
+    {
+      "name": "Katharina Irrgang",
+      "email": "katharina.irrgang@ibm.com"
     }
   ],
   "bugs": {
@@ -52,7 +60,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "3.7.0",
-    "@instana/serverless": "3.7.0"
+    "@instana/core": "3.8.0",
+    "@instana/serverless": "3.8.0"
   }
 }
