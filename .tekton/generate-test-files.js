@@ -102,6 +102,10 @@ const groups = {
   'test:ci:shared-metrics': {
     sidecars: [],
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/shared-metrics"'
+  },
+  'test:ci:serverless-collector': {
+    sidecars: [],
+    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/serverless-collector"'
   }
 };
 
