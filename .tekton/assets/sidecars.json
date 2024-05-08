@@ -34,7 +34,7 @@
     },
     {
       "name": "zookeeper",
-      "image": "wurstmeister/zookeeper:latest",
+      "image": "zookeeper:3.9.2",
       "readinessProbe": {
         "tcpSocket": {
           "port": 2181
