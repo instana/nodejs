@@ -25,7 +25,6 @@ The following packages are meant for direct consumption by Instana users:
 
 * `@instana/collector`: See <https://www.ibm.com/docs/en/instana-observability/current?topic=technologies-monitoring-nodejs>.
 * `@instana/serverless-collector`: See <https://www.ibm.com/docs/en/instana-observability/current?topic=technologies-monitoring-nodejs>.
-
 * `@instana/aws-fargate`: See <https://www.ibm.com/docs/en/instana-observability/current?topic=agents-aws-fargate#nodejs>.
 * `@instana/aws-lambda`: See <https://www.ibm.com/docs/en/instana-observability/current?topic=lambda-aws-native-tracing-nodejs>.
 * `@instana/google-cloud-run`: See <https://www.ibm.com/docs/en/instana-observability/current?topic=agents-google-cloud-run#nodejs>.
