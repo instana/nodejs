@@ -69,7 +69,7 @@
   },
   "devDependencies": {
     "@apollo/gateway": "^2.7.6",
-    "@apollo/subgraph": "^2.7.5",
+    "@apollo/subgraph": "^2.7.6",
     "@aws-sdk/client-dynamodb": "^3.569.0",
     "@aws-sdk/client-dynamodb-v3": "npm:@aws-sdk/client-dynamodb@3.20.0",
     "@aws-sdk/client-kinesis": "^3.569.0",
