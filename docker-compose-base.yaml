@@ -36,11 +36,8 @@ services:
       ES_JAVA_OPTS: "-Xms500m -Xmx500m"
       xpack.security.enabled: 'false'
 
-  # Kafka test will sometimes fail because Zookeeper won't start due to
-  # java.io.IOException: Unable to create data directory /opt/zookeeper-3.4.9/data/version-2, which seems to be a known issue:
-  # -> https://issues.apache.org/jira/browse/ZOOKEEPER-1936
   zookeeper:
-    image: wurstmeister/zookeeper
+    image: zookeeper:3.9.2
     platform: linux/amd64
     ports:
       - 2181:2181
