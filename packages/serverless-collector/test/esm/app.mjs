@@ -14,7 +14,7 @@ app.on('request', (req, res) => {
   fetch(downstreamDummyUrl).then(() => {
     res.end(
       JSON.stringify({
-        message: 'Hello Serverless Service!'
+        message: 'Hello from Serverless Collector App!'
       })
     );
   });
@@ -22,7 +22,7 @@ app.on('request', (req, res) => {
 
 app.listen(port, () => {
   if (process.send) {
-    process.send('serverless-service: listening');
+    process.send('serverless-collector-app: listening');
   }
   // eslint-disable-next-line no-console
   console.log(`Listening on port ${port}.`);

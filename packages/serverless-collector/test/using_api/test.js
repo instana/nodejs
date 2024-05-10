@@ -13,11 +13,11 @@ const { expectExactlyOneMatching } = require('@instana/core/test/test_util');
 const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 const containerAppPath = path.join(__dirname, './app');
-const instanaAgentKey = 'serverless-service-dummy-key';
+const instanaAgentKey = 'serverless-collector-dummy-key';
 
 function prelude() {}
 
-describe('Using the API', function () {
+describe('[serverless-collector] Using the API', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
@@ -99,7 +99,7 @@ describe('Using the API', function () {
 
   function verify(control, response) {
     expect(response).to.be.an('object');
-    expect(response.message).to.equal('Hello Serverless Service!');
+    expect(response.message).to.equal('Hello from Serverless Collector App!');
     expect(response.logs.error).to.be.empty;
     expect(response.currentSpan.span.n).to.equal('node.http.server');
     expect(response.currentSpan.span.f.hl).to.be.true;
@@ -155,7 +155,7 @@ describe('Using the API', function () {
 
   function verifyNoOp(control, response) {
     expect(response).to.be.an('object');
-    expect(response.message).to.equal('Hello Serverless Service!');
+    expect(response.message).to.equal('Hello from Serverless Collector App!');
     expect(response.logs).to.deep.equal({
       debug: [],
       info: [],

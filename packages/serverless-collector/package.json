@@ -1,7 +1,7 @@
 {
   "name": "@instana/serverless-collector",
   "version": "3.8.0",
-  "description": "Instana tracing for Node.js based serverless services",
+  "description": "The Instana Node.js trace data collector for serverless environments.",
   "author": {
     "name": "Joice Joy",
     "email": "joice.joy@ibm.com"

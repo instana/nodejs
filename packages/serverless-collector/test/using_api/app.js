@@ -56,7 +56,7 @@ const app = http.createServer((req, res) => {
 });
 
 app.listen(port, () => {
-  sendToParent('serverless-service: listening');
+  sendToParent('serverless-collector-app: listening');
   console.log(`Listening on port ${port}.`);
 });
 
@@ -70,7 +70,7 @@ function logAndCapture(level) {
 function sendResponse(response, currentSpan) {
   response.end(
     JSON.stringify({
-      message: 'Hello Serverless Service!',
+      message: 'Hello from Serverless Collector App!',
       logs: capturedLogs,
       currentSpan,
       currentSpanConstructor: currentSpan.constructor.name

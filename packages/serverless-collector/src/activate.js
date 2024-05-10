@@ -21,7 +21,7 @@ function init() {
     logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL);
   }
 
-  // This package will not collect any performance metrics from the serverless services
+  // NOTE: This package will not collect any performance metrics.
 
   try {
     identityProvider.init();
@@ -32,12 +32,9 @@ function init() {
     logger.debug('@instana/serverless-collector initialized.');
 
     // eslint-disable-next-line no-unused-expressions
-    process.send && process.send('instana.serverless-service.initialized');
+    process.send && process.send('instana.serverless-collector.initialized');
   } catch (e) {
-    logger.error(
-      'Initializing @instana/serverless-collector failed. This process will not be traced.',
-      e
-    );
+    logger.error('Initializing @instana/serverless-collector failed. This process will not be traced.', e);
   }
 }
 

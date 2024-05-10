@@ -25,12 +25,12 @@ class Control extends AbstractServerlessControl {
     this.backendBaseUrl = this.opts.backendBaseUrl || `https://localhost:${this.backendPort}/serverless`;
     this.downstreamDummyPort = this.opts.downstreamDummyPort || portfinder();
     this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
-    this.instanaAgentKey = this.opts.instanaAgentKey || 'serverless-service-dummy-key';
+    this.instanaAgentKey = this.opts.instanaAgentKey || 'serverless-collector-dummy-key';
   }
 
   reset() {
     super.reset();
-    this.messagesFromServerlessService = [];
+    this.messagesFromServerlessCollector = [];
     this.serverlessAppHasStarted = false;
     this.serverlessAppHasTerminated = false;
   }
@@ -74,21 +74,21 @@ class Control extends AbstractServerlessControl {
     });
 
     this.serverlessApp.on('message', message => {
-      this.messagesFromServerlessService.push(message);
+      this.messagesFromServerlessCollector.push(message);
     });
   }
 
   hasMonitoredProcessStarted() {
     if (this.serverlessUninitialized) {
       return (
-        this.messagesFromServerlessService.indexOf('serverless-service: listening') >= 0 &&
-        this.messagesFromServerlessService.indexOf('instana.serverless-service.initialized') === -1 &&
+        this.messagesFromServerlessCollector.indexOf('serverless-collector-app: listening') >= 0 &&
+        this.messagesFromServerlessCollector.indexOf('instana.serverless-collector.initialized') === -1 &&
         !this.serverlessAppHasTerminated
       );
     } else {
       return (
-        this.messagesFromServerlessService.indexOf('serverless-service: listening') >= 0 &&
-        this.messagesFromServerlessService.indexOf('instana.serverless-service.initialized') >= 0 &&
+        this.messagesFromServerlessCollector.indexOf('serverless-collector-app: listening') >= 0 &&
+        this.messagesFromServerlessCollector.indexOf('instana.serverless-collector.initialized') >= 0 &&
         !this.serverlessAppHasTerminated
       );
     }

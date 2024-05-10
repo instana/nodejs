@@ -21,11 +21,11 @@
 
 This repository hosts all Instana's Node.js tracer packages.
 
-### Traditional server-based
+### Traditional server-based environments
 
 * [@instana/collector](packages/collector/README.md)
 
-### Serverless
+### Serverless environments
 
 * [@instana/aws-fargate](https://www.ibm.com/docs/en/instana-observability/current?topic=agents-aws-fargate#nodejs)
 * [@instana/aws-lambda](https://www.ibm.com/docs/en/instana-observability/current?topic=lambda-aws-native-tracing-nodejs)
