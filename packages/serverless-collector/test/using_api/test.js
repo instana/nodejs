@@ -17,7 +17,7 @@ const instanaAgentKey = 'serverless-collector-dummy-key';
 
 function prelude() {}
 
-describe('[serverless-collector] Using the API', function () {
+describe('[serverless-collector] using the api', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
@@ -133,6 +133,7 @@ describe('[serverless-collector] Using the API', function () {
       expect(span.data.http.host).to.equal(`127.0.0.1:${control.getPort()}`);
       expect(span.data.http.status).to.equal(200);
       expect(span.ec).to.equal(0);
+      expect(span._receivedHeaders['x-instana-host']).to.equal('nodejs-serverless');
     });
   }
 
