@@ -21,7 +21,8 @@ function init() {
     logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL);
   }
 
-  // NOTE: This package will not collect any performance metrics.
+  // NOTE: This package will not collect metrics.
+  // NOTE: This package does not support autotracing.
 
   try {
     identityProvider.init();
@@ -38,6 +39,8 @@ function init() {
   }
 }
 
+// NOTE: auto initialization is used because for all serverless environments
+//       we recommend using the docker images. Therefor we need to auto initialize.
 init();
 
 exports.currentSpan = function getHandleForCurrentSpan() {

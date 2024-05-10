@@ -9,10 +9,10 @@ const { isNodeJsTooOld, minimumNodeJsVersion } = require('@instana/core/src/util
 if (isNodeJsTooOld()) {
   // eslint-disable-next-line no-console
   console.error(
-    `The package @instana/serverless-collector requires at least Node.js ${minimumNodeJsVersion} but this` +
+    `The package @instana/serverless-collector requires at least Node.js v${minimumNodeJsVersion} but this ` +
       `process is running on Node.js ${process.version}. This process will not be traced by Instana.`
   );
-  module.exports = exports = require('./noop');
+  return;
 }
 
 const { util: coreUtil } = require('@instana/core');

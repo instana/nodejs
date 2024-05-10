@@ -4,13 +4,18 @@
 
 'use strict';
 
+function extractEntityId() {
+  return String(process.pid);
+}
+
 let entityId;
 exports.init = function init() {
   entityId = extractEntityId();
 };
 
 exports.getHostHeader = function getHostHeader() {
-  return entityId;
+  // default is "nodejs-serverless" - see packages/serverless/src/backend_connector.js#81
+  return null;
 };
 
 exports.getEntityId = function getEntityId() {
@@ -23,7 +28,3 @@ exports.getFrom = function getFrom() {
     e: entityId
   };
 };
-
-function extractEntityId() {
-  return String(process.pid);
-}
