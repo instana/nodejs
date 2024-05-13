@@ -18,9 +18,22 @@ jobs:
           echo $stats_cases
           echo "instana_stats_test_cases=$stats_cases" >> $GITHUB_ENV
 
-      - name: Print env from previous step
-        run: |
-          echo "From .env"
-          echo "${{ env.instana_stats_test_cases }}"
-          echo "From $"
-          echo $instana_stats_test_cases
+      - name: Send slack message
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID_TEAM }}
+          payload: |
+            {
+              "text": "Team Node.js Test Stats",
+              "attachments": [{
+                "color": "good",
+                "fields": [
+                  {
+                    "title": "Number of Test Cases [for Node.js repository](https://github.com/instana/nodejs)",
+                    "value": "${{ env.instana_stats_test_cases }}"
+                  }
+                ]
+              }]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
