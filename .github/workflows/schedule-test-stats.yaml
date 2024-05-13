@@ -21,7 +21,7 @@ jobs:
       - name: Send slack message
         uses: slackapi/slack-github-action@v1.26.0
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID_TEAM }}
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID_BREWERY_NODE }}
           payload: |
             {
               "text": "Team Node.js Test Stats",
@@ -29,7 +29,7 @@ jobs:
                 "color": "good",
                 "fields": [
                   {
-                    "title": "Number of Test Cases [for Node.js repository](https://github.com/instana/nodejs)",
+                    "title": "Number of Test Cases:",
                     "value": "${{ env.instana_stats_test_cases }}"
                   }
                 ]
