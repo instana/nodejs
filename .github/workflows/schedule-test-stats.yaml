@@ -21,7 +21,7 @@ jobs:
       - name: Send slack message
         uses: slackapi/slack-github-action@v1.21.0
         with:
-          channel-id: D02FE3BFEHG
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID_RELEASES }}
           payload: |
             {
               "text": "Node.js Test Stats",
