@@ -91,7 +91,7 @@ We are adhering to the [Conventional Commits standard](https://www.conventionalc
 
 For any change that is customer-facing and should appear in the changelog file, we require the use of either 'fix' or 'feat' in the commit message. If the change is not customer-facing and is more related to internal tasks or housekeeping, it should use 'chore' for instance. Please use 'fix' if you need to deprecate a library.
 
-When composing commit messages, it's important to use past tense. Additionally, if there is a corresponding ticket or issue associated with the change, please reference it in the commit message.
+When composing commit messages, it's important to use past tense. Additionally, if there is a corresponding ticket or issue associated with the change, please put the ticket link in the commit message and pull request.
 
 For instance, you can refer to this example commit message: https://github.com/instana/nodejs/commit/bd3e7554fe21188c3ad10d442e4d72546d5c2267
 
