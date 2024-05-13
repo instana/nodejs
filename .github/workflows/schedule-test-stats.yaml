@@ -10,30 +10,30 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
-      
-    - name: Execute stats
-      run: |
-        stats_output=$(node bin/gather-test-stats.js)
-        echo "::set-output name=stats::$stats_output"
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        
+      - name: Execute stats
+        run: |
+          stats_output=$(node bin/gather-test-stats.js)
+          echo "::set-output name=stats::$stats_output"
 
-    - name: Send slack message
-        uses: slackapi/slack-github-action@v1.21.0
-        with:
-          channel-id: D02FE3BFEHG
-          payload: |
-            {
-              "text": "Node.js Test Stats",
-              "attachments": [{
-                "color": "good",
-                "fields": [
-                  {
-                    "title": "Result",
-                    "value": "${{ steps.execute-stats.outputs.stats }}"
-                  }
-                ]
-              }]
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      - name: Send slack message
+          uses: slackapi/slack-github-action@v1.21.0
+          with:
+            channel-id: D02FE3BFEHG
+            payload: |
+              {
+                "text": "Node.js Test Stats",
+                "attachments": [{
+                  "color": "good",
+                  "fields": [
+                    {
+                      "title": "Result",
+                      "value": "${{ steps.execute-stats.outputs.stats }}"
+                    }
+                  ]
+                }]
+              }
+          env:
+            SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
