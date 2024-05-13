@@ -1,8 +1,9 @@
-name: Schedule Test Stats
+name: scheduled-test-stats
 
 on:
   schedule:
     - cron: '0 0 * * 1' # Every Monday at 06:00 AM UTC
+  workflow_dispatch:
 
 jobs:
   run-script:
