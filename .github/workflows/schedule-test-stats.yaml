@@ -13,29 +13,12 @@ jobs:
         uses: actions/checkout@v2
         
       - name: Execute stats
-        id: step_one
         run: |
           stats_cases=$(node bin/gather-test-stats.js)
           echo $stats_cases
           echo "instana_stats_test_cases=$stats_cases" >> $GITHUB_ENV
 
-      - name: Send slack message
-        id: step_two
-        uses: slackapi/slack-github-action@v1.21.0
-        with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID_TEAM }}
-          payload: |
-            {
-              "text": "Team Node.js Test Stats",
-              "attachments": [{
-                "color": "good",
-                "fields": [
-                  {
-                    "title": "Number of Test Cases in https://github.com/instana/nodejs:",
-                    "value": "$instana_stats_test_cases"
-                  }
-                ]
-              }]
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      - name: Print env from previous step
+        run: |
+          echo "${{ env.instana_stats_test_cases }}
+          echo $instana_stats_test_cases
