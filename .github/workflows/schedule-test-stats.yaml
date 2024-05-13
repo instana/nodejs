@@ -20,5 +20,7 @@ jobs:
 
       - name: Print env from previous step
         run: |
-          echo "${{ env.instana_stats_test_cases }}
+          echo "From .env"
+          echo "${{ env.instana_stats_test_cases }}"
+          echo "From $"
           echo $instana_stats_test_cases
