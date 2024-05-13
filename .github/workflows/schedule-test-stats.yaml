@@ -8,7 +8,8 @@ on:
 jobs:
   run-script:
     runs-on: ubuntu-latest
-    
+    env:
+      CIRCLE_TOKEN: ${{ secrets.CIRCLE_TOKEN }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
