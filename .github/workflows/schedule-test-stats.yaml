@@ -15,11 +15,9 @@ jobs:
       - name: Execute stats
         id: step_one
         run: |
-          stats_output=$(node bin/gather-test-stats.js)
-
-          echo $stats_output
-
-          echo "instana_test_stats=$stats_output" >> $GITHUB_ENV
+          stats_cases=$(node bin/gather-test-stats.js)
+          echo $stats_cases
+          echo "instana_stats_test_cases=$stats_cases" >> $GITHUB_ENV
 
       - name: Send slack message
         id: step_two
@@ -33,8 +31,8 @@ jobs:
                 "color": "good",
                 "fields": [
                   {
-                    "title": "Test Files / Test Cases",
-                    "value": "$instana_test_stats"
+                    "title": "Number of Test Cases in https://github.com/instana/nodejs:",
+                    "value": "$instana_stats_test_cases"
                   }
                 ]
               }]

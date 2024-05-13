@@ -48,5 +48,5 @@ packages.forEach(pkg => {
   });
 });
 
-console.log(`TOTAL NUMBER OF TEST FILES: ${noOfTestFiles}`);
-console.log(`TOTAL NUMBER OF TEST CASES: ${noOfTestCases}`);
+// console.log(`TOTAL NUMBER OF TEST FILES: ${noOfTestFiles}`);
+console.log(noOfTestCases);
