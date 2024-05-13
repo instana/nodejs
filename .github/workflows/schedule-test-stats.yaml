@@ -8,8 +8,6 @@ on:
 jobs:
   run-script:
     runs-on: ubuntu-latest
-    env:
-      CIRCLE_TOKEN: ${{ secrets.CIRCLE_TOKEN }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -22,7 +20,7 @@ jobs:
       - name: Send slack message
         uses: slackapi/slack-github-action@v1.21.0
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID_RELEASES }}
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID_TEAM }}
           payload: |
             {
               "text": "Node.js Test Stats",
