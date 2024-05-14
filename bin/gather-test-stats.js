@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 
 const packagesFolder = path.join(__dirname, '..', 'packages');
+// eslint-disable-next-line no-unused-vars
 let noOfTestFiles = 0;
 let noOfTestCases = 0;
 
