@@ -26,7 +26,6 @@ jobs:
     name: Release the main branch as a new version to the npm registry.
     runs-on: ubuntu-latest
     env:
-      CIRCLE_TOKEN: ${{ secrets.CIRCLE_TOKEN }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       FROM_PACKAGE: ${{ inputs.fromPackage }}
       DRY_RUN: ${{ inputs.dryRun }}
