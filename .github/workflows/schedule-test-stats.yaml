@@ -35,5 +35,5 @@ jobs:
               }]
             }
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_TEAM_NODE_CHANNEL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_BREWERY_NODE_CHANNEL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
