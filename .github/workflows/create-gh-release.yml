@@ -42,7 +42,6 @@ jobs:
         if: "${{ success() }}"
         uses: slackapi/slack-github-action@v1.21.0
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID_TEAM }}
           payload: |
             {
               "text": "Github release has been created successfully! :tada:",
@@ -57,13 +56,13 @@ jobs:
               }]
             }
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_TEAM_NODE_CHANNEL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
       - name: Send failure message
         if: "${{ failure() }}"
         uses: slackapi/slack-github-action@v1.21.0
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID_TEAM }}
           payload: |
             {
               "text": ":boom: :scream: Github Release has failed! :scream_cat: :sob:",
@@ -72,4 +71,5 @@ jobs:
               }]
             }
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_TEAM_NODE_CHANNEL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

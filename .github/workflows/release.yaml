@@ -91,7 +91,6 @@ jobs:
         if: "${{ success() && env.DRY_RUN != 'true' }}"
         uses: slackapi/slack-github-action@v1.21.0
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID_TEAM }}
           payload: |
             {
               "text": ":mega: :package: Version ${{ steps.read_version_number.outputs.version }} has been released successfully! :star-struck: :tada:",
@@ -124,13 +123,13 @@ jobs:
               }]
             }
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_TEAM_NODE_CHANNEL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
       - name: Send success message to release channel
         if: "${{ success() && env.DRY_RUN != 'true' }}"
         uses: slackapi/slack-github-action@v1.21.0
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID_RELEASES }}
           payload: |
             {
               "text": ":mega: :package: Version ${{ steps.read_version_number.outputs.version }} of the Node.js tracer (npm package @instana/collector and friends) has been released! :star-struck: :tada:",
@@ -148,13 +147,13 @@ jobs:
               }]
             }
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_RELEASES_CHANNEL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
       - name: Send failure message
         if: "${{ failure() && env.DRY_RUN != 'true' }}"
         uses: slackapi/slack-github-action@v1.21.0
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID_TEAM }}
           payload: |
             {
               "text": ":boom: :scream: Releasing new package versions has failed! :scream_cat: :sob:",
@@ -183,5 +182,6 @@ jobs:
               }]
             }
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_TEAM_NODE_CHANNEL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
