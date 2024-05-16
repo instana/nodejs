@@ -1,0 +1,78 @@
+---
+
+resources:
+
+  - name: nodejs-repository
+    type: git
+    icon: github
+    source:
+      uri: https://github.com/instana/nodejs.git
+      branch: node20-dev
+      username: ((instanacd-github-api-token))
+      password: x-oauth-basic
+
+
+  - name: instana-aws-fargate-npm-package
+    type: npm-resource
+    icon: cube-outline
+    source:
+      scope: instana
+      package: aws-fargate
+      registry:
+        uri: https://registry.npmjs.org/
+
+resource_types:
+
+  - name: npm-resource
+    type: registry-image
+    source:
+      repository: timotto/concourse-npm-resource
+      tag: latest
+
+jobs:
+
+  - name: self-update
+    max_in_flight: 1
+    plan:
+      - get: nodejs-repository
+        trigger: true
+      - set_pipeline: self
+        file: nodejs-repository/packages/serverless/ci/testing/pipeline-debug.yaml
+        vars:
+          branch: node20-dev
+
+  - name: aws-fargate-nodejs-container-image-layer
+    serial: true
+    plan:
+      - in_parallel:
+        - get: instana-aws-fargate-npm-package
+          trigger: true
+          params:
+            skip_download: true
+        - get: nodejs-repository
+          passed:
+          - self-update
+
+      - load_var: package-version
+        file: instana-aws-fargate-npm-package/version
+        reveal: true
+
+      - task: build-fargate-image
+        privileged: true
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: vito/oci-build-task
+              tag: latest
+          params:
+            CONTEXT: nodejs-repository/packages/aws-fargate/images/instana-aws-fargate/
+            DOCKERFILE: nodejs-repository/packages/aws-fargate/images/instana-aws-fargate/Dockerfile-npm
+            BUILD_ARG_package_version: ((.:package-version))
+          inputs:
+            - name: nodejs-repository
+          outputs:
+            - name: image
+          run:
+            path: build
