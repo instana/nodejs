@@ -1,4 +1,4 @@
-FROM node:18 AS instana-azure-container-services-build-nodejs
+FROM node:20 AS instana-azure-container-services-build-nodejs
 
 WORKDIR /instana
 COPY package.json ./

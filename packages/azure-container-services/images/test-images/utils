@@ -17,7 +17,9 @@ function normalizeArgs {
 
   local nodeJsVersion=$2
    if [[ -z "${nodeJsVersion-}" ]]; then
-    NODEJS_VERSION=18
+    ROOT_DIR=$(git rev-parse --show-toplevel)
+    NVMRC_PATH="$ROOT_DIR/.nvmrc"
+    NODEJS_VERSION=$(cat "$NVMRC_PATH")
   elif [[ $nodeJsVersion -lt 14 ]]; then
     echo "Unsupported Node version: $nodeJsVersion"
     exit 

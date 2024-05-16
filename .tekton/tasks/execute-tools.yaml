@@ -60,11 +60,13 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        NVM_VERSION=$(cat .nvmrc)
+
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi        
 
-        if [[ $(node -v) =~ ^v18.*$ ]]; then
+        if [[ $(node -v) =~ ^v${NVM_VERSION#v}.*$ ]]; then
           node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)
 
           if [ $? -eq 0 ]; then
@@ -82,11 +84,13 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        NVM_VERSION=$(cat .nvmrc)
+
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi        
 
-        if [[ $(node -v) =~ ^v18.*$ ]]; then
+        if [[ $(node -v) =~ ^v${NVM_VERSION#v}.*$ ]]; then
            npm run depcheck
 
           if [ $? -eq 0 ]; then
@@ -104,11 +108,13 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        NVM_VERSION=$(cat .nvmrc)
+
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi        
         
-        if [[ $(node -v) =~ ^v18.*$ ]]; then
+        if [[ $(node -v) =~ ^v${NVM_VERSION#v}.*$ ]]; then
           bin/clean-aws.js --service=s3
           bin/clean-aws.js --service=dynamodb
           bin/clean-aws.js --service=sqs

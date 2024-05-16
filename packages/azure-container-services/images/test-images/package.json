@@ -1,7 +1,7 @@
 {
   "name": "azure-test-app",
   "version": "1.0.0",
-  "description": "a azure test container",
+  "description": "Azure test container",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/instana/nodejs.git"
@@ -11,8 +11,5 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Arya Mohanan <arya.mohanan@ibm.com>",
-  "license": "ISC",
-  "engines": {
-    "node": ">=18"
-  }
+  "license": "ISC"
 }

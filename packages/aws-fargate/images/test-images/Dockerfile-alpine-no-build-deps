@@ -1,6 +1,6 @@
 ARG INSTANA_LAYER=icr.io/instana/aws-fargate-nodejs:latest
-ARG NODEJS_VERSION=18
 
+ARG NODEJS_VERSION
 FROM ${INSTANA_LAYER} as instanaLayer
 
 FROM node:${NODEJS_VERSION}-alpine

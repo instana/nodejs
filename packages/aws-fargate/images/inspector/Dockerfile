@@ -1,4 +1,6 @@
-FROM node:18-alpine
+ARG NODEJS_VERSION
+FROM node:${NODEJS_VERSION}-alpine
+
 WORKDIR /usr/src/app
 
 COPY package*.json ./

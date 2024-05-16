@@ -61,6 +61,9 @@
   "bugs": {
     "url": "https://github.com/instana/nodejs/issues"
   },
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "license": "MIT",
   "dependencies": {
     "@instana/core": "3.8.1",
