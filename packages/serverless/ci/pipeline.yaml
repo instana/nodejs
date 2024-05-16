@@ -108,7 +108,7 @@ resources:
     type: slack-notification
     icon: slack
     source:
-      url: ((tracer-community-slack-hook))
+      url: ((team-nodejs-slack-hook))
 
   - name: instana-azure-container-services-npm-package
     type: npm-resource
