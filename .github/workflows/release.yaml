@@ -38,12 +38,12 @@ jobs:
           token: ${{ secrets.GH_PAT }}
 
       - name: Read .nvmrc
-        run: echo "NODE_VERSION=$(cat .nvmrc)" >> $GITHUB_ENV
+        run: echo "NODEJS_VERSION=$(cat .nvmrc)" >> $GITHUB_ENV
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: ${{ env.NODEJS_VERSION }}
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
 

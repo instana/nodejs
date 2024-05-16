@@ -1,5 +1,5 @@
-ARG NODE_VERSION
-FROM node:${NODE_VERSION} AS instana-aws-fargate-build-nodejs
+ARG NODEJS_VERSION
+FROM node:${NODEJS_VERSION} AS instana-aws-fargate-build-nodejs
 
 WORKDIR /instana
 COPY package.json ./
