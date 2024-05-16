@@ -31,15 +31,7 @@ resource_types:
 
 jobs:
 
-  - name: self-update
-    max_in_flight: 1
-    plan:
-      - get: nodejs-repository
-        trigger: true
-      - set_pipeline: self
-        file: nodejs-repository/packages/serverless/ci/testing/pipeline-debug.yaml
-        vars:
-          branch: node20-dev
+  # self-update is only important for the the production system!
 
   - name: aws-fargate-nodejs-container-image-layer
     serial: true
@@ -50,11 +42,13 @@ jobs:
           params:
             skip_download: true
         - get: nodejs-repository
-          passed:
-          - self-update
 
       - load_var: package-version
         file: instana-aws-fargate-npm-package/version
+        reveal: true
+
+      - load_var: nodejs-version
+        file: nodejs-repository/.nvmrc
         reveal: true
 
       - task: build-fargate-image
@@ -70,6 +64,7 @@ jobs:
             CONTEXT: nodejs-repository/packages/aws-fargate/images/instana-aws-fargate/
             DOCKERFILE: nodejs-repository/packages/aws-fargate/images/instana-aws-fargate/Dockerfile-npm
             BUILD_ARG_package_version: ((.:package-version))
+            BUILD_ARG_NODEJS_VERSION: ((.:nodejs-version))
           inputs:
             - name: nodejs-repository
           outputs:
