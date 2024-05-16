@@ -16,6 +16,8 @@ function normalizeArgs {
     ROOT_DIR=$(git rev-parse --show-toplevel)
     NVMRC_PATH="$ROOT_DIR/.nvmrc"
     NODEJS_VERSION=$(cat "$NVMRC_PATH")
+
+    # Used for local runtime simulator only.
     LAMBDA_BASE_IMAGE=public.ecr.aws/lambda/nodejs:${NODEJS_VERSION%.*}
   elif [[ $nodeJsVersion -lt 14 ]]; then
     echo "Unsupported Node version: $nodeJsVersion"
