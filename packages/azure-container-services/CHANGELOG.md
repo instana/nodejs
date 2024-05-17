@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.8.1](https://github.com/instana/nodejs/compare/v3.8.0...v3.8.1) (2024-05-17)
+
+### Bug Fixes
+
+- **azure-container-services:** gracefully shutdown if node version is unsupported ([#1144](https://github.com/instana/nodejs/issues/1144)) ([59f355b](https://github.com/instana/nodejs/commit/59f355b4f026e53cccbb3e41012c6428fca163f6))
+
 # [3.8.0](https://github.com/instana/nodejs/compare/v3.7.0...v3.8.0) (2024-05-06)
 
 **Note:** Version bump only for package @instana/azure-container-services
