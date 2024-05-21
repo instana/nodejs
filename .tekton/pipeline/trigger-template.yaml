@@ -6,6 +6,8 @@ spec:
   envFrom:
     - configMapRef:
         name: environment-properties
+    - secretRef:
+        name: secure-properties        
   params:
     - name: repository
       description: The git repo
@@ -29,8 +31,9 @@ spec:
       description: SHA
     - name: node-version
       value: $(params.node-version)
+      default: $(params.NODE_DEV_VERSION)
     - name: npm-version
-      value: $(params.npm-version)
+      value: $(params.npm-version)      
     - name: target-branch
       description: "Either pr branch or any other branch."
     - name: pl-name
