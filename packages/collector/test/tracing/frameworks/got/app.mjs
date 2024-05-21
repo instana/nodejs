@@ -17,15 +17,10 @@ import morgan from 'morgan';
 import bodyParser from 'body-parser';
 import getAppPort from '../../../test_util/app-port.js';
 const port = getAppPort();
-
 /**
- * NOTE: got v12 has dropped support for commonjs.
- *       It is possible to dynamically import a ESM module,
- *       but we simply stay on v11 to proof that got requests are auto-instrumented.
- *
- * (async () => {
- *   await import('got');
- * })();
+ * NOTE: From v12 the got module is pure ESM.
+ * See https://github.com/sindresorhus/got/releases/tag/v12.0.0.
+ * In ESM test, we use the latest got module.
  */
 import got from 'got';
 
