@@ -22,8 +22,8 @@ spec:
     - name: node-version
       value: $(params.node-version)
       default: ""
-    - name: node-version
-      value: "$(params.node-version)"
+    - name: npm-version
+      value: $(params.npm-version)
       default: ""
     - name: pl-name
       value: $(event.after)
