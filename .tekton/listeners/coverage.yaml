@@ -6,6 +6,8 @@ spec:
   envFrom:
     - configMapRef:
         name: environment-properties
+    - secretRef:
+        name: secure-properties
   params:
     - name: branch
       value: $(params.target-branch)
@@ -19,10 +21,10 @@ spec:
       value: ""
     - name: node-version
       value: $(params.node-version)
-      default: ""
+      default: "$(params.NODE_DEV_VERSION)"
     - name: npm-version
       value: $(params.npm-version)
-      default: ""      
+      default: ""
     - name: pl-name
       value: "coverage"
     - name: pipeline-ref

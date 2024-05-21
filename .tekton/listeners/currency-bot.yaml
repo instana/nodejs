@@ -6,6 +6,8 @@ spec:
   envFrom:
     - configMapRef:
         name: environment-properties
+    - secretRef:
+        name: secure-properties
   params:
     - name: branch
       value: $(params.target-branch)
@@ -19,7 +21,7 @@ spec:
       value: $(param.commit-id)
       default: ""
     - name: node-version
-      value: $(params.node-version)
+      value: "$(params.NODE_DEV_VERSION)"
       default: ""
     - name: npm-version
       value: $(params.npm-version)
