@@ -27,13 +27,13 @@ spec:
       value: $(params.npm-version)
       default: ""
     - name: pl-name
-      value: "esm-$(params.node-version)"
+      value: "esm"
     - name: pipeline-ref
       value: "default-pipeline"
     - name: esm
       value: "true"
     - name: context
-      value: "node-$(params.node-version)-esm"
+      value: "node-esm"
     - name: skip-cache
       value: $(params.skip-cache)
 
