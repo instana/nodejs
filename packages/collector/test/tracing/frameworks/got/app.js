@@ -27,13 +27,17 @@ const bodyParser = require('body-parser');
  *   await import('got');
  * })();
  */
-const got = require('got');
 const port = require('../../../test_util/app-port')();
 const app = express();
 const logPrefix = `Got App (${process.pid}):\t`;
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
-
+let got;
+if (process.env.GOT_VERSION === 'latest') {
+  got = require('got');
+} else {
+  got = require(`got-${process.env.GOT_VERSION}`);
+}
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
 }

@@ -14,68 +14,71 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/got', function () {
-  this.timeout(config.getTestTimeout());
+['latest', 'v11'].forEach(gotVersion => {
+  mochaSuiteFn('tracing/got', function () {
+    this.timeout(config.getTestTimeout());
 
-  globalAgent.setUpCleanUpHooks();
-  const agentControls = globalAgent.instance;
+    globalAgent.setUpCleanUpHooks();
+    const agentControls = globalAgent.instance;
 
-  let controls;
+    let controls;
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        esm: gotVersion === 'latest',
+        env: { GOT_VERSION: gotVersion }
+      });
 
-  before(async () => {
-    controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true
+      await controls.startAndWaitForAgentConnection();
     });
 
-    await controls.startAndWaitForAgentConnection();
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
+    it('GET request', () =>
+      controls
+        .sendRequest({
+          method: 'GET',
+          path: '/request'
+        })
+        .then(() =>
+          retry(() =>
+            agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
+
+              const httpEntry = verifyHttpRootEntry({
+                spans,
+                apiPath: '/request',
+                pid: String(controls.getPid())
+              });
+
+              verifyExitSpan({
+                spanName: 'node.http.client',
+                spans,
+                parent: httpEntry,
+                withError: false,
+                pid: String(controls.getPid()),
+                dataProperty: 'http',
+                extraTests: [
+                  span => {
+                    expect(span.data.http.method).to.equal('GET');
+                    expect(span.data.http.url).to.equal(`http://127.0.0.1:${agentControls.agentPort}/`);
+                    expect(span.data.http.status).to.equal(200);
+                  }
+                ]
+              });
+            })
+          )
+        ));
   });
-
-  beforeEach(async () => {
-    await agentControls.clearReceivedTraceData();
-  });
-
-  after(async () => {
-    await controls.stop();
-  });
-
-  afterEach(async () => {
-    await controls.clearIpcMessages();
-  });
-
-  it('GET request', () =>
-    controls
-      .sendRequest({
-        method: 'GET',
-        path: '/request'
-      })
-      .then(() =>
-        retry(() =>
-          agentControls.getSpans().then(spans => {
-            expect(spans.length).to.equal(2);
-
-            const httpEntry = verifyHttpRootEntry({
-              spans,
-              apiPath: '/request',
-              pid: String(controls.getPid())
-            });
-
-            verifyExitSpan({
-              spanName: 'node.http.client',
-              spans,
-              parent: httpEntry,
-              withError: false,
-              pid: String(controls.getPid()),
-              dataProperty: 'http',
-              extraTests: [
-                span => {
-                  expect(span.data.http.method).to.equal('GET');
-                  expect(span.data.http.url).to.equal(`http://127.0.0.1:${agentControls.agentPort}/`);
-                  expect(span.data.http.status).to.equal(200);
-                }
-              ]
-            });
-          })
-        )
-      ));
 });

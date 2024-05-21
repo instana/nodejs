@@ -38,6 +38,7 @@ class ProcessControls {
    * @property {boolean} [tracingEnabled]
    * @property {*} [agentControls]
    * @property {Object.<string, *} [env]
+   * @property {boolean} [esm]
    */
 
   /**
@@ -54,7 +55,7 @@ class ProcessControls {
       opts.appPath = path.join(opts.dirname, 'app.js');
     }
 
-    if (process.env.RUN_ESM && !opts.execArgv) {
+    if ((process.env.RUN_ESM || opts.esm) && !opts.execArgv) {
       if (opts.dirname) {
         try {
           const files = fs.readdirSync(opts.dirname);
