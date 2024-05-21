@@ -148,7 +148,8 @@
     "fastify": "^4.27.0",
     "fastify-v3": "npm:fastify@^3.21.5",
     "google-protobuf": "^3.21.2",
-    "got": "^11.8.6",
+    "got": "^14.3.0",
+    "got-v11": "npm:got@^11.8.6",
     "graphql": "^16.8.1",
     "graphql-subscriptions": "^2.0.0",
     "graphql-tag": "2.12.6",
@@ -236,7 +237,8 @@
     "kafka-avro": "^3.1.1",
     "node-rdkafka": "^3.0.1",
     "pg-native": "^3.0.1",
-    "prisma": "^5.14.0"
+    "prisma": "^5.14.0",
+    "@types/cacheable-request": "8.3.1"
   },
   "overrides": {
     "nx": "15.8.9",
