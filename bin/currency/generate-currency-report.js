@@ -49,7 +49,8 @@ currencies = currencies.map(currency => {
 
     const diff = semver.diff(latestVersion, installedVersion);
 
-    upToDate = diff === 'patch' || diff === null;
+    // CASE: no new release happened when diff is null
+    upToDate = diff === null;
 
     try {
       latestVersionPublishedAt = new Date(
@@ -87,6 +88,15 @@ currencies = currencies.map(currency => {
         console.log(err);
         // ignore
       }
+    }
+
+    // We are always up to date when the target lib released a patch or a minor and
+    // we are still on track with the policy.
+    // We have the currency bot running daily, which bumps us patch and minor releases.
+    // There is a bot which generates JIRA cards for all libraries which are "up-to-date"
+    // false. It runs daily in the night. We do not want these JIRA cards.
+    if (Number(daysBehind) < Number(currency.policy.match(/(\d+)-/)[1]) && diff !== 'major') {
+      upToDate = true;
     }
   }
 
