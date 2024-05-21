@@ -21,8 +21,8 @@ spec:
       value: $(param.commit-id)
       default: ""
     - name: node-version
-      value: $(params.node-version)
-      default: $(params.NODE_DEV_VERSION)
+      value: $(params.NODE_DEV_VERSION)
+      default: ""
     - name: npm-version
       value: $(params.npm-version)
       default: ""
