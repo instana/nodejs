@@ -36,7 +36,9 @@ spec:
     - name: pipeline-ref
       value: "default-pipeline"
     - name: skip-cache
-      value: $(params.skip-cache)      
+      value: $(params.skip-cache)
+    - name: context
+      value: "node-dev"
 
 ---
 
