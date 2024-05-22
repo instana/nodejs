@@ -15,7 +15,7 @@ require('../../../..')({});
 // eslint-disable-next-line import/no-extraneous-dependencies
 const KafkaAvro = require('kafka-avro');
 
-const fetch = require('node-fetch');
+const fetch = require('node-fetch-v2');
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const logPrefix = `Kafka Avro Producer (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);

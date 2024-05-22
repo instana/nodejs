@@ -6,7 +6,7 @@
 
 const expect = require('chai').expect;
 const semver = require('semver');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch-v2');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');

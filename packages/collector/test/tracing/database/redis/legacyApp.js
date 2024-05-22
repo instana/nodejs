@@ -19,7 +19,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const redis = require('redis');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch-v2');
 const port = require('../../../test_util/app-port')();
 
 const cls = require('../../../../../core/src/tracing/cls');

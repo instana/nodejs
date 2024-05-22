@@ -20,7 +20,7 @@ const instana = require('../../../..')();
 
 const express = require('express');
 const kafka = require('kafka-node');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch-v2');
 const { v4: uuid } = require('uuid');
 
 let connected = false;

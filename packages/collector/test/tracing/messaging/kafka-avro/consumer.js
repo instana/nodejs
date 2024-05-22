@@ -15,7 +15,7 @@ const instana = require('../../../..')();
 // eslint-disable-next-line import/no-extraneous-dependencies
 const KafkaAvro = require('kafka-avro');
 
-const fetch = require('node-fetch');
+const fetch = require('node-fetch-v2');
 const delay = require('../../../../../core/test/test_util/delay');
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const { sendToParent } = require('@instana/core/test/test_util');

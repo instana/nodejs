@@ -15,7 +15,7 @@ require('../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch-v2');
 
 const serverPort = process.env.SERVER_PORT;
 const serverBaseUrl = `http://127.0.0.1:${serverPort}`;

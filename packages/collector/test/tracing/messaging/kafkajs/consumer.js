@@ -15,7 +15,7 @@ const instana = require('../../../..')();
 
 const express = require('express');
 const { Kafka } = require('kafkajs');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch-v2');
 const { v4: uuid } = require('uuid');
 
 const delay = require('../../../../../core/test/test_util/delay');

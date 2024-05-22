@@ -16,7 +16,7 @@ process.on('SIGTERM', () => {
 require('./mockVersion');
 require('../../../..')();
 
-const fetch = require('node-fetch');
+const fetch = require('node-fetch-v2');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
