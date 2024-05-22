@@ -6,8 +6,6 @@ spec:
   envFrom:
     - configMapRef:
         name: environment-properties
-    - secretRef:
-        name: secure-properties
   params:
     - name: branch
       value: $(params.target-branch)
