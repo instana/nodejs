@@ -56,12 +56,11 @@ exports.init = function (config) {
 function patchedModuleLoad(moduleName) {
   // CASE: when using ESM, the Node runtime passes a full path to Module._load
   //       We aim to extract the module name to apply our instrumentation.
-  //       The native ESM support is pending, and the requireHook isn't compatible with native ESM.
-  //       However, for the 'got' module, we persist with the require hook as its uses the core HTTP
-  //       module under the hood. In our instrumentation, 'got' is automatically included alongside
-  //       the core HTTP module. Despite 'got' transitioning to a pure ESM module from v12 onwards,
-  //       it continues to function seamlessly with the existing requireHook.
   // CASE: we ignore all file endings, which we are not interested in. Any module can load any file.
+  // CASE: The native ESM support is pending, and the requireHook isn't compatible with native ESM.
+  //       However, 'got' is automatically instrumented along with the the http2wrapper,
+  //       which is a CommonJS library requiring http. Despite 'got' transitioning to a pure ESM module
+  //       from v12 onwards, it continues to work with the existing requireHook.
   if (path.isAbsolute(moduleName) && ['.node', '.json', '.ts'].indexOf(path.extname(moduleName)) === -1) {
     // EDGE CASE for ESM: mysql2/promise.js
     if (moduleName.indexOf('node_modules/mysql2/promise.js') !== -1) {
