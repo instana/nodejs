@@ -10,12 +10,6 @@ COPY --from=instanaLayer /instana /instana
 
 COPY package*.json ./
 COPY . .
-RUN apk add --no-cache --virtual .gyp \
-        build-base \
-        python \
-    && npm install --only=production \
-    && /instana/setup.sh \
-    && apk del .gyp python
 
 ENV NODE_OPTIONS="--require /instana/node_modules/@instana/google-cloud-run"
 
