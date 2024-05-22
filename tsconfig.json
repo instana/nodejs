@@ -4,7 +4,7 @@
     "target": "ES6",
     "allowJs": true,
     "checkJs": true,
-    "lib": ["esnext.asynciterable"],
+    "lib": ["esnext.asynciterable","DOM"],
     "moduleResolution": "node",
     "esModuleInterop": true,
     "noEmit": true,

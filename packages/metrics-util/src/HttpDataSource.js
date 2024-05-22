@@ -5,7 +5,7 @@
 
 'use strict';
 
-const fetch = require('node-fetch-v2');
+const fetch = require('node-fetch');
 
 const DataSource = require('./DataSource');
 
