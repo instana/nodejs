@@ -35,8 +35,8 @@ app.get('/', (req, res) => {
 
 app.get('/multipleRequireWithStealthyRequire', async (req, res) => {
   // Wrap the require calls with stealthyRequire to avoid caching
-  const firstInstanceOfGot = stealthyRequire(require.cache, () => require('got-v11'));
-  const secondInstanceOfGot = stealthyRequire(require.cache, () => require('got-v11'));
+  const firstInstanceOfGot = stealthyRequire(require.cache, () => require('express'));
+  const secondInstanceOfGot = stealthyRequire(require.cache, () => require('express'));
 
   // Verify that the two instances of the 'got' module are different. In this scenario, we emulate the behavior of
   // stealthy-require, ensuring that each time we load the module, it is a fresh instance. This precaution is taken
