@@ -57,13 +57,15 @@ function patchedModuleLoad(moduleName) {
   // CASE: when using ESM, the Node runtime passes a full path to Module._load
   //       We aim to extract the module name to apply our instrumentation.
   // CASE: we ignore all file endings, which we are not interested in. Any module can load any file.
-  // CASE: The native ESM support is pending, and the requireHook isn't compatible with native ESM.
-  //       However, 'got' is instrumented by coincidency, because it is requiring the http2wrapper
-  //       https://github.com/search?q=repo%3Asindresorhus%2Fgot%20from%20%27http2-wrapper%27&type=code
-  //       CJS package, which is requiring http. Despite 'got' transitioning to a pure ESM module
-  //       from v12 onwards, it continues to work with the existing requireHook.
-  //       Native ESM libraries who import core node modules (import http from 'node:http') are not
-  //       triggering Module._load.
+  // CASE: Native ESM support is still pending, and the requireHook is not compatible with native ESM.
+  //       However, starting from version 12, the 'got' module is transitioning to a pure ESM module but
+  //       continues to function. This is because 'got' is instrumented coincidentally with the 'http' module.
+  //       The instrumentation of 'http' and 'https' works without the requireHook.
+  //       See: https://github.com/search?q=repo%3Asindresorhus%2Fgot%20from%20%27http2-wrapper%27&type=code
+  //       This differs from our other instrumentations, where we require 'http' and 'https' at the top.
+  //       Native ESM libraries that import core Node modules (e.g., import http from 'node:http') do not
+  //       trigger Module._load, hence do not use the requireHook.
+  //       However, when an ESM library imports a CommonJS package, our requireHook is triggered.
   if (path.isAbsolute(moduleName) && ['.node', '.json', '.ts'].indexOf(path.extname(moduleName)) === -1) {
     // EDGE CASE for ESM: mysql2/promise.js
     if (moduleName.indexOf('node_modules/mysql2/promise.js') !== -1) {
