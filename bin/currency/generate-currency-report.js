@@ -63,27 +63,35 @@ currencies = currencies.map(currency => {
     if (!upToDate) {
       try {
         const releaseList = JSON.parse(execSync(`npm show ${currency.name} time --json`).toString());
-        const index = Object.keys(releaseList).indexOf(installedVersion);
-        // NOTE: +1 is the next release of the current installed version!
-        let key = Object.keys(releaseList)[index + 1];
+        const keys = Object.keys(releaseList);
 
-        if (key === latestVersion) {
-          daysBehind = moment(new Date()).startOf('day').diff(moment(latestVersionPublishedAt).startOf('day'), 'days');
-        } else {
-          // CASE: no release happened after the previous release
-          //       e.g. 2.x release happened after 3.x release (valid use case)
-          // eslint-disable-next-line no-lonely-if
-          if (!key) {
-            key = Object.keys(releaseList)[index];
-            daysBehind = moment(new Date())
-              .startOf('day')
-              .diff(moment(new Date(releaseList[key])).startOf('day'), 'days');
-          } else {
-            daysBehind = moment(latestVersionPublishedAt)
-              .startOf('day')
-              .diff(moment(new Date(releaseList[key])).startOf('day'), 'days');
+        // CASE: 3.3.0 is supported -> [..., 3.3.0, 3.4.0, 3.5.0, ...] -> 3.4.0 is the next available version
+        //       we need need to reference the date from.
+        let nextAvailableVersionIndex = keys[keys.indexOf(installedVersion) + 1];
+
+        // GOAL: Search for major releases happened after the installed version.
+        // EDGE CASE: 2.5.0 is supported [..., 3.0.0, 2.3.0, 3.0.1, 2.4.0, 2.5.0]
+        //            3.0.0 is what we are interested in -> behind since 3.0.0
+        const currentMajorVersion = semver.major(installedVersion);
+        let latestNextMajorVersionIndex;
+        keys.forEach(key => {
+          try {
+            // NOTE: we ignore beta releases for now to calculate the days behind
+            if (!semver.prerelease(key) && semver.major(key) > currentMajorVersion && !latestNextMajorVersionIndex) {
+              latestNextMajorVersionIndex = key;
+            }
+          } catch (err) {
+            // ignore e.g. there are some keys in the array we just ignore
           }
+        });
+
+        if (latestNextMajorVersionIndex) {
+          nextAvailableVersionIndex = latestNextMajorVersionIndex;
         }
+
+        daysBehind = moment(new Date())
+          .startOf('day')
+          .diff(moment(new Date(releaseList[nextAvailableVersionIndex])).startOf('day'), 'days');
       } catch (err) {
         console.log(err);
         // ignore
