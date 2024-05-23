@@ -18,22 +18,17 @@ const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 
-/**
- * NOTE: got v12 has dropped support for commonjs.
- *       It is possible to dynamically import a ESM module,
- *       but we simply stay on v11 to proof that got requests are auto-instrumented.
- *
- * (async () => {
- *   await import('got');
- * })();
- */
-const got = require('got');
 const port = require('../../../test_util/app-port')();
 const app = express();
 const logPrefix = `Got App (${process.pid}):\t`;
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
-
+/**
+ * NOTE: got v12 has dropped support for commonjs.
+ * See https://github.com/sindresorhus/got/releases/tag/v12.0.0.
+ * In CJS test, we use the v11 to test the got module.
+ */
+ const got = require('got-v11');
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
 }
