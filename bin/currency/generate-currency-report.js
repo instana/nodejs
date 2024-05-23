@@ -74,15 +74,18 @@ currencies = currencies.map(currency => {
         //            3.0.0 is what we are interested in -> behind since 3.0.0
         const currentMajorVersion = semver.major(installedVersion);
         let latestNextMajorVersionIndex;
-        keys.forEach(key => {
+        keys.every(key => {
           try {
             // NOTE: we ignore beta releases for now to calculate the days behind
-            if (!semver.prerelease(key) && semver.major(key) > currentMajorVersion && !latestNextMajorVersionIndex) {
+            if (!semver.prerelease(key) && semver.major(key) > currentMajorVersion) {
               latestNextMajorVersionIndex = key;
+              return false;
             }
           } catch (err) {
             // ignore e.g. there are some keys in the array we just ignore
           }
+
+          return true;
         });
 
         if (latestNextMajorVersionIndex) {
