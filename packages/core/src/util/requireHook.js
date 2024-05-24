@@ -61,10 +61,11 @@ function patchedModuleLoad(moduleName) {
   //       However, starting from version 12, the 'got' module is transitioning to a pure ESM module but
   //       continues to function. This is because 'got' is instrumented coincidentally with the 'http' module.
   //       The instrumentation of 'http' and 'https' works without the requireHook.
-  //       See: https://github.com/search?q=repo%3Asindresorhus%2Fgot%20from%20%27http2-wrapper%27&type=code
-  //       This differs from our other instrumentations, where we require 'http' and 'https' at the top.
-  //       Native ESM libraries that import core Node modules (e.g., import http from 'node:http') do not
-  //       trigger Module._load, hence do not use the requireHook.
+  //       See: https://github.com/search?q=repo%3Asindresorhus%2Fgot%20from%20%27http2-wrapper%27&type=code.
+  //       This is also the case with 'node-fetch'; from version 3, 'node-fetch' is a pure ESM and uses 'http'
+  //       under the hood, working well without requireHook. This differs from our other instrumentations,
+  //       where we require 'http' and 'https' at the top. Native ESM libraries that import core Node modules
+  //       (e.g., import http from 'node:http') do not  trigger Module._load, hence do not use the requireHook.
   //       However, when an ESM library imports a CommonJS package, our requireHook is triggered.
   if (path.isAbsolute(moduleName) && ['.node', '.json', '.ts'].indexOf(path.extname(moduleName)) === -1) {
     // EDGE CASE for ESM: mysql2/promise.js
