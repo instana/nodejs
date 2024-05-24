@@ -594,8 +594,8 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": true,
-    "note": "[Native ESM Module](https://jsw.ibm.com/browse/INSTA-2068)",
+    "ignoreUpdates": false,
+    "note": "",
     "deprecated": false,
     "core": false
   },
