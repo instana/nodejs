@@ -726,7 +726,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false,
+    "ignoreUpdates": true,
     "note": "[Otel](https://jsw.ibm.com/browse/INSTA-1561)",
     "deprecated": false,
     "core": false
