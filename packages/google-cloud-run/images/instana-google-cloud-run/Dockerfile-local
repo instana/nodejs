@@ -1,4 +1,5 @@
-FROM node:18 AS instana-google-cloud-run-build-nodejs
+ARG NODEJS_VERSION
+FROM node:${NODEJS_VERSION} AS instana-google-cloud-run-build-nodejs
 
 WORKDIR /instana
 COPY package.json ./

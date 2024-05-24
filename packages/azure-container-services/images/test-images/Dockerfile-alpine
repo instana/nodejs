@@ -1,5 +1,5 @@
 ARG INSTANA_LAYER=icr.io/instana/azure-container-services-nodejs:latest
-ARG NODEJS_VERSION=18
+ARG NODEJS_VERSION
 
 FROM ${INSTANA_LAYER} as instanaLayer
 
@@ -10,11 +10,6 @@ COPY --from=instanaLayer /instana /instana
 
 COPY package*.json ./
 COPY . .
-RUN apk add --no-cache --virtual .gyp \
-        build-base \
-        python \
-    && npm install --only=production \
-    && apk del .gyp python
 
 ENV NODE_OPTIONS="--require /instana/node_modules/@instana/azure-container-services"
 

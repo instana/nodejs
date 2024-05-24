@@ -30,7 +30,7 @@ spec:
     - name: node-version
       value: $(params.node-version)
     - name: npm-version
-      value: $(params.npm-version)
+      value: $(params.npm-version)      
     - name: target-branch
       description: "Either pr branch or any other branch."
     - name: pl-name

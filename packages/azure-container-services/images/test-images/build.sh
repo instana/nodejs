@@ -13,9 +13,9 @@
 
 # Parameters:
 # - $1: Instana Layer Mode, which Docker base image layer to use. Options:
-#     - released      -> use an official production image from the public IBM container registry (icr.io)
-#     - local -> use a local Docker base image
-#     - azure -> use an image from the Azure container registry with test base images
+#     - released  -> use an official production image from the public IBM container registry (icr.io)
+#     - local     -> use a local Docker base image
+#     - azure     -> use an image from the Azure container registry with test base images
 # - $2: Node.js version. Options:
 #     - 18
 #     - 16

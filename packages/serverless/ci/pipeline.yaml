@@ -108,7 +108,7 @@ resources:
     type: slack-notification
     icon: slack
     source:
-      url: ((tracer-community-slack-hook))
+      url: ((team-nodejs-slack-hook))
 
   - name: instana-azure-container-services-npm-package
     type: npm-resource
@@ -166,8 +166,13 @@ jobs:
         - get: nodejs-repository
           passed:
           - self-update
+
       - load_var: package-version
         file: instana-aws-fargate-npm-package/version
+        reveal: true
+
+      - load_var: nodejs-version
+        file: nodejs-repository/.nvmrc
         reveal: true
 
       - task: build-and-publish-fargate-image
@@ -183,6 +188,7 @@ jobs:
             CONTEXT: nodejs-repository/packages/aws-fargate/images/instana-aws-fargate/
             DOCKERFILE: nodejs-repository/packages/aws-fargate/images/instana-aws-fargate/Dockerfile-npm
             BUILD_ARG_package_version: ((.:package-version))
+            BUILD_ARG_NODEJS_VERSION: ((.:nodejs-version))
           inputs:
             - name: nodejs-repository
           outputs:
@@ -210,7 +216,7 @@ jobs:
         channel: '#team-node'
         icon_emoji: ':white_check_mark:'
         text: |
-              :white_check_mark: Version ((.:package-version)) of the container image `instana/aws-fargate-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `delivery.instana.io`/`containers.instana.io`.
+              :white_check_mark: Version ((.:package-version)) build with ((.:nodejs-version)) of the container image `instana/aws-fargate-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `delivery.instana.io`/`containers.instana.io`.
         attachments: &slack-alert-attachements-success
           - color: '#00ff00'
             fields:
@@ -254,8 +260,13 @@ jobs:
         - get: nodejs-repository
           passed:
           - self-update
+
       - load_var: package-version
         file: instana-google-cloud-run-npm-package/version
+        reveal: true
+
+      - load_var: nodejs-version
+        file: nodejs-repository/.nvmrc
         reveal: true
 
       - task: build-and-publish-google-cloud-run-image
@@ -271,6 +282,7 @@ jobs:
             CONTEXT: nodejs-repository/packages/google-cloud-run/images/instana-google-cloud-run/
             DOCKERFILE: nodejs-repository/packages/google-cloud-run/images/instana-google-cloud-run/Dockerfile-npm
             BUILD_ARG_package_version: ((.:package-version))
+            BUILD_ARG_NODEJS_VERSION: ((.:nodejs-version))
           inputs:
             - name: nodejs-repository
           outputs:
@@ -284,6 +296,7 @@ jobs:
           additional_tags: instana-google-cloud-run-npm-package/version
         get_params:
           skip_download: true
+
       - put: google-cloud-run-nodejs-image-containers-instana-io
         params:
           image: image/image.tar
@@ -297,7 +310,7 @@ jobs:
         channel: '#team-node'
         icon_emoji: ':white_check_mark:'
         text: |
-              :white_check_mark: Version ((.:package-version)) of the container image `instana/google-cloud-run-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `delivery.instana.io`/`containers.instana.io`.
+              :white_check_mark: Version ((.:package-version)) build with ((.:nodejs-version)) of the container image `instana/google-cloud-run-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `delivery.instana.io`/`containers.instana.io`.
         attachments: *slack-alert-attachements-success
     on_failure: &slack-notify-failure-cloud-run
       put: slack-alert
@@ -361,6 +374,7 @@ jobs:
         - get: nodejs-repository
           passed:
           - self-update
+
       - load_var: package-version
         file: instana-aws-lambda-npm-package/version
         reveal: true
@@ -441,8 +455,13 @@ jobs:
         - get: nodejs-repository
           passed:
           - self-update
+
       - load_var: package-version
         file: instana-azure-container-services-npm-package/version
+        reveal: true
+
+      - load_var: nodejs-version
+        file: nodejs-repository/.nvmrc
         reveal: true
 
       - task: build-and-publish-azure-container-services-image
@@ -458,6 +477,7 @@ jobs:
             CONTEXT: nodejs-repository/packages/azure-container-services/images/instana-azure-container-services/
             DOCKERFILE: nodejs-repository/packages/azure-container-services/images/instana-azure-container-services/Dockerfile-npm
             BUILD_ARG_package_version: ((.:package-version))
+            BUILD_ARG_NODEJS_VERSION: ((.:nodejs-version))
           inputs:
             - name: nodejs-repository
           outputs:
@@ -478,7 +498,7 @@ jobs:
         channel: '#team-node'
         icon_emoji: ':white_check_mark:'
         text: |
-              :white_check_mark: Version ((.:package-version)) of the container image `instana/azure-container-services-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `delivery.instana.io`/`containers.instana.io`.
+              :white_check_mark: Version ((.:package-version)) build with ((.:nodejs-version)) of the container image `instana/azure-container-services-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `delivery.instana.io`/`containers.instana.io`.
         attachments: *slack-alert-attachements-success
     on_failure: &slack-notify-failure-azure-container-services
       put: slack-alert

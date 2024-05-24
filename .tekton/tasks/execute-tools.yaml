@@ -7,7 +7,9 @@ spec:
     - name: node-version
       value: $(params.node-version)
     - name: npm-version
-      value: $(params.npm-version)      
+      value: $(params.npm-version)
+    - name: target-branch
+      value: $(params.target-branch)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -62,17 +64,15 @@ spec:
 
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
-        fi        
+        fi
 
-        if [[ $(node -v) =~ ^v18.*$ ]]; then
-          node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)
+        node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)
 
-          if [ $? -eq 0 ]; then
-            touch commitlint.succeeded
-          else
-            touch commitlint.failed
-            exit 1
-          fi
+        if [ $? -eq 0 ]; then
+          touch commitlint.succeeded
+        else
+          touch commitlint.failed
+          exit 1
         fi
     - name: depcheck
       image: node:$(params.node-version)
@@ -84,17 +84,15 @@ spec:
 
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
-        fi        
+        fi
 
-        if [[ $(node -v) =~ ^v18.*$ ]]; then
-           npm run depcheck
+        npm run depcheck
 
-          if [ $? -eq 0 ]; then
-            touch depcheck.succeeded
-          else
-            touch depcheck.failed
-            exit 1
-          fi 
+        if [ $? -eq 0 ]; then
+          touch depcheck.succeeded
+        else
+          touch depcheck.failed
+          exit 1
         fi
     - name: clean-aws
       image: node:$(params.node-version)      
@@ -106,9 +104,9 @@ spec:
 
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
-        fi        
-        
-        if [[ $(node -v) =~ ^v18.*$ ]]; then
+        fi
+
+        if [ "$(params.target-branch)" == "main" ]; then
           bin/clean-aws.js --service=s3
           bin/clean-aws.js --service=dynamodb
           bin/clean-aws.js --service=sqs

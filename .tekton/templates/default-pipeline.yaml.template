@@ -173,7 +173,9 @@ spec:
         - name: node-version
           value: $(params.node-version)   
         - name: npm-version
-          value: $(params.npm-version)   
+          value: $(params.npm-version)
+        - name: target-branch
+          value: $(params.target-branch)
       workspaces:
         - name: output
           workspace: artifacts

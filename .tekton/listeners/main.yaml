@@ -29,7 +29,8 @@ spec:
       value: "default-pipeline"
     - name: skip-cache
       value: $(params.skip-cache)      
-
+    - name: context
+      value: "node-dev"
 ---
 
 apiVersion: triggers.tekton.dev/v1beta1

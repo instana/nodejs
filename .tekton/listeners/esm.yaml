@@ -23,7 +23,7 @@ spec:
       default: ""
     - name: npm-version
       value: $(params.npm-version)
-      default: ""      
+      default: ""
     - name: pl-name
       value: "esm-$(params.node-version)"
     - name: pipeline-ref

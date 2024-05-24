@@ -125,7 +125,14 @@ echo "Removing images $image_tag_without_version and $image_tag"
 docker rmi -f $image_tag_without_version
 docker rmi -f $image_tag
 
-echo "Building $dockerfile -> $image_tag"
+ROOT_DIR=$(git rev-parse --show-toplevel)
+NVMRC_PATH="$ROOT_DIR/.nvmrc"
+NODEJS_VERSION=$(cat "$NVMRC_PATH")
+
+build_arg="--build-arg NODEJS_VERSION=$NODEJS_VERSION $build_arg"
+
+echo "Building $dockerfile -> $image_tag with $build_arg"
+
 docker build --progress=plain $build_arg -f $dockerfile -t $image_tag -t $gcr_repository/$image_tag .
 echo "docker build exit status: $?"
 

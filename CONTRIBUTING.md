@@ -2,7 +2,7 @@
 
 ## Requirements
 
-You should use the Node.js version defined in [.nvmrc](https://github.com/instana/nodejs/blob/main/.nvmrc) (and the `npm` version that comes with that Node.js version) for local development. You might want to install [nvm](https://github.com/nvm-sh/nvm) to manage multiple Node.js versions, but this is optional.
+Please install [nvm](https://github.com/nvm-sh/nvm) to manage multiple Node.js versions. The current development version is defined in our [.nvmrc](https://github.com/instana/nodejs/blob/main/.nvmrc).
 
 Python3 (< 3.11) is required, otherwise the db2 package won't build, see https://github.com/nodejs/node-gyp/issues/2219.
 

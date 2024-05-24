@@ -36,9 +36,14 @@ jobs:
           # ./disallow-major-release.sh to work.
           fetch-depth: 0
           token: ${{ secrets.GH_PAT }}
-      - uses: actions/setup-node@v3
+
+      - name: Read .nvmrc
+        run: echo "NODEJS_VERSION=$(cat .nvmrc)" >> $GITHUB_ENV
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: ${{ env.NODEJS_VERSION }}
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
 
