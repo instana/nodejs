@@ -248,7 +248,8 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "deprecated": false
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "express",
@@ -269,7 +270,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false,
+    "ignoreUpdates": true,
     "note": "",
     "deprecated": false,
     "core": true
@@ -281,7 +282,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false,
+    "ignoreUpdates": true,
     "note": "",
     "deprecated": false,
     "core": true
@@ -293,7 +294,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false,
+    "ignoreUpdates": true,
     "note": "",
     "deprecated": false,
     "core": true
@@ -305,7 +306,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false,
+    "ignoreUpdates": true,
     "note": "",
     "deprecated": false,
     "core": true
@@ -317,7 +318,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false,
+    "ignoreUpdates": true,
     "note": "",
     "deprecated": false,
     "core": true
@@ -329,7 +330,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false,
+    "ignoreUpdates": true,
     "note": "",
     "deprecated": false,
     "core": true
@@ -425,7 +426,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": true,
+    "ignoreUpdates": false,
     "note": "",
     "deprecated": true,
     "core": false
@@ -605,7 +606,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false,
+    "ignoreUpdates": true,
     "note": "",
     "deprecated": false,
     "core": true
