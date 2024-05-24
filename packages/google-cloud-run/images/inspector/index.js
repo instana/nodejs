@@ -7,11 +7,9 @@
 
 'use strict';
 
-const fetch = require('node-fetch');
 const { promises: fs } = require('fs');
 const http = require('http');
 const isWhitespace = require('is-whitespace');
-
 const metadataBaseUrl = 'http://metadata.google.internal/computeMetadata/v1/';
 const app = new http.Server();
 

@@ -11,8 +11,6 @@ const app = new http.Server();
 const port = 3000;
 
 const { promises: fs } = require('fs');
-const fetch = require('node-fetch');
-
 const metadataFileEnvVar = 'ECS_CONTAINER_METADATA_FILE';
 const metadataUriEnvVarV3 = 'ECS_CONTAINER_METADATA_URI';
 const metadataUriEnvVarV4 = 'ECS_CONTAINER_METADATA_URI_V4';
