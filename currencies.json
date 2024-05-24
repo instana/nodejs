@@ -7,7 +7,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "@apollo/subgraph",
@@ -17,7 +19,21 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "@apollo/federation",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": true,
+    "note": "",
+    "deprecated": true,
+    "core": false
   },
   {
     "name": "@aws-sdk/client-dynamodb",
@@ -27,7 +43,9 @@
     "cloudNative": true,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "@aws-sdk/client-kinesis",
@@ -37,7 +55,9 @@
     "cloudNative": true,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "@aws-sdk/client-lambda",
@@ -47,7 +67,9 @@
     "cloudNative": true,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "@aws-sdk/client-s3",
@@ -57,7 +79,9 @@
     "cloudNative": true,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "@aws-sdk/client-sns",
@@ -67,7 +91,9 @@
     "cloudNative": true,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "@aws-sdk/client-sqs",
@@ -77,7 +103,9 @@
     "cloudNative": true,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "@aws-sdk/lib-dynamodb",
@@ -87,7 +115,9 @@
     "cloudNative": true,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "@elastic/elasticsearch",
@@ -97,7 +127,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "@google-cloud/pubsub",
@@ -107,7 +139,9 @@
     "cloudNative": true,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "@google-cloud/storage",
@@ -117,7 +151,9 @@
     "cloudNative": true,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "@grpc/grpc-js",
@@ -127,7 +163,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "@grpc/proto-loader",
@@ -137,7 +175,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "@hapi/hapi",
@@ -147,7 +187,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "amqplib",
@@ -157,7 +199,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "superagent",
@@ -167,7 +211,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "aws-sdk",
@@ -177,7 +223,9 @@
     "cloudNative": true,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "bull",
@@ -187,7 +235,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "couchbase",
@@ -197,7 +247,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "express",
@@ -207,47 +259,81 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
-    "name": "core-http(s)-server",
+    "name": "http(s)-server",
     "policy": "0-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
+    "ignoreUpdates": true,
+    "note": "",
+    "deprecated": false,
+    "core": true
   },
   {
-    "name": "core-http2(s)-server",
+    "name": "http2(s)-server",
     "policy": "0-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
+    "ignoreUpdates": true,
+    "note": "",
+    "deprecated": false,
+    "core": true
   },
   {
-    "name": "core-http(s)-client",
+    "name": "http(s)-client",
     "policy": "0-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
+    "ignoreUpdates": true,
+    "note": "",
+    "deprecated": false,
+    "core": true
   },
   {
-    "name": "core-http2(s)-client",
+    "name": "http2(s)-client",
     "policy": "0-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
+    "ignoreUpdates": true,
+    "note": "",
+    "deprecated": false,
+    "core": true
+  },
+  {
+    "name": "fs",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": true,
+    "note": "",
+    "deprecated": false,
+    "core": true
+  },
+  {
+    "name": "timers",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": true,
+    "note": "",
+    "deprecated": false,
+    "core": true
   },
   {
     "name": "fastify",
@@ -257,7 +343,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "google-protobuf",
@@ -267,7 +355,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "got",
@@ -277,7 +367,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "graphql",
@@ -287,7 +379,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "graphql-subscriptions",
@@ -297,17 +391,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
-  },
-  {
-    "name": "graphql-tag",
-    "policy": "30-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "graphql-ws",
@@ -317,7 +403,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "ioredis",
@@ -327,7 +415,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "kafka-node",
@@ -337,7 +427,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": true,
+    "core": false
   },
   {
     "name": "kafkajs",
@@ -347,7 +439,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "koa",
@@ -357,7 +451,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "koa-router",
@@ -367,7 +463,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "log4js",
@@ -377,7 +475,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "mali",
@@ -387,7 +487,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "memcached",
@@ -397,7 +499,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "mongodb",
@@ -407,7 +511,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "mongoose",
@@ -417,7 +523,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "mssql",
@@ -427,7 +535,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "mysql",
@@ -437,7 +547,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "mysql2",
@@ -447,7 +559,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "nats",
@@ -457,17 +571,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
-  },
-  {
-    "name": "node-fetch",
-    "policy": "30-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": true,
-    "note": "[Native ESM Module](https://jsw.ibm.com/browse/INSTA-2068)"
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "node-nats-streaming",
@@ -477,7 +583,33 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "node-fetch",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "[Native ESM Module](https://jsw.ibm.com/browse/INSTA-2068)",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "fetch",
+    "policy": "0-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": true,
+    "note": "",
+    "deprecated": false,
+    "core": true
   },
   {
     "name": "pg",
@@ -487,127 +619,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
-  },
-  {
-    "name": "pino",
-    "policy": "30-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
-  },
-  {
-    "name": "redis",
-    "policy": "30-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
-  },
-  {
-    "name": "restify",
-    "policy": "30-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
-  },
-  {
-    "name": "sequelize",
-    "policy": "30-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
-  },
-  {
-    "name": "socket.io",
-    "policy": "30-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
-  },
-  {
-    "name": "socket.io-client",
-    "policy": "30-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
-  },
-  {
-    "name": "sqs-consumer",
-    "policy": "30-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
-  },
-  {
-    "name": "tedious",
-    "policy": "30-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": true,
-    "note": "[Otel](https://jsw.ibm.com/browse/INSTA-1561)"
-  },
-  {
-    "name": "winston",
-    "policy": "30-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
-  },
-  {
-    "name": "ibm_db",
-    "policy": "30-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
-  },
-  {
-    "name": "kafka-avro",
-    "policy": "30-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
-  },
-  {
-    "name": "node-rdkafka",
-    "policy": "30-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "pg-native",
@@ -617,7 +631,165 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "pino",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "redis",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "restify",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "sequelize",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "socket.io",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "socket.io-client",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "sqs-consumer",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "tedious",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "[Otel](https://jsw.ibm.com/browse/INSTA-1561)",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "winston",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "express-winston",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "ibm_db",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "kafka-avro",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "node-rdkafka",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "deprecated": true,
+    "core": false
   },
   {
     "name": "q",
@@ -627,27 +799,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
-  },
-  {
-    "name": "core-timers",
-    "policy": "0-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
-  },
-  {
-    "name": "core-fs",
-    "policy": "0-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "prisma",
@@ -657,7 +811,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "typeorm",
@@ -667,7 +823,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "bunyan",
@@ -677,7 +835,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "bluebird",
@@ -687,7 +847,9 @@
     "cloudNative": false,
     "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
   },
   {
     "name": "@azure/storage-blob",
@@ -696,7 +858,45 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
+    "ignoreUpdates": true,
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "tsoa",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
     "ignoreUpdates": false,
-    "note": ""
+    "note": "",
+    "deprecated": false,
+    "core": false
+  },
+  {
+    "name": "request",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": true,
+    "note": "",
+    "deprecated": true,
+    "core": false
+  },
+  {
+    "name": "request-promise",
+    "policy": "30-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": true,
+    "note": "",
+    "deprecated": true,
+    "core": false
   }
 ]
