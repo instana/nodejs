@@ -137,7 +137,7 @@ function jsonToMarkdown(data) {
     '# Node.js supported core & third party packages' +
     '\n\n' +
     // eslint-disable-next-line max-len
-    '| Package name | Last Supported Version | Latest Version | Latest Version Published At | Support Policy | Days behind | Up-to-date | Note | Deprecated | Cloud Native | Beta version |\n';
+    '| Package name | Last Supported Version | Latest Version | Latest Version Published At | Support Policy | Days behind | Up-to-date | Note | Depri-cated | Cloud Native | Beta version |\n';
 
   markdown +=
     // eslint-disable-next-line max-len
