@@ -480,18 +480,6 @@
     "core": false
   },
   {
-    "name": "mali",
-    "policy": "30-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": "",
-    "deprecated": false,
-    "core": false
-  },
-  {
     "name": "memcached",
     "policy": "30-days",
     "lastSupportedVersion": "",
