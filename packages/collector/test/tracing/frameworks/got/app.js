@@ -28,7 +28,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
  * See https://github.com/sindresorhus/got/releases/tag/v12.0.0.
  * In CJS test, we use the v11 to test the got module.
  */
- const got = require('got-v11');
+const got = require('got-v11');
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
 }
