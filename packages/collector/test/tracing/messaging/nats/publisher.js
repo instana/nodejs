@@ -16,7 +16,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 require('./mockVersion');
 require('../../../..')();
 
-const fetch = require('node-fetch');
+const fetch = require('node-fetch-v2');
 const express = require('express');
 const NATS = require('nats');
 

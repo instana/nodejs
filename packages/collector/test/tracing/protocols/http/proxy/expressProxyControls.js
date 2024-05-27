@@ -5,7 +5,7 @@
 
 'use strict';
 
-const fetch = require('node-fetch');
+const fetch = require('node-fetch-v2');
 const path = require('path');
 const spawn = require('child_process').spawn;
 

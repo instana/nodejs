@@ -29,7 +29,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const assert = require('assert');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch-v2');
 const port = require('../../../test_util/app-port')();
 
 const app = express();

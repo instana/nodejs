@@ -32,10 +32,7 @@ if (config.collectorEnabled) {
 }
 
 const downstreamUrl = process.env.DOWNSTREAM_URL;
-
 const express = require('express');
-const fetch = require('node-fetch');
-
 const app = express();
 
 app.get('/', (req, res) => {

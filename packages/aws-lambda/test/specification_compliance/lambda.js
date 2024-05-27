@@ -15,7 +15,7 @@ const instana = require('../..');
 // assumed root dir of the Lambda.
 require('../../src/metrics/rootDir').root = require('path').resolve(__dirname, '..', '..');
 
-const fetch = require('node-fetch');
+const fetch = require('node-fetch-v2');
 
 const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;
 

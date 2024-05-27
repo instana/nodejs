@@ -22,7 +22,7 @@ require('../../../src')({
 });
 
 const restify = require('restify');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch-v2');
 const _pg = require('pg');
 const Pool = _pg.Pool;
 const Client = _pg.Client;
