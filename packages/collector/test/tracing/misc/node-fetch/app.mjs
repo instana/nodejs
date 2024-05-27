@@ -6,7 +6,10 @@
 
 'use strict';
 
-// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
+// NOTE:  c8 bug https://github.com/bcoe/c8/issues/166
+// NOTE:  There is an open issue with the latest version of node-fetch that cause type errors.
+//        Please refer to https://github.com/node-fetch/node-fetch/issues/1617 for more details.
+//        As a temporary workaround, we've added "DOM" in the tsconfig file.
 process.on('SIGTERM', () => {
   process.disconnect();
   process.exit(0);

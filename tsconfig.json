@@ -4,7 +4,10 @@
     "target": "ES6",
     "allowJs": true,
     "checkJs": true,
-    "lib": ["esnext.asynciterable","DOM"],
+    // There is an open issue with the latest version of node-fetch that cause type errors.
+    // Please refer to https://github.com/node-fetch/node-fetch/issues/1617 for more details. 
+    // As a temporary workaround, we've added "DOM" to this section.
+    "lib": ["esnext.asynciterable", "DOM"],
     "moduleResolution": "node",
     "esModuleInterop": true,
     "noEmit": true,
