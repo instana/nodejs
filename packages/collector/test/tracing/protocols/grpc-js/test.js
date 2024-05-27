@@ -23,6 +23,7 @@ const mochaSuiteFn = semver.satisfies(process.versions.node, '>=8.13.0') ? descr
  * @grpc/grpc-js 1.10 is no longer compatible with mali server
  *   - https://github.com/malijs/mali/issues/376
  *   - mali seems unmaintained. no release since > 2y
+ *   - we removed the test cases for now
  */
 ['latest', 'v1'].forEach(version => {
   mochaSuiteFn(`tracing/grpc-js@${version}`, function () {
@@ -111,55 +112,6 @@ const mochaSuiteFn = semver.satisfies(process.versions.node, '>=8.13.0') ? descr
 
       it('must cancel bidi streaming', () =>
         runTest('/bidi-stream', serverControls, clientControls, null, true, false));
-    });
-
-    // See https://github.com/malijs/mali/issues/376
-    const maliMochaSuiteFn =
-      semver.satisfies(process.versions.node, '>=14.0.0') && version !== 'latest' ? describe : describe.skip;
-
-    maliMochaSuiteFn('with mali server', function () {
-      let serverControls;
-      let clientControls;
-
-      before(async function () {
-        serverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'maliServer'),
-          useGlobalAgent: true,
-          env: {
-            INSTANA_GRPC_VERSION: version
-          }
-        });
-
-        clientControls = new ProcessControls({
-          appPath: path.join(__dirname, 'client'),
-          useGlobalAgent: true,
-          env: {
-            INSTANA_GRPC_VERSION: version
-          }
-        });
-
-        await serverControls.startAndWaitForAgentConnection();
-        await clientControls.startAndWaitForAgentConnection();
-      });
-
-      beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
-      });
-
-      after(async () => {
-        await serverControls.stop();
-        await clientControls.stop();
-      });
-
-      afterEach(async () => {
-        await serverControls.clearIpcMessages();
-        await clientControls.clearIpcMessages();
-      });
-
-      it('must trace an unary call', () => {
-        const expectedReply = 'received: request';
-        return runTest('/unary-call', serverControls, clientControls, expectedReply);
-      });
     });
 
     describe('suppressed', function () {
