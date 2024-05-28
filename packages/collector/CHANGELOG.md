@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.9.0](https://github.com/instana/nodejs/compare/v3.8.1...v3.9.0) (2024-05-28)
+
+### Features
+
+- added support for got v12, v13, v14 ([#1157](https://github.com/instana/nodejs/issues/1157)) ([1333a3c](https://github.com/instana/nodejs/commit/1333a3c34ede5444608b6b76e810f474c5496249))
+- added support for node-fetch v3 ([#1160](https://github.com/instana/nodejs/issues/1160)) ([b96f30c](https://github.com/instana/nodejs/commit/b96f30cfd80680917fc6993e2e47cd86102fd1be))
+
 ## [3.8.1](https://github.com/instana/nodejs/compare/v3.8.0...v3.8.1) (2024-05-17)
 
 **Note:** Version bump only for package @instana/collector
