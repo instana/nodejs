@@ -97,6 +97,9 @@ function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
   }
 
   before(async () => {
+    // remove the dependency temporarily
+    await rename(opts.nativeModuleFolder, opts.backupPath);
+
     controls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
       agentControls,
@@ -113,6 +116,7 @@ function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
 
   after(async () => {
     await controls.stop();
+    await rename(opts.backupPath, opts.nativeModuleFolder);
   });
 
   afterEach(async () => {
@@ -120,15 +124,6 @@ function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
   });
 
   describe(opts.name, () => {
-    before(async () => {
-      // remove the dependency temporarily
-      await rename(opts.nativeModuleFolder, opts.backupPath);
-    });
-
-    after(async () => {
-      await rename(opts.backupPath, opts.nativeModuleFolder);
-    });
-
     it('metrics from native add-ons should become available at some point', () =>
       retry(() =>
         Promise.all([
