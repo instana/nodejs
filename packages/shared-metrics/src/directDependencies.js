@@ -34,8 +34,6 @@ exports.deactivate = function deactivate() {
 };
 
 exports.activate = function activate() {
-  logger.debug(`activate ${attempts}`);
-
   attempts++;
   util.applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, packageJsonPath) => {
     if (err) {
