@@ -20,6 +20,5 @@
 import instana from './src/index.js';
 instana();
 
-// We plan to utilize this for adding native ESM support in the near future
-// import { register } from 'node:module';
-// register(./loader.mjs, import.meta.url);
+import { register } from 'node:module';
+register('./loader.mjs', import.meta.url);

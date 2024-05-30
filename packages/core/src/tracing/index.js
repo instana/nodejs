@@ -91,7 +91,8 @@ const instrumentations = [
   './instrumentation/protocols/httpClient',
   './instrumentation/protocols/httpServer',
   './instrumentation/protocols/nativeFetch',
-  './instrumentation/protocols/superagent'
+  './instrumentation/protocols/superagent',
+  './instrumentation/test/calculator'
 ];
 
 /**

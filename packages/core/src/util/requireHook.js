@@ -68,8 +68,9 @@ function patchedModuleLoad(moduleName) {
   //       (e.g., import http from 'node:http') do not  trigger Module._load, hence do not use the requireHook.
   //       However, when an ESM library imports a CommonJS package, our requireHook is triggered.
   if (path.isAbsolute(moduleName) && ['.node', '.json', '.ts'].indexOf(path.extname(moduleName)) === -1) {
-    // EDGE CASE for ESM: mysql2/promise.js
     if (moduleName.indexOf('node_modules/mysql2/promise.js') !== -1) {
+      //     return origLoad.apply(Module, arguments);
+      // }
       moduleName = 'mysql2/promise';
     } else {
       // e.g. path is node_modules/@elastic/elasicsearch/index.js

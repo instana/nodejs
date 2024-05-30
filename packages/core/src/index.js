@@ -54,6 +54,7 @@ function preInit() {
   util.hasThePackageBeenInitializedTooLate();
   util.requireHook.init(preliminaryConfig);
   tracing.preInit(preliminaryConfig);
+  util.iitmHook.init();
   // Initialize secrets as early as possible, in particular for env var collection in fargate/google-cloud-run when
   // the config comes from INSTANA_SECRETS.
   secrets.init(/** @type {secrets.SecretOption} */ (preliminaryConfig));
@@ -72,6 +73,7 @@ function init(config, downstreamConnection, processIdentityProvider) {
   secrets.init(/** @type {secrets.SecretOption} */ (config));
   util.requireHook.init(config);
   tracing.init(config, downstreamConnection, processIdentityProvider);
+  util.iitmHook.init();
 }
 
 module.exports = {
