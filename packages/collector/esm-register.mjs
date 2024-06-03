@@ -21,4 +21,4 @@ import instana from './src/index.js';
 instana();
 
 import { register } from 'node:module';
-register('./loader.mjs', import.meta.url);
+register('@instana/core/loader.mjs', import.meta.url);

@@ -4,10 +4,7 @@
 
 'use strict';
 
-const path = require('path');
-const rootDir = path.resolve(__dirname, '../../../../');
-const iitmHookPath = require.resolve('import-in-the-middle', { paths: [rootDir] });
-const iitmHook = require(iitmHookPath);
+const iitmHook = require('import-in-the-middle');
 
 /** @type {import('../logger').GenericLogger} */
 let logger = require('../logger').getLogger('util/iitmHook', newLogger => {
@@ -18,7 +15,7 @@ let logger = require('../logger').getLogger('util/iitmHook', newLogger => {
 const byModuleNameTransformers = {};
 
 exports.init = function init() {
-  // eslint-disable-next-line no-restricted-syntax
+// eslint-disable-next-line no-restricted-syntax
   for (const [moduleName, applicableTransformers] of Object.entries(byModuleNameTransformers)) {
     if (applicableTransformers) {
       for (let i = 0; i < applicableTransformers.length; i++) {
