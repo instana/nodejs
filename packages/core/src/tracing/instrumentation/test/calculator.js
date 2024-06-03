@@ -9,7 +9,7 @@ const shimmer = require('../../shimmer');
 const { EXIT } = require('../../constants');
 const tracingUtil = require('../../tracingUtil');
 const cls = require('../../cls');
-const iitmHook = require('../../../util/iitmHook');
+const { hook } = require('../../hook');
 
 let active = false;
 
@@ -24,7 +24,7 @@ exports.deactivate = function deactivate() {
 };
 
 exports.init = function init() {
-  iitmHook.onModuleLoad('esm-square-calculator', instrument);
+  hook('esm-square-calculator', instrument);
 };
 
 /**

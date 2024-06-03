@@ -20,6 +20,7 @@ const {
   isLatestEsmSupportedVersion,
   hasExperimentalLoaderFlag
 } = require('./esmSupportedVersion');
+const iitmHook = require('../util/iitmHook');
 
 let tracingEnabled = false;
 let tracingActivated = false;
@@ -198,6 +199,7 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
         otelInstrumentations.init(config, cls);
       }
     }
+    iitmHook.init();
   }
 
   if (config.tracing.activateImmediately) {
