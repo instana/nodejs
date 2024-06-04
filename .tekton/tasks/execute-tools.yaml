@@ -3,6 +3,9 @@ kind: Task
 metadata:
   name: execute-tools
 spec:
+  envFrom:
+    - configMapRef:
+        name: environment-properties
   params:
     - name: node-version
       value: $(params.node-version)
@@ -24,7 +27,7 @@ spec:
 
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
-        fi        
+        fi
 
         npm run audit
 
@@ -44,7 +47,7 @@ spec:
 
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
-        fi        
+        fi
 
         npm run lint
 
@@ -95,7 +98,18 @@ spec:
           exit 1
         fi
     - name: clean-aws
-      image: node:$(params.node-version)      
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AWS_ACCESS_KEY_ID"
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AWS_SECRET_ACCESS_KEY"
+      image: node:$(params.node-version)
       script: |
         #!/bin/bash
 
