@@ -13,6 +13,8 @@ spec:
       value: $(params.npm-version)
     - name: target-branch
       value: $(params.target-branch)
+    - name: continuous-delivery-context-secret
+      value: $(params.continuous-delivery-context-secret)      
   workspaces:
     - name: output
       mountPath: /artifacts
