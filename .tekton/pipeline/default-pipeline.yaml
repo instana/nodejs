@@ -177,7 +177,7 @@ spec:
         - name: target-branch
           value: $(params.target-branch)
         - name: continuous-delivery-context-secret
-          value: $(params.continuous-delivery-context-secret)
+          value: "secure-properties"
       workspaces:
         - name: output
           workspace: artifacts
