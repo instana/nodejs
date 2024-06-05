@@ -149,7 +149,7 @@ function start(version) {
 
       function verifyResponse(response, operation, withError) {
         expect(response).to.exist;
-        if (response.error) throw new Error(response.error);
+        if (!withError && response.error) throw new Error(response.error);
 
         if (!withError) {
           if (operation === 'createBucket') {
