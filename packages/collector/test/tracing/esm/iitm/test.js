@@ -68,7 +68,7 @@ mochaSuiteFn('[ESM] - iitm', function () {
               ]
             });
 
-            const calculatorSpan = spans.find(span => span.n === 'calculator');
+            const calculatorSpan = spans.find(span => span.n === 'square-calc');
             expect(calculatorSpan).to.exist;
             expect(calculatorSpan.k).to.equal(constants.EXIT);
             expect(calculatorSpan.data.calculator).to.be.an('object');

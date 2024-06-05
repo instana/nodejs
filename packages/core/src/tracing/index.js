@@ -93,7 +93,7 @@ const instrumentations = [
   './instrumentation/protocols/httpServer',
   './instrumentation/protocols/nativeFetch',
   './instrumentation/protocols/superagent',
-  './instrumentation/test/calculator'
+  './instrumentation/test/squareCalc'
 ];
 
 /**

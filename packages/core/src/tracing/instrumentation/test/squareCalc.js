@@ -9,7 +9,7 @@ const shimmer = require('../../shimmer');
 const { EXIT } = require('../../constants');
 const tracingUtil = require('../../tracingUtil');
 const cls = require('../../cls');
-const { hook } = require('../../hook');
+const hook = require('../../hook');
 
 let active = false;
 
@@ -24,7 +24,7 @@ exports.deactivate = function deactivate() {
 };
 
 exports.init = function init() {
-  hook('square-calc', instrument);
+  hook.onModuleLoad('square-calc', instrument);
 };
 
 /**
@@ -38,7 +38,7 @@ function instrument(orgModule) {
     console.log(`Calculating the square of ${number}`);
 
     return cls.ns.runAndReturn(() => {
-      const span = cls.startSpan('calculator', EXIT, null, null);
+      const span = cls.startSpan('square-calc', EXIT, null, null);
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(instrument, 1);
 
