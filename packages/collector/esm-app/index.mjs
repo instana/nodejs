@@ -1,6 +1,6 @@
 import got from 'got';
 import express from 'express';
-import { calculateSquare } from 'esm-square-calculator';
+import { calculateSquare } from 'square-calc';
 
 const app = express();
 

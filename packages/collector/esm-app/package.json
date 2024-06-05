@@ -2,13 +2,13 @@
   "name": "esm-app",
   "version": "1.0.0",
   "scripts": {
-    "start": "node  --inspect-brk=0.0.0.0:9229 --import ../esm-register.mjs index.mjs",
+    "start": "node  --import ../esm-register.mjs index.mjs",
     "start-v18": "node --loader ../esm-loader.mjs app.mjs"
   },
   "author": "arya.mohanan@ibm.com",
   "license": "ISC",
   "dependencies": {
-    "esm-square-calculator": "^1.1.0",
+    "square-calc": "^3.0.0",
     "express": "^4.18.3",
     "got": "^14.3.0"
   }

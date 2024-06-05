@@ -24,7 +24,7 @@ exports.deactivate = function deactivate() {
 };
 
 exports.init = function init() {
-  hook('esm-square-calculator', instrument);
+  hook('square-calc', instrument);
 };
 
 /**

@@ -5,14 +5,14 @@
 'use strict';
 
 const { onModuleLoad: iitmOnModuleLoad } = require('../util/iitmHook');
-const { onModuleLoad: requireHookOnModuleLoad } = require('../util/requireHook');
+const requireHook = require('../util/requireHook');
 
-const pureEsmLibraries = ['esm-square-calculator'];
+const pureEsmLibraries = ['square-calc'];
 
 exports.hook = (/** @type {string} */ module, /** @type {Function} */ fn) => {
-  requireHookOnModuleLoad('esm-square-calculator', fn);
+  requireHook.onModuleLoad(module, fn);
 
   if (pureEsmLibraries.includes(module)) {
-    iitmOnModuleLoad('esm-square-calculator', fn);
+    iitmOnModuleLoad(module, fn);
   }
 };

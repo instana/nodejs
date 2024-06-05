@@ -14,7 +14,7 @@ import express from 'express';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
 import getAppPort from '../../../test_util/app-port.js';
-import { calculateSquare } from 'esm-square-calculator';
+import { calculateSquare } from 'square-calc';
 const port = getAppPort();
 
 const app = express();
