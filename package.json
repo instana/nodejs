@@ -77,7 +77,7 @@
     "@aws-sdk/client-lambda": "^3.590.0",
     "@aws-sdk/client-s3": "^3.590.0",
     "@aws-sdk/client-s3-v3": "npm:@aws-sdk/client-s3@3.321.1",
-    "@aws-sdk/client-sns": "^3.588.0",
+    "@aws-sdk/client-sns": "^3.590.0",
     "@aws-sdk/client-sqs": "^3.588.0",
     "@aws-sdk/client-sqs-v3": "npm:@aws-sdk/client-sqs@3.24.0",
     "@aws-sdk/lib-dynamodb": "^3.588.0",
