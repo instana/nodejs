@@ -122,9 +122,7 @@ spec:
           npm install npm@$(params.npm-version) -g
         fi
 
-        if [ "$(params.target-branch)" == "main" ]; then
-          bin/clean-aws.js --service=s3
-          bin/clean-aws.js --service=dynamodb
-          bin/clean-aws.js --service=sqs
-          bin/clean-aws.js --service=kinesis
-        fi
+        bin/clean-aws.js --service=s3
+        bin/clean-aws.js --service=dynamodb
+        bin/clean-aws.js --service=sqs
+        bin/clean-aws.js --service=kinesis
