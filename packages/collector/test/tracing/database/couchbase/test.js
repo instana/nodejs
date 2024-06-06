@@ -43,7 +43,7 @@ const verifyCouchbaseSpan = (controls, entrySpan, options = {}) => [
       // eslint-disable-next-line no-nested-ternary
       'type' in options ? (options.type === '' ? undefined : options.type) : 'membase'
     ),
-  span => expect(span.data.couchbase.sql).to.equal(options.sql || 'GET'),
+  span => expect(span.data.couchbase.sql).to.contain(options.sql || 'GET'),
   span =>
     options.error
       ? expect(span.data.couchbase.error).to.equal(options.error)
@@ -393,8 +393,7 @@ mochaSuiteFn('tracing/couchbase', function () {
             );
           }));
 
-      // flaky on CI
-      it.skip('[analyticsindexes] must trace', () =>
+      it('[analyticsindexes] must trace', () =>
         controls
           .sendRequest({
             method: 'post',
@@ -428,8 +427,7 @@ mochaSuiteFn('tracing/couchbase', function () {
             );
           }));
 
-      // flaky on CI
-      it.skip('[searchquery] must trace', () =>
+      it('[searchquery] must trace', () =>
         controls
           .sendRequest({
             method: 'get',
@@ -575,7 +573,7 @@ mochaSuiteFn('tracing/couchbase', function () {
                     verifyCouchbaseSpan(controls, entrySpan, {
                       bucket: '',
                       type: '',
-                      sql: 'QUERY'
+                      sql: 'SELECT * FROM projects WHERE name='
                     })
                   );
 
@@ -586,7 +584,7 @@ mochaSuiteFn('tracing/couchbase', function () {
                     verifyCouchbaseSpan(controls, entrySpan, {
                       bucket: 'companies',
                       type: 'ephemeral',
-                      sql: 'QUERY'
+                      sql: 'SELECT * FROM _default WHERE name='
                     })
                   );
 
@@ -599,7 +597,7 @@ mochaSuiteFn('tracing/couchbase', function () {
                       // FYI: this error msg does not come from us.
                       error: 'bucket not found',
                       type: 'ephemeral',
-                      sql: 'QUERY'
+                      sql: 'SELECT * FROM TABLE_DOES_NOT_EXIST WHERE name'
                     })
                   );
 
@@ -649,7 +647,7 @@ mochaSuiteFn('tracing/couchbase', function () {
                       verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: '',
                         type: '',
-                        sql: 'QUERY'
+                        sql: 'SELECT * FROM'
                       })
                     );
                     expectExactlyOneMatching(
@@ -658,7 +656,7 @@ mochaSuiteFn('tracing/couchbase', function () {
                         bucket: '',
                         hostname: connStr2,
                         type: '',
-                        sql: 'QUERY'
+                        sql: 'SELECT * FROM'
                       })
                     );
                   }
