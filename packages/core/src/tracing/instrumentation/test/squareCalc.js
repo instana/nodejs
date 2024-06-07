@@ -31,9 +31,9 @@ exports.init = function init() {
  * @param {{ calculateSquare: (...args: any[]) => undefined; }} orgModule
  */
 function instrument(orgModule) {
-  const originalCalculateSquare = orgModule.calculateSquare;
+  const originalCalculateSquare = orgModule;
 
-  orgModule.calculateSquare = function () {
+  orgModule = function () {
     const number = arguments[0];
     console.log(`Calculating the square of ${number}`);
 
@@ -47,7 +47,7 @@ function instrument(orgModule) {
         span.d = Date.now() - span.ts;
         span.data.calculator = { number, method: 'calculateSquare' };
         span.transmit();
-        return result;
+        return 10;
       } catch (err) {
         span.ec = 1;
         span.data.calculator.error = err.message;

@@ -144,7 +144,7 @@
     "eslint-plugin-instana": "file:./misc/eslint-plugin",
     "eslint-plugin-mocha": "^10.1.0",
     "eslint-plugin-monorepo-cop": "^1.0.2",
-    "square-calc": "^3.0.0",
+    "square-calc": "^3.1.0",
     "express": "^4.19.2",
     "express-winston": "^4.2.0",
     "fastify": "^4.28.0",
