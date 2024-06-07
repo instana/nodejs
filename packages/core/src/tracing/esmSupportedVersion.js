@@ -39,3 +39,23 @@ exports.hasExperimentalLoaderFlag = function hasExperimentalLoaderFlag() {
 
   return experimentalLoaderFlagIsSet && exports.isLatestEsmSupportedVersion(process.versions.node);
 };
+/**
+ * Checks if the application is an ESM (ECMAScript Modules) app by inspecting how the collector is invoked with flags
+ * like --experimental-loader and --import.
+ * @returns {boolean} - True if the application is an ESM app, false otherwise.
+ */
+exports.isESMApp = function isESMApp() {
+  return (
+    (process.env.NODE_OPTIONS &&
+      (process.env.NODE_OPTIONS.indexOf('--experimental-loader') !== -1 ||
+        process.env.NODE_OPTIONS.indexOf('--import') !== -1)) ||
+    (process.execArgv &&
+      process.execArgv.length > 0 &&
+      ((process.execArgv[0].indexOf('--experimental-loader') !== -1 &&
+        process.execArgv[0].indexOf('esm-loader.mjs') !== -1) ||
+        (process.execArgv[0].indexOf('--experimental-loader') !== -1 &&
+          process.execArgv[1].indexOf('esm-loader.mjs') !== -1) ||
+        (process.execArgv[0].indexOf('--import') !== -1 && process.execArgv[0].indexOf('esm-register.mjs') !== -1) ||
+        (process.execArgv[0].indexOf('--import') !== -1 && process.execArgv[1].indexOf('esm-register.mjs') !== -1)))
+  );
+};

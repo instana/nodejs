@@ -18,7 +18,8 @@ const { otelInstrumentations } = require('./opentelemetry-instrumentations');
 const {
   esmSupportedVersion,
   isLatestEsmSupportedVersion,
-  hasExperimentalLoaderFlag
+  hasExperimentalLoaderFlag,
+  isESMApp
 } = require('./esmSupportedVersion');
 const iitmHook = require('../util/iitmHook');
 
@@ -177,6 +178,7 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
         'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
     );
   }
+  _config.esm = isESMApp();
   config = _config;
   processIdentityProvider = _processIdentityProvider;
 

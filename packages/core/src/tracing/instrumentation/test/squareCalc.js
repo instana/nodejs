@@ -24,7 +24,8 @@ exports.deactivate = function deactivate() {
 };
 
 exports.init = function init() {
-  hook.onModuleLoad('square-calc', instrument);
+  const esmAPP = arguments[0].esm;
+  hook.onModuleLoad('square-calc', instrument, esmAPP);
 };
 
 /**
