@@ -60,6 +60,7 @@ describe('tracing/prisma', function () {
           } catch (err) {
             // ignore
           }
+          await executeAsync('./node_modules/.bin/prisma generate', appDir);
         });
 
         // Set up Prisma stuff for the provider we want to test with (either sqlite or postgresql).
