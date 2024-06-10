@@ -60,7 +60,19 @@ describe('tracing/prisma', function () {
           } catch (err) {
             // ignore
           }
-          await executeAsync('./node_modules/.bin/prisma generate', appDir);
+          try {
+            const prismaClientSource = path.resolve(__dirname, './node_modules/.prisma');
+            const prismaClientDestination = path.resolve(__dirname, '../../../../../../node_modules/.prisma');
+            const destinationExists = await fs
+              .access(prismaClientDestination)
+              .then(() => true)
+              .catch(() => false);
+            if (!destinationExists) {
+              await recursiveCopy(prismaClientSource, prismaClientDestination);
+            }
+          } catch (err) {
+            // ignore
+          }
         });
 
         // Set up Prisma stuff for the provider we want to test with (either sqlite or postgresql).
