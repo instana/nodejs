@@ -69,8 +69,6 @@ function patchedModuleLoad(moduleName) {
   //       However, when an ESM library imports a CommonJS package, our requireHook is triggered.
   if (path.isAbsolute(moduleName) && ['.node', '.json', '.ts'].indexOf(path.extname(moduleName)) === -1) {
     if (moduleName.indexOf('node_modules/mysql2/promise.js') !== -1) {
-      //     return origLoad.apply(Module, arguments);
-      // }
       moduleName = 'mysql2/promise';
     } else {
       // e.g. path is node_modules/@elastic/elasicsearch/index.js

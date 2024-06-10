@@ -60,18 +60,19 @@ describe('tracing/prisma', function () {
           } catch (err) {
             // ignore
           }
-          try {
-            const prismaClientSource = path.resolve(__dirname, './node_modules/.prisma');
-            const prismaClientDestination = path.resolve(__dirname, '../../../../../../node_modules/.prisma');
-            const destinationExists = await fs
-              .access(prismaClientDestination)
-              .then(() => true)
-              .catch(() => false);
-            if (!destinationExists) {
-              await recursiveCopy(prismaClientSource, prismaClientDestination);
-            }
-          } catch (err) {
-            // ignore
+
+          // By default, Prisma Client is generated into the './node_modules/.prisma/client' folder.
+          // However, In case of ESM apps when loading the module with the IITM hook, it checks for its
+          //  installation in the root 'node_modules' folder. Therefore, if the '.prisma' folder is not found
+          // in the root directory during module loading, this code copies it from its default location.
+          // This is beacuse of we are handling prisma tests differently in our code base.
+          const prismaClientDestination = path.resolve(__dirname, '../../../../../../node_modules/.prisma');
+          const destinationExists = await fs
+            .access(prismaClientDestination)
+            .then(() => true)
+            .catch(() => false);
+          if (!destinationExists) {
+            await recursiveCopy(path.resolve(__dirname, './node_modules/.prisma'), prismaClientDestination);
           }
         });
 
