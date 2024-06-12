@@ -129,16 +129,21 @@ function runHandler(handler, error, { context, event, eventOpts } = {}) {
   context = context || createContext(callback);
   addDirectInvokeTracingCorrelationToContext(context, trigger);
 
-  setTimeout(() => {
-    log('Lambda timed out.');
+  if (
+    process.env.INSTANA_ENABLE_LAMBDA_TIMEOUT_DETECTION &&
+    process.env.INSTANA_ENABLE_LAMBDA_TIMEOUT_DETECTION === 'true'
+  ) {
+    setTimeout(() => {
+      log('Lambda timed out.');
 
-    sendToParent('runtime: terminating');
+      sendToParent('runtime: terminating');
 
-    sendToParent({
-      type: 'lambda-timeout',
-      error: true
-    });
-  }, context.getRemainingTimeInMillis());
+      sendToParent({
+        type: 'lambda-timeout',
+        error: true
+      });
+    }, context.getRemainingTimeInMillis());
+  }
 
   const promise = handler(event, context, callback);
 
