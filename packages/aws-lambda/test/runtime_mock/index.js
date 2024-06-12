@@ -130,8 +130,8 @@ function runHandler(handler, error, { context, event, eventOpts } = {}) {
   addDirectInvokeTracingCorrelationToContext(context, trigger);
 
   if (
-    process.env.INSTANA_ENABLE_LAMBDA_TIMEOUT_DETECTION &&
-    process.env.INSTANA_ENABLE_LAMBDA_TIMEOUT_DETECTION === 'true'
+    process.env.INSTANA_ENABLE_RUNTIME_TIMEOUT_DETECTION &&
+    process.env.INSTANA_ENABLE_RUNTIME_TIMEOUT_DETECTION === 'true'
   ) {
     setTimeout(() => {
       log('Lambda timed out.');

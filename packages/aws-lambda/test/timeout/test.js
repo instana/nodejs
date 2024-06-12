@@ -115,10 +115,21 @@ describe('timeout heuristic', function () {
   describe('when the timeout detection is disabled and a timeout occurs', function () {
     runTest.bind(this)({
       lambdaTimeout: 3100,
-      delay: 3500,
+      delay: 5000,
       expectEntrySpan: false,
-      expectTimeout: true,
+      expectTimeout: false,
       expectResponseFromLambda: false,
+      enableLambdaTimeoutDetection: false
+    });
+  });
+
+  describe('when the timeout detection is disabled and no timeout occurs', function () {
+    runTest.bind(this)({
+      lambdaTimeout: 3000,
+      delay: 500,
+      expectEntrySpan: true,
+      expectTimeout: false,
+      expectResponseFromLambda: true,
       enableLambdaTimeoutDetection: false
     });
   });
@@ -136,7 +147,8 @@ describe('timeout heuristic', function () {
 
     before(async () => {
       const envs = {
-        DELAY: delay
+        DELAY: delay,
+        INSTANA_ENABLE_RUNTIME_TIMEOUT_DETECTION: true
       };
 
       if (enableLambdaTimeoutDetection) {
