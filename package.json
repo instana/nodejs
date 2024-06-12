@@ -222,7 +222,7 @@
     "stealthy-require": "1.1.1",
     "superagent": "^9.0.2",
     "tedious": "^17.0.0",
-    "tsoa": "^6.3.0",
+    "tsoa": "^6.3.1",
     "typescript": "^5.0.4",
     "underscore": "^1.13.1",
     "uuid": "^9.0.1",
