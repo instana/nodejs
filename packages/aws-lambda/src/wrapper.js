@@ -175,6 +175,19 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
       });
     };
 
+    /**
+     * We offer the customer to enable the timeout detection
+     * But its not recommended to use it on production, only for debugging purposes.
+     * See https://github.com/instana/nodejs/pull/668.
+     */
+    if (
+      process.env.INSTANA_ENABLE_LAMBDA_TIMEOUT_DETECTION &&
+      process.env.INSTANA_ENABLE_LAMBDA_TIMEOUT_DETECTION === 'true'
+    ) {
+      logger.debug('Heuristical timeout detection enabled. Please only use for debugging purposes.');
+      registerTimeoutDetection(context, entrySpan);
+    }
+
     let handlerPromise;
     try {
       handlerPromise = originalHandler.apply(originalThis, originalArgs);
@@ -256,6 +269,50 @@ function init(event, arnInfo, _config) {
   metrics.init(config);
   metrics.activate();
   tracing.activate();
+}
+
+function registerTimeoutDetection(context, entrySpan) {
+  // We register the timeout detection directly at the start so getRemainingTimeInMillis basically gives us the
+  // configured timeout for this Lambda function, minus roughly 50 - 100 ms that is spent in bootstrapping.
+  const initialRemainingMillis = getRemainingTimeInMillis(context);
+  if (typeof initialRemainingMillis !== 'number') {
+    return;
+  }
+  if (initialRemainingMillis <= 2500) {
+    logger.debug(
+      'Heuristical timeout detection will be disabled for Lambda functions with a short timeout ' +
+        '(2 seconds and smaller).'
+    );
+    return;
+  }
+
+  let triggerTimeoutHandlingAfter;
+  if (initialRemainingMillis <= 4000) {
+    // For Lambdas configured with a timeout of 3 or 4 seconds we heuristically assume a timeout when only
+    // 10% of time is remaining.
+    triggerTimeoutHandlingAfter = initialRemainingMillis * 0.9;
+  } else {
+    // For Lambdas configured with a timeout of  5 seconds or more we heuristically assume a timeout when only 400 ms of
+    // time are remaining.
+    triggerTimeoutHandlingAfter = initialRemainingMillis - 400;
+  }
+
+  logger.debug(
+    `Registering heuristical timeout detection to be triggered in ${triggerTimeoutHandlingAfter} milliseconds.`
+  );
+
+  setTimeout(() => {
+    postHandlerForTimeout(entrySpan, getRemainingTimeInMillis(context));
+  }, triggerTimeoutHandlingAfter).unref();
+}
+
+function getRemainingTimeInMillis(context) {
+  if (context && typeof context.getRemainingTimeInMillis === 'function') {
+    return context.getRemainingTimeInMillis();
+  } else {
+    logger.warn('context.getRemainingTimeInMillis() is not available, timeout detection will be disabled.');
+    return null;
+  }
 }
 
 function shouldUseLambdaExtension() {
@@ -387,6 +444,48 @@ function postHandler(entrySpan, error, result, callback) {
     metricsPayload,
     finalLambdaRequest: true,
     callback
+  });
+}
+
+/**
+ * When the timeout heuristic detects an imminent timeout, we finish the entry span prematurely and send it to the
+ * back end.
+ */
+function postHandlerForTimeout(entrySpan, remainingMillis) {
+  /**
+   * context.getRemainingTimeInMillis(context) can return negative values
+   * That just means that the lambda was already closed.
+   * `setTimeout` is not 100% reliable
+   */
+  if (remainingMillis < 200) {
+    logger.debug('Skipping heuristical timeout detection because lambda timeout exceeded already.');
+    return;
+  }
+
+  if (entrySpan) {
+    // CASE: Timeout not needed, we already send the data to the backend successfully
+    if (entrySpan.transmitted) {
+      logger.debug('Skipping heuristical timeout detection because BE data was sent already.');
+      return;
+    }
+
+    entrySpan.ec = 1;
+    entrySpan.data.lambda.msleft = remainingMillis;
+    entrySpan.data.lambda.error = `Possible Lambda timeout with only ${remainingMillis} ms left.`;
+    entrySpan.d = Date.now() - entrySpan.ts;
+    entrySpan.transmit();
+  }
+
+  logger.debug(`Heuristical timeout detection was triggered with ${remainingMillis} milliseconds left.`);
+
+  // deliberately not gathering metrics but only sending spans.
+  const spans = spanBuffer.getAndResetSpans();
+
+  sendToBackend({
+    spans,
+    metricsPayload: {},
+    finalLambdaRequest: true,
+    callback: () => {}
   });
 }
 

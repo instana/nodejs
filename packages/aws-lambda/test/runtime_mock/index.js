@@ -129,6 +129,22 @@ function runHandler(handler, error, { context, event, eventOpts } = {}) {
   context = context || createContext(callback);
   addDirectInvokeTracingCorrelationToContext(context, trigger);
 
+  if (
+    process.env.INSTANA_ENABLE_RUNTIME_TIMEOUT_DETECTION &&
+    process.env.INSTANA_ENABLE_RUNTIME_TIMEOUT_DETECTION === 'true'
+  ) {
+    setTimeout(() => {
+      log('Lambda timed out.');
+
+      sendToParent('runtime: terminating');
+
+      sendToParent({
+        type: 'lambda-timeout',
+        error: true
+      });
+    }, context.getRemainingTimeInMillis());
+  }
+
   const promise = handler(event, context, callback);
 
   if (promise && typeof promise.then === 'function') {
@@ -187,6 +203,9 @@ function createContext(callback) {
     : `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
 
   const configuredTimeout = process.env.LAMBDA_TIMEOUT ? parseInt(process.env.LAMBDA_TIMEOUT, 10) : 3000;
+
+  // eslint-disable-next-line no-console
+  console.log(`Lambda timeout is set to ${configuredTimeout} ms.`);
 
   const done = (err, result) => {
     callback(err, result);
