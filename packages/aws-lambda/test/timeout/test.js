@@ -11,8 +11,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const config = require('../../../serverless/test/config');
-const { expectExactlyOneMatching, isCI } = require('../../../core/test/test_util');
-const retry = require('../../../serverless/test/util/retry');
+const { expectExactlyOneMatching, isCI, retry } = require('../../../core/test/test_util');
 
 const { fail } = expect;
 
