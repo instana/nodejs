@@ -150,7 +150,7 @@
     "google-protobuf": "^3.21.2",
     "got": "^14.4.1",
     "got-v11": "npm:got@^11.8.6",
-    "graphql": "^16.8.1",
+    "graphql": "^16.8.2",
     "graphql-subscriptions": "^2.0.0",
     "graphql-tag": "^2.12.6",
     "graphql-ws": "^5.16.0",
