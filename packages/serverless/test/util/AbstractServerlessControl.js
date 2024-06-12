@@ -13,7 +13,7 @@ const path = require('path');
 const fetch = require('node-fetch-v2');
 
 const retry = require('@instana/core/test/test_util/retry');
-const delay = require('@instana/core/test/test_util/delay');
+// const delay = require('@instana/core/test/test_util/delay');
 const config = require('@instana/core/test/config');
 
 // To address the certificate authorization issue with node-fetch, process.env.NODE_TLS_REJECT_UNAUTHORIZED
