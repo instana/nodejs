@@ -10,8 +10,8 @@ const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
-const config = require('../../../serverless/test/config');
-const { expectExactlyOneMatching, isCI, retry } = require('../../../core/test/test_util');
+const config = require('@instana/core/test/config');
+const { expectExactlyOneMatching, retry } = require('../../../core/test/test_util');
 
 const { fail } = expect;
 
@@ -26,50 +26,19 @@ const downstreamDummyPort = 3456;
 const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
-function prelude(opts) {
-  const timeout = opts.lambdaTimeout * 2;
-  this.timeout(isCI() ? config.getTestTimeout() : timeout);
-  this.slow(timeout);
+describe('timeout heuristic', function () {
+  this.timeout(config.getTestTimeout());
 
-  if (opts.startBackend == null) {
-    opts.startBackend = true;
-  }
-
-  // eslint-disable-next-line prefer-object-spread
-  const env = Object.assign(
-    {
-      INSTANA_ENDPOINT_URL: opts.instanaEndpointUrl,
-      INSTANA_AGENT_KEY: opts.instanaAgentKey,
-      LAMBDA_TIMEOUT: opts.lambdaTimeout
-    },
-    opts.env
-  );
-  const control = new Control({
-    faasRuntimePath: path.join(__dirname, '../runtime_mock'),
-    handlerDefinitionPath: opts.handlerDefinitionPath,
-    startBackend: opts.startBackend,
-    backendPort,
-    backendBaseUrl,
-    downstreamDummyUrl,
-    env,
-    timeout,
-    lambdaTimeout: opts.lambdaTimeout
-  });
-  control.registerTestHooks();
-  return control;
-}
-
-describe('timeout heuristic', () => {
   const handlerDefinitionPath = path.join(__dirname, './lambda');
 
   describe('when the Lambda has a very short timeout and times out', function () {
-    // For Lambdas with timeout configured at 1 second or lower, we disable timeout detection.
     runTest.bind(this)({
       lambdaTimeout: 1000,
       delay: 1500,
       expectEntrySpan: false,
       expectTimeout: false,
-      expectResponseFromLambda: false
+      expectResponseFromLambda: false,
+      enableLambdaTimeoutDetection: true
     });
   });
 
@@ -80,7 +49,8 @@ describe('timeout heuristic', () => {
       expectEntrySpan: true,
       expectTimeout: true,
       expectResponseFromLambda: false,
-      expectedMillisRemainingAtTimeout: 280
+      expectedMillisRemainingAtTimeout: 280,
+      enableLambdaTimeoutDetection: true
     });
   });
 
@@ -91,7 +61,8 @@ describe('timeout heuristic', () => {
       expectEntrySpan: true,
       expectTimeout: true,
       expectResponseFromLambda: true,
-      expectedMillisRemainingAtTimeout: 280
+      expectedMillisRemainingAtTimeout: 280,
+      enableLambdaTimeoutDetection: true
     });
   });
 
@@ -101,7 +72,8 @@ describe('timeout heuristic', () => {
       delay: 2000,
       expectEntrySpan: true,
       expectTimeout: false,
-      expectResponseFromLambda: true
+      expectResponseFromLambda: true,
+      enableLambdaTimeoutDetection: true
     });
   });
 
@@ -112,7 +84,8 @@ describe('timeout heuristic', () => {
       expectEntrySpan: true,
       expectTimeout: true,
       expectResponseFromLambda: false,
-      expectedMillisRemainingAtTimeout: 400
+      expectedMillisRemainingAtTimeout: 400,
+      enableLambdaTimeoutDetection: true
     });
   });
 
@@ -123,7 +96,8 @@ describe('timeout heuristic', () => {
       expectEntrySpan: true,
       expectTimeout: true,
       expectResponseFromLambda: true,
-      expectedMillisRemainingAtTimeout: 400
+      expectedMillisRemainingAtTimeout: 400,
+      enableLambdaTimeoutDetection: true
     });
   });
 
@@ -133,7 +107,8 @@ describe('timeout heuristic', () => {
       delay: 8000,
       expectEntrySpan: true,
       expectTimeout: false,
-      expectResponseFromLambda: true
+      expectResponseFromLambda: true,
+      enableLambdaTimeoutDetection: true
     });
   });
 
@@ -144,19 +119,7 @@ describe('timeout heuristic', () => {
       expectEntrySpan: false,
       expectTimeout: true,
       expectResponseFromLambda: false,
-      disableLambdaTimeoutDetection: true
-    });
-  });
-
-  describe('when the timeout detection env is set but its set to false', function () {
-    runTest.bind(this)({
-      lambdaTimeout: 3100,
-      delay: 3500,
-      expectEntrySpan: true,
-      expectTimeout: true,
-      expectResponseFromLambda: false,
-      disableLambdaTimeoutDetection: false,
-      expectedMillisRemainingAtTimeout: 300
+      enableLambdaTimeoutDetection: false
     });
   });
 
@@ -167,25 +130,58 @@ describe('timeout heuristic', () => {
     expectTimeout,
     expectResponseFromLambda,
     expectedMillisRemainingAtTimeout,
-    disableLambdaTimeoutDetection
+    enableLambdaTimeoutDetection
   }) {
-    const envs = {
-      DELAY: delay
-    };
+    let control;
 
-    if (disableLambdaTimeoutDetection !== undefined) {
-      envs.INSTANA_DISABLE_LAMBDA_TIMEOUT_DETECTION = disableLambdaTimeoutDetection;
-    }
+    before(async () => {
+      const envs = {
+        DELAY: delay
+      };
 
-    const opts = {
-      handlerDefinitionPath,
-      instanaEndpointUrl: backendBaseUrl,
-      instanaAgentKey,
-      lambdaTimeout,
-      env: envs
-    };
+      if (enableLambdaTimeoutDetection) {
+        envs.INSTANA_ENABLE_LAMBDA_TIMEOUT_DETECTION = enableLambdaTimeoutDetection;
+      }
 
-    const control = prelude.bind(this)(opts);
+      const opts = {
+        handlerDefinitionPath,
+        instanaEndpointUrl: backendBaseUrl,
+        instanaAgentKey,
+        lambdaTimeout,
+        env: envs
+      };
+
+      if (opts.startBackend == null) {
+        opts.startBackend = true;
+      }
+
+      // eslint-disable-next-line prefer-object-spread
+      const env = Object.assign(
+        {
+          INSTANA_ENDPOINT_URL: opts.instanaEndpointUrl,
+          INSTANA_AGENT_KEY: opts.instanaAgentKey,
+          LAMBDA_TIMEOUT: opts.lambdaTimeout
+        },
+        opts.env
+      );
+
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: opts.handlerDefinitionPath,
+        startBackend: opts.startBackend,
+        backendPort,
+        backendBaseUrl,
+        downstreamDummyUrl,
+        env,
+        lambdaTimeout: opts.lambdaTimeout
+      });
+
+      await control.start();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
 
     let label;
 

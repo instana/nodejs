@@ -34,6 +34,9 @@ AbstractServerlessControl.prototype.reset = function reset() {
 };
 
 AbstractServerlessControl.prototype.start = async function () {
+  // eslint-disable-next-line no-console
+  console.log('[AbstractServerlessControl] start all processes');
+
   this.reset();
 
   let backendPromise;
@@ -98,6 +101,10 @@ AbstractServerlessControl.prototype.start = async function () {
       this.startMonitoredProcess();
       return this.waitUntilMonitoredProcessHasStarted();
     })
+    .then(() => {
+      // eslint-disable-next-line no-console
+      console.log('[AbstractServerlessControl] started all processes');
+    })
     .catch(e => {
       fail(`A child process did not start properly: ${e}`);
     });
@@ -113,7 +120,8 @@ AbstractServerlessControl.prototype.stop = async function () {
 };
 
 AbstractServerlessControl.prototype.startBackendAndWaitForIt = async function startBackendAndWaitForIt() {
-  await delay(2000);
+  // eslint-disable-next-line no-console
+  console.log('[AbstractServerlessControl] startBackendAndWaitForIt');
 
   this.backendHasBeenStarted = true;
   this.backend = fork(path.join(__dirname, '../backend_stub'), {
@@ -205,6 +213,8 @@ AbstractServerlessControl.prototype.isProcessUpPromise = function isProcessUpPro
   processStartMessage
 ) {
   if (this.isProcessUp(allMessagesFromProcess, processStartMessage)) {
+    // eslint-disable-next-line no-console
+    console.log(`[AbstractServerlessControl] process is up: ${label}`);
     return Promise.resolve();
   } else {
     return Promise.reject(new Error(`The process ${label} is still not up.`));

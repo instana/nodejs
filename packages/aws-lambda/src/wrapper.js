@@ -176,13 +176,15 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
     };
 
     /**
-     * We offer the customer to disable the timeout detection
-     * See https://github.com/instana/nodejs/pull/443
+     * We offer the customer to enable the timeout detection
+     * But its not recommended to use it on production, only for debugging purposes.
+     * See https://github.com/instana/nodejs/pull/668.
      */
     if (
-      !process.env.INSTANA_DISABLE_LAMBDA_TIMEOUT_DETECTION ||
-      process.env.INSTANA_DISABLE_LAMBDA_TIMEOUT_DETECTION === 'false'
+      process.env.INSTANA_ENABLE_LAMBDA_TIMEOUT_DETECTION &&
+      process.env.INSTANA_ENABLE_LAMBDA_TIMEOUT_DETECTION === 'true'
     ) {
+      logger.debug('Heuristical timeout detection enabled. Please only use for debugging purposes.');
       registerTimeoutDetection(context, entrySpan);
     }
 

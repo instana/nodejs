@@ -45,6 +45,7 @@ Control.prototype.reset = function reset() {
 };
 
 Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
+  const self = this;
   const envs = {
     HANDLER_DEFINITION_PATH: this.opts.handlerDefinitionPath,
     DOWNSTREAM_DUMMY_URL: this.downstreamDummyUrl,
@@ -79,6 +80,8 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
       }
     } else if (message.type === 'lambda-context') {
       this.clientContext = message.context.clientContext;
+    } else if (message.type === 'lambda-timeout') {
+      self.faasRuntime.kill();
     } else {
       this.messagesFromFaasRuntime.push(message);
     }
