@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.11.0](https://github.com/instana/nodejs/compare/v3.10.0...v3.11.0) (2024-06-13)
+
+### Bug Fixes
+
+- **aws-lambda:** timeout not being activated when timeout is 3s ([60c99f4](https://github.com/instana/nodejs/commit/60c99f406b062e2a208762ed12b9bbee4915d235))
+
 # [3.10.0](https://github.com/instana/nodejs/compare/v3.9.0...v3.10.0) (2024-06-13)
 
 ### Features
