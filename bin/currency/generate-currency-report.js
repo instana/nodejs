@@ -69,16 +69,26 @@ currencies = currencies.map(currency => {
       try {
         const releaseList = JSON.parse(execSync(`npm show ${currency.name} time --json`).toString());
         const keys = Object.keys(releaseList);
+        const currentMajorVersion = semver.major(installedVersion);
 
         // CASE: 3.3.0 is supported -> [..., 3.3.0, 3.4.0, 3.5.0, ...] -> 3.4.0 is the next available version
         //       we need need to reference the date from.
-        let nextAvailableVersionIndex = keys[keys.indexOf(installedVersion) + 1];
+        // CASE: [..., 3.3.0, 3.4.0, 4.0.0, 3.5.0]
+        let nextAvailableVersionIndex;
+        keys.slice(keys.indexOf(installedVersion) + 1).every(key => {
+          if (!semver.prerelease(key) && semver.major(key) === currentMajorVersion) {
+            nextAvailableVersionIndex = key;
+            return false;
+          }
+
+          return true;
+        });
 
         // GOAL: Search for major releases happened after the installed version.
         // EDGE CASE: 2.5.0 is supported [..., 3.0.0, 2.3.0, 3.0.1, 2.4.0, 2.5.0]
         //            3.0.0 is what we are interested in -> behind since 3.0.0
-        const currentMajorVersion = semver.major(installedVersion);
         let latestNextMajorVersionIndex;
+
         keys.every(key => {
           try {
             // NOTE: we ignore beta releases for now to calculate the days behind
