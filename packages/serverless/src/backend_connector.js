@@ -20,7 +20,9 @@ let useLambdaExtension = false;
 
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
 let defaultTimeout = 500;
-const layerExtensionTimeout = 300;
+const layerExtensionTimeout = process.env.INSTANA_LAMBDA_EXTENSION_TIMEOUT_IN_MS
+  ? Number(process.env.INSTANA_LAMBDA_EXTENSION_TIMEOUT_IN_MS)
+  : 500;
 let backendTimeout = defaultTimeout;
 
 const proxyEnvVar = 'INSTANA_ENDPOINT_PROXY';
