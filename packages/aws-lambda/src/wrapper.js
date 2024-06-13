@@ -278,7 +278,12 @@ function registerTimeoutDetection(context, entrySpan) {
   if (typeof initialRemainingMillis !== 'number') {
     return;
   }
-  if (initialRemainingMillis <= 2500) {
+
+  const minimumTimeoutInMs = process.env.INSTANA_MINIMUM_LAMBDA_TIMEOUT_FOR_TIMEOUT_DETECTION_IN_MS
+    ? Number(process.env.INSTANA_MINIMUM_LAMBDA_TIMEOUT_FOR_TIMEOUT_DETECTION_IN_MS)
+    : 2000;
+
+  if (initialRemainingMillis <= minimumTimeoutInMs) {
     logger.debug(
       'Heuristical timeout detection will be disabled for Lambda functions with a short timeout ' +
         '(2 seconds and smaller).'
