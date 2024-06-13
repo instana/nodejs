@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.10.0](https://github.com/instana/nodejs/compare/v3.9.0...v3.10.0) (2024-06-13)
+
+### Features
+
+- added support for tedious v16 and v17 ([#1174](https://github.com/instana/nodejs/issues/1174)) ([710b193](https://github.com/instana/nodejs/commit/710b1935247b60c03d482d4858ebebaf4a1938ac))
+- **aws-lambda:** added optional timeout detection ([#1181](https://github.com/instana/nodejs/issues/1181)) ([41c9b77](https://github.com/instana/nodejs/commit/41c9b77246803e8b0cf14d1c9513283d6e5d0f58))
+
 # [3.9.0](https://github.com/instana/nodejs/compare/v3.8.1...v3.9.0) (2024-05-28)
 
 ### Features

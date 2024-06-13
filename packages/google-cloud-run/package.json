@@ -1,6 +1,6 @@
 {
   "name": "@instana/google-cloud-run",
-  "version": "3.9.0",
+  "version": "3.10.0",
   "description": "Instana tracing and monitoring for Node.js based Google Cloud Run services",
   "author": {
     "name": "Bastian Krol",
@@ -66,9 +66,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "3.9.0",
-    "@instana/metrics-util": "3.9.0",
-    "@instana/serverless": "3.9.0"
+    "@instana/core": "3.10.0",
+    "@instana/metrics-util": "3.10.0",
+    "@instana/serverless": "3.10.0"
   },
   "engines": {
     "node": ">=14.0.0"
