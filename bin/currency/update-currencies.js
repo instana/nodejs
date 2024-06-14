@@ -12,16 +12,24 @@ const currencies = require(path.join(__dirname, '..', '..', 'currencies.json'));
 const utils = require('./utils');
 const MAJOR_UPDATES_MODE = process.env.MAJOR_UPDATES_MODE ? process.env.MAJOR_UPDATES_MODE === 'true' : false;
 const BRANCH = process.env.BRANCH;
+const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
 const cwd = path.join(__dirname, '..', '..');
 
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
 let branchName = BRANCH;
 
+console.log(`MAJOR_UPDATES_MODE: ${MAJOR_UPDATES_MODE}`);
+console.log(`BRANCH: ${BRANCH}`);
+console.log(`SKIP_PUSH: ${SKIP_PUSH}`);
+
 if (!MAJOR_UPDATES_MODE) {
   console.log('Preparing patch/minor updates...');
   execSync('git checkout main', { cwd });
   execSync('npm i --no-audit', { cwd });
-  execSync(`git checkout -b ${branchName}`, { cwd });
+
+  if (BRANCH !== 'main') {
+    execSync(`git checkout -b ${branchName}`, { cwd });
+  }
 }
 
 currencies.forEach(currency => {
@@ -64,6 +72,14 @@ currencies.forEach(currency => {
       versionArray = [versionArray];
     }
 
+    versionArray = versionArray.sort((a, b) => {
+      if (semver.gt(a, b)) {
+        return 1;
+      }
+
+      return -1;
+    });
+
     latestVersion = versionArray[versionArray.length - 1];
   } else {
     latestVersion = execSync(`npm info ${currency.name} version`).toString().trim();
@@ -102,7 +118,9 @@ currencies.forEach(currency => {
       // CASE: branch does not exist, continue
     }
 
-    execSync(`git checkout -b ${branchName}`, { cwd });
+    if (BRANCH !== 'main') {
+      execSync(`git checkout -b ${branchName}`, { cwd });
+    }
   }
 
   if (isRootDependency) {
@@ -125,12 +143,15 @@ currencies.forEach(currency => {
   if (MAJOR_UPDATES_MODE) {
     execSync('git add *package.json package-lock.json', { cwd });
     execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
-    execSync(`git push origin ${branchName} --no-verify`, { cwd });
-    execSync(
-      // eslint-disable-next-line max-len
-      `gh pr create --base main --head ${branchName} --title "[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}" --body "Tada!"`,
-      { cwd }
-    );
+
+    if (!SKIP_PUSH) {
+      execSync(`git push origin ${branchName} --no-verify`, { cwd });
+      execSync(
+        // eslint-disable-next-line max-len
+        `gh pr create --base main --head ${branchName} --title "[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}" --body "Tada!"`,
+        { cwd }
+      );
+    }
   } else {
     execSync('git add *package.json package-lock.json', { cwd });
     execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
@@ -138,10 +159,12 @@ currencies.forEach(currency => {
 });
 
 if (!MAJOR_UPDATES_MODE) {
-  execSync(`git push origin ${branchName} --no-verify`, { cwd });
-  execSync(
-    // eslint-disable-next-line max-len
-    `gh pr create --base main --head ${branchName} --title "[Currency Bot] Bumped patch/minor dependencies" --body "Tada!"`,
-    { cwd }
-  );
+  if (!SKIP_PUSH) {
+    execSync(`git push origin ${branchName} --no-verify`, { cwd });
+    execSync(
+      // eslint-disable-next-line max-len
+      `gh pr create --base main --head ${branchName} --title "[Currency Bot] Bumped patch/minor dependencies" --body "Tada!"`,
+      { cwd }
+    );
+  }
 }
