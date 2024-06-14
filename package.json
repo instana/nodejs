@@ -94,6 +94,7 @@
     "@grpc/proto-loader": "^0.7.13",
     "@hapi/hapi": "^21.3.10",
     "@ibm/tekton-lint": "^1.0.0-beta.9",
+    "@opentelemetry/instrumentation": "0.50.0",
     "@opentelemetry/auto-instrumentations-node": "^0.43.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.49.1",
     "@opentelemetry/sdk-node": "^0.49.1",
