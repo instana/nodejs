@@ -29,6 +29,8 @@ currencies = currencies.sort(function (a, b) {
 });
 
 currencies = currencies.map(currency => {
+  console.log(`Checking ${currency.name}...`);
+
   let installedVersion = utils.getRootDependencyVersion(currency.name);
   let latestVersion;
   let upToDate;
@@ -44,13 +46,39 @@ currencies = currencies.map(currency => {
     installedVersion = latestVersion = 'latest';
     upToDate = true;
   } else {
-    latestVersion = execSync(`npm info ${currency.name} version`).toString().trim();
+    let releaseList = JSON.parse(execSync(`npm show ${currency.name} time --json`).toString());
+    delete releaseList.created;
+    delete releaseList.modified;
+
+    // NOTE: we ignore pre releases completely for now
+    releaseList = Object.keys(releaseList)
+      .filter(key => {
+        return !semver.prerelease(key) && semver.valid(key);
+      })
+      .reduce((obj, key) => {
+        obj[key] = releaseList[key];
+        return obj;
+      }, {});
+
+    // CASE: sort all versions by name ASC
+    const keys = Object.keys(releaseList).sort((a, b) => {
+      if (semver.gt(a, b)) {
+        return 1;
+      }
+
+      return -1;
+    });
+
+    latestVersion = keys[keys.length - 1];
 
     if (!installedVersion) {
       installedVersion = latestVersion;
     } else {
       installedVersion = installedVersion.replace(/[^0-9.]/g, '');
     }
+
+    console.log(`Installed version: ${installedVersion}`);
+    console.log(`Latest version: ${latestVersion}`);
 
     const diff = semver.diff(latestVersion, installedVersion);
 
@@ -67,18 +95,6 @@ currencies = currencies.map(currency => {
 
     if (!upToDate) {
       try {
-        const releaseList = JSON.parse(execSync(`npm show ${currency.name} time --json`).toString());
-        delete releaseList.created;
-        delete releaseList.modified;
-
-        const keys = Object.keys(releaseList).sort((a, b) => {
-          if (semver.gt(a, b)) {
-            return 1;
-          }
-
-          return -1;
-        });
-
         const currentMajorVersion = semver.major(installedVersion);
 
         // CASE: 3.3.0 is supported -> [..., 3.3.0, 3.4.0, 3.5.0, ...] -> 3.4.0 is the next available version
@@ -86,7 +102,7 @@ currencies = currencies.map(currency => {
         // CASE: [..., 3.3.0, 3.4.0, 4.0.0, 3.5.0]
         let nextAvailableVersionIndex;
         keys.slice(keys.indexOf(installedVersion) + 1).every(key => {
-          if (!semver.prerelease(key) && semver.major(key) === currentMajorVersion) {
+          if (semver.major(key) === currentMajorVersion) {
             nextAvailableVersionIndex = key;
             return false;
           }
@@ -101,8 +117,7 @@ currencies = currencies.map(currency => {
 
         keys.every(key => {
           try {
-            // NOTE: we ignore beta releases for now to calculate the days behind
-            if (!semver.prerelease(key) && semver.major(key) > currentMajorVersion) {
+            if (semver.major(key) > currentMajorVersion) {
               latestNextMajorVersionIndex = key;
               return false;
             }
