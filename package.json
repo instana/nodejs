@@ -145,7 +145,7 @@
     "eslint-plugin-monorepo-cop": "^1.0.2",
     "express": "^4.19.2",
     "express-winston": "^4.2.0",
-    "fastify": "^4.27.0",
+    "fastify": "^4.28.0",
     "fastify-v3": "npm:fastify@^3.21.5",
     "google-protobuf": "^3.21.2",
     "got": "^14.4.1",
