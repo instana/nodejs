@@ -68,7 +68,17 @@ currencies = currencies.map(currency => {
     if (!upToDate) {
       try {
         const releaseList = JSON.parse(execSync(`npm show ${currency.name} time --json`).toString());
-        const keys = Object.keys(releaseList);
+        delete releaseList.created;
+        delete releaseList.modified;
+
+        const keys = Object.keys(releaseList).sort((a, b) => {
+          if (semver.gt(a, b)) {
+            return 1;
+          }
+
+          return -1;
+        });
+
         const currentMajorVersion = semver.major(installedVersion);
 
         // CASE: 3.3.0 is supported -> [..., 3.3.0, 3.4.0, 3.5.0, ...] -> 3.4.0 is the next available version
