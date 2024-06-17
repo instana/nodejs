@@ -4,7 +4,7 @@
 
 'use strict';
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../hook');
 const tracingUtil = require('../../tracingUtil');
 const { limitTraceId } = require('../../tracingHeaders');
 const leftPad = require('../../leftPad');
@@ -23,9 +23,9 @@ logger = require('../../../logger').getLogger('tracing/rdkafka', newLogger => {
 let isActive = false;
 
 exports.init = function init(config) {
-  requireHook.onFileLoad(/\/node-rdkafka\/lib\/producer\.js/, instrumentProducer);
-  requireHook.onFileLoad(/\/node-rdkafka\/lib\/kafka-consumer-stream\.js/, instrumentConsumerAsStream);
-  requireHook.onModuleLoad('node-rdkafka', instrumentConsumer);
+  hook.onFileLoad(/\/node-rdkafka\/lib\/producer\.js/, instrumentProducer);
+  hook.onFileLoad(/\/node-rdkafka\/lib\/kafka-consumer-stream\.js/, instrumentConsumerAsStream);
+  hook.onModuleLoad('node-rdkafka', instrumentConsumer);
 
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
   configHeader = config.tracing.kafka.headerFormat;

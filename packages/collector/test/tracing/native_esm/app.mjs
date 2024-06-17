@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 import express from 'express';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
-import getAppPort from '../../../test_util/app-port.js';
+import getAppPort from '../../test_util/app-port.js';
 import calculateSquare from 'square-calc';
 const port = getAppPort();
 
@@ -33,6 +33,10 @@ app.get('/', async (req, res) => {
 });
 
 app.get('/request', async (req, res) => {
+  const square = calculateSquare(5);
+  res.json({ square });
+});
+app.get('/cjs', async (req, res) => {
   const square = calculateSquare(5);
   res.json({ square });
 });

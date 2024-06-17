@@ -7,7 +7,7 @@
 
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -18,7 +18,7 @@ exports.spanName = 'postgres';
 exports.batchable = true;
 
 exports.init = function init() {
-  requireHook.onModuleLoad('pg', instrumentPg);
+  hook.onModuleLoad('pg', instrumentPg);
 };
 
 function instrumentPg(pg) {

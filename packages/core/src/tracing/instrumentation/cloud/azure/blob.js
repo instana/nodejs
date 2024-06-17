@@ -6,7 +6,7 @@
 
 const shimmer = require('../../../shimmer');
 
-const requireHook = require('../../../../util/requireHook');
+const hook = require('../../../hook');
 const tracingUtil = require('../../../tracingUtil');
 const constants = require('../../../constants');
 const cls = require('../../../cls');
@@ -16,7 +16,7 @@ let isActive = false;
 exports.spanName = 'azstorage';
 
 exports.init = function init() {
-  requireHook.onModuleLoad('@azure/storage-blob', instrumentBlob);
+  hook.onModuleLoad('@azure/storage-blob', instrumentBlob);
 };
 
 function instrumentBlob(blob) {

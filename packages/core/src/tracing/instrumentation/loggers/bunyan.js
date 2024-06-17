@@ -9,7 +9,7 @@
 
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -17,7 +17,7 @@ const cls = require('../../cls');
 let isActive = false;
 
 exports.init = function init() {
-  requireHook.onModuleLoad('bunyan', instrument);
+  hook.onModuleLoad('bunyan', instrument);
 };
 
 function instrument(Logger) {

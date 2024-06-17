@@ -7,7 +7,7 @@
 
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -20,9 +20,9 @@ logger = require('../../../logger').getLogger('tracing/amqp', newLogger => {
 let isActive = false;
 
 exports.init = function init() {
-  requireHook.onFileLoad(/\/amqplib\/lib\/channel\.js/, instrumentChannel);
-  requireHook.onFileLoad(/\/amqplib\/lib\/channel_model\.js/, instrumentChannelModel);
-  requireHook.onFileLoad(/\/amqplib\/lib\/callback_model\.js/, instrumentCallbackModel);
+  hook.onFileLoad(/\/amqplib\/lib\/channel\.js/, instrumentChannel);
+  hook.onFileLoad(/\/amqplib\/lib\/channel_model\.js/, instrumentChannelModel);
+  hook.onFileLoad(/\/amqplib\/lib\/callback_model\.js/, instrumentCallbackModel);
 };
 
 function instrumentChannel(channelModule) {

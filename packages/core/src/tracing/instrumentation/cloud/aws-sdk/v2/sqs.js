@@ -15,7 +15,7 @@ const {
   readTracingAttributes
 } = require('../aws_utils');
 const { ENTRY, EXIT, sqsAttributeNames } = require('../../../../constants');
-const requireHook = require('../../../../../util/requireHook');
+const hook = require('../../../../hook');
 const tracingUtil = require('../../../../tracingUtil');
 
 // Available call types to be sent into span.data.sqs.type
@@ -40,8 +40,8 @@ let logger = require('../../../../../logger').getLogger('tracing/sqs/v2', newLog
 let isActive = false;
 
 exports.init = function init() {
-  requireHook.onModuleLoad('aws-sdk', instrumentSQS);
-  requireHook.onModuleLoad('sqs-consumer', instrumentSQSConsumer);
+  hook.onModuleLoad('aws-sdk', instrumentSQS);
+  hook.onModuleLoad('sqs-consumer', instrumentSQSConsumer);
 };
 
 function instrumentSQS(AWS) {

@@ -11,27 +11,27 @@ let logger = require('../logger').getLogger('util/iitmHook', newLogger => {
   logger = newLogger;
 });
 
-/** @type {Object.<string, *>} */
+/** @type {Object.<string, Function[]>} */
 const byModuleNameTransformers = {};
 
+/**
+ * Initializes the import-in-the-middle hooking.
+ */
 exports.init = function init() {
-  // eslint-disable-next-line no-restricted-syntax
-  for (const [moduleName, applicableTransformers] of Object.entries(byModuleNameTransformers)) {
+  Object.entries(byModuleNameTransformers).forEach(([moduleName, applicableTransformers]) => {
     if (applicableTransformers) {
-      for (let i = 0; i < applicableTransformers.length; i++) {
-        const transformerFn = applicableTransformers[i];
+      applicableTransformers.forEach(transformerFn => {
         if (typeof transformerFn === 'function') {
           try {
             // @ts-ignore
-            // eslint-disable-next-line no-loop-func
-            iitmHook([moduleName], (exports, name, basedir) => {
-              logger.info(`Hooking enabled for module ${name} in base directory ${basedir}`);
+            iitmHook([moduleName], (exports, name) => {
+              logger.debug(`iitm-hooking enabled for module ${name}`);
               if (exports && exports.default) {
                 exports.default = transformerFn(exports.default);
-                return exports;
               } else {
                 return transformerFn(exports);
               }
+              return exports;
             });
           } catch (e) {
             logger.error(`Cannot instrument ${moduleName} due to an error in instrumentation: ${e}`);
@@ -46,21 +46,19 @@ exports.init = function init() {
           logger.error(
             `The transformer is not a function but of type "${typeof transformerFn}" (details: ${
               transformerFn == null ? 'null/undefined' : transformerFn
-              // eslint-disable-next-line no-useless-concat
-            }). ` + "The most likely cause is that something has messed with Node.js' module cache."
+            }).`
           );
         }
-      }
+      });
     }
-  }
+  });
 };
 
 /**
- * Add a transformer function for a specific module.
- * @param {string} moduleName
- * @param {Function} transfornFn
+ * @param {string} moduleName - The name of the module.
+ * @param {Function} transformFn - The transformer function.
  */
-exports.onModuleLoad = function onModuleLoad(moduleName, transfornFn) {
+exports.onModuleLoad = function onModuleLoad(moduleName, transformFn) {
   byModuleNameTransformers[moduleName] = byModuleNameTransformers[moduleName] || [];
-  byModuleNameTransformers[moduleName].push(transfornFn);
+  byModuleNameTransformers[moduleName].push(transformFn);
 };

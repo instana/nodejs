@@ -7,7 +7,7 @@
 
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -34,11 +34,11 @@ exports.batchable = true;
 
 exports.init = function init() {
   // unified topology layer
-  requireHook.onFileLoad(/\/mongodb\/lib\/cmap\/connection\.js/, instrumentCmapConnection);
+  hook.onFileLoad(/\/mongodb\/lib\/cmap\/connection\.js/, instrumentCmapConnection);
   // mongodb >= 3.3.x, legacy topology layer
-  requireHook.onFileLoad(/\/mongodb\/lib\/core\/connection\/pool\.js/, instrumentLegacyTopologyPool);
+  hook.onFileLoad(/\/mongodb\/lib\/core\/connection\/pool\.js/, instrumentLegacyTopologyPool);
   // mongodb < 3.3.x, legacy topology layer
-  requireHook.onFileLoad(/\/mongodb-core\/lib\/connection\/pool\.js/, instrumentLegacyTopologyPool);
+  hook.onFileLoad(/\/mongodb-core\/lib\/connection\/pool\.js/, instrumentLegacyTopologyPool);
 };
 
 function instrumentCmapConnection(connection) {

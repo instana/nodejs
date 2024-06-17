@@ -8,7 +8,7 @@
 const { LRUCache } = require('lru-cache');
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -28,7 +28,7 @@ exports.spanName = 'postgres';
 exports.batchable = true;
 
 exports.init = function init() {
-  requireHook.onModuleLoad('pg-native', instrumentPgNative);
+  hook.onModuleLoad('pg-native', instrumentPgNative);
 };
 
 function instrumentPgNative(Client) {

@@ -5,7 +5,7 @@
 'use strict';
 
 const shimmer = require('../../shimmer');
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -24,7 +24,7 @@ exports.deactivate = function deactivate() {
 };
 
 exports.init = function init() {
-  requireHook.onModuleLoad('couchbase', instrument);
+  hook.onModuleLoad('couchbase', instrument);
 
   // The couchbase client talks to some Couchbase services via http directly from the JS implementation.
   // e.g. search service

@@ -4,16 +4,12 @@
 
 'use strict';
 
-/* eslint-disable no-unused-vars */
-const shimmer = require('../../shimmer');
 const { EXIT } = require('../../constants');
 const tracingUtil = require('../../tracingUtil');
 const cls = require('../../cls');
 const hook = require('../../hook');
-
+// eslint-disable-next-line no-unused-vars
 let active = false;
-
-/* eslint-disable no-console */
 
 exports.activate = function activate() {
   active = true;
@@ -24,19 +20,18 @@ exports.deactivate = function deactivate() {
 };
 
 exports.init = function init() {
-  const esmAPP = arguments[0].esm;
-  hook.onModuleLoad('square-calc', instrument, esmAPP);
+  hook.onModuleLoad('square-calc', instrument);
 };
 
 /**
- * @param {{ calculateSquare: (...args: any[]) => undefined; }} orgModule
+ * Instruments the 'calculateSquare' method of the 'square-calc' module.
+ * @param {{ calculateSquare: (...args: any[]) => undefined; }} orgModule - The original module.
  */
 function instrument(orgModule) {
   const originalCalculateSquare = orgModule;
 
   orgModule = function () {
     const number = arguments[0];
-    console.log(`Calculating the square of ${number}`);
 
     return cls.ns.runAndReturn(() => {
       const span = cls.startSpan('square-calc', EXIT, null, null);
@@ -48,7 +43,7 @@ function instrument(orgModule) {
         span.d = Date.now() - span.ts;
         span.data.calculator = { number, method: 'calculateSquare' };
         span.transmit();
-        return 10;
+        return result;
       } catch (err) {
         span.ec = 1;
         span.data.calculator.error = err.message;

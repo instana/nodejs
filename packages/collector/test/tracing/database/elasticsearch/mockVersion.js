@@ -5,7 +5,7 @@
 'use strict';
 
 const mock = require('mock-require');
-const requireHook = require('../../../../../core/src/util/requireHook');
+const hook = require('../../../../../core/src/tracing/hook');
 const ELASTIC_VERSION = process.env.ELASTIC_VERSION;
 const ELASTIC_REQUIRE =
   process.env.ELASTIC_VERSION === 'latest' ? '@elastic/elasticsearch' : `@elastic/elasticsearch-v${ELASTIC_VERSION}`;
@@ -14,8 +14,8 @@ if (ELASTIC_REQUIRE !== '@elastic/elasticsearch') {
   mock('@elastic/elasticsearch', ELASTIC_REQUIRE);
 }
 
-const originalFn = requireHook.onModuleLoad;
-requireHook.onModuleLoad = function onModuleLoad() {
+const originalFn = hook.onModuleLoad;
+hook.onModuleLoad = function onModuleLoad() {
   if (arguments[0] !== '@elastic/elasticsearch') {
     return originalFn.apply(this, arguments);
   }

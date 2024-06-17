@@ -59,7 +59,6 @@ const constants = require('../tracing/constants');
  * @property {InstanaTracingOption} [tracing]
  * @property {InstanaSecretsOption} [secrets]
  * @property {number} [timeBetweenHealthcheckCalls]
- * @property {boolean} [esm]
  */
 
 /**

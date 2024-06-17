@@ -130,6 +130,7 @@ exports.supportedVersion = supportedVersion;
 exports.util = tracingUtil;
 exports.esmSupportedVersion = esmSupportedVersion;
 exports.isLatestEsmSupportedVersion = isLatestEsmSupportedVersion;
+exports.isESMApp = isESMApp;
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} cfg
@@ -178,7 +179,6 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
         'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
     );
   }
-  _config.esm = isESMApp();
   config = _config;
   processIdentityProvider = _processIdentityProvider;
 

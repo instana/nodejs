@@ -7,7 +7,7 @@
 
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../hook');
 const httpServer = require('../protocols/httpServer');
 const cls = require('../../cls');
 
@@ -22,7 +22,7 @@ exports.deactivate = function deactivate() {
 };
 
 exports.init = function init() {
-  requireHook.onModuleLoad('koa-router', instrumentRouter);
+  hook.onModuleLoad('koa-router', instrumentRouter);
 };
 
 function instrumentRouter(Router) {

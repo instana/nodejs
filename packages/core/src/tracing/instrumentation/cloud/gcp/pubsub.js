@@ -15,7 +15,7 @@ const {
   ENTRY,
   EXIT
 } = require('../../../constants');
-const requireHook = require('../../../../util/requireHook');
+const hook = require('../../../hook');
 const tracingUtil = require('../../../tracingUtil');
 
 let logger;
@@ -28,8 +28,8 @@ const subscriptionRegex = /^projects\/([^/]+)\/subscriptions\/(.+)$/;
 let isActive = false;
 
 exports.init = function init() {
-  requireHook.onFileLoad(/\/@google-cloud\/pubsub\/build\/src\/publisher\/index.js/, instrumentPublisher);
-  requireHook.onFileLoad(/\/@google-cloud\/pubsub\/build\/src\/subscriber.js/, instrumentSubscriber);
+  hook.onFileLoad(/\/@google-cloud\/pubsub\/build\/src\/publisher\/index.js/, instrumentPublisher);
+  hook.onFileLoad(/\/@google-cloud\/pubsub\/build\/src\/subscriber.js/, instrumentSubscriber);
 };
 
 function instrumentPublisher(publisher) {

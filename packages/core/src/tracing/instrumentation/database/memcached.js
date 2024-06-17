@@ -10,7 +10,7 @@ const { EXIT } = require('../../constants');
 const tracingUtil = require('../../tracingUtil');
 
 const shimmer = require('../../shimmer');
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../hook');
 const { getFunctionArguments } = require('../../../util/function_arguments');
 
 const operationsInfo = {
@@ -39,7 +39,7 @@ exports.isActive = function () {
 };
 
 exports.init = function init() {
-  requireHook.onModuleLoad('memcached', instrumentMemcached);
+  hook.onModuleLoad('memcached', instrumentMemcached);
 };
 
 exports.activate = function activate() {

@@ -6,7 +6,7 @@
 'use strict';
 
 const shimmer = require('../../../../shimmer');
-const requireHook = require('../../../../../util/requireHook');
+const hook = require('../../../../hook');
 const { getFunctionArguments } = require('../../../../../util/function_arguments');
 
 /** @type {Array.<import('./instana_aws_product').InstanaAWSProduct}> */
@@ -37,23 +37,23 @@ exports.init = function init() {
   sqsConsumer.init();
 
   // NOTE: each aws product can have it's own init fn to wrap or unwrap specific functions
-  awsProducts.forEach(awsProduct => awsProduct.init && awsProduct.init(requireHook, shimmer));
+  awsProducts.forEach(awsProduct => awsProduct.init && awsProduct.init(hook, shimmer));
 
   /**
    * @aws-sdk/smithly-client >= 3.36.0 changed how the dist structure gets delivered
    * https://github.com/aws/aws-sdk-js-v3/blob/main/packages/smithy-client/CHANGELOG.md#3360-2021-10-08
    * @aws-sdk/smithly-client is a subdependency of any @aws-sdk/* package
    */
-  requireHook.onFileLoad(/@aws-sdk\/smithy-client\/dist-cjs\/client\.js/, instrumentGlobalSmithy);
+  hook.onFileLoad(/@aws-sdk\/smithy-client\/dist-cjs\/client\.js/, instrumentGlobalSmithy);
 
   /**
    * @aws-sdk/smithly-client < 3.36.0
    */
-  requireHook.onFileLoad(/@aws-sdk\/smithy-client\/dist\/cjs\/client\.js/, instrumentGlobalSmithy);
+  hook.onFileLoad(/@aws-sdk\/smithy-client\/dist\/cjs\/client\.js/, instrumentGlobalSmithy);
   /**
    * @aws-sdk/smithly-client > 3.36.0
    */
-  requireHook.onModuleLoad('@smithy/smithy-client', instrumentGlobalSmithy);
+  hook.onModuleLoad('@smithy/smithy-client', instrumentGlobalSmithy);
 };
 
 exports.isActive = function () {

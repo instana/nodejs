@@ -12,11 +12,11 @@ logger = require('../../../logger').getLogger('tracing/mongoose', newLogger => {
   logger = newLogger;
 });
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../hook');
 const cls = require('../../cls');
 
 exports.init = function () {
-  requireHook.onModuleLoad('mongoose', exports.instrument);
+  hook.onModuleLoad('mongoose', exports.instrument);
 };
 
 // This instruments the Aggregate object exported by Mongoose. The Mongoose library uses the standard MongoDB driver

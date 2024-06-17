@@ -6,7 +6,7 @@
 'use strict';
 
 const shimmer = require('../../../../shimmer');
-const requireHook = require('../../../../../util/requireHook');
+const hook = require('../../../../hook');
 
 /** @type {Array.<import('./instana_aws_product').InstanaAWSProduct}> */
 const awsProducts = [
@@ -34,7 +34,7 @@ exports.isActive = function () {
 };
 
 exports.init = function init() {
-  requireHook.onModuleLoad('aws-sdk', instrumentAWS);
+  hook.onModuleLoad('aws-sdk', instrumentAWS);
 };
 
 exports.activate = function activate() {

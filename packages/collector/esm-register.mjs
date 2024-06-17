@@ -8,7 +8,7 @@
  * see https://github.com/nodejs/node/pull/44710.
  * Previously, loading the Instana collector within the loader and after the update ESM support
  * no longer working with v18.19 and above. To address this, we've opted to load the Instana
- * collector in the main thread using --import. Additionally, we aim to incorporate native ESM
+ * collector in the main thread using --import. Additionally, we incorporated native ESM
  * support by utilizing the node register method, enabling customization of the ESM loader
  * with 'import-in-the-middle'.
  *
@@ -19,6 +19,8 @@
 // Import the initialization module for Instana collector and it should be executed in the main thread.
 import instana from './src/index.js';
 instana();
-
+// ESM module resolution and loading are facilitated by registering `@instana/core/iitm-loader.mjs`, which exports
+// import-in-the-middle(IITM) hooks. This registration can be accomplished using the register method from node:module.
+// see: https://nodejs.org/api/module.html#customization-hooks
 import { register } from 'node:module';
-register('@instana/core/loader.mjs', import.meta.url);
+register('@instana/core/iitm-loader.mjs', import.meta.url);

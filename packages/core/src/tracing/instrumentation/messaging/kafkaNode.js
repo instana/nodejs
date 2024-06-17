@@ -7,7 +7,7 @@
 
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -22,7 +22,7 @@ let isActive = false;
 // FYI: officially deprecated. No release since 4 years. But still very
 //      high usage on npm trends. We will drop in 4.x v4.
 exports.init = function init() {
-  requireHook.onModuleLoad('kafka-node', instrument);
+  hook.onModuleLoad('kafka-node', instrument);
 };
 
 function instrument(kafka) {

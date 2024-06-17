@@ -39,13 +39,20 @@ exports.hasExperimentalLoaderFlag = function hasExperimentalLoaderFlag() {
 
   return experimentalLoaderFlagIsSet && exports.isLatestEsmSupportedVersion(process.versions.node);
 };
+
 /**
- * Checks if the application is an ESM (ECMAScript Modules) app by inspecting how the collector is invoked with flags
- * like --experimental-loader and --import.
- * @returns {boolean} - True if the application is an ESM app, false otherwise.
+ * Checks if the application is an ECMAScript Modules (ESM) app by inspecting
+ * the presence of flags like --experimental-loader and --import in the environment.
+ * @returns {boolean} True if an ESM app is detected, false otherwise.
+ * If the application is ESM, caching the result for efficiency.
  */
 exports.isESMApp = function isESMApp() {
-  return (
+  const cacheKey = 'isESMApp';
+
+  if (require.cache[cacheKey]) {
+    return require.cache[cacheKey].exports;
+  }
+  const isESM =
     (process.env.NODE_OPTIONS &&
       (process.env.NODE_OPTIONS.indexOf('--experimental-loader') !== -1 ||
         process.env.NODE_OPTIONS.indexOf('--import') !== -1)) ||
@@ -56,6 +63,10 @@ exports.isESMApp = function isESMApp() {
         (process.execArgv[0].indexOf('--experimental-loader') !== -1 &&
           process.execArgv[1].indexOf('esm-loader.mjs') !== -1) ||
         (process.execArgv[0].indexOf('--import') !== -1 && process.execArgv[0].indexOf('esm-register.mjs') !== -1) ||
-        (process.execArgv[0].indexOf('--import') !== -1 && process.execArgv[1].indexOf('esm-register.mjs') !== -1)))
-  );
+        (process.execArgv[0].indexOf('--import') !== -1 && process.execArgv[1].indexOf('esm-register.mjs') !== -1)));
+
+  // @ts-ignore
+  require.cache[cacheKey] = { exports: isESM };
+
+  return isESM;
 };

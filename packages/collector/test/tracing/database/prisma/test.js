@@ -29,8 +29,21 @@ describe('tracing/prisma', function () {
 
   ['latest', 'v4', 'v450'].forEach(version => {
     providers.forEach(provider => {
-      let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-      mochaSuiteFn = version === 'latest' && semver.lt(process.versions.node, '16.0.0') ? describe.skip : describe;
+      let mochaSuiteFn = describe;
+
+      if (supportedVersion(process.versions.node)) {
+        // Skip tests for Node.js version 18.19.0 and above due to an issue with import-in-the-middle (IITM) package.
+        // See https://github.com/DataDog/import-in-the-middle/issues/97
+        if (semver.gte(process.versions.node, '18.19.0')) {
+          mochaSuiteFn = describe.skip;
+        }
+
+        if (version === 'latest' && semver.lt(process.versions.node, '16.0.0')) {
+          mochaSuiteFn = describe.skip;
+        }
+      } else {
+        mochaSuiteFn = describe.skip;
+      }
 
       mochaSuiteFn(`[${version}] with provider ${provider}`, () => {
         if (provider === 'postgresql' && !process.env.PRISMA_POSTGRES_URL) {
@@ -59,20 +72,6 @@ describe('tracing/prisma', function () {
             await executeAsync(`npm i @prisma/client@${versionToInstall}`, appDir);
           } catch (err) {
             // ignore
-          }
-
-          // By default, Prisma Client is generated into the './node_modules/.prisma/client' folder.
-          // However, In case of ESM apps when loading the module with the IITM hook, it checks for its
-          //  installation in the root 'node_modules' folder. Therefore, if the '.prisma' folder is not found
-          // in the root directory during module loading, this code copies it from its default location.
-          // This is beacuse of we are handling prisma tests differently in our code base.
-          const prismaClientDestination = path.resolve(__dirname, '../../../../../../node_modules/.prisma');
-          const destinationExists = await fs
-            .access(prismaClientDestination)
-            .then(() => true)
-            .catch(() => false);
-          if (!destinationExists) {
-            await recursiveCopy(path.resolve(__dirname, './node_modules/.prisma'), prismaClientDestination);
           }
         });
 

@@ -10,7 +10,7 @@
 const { inspect } = require('util');
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -18,7 +18,7 @@ const cls = require('../../cls');
 let isActive = false;
 
 exports.init = function init() {
-  requireHook.onFileLoad(/\/pino\/lib\/tools\.js/, instrumentPinoTools);
+  hook.onFileLoad(/\/pino\/lib\/tools\.js/, instrumentPinoTools);
 };
 
 function instrumentPinoTools(toolsModule) {

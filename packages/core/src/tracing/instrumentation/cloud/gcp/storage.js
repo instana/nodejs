@@ -10,13 +10,13 @@ const shimmer = require('../../../shimmer');
 
 const cls = require('../../../cls');
 const constants = require('../../../constants');
-const requireHook = require('../../../../util/requireHook');
+const hook = require('../../../hook');
 const tracingUtil = require('../../../tracingUtil');
 
 let isActive = false;
 
 exports.init = function init() {
-  requireHook.onModuleLoad('@google-cloud/storage', instrument);
+  hook.onModuleLoad('@google-cloud/storage', instrument);
 };
 
 const storageInstrumentations = [
