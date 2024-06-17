@@ -94,9 +94,24 @@ module.exports.init = (_config, cls) => {
   };
 
   const provider = new BasicTracerProvider();
-  api.trace.setGlobalTracerProvider(provider);
-  api.context.setGlobalContextManager(new AsyncHooksContextManager());
+  const contextManager = new AsyncHooksContextManager();
 
+  api.trace.setGlobalTracerProvider(provider);
+  api.context.setGlobalContextManager(contextManager);
+
+  /**
+   * Each instrumentation depends on @opentelemetry/instrumentation.
+   * @opentelemetry/instrumentation has a peer dependency to @opentelemetry/api.
+   *
+   * Every instrumentation is based on @opentelemetry/instrumentation.
+   * We need to install an older version of @opentelemetry/instrumentation on root,
+   * to AVOID that the e.g. the tedious instrumentation loads
+   * the root @opentelemetry/instrumentation. Because otherwise
+   * we will load two different instances of @openetelemetry/api.
+   * And then we will get NonRecordingSpan instances when running the tests.
+   *
+   * This is an npm workspace issue. Nohoisting missing.
+   */
   const orig = api.trace.setSpan;
   api.trace.setSpan = function instanaSetSpan(ctx, span) {
     transformToInstanaSpan(span);
