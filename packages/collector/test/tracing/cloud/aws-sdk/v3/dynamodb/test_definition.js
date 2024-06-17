@@ -388,6 +388,7 @@ function start(version, requestMethod, reducedTestSuite = false) {
       });
 
       if (!withError) {
+        expect(spans.length).to.equal(3);
         verifyHttpExit({ spans, parent: httpEntry, pid: String(controls.getPid()) });
       }
     }

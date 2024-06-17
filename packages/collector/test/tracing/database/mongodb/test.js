@@ -90,6 +90,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
               expect(res).to.be.a('number');
               return retry(() =>
                 agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(2);
                   const entrySpan = expectHttpEntry(controls, spans, '/count');
                   expectMongoExit(
                     controls,
@@ -119,6 +120,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
             .then(() =>
               retry(() =>
                 agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(3);
                   const entrySpan = expectHttpEntry(controls, spans, '/insert-one');
                   expectMongoExit(controls, spans, entrySpan, 'insert');
                   expectHttpExit(controls, spans, entrySpan);
@@ -154,6 +156,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
               return retry(() =>
                 agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(9);
                   const entrySpanUpdate = expectHttpEntry(controls, spans, '/update-one');
 
                   expectMongoExit(
@@ -210,6 +213,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
               return retry(() =>
                 agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(9);
                   const entrySpanUpdate = expectHttpEntry(controls, spans, '/replace-one');
                   expectMongoExit(
                     controls,
@@ -256,6 +260,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
               expect(response).to.not.exist;
               return retry(() =>
                 agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(9);
                   const entrySpanUpdate = expectHttpEntry(controls, spans, '/delete-one');
                   expectMongoExit(
                     controls,
@@ -294,6 +299,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
             .then(() =>
               retry(() =>
                 agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(3);
                   const entrySpan = expectHttpEntry(controls, spans, '/find-one');
                   expectMongoExit(
                     controls,
