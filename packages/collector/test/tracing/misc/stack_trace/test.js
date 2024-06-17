@@ -52,6 +52,7 @@ mochaSuiteFn('tracing/stackTraces', function () {
         .then(() =>
           testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(3);
               testUtils.expectAtLeastOneMatching(spans, [
                 span => expect(span.n).to.equal('node.http.server'),
                 span => expect(span.stack).to.have.lengthOf(0)
@@ -90,6 +91,7 @@ mochaSuiteFn('tracing/stackTraces', function () {
         .then(() =>
           testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(6);
               testUtils.expectAtLeastOneMatching(spans, [
                 span => expect(span.n).to.equal('node.http.server'),
                 span => expect(span.stack).to.have.lengthOf(0)
@@ -108,6 +110,7 @@ mochaSuiteFn('tracing/stackTraces', function () {
         .then(() =>
           testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(9);
               testUtils.expectAtLeastOneMatching(spans, [
                 span => expect(span.n).to.equal('node.http.client'),
                 span => expect(span.k).to.equal(constants.EXIT),

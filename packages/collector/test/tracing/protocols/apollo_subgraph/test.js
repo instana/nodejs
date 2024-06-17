@@ -101,6 +101,11 @@ mochaSuiteFn('tracing gateway with apollo-subgraph', function () {
 
             return testUtils.retry(() => {
               return agentControls.getSpans().then(spans => {
+                if (withError) {
+                  expect(spans.length).to.equal(5);
+                } else {
+                  expect(spans.length).to.equal(11);
+                }
                 return verifySpansForQuery(
                   {
                     gatewayControls,
