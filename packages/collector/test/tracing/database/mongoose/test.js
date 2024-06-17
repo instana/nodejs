@@ -83,6 +83,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
         .then(() =>
           retry(() =>
             agentControls.getSpans().then(spans => {
+              expect(spans).to.have.lengthOf(2);
               const entrySpan = expectEntry(controls, spans, '/insert');
               expectMongoExit(controls, spans, entrySpan, 'insert');
             })
@@ -119,6 +120,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
         .then(() =>
           retry(() =>
             agentControls.getSpans().then(spans => {
+              expect(spans).to.have.lengthOf(4);
               const entrySpan = expectEntry(controls, spans, '/find');
               const mongoExit = expectMongoExit(controls, spans, entrySpan, 'find');
               expect(mongoExit.data.mongo.filter).to.contain('"age":42');

@@ -74,6 +74,7 @@ mochaSuiteFn('tracing/sdk', function () {
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
             return agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
               const customEntry = expectCustomEntry({
                 spans,
                 pid: controls.getPid(),
@@ -100,6 +101,7 @@ mochaSuiteFn('tracing/sdk', function () {
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
             return agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
               const customEntry = expectCustomEntry({
                 spans,
                 pid: controls.getPid(),
@@ -126,6 +128,7 @@ mochaSuiteFn('tracing/sdk', function () {
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
             return agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
               const customEntry = expectCustomEntry({
                 spans,
                 pid: controls.getPid(),
@@ -152,6 +155,7 @@ mochaSuiteFn('tracing/sdk', function () {
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
             return agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
               const customEntry = expectCustomEntry({
                 spans,
                 pid: controls.getPid(),
@@ -172,6 +176,7 @@ mochaSuiteFn('tracing/sdk', function () {
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
             return agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
               const customEntry = expectCustomEntry({
                 spans,
                 pid: controls.getPid(),
@@ -202,6 +207,7 @@ mochaSuiteFn('tracing/sdk', function () {
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
             return agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
               const customEntry = expectCustomEntry({
                 spans,
                 pid: controls.getPid(),
@@ -230,6 +236,7 @@ mochaSuiteFn('tracing/sdk', function () {
               expect(response.indexOf('The MIT License')).to.equal(0);
               return retry(() =>
                 agentControls.getSpans().then(spans => {
+                  expect(spans.length).to.equal(4);
                   const httpEntry = expectHttpEntry({
                     spans,
                     path: `/${apiType}/create-intermediate`,
@@ -258,6 +265,7 @@ mochaSuiteFn('tracing/sdk', function () {
 
               return retry(() =>
                 agentControls.getSpans().then(spans => {
+                  expect(spans.length).to.equal(3);
                   const httpEntry = expectHttpEntry({
                     spans,
                     path: `/${apiType}/create-overlapping-intermediates`
@@ -294,6 +302,7 @@ mochaSuiteFn('tracing/sdk', function () {
               expect(response.indexOf('The MIT License')).to.equal(0);
               return retry(() =>
                 agentControls.getSpans().then(spans => {
+                  expect(spans.length).to.equal(3);
                   const httpEntry = expectHttpEntry({
                     spans,
                     path: `/${apiType}/create-exit`,
@@ -319,6 +328,7 @@ mochaSuiteFn('tracing/sdk', function () {
               expect(response).to.equal('Not Found');
               return retry(() =>
                 agentControls.getSpans().then(spans => {
+                  expect(spans.length).to.equal(3);
                   const httpEntry = expectHttpEntry({
                     spans,
                     path: `/${apiType}/create-exit`,
@@ -345,6 +355,7 @@ mochaSuiteFn('tracing/sdk', function () {
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: event-emitter');
             return agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
               const customEntry = expectCustomEntry({
                 spans,
                 pid: controls.getPid(),
@@ -364,6 +375,7 @@ mochaSuiteFn('tracing/sdk', function () {
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: nest-entry-exit');
             return agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
               const customEntry = expectCustomEntry({
                 spans,
                 pid: controls.getPid(),
@@ -389,6 +401,7 @@ mochaSuiteFn('tracing/sdk', function () {
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: nest-intermediates');
             return agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(4);
               const customEntry = expectCustomEntry({
                 spans,
                 pid: controls.getPid(),
@@ -434,6 +447,7 @@ mochaSuiteFn('tracing/sdk', function () {
           expect(response.result).to.equal(42);
           return retry(() =>
             agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(3);
               const httpEntry = expectHttpEntry({
                 spans,
                 path: '/callback/create-exit-synchronous-result',
@@ -463,6 +477,7 @@ mochaSuiteFn('tracing/sdk', function () {
         expect(ipcMessages[0]).to.equal('done: 4711');
         return retry(() =>
           agentControls.getSpans().then(spans => {
+            expect(spans.length).to.equal(3);
             const customEntry = expectExactlyOneMatching(spans, [
               span => expect(span.t).to.exist,
               span => expect(span.p).to.not.exist,

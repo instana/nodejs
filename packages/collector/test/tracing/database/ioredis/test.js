@@ -80,7 +80,7 @@ mochaSuiteFn('tracing/ioredis', function () {
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('POST')
             ]);
-
+            expect(spans).to.have.lengthOf(4);
             expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(writeEntrySpan.t),
               span => expect(span.p).to.equal(writeEntrySpan.s),
@@ -145,7 +145,7 @@ mochaSuiteFn('tracing/ioredis', function () {
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('POST')
             ]);
-
+            expect(spans).to.have.lengthOf(5);
             expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(writeEntrySpan.t),
               span => expect(span.p).to.equal(writeEntrySpan.s),
@@ -225,7 +225,7 @@ mochaSuiteFn('tracing/ioredis', function () {
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('POST')
             ]);
-
+            expect(spans).to.have.lengthOf(5);
             expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(writeEntrySpan.t),
               span => expect(span.p).to.equal(writeEntrySpan.s),
@@ -362,7 +362,7 @@ mochaSuiteFn('tracing/ioredis', function () {
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('GET')
             ]);
-
+            expect(spans).to.have.lengthOf(5);
             expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(writeEntrySpan.t),
               span => expect(span.p).to.equal(writeEntrySpan.s),
@@ -397,7 +397,7 @@ mochaSuiteFn('tracing/ioredis', function () {
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('POST')
             ]);
-
+            expect(spans).to.have.lengthOf(6);
             expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(entrySpan.t),
               span => expect(span.p).to.equal(entrySpan.s),
@@ -476,6 +476,7 @@ mochaSuiteFn('tracing/ioredis', function () {
       .then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
+            expect(spans).to.have.lengthOf(5);
             const writeEntrySpan = expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('GET')
@@ -515,7 +516,7 @@ mochaSuiteFn('tracing/ioredis', function () {
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('POST')
             ]);
-
+            expect(spans).to.have.lengthOf(5);
             expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(entrySpan.t),
               span => expect(span.p).to.equal(entrySpan.s),

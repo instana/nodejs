@@ -62,6 +62,7 @@ mochaSuiteFn('tracing/too late', function () {
               agentControls.getMonitoringEvents(),
               agentControls.getAllMetrics(controls.getPid())
             ]).then(([spans, monitoringEvents, metrics]) => {
+              expect(spans.length).to.equal(1);
               // expect HTTP entry to be captured
               testUtils.expectAtLeastOneMatching(spans, [
                 span => expect(span.n).to.equal('node.http.server'),
@@ -146,6 +147,7 @@ mochaSuiteFn('tracing/too late', function () {
               agentControls.getMonitoringEvents(),
               agentControls.getAllMetrics(controls.getPid())
             ]).then(([spans, monitoringEvents, metrics]) => {
+              expect(spans.length).to.equal(2);
               const httpEntry = testUtils.expectAtLeastOneMatching(spans, [
                 span => expect(span.n).to.equal('node.http.server'),
                 span => expect(span.k).to.equal(constants.ENTRY),

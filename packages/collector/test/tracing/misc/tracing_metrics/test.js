@@ -53,6 +53,7 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       expect(response).to.equal('OK');
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
+        expect(spans.length).to.equal(4);
         const httpEntry = expectHttpEntry(spans, '/create-spans');
         expectExit(spans, httpEntry, 'exit-1');
         expectExit(spans, httpEntry, 'exit-2');
@@ -74,6 +75,7 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       expect(response).to.equal('OK');
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
+        expect(spans.length).to.equal(2);
         const httpEntry = expectHttpEntry(spans, '/create-unfinished-spans');
         expectExit(spans, httpEntry, 'exit-1');
       });
@@ -116,6 +118,7 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       expect(response).to.equal('OK');
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
+        expect(spans.length).to.equal(4);
         const httpEntry = expectHttpEntry(spans, '/create-spans');
         expectExit(spans, httpEntry, 'exit-1');
         expectExit(spans, httpEntry, 'exit-2');

@@ -151,6 +151,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
       });
 
       if (!withError) {
+        expect(spans.length).to.equal(3);
         verifyHttpExit({ spans, parent: httpEntry, pid: String(controls.getPid()) });
       }
     }
