@@ -61,29 +61,7 @@ currencies.forEach(currency => {
   }
 
   installedVersion = installedVersion.replace(/[^0-9.]/g, '');
-  let latestVersion;
-
-  if (!MAJOR_UPDATES_MODE) {
-    let versionArray = JSON.parse(
-      execSync(`npm info ${currency.name}@^${semver.major(installedVersion)} version --json`).toString()
-    );
-
-    if (!Array.isArray(versionArray)) {
-      versionArray = [versionArray];
-    }
-
-    versionArray = versionArray.sort((a, b) => {
-      if (semver.gt(a, b)) {
-        return 1;
-      }
-
-      return -1;
-    });
-
-    latestVersion = versionArray[versionArray.length - 1];
-  } else {
-    latestVersion = execSync(`npm info ${currency.name} version`).toString().trim();
-  }
+  const latestVersion = utils.getLatestVersion(currency.name, installedVersion);
 
   if (latestVersion === installedVersion) {
     console.log(

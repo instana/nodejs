@@ -5,24 +5,27 @@
 'use strict';
 
 const path = require('path');
+// eslint-disable-next-line import/no-extraneous-dependencies
+const semver = require('semver');
+const { execSync } = require('child_process');
 const fs = require('fs');
 
-module.exports.getRootDependencyVersion = name => {
+exports.getRootDependencyVersion = name => {
   const pkgjson = require(path.join(__dirname, '..', '..', 'package.json'));
   return pkgjson.devDependencies[name] || pkgjson.optionalDependencies[name];
 };
 
-module.exports.getDevDependencyVersion = name => {
+exports.getDevDependencyVersion = name => {
   const pkgjson = require(path.join(__dirname, '..', '..', 'package.json'));
   return pkgjson.devDependencies[name];
 };
 
-module.exports.getOptionalDependencyVersion = name => {
+exports.getOptionalDependencyVersion = name => {
   const pkgjson = require(path.join(__dirname, '..', '..', 'package.json'));
   return pkgjson.optionalDependencies[name];
 };
 
-module.exports.getPackageName = name => {
+exports.getPackageName = name => {
   const dirs = fs.readdirSync(path.join(__dirname, '..', '..', 'packages'));
   let targetPkg;
 
@@ -40,7 +43,7 @@ module.exports.getPackageName = name => {
   return targetPkg;
 };
 
-module.exports.getPackageDependencyVersion = name => {
+exports.getPackageDependencyVersion = name => {
   const dirs = fs.readdirSync(path.join(__dirname, '..', '..', 'packages'));
 
   return dirs
@@ -53,4 +56,63 @@ module.exports.getPackageDependencyVersion = name => {
       }
     })
     .find(version => version !== undefined);
+};
+
+const hasPrereleaseTag = (packageName, majorVersion) => {
+  const tags = JSON.parse(execSync(`npm view ${packageName} dist-tags --json`).toString());
+  let toReturn = false;
+
+  Object.keys(tags).forEach(tag => {
+    if (tag !== 'latest' && semver.major(tags[tag]) === majorVersion) {
+      toReturn = true;
+    }
+  });
+
+  return toReturn;
+};
+
+const getAllVersions = packageName => {
+  return JSON.parse(execSync(`npm view ${packageName} versions --json`).toString());
+};
+
+const getHighestMajorVersion = versions => {
+  let highestMajorVersion;
+
+  versions.forEach(version => {
+    if (
+      !highestMajorVersion ||
+      (semver.major(version) >= semver.major(highestMajorVersion) && semver.gt(version, highestMajorVersion))
+    ) {
+      highestMajorVersion = version;
+    }
+  });
+
+  return highestMajorVersion;
+};
+
+exports.getLatestVersion = (pkgName, installedVersion) => {
+  let latestVersion = execSync(`npm info ${pkgName} version`).toString().trim();
+  const allVersions = getAllVersions(pkgName);
+  const highestMajorVersion = getHighestMajorVersion(allVersions);
+
+  if (semver.major(highestMajorVersion) > semver.major(latestVersion)) {
+    const highestMajorVersionIsPrerelease =
+      hasPrereleaseTag(pkgName, semver.major(highestMajorVersion)) || semver.prerelease(highestMajorVersion);
+
+    console.log(
+      // eslint-disable-next-line max-len
+      `Detected a higher major version: ${highestMajorVersion} and this version is a prerelease: ${!!highestMajorVersionIsPrerelease}`
+    );
+
+    if (!highestMajorVersionIsPrerelease) {
+      latestVersion = highestMajorVersion;
+    }
+  }
+
+  // e.g. kafka-avro released a wrong order of versions
+  if (installedVersion && semver.lt(latestVersion, installedVersion)) {
+    return installedVersion;
+  }
+
+  return latestVersion;
 };
