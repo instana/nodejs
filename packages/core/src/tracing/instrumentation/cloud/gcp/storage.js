@@ -10,7 +10,7 @@ const shimmer = require('../../../shimmer');
 
 const cls = require('../../../cls');
 const constants = require('../../../constants');
-const hook = require('../../../hook');
+const hook = require('../../../../util/hook');
 const tracingUtil = require('../../../tracingUtil');
 
 let isActive = false;

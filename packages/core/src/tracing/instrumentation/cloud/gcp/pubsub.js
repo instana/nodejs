@@ -15,7 +15,7 @@ const {
   ENTRY,
   EXIT
 } = require('../../../constants');
-const hook = require('../../../hook');
+const hook = require('../../../../util/hook');
 const tracingUtil = require('../../../tracingUtil');
 
 let logger;

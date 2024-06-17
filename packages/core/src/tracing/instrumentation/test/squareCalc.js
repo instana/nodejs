@@ -7,7 +7,7 @@
 const { EXIT } = require('../../constants');
 const tracingUtil = require('../../tracingUtil');
 const cls = require('../../cls');
-const hook = require('../../hook');
+const hook = require('../../../util/hook');
 // eslint-disable-next-line no-unused-vars
 let active = false;
 

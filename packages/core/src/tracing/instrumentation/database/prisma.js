@@ -11,7 +11,7 @@ logger = require('../../../logger').getLogger('tracing/prisma', newLogger => {
   logger = newLogger;
 });
 
-const hook = require('../../hook');
+const hook = require('../../../util/hook');
 const { getErrorDetails, getStackTrace } = require('../../tracingUtil');
 const { EXIT } = require('../../constants');
 const cls = require('../../cls');

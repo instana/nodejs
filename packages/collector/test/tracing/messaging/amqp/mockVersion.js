@@ -6,7 +6,7 @@
 
 const Module = require('module');
 const mock = require('mock-require');
-const hook = require('../../../../../core/src/tracing/hook');
+const hook = require('../../../../../core/src/util/hook');
 
 const AMQPLIB_REQUIRE = process.env.AMQPLIB_VERSION === 'latest' ? 'amqplib' : `amqplib-${process.env.AMQPLIB_VERSION}`;
 

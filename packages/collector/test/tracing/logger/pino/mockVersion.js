@@ -5,7 +5,7 @@
 'use strict';
 
 const mock = require('mock-require');
-const hook = require('../../../../../core/src/tracing/hook');
+const hook = require('../../../../../core/src/util/hook');
 const PINO_VERSION = process.env.PINO_VERSION || 'latest';
 const PINO_REQUIRE = PINO_VERSION === 'latest' ? 'pino' : `pino-${PINO_VERSION}`;
 

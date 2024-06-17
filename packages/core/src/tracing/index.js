@@ -20,7 +20,7 @@ const {
   isLatestEsmSupportedVersion,
   hasExperimentalLoaderFlag,
   isESMApp
-} = require('./esmSupportedVersion');
+} = require('../util/esm');
 const iitmHook = require('../util/iitmHook');
 
 let tracingEnabled = false;
@@ -200,8 +200,10 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
       if (_config.tracing.useOpentelemetry) {
         otelInstrumentations.init(config, cls);
       }
+      if (isESMApp()) {
+        iitmHook.init();
+      }
     }
-    iitmHook.init();
   }
 
   if (config.tracing.activateImmediately) {

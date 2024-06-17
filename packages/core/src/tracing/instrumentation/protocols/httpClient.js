@@ -19,7 +19,7 @@ const {
 const constants = require('../../constants');
 const cls = require('../../cls');
 const url = require('url');
-const hook = require('../../hook');
+const hook = require('../../../util/hook');
 let logger;
 logger = require('../../../logger').getLogger('tracing/httpClient', newLogger => {
   logger = newLogger;

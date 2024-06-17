@@ -7,7 +7,7 @@
 
 const shimmer = require('../../shimmer');
 
-const hook = require('../../hook');
+const hook = require('../../../util/hook');
 
 let hasBeenPatched = false;
 

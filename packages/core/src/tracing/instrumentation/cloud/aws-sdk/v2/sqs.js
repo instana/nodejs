@@ -15,7 +15,7 @@ const {
   readTracingAttributes
 } = require('../aws_utils');
 const { ENTRY, EXIT, sqsAttributeNames } = require('../../../../constants');
-const hook = require('../../../../hook');
+const hook = require('../../../../../util/hook');
 const tracingUtil = require('../../../../tracingUtil');
 
 // Available call types to be sent into span.data.sqs.type

@@ -10,7 +10,7 @@ const { EXIT } = require('../../constants');
 const tracingUtil = require('../../tracingUtil');
 
 const shimmer = require('../../shimmer');
-const hook = require('../../hook');
+const hook = require('../../../util/hook');
 const { getFunctionArguments } = require('../../../util/function_arguments');
 
 const operationsInfo = {

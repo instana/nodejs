@@ -4,10 +4,10 @@
 
 'use strict';
 
-const iitmHook = require('../util/iitmHook');
-const requireHook = require('../util/requireHook');
+const iitmHook = require('./iitmHook');
+const requireHook = require('./requireHook');
 // eslint-disable-next-line import/no-useless-path-segments
-const isESMApp = require('../tracing/esmSupportedVersion').isESMApp;
+const isESMApp = require('./esm').isESMApp;
 
 /*
  * RequireHook

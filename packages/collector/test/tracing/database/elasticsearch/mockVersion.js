@@ -5,7 +5,7 @@
 'use strict';
 
 const mock = require('mock-require');
-const hook = require('../../../../../core/src/tracing/hook');
+const hook = require('../../../../../core/src/util/hook');
 const ELASTIC_VERSION = process.env.ELASTIC_VERSION;
 const ELASTIC_REQUIRE =
   process.env.ELASTIC_VERSION === 'latest' ? '@elastic/elasticsearch' : `@elastic/elasticsearch-v${ELASTIC_VERSION}`;

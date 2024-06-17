@@ -8,7 +8,7 @@
 const shimmer = require('../../shimmer');
 const methods = require('methods');
 
-const hook = require('../../hook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const httpServer = require('../protocols/httpServer');
 const cls = require('../../cls');

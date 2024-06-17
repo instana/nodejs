@@ -13,7 +13,7 @@ logger = require('../../../logger').getLogger('tracing/superagent', newLogger =>
   logger = newLogger;
 });
 
-const hook = require('../../hook');
+const hook = require('../../../util/hook');
 const cls = require('../../cls');
 
 exports.init = function () {

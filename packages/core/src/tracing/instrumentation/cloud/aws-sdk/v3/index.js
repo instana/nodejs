@@ -6,7 +6,7 @@
 'use strict';
 
 const shimmer = require('../../../../shimmer');
-const hook = require('../../../../hook');
+const hook = require('../../../../../util/hook');
 const { getFunctionArguments } = require('../../../../../util/function_arguments');
 
 /** @type {Array.<import('./instana_aws_product').InstanaAWSProduct}> */

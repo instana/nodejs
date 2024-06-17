@@ -5,7 +5,7 @@
 'use strict';
 
 const mock = require('mock-require');
-const hook = require('../../../../../core/src/tracing/hook');
+const hook = require('../../../../../core/src/util/hook');
 
 const MONGODB_VERSION = process.env.MONGODB_VERSION;
 const MONGODB_REQUIRE = process.env.MONGODB_VERSION === 'latest' ? 'mongodb' : `mongodb-${MONGODB_VERSION}`;

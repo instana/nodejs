@@ -8,7 +8,7 @@
 const semver = require('semver');
 const path = require('path');
 const mock = require('mock-require');
-const hook = require('../../../../../core/src/tracing/hook');
+const hook = require('../../../../../core/src/util/hook');
 
 const graphqlMajorDefault = semver.major(require(`${path.dirname(require.resolve('graphql'))}/package.json`).version);
 const GRAPHQL_VERSION = process.env.GRAPHQL_VERSION || graphqlMajorDefault.toString();

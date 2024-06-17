@@ -8,7 +8,7 @@
 const fs = require('../uninstrumentedFs');
 const path = require('path');
 // eslint-disable-next-line import/no-useless-path-segments
-const isESMApp = require('../tracing/esmSupportedVersion').isESMApp;
+const isESMApp = require('../util/esm').isESMApp;
 
 /** @type {import('../logger').GenericLogger} */
 let logger;

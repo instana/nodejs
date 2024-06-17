@@ -5,7 +5,7 @@
 
 'use strict';
 
-const hook = require('../../hook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const { limitTraceId } = require('../../tracingHeaders');
 const leftPad = require('../../leftPad');

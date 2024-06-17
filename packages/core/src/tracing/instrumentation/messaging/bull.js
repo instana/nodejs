@@ -8,7 +8,7 @@
 const shimmer = require('../../shimmer');
 const cls = require('../../cls');
 const { ENTRY, EXIT } = require('../../constants');
-const hook = require('../../hook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const { getFunctionArguments } = require('../../../util/function_arguments');
 

@@ -5,7 +5,7 @@
 
 'use strict';
 
-const hook = require('../../hook');
+const hook = require('../../../util/hook');
 const httpServer = require('../protocols/httpServer');
 const cls = require('../../cls');
 let logger = require('../../../logger').getLogger('tracing/fastify', newLogger => {

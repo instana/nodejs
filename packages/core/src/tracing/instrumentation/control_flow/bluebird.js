@@ -6,7 +6,7 @@
 'use strict';
 
 const instrument = require('cls-bluebird');
-const hook = require('../../hook');
+const hook = require('../../../util/hook');
 const cls = require('../../cls');
 
 exports.activate = function activate() {
