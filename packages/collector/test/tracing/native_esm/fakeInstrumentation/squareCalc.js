@@ -4,10 +4,10 @@
 
 'use strict';
 
-const { EXIT } = require('../../constants');
-const tracingUtil = require('../../tracingUtil');
-const cls = require('../../cls');
-const hook = require('../../../util/hook');
+const { EXIT } = require('@instana/core').tracing.constants;
+const tracingUtil = require('../../../../../core/src/tracing/tracingUtil');
+const cls = require('../../../../../core/src/tracing/cls');
+const hook = require('@instana/core').util.hook;
 // eslint-disable-next-line no-unused-vars
 let active = false;
 

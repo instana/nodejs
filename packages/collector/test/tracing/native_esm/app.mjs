@@ -9,7 +9,8 @@ process.on('SIGTERM', () => {
   process.disconnect();
   process.exit(0);
 });
-
+import instrumentation from './fakeInstrumentation/squareCalc';
+instrumentation.init();
 import express from 'express';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';

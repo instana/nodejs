@@ -11,7 +11,8 @@ process.on('SIGTERM', () => {
 });
 const mock = require('mock-require');
 mock('square-calc', 'square-calc-v2');
-
+const instrumentation = require('./fakeInstrumentation/squareCalc');
+instrumentation.init();
 require('../../..')();
 const express = require('express');
 const morgan = require('morgan');

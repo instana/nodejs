@@ -68,8 +68,7 @@ let patterns = [
   /\/superagent\/lib\/node\/index.js/,
   /\/@smithy\/smithy-client\//,
   /\/request\/index.js/,
-  /\/@apollo\/federation\/dist\//,
-  /\/square-calc\/index.mjs/
+  /\/@apollo\/federation\/dist\//
 ];
 
 const extraPatterns = [
