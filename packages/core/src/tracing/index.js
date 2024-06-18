@@ -130,7 +130,6 @@ exports.supportedVersion = supportedVersion;
 exports.util = tracingUtil;
 exports.esmSupportedVersion = esmSupportedVersion;
 exports.isLatestEsmSupportedVersion = isLatestEsmSupportedVersion;
-exports.isESMApp = isESMApp;
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} cfg

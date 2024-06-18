@@ -20,6 +20,6 @@
 
 import instana from './src/index.js';
 instana();
-// Here we exports all named exports from '@instana/core/iitm-loader.mjs', enabling 
+// Here we export all named exports from '@instana/core/iitm-loader.mjs', enabling
 // integration of import-in-the-middle (IITM) for Native ESM module support.
 export * from '@instana/core/iitm-loader.mjs';

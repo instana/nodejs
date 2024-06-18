@@ -19,5 +19,6 @@ module.exports = {
   requireHook: require('./requireHook'),
   slidingWindow: require('./slidingWindow'),
   stackTrace: require('./stackTrace'),
-  iitmHook: require('./iitmHook')
+  iitmHook: require('./iitmHook'),
+  hook: require('./hook')
 };

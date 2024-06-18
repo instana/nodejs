@@ -7,7 +7,7 @@
 
 const cluster = require('cluster');
 
-const requireHook = require('@instana/core').util.requireHook;
+const hook = require('@instana/core').util.hook;
 const selfPath = require('./selfPath');
 
 /** @type {import('@instana/core/src/logger').GenericLogger} */
@@ -17,7 +17,7 @@ logger = require('../../../logger').getLogger('tracing/edgemicro', newLogger => 
 });
 
 exports.init = function () {
-  requireHook.onFileLoad(/\/edgemicro\/cli\/lib\/reload-cluster.js/, instrumentReloadCluster);
+  hook.onFileLoad(/\/edgemicro\/cli\/lib\/reload-cluster.js/, instrumentReloadCluster);
 };
 
 /**

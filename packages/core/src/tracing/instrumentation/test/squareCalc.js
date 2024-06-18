@@ -56,5 +56,3 @@ function instrument(orgModule) {
 
   return orgModule;
 }
-
-module.exports.instrument = instrument;

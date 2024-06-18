@@ -58,7 +58,7 @@ function patchedModuleLoad(moduleName) {
   //       We aim to extract the module name to apply our instrumentation.
   // CASE: we ignore all file endings, which we are not interested in. Any module can load any file.
   // CASE: The requireHook is not compatible with native ESM so the native ESM is not handled here.
-  //       However, starting from version 12, the 'got' module is transitioning to a pure ESM module but
+  //       Exception: Starting from version 12, the 'got' module is transitioning to a pure ESM module but
   //       continues to function. This is because 'got' is instrumented coincidentally with the 'http' module.
   //       The instrumentation of 'http' and 'https' works without the requireHook.
   //       See: https://github.com/search?q=repo%3Asindresorhus%2Fgot%20from%20%27http2-wrapper%27&type=code.

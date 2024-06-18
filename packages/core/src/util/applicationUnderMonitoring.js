@@ -7,8 +7,7 @@
 
 const fs = require('../uninstrumentedFs');
 const path = require('path');
-// eslint-disable-next-line import/no-useless-path-segments
-const isESMApp = require('../util/esm').isESMApp;
+const isESMApp = require('./esm').isESMApp;
 
 /** @type {import('../logger').GenericLogger} */
 let logger;

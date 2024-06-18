@@ -22,26 +22,16 @@ exports.init = function init() {
     if (applicableTransformers) {
       applicableTransformers.forEach(transformerFn => {
         if (typeof transformerFn === 'function') {
-          try {
-            // @ts-ignore
-            iitmHook([moduleName], (exports, name) => {
-              logger.debug(`iitm-hooking enabled for module ${name}`);
-              if (exports && exports.default) {
-                exports.default = transformerFn(exports.default);
-              } else {
-                return transformerFn(exports);
-              }
-              return exports;
-            });
-          } catch (e) {
-            logger.error(`Cannot instrument ${moduleName} due to an error in instrumentation: ${e}`);
-            if (e.message) {
-              logger.error(e.message);
+          // @ts-ignore
+          iitmHook([moduleName], (exports, name) => {
+            logger.debug(`iitm-hooking enabled for module ${name}`);
+            if (exports && exports.default) {
+              exports.default = transformerFn(exports.default);
+            } else {
+              return transformerFn(exports);
             }
-            if (e.stack) {
-              logger.error(e.stack);
-            }
-          }
+            return exports;
+          });
         } else {
           logger.error(
             `The transformer is not a function but of type "${typeof transformerFn}" (details: ${

@@ -36,10 +36,6 @@ app.get('/request', async (req, res) => {
   const square = calculateSquare(5);
   res.json({ square });
 });
-app.get('/cjs', async (req, res) => {
-  const square = calculateSquare(5);
-  res.json({ square });
-});
 
 app.listen(port, () => {
   log(`Listening on port: ${port}`);

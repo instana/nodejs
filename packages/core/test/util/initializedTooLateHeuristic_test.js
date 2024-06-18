@@ -8,7 +8,7 @@ const expect = require('chai').expect;
 const sinon = require('sinon');
 const path = require('path');
 const fs = require('fs');
-const requireHook = require('../../src/util/requireHook');
+const hook = require('../../src/util/hook');
 const initializedTooLateHeurstic = require('../../src/util/initializedTooLateHeuristic');
 const config = require('../config');
 
@@ -18,10 +18,10 @@ describe('[UNIT] util.initializedTooLateHeurstic', function () {
   const instrumentedModules = [];
 
   before(() => {
-    sinon.stub(requireHook, 'onFileLoad').callsFake(function fake(m) {
+    sinon.stub(hook, 'onFileLoad').callsFake(function fake(m) {
       instrumentedModules.push(m);
     });
-    sinon.stub(requireHook, 'onModuleLoad').callsFake(function fake(m) {
+    sinon.stub(hook, 'onModuleLoad').callsFake(function fake(m) {
       instrumentedModules.push(m);
     });
 

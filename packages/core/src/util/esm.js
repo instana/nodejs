@@ -44,29 +44,25 @@ exports.hasExperimentalLoaderFlag = function hasExperimentalLoaderFlag() {
  * Checks if the application is an ECMAScript Modules (ESM) app by inspecting
  * the presence of flags like --experimental-loader and --import in the environment.
  * @returns {boolean} True if an ESM app is detected, false otherwise.
- * If the application is ESM, caching the result for efficiency.
+If the application is ESM, caching the result for efficiency.
+ * @type {boolean}
  */
+let isESMCached = null;
 exports.isESMApp = function isESMApp() {
-  const cacheKey = 'isESMApp';
-
-  if (require.cache[cacheKey]) {
-    return require.cache[cacheKey].exports;
+  if (isESMCached !== null) {
+    return isESMCached;
   }
   const isESM =
     (process.env.NODE_OPTIONS &&
-      (process.env.NODE_OPTIONS.indexOf('--experimental-loader') !== -1 ||
-        process.env.NODE_OPTIONS.indexOf('--import') !== -1)) ||
+      (process.env.NODE_OPTIONS.includes('--experimental-loader') || process.env.NODE_OPTIONS.includes('--import'))) ||
     (process.execArgv &&
       process.execArgv.length > 0 &&
-      ((process.execArgv[0].indexOf('--experimental-loader') !== -1 &&
-        process.execArgv[0].indexOf('esm-loader.mjs') !== -1) ||
-        (process.execArgv[0].indexOf('--experimental-loader') !== -1 &&
-          process.execArgv[1].indexOf('esm-loader.mjs') !== -1) ||
-        (process.execArgv[0].indexOf('--import') !== -1 && process.execArgv[0].indexOf('esm-register.mjs') !== -1) ||
-        (process.execArgv[0].indexOf('--import') !== -1 && process.execArgv[1].indexOf('esm-register.mjs') !== -1)));
+      ((process.execArgv[0].includes('--experimental-loader') && process.execArgv[0].includes('esm-loader.mjs')) ||
+        (process.execArgv[0].includes('--experimental-loader') && process.execArgv[1]?.includes('esm-loader.mjs')) ||
+        (process.execArgv[0].includes('--import') && process.execArgv[0].includes('esm-register.mjs')) ||
+        (process.execArgv[0].includes('--import') && process.execArgv[1]?.includes('esm-register.mjs'))));
 
-  // @ts-ignore
-  require.cache[cacheKey] = { exports: isESM };
+  isESMCached = isESM;
 
   return isESM;
 };
