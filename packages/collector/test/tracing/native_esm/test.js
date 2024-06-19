@@ -11,7 +11,7 @@ const { retry, verifyEntrySpan } = require('../../../../core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 const constants = require('@instana/core').tracing.constants;
-
+const path = require('path');
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/native-esm modules', function () {
@@ -25,7 +25,10 @@ mochaSuiteFn('tracing/native-esm modules', function () {
   before(async () => {
     controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true
+      useGlobalAgent: true,
+      env: {
+        INSTANA_CUSTOM_INSTRUMENTATIONS: [path.resolve(__dirname, './customInstrumentation/squareCalc')]
+      }
     });
     await controls.startAndWaitForAgentConnection();
   });

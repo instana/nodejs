@@ -44,7 +44,7 @@ let config = null;
 let processIdentityProvider = null;
 
 // Note: Also update initializedTooLateHeuristic.js and the accompanying test when adding instrumentations.
-const instrumentations = [
+let instrumentations = [
   './instrumentation/cloud/aws-sdk/v2/index',
   './instrumentation/cloud/aws-sdk/v3/index',
   './instrumentation/cloud/aws-sdk/v2/sdk',
@@ -97,6 +97,15 @@ const instrumentations = [
 ];
 
 /**
+ * @type {string[]}
+ */
+const customInstrumentations = process.env.INSTANA_CUSTOM_INSTRUMENTATIONS
+  ? process.env.INSTANA_CUSTOM_INSTRUMENTATIONS.split(',')
+  : [];
+if (customInstrumentations.length > 0) {
+  instrumentations = instrumentations.concat(customInstrumentations);
+}
+/**
  * This is a temporary type definition for instrumented modules until we get to add types to these modules.
  * For now it is safe to say that these modules are objects with the following methods:
  * @typedef {Object} InstanaInstrumentedModule
@@ -135,8 +144,8 @@ exports.isLatestEsmSupportedVersion = isLatestEsmSupportedVersion;
  * @param {string} instrumentationKey
  */
 const isInstrumentationDisabled = (cfg, instrumentationKey) => {
-  const extractedInstrumentationName = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/)[1];
-
+  const matchResult = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/);
+  const extractedInstrumentationName = matchResult ? matchResult[1] : instrumentationKey.match(/\/([^/]+)$/)[1];
   return (
     cfg.tracing.disabledTracers.includes(extractedInstrumentationName.toLowerCase()) ||
     (instrumentationModules[instrumentationKey].instrumentationName &&

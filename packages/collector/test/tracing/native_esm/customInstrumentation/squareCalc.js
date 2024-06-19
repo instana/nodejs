@@ -9,14 +9,14 @@ const tracingUtil = require('../../../../../core/src/tracing/tracingUtil');
 const cls = require('../../../../../core/src/tracing/cls');
 const hook = require('@instana/core').util.hook;
 // eslint-disable-next-line no-unused-vars
-let active = false;
+let isActive = false;
 
 exports.activate = function activate() {
-  active = true;
+  isActive = true;
 };
 
 exports.deactivate = function deactivate() {
-  active = false;
+  isActive = false;
 };
 
 exports.init = function init() {
@@ -32,7 +32,9 @@ function instrument(orgModule) {
 
   orgModule = function () {
     const number = arguments[0];
-
+    if (cls.skipExitTracing({ isActive })) {
+      return originalCalculateSquare.apply(this, arguments);
+    }
     return cls.ns.runAndReturn(() => {
       const span = cls.startSpan('square-calc', EXIT, null, null);
       span.ts = Date.now();
