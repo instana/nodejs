@@ -101,8 +101,8 @@ function instrumentCluster(cluster, connectionStr) {
   instrumentTransactions(cluster, connectionStr);
 
   // cluster.query
-  shimmer.wrap(cluster, 'query', function instrumentClusterQuery(original) {
-    return function instrumentClusterQueryWrapped() {
+  shimmer.wrap(cluster, 'query', function insatanClusterQuery(original) {
+    return function instanaClusterQueryWrapped() {
       const originalThis = this;
       const originalArgs = arguments;
       const sqlStatement = originalArgs[0] || '';
