@@ -105,11 +105,12 @@ function instrumentCluster(cluster, connectionStr) {
     return function instrumentClusterQueryWrapped() {
       const originalThis = this;
       const originalArgs = arguments;
+      const sqlStatement = originalArgs[0] || '';
 
       return instrumentOperation(
         {
           connectionStr,
-          sql: tracingUtil.shortenDatabaseStatement(originalArgs[0])
+          sql: tracingUtil.shortenDatabaseStatement(sqlStatement)
         },
         original
       ).apply(originalThis, originalArgs);
@@ -117,20 +118,27 @@ function instrumentCluster(cluster, connectionStr) {
   });
 
   // #### ANALYTICS SERVICE
-  shimmer.wrap(
-    cluster,
-    'analyticsQuery',
-    instrumentOperation.bind(null, {
-      connectionStr,
-      sql: 'ANALYTICSQUERY',
-      resultHandler: (span, result) => {
-        if (result && result.rows && result.rows.length > 0 && result.rows[0].BucketName) {
-          span.data.couchbase.bucket = result.rows[0].BucketName;
-          span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
-        }
-      }
-    })
-  );
+  shimmer.wrap(cluster, 'analyticsQuery', function instanaClusterAnalyticsQuery(original) {
+    return function instanaClusterAnalyticsQueryWrapped() {
+      const originalThis = this;
+      const originalArgs = arguments;
+      const sqlStatement = originalArgs[0] || '';
+
+      return instrumentOperation(
+        {
+          connectionStr,
+          sql: tracingUtil.shortenDatabaseStatement(sqlStatement),
+          resultHandler: (span, result) => {
+            if (result && result.rows && result.rows.length > 0 && result.rows[0].BucketName) {
+              span.data.couchbase.bucket = result.rows[0].BucketName;
+              span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
+            }
+          }
+        },
+        original
+      ).apply(originalThis, originalArgs);
+    };
+  });
 }
 
 function instrumentCollection(cluster, connectionStr) {
@@ -181,13 +189,14 @@ function instrumentCollection(cluster, connectionStr) {
         return function instanaScopeQueryWrapped() {
           const originalThis = this;
           const originalArgs = arguments;
+          const sqlStatement = originalArgs[0] || '';
 
           return instrumentOperation(
             {
               connectionStr,
               bucketName,
               getBucketTypeFn: getBucketType(cluster, bucketName),
-              sql: tracingUtil.shortenDatabaseStatement(originalArgs[0])
+              sql: tracingUtil.shortenDatabaseStatement(sqlStatement)
             },
             original
           ).apply(originalThis, originalArgs);

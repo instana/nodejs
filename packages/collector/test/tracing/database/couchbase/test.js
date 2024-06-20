@@ -401,6 +401,7 @@ mochaSuiteFn('tracing/couchbase', function () {
           })
           .then(resp => {
             expect(resp.success).to.eql(true);
+
             return retry(() =>
               verifySpans(agentControls, controls, {
                 spanLength: 9,
@@ -410,16 +411,70 @@ mochaSuiteFn('tracing/couchbase', function () {
                     verifyCouchbaseSpan(controls, entrySpan, {
                       bucket: 'projects',
                       type: 'membase',
-                      sql: 'ANALYTICSQUERY'
+                      sql: 'SELECT '
                     })
                   );
                   expectExactlyNMatching(
                     spans,
-                    7,
+                    1,
                     verifyCouchbaseSpan(controls, entrySpan, {
                       bucket: '',
                       type: '',
-                      sql: 'ANALYTICSQUERY'
+                      sql: 'CREATE DATAVERSE '
+                    })
+                  );
+                  expectExactlyNMatching(
+                    spans,
+                    1,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: '',
+                      type: '',
+                      sql: 'CREATE DATASET '
+                    })
+                  );
+                  expectExactlyNMatching(
+                    spans,
+                    1,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: '',
+                      type: '',
+                      sql: 'CREATE INDEX '
+                    })
+                  );
+                  expectExactlyNMatching(
+                    spans,
+                    1,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: '',
+                      type: '',
+                      sql: 'SELECT'
+                    })
+                  );
+                  expectExactlyNMatching(
+                    spans,
+                    1,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: '',
+                      type: '',
+                      sql: 'DROP INDEX '
+                    })
+                  );
+                  expectExactlyNMatching(
+                    spans,
+                    1,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: '',
+                      type: '',
+                      sql: 'DROP DATASET '
+                    })
+                  );
+                  expectExactlyNMatching(
+                    spans,
+                    1,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: '',
+                      type: '',
+                      sql: 'DROP DATAVERSE '
                     })
                   );
                 }
