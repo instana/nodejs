@@ -144,6 +144,10 @@ exports.isLatestEsmSupportedVersion = isLatestEsmSupportedVersion;
  * @param {string} instrumentationKey
  */
 const isInstrumentationDisabled = (cfg, instrumentationKey) => {
+  // Extracts the instrumentation name using the pattern '.\/instrumentation\/[^/]*\/(.*)',
+  // capturing the part after '/instrumentation/.../'. If this pattern doesn't match,
+  // it falls back to extracting the last part of the path after the final '/'.
+  // This is primarily implemented to handle customInstrumentation cases.
   const matchResult = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/);
   const extractedInstrumentationName = matchResult ? matchResult[1] : instrumentationKey.match(/\/([^/]+)$/)[1];
   return (
