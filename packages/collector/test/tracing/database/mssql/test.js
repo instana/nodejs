@@ -20,8 +20,13 @@ describe('tracing/mssql', function () {
 
     // The latest version of mssql (v11) no longer supports Node.js versions 16 and below.
     // For more details, see the release notes: https://github.com/tediousjs/node-mssql/releases/tag/v11.0.0
+    // In the next major release we can discontinue testing with multiple versions. Currently, we maintain this
+    // testing as the latest version of mssql does not support Node.js versions 14 and 16.
     if (mssqlVersion === 'latest') {
       mochaSuiteFn = semver.lt(process.versions.node, '18.0.0') ? describe.skip : mochaSuiteFn;
+    }
+    if (mssqlVersion === 'v10') {
+      mochaSuiteFn = semver.lt(process.versions.node, '16.0.0') ? describe.skip : mochaSuiteFn;
     }
     mochaSuiteFn(`mssql@${mssqlVersion}`, function () {
       this.timeout(isCI() ? 70000 : config.getTestTimeout() * 2);
