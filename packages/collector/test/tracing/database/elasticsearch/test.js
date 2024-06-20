@@ -36,7 +36,7 @@ mochaSuiteFn('tracing/elasticsearch', function () {
     {
       version: 'latest',
       instrumentationFlavor: 'transport',
-      engine: '14.0.0'
+      engine: '18.0.0'
     },
     {
       version: '7.17.0',
