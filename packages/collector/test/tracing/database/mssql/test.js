@@ -12,11 +12,22 @@ const config = require('../../../../../core/test/config');
 const { expectAtLeastOneMatching, isCI, retry } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
+const semver = require('semver');
 
 describe('tracing/mssql', function () {
-  ['latest', 'v9'].forEach(mssqlVersion => {
-    const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+  ['latest', 'v10'].forEach(mssqlVersion => {
+    let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+    // The latest version of mssql (v11) no longer supports Node.js versions 16 and below.
+    // For more details, see the release notes: https://github.com/tediousjs/node-mssql/releases/tag/v11.0.0
+    if (mssqlVersion === 'latest') {
+      mochaSuiteFn = semver.lt(process.versions.node, '18.0.0') ? describe.skip : mochaSuiteFn;
+    }
+    // mssql dropped support for Node.js v14 and below.
+    // see https://github.com/tediousjs/node-mssql/releases/tag/v10.0.0
+    if (mssqlVersion === 'v10') {
+      mochaSuiteFn = semver.lt(process.versions.node, '16.0.0') ? describe.skip : mochaSuiteFn;
+    }
     mochaSuiteFn(`mssql@${mssqlVersion}`, function () {
       this.timeout(isCI() ? 70000 : config.getTestTimeout() * 2);
 
