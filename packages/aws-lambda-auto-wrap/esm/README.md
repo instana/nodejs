@@ -15,4 +15,10 @@ see the comment https://github.com/aws/aws-sdk-js-v3/issues/3230#issuecomment-15
 
 The Node.js 18.x runtime introduces support for ES module resolution using NODE_PATH. For more information, refer to [Node.js 18.x runtime now available in AWS Lambda](https://aws.amazon.com/blogs/compute/node-js-18-x-runtime-now-available-in-aws-lambda/). This is the recommended workaround.
 
-In version 4.x, we will remove the aws-lambda-auto-wrap npm package and manually copy over the files in the publish layer script. Additionally, we can drop support for Node.js 14 and 16, as the issue will be resolved with version 18.
+## Future Plans in Version 4.x
+
+- Removal of aws-lambda-auto-wrap: We plan to eliminate the dependency on the aws-lambda-auto-wrap npm package. Instead, we will manually copy over the necessary files during the publish layer script execution.
+
+- Discontinuation of Support for Node.js 14 and 16: AWS has already dropped support for Node.js 14, and Node.js 16 is scheduled for deprecation. With the introduction of the Node.js 18.x runtime in AWS Lambda, we anticipate resolving existing issues related to ES module support
+
+- Node.js 18.x Runtime and ES Module Resolution: The Node.js 18.x runtime in AWS Lambda enhances ES module resolution by introducing support for NODE_PATH. This improvement allows Lambda functions to better manage and load ES modules.
