@@ -86,7 +86,7 @@ function instrumentCluster(cluster, connectionStr) {
   if (!cluster) return;
 
   // #### SEARCH QUERY
-  shimmer.wrap(cluster, 'searchQuery', instrumentOperation.bind(null, { connectionStr, sqlType: 'SEARCHQUERY' }));
+  shimmer.wrap(cluster, 'searchQuery', instrumentOperation.bind(null, { connectionStr, sql: 'SEARCHQUERY' }));
 
   // #### CRUD
   instrumentCollection(cluster, connectionStr);
@@ -101,23 +101,44 @@ function instrumentCluster(cluster, connectionStr) {
   instrumentTransactions(cluster, connectionStr);
 
   // cluster.query
-  shimmer.wrap(cluster, 'query', instrumentOperation.bind(null, { connectionStr, sqlType: 'QUERY' }));
+  shimmer.wrap(cluster, 'query', function insatanClusterQuery(original) {
+    return function instanaClusterQueryWrapped() {
+      const originalThis = this;
+      const originalArgs = arguments;
+      const sqlStatement = originalArgs[0] || '';
+
+      return instrumentOperation(
+        {
+          connectionStr,
+          sql: tracingUtil.shortenDatabaseStatement(sqlStatement)
+        },
+        original
+      ).apply(originalThis, originalArgs);
+    };
+  });
 
   // #### ANALYTICS SERVICE
-  shimmer.wrap(
-    cluster,
-    'analyticsQuery',
-    instrumentOperation.bind(null, {
-      connectionStr,
-      sqlType: 'ANALYTICSQUERY',
-      resultHandler: (span, result) => {
-        if (result && result.rows && result.rows.length > 0 && result.rows[0].BucketName) {
-          span.data.couchbase.bucket = result.rows[0].BucketName;
-          span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
-        }
-      }
-    })
-  );
+  shimmer.wrap(cluster, 'analyticsQuery', function instanaClusterAnalyticsQuery(original) {
+    return function instanaClusterAnalyticsQueryWrapped() {
+      const originalThis = this;
+      const originalArgs = arguments;
+      const sqlStatement = originalArgs[0] || '';
+
+      return instrumentOperation(
+        {
+          connectionStr,
+          sql: tracingUtil.shortenDatabaseStatement(sqlStatement),
+          resultHandler: (span, result) => {
+            if (result && result.rows && result.rows.length > 0 && result.rows[0].BucketName) {
+              span.data.couchbase.bucket = result.rows[0].BucketName;
+              span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
+            }
+          }
+        },
+        original
+      ).apply(originalThis, originalArgs);
+    };
+  });
 }
 
 function instrumentCollection(cluster, connectionStr) {
@@ -145,32 +166,42 @@ function instrumentCollection(cluster, connectionStr) {
         // https://github.com/couchbase/couchnode/blob/v4.2.2/src/connection.hpp#L208
         ['get', 'remove', 'insert', 'upsert', 'replace', 'mutateIn', 'lookupIn', 'exists', 'getAndTouch'].forEach(
           op => {
-            shimmer.wrap(
-              collection,
-              op,
-              instrumentOperation.bind(null, {
-                connectionStr,
-                bucketName,
-                getBucketTypeFn,
-                sqlType: op.toUpperCase()
-              })
-            );
+            shimmer.wrap(collection, op, function instanaCollectionWrapped(original) {
+              return function instanaCollectionWrappedInner() {
+                return instrumentOperation(
+                  {
+                    connectionStr,
+                    bucketName,
+                    getBucketTypeFn,
+                    sql: op.toUpperCase()
+                  },
+                  original
+                ).apply(this, arguments);
+              };
+            });
           }
         );
 
         return collection;
       };
 
-      shimmer.wrap(
-        scope,
-        'query',
-        instrumentOperation.bind(null, {
-          connectionStr,
-          sqlType: 'QUERY',
-          bucketName,
-          getBucketTypeFn: getBucketType(cluster, bucketName)
-        })
-      );
+      shimmer.wrap(scope, 'query', function instanaScopeQuery(original) {
+        return function instanaScopeQueryWrapped() {
+          const originalThis = this;
+          const originalArgs = arguments;
+          const sqlStatement = originalArgs[0] || '';
+
+          return instrumentOperation(
+            {
+              connectionStr,
+              bucketName,
+              getBucketTypeFn: getBucketType(cluster, bucketName),
+              sql: tracingUtil.shortenDatabaseStatement(sqlStatement)
+            },
+            original
+          ).apply(originalThis, originalArgs);
+        };
+      });
 
       return scope;
     };
@@ -207,7 +238,7 @@ function instrumentSearchIndexes(cluster, connectionStr) {
           return instrumentOperation(
             {
               connectionStr,
-              sqlType: fnName.toUpperCase(),
+              sql: fnName.toUpperCase(),
               bucketName,
               getBucketTypeFn,
               resultHandler: (span, result) => {
@@ -252,7 +283,7 @@ function instrumentQueryIndexes(cluster, connectionStr) {
           return instrumentOperation(
             {
               connectionStr,
-              sqlType: fnName.toUpperCase(),
+              sql: fnName.toUpperCase(),
               bucketName,
               getBucketTypeFn
             },
@@ -302,7 +333,7 @@ function instrumentTransactions(cluster, connectionStr) {
                     connectionStr,
                     bucketName,
                     getBucketTypeFn,
-                    sqlType: op.toUpperCase()
+                    sql: op.toUpperCase()
                   },
                   original
                 ).apply(originalThis1, originalArgs1);
@@ -358,7 +389,7 @@ function instrumentTransactions(cluster, connectionStr) {
   };
 }
 
-function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sqlType, resultHandler }, original) {
+function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sql, resultHandler }, original) {
   return function instanaOpOverride() {
     const originalThis = this;
     const originalArgs = arguments;
@@ -376,7 +407,7 @@ function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sqlTy
         hostname: connectionStr,
         bucket: bucketName,
         type: bucketType,
-        sql: sqlType
+        sql
       };
 
       const { originalCallback, callbackIndex } = tracingUtil.findCallback(originalArgs);
