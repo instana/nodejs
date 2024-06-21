@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.12.0](https://github.com/instana/nodejs/compare/v3.11.0...v3.12.0) (2024-06-21)
+
+### Features
+
+- added support for mssql v11 ([#1195](https://github.com/instana/nodejs/issues/1195)) ([d9dd2ac](https://github.com/instana/nodejs/commit/d9dd2ac9b15c3f8d29a3871c3c2eb896520ecb6a))
+
 # [3.11.0](https://github.com/instana/nodejs/compare/v3.10.0...v3.11.0) (2024-06-13)
 
 **Note:** Version bump only for package @instana/collector

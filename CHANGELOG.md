@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.12.0](https://github.com/instana/nodejs/compare/v3.11.0...v3.12.0) (2024-06-21)
+
+### Features
+
+- added support for mssql v11 ([#1195](https://github.com/instana/nodejs/issues/1195)) ([d9dd2ac](https://github.com/instana/nodejs/commit/d9dd2ac9b15c3f8d29a3871c3c2eb896520ecb6a))
+- added support for tedious v16 and v17 ([#1184](https://github.com/instana/nodejs/issues/1184)) ([cd02b96](https://github.com/instana/nodejs/commit/cd02b96f0c1cd7abcf856f78bce1d736767dd62f))
+
+### Reverts
+
+- Revert "build: bumped @elastic/elasticsearch from 8.13.1 to 8.14.0" ([2b0e755](https://github.com/instana/nodejs/commit/2b0e755ffcd6e2a49c1153ccac3eb4b81c5fc10f))
+
 # [3.11.0](https://github.com/instana/nodejs/compare/v3.10.0...v3.11.0) (2024-06-13)
 
 ### Bug Fixes

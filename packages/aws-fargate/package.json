@@ -1,6 +1,6 @@
 {
   "name": "@instana/aws-fargate",
-  "version": "3.11.0",
+  "version": "3.12.0",
   "description": "Instana tracing and monitoring for Node.js based AWS Fargate tasks",
   "author": {
     "name": "Bastian Krol",
@@ -66,9 +66,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "3.11.0",
-    "@instana/metrics-util": "3.11.0",
-    "@instana/serverless": "3.11.0"
+    "@instana/core": "3.12.0",
+    "@instana/metrics-util": "3.12.0",
+    "@instana/serverless": "3.12.0"
   },
   "engines": {
     "node": ">=14.0.0"
