@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.13.0](https://github.com/instana/nodejs/compare/v3.12.0...v3.13.0) (2024-06-24)
+
+### Features
+
+- **couchbase:** added support for raw sql queries ([#1187](https://github.com/instana/nodejs/issues/1187)) ([660795e](https://github.com/instana/nodejs/commit/660795e5d5fcf49656460031dc44507521512dfa))
+
 # [3.12.0](https://github.com/instana/nodejs/compare/v3.11.0...v3.12.0) (2024-06-21)
 
 ### Features
