@@ -20,7 +20,7 @@ exports.deactivate = function deactivate() {
 };
 
 exports.init = function init() {
-  hook.onModuleLoad('square-calc', instrument);
+  hook.onModuleLoad('square-calc', instrument, { nativeEsm: true });
 };
 
 /**

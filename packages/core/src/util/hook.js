@@ -9,21 +9,14 @@ const requireHook = require('./requireHook');
 const isESMApp = require('./esm').isESMApp;
 
 /*
- * pureEsmLibraries
- *
- * This array lists all the libraries that are native ECMAScript Modules.
- */
-const pureEsmLibraries = ['square-calc'];
-/*
  * RequireHook
  *
  * Provides support for all CommonJS (CJS) modules in CJS applications,
- * even if the CJS version of libraries listed in "pureEsmLibraries" is used.
  * Additionally, it extends support to all CommonJS (CJS) modules in ESM applications.
  *
  * Import-in-the-middle
  *
- * Offers support for all native ECMAScript Modules listed in "pureEsmLibraries" within ESM applications.
+ * Offers support for all native ECMAScript Modules within ESM applications.
  * However, it does not provide support for modules loaded from CJS applications.
  *
  * Note: In the next major release (4.x), we plan to transition all CJS modules in ESM applications to be
@@ -33,9 +26,18 @@ const pureEsmLibraries = ['square-calc'];
 /**
  * @param {string} moduleName
  * @param {Function} fn
+ * @param {Object} [options] - Optional settings
+ * @param {boolean} [options.nativeEsm] - Indicates if the module is a native ECMAScript Module
  */
-exports.onModuleLoad = (moduleName, fn) => {
-  if (pureEsmLibraries.includes(moduleName) && isESMApp()) {
+exports.onModuleLoad = (moduleName, fn, { nativeEsm = false } = {}) => {
+  // Use requireHook directly if the application is not an ESM app
+  if (!isESMApp()) {
+    requireHook.onModuleLoad(moduleName, fn);
+    return;
+  }
+
+  // Use iitmHook if nativeEsm is true, otherwise use requireHook
+  if (nativeEsm) {
     iitmHook.onModuleLoad(moduleName, fn);
   } else {
     requireHook.onModuleLoad(moduleName, fn);
