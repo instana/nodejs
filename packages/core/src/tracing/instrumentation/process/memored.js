@@ -5,13 +5,13 @@
 
 'use strict';
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const cls = require('../../cls');
 
 let isActive = false;
 
 exports.init = function init() {
-  requireHook.onFileLoad(/\/memored\/index.js/, instrumentMemored);
+  hook.onFileLoad(/\/memored\/index.js/, instrumentMemored);
 };
 
 // This instruments a dependency of edgemicro that usually lives in

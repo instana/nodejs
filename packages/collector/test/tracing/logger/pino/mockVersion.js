@@ -5,7 +5,7 @@
 'use strict';
 
 const mock = require('mock-require');
-const requireHook = require('../../../../../core/src/util/requireHook');
+const hook = require('../../../../../core/src/util/hook');
 const PINO_VERSION = process.env.PINO_VERSION || 'latest';
 const PINO_REQUIRE = PINO_VERSION === 'latest' ? 'pino' : `pino-${PINO_VERSION}`;
 
@@ -22,8 +22,8 @@ if (PINO_REQUIRE !== 'pino') {
  * If we test against `pino-v6`, we need to wait for the
  * on file load event for `node_modules/pino-v6/....js`
  */
-const originalOnFileLoad = requireHook.onFileLoad;
-requireHook.onFileLoad = function onFileLoad() {
+const originalOnFileLoad = hook.onFileLoad;
+hook.onFileLoad = function onFileLoad() {
   if (arguments[0].toString() !== '/\\/pino\\/lib\\/tools\\.js/') {
     return originalOnFileLoad.apply(this, arguments);
   }

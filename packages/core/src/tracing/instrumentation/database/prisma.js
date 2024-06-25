@@ -11,7 +11,7 @@ logger = require('../../../logger').getLogger('tracing/prisma', newLogger => {
   logger = newLogger;
 });
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const { getErrorDetails, getStackTrace } = require('../../tracingUtil');
 const { EXIT } = require('../../constants');
 const cls = require('../../cls');
@@ -21,7 +21,7 @@ let isActive = false;
 const providerAndDataSourceUriMap = new WeakMap();
 
 exports.init = function init() {
-  requireHook.onModuleLoad('@prisma/client', instrumentPrismaClient);
+  hook.onModuleLoad('@prisma/client', instrumentPrismaClient);
 };
 
 function instrumentPrismaClient(prismaClientModule) {

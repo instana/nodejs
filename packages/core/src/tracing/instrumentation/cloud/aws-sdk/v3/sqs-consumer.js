@@ -5,11 +5,11 @@
 'use strict';
 
 const shimmer = require('../../../../shimmer');
-const requireHook = require('../../../../../util/requireHook');
+const hook = require('../../../../../util/hook');
 const cls = require('../../../../cls');
 
 function init() {
-  requireHook.onModuleLoad('sqs-consumer', instrument);
+  hook.onModuleLoad('sqs-consumer', instrument);
 }
 
 function instrument(SQSConsumer) {

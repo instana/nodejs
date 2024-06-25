@@ -8,7 +8,7 @@
 const shimmer = require('../../shimmer');
 const methods = require('methods');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const httpServer = require('../protocols/httpServer');
 const cls = require('../../cls');
@@ -24,7 +24,7 @@ exports.deactivate = function deactivate() {
 };
 
 exports.init = function init() {
-  requireHook.onModuleLoad('express', instrument);
+  hook.onModuleLoad('express', instrument);
 };
 
 function instrument(express) {

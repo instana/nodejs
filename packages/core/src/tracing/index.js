@@ -18,8 +18,10 @@ const { otelInstrumentations } = require('./opentelemetry-instrumentations');
 const {
   esmSupportedVersion,
   isLatestEsmSupportedVersion,
-  hasExperimentalLoaderFlag
-} = require('./esmSupportedVersion');
+  hasExperimentalLoaderFlag,
+  isESMApp
+} = require('../util/esm');
+const iitmHook = require('../util/iitmHook');
 
 let tracingEnabled = false;
 let tracingActivated = false;
@@ -42,7 +44,7 @@ let config = null;
 let processIdentityProvider = null;
 
 // Note: Also update initializedTooLateHeuristic.js and the accompanying test when adding instrumentations.
-const instrumentations = [
+let instrumentations = [
   './instrumentation/cloud/aws-sdk/v2/index',
   './instrumentation/cloud/aws-sdk/v3/index',
   './instrumentation/cloud/aws-sdk/v2/sdk',
@@ -95,6 +97,15 @@ const instrumentations = [
 ];
 
 /**
+ * @type {string[]}
+ */
+const customInstrumentations = process.env.INSTANA_CUSTOM_INSTRUMENTATIONS
+  ? process.env.INSTANA_CUSTOM_INSTRUMENTATIONS.split(',')
+  : [];
+if (customInstrumentations.length > 0) {
+  instrumentations = instrumentations.concat(customInstrumentations);
+}
+/**
  * This is a temporary type definition for instrumented modules until we get to add types to these modules.
  * For now it is safe to say that these modules are objects with the following methods:
  * @typedef {Object} InstanaInstrumentedModule
@@ -133,8 +144,12 @@ exports.isLatestEsmSupportedVersion = isLatestEsmSupportedVersion;
  * @param {string} instrumentationKey
  */
 const isInstrumentationDisabled = (cfg, instrumentationKey) => {
-  const extractedInstrumentationName = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/)[1];
-
+  // Extracts the instrumentation name using the pattern '.\/instrumentation\/[^/]*\/(.*)',
+  // capturing the part after '/instrumentation/.../'. If this pattern doesn't match,
+  // it falls back to extracting the last part of the path after the final '/'.
+  // This is primarily implemented to handle customInstrumentation cases.
+  const matchResult = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/);
+  const extractedInstrumentationName = matchResult ? matchResult[1] : instrumentationKey.match(/\/([^/]+)$/)[1];
   return (
     cfg.tracing.disabledTracers.includes(extractedInstrumentationName.toLowerCase()) ||
     (instrumentationModules[instrumentationKey].instrumentationName &&
@@ -195,6 +210,9 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
 
       if (_config.tracing.useOpentelemetry) {
         otelInstrumentations.init(config, cls);
+      }
+      if (isESMApp()) {
+        iitmHook.init();
       }
     }
   }

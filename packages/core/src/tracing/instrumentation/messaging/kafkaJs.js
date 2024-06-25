@@ -5,7 +5,7 @@
 
 'use strict';
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const { limitTraceId } = require('../../tracingHeaders');
 const leftPad = require('../../leftPad');
@@ -23,8 +23,8 @@ let headerFormat = constants.kafkaHeaderFormatDefault;
 let isActive = false;
 
 exports.init = function init(config) {
-  requireHook.onFileLoad(/\/kafkajs\/src\/producer\/messageProducer\.js/, instrumentProducer);
-  requireHook.onFileLoad(/\/kafkajs\/src\/consumer\/runner\.js/, instrumentConsumer);
+  hook.onFileLoad(/\/kafkajs\/src\/producer\/messageProducer\.js/, instrumentProducer);
+  hook.onFileLoad(/\/kafkajs\/src\/consumer\/runner\.js/, instrumentConsumer);
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
   headerFormat = config.tracing.kafka.headerFormat;
 };

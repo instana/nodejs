@@ -6,7 +6,7 @@
 
 const Module = require('module');
 const mock = require('mock-require');
-const requireHook = require('../../../../../core/src/util/requireHook');
+const hook = require('../../../../../core/src/util/hook');
 
 const AMQPLIB_REQUIRE = process.env.AMQPLIB_VERSION === 'latest' ? 'amqplib' : `amqplib-${process.env.AMQPLIB_VERSION}`;
 
@@ -23,8 +23,8 @@ if (AMQPLIB_REQUIRE !== 'amqplib') {
  * If we test against `amqplib-v0.8.0`, we need to wait for the
  * on file load event for `node_modules/amqplib-v0.8.0/lib/...
  */
-const originalOnFileLoad = requireHook.onFileLoad;
-requireHook.onFileLoad = function onFileLoad() {
+const originalOnFileLoad = hook.onFileLoad;
+hook.onFileLoad = function onFileLoad() {
   if (
     arguments[0].source === '\\/amqplib\\/lib\\/channel\\.js' ||
     arguments[0].source === '\\/amqplib\\/lib\\/channel_model\\.js' ||

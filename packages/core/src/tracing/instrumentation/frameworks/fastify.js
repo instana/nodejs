@@ -5,7 +5,7 @@
 
 'use strict';
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const httpServer = require('../protocols/httpServer');
 const cls = require('../../cls');
 let logger = require('../../../logger').getLogger('tracing/fastify', newLogger => {
@@ -23,7 +23,7 @@ exports.deactivate = function deactivate() {
 };
 
 exports.init = function init() {
-  requireHook.onModuleLoad('fastify', instrument);
+  hook.onModuleLoad('fastify', instrument);
 };
 
 /**

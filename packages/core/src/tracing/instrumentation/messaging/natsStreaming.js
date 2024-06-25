@@ -10,7 +10,7 @@
 
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -19,7 +19,7 @@ let isActive = false;
 let clientHasBeenInstrumented = false;
 
 exports.init = function init() {
-  requireHook.onModuleLoad('node-nats-streaming', instrumentNatsStreaming);
+  hook.onModuleLoad('node-nats-streaming', instrumentNatsStreaming);
 };
 
 function instrumentNatsStreaming(natsStreamingModule) {

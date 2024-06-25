@@ -7,12 +7,12 @@
 
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 
 let hasBeenPatched = false;
 
 exports.init = () => {
-  requireHook.onModuleLoad('cls-hooked', patchClsHooked);
+  hook.onModuleLoad('cls-hooked', patchClsHooked);
 };
 
 // This module applies a patch to the cls-hooked module (https://github.com/Jeff-Lewis/cls-hooked/). This patch fixes a

@@ -8,7 +8,7 @@
 const shimmer = require('../../shimmer');
 const cls = require('../../cls');
 const { ENTRY, EXIT } = require('../../constants');
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const { getFunctionArguments } = require('../../../util/function_arguments');
 
@@ -21,7 +21,7 @@ let isActive = false;
 exports.spanName = 'bull';
 
 exports.init = function init() {
-  requireHook.onModuleLoad('bull', instrumentBull);
+  hook.onModuleLoad('bull', instrumentBull);
 };
 
 function instrumentBull(Bull) {

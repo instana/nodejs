@@ -12,7 +12,7 @@ logger = require('../../../logger').getLogger('tracing/graphql', newLogger => {
   logger = newLogger;
 });
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -27,9 +27,9 @@ const operationTypes = [queryOperationType, mutationOperationType, subscriptionO
 const subscriptionUpdate = 'subscription-update';
 
 exports.init = function init() {
-  requireHook.onFileLoad(/\/graphql\/execution\/execute.js/, instrumentExecute);
-  requireHook.onFileLoad(/\/@apollo\/gateway\/dist\/executeQueryPlan.js/, instrumentApolloGatewayExecuteQueryPlan);
-  requireHook.onModuleLoad('@apollo/federation', logDeprecatedWarning);
+  hook.onFileLoad(/\/graphql\/execution\/execute.js/, instrumentExecute);
+  hook.onFileLoad(/\/@apollo\/gateway\/dist\/executeQueryPlan.js/, instrumentApolloGatewayExecuteQueryPlan);
+  hook.onModuleLoad('@apollo/federation', logDeprecatedWarning);
 };
 
 function instrumentExecute(executeModule) {

@@ -7,7 +7,7 @@
 
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const httpServer = require('../protocols/httpServer');
 const cls = require('../../cls');
 
@@ -19,7 +19,7 @@ logger = require('../../../logger').getLogger('tracing/hapi', newLogger => {
 let isActive = false;
 
 exports.init = function init() {
-  requireHook.onModuleLoad('@hapi/call', instrumentHapiCall);
+  hook.onModuleLoad('@hapi/call', instrumentHapiCall);
 };
 
 function instrumentHapiCall(hapiCall) {

@@ -8,7 +8,7 @@
 const semver = require('semver');
 const path = require('path');
 const mock = require('mock-require');
-const requireHook = require('../../../../../core/src/util/requireHook');
+const hook = require('../../../../../core/src/util/hook');
 
 const graphqlMajorDefault = semver.major(require(`${path.dirname(require.resolve('graphql'))}/package.json`).version);
 const GRAPHQL_VERSION = process.env.GRAPHQL_VERSION || graphqlMajorDefault.toString();
@@ -45,8 +45,8 @@ if (GRAPHQL_REQUIRE !== 'graphql') {
  * If we test against `graphql-v16`, we need to wait for the
  * on file load event for `node_modules/graphql-v16/execution/execution.js`
  */
-const originalOnFileLoad = requireHook.onFileLoad;
-requireHook.onFileLoad = function onFileLoad() {
+const originalOnFileLoad = hook.onFileLoad;
+hook.onFileLoad = function onFileLoad() {
   if (arguments[0].toString() !== '/\\/graphql\\/execution\\/execute.js/') {
     return originalOnFileLoad.apply(this, arguments);
   }

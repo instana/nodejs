@@ -5,7 +5,7 @@
 
 'use strict';
 
-const requireHook = require('../../../../../util/requireHook');
+const hook = require('../../../../../util/hook');
 const constants = require('../../../../constants');
 
 /**
@@ -14,7 +14,7 @@ const constants = require('../../../../constants');
  * (see https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html).
  */
 exports.init = function init() {
-  requireHook.onFileLoad(/\/aws-sdk\/lib\/signers\/v4.js/, addInstanaHeadersToUnsignableHeaders);
+  hook.onFileLoad(/\/aws-sdk\/lib\/signers\/v4.js/, addInstanaHeadersToUnsignableHeaders);
 };
 
 function addInstanaHeadersToUnsignableHeaders(v4SignerModule) {

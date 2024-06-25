@@ -7,7 +7,7 @@
 
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -27,8 +27,8 @@ exports.deactivate = function deactivate() {
 
 exports.init = function init() {
   // v4 commands, "redis-commands" is outdated and no longer compatible with it
-  requireHook.onFileLoad(/\/@redis\/client\/dist\/lib\/cluster\/commands.js/, captureCommands);
-  requireHook.onModuleLoad('redis', instrument);
+  hook.onFileLoad(/\/@redis\/client\/dist\/lib\/cluster\/commands.js/, captureCommands);
+  hook.onModuleLoad('redis', instrument);
 };
 
 let redisCommandList = [];

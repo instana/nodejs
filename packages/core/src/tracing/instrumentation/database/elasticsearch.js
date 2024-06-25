@@ -8,7 +8,7 @@
 const url = require('url');
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -27,7 +27,7 @@ exports.spanName = 'elasticsearch';
 exports.batchable = true;
 
 exports.init = function init() {
-  requireHook.onModuleLoad('@elastic/elasticsearch', instrument);
+  hook.onModuleLoad('@elastic/elasticsearch', instrument);
 };
 
 const connectionUrlCache = {};

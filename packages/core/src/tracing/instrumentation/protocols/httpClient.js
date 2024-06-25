@@ -19,7 +19,7 @@ const {
 const constants = require('../../constants');
 const cls = require('../../cls');
 const url = require('url');
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 let logger;
 logger = require('../../../logger').getLogger('tracing/httpClient', newLogger => {
   logger = newLogger;
@@ -32,7 +32,7 @@ exports.init = function init(config) {
   instrument(coreHttpModule, false);
   instrument(coreHttpsModule, true);
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
-  requireHook.onModuleLoad('request', logDeprecatedWarning);
+  hook.onModuleLoad('request', logDeprecatedWarning);
 };
 function logDeprecatedWarning() {
   logger.warn(

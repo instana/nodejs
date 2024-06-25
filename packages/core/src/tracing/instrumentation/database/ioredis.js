@@ -7,7 +7,7 @@
 
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -26,7 +26,7 @@ exports.deactivate = function deactivate() {
 };
 
 exports.init = function init() {
-  requireHook.onModuleLoad('ioredis', instrument);
+  hook.onModuleLoad('ioredis', instrument);
 };
 
 function instrument(ioredis) {

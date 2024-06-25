@@ -13,11 +13,11 @@ logger = require('../../../logger').getLogger('tracing/superagent', newLogger =>
   logger = newLogger;
 });
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const cls = require('../../cls');
 
 exports.init = function () {
-  requireHook.onModuleLoad('superagent', exports.instrument);
+  hook.onModuleLoad('superagent', exports.instrument);
 };
 
 // This instruments the Request object exported by superagent. The superagent library uses Node.js' http/https/http2

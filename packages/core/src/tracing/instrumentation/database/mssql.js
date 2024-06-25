@@ -5,7 +5,7 @@
 
 'use strict';
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -17,7 +17,7 @@ exports.spanName = 'mssql';
 exports.batchable = true;
 
 exports.init = function init() {
-  requireHook.onModuleLoad('mssql', instrumentMssql);
+  hook.onModuleLoad('mssql', instrumentMssql);
 };
 
 function instrumentMssql(mssql) {

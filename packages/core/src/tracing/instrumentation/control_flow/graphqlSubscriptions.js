@@ -7,7 +7,7 @@
 
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const cls = require('../../cls');
 
 let isActive = false;
@@ -15,8 +15,8 @@ let isActive = false;
 const CLS_CONTEXT_SYMBOL = Symbol('_instana_cls_context');
 
 exports.init = () => {
-  requireHook.onModuleLoad('graphql-subscriptions', instrumentModule);
-  requireHook.onFileLoad(/\/graphql-subscriptions\/dist\/pubsub-async-iterator\.js/, instrumentAsyncIterator);
+  hook.onModuleLoad('graphql-subscriptions', instrumentModule);
+  hook.onFileLoad(/\/graphql-subscriptions\/dist\/pubsub-async-iterator\.js/, instrumentAsyncIterator);
 };
 
 function instrumentModule(graphQlSubscriptions) {

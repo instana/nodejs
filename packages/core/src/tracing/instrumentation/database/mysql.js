@@ -7,7 +7,7 @@
 
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -18,9 +18,9 @@ exports.spanName = 'mysql';
 exports.batchable = true;
 
 exports.init = function init() {
-  requireHook.onModuleLoad('mysql', instrumentMysql);
-  requireHook.onModuleLoad('mysql2', instrumentMysql2);
-  requireHook.onModuleLoad('mysql2/promise', instrumentMysql2WithPromises);
+  hook.onModuleLoad('mysql', instrumentMysql);
+  hook.onModuleLoad('mysql2', instrumentMysql2);
+  hook.onModuleLoad('mysql2/promise', instrumentMysql2WithPromises);
 };
 
 function instrumentMysql(mysql) {

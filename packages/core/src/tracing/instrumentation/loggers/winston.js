@@ -5,7 +5,7 @@
 
 'use strict';
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -14,9 +14,9 @@ let isActive = false;
 
 exports.init = function init() {
   // Winston 2.x
-  requireHook.onFileLoad(/\/winston\/lib\/winston\/logger\.js/, instrumentWinston2);
+  hook.onFileLoad(/\/winston\/lib\/winston\/logger\.js/, instrumentWinston2);
   // Winston >= 3.x
-  requireHook.onFileLoad(/\/winston\/lib\/winston\/create-logger\.js/, instrumentWinston3);
+  hook.onFileLoad(/\/winston\/lib\/winston\/create-logger\.js/, instrumentWinston3);
 };
 
 function instrumentWinston2(loggerModule) {

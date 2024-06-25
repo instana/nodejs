@@ -8,7 +8,7 @@
 const util = require('util');
 const shimmer = require('../../shimmer');
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -18,8 +18,8 @@ let isActive = false;
 let levels;
 
 exports.init = function init() {
-  requireHook.onFileLoad(/\/log4js\/lib\/levels\.js/, saveLevelsRef);
-  requireHook.onFileLoad(/\/log4js\/lib\/logger\.js/, instrumentLog4jsLogger);
+  hook.onFileLoad(/\/log4js\/lib\/levels\.js/, saveLevelsRef);
+  hook.onFileLoad(/\/log4js\/lib\/logger\.js/, instrumentLog4jsLogger);
 };
 
 function saveLevelsRef(levelsModule) {

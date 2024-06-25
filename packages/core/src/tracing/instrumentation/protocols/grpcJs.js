@@ -11,7 +11,7 @@ logger = require('../../../logger').getLogger('tracing/grpcjs', newLogger => {
   logger = newLogger;
 });
 
-const requireHook = require('../../../util/requireHook');
+const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -31,9 +31,9 @@ const TYPES_WITH_CALLBACK = [TYPES.UNARY, TYPES.CLIENT_STREAM];
 const TYPES_WITH_CALL_END = [TYPES.SERVER_STREAM, TYPES.BIDI];
 
 exports.init = function () {
-  requireHook.onModuleLoad('@grpc/grpc-js', instrumentModule);
-  requireHook.onFileLoad(/\/@grpc\/grpc-js\/build\/src\/server\.js/, instrumentServer);
-  requireHook.onFileLoad(/\/@grpc\/grpc-js\/build\/src\/client\.js/, instrumentClient);
+  hook.onModuleLoad('@grpc/grpc-js', instrumentModule);
+  hook.onFileLoad(/\/@grpc\/grpc-js\/build\/src\/server\.js/, instrumentServer);
+  hook.onFileLoad(/\/@grpc\/grpc-js\/build\/src\/client\.js/, instrumentClient);
 };
 
 function instrumentModule(grpc) {

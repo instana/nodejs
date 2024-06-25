@@ -57,8 +57,8 @@ function patchedModuleLoad(moduleName) {
   // CASE: when using ESM, the Node runtime passes a full path to Module._load
   //       We aim to extract the module name to apply our instrumentation.
   // CASE: we ignore all file endings, which we are not interested in. Any module can load any file.
-  // CASE: Native ESM support is still pending, and the requireHook is not compatible with native ESM.
-  //       However, starting from version 12, the 'got' module is transitioning to a pure ESM module but
+  // CASE: The requireHook is not compatible with native ESM so the native ESM is not handled here.
+  //       Exception: Starting from version 12, the 'got' module is transitioning to a pure ESM module but
   //       continues to function. This is because 'got' is instrumented coincidentally with the 'http' module.
   //       The instrumentation of 'http' and 'https' works without the requireHook.
   //       See: https://github.com/search?q=repo%3Asindresorhus%2Fgot%20from%20%27http2-wrapper%27&type=code.
@@ -67,6 +67,7 @@ function patchedModuleLoad(moduleName) {
   //       where we require 'http' and 'https' at the top. Native ESM libraries that import core Node modules
   //       (e.g., import http from 'node:http') do not  trigger Module._load, hence do not use the requireHook.
   //       However, when an ESM library imports a CommonJS package, our requireHook is triggered.
+  //       For native ESM libraries the iitmHook is triggered.
   if (path.isAbsolute(moduleName) && ['.node', '.json', '.ts'].indexOf(path.extname(moduleName)) === -1) {
     // EDGE CASE for ESM: mysql2/promise.js
     if (moduleName.indexOf('node_modules/mysql2/promise.js') !== -1) {

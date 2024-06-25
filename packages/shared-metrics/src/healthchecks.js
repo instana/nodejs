@@ -5,7 +5,7 @@
 
 'use strict';
 
-const { requireHook } = require('@instana/core').util;
+const { hook } = require('@instana/core').util;
 
 let logger = require('@instana/core').logger.getLogger('metrics');
 
@@ -30,7 +30,7 @@ exports.payloadPrefix = 'healthchecks';
 // @ts-ignore
 exports.currentPayload = {};
 
-requireHook.onModuleLoad(
+hook.onModuleLoad(
   'admin-plugin-healthcheck',
   function onAdminPluginHealthcheckLoaded(/** @type {*} */ _adminPluginHealthcheck) {
     adminPluginHealthcheck = _adminPluginHealthcheck;
