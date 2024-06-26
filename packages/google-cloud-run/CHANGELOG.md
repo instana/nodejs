@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.14.0](https://github.com/instana/nodejs/compare/v3.13.0...v3.14.0) (2024-06-26)
+
+### Features
+
+- added native esm support ([#1159](https://github.com/instana/nodejs/issues/1159)) ([8bfef61](https://github.com/instana/nodejs/commit/8bfef61a72f52423cb4aebb4023f61715a596ff1))
+
 # [3.13.0](https://github.com/instana/nodejs/compare/v3.12.0...v3.13.0) (2024-06-24)
 
 **Note:** Version bump only for package @instana/google-cloud-run
