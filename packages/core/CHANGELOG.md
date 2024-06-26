@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.14.1](https://github.com/instana/nodejs/compare/v3.14.0...v3.14.1) (2024-06-26)
+
+### Bug Fixes
+
+- resolved module loading issue with the latest release ([#1201](https://github.com/instana/nodejs/issues/1201)) ([93f2a36](https://github.com/instana/nodejs/commit/93f2a3614ee47b71e2424d9d81570c681887f75e))
+
 # [3.14.0](https://github.com/instana/nodejs/compare/v3.13.0...v3.14.0) (2024-06-26)
 
 ### Features
