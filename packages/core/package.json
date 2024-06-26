@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "files": [
     "src",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "iitm-loader.mjs"
   ],
   "publishConfig": {
     "access": "public"
