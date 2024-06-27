@@ -123,7 +123,7 @@ fi
 # maybe cannot be) enabled for our AWS account. We currently do not publish Lambda layers to these regions.
 # For now, we also skip cn-north-1, since we are getting the following error:
 # Connection was closed before we received a valid response from endpoint URL: "https://lambda.cn-north-1.amazonaws.com.cn/2018-10-31/layers/.../versions".
-SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1\naf-south-1\nap-east-1\nap-northeast-1\nap-northeast-2\nap-northeast-3\nap-south-1\nap-south-2\nap-southeast-1\nap-southeast-2\nap-southeast-3\nap-southeast-4\nca-central-1\nca-west-1\ncn-northwest-1\neu-central-1\neu-central-2\neu-north-1\neu-south-1\neu-south-2\neu-west-1\neu-west-2\neu-west-3\nil-central-1\nme-central-1\nme-south-1\nsa-east-1\nus-east-1\nus-east-2\nus-west-1\nus-west-2'
+SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1\ncn-north-1'
 
 # AWS China is completely separated from the rest of AWS. You cannot enable the Chinese regions in a global AWS account.
 # Instead, we have a separate account for AWS China.
