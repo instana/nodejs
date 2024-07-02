@@ -10,6 +10,10 @@ But AWS forgot to add support for layers. There are currently two known bugs:
 
 We are affected by the second bug. When AWS fixes the underlying problem in their AWS runtime, we are able to transform the new esm handler into a real ES module.
 
-For now: We ship the ES handler as commonjs module with the help of dynamic imports.
+For the time being, we are shipping the ES handler as a CommonJS module using dynamic imports as a workaround for Node.js 14 and 16, as AWS has yet to resolve the issue for these versions, which are no longer LTS.
 
-In 4.x: We remove the aws-lambda-auto-wrap npm package and manually copy over the files in the publish layer script.
+## Future Plans in Version 4.x
+
+- Removal of aws-lambda-auto-wrap: We plan to eliminate the dependency on the aws-lambda-auto-wrap npm package. Instead, we will manually copy over the necessary files during the publish layer script execution.
+
+- Discontinuation of Support for Node.js 14 and 16: AWS has already dropped support for Node.js 14, and Node.js 16 is scheduled for deprecation.
