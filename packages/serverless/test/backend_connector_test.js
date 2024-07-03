@@ -43,7 +43,8 @@ describe('[UNIT] backend connector', () => {
         on: onStub,
         setTimeout: sinon.stub(),
         end: sinon.stub(),
-        removeAllListeners: sinon.stub()
+        removeAllListeners: sinon.stub(),
+        destroy: sinon.stub()
       });
     });
 
