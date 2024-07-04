@@ -310,7 +310,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
         req.on('error', () => {});
         // At this point we already received a response from the server, but since we removed all listeners we have to
         // manually clean up the request.
-        req.destroy();
+        destroyRequest(req);
       }
 
       handleCallback();
