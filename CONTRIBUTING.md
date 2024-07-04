@@ -95,6 +95,24 @@ When composing commit messages, it's important to use past tense. Additionally, 
 
 For instance, you can refer to this example commit message: https://github.com/instana/nodejs/commit/bd3e7554fe21188c3ad10d442e4d72546d5c2267
 
+## Creating a development branch
+
+When creating a development branch, please follow these guidelines:
+
+- Choose a branch name that is brief yet clearly indicates the purpose of the feature.
+- Use lowercase alphanumeric characters (a-z, 0-9).
+- Hyphens (-) can be used for separation, but cannot be the first or last character of the name.
+- The name must begin and end with an alphanumeric character.
+  
+For example:
+
+- Good branch names:
+  - `feature-redis`
+  - `fix-lambda-timeout`
+
+- Avoid using:
+  - `feature/redis`
+
 ## Managing Dependencies In Packages
 
 We are using **npm workspaces** and **lerna v7**.
@@ -306,8 +324,6 @@ REGIONS=<region> SKIP_DOCKER_IMAGE=true BUILD_LAYER_WITH=local LAYER_NAME=experi
 ## ESM Support
 
 We have added the ESM support for all Node.js versions, Since version 20.6, [ESM loaders are off-thread](https://github.com/nodejs/node/pull/44710), loaded separately, a shift from previous setups where the Instana collector was loaded within the loader, leading to a disruption in existing implementation. To resolve this, we've replaced the deprecated `--experimental-loader` with `--import`, facilitating the loading of the collector in the main thread. However, note that `--import` is only compatible with Node.js v18.19 and later, necessitating the maintenance of both styles for different Node.js versions.
-
-Efforts are ongoing to integrate native ESM support, detailed in ref INSTA-807.
 
 Use the following command to enable experimental ESM support:
 
