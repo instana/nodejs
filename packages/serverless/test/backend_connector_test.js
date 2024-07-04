@@ -32,19 +32,21 @@ describe('[UNIT] backend connector', () => {
     this.timeout(config.getTestTimeout());
 
     let onStub;
+    let destroyStub;
 
     beforeEach(() => {
       sinon.spy(global, 'setInterval');
       sinon.spy(global, 'clearInterval');
 
       onStub = sinon.stub();
+      destroyStub = sinon.stub();
 
       sinon.stub(uninstrumentedHttp.http, 'request').returns({
         on: onStub,
         setTimeout: sinon.stub(),
         end: sinon.stub(),
         removeAllListeners: sinon.stub(),
-        destroy: sinon.stub()
+        destroy: destroyStub
       });
     });
 
@@ -98,6 +100,8 @@ describe('[UNIT] backend connector', () => {
 
         setTimeout(onEnd, 200);
         await prom;
+
+        expect(destroyStub.called).to.be.true;
       });
     });
 
@@ -123,6 +127,8 @@ describe('[UNIT] backend connector', () => {
 
         setTimeout(onEnd, 200);
         await prom;
+
+        expect(destroyStub.called).to.be.true;
       });
     });
 
@@ -164,6 +170,8 @@ describe('[UNIT] backend connector', () => {
 
         // 1 bundle req, 2 heartbeats
         expect(uninstrumentedHttp.http.request.callCount).to.eql(3);
+
+        expect(destroyStub.called).to.be.true;
       });
     });
 
@@ -225,6 +233,8 @@ describe('[UNIT] backend connector', () => {
         await delay(250);
 
         expect(uninstrumentedHttp.http.request.callCount).to.eql(2);
+
+        expect(destroyStub.called).to.be.true;
       });
     });
   });
