@@ -47,8 +47,7 @@ function start(version) {
     mochaSuiteFn = describe;
   }
 
-  // Skipping tests because S3 bucket creation is failing due to reaching the bucket limit in the test/dev AWS account.
-  mochaSuiteFn.skip(`npm: ${version}`, function () {
+  mochaSuiteFn(`npm: ${version}`, function () {
     this.timeout(config.getTestTimeout() * 3);
 
     const bucketPrefix = 'nodejs-team';
