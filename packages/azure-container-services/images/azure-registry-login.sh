@@ -6,4 +6,4 @@
 
 set -eo pipefail
 
-az acr login --name teamnodejsregistry
+az acr login --name nodejsteamregistry
