@@ -71,8 +71,11 @@ const verifySpans = (agentControls, controls, options = {}) =>
     expectExactlyOneMatching(spans, verifyCouchbaseSpan(controls, entrySpan, options));
   });
 
+// The Couchbase Node.js client is compatible with supported LTS versions of Node.js.
+// The supported LTS versions start from v18, as support for Node.js v16.x is no longer maintained.
+// see: https://github.com/nodejs/node-addon-api/releases/tag/v8.0.0
 const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '16.0.0') ? describe : describe.skip;
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
 
 let tries = 0;
 const maxTries = 100;
@@ -152,7 +155,7 @@ async function configureCouchbase() {
 }
 
 // NOTE: it takes 1-2 minutes till the couchbase server can be reached via docker
-mochaSuiteFn('tracing/couchbase', function () {
+mochaSuiteFn.only('tracing/couchbase', function () {
   this.timeout(config.getTestTimeout() * 4);
 
   globalAgent.setUpCleanUpHooks();
