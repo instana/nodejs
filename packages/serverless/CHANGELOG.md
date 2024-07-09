@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.14.2](https://github.com/instana/nodejs/compare/v3.14.1...v3.14.2) (2024-07-09)
+
+### Bug Fixes
+
+- clean up old requests to prevent lambda resource exhaustion ([#1217](https://github.com/instana/nodejs/issues/1217)) ([a8a22f0](https://github.com/instana/nodejs/commit/a8a22f073be1db8916e91b51415c1b7dc11199a0))
+
 ## [3.14.1](https://github.com/instana/nodejs/compare/v3.14.0...v3.14.1) (2024-06-26)
 
 **Note:** Version bump only for package @instana/serverless

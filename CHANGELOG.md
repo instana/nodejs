@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.14.2](https://github.com/instana/nodejs/compare/v3.14.1...v3.14.2) (2024-07-09)
+
+### Bug Fixes
+
+- clean up old requests to prevent lambda resource exhaustion ([#1217](https://github.com/instana/nodejs/issues/1217)) ([a8a22f0](https://github.com/instana/nodejs/commit/a8a22f073be1db8916e91b51415c1b7dc11199a0))
+
+### Reverts
+
+- Revert "test: skip the s3 tests due to s3 bucket limit" ([622101b](https://github.com/instana/nodejs/commit/622101bc8b79e69eadceea3d9757d836ccfd8bd7))
+- Revert "ci: skipping the chinese region from publishing the lambda layers" ([078f9f7](https://github.com/instana/nodejs/commit/078f9f7b36607497097c9ffd6077b515428e83b6))
+- Revert "test: publish aws lambda layer to cn-north-1 and skip other regions temporarily" ([47f8d32](https://github.com/instana/nodejs/commit/47f8d324f802f699d756a9ce8fc2e4df4e0c13a4))
+
 ## [3.14.1](https://github.com/instana/nodejs/compare/v3.14.0...v3.14.1) (2024-06-26)
 
 ### Bug Fixes

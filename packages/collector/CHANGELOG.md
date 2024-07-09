@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.14.2](https://github.com/instana/nodejs/compare/v3.14.1...v3.14.2) (2024-07-09)
+
+### Reverts
+
+- Revert "test: skip the s3 tests due to s3 bucket limit" ([622101b](https://github.com/instana/nodejs/commit/622101bc8b79e69eadceea3d9757d836ccfd8bd7))
+
 ## [3.14.1](https://github.com/instana/nodejs/compare/v3.14.0...v3.14.1) (2024-06-26)
 
 **Note:** Version bump only for package @instana/collector
