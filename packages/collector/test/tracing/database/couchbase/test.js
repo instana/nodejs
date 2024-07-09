@@ -155,7 +155,7 @@ async function configureCouchbase() {
 }
 
 // NOTE: it takes 1-2 minutes till the couchbase server can be reached via docker
-mochaSuiteFn.only('tracing/couchbase', function () {
+mochaSuiteFn('tracing/couchbase', function () {
   this.timeout(config.getTestTimeout() * 4);
 
   globalAgent.setUpCleanUpHooks();
