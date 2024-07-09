@@ -32,12 +32,6 @@ describe('tracing/prisma', function () {
       let mochaSuiteFn = describe;
 
       if (supportedVersion(process.versions.node)) {
-        // Skip ESM tests for Node.js version 18.19.0 and above due to an issue with import-in-the-middle (IITM)
-        //  package. See https://github.com/DataDog/import-in-the-middle/issues/97
-        if (semver.gte(process.versions.node, '18.19.0') && process.env.RUN_ESM) {
-          mochaSuiteFn = describe.skip;
-        }
-
         if (version === 'latest' && semver.lt(process.versions.node, '16.0.0')) {
           mochaSuiteFn = describe.skip;
         }
