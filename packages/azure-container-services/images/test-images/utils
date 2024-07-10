@@ -8,7 +8,7 @@ function normalizeArgs {
     instana_layer_without_tag=instana-azure-container-services-nodejs-local
     INSTANA_LAYER_MODE=local
   elif [[ $instanaLayerMode = azure ]]; then
-    instana_layer_without_tag=teamnodejsregistry.azurecr.io/instana-azure-container-services-nodejs
+    instana_layer_without_tag=nodejsteamregistry.azurecr.io/instana-azure-container-services-nodejs
     INSTANA_LAYER_MODE=azure
   else
     echo "Unknown option for Instana layer: $instanaLayerMode"

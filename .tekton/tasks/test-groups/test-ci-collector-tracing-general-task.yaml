@@ -99,8 +99,8 @@ spec:
         fi
         export CI=true
         export GCP_PROJECT="k8s-brewery"
-        export AZURE_SQL_USERNAME="admin@instana@nodejs-db-server"
-        export AZURE_SQL_SERVER="nodejs-db-server.database.windows.net"
+        export AZURE_SQL_USERNAME="admin@instana@nodejs-team-db-server"
+        export AZURE_SQL_SERVER="nodejs-team-db-server.database.windows.net"
         export AZURE_SQL_DATABASE="azure-nodejs-test"
         if [ "$(params.esm)" == "true" ]; then
           export RUN_ESM=true

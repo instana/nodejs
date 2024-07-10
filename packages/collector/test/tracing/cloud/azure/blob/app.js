@@ -116,24 +116,19 @@ app.get('/download-buffer', async (req, res) => {
   }
 });
 
-app.get('/download-buffer-promise', async (req, res) => {
-  try {
-    await uploadDocumentToAzure();
-    blockBlobClient
-      .downloadToBuffer()
-      .then(response => {
-        fs.writeFileSync(localFilePath, response);
-        fs.unlinkSync(localFilePath);
-      })
-      .catch(error => {
-        log(`Error downloading blob: ${error.message}`);
-      });
-    await deleteDocumentFromAzure(blobName);
-    res.send();
-  } catch (e) {
-    log('Error in /download-buffer-promise:', e);
-    res.send();
-  }
+app.get('/download-buffer-promise', (req, res) => {
+  uploadDocumentToAzure()
+    .then(() => blockBlobClient.downloadToBuffer())
+    .then(response => {
+      fs.writeFileSync(localFilePath, response);
+      return fs.unlinkSync(localFilePath);
+    })
+    .then(() => deleteDocumentFromAzure(blobName))
+    .then(() => res.send())
+    .catch(error => {
+      log(`Error downloading blob: ${error.message}`);
+      res.send();
+    });
 });
 
 app.get('/download-await', async (req, res) => {

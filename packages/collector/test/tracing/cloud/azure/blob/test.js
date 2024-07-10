@@ -40,11 +40,15 @@ let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe
 mochaSuiteFn = semver.lt(process.versions.node, minimumNodeJsVer) ? describe.skip : mochaSuiteFn;
 
 /**
- * This suite is skipped if no storageAccount or accountKey has been provided via AZURE_STORAGE_ACCOUNT_NAME
- * and AZURE_STORAGE_ACCOUNT_KEY. For the Azure blob tests, the azure storage account used is 'teamnodejstracer'
- * which is the value for AZURE_STORAGE_ACCOUNT_NAME. From the azure portal, navigate to this storage account
- * and under the Access keys, Key can be found for AZURE_STORAGE_ACCOUNT_KEY
+ * This suite is skipped if no storage account or account key has been provided via AZURE_STORAGE_ACCOUNT_NAME
+ * and AZURE_STORAGE_ACCOUNT_KEY. For Azure Blob tests, the Azure storage account used is 'nodejstracerteam',
+ * specified in AZURE_STORAGE_ACCOUNT_NAME. Retrieve the account key from the Azure portal by navigating
+ * to the 'Security + Networking' section of the 'nodejstracerteam' storage account and locating the Access keys.
+ * Alternatively, find the key in 1password by searching for "Team Node.js: Azure Blob credentials" and set it.
+ * export AZURE_STORAGE_ACCOUNT_NAME=nodejstracerteam
+ * export AZURE_STORAGE_ACCOUNT_KEY=<key>
  */
+
 if (!storageAccount || !accountKey) {
   describe('tracing/cloud/azure/blob', function () {
     it('The configuration for Azure is missing', () => {
@@ -79,6 +83,10 @@ if (!storageAccount || !accountKey) {
         });
 
         await controls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -428,6 +436,10 @@ if (!storageAccount || !accountKey) {
         });
 
         await controls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
       });
 
       after(async () => {
