@@ -5,6 +5,8 @@
 Please install [nvm](https://github.com/nvm-sh/nvm) to manage multiple Node.js versions. The current development version is defined in our [.nvmrc](https://github.com/instana/nodejs/blob/main/.nvmrc).
 
 Python3 (< 3.11) is required, otherwise the db2 package won't build, see https://github.com/nodejs/node-gyp/issues/2219.
+If you're having issues with distutils module, then double check the python3 version (python3 --version) and make sure that the version pointing to is < 3.12
+The error can be something like: ModuleNotFoundError: No module named 'distutils'
 
 `brew install jq` for OSX (for other systems please look up [here](https://stedolan.github.io/jq/)) is required to run `npm run audit` or `lerna audit run`.
 
