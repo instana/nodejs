@@ -34,7 +34,7 @@
     "doctoc": "doctoc README.md packages/collector/README.md",
     "lint": "eslint .*.js *.js && npm run typecheck && lerna run lint --stream && eslint misc && eslint dockerfile-examples && eslint bin",
     "tekton:lint": "npx @ibm/tekton-lint .tekton/**/**/*.yaml .tekton/**/*.yaml .tekton/*.yaml",
-    "postinstall": "husky install && lerna run node_modules:exists",
+    "postinstall": "chmod +x ./node_modules/husky/lib/bin.js && husky install && lerna run node_modules:exists",
     "precommit": "npm run doctoc",
     "coverage": "rm -rf ./coverage && c8 --all --reporter=lcov npm run ${npm_config_npm_command} && npm run open-coverage",
     "coverage-ci": "c8 --all --reporter=lcov --report-dir=./coverage/${npm_config_report_dir} npm run ${npm_config_npm_command}",
