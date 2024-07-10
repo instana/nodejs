@@ -45,6 +45,8 @@ mochaSuiteFn = semver.lt(process.versions.node, minimumNodeJsVer) ? describe.ski
  * specified in AZURE_STORAGE_ACCOUNT_NAME. Retrieve the account key from the Azure portal by navigating
  * to the 'Security + Networking' section of the 'nodejstracerteam' storage account and locating the Access keys.
  * Alternatively, find the key in 1password by searching for "Team Node.js: Azure Blob credentials" and set it.
+ * export AZURE_STORAGE_ACCOUNT_NAME=nodejstracerteam
+ * export AZURE_STORAGE_ACCOUNT_KEY=<key>
  */
 
 if (!storageAccount || !accountKey) {
