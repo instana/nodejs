@@ -53,6 +53,11 @@ spec:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
               key: "AZURE_SQL_PWD"
+        - name: AZURE_STORAGE_ACCOUNT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AZURE_STORAGE_ACCOUNT_KEY"
       image: node:$(params.node-version)
       script: |
         #!/bin/bash
@@ -84,6 +89,7 @@ spec:
         export AZURE_SQL_USERNAME="admin@instana@nodejs-team-db-server"
         export AZURE_SQL_SERVER="nodejs-team-db-server.database.windows.net"
         export AZURE_SQL_DATABASE="azure-nodejs-test"
+        export AZURE_STORAGE_ACCOUNT_NAME="nodejstracerteam"
         if [ "$(params.esm)" == "true" ]; then
           export RUN_ESM=true
           if ! echo "test:ci:aws-lambda" | grep -q 'ci:collector'; then
