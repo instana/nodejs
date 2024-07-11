@@ -107,6 +107,15 @@ exports.setLogger = function setLogger(_logger) {
   logger = _logger;
 };
 
+/**
+ *
+ * "finalLambdaRequest":
+ * When using AWS Lambda, we send metrics and spans together
+ * using the function "sendBundle". The variable was invented to indicate
+ * that this is the last request to be sent before the AWS Lambda runtime might freeze the process.
+ * Currently, there is exactly one request to send all the data and
+ * the variable is always true.
+ */
 exports.sendBundle = function sendBundle(bundle, finalLambdaRequest, callback) {
   send('/bundle', bundle, finalLambdaRequest, callback);
 };
@@ -302,15 +311,20 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
     // See the req.end(serializedPayload) call below, too. In the no-extension/no-proxy case, that call has the callback
     // to end the processing. Otherwise, the callback is provided here to http.request().
     req = transport.request(options, () => {
-      // This is the final request from an AWS Lambda. In some scenarios we might get a stale timeout event on the
-      // socket object from a previous invocation of the Lambda handler, that is, from before the AWS Lambda runtime
-      // froze the Node.js process. Explicitly removing all listeners on the req object helps with that.
+      // When the Node.js process is frozen while the request is pending, and then thawed later,
+      // this can trigger a stale, bogus timeout event (because from the perspective of the freshly thawed Node.js
+      // runtime, the request has been pending and inactive since a long time). To avoid that, we remove all listeners
+      // (including the timeout listener) on the request. Since the Lambda runtime will be frozen afterwards (or
+      // reused for a different, unrelated invocation), it is safe to assume that  we are no longer interested in any
+      // events emitted by the request or the underlying socket.
       if (finalLambdaRequest) {
         req.removeAllListeners();
         req.on('error', () => {});
-        // At this point we already received a response from the server, but since we removed all listeners we have to
-        // manually clean up the request.
-        req.destroy();
+
+        // Finally, abort the request because from our end we are no longer interested in the response and we also do
+        // not want to let pending IO actions linger in the event loop. This will also call request.destoy and
+        // req.socket.destroy() internally.
+        destroyRequest(req);
       }
 
       handleCallback();
@@ -388,9 +402,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
   if (skipWaitingForHttpResponse) {
     req.end(serializedPayload, () => {
       if (finalLambdaRequest) {
-        // This is the final request from an AWS Lambda, directly before the Lambda returns its response to the client.
-        // The Node.js process might be frozen by the AWS Lambda runtime machinery after that and thawed again later for
-        // another invocation. When the Node.js process is frozen while the request is pending, and then thawed later,
+        // When the Node.js process is frozen while the request is pending, and then thawed later,
         // this can trigger a stale, bogus timeout event (because from the perspective of the freshly thawed Node.js
         // runtime, the request has been pending and inactive since a long time). To avoid that, we remove all listeners
         // (including the timeout listener) on the request. Since the Lambda runtime will be frozen afterwards (or
@@ -405,7 +417,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
         // Finally, abort the request because from our end we are no longer interested in the response and we also do
         // not want to let pending IO actions linger in the event loop. This will also call request.destoy and
         // req.socket.destroy() internally.
-        req.abort();
+        destroyRequest(req);
       }
 
       // We finish as soon as the request has been flushed, without waiting for the response.
