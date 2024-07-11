@@ -342,11 +342,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-cloud-gcp-task
+    - name: test-ci-collector-tracing-cloud-azure-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-cloud-gcp
+        name: test-ci-collector-tracing-cloud-azure
       params:
         - name: node-version
           value: $(params.node-version)
@@ -365,11 +365,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-cloud-azure-task
+    - name: test-ci-collector-tracing-cloud-gcp-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-cloud-azure
+        name: test-ci-collector-tracing-cloud-gcp
       params:
         - name: node-version
           value: $(params.node-version)
