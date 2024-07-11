@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.14.3](https://github.com/instana/nodejs/compare/v3.14.2...v3.14.3) (2024-07-11)
+
+### Bug Fixes
+
+- recreated prebuild for linux x64 musl abi 115 ([#1232](https://github.com/instana/nodejs/issues/1232)) ([86f1a71](https://github.com/instana/nodejs/commit/86f1a713a620b05e0165717cb6e8cb509f0cf084)), closes [#1231](https://github.com/instana/nodejs/issues/1231)
+
 ## [3.14.2](https://github.com/instana/nodejs/compare/v3.14.1...v3.14.2) (2024-07-09)
 
 ### Bug Fixes
