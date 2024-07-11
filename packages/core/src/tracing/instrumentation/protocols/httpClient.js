@@ -184,7 +184,25 @@ function instrument(coreModule, forceHttps) {
 
     // If there is no active entry span, we fall back to the reduced span of the most recent entry span. See comment in
     // packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
-    const parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
+    let parentSpan = cls.getCurrentSpan();
+
+    if (!parentSpan) {
+      // If there is no active entry span, we fall back to the reduced span of the most recent entry span.
+      // See comment in
+      // packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
+      const reducedSpan = cls.getReducedSpan();
+
+      // SDK spans are different. There is a manual entry span. But if you do have an exit span
+      // before the SDK entry span and you do that in a loop, we should not use the restored
+      // entry span.
+      // TODO: Find a full solution for the problem.
+      // TODO: Add a test to reproduce the SDK problem.
+      // TODO: How do we define that certain cases can use a reduced span and some not?
+      // TODO: How can we catch this specific use case with the SDK?
+      if (reducedSpan && reducedSpan.n !== 'sdk') {
+        parentSpan = reducedSpan;
+      }
+    }
 
     if (
       skipTracingResult.skip ||
