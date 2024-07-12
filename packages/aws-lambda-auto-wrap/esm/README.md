@@ -1,4 +1,4 @@
-## ES Module Support for AWS Lambda
+## ES Module Support for AWS Lambda Layer
 
 AWS Lambda began supporting ES modules with Node v14. Learn more on the [AWS Lambda ES modules and top-level await with Node.js 14](https://aws.amazon.com/about-aws/whats-new/2022/01/aws-lambda-es-modules-top-level-await-node-js-14/) page.
 
