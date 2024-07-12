@@ -47,6 +47,7 @@
     "test:ci:collector:tracing:cloud:aws:v2": "lerna run test:ci:tracing:cloud:aws:v2 --stream --scope=@instana/collector",
     "test:ci:collector:tracing:cloud:aws:v3": "lerna run test:ci:tracing:cloud:aws:v3 --stream --scope=@instana/collector",
     "test:ci:collector:tracing:cloud:gcp": "lerna run test:ci:tracing:cloud:gcp --stream --scope=@instana/collector",
+    "test:ci:collector:tracing:cloud:azure": "lerna run test:ci:tracing:cloud:azure --stream --scope=@instana/collector",
     "test:ci:collector:tracing:messaging": "lerna run test:ci:tracing:messaging --stream --scope=@instana/collector",
     "test:ci:collector:tracing:protocols": "lerna run test:ci:tracing:protocols --stream --scope=@instana/collector",
     "test:ci:collector:tracing:general": "lerna run test:ci:tracing:general --stream --scope=@instana/collector",

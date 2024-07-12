@@ -342,6 +342,29 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
+    - name: test-ci-collector-tracing-cloud-azure-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: test-ci-collector-tracing-cloud-azure
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+      workspaces:
+        - name: output
+          workspace: artifacts
     - name: test-ci-collector-tracing-cloud-gcp-task
       runAfter:
         - install-npm-dependencies

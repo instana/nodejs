@@ -30,6 +30,10 @@ const groups = {
     sidecars: [],
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/gcp"'
   },
+  'test:ci:collector:tracing:cloud:azure': {
+    sidecars: [],
+    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/azure"'
+  },
   'test:ci:collector:tracing:messaging': {
     sidecars: [
       'zookeeper',
