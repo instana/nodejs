@@ -1,7 +1,7 @@
 [
   {
     "name": "@apollo/gateway",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -13,7 +13,7 @@
   },
   {
     "name": "@apollo/subgraph",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -25,7 +25,7 @@
   },
   {
     "name": "@apollo/federation",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -37,7 +37,7 @@
   },
   {
     "name": "@aws-sdk/client-dynamodb",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
@@ -49,7 +49,7 @@
   },
   {
     "name": "@aws-sdk/client-kinesis",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
@@ -61,7 +61,7 @@
   },
   {
     "name": "@aws-sdk/client-lambda",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
@@ -73,7 +73,7 @@
   },
   {
     "name": "@aws-sdk/client-s3",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
@@ -85,7 +85,7 @@
   },
   {
     "name": "@aws-sdk/client-sns",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
@@ -97,7 +97,7 @@
   },
   {
     "name": "@aws-sdk/client-sqs",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
@@ -109,7 +109,7 @@
   },
   {
     "name": "@aws-sdk/lib-dynamodb",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
@@ -121,7 +121,7 @@
   },
   {
     "name": "@elastic/elasticsearch",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -133,7 +133,7 @@
   },
   {
     "name": "@google-cloud/pubsub",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
@@ -145,7 +145,7 @@
   },
   {
     "name": "@google-cloud/storage",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
@@ -157,7 +157,7 @@
   },
   {
     "name": "@grpc/grpc-js",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -169,7 +169,7 @@
   },
   {
     "name": "@grpc/proto-loader",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -181,7 +181,7 @@
   },
   {
     "name": "@hapi/hapi",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -193,7 +193,7 @@
   },
   {
     "name": "amqplib",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -205,7 +205,7 @@
   },
   {
     "name": "superagent",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -217,7 +217,7 @@
   },
   {
     "name": "aws-sdk",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": true,
@@ -229,7 +229,7 @@
   },
   {
     "name": "bull",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -241,7 +241,7 @@
   },
   {
     "name": "couchbase",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -253,7 +253,7 @@
   },
   {
     "name": "express",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -313,7 +313,7 @@
   },
   {
     "name": "fs",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -325,7 +325,7 @@
   },
   {
     "name": "timers",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -337,7 +337,7 @@
   },
   {
     "name": "fastify",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -349,7 +349,7 @@
   },
   {
     "name": "google-protobuf",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -361,7 +361,7 @@
   },
   {
     "name": "got",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -373,7 +373,7 @@
   },
   {
     "name": "graphql",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -385,7 +385,7 @@
   },
   {
     "name": "graphql-subscriptions",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -397,7 +397,7 @@
   },
   {
     "name": "graphql-ws",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -409,7 +409,7 @@
   },
   {
     "name": "ioredis",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -421,7 +421,7 @@
   },
   {
     "name": "kafka-node",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -433,7 +433,7 @@
   },
   {
     "name": "kafkajs",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -445,7 +445,7 @@
   },
   {
     "name": "koa",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -457,7 +457,7 @@
   },
   {
     "name": "koa-router",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -469,7 +469,7 @@
   },
   {
     "name": "log4js",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -481,7 +481,7 @@
   },
   {
     "name": "memcached",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -493,7 +493,7 @@
   },
   {
     "name": "mongodb",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -505,7 +505,7 @@
   },
   {
     "name": "mongoose",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -517,7 +517,7 @@
   },
   {
     "name": "mssql",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -529,7 +529,7 @@
   },
   {
     "name": "mysql",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -541,7 +541,7 @@
   },
   {
     "name": "mysql2",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -553,7 +553,7 @@
   },
   {
     "name": "nats",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -565,7 +565,7 @@
   },
   {
     "name": "node-nats-streaming",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -577,7 +577,7 @@
   },
   {
     "name": "node-fetch",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -601,7 +601,7 @@
   },
   {
     "name": "pg",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -613,7 +613,7 @@
   },
   {
     "name": "pg-native",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -625,7 +625,7 @@
   },
   {
     "name": "pino",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -637,7 +637,7 @@
   },
   {
     "name": "redis",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -649,7 +649,7 @@
   },
   {
     "name": "restify",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -661,7 +661,7 @@
   },
   {
     "name": "sequelize",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -673,7 +673,7 @@
   },
   {
     "name": "socket.io",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -685,7 +685,7 @@
   },
   {
     "name": "socket.io-client",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -697,7 +697,7 @@
   },
   {
     "name": "sqs-consumer",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -709,7 +709,7 @@
   },
   {
     "name": "tedious",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -721,7 +721,7 @@
   },
   {
     "name": "winston",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -733,7 +733,7 @@
   },
   {
     "name": "express-winston",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -745,7 +745,7 @@
   },
   {
     "name": "ibm_db",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -757,7 +757,7 @@
   },
   {
     "name": "kafka-avro",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -769,7 +769,7 @@
   },
   {
     "name": "node-rdkafka",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -781,7 +781,7 @@
   },
   {
     "name": "q",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -793,7 +793,7 @@
   },
   {
     "name": "prisma",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -805,7 +805,7 @@
   },
   {
     "name": "typeorm",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -817,7 +817,7 @@
   },
   {
     "name": "bunyan",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -829,7 +829,7 @@
   },
   {
     "name": "bluebird",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -841,7 +841,7 @@
   },
   {
     "name": "@azure/storage-blob",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -853,7 +853,7 @@
   },
   {
     "name": "tsoa",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -865,7 +865,7 @@
   },
   {
     "name": "request",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -877,7 +877,7 @@
   },
   {
     "name": "request-promise",
-    "policy": "30-days",
+    "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
