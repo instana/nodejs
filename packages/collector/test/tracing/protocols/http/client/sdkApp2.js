@@ -14,11 +14,10 @@ const instana = require('../../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const fetch = require('node-fetch-v2');
 const port = require('../../../../test_util/app-port')();
 
 const app = express();
-const logPrefix = 'SDK app 2\t';
+const logPrefix = 'SDK App 2\t';
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
