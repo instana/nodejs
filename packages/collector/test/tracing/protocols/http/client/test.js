@@ -12,7 +12,7 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
-const { expectExactlyOneMatching, retry } = require('../../../../../../core/test/test_util');
+const { expectExactlyOneMatching, retry, delay } = require('../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 
@@ -38,6 +38,33 @@ mochaSuiteFn('tracing/http client', function () {
 
   describe('superagent', function () {
     registerSuperagentTest.call(this);
+  });
+
+  describe('SDK', function () {
+    let sdkControls;
+
+    before(async () => {
+      sdkControls = new ProcessControls({
+        appPath: path.join(__dirname, 'sdkApp'),
+        useGlobalAgent: true,
+        env: {}
+      });
+
+      await sdkControls.start(null, null, true);
+    });
+
+    after(async () => {
+      await sdkControls.stop();
+    });
+
+    it('should not trace example.com exit span without entry span', async () => {
+      await delay(3000);
+
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        expect(spans.length).to.equal(4);
+      });
+    });
   });
 });
 
