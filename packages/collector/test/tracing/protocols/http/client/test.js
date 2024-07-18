@@ -40,12 +40,12 @@ mochaSuiteFn('tracing/http client', function () {
     registerSuperagentTest.call(this);
   });
 
-  describe('SDK', function () {
+  describe('SDK CASE 1', function () {
     let sdkControls;
 
     before(async () => {
       sdkControls = new ProcessControls({
-        appPath: path.join(__dirname, 'sdkApp'),
+        appPath: path.join(__dirname, 'sdkApp1'),
         useGlobalAgent: true,
         env: {}
       });
@@ -59,6 +59,36 @@ mochaSuiteFn('tracing/http client', function () {
       await retry(async () => {
         const spans = await globalAgent.instance.getSpans();
         expect(spans.length).to.equal(4);
+      });
+    });
+  });
+
+  describe('SDK CASE 2', function () {
+    let sdkControls;
+
+    before(async () => {
+      sdkControls = new ProcessControls({
+        appPath: path.join(__dirname, 'sdkApp2'),
+        useGlobalAgent: true,
+        env: {}
+      });
+
+      await sdkControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await sdkControls.stop();
+    });
+
+    it('should trace deferred exit calls', async () => {
+      await sdkControls.sendRequest({
+        method: 'GET',
+        path: '/deferred-exit'
+      });
+
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        expect(spans.length).to.equal(3);
       });
     });
   });
