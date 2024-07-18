@@ -55,8 +55,7 @@ function storeReducedSpan(context, key, span) {
   // which an init call has been received, the memory used by clsHooked will grow, because context objects will be kept
   // around forever. By keeping the reduced span we can at least see (in a heap dump) for which type of spans the
   // destroy call is missing, aiding in troubleshooting the Node.js runtime bug.
-
-  if (key === currentSpanKey && span != null) {
+  if (key === currentSpanKey && span != null && span.n !== 'sdk') {
     context[reducedSpanKey] = {
       n: span.n,
       t: span.t,

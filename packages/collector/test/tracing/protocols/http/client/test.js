@@ -53,12 +53,8 @@ mochaSuiteFn('tracing/http client', function () {
       await sdkControls.start(null, null, true);
     });
 
-    after(async () => {
-      await sdkControls.stop();
-    });
-
     it('should not trace example.com exit span without entry span', async () => {
-      await delay(3000);
+      await delay(2500);
 
       await retry(async () => {
         const spans = await globalAgent.instance.getSpans();

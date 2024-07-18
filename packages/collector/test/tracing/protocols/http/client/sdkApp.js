@@ -28,10 +28,11 @@ const app = async () => {
   let count = 0;
 
   while (count < 2) {
-    // eslint-disable-next-line no-await-in-loop
-    await delay(1000);
     main();
     count += 1;
+
+    // eslint-disable-next-line no-await-in-loop
+    await delay(1000);
   }
 };
 
