@@ -140,7 +140,7 @@ class ProcessControls {
     return this.port;
   }
 
-  async start(retryTime, until) {
+  async start(retryTime, until, skipWaitUntilServerIsUp = false) {
     const that = this;
     this.receivedIpcMessages = [];
 
@@ -166,6 +166,7 @@ class ProcessControls {
       }
     });
 
+    if (skipWaitUntilServerIsUp) return;
     await this.waitUntilServerIsUp(retryTime, until);
   }
 

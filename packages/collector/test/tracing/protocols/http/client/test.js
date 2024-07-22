@@ -12,7 +12,7 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
-const { expectExactlyOneMatching, retry } = require('../../../../../../core/test/test_util');
+const { expectExactlyOneMatching, retry, delay } = require('../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 
@@ -38,6 +38,59 @@ mochaSuiteFn('tracing/http client', function () {
 
   describe('superagent', function () {
     registerSuperagentTest.call(this);
+  });
+
+  describe('SDK CASE 1', function () {
+    let sdkControls;
+
+    before(async () => {
+      sdkControls = new ProcessControls({
+        appPath: path.join(__dirname, 'sdkApp1'),
+        useGlobalAgent: true,
+        env: {}
+      });
+
+      await sdkControls.start(null, null, true);
+    });
+
+    it('should not trace example.com exit span without entry span', async () => {
+      await delay(2500);
+
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        expect(spans.length).to.equal(4);
+      });
+    });
+  });
+
+  describe('SDK CASE 2', function () {
+    let sdkControls;
+
+    before(async () => {
+      sdkControls = new ProcessControls({
+        appPath: path.join(__dirname, 'sdkApp2'),
+        useGlobalAgent: true,
+        env: {}
+      });
+
+      await sdkControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await sdkControls.stop();
+    });
+
+    it('should trace deferred exit calls', async () => {
+      await sdkControls.sendRequest({
+        method: 'GET',
+        path: '/deferred-exit'
+      });
+
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        expect(spans.length).to.equal(3);
+      });
+    });
   });
 });
 
