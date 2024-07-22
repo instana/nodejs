@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.14.4](https://github.com/instana/nodejs/compare/v3.14.3...v3.14.4) (2024-07-22)
+
+### Bug Fixes
+
+- **core:** avoided creating standalone exit spans when using the sdk ([#1234](https://github.com/instana/nodejs/issues/1234)) ([9a0d8fc](https://github.com/instana/nodejs/commit/9a0d8fc0420e7462c3f17e247127b44a320eeace))
+
 ## [3.14.3](https://github.com/instana/nodejs/compare/v3.14.2...v3.14.3) (2024-07-11)
 
 **Note:** Version bump only for package @instana/collector
