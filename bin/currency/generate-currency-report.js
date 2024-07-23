@@ -29,7 +29,6 @@ currencies = currencies.sort(function (a, b) {
 });
 
 currencies = currencies.map(currency => {
-  if (currency.name !== 'tedious') return currency;
   console.log('\n###############################################');
   console.log(`Checking ${currency.name}...`);
 
