@@ -8,7 +8,6 @@ const expect = require('chai').expect;
 const path = require('path');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
-const { isCI } = require('@instana/core/test/test_util');
 const config = require('../../../../core/test/config');
 const portfinder = require('../../test_util/portfinder');
 
@@ -498,14 +497,19 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         ));
   });
 
-  // Skipping the tests on CI for now, because there is a existing timeout issue while connectiong the azure sql,
-  // see github issue https://github.com/tediousjs/tedious/issues/1277
-  const runTedious = isCI() ? describe.skip : describe;
+  const runTedious = describe;
   runTedious('tedious', function () {
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
       let controls;
+
+      /* This line sets the timeout duration for a test case to 2 minutes.
+       * This is added because we are having some issue with the free tier of azure database which goes from
+       * `online` state to `paused` state after some time of inactivity (seems to be 30 minutes).
+       * So the initial connection req on the paused DB needs time for it to get back online.
+      */
+      this.timeout(1000 * 60 * 2);
 
       before(async () => {
         controls = new ProcessControls({
@@ -516,7 +520,8 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           }
         });
 
-        await controls.startAndWaitForAgentConnection();
+        // Waiting time added for the agent connection
+        await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 2);
       });
 
       beforeEach(async () => {
