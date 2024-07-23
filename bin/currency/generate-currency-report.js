@@ -29,6 +29,7 @@ currencies = currencies.sort(function (a, b) {
 });
 
 currencies = currencies.map(currency => {
+  if (currency.name !== 'tedious') return currency;
   console.log('\n###############################################');
   console.log(`Checking ${currency.name}...`);
 
@@ -77,16 +78,19 @@ currencies = currencies.map(currency => {
     if (!upToDate) {
       try {
         const releaseList = JSON.parse(execSync(`npm show ${currency.name} time --json`).toString());
-        const timeIndex = releaseList[latestVersion];
+        const timeIndexLatestVersion = releaseList[latestVersion];
+        const timeIndexInstalledVersion = releaseList[installedVersion];
 
-        daysBehind = moment(new Date())
+        daysBehind = moment(new Date(timeIndexLatestVersion))
           .startOf('day')
-          .diff(moment(new Date(timeIndex)).startOf('day'), 'days');
+          .diff(moment(new Date(timeIndexInstalledVersion)).startOf('day'), 'days');
       } catch (err) {
         console.log(err);
         // ignore
       }
     }
+
+    console.log(`Days behind: ${daysBehind}`);
 
     // We are always up to date when the target lib released a patch or a minor and
     // we are still on track with the policy.
