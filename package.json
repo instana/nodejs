@@ -150,7 +150,7 @@
     "fastify": "^4.28.1",
     "fastify-v3": "npm:fastify@^3.21.5",
     "google-protobuf": "^3.21.4",
-    "got": "^14.4.1",
+    "got": "^14.4.2",
     "got-v11": "npm:got@^11.8.6",
     "graphql": "^16.9.0",
     "graphql-subscriptions": "^2.0.0",
