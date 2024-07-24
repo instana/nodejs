@@ -7,8 +7,6 @@
 const path = require('path');
 const fs = require('fs');
 // eslint-disable-next-line import/no-extraneous-dependencies
-const moment = require('moment');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const semver = require('semver');
 const { execSync } = require('child_process');
 const utils = require('./utils');
@@ -77,12 +75,7 @@ currencies = currencies.map(currency => {
     if (!upToDate) {
       try {
         const releaseList = JSON.parse(execSync(`npm show ${currency.name} time --json`).toString());
-        const timeIndexLatestVersion = releaseList[latestVersion];
-        const timeIndexInstalledVersion = releaseList[installedVersion];
-
-        daysBehind = moment(new Date(timeIndexLatestVersion))
-          .startOf('day')
-          .diff(moment(new Date(timeIndexInstalledVersion)).startOf('day'), 'days');
+        daysBehind = utils.getDaysBehind(releaseList, installedVersion);
       } catch (err) {
         console.log(err);
         // ignore

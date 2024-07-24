@@ -7,6 +7,9 @@
 const path = require('path');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const semver = require('semver');
+// eslint-disable-next-line import/no-extraneous-dependencies
+const moment = require('moment');
+
 const { execSync } = require('child_process');
 const fs = require('fs');
 
@@ -115,4 +118,32 @@ exports.getLatestVersion = (pkgName, installedVersion) => {
   }
 
   return latestVersion;
+};
+
+function filterStableReleases(releaseList) {
+  return Object.fromEntries(
+    Object.entries(releaseList).filter(([version]) => !version.includes('alpha') && !version.includes('beta'))
+  );
+}
+
+function calculateDaysDifference(date1, date2) {
+  const timeDiff = Math.abs(moment(date2).diff(moment(date1), 'days'));
+  return timeDiff;
+}
+
+exports.getDaysBehind = (releaseList, installedVersion, today = new Date()) => {
+  const stableReleaseList = filterStableReleases(releaseList);
+  const versions = Object.keys(stableReleaseList);
+  const installedVersionIndex = versions.indexOf(installedVersion);
+
+  if (installedVersionIndex === -1 || installedVersionIndex === versions.length - 1) {
+    return 0;
+  }
+
+  const nextVersion = versions[installedVersionIndex + 1];
+  const nextVersionDate = stableReleaseList[nextVersion];
+  console.log(`Next version: ${nextVersion}`);
+  console.log(`Next version date: ${nextVersionDate}`);
+  console.log(`Today: ${today}`);
+  return calculateDaysDifference(nextVersionDate, today);
 };
