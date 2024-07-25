@@ -497,18 +497,14 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         ));
   });
 
-  const runTedious = describe;
-  runTedious('tedious', function () {
+  describe('tedious', function () {
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
       let controls;
 
-      /* This line sets the timeout duration for a test case to 2 minutes.
-       * This is added because we are having some issue with the free tier of azure database which goes from
-       * `online` state to `paused` state after some time of inactivity (seems to be 30 minutes).
-       * So the initial connection req on the paused DB needs time for it to get back online.
-      */
+    // We need to increase the waiting timeout here for the initial azure connection,
+    // because it can take up to 1-2 minutes till azure replies if the db is in paused state
       this.timeout(1000 * 60 * 2);
 
       before(async () => {
@@ -520,7 +516,6 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           }
         });
 
-        // Waiting time added for the agent connection
         await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 2);
       });
 
