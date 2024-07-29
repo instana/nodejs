@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 
 import couchbase from 'couchbase';
 import bodyParser from 'body-parser';
-import express from 'express';
+import express from 'express-beta';
 import { v1 } from 'uuid';
 import morgan from 'morgan';
 import fetch from 'node-fetch';

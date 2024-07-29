@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 });
 
 import AWS from 'aws-sdk';
-import express from 'express';
+import express from 'express-beta';
 const logPrefix = `AWS SDK v2 Lambda (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const lambda = new AWS.Lambda();

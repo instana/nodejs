@@ -27,7 +27,7 @@ const instana = require('../..')({
   }
 });
 
-const express = require('express');
+const express = require('express-beta');
 const morgan = require('morgan');
 const path = require('path');
 const fs = require('fs');

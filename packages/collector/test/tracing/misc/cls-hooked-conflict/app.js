@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 const instana = require('../../../..')();
 const clsHooked = require('cls-hooked');
 
-const express = require('express');
+const express = require('express-beta');
 const morgan = require('morgan');
 const pino = require('pino')();
 

@@ -10,7 +10,7 @@ require('../../../../..')();
 
 const { BlobServiceClient, BlobBatchClient, BlobClient, StorageSharedKeyCredential } = require('@azure/storage-blob');
 
-const express = require('express');
+const express = require('express-beta');
 const bodyParser = require('body-parser');
 const port = require('../../../../test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT;

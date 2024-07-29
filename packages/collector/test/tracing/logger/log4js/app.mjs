@@ -15,7 +15,7 @@ process.on('SIGTERM', () => {
 
 import fetch from 'node-fetch';
 import bodyParser from 'body-parser';
-import express from 'express';
+import express from 'express-beta';
 import morgan from 'morgan';
 import log4js from 'log4js';
 import getAppPort from '../../../test_util/app-port.js';

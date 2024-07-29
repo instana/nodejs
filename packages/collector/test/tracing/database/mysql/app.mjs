@@ -50,7 +50,7 @@ if (driverModeEnvVar === 'mysql') {
 
 import fetch from 'node-fetch';
 import bodyParser from 'body-parser';
-import express from 'express';
+import express from 'express-beta';
 import morgan from 'morgan';
 
 const app = express();

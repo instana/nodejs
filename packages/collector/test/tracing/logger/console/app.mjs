@@ -17,7 +17,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 
 import fetch from 'node-fetch';
 import bodyParser from 'body-parser';
-import express from 'express';
+import express from 'express-beta';
 import morgan from 'morgan';
 import bunyan from 'bunyan';
 import getAppPort from '../../../test_util/app-port.js';

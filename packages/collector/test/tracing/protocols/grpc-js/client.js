@@ -17,7 +17,7 @@ require('../../../..')();
 
 const bodyParser = require('body-parser');
 const pinoLogger = require('pino')();
-const express = require('express');
+const express = require('express-beta');
 const morgan = require('morgan');
 const grpc = require('@grpc/grpc-js');
 const path = require('path');

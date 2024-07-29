@@ -10,7 +10,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-import express from 'express';
+import express from 'express-beta';
 import getAppPort from '@instana/collector/test/test_util/app-port.js';
 
 const port = getAppPort();

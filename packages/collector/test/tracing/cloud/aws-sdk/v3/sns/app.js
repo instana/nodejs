@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 
 require('../../../../../..')();
 
-const express = require('express');
+const express = require('express-beta');
 const fetch = require('node-fetch-v2');
 const app = express();
 const agentPort = process.env.INSTANA_AGENT_PORT;

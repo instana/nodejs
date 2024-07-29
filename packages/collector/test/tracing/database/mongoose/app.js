@@ -16,7 +16,7 @@ require('../../../..')();
 
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const express = require('express');
+const express = require('express-beta');
 const morgan = require('morgan');
 const { v4: uuid } = require('uuid');
 const port = require('../../../test_util/app-port')();

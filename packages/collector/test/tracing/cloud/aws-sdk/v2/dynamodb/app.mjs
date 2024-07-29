@@ -20,7 +20,7 @@ import logger from '@instana/core/test/test_util/log.js';
 const port = getAppPort();
 
 import AWS from 'aws-sdk';
-import express from 'express';
+import express from 'express-beta';
 const logPrefix = `AWS SDK v2 DynamoDB (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const dynamoDB = new AWS.DynamoDB();

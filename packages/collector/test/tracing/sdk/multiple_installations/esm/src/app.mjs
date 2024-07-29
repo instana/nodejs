@@ -27,7 +27,7 @@ const initializedInstana = instana();
 //       was never initialized.
 // import instana from '../../../../../../src/index.js';
 
-import express from 'express';
+import express from 'express-beta';
 import delay from '@instana/core/test/test_util/delay.js';
 
 const port = getAppPort();

@@ -7,7 +7,7 @@
 'use strict';
 
 import { BlobServiceClient, BlobBatchClient, BlobClient, StorageSharedKeyCredential } from '@azure/storage-blob';
-import express from 'express';
+import express from 'express-beta';
 import bodyParser from 'body-parser';
 import getAppPort from '../../../../test_util/app-port.js';
 import path from 'path';

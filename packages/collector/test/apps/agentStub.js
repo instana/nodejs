@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 const bodyParser = require('body-parser');
 const bunyan = require('bunyan');
-const express = require('express');
+const express = require('express-beta');
 const _ = require('lodash');
 // const morgan = require('morgan');
 const app = express();

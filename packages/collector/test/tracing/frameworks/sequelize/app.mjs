@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-import express from 'express';
+import express from 'express-beta';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
 import getAppPort from '../../../test_util/app-port.js';

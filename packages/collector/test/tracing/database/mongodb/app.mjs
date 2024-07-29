@@ -20,7 +20,7 @@ process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT = 1;
 
 import MongoClient from 'mongodb';
 import bodyParser from 'body-parser';
-import express from 'express';
+import express from 'express-beta';
 import morgan from 'morgan';
 import assert from 'assert';
 import fetch from 'node-fetch';

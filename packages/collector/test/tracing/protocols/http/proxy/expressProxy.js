@@ -25,7 +25,7 @@ require('../../../../..')({
   }
 });
 
-const express = require('express');
+const express = require('express-beta');
 const fetch = require('node-fetch-v2');
 const port = require('../../../../test_util/app-port')();
 const app = express();

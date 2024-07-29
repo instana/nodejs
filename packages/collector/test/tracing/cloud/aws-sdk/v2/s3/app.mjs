@@ -15,7 +15,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 import fetch from 'node-fetch';
 import delay from '../../../../../../../core/test/test_util/delay.js';
 import AWS from 'aws-sdk';
-import express from 'express';
+import express from 'express-beta';
 
 const logPrefix = `AWS SDK v2 S3 (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });

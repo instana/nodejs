@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 });
 
 import bodyParser from 'body-parser';
-import express from 'express';
+import express from 'express-beta';
 import moduleModule from 'module';
 import morgan from 'morgan';
 import semver from 'semver';

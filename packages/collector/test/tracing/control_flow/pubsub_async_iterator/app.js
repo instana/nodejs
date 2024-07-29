@@ -15,7 +15,7 @@ require('../../../..')();
 
 const cls = require('../../../../../core/src/tracing/cls');
 
-const express = require('express');
+const express = require('express-beta');
 const morgan = require('morgan');
 const graphqlSubscriptions = require('graphql-subscriptions');
 const port = require('../../../test_util/app-port')();
