@@ -52,14 +52,14 @@ const config = {
   },
   options: {
     database: azureConfig?.AZURE_SQL_DATABASE || process.env.AZURE_SQL_DATABASE,
-    connectTimeout: 20000
+    connectTimeout: 30000
   }
 };
 
 let connected = false;
 let connection;
 
-const retryDelay = 1000;
+const retryDelay = 30000;
 const maxRetries = 2;
 let currentRetry = 0;
 
