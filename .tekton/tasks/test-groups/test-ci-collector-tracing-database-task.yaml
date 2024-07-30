@@ -83,8 +83,6 @@ spec:
   params:
     - name: node-version
       value: $(params.node-version)
-    - name: npm-version
-      value: $(params.npm-version)
     - name: repository
       value: $(params.repository)
     - name: revision
@@ -140,9 +138,6 @@ spec:
         CIRCLE_COMPARE_URL=""
         MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
-        if [ -n "$(params.npm-version)" ]; then
-          npm install npm@$(params.npm-version) -g
-        fi
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
           MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
@@ -174,9 +169,9 @@ spec:
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            npm run coverage-ci --npm_command="test:ci:collector:tracing:database" --report_dir="test-ci-collector-tracing-database"
+            workspace="test:ci:collector:tracing:database" report_dir="test-ci-collector-tracing-database" pnpm run coverage-ci
           else
-            npm run "test:ci:collector:tracing:database"
+            pnpm run "test:ci:collector:tracing:database"
           fi          
           if [ $? -eq 0 ]; then
             touch "test:ci:collector:tracing:database.succeeded"

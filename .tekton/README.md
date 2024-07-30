@@ -7,7 +7,7 @@
 ## Linting
 
 ```sh
-npm run tekton:lint
+pnpm run tekton:lint
 ```
 
 ## Local testing

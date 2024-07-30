@@ -61,7 +61,7 @@ Setting `RUN_ESM=true` locally will run use the ESM app instead of the CJS app w
 If you are actively developing a feature and you would like to know which lines and files you have already covered in your tests, you can run:
 
 ```
-npm run coverage --npm_command="test:ci:opentelemetry-exporter"
+workspace="test:ci:opentelemetry-exporter" pnpm run coverage
 ```
 
 At the end of the execution it will open the coverage report in the browser and you can navigate through

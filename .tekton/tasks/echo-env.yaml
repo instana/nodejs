@@ -6,8 +6,6 @@ spec:
   params:
     - name: node-version
       value: $(params.node-version)
-    - name: npm-version
-      value: $(params.npm-version)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -18,9 +16,4 @@ spec:
         #!/bin/bash
 
         echo "Node: $(node --version)"
-
-        if [ -n "$(params.npm-version)" ]; then
-          npm install npm@$(params.npm-version) -g
-        fi
-
-        echo "NPM: $(npm --version)"
+        echo "PNPM: $(pnpm --version)"
