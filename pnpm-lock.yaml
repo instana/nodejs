@@ -743,8 +743,8 @@ importers:
   packages/shared-metrics:
     dependencies:
       '@instana/core':
-        specifier: 3.14.4
-        version: 3.14.4
+        specifier: workspace:../core
+        version: link:../core
       detect-libc:
         specifier: ^2.0.2
         version: 2.0.3

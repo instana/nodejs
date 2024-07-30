@@ -56,7 +56,7 @@
     "verify": "pnpm run lint && npm test"
   },
   "dependencies": {
-    "@instana/core": "3.14.4",
+    "@instana/core": "workspace:../core",
     "detect-libc": "^2.0.2",
     "event-loop-lag": "^1.4.0",
     "recursive-copy": "^2.0.13",
