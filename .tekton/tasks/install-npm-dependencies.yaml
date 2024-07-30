@@ -32,5 +32,5 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
-        pnpm install pnpm -g
+        npm install -g pnpm
         ppnpm install
