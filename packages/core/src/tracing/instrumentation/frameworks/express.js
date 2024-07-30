@@ -24,6 +24,7 @@ exports.deactivate = function deactivate() {
 };
 
 exports.init = function init() {
+  hook.onModuleLoad('express-beta', instrument);
   hook.onModuleLoad('express', instrument);
 };
 
