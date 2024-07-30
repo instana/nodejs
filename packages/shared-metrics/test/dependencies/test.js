@@ -21,7 +21,7 @@ const ProcessControls = require('../../../collector/test/test_util/ProcessContro
 const globalAgent = require('../../../collector/test/globalAgent');
 
 describe('dependencies', function () {
-  // Some of the tests in this suite include running npm install and on CI we have observed that this can take roughly
+  // Some of the tests in this suite include running pnpm install and on CI we have observed that this can take roughly
   // two minutes (!) sometimes, so we go with a large timeout. Base timeout on CI is 30 seconds, with
   // factor 6 this allows for test durations up to three minutes.
   this.timeout(config.getTestTimeout() * 6);
@@ -33,7 +33,7 @@ describe('dependencies', function () {
     const appDir = path.join(__dirname, 'app-with-package-json');
 
     before(() => {
-      runCommandSync('npm install --production --no-optional --no-audit', appDir);
+      runCommandSync('pnpm install --production --no-optional --no-audit', appDir);
     });
 
     let controls;
@@ -76,7 +76,7 @@ describe('dependencies', function () {
   describe('without a package.json file', () => {
     // This simulates a deployment where the package.json file is not included in the deployment. It is not entirely
     // trivial to create that situation. We copy the app from ./app-without-package-json to a temporary directory, then
-    // run npm install there and finally delete the package.json file.
+    // run pnpm install there and finally delete the package.json file.
     // Even if we had an app without a package.json file right here in the packages/shared-metrics/test folder, our
     // lookup mechanism would find another package.json file in packages/shared-metrics, or, if that would be missing,
     // in the root directory of the repository. This is because the lookup mechanism traverses the file system hierarchy
@@ -90,7 +90,7 @@ describe('dependencies', function () {
       // eslint-disable-next-line no-console
       console.log(`Copying test app from ${appDir} to ${tmpDir}.`);
       await recursiveCopy(appDir, tmpDir);
-      runCommandSync('npm install --production --no-optional --no-audit', tmpDir);
+      runCommandSync('pnpm install --production --no-optional --no-audit', tmpDir);
       const instanaPath = path.join(tmpDir, 'node_modules', '@instana');
       mkdirp.sync(instanaPath);
       const collectorPath = path.join(instanaPath, 'collector');
@@ -156,7 +156,7 @@ describe('dependencies', function () {
     const repoRootDir = path.join(__dirname, '..', '..', '..', '..');
 
     before(async () => {
-      runCommandSync(`npm install --production --no-optional --no-audit ${appTgz}`, tmpDir);
+      runCommandSync(`pnpm install --production --no-optional --no-audit ${appTgz}`, tmpDir);
       const instanaPath = path.join(tmpDir, 'node_modules', '@instana');
       mkdirp.sync(instanaPath);
       const collectorPath = path.join(instanaPath, 'collector');

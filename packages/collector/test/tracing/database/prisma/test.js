@@ -57,7 +57,7 @@ describe('tracing/prisma', function () {
           }
 
           try {
-            await executeAsync(`npm install prisma@${versionToInstall}`, appDir);
+            await executeAsync(`pnpm install prisma@${versionToInstall}`, appDir);
           } catch (err) {
             // ignore
           }

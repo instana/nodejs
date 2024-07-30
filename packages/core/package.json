@@ -2,28 +2,6 @@
   "name": "@instana/core",
   "version": "3.14.4",
   "description": "Core library for Instana's Node.js packages",
-  "main": "src/index.js",
-  "files": [
-    "src",
-    "CHANGELOG.md",
-    "iitm-loader.mjs"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "audit": "npm audit --omit=dev",
-    "test": "NODE_ENV=debug USE_OPENTRACING_DEBUG_IMPL=true mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --sort $(find test -iname '*test.js')",
-    "test:debug": "WITH_STDOUT=true npm run test",
-    "test:ci": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json 'test/**/*test.js'",
-    "lint": "eslint src test",
-    "verify": "npm run lint && npm test",
-    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/instana/nodejs.git"
-  },
   "keywords": [
     "instana",
     "agent",
@@ -33,6 +11,15 @@
     "performance",
     "tracing"
   ],
+  "homepage": "https://github.com/instana/nodejs/blob/main/packages/core/README.md",
+  "bugs": {
+    "url": "https://github.com/instana/nodejs/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs.git"
+  },
+  "license": "MIT",
   "author": {
     "name": "Bastian Krol",
     "email": "bastian.krol@instana.com"
@@ -51,11 +38,21 @@
       "email": "arya.mohanan@ibm.com"
     }
   ],
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/instana/nodejs/issues"
+  "main": "src/index.js",
+  "files": [
+    "src",
+    "CHANGELOG.md",
+    "iitm-loader.mjs"
+  ],
+  "scripts": {
+    "audit": "npm audit --omit=dev",
+    "lint": "eslint src test",
+    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'",
+    "test": "NODE_ENV=debug USE_OPENTRACING_DEBUG_IMPL=true mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --sort $(find test -iname '*test.js')",
+    "test:ci": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json 'test/**/*test.js'",
+    "test:debug": "WITH_STDOUT=true pnpm run test",
+    "verify": "pnpm run lint && npm test"
   },
-  "homepage": "https://github.com/instana/nodejs/blob/main/packages/core/README.md",
   "dependencies": {
     "@opentelemetry/api": "1.9.0",
     "@opentelemetry/context-async-hooks": "1.25.0",
@@ -71,5 +68,8 @@
     "opentracing": "^0.14.5",
     "semver": "^7.5.4",
     "shimmer": "^1.2.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

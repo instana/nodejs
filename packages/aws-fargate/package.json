@@ -2,38 +2,6 @@
   "name": "@instana/aws-fargate",
   "version": "3.14.4",
   "description": "Instana tracing and monitoring for Node.js based AWS Fargate tasks",
-  "author": {
-    "name": "Bastian Krol",
-    "email": "bastian.krol@instana.com"
-  },
-  "homepage": "https://github.com/instana/nodejs/blob/main/packages/aws-fargate/README.md",
-  "main": "src/index.js",
-  "files": [
-    "src",
-    "esm-loader.mjs",
-    "esm-register.mjs"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "directories": {
-    "lib": "src",
-    "test": "test"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/instana/nodejs.git"
-  },
-  "scripts": {
-    "audit": "npm audit --omit=dev",
-    "node_modules:exists": "mkdir -p node_modules",
-    "test": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --sort $(find test -iname '*test.js')",
-    "test:debug": "WITH_STDOUT=true npm run test",
-    "test:ci": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json 'test/**/*test.js'",
-    "lint": "eslint src test images",
-    "verify": "npm run lint && npm test",
-    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'images/**/*.js'"
-  },
   "keywords": [
     "distributed-tracing",
     "aws",
@@ -47,6 +15,19 @@
     "performance",
     "tracing"
   ],
+  "homepage": "https://github.com/instana/nodejs/blob/main/packages/aws-fargate/README.md",
+  "bugs": {
+    "url": "https://github.com/instana/nodejs/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Bastian Krol",
+    "email": "bastian.krol@instana.com"
+  },
   "contributors": [
     {
       "name": "Willian Carvalho",
@@ -61,10 +42,26 @@
       "email": "arya.mohanan@ibm.com"
     }
   ],
-  "bugs": {
-    "url": "https://github.com/instana/nodejs/issues"
+  "main": "src/index.js",
+  "directories": {
+    "lib": "src",
+    "test": "test"
   },
-  "license": "MIT",
+  "files": [
+    "src",
+    "esm-loader.mjs",
+    "esm-register.mjs"
+  ],
+  "scripts": {
+    "audit": "npm audit --omit=dev",
+    "lint": "eslint src test images",
+    "node_modules:exists": "mkdir -p node_modules",
+    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'images/**/*.js'",
+    "test": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --sort $(find test -iname '*test.js')",
+    "test:ci": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json 'test/**/*test.js'",
+    "test:debug": "WITH_STDOUT=true pnpm run test",
+    "verify": "pnpm run lint && npm test"
+  },
   "dependencies": {
     "@instana/core": "3.14.4",
     "@instana/metrics-util": "3.14.4",
@@ -72,5 +69,8 @@
   },
   "engines": {
     "node": ">=14.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

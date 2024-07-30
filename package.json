@@ -37,7 +37,7 @@
     "lint": "eslint .*.js *.js && pnpm run typecheck && lerna run lint --stream && eslint misc && eslint dockerfile-examples && eslint bin",
     "open-coverage": "open coverage/lcov-report/index.html",
     "prettier": "prettier --write 'misc/**/*.js' 'dockerfile-examples/**/*.js' 'bin/**/*.js' && lerna run prettier --stream",
-    "reinstall-deps": "lerna clean -y && rm -rf node_modules && pnpm install --loglevel verbose",
+    "reinstall-deps": "lerna clean -y && rm -rf node_modules && pppnpm install --loglevel verbose",
     "sort-packagejson": "pnpm prettier --write package.json",
     "tekton:lint": "npx @ibm/tekton-lint .tekton/**/**/*.yaml .tekton/**/*.yaml .tekton/*.yaml",
     "test:ci:autoprofile": "lerna run test:ci --stream --scope=@instana/autoprofile",

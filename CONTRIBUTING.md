@@ -10,13 +10,13 @@ The error can be something like: ModuleNotFoundError: No module named 'distutils
 
 `brew install jq` for OSX (for other systems please look up [here](https://stedolan.github.io/jq/)) is required to run `npm run audit` or `lerna audit run`.
 
-Note: You might need to install `libpq-dev`/`postgresql-devel` or a similar package before running `npm install` because `pg-native` depends on it. (`@instana/collector` and friends do not depend on `pg-native` but our test suite depends on it.)
+Note: You might need to install `libpq-dev`/`postgresql-devel` or a similar package before running `ppnpm install` because `pg-native` depends on it. (`@instana/collector` and friends do not depend on `pg-native` but our test suite depends on it.)
 
-After cloning the repository, run `npm install` in the root of the repository.
+After cloning the repository, run `pnpm install` in the root of the repository.
 
 Ensure that your IDE is set up to utilize **ESLint** and **Prettier**, with automatic code formatting enabled.
 
-Troubleshooting `pg_config: command not found`: The tests in this package depend on (among others) `pg-native` and that in turn depends on the native add-on `libpq`. That add-on might try to call `pg_config` during `npm install`. If `npm install` terminates with `pg_config: command not found`, install the PostgreSQL package for your system (e.g. `brew install postgresql` or similar). If you do not want to run any tests, you can also omit this step and install dependencies with `npm install --production` instead.
+Troubleshooting `pg_config: command not found`: The tests in this package depend on (among others) `pg-native` and that in turn depends on the native add-on `libpq`. That add-on might try to call `pg_config` during `pnpm install`. If `pnpm install` terminates with `pg_config: command not found`, install the PostgreSQL package for your system (e.g. `brew install postgresql` or similar). If you do not want to run any tests, you can also omit this step and install dependencies with `pnpm install --production` instead.
 
 Install the [`aws-cli`](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) to publish AWS layers from local.
 
@@ -24,7 +24,7 @@ Install the [`aws-cli`](https://docs.aws.amazon.com/cli/latest/userguide/getting
 
 If you are using Node.js v14 and would like to take advantage of the "overrides" feature in package.json, you need to upgrade npm manually since Node.js v14 ships with npm v6, and `overrides` were introduced in npm v8.3. Upgrade npm manually to the latest version using the following command:
 ```
-npm install -g npm@latest
+pnpm install -g npm@latest
 ```
 
 ## Executing Tests Locally
@@ -133,9 +133,9 @@ The following sections describe how to manage dependencies in practice.
 
 ### Adding A Package Dependency
 
-`npm install -D ${dependency-name}`: Adds a dev dependency to the root `package.json` file.
-`npm install ${dependency-name} -w packages/collector`: Adds a production dependency to the package `@instana/collector`. This is equivalent to `cd packages/collector; npm install ${dependency-name}`.
-`npm install -D ${dependency-name} -w packages/collector`: Adds a dev dependency to the package `@instana/collector`. This is equivalent to `cd packages/collector; npm install -D ${dependency-name}`.
+`pnpm install -D ${dependency-name}`: Adds a dev dependency to the root `package.json` file.
+`pnpm install ${dependency-name} -w packages/collector`: Adds a production dependency to the package `@instana/collector`. This is equivalent to `cd packages/collector; pnpm install ${dependency-name}`.
+`pnpm install -D ${dependency-name} -w packages/collector`: Adds a dev dependency to the package `@instana/collector`. This is equivalent to `cd packages/collector; pnpm install -D ${dependency-name}`.
 
 ### Removing A Package Dependency
 
@@ -145,10 +145,10 @@ The following sections describe how to manage dependencies in practice.
 
 ### Updating A Single Version In A `package.json` File
 
-`npm install ${dependency-name}@${version}`: Updates a specific production dependency on the root.
-`npm install -D ${dependency-name}@${version}`: Updates a specific dev dependency on the root.
-`npm install ${dependency-name}@${version} -w packages/collector`: Updates a specific production dependency in the package `@instana/collector`. This is equivalent to `cd packages/collector; npm install ${dependency-name}@${version}`.
-`npm install -D ${dependency-name}@${version} -w packages/collector`: Updates a specific dev dependency in the package `@instana/collector`. This is equivalent to `cd packages/collector; npm install -D ${dependency-name}@${version}`.
+`pnpm install ${dependency-name}@${version}`: Updates a specific production dependency on the root.
+`pnpm install -D ${dependency-name}@${version}`: Updates a specific dev dependency on the root.
+`pnpm install ${dependency-name}@${version} -w packages/collector`: Updates a specific production dependency in the package `@instana/collector`. This is equivalent to `cd packages/collector; pnpm install ${dependency-name}@${version}`.
+`pnpm install -D ${dependency-name}@${version} -w packages/collector`: Updates a specific dev dependency in the package `@instana/collector`. This is equivalent to `cd packages/collector; pnpm install -D ${dependency-name}@${version}`.
 
 ### Updating A Single Version In A Lockfile
 
@@ -169,7 +169,7 @@ Refs:
     - https://docs.npmjs.com/cli/v9/configuring-npm/package-lock-json#lockfileversion
     - https://github.com/instana/nodejs/pull/710
 
-**Note:** Packages published on the npm registry never contain `package-lock.json` files. So the versions pinned in our `package-lock.json` file are only relevant to determine the package versions that get installed when running `npm install` inside this repository (locally or on CI), they do not affect users installing `@instana` packages as a dependency.
+**Note:** Packages published on the npm registry never contain `package-lock.json` files. So the versions pinned in our `package-lock.json` file are only relevant to determine the package versions that get installed when running `pnpm install` inside this repository (locally or on CI), they do not affect users installing `@instana` packages as a dependency.
 
 ### Version Ranges vs. Pinning a Specific Version
 

@@ -26,9 +26,9 @@ describe('snapshot data and metrics', function () {
 
   before(async () => {
     const cwd = __dirname;
-    console.log(`Running npm install in ${cwd}.`);
-    const npmInstallOutput = execSync('npm install --no-audit', { cwd });
-    console.log(`Done with running npm install in ${cwd}: ${npmInstallOutput}`);
+    console.log(`Running pnpm install in ${cwd}.`);
+    const npmInstallOutput = execSync('pnpm install --no-audit', { cwd });
+    console.log(`Done with running pnpm install in ${cwd}: ${npmInstallOutput}`);
 
     controls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),

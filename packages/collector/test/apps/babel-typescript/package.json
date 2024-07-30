@@ -2,19 +2,20 @@
   "name": "babel-example-app-with-instana",
   "version": "1.0.0",
   "description": "An example (and a test) for how to integrate @instana/collector into a babel app",
-  "license": "MIT",
-  "scripts": {
-    "type-check": "tsc --noEmit",
-    "type-check:watch": "npm run type-check -- --watch",
-    "build": "npm run build:types && npm run build:js",
-    "build:types": "tsc --emitDeclarationOnly",
-    "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/instana/nodejs.git"
   },
+  "license": "MIT",
   "main": "lib/index",
+  "scripts": {
+    "build": "pnpm run build:types && pnpm run build:js",
+    "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
+    "build:types": "tsc --emitDeclarationOnly",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "pnpm run type-check -- --watch"
+  },
+  "dependencies": {},
   "devDependencies": {
     "@babel/cli": "^7.24.1",
     "@babel/core": "^7.24.3",
@@ -27,6 +28,5 @@
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.11.30",
     "typescript": "^5.4.3"
-  },
-  "dependencies": {}
+  }
 }

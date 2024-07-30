@@ -119,7 +119,7 @@ currencies.forEach(currency => {
     } else {
       console.log(`npm i --save-optional ${currency.name}@${latestVersion} --no-audit`);
       execSync(`npm i --save-optional ${currency.name}@${latestVersion} --no-audit`, { stdio: 'inherit', cwd });
-      // NOTE: run an extra npm install after updating the optional dependencies because of
+      // NOTE: run an extra pnpm install after updating the optional dependencies because of
       //       a bug in npm: https://github.com/npm/cli/issues/7530
       execSync('npm i', { stdio: 'inherit', cwd });
     }

@@ -2,37 +2,6 @@
   "name": "instana-aws-lambda-auto-wrap",
   "version": "3.14.4",
   "description": "Automatically wrap AWS Lambdas for Instana tracing and monitoring without code modification.",
-  "author": {
-    "name": "Bastian Krol",
-    "email": "bastian.krol@instana.com"
-  },
-  "homepage": "https://github.com/instana/nodejs/blob/main/packages/aws-lambda-auto-wrap/README.md",
-  "license": "MIT",
-  "main": "src/index.js",
-  "files": [
-    "src",
-    "CHANGELOG.md"
-  ],
-  "directories": {
-    "lib": "src"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/instana/nodejs.git"
-  },
-  "scripts": {
-    "audit": "npm audit --omit=dev",
-    "node_modules:exists": "mkdir -p node_modules",
-    "test": "NODE_ENV=debug mocha --config=test/.mocharc.js --sort $(find test -iname '*test.js')",
-    "test:debug": "WITH_STDOUT=true npm run test",
-    "test:ci": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json 'test/**/*test.js'",
-    "lint": "eslint src",
-    "verify": "npm run lint",
-    "prettier": "prettier --write 'src/**/*.js'"
-  },
   "keywords": [
     "distributed-tracing",
     "aws",
@@ -46,6 +15,19 @@
     "performance",
     "tracing"
   ],
+  "homepage": "https://github.com/instana/nodejs/blob/main/packages/aws-lambda-auto-wrap/README.md",
+  "bugs": {
+    "url": "https://github.com/instana/nodejs/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Bastian Krol",
+    "email": "bastian.krol@instana.com"
+  },
   "contributors": [
     {
       "name": "Willian Carvalho",
@@ -60,11 +42,29 @@
       "email": "arya.mohanan@ibm.com"
     }
   ],
-  "bugs": {
-    "url": "https://github.com/instana/nodejs/issues"
+  "main": "src/index.js",
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "src",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "audit": "npm audit --omit=dev",
+    "lint": "eslint src",
+    "node_modules:exists": "mkdir -p node_modules",
+    "prettier": "prettier --write 'src/**/*.js'",
+    "test": "NODE_ENV=debug mocha --config=test/.mocharc.js --sort $(find test -iname '*test.js')",
+    "test:ci": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json 'test/**/*test.js'",
+    "test:debug": "WITH_STDOUT=true pnpm run test",
+    "verify": "pnpm run lint"
   },
   "dependencies": {
     "@instana/aws-lambda": "3.14.4",
     "@instana/core": "3.14.4"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

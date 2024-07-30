@@ -2,37 +2,6 @@
   "name": "@instana/shared-metrics",
   "version": "3.14.4",
   "description": "Internal metrics plug-in package for Node.js monitoring with Instana",
-  "author": {
-    "name": "Bastian Krol",
-    "email": "bastian.krol@instana.com"
-  },
-  "homepage": "https://github.com/instana/nodejs/blob/main/packages/shared-metrics/README.md",
-  "main": "src/index.js",
-  "files": [
-    "src",
-    "addons/linux",
-    "CHANGELOG.md"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "directories": {
-    "lib": "src",
-    "test": "test"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/instana/nodejs.git"
-  },
-  "scripts": {
-    "audit": "npm audit --omit=dev",
-    "test": "mocha --config=test/.mocharc.js --require test/hooks.js --sort $(find test -iname '*test.js')",
-    "test:ci": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/**/*test.js'",
-    "test:debug": "WITH_STDOUT=true npm run test",
-    "lint": "eslint src test",
-    "verify": "npm run lint && npm test",
-    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
-  },
   "keywords": [
     "instana",
     "memory",
@@ -40,6 +9,19 @@
     "monitoring",
     "performance"
   ],
+  "homepage": "https://github.com/instana/nodejs/blob/main/packages/shared-metrics/README.md",
+  "bugs": {
+    "url": "https://github.com/instana/nodejs/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Bastian Krol",
+    "email": "bastian.krol@instana.com"
+  },
   "contributors": [
     {
       "name": "Willian Carvalho",
@@ -54,10 +36,25 @@
       "email": "arya.mohanan@ibm.com"
     }
   ],
-  "bugs": {
-    "url": "https://github.com/instana/nodejs/issues"
+  "main": "src/index.js",
+  "directories": {
+    "lib": "src",
+    "test": "test"
   },
-  "license": "MIT",
+  "files": [
+    "src",
+    "addons/linux",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "audit": "npm audit --omit=dev",
+    "lint": "eslint src test",
+    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'",
+    "test": "mocha --config=test/.mocharc.js --require test/hooks.js --sort $(find test -iname '*test.js')",
+    "test:ci": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/**/*test.js'",
+    "test:debug": "WITH_STDOUT=true pnpm run test",
+    "verify": "pnpm run lint && npm test"
+  },
   "dependencies": {
     "@instana/core": "3.14.4",
     "detect-libc": "^2.0.2",
@@ -69,5 +66,8 @@
   "optionalDependencies": {
     "event-loop-stats": "1.4.1",
     "gcstats.js": "1.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

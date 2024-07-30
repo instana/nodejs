@@ -14,7 +14,7 @@ const testUtils = require('../../../../core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 
-describe('snapshot data and metrics/app deployed via npm install', function () {
+describe('snapshot data and metrics/app deployed via pnpm install', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -53,7 +53,7 @@ describe('snapshot data and metrics/app deployed via npm install', function () {
         expect(deps['npm-installed-test-app']).to.equal('4.5.6');
 
         expect(findMetric(allMetrics, ['description'])).to.equal(
-          'This is a test application that is deployed via npm install $appName.'
+          'This is a test application that is deployed via pnpm install $appName.'
         );
 
         const directDeps = findMetric(allMetrics, ['directDependencies']);
