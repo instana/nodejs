@@ -95,6 +95,8 @@ For any change that is customer-facing and should appear in the changelog file, 
 
 When composing commit messages, it's important to use past tense. Additionally, if there is a corresponding ticket or issue associated with the change, please put the ticket link in the commit message and pull request.
 
+The commit message length is limited. Read through our commitlint rules [here](https://github.com/instana/nodejs/blob/v3.14.4/commitlint.config.js#L14).
+
 For instance, you can refer to this example commit message: https://github.com/instana/nodejs/commit/bd3e7554fe21188c3ad10d442e4d72546d5c2267
 
 ## Creating a development branch
