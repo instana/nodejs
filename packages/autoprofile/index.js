@@ -3,7 +3,9 @@
  * (c) Copyright Instana Inc. and contributors 2020
  */
 
-let AutoProfiler = require('./lib/auto_profiler').AutoProfiler;
+'use strict';
+
+const AutoProfiler = require('./lib/auto_profiler').AutoProfiler;
 
 let profiler = null;
 

@@ -43,7 +43,7 @@ spec:
         cd $ARTIFACTS_PATH
 
         npm install -g pnpm
-        # pnpm run lint
+        pnpm run lint
 
         if [ $? -eq 0 ]; then
           touch lint.succeeded

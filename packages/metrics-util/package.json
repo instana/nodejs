@@ -57,9 +57,9 @@
     "verify": "pnpm run lint && npm test"
   },
   "dependencies": {
-    "@instana/core": "3.14.4",
-    "@instana/serverless": "3.14.4",
-    "@instana/shared-metrics": "3.14.4",
+    "@instana/core": "workspace:../core",
+    "@instana/serverless": "workspace:../serverless",
+    "@instana/shared-metrics": "workspace:../shared-metrics",
     "node-fetch": "^2.6.7"
   },
   "publishConfig": {

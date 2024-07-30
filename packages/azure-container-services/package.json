@@ -60,8 +60,8 @@
     "verify": "pnpm run lint && npm test"
   },
   "dependencies": {
-    "@instana/core": "3.14.4",
-    "@instana/serverless": "3.14.4"
+    "@instana/core": "workspace:../core",
+    "@instana/serverless": "workspace:../serverless"
   },
   "engines": {
     "node": ">=14.0.0"

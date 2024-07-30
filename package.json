@@ -33,11 +33,12 @@
     "coverage-ci": "c8 --all --reporter=lcov --report-dir=./coverage/${report_dir} pnpm run ${workspace}",
     "depcheck": "lerna exec 'npx depcheck --skip-missing --ignores nan,agent-base,@types/*' --stream",
     "doctoc": "doctoc README.md packages/collector/README.md",
+    "preinstall": "npx only-allow pnpm",
     "postinstall": "chmod +x ./node_modules/husky/lib/bin.js && husky install && lerna run node_modules:exists",
     "lint": "eslint .*.js *.js && pnpm run typecheck && lerna run lint --stream && eslint misc && eslint dockerfile-examples && eslint bin",
     "open-coverage": "open coverage/lcov-report/index.html",
     "prettier": "prettier --write 'misc/**/*.js' 'dockerfile-examples/**/*.js' 'bin/**/*.js' && lerna run prettier --stream",
-    "reinstall-deps": "lerna clean -y && rm -rf node_modules && pppnpm install --loglevel verbose",
+    "reinstall-deps": "lerna clean -y && rm -rf node_modules && pnpm install --loglevel verbose",
     "sort-packagejson": "pnpm prettier --write package.json",
     "tekton:lint": "npx @ibm/tekton-lint .tekton/**/**/*.yaml .tekton/**/*.yaml .tekton/*.yaml",
     "test:ci:autoprofile": "lerna run test:ci --stream --scope=@instana/autoprofile",
@@ -240,7 +241,7 @@
     "tedious": "^17.0.0",
     "tsoa": "^6.4.0",
     "typeorm": "^0.3.20",
-    "typescript": "^5.0.4",
+    "typescript": "5.3.3",
     "underscore": "^1.13.1",
     "uuid": "^9.0.1",
     "wait-sync": "^1.0.1",
@@ -257,6 +258,10 @@
     "prisma": "^5.17.0"
   },
   "packageManager": "pnpm@9.6.0",
+  "engines": {
+    "npm": "Please use pnpm",
+    "yarn": "Please use pnpm"
+  },
   "overrides": {
     "nx": "15.8.9",
     "stream-shift": "1.0.2"

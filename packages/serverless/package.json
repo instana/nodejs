@@ -62,7 +62,7 @@
     "verify": "pnpm run lint && npm test"
   },
   "dependencies": {
-    "@instana/core": "3.14.4",
+    "@instana/core": "workspace:../core",
     "agent-base": "^6.0.2",
     "https-proxy-agent": "^7.0.2"
   },

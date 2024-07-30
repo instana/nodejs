@@ -53,7 +53,7 @@
     "verify": "pnpm run lint && npm test"
   },
   "dependencies": {
-    "@instana/serverless": "3.14.4",
+    "@instana/serverless": "workspace:../serverless",
     "@opentelemetry/api": "1.4.1",
     "@opentelemetry/core": "1.17.1"
   },

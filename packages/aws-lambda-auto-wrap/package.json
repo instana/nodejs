@@ -61,8 +61,8 @@
     "verify": "pnpm run lint"
   },
   "dependencies": {
-    "@instana/aws-lambda": "3.14.4",
-    "@instana/core": "3.14.4"
+    "@instana/aws-lambda": "workspace:../aws-lambda",
+    "@instana/core": "workspace:../core"
   },
   "publishConfig": {
     "access": "public"

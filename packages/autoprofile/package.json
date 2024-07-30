@@ -58,7 +58,7 @@
     "verify": "pnpm run lint && npm test"
   },
   "dependencies": {
-    "@instana/core": "3.14.4",
+    "@instana/core": "workspace:../core",
     "detect-libc": "^2.0.2",
     "nan": "^2.14.2",
     "node-gyp-build": "^4.7.1",
