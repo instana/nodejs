@@ -33,4 +33,4 @@ spec:
         cd $ARTIFACTS_PATH
 
         npm install -g pnpm
-        ppnpm install
+        pnpm install

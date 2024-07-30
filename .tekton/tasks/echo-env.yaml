@@ -15,5 +15,5 @@ spec:
       script: |
         #!/bin/bash
 
-        echo "Node: $(node --version)"
-        echo "PNPM: $(pnpm --version)"
+        echo "node: $(node --version)"
+        echo "npm: $(npm --version)"
