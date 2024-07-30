@@ -25,6 +25,7 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        npm install -g pnpm
         pnpm run audit
 
         if [ $? -eq 0 ]; then
@@ -41,6 +42,7 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        npm install -g pnpm
         # pnpm run lint
 
         if [ $? -eq 0 ]; then
@@ -73,6 +75,7 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        npm install -g pnpm
         pnpm run depcheck
 
         if [ $? -eq 0 ]; then
