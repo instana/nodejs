@@ -47,13 +47,13 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "audit": "npm audit --omit=dev",
+    "audit": "pnpm audit --prod",
     "lint": "eslint src test",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'",
     "test": "mocha --config=test/.mocharc.js --require test/hooks.js --sort $(find test -iname '*test.js')",
     "test:ci": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/**/*test.js'",
     "test:debug": "WITH_STDOUT=true pnpm run test",
-    "verify": "pnpm run lint && npm test"
+    "verify": "pnpm run lint && pnpm test"
   },
   "dependencies": {
     "@instana/core": "workspace:../core",

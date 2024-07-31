@@ -51,7 +51,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "audit": "npm audit --omit=dev",
+    "audit": "pnpm audit --prod",
     "lint": "eslint src",
     "node_modules:exists": "mkdir -p node_modules",
     "prettier": "prettier --write 'src/**/*.js'",

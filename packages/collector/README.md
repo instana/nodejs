@@ -65,5 +65,5 @@ In most cases it is enough to require and initialize `@instana/collector` and le
 
 ## Filing Issues
 
-If something is not working as expected or you have a question, instead of opening an issue in this repository, please open a ticket at <https://www.ibm.com/mysupport> instead. Please refrain from filing issues or tickets if your audit tool (npm audit, Snyk, etc.) reported a CVE for a dependency or a transitive dependency of `@instana/collector` -- we run these audits with every build and take appropriate action automatically.
+If something is not working as expected or you have a question, instead of opening an issue in this repository, please open a ticket at <https://www.ibm.com/mysupport> instead. Please refrain from filing issues or tickets if your audit tool (pnpm audit, Snyk, etc.) reported a CVE for a dependency or a transitive dependency of `@instana/collector` -- we run these audits with every build and take appropriate action automatically.
 
