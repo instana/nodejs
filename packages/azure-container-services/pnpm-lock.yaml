@@ -1,0 +1,16 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@instana/core':
+        specifier: workspace:../core
+        version: link:../core
+      '@instana/serverless':
+        specifier: workspace:../serverless
+        version: link:../serverless

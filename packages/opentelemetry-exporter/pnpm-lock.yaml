@@ -1,0 +1,46 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@instana/serverless':
+        specifier: workspace:../serverless
+        version: link:../serverless
+      '@opentelemetry/api':
+        specifier: 1.4.1
+        version: 1.4.1
+      '@opentelemetry/core':
+        specifier: 1.17.1
+        version: 1.17.1(@opentelemetry/api@1.4.1)
+
+packages:
+
+  '@opentelemetry/api@1.4.1':
+    resolution: {integrity: sha512-O2yRJce1GOc6PAy3QxFM4NzFiWzvScDC1/5ihYBL6BUEVdq0XMWN01sppE+H6bBXbaFYipjwFLEWLg5PaSOThA==}
+    engines: {node: '>=8.0.0'}
+
+  '@opentelemetry/core@1.17.1':
+    resolution: {integrity: sha512-I6LrZvl1FF97FQXPR0iieWQmKnGxYtMbWA1GrAXnLUR+B1Hn2m8KqQNEIlZAucyv00GBgpWkpllmULmZfG8P3g==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.0.0 <1.7.0'
+
+  '@opentelemetry/semantic-conventions@1.17.1':
+    resolution: {integrity: sha512-xbR2U+2YjauIuo42qmE8XyJK6dYeRMLJuOlUP5SO4auET4VtOHOzgkRVOq+Ik18N+Xf3YPcqJs9dZMiDddz1eQ==}
+    engines: {node: '>=14'}
+
+snapshots:
+
+  '@opentelemetry/api@1.4.1': {}
+
+  '@opentelemetry/core@1.17.1(@opentelemetry/api@1.4.1)':
+    dependencies:
+      '@opentelemetry/api': 1.4.1
+      '@opentelemetry/semantic-conventions': 1.17.1
+
+  '@opentelemetry/semantic-conventions@1.17.1': {}
