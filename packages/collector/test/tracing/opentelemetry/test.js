@@ -6,6 +6,7 @@
 
 const expect = require('chai').expect;
 const path = require('path');
+const semver = require('semver');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../core/test/config');
@@ -497,14 +498,15 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         ));
   });
 
-  describe('tedious', function () {
+  const runTedious = semver.gt(process.versions.node, '14.0.0') ? describe : describe.skip;
+  runTedious('tedious', function () {
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
       let controls;
 
-    // We need to increase the waiting timeout here for the initial azure connection,
-    // because it can take up to 1-2 minutes till azure replies if the db is in paused state
+      // We need to increase the waiting timeout here for the initial azure connection,
+      // because it can take up to 1-2 minutes till azure replies if the db is in paused state
       this.timeout(1000 * 60 * 2);
 
       before(async () => {
