@@ -62,6 +62,9 @@
     "@instana/shared-metrics": "workspace:../shared-metrics",
     "node-fetch": "^2.6.7"
   },
+  "devDependencies": {
+    "@instana/collector": "workspace:../collector"
+  },
   "publishConfig": {
     "access": "public"
   }

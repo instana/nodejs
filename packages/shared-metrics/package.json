@@ -63,6 +63,9 @@
     "semver": "^7.5.4",
     "tar": "^6.2.1"
   },
+  "devDependencies": {
+    "@instana/collector": "workspace:../collector"
+  },
   "optionalDependencies": {
     "event-loop-stats": "1.4.1",
     "gcstats.js": "1.0.0"

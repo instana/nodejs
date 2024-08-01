@@ -52,7 +52,8 @@
     "@opentelemetry/api": "1.4.1"
   },
   "devDependencies": {
-    "@instana/collector": "workspace:../collector"
+    "@instana/collector": "workspace:../collector",
+    "@instana/core": "workspace:../core"
   },
   "engines": {
     "node": ">=14.0.0"

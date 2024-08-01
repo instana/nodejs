@@ -20,6 +20,10 @@ importers:
       node-fetch:
         specifier: ^2.6.7
         version: 2.7.0
+    devDependencies:
+      '@instana/collector':
+        specifier: workspace:../collector
+        version: link:../collector
 
 packages:
 

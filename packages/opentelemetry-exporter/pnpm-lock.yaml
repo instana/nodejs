@@ -21,6 +21,9 @@ importers:
       '@instana/collector':
         specifier: workspace:../collector
         version: link:../collector
+      '@instana/core':
+        specifier: workspace:../core
+        version: link:../core
 
 packages:
 
