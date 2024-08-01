@@ -60,6 +60,9 @@
     "@instana/core": "workspace:../core",
     "@instana/serverless": "workspace:../serverless"
   },
+  "devDependencies": {
+    "@instana/collector": "workspace:../collector"
+  },
   "publishConfig": {
     "access": "public"
   }

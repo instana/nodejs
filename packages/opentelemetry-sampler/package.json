@@ -51,6 +51,9 @@
   "dependencies": {
     "@opentelemetry/api": "1.4.1"
   },
+  "devDependencies": {
+    "@instana/collector": "workspace:../collector"
+  },
   "engines": {
     "node": ">=14.0.0"
   }

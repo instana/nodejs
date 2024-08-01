@@ -67,6 +67,9 @@
     "@instana/metrics-util": "workspace:../metrics-util",
     "@instana/serverless": "workspace:../serverless"
   },
+  "devDependencies": {
+    "@instana/collector": "workspace:../collector"
+  },
   "engines": {
     "node": ">=14.0.0"
   },

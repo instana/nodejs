@@ -17,3 +17,7 @@ importers:
       '@instana/serverless':
         specifier: workspace:../serverless
         version: link:../serverless
+    devDependencies:
+      '@instana/collector':
+        specifier: workspace:../collector
+        version: link:../collector

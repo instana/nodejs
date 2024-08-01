@@ -63,6 +63,9 @@
     "@instana/core": "workspace:../core",
     "@instana/serverless": "workspace:../serverless"
   },
+  "devDependencies": {
+    "@instana/collector": "workspace:../collector"
+  },
   "engines": {
     "node": ">=14.0.0"
   },
