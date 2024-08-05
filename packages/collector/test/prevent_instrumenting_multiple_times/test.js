@@ -27,7 +27,7 @@ describe('prevent initializing @instana/collector multiple times', function () {
   let controls;
 
   before(async () => {
-    runCommandSync('pnpm install --prod --no-optional @instana/collector', tmpDir);
+    runCommandSync('pnpm install --prod --no-optional --no-lockfile --ignore-workspace @instana/collector', tmpDir);
 
     controls = new ProcessControls({
       appPath: path.join(__dirname, '..', 'apps', 'express'),

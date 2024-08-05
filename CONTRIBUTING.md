@@ -157,19 +157,9 @@ The following sections describe how to manage dependencies in practice.
 `npm update ${dependency-name} -w packages/collector`: Updates a specific production dependency of the package `@instana/collector`. This is equivalent to `cd packages/collector; npm update ${dependency-name}`.
 `npm update -D ${dependency-name} -w packages/collector`: Updates a specific dev dependency of the package `@instana/collector`. This is equivalent to `cd packages/collector; npm update -D ${dependency-name}`.
 
-### package-lock.json
+### pnpm-lock.yaml
 
-There is only one single package-lock.json file when using **npm workspaces**.
-
-We are currently using **lockfileVersion 3**.
-
-If you need to recreate the package lock file, please us `npm i --lockfile-version 2`.
-
-Refs:
-    - https://docs.npmjs.com/cli/v9/configuring-npm/package-lock-json#lockfileversion
-    - https://github.com/instana/nodejs/pull/710
-
-**Note:** Packages published on the npm registry never contain `package-lock.json` files. So the versions pinned in our `package-lock.json` file are only relevant to determine the package versions that get installed when running `pnpm install` inside this repository (locally or on CI), they do not affect users installing `@instana` packages as a dependency.
+...
 
 ### Version Ranges vs. Pinning a Specific Version
 
@@ -217,7 +207,7 @@ The Github action will try to publish new versions for all packages from the mos
 
 Parameters for the release Github action:
 * "Use lerna publish from-package": Instead of executing `lerna publish`, the action will execute `lerna publish from-package`. See [below](#separate-lerna-version-and-lerna-publish) for the use case for this parameter. If in doubt, leave it unchanged (that is, `false`).
-* "Dry Run": With this option set to true, the Github action will not actually create a release but only apply all changes (package.json and package-lock.json files, CHANGELOG files). The action log will show the resulting diff at the end. The changes will not be committed. This can be used to preview the changes the release action would apply. If this option is `true`, the option "Use lerna publish from-package" has no effect.
+* "Dry Run": With this option set to true, the Github action will not actually create a release but only apply all changes (package.json and pnpm-lock.yaml files, CHANGELOG files). The action log will show the resulting diff at the end. The changes will not be committed. This can be used to preview the changes the release action would apply. If this option is `true`, the option "Use lerna publish from-package" has no effect.
 
 Lerna will determine if this is going to be a minor or patch version from the commit comments of all commits since the last release. It will also automatically update the CHANGELOG.md files in the root of the repository and also in all individual packages, based on those commits.
 
@@ -234,7 +224,7 @@ It is possible to execute the git parts of a release (version bump and tagging) 
 - Run `lerna version` to bump all versions and create a git tag.
     - You can skip this step if it has already happened for the release you want to publish. If not, the step is mandatory.
     - Lerna will determine if this is going to be a major, minor or patch version from the commit comments of all commits since the last release. It will also update all relevant changelog files.
-    - Lerna will push the commit and the tag created by `lerna version` to GitHub. Check that this has happened. Also check that the version numbers in package-lock.json have been updated as well.
+    - Lerna will push the commit and the tag created by `lerna version` to GitHub. Check that this has happened. Also check that the version numbers in pnpm-lock.yaml have been updated as well.
 - Run the Github action `release-on-demand` with the parameter `Use lerna publish from-package` set to `true`.
 
 This will execute `lerna publish from-package`. This can also be used if the previous execution of the release Github action went through for a subset of packages but not for others. Lerna will automatically figure out for which packages the latest version is not present in the registry and only publish those.

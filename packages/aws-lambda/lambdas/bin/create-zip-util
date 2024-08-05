@@ -9,11 +9,11 @@ function createZip {
   if [[ ! -e .dont-add-instana  ]]; then
 
     # No matter how we build the zip file, we need to modifiy the package.json, so we create a backup copy to be able to
-    # revert that modification later. Also, we do not want a modified package-lock.json show up in git diff all the
+    # revert that modification later. Also, we do not want a modified pnpm-lock.yaml show up in git diff all the
     # time.
     cp package.json package.json.backup
-    if [[ -f package-lock.json ]]; then
-      cp package-lock.json package-lock.json.backup
+    if [[ -f pnpm-lock.yaml ]]; then
+      cp pnpm-lock.yaml pnpm-lock.yaml.backup
     fi
 
     if [[ "${BUILD_LAMBDAS_WITH-}" == "layer" ]]; then
@@ -42,7 +42,7 @@ function createZip {
       # Furthermore we have to ensure that instana packages, which uses other instana packages, also will use the local version.
       # We can achieve that by installing our local core version first and ensuring npm will use the root installation for sub packages
       # We have to remove the lock file otherwise the integrity will fail.
-      rm package-lock.json
+      rm pnpm-lock.yaml
 
       npm --loglevel=warn --production install -S "../../instana-core.tgz"
       npm --loglevel=warn --production install -S "../../instana-aws-lambda-auto-wrap.tgz"
@@ -81,8 +81,8 @@ function createZip {
   if [[ ! -e .dont-add-instana  ]]; then
     # revert package.json modification
     mv package.json.backup package.json
-    if [[ -e package-lock.json.backup ]]; then
-      mv package-lock.json.backup package-lock.json
+    if [[ -e pnpm-lock.yaml.backup ]]; then
+      mv pnpm-lock.yaml.backup pnpm-lock.yaml
     fi
   fi
 }

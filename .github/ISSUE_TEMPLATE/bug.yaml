@@ -39,12 +39,4 @@ body:
       render: shell
     validations:
       required: true
-  - type: textarea
-    id: package-lockfile
-    attributes:
-      label: package-lock.json
-      description: Please paste the contents of the package-lock.json or yarn.lock file for the application that was affected by this bug.
-      render: shell
-    validations:
-      required: true
 

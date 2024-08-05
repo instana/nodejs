@@ -57,13 +57,13 @@ describe('tracing/prisma', function () {
           }
 
           try {
-            await executeAsync(`pnpm install prisma@${versionToInstall}`, appDir);
+            await executeAsync(`pnpm install --no-lockfile --ignore-workspace prisma@${versionToInstall}`, appDir);
           } catch (err) {
             // ignore
           }
 
           try {
-            await executeAsync(`npm i @prisma/client@${versionToInstall}`, appDir);
+            await executeAsync(`pnpm i --no-lockfile --ignore-workspace @prisma/client@${versionToInstall}`, appDir);
           } catch (err) {
             // ignore
           }

@@ -39,7 +39,11 @@ mochaSuiteFn('tracing a babel/typescript setup', function () {
       // We use --no-optional to make pnpm install a bit faster. Compiling native add-ons (gcstats.js and friends)
       // might take longer than the the timeout on CI, and they are not relevant for this test suite.
 
-      executeCallback('pnpm install --no-optional && pnpm run build', babelAppDir, done);
+      executeCallback(
+        'pnpm install --no-optional --no-lockfile --ignore-workspace && pnpm run build',
+        babelAppDir,
+        done
+      );
     });
   });
 

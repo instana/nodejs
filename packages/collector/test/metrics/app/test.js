@@ -27,7 +27,7 @@ describe('snapshot data and metrics', function () {
   before(async () => {
     const cwd = __dirname;
     console.log(`Running pnpm install in ${cwd}.`);
-    const npmInstallOutput = execSync('pnpm install --no-audit', { cwd });
+    const npmInstallOutput = execSync('pnpm install --no-lockfile --ignore-workspace', { cwd });
     console.log(`Done with running pnpm install in ${cwd}: ${npmInstallOutput}`);
 
     controls = new ProcessControls({
