@@ -36,20 +36,10 @@ mochaSuiteFn('tracing a babel/typescript setup', function () {
       // If this fails with "Error: Cannot find module './testUtils'" there might be left over node_modules installed by
       // a different Node.js version. rm -rf packages/collector/test/apps/babel-typescript/node_modules and run again.
 
-      // We use --omit=optional to make pnpm install a bit faster. Compiling native add-ons (gcstats.js and friends)
+      // We use --no-optional to make pnpm install a bit faster. Compiling native add-ons (gcstats.js and friends)
       // might take longer than the the timeout on CI, and they are not relevant for this test suite.
 
-      // The lock file collector/test/apps/babel-typescript/package-lock.json has some arbitrary (and probably outdated)
-      // version of @instana/collector. We always update to the latest version before actually running the test.
-      const latestCollectorVersion = require(path.join(__dirname, '..', '..', '..', '..', 'package.json')).version;
-
-      executeCallback(
-        `pnpm install --no-save --omit=optional --no-audit @instana/collector@${latestCollectorVersion} && ` +
-          'pnpm install --omit=optional --no-audit && ' +
-          'pnpm run build',
-        babelAppDir,
-        done
-      );
+      executeCallback('pnpm install --no-optional && pnpm run build', babelAppDir, done);
     });
   });
 

@@ -15,7 +15,9 @@
     "type-check": "tsc --noEmit",
     "type-check:watch": "pnpm run type-check -- --watch"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@instana/collector": "latest"
+  },
   "devDependencies": {
     "@babel/cli": "^7.24.1",
     "@babel/core": "^7.24.3",
