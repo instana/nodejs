@@ -59,7 +59,6 @@ mochaSuiteFn('tracing/express with uncaught errors', function () {
               span => expect(span.f.h).to.equal('agent-stub-uuid'),
               span => expect(span.error).to.not.exist,
               span => expect(span.ec).to.equal(1),
-              // TODO: error is not traced in express v5
               span => expect(span.data.http.error).to.match(/To be caught by default error handler/)
             ]);
           })
@@ -77,7 +76,6 @@ mochaSuiteFn('tracing/express with uncaught errors', function () {
               span => expect(span.f.h).to.equal('agent-stub-uuid'),
               span => expect(span.error).to.not.exist,
               span => expect(span.ec).to.equal(0),
-              // TODO: http.error is not trcaed correctly in express v5 beta.
               span => expect(span.data.http.error).to.match(/To be caught by custom error handler/)
             ]);
           })

@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 });
 
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-beta');
 const morgan = require('morgan');
 const pino = require('pino')();
 const http = require('http');
@@ -74,7 +74,7 @@ app.delete('/received/spans', (req, res) => {
 
 // With the exception of /heartbeat, the Lambda extension would forward all requests to the
 // back end (serverless-acceptor). This handler mimicks that behavior.
-app.all('*', (req, res) => {
+app.all('(.*)', (req, res) => {
   const stringifiedBody = JSON.stringify(req.body);
   logger.debug(`incoming request: ${req.method} ${req.url}: ${stringifiedBody}`);
 

@@ -13,7 +13,6 @@ process.on('SIGTERM', () => {
 
 const instana = require('../../../..')();
 const clsHooked = require('cls-hooked');
-const bodyParser = require('body-parser');
 const express = require('express-beta');
 const morgan = require('morgan');
 const pino = require('pino')();
@@ -68,7 +67,7 @@ function handler(req, res) {
   pino.warn('Should be traced.');
   return res.status(200).json({
     'incoming-request': {
-      body: req.body
+      body: req.body ? req.body : {}
     },
     'cls-contexts': {
       'appliation-under-monitoring': customPropertyValue,
@@ -85,10 +84,10 @@ app.get('/', (req, res) => {
 });
 
 app.use(requestContextFactory());
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
-// TODO: The req.body is not parsed as JSON, expected {} but getting undefined in express v5 beta.
-app.use(bodyParser.json());
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
 app.use(handler);
 
 app.listen(port, () => {
