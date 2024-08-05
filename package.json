@@ -2,6 +2,7 @@
   "name": "@instana/root",
   "private": true,
   "description": "A monorepo for various Instana Node.js tracing and metrics collector packages",
+  "packageManager": "pnpm@9.6.0",
   "author": {
     "name": "Bastian Krol",
     "email": "bastian.krol@instana.com"
@@ -14,9 +15,6 @@
   "bugs": {
     "url": "https://github.com/instana/nodejs/issues"
   },
-  "workspaces": [
-    "packages/*"
-  ],
   "license": "MIT",
   "contributors": [
     {
@@ -233,7 +231,16 @@
     "wait-sync": "^1.0.1",
     "winston": "^3.13.1",
     "ws": "^8.16.0",
-    "yargs": "^17.5.1"
+    "yargs": "^17.5.1",
+    "@types/bunyan": "^1.8.8",
+    "opentracing": "^0.14.5",
+    "typeorm": "^0.3.20",
+    "@types/tar": "^6.1.6",
+    "@opentelemetry/propagator-instana": "0.3.1",
+    "@opentelemetry/resources": "1.14.0",
+    "@opentelemetry/semantic-conventions": "1.21.0",
+    "chai-spies": "1.0.0",
+    "nock": "^13.2.9"
   },
   "optionalDependencies": {
     "couchbase": "^4.4.0",

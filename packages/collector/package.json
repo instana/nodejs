@@ -87,10 +87,5 @@
   },
   "optionalDependencies": {
     "@instana/autoprofile": "3.14.4"
-  },
-  "devDependencies": {
-    "@types/bunyan": "^1.8.8",
-    "opentracing": "^0.14.5",
-    "typeorm": "^0.3.20"
   }
 }
