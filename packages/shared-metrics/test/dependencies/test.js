@@ -33,7 +33,7 @@ describe('dependencies', function () {
     const appDir = path.join(__dirname, 'app-with-package-json');
 
     before(() => {
-      runCommandSync('pnpm install --production --no-optional --no-audit', appDir);
+      runCommandSync('pnpm install --prod --no-optional', appDir);
     });
 
     let controls;
@@ -90,7 +90,7 @@ describe('dependencies', function () {
       // eslint-disable-next-line no-console
       console.log(`Copying test app from ${appDir} to ${tmpDir}.`);
       await recursiveCopy(appDir, tmpDir);
-      runCommandSync('pnpm install --production --no-optional --no-audit', tmpDir);
+      runCommandSync('pnpm install --prod --no-optional', tmpDir);
       const instanaPath = path.join(tmpDir, 'node_modules', '@instana');
       mkdirp.sync(instanaPath);
       const collectorPath = path.join(instanaPath, 'collector');
@@ -156,7 +156,7 @@ describe('dependencies', function () {
     const repoRootDir = path.join(__dirname, '..', '..', '..', '..');
 
     before(async () => {
-      runCommandSync(`pnpm install --production --no-optional --no-audit ${appTgz}`, tmpDir);
+      runCommandSync(`pnpm install --prod --no-optional ${appTgz}`, tmpDir);
       const instanaPath = path.join(tmpDir, 'node_modules', '@instana');
       mkdirp.sync(instanaPath);
       const collectorPath = path.join(instanaPath, 'collector');

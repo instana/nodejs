@@ -29,7 +29,7 @@ mochaSuiteFn('[ESM] tracing/sdk/multiple_installations', function () {
   const pathToSeparateInstanaCollector = path.join(tmpDir, 'node_modules', '@instana', 'collector', 'src', 'index.js');
 
   before(() => {
-    testUtils.runCommandSync(`pnpm install --production --no-optional --no-audit ${pwdCollectorPkg}`, tmpDir);
+    testUtils.runCommandSync(`pnpm install --prod --no-optional ${pwdCollectorPkg}`, tmpDir);
   });
 
   after(done => {

@@ -33,7 +33,7 @@ mochaSuiteFn('[CJS] tracing/sdk/multiple_installations', function () {
   let controls;
 
   before(async () => {
-    testUtils.runCommandSync('pnpm install --production --no-optional --no-audit @instana/collector', tmpDir);
+    testUtils.runCommandSync('pnpm install --prod --no-optional @instana/collector', tmpDir);
 
     controls = new ProcessControls({
       useGlobalAgent: true,
