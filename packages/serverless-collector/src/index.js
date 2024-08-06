@@ -34,9 +34,9 @@ if (!isExcludedFromInstrumentation) {
 }
 
 if (!isExcludedFromInstrumentation && environmentUtil.isValid()) {
-  logger.debug('Validating environmentUtil after checking environmentUtil.isValid()');
+  logger.debug('success: Validating environmentUtil and activating');
   module.exports = exports = require('./activate');
 } else {
-  logger.debug('isExcludedFromInstrumentation or environmentUtil.isValid() failed');
+  logger.debug('failure: Validating environmentUtil');
   module.exports = exports = require('./noop');
 }
