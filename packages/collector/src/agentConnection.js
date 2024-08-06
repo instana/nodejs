@@ -264,10 +264,15 @@ exports.sendMetrics = function sendMetrics(data, cb) {
  */
 exports.sendSpans = function sendSpans(spans, cb) {
   const callback = util.atMostOnce('callback for sendSpans', err => {
+    let spanInfo;
     if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
       logLargeSpans(spans);
     } else if (err && !maxContentErrorHasBeenLogged) {
-      logSpanDebugInfo(spans);
+      spanInfo = getSpanLengthInfo(spans);
+      logger.warn('error occurred in sendSpans. no of spans found: %s', spanInfo);
+    } else {
+      spanInfo = getSpanLengthInfo(spans);
+      logger.debug('debugging in sendSpans. no of spans found: %s', spanInfo);
     }
     cb(err);
   });
@@ -493,7 +498,7 @@ function logLargeSpans(spans) {
  *
  * @param {Array.<InstanaBaseSpan>} spans
  */
-function logSpanDebugInfo(spans) {
+function getSpanLengthInfo(spans) {
   const spanMapping = {
     1: 'entrySpans',
     2: 'exitSpans'
@@ -507,7 +512,7 @@ function logSpanDebugInfo(spans) {
       acc[label] = (acc[label] || 0) + 1;
     }
     return acc;
-  }, {});
+  }, {}) || {};
 
-  logger.debug('error occurred in sendSpans. no of spans found: %s', countBySpanType);
+  return countBySpanType;
 }
