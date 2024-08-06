@@ -419,8 +419,6 @@ function isBatchable(span) {
 function transmitSpans() {
   clearTimeout(transmissionTimeoutHandle);
 
-  logger.debug('starting transmission to downstream');
-
   if (spans.length === 0) {
     if (!isFaaS) {
       transmissionTimeoutHandle = setTimeout(transmitSpans, transmissionDelay);
