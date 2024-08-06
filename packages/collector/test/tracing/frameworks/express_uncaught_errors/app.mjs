@@ -13,6 +13,14 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+import mock from 'mock-require';
+const EXPRESS_VERSION = process.env.EXPRESS_VERSION;
+const EXPRESS_REQUIRE = EXPRESS_VERSION === 'latest' ? 'express' : `express-${EXPRESS_VERSION}`;
+
+if (EXPRESS_REQUIRE !== 'express') {
+  mock('express', EXPRESS_REQUIRE);
+}
+
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
