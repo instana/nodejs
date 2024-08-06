@@ -33,6 +33,7 @@ mochaSuiteFn('tracing a babel/typescript setup', function () {
       if (err) {
         return done(err);
       }
+
       // If this fails with "Error: Cannot find module './testUtils'" there might be left over node_modules installed by
       // a different Node.js version. rm -rf packages/collector/test/apps/babel-typescript/node_modules and run again.
 

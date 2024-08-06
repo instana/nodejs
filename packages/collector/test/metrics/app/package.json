@@ -1,23 +1,23 @@
 {
   "name": "metrics-test-app",
-  "private": true,
   "version": "1.2.3",
+  "private": true,
   "description": "This is a test application to test snapshot and metrics data.",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/instana/nodejs.git"
-  },
-  "main": "app.js",
-  "author": {
-    "name": "Bastian Krol",
-    "email": "bastian.krol@instana.com"
-  },
   "keywords": [
     "keyword1",
     "keyword2"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs.git"
+  },
   "license": "MIT",
+  "author": {
+    "name": "Bastian Krol",
+    "email": "bastian.krol@instana.com"
+  },
+  "main": "app.js",
   "dependencies": {
-    "node-fetch": "^2.6.0"
+    "node-fetch": "2.6.0"
   }
 }
