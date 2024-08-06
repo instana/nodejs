@@ -10,13 +10,13 @@ The error can be something like: ModuleNotFoundError: No module named 'distutils
 
 `brew install jq` for OSX (for other systems please look up [here](https://stedolan.github.io/jq/)) is required to run `npm run audit` or `lerna audit run`.
 
-Note: You might need to install `libpq-dev`/`postgresql-devel` or a similar package before running `npm install` because `pg-native` depends on it. (`@instana/collector` and friends do not depend on `pg-native` but our test suite depends on it.)
+Note: You might need to install `libpq-dev`/`postgresql-devel` or a similar package before running `ppnpm install` because `pg-native` depends on it. (`@instana/collector` and friends do not depend on `pg-native` but our test suite depends on it.)
 
-After cloning the repository, run `npm install` in the root of the repository.
+After cloning the repository, run `pnpm install` in the root of the repository.
 
 Ensure that your IDE is set up to utilize **ESLint** and **Prettier**, with automatic code formatting enabled.
 
-Troubleshooting `pg_config: command not found`: The tests in this package depend on (among others) `pg-native` and that in turn depends on the native add-on `libpq`. That add-on might try to call `pg_config` during `npm install`. If `npm install` terminates with `pg_config: command not found`, install the PostgreSQL package for your system (e.g. `brew install postgresql` or similar). If you do not want to run any tests, you can also omit this step and install dependencies with `npm install --production` instead.
+Troubleshooting `pg_config: command not found`: The tests in this package depend on (among others) `pg-native` and that in turn depends on the native add-on `libpq`. That add-on might try to call `pg_config` during `pnpm install`. If `pnpm install` terminates with `pg_config: command not found`, install the PostgreSQL package for your system (e.g. `brew install postgresql` or similar). If you do not want to run any tests, you can also omit this step and install dependencies with `pnpm install --production` instead.
 
 Install the [`aws-cli`](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) to publish AWS layers from local.
 
@@ -24,7 +24,7 @@ Install the [`aws-cli`](https://docs.aws.amazon.com/cli/latest/userguide/getting
 
 If you are using Node.js v14 and would like to take advantage of the "overrides" feature in package.json, you need to upgrade npm manually since Node.js v14 ships with npm v6, and `overrides` were introduced in npm v8.3. Upgrade npm manually to the latest version using the following command:
 ```
-npm install -g npm@latest
+pnpm install -g npm@latest
 ```
 
 ## Executing Tests Locally
@@ -61,7 +61,7 @@ Setting `RUN_ESM=true` locally will run use the ESM app instead of the CJS app w
 If you are actively developing a feature and you would like to know which lines and files you have already covered in your tests, you can run:
 
 ```
-npm run coverage --npm_command="test:ci:opentelemetry-exporter"
+workspace="test:ci:opentelemetry-exporter" pnpm run coverage
 ```
 
 At the end of the execution it will open the coverage report in the browser and you can navigate through
@@ -133,9 +133,9 @@ The following sections describe how to manage dependencies in practice.
 
 ### Adding A Package Dependency
 
-`npm install -D ${dependency-name}`: Adds a dev dependency to the root `package.json` file.
-`npm install ${dependency-name} -w packages/collector`: Adds a production dependency to the package `@instana/collector`. This is equivalent to `cd packages/collector; npm install ${dependency-name}`.
-`npm install -D ${dependency-name} -w packages/collector`: Adds a dev dependency to the package `@instana/collector`. This is equivalent to `cd packages/collector; npm install -D ${dependency-name}`.
+`pnpm install -D ${dependency-name}`: Adds a dev dependency to the root `package.json` file.
+`pnpm install ${dependency-name} -w packages/collector`: Adds a production dependency to the package `@instana/collector`. This is equivalent to `cd packages/collector; pnpm install ${dependency-name}`.
+`pnpm install -D ${dependency-name} -w packages/collector`: Adds a dev dependency to the package `@instana/collector`. This is equivalent to `cd packages/collector; pnpm install -D ${dependency-name}`.
 
 ### Removing A Package Dependency
 
@@ -145,10 +145,10 @@ The following sections describe how to manage dependencies in practice.
 
 ### Updating A Single Version In A `package.json` File
 
-`npm install ${dependency-name}@${version}`: Updates a specific production dependency on the root.
-`npm install -D ${dependency-name}@${version}`: Updates a specific dev dependency on the root.
-`npm install ${dependency-name}@${version} -w packages/collector`: Updates a specific production dependency in the package `@instana/collector`. This is equivalent to `cd packages/collector; npm install ${dependency-name}@${version}`.
-`npm install -D ${dependency-name}@${version} -w packages/collector`: Updates a specific dev dependency in the package `@instana/collector`. This is equivalent to `cd packages/collector; npm install -D ${dependency-name}@${version}`.
+`pnpm install ${dependency-name}@${version}`: Updates a specific production dependency on the root.
+`pnpm install -D ${dependency-name}@${version}`: Updates a specific dev dependency on the root.
+`pnpm install ${dependency-name}@${version} -w packages/collector`: Updates a specific production dependency in the package `@instana/collector`. This is equivalent to `cd packages/collector; pnpm install ${dependency-name}@${version}`.
+`pnpm install -D ${dependency-name}@${version} -w packages/collector`: Updates a specific dev dependency in the package `@instana/collector`. This is equivalent to `cd packages/collector; pnpm install -D ${dependency-name}@${version}`.
 
 ### Updating A Single Version In A Lockfile
 
@@ -157,19 +157,9 @@ The following sections describe how to manage dependencies in practice.
 `npm update ${dependency-name} -w packages/collector`: Updates a specific production dependency of the package `@instana/collector`. This is equivalent to `cd packages/collector; npm update ${dependency-name}`.
 `npm update -D ${dependency-name} -w packages/collector`: Updates a specific dev dependency of the package `@instana/collector`. This is equivalent to `cd packages/collector; npm update -D ${dependency-name}`.
 
-### package-lock.json
+### pnpm-lock.yaml
 
-There is only one single package-lock.json file when using **npm workspaces**.
-
-We are currently using **lockfileVersion 3**.
-
-If you need to recreate the package lock file, please us `npm i --lockfile-version 2`.
-
-Refs:
-    - https://docs.npmjs.com/cli/v9/configuring-npm/package-lock-json#lockfileversion
-    - https://github.com/instana/nodejs/pull/710
-
-**Note:** Packages published on the npm registry never contain `package-lock.json` files. So the versions pinned in our `package-lock.json` file are only relevant to determine the package versions that get installed when running `npm install` inside this repository (locally or on CI), they do not affect users installing `@instana` packages as a dependency.
+...
 
 ### Version Ranges vs. Pinning a Specific Version
 
@@ -217,7 +207,7 @@ The Github action will try to publish new versions for all packages from the mos
 
 Parameters for the release Github action:
 * "Use lerna publish from-package": Instead of executing `lerna publish`, the action will execute `lerna publish from-package`. See [below](#separate-lerna-version-and-lerna-publish) for the use case for this parameter. If in doubt, leave it unchanged (that is, `false`).
-* "Dry Run": With this option set to true, the Github action will not actually create a release but only apply all changes (package.json and package-lock.json files, CHANGELOG files). The action log will show the resulting diff at the end. The changes will not be committed. This can be used to preview the changes the release action would apply. If this option is `true`, the option "Use lerna publish from-package" has no effect.
+* "Dry Run": With this option set to true, the Github action will not actually create a release but only apply all changes (package.json and pnpm-lock.yaml files, CHANGELOG files). The action log will show the resulting diff at the end. The changes will not be committed. This can be used to preview the changes the release action would apply. If this option is `true`, the option "Use lerna publish from-package" has no effect.
 
 Lerna will determine if this is going to be a minor or patch version from the commit comments of all commits since the last release. It will also automatically update the CHANGELOG.md files in the root of the repository and also in all individual packages, based on those commits.
 
@@ -234,7 +224,7 @@ It is possible to execute the git parts of a release (version bump and tagging) 
 - Run `lerna version` to bump all versions and create a git tag.
     - You can skip this step if it has already happened for the release you want to publish. If not, the step is mandatory.
     - Lerna will determine if this is going to be a major, minor or patch version from the commit comments of all commits since the last release. It will also update all relevant changelog files.
-    - Lerna will push the commit and the tag created by `lerna version` to GitHub. Check that this has happened. Also check that the version numbers in package-lock.json have been updated as well.
+    - Lerna will push the commit and the tag created by `lerna version` to GitHub. Check that this has happened. Also check that the version numbers in pnpm-lock.yaml have been updated as well.
 - Run the Github action `release-on-demand` with the parameter `Use lerna publish from-package` set to `true`.
 
 This will execute `lerna publish from-package`. This can also be used if the previous execution of the release Github action went through for a subset of packages but not for others. Lerna will automatically figure out for which packages the latest version is not present in the registry and only publish those.

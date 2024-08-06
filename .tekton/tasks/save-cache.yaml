@@ -30,44 +30,4 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
-        if [ ! -e "node-modules.tar.zst" ]; then
-          echo "Saving node_modules cache..."
-
-          curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
-          ibmcloud plugin install cloud-object-storage -f -r 'IBM Cloud'
-          ibmcloud login -a https://cloud.ibm.com -r eu-de --apikey $API_KEY
-
-          apt-get update -y
-          apt-get install zstd -y
-
-          # Remove any cached npm files before zipping
-          find node_modules \( -name '.*' ! \( -path "node_modules/.bin" -o -path "node_modules/.package-lock.json" -o -path "node_modules/.cache*" \) \) -exec rm -rf {} +
-          find node_modules -type f -name '.*' ! \( -path "node_modules/.bin" -o -path "node_modules/.package-lock.json" \) -exec rm -f {} +
-
-          tar -cf - node_modules | zstd -o node-modules.tar.zst
-
-          checksum=$(sha256sum package-lock.json | awk '{print $1}')
-          ibmcloud cos upload --bucket npm-cache --key node-modules-$(params.target-branch)-$(params.node-version)-$checksum --file ./node-modules.tar.zst
-
-          echo "Uploaded root node_modules cache"
-          
-          # Iterate over packages/*/ directories
-          for package_dir in packages/*; do   
-            if [ -d "$ARTIFACTS_PATH/$package_dir" ]; then
-              cd $ARTIFACTS_PATH/$package_dir
-              package_name=$(basename "$package_dir")
-              pkg_name="node-modules-$(params.target-branch)-$(params.node-version)-$package_name-$checksum"
-              rm -rf $pkg_name.tar.zst
-
-              echo "Saving cache for $pkg_name"
-
-              tar -cf - node_modules | zstd -o "$pkg_name.tar.zst"              
-              ibmcloud cos upload --bucket npm-cache --key $pkg_name --file "./$pkg_name.tar.zst"
-            fi
-          done
-
-          echo "Saved node_modules cache..."
-        else
-          echo "Nope, we do not cache."
-          echo $(ls -lah)
-        fi
+        echo "Skip"

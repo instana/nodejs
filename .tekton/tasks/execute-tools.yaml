@@ -9,8 +9,6 @@ spec:
   params:
     - name: node-version
       value: $(params.node-version)
-    - name: npm-version
-      value: $(params.npm-version)
     - name: target-branch
       value: $(params.target-branch)
     - name: continuous-delivery-context-secret
@@ -27,11 +25,8 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
-        if [ -n "$(params.npm-version)" ]; then
-          npm install npm@$(params.npm-version) -g
-        fi
-
-        npm run audit
+        npm install -g pnpm
+        pnpm run audit
 
         if [ $? -eq 0 ]; then
           touch audit.succeeded
@@ -47,11 +42,8 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
-        if [ -n "$(params.npm-version)" ]; then
-          npm install npm@$(params.npm-version) -g
-        fi
-
-        npm run lint
+        npm install -g pnpm
+        pnpm run lint
 
         if [ $? -eq 0 ]; then
           touch lint.succeeded
@@ -66,10 +58,6 @@ spec:
 
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
-
-        if [ -n "$(params.npm-version)" ]; then
-          npm install npm@$(params.npm-version) -g
-        fi
 
         node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)
 
@@ -87,11 +75,8 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
-        if [ -n "$(params.npm-version)" ]; then
-          npm install npm@$(params.npm-version) -g
-        fi
-
-        npm run depcheck
+        npm install -g pnpm
+        pnpm run depcheck
 
         if [ $? -eq 0 ]; then
           touch depcheck.succeeded
@@ -117,10 +102,6 @@ spec:
 
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
-
-        if [ -n "$(params.npm-version)" ]; then
-          npm install npm@$(params.npm-version) -g
-        fi
 
         bin/clean-aws.js --service=s3
         bin/clean-aws.js --service=dynamodb

@@ -119,7 +119,7 @@ currencies.forEach(currency => {
     } else {
       console.log(`npm i --save-optional ${currency.name}@${latestVersion} --no-audit`);
       execSync(`npm i --save-optional ${currency.name}@${latestVersion} --no-audit`, { stdio: 'inherit', cwd });
-      // NOTE: run an extra npm install after updating the optional dependencies because of
+      // NOTE: run an extra pnpm install after updating the optional dependencies because of
       //       a bug in npm: https://github.com/npm/cli/issues/7530
       execSync('npm i', { stdio: 'inherit', cwd });
     }
@@ -130,7 +130,7 @@ currencies.forEach(currency => {
   }
 
   if (MAJOR_UPDATES_MODE) {
-    execSync('git add *package.json package-lock.json', { cwd });
+    execSync('git add *package.json pnpm-lock.yaml', { cwd });
     execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
 
     if (hasCommits(branchName, cwd)) {
@@ -146,7 +146,7 @@ currencies.forEach(currency => {
       console.log(`Branch ${branchName} has no commits.`);
     }
   } else {
-    execSync('git add *package.json package-lock.json', { cwd });
+    execSync('git add *package.json pnpm-lock.yaml', { cwd });
     execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
   }
 });

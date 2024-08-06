@@ -6,4 +6,4 @@
 
 set -eo pipefail
 
-npx lerna exec "npm run test:debug" --scope=@instana/azure-container-services
+npx lerna exec "pnpm run test:debug" --scope=@instana/azure-container-services

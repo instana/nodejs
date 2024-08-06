@@ -111,11 +111,11 @@ spec:
           value: "pending"
         - name: pipeline-debug
           value: $(params.pipeline-debug)               
-    - name: install-npm-dependencies
+    - name: install-dependencies
       runAfter:
         - git-fetch-repo
       taskRef:
-        name: install-npm-dependencies
+        name: install-dependencies
       params:
         - name: continuous-delivery-context-secret
           value: "secure-properties"
@@ -134,7 +134,7 @@ spec:
           workspace: artifacts
     - name: save-cache
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: save-cache
       params:
@@ -151,7 +151,7 @@ spec:
           workspace: artifacts
     - name: upload-currency-report
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: upload-currency-report
       params:
@@ -166,7 +166,7 @@ spec:
           workspace: artifacts
     - name: execute-tools
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: execute-tools
       params:

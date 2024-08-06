@@ -17,7 +17,7 @@ If you want to use the agent stub instead of an actual agent, do this:
 ```
 # start the agent stub
 cd nodejs/packages/collector
-DROP_DATA=true npm run agent-stub
+DROP_DATA=true pnpm run agent-stub
 
 # start the app (in a separate terminal)
 cd nodejs/packages/collector/dummy-app

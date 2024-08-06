@@ -22,10 +22,11 @@ describe('retry loading native addons', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
+  const sharedMetricsFolder = path.join(path.dirname(require.resolve('@instana/shared-metrics')), '..');
   const metricAddonsTestConfigs = [
     {
       name: 'event-loop-stats',
-      nativeModuleFolder: path.dirname(require.resolve('event-loop-stats/package.json')),
+      nativeModuleFolder: path.join(sharedMetricsFolder, 'node_modules', 'event-loop-stats'),
       backupPath: path.join(os.tmpdir(), 'event-loop-stats-backup'),
       check: ([aggregated]) => {
         const libuv = aggregated.libuv;
@@ -41,7 +42,7 @@ describe('retry loading native addons', function () {
     },
     {
       name: 'gcstats.js',
-      nativeModuleFolder: path.dirname(require.resolve('gcstats.js/package.json')),
+      nativeModuleFolder: path.join(sharedMetricsFolder, 'node_modules', 'gcstats.js'),
       backupPath: path.join(os.tmpdir(), 'gcstats.js-backup'),
       check: ([aggregated]) => {
         // The for loop above ensures that the first metric POST that had the gc payload

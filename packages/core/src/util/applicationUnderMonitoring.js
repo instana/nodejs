@@ -213,7 +213,7 @@ function searchForPackageJsonInDirectoryTreeUpwards(dir, cb) {
     if (appInstalledIntoNodeModules) {
       // Some users do not deploy their app by cloning/copying the app's sources to the target system and installing its
       // dependencies via npm/yarn there. Instead, they publish the whole app into an npm-compatible registry and use
-      // npm install $appName on the target system to deploy the app including its dependencies. In this scenario, we
+      // pnpm install $appName on the target system to deploy the app including its dependencies. In this scenario, we
       // need to skip the check for an accompanying node_modules folder (see below). We can recognize this pattern
       // (heuristically) by the fact that the segment 'node_modules' already appears in the path to the main module.
       return process.nextTick(cb, null, pathToCheck);

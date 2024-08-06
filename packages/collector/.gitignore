@@ -5,4 +5,5 @@
 
 test/bin/edgemicroResources/cli/edgemicro
 test/tracing/database/prisma/package.json
-test/tracing/database/prisma/package-lock.json
+test/tracing/database/prisma/pnpm-lock.yaml
+test/apps/babel-typescript/pnpm-lock.yaml

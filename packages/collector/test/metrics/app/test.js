@@ -26,9 +26,9 @@ describe('snapshot data and metrics', function () {
 
   before(async () => {
     const cwd = __dirname;
-    console.log(`Running npm install in ${cwd}.`);
-    const npmInstallOutput = execSync('npm install --no-audit', { cwd });
-    console.log(`Done with running npm install in ${cwd}: ${npmInstallOutput}`);
+    console.log(`Running pnpm install in ${cwd}.`);
+    const npmInstallOutput = execSync('pnpm install --no-lockfile --ignore-workspace', { cwd });
+    console.log(`Done with running pnpm install in ${cwd}: ${npmInstallOutput}`);
 
     controls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
@@ -79,7 +79,7 @@ describe('snapshot data and metrics', function () {
         const directDeps = findMetric(allMetrics, ['directDependencies']);
         expect(directDeps).to.be.an('object');
         expect(Object.keys(directDeps)).to.have.lengthOf.at.least(1);
-        expect(directDeps.dependencies['node-fetch']).to.equal('^2.6.0');
+        expect(directDeps.dependencies['node-fetch']).to.equal('2.6.0');
 
         expect(findMetric(allMetrics, ['execArgs'])).to.be.an('array');
         expect(findMetric(allMetrics, ['execArgs'])).to.be.empty;

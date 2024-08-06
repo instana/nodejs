@@ -8,7 +8,7 @@ FROM public.ecr.aws/lambda/nodejs:14
 COPY --from=instana-layer /opt/extensions/ /opt/extensions/
 COPY --from=instana-layer /opt/nodejs/ /opt/nodejs/
 
-COPY index.js package.json package-lock.json /var/task/
+COPY index.js package.json pnpm-lock.yaml /var/task/
 WORKDIR /var/task
 RUN npm install
 

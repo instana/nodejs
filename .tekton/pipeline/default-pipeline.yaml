@@ -111,11 +111,11 @@ spec:
           value: "pending"
         - name: pipeline-debug
           value: $(params.pipeline-debug)               
-    - name: install-npm-dependencies
+    - name: install-dependencies
       runAfter:
         - git-fetch-repo
       taskRef:
-        name: install-npm-dependencies
+        name: install-dependencies
       params:
         - name: continuous-delivery-context-secret
           value: "secure-properties"
@@ -134,7 +134,7 @@ spec:
           workspace: artifacts
     - name: save-cache
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: save-cache
       params:
@@ -151,7 +151,7 @@ spec:
           workspace: artifacts
     - name: upload-currency-report
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: upload-currency-report
       params:
@@ -166,7 +166,7 @@ spec:
           workspace: artifacts
     - name: execute-tools
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: execute-tools
       params:
@@ -183,7 +183,7 @@ spec:
           workspace: artifacts
     - name: test-ci-autoprofile-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-autoprofile
       params:
@@ -206,7 +206,7 @@ spec:
           workspace: artifacts
     - name: test-ci-aws-fargate-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-aws-fargate
       params:
@@ -229,7 +229,7 @@ spec:
           workspace: artifacts
     - name: test-ci-aws-lambda-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-aws-lambda
       params:
@@ -252,7 +252,7 @@ spec:
           workspace: artifacts
     - name: test-ci-azure-container-services-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-azure-container-services
       params:
@@ -275,7 +275,7 @@ spec:
           workspace: artifacts
     - name: test-ci-collector-general-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-collector-general
       params:
@@ -298,7 +298,7 @@ spec:
           workspace: artifacts
     - name: test-ci-collector-tracing-cloud-aws-v2-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-collector-tracing-cloud-aws-v2
       params:
@@ -321,7 +321,7 @@ spec:
           workspace: artifacts
     - name: test-ci-collector-tracing-cloud-aws-v3-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-collector-tracing-cloud-aws-v3
       params:
@@ -344,7 +344,7 @@ spec:
           workspace: artifacts
     - name: test-ci-collector-tracing-cloud-azure-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-collector-tracing-cloud-azure
       params:
@@ -367,7 +367,7 @@ spec:
           workspace: artifacts
     - name: test-ci-collector-tracing-cloud-gcp-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-collector-tracing-cloud-gcp
       params:
@@ -390,7 +390,7 @@ spec:
           workspace: artifacts
     - name: test-ci-collector-tracing-database-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-collector-tracing-database
       params:
@@ -413,7 +413,7 @@ spec:
           workspace: artifacts
     - name: test-ci-collector-tracing-frameworks-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-collector-tracing-frameworks
       params:
@@ -436,7 +436,7 @@ spec:
           workspace: artifacts
     - name: test-ci-collector-tracing-general-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-collector-tracing-general
       params:
@@ -459,7 +459,7 @@ spec:
           workspace: artifacts
     - name: test-ci-collector-tracing-logger-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-collector-tracing-logger
       params:
@@ -482,7 +482,7 @@ spec:
           workspace: artifacts
     - name: test-ci-collector-tracing-messaging-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-collector-tracing-messaging
       params:
@@ -505,7 +505,7 @@ spec:
           workspace: artifacts
     - name: test-ci-collector-tracing-misc-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-collector-tracing-misc
       params:
@@ -528,7 +528,7 @@ spec:
           workspace: artifacts
     - name: test-ci-collector-tracing-protocols-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-collector-tracing-protocols
       params:
@@ -551,7 +551,7 @@ spec:
           workspace: artifacts
     - name: test-ci-core-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-core
       params:
@@ -574,7 +574,7 @@ spec:
           workspace: artifacts
     - name: test-ci-google-cloud-run-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-google-cloud-run
       params:
@@ -597,7 +597,7 @@ spec:
           workspace: artifacts
     - name: test-ci-metrics-util-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-metrics-util
       params:
@@ -620,7 +620,7 @@ spec:
           workspace: artifacts
     - name: test-ci-opentelemetry-exporter-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-opentelemetry-exporter
       params:
@@ -643,7 +643,7 @@ spec:
           workspace: artifacts
     - name: test-ci-opentelemetry-sampler-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-opentelemetry-sampler
       params:
@@ -666,7 +666,7 @@ spec:
           workspace: artifacts
     - name: test-ci-serverless-collector-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-serverless-collector
       params:
@@ -689,7 +689,7 @@ spec:
           workspace: artifacts
     - name: test-ci-serverless-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-serverless
       params:
@@ -712,7 +712,7 @@ spec:
           workspace: artifacts
     - name: test-ci-shared-metrics-task
       runAfter:
-        - install-npm-dependencies
+        - install-dependencies
       taskRef:
         name: test-ci-shared-metrics
       params:

@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: install-dependencies
+spec:
+  params:
+    - name: continuous-delivery-context-secret
+      default: secure-properties
+    - name: ibmcloud-apikey-secret-key
+      default: apikey
+    - name: target-branch
+      value: $(params.target-branch)
+    - name: node-version
+      value: $(params.node-version)      
+    - name: skip-cache
+      value: $(params.skip-cache)      
+  workspaces:
+    - name: output
+      mountPath: /artifacts
+  steps:
+    - name: pnpm-install
+      image: node:$(params.node-version)
+      env:
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: $(params.ibmcloud-apikey-secret-key)
+              optional: true
+      script: |
+        #!/bin/bash
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+
+        npm install -g pnpm
+        pnpm install

@@ -55,7 +55,7 @@ spec:
           npx eslint packages/ -f json > eslint-report.json || true
 
           echo "Install sonarcube scanner..."
-          npm install -g sonarqube-scanner
+          pnpm install -g sonarqube-scanner
 
           echo "Run sonarqube..."
           sonar-scanner

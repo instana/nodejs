@@ -287,7 +287,7 @@ fi
 VERSION=$(jq -r .version node_modules/@instana/aws-lambda/package.json)
 
 echo "building layer with package version $VERSION"
-rm -f package.json package-lock.json
+rm -f package.json pnpm-lock.yaml
 cd ..
 
 echo "step 4/9: Add extension to layer"

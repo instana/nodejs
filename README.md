@@ -10,7 +10,9 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Instana npm Packages](#instana-npm-packages)
+- [Instana npm packages](#instana-npm-packages)
+  - [Traditional server-based environments](#traditional-server-based-environments)
+  - [Serverless environments](#serverless-environments)
 - [Breaking Changes](#breaking-changes)
 - [Filing Issues](#filing-issues)
 - [Documentation](#documentation)

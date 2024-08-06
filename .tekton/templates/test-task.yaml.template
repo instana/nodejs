@@ -10,8 +10,6 @@ spec:
   params:
     - name: node-version
       value: $(params.node-version)
-    - name: npm-version
-      value: $(params.npm-version)
     - name: repository
       value: $(params.repository)
     - name: revision
@@ -64,14 +62,12 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        npm install -g pnpm
+
         BASE_REVISION=$(git rev-parse origin/main)
         CIRCLE_COMPARE_URL=""
         MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
-
-        if [ -n "$(params.npm-version)" ]; then
-          npm install npm@$(params.npm-version) -g
-        fi
 
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
@@ -110,9 +106,9 @@ spec:
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
+            workspace="{{groupName}}" report_dir="{{sanitizedGroupName}}" pnpm run coverage-ci
           else
-            npm run "{{groupName}}"
+            pnpm run "{{groupName}}"
           fi          
 
           if [ $? -eq 0 ]; then

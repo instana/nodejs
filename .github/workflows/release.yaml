@@ -44,15 +44,18 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODEJS_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+
+      - name: install pnpm
+        run: |
+          npm install -g pnpm
 
       - name: echo versions
         run: |
           node --version
           npm --version
+          pnpm --version
           
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
       - name: Disallow major releases
         run: .github/workflows/disallow-major-release.sh

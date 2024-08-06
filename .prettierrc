@@ -2,5 +2,6 @@
   "printWidth": 120,
   "singleQuote": true,
   "arrowParens": "avoid",
-  "trailingComma": "none"
+  "trailingComma": "none",
+  "plugins": ["prettier-plugin-packagejson"]
 }
