@@ -30,17 +30,25 @@ exports.init = function init() {
 function instrument(express) {
   if (express.Router && express.Router.handle && express.Router.use) {
     // express 4
+    // capture the uncaught error
     shimmer.wrap(express.Router, 'handle', shimExpress4Handle);
     shimmer.wrap(express.Router, 'use', shimExpress4Use);
   }
 
   if (express.Route && express.Route.prototype) {
-    // express 4
+    // express v4, v5 beta
+    // capture the path template
     methods.concat('all').forEach(method => {
       if (typeof express.Route.prototype[method] === 'function') {
         shimmer.wrap(express.Route.prototype, method, shimHandlerRegistration);
       }
     });
+  }
+  if (express.Router && express.Router.prototype) {
+    // express v5 beta
+    // capture the uncaught error
+    shimmer.wrap(express.Router.prototype, 'handle', shimExpress4Handle);
+    shimmer.wrap(express.Router.prototype, 'use', shimExpress4Use);
   }
 }
 
