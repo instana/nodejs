@@ -129,11 +129,3 @@ function hasLoggingFunctions(_logger) {
     typeof _logger.error === 'function'
   );
 }
-
-/**
- * @param {import('@instana/core/src/logger').GenericLogger | *} _logger
- * @returns {boolean}
- */
-exports.isDebugMode = function isDebugMode(_logger) {
-  return (_logger.level() === bunyan.DEBUG);
-};

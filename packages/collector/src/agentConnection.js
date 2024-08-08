@@ -18,8 +18,6 @@ logger = require('./logger').getLogger('agentConnection', newLogger => {
   logger = newLogger;
 });
 
-const debugMode = require('./logger').isDebugMode(logger);
-
 const circularReferenceRemover = require('./util/removeCircular');
 const agentOpts = require('./agent/opts');
 const pidStore = require('./pidStore');
@@ -508,9 +506,6 @@ function logLargeSpans(spans) {
  * @returns {CountBySpanType}
  */
 function getSpanLengthInfo(spans) {
-  // No need to compute the spanInfo if we are not logging it
-  if (!debugMode) return {};
-
   /** @type {Object.<number, string>} */
   const spanMapping = {
     1: 'entrySpans',
