@@ -269,10 +269,10 @@ exports.sendSpans = function sendSpans(spans, cb) {
       logLargeSpans(spans);
     } else if (err && !maxContentErrorHasBeenLogged) {
       spanInfo = getSpanLengthInfo(spans);
-      logger.warn('error occurred in sendSpans. no of spans found: %s', spanInfo);
+      logger.warn('Failed to send: %s', spanInfo);
     } else {
       spanInfo = getSpanLengthInfo(spans);
-      logger.debug('debugging in sendSpans. no of spans found: %s', spanInfo);
+      logger.debug('Successfully sent: %s', spanInfo);
     }
     cb(err);
   });
@@ -501,7 +501,8 @@ function logLargeSpans(spans) {
 function getSpanLengthInfo(spans) {
   const spanMapping = {
     1: 'entrySpans',
-    2: 'exitSpans'
+    2: 'exitSpans',
+    3: 'intermediateSpans'
   };
 
   const countBySpanType = spans.reduce((acc, item) => {
