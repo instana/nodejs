@@ -16,72 +16,75 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/express with uncaught errors', function () {
-  this.timeout(config.getTestTimeout());
+['latest', 'v5-beta'].forEach(version => {
+  mochaSuiteFn(`tracing/express@${version} with uncaught errors`, function () {
+    this.timeout(config.getTestTimeout());
 
-  const agentControls = globalAgent.instance;
-  globalAgent.setUpCleanUpHooks();
+    const agentControls = globalAgent.instance;
+    globalAgent.setUpCleanUpHooks();
 
-  let controls;
+    let controls;
 
-  before(async () => {
-    controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: { EXPRESS_VERSION: version }
+      });
+
+      await controls.startAndWaitForAgentConnection();
     });
 
-    await controls.startAndWaitForAgentConnection();
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
+    [false, true].forEach(isRootSpan => registerTests(isRootSpan));
+
+    function registerTests(isRootSpan) {
+      it(`must record result of default express uncaught error function (root span: ${isRootSpan})`, () =>
+        controls.sendRequest(createRequest(false, isRootSpan)).then(() => {
+          return testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.k).to.equal(constants.ENTRY),
+                span => expect(span.f.e).to.equal(String(controls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(1),
+                span => expect(span.data.http.error).to.match(/To be caught by default error handler/)
+              ]);
+            })
+          );
+        }));
+
+      it(`must record result of custom express uncaught error function (root span: ${isRootSpan})`, () =>
+        controls.sendRequest(createRequest(true, isRootSpan)).then(() => {
+          return testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.k).to.equal(constants.ENTRY),
+                span => expect(span.f.e).to.equal(String(controls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(0),
+                span => expect(span.data.http.error).to.match(/To be caught by custom error handler/)
+              ]);
+            })
+          );
+        }));
+    }
   });
-
-  beforeEach(async () => {
-    await agentControls.clearReceivedTraceData();
-  });
-
-  after(async () => {
-    await controls.stop();
-  });
-
-  afterEach(async () => {
-    await controls.clearIpcMessages();
-  });
-
-  [false, true].forEach(isRootSpan => registerTests(isRootSpan));
-
-  function registerTests(isRootSpan) {
-    it(`must record result of default express uncaught error function (root span: ${isRootSpan})`, () =>
-      controls.sendRequest(createRequest(false, isRootSpan)).then(() => {
-        return testUtils.retry(() =>
-          agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, [
-              span => expect(span.n).to.equal('node.http.server'),
-              span => expect(span.k).to.equal(constants.ENTRY),
-              span => expect(span.f.e).to.equal(String(controls.getPid())),
-              span => expect(span.f.h).to.equal('agent-stub-uuid'),
-              span => expect(span.error).to.not.exist,
-              span => expect(span.ec).to.equal(1),
-              span => expect(span.data.http.error).to.match(/To be caught by default error handler/)
-            ]);
-          })
-        );
-      }));
-
-    it(`must record result of custom express uncaught error function (root span: ${isRootSpan})`, () =>
-      controls.sendRequest(createRequest(true, isRootSpan)).then(() => {
-        return testUtils.retry(() =>
-          agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, [
-              span => expect(span.n).to.equal('node.http.server'),
-              span => expect(span.k).to.equal(constants.ENTRY),
-              span => expect(span.f.e).to.equal(String(controls.getPid())),
-              span => expect(span.f.h).to.equal('agent-stub-uuid'),
-              span => expect(span.error).to.not.exist,
-              span => expect(span.ec).to.equal(0),
-              span => expect(span.data.http.error).to.match(/To be caught by custom error handler/)
-            ]);
-          })
-        );
-      }));
-  }
 });
 
 function createRequest(customErrorHandler, isRootSpan) {

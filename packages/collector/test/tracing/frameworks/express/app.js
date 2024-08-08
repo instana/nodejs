@@ -12,6 +12,7 @@ process.on('SIGTERM', () => {
   process.disconnect();
   process.exit(0);
 });
+require('./mockVersion');
 
 const instana = require('../../../..')();
 

@@ -13,6 +13,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('./mockVersion');
 require('../../../..')();
 
 const bodyParser = require('body-parser');
