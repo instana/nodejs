@@ -264,15 +264,12 @@ exports.sendMetrics = function sendMetrics(data, cb) {
  */
 exports.sendSpans = function sendSpans(spans, cb) {
   const callback = util.atMostOnce('callback for sendSpans', err => {
-    let spanInfo;
     if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
       logLargeSpans(spans);
-    } else if (err && !maxContentErrorHasBeenLogged) {
-      spanInfo = getSpanLengthInfo(spans);
-      logger.warn('Failed to send: %s', spanInfo);
+    } else if (err) {
+      logger.debug('Failed to send: %s', getSpanLengthInfo(spans));
     } else {
-      spanInfo = getSpanLengthInfo(spans);
-      logger.debug('Successfully sent: %s', spanInfo);
+      logger.debug('Successfully sent: %s', getSpanLengthInfo(spans));
     }
     cb(err);
   });
