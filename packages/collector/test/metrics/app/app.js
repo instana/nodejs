@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 require('../../..')();
 
-const express = require('express');
+const express = require('express-beta');
 const morgan = require('morgan');
 
 const app = express();

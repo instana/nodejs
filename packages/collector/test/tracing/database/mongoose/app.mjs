@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
-import express from 'express';
+import express from 'express-beta';
 import morgan from 'morgan';
 import { v4 as uuid } from 'uuid';
 import getAppPort from '../../../test_util/app-port.js';

@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 const mock = require('mock-require');
 mock('square-calc', 'square-calc-v2');
 require('../../..')();
-const express = require('express');
+const express = require('express-beta');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const getAppPort = require('../../test_util/app-port');

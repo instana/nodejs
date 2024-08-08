@@ -17,7 +17,7 @@ import instanaFactory from '../../../../src/index.js';
 const instana = instanaFactory();
 
 import bodyParser from 'body-parser';
-import express from 'express';
+import express from 'express-beta';
 import morgan from 'morgan';
 import getAppPort from '../../../test_util/app-port.js';
 const port = getAppPort();

@@ -18,7 +18,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 import _pg from 'pg';
 const Pool = _pg.Pool;
 const Client = _pg.Client;
-import express from 'express';
+import express from 'express-beta';
 import morgan from 'morgan';
 import fetch from 'node-fetch';
 import bodyParser from 'body-parser';

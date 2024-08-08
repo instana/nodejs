@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 });
 
 import bodyParser from 'body-parser';
-import express from 'express';
+import express from 'express-beta';
 import morgan from 'morgan';
 import getAppPort from '../../../test_util/app-port.js';
 const port = getAppPort();

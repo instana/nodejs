@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 
 import { promisify } from 'util';
 import bodyParser from 'body-parser';
-import express from 'express';
+import express from 'express-beta';
 import fs from 'fs';
 import morgan from 'morgan';
 import ibmdb from 'ibm_db';
