@@ -13,6 +13,9 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+// Here, we're using the SDK for testing, so importing the collector directly.
+import instanaFactory from '../../../../src/index.js';
+const instana = instanaFactory();
 
 import bodyParser from 'body-parser';
 import express from 'express';
