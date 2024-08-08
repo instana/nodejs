@@ -28,11 +28,15 @@ exports.init = function init() {
 };
 
 function instrument(express) {
+  // capture the uncaught error
   if (express.Router && express.Router.handle && express.Router.use) {
     // express 4
-    // capture the uncaught error
-    shimmer.wrap(express.Router, 'handle', shimExpress4Handle);
+    shimmer.wrap(express.Router, 'handle', shimExpressHandle);
     shimmer.wrap(express.Router, 'use', shimExpress4Use);
+  } else if (express.Router && express.Router.prototype) {
+    // express v5 beta
+    shimmer.wrap(express.Router.prototype, 'handle', shimExpressHandle);
+    shimmer.wrap(express.Router.prototype, 'use', shimExpress4Use);
   }
 
   if (express.Route && express.Route.prototype) {
@@ -44,15 +48,9 @@ function instrument(express) {
       }
     });
   }
-  if (express.Router && express.Router.prototype) {
-    // express v5 beta
-    // capture the uncaught error
-    shimmer.wrap(express.Router.prototype, 'handle', shimExpress4Handle);
-    shimmer.wrap(express.Router.prototype, 'use', shimExpress4Use);
-  }
 }
 
-function shimExpress4Handle(realHandle) {
+function shimExpressHandle(realHandle) {
   return function shimmedHandle() {
     const args = [];
     for (let i = 0; i < arguments.length; i++) {
