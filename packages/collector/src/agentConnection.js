@@ -492,25 +492,40 @@ function logLargeSpans(spans) {
 }
 
 /**
- *
- * @param {Array.<InstanaBaseSpan>} spans
+ * @typedef {InstanaBaseSpan} Span Span
+ * @property {number} [k] kind
+ */
+
+/**
+ * Returning type for the function getSpanLengthInfo
+ * @typedef {Object.<string, number>} CountBySpanType
+ */
+
+/**
+ * @param {Span[]} spans
+ * @returns {CountBySpanType}
  */
 function getSpanLengthInfo(spans) {
+  /** @type {Object.<number, string>} */
   const spanMapping = {
     1: 'entrySpans',
     2: 'exitSpans',
     3: 'intermediateSpans'
   };
 
-  const countBySpanType = spans.reduce((acc, item) => {
-    // @ts-ignore
-    const label = spanMapping[item.k];
+  /**
+   * @param {CountBySpanType} acc
+   * @param {Span} item
+   */
+  const reducer = (acc, item) => {
+    const label = spanMapping[item?.k];
     if (label) {
-      // @ts-ignore
       acc[label] = (acc[label] || 0) + 1;
     }
     return acc;
-  }, {}) || {};
+  };
+
+  const countBySpanType = spans.reduce(reducer, {});
 
   return countBySpanType;
 }
