@@ -298,7 +298,7 @@ async function copyDirectory(source, destination) {
     if (entry.isDirectory()) {
       return copyDirectory(sourcePath, destinationPath);
     } else {
-      return fs.promises.copyFile(sourcePath, destinationPath);
+      return fs.promises.copyFile(sourcePath, destinationPath, fs.promises.constants.COPYFILE_FICLONE);
     }
   });
   await Promise.all(tasks);
