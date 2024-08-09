@@ -66,3 +66,30 @@ exports.isESMApp = function isESMApp() {
 
   return isESM;
 };
+
+exports.tracerInstrumentationInfo = function tracerInstrumentationInfo() {
+  const objMap = {
+    usingExperimentalLoaderFlag: '--experimental-loader',
+    usingImport: '--import',
+    usingRequire: '--require'
+  };
+  const usingExperimentalLoaderFlag =
+    (process.env.NODE_OPTIONS && process.env.NODE_OPTIONS.includes('--experimental-loader')) ||
+    (process.execArgv[0] && process.execArgv[0].includes('--experimental-loader'))
+    ? 'usingExperimentalLoaderFlag' : '';
+
+  const usingImport =
+    (process.execArgv &&
+      process.execArgv.length > 0 &&
+      process.execArgv[0].includes('--import') && process.execArgv[0].includes('esm-register.mjs')) ||
+    (process.execArgv &&
+      process.execArgv.length > 0 &&
+      process.execArgv[0].includes('--import') && process.execArgv[1]?.includes('esm-register.mjs'))
+    ? 'usingImport' : '';
+
+  const usingRequire = (process.env.NODE_OPTIONS && process.env.NODE_OPTIONS.includes('--require')) ||
+  (process.execArgv[0] && process.execArgv[0].includes('--require')) ? 'usingRequire' : '';
+
+  // @ts-ignore
+  return objMap[usingExperimentalLoaderFlag || usingImport || usingRequire || 'default'];
+};
