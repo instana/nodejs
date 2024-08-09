@@ -182,25 +182,26 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
       .then(() => {
         // See below for the reason why we append 'precompiled' to the path.
         const targetDir = path.join(opts.nativeModulePath, 'precompiled');
-        try {
-          copyDirectory(path.join(os.tmpdir(), opts.nativeModuleName), targetDir);
-          // We have unpacked and copied the correct precompiled native addon. The next attempt to require the
-          // dependency should work.
-          //
-          // However, we must not use any of the paths from which Node.js has tried to load the module before (that
-          // is, node_modules/${opts.nativeModuleName}). Node.js' module loading infrastructure
-          // (lib/internal/modules/cjs/loader.js and lib/internal/modules/package_json_reader.js) have built-in
-          // caching on multiple levels (for example, package.json locations and package.json contents). If Node.js
-          // has tried unsuccessfully to load a module or read a package.json from a particular path,
-          // it will remember and not try to load anything from that path again (a `false` will be
-          // put into the cache for that cache key). Instead, we force a new path, by adding precompiled
-          // to the module path and use the absolute path to the module to load it.
-          opts.loadFrom = targetDir;
-          callback(true);
-        } catch (err) {
-          logger.warn(`Copying the precompiled build for ${opts.nativeModuleName} ${label} failed.`, err);
-          callback(false);
-        }
+        copyDirectory(path.join(os.tmpdir(), opts.nativeModuleName), targetDir)
+          .then(() => {
+            opts.loadFrom = targetDir;
+            callback(true);
+          })
+          .catch(error => {
+            logger.warn(`Copying the precompiled build for ${opts.nativeModuleName} ${label} failed.`, error);
+            callback(false);
+          });
+        // We have unpacked and copied the correct precompiled native addon. The next attempt to require the
+        // dependency should work.
+        //
+        // However, we must not use any of the paths from which Node.js has tried to load the module before (that
+        // is, node_modules/${opts.nativeModuleName}). Node.js' module loading infrastructure
+        // (lib/internal/modules/cjs/loader.js and lib/internal/modules/package_json_reader.js) have built-in
+        // caching on multiple levels (for example, package.json locations and package.json contents). If Node.js
+        // has tried unsuccessfully to load a module or read a package.json from a particular path,
+        // it will remember and not try to load anything from that path again (a `false` will be
+        // put into the cache for that cache key). Instead, we force a new path, by adding precompiled
+        // to the module path and use the absolute path to the module to load it.
       })
       .catch(tarErr => {
         logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed.`, tarErr);
@@ -285,19 +286,22 @@ function setLogger(_logger) {
  * @param {string} source
  * @param {string} destination
  */
-function copyDirectory(source, destination) {
-  fs.mkdirSync(destination, { recursive: true });
+async function copyDirectory(source, destination) {
+  await fs.promises.mkdir(destination, { recursive: true });
 
-  fs.readdirSync(source, { withFileTypes: true }).forEach(entry => {
+  const entries = await fs.promises.readdir(source, { withFileTypes: true });
+
+  const tasks = entries.map(async entry => {
     const sourcePath = path.join(source, entry.name);
     const destinationPath = path.join(destination, entry.name);
 
     if (entry.isDirectory()) {
-      copyDirectory(sourcePath, destinationPath);
+      return copyDirectory(sourcePath, destinationPath);
     } else {
-      fs.copyFileSync(sourcePath, destinationPath);
+      return fs.promises.copyFile(sourcePath, destinationPath);
     }
   });
+  await Promise.all(tasks);
 }
 // Temporarily export for testing.
 loadNativeAddOn.copyDirectory = copyDirectory;
