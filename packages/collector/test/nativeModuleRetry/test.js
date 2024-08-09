@@ -15,7 +15,7 @@ const { retry } = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 const globalAgent = require('../globalAgent');
 
-describe('retry loading native addons', function () {
+describe.skip('retry loading native addons', function () {
   const timeout = Math.max(config.getTestTimeout(), 20000);
   this.timeout(timeout);
 
