@@ -19,7 +19,8 @@ const {
   esmSupportedVersion,
   isLatestEsmSupportedVersion,
   hasExperimentalLoaderFlag,
-  isESMApp
+  isESMApp,
+  tracerInstrumentationInfo
 } = require('../util/esm');
 const iitmHook = require('../util/iitmHook');
 
@@ -198,6 +199,10 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
   automaticTracingEnabled = config.tracing.automaticTracingEnabled;
 
   if (tracingEnabled) {
+    const loader = tracerInstrumentationInfo();
+    // eslint-disable-next-line no-console
+    console.debug('The app is loaded using: %s command', loader);
+
     tracingUtil.init(config);
     tracingHeaders.init(config);
     spanBuffer.init(config, downstreamConnection);
