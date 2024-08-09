@@ -9,7 +9,6 @@ const { logger: Logger, uninstrumentedFs: fs } = require('@instana/core');
 let logger = Logger.getLogger('shared-metrics/native-module-retry');
 
 const EventEmitter = require('events');
-const copy = require('recursive-copy');
 const os = require('os');
 const tar = require('tar');
 const path = require('path');
@@ -183,38 +182,25 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
       .then(() => {
         // See below for the reason why we append 'precompiled' to the path.
         const targetDir = path.join(opts.nativeModulePath, 'precompiled');
-
-        // @ts-ignore
-        copy(
-          path.join(os.tmpdir(), opts.nativeModuleName),
-          targetDir,
-          {
-            overwrite: true,
-            dot: true
-          },
-          // @ts-ignore
-          cpErr => {
-            if (cpErr) {
-              logger.warn(`Copying the precompiled build for ${opts.nativeModuleName} ${label} failed.`, cpErr);
-              callback(false);
-              return;
-            }
-
-            // We have unpacked and copied the correct precompiled native addon. The next attempt to require the
-            // dependency should work.
-            //
-            // However, we must not use any of the paths from which Node.js has tried to load the module before (that
-            // is, node_modules/${opts.nativeModuleName}). Node.js' module loading infrastructure
-            // (lib/internal/modules/cjs/loader.js and lib/internal/modules/package_json_reader.js) have built-in
-            // caching on multiple levels (for example, package.json locations and package.json contents). If Node.js
-            // has tried unsuccessfully to load a module or read a package.json from a particular path,
-            // it will remember and not try to load anything from that path again (a `false` will be
-            // put into the cache for that cache key). Instead, we force a new path, by adding precompiled
-            // to the module path and use the absolute path to the module to load it.
-            opts.loadFrom = targetDir;
-            callback(true);
-          }
-        );
+        try {
+          copyDirectory(path.join(os.tmpdir(), opts.nativeModuleName), targetDir);
+          // We have unpacked and copied the correct precompiled native addon. The next attempt to require the
+          // dependency should work.
+          //
+          // However, we must not use any of the paths from which Node.js has tried to load the module before (that
+          // is, node_modules/${opts.nativeModuleName}). Node.js' module loading infrastructure
+          // (lib/internal/modules/cjs/loader.js and lib/internal/modules/package_json_reader.js) have built-in
+          // caching on multiple levels (for example, package.json locations and package.json contents). If Node.js
+          // has tried unsuccessfully to load a module or read a package.json from a particular path,
+          // it will remember and not try to load anything from that path again (a `false` will be
+          // put into the cache for that cache key). Instead, we force a new path, by adding precompiled
+          // to the module path and use the absolute path to the module to load it.
+          opts.loadFrom = targetDir;
+          callback(true);
+        } catch (err) {
+          logger.warn(`Copying the precompiled build for ${opts.nativeModuleName} ${label} failed.`, err);
+          callback(false);
+        }
       })
       .catch(tarErr => {
         logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed.`, tarErr);
@@ -293,5 +279,27 @@ loadNativeAddOn.selfNodeModulesPath = '';
 function setLogger(_logger) {
   logger = _logger;
 }
+
+/**
+ * Recursively copies all files and subdirectories from the source directory to the destination directory.
+ * @param {string} source
+ * @param {string} destination
+ */
+function copyDirectory(source, destination) {
+  fs.mkdirSync(destination, { recursive: true });
+
+  fs.readdirSync(source, { withFileTypes: true }).forEach(entry => {
+    const sourcePath = path.join(source, entry.name);
+    const destinationPath = path.join(destination, entry.name);
+
+    if (entry.isDirectory()) {
+      copyDirectory(sourcePath, destinationPath);
+    } else {
+      fs.copyFileSync(sourcePath, destinationPath);
+    }
+  });
+}
+// Temporarily export for testing.
+loadNativeAddOn.copyDirectory = copyDirectory;
 
 module.exports = loadNativeAddOn;
