@@ -267,18 +267,6 @@ app.get('/callSequence', async (req, res) => {
   }
 });
 
-app.post('/two-different-target-hosts', async (req, res) => {
-  try {
-    const response = {};
-    response.response1 = await cluster.set(req.query.key, req.query.value1);
-    response.response2 = await client2.set(req.query.key, req.query.value2);
-    res.json(response);
-  } catch (e) {
-    log('Redis set operation failed.', e);
-    res.sendStatus(500);
-  }
-});
-
 app.listen(port, () => {
   log(`Listening on port: ${port}`);
 });

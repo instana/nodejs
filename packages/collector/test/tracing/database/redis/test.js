@@ -129,8 +129,8 @@ describe('tracing/redis', function () {
                   span => expect(span.data.redis.command).to.equal('get')
                 ]);
 
-                verifyHttpExit(spans, writeEntrySpan);
-                verifyHttpExit(spans, readEntrySpan);
+                verifyHttpExit(controls, spans, writeEntrySpan);
+                verifyHttpExit(controls, spans, readEntrySpan);
               })
             );
           }));
@@ -235,8 +235,8 @@ describe('tracing/redis', function () {
                   span => expect(span.data.redis.command).to.equal('get')
                 ]);
 
-                verifyHttpExit(spans, writeEntrySpan);
-                verifyHttpExit(spans, readEntrySpan);
+                verifyHttpExit(controls, spans, writeEntrySpan);
+                verifyHttpExit(controls, spans, readEntrySpan);
               })
             );
           }));
@@ -291,7 +291,7 @@ describe('tracing/redis', function () {
                       : expect(span.data.redis.command).to.equal('hget')
                 ]);
 
-                verifyHttpExit(spans, entrySpan);
+                verifyHttpExit(controls, spans, entrySpan);
               })
             );
           }));
@@ -313,7 +313,7 @@ describe('tracing/redis', function () {
                   span => expect(span.data.http.method).to.equal('GET')
                 ]);
 
-                verifyHttpExit(spans, writeEntrySpan);
+                verifyHttpExit(controls, spans, writeEntrySpan);
               })
             )
           ));
@@ -350,7 +350,7 @@ describe('tracing/redis', function () {
                   span => expect(span.data.redis.command).to.equal('set')
                 ]);
 
-                verifyHttpExit(spans, writeEntrySpan);
+                verifyHttpExit(controls, spans, writeEntrySpan);
               })
             )
           ));
@@ -387,7 +387,7 @@ describe('tracing/redis', function () {
                   span => expect(span.data.redis.error).to.be.a('string')
                 ]);
 
-                verifyHttpExit(spans, writeEntrySpan);
+                verifyHttpExit(controls, spans, writeEntrySpan);
               })
             )
           ));
@@ -428,7 +428,7 @@ describe('tracing/redis', function () {
                       : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
                 ]);
 
-                verifyHttpExit(spans, writeEntrySpan);
+                verifyHttpExit(controls, spans, writeEntrySpan);
               })
             )
           ));
@@ -476,7 +476,7 @@ describe('tracing/redis', function () {
                         : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
                   ]);
 
-                  verifyHttpExit(spans, writeEntrySpan);
+                  verifyHttpExit(controls, spans, writeEntrySpan);
                 })
               )
             ));
@@ -520,7 +520,7 @@ describe('tracing/redis', function () {
                       : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
                 ]);
 
-                verifyHttpExit(spans, writeEntrySpan);
+                verifyHttpExit(controls, spans, writeEntrySpan);
               })
             )
           ));
@@ -560,7 +560,7 @@ describe('tracing/redis', function () {
                       : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
                 ]);
 
-                verifyHttpExit(spans, writeEntrySpan);
+                verifyHttpExit(controls, spans, writeEntrySpan);
               })
             )
           ));
@@ -600,7 +600,7 @@ describe('tracing/redis', function () {
                       : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
                 ]);
 
-                verifyHttpExit(spans, writeEntrySpan);
+                verifyHttpExit(controls, spans, writeEntrySpan);
               })
             )
           ));
@@ -640,7 +640,7 @@ describe('tracing/redis', function () {
                       : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
                 ]);
 
-                verifyHttpExit(spans, writeEntrySpan);
+                verifyHttpExit(controls, spans, writeEntrySpan);
               })
             )
           ));
@@ -678,7 +678,7 @@ describe('tracing/redis', function () {
                   span => expect(span.f.h).to.equal('agent-stub-uuid')
                 ]);
 
-                verifyHttpExit(spans, writeEntrySpan);
+                verifyHttpExit(controls, spans, writeEntrySpan);
               })
             )
           ));
@@ -712,7 +712,7 @@ describe('tracing/redis', function () {
                     span => expect(span.data.redis.command).to.equal('hVals')
                   ]);
 
-                  verifyHttpExit(spans, entrySpan);
+                  verifyHttpExit(controls, spans, entrySpan);
                 })
               )
             ));
@@ -745,7 +745,7 @@ describe('tracing/redis', function () {
                     span => expect(span.data.redis.command).to.equal('get')
                   ]);
 
-                  verifyHttpExit(spans, entrySpan);
+                  verifyHttpExit(controls, spans, entrySpan);
                 })
               )
             ));
@@ -779,7 +779,7 @@ describe('tracing/redis', function () {
                     span => expect(span.data.redis.command).to.equal('blPop')
                   ]);
 
-                  verifyHttpExit(spans, entrySpan);
+                  verifyHttpExit(controls, spans, entrySpan);
                 })
               )
             ));
@@ -853,23 +853,23 @@ describe('tracing/redis', function () {
           ]);
         });
       });
-
-      function verifyHttpExit(spans, parent) {
-        expectExactlyOneMatching(spans, [
-          span => expect(span.t).to.equal(parent.t),
-          span => expect(span.p).to.equal(parent.s),
-          span => expect(span.n).to.equal('node.http.client'),
-          span => expect(span.k).to.equal(constants.EXIT),
-          span => expect(span.f.e).to.equal(String(controls.getPid())),
-          span => expect(span.f.h).to.equal('agent-stub-uuid'),
-          span => expect(span.async).to.not.exist,
-          span => expect(span.error).to.not.exist,
-          span => expect(span.ec).to.equal(0),
-          span => expect(span.data.http.method).to.equal('GET'),
-          span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
-          span => expect(span.data.http.status).to.equal(200)
-        ]);
-      }
     });
   });
+
+  function verifyHttpExit(controls, spans, parent) {
+    expectExactlyOneMatching(spans, [
+      span => expect(span.t).to.equal(parent.t),
+      span => expect(span.p).to.equal(parent.s),
+      span => expect(span.n).to.equal('node.http.client'),
+      span => expect(span.k).to.equal(constants.EXIT),
+      span => expect(span.f.e).to.equal(String(controls.getPid())),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.error).to.not.exist,
+      span => expect(span.ec).to.equal(0),
+      span => expect(span.data.http.method).to.equal('GET'),
+      span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
+      span => expect(span.data.http.status).to.equal(200)
+    ]);
+  }
 });
