@@ -104,7 +104,9 @@ describe('tracing/redis', function () {
                   span => expect(span.async).to.not.exist,
                   span => expect(span.error).to.not.exist,
                   span => expect(span.ec).to.equal(0),
-                  span => expect(span.data.redis.connection).to.contain(process.env.REDIS),
+                  span => expect(span.data.redis.connection).to.contain(process.env.REDIS_NODE_1),
+                  span => expect(span.data.redis.connection).to.contain(process.env.REDIS_NODE_2),
+                  span => expect(span.data.redis.connection).to.contain(process.env.REDIS_NODE_3),
                   span => expect(span.data.redis.command).to.equal('set')
                 ]);
 
@@ -125,7 +127,9 @@ describe('tracing/redis', function () {
                   span => expect(span.async).to.not.exist,
                   span => expect(span.error).to.not.exist,
                   span => expect(span.ec).to.equal(0),
-                  span => expect(span.data.redis.connection).to.contain(process.env.REDIS),
+                  span => expect(span.data.redis.connection).to.contain(process.env.REDIS_NODE_1),
+                  span => expect(span.data.redis.connection).to.contain(process.env.REDIS_NODE_2),
+                  span => expect(span.data.redis.connection).to.contain(process.env.REDIS_NODE_3),
                   span => expect(span.data.redis.command).to.equal('get')
                 ]);
 

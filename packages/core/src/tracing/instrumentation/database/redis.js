@@ -29,6 +29,7 @@ exports.init = function init() {
   // v4 commands, "redis-commands" is outdated and no longer compatible with it
   hook.onFileLoad(/\/@redis\/client\/dist\/lib\/cluster\/commands.js/, captureCommands);
   hook.onModuleLoad('redis', instrument);
+  hook.onModuleLoad('@redis/client', instrument);
 };
 
 let redisCommandList = [];
@@ -42,6 +43,17 @@ function instrument(redis) {
   // NOTE: v4 no longer exposes the RedisClient. We need to wait till `createClient` get's called
   //       to get the instance of the redis client
   if (!redis.RedisClient) {
+    const createClusterWrap = originalCreateClusterFn => {
+      return function instrumentedCreateClusterInstana(createClusterOpts) {
+        const redisCluster = originalCreateClusterFn.apply(this, arguments);
+        const addressUrl = createClusterOpts.rootNodes.map(node => node.url).join(', ');
+
+        shimAllCommands(redisCluster, addressUrl, false, redisCommandList);
+
+        return redisCluster;
+      };
+    };
+
     const createClientWrap = originalCreatedClientFn => {
       return function instrumentedCreateClientInstana(createClientOpts) {
         const redisClient = originalCreatedClientFn.apply(this, arguments);
@@ -122,6 +134,7 @@ function instrument(redis) {
       };
     };
 
+    shimmer.wrap(redis, 'createCluster', createClusterWrap);
     shimmer.wrap(redis, 'createClient', createClientWrap);
   } else {
     const redisClientProto = redis.RedisClient.prototype;
