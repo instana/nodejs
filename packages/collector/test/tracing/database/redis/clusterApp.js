@@ -1,5 +1,5 @@
 /*
- * (c) Copyright IBM Corp. 2022
+ * (c) Copyright IBM Corp. 2024
  */
 /* eslint-disable no-console */
 
@@ -16,31 +16,57 @@ require('../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const redis = require('redis');
+
+// TODO: require('redis') and require('@redis/client') needs to be covered
+const redis = require('@redis/client');
 const fetch = require('node-fetch-v2');
 const port = require('../../../test_util/app-port')();
 
 const cls = require('../../../../../core/src/tracing/cls');
 const app = express();
-const logPrefix = `Redis Latest App (${process.pid}):\t`;
+const logPrefix = `Redis Cluster App (${process.pid}):\t`;
 let connectedToRedis = false;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-const client = redis.createClient({ url: `redis://${process.env.REDIS}` });
-const client2 = redis.createClient({ url: `redis://${process.env.REDIS_ALTERNATIVE}` });
+// node bin/start-test-containers.js --redis-node-0 --redis-node-1 --redis-node-2
+// docker exec -it 2aaaac7b9112 redis-cli -p 6379 cluster info
 
-[client, client2].forEach(c => {
-  c.on('error', err => log('Redis Client Error', err));
+const cluster = redis.createCluster({
+  rootNodes: [
+    {
+      url: `redis://${process.env.REDIS_NODE_1}`,
+      socket: {
+        connectTimeout: 10 * 1000
+      }
+    },
+    {
+      url: `redis://${process.env.REDIS_NODE_2}`,
+      socket: {
+        connectTimeout: 10 * 1000
+      }
+    },
+    {
+      url: `redis://${process.env.REDIS_NODE_3}`,
+      socket: {
+        connectTimeout: 10 * 1000
+      }
+    }
+  ],
+  defaults: {
+    socket: {
+      connectTimeout: 50000
+    }
+  }
+});
+
+[cluster].forEach(c => {
+  c.on('error', err => log('Redis Cluster Error', err));
 });
 
 (async () => {
-  log('Connecting to client 1');
-  await client.connect();
-  log(`Connected to client 1 (${process.env.REDIS}).`);
-
-  log('Connecting to client 2');
-  await client2.connect();
-  log(`Connected to client 2 (${process.env.REDIS_ALTERNATIVE}).`);
+  log(`Connecting to cluster. (${process.env.REDIS_NODE_1}, ${process.env.REDIS_NODE_2}, ${process.env.REDIS_NODE_3})`);
+  await cluster.connect();
+  log('Connected to cluster');
 
   connectedToRedis = true;
 })();
@@ -60,10 +86,23 @@ app.get('/', (req, res) => {
 });
 
 app.post('/clearkeys', async (req, res) => {
-  cls.isTracing() && cls.setTracingLevel('0');
-  await client.flushAll();
+  if (cls.isTracing()) {
+    cls.setTracingLevel('0');
+  }
 
-  cls.isTracing() && cls.setTracingLevel('1');
+  console.log(cluster.masters);
+
+  await Promise.all(
+    cluster.masters.map(async master => {
+      const client = await cluster.nodeClient(master);
+      await client.flushAll();
+    })
+  );
+
+  if (cls.isTracing()) {
+    cls.setTracingLevel('1');
+  }
+
   res.sendStatus(200);
 });
 
@@ -72,7 +111,7 @@ app.post('/values', async (req, res) => {
   const value = req.query.value;
 
   try {
-    await client.set(key, value);
+    await cluster.set(key, value);
     log('Set key successfully.');
   } catch (e) {
     log('Set with key %s, value %s failed', key, value, e);
@@ -87,7 +126,7 @@ app.get('/values', async (req, res) => {
   const key = req.query.key;
 
   try {
-    const redisRes = await client.get(key);
+    const redisRes = await cluster.get(key);
     log('Got redis key successfully.');
     await fetch(`http://127.0.0.1:${agentPort}`);
     log('Sent agent request successfully.');
@@ -99,17 +138,17 @@ app.get('/values', async (req, res) => {
 });
 
 app.get('/hvals', async (req, res) => {
-  await client.hVals('key1');
+  await cluster.hVals('key1');
   await fetch(`http://127.0.0.1:${agentPort}`);
   log('Sent agent request successfully.');
   res.sendStatus(200);
 });
 
 app.get('/blocking', async (req, res) => {
-  const blPopPromise = client.blPop(redis.commandOptions({ isolated: true }), 'mykey', 0);
+  const blPopPromise = cluster.blPop(redis.commandOptions({ isolated: true }), 'mykey', 0);
 
   try {
-    await client.lPush('mykey', ['1', '2']);
+    await cluster.lPush('mykey', ['1', '2']);
     await blPopPromise; // '2'
 
     await fetch(`http://127.0.0.1:${agentPort}`);
@@ -124,9 +163,9 @@ app.get('/blocking', async (req, res) => {
 
 app.get('/scan-iterator', async (req, res) => {
   // eslint-disable-next-line no-restricted-syntax
-  for await (const key of client.scanIterator()) {
+  for await (const key of cluster.scanIterator()) {
     try {
-      await client.get(key);
+      await cluster.get(key);
     } catch (getErr) {
       // ignore for now
     }
@@ -139,16 +178,16 @@ app.get('/scan-iterator', async (req, res) => {
 });
 
 app.get('/hset-hget', async (req, res) => {
-  await client.hSet('someCollection1', 'key1', 'value1');
+  await cluster.hSet('someCollection1', 'key1', 'value1');
   // HGETALL = hGetAll internally, no need to add test coverage for both
-  const result = await client.hGetAll('someCollection1');
+  const result = await cluster.hGetAll('someCollection1');
   await fetch(`http://127.0.0.1:${agentPort}`);
   res.status(200).send(result.key1);
 });
 
 app.get('/get-without-waiting', (req, res) => {
   const key = req.query.key;
-  client.get(key);
+  cluster.get(key);
   fetch(`http://127.0.0.1:${agentPort}`).then(() => {
     res.sendStatus(200);
   });
@@ -158,7 +197,7 @@ app.get('/set-without-waiting', (req, res) => {
   const key = req.query.key;
   const value = req.query.value;
 
-  client.set(key, value);
+  cluster.set(key, value);
 
   fetch(`http://127.0.0.1:${agentPort}`).then(() => {
     res.sendStatus(200);
@@ -168,7 +207,7 @@ app.get('/set-without-waiting', (req, res) => {
 app.get('/failure', async (req, res) => {
   try {
     // simulating wrong get usage
-    const redisRes = await client.get(null);
+    const redisRes = await cluster.get(null);
     res.send(redisRes);
   } catch (err) {
     await fetch(`http://127.0.0.1:${agentPort}`);
@@ -178,7 +217,7 @@ app.get('/failure', async (req, res) => {
 
 app.get('/multi', async (req, res) => {
   try {
-    await client.multi().set('key', 'value').get('key').exec();
+    await cluster.multi().set('key', 'value').get('key').exec();
     await fetch(`http://127.0.0.1:${agentPort}`);
     res.sendStatus(200);
   } catch (err) {
@@ -189,7 +228,7 @@ app.get('/multi', async (req, res) => {
 
 app.get('/multi-no-waiting', async (req, res) => {
   try {
-    client.multi().set('key', 'value').get('key').exec();
+    cluster.multi().set('key', 'value').get('key').exec();
     await fetch(`http://127.0.0.1:${agentPort}`);
     res.sendStatus(200);
   } catch (err) {
@@ -201,7 +240,7 @@ app.get('/multi-no-waiting', async (req, res) => {
 app.get('/multiFailure', async (req, res) => {
   // simulating wrong get usage
   try {
-    await client.multi().set('key', 'value').get(null).exec();
+    await cluster.multi().set('key', 'value').get(null).exec();
     res.sendStatus(500);
   } catch (err) {
     log('Multi expected to fail', err);
@@ -211,14 +250,14 @@ app.get('/multiFailure', async (req, res) => {
 });
 
 app.get('/batchSuccess', async (req, res) => {
-  await client.multi().get('1').set('2', '2').execAsPipeline();
+  await cluster.multi().get('1').set('2', '2').execAsPipeline();
   await fetch(`http://127.0.0.1:${agentPort}`);
   res.sendStatus(200);
 });
 
 app.get('/batchFailure', async (req, res) => {
   try {
-    await client.multi().get(null).set('2', '2').execAsPipeline();
+    await cluster.multi().get(null).set('2', '2').execAsPipeline();
     res.sendStatus(500);
   } catch (err) {
     log('Batch expected to fail', err);
@@ -232,8 +271,8 @@ app.get('/callSequence', async (req, res) => {
   const value = 'bar';
 
   try {
-    await client.set(key, value);
-    const result = await client.get(key);
+    await cluster.set(key, value);
+    const result = await cluster.get(key);
     await fetch(`http://127.0.0.1:${agentPort}`);
     res.send(result);
   } catch (err) {
@@ -245,7 +284,7 @@ app.get('/callSequence', async (req, res) => {
 app.post('/two-different-target-hosts', async (req, res) => {
   try {
     const response = {};
-    response.response1 = await client.set(req.query.key, req.query.value1);
+    response.response1 = await cluster.set(req.query.key, req.query.value1);
     response.response2 = await client2.set(req.query.key, req.query.value2);
     res.json(response);
   } catch (e) {

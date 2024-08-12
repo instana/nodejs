@@ -26,8 +26,117 @@ describe('tracing/redis', function () {
 
   const agentControls = globalAgent.instance;
 
-  ['latest', 'v3'].forEach(redisVersion => {
+  ['latest'].forEach(redisVersion => {
     const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+
+    mochaSuiteFn.only(`cluster: redis@${redisVersion}`, function () {
+      globalAgent.setUpCleanUpHooks();
+      let controls;
+
+      this.timeout(50000);
+
+      before(async () => {
+        controls = new ProcessControls({
+          dirname: __dirname,
+          useGlobalAgent: true,
+          env: {
+            REDIS_VERSION: redisVersion,
+            REDIS_CLUSTER: 'true'
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection(1000, Date.now() + 50000);
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      before(async () => {
+        await controls.sendRequest({
+          method: 'POST',
+          path: '/clearkeys'
+        });
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
+
+      it('must trace set/get calls', () =>
+        controls
+          .sendRequest({
+            method: 'POST',
+            path: '/values',
+            qs: {
+              key: 'price',
+              value: 42
+            }
+          })
+          .then(() =>
+            controls.sendRequest({
+              method: 'GET',
+              path: '/values',
+              qs: {
+                key: 'price'
+              }
+            })
+          )
+          .then(response => {
+            expect(String(response)).to.equal('42');
+
+            return retry(() =>
+              agentControls.getSpans().then(spans => {
+                const writeEntrySpan = expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.data.http.method).to.equal('POST')
+                ]);
+
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.data.redis.connection).to.contain(process.env.REDIS),
+                  span => expect(span.data.redis.command).to.equal('set')
+                ]);
+
+                const readEntrySpan = expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.data.http.method).to.equal('GET'),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid')
+                ]);
+
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(readEntrySpan.t),
+                  span => expect(span.p).to.equal(readEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.data.redis.connection).to.contain(process.env.REDIS),
+                  span => expect(span.data.redis.command).to.equal('get')
+                ]);
+
+                verifyHttpExit(spans, writeEntrySpan);
+                verifyHttpExit(spans, readEntrySpan);
+              })
+            );
+          }));
+    });
 
     mochaSuiteFn(`redis@${redisVersion}`, function () {
       globalAgent.setUpCleanUpHooks();

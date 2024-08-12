@@ -12,8 +12,11 @@ process.on('SIGTERM', () => {
 
 require('./mockVersion');
 const redisLatest = process.env.REDIS_VERSION === 'latest';
+const redisCluster = process.env.REDIS_CLUSTER === 'true';
 
-if (redisLatest) {
+if (redisCluster) {
+  require('./clusterApp');
+} else if (redisLatest) {
   require('./latestApp');
 } else {
   // v3
