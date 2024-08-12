@@ -13,6 +13,7 @@ const os = require('os');
 const tar = require('tar');
 const path = require('path');
 const detectLibc = require('detect-libc');
+const fse = require('fs-extra');
 
 /**
  * @typedef {Object} InstanaSharedMetricsOptions
@@ -182,7 +183,9 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
       .then(() => {
         // See below for the reason why we append 'precompiled' to the path.
         const targetDir = path.join(opts.nativeModulePath, 'precompiled');
-        copyDirectory(path.join(os.tmpdir(), opts.nativeModuleName), targetDir)
+
+        fse
+          .copy(path.join(os.tmpdir(), opts.nativeModuleName), targetDir)
           .then(() => {
             opts.loadFrom = targetDir;
             callback(true);
@@ -280,30 +283,5 @@ loadNativeAddOn.selfNodeModulesPath = '';
 function setLogger(_logger) {
   logger = _logger;
 }
-
-/**
- * Recursively copies all files and subdirectories from the source directory to the destination directory.
- * @param {string} source
- * @param {string} destination
- */
-async function copyDirectory(source, destination) {
-  await fs.promises.mkdir(destination, { recursive: true });
-
-  const entries = await fs.promises.readdir(source, { withFileTypes: true });
-
-  const tasks = entries.map(async entry => {
-    const sourcePath = path.join(source, entry.name);
-    const destinationPath = path.join(destination, entry.name);
-
-    if (entry.isDirectory()) {
-      return copyDirectory(sourcePath, destinationPath);
-    } else {
-      return fs.promises.copyFile(sourcePath, destinationPath);
-    }
-  });
-  await Promise.all(tasks);
-}
-// Temporarily export for testing.
-loadNativeAddOn.copyDirectory = copyDirectory;
 
 module.exports = loadNativeAddOn;
