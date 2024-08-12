@@ -225,7 +225,6 @@
     "square-calc": "3.2.1",
     "square-calc-v2": "npm:square-calc@2.4.0",
     "stealthy-require": "1.1.1",
-    "superagent": "^10.0.0",
     "tedious": "^17.0.0",
     "tsoa": "^6.4.0",
     "typescript": "^5.0.4",
@@ -242,7 +241,8 @@
     "kafka-avro": "^3.2.0",
     "node-rdkafka": "^3.1.0",
     "pg-native": "^3.1.0",
-    "prisma": "^5.18.0"
+    "prisma": "^5.18.0",
+    "superagent": "^10.0.0"
   },
   "overrides": {
     "nx": "15.8.9",

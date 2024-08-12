@@ -36,7 +36,10 @@ mochaSuiteFn('tracing/http client', function () {
   registerConnectionRefusalTest.call(this, false);
   registerConnectionRefusalTest.call(this, true);
 
-  describe('superagent', function () {
+  // Installation of superagent v10 fails for Node.js v16.
+  // Reference: https://github.com/ladjs/superagent/pull/1813
+  const runSuperagent = semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
+  runSuperagent('superagent', function () {
     registerSuperagentTest.call(this);
   });
 
