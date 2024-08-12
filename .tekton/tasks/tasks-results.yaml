@@ -26,16 +26,6 @@ spec:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
               key: "SONAR_TOKEN"          
-        - name: SONAR_PWD
-          valueFrom:
-            secretKeyRef:
-              name: $(params.continuous-delivery-context-secret)
-              key: "SONAR_PWD"          
-        - name: SONAR_LOGIN
-          valueFrom:
-            secretKeyRef:
-              name: $(params.continuous-delivery-context-secret)
-              key: "SONAR_LOGIN"          
       script: |
         #!/bin/bash
         
@@ -55,7 +45,7 @@ spec:
           npx eslint packages/ -f json > eslint-report.json || true
 
           echo "Install sonarcube scanner..."
-          npm install -g sonarqube-scanner
+          npm install -g sonarqube-scanner@3.5
 
           echo "Run sonarqube..."
           sonar-scanner
