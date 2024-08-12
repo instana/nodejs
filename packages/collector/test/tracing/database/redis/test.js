@@ -29,11 +29,9 @@ describe('tracing/redis', function () {
   ['latest'].forEach(redisVersion => {
     const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-    mochaSuiteFn.only(`cluster: redis@${redisVersion}`, function () {
+    mochaSuiteFn(`cluster: redis@${redisVersion}`, function () {
       globalAgent.setUpCleanUpHooks();
       let controls;
-
-      this.timeout(50000);
 
       before(async () => {
         controls = new ProcessControls({
@@ -45,7 +43,7 @@ describe('tracing/redis', function () {
           }
         });
 
-        await controls.startAndWaitForAgentConnection(1000, Date.now() + 50000);
+        await controls.startAndWaitForAgentConnection();
       });
 
       beforeEach(async () => {
@@ -67,7 +65,7 @@ describe('tracing/redis', function () {
         await controls.clearIpcMessages();
       });
 
-      it('must trace set/get calls', () =>
+      it.only('must trace set/get calls', () =>
         controls
           .sendRequest({
             method: 'POST',

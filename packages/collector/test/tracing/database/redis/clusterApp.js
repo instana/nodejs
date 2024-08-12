@@ -30,32 +30,21 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 
 // node bin/start-test-containers.js --redis-node-0 --redis-node-1 --redis-node-2
 // docker exec -it 2aaaac7b9112 redis-cli -p 6379 cluster info
-
 const cluster = redis.createCluster({
   rootNodes: [
     {
-      url: `redis://${process.env.REDIS_NODE_1}`,
-      socket: {
-        connectTimeout: 10 * 1000
-      }
+      url: `redis://${process.env.REDIS_NODE_1}`
     },
     {
-      url: `redis://${process.env.REDIS_NODE_2}`,
-      socket: {
-        connectTimeout: 10 * 1000
-      }
+      url: `redis://${process.env.REDIS_NODE_2}`
     },
     {
-      url: `redis://${process.env.REDIS_NODE_3}`,
-      socket: {
-        connectTimeout: 10 * 1000
-      }
+      url: `redis://${process.env.REDIS_NODE_3}`
     }
   ],
+  useReplicas: false,
   defaults: {
-    socket: {
-      connectTimeout: 50000
-    }
+    url: `redis://${process.env.REDIS_NODE_1}`
   }
 });
 
@@ -67,7 +56,6 @@ const cluster = redis.createCluster({
   log(`Connecting to cluster. (${process.env.REDIS_NODE_1}, ${process.env.REDIS_NODE_2}, ${process.env.REDIS_NODE_3})`);
   await cluster.connect();
   log('Connected to cluster');
-
   connectedToRedis = true;
 })();
 
@@ -89,8 +77,6 @@ app.post('/clearkeys', async (req, res) => {
   if (cls.isTracing()) {
     cls.setTracingLevel('0');
   }
-
-  console.log(cluster.masters);
 
   await Promise.all(
     cluster.masters.map(async master => {
