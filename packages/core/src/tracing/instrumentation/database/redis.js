@@ -28,6 +28,7 @@ exports.deactivate = function deactivate() {
 exports.init = function init() {
   // v4 commands, "redis-commands" is outdated and no longer compatible with it
   hook.onFileLoad(/\/@redis\/client\/dist\/lib\/cluster\/commands.js/, captureCommands);
+
   hook.onModuleLoad('redis', instrument);
   hook.onModuleLoad('@redis/client', instrument);
 };

@@ -26,7 +26,7 @@ describe('tracing/redis', function () {
 
   const agentControls = globalAgent.instance;
 
-  ['latest'].forEach(redisVersion => {
+  ['latest', 'v3'].forEach(redisVersion => {
     const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
     mochaSuiteFn(`cluster: redis@${redisVersion}`, function () {
@@ -65,7 +65,7 @@ describe('tracing/redis', function () {
         await controls.clearIpcMessages();
       });
 
-      it.only('must trace set/get calls', () =>
+      it('must trace set/get calls', () =>
         controls
           .sendRequest({
             method: 'POST',
