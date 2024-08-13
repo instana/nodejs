@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.15.0](https://github.com/instana/nodejs/compare/v3.14.4...v3.15.0) (2024-08-13)
+
+### Bug Fixes
+
+- improved debug logs in agent sending spans ([#1259](https://github.com/instana/nodejs/issues/1259)) ([55ee69e](https://github.com/instana/nodejs/commit/55ee69e58214420f2311203853ace739df0a58fe))
+
+### Features
+
+- added support for express v5 beta-3 ([#1261](https://github.com/instana/nodejs/issues/1261)) ([bf471ed](https://github.com/instana/nodejs/commit/bf471edd5dcd2d91bb30b88170cb94bc5b2ee8aa))
+
 ## [3.14.4](https://github.com/instana/nodejs/compare/v3.14.3...v3.14.4) (2024-07-22)
 
 ### Bug Fixes
