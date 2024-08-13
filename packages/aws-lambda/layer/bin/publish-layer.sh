@@ -25,6 +25,8 @@ EOF
   exit 1
 }
 
+echo "Using AWS CLI version: $(aws --version)"
+
 command -v docker >/dev/null 2>&1 || {
   cat <<EOF >&2
 Docker needs to be installed but it isn't.
@@ -111,6 +113,10 @@ fi
 
 ZIP_NAME=$ZIP_PREFIX.zip
 TMP_ZIP_DIR=tmp
+
+AWS_CLI_RETRY_MAX_ATTEMPTS=5
+AWS_CLI_TIMEOUT_DEFAULT=100
+AWS_CLI_TIMEOUT_FOR_CHINA=6000
 
 if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
   printf "Warning: Environment variables AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are not set.\n"
@@ -307,6 +313,7 @@ mv $ZIP_NAME ..
 popd > /dev/null
 
 export AWS_PAGER=""
+export AWS_MAX_ATTEMPTS=$AWS_CLI_RETRY_MAX_ATTEMPTS
 
 if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
   echo "step 6/9: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to specifed regions"
@@ -333,6 +340,9 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
           break
         fi
       done <<< "$CHINESE_REGIONS"
+
+      aws_cli_timeout_options="--cli-connect-timeout $AWS_CLI_TIMEOUT_DEFAULT"
+
       if [[ $is_chinese_region -eq 1 ]]; then
         if [[ -z $AWS_ACCESS_KEY_ID_CHINA ]] || [[ -z $AWS_SECRET_ACCESS_KEY_CHINA ]]; then
           printf "Error: Trying to publish to Chinese region $region, but at least one of the environment variables\n"
@@ -343,13 +353,17 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
         # AWS credential environment variables will be reverted after the publish for this region is done.
         AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_CHINA
         AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_CHINA
+        aws_cli_timeout_options="--cli-read-timeout $AWS_CLI_TIMEOUT_FOR_CHINA --cli-connect-timeout $AWS_CLI_TIMEOUT_FOR_CHINA"
       fi
+
+      echo "   + using aws_cli_timeout_options: $aws_cli_timeout_options and retrying $AWS_CLI_RETRY_MAX_ATTEMPTS times"
 
       # See https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html for documentation.
       # NOTE: --compatible-architectures $LAMBDA_ARCHITECTURE is not working in all regions.
       lambda_layer_version=$( \
         aws \
         --region $region  \
+        $aws_cli_timeout_options \
         lambda \
           publish-layer-version \
           --layer-name $LAYER_NAME \
@@ -362,10 +376,12 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
       )
 
       echo "   + published version $lambda_layer_version to region $region"
+
       if [[ $lambda_layer_version =~ ^[0-9]+$ ]]; then
         echo "   + setting required permission on Lambda layer $LAYER_NAME / version $lambda_layer_version in region $region"
         aws \
         --region $region \
+        $aws_cli_timeout_options \
         lambda \
         add-layer-version-permission \
           --layer-name $LAYER_NAME \
