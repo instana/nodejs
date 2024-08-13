@@ -17,8 +17,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 
-// TODO: require('redis') and require('@redis/client') needs to be covered
-const redis = require('@redis/client');
+const redis = process.env.REDIS_PKG === 'new' ? require('@redis/client') : require('redis');
 const fetch = require('node-fetch-v2');
 const port = require('../../../test_util/app-port')();
 

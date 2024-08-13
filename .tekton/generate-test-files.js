@@ -15,7 +15,17 @@ const groups = {
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/frameworks"'
   },
   'test:ci:collector:tracing:database': {
-    sidecars: ['memcached', 'mongodb', 'elasticsearch', 'redis', 'couchbase', 'mysql', 'postgres', 'mssql'],
+    sidecars: [
+      'memcached',
+      'mongodb',
+      'elasticsearch',
+      'redis',
+      'redis-cluster-node-0',
+      'couchbase',
+      'mysql',
+      'postgres',
+      'mssql'
+    ],
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"'
   },
   'test:ci:collector:tracing:cloud:aws:v2': {
