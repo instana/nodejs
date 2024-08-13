@@ -112,6 +112,9 @@ fi
 ZIP_NAME=$ZIP_PREFIX.zip
 TMP_ZIP_DIR=tmp
 
+MAX_ATTEMPTS=5
+AWS_CLI_TIMEOUT_FOR_CHINA=6000
+
 if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
   printf "Warning: Environment variables AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are not set.\n"
   printf "This might be okay if you have set up AWS authentication via other means.\n"
@@ -307,6 +310,7 @@ mv $ZIP_NAME ..
 popd > /dev/null
 
 export AWS_PAGER=""
+export AWS_MAX_ATTEMPTS=$MAX_ATTEMPTS
 
 if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
   echo "step 6/9: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to specifed regions"
@@ -343,6 +347,7 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
         # AWS credential environment variables will be reverted after the publish for this region is done.
         AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_CHINA
         AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_CHINA
+        aws_cli_timeout_options="--cli-read-timeout $AWS_CLI_TIMEOUT_FOR_CHINA --cli-connect-timeout $AWS_CLI_TIMEOUT_FOR_CHINA"
       fi
 
       # See https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html for documentation.
@@ -350,6 +355,7 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
       lambda_layer_version=$( \
         aws \
         --region $region  \
+        $aws_cli_timeout_options \
         lambda \
           publish-layer-version \
           --layer-name $LAYER_NAME \
@@ -366,6 +372,7 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
         echo "   + setting required permission on Lambda layer $LAYER_NAME / version $lambda_layer_version in region $region"
         aws \
         --region $region \
+        $aws_cli_timeout_options \
         lambda \
         add-layer-version-permission \
           --layer-name $LAYER_NAME \
