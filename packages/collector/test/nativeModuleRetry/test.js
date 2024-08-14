@@ -6,9 +6,10 @@
 'use strict';
 
 const { expect } = require('chai');
-const fs = require('node:fs/promises');
+const fsPromise = require('node:fs/promises');
 const os = require('os');
 const path = require('path');
+const fs = require('fs');
 
 const config = require('../../../core/test/config');
 const { retry } = require('../../../core/test/test_util');
@@ -67,11 +68,11 @@ function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
 
   const rename = async (oldPath, newPath) => {
     try {
-      await fs.rename(oldPath, newPath);
+      await fsPromise.rename(oldPath, newPath);
     } catch (err) {
-      if (err.code === 'EXDEV') {
+      if (err.code === 'EXDEV' || err.code === 'ENOTEMPTY') {
         await copyFolder(oldPath, newPath);
-        await fs.rmdir(oldPath, { recursive: true });
+        await fsPromise.rm(oldPath, { recursive: true });
       } else {
         throw err;
       }
@@ -79,8 +80,8 @@ function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
   };
 
   async function copyFolder(src, dest) {
-    await fs.mkdir(dest, { recursive: true });
-    const entries = await fs.readdir(src, { withFileTypes: true });
+    await fsPromise.mkdir(dest, { recursive: true });
+    const entries = await fsPromise.readdir(src, { withFileTypes: true });
 
     const copyPromises = entries.map(async entry => {
       const srcPath = `${src}/${entry.name}`;
@@ -89,12 +90,32 @@ function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
       if (entry.isDirectory()) {
         await copyFolder(srcPath, destPath);
       } else {
-        await fs.copyFile(srcPath, destPath);
+        await fsPromise.copyFile(srcPath, destPath);
       }
     });
 
     await Promise.all(copyPromises);
   }
+  const check = async copiedBinaryPath => {
+    const targetDirectory = 'precompiled';
+
+    const directoryPath = path.join(copiedBinaryPath, targetDirectory);
+    ['binding.gyp', 'build', 'package.json', 'src'].forEach(file => {
+      expect(fs.existsSync(path.join(directoryPath, file))).to.be.true;
+    });
+
+    if (directoryPath.includes('event-loop-stats')) {
+      expect(fs.existsSync(path.join(directoryPath, 'src', 'eventLoopStats.cc'))).to.be.true;
+      expect(fs.existsSync(path.join(directoryPath, 'src', 'eventLoopStats.js'))).to.be.true;
+      expect(fs.existsSync(path.join(directoryPath, 'build', 'Release', 'eventLoopStats.node'))).to.be.true;
+    }
+
+    if (directoryPath.includes('gcstats.js')) {
+      expect(fs.existsSync(path.join(directoryPath, 'src', 'gcstats.cc'))).to.be.true;
+      expect(fs.existsSync(path.join(directoryPath, 'src', 'gcstats.js'))).to.be.true;
+      expect(fs.existsSync(path.join(directoryPath, 'build', 'Release', 'gcstats.node'))).to.be.true;
+    }
+  };
 
   before(async () => {
     // remove the dependency temporarily
@@ -132,5 +153,18 @@ function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
           agentControls.getEvents()
         ]).then(opts.check)
       ));
+    it('should successfully copy the precompiled binaries', async () => {
+      // For the test, the precompiled binaries are copied to the path node_modules/@instana/shared-metrics.
+      const copiedBinaryPath = require('path').join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'shared-metrics',
+        'node_modules',
+        `${opts.name}`
+      );
+      await check(copiedBinaryPath);
+    });
   });
 }
