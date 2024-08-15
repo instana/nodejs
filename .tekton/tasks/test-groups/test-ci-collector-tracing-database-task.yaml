@@ -34,8 +34,9 @@ spec:
             value: "60"
           - name: "REDIS_PORT_NUMBER"
             value: "6380"
-          - name: "REDIS_TLS_PORT_NUMBER"
-            value: "6380"
+      ports:
+        - name: portname
+          containerPort: 6380
     - name: redis-cluster-node-1
       image: docker.io/bitnami/redis-cluster:7.2
       env:
@@ -45,8 +46,9 @@ spec:
             value: "redis-cluster-node-0 redis-cluster-node-1 redis-cluster-node-2"
           - name: "REDIS_PORT_NUMBER"
             value: "6381"
-          - name: "REDIS_TLS_PORT_NUMBER"
-            value: "6381"
+      ports:
+        - name: portname
+          containerPort: 6381
     - name: redis-cluster-node-2
       image: docker.io/bitnami/redis-cluster:7.2
       env:
@@ -58,6 +60,9 @@ spec:
             value: "6382"
           - name: "REDIS_TLS_PORT_NUMBER"
             value: "6382"
+      ports:
+        - name: portname
+          containerPort: 6382
     - name: couchbase
       image: couchbase/server:7.1.4
       readinessProbe:
