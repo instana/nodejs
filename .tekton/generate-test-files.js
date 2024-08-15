@@ -21,6 +21,8 @@ const groups = {
       'elasticsearch',
       'redis',
       'redis-cluster-node-0',
+      'redis-cluster-node-1',
+      'redis-cluster-node-2',
       'couchbase',
       'mysql',
       'postgres',

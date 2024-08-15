@@ -32,7 +32,7 @@ describe('tracing/redis', function () {
     // NOTE: clustering was added in v4
     //       https://github.com/redis/node-redis/blob/master/CHANGELOG.md#v400---24-nov-2021
     if (redisVersion === 'latest') {
-      mochaSuiteFn(`cluster (@redis/client): redis@${redisVersion}`, function () {
+      mochaSuiteFn.only(`cluster (@redis/client): redis@${redisVersion}`, function () {
         globalAgent.setUpCleanUpHooks();
         let controls;
 
