@@ -43,32 +43,36 @@ const cluster = redis.createCluster({
   ],
   useReplicas: false,
   defaults: {
-    url: `redis://${process.env.REDIS_NODE_1}`,
-    socket: {
-      connectTimeout: 1000 * 60 * 5
-    },
-    retryStrategy: function (times) {
-      // Return the time (in ms) to wait before retrying, or an error if no more retries are allowed
-      if (times >= 5) {
-        // Stop retrying after 5 attempts
-        return new Error('Retry limit reached');
-      }
-      // Exponential backoff strategy
-      return Math.min(times * 100, 3000);
-    }
+    url: `redis://${process.env.REDIS_NODE_1}`
   }
 });
 
-[cluster].forEach(c => {
-  c.on('error', err => log('Redis Cluster Error', err));
-});
+cluster.on('error', err => log('Redis Cluster Error', err));
 
-(async () => {
+const MAX_TRIES = 50;
+let tries = 0;
+
+const connect = async () => {
   log(`Connecting to cluster. (${process.env.REDIS_NODE_1}, ${process.env.REDIS_NODE_2}, ${process.env.REDIS_NODE_3})`);
-  await cluster.connect();
-  log('Connected to cluster');
-  connectedToRedis = true;
-})();
+  try {
+    await cluster.connect();
+    log('Connected to cluster');
+    connectedToRedis = true;
+  } catch (err) {
+    log('Failed to connect to cluster', err);
+
+    if (tries >= MAX_TRIES) {
+      log('Max tries reached, exiting.');
+      process.exit(1);
+    }
+
+    log('Retrying...');
+    tries += 1;
+    setTimeout(connect, 1000 * 5);
+  }
+};
+
+connect();
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

@@ -22,7 +22,7 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 describe('tracing/redis', function () {
-  this.timeout(config.getTestTimeout());
+  this.timeout(1000 * 60 * 5);
 
   const agentControls = globalAgent.instance;
 
