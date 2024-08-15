@@ -47,7 +47,7 @@ describe('tracing/redis', function () {
             }
           });
 
-          await controls.startAndWaitForAgentConnection();
+          await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
         });
 
         beforeEach(async () => {

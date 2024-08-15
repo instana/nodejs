@@ -43,7 +43,19 @@ const cluster = redis.createCluster({
   ],
   useReplicas: false,
   defaults: {
-    url: `redis://${process.env.REDIS_NODE_1}`
+    url: `redis://${process.env.REDIS_NODE_1}`,
+    socket: {
+      connectTimeout: 1000 * 60 * 5
+    },
+    retryStrategy: function (times) {
+      // Return the time (in ms) to wait before retrying, or an error if no more retries are allowed
+      if (times >= 5) {
+        // Stop retrying after 5 attempts
+        return new Error('Retry limit reached');
+      }
+      // Exponential backoff strategy
+      return Math.min(times * 100, 3000);
+    }
   }
 });
 
