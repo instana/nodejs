@@ -109,7 +109,7 @@
         { "name": "REDIS_NODES", "value": "redis-cluster-node-0 redis-cluster-node-1 redis-cluster-node-2" },
         { "name": "REDIS_CLUSTER_CREATOR", "value": "yes" },
         { "name": "REDIS_CLUSTER_REPLICAS", "value": "0" },
-        { "name": "REDIS_CLUSTER_SLEEP_BEFORE_DNS_LOOKUP", "value": "10" },
+        { "name": "REDIS_CLUSTER_SLEEP_BEFORE_DNS_LOOKUP", "value": "60" },
         { "name": "REDIS_PORT_NUMBER", "value": "6380" }
       ]
     },
@@ -119,9 +119,6 @@
       "env": [
         { "name": "ALLOW_EMPTY_PASSWORD", "value": "yes" },
         { "name": "REDIS_NODES", "value": "redis-cluster-node-0 redis-cluster-node-1 redis-cluster-node-2" },
-        { "name": "REDIS_CLUSTER_CREATOR", "value": "yes" },
-        { "name": "REDIS_CLUSTER_REPLICAS", "value": "0" },
-        { "name": "REDIS_CLUSTER_SLEEP_BEFORE_DNS_LOOKUP", "value": "10" },
         { "name": "REDIS_PORT_NUMBER", "value": "6381" }
       ]
     },
@@ -131,9 +128,6 @@
       "env": [
         { "name": "ALLOW_EMPTY_PASSWORD", "value": "yes" },
         { "name": "REDIS_NODES", "value": "redis-cluster-node-0 redis-cluster-node-1 redis-cluster-node-2" },
-        { "name": "REDIS_CLUSTER_CREATOR", "value": "yes" },
-        { "name": "REDIS_CLUSTER_REPLICAS", "value": "0" },
-        { "name": "REDIS_CLUSTER_SLEEP_BEFORE_DNS_LOOKUP", "value": "10" },
         { "name": "REDIS_PORT_NUMBER", "value": "6382" }
       ]
     },
