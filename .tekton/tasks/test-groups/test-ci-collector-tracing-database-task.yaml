@@ -31,11 +31,11 @@ spec:
           - name: "REDIS_CLUSTER_REPLICAS"
             value: "0"
           - name: "REDIS_CLUSTER_SLEEP_BEFORE_DNS_LOOKUP"
-            value: "60"
+            value: "10"
           - name: "REDIS_PORT_NUMBER"
             value: "6380"
-      command:
-        - "redis-server"
+      args:
+        - "/opt/bitnami/scripts/redis-cluster/run.sh"
         - "--port"
         - "6380"
     - name: redis-cluster-node-1
@@ -47,8 +47,8 @@ spec:
             value: "redis-cluster-node-0 redis-cluster-node-1 redis-cluster-node-2"
           - name: "REDIS_PORT_NUMBER"
             value: "6381"
-      command:
-        - "redis-server"
+      args:
+        - "/opt/bitnami/scripts/redis-cluster/run.sh"
         - "--port"
         - "6381"
     - name: redis-cluster-node-2
@@ -62,8 +62,8 @@ spec:
             value: "6382"
           - name: "REDIS_TLS_PORT_NUMBER"
             value: "6382"
-      command:
-        - "redis-server"
+      args:
+        - "/opt/bitnami/scripts/redis-cluster/run.sh"
         - "--port"
         - "6382"
     - name: couchbase
