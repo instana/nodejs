@@ -20,18 +20,20 @@ const globalAgent = require('../globalAgent');
  * Test suite for verifying the fallback mechanism for loading native add-ons.
  *
  * This test ensures that if a native add-on (such as event-loop-stats or gcstats.js) cannot be loaded initially,
- * the system correctly falls back to using precompiled versions of these add-ons. This ensures the application remains
+ * the system correctly falls back to using precompiled versions of these add-ons. This ensures the application
  * functions as expected even if the native module is missing or cannot be compiled. The function `attemptRequire`,
- * defined here: https://github.com/instana/nodejs/blob/main/packages/shared-metrics/src/util/nativeModuleRetry.js#L111
- * is used for the initial attempt to load the native add-on module. It tries to require the native module from the
- * root. If this attempt fails, the fallback mechanism is triggered.
+ * defined in the shared-metrics/src/util/nativeModuleRetry  is used for the initial attempt to load the native
+ * add-on module. It tries to require the native module from the root for this test, because we use npm workspaces
+ * and the dependencies are hoisted to the root. If this attempt fails, the fallback mechanism is triggered.
  *
- * **Issue with npm Workspaces**:
+ * **Design problem of the test**:
  *
  * With `npm workspaces`, dependencies are installed in the root `node_modules` folder instead of individual
- * package `node_modules` folders. This can complicate managing native modules and their precompiled binaries,
- * as the fallback mechanism must copy to the correct path. This test verifying that precompiled binaries are copied
- * and loaded correctly to the @instana/shared-metrics/node_modules folder.
+ * package `node_modules` folders. This can complicate managing the installed native modules and their copied
+ * precompiled binaries, as the fallback mechanism must copy to the correct path. This test verifying that
+ *  precompiled binaries are copied and loaded correctly to the @instana/shared-metrics/node_modules folder.
+ * The test is **mis-designed**, because the test should not use the local dev environment to check the presence
+ * of precompiled binaries. Instead it should create a tmp folder.
  *
  * **Test Design**:
  *
@@ -43,9 +45,8 @@ const globalAgent = require('../globalAgent');
  *    - The test checks if the fallback mechanism correctly copies the precompiled binaries to the appropriate directory
  *      when the native module is not found.
  *
- * Note: Currently, we are not addressing the npm workspace issues with prebuilds because there is a
- * potential migration to a tool like prebuildify in the future, which might handle these issues differently.
- * refs: INSTA-770
+ * Note: Currently, we are not addressing the wrong test design because there will be a migration to a tool called
+ *  prebuildify in the near future, which will change the whole feature. refs: INSTA-770
  */
 
 describe('retry loading native addons', function () {
