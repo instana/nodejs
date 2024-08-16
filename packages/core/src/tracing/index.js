@@ -19,10 +19,10 @@ const {
   esmSupportedVersion,
   isLatestEsmSupportedVersion,
   hasExperimentalLoaderFlag,
-  isESMApp,
-  tracerInstrumentationInfo
+  isESMApp
 } = require('../util/esm');
 const iitmHook = require('../util/iitmHook');
+const { tracerInstrumentationInfo } = require('../util/clientInstrumentationCheck');
 
 let tracingEnabled = false;
 let tracingActivated = false;
@@ -181,6 +181,10 @@ exports.preInit = function preInit(preliminaryConfig) {
  * @param {CollectorPIDStore} _processIdentityProvider
  */
 exports.init = function init(_config, downstreamConnection, _processIdentityProvider) {
+  // Logging the npm module instrumentation
+  // eslint-disable-next-line no-console
+  console.info('The app has instrumented instana using: %s', tracerInstrumentationInfo());
+
   // Consider removing this in the next major release(v4.x) of the @instana package.
   if (hasExperimentalLoaderFlag()) {
     // eslint-disable-next-line no-console
@@ -199,10 +203,6 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
   automaticTracingEnabled = config.tracing.automaticTracingEnabled;
 
   if (tracingEnabled) {
-    const loader = tracerInstrumentationInfo();
-    // eslint-disable-next-line no-console
-    console.debug('The app has instrumented instana using: %s', loader);
-
     tracingUtil.init(config);
     tracingHeaders.init(config);
     spanBuffer.init(config, downstreamConnection);
