@@ -183,10 +183,26 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
       .then(() => {
         // See below for the reason why we append 'precompiled' to the path.
         const targetDir = path.join(opts.nativeModulePath, 'precompiled');
+        const sourceDir = path.join(os.tmpdir(), opts.nativeModuleName);
+        logger.debug(
+          `Copying the precompiled build for ${opts.nativeModuleName} ${label} from ${sourceDir} to ${targetDir}.`
+        );
 
         fse
-          .copy(path.join(os.tmpdir(), opts.nativeModuleName), targetDir)
+          .copy(sourceDir, targetDir, { dereference: true })
           .then(() => {
+            // We have unpacked and copied the correct precompiled native addon. The next attempt to require the
+            // dependency should work.
+            //
+            // However, we must not use any of the paths from which Node.js has tried to load the module before (that
+            // is, node_modules/${opts.nativeModuleName}). Node.js' module loading infrastructure
+            // (lib/internal/modules/cjs/loader.js and lib/internal/modules/package_json_reader.js) have built-in
+            // caching on multiple levels (for example, package.json locations and package.json contents). If Node.js
+            // has tried unsuccessfully to load a module or read a package.json from a particular path,
+            // it will remember and not try to load anything from that path again (a `false` will be
+            // put into the cache for that cache key). Instead, we force a new path, by adding precompiled
+            // to the module path and use the absolute path to the module to load it.
+            logger.debug(`Successfully copied the precompiled build for ${opts.nativeModuleName} ${label}.`);
             opts.loadFrom = targetDir;
             callback(true);
           })
@@ -194,17 +210,6 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
             logger.warn(`Copying the precompiled build for ${opts.nativeModuleName} ${label} failed.`, error);
             callback(false);
           });
-        // We have unpacked and copied the correct precompiled native addon. The next attempt to require the
-        // dependency should work.
-        //
-        // However, we must not use any of the paths from which Node.js has tried to load the module before (that
-        // is, node_modules/${opts.nativeModuleName}). Node.js' module loading infrastructure
-        // (lib/internal/modules/cjs/loader.js and lib/internal/modules/package_json_reader.js) have built-in
-        // caching on multiple levels (for example, package.json locations and package.json contents). If Node.js
-        // has tried unsuccessfully to load a module or read a package.json from a particular path,
-        // it will remember and not try to load anything from that path again (a `false` will be
-        // put into the cache for that cache key). Instead, we force a new path, by adding precompiled
-        // to the module path and use the absolute path to the module to load it.
       })
       .catch(tarErr => {
         logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed.`, tarErr);
