@@ -189,7 +189,7 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
         );
 
         fse
-          .copy(sourceDir, targetDir, { dereference: true })
+          .copy(sourceDir, targetDir)
           .then(() => {
             // We have unpacked and copied the correct precompiled native addon. The next attempt to require the
             // dependency should work.
