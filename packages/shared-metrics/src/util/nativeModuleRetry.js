@@ -9,11 +9,11 @@ const { logger: Logger, uninstrumentedFs: fs } = require('@instana/core');
 let logger = Logger.getLogger('shared-metrics/native-module-retry');
 
 const EventEmitter = require('events');
-const copy = require('recursive-copy');
 const os = require('os');
 const tar = require('tar');
 const path = require('path');
 const detectLibc = require('detect-libc');
+const fse = require('fs-extra');
 
 /**
  * @typedef {Object} InstanaSharedMetricsOptions
@@ -183,23 +183,14 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
       .then(() => {
         // See below for the reason why we append 'precompiled' to the path.
         const targetDir = path.join(opts.nativeModulePath, 'precompiled');
+        const sourceDir = path.join(os.tmpdir(), opts.nativeModuleName);
+        logger.debug(
+          `Copying the precompiled build for ${opts.nativeModuleName} ${label} from ${sourceDir} to ${targetDir}.`
+        );
 
-        // @ts-ignore
-        copy(
-          path.join(os.tmpdir(), opts.nativeModuleName),
-          targetDir,
-          {
-            overwrite: true,
-            dot: true
-          },
-          // @ts-ignore
-          cpErr => {
-            if (cpErr) {
-              logger.warn(`Copying the precompiled build for ${opts.nativeModuleName} ${label} failed.`, cpErr);
-              callback(false);
-              return;
-            }
-
+        fse
+          .copy(sourceDir, targetDir)
+          .then(() => {
             // We have unpacked and copied the correct precompiled native addon. The next attempt to require the
             // dependency should work.
             //
@@ -211,10 +202,14 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
             // it will remember and not try to load anything from that path again (a `false` will be
             // put into the cache for that cache key). Instead, we force a new path, by adding precompiled
             // to the module path and use the absolute path to the module to load it.
+            logger.debug(`Successfully copied the precompiled build for ${opts.nativeModuleName} ${label}.`);
             opts.loadFrom = targetDir;
             callback(true);
-          }
-        );
+          })
+          .catch(error => {
+            logger.warn(`Copying the precompiled build for ${opts.nativeModuleName} ${label} failed.`, error);
+            callback(false);
+          });
       })
       .catch(tarErr => {
         logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed.`, tarErr);
