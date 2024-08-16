@@ -16,6 +16,39 @@ const { retry } = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 const globalAgent = require('../globalAgent');
 
+/**
+ * Test suite for verifying the fallback mechanism for loading native add-ons.
+ *
+ * This test ensures that if a native add-on (event-loop-stats or gcstats.js) cannot be loaded initially,
+ * the system correctly falls back to using precompiled versions of these add-ons. This ensures the application
+ * functions as expected even if the native module is missing or cannot be compiled.
+ *
+ * **Issue with npm Workspaces**:
+ *
+ * With `npm workspaces`, dependencies are installed in the root `node_modules` folder instead of individual
+ * package `node_modules` folders. This can complicate managing native modules and their precompiled binaries,
+ * as the fallback mechanism must copy to the correct path. This test verifying that precompiled binaries are copied
+ * and loaded correctly to the @instana/shared-metrics/node_modules folder.
+ *
+ * The test operates as follows:
+ *
+ * 1. **Setup**:
+ *      - Temporarily moves the installed native module to a backup directory to simulate its absence.
+ *
+ * 2. **Test Cases**:
+ *
+ *    - **Metrics Availability**:
+ *      - Check if metrics from the native add-ons become available. This
+ *        involves fetching aggregated metrics and events from the agent and validating that the metrics are correctly
+ *        populated and meet expected structure and values as defined in the 'check' function.
+ *
+ *    - **Precompiled Binaries Verification**:
+ *      - Verifies that precompiled binaries are correctly copied to the 'shared-metrics' node_modules directory.
+ *        This involves checking the existence of essential files and directories in the location where
+ *        the precompiled binaries should be, ensuring that all necessary files for proper operation of the add-on
+ *        are present.
+ */
+
 describe('retry loading native addons', function () {
   const timeout = Math.max(config.getTestTimeout(), 20000);
   this.timeout(timeout);
@@ -154,7 +187,8 @@ function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
         ]).then(opts.check)
       ));
     it('should successfully copy the precompiled binaries', async () => {
-      // For the test, the precompiled binaries are copied to the path node_modules/@instana/shared-metrics.
+      // During testing, the precompiled binaries are copied to the node_modules/@instana/shared-metrics directory.
+      // However, npm workspaces installs the packages in the root node_modules directory.
       const copiedBinaryPath = require('path').join(
         __dirname,
         '..',
