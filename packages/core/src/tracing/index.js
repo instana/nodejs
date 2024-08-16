@@ -201,7 +201,7 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
   if (tracingEnabled) {
     const loader = tracerInstrumentationInfo();
     // eslint-disable-next-line no-console
-    console.debug('The app is loaded using: %s command', loader);
+    console.debug('The app has instrumented instana using: %s', loader);
 
     tracingUtil.init(config);
     tracingHeaders.init(config);

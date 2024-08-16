@@ -68,28 +68,29 @@ exports.isESMApp = function isESMApp() {
 };
 
 exports.tracerInstrumentationInfo = function tracerInstrumentationInfo() {
-  const objMap = {
-    usingExperimentalLoaderFlag: '--experimental-loader',
-    usingImport: '--import',
-    usingRequire: '--require'
+  const instrumentationMap = {
+    usingExperimentalLoaderFlag: '--experimental-loader flag',
+    usingImport: '--import flag',
+    usingRequire: '--require flag',
+    noFlags: 'no additional flags'
   };
+
   const usingExperimentalLoaderFlag =
-    (process.env.NODE_OPTIONS && process.env.NODE_OPTIONS.includes('--experimental-loader')) ||
-    (process.execArgv[0] && process.execArgv[0].includes('--experimental-loader'))
+    (process.env.NODE_OPTIONS?.includes('--experimental-loader')) ||
+    (process.execArgv?.[0]?.includes('--experimental-loader'))
     ? 'usingExperimentalLoaderFlag' : '';
 
   const usingImport =
-    (process.execArgv &&
-      process.execArgv.length > 0 &&
-      process.execArgv[0].includes('--import') && process.execArgv[0].includes('esm-register.mjs')) ||
-    (process.execArgv &&
-      process.execArgv.length > 0 &&
-      process.execArgv[0].includes('--import') && process.execArgv[1]?.includes('esm-register.mjs'))
+    (process.env.NODE_OPTIONS?.includes('--import') && process.env.NODE_OPTIONS?.includes('@instana/collector')) ||
+    (process.execArgv?.[0]?.includes('--import') && process.execArgv?.[0].includes('@instana/collector')) ||
+    (process.execArgv?.[0]?.includes('--import') && process.execArgv?.[1].includes('@instana/collector'))
     ? 'usingImport' : '';
 
-  const usingRequire = (process.env.NODE_OPTIONS && process.env.NODE_OPTIONS.includes('--require')) ||
-  (process.execArgv[0] && process.execArgv[0].includes('--require')) ? 'usingRequire' : '';
+  const usingRequire =
+    (process.env.NODE_OPTIONS?.includes('--require') && process.env.NODE_OPTIONS?.includes('@instana/collector')) ||
+    (process.execArgv?.[0]?.includes('--require') && process.execArgv?.[0].includes('@instana/collector')) ||
+    (process.execArgv?.[0]?.includes('--require') && process.execArgv?.[1].includes('@instana/collector'))
+    ? 'usingRequire' : '';
 
-  // @ts-ignore
-  return objMap[usingExperimentalLoaderFlag || usingImport || usingRequire || 'default'];
+  return instrumentationMap[usingExperimentalLoaderFlag || usingImport || usingRequire || 'noFlags'];
 };
