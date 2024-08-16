@@ -19,9 +19,12 @@ const globalAgent = require('../globalAgent');
 /**
  * Test suite for verifying the fallback mechanism for loading native add-ons.
  *
- * This test ensures that if a native add-on (event-loop-stats or gcstats.js) cannot be loaded initially,
- * the system correctly falls back to using precompiled versions of these add-ons. This ensures the application
- * functions as expected even if the native module is missing or cannot be compiled.
+ * This test ensures that if a native add-on (such as event-loop-stats or gcstats.js) cannot be loaded initially,
+ * the system correctly falls back to using precompiled versions of these add-ons. This ensures the application remains
+ * functions as expected even if the native module is missing or cannot be compiled. The function `attemptRequire`,
+ * defined here: https://github.com/instana/nodejs/blob/main/packages/shared-metrics/src/util/nativeModuleRetry.js#L111
+ * is used for the initial attempt to load the native add-on module. It tries to require the native module from the
+ * root. If this attempt fails, the fallback mechanism is triggered.
  *
  * **Issue with npm Workspaces**:
  *
@@ -30,23 +33,19 @@ const globalAgent = require('../globalAgent');
  * as the fallback mechanism must copy to the correct path. This test verifying that precompiled binaries are copied
  * and loaded correctly to the @instana/shared-metrics/node_modules folder.
  *
- * The test operates as follows:
+ * **Test Design**:
  *
  * 1. **Setup**:
- *      - Temporarily moves the installed native module to a backup directory to simulate its absence.
+ *    - The installed native module is temporarily moved to a backup directory to simulate its absence. As the system
+ *      first tries to require the native module from the root, so we relocate the modules.
  *
- * 2. **Test Cases**:
+ * 2. **Fallback Mechanism**:
+ *    - The test checks if the fallback mechanism correctly copies the precompiled binaries to the appropriate directory
+ *      when the native module is not found.
  *
- *    - **Metrics Availability**:
- *      - Check if metrics from the native add-ons become available. This
- *        involves fetching aggregated metrics and events from the agent and validating that the metrics are correctly
- *        populated and meet expected structure and values as defined in the 'check' function.
- *
- *    - **Precompiled Binaries Verification**:
- *      - Verifies that precompiled binaries are correctly copied to the 'shared-metrics' node_modules directory.
- *        This involves checking the existence of essential files and directories in the location where
- *        the precompiled binaries should be, ensuring that all necessary files for proper operation of the add-on
- *        are present.
+ * Note: Currently, we are not addressing the npm workspace issues with prebuilds because there is a
+ * potential migration to a tool like prebuildify in the future, which might handle these issues differently.
+ * refs: INSTA-770
  */
 
 describe('retry loading native addons', function () {
