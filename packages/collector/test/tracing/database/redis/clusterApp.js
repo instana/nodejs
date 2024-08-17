@@ -22,29 +22,50 @@ const fetch = require('node-fetch-v2');
 const port = require('../../../test_util/app-port')();
 
 const cls = require('../../../../../core/src/tracing/cls');
+const { isCI } = require('../../../../../core/test/test_util');
 const app = express();
 const logPrefix = `Redis Cluster App (${process.pid}):\t`;
 let connectedToRedis = false;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
+let nodes = [
+  {
+    url: `redis://${process.env.REDIS_NODE_1}`
+  },
+  {
+    url: `redis://${process.env.REDIS_NODE_2}`
+  },
+  {
+    url: `redis://${process.env.REDIS_NODE_3}`
+  }
+];
+
+let defaults = {
+  url: `redis://${process.env.REDIS_NODE_1}`
+};
+
+// NOTE: We cannot run redis cluster on Tekton https://github.com/bitnami/charts/issues/28894
+if (isCI()) {
+  nodes = [
+    {
+      url: `redis://${process.env.AZURE_REDIS_CLUSTER}`
+    }
+  ];
+
+  defaults = {
+    socket: {
+      tls: true
+    },
+    password: process.env.AZURE_REDIS_CLUSTER_PWD
+  };
+}
+
 // node bin/start-test-containers.js --redis-node-0 --redis-node-1 --redis-node-2
 // docker exec -it 2aaaac7b9112 redis-cli -p 6379 cluster info
 const cluster = redis.createCluster({
-  rootNodes: [
-    {
-      url: `redis://${process.env.REDIS_NODE_1}`
-    },
-    {
-      url: `redis://${process.env.REDIS_NODE_2}`
-    },
-    {
-      url: `redis://${process.env.REDIS_NODE_3}`
-    }
-  ],
+  rootNodes: nodes,
   useReplicas: false,
-  defaults: {
-    url: `redis://${process.env.REDIS_NODE_1}`
-  }
+  defaults
 });
 
 cluster.on('error', err => log('Redis Cluster Error', err));
@@ -53,7 +74,8 @@ const MAX_TRIES = 50;
 let tries = 0;
 
 const connect = async () => {
-  log(`Connecting to cluster. (${process.env.REDIS_NODE_1}, ${process.env.REDIS_NODE_2}, ${process.env.REDIS_NODE_3})`);
+  log(`Connecting to cluster. (${nodes.map(node => node.url).join(', ')})`);
+
   try {
     await cluster.connect();
     log('Connected to cluster');

@@ -19,53 +19,6 @@ spec:
             value: "false"
     - name: redis
       image: redis:5.0.14
-    - name: redis-cluster-node-0
-      image: docker.io/bitnami/redis-cluster:7.2
-      env:
-          - name: "ALLOW_EMPTY_PASSWORD"
-            value: "yes"
-          - name: "REDIS_NODES"
-            value: "redis-cluster-node-0 redis-cluster-node-1 redis-cluster-node-2"
-          - name: "REDIS_CLUSTER_CREATOR"
-            value: "yes"
-          - name: "REDIS_CLUSTER_REPLICAS"
-            value: "0"
-          - name: "REDIS_CLUSTER_SLEEP_BEFORE_DNS_LOOKUP"
-            value: "10"
-          - name: "REDIS_PORT_NUMBER"
-            value: "6380"
-      args:
-        - "/opt/bitnami/scripts/redis-cluster/run.sh"
-        - "--port"
-        - "6380"
-    - name: redis-cluster-node-1
-      image: docker.io/bitnami/redis-cluster:7.2
-      env:
-          - name: "ALLOW_EMPTY_PASSWORD"
-            value: "yes"
-          - name: "REDIS_NODES"
-            value: "redis-cluster-node-0 redis-cluster-node-1 redis-cluster-node-2"
-          - name: "REDIS_PORT_NUMBER"
-            value: "6381"
-      args:
-        - "/opt/bitnami/scripts/redis-cluster/run.sh"
-        - "--port"
-        - "6381"
-    - name: redis-cluster-node-2
-      image: docker.io/bitnami/redis-cluster:7.2
-      env:
-          - name: "ALLOW_EMPTY_PASSWORD"
-            value: "yes"
-          - name: "REDIS_NODES"
-            value: "redis-cluster-node-0 redis-cluster-node-1 redis-cluster-node-2"
-          - name: "REDIS_PORT_NUMBER"
-            value: "6382"
-          - name: "REDIS_TLS_PORT_NUMBER"
-            value: "6382"
-      args:
-        - "/opt/bitnami/scripts/redis-cluster/run.sh"
-        - "--port"
-        - "6382"
     - name: couchbase
       image: couchbase/server:7.1.4
       readinessProbe:
@@ -157,7 +110,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
-              key: "AWS_SECRET_ACCESS_KEY"              
+              key: "AWS_SECRET_ACCESS_KEY"
+        - name: AZURE_REDIS_CLUSTER_PWD
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AZURE_REDIS_CLUSTER_PWD"              
         - name: DB2_CONNECTION_STR
           valueFrom:
             secretKeyRef:
@@ -208,6 +166,7 @@ spec:
         export GCP_PROJECT="k8s-brewery"
         export AZURE_SQL_USERNAME="admin@instana@nodejs-team-db-server"
         export AZURE_SQL_SERVER="nodejs-team-db-server.database.windows.net"
+        export AZURE_REDIS_CLUSTER="team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380"
         export AZURE_SQL_DATABASE="azure-nodejs-test"
         export AZURE_STORAGE_ACCOUNT_NAME="nodejstracerteam"
         if [ "$(params.esm)" == "true" ]; then
