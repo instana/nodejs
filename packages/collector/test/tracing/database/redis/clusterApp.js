@@ -44,7 +44,7 @@ let defaults = {
   url: `redis://${process.env.REDIS_NODE_1}`
 };
 
-// NOTE: We cannot run redis cluster on Tekton https://github.com/bitnami/charts/issues/28894
+// NOTE: we cannot run redis cluster on Tekton https://github.com/bitnami/charts/issues/28894
 if (isCI()) {
   nodes = [
     {
