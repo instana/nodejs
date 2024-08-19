@@ -20,7 +20,6 @@ exports.clientInstrumentationInfo = function clientInstrumentationInfo() {
       noFlags: 'no additional flags'
     };
     let method = '';
-    let appType = '';
 
     if (isESMApp()) {
       const usingExperimentalLoaderFlag =
@@ -31,7 +30,6 @@ exports.clientInstrumentationInfo = function clientInstrumentationInfo() {
         process.env.NODE_OPTIONS?.includes('--import') || process.execArgv?.[0]?.includes('--import')
         ? 'usingImport' : '';
 
-      appType = 'ESM';
       method = instrumentationMap[usingExperimentalLoaderFlag || usingImportFlag || 'noFlags'];
     } else {
       const usingRequire =
@@ -40,9 +38,8 @@ exports.clientInstrumentationInfo = function clientInstrumentationInfo() {
         (process.execArgv?.[0]?.includes('--require') && process.execArgv?.[1].includes('@instana'))
         ? 'usingRequire' : '';
 
-        appType = 'non ESM(common)';
         method = instrumentationMap[usingRequire || 'noFlags'];
     }
 
-    logger.debug(`The ${appType} App has instrumented instana using: ${method}`);
+    logger.debug(`The App has instrumented instana using: ${method}`);
   };
