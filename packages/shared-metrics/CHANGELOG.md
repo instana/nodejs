@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.15.1](https://github.com/instana/nodejs/compare/v3.15.0...v3.15.1) (2024-08-19)
+
+### Bug Fixes
+
+- **shared-metrics:** removed recursive-copy dependency ([#1265](https://github.com/instana/nodejs/issues/1265)) ([63e67f1](https://github.com/instana/nodejs/commit/63e67f17d0b3025a5b671c2a4ba7f37e163a9649))
+
 # [3.15.0](https://github.com/instana/nodejs/compare/v3.14.4...v3.15.0) (2024-08-13)
 
 **Note:** Version bump only for package @instana/shared-metrics
