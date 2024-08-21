@@ -22,7 +22,7 @@ const {
   isESMApp
 } = require('../util/esm');
 const iitmHook = require('../util/iitmHook');
-const { clientInstrumentationInfo } = require('../util/clientInstrumentationCheck');
+const { logPackageInstallation } = require('../util/logPackageInstallation');
 
 let tracingEnabled = false;
 let tracingActivated = false;
@@ -181,8 +181,8 @@ exports.preInit = function preInit(preliminaryConfig) {
  * @param {CollectorPIDStore} _processIdentityProvider
  */
 exports.init = function init(_config, downstreamConnection, _processIdentityProvider) {
-  // Calling this function will log the instana instrumentation type of client application
-  clientInstrumentationInfo();
+  // Logs the instana instrumentation method of client application in debug mode
+  logPackageInstallation();
 
   // Consider removing this in the next major release(v4.x) of the @instana package.
   if (hasExperimentalLoaderFlag()) {

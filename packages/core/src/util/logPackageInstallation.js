@@ -8,11 +8,12 @@ const isESMApp = require('./esm').isESMApp;
 
 /** @type {import('../logger').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('util/clientInstrumentationCheck', newLogger => {
+logger = require('../logger').getLogger('util/logPackageInstallation', newLogger => {
   logger = newLogger;
 });
 
-exports.clientInstrumentationInfo = function clientInstrumentationInfo() {
+exports.logPackageInstallation = function logPackageInstallation() {
+  if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL === 'debug') {
     const instrumentationMap = {
       usingExperimentalLoaderFlag: '--experimental-loader flag',
       usingImport: '--import flag',
@@ -42,4 +43,5 @@ exports.clientInstrumentationInfo = function clientInstrumentationInfo() {
     }
 
     logger.debug(`The App has instrumented instana using: ${method}`);
+  }
   };
