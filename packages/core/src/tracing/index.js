@@ -22,7 +22,7 @@ const {
   isESMApp
 } = require('../util/esm');
 const iitmHook = require('../util/iitmHook');
-const { logPackageInstallation } = require('../util/logPackageInstallation');
+const { getPackageInstallation } = require('../util/getPackageInstallation');
 
 let tracingEnabled = false;
 let tracingActivated = false;
@@ -181,8 +181,12 @@ exports.preInit = function preInit(preliminaryConfig) {
  * @param {CollectorPIDStore} _processIdentityProvider
  */
 exports.init = function init(_config, downstreamConnection, _processIdentityProvider) {
-  // Logs the instana instrumentation method of client application in debug mode
-  logPackageInstallation();
+  if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL === 'debug') {
+    const method = getPackageInstallation();
+
+    // eslint-disable-next-line no-console
+    console.debug(`The App has instrumented instana using: ${method}`);
+  }
 
   // Consider removing this in the next major release(v4.x) of the @instana package.
   if (hasExperimentalLoaderFlag()) {
