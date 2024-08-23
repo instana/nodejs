@@ -26,72 +26,133 @@ const qualifiedArn = `${unqualifiedArn}:${version}`;
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
 describe('multiple data lambda handler', function () {
-  this.timeout(config.getTestTimeout() * 2);
-  let control;
+  describe('with 3 iterations', function () {
+    this.timeout(config.getTestTimeout() * 2);
+    let control;
 
-  before(async () => {
-    control = new Control({
-      faasRuntimePath: path.join(__dirname, '../runtime_mock'),
-      handlerDefinitionPath: path.join(__dirname, './lambda'),
-      startBackend: true,
-      env: {
-        INSTANA_AGENT_KEY: instanaAgentKey,
-        WITH_CONFIG: 'true'
-      }
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: path.join(__dirname, './lambda'),
+        startBackend: true,
+        env: {
+          INSTANA_AGENT_KEY: instanaAgentKey,
+          WITH_CONFIG: 'true',
+          INSTANA_NUMBER_OF_ITERATIONS: 3
+        }
+      });
+
+      await control.start();
     });
 
-    await control.start();
+    beforeEach(async () => {
+      // wait a little to ensure no more spans are sent from the handler
+      // the handler sends some async request in the background
+      await delay(2000);
+
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must capture metrics and all spans', () => {
+      return control
+        .runHandler()
+        .then(() => {
+          // Tekton CI is really unreliable. We need to be very relaxed with the duration
+          if (!isCI()) {
+            const duration = Date.now() - control.startedAt;
+            expect(duration).to.be.at.most(1000 * 3);
+          }
+
+          verifyResponse(control, 1);
+        })
+        .then(() => {
+          return retry(
+            () => {
+              return Promise.all([
+                //
+                control.getSpans(),
+                control.getRawBundles(),
+                control.getRawSpanArrays()
+              ]).then(([spans, rawBundles, rawSpanArrays]) => {
+                verifySpans(spans);
+                expect(rawSpanArrays).to.be.an('array');
+                expect(rawSpanArrays).to.have.lengthOf(2);
+                expect(rawBundles).to.be.an('array');
+                expect(rawBundles).to.have.lengthOf.at.least(1);
+                expect(rawBundles).to.have.lengthOf.at.most(4);
+              });
+            },
+            null,
+            Date.now() + config.getRetryTimeout() * 2
+          );
+        });
+    });
   });
 
-  beforeEach(async () => {
-    // wait a little to ensure no more spans are sent from the handler
-    // the handler sends some async request in the background
-    await delay(2000);
+  describe('with 100 iterations', function () {
+    this.timeout(config.getTestTimeout() * 2);
+    let control;
 
-    await control.reset();
-    await control.resetBackendSpansAndMetrics();
-  });
-
-  after(async () => {
-    await control.stop();
-  });
-
-  it('must capture metrics and all spans', () => {
-    return control
-      .runHandler()
-      .then(() => {
-        // Tekton CI is really unreliable. We need to be very relaxed with the duration
-        if (!isCI()) {
-          const duration = Date.now() - control.startedAt;
-          expect(duration).to.be.at.most(1000 * 3);
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: path.join(__dirname, './lambda'),
+        startBackend: true,
+        env: {
+          INSTANA_AGENT_KEY: instanaAgentKey,
+          WITH_CONFIG: 'true',
+          INSTANA_NUMBER_OF_ITERATIONS: 100
         }
-
-        verifyResponse(1);
-      })
-      .then(() => {
-        return retry(
-          () => {
-            return Promise.all([
-              //
-              control.getSpans(),
-              control.getRawBundles(),
-              control.getRawSpanArrays()
-            ]).then(([spans, rawBundles, rawSpanArrays]) => {
-              verifySpans(spans);
-              expect(rawSpanArrays).to.be.an('array');
-              expect(rawSpanArrays).to.have.lengthOf(2);
-              expect(rawBundles).to.be.an('array');
-              expect(rawBundles).to.have.lengthOf.at.least(1);
-              expect(rawBundles).to.have.lengthOf.at.most(4);
-            });
-          },
-          null,
-          Date.now() + config.getRetryTimeout() * 2
-        );
       });
+
+      await control.start();
+    });
+
+    beforeEach(async () => {
+      // wait a little to ensure no more spans are sent from the handler
+      // the handler sends some async request in the background
+      await delay(2000);
+
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must capture metrics and all spans', () => {
+      return control
+        .runHandler()
+        .then(() => {
+          verifyResponse(control, 1);
+        })
+        .then(() => {
+          return retry(
+            () => {
+              return Promise.all([
+                //
+                control.getSpans(),
+                control.getRawBundles()
+              ]).then(([spans, rawBundles]) => {
+                // one bundle request with 101 spans
+                expect(rawBundles.length).to.equal(1);
+                expect(spans.length).to.equal(101);
+              });
+            },
+            null,
+            Date.now() + config.getRetryTimeout() * 2
+          );
+        });
+    });
   });
 
-  function verifyResponse(numberOfResults) {
+  function verifyResponse(control, numberOfResults) {
     /* eslint-disable no-console */
     if (control.getLambdaErrors() && control.getLambdaErrors().length > 0) {
       console.log('Unexpected Errors:');

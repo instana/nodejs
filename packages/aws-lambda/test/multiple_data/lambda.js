@@ -22,9 +22,14 @@ const sendReq = async () => {
 };
 
 exports.handler = instana.wrap(async () => {
-  await sendReq();
-  await sendReq();
-  await sendReq();
+  const numberOfIterations = process.env.INSTANA_NUMBER_OF_ITERATIONS;
+  const tasks = [];
+
+  for (let i = 0; i < numberOfIterations; i++) {
+    tasks.push(sendReq());
+  }
+
+  await Promise.all(tasks);
 
   setTimeout(async () => {
     await sendReq();
