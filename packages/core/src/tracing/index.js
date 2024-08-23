@@ -22,7 +22,7 @@ const {
   isESMApp
 } = require('../util/esm');
 const iitmHook = require('../util/iitmHook');
-const { getPackageInstallation } = require('../util/getPackageInstallation');
+const { getPreloadFlags } = require('../util/getPreloadFlags');
 
 let tracingEnabled = false;
 let tracingActivated = false;
@@ -182,10 +182,10 @@ exports.preInit = function preInit(preliminaryConfig) {
  */
 exports.init = function init(_config, downstreamConnection, _processIdentityProvider) {
   if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL === 'debug') {
-    const method = getPackageInstallation();
+    const preloadFlags = getPreloadFlags();
 
     // eslint-disable-next-line no-console
-    console.debug(`The App has instrumented instana using: ${method}`);
+    console.debug(`The App is using the following preload flags: ${preloadFlags}`);
   }
 
   // Consider removing this in the next major release(v4.x) of the @instana package.
