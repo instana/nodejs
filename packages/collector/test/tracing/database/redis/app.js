@@ -24,7 +24,7 @@ const port = require('../../../test_util/app-port')();
 const cls = require('../../../../../core/src/tracing/cls');
 const app = express();
 const logPrefix =
-  `Redis App (version: ${process.env.REDIS_VERSION}, require: ${process.env.REDIS_PKG},` +
+  `Redis App (version: ${process.env.REDIS_VERSION}, require: ${process.env.REDIS_PKG}, ` +
   `cluster: ${process.env.REDIS_CLUSTER}, pid: ${process.pid}):\t`;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
@@ -157,6 +157,7 @@ app.get('/scan-iterator', async (req, res) => {
 
 app.get('/hset-hget', async (req, res) => {
   await connection.hSet('someCollection1', 'key1', 'value1');
+
   // HGETALL = hGetAll internally, no need to add test coverage for both
   const result = await connection.hGetAll('someCollection1');
   await fetch(`http://127.0.0.1:${agentPort}`);

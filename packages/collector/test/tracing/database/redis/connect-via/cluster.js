@@ -4,43 +4,39 @@
 
 'use strict';
 
-const { isCI, delay } = require('../../../../../../core/test/test_util');
 const MAX_TRIES = 50;
 
 // node bin/start-test-containers.js --redis-node-0 --redis-node-1 --redis-node-2
 // docker exec -it 2aaaac7b9112 redis-cli -p 6379 cluster info
 module.exports = async function connect(redis, log, tries = 0) {
-  let nodes = [
+  // NOTE: we cannot run redis cluster on Tekton https://github.com/bitnami/charts/issues/28894
+  // NOTE: we cannot run redis cluster on Docker locally https://github.com/redis/node-redis/issues/2815
+  //
+  // Please set the environment variables to connect to the cloud redis cluster:
+  //    export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
+  //    export AZURE_REDIS_CLUSTER_PWD=
+
+  if (!process.env.AZURE_REDIS_CLUSTER || !process.env.AZURE_REDIS_CLUSTER_PWD) {
+    log(
+      'Please set the environment variables AZURE_REDIS_CLUSTER and AZURE_REDIS_CLUSTER_PWD ' +
+        'to connect to the cloud redis cluster.'
+    );
+
+    process.exit(1);
+  }
+
+  const nodes = [
     {
-      url: `redis://${process.env.REDIS_NODE_1}`
-    },
-    {
-      url: `redis://${process.env.REDIS_NODE_2}`
-    },
-    {
-      url: `redis://${process.env.REDIS_NODE_3}`
+      url: `redis://${process.env.AZURE_REDIS_CLUSTER}`
     }
   ];
 
-  let defaults = {
-    url: `redis://${process.env.REDIS_NODE_1}`
+  const defaults = {
+    socket: {
+      tls: true
+    },
+    password: process.env.AZURE_REDIS_CLUSTER_PWD
   };
-
-  // NOTE: we cannot run redis cluster on Tekton https://github.com/bitnami/charts/issues/28894
-  if (isCI()) {
-    nodes = [
-      {
-        url: `redis://${process.env.AZURE_REDIS_CLUSTER}`
-      }
-    ];
-
-    defaults = {
-      socket: {
-        tls: true
-      },
-      password: process.env.AZURE_REDIS_CLUSTER_PWD
-    };
-  }
 
   // node bin/start-test-containers.js --redis-node-0 --redis-node-1 --redis-node-2
   // docker exec -it 2aaaac7b9112 redis-cli -p 6379 cluster info
@@ -48,6 +44,8 @@ module.exports = async function connect(redis, log, tries = 0) {
     rootNodes: nodes,
     useReplicas: false,
     defaults
+    // https://github.com/redis/node-redis/issues/2022
+    // maxCommandRedirections: 100
   });
 
   cluster.on('error', err => log('Redis Cluster Error', err));

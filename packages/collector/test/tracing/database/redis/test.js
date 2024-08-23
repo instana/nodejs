@@ -14,7 +14,6 @@ const config = require('../../../../../core/test/config');
 const {
   retry,
   delay,
-  isCI,
   expectExactlyNMatching,
   expectAtLeastOneMatching,
   expectExactlyOneMatching,
@@ -24,8 +23,8 @@ const {
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-['cluster'].forEach(setupType => {
-  describe.only(`tracing/redis ${setupType}`, function () {
+['default', 'cluster'].forEach(setupType => {
+  describe(`tracing/redis ${setupType}`, function () {
     ['redis', '@redis/client'].forEach(redisPkg => {
       describe(`require: ${redisPkg}`, function () {
         this.timeout(config.getTestTimeout() * 4);
@@ -631,38 +630,41 @@ const globalAgent = require('../../../globalAgent');
                     )
                   ));
 
-              it('must trace scan iterator usage', () =>
-                controls
-                  .sendRequest({
-                    method: 'GET',
-                    path: '/scan-iterator'
-                  })
-                  .then(() =>
-                    retry(() =>
-                      agentControls.getSpans().then(spans => {
-                        const entrySpan = expectAtLeastOneMatching(spans, [
-                          span => expect(span.n).to.equal('node.http.server'),
-                          span => expect(span.data.http.method).to.equal('GET')
-                        ]);
+              // scanIterator not available on cluster.
+              if (setupType !== 'cluster') {
+                it('must trace scan iterator usage', () =>
+                  controls
+                    .sendRequest({
+                      method: 'GET',
+                      path: '/scan-iterator'
+                    })
+                    .then(() =>
+                      retry(() =>
+                        agentControls.getSpans().then(spans => {
+                          const entrySpan = expectAtLeastOneMatching(spans, [
+                            span => expect(span.n).to.equal('node.http.server'),
+                            span => expect(span.data.http.method).to.equal('GET')
+                          ]);
 
-                        expectExactlyNMatching(spans, 4, [
-                          span => expect(span.t).to.equal(entrySpan.t),
-                          span => expect(span.p).to.equal(entrySpan.s),
-                          span => expect(span.n).to.equal('redis'),
-                          span => expect(span.k).to.equal(constants.EXIT),
-                          span => expect(span.f.e).to.equal(String(controls.getPid())),
-                          span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                          span => expect(span.async).to.not.exist,
-                          span => expect(span.error).to.not.exist,
-                          span => expect(span.ec).to.equal(0),
-                          span => verifyConnection(setupType, span),
-                          span => expect(span.data.redis.command).to.equal('get')
-                        ]);
+                          expectExactlyNMatching(spans, 4, [
+                            span => expect(span.t).to.equal(entrySpan.t),
+                            span => expect(span.p).to.equal(entrySpan.s),
+                            span => expect(span.n).to.equal('redis'),
+                            span => expect(span.k).to.equal(constants.EXIT),
+                            span => expect(span.f.e).to.equal(String(controls.getPid())),
+                            span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                            span => expect(span.async).to.not.exist,
+                            span => expect(span.error).to.not.exist,
+                            span => expect(span.ec).to.equal(0),
+                            span => verifyConnection(setupType, span),
+                            span => expect(span.data.redis.command).to.equal('get')
+                          ]);
 
-                        verifyHttpExit(controls, spans, entrySpan);
-                      })
-                    )
-                  ));
+                          verifyHttpExit(controls, spans, entrySpan);
+                        })
+                      )
+                    ));
+              }
 
               // See https://redis.js.org/#node-redis-usage-basic-example blocking commands
               it('blocking', () =>
@@ -731,42 +733,45 @@ const globalAgent = require('../../../globalAgent');
               }
             });
 
-            it('call two different hosts', async () => {
-              const response = await controls.sendRequest({
-                method: 'POST',
-                path: '/two-different-target-hosts',
-                qs: {
-                  key: 'key',
-                  value1: 'value1',
-                  value2: 'value2'
-                }
-              });
+            // Does not make sense for cluster.
+            if (setupType !== 'cluster') {
+              it('call two different hosts', async () => {
+                const response = await controls.sendRequest({
+                  method: 'POST',
+                  path: '/two-different-target-hosts',
+                  qs: {
+                    key: 'key',
+                    value1: 'value1',
+                    value2: 'value2'
+                  }
+                });
 
-              expect(response.response1).to.equal('OK');
-              expect(response.response2).to.equal('OK');
+                expect(response.response1).to.equal('OK');
+                expect(response.response2).to.equal('OK');
 
-              await retry(async () => {
-                const spans = await agentControls.getSpans();
-                const entrySpan = expectAtLeastOneMatching(spans, [
-                  span => expect(span.n).to.equal('node.http.server'),
-                  span => expect(span.data.http.method).to.equal('POST')
-                ]);
-                expectExactlyOneMatching(spans, [
-                  span => expect(span.t).to.equal(entrySpan.t),
-                  span => expect(span.p).to.equal(entrySpan.s),
-                  span => expect(span.n).to.equal('redis'),
-                  span => expect(span.data.redis.command).to.equal('set'),
-                  span => expect(span.data.redis.connection).to.contain('127.0.0.1')
-                ]);
-                expectExactlyOneMatching(spans, [
-                  span => expect(span.t).to.equal(entrySpan.t),
-                  span => expect(span.p).to.equal(entrySpan.s),
-                  span => expect(span.n).to.equal('redis'),
-                  span => expect(span.data.redis.command).to.equal('set'),
-                  span => expect(span.data.redis.connection).to.contain('localhost')
-                ]);
+                await retry(async () => {
+                  const spans = await agentControls.getSpans();
+                  const entrySpan = expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.server'),
+                    span => expect(span.data.http.method).to.equal('POST')
+                  ]);
+                  expectExactlyOneMatching(spans, [
+                    span => expect(span.t).to.equal(entrySpan.t),
+                    span => expect(span.p).to.equal(entrySpan.s),
+                    span => expect(span.n).to.equal('redis'),
+                    span => expect(span.data.redis.command).to.equal('set'),
+                    span => expect(span.data.redis.connection).to.contain('127.0.0.1')
+                  ]);
+                  expectExactlyOneMatching(spans, [
+                    span => expect(span.t).to.equal(entrySpan.t),
+                    span => expect(span.p).to.equal(entrySpan.s),
+                    span => expect(span.n).to.equal('redis'),
+                    span => expect(span.data.redis.command).to.equal('set'),
+                    span => expect(span.data.redis.connection).to.contain('localhost')
+                  ]);
+                });
               });
-            });
+            }
           });
         });
 
@@ -789,13 +794,7 @@ const globalAgent = require('../../../globalAgent');
 
         function verifyConnection(type, span) {
           if (type === 'cluster') {
-            if (isCI()) {
-              expect(span.data.redis.connection).to.contain(process.env.REDIS_NODE_1);
-            } else {
-              expect(span.data.redis.connection).to.contain(process.env.REDIS_NODE_1);
-              expect(span.data.redis.connection).to.contain(process.env.REDIS_NODE_2);
-              expect(span.data.redis.connection).to.contain(process.env.REDIS_NODE_3);
-            }
+            expect(span.data.redis.connection).to.contain(process.env.AZURE_REDIS_CLUSTER);
           } else {
             expect(span.data.redis.connection).to.contain(process.env.REDIS);
           }
