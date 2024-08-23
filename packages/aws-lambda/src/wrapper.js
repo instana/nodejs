@@ -433,9 +433,9 @@ function postHandler(entrySpan, error, result, callback) {
   const spans = spanBuffer.getAndResetSpans();
 
   // We want that all upcoming spans are send immediately to the BE.
-  // Span collection happens all the time and they are buffered via spanBuffer.
-  // The spanBuffer will only send out the spans early if the payload becomes too big.
-  // When the Lambda handler finishes we trigger `sendBundle`.
+  // Span collection happens all the time, but for AWS Lambda sending spans early via spanBuffer
+  // is disabled because we cannot use `setTimeout` on AWS Lambda.
+  // When the Lambda handler finishes we send all spans via `sendBundle`.
   // If there is any span collected afterwards (async operations), we send them out
   // directly and that's why we set `setTransmitImmediate` to true.
   spanBuffer.setTransmitImmediate(true);
