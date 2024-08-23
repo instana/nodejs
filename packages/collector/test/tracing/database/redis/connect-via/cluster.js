@@ -5,6 +5,7 @@
 'use strict';
 
 const MAX_TRIES = 50;
+const { delay } = require('../../../../../../core/test/test_util');
 
 // node bin/start-test-containers.js --redis-node-0 --redis-node-1 --redis-node-2
 // docker exec -it 2aaaac7b9112 redis-cli -p 6379 cluster info
