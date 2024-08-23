@@ -29,6 +29,7 @@ let patterns = [
   /\/@hapi\/call\/lib\//,
   /\/@prisma\/client\//,
   /\/@redis\/client\/dist\/lib\/cluster\/commands.js/,
+  /\/@redis\/client\/dist\/index.js/,
   /\/amqplib\/lib\//,
   /\/aws-sdk\/lib\//,
   // deliberately not including bunyan because we depend on bunyan ourselves
