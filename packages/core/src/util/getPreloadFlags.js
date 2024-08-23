@@ -5,17 +5,30 @@
 'use strict';
 
 exports.getPreloadFlags = function getPreloadFlags() {
-  if (
-    process.env.NODE_OPTIONS?.includes('--require')
-    || process.env.NODE_OPTIONS?.includes('--import')
-    || process.env.NODE_OPTIONS?.includes('--experimental-loader')) {
-      return process.env.NODE_OPTIONS;
-  } else if (process.execArgv.length > 0) {
-    const result = process.execArgv.find(arg =>
-      arg.includes('--require') || arg.includes('--import') || arg.includes('--experimental-loader')
-    );
-    return result || 'noFlags';
-  } else {
-    return 'noFlags';
+  const flags = ['--require', '--import', '--experimental-loader'];
+  const instanaKeyword = '@instana';
+
+  // Function to find the matching flag along with '@instana' keyword
+  /**
+    * @param {string | string[]} option
+  */
+  function findFlagWithInstana(option) {
+    return flags.find(flag => option.includes(flag) && option.includes(instanaKeyword));
   }
+
+  if (process.env.NODE_OPTIONS) {
+    const foundFlag = findFlagWithInstana(process.env.NODE_OPTIONS);
+    if (foundFlag) {
+      return foundFlag;
+    }
+  }
+
+  if (process.execArgv.length > 0) {
+    const foundFlag = findFlagWithInstana(process.execArgv?.join(' '));
+    if (foundFlag) {
+      return foundFlag;
+    }
+  }
+
+  return 'noFlags';
 };
