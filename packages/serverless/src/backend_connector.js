@@ -117,6 +117,10 @@ exports.setLogger = function setLogger(_logger) {
  * the variable is always true.
  */
 exports.sendBundle = function sendBundle(bundle, finalLambdaRequest, callback) {
+  logger.debug(
+    `Sending bundle to Instana (no. of spans: ${(bundle && bundle.spans && bundle.spans.length) || 'unknown'})`
+  );
+
   send('/bundle', bundle, finalLambdaRequest, callback);
 };
 
@@ -125,6 +129,7 @@ exports.sendMetrics = function sendMetrics(metrics, callback) {
 };
 
 exports.sendSpans = function sendSpans(spans, callback) {
+  logger.debug(`Sending spans to Instana (no. of spans: ${spans.length})`);
   send('/traces', spans, false, callback);
 };
 
@@ -235,8 +240,6 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
 
     handleCallback();
     return;
-  } else {
-    logger.debug(`Sending data to Instana (${resourcePath}).`);
   }
 
   if (!warningsHaveBeenLogged) {
@@ -263,6 +266,8 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
     localUseLambdaExtension || environmentUtil.getBackendPath() === '/'
       ? resourcePath
       : environmentUtil.getBackendPath() + resourcePath;
+
+  logger.debug(`Sending data to Instana (${requestPath}).`);
 
   // serialize the payload object
   const serializedPayload = JSON.stringify(payload);
@@ -392,7 +397,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
   });
 
   req.on('finish', () => {
-    logger.debug(`Sent data to Instana (${resourcePath}).`);
+    logger.debug(`Sent data to Instana (${requestPath}).`);
 
     if (useLambdaExtension && finalLambdaRequest) {
       clearInterval(heartbeatInterval);

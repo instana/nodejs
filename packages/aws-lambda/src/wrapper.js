@@ -372,8 +372,9 @@ function postPromise(entrySpan, error, value) {
 }
 
 function sendToBackend({ spans, metricsPayload, finalLambdaRequest, callback }) {
-  const runBackendConnector = () =>
-    backendConnector.sendBundle({ spans, metrics: metricsPayload }, finalLambdaRequest, callback);
+  const runBackendConnector = () => {
+    return backendConnector.sendBundle({ spans, metrics: metricsPayload }, finalLambdaRequest, callback);
+  };
 
   // CASE: Customer uses process.env.INSTANA_AGENT_KEY
   if (!ssm.isUsed()) {

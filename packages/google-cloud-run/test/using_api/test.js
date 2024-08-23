@@ -105,8 +105,9 @@ describe('Using the API', function () {
     // During phase 1 of the Kafka header migration (October 2022 - October 2023) there will be a debug log about
     // ignoring the option 'both' for rdkafka. We do not care about that log message in this test.
     const debug = response.logs.debug.filter(msg => !msg.includes('Ignoring configuration or default value'));
-    expect(debug).to.contain('Sending data to Instana (/metrics).');
-    expect(debug).to.contain('Sent data to Instana (/metrics).');
+
+    expect(debug).to.contain('Sending data to Instana (/serverless/metrics).');
+    expect(debug).to.contain('Sent data to Instana (/serverless/metrics).');
 
     expect(response.logs.info).to.be.empty;
     expect(response.logs.warn).to.deep.equal([
