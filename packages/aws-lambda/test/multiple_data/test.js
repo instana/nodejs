@@ -144,7 +144,7 @@ describe('multiple data lambda handler', function () {
                 // 1 X bundle requestat the end of the lambda fn
                 expect(rawBundles.length).to.equal(1);
 
-                // This is the delayed request.
+                // All spans are sent at the end of the lambda fn
                 expect(rawBundles[0].spans.length).to.equal(101);
 
                 // 0 requests from span buffer.
