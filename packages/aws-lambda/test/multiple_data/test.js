@@ -94,7 +94,7 @@ describe('multiple data lambda handler', function () {
     });
   });
 
-  describe('with 100 iterations', function () {
+  describe('[batching disabled] with 100 iterations', function () {
     this.timeout(config.getTestTimeout() * 2);
     let control;
 
@@ -138,11 +138,100 @@ describe('multiple data lambda handler', function () {
               return Promise.all([
                 //
                 control.getSpans(),
-                control.getRawBundles()
-              ]).then(([spans, rawBundles]) => {
-                // one bundle request with 101 spans
+                control.getRawBundles(),
+                control.getRawSpanArrays()
+              ]).then(([spans, rawBundles, rawSpanArrays]) => {
+                // 1 X bundle requestat the end of the lambda fn
                 expect(rawBundles.length).to.equal(1);
+
+                // All spans are sent at the end of the lambda fn
+                expect(rawBundles[0].spans.length).to.equal(101);
+
+                // 0 requests from span buffer.
+                expect(rawSpanArrays.length).to.equal(0);
+
                 expect(spans.length).to.equal(101);
+              });
+            },
+            null,
+            Date.now() + config.getRetryTimeout() * 2
+          );
+        });
+    });
+  });
+
+  describe('[batching enabled] with 100 iterations', function () {
+    this.timeout(config.getTestTimeout() * 2);
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: path.join(__dirname, './lambda'),
+        startBackend: true,
+        env: {
+          INSTANA_AGENT_KEY: instanaAgentKey,
+          WITH_CONFIG: 'true',
+          INSTANA_NUMBER_OF_ITERATIONS: 100,
+          INSTANA_SPANBATCHING_ENABLED: 'true',
+          INSTANA_FORCE_TRANSMISSION_STARTING_AT: 10,
+          INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: 100
+        }
+      });
+
+      await control.start();
+    });
+
+    beforeEach(async () => {
+      // wait a little to ensure no more spans are sent from the handler
+      // the handler sends some async request in the background
+      await delay(2000);
+
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must capture metrics and all spans', () => {
+      return control
+        .runHandler()
+        .then(() => {
+          verifyResponse(control, 1);
+        })
+        .then(() => {
+          return retry(
+            () => {
+              return Promise.all([
+                //
+                control.getSpans(),
+                control.getRawBundles(),
+                control.getRawSpanArrays()
+              ]).then(([spans, rawBundles, rawSpanArrays]) => {
+                // 1 X bundle requestat the end of the lambda fn
+                expect(rawBundles.length).to.equal(1);
+
+                // This is the delayed request.
+                expect(rawBundles[0].spans.length).to.equal(1);
+
+                // 10 requests from span buffer.
+                expect(rawSpanArrays.length).to.equal(12);
+                expect(rawSpanArrays[0].length).to.equal(10);
+                expect(rawSpanArrays[1].length).to.equal(10);
+                expect(rawSpanArrays[2].length).to.equal(10);
+                expect(rawSpanArrays[3].length).to.equal(10);
+                expect(rawSpanArrays[4].length).to.equal(10);
+                expect(rawSpanArrays[5].length).to.equal(10);
+                expect(rawSpanArrays[6].length).to.equal(10);
+                expect(rawSpanArrays[7].length).to.equal(10);
+                expect(rawSpanArrays[8].length).to.equal(10);
+                expect(rawSpanArrays[9].length).to.equal(10);
+                expect(rawSpanArrays[10].length).to.equal(1);
+                expect(rawSpanArrays[11].length).to.equal(1);
+
+                expect(spans.length).to.equal(103);
               });
             },
             null,
