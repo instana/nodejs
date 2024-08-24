@@ -141,7 +141,7 @@ describe('multiple data lambda handler', function () {
                 control.getRawBundles(),
                 control.getRawSpanArrays()
               ]).then(([spans, rawBundles, rawSpanArrays]) => {
-                // 1 X bundle requestat the end of the lambda fn
+                // 1 X bundle request at the end of the lambda fn
                 expect(rawBundles.length).to.equal(1);
 
                 // All spans are sent at the end of the lambda fn

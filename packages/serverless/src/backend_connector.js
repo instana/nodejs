@@ -117,9 +117,7 @@ exports.setLogger = function setLogger(_logger) {
  * the variable is always true.
  */
 exports.sendBundle = function sendBundle(bundle, finalLambdaRequest, callback) {
-  logger.debug(
-    `Sending bundle to Instana (no. of spans: ${(bundle && bundle.spans && bundle.spans.length) || 'unknown'})`
-  );
+  logger.debug(`Sending bundle to Instana (no. of spans: ${bundle?.spans?.length ?? 'unknown'})`);
 
   send('/bundle', bundle, finalLambdaRequest, callback);
 };

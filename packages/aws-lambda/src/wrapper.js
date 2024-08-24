@@ -438,6 +438,7 @@ function postHandler(entrySpan, error, result, callback) {
   // When the Lambda handler finishes we send all spans via `sendBundle`.
   // If there is any span collected afterwards (async operations), we send them out
   // directly and that's why we set `setTransmitImmediate` to true.
+  // We need to rework the default behavior via https://jsw.ibm.com/browse/INSTA-13498
   spanBuffer.setTransmitImmediate(true);
 
   const metricsData = metrics.gatherData();
