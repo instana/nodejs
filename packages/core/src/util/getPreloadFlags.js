@@ -6,29 +6,36 @@
 
 exports.getPreloadFlags = function getPreloadFlags() {
   const flags = ['--require', '--import', '--experimental-loader'];
-  const instanaKeyword = '@instana';
 
-  // Function to find the matching flag along with '@instana' keyword
   /**
-    * @param {string | string[]} option
-  */
-  function findFlagWithInstana(option) {
-    return flags.find(flag => option.includes(flag) && option.includes(instanaKeyword));
+   * @param {string[]} optionArray
+   */
+  function extractOption(optionArray) {
+    const relevantOptions = [];
+
+    for (let i = 0; i < optionArray.length; i++) {
+      if (flags.some(flag => optionArray[i].includes(flag))) {
+        relevantOptions.push(`${optionArray[i]} ${optionArray[i + 1]}`);
+        i++; // Skip the next element as it's already included
+      }
+    }
+
+    return relevantOptions.join(', ');
   }
 
+  // Check process.env.NODE_OPTIONS
+  let nodeOptions = '';
   if (process.env.NODE_OPTIONS) {
-    const foundFlag = findFlagWithInstana(process.env.NODE_OPTIONS);
-    if (foundFlag) {
-      return foundFlag;
-    }
+    const nodeOptionsArray = process.env.NODE_OPTIONS.split(' ');
+    nodeOptions = extractOption(nodeOptionsArray);
   }
 
+  // Check process.execArgv
+  let execArgs = '';
   if (process.execArgv.length > 0) {
-    const foundFlag = findFlagWithInstana(process.execArgv?.join(' '));
-    if (foundFlag) {
-      return foundFlag;
-    }
+    execArgs = extractOption(process.execArgv);
   }
 
-  return 'noFlags';
+  const result = [nodeOptions, execArgs].filter(Boolean).join(', ') || 'noFlags';
+  return result;
 };
