@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.15.2](https://github.com/instana/nodejs/compare/v3.15.1...v3.15.2) (2024-08-27)
+
+### Bug Fixes
+
+- deprecated q library ([#1282](https://github.com/instana/nodejs/issues/1282)) ([d86f939](https://github.com/instana/nodejs/commit/d86f939e9bc20c06dead85376eb90b42def5c9c4))
+
 ## [3.15.1](https://github.com/instana/nodejs/compare/v3.15.0...v3.15.1) (2024-08-19)
 
 **Note:** Version bump only for package @instana/collector
