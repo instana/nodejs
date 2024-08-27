@@ -4,6 +4,12 @@
 
 'use strict';
 
+/** @type {import('../logger').GenericLogger} */
+let logger;
+logger = require('../logger').getLogger('util/getPreloadFlags', newLogger => {
+  logger = newLogger;
+});
+
 exports.getPreloadFlags = function getPreloadFlags() {
   const flags = ['--require', '--import', '--experimental-loader'];
 
@@ -38,6 +44,7 @@ exports.getPreloadFlags = function getPreloadFlags() {
     const result = [nodeOptions, execArgs].filter(Boolean).join(', ') || 'noFlags';
     return result;
   } catch (error) {
-    return error;
+    logger.error('Error occurred while doing preload flag filtering: %s ', error);
+    return '';
   }
 };
