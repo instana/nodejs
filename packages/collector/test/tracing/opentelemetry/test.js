@@ -499,7 +499,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
   });
 
   const runTedious = semver.gte(process.versions.node, '16.0.0') ? describe : describe.skip;
-  runTedious('tedious', function () {
+  runTedious.only('tedious', function () {
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;

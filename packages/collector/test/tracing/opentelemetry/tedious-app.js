@@ -22,8 +22,16 @@ const express = require('express');
 const fs = require('fs');
 const { isCI } = require('@instana/core/test/test_util');
 const port = require('../../test_util/app-port')();
-const Connection = require('tedious').Connection;
-const Request = require('tedious').Request;
+
+// collector -> typeorm -> mssql v10 -> tedious v16
+// We cant install typeorm on root because we have mssql v11 installed on root.
+// It will get installed into the collector node_modules
+// And required here, which is wrong! We want to use the root dependency.
+// TODO: https://jsw.ibm.com/browse/INSTA-7722
+const tedious = require('../../../../../node_modules/tedious');
+
+const Connection = tedious.Connection;
+const Request = tedious.Request;
 const bodyParser = require('body-parser');
 const app = express();
 
