@@ -9,11 +9,9 @@ const expect = require('chai').expect;
 const { getPreloadFlags } = require('../../src/util/getPreloadFlags');
 
 describe('util.getPreloadFlags', () => {
-  // Variables to store original values of NODE_OPTIONS and execArgv
   const originalNodeOptions = process.env.NODE_OPTIONS;
-  const originalExecArgv = process.execArgv.slice(); // Slice to copy the array
+  const originalExecArgv = process.execArgv.slice();
 
-  // Helper function to reset environment variables and execArgs
   const resetEnvironment = () => {
     process.env.NODE_OPTIONS = '';
     process.execArgv = [];
@@ -28,12 +26,11 @@ describe('util.getPreloadFlags', () => {
   });
 
   after(() => {
-    // Restore original NODE_OPTIONS and execArgv values after all tests
     process.env.NODE_OPTIONS = originalNodeOptions;
     process.execArgv = originalExecArgv;
   });
 
-  it('should return relevant flags from process.env.NODE_OPTIONS', () => {
+  it('should return relevant flags from NODE_OPTIONS', () => {
     process.env.NODE_OPTIONS =
       "INSTANA_DEBUG=true node --require '@instana/collector/src/immediate.js' ./dummy-app/src/index.js";
 
@@ -42,7 +39,7 @@ describe('util.getPreloadFlags', () => {
     expect(result).equal("--require '@instana/collector/src/immediate.js'");
   });
 
-  it('should return relevant flags from process.execArgv', () => {
+  it('should return relevant flags from execArgv', () => {
     process.execArgv = ['--require', '@instana/collector/src/immediate.js'];
 
     const result = getPreloadFlags();

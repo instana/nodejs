@@ -16,26 +16,28 @@ exports.getPreloadFlags = function getPreloadFlags() {
     for (let i = 0; i < optionArray.length; i++) {
       if (flags.some(flag => optionArray[i].includes(flag))) {
         relevantOptions.push(`${optionArray[i]} ${optionArray[i + 1]}`);
-        i++; // Skip the next element as it's already included
+        i++;
       }
     }
 
     return relevantOptions.join(', ');
   }
 
-  // Check process.env.NODE_OPTIONS
-  let nodeOptions = '';
-  if (process.env.NODE_OPTIONS) {
-    const nodeOptionsArray = process.env.NODE_OPTIONS.split(' ');
-    nodeOptions = extractOption(nodeOptionsArray);
-  }
+  try {
+    let nodeOptions = '';
+    if (process.env.NODE_OPTIONS) {
+      const nodeOptionsArray = process.env.NODE_OPTIONS.split(' ');
+      nodeOptions = extractOption(nodeOptionsArray);
+    }
 
-  // Check process.execArgv
-  let execArgs = '';
-  if (process.execArgv.length > 0) {
-    execArgs = extractOption(process.execArgv);
-  }
+    let execArgs = '';
+    if (process.execArgv.length > 0) {
+      execArgs = extractOption(process.execArgv);
+    }
 
-  const result = [nodeOptions, execArgs].filter(Boolean).join(', ') || 'noFlags';
-  return result;
+    const result = [nodeOptions, execArgs].filter(Boolean).join(', ') || 'noFlags';
+    return result;
+  } catch (error) {
+    return error;
+  }
 };
