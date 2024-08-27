@@ -25,8 +25,8 @@ const port = require('../../test_util/app-port')();
 
 // collector -> typeorm -> mssql v10 -> tedious v16
 // We cant install typeorm on root because we have mssql v11 installed on root.
-// It will get installed into the collector node_modules
-// And required here, which is wrong! We want to use the root dependency.
+// If we require tedious here, it will load the dependency from the
+// node_modules folder of the collector package.
 // TODO: https://jsw.ibm.com/browse/INSTA-7722
 const tedious = require('../../../../../node_modules/tedious');
 
