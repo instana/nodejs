@@ -22,6 +22,12 @@ const {
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
+// Please run this command on the root folder to start the redis instance:
+// node bin/start-test-containers.js --redis
+//
+// Please set the environment variables to run the tests against azure redis cluster:
+//    export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
+//    export AZURE_REDIS_CLUSTER_PWD=
 ['default', 'cluster'].forEach(setupType => {
   describe(`tracing/redis ${setupType}`, function () {
     ['redis', '@redis/client'].forEach(redisPkg => {
@@ -147,6 +153,11 @@ const globalAgent = require('../../../globalAgent');
 
                       verifyHttpExit(controls, spans, writeEntrySpan);
                       verifyHttpExit(controls, spans, readEntrySpan);
+
+                      // 2 x entry span
+                      // 2 x redis exit span
+                      // 2 x http exit span
+                      expect(spans.length).to.eql(6);
                     })
                   );
                 }));
