@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.16.0](https://github.com/instana/nodejs/compare/v3.15.2...v3.16.0) (2024-08-28)
+
+### Reverts
+
+- Revert "ci: skipped publishing AWS layer to the newly added region ap-southeast-5" ([038ff2d](https://github.com/instana/nodejs/commit/038ff2d75101012a123cb8c58ce2b730b6faaba9))
+
 ## [3.15.2](https://github.com/instana/nodejs/compare/v3.15.1...v3.15.2) (2024-08-27)
 
 ### Bug Fixes

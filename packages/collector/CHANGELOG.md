@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.16.0](https://github.com/instana/nodejs/compare/v3.15.2...v3.16.0) (2024-08-28)
+
+### Features
+
+- added support for redis cluster ([#1270](https://github.com/instana/nodejs/issues/1270)) ([4d1dc72](https://github.com/instana/nodejs/commit/4d1dc726451d28ccbe3b94f7f12b0b74ba7b5660))
+- added support for tedious v18 ([#1289](https://github.com/instana/nodejs/issues/1289)) ([e2990c1](https://github.com/instana/nodejs/commit/e2990c1c47ae94696e25d01d07f0fa5fe7ba7354))
+
 ## [3.15.2](https://github.com/instana/nodejs/compare/v3.15.1...v3.15.2) (2024-08-27)
 
 ### Bug Fixes
