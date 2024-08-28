@@ -7,16 +7,17 @@
 const MAX_TRIES = 50;
 const { delay } = require('../../../../../../core/test/test_util');
 
-// node bin/start-test-containers.js --redis-node-0 --redis-node-1 --redis-node-2
-// docker exec -it 2aaaac7b9112 redis-cli -p 6379 cluster info
+// NOTE: We run the tests locally and on CI against azure redis cluster.
+// NOTE: We cannot run redis cluster on Tekton https://github.com/bitnami/charts/issues/28894
+// NOTE: We cannot use a docker based redis cluster at the moment!
+//       See https://github.com/redis/node-redis/issues/2815.
+//       These commands are useful as soon as we switch to a docker based cluster.
+//       node bin/start-test-containers.js --redis-node-0 --redis-node-1 --redis-node-2
+//       docker exec -it 2aaaac7b9112 redis-cli -p 6379 cluster info
 module.exports = async function connect(redis, log, tries = 0) {
-  // NOTE: we cannot run redis cluster on Tekton https://github.com/bitnami/charts/issues/28894
-  // NOTE: we cannot run redis cluster on Docker locally https://github.com/redis/node-redis/issues/2815
-  //
-  // Please set the environment variables to connect to the cloud redis cluster:
+  // Please set the environment variables to run the tests against azure redis cluster:
   //    export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
   //    export AZURE_REDIS_CLUSTER_PWD=
-
   if (!process.env.AZURE_REDIS_CLUSTER || !process.env.AZURE_REDIS_CLUSTER_PWD) {
     log(
       'Please set the environment variables AZURE_REDIS_CLUSTER and AZURE_REDIS_CLUSTER_PWD ' +

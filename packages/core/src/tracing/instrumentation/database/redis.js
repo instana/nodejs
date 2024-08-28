@@ -45,7 +45,7 @@ function instrument(redis) {
   //       to get the instance of the redis client
   if (!redis.RedisClient) {
     const wrapMulti = (addressUrl, isCluster) => {
-      return function innerWrapMlti(originalMultiFn) {
+      return function innerWrapMulti(originalMultiFn) {
         return function instrumentedMultiInstana() {
           const result = originalMultiFn.apply(this, arguments);
           const selfMadeQueue = [];
