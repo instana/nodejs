@@ -26,7 +26,6 @@ const mochaSuiteFn =
 
 function checkConnection(span, setupType) {
   if (setupType === 'cluster') {
-    // Internal IP of azure cluster.
     expect(span.data.redis.connection).to.equal(process.env.AZURE_REDIS_CLUSTER);
   } else {
     expect(span.data.redis.connection).to.equal(process.env.REDIS);

@@ -36,7 +36,11 @@ function instrument(ioredis) {
     constructor() {
       super(...arguments);
 
-      clusterConnectionString = this.startupNodes.map(node => `${node.host}:${node.port}`).join(',');
+      try {
+        clusterConnectionString = this.startupNodes.map(node => `${node.host}:${node.port}`).join(',');
+      } catch (e) {
+        // ignore
+      }
     }
   }
 
@@ -47,8 +51,9 @@ function instrument(ioredis) {
     enumerable: true
   });
 
-  // The "sendCommand" is called on the cluster instance as well, but `client.isCluster` is false.
-  // We need to workaround and getting the cluster connection via the class constructor.
+  // We cannot register `ioredis.Cluster.prototype.sendCommand` otherwise we produce two spans for the same command.
+  // Because `ioredis.prototype.sendCommand` is triggerd when using a cluster, but `client.isCluster` is false.
+  // Thats why we override the Cluster Class and extract the connection string.
   shimmer.wrap(ioredis.prototype, 'sendCommand', instrumentSendCommand);
   shimmer.wrap(ioredis.prototype, 'multi', instrumentMultiCommand);
   shimmer.wrap(ioredis.prototype, 'pipeline', instrumentPipelineCommand);
