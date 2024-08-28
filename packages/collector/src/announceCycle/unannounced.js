@@ -192,11 +192,7 @@ function applyKafkaTracingConfiguration(agentResponse) {
       traceCorrelation:
         kafkaTracingConfigFromAgent['trace-correlation'] != null
           ? kafkaTracingConfigFromAgent['trace-correlation']
-          : tracingConstants.kafkaTraceCorrelationDefault,
-      headerFormat:
-        kafkaTracingConfigFromAgent['header-format'] != null
-          ? kafkaTracingConfigFromAgent['header-format']
-          : tracingConstants.kafkaHeaderFormatDefault
+          : tracingConstants.kafkaTraceCorrelationDefault
     };
     ensureNestedObjectExists(agentOpts.config, ['tracing', 'kafka']);
     agentOpts.config.tracing.kafka = kafkaTracingConfig;
