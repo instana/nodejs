@@ -20,30 +20,24 @@ require('../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const Redis = require('ioredis');
+const ioredis = require('ioredis');
 const fetch = require('node-fetch-v2');
 const port = require('../../../test_util/app-port')();
+const connect = require('./connect-via');
 const app = express();
-const logPrefix = `Express / Redis App (${process.pid}):\t`;
-let connectedToRedis = true;
+const logPrefix = `Express / IORedis App (${process.pid}):\t`;
 
-const client = new Redis(`//${process.env.REDIS}`);
-const client2 = new Redis(`//${process.env.REDIS_ALTERNATIVE}`);
+let connectedToRedis = false;
+let client;
+let client2;
 
-let clientReady = false;
-let client2Ready = false;
-client.on('ready', () => {
-  clientReady = true;
-  if (client2Ready) {
-    connectedToRedis = true;
-  }
-});
-client2.on('ready', () => {
-  client2Ready = true;
-  if (clientReady) {
-    connectedToRedis = true;
-  }
-});
+(async () => {
+  const { connection, connection2 } = await connect(ioredis, log);
+
+  client = connection;
+  client2 = connection2;
+  connectedToRedis = true;
+})();
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

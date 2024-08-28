@@ -18,31 +18,25 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
-import Redis from 'ioredis';
+import ioredis from 'ioredis';
 import fetch from 'node-fetch';
 import portFactory from '../../../test_util/app-port.js';
+import connect from './connect-via/index.js';
 const port = portFactory();
 const app = express();
 const logPrefix = `Express / Redis App (${process.pid}):\t`;
-let connectedToRedis = true;
 
-const client = new Redis(`//${process.env.REDIS}`);
-const client2 = new Redis(`//${process.env.REDIS_ALTERNATIVE}`);
+let connectedToRedis = false;
+let client;
+let client2;
 
-let clientReady = false;
-let client2Ready = false;
-client.on('ready', () => {
-  clientReady = true;
-  if (client2Ready) {
-    connectedToRedis = true;
-  }
-});
-client2.on('ready', () => {
-  client2Ready = true;
-  if (clientReady) {
-    connectedToRedis = true;
-  }
-});
+(async () => {
+  const { connection, connection2 } = await connect(ioredis, log);
+
+  client = connection;
+  client2 = connection2;
+  connectedToRedis = true;
+})();
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
