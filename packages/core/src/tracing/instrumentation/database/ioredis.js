@@ -29,10 +29,32 @@ exports.init = function init() {
   hook.onModuleLoad('ioredis', instrument);
 };
 
+let clusterConnectionString;
+
 function instrument(ioredis) {
+  class InstanaClusterClass extends ioredis.Cluster {
+    constructor() {
+      super(...arguments);
+
+      clusterConnectionString = this.startupNodes.map(node => `${node.host}:${node.port}`).join(',');
+    }
+  }
+
+  Object.defineProperty(ioredis, 'Cluster', {
+    value: InstanaClusterClass,
+    writable: false,
+    configurable: false,
+    enumerable: true
+  });
+
+  // The "sendCommand" is called on the cluster instance as well, but `client.isCluster` is false.
+  // We need to workaround and getting the cluster connection via the class constructor.
   shimmer.wrap(ioredis.prototype, 'sendCommand', instrumentSendCommand);
   shimmer.wrap(ioredis.prototype, 'multi', instrumentMultiCommand);
   shimmer.wrap(ioredis.prototype, 'pipeline', instrumentPipelineCommand);
+
+  shimmer.wrap(ioredis.Cluster.prototype, 'multi', instrumentMultiCommand);
+  shimmer.wrap(ioredis.Cluster.prototype, 'pipeline', instrumentPipelineCommand);
 }
 
 function instrumentSendCommand(original) {
@@ -49,18 +71,19 @@ function instrumentSendCommand(original) {
       return original.apply(this, arguments);
     }
 
+    // ".multi()" commands could actually be recorded as multiple spans, but we ONLY want to record ONE
+    // batched span considering that a multi call represents a transaction.
+    // The same is true for pipeline calls, but they have a slightly different semantic.
     if (
       parentSpan.n === exports.spanName &&
-      (parentSpan.data.redis.command === 'multi' || parentSpan.data.redis.command === 'pipeline') &&
-      // the multi call is handled in instrumentMultiCommand but since multi is also send to Redis it will also
-      // trigger instrumentSendCommand, which is why we filter it out.
-      command.name !== 'multi'
+      (parentSpan.data.redis.command === 'multi' || parentSpan.data.redis.command === 'pipeline')
     ) {
-      // multi commands could actually be recorded as multiple spans, but we only want to record one
-      // batched span considering that a multi call represents a transaction.
-      // The same is true for pipeline calls, but they have a slightly different semantic.
+      // This is the initial .multi()/.pipeline() request. We do not want to record this as subCommand.
+      if (command.name === 'multi' || command.name === 'pipeline') return original.apply(this, arguments);
+
       const parentSpanSubCommands = (parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || []);
       parentSpanSubCommands.push(command.name);
+      return original.apply(this, arguments);
     } else if (constants.isExitSpan(parentSpan)) {
       // Apart from the special case of multi/pipeline calls, redis exits can't be child spans of other exits.
       return original.apply(this, arguments);
@@ -71,7 +94,7 @@ function instrumentSendCommand(original) {
       const span = cls.startSpan(exports.spanName, constants.EXIT);
       span.stack = tracingUtil.getStackTrace(wrappedInternalSendCommand);
       span.data.redis = {
-        connection: `${client.options.host}:${client.options.port}`,
+        connection: clusterConnectionString || `${client.options.host}:${client.options.port}`,
         command: command.name.toLowerCase()
       };
 
@@ -121,13 +144,22 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
       return original.apply(this, arguments);
     }
 
+    let connection;
+
+    // NOTE: here it works because we register the instrumentation on the cluster prototype
+    if (client.isCluster) {
+      connection = clusterConnectionString;
+    } else {
+      connection = `${client.options.host}:${client.options.port}`;
+    }
+
     // create a new cls context parent to track the multi/pipeline child calls
     const clsContextForMultiOrPipeline = cls.ns.createContext();
     cls.ns.enter(clsContextForMultiOrPipeline);
     const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(wrappedInternalMultiOrPipelineCommand);
     span.data.redis = {
-      connection: `${client.options.host}:${client.options.port}`,
+      connection,
       command: commandName
     };
 
@@ -143,6 +175,7 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
 
 function instrumentMultiOrPipelineExec(clsContextForMultiOrPipeline, commandName, span, original) {
   const endCallback = commandName === 'pipeline' ? pipelineCommandEndCallback : multiCommandEndCallback;
+
   return function instrumentedExec() {
     // the exec call is actually when the transmission of these commands to
     // redis is happening

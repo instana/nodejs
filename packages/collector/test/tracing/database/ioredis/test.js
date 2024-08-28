@@ -24,14 +24,23 @@ const globalAgent = require('../../../globalAgent');
 const mochaSuiteFn =
   semver.gte(process.versions.node, '14.0.0') && supportedVersion(process.versions.node) ? describe : describe.skip;
 
-// Please run this command on the root folder to start the redis instance:
+function checkConnection(span, setupType) {
+  if (setupType === 'cluster') {
+    // Internal IP of azure cluster.
+    expect(span.data.redis.connection).to.equal(process.env.AZURE_REDIS_CLUSTER);
+  } else {
+    expect(span.data.redis.connection).to.equal(process.env.REDIS);
+  }
+}
+
+// Please run this command on the root folder to start the single redis instance (default):
 // node bin/start-test-containers.js --redis
 //
 // Please set the environment variables to run the tests against azure redis cluster:
 //    export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
 //    export AZURE_REDIS_CLUSTER_PWD=
-['cluster'].forEach(setupType => {
-  mochaSuiteFn.only(`tracing/ioredis ${setupType}`, function () {
+['default', 'cluster'].forEach(setupType => {
+  mochaSuiteFn(`tracing/ioredis ${setupType}`, function () {
     this.timeout(config.getTestTimeout() + 4);
 
     globalAgent.setUpCleanUpHooks();
@@ -62,7 +71,7 @@ const mochaSuiteFn =
       await controls.clearIpcMessages();
     });
 
-    it.only('must trace set/get calls', () =>
+    it('must trace set/get calls', () =>
       controls
         .sendRequest({
           method: 'POST',
@@ -103,7 +112,7 @@ const mochaSuiteFn =
                 span => expect(span.async).to.not.exist,
                 span => expect(span.error).to.not.exist,
                 span => expect(span.ec).to.equal(0),
-                span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+                span => checkConnection(span, setupType),
                 span => expect(span.data.redis.command).to.equal('set')
               ]);
 
@@ -122,7 +131,7 @@ const mochaSuiteFn =
                 span => expect(span.async).to.not.exist,
                 span => expect(span.error).to.not.exist,
                 span => expect(span.ec).to.equal(0),
-                span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+                span => checkConnection(span, setupType),
                 span => expect(span.data.redis.command).to.equal('get')
               ]);
             })
@@ -168,7 +177,7 @@ const mochaSuiteFn =
                 span => expect(span.async).to.not.exist,
                 span => expect(span.error).to.not.exist,
                 span => expect(span.ec).to.equal(0),
-                span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+                span => checkConnection(span, setupType),
                 span => expect(span.data.redis.command).to.equal('set')
               ]);
 
@@ -187,7 +196,7 @@ const mochaSuiteFn =
                 span => expect(span.async).to.not.exist,
                 span => expect(span.error).to.not.exist,
                 span => expect(span.ec).to.equal(0),
-                span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+                span => checkConnection(span, setupType),
                 span => expect(span.data.redis.command).to.equal('get')
               ]);
 
@@ -248,7 +257,7 @@ const mochaSuiteFn =
                 span => expect(span.async).to.not.exist,
                 span => expect(span.error).to.not.exist,
                 span => expect(span.ec).to.equal(0),
-                span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+                span => checkConnection(span, setupType),
                 span => expect(span.data.redis.command).to.equal('set')
               ]);
 
@@ -267,7 +276,7 @@ const mochaSuiteFn =
                 span => expect(span.async).to.not.exist,
                 span => expect(span.error).to.not.exist,
                 span => expect(span.ec).to.equal(0),
-                span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+                span => checkConnection(span, setupType),
                 span => expect(span.data.redis.command).to.equal('get')
               ]);
 
@@ -316,7 +325,7 @@ const mochaSuiteFn =
                 span => expect(span.async).to.not.exist,
                 span => expect(span.error).to.not.exist,
                 span => expect(span.ec).to.equal(1),
-                span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+                span => checkConnection(span, setupType),
                 span => expect(span.data.redis.command).to.equal('get'),
                 span => expect(span.data.redis.error).to.be.a('string')
               ]);
@@ -338,6 +347,8 @@ const mochaSuiteFn =
                 span => expect(span.data.http.method).to.equal('GET')
               ]);
 
+              expect(spans.length).to.equal(2);
+
               expectAtLeastOneMatching(spans, [
                 span => expect(span.t).to.equal(writeEntrySpan.t),
                 span => expect(span.p).to.equal(writeEntrySpan.s),
@@ -350,7 +361,7 @@ const mochaSuiteFn =
                 span => expect(span.ec).to.equal(0),
                 span => expect(span.b.s).to.equal(2),
                 span => expect(span.b.u).to.not.exist,
-                span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+                span => checkConnection(span, setupType),
                 span => expect(span.data.redis.command).to.equal('multi'),
                 span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
               ]);
@@ -374,7 +385,9 @@ const mochaSuiteFn =
                 span => expect(span.n).to.equal('node.http.server'),
                 span => expect(span.data.http.method).to.equal('GET')
               ]);
-              expect(spans).to.have.lengthOf(5);
+
+              expect(spans).to.have.lengthOf(2);
+
               expectAtLeastOneMatching(spans, [
                 span => expect(span.t).to.equal(writeEntrySpan.t),
                 span => expect(span.p).to.equal(writeEntrySpan.s),
@@ -387,7 +400,7 @@ const mochaSuiteFn =
                 span => expect(span.ec).to.equal(2),
                 span => expect(span.b.s).to.equal(2),
                 span => expect(span.b.u).to.not.exist,
-                span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+                span => checkConnection(span, setupType),
                 span => expect(span.data.redis.command).to.equal('multi'),
                 span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']),
                 span => expect(span.data.redis.error).to.be.a('string')
@@ -409,7 +422,9 @@ const mochaSuiteFn =
                 span => expect(span.n).to.equal('node.http.server'),
                 span => expect(span.data.http.method).to.equal('POST')
               ]);
-              expect(spans).to.have.lengthOf(6);
+
+              expect(spans).to.have.lengthOf(3);
+
               expectAtLeastOneMatching(spans, [
                 span => expect(span.t).to.equal(entrySpan.t),
                 span => expect(span.p).to.equal(entrySpan.s),
@@ -422,7 +437,7 @@ const mochaSuiteFn =
                 span => expect(span.ec).to.equal(0),
                 span => expect(span.b.s).to.equal(2),
                 span => expect(span.b.u).to.not.exist,
-                span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+                span => checkConnection(span, setupType),
                 span => expect(span.data.redis.command).to.equal('multi'),
                 span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
               ]);
@@ -459,6 +474,8 @@ const mochaSuiteFn =
                 span => expect(span.data.http.method).to.equal('GET')
               ]);
 
+              expect(spans).to.have.lengthOf(2);
+
               expectAtLeastOneMatching(spans, [
                 span => expect(span.t).to.equal(writeEntrySpan.t),
                 span => expect(span.p).to.equal(writeEntrySpan.s),
@@ -471,7 +488,7 @@ const mochaSuiteFn =
                 span => expect(span.ec).to.equal(0),
                 span => expect(span.b.s).to.equal(3),
                 span => expect(span.b.u).to.not.exist,
-                span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+                span => checkConnection(span, setupType),
                 span => expect(span.data.redis.command).to.equal('pipeline'),
                 span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hset', 'hget'])
               ]);
@@ -488,11 +505,12 @@ const mochaSuiteFn =
         .then(() =>
           retry(() =>
             agentControls.getSpans().then(spans => {
-              expect(spans).to.have.lengthOf(5);
               const writeEntrySpan = expectAtLeastOneMatching(spans, [
                 span => expect(span.n).to.equal('node.http.server'),
                 span => expect(span.data.http.method).to.equal('GET')
               ]);
+
+              expect(spans).to.have.lengthOf(2);
 
               expectAtLeastOneMatching(spans, [
                 span => expect(span.t).to.equal(writeEntrySpan.t),
@@ -506,7 +524,7 @@ const mochaSuiteFn =
                 span => expect(span.ec).to.equal(1),
                 span => expect(span.b.s).to.equal(3),
                 span => expect(span.b.u).to.not.exist,
-                span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+                span => checkConnection(span, setupType),
                 span => expect(span.data.redis.command).to.equal('pipeline'),
                 span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hset', 'hget']),
                 span => expect(span.data.redis.error).to.be.a('string')
@@ -528,7 +546,9 @@ const mochaSuiteFn =
                 span => expect(span.n).to.equal('node.http.server'),
                 span => expect(span.data.http.method).to.equal('POST')
               ]);
-              expect(spans).to.have.lengthOf(5);
+
+              expect(spans).to.have.lengthOf(3);
+
               expectAtLeastOneMatching(spans, [
                 span => expect(span.t).to.equal(entrySpan.t),
                 span => expect(span.p).to.equal(entrySpan.s),
@@ -541,7 +561,7 @@ const mochaSuiteFn =
                 span => expect(span.ec).to.equal(0),
                 span => expect(span.b.s).to.equal(2),
                 span => expect(span.b.u).to.not.exist,
-                span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+                span => checkConnection(span, setupType),
                 span => expect(span.data.redis.command).to.equal('pipeline'),
                 span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
               ]);
@@ -592,41 +612,46 @@ const mochaSuiteFn =
       }
     });
 
-    it('call two different hosts', async () => {
-      const response = await controls.sendRequest({
-        method: 'POST',
-        path: '/two-different-target-hosts',
-        qs: {
-          key: 'key',
-          value1: 'value1',
-          value2: 'value2'
-        }
-      });
+    if (setupType !== 'cluster') {
+      it('call two different hosts/clients', async () => {
+        const response = await controls.sendRequest({
+          method: 'POST',
+          path: '/two-different-target-hosts',
+          qs: {
+            key: 'key',
+            value1: 'value1',
+            value2: 'value2'
+          }
+        });
 
-      expect(response.response1).to.equal('OK');
-      expect(response.response2).to.equal('OK');
+        expect(response.response1).to.equal('OK');
+        expect(response.response2).to.equal('OK');
 
-      await retry(async () => {
-        const spans = await agentControls.getSpans();
-        const entrySpan = expectAtLeastOneMatching(spans, [
-          span => expect(span.n).to.equal('node.http.server'),
-          span => expect(span.data.http.method).to.equal('POST')
-        ]);
-        expectExactlyOneMatching(spans, [
-          span => expect(span.t).to.equal(entrySpan.t),
-          span => expect(span.p).to.equal(entrySpan.s),
-          span => expect(span.n).to.equal('redis'),
-          span => expect(span.data.redis.command).to.equal('set'),
-          span => expect(span.data.redis.connection).to.contain('127.0.0.1')
-        ]);
-        expectExactlyOneMatching(spans, [
-          span => expect(span.t).to.equal(entrySpan.t),
-          span => expect(span.p).to.equal(entrySpan.s),
-          span => expect(span.n).to.equal('redis'),
-          span => expect(span.data.redis.command).to.equal('set'),
-          span => expect(span.data.redis.connection).to.contain('localhost')
-        ]);
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          const entrySpan = expectAtLeastOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.data.http.method).to.equal('POST')
+          ]);
+
+          expect(spans).to.have.lengthOf(3);
+
+          expectExactlyOneMatching(spans, [
+            span => expect(span.t).to.equal(entrySpan.t),
+            span => expect(span.p).to.equal(entrySpan.s),
+            span => expect(span.n).to.equal('redis'),
+            span => expect(span.data.redis.command).to.equal('set'),
+            span => expect(span.data.redis.connection).to.contain('127.0.0.1')
+          ]);
+          expectExactlyOneMatching(spans, [
+            span => expect(span.t).to.equal(entrySpan.t),
+            span => expect(span.p).to.equal(entrySpan.s),
+            span => expect(span.n).to.equal('redis'),
+            span => expect(span.data.redis.command).to.equal('set'),
+            span => expect(span.data.redis.connection).to.contain('localhost')
+          ]);
+        });
       });
-    });
+    }
   });
 });
