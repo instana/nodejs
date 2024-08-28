@@ -556,24 +556,31 @@ function skipExitTracing(options) {
   const parentSpan = getCurrentSpan();
   const suppressed = tracingSuppressed();
   const isExitSpanResult = isExitSpan(parentSpan);
+  // CASE: check for INSTANA_ALLOW_ROOT_EXIT_SPAN
+  // TODO: Add check for variable from config: allowRootExitSpan
+  if (process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN === '1' && !suppressed) {
+    if (opts.extendedResponse) return { skip: false, suppressed, isExitSpan: isExitSpanResult };
+    else return false;
+  } else {
+    // CASE: first ask for suppressed, because if we skip the entry span, we won't have a parentSpan
+    //       on the exit span, which would create noisy log messages.
+    if (suppressed) {
+      if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
+      return true;
+    }
 
-  // CASE: first ask for suppressed, because if we skip the entry span, we won't have a parentSpan
-  //       on the exit span, which would create noisy log messages.
-  if (suppressed) {
-    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
-    return true;
+    if (!opts.skipParentSpanCheck && (!parentSpan || isExitSpanResult)) {
+      if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
+      else return true;
+    }
+
+    const skipIsActive = opts.isActive === false;
+    const skipIsTracing = !opts.skipIsTracing ? !isTracing() : false;
+    const skip = skipIsActive || skipIsTracing;
+
+    if (opts.extendedResponse) return { skip, suppressed, isExitSpan: isExitSpanResult };
+    else return skip;
   }
-
-  if (!opts.skipParentSpanCheck && (!parentSpan || isExitSpanResult)) {
-    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
-    else return true;
-  }
-
-  const skipIsActive = opts.isActive === false;
-  const skipIsTracing = !opts.skipIsTracing ? !isTracing() : false;
-  const skip = skipIsActive || skipIsTracing;
-  if (opts.extendedResponse) return { skip, suppressed, isExitSpan: isExitSpanResult };
-  else return skip;
 }
 
 module.exports = {
