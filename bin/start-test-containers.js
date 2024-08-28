@@ -30,7 +30,8 @@ if (args.length > 0) {
   filteredServices = baseConfig.services;
 }
 
-const filteredConfig = { version: baseConfig.version, services: filteredServices };
+const networks = baseConfig.networks;
+const filteredConfig = { version: baseConfig.version, services: filteredServices, networks };
 const filteredYaml = yaml.dump(filteredConfig);
 fs.writeFileSync('./docker-compose.yaml', filteredYaml);
 

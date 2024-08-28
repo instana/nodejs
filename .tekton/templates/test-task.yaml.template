@@ -37,7 +37,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
-              key: "AWS_SECRET_ACCESS_KEY"              
+              key: "AWS_SECRET_ACCESS_KEY"
+        - name: AZURE_REDIS_CLUSTER_PWD
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AZURE_REDIS_CLUSTER_PWD"              
         - name: DB2_CONNECTION_STR
           valueFrom:
             secretKeyRef:
@@ -94,6 +99,7 @@ spec:
         export GCP_PROJECT="k8s-brewery"
         export AZURE_SQL_USERNAME="admin@instana@nodejs-team-db-server"
         export AZURE_SQL_SERVER="nodejs-team-db-server.database.windows.net"
+        export AZURE_REDIS_CLUSTER="team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380"
         export AZURE_SQL_DATABASE="azure-nodejs-test"
         export AZURE_STORAGE_ACCOUNT_NAME="nodejstracerteam"
 

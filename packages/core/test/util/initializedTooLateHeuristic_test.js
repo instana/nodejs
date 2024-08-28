@@ -54,7 +54,7 @@ describe('[UNIT] util.initializedTooLateHeurstic', function () {
   it('hasBeenInitializedTooLate is true', () => {
     instrumentedModules.forEach(moduleName => {
       // eslint-disable-next-line no-console
-      console.log(`for module ${moduleName}`);
+      console.log(`### for module ${moduleName}`);
 
       initializedTooLateHeurstic.reset();
 

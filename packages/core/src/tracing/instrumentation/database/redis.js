@@ -28,7 +28,9 @@ exports.deactivate = function deactivate() {
 exports.init = function init() {
   // v4 commands, "redis-commands" is outdated and no longer compatible with it
   hook.onFileLoad(/\/@redis\/client\/dist\/lib\/cluster\/commands.js/, captureCommands);
+
   hook.onModuleLoad('redis', instrument);
+  hook.onModuleLoad('@redis/client', instrument);
 };
 
 let redisCommandList = [];
@@ -42,6 +44,75 @@ function instrument(redis) {
   // NOTE: v4 no longer exposes the RedisClient. We need to wait till `createClient` get's called
   //       to get the instance of the redis client
   if (!redis.RedisClient) {
+    const wrapMulti = (addressUrl, isCluster) => {
+      return function innerWrapMulti(originalMultiFn) {
+        return function instrumentedMultiInstana() {
+          const result = originalMultiFn.apply(this, arguments);
+          const selfMadeQueue = [];
+
+          // batch
+          const wrapExecAsPipeline = execAsPipelineOriginalFn => {
+            return function instrumentedExecAsPipelineInstana() {
+              return instrumentMultiExec(
+                this,
+                arguments,
+                execAsPipelineOriginalFn,
+                addressUrl,
+                false,
+                false,
+                selfMadeQueue
+              );
+            };
+          };
+
+          // multi
+          const wrapExec = execOriginalFn => {
+            return function instrumentedExecAsPipelineInstana() {
+              return instrumentMultiExec(this, arguments, execOriginalFn, addressUrl, true, false, selfMadeQueue);
+            };
+          };
+
+          const wrapAddCommand = addCommandOriginalFn => {
+            return function instrumentedAddCommandInstana() {
+              if (isCluster) {
+                selfMadeQueue.push(arguments[1]);
+              } else {
+                selfMadeQueue.push(arguments[0]);
+              }
+
+              return addCommandOriginalFn.apply(this, arguments);
+            };
+          };
+
+          // NOTE: addCommand will fill our self made queue to know how many
+          // operations landed in this multi transaction. We are unable to access
+          // redis internal queue anymore.
+          shimmer.wrap(result, 'addCommand', wrapAddCommand);
+          shimmer.wrap(result, 'exec', wrapExec);
+
+          // `execAsPipeline` can be used to trigger batches in 4.x
+          shimmer.wrap(result, 'execAsPipeline', wrapExecAsPipeline);
+
+          return result;
+        };
+      };
+    };
+
+    const createClusterWrap = originalCreateClusterFn => {
+      return function instrumentedCreateClusterInstana(createClusterOpts) {
+        const redisCluster = originalCreateClusterFn.apply(this, arguments);
+        const addressUrl = createClusterOpts.rootNodes.map(node => node.url).join(', ');
+
+        shimAllCommands(redisCluster, addressUrl, false, redisCommandList);
+
+        if (redisCluster.multi) {
+          shimmer.wrap(redisCluster, 'multi', wrapMulti(addressUrl, true));
+        }
+
+        return redisCluster;
+      };
+    };
+
     const createClientWrap = originalCreatedClientFn => {
       return function instrumentedCreateClientInstana(createClientOpts) {
         const redisClient = originalCreatedClientFn.apply(this, arguments);
@@ -68,60 +139,14 @@ function instrument(redis) {
         shimAllCommands(redisClient, addressUrl, false, redisCommandList);
 
         if (redisClient.multi) {
-          const wrapMulti = originalMultiFn => {
-            return function instrumentedMultiInstana() {
-              const result = originalMultiFn.apply(this, arguments);
-              const selfMadeQueue = [];
-
-              // batch
-              const wrapExecAsPipeline = execAsPipelineOriginalFn => {
-                return function instrumentedExecAsPipelineInstana() {
-                  return instrumentMultiExec(
-                    this,
-                    arguments,
-                    execAsPipelineOriginalFn,
-                    addressUrl,
-                    false,
-                    false,
-                    selfMadeQueue
-                  );
-                };
-              };
-
-              // multi
-              const wrapExec = execOriginalFn => {
-                return function instrumentedExecAsPipelineInstana() {
-                  return instrumentMultiExec(this, arguments, execOriginalFn, addressUrl, true, false, selfMadeQueue);
-                };
-              };
-
-              const wrapAddCommand = addCommandOriginalFn => {
-                return function instrumentedAddCommandInstana() {
-                  selfMadeQueue.push(arguments[0]);
-                  return addCommandOriginalFn.apply(this, arguments);
-                };
-              };
-
-              // NOTE: addCommand will fill our self made queue to know how many
-              // operations landed in this multi transaction. We are unable to access
-              // redis internal queue anymore.
-              shimmer.wrap(result, 'addCommand', wrapAddCommand);
-              shimmer.wrap(result, 'exec', wrapExec);
-
-              // `execAsPipeline` can be used to trigger batches in 4.x
-              shimmer.wrap(result, 'execAsPipeline', wrapExecAsPipeline);
-
-              return result;
-            };
-          };
-
-          shimmer.wrap(redisClient, 'multi', wrapMulti);
+          shimmer.wrap(redisClient, 'multi', wrapMulti(addressUrl, false));
         }
 
         return redisClient;
       };
     };
 
+    shimmer.wrap(redis, 'createCluster', createClusterWrap);
     shimmer.wrap(redis, 'createClient', createClientWrap);
   } else {
     const redisClientProto = redis.RedisClient.prototype;
