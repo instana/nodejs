@@ -218,6 +218,30 @@ describe('tracing/cls', () => {
     });
   });
 
+  it('must allow an exit span withoit a parent entry span', () => {
+    cls.ns.run(() => {
+      cls.setTracingLevel('1');
+      process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = '1';
+
+      cls.startSpan('Vito-Corleone', constants.EXIT);
+      expect(cls.skipExitTracing()).to.equal(false);
+      cls.startSpan('Michael-Corleone', constants.EXIT);
+      expect(cls.skipExitTracing()).to.equal(false);
+
+      process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = null;
+    });
+  });
+
+  it('must skip an exit span withoit a parent entry span', () => {
+    cls.ns.run(() => {
+      cls.setTracingLevel('1');
+
+      expect(cls.skipExitTracing()).to.equal(true);
+      cls.startSpan('Antonio-Andolini', constants.EXIT);
+      expect(cls.skipExitTracing()).to.equal(true);
+    });
+  });
+
   it('must store reduced backup of span data on cleanup', () => {
     cls.ns.run(context => {
       expect(context[cls.currentEntrySpanKey]).to.equal(undefined);
