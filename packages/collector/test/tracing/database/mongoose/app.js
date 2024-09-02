@@ -52,6 +52,7 @@ mongoose.model(
 const Person = mongoose.model('Person');
 
 if (process.env.MONGOOSE_VERSION === 'latest' || process.env.MONGOOSE_VERSION === 'v7') {
+  log('TRYING TO CONNECT USING ASYNC AWAIT: ', process.env.MONGOOSE_VERSION);
   (async () => {
     try {
       await mongoose.connect(connectString);
@@ -62,6 +63,7 @@ if (process.env.MONGOOSE_VERSION === 'latest' || process.env.MONGOOSE_VERSION ==
     }
   })();
 } else {
+  log('TRYING TO CONNECT USING CALLBACK FUNCTION');
   mongoose.connect(connectString, err => {
     if (err) {
       log('Failed to connect to Mongodb', err);

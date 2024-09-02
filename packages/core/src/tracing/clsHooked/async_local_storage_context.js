@@ -226,6 +226,8 @@ class Namespace {
 
     const self = this;
 
+    // console.log(arguments, context, 'AAAAAAAAAAAAAAaaaaaa');
+
     return function clsBind() {
       self.enter(context);
       return fn.apply(this, arguments);

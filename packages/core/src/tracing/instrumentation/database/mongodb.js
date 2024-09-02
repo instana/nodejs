@@ -41,12 +41,16 @@ exports.init = function init() {
   hook.onFileLoad(/\/mongodb-core\/lib\/connection\/pool\.js/, instrumentLegacyTopologyPool);
 };
 
+// check
 function instrumentCmapConnection(connection) {
   if (connection.Connection && connection.Connection.prototype) {
     // v4, v5
     if (!connection.Connection.prototype.query) {
+      console.log(' query statement version');
+
       shimmer.wrap(connection.Connection.prototype, 'command', shimCmapCommand);
     } else {
+      console.log(' else statement version: ', connection.Connection.prototype.query);
       // collection.findOne, collection.find et al.
       shimmer.wrap(connection.Connection.prototype, 'query', shimCmapQuery);
       // collection.count et al.
@@ -90,6 +94,7 @@ function shimCmapCommand(original) {
 
     const command = arguments[1] && commands.find(c => arguments[1][c]);
 
+    console.log('command: ', command);
     if (!command) {
       return original.apply(this, arguments);
     }
@@ -159,6 +164,8 @@ function instrumentedCmapQuery(ctx, originalQuery, originalArgs) {
     };
 
     readJsonOrFilter(cmd, span);
+    console.log('222222222222222222222');
+
     return handleCallbackOrPromise(ctx, originalArgs, originalQuery, span);
   });
 }
@@ -198,6 +205,7 @@ function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command) {
       // we do not capture the document for insert commands
       readJsonOrFilter(originalArgs[1], span);
     }
+    console.log('333333333333333333333');
 
     return handleCallbackOrPromise(ctx, originalArgs, originalMethod, span);
   });
@@ -221,6 +229,8 @@ function instrumentedCmapGetMore(ctx, originalMethod, originalArgs) {
       service,
       namespace
     };
+
+    console.log('4444444444444444444444');
 
     return handleCallbackOrPromise(ctx, originalArgs, originalMethod, span);
   });
@@ -334,6 +344,7 @@ function instrumentedLegacyWrite(ctx, originalWrite, originalArgs) {
     };
 
     readJsonOrFilterFromMessage(message, span);
+    console.log('55555555555555555555555');
     return handleCallbackOrPromise(ctx, originalArgs, originalWrite, span);
   });
 }
@@ -438,11 +449,15 @@ function createWrappedCallback(span, originalCallback) {
 
 function handleCallbackOrPromise(ctx, originalArgs, originalFunction, span) {
   const { originalCallback, callbackIndex } = tracingUtil.findCallback(originalArgs);
+
+  console.log('handleCallbackOrPromise: ', callbackIndex, originalCallback);
+
+  // Probably changes needs to be done here
+  // Failing this for callbackIndex = 3 and mongodDB version 6.8 with mongoose 8.6 only
   if (callbackIndex !== -1) {
     originalArgs[callbackIndex] = createWrappedCallback(span, originalCallback);
     return originalFunction.apply(ctx, originalArgs);
   }
-
   const resultPromise = originalFunction.apply(ctx, originalArgs);
 
   if (resultPromise && resultPromise.then) {
