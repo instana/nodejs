@@ -157,19 +157,21 @@ class ProcessControls {
       forkConfig.execArgv = this.execArgv;
     }
 
-    const installationDir = path.dirname(this.appPath);
+    if (this.env.CURRENCY_NAME && this.env.CURRENCY_VERSION) {
+      const installationDir = path.dirname(this.appPath);
 
-    // eslint-disable-next-line no-console
-    console.log(
-      `Installing currency package ${this.env.CURRENCY_NAME}@${this.env.CURRENCY_VERSION} in ${installationDir}`
-    );
+      // eslint-disable-next-line no-console
+      console.log(
+        `Installing currency package ${this.env.CURRENCY_NAME}@${this.env.CURRENCY_VERSION} in ${installationDir}`
+      );
 
-    await execSync(
-      `npm install ${this.env.CURRENCY_NAME}@${this.env.CURRENCY_VERSION} --prefix ${installationDir} --no-audit --no-package-lock --no-save`
-    );
+      await execSync(
+        `npm install ${this.env.CURRENCY_NAME}@${this.env.CURRENCY_VERSION} --prefix ${installationDir} --no-audit --no-package-lock --no-save`
+      );
 
-    // eslint-disable-next-line no-console
-    console.log('Currency package installed');
+      // eslint-disable-next-line no-console
+      console.log('Currency package installed');
+    }
 
     this.process = this.args ? fork(this.appPath, this.args || [], forkConfig) : fork(this.appPath, forkConfig);
 
