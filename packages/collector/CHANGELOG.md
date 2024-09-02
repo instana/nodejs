@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.17.0](https://github.com/instana/nodejs/compare/v3.16.0...v3.17.0) (2024-09-02)
+
+### Features
+
+- added support for tedious v19 ([#1295](https://github.com/instana/nodejs/issues/1295)) ([6f61f9e](https://github.com/instana/nodejs/commit/6f61f9e58cc7458f8060b2821850488e999faf36))
+
 # [3.16.0](https://github.com/instana/nodejs/compare/v3.15.2...v3.16.0) (2024-08-28)
 
 ### Features
