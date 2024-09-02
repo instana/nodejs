@@ -21,12 +21,14 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
 // v5 uses mongodb v3
 // v6 uses mongodb v4
 // v7 uses mongodb v5
-// v8 uses mongodb v6
+// v8 (latest) uses mongodb v6
 
-['latest', 'v7', 'v6', 'v5'].forEach(version => {
+['latest', 'v854', 'v7', 'v6', 'v5'].forEach(version => {
   let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-  if (version === 'latest') {
+  const isLatestMajor = version === 'latest' || version === 'v854';
+
+  if (isLatestMajor) {
     mochaSuiteFn = semver.lt(process.versions.node, '16.0.0') ? describe.skip : mochaSuiteFn;
   } else if (version === 'v7') {
     mochaSuiteFn = semver.lt(process.versions.node, '14.0.0') ? describe.skip : mochaSuiteFn;
@@ -35,7 +37,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
   }
 
   // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
-  if (process.env.RUN_ESM && version !== 'latest') return;
+  if (process.env.RUN_ESM && !isLatestMajor) return;
 
   mochaSuiteFn(`tracing/mongoose@${version}`, function () {
     const timeout = USE_ATLAS ? config.getTestTimeout() * 2 : config.getTestTimeout();

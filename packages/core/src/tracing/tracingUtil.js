@@ -259,11 +259,16 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
   let originalCallback;
   let callbackIndex = -1;
 
+  // CASE: libraries pass a class into a function as argument
+  const isClass = (/** @type {any} */ fn) => {
+    return typeof fn === 'function' && /^\s*class\s+/.test(Function.prototype.toString.call(fn));
+  };
+
   // If there is any function that takes two or more functions as an argument,
   // the convention would be to pass in the callback as the last argument, thus searching
   // from the end backwards might be marginally safer.
   for (let i = originalArgs.length - 1; i >= 0; i--) {
-    if (typeof originalArgs[i] === 'function') {
+    if (typeof originalArgs[i] === 'function' && !isClass(originalArgs[i])) {
       originalCallback = originalArgs[i];
       callbackIndex = i;
       break;

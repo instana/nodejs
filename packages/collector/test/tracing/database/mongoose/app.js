@@ -32,6 +32,8 @@ const ATLAS_USER = process.env.ATLAS_USER || '';
 const ATLAS_PASSWORD = process.env.ATLAS_PASSWORD || '';
 const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
+const isLatestMajor = process.env.MONGOOSE_VERSION === 'latest' || process.env.MONGOOSE_VERSION === 'v854';
+
 let connectString;
 if (USE_ATLAS) {
   connectString = `mongodb+srv://${ATLAS_USER}:${ATLAS_PASSWORD}@${ATLAS_CLUSTER}/mongoose?retryWrites=true&w=majority`;
@@ -51,7 +53,7 @@ mongoose.model(
 );
 const Person = mongoose.model('Person');
 
-if (process.env.MONGOOSE_VERSION === 'latest' || process.env.MONGOOSE_VERSION === 'v7') {
+if (isLatestMajor || process.env.MONGOOSE_VERSION === 'v7') {
   (async () => {
     try {
       await mongoose.connect(connectString);
