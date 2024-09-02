@@ -153,7 +153,7 @@ mochaSuiteFn(`tracing/${CURRENCY_NAME}`, function () {
             );
           }));
 
-        it.only('must write to ES and retrieve the same document, tracing everything', () => {
+        it('must write to ES and retrieve the same document, tracing everything', () => {
           const titleA = `a${Date.now()}`;
 
           return index({
