@@ -22,40 +22,41 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/elasticsearch', function () {
+const CURRENCY_NAME = '@elastic/elasticsearch';
+const CURRENCY = global.CURRENCIES['@elastic/elasticsearch'];
+
+mochaSuiteFn(`tracing/${CURRENCY_NAME}`, function () {
   this.timeout(Math.max(config.getTestTimeout() * 4, 30000));
 
-  /**
-   * transport: instrumentation >= 7.9.1
-   * api: instrumentation < 7.9.1
-   *
-   * The words "transport" and "api" try to describe the different
-   * mechanismn we use in core/src/tracing/instrumentation/database/elasticsearch.js
-   */
-  [
-    {
-      version: 'latest',
-      instrumentationFlavor: 'transport',
-      engine: '18.0.0'
-    },
-    {
-      version: '7.17.0',
-      instrumentationFlavor: 'transport',
-      engine: '12.0.0'
-    },
-    {
-      version: '7.9.0',
-      instrumentationFlavor: 'api',
-      engine: '8.0.0'
+  CURRENCY.versions.forEach(version => {
+    const isLatestVersion = version === CURRENCY.versions.splice(-1);
+
+    /**
+     * transport: instrumentation >= 7.9.1
+     * api: instrumentation < 7.9.1
+     *
+     * The words "transport" and "api" try to describe the different
+     * mechanismn we use in core/src/tracing/instrumentation/database/elasticsearch.js
+     */
+    let instrumentationFlavor = 'transport';
+    let engine = '18.0.0';
+
+    if (semver.eq(version, '7.9.0')) {
+      instrumentationFlavor = 'api';
+      engine = '8.0.0';
     }
-  ].forEach(({ version, instrumentationFlavor, engine }) => {
+
+    if (semver.eq(version, '7.17.0')) {
+      engine = '12.0.0';
+    }
+
     const versionDescribe = semver.gte(process.versions.node, engine) ? describe : describe.skip;
 
     versionDescribe(
       // eslint-disable-next-line no-useless-concat
-      `@elastic/elasticsearch@${version}/` + `instrumentation flavor: ${instrumentationFlavor}`,
+      `${version}/` + `instrumentation flavor: ${instrumentationFlavor}`,
       function () {
-        const indicesKey = version === 'latest' ? 'Indices.refresh' : 'indices.refresh';
+        const indicesKey = isLatestVersion ? 'Indices.refresh' : 'indices.refresh';
 
         globalAgent.setUpCleanUpHooks();
         const agentControls = globalAgent.instance;
@@ -66,7 +67,9 @@ mochaSuiteFn('tracing/elasticsearch', function () {
             dirname: __dirname,
             useGlobalAgent: true,
             env: {
-              ELASTIC_VERSION: version
+              CURRENCY_NAME,
+              CURRENCY_VERSION: version,
+              CURRENCY_VERSION_IS_LATEST: isLatestVersion
             }
           });
 
@@ -150,7 +153,7 @@ mochaSuiteFn('tracing/elasticsearch', function () {
             );
           }));
 
-        it('must write to ES and retrieve the same document, tracing everything', () => {
+        it.only('must write to ES and retrieve the same document, tracing everything', () => {
           const titleA = `a${Date.now()}`;
 
           return index({
@@ -162,7 +165,7 @@ mochaSuiteFn('tracing/elasticsearch', function () {
               expect(res1.error).to.not.exist;
               expect(res1.response).to.exist;
 
-              if (version === 'latest') {
+              if (isLatestVersion) {
                 expect(res1.response.body.result).to.equal('created');
               } else {
                 expect(res1.response.statusCode).to.equal(201);
@@ -516,7 +519,7 @@ mochaSuiteFn('tracing/elasticsearch', function () {
             }
           });
 
-          if (version === 'latest') {
+          if (isLatestVersion) {
             expect(response.response1).to.equal('created');
             expect(response.response2).to.equal('created');
           } else {

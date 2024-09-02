@@ -122,6 +122,7 @@
   {
     "name": "@elastic/elasticsearch",
     "policy": "45-days",
+    "versions": ["7.9.0", "7.17.0", "8.15.0"],
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,

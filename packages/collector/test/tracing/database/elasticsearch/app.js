@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('./mockVersion');
+// require('./mockVersion');
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 require('../../../..')();
@@ -26,8 +26,8 @@ const { Client } = require('@elastic/elasticsearch');
 const port = require('../../../test_util/app-port')();
 
 const app = express();
-const logPrefix = `Elasticsearch ${process.env.ELASTIC_VERSION} (${process.pid}):\t`;
-const isLatest = process.env.ELASTIC_VERSION === 'latest';
+const logPrefix = `Elasticsearch ${process.env.CURRENCY_VERSION} (${process.pid}):\t`;
+const isLatest = process.env.CURRENCY_VERSION_IS_LATEST === 'true';
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

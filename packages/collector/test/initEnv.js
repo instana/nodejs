@@ -47,3 +47,12 @@ Object.keys(DEFAULT_ENV_VALUES).forEach(key => {
     process.env[key] = DEFAULT_ENV_VALUES[key];
   }
 });
+
+const currencies = require('../../../currencies.json');
+const currenciesObj = {};
+
+currencies.forEach(currency => {
+  currenciesObj[currency.name] = currency;
+});
+
+global.CURRENCIES = currenciesObj;
