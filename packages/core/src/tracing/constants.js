@@ -17,9 +17,10 @@ exports.traceLevelHeaderNameLowerCase = exports.traceLevelHeaderName.toLowerCase
 exports.syntheticHeaderName = 'X-INSTANA-SYNTHETIC';
 exports.syntheticHeaderNameLowerCase = exports.syntheticHeaderName.toLowerCase();
 
-// New kafka trace correlation (string values). Available as opt-in since 2021-10, and send out together with the legacy
-// binary headers by default starting in 2022-10. We will switch over to these headers completely (omitting the legacy
-// headers approximately in 2023-10.
+// New Kafka trace correlation (string values) was introduced as an opt-in feature in 2021-10. Initially, it was sent
+// out along with the legacy binary headers by default starting in 2022-10. However, as of 2024-10, only string headers
+// are supported, and the legacy binary headers are no longer supported.
+
 exports.kafkaTraceIdHeaderName = 'X_INSTANA_T';
 exports.kafkaSpanIdHeaderName = 'X_INSTANA_S';
 exports.kafkaTraceLevelHeaderName = 'X_INSTANA_L_S';
