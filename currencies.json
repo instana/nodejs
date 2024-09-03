@@ -510,7 +510,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": true,
+    "ignoreUpdates": false,
     "note": "",
     "deprecated": false,
     "core": false
