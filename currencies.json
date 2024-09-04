@@ -886,5 +886,17 @@
     "note": "",
     "deprecated": true,
     "core": false
+  },
+  {
+    "name": "async",
+    "policy": "45-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "deprecated": false,
+    "core": false
   }
 ]
