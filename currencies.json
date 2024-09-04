@@ -30,7 +30,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": true,
+    "ignoreUpdates": false,
     "note": "",
     "deprecated": true,
     "core": false
@@ -762,7 +762,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": true,
+    "ignoreUpdates": false,
     "note": "",
     "deprecated": false,
     "core": false
@@ -846,7 +846,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": true,
+    "ignoreUpdates": false,
     "note": "",
     "deprecated": false,
     "core": false
@@ -870,7 +870,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": true,
+    "ignoreUpdates": false,
     "note": "",
     "deprecated": true,
     "core": false
@@ -882,7 +882,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": true,
+    "ignoreUpdates": false,
     "note": "",
     "deprecated": true,
     "core": false
