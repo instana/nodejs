@@ -199,6 +199,17 @@ app.post('/async/create-intermediate', async function createIntermediateAsync(re
   afterCreateIntermediate(instana.sdk.async, file, encoding, res);
 });
 
+app.post('/async/parallel-intermediates', async (req, res) => {
+  const execute = async name => {
+    const s = await instana.sdk.async.startIntermediateSpan(name);
+    await delay(200);
+    await instana.sdk.async.completeIntermediateSpan(null, null, s);
+  };
+
+  await Promise.all([execute('eins'), execute('zwei')]);
+  res.sendStatus(200);
+});
+
 function afterCreateIntermediate(instanaSdk, file, encoding, res) {
   fs.readFile(file, encoding, (err, content) => {
     if (err) {
