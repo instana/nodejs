@@ -19,8 +19,12 @@ const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
 const { tracingHeaders, constants, spanBuffer } = tracing;
 
+const lambdaConfig = {
+  tracing: { forceTransmissionStartingAt: 10, transmissionDelay: 100, initialTransmissionDelay: 100 }
+};
+
 const logger = log.init();
-let config = normalizeConfig({}, logger);
+let config = normalizeConfig(lambdaConfig, logger);
 
 let coldStart = true;
 
