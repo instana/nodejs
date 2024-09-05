@@ -28,6 +28,8 @@ const w3cTraceContextKey = 'com.instana.w3ctc';
 let serviceName;
 /** @type {import('../../../collector/src/pidStore')} */
 let processIdentityProvider = null;
+/** @type {Boolean} */
+let allowRootExitSpan;
 
 /*
  * Access the Instana namespace in continuation local storage.
@@ -48,6 +50,7 @@ function init(config, _processIdentityProvider) {
     serviceName = config.serviceName;
   }
   processIdentityProvider = _processIdentityProvider;
+  allowRootExitSpan = process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN === '1' || config?.tracing?.allowRootExitSpan;
 }
 
 /**
@@ -558,7 +561,8 @@ function skipExitTracing(options) {
   const isExitSpanResult = isExitSpan(parentSpan);
   // CASE: check for INSTANA_ALLOW_ROOT_EXIT_SPAN
   // TODO: Add check for variable from config: allowRootExitSpan
-  if (process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN === '1' && !suppressed) {
+
+  if (allowRootExitSpan && !suppressed) {
     if (opts.extendedResponse) return { skip: false, suppressed, isExitSpan: isExitSpanResult };
     else return false;
   } else {
