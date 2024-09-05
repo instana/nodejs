@@ -43,6 +43,9 @@ exports.activate = function activate(extraConfig) {
       headerFormat = extraConfig.tracing.kafka.headerFormat;
     }
   }
+  if (headerFormat) {
+    logWarningForKafkaHeaderFormat();
+  }
   isActive = true;
 };
 
@@ -531,4 +534,12 @@ function removeInstanaHeadersFromMessage(message) {
       delete message.headers[name];
     });
   }
+}
+
+// Note: This function can be removed as soon as we finish the Kafka header migration phase2.
+function logWarningForKafkaHeaderFormat() {
+  logger.warn(
+    '[Deprecation Warning] The configuration option for specifying the Kafka header format will be removed in the ' +
+      "next major release. The default header format will be 'string'."
+  );
 }
