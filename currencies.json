@@ -325,7 +325,7 @@
   },
   {
     "name": "timers",
-    "policy": "45-days",
+    "policy": "0-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
