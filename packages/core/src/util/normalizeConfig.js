@@ -17,6 +17,7 @@ const configNormalizers = require('./configNormalizers');
  * @property {boolean} [automaticTracingEnabled]
  * @property {boolean} [activateImmediately]
  * @property {number} [forceTransmissionStartingAt]
+ * @property {number} [initialTransmissionDelay]
  * @property {number} [maxBufferedSpans]
  * @property {number} [transmissionDelay]
  * @property {number} [stackTraceLength]
@@ -115,6 +116,7 @@ const defaults = {
     forceTransmissionStartingAt: 500,
     maxBufferedSpans: 1000,
     transmissionDelay: 1000,
+    initialTransmissionDelay: 1000,
     http: {
       extraHttpHeadersToCapture: []
     },
@@ -163,8 +165,6 @@ module.exports = function normalizeConfig(config, _logger) {
   if (config == null) {
     config = {};
   }
-
-  config.logger = logger;
 
   normalizeServiceName(config);
   normalizePackageJsonPath(config);
@@ -385,6 +385,13 @@ function normalizeTracingTransmission(config) {
     defaults.tracing.forceTransmissionStartingAt,
     'config.tracing.forceTransmissionStartingAt',
     'INSTANA_FORCE_TRANSMISSION_STARTING_AT'
+  );
+
+  config.tracing.initialTransmissionDelay = normalizeSingleValue(
+    config.tracing.initialTransmissionDelay,
+    defaults.tracing.initialTransmissionDelay,
+    'config.tracing.initialTransmissionDelay',
+    'INSTANA_TRACING_INITIAL_TRANSMISSION_DELAY'
   );
 }
 
