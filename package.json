@@ -121,7 +121,7 @@
     "amqplib": "^0.10.4",
     "amqplib-v0": "npm:amqplib@^0.8.0",
     "apollo-server-express": "^3.13.0",
-    "async": "^3.2.2",
+    "async": "^3.2.6",
     "aws-sdk": "^2.1689.0",
     "basic-auth-parser": "^0.0.2",
     "bluebird": "^3.7.2",
