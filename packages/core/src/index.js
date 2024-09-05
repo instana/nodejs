@@ -68,7 +68,7 @@ function preInit() {
 function init(config, downstreamConnection, processIdentityProvider) {
   log.init(/** @type {log.LoggerConfig} */ (config));
   util.hasThePackageBeenInitializedTooLate();
-  config = normalizeConfig(config);
+  config = normalizeConfig(config, processIdentityProvider);
   secrets.init(/** @type {secrets.SecretOption} */ (config));
   util.requireHook.init(config);
   tracing.init(config, downstreamConnection, processIdentityProvider);
