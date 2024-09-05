@@ -8,7 +8,7 @@
 'use strict';
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
-
+const deepMerge = require('../util/deepMerge');
 const constants = require('../tracing/constants');
 
 /**
@@ -18,6 +18,7 @@ const constants = require('../tracing/constants');
  * @property {boolean} [automaticTracingEnabled]
  * @property {boolean} [activateImmediately]
  * @property {number} [forceTransmissionStartingAt]
+ * @property {number} [initialTransmissionDelay]
  * @property {number} [maxBufferedSpans]
  * @property {number} [transmissionDelay]
  * @property {number} [stackTraceLength]
@@ -91,7 +92,7 @@ logger = require('../logger').getLogger('configuration', newLogger => {
 });
 
 /** @type {InstanaConfig} */
-const defaults = {
+const defaultsBase = {
   serviceName: null,
   packageJsonPath: null,
 
@@ -108,6 +109,7 @@ const defaults = {
     forceTransmissionStartingAt: 500,
     maxBufferedSpans: 1000,
     transmissionDelay: 1000,
+    initialTransmissionDelay: 1000,
     http: {
       extraHttpHeadersToCapture: []
     },
@@ -126,8 +128,17 @@ const defaults = {
   }
 };
 
-const validKafkaHeaderFormats = ['binary', 'string', 'both'];
+/** @type {Record<string, InstanaConfig>} */
+const identityProviderDefaults = {
+  'aws-lambda': {
+    tracing: { forceTransmissionStartingAt: 10, transmissionDelay: 100, initialTransmissionDelay: 100 }
+  }
+};
 
+/** @type InstanaConfig */
+let defaults = {};
+
+const validKafkaHeaderFormats = ['binary', 'string', 'both'];
 const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
 
 /**
@@ -136,11 +147,18 @@ const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-igno
 
 /**
  * @param {InstanaConfig} [config]
+ * @param {import('../../../collector/src/pidStore')} [identityProvider]
  * @returns {InstanaConfig}
  */
-module.exports = function normalizeConfig(config) {
+module.exports = function normalizeConfig(config, identityProvider) {
   if (config == null) {
     config = {};
+  }
+
+  if (identityProvider && identityProvider.getName && identityProviderDefaults[identityProvider.getName()]) {
+    defaults = deepMerge(defaultsBase, identityProviderDefaults[identityProvider.getName()]);
+  } else {
+    defaults = defaultsBase;
   }
 
   normalizeServiceName(config);
@@ -337,6 +355,13 @@ function normalizeTracingTransmission(config) {
     defaults.tracing.forceTransmissionStartingAt,
     'config.tracing.forceTransmissionStartingAt',
     'INSTANA_FORCE_TRANSMISSION_STARTING_AT'
+  );
+
+  config.tracing.initialTransmissionDelay = normalizeSingleValue(
+    config.tracing.initialTransmissionDelay,
+    defaults.tracing.initialTransmissionDelay,
+    'config.tracing.initialTransmissionDelay',
+    'INSTANA_TRACING_INITIAL_TRANSMISSION_DELAY'
   );
 }
 

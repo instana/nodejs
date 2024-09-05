@@ -36,6 +36,10 @@ Object.defineProperty(exports, 'pid', {
   }
 });
 
+exports.getName = function getName() {
+  return 'default-identity';
+};
+
 exports.getEntityId = function getEntityId() {
   return internalPidStore.pid;
 };
