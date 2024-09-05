@@ -31,6 +31,7 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_KAFKA_TRACE_CORRELATION;
     delete process.env.INSTANA_KAFKA_HEADER_FORMAT;
     delete process.env.INSTANA_PACKAGE_JSON_PATH;
+    delete process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN;
   }
 
   it('should apply all defaults', () => {
@@ -501,6 +502,32 @@ describe('util.normalizeConfig', () => {
     expect(config.packageJsonPath).to.equal('/my/path');
   });
 
+  it('should disable allow root exit span if config is set', () => {
+    const config = normalizeConfig({
+      tracing: { allowRootExitSpan: false }
+    });
+    expect(config.tracing.allowRootExitSpan).to.equal(false);
+  });
+
+  it('should enable allow root exit span if config is set', () => {
+    const config = normalizeConfig({
+      tracing: { allowRootExitSpan: true }
+    });
+    expect(config.tracing.allowRootExitSpan).to.equal(true);
+  });
+
+  it('should enable allow root exit span if INSTANA_ALLOW_ROOT_EXIT_SPAN is set', () => {
+    process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = '0';
+    const config = normalizeConfig();
+    expect(config.tracing.allowRootExitSpan).to.equal(false);
+  });
+
+  it('should enable opentelemetry if INSTANA_ALLOW_ROOT_EXIT_SPAN is set', () => {
+    process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = '1';
+    const config = normalizeConfig();
+    expect(config.tracing.allowRootExitSpan).to.equal(true);
+  });
+
   function checkDefaults(config) {
     expect(config).to.be.an('object');
 
@@ -530,6 +557,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.kafka.traceCorrelation).to.be.true;
     expect(config.tracing.kafka.headerFormat).to.equal('both');
     expect(config.tracing.useOpentelemetry).to.equal(true);
+    expect(config.tracing.allowRootExitSpan).to.equal(false);
 
     expect(config.secrets).to.be.an('object');
     expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
