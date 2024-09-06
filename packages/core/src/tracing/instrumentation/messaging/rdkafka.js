@@ -44,9 +44,7 @@ exports.activate = function activate(extraConfig) {
     }
     extraConfigHeader = extraConfig.tracing.kafka.headerFormat;
   }
-  if (extraConfigHeader || configHeader) {
-    logWarningForKafkaHeaderFormat(extraConfigHeader || configHeader);
-  }
+  logWarningForKafkaHeaderFormat(extraConfigHeader || configHeader);
   isActive = true;
 };
 
@@ -55,11 +53,12 @@ exports.deactivate = function deactivate() {
 };
 
 // Note: This function can be removed as soon as we finish the Kafka header migration phase 2 and remove the ability to
-// configure the header format.
+// configure the header format.  Might happen in major release v4.
 function logWarningForKafkaHeaderFormat(headerFormat) {
   logger.warn(
     '[Deprecation Warning] The configuration option for specifying the Kafka header format will be removed in the ' +
-      "next major release. The default header format will be 'string'."
+      'next major release as the format will no longer be configurable and Instana tracers will only send string ' +
+      'headers. More details see: https://ibm.biz/kafka-trace-correlation-headers.'
   );
   // node-rdkafka's handling of non-string header values is broken, see
   // https://github.com/Blizzard/node-rdkafka/pull/968.

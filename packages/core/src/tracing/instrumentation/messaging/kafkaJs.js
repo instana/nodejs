@@ -537,9 +537,11 @@ function removeInstanaHeadersFromMessage(message) {
 }
 
 // Note: This function can be removed as soon as we finish the Kafka header migration phase2.
+// Might happen in major release v4.
 function logWarningForKafkaHeaderFormat() {
   logger.warn(
     '[Deprecation Warning] The configuration option for specifying the Kafka header format will be removed in the ' +
-      "next major release. The default header format will be 'string'."
+      'next major release as the format will no longer be configurable and Instana tracers will only send string ' +
+      'headers. More details see: https://ibm.biz/kafka-trace-correlation-headers.'
   );
 }
