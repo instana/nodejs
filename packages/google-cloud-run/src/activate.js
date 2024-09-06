@@ -17,10 +17,11 @@ const { normalizeConfig } = coreUtil;
 let logger = consoleLogger;
 
 const config = normalizeConfig({});
+config.logger = logger;
 
 function init() {
   if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL) {
-    logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL);
+    logger.setLevel(process.env.INSTANA_DEBUG === 'true' ? 'debug' : process.env.INSTANA_LOG_LEVEL);
   }
 
   if (!process.env.K_REVISION) {
