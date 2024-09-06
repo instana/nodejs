@@ -181,7 +181,7 @@ exports.preInit = function preInit(preliminaryConfig) {
  * @param {CollectorPIDStore} _processIdentityProvider
  */
 exports.init = function init(_config, downstreamConnection, _processIdentityProvider) {
-  if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL === 'debug') {
+  if (process.env.INSTANA_DEBUG === 'true' || process.env.INSTANA_LOG_LEVEL === 'debug') {
     const preloadFlags = getPreloadFlags();
 
     // eslint-disable-next-line no-console

@@ -242,8 +242,9 @@ function init(event, arnInfo, _config) {
     config.logger = logger;
   }
 
-  if (process.env.INSTANA_DEBUG || config.level || process.env.INSTANA_LOG_LEVEL) {
-    logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : config.level || process.env.INSTANA_LOG_LEVEL);
+  const logLevel = process.env.INSTANA_DEBUG === 'true' ? 'debug' : config.level || process.env.INSTANA_LOG_LEVEL;
+  if (logLevel) {
+    logger.setLevel(logLevel);
   }
 
   ssm.init({ logger });
