@@ -18,8 +18,10 @@ const { normalizeConfig } = coreUtil;
 let logger = consoleLogger;
 
 const config = normalizeConfig({});
+config.logger = logger;
 
 function init() {
+  // NOTE: We accept for `process.env.INSTANA_DEBUG` any string value - does not have to be "true".
   if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL) {
     logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL);
   }

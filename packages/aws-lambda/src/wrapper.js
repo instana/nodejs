@@ -242,6 +242,7 @@ function init(event, arnInfo, _config) {
     config.logger = logger;
   }
 
+  // NOTE: We accept for `process.env.INSTANA_DEBUG` any string value - does not have to be "true".
   if (process.env.INSTANA_DEBUG || config.level || process.env.INSTANA_LOG_LEVEL) {
     logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : config.level || process.env.INSTANA_LOG_LEVEL);
   }

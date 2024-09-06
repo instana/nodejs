@@ -15,6 +15,7 @@ const { normalizeConfig } = coreUtil;
 let logger = consoleLogger;
 
 const config = normalizeConfig({});
+config.logger = logger;
 
 function init() {
   if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL) {
