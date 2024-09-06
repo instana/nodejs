@@ -14,7 +14,12 @@ const { normalizeConfig } = coreUtil;
 
 let logger = consoleLogger;
 
+// TODO: Why do we normalize the config from core here?
 const config = normalizeConfig({});
+
+// NOTE: We have to pass the custom logger via the config object from the packages
+//       into the core module. This will respect the log level from the customer
+//       across the application.
 config.logger = logger;
 
 function init() {
