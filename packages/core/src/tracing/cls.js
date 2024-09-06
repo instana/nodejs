@@ -50,7 +50,7 @@ function init(config, _processIdentityProvider) {
     serviceName = config.serviceName;
   }
   processIdentityProvider = _processIdentityProvider;
-  allowRootExitSpan = process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN === '1' || config?.tracing?.allowRootExitSpan;
+  allowRootExitSpan = config?.tracing?.allowRootExitSpan;
 }
 
 /**
@@ -560,6 +560,7 @@ function skipExitTracing(options) {
   const parentSpan = getCurrentSpan();
   const suppressed = tracingSuppressed();
   const isExitSpanResult = isExitSpan(parentSpan);
+  const parentOrReduced = parentSpan || getReducedSpan();
 
   // CASE: first ask for suppressed, because if we skip the entry span, we won't have a parentSpan
   //       on the exit span, which would create noisy log messages.
@@ -571,6 +572,11 @@ function skipExitTracing(options) {
   if (allowRootExitSpan) {
     if (opts.extendedResponse) return { skip: false, suppressed, isExitSpan: isExitSpanResult };
     else return false;
+  }
+
+  if (!allowRootExitSpan && (!parentOrReduced || isExitSpan(parentOrReduced))) {
+    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
+    else return true;
   }
 
   if (!opts.skipParentSpanCheck && (!parentSpan || isExitSpanResult)) {

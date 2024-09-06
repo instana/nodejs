@@ -87,17 +87,13 @@ function instrument() {
       skipIsTracing: true
     });
 
-    // If there is no active entry span, we fall back to the reduced span of the most recent entry span. See comment in
-    // packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
-    const parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
-
     const originalThis = this;
     const originalArgs = new Array(arguments.length);
     for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
 
-    if (skipTracingResult.skip || !parentSpan || constants.isExitSpan(parentSpan)) {
+    if (skipTracingResult.skip) {
       if (skipTracingResult.suppressed) {
         injectSuppressionHeader(originalArgs, w3cTraceContext);
       }
