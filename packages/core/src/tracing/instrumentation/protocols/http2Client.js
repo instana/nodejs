@@ -66,11 +66,7 @@ function instrumentClientHttp2Session(clientHttp2Session) {
     let w3cTraceContext = cls.getW3cTraceContext();
     const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true, skipParentSpanCheck: true });
 
-    // If there is no active entry span, we fall back to the reduced span of the most recent entry span. See comment in
-    // packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
-    const parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
-
-    if (skipTracingResult.skip || !parentSpan || constants.isExitSpan(parentSpan)) {
+    if (skipTracingResult.skip) {
       if (skipTracingResult.suppressed) {
         addTraceLevelHeader(headers, '0', w3cTraceContext);
       }

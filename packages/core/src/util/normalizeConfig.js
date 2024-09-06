@@ -254,7 +254,7 @@ function normalizeAllowExitRootSpan(config) {
   }
 
   config.tracing.allowRootExitSpan =
-    process.env['INSTANA_ALLOW_ROOT_EXIT_SPAN'] === '1' || defaults.tracing.allowRootExitSpan;
+    process.env['INSTANA_ALLOW_ROOT_EXIT_SPAN']?.toLowerCase() === 'true' || defaults.tracing.allowRootExitSpan;
   return;
 }
 

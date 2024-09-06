@@ -446,28 +446,28 @@ describe('util.normalizeConfig', () => {
     expect(config.packageJsonPath).to.equal('/my/path');
   });
 
-  it('should disable allow root exit span if config is set', () => {
+  it('should disable allow root exit span if config is set to false', () => {
     const config = normalizeConfig({
       tracing: { allowRootExitSpan: false }
     });
     expect(config.tracing.allowRootExitSpan).to.equal(false);
   });
 
-  it('should enable allow root exit span if config is set', () => {
+  it('should enable allow root exit span if config is set to true', () => {
     const config = normalizeConfig({
       tracing: { allowRootExitSpan: true }
     });
     expect(config.tracing.allowRootExitSpan).to.equal(true);
   });
 
-  it('should enable allow root exit span if INSTANA_ALLOW_ROOT_EXIT_SPAN is set', () => {
-    process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = '0';
+  it('should disable allow root exit span if INSTANA_ALLOW_ROOT_EXIT_SPAN is not set', () => {
+    process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = false;
     const config = normalizeConfig();
     expect(config.tracing.allowRootExitSpan).to.equal(false);
   });
 
-  it('should enable opentelemetry if INSTANA_ALLOW_ROOT_EXIT_SPAN is set', () => {
-    process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = '1';
+  it('should enable allow root exit span if INSTANA_ALLOW_ROOT_EXIT_SPAN is set', () => {
+    process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = true;
     const config = normalizeConfig();
     expect(config.tracing.allowRootExitSpan).to.equal(true);
   });

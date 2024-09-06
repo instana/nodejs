@@ -186,12 +186,7 @@ function instrument(coreModule, forceHttps) {
     // packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
     const parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
 
-    if (
-      skipTracingResult.skip ||
-      !parentSpan ||
-      constants.isExitSpan(parentSpan) ||
-      shouldBeBypassed(parentSpan, options)
-    ) {
+    if (skipTracingResult.skip || shouldBeBypassed(parentSpan, options)) {
       let traceLevelHeaderHasBeenAdded = false;
       if (skipTracingResult.suppressed) {
         traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0', w3cTraceContext);
