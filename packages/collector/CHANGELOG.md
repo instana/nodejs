@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.18.0](https://github.com/instana/nodejs/compare/v3.17.1...v3.18.0) (2024-09-06)
+
+### Features
+
+- added support for ioredis cluster ([#1292](https://github.com/instana/nodejs/issues/1292)) ([0318eac](https://github.com/instana/nodejs/commit/0318eace6c8e682bf49a10f819d49cf03942a2f1))
+
 ## [3.17.1](https://github.com/instana/nodejs/compare/v3.17.0...v3.17.1) (2024-09-03)
 
 ### Bug Fixes

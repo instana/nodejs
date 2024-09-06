@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.18.0](https://github.com/instana/nodejs/compare/v3.17.1...v3.18.0) (2024-09-06)
+
+### Bug Fixes
+
+- **serverless:** resolved printing debug logs by default ([#1317](https://github.com/instana/nodejs/issues/1317)) ([d5dfbd7](https://github.com/instana/nodejs/commit/d5dfbd74b54fdeb4d6535f53c32484402855961a)), closes [#1316](https://github.com/instana/nodejs/issues/1316)
+
 ## [3.17.1](https://github.com/instana/nodejs/compare/v3.17.0...v3.17.1) (2024-09-03)
 
 **Note:** Version bump only for package @instana/serverless-collector
