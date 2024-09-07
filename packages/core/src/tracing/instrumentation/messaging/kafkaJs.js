@@ -542,6 +542,6 @@ function logWarningForKafkaHeaderFormat() {
   logger.warn(
     '[Deprecation Warning] The configuration option for specifying the Kafka header format will be removed in the ' +
       'next major release as the format will no longer be configurable and Instana tracers will only send string ' +
-      'headers. More details see: https://ibm.biz/kafka-trace-correlation-headers.'
+      'headers. More details see: https://ibm.biz/kafka-trace-correlation-header.'
   );
 }
