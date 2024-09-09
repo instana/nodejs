@@ -166,8 +166,7 @@ describe('unannounced state', () => {
       prepareAnnounceResponse({
         tracing: {
           kafka: {
-            'trace-correlation': false,
-            'header-format': 'string'
+            'trace-correlation': false
           }
         }
       });

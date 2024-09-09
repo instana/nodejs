@@ -49,7 +49,6 @@ const maxRetryDelay = 60 * 1000; // one minute
 /**
  * @typedef {Object} KafkaTracingConfig
  * @property {boolean} [trace-correlation]
- * @property {string} [header-format]
  */
 
 module.exports = {

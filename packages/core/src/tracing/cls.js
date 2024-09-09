@@ -283,8 +283,7 @@ function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext) {
 
   // If the client code has specified a trace ID/parent ID, use the provided IDs.
   if (traceId) {
-    // The incoming trace ID/span ID from an upstream tracer could be shorter than the standard length. Some of our code
-    // (in particular, the binary Kafka trace correlation header X_INSTANA_C) assumes the standard length. We normalize
+    // The incoming trace ID/span ID from an upstream tracer could be shorter than the standard length. We normalize
     // both IDs here by left-padding with 0 characters.
 
     // Maintenance note (128-bit-trace-ids): When we switch to 128 bit trace IDs, we need to left-pad the trace ID to 32
