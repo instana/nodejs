@@ -62,6 +62,45 @@ mochaSuiteFn('tracing/sdk', function () {
 
     ['callback', 'promise', 'async'].forEach(function (apiType) {
       registerSuite.bind(this)(apiType);
+
+      if (apiType === 'async') {
+        it(`${apiType} parallel intermediates`, async () => {
+          await controls.sendRequest({
+            method: 'POST',
+            path: `/${apiType}/parallel-intermediates`
+          });
+
+          await delay(waitForSpans);
+
+          const spans = await agentControls.getSpans();
+
+          // 1 x entry, 2 x intermediate
+          expect(spans.length).to.equal(3);
+
+          const entrySpan = expectHttpEntry({
+            spans,
+            path: `/${apiType}/parallel-intermediates`
+          });
+
+          const intermediate2 = expectIntermediate({
+            spans,
+            parentEntry: entrySpan,
+            name: 'eins',
+            pid: controls.getPid(),
+            apiType,
+            checkStack: false
+          });
+
+          expectIntermediate({
+            spans,
+            parentEntry: intermediate2,
+            name: 'zwei',
+            pid: controls.getPid(),
+            apiType,
+            checkStack: false
+          });
+        });
+      }
     });
 
     function registerSuite(apiType) {
@@ -759,7 +798,7 @@ mochaSuiteFn('tracing/sdk', function () {
     ]);
   }
 
-  function expectIntermediate({ spans, parentEntry, name, pid, apiType }) {
+  function expectIntermediate({ spans, parentEntry, name, pid, apiType, checkStack = true }) {
     return expectExactlyOneMatching(spans, [
       span => expect(span.t).to.equal(parentEntry.t),
       span => expect(span.p).to.equal(parentEntry.s),
@@ -768,8 +807,11 @@ mochaSuiteFn('tracing/sdk', function () {
       span => expect(span.f.e).to.equal(String(pid)),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
       span => expect(span.ec).to.equal(0),
-      span => expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/),
-      span => expect(span.stack[0].m).to.match(apiType === 'async' ? /^nestIntermediatesAsync$/ : /createIntermediate/),
+      span => (checkStack ? expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/) : true),
+      span =>
+        checkStack
+          ? expect(span.stack[0].m).to.match(apiType === 'async' ? /^nestIntermediatesAsync$/ : /createIntermediate/)
+          : true,
       span => expect(span.data.sdk).to.exist,
       span => expect(span.data.sdk.name).to.equal(name),
       span => expect(span.data.sdk.type).to.equal(constants.SDK.INTERMEDIATE),
