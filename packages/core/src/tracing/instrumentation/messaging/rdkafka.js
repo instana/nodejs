@@ -52,9 +52,14 @@ exports.deactivate = function deactivate() {
   isActive = false;
 };
 
-// Note: This function can be removed as soon as we finish the Kafka header migration and remove the ability to
-// configure the header format (at that point, we will only be using string headers).
+// Note: This function can be removed as soon as we finish the Kafka header migration phase 2 and remove the ability to
+// configure the header format.  Might happen in major release v4.
 function logWarningForKafkaHeaderFormat(headerFormat) {
+  logger.warn(
+    '[Deprecation Warning] The configuration option for specifying the Kafka header format will be removed in the ' +
+      'next major release as the format will no longer be configurable and Instana tracers will only send string ' +
+      'headers. More details see: https://ibm.biz/kafka-trace-correlation-header.'
+  );
   // node-rdkafka's handling of non-string header values is broken, see
   // https://github.com/Blizzard/node-rdkafka/pull/968.
   //
@@ -65,21 +70,10 @@ function logWarningForKafkaHeaderFormat(headerFormat) {
   // Trace correlation would be broken for rdkafka senders with the header format 'binary'. If that format has been
   // configured explicitly, we log a warning and ignore the config value. The rdkafka instrumentation alwas acts as if
   // format 'string' had been configured.
-  if (headerFormat === 'binary') {
+  if (headerFormat === 'binary' || headerFormat === 'both') {
     logger.warn(
-      "Ignoring configuration value 'binary' for Kafka header format in node-rdkafka instrumentation, using header " +
-        "format 'string' instead. Binary headers do not work with node-rdkafka, see " +
-        'https://github.com/Blizzard/node-rdkafka/pull/968.'
-    );
-  } else if (headerFormat === 'both') {
-    // The option format 'both' which is available for other tracers/instrumentations (sending both binary and string
-    // headers also does not make sense for node-rdkafka headers, because sending binary headers along with string
-    // headers will not have any benefit. Theoretically, we would also want to warn if 'both' has been configured
-    // explicitly. But both is also the current default value and we cannot differentiate between an explicit
-    // configuration and the default value here, so we do not log a warning for 'both', just a debug message.
-    logger.debug(
-      "Ignoring configuration or default value 'both' for Kafka header format in node-rdkafka instrumentation, using " +
-        "header format 'string' instead. Binary headers do not work with node-rdkafka, see " +
+      `Ignoring configuration value '${headerFormat}' for Kafka header format in node-rdkafka instrumentation, ` +
+        " using header format 'string' instead. Binary headers do not work with node-rdkafka, see " +
         'https://github.com/Blizzard/node-rdkafka/pull/968.'
     );
   }
