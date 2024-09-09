@@ -341,7 +341,7 @@ function findInstanaHeaderValues(instanaHeadersAsObject) {
   let parentSpanId;
   let level;
 
-  // CASE: Look for the the newer string header format first.
+  // Since v4, only 'string' format is supported.
   if (instanaHeadersAsObject[constants.kafkaTraceIdHeaderName]) {
     traceId = String(instanaHeadersAsObject[constants.kafkaTraceIdHeaderName]);
     if (traceId) {
