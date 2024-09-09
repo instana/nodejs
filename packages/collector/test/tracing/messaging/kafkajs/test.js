@@ -262,7 +262,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
         it('must trace sending and receiving but will not keep trace continuity', async () => {
           const parameters = {
-            headerFormat: 'correlation-disabled',
+            kafkaCorrelation: 'correlation-disabled',
             useSendBatch,
             useEachBatch
           };
@@ -293,7 +293,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
         });
 
         it('must not trace Kafka exits when suppressed (but will trace Kafka entries)', async () => {
-          const parameters = { headerFormat: 'correlation-disabled', useSendBatch, useEachBatch };
+          const parameters = { kafkaCorrelation: 'correlation-disabled', useSendBatch, useEachBatch };
 
           await producerControls.sendRequest({
             method: 'POST',
@@ -362,7 +362,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
       await consumerControls.stop();
     });
 
-    const headerFormat = 'correlation-disabled';
+    const kafkaCorrelation = 'correlation-disabled';
 
     it(
       'must trace sending and receiving but will not keep trace continuity ' +
@@ -383,10 +383,10 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
         await retry(async () => {
           const messages = await getMessages(consumerControls);
-          checkMessages(messages, { headerFormat });
+          checkMessages(messages, { kafkaCorrelation });
           const spans = await customAgentControls.getSpans();
           const httpEntry = verifyHttpEntry(spans);
-          verifyKafkaExits(spans, httpEntry, { headerFormat });
+          verifyKafkaExits(spans, httpEntry, { kafkaCorrelation });
           verifyFollowUpHttpExit(spans, httpEntry);
         });
       }
@@ -432,7 +432,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
     it('must not trace when disabled', async () => {
       const parameters = {
-        headerFormat: 'tracing-disabled',
+        kafkaCorrelation: 'tracing-disabled',
         error: false,
         useSendBatch: false,
         useEachBatch: false
@@ -640,7 +640,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
   }
 
   function verifyKafkaEntries(spans, parentKafkaExit, parameters) {
-    const { headerFormat, error, useSendBatch, useEachBatch } = parameters;
+    const { kafkaCorrelation, error, useSendBatch, useEachBatch } = parameters;
     if (error === 'producer') {
       return;
     }
@@ -652,7 +652,11 @@ mochaSuiteFn('tracing/kafkajs', function () {
       span => expect(span.data.kafka.access).to.equal('consume'),
       span => expect(span.data.kafka.service).to.equal(`${topicPrefix}-1`)
     ];
-    expectationsFirstKafkaEntry = addParentChildExpectation(expectationsFirstKafkaEntry, parentKafkaExit, headerFormat);
+    expectationsFirstKafkaEntry = addParentChildExpectation(
+      expectationsFirstKafkaEntry,
+      parentKafkaExit,
+      kafkaCorrelation
+    );
     if (error === 'consumer') {
       expectationsFirstKafkaEntry.push(span => expect(span.ec).to.equal(1));
     } else {
@@ -685,7 +689,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
       expectationsSecondKafkaEntry = addParentChildExpectation(
         expectationsSecondKafkaEntry,
         parentKafkaExit,
-        headerFormat
+        kafkaCorrelation
       );
       if (error === 'consumer') {
         expectationsSecondKafkaEntry.push(span => expect(span.ec).to.equal(1));
@@ -712,7 +716,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
       expectationsThirdKafkaEntry = addParentChildExpectation(
         expectationsThirdKafkaEntry,
         parentKafkaExit,
-        headerFormat
+        kafkaCorrelation
       );
       if (error === 'consumer') {
         expectationsThirdKafkaEntry.push(span => expect(span.ec).to.equal(1));
@@ -734,8 +738,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
     }
   }
 
-  function addParentChildExpectation(expectations, parentKafkaExit, headerFormat) {
-    if (headerFormat !== 'correlation-disabled') {
+  function addParentChildExpectation(expectations, parentKafkaExit, kafkaCorrelation) {
+    if (kafkaCorrelation !== 'correlation-disabled') {
       // With correlation headers enabled (default), Kafka entries will be the child span of a Kafka exit.
       expectations = expectations.concat([
         span => expect(span.t).to.equal(parentKafkaExit.t),
