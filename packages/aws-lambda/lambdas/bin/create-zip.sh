@@ -62,7 +62,7 @@ mv instana-aws-lambda-*.tgz instana-aws-lambda.tgz
 echo "Building local tar.gz for instana-aws-lambda-auto-wrap."
 cd ../aws-lambda-auto-wrap
 npm --loglevel=warn pack
-mv instana-aws-lambda-auto-wrap*.tgz ../aws-lambda/instana-aws-lambda-auto-wrap.tgz
+mv instana-aws-lambda-auto-wrap-*.tgz ../aws-lambda/instana-aws-lambda-auto-wrap.tgz
 cd ../aws-lambda
 
 if [[ "${BUILD_LAMBDAS_WITH-npm}" == "npm" ]]; then
