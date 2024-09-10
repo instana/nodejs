@@ -153,8 +153,7 @@ describe('unannounced state', () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
               kafka: {
-                traceCorrelation: constants.kafkaTraceCorrelationDefault,
-                headerFormat: constants.kafkaHeaderFormatDefault
+                traceCorrelation: constants.kafkaTraceCorrelationDefault
               }
             }
           });
@@ -167,8 +166,7 @@ describe('unannounced state', () => {
       prepareAnnounceResponse({
         tracing: {
           kafka: {
-            'trace-correlation': false,
-            'header-format': 'string'
+            'trace-correlation': false
           }
         }
       });
@@ -177,8 +175,7 @@ describe('unannounced state', () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
               kafka: {
-                traceCorrelation: false,
-                headerFormat: 'string'
+                traceCorrelation: false
               }
             }
           });
