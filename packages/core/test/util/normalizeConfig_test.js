@@ -29,7 +29,6 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_DISABLE_SPANBATCHING;
     delete process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION;
     delete process.env.INSTANA_KAFKA_TRACE_CORRELATION;
-    delete process.env.INSTANA_KAFKA_HEADER_FORMAT;
     delete process.env.INSTANA_PACKAGE_JSON_PATH;
   }
 
@@ -337,47 +336,6 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.kafka.traceCorrelation).to.be.false;
   });
 
-  it('should set Kafka header format to binary', () => {
-    const config = normalizeConfig({ tracing: { kafka: { headerFormat: 'binary' } } });
-    expect(config.tracing.kafka.headerFormat).to.equal('binary');
-  });
-
-  it('should set Kafka header format to string', () => {
-    const config = normalizeConfig({ tracing: { kafka: { headerFormat: 'string' } } });
-    expect(config.tracing.kafka.headerFormat).to.equal('string');
-  });
-
-  it('should set Kafka header format to both', () => {
-    const config = normalizeConfig({ tracing: { kafka: { headerFormat: 'both' } } });
-    expect(config.tracing.kafka.headerFormat).to.equal('both');
-  });
-
-  it('should ignore non-string Kafka header format', () => {
-    const config = normalizeConfig({ tracing: { kafka: { headerFormat: 13 } } });
-    // During phase 1 of the migration, 'both' will be the default value. In phase 2, the ability to configure the
-    // format will be removed and we will only use the 'string' format.
-    expect(config.tracing.kafka.headerFormat).to.equal('both');
-  });
-
-  it('should ignore invalid Kafka header format', () => {
-    const config = normalizeConfig({ tracing: { kafka: { headerFormat: 'whatever' } } });
-    // During phase 1 of the migration, 'both' will be the default value. In phase 2, the ability to configure the
-    // format will be removed and we will only use the 'string' format.
-    expect(config.tracing.kafka.headerFormat).to.equal('both');
-  });
-
-  it('should set Kafka header format to binary via INSTANA_KAFKA_HEADER_FORMAT', () => {
-    process.env.INSTANA_KAFKA_HEADER_FORMAT = 'binary';
-    const config = normalizeConfig();
-    expect(config.tracing.kafka.headerFormat).to.equal('binary');
-  });
-
-  it('should set Kafka header format to string via INSTANA_KAFKA_HEADER_FORMAT', () => {
-    process.env.INSTANA_KAFKA_HEADER_FORMAT = 'string';
-    const config = normalizeConfig();
-    expect(config.tracing.kafka.headerFormat).to.equal('string');
-  });
-
   it('should disable opentelemetry if config is set', () => {
     const config = normalizeConfig({
       tracing: { useOpentelemetry: false }
@@ -402,20 +360,6 @@ describe('util.normalizeConfig', () => {
     process.env.INSTANA_DISABLE_USE_OPENTELEMETRY = 'false';
     const config = normalizeConfig();
     expect(config.tracing.useOpentelemetry).to.equal(true);
-  });
-
-  it('should set Kafka header format to both via INSTANA_KAFKA_HEADER_FORMAT', () => {
-    process.env.INSTANA_KAFKA_HEADER_FORMAT = 'both';
-    const config = normalizeConfig();
-    expect(config.tracing.kafka.headerFormat).to.equal('both');
-  });
-
-  it('should ignore invalid Kafka header format in INSTANA_KAFKA_HEADER_FORMAT', () => {
-    process.env.INSTANA_KAFKA_HEADER_FORMAT = 'whatever';
-    const config = normalizeConfig();
-    // During phase 1 of the migration, 'both' will be the default value. In phase 2, the ability to configure the
-    // format will be removed and we will only use the 'string' format.
-    expect(config.tracing.kafka.headerFormat).to.equal('both');
   });
 
   it('should accept custom secrets config', () => {
@@ -528,7 +472,6 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.spanBatchingEnabled).to.be.false;
     expect(config.tracing.disableW3cTraceCorrelation).to.be.false;
     expect(config.tracing.kafka.traceCorrelation).to.be.true;
-    expect(config.tracing.kafka.headerFormat).to.equal('both');
     expect(config.tracing.useOpentelemetry).to.equal(true);
 
     expect(config.secrets).to.be.an('object');
