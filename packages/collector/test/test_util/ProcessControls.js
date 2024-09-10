@@ -18,6 +18,7 @@ const http2Promise = require('./http2Promise');
 const testUtils = require('../../../core/test/test_util');
 const globalAgent = require('../globalAgent');
 const portFinder = require('./portfinder');
+const { execSync } = require('child_process');
 const sslDir = path.join(__dirname, '..', 'apps', 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
 const isLatestEsmSupportedVersion = require('@instana/core').tracing.isLatestEsmSupportedVersion;
@@ -154,6 +155,22 @@ class ProcessControls {
     }
     if (this.execArgv) {
       forkConfig.execArgv = this.execArgv;
+    }
+
+    if (this.env.CURRENCY_NAME && this.env.CURRENCY_VERSION) {
+      const installationDir = path.dirname(this.appPath);
+
+      // eslint-disable-next-line no-console
+      console.log(
+        `Installing currency package ${this.env.CURRENCY_NAME}@${this.env.CURRENCY_VERSION} in ${installationDir}`
+      );
+
+      await execSync(
+        `npm install ${this.env.CURRENCY_NAME}@${this.env.CURRENCY_VERSION} --prefix ${installationDir} --no-audit --no-package-lock --no-save`
+      );
+
+      // eslint-disable-next-line no-console
+      console.log('Currency package installed');
     }
 
     this.process = this.args ? fork(this.appPath, this.args || [], forkConfig) : fork(this.appPath, forkConfig);
