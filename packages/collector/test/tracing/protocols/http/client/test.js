@@ -93,6 +93,56 @@ mochaSuiteFn('tracing/http client', function () {
       });
     });
   });
+
+  describe('OPT-IN APP CASE 1', function () {
+    let agentControls;
+
+    before(async () => {
+      agentControls = new ProcessControls({
+        appPath: path.join(__dirname, 'optInApp'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_ALLOW_ROOT_EXIT_SPAN: true
+        }
+      });
+
+      await agentControls.start(null, null, true);
+    });
+
+    it('should trace exit span without entry span if INSTANA_ALLOW_ROOT_EXIT_SPAN is true', async () => {
+      await delay(2500);
+
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        expect(spans.length).to.equal(4);
+      });
+    });
+  });
+
+  describe('OPT-IN APP CASE 2', function () {
+    let agentControls;
+
+    before(async () => {
+      agentControls = new ProcessControls({
+        appPath: path.join(__dirname, 'optInApp'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_ALLOW_ROOT_EXIT_SPAN: false
+        }
+      });
+
+      await agentControls.start(null, null, true);
+    });
+
+    it('should not trace exit span without entry span if INSTANA_ALLOW_ROOT_EXIT_SPAN is false', async () => {
+      await delay(2500);
+
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        expect(spans.length).to.equal(0);
+      });
+    });
+  });
 });
 
 function registerTests(useHttps) {
