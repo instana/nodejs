@@ -106,20 +106,10 @@ describe('Using the API', function () {
     return retry(async () => {
       expect(response).to.be.an('object');
       expect(response.message).to.equal('Hello Fargate!');
-
-      // During phase 1 of the Kafka header migration (October 2022 - October 2023) there will be a debug log about
-      // ignoring the option 'both' for rdkafka. We do not care about that log message in this test.
-      const debug = response.logs.debug.filter(msg => !msg.includes('Ignoring configuration or default value'));
-
-      // As part of the Kafka header migration phase 2, we have added warning logs regarding the removal of the option
-      // to configure Kafka header formats. This test skips the warning message, and the warning itself will be removed
-      // in the next major release.
-      const warn = response.logs.warn.filter(msg => !msg.includes('Kafka header format'));
-      expect(debug).to.contain('Sending data to Instana (/serverless/metrics).');
-      expect(debug).to.contain('Sent data to Instana (/serverless/metrics).');
-
+      expect(response.logs.debug).to.contain('Sending data to Instana (/serverless/metrics).');
+      expect(response.logs.debug).to.contain('Sent data to Instana (/serverless/metrics).');
       expect(response.logs.info).to.be.empty;
-      expect(warn).to.deep.equal([
+      expect(response.logs.warn).to.deep.equal([
         'INSTANA_DISABLE_CA_CHECK is set, which means that the server certificate will not be verified against the ' +
           'list of known CAs. This makes your service vulnerable to MITM attacks when connecting to Instana. This ' +
           'setting should never be used in production, unless you use our on-premises product and are unable to ' +
