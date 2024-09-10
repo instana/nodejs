@@ -301,8 +301,6 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
       ? resourcePath
       : environmentUtil.getBackendPath() + resourcePath;
 
-  logger.debug(`[${requestId}] Sending data to Instana (${requestPath}).`);
-
   // serialize the payload object
   const serializedPayload = JSON.stringify(payload);
 
@@ -320,6 +318,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
     rejectUnauthorized: !disableCaCheck
   };
 
+  logger.debug(`Request options (${options.hostname}, ${options.port}, ${options.path}).`);
   reqOptions.timeout = getBackendTimeout(localUseLambdaExtension);
 
   if (proxyAgent && !localUseLambdaExtension) {

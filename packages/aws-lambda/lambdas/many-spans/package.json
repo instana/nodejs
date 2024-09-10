@@ -1,0 +1,21 @@
+{
+  "name": "many-spans",
+  "description": "Testing lots of spans.",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs.git"
+  },
+  "scripts": {
+    "preinstall": "sh ../.npm-scripts/preinstall.sh",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Katharina Irrgang <katharina.irrgang@ibm.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz",
+    "@instana/serverless": "file:../../../serverless/instana-serverless.tgz",
+    "instana-aws-lambda-auto-wrap": "file:../../../aws-lambda-auto-wrap/instana-aws-lambda-auto-wrap.tgz"
+  }
+}
