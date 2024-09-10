@@ -18,30 +18,23 @@ logger = require('../../../logger').getLogger('tracing/kafkajs', newLogger => {
 });
 
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
-let headerFormat = constants.kafkaHeaderFormatDefault;
 
 let isActive = false;
 
 exports.init = function init(config) {
   hook.onFileLoad(/\/kafkajs\/src\/producer\/messageProducer\.js/, instrumentProducer);
   hook.onFileLoad(/\/kafkajs\/src\/consumer\/runner\.js/, instrumentConsumer);
-  hook.onModuleLoad('kafkajs', logWarningForKafkaHeaderFormat);
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
-  headerFormat = config.tracing.kafka.headerFormat;
 };
 
 exports.updateConfig = function updateConfig(config) {
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
-  headerFormat = config.tracing.kafka.headerFormat;
 };
 
 exports.activate = function activate(extraConfig) {
   if (extraConfig && extraConfig.tracing && extraConfig.tracing.kafka) {
     if (extraConfig.tracing.kafka.traceCorrelation != null) {
       traceCorrelationEnabled = extraConfig.tracing.kafka.traceCorrelation;
-    }
-    if (typeof extraConfig.tracing.kafka.headerFormat === 'string') {
-      headerFormat = extraConfig.tracing.kafka.headerFormat;
     }
   }
   isActive = true;
@@ -254,19 +247,6 @@ function instrumentedEachMessage(originalEachMessage) {
       if (message.headers[constants.kafkaTraceLevelHeaderName]) {
         level = String(message.headers[constants.kafkaTraceLevelHeaderName]);
       }
-      // Only fall back to legacy binary trace correlation headers if no new header is present.
-      if (traceId == null && parentSpanId == null && level == null) {
-        // The newer string header format has not been found, fall back to legacy binary headers.
-        if (message.headers[constants.kafkaLegacyTraceContextHeaderName]) {
-          const traceContextBuffer = message.headers[constants.kafkaLegacyTraceContextHeaderName];
-          if (Buffer.isBuffer(traceContextBuffer) && traceContextBuffer.length === 24) {
-            const traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);
-            traceId = traceContext.t;
-            parentSpanId = traceContext.s;
-          }
-        }
-        level = readTraceLevelBinary(message);
-      }
     }
 
     removeInstanaHeadersFromMessage(message);
@@ -349,27 +329,6 @@ function instrumentedEachBatch(originalEachBatch) {
         }
       }
 
-      if (traceId == null && parentSpanId == null && level == null) {
-        // The newer string header format has not been found, fall back to legacy binary headers.
-        for (let msgIdx = 0; msgIdx < batch.messages.length; msgIdx++) {
-          if (
-            batch.messages[msgIdx].headers &&
-            batch.messages[msgIdx].headers[constants.kafkaLegacyTraceContextHeaderName]
-          ) {
-            const traceContextBuffer = batch.messages[msgIdx].headers[constants.kafkaLegacyTraceContextHeaderName];
-            if (Buffer.isBuffer(traceContextBuffer) && traceContextBuffer.length === 24) {
-              const traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);
-              traceId = traceContext.t;
-              parentSpanId = traceContext.s;
-            }
-          }
-          level = readTraceLevelBinary(batch.messages[msgIdx]);
-          if (traceId != null || parentSpanId != null || level != null) {
-            break;
-          }
-        }
-      }
-
       for (let msgIdx = 0; msgIdx < batch.messages.length; msgIdx++) {
         removeInstanaHeadersFromMessage(batch.messages[msgIdx]);
       }
@@ -411,51 +370,13 @@ function isSuppressed(level) {
   return level === '0';
 }
 
-function readTraceLevelBinary(message) {
-  if (message.headers[constants.kafkaLegacyTraceLevelHeaderName]) {
-    const traceLevelBuffer = message.headers[constants.kafkaLegacyTraceLevelHeaderName];
-    if (Buffer.isBuffer(traceLevelBuffer) && traceLevelBuffer.length >= 1) {
-      return String(traceLevelBuffer.readInt8());
-    }
-  }
-  return '1';
-}
-
 function addTraceContextHeaderToAllMessages(messages, span) {
   if (!traceCorrelationEnabled) {
     return;
   }
-  switch (headerFormat) {
-    case 'binary':
-      addLegacyTraceContextHeaderToAllMessages(messages, span);
-      break;
-    case 'string':
-      addTraceIdSpanIdToAllMessages(messages, span);
-      break;
-    case 'both':
-    // fall through (both is the default)
-    default:
-      addLegacyTraceContextHeaderToAllMessages(messages, span);
-      addTraceIdSpanIdToAllMessages(messages, span);
-  }
-}
-
-function addLegacyTraceContextHeaderToAllMessages(messages, span) {
-  if (Array.isArray(messages)) {
-    for (let msgIdx = 0; msgIdx < messages.length; msgIdx++) {
-      if (messages[msgIdx].headers == null) {
-        messages[msgIdx].headers = {
-          [constants.kafkaLegacyTraceContextHeaderName]: tracingUtil.renderTraceContextToBuffer(span),
-          [constants.kafkaLegacyTraceLevelHeaderName]: constants.kafkaLegacyTraceLevelValueInherit
-        };
-      } else if (messages[msgIdx].headers && typeof messages[msgIdx].headers === 'object') {
-        messages[msgIdx].headers[constants.kafkaLegacyTraceContextHeaderName] =
-          tracingUtil.renderTraceContextToBuffer(span);
-        messages[msgIdx].headers[constants.kafkaLegacyTraceLevelHeaderName] =
-          constants.kafkaLegacyTraceLevelValueInherit;
-      }
-    }
-  }
+  // Add trace ID and span ID headers to all Kafka messages for trace correlation.
+  // 'string' headers are used by default starting from v4.
+  addTraceIdSpanIdToAllMessages(messages, span);
 }
 
 function addTraceIdSpanIdToAllMessages(messages, span) {
@@ -481,34 +402,8 @@ function addTraceLevelSuppressionToAllMessages(messages) {
   if (!traceCorrelationEnabled) {
     return;
   }
-  switch (headerFormat) {
-    case 'binary':
-      addTraceLevelSuppressionToAllMessagesBinary(messages);
-      break;
-    case 'string':
-      addTraceLevelSuppressionToAllMessagesString(messages);
-      break;
-    case 'both':
-    // fall through (both is the default)
-    default:
-      addTraceLevelSuppressionToAllMessagesBinary(messages);
-      addTraceLevelSuppressionToAllMessagesString(messages);
-  }
-}
-
-function addTraceLevelSuppressionToAllMessagesBinary(messages) {
-  if (Array.isArray(messages)) {
-    for (let msgIdx = 0; msgIdx < messages.length; msgIdx++) {
-      if (messages[msgIdx].headers == null) {
-        messages[msgIdx].headers = {
-          [constants.kafkaLegacyTraceLevelHeaderName]: constants.kafkaLegacyTraceLevelValueSuppressed
-        };
-      } else if (messages[msgIdx].headers && typeof messages[msgIdx].headers === 'object') {
-        messages[msgIdx].headers[constants.kafkaLegacyTraceLevelHeaderName] =
-          constants.kafkaLegacyTraceLevelValueSuppressed;
-      }
-    }
-  }
+  // Since v4, only 'string' format is supported by default.
+  addTraceLevelSuppressionToAllMessagesString(messages);
 }
 
 function addTraceLevelSuppressionToAllMessagesString(messages) {
@@ -532,14 +427,4 @@ function removeInstanaHeadersFromMessage(message) {
       delete message.headers[name];
     });
   }
-}
-
-// Note: This function can be removed as soon as we finish the Kafka header migration phase2.
-// Might happen in major release v4.
-function logWarningForKafkaHeaderFormat() {
-  logger.warn(
-    '[Deprecation Warning] The configuration option for specifying the Kafka header format will be removed in the ' +
-      'next major release as the format will no longer be configurable and Instana tracers will only send string ' +
-      'headers. More details see: https://ibm.biz/kafka-trace-correlation-header.'
-  );
 }
