@@ -122,7 +122,10 @@ exports.getLatestVersion = (pkgName, installedVersion) => {
 
 function filterStableReleases(releaseList) {
   return Object.fromEntries(
-    Object.entries(releaseList).filter(([version]) => !version.includes('alpha') && !version.includes('beta'))
+    Object.entries(releaseList).filter(
+      ([version]) =>
+        !version.includes('alpha') && !version.includes('beta') && !version.includes('dev') && !version.includes('rc')
+    )
   );
 }
 
