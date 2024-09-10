@@ -309,10 +309,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     before(async () => {
       producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'producer'),
-        useGlobalAgent: true,
-        env: {
-          INSTANA_KAFKA_HEADER_FORMAT: 'string'
-        }
+        useGlobalAgent: true
       });
       consumerControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
@@ -364,9 +361,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     let consumerControls;
 
     before(async () => {
-      await customAgentControls.startAgent({
-        kafkaConfig: { headerFormat: 'string' }
-      });
+      await customAgentControls.startAgent();
 
       producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'producer'),

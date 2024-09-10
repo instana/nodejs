@@ -17,35 +17,20 @@ exports.traceLevelHeaderNameLowerCase = exports.traceLevelHeaderName.toLowerCase
 exports.syntheticHeaderName = 'X-INSTANA-SYNTHETIC';
 exports.syntheticHeaderNameLowerCase = exports.syntheticHeaderName.toLowerCase();
 
-// legacy kafka trace correlation (binary values)
-exports.kafkaLegacyTraceContextHeaderName = 'X_INSTANA_C';
-exports.kafkaLegacyTraceLevelHeaderName = 'X_INSTANA_L';
-exports.kafkaLegacyTraceLevelValueSuppressed = Buffer.from([0]);
-exports.kafkaLegacyTraceLevelValueInherit = Buffer.from([1]);
+// New Kafka trace correlation (string values) was introduced as an opt-in feature in 2021-10. Initially, it was sent
+// out along with the legacy binary headers by default starting in 2022-10. However, as of 2024-10, only string headers
+// are supported, and the legacy binary headers are no longer supported.
 
-// New kafka trace correlation (string values). Available as opt-in since 2021-10, and send out together with the legacy
-// binary headers by default starting in 2022-10. We will switch over to these headers completely (omitting the legacy
-// headers approximately in 2023-10.
 exports.kafkaTraceIdHeaderName = 'X_INSTANA_T';
 exports.kafkaSpanIdHeaderName = 'X_INSTANA_S';
 exports.kafkaTraceLevelHeaderName = 'X_INSTANA_L_S';
 
-/**
- * @typedef {'binary' | 'string' | 'both'} KafkaTraceCorrelationFormat
- */
-
-// With the current phase 1 of the Kafka header format migration, 'both', is the default.
-// With phase 2 (starting approximately October 2023) it will no longer be configurable and will always use 'string'.
-/** @type {KafkaTraceCorrelationFormat} */
-exports.kafkaHeaderFormatDefault = 'both';
 exports.kafkaTraceCorrelationDefault = true;
 
 exports.allInstanaKafkaHeaders = [
   exports.kafkaTraceIdHeaderName,
   exports.kafkaSpanIdHeaderName,
-  exports.kafkaTraceLevelHeaderName,
-  exports.kafkaLegacyTraceContextHeaderName,
-  exports.kafkaLegacyTraceLevelHeaderName
+  exports.kafkaTraceLevelHeaderName
 ];
 
 exports.w3cTraceParent = 'traceparent';

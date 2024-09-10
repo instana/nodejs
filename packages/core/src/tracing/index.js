@@ -123,7 +123,6 @@ if (customInstrumentations.length > 0) {
 /**
  * @typedef {Object} KafkaTracingConfig
  * @property {boolean} [traceCorrelation]
- * @property {string} [headerFormat]
  */
 
 /** @type {Array.<InstanaInstrumentedModule>} */
