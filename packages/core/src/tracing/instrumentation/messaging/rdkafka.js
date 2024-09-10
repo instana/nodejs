@@ -13,7 +13,6 @@ const cls = require('../../cls');
 const shimmer = require('../../shimmer');
 const { getFunctionArguments } = require('../../../util/function_arguments');
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
-let configHeader = null;
 
 let logger;
 logger = require('../../../logger').getLogger('tracing/rdkafka', newLogger => {
@@ -26,25 +25,22 @@ exports.init = function init(config) {
   hook.onFileLoad(/\/node-rdkafka\/lib\/producer\.js/, instrumentProducer);
   hook.onFileLoad(/\/node-rdkafka\/lib\/kafka-consumer-stream\.js/, instrumentConsumerAsStream);
   hook.onModuleLoad('node-rdkafka', instrumentConsumer);
+  hook.onModuleLoad('node-rdkafka', logWarningForKafkaHeaderFormat);
 
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
-  configHeader = config.tracing.kafka.headerFormat;
 };
 
 exports.updateConfig = function updateConfig(config) {
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
-  configHeader = config.tracing.kafka.headerFormat;
 };
 // The extraConfig is coming from the agent configs. You can set the kafka format in the agent.
 exports.activate = function activate(extraConfig) {
-  let extraConfigHeader = null;
   if (extraConfig && extraConfig.tracing && extraConfig.tracing.kafka) {
     if (extraConfig.tracing.kafka.traceCorrelation != null) {
       traceCorrelationEnabled = extraConfig.tracing.kafka.traceCorrelation;
     }
-    extraConfigHeader = extraConfig.tracing.kafka.headerFormat;
   }
-  logWarningForKafkaHeaderFormat(extraConfigHeader || configHeader);
+
   isActive = true;
 };
 
@@ -54,29 +50,13 @@ exports.deactivate = function deactivate() {
 
 // Note: This function can be removed as soon as we finish the Kafka header migration phase 2 and remove the ability to
 // configure the header format.  Might happen in major release v4.
-function logWarningForKafkaHeaderFormat(headerFormat) {
+function logWarningForKafkaHeaderFormat() {
   logger.warn(
-    '[Deprecation Warning] The configuration option for specifying the Kafka header format will be removed in the ' +
-      'next major release as the format will no longer be configurable and Instana tracers will only send string ' +
-      'headers. More details see: https://ibm.biz/kafka-trace-correlation-header.'
+    '[Deprecation Warning] The Kafka header format configuration will be removed in the next major release. ' +
+      'Instana tracers will only support string headers, as binary headers are not compatible with node-rdkafka. ' +
+      'For more information, see the GitHub issue: https://github.com/Blizzard/node-rdkafka/pull/968, and review our ' +
+      'official documentation on Kafka header configuration: https://ibm.biz/kafka-trace-correlation-header.'
   );
-  // node-rdkafka's handling of non-string header values is broken, see
-  // https://github.com/Blizzard/node-rdkafka/pull/968.
-  //
-  // For this reason, the legacy binary header format for Instana Kafka trace correlation headers (X_INSTANA_C) will not
-  // work with node-rdkafka. Fortunately, we are already in the process of migrating away from that binary header format
-  // to a header format that is purely based on string values.
-  //
-  // Trace correlation would be broken for rdkafka senders with the header format 'binary'. If that format has been
-  // configured explicitly, we log a warning and ignore the config value. The rdkafka instrumentation alwas acts as if
-  // format 'string' had been configured.
-  if (headerFormat === 'binary' || headerFormat === 'both') {
-    logger.warn(
-      `Ignoring configuration value '${headerFormat}' for Kafka header format in node-rdkafka instrumentation, ` +
-        " using header format 'string' instead. Binary headers do not work with node-rdkafka, see " +
-        'https://github.com/Blizzard/node-rdkafka/pull/968.'
-    );
-  }
 }
 
 function instrumentProducer(ProducerClass) {

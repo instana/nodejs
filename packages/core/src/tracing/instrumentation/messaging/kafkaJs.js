@@ -25,6 +25,7 @@ let isActive = false;
 exports.init = function init(config) {
   hook.onFileLoad(/\/kafkajs\/src\/producer\/messageProducer\.js/, instrumentProducer);
   hook.onFileLoad(/\/kafkajs\/src\/consumer\/runner\.js/, instrumentConsumer);
+  hook.onModuleLoad('kafkajs', logWarningForKafkaHeaderFormat);
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
   headerFormat = config.tracing.kafka.headerFormat;
 };
@@ -42,9 +43,6 @@ exports.activate = function activate(extraConfig) {
     if (typeof extraConfig.tracing.kafka.headerFormat === 'string') {
       headerFormat = extraConfig.tracing.kafka.headerFormat;
     }
-  }
-  if (headerFormat) {
-    logWarningForKafkaHeaderFormat();
   }
   isActive = true;
 };
