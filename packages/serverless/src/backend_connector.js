@@ -286,6 +286,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback, tries, reques
     headers: {
       'Content-Type': 'application/json',
       'Content-Length': Buffer.byteLength(serializedPayload),
+      Connection: 'close',
       [constants.xInstanaHost]: hostHeader,
       [constants.xInstanaKey]: environmentUtil.getInstanaAgentKey()
     },
@@ -349,6 +350,10 @@ function send(resourcePath, payload, finalLambdaRequest, callback, tries, reques
     const { statusCode } = res;
 
     logger.debug(`${requestId} Received HTTP status code ${statusCode} from Instana (${requestPath}).`);
+
+    res.on('end', () => {
+      logger.debug(`${requestId} Response ended (${requestPath}).`);
+    });
   });
 
   // See above for the difference between the timeout attribute in the request options and handling the 'timeout'
