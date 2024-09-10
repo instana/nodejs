@@ -24,7 +24,6 @@ let isActive = false;
 exports.init = function init(config) {
   hook.onFileLoad(/\/kafkajs\/src\/producer\/messageProducer\.js/, instrumentProducer);
   hook.onFileLoad(/\/kafkajs\/src\/consumer\/runner\.js/, instrumentConsumer);
-  hook.onModuleLoad('kafkajs', logWarningForKafkaHeaderFormat);
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
 };
 
