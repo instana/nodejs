@@ -110,6 +110,7 @@ describe('tracing/spanBuffer', () => {
           tracing: {
             maxBufferedSpans: 1000,
             forceTransmissionStartingAt: 2,
+            initialTransmissionDelay: 200,
             transmissionDelay: 200
           }
         },
