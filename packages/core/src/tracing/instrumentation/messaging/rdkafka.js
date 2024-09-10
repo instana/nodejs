@@ -14,18 +14,12 @@ const shimmer = require('../../shimmer');
 const { getFunctionArguments } = require('../../../util/function_arguments');
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
 
-let logger;
-logger = require('../../../logger').getLogger('tracing/rdkafka', newLogger => {
-  logger = newLogger;
-});
-
 let isActive = false;
 
 exports.init = function init(config) {
   hook.onFileLoad(/\/node-rdkafka\/lib\/producer\.js/, instrumentProducer);
   hook.onFileLoad(/\/node-rdkafka\/lib\/kafka-consumer-stream\.js/, instrumentConsumerAsStream);
   hook.onModuleLoad('node-rdkafka', instrumentConsumer);
-  hook.onModuleLoad('node-rdkafka', logWarningForKafkaHeaderFormat);
 
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
 };
@@ -40,24 +34,12 @@ exports.activate = function activate(extraConfig) {
       traceCorrelationEnabled = extraConfig.tracing.kafka.traceCorrelation;
     }
   }
-
   isActive = true;
 };
 
 exports.deactivate = function deactivate() {
   isActive = false;
 };
-
-// Note: This function can be removed as soon as we finish the Kafka header migration phase 2 and remove the ability to
-// configure the header format.  Might happen in major release v4.
-function logWarningForKafkaHeaderFormat() {
-  logger.warn(
-    '[Deprecation Warning] The Kafka header format configuration will be removed in the next major release. ' +
-      'Instana tracers will only support string headers, as binary headers are not compatible with node-rdkafka. ' +
-      'For more information, see the GitHub issue: https://github.com/Blizzard/node-rdkafka/pull/968, and review our ' +
-      'official documentation on Kafka header configuration: https://ibm.biz/kafka-trace-correlation-header.'
-  );
-}
 
 function instrumentProducer(ProducerClass) {
   shimmer.wrap(ProducerClass.prototype, 'produce', shimProduce);
@@ -312,16 +294,6 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
   });
 }
 
-function readTraceLevelBinary(instanaHeadersAsObject) {
-  if (instanaHeadersAsObject[constants.kafkaLegacyTraceLevelHeaderName]) {
-    const traceLevelBuffer = instanaHeadersAsObject[constants.kafkaLegacyTraceLevelHeaderName];
-    if (Buffer.isBuffer(traceLevelBuffer) && traceLevelBuffer.length >= 1) {
-      return String(traceLevelBuffer.readInt8());
-    }
-  }
-  return '1';
-}
-
 function addTraceContextHeader(headers, span) {
   if (!traceCorrelationEnabled) {
     return headers;
@@ -369,7 +341,7 @@ function findInstanaHeaderValues(instanaHeadersAsObject) {
   let parentSpanId;
   let level;
 
-  // CASE: Look for the the newer string header format first.
+  // Since v4, only 'string' format is supported.
   if (instanaHeadersAsObject[constants.kafkaTraceIdHeaderName]) {
     traceId = String(instanaHeadersAsObject[constants.kafkaTraceIdHeaderName]);
     if (traceId) {
@@ -383,22 +355,6 @@ function findInstanaHeaderValues(instanaHeadersAsObject) {
   }
   if (instanaHeadersAsObject[constants.kafkaTraceLevelHeaderName]) {
     level = String(instanaHeadersAsObject[constants.kafkaTraceLevelHeaderName]);
-  }
-
-  // CASE: Only fall back to legacy binary trace correlation headers if no new header is present.
-  if (traceId == null && parentSpanId == null && level == null) {
-    // The newer string header format has not been found, fall back to legacy binary headers.
-    if (instanaHeadersAsObject[constants.kafkaLegacyTraceContextHeaderName]) {
-      const traceContextBuffer = instanaHeadersAsObject[constants.kafkaLegacyTraceContextHeaderName];
-
-      if (Buffer.isBuffer(traceContextBuffer) && traceContextBuffer.length === 24) {
-        const traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);
-        traceId = traceContext.t;
-        parentSpanId = traceContext.s;
-      }
-    }
-
-    level = readTraceLevelBinary(instanaHeadersAsObject);
   }
 
   return { level, traceId, longTraceId, parentSpanId };

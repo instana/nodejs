@@ -36,7 +36,6 @@ const constants = require('../tracing/constants');
 /**
  * @typedef {Object} KafkaTracingOptions
  * @property {boolean} [traceCorrelation]
- * @property {import('../tracing/constants').KafkaTraceCorrelationFormat} [headerFormat]
  */
 
 /**
@@ -81,7 +80,6 @@ const constants = require('../tracing/constants');
 /**
  * @typedef {Object} AgentTracingKafkaConfig
  * @property {boolean} [traceCorrelation]
- * @property {string} [headerFormat]
  */
 
 /** @type {import('../logger').GenericLogger} */
@@ -116,8 +114,7 @@ const defaults = {
     spanBatchingEnabled: false,
     disableW3cTraceCorrelation: false,
     kafka: {
-      traceCorrelation: true,
-      headerFormat: constants.kafkaHeaderFormatDefault
+      traceCorrelation: true
     }
   },
   secrets: {
@@ -125,8 +122,6 @@ const defaults = {
     keywords: ['key', 'pass', 'secret']
   }
 };
-
-const validKafkaHeaderFormats = ['binary', 'string', 'both'];
 
 const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
 
@@ -547,33 +542,6 @@ function normalizeTracingKafka(config) {
     config.tracing.kafka.traceCorrelation = false;
   } else {
     config.tracing.kafka.traceCorrelation = defaults.tracing.kafka.traceCorrelation;
-  }
-
-  // @ts-ignore
-  config.tracing.kafka.headerFormat =
-    config.tracing.kafka.headerFormat || process.env.INSTANA_KAFKA_HEADER_FORMAT || defaults.tracing.kafka.headerFormat;
-  if (typeof config.tracing.kafka.headerFormat !== 'string') {
-    logger.warn(
-      `The value of config.tracing.kafka.headerFormat ("${config.tracing.kafka.headerFormat}") is not a string. ` +
-        `Assuming the default value "${defaults.tracing.kafka.headerFormat}".`
-    );
-    config.tracing.kafka.headerFormat = defaults.tracing.kafka.headerFormat;
-    return;
-  }
-  // @ts-ignore
-  config.tracing.kafka.headerFormat = config.tracing.kafka.headerFormat.toLowerCase();
-  if (validKafkaHeaderFormats.indexOf(config.tracing.kafka.headerFormat) < 0) {
-    logger.warn(
-      'The value of config.tracing.kafka.headerFormat (or the value of INSTANA_KAFKA_HEADER_FORMAT) ' +
-        `("${config.tracing.kafka.headerFormat}") is not a supported header format. Assuming the default ` +
-        `value "${defaults.tracing.kafka.headerFormat}".`
-    );
-    config.tracing.kafka.headerFormat = defaults.tracing.kafka.headerFormat;
-    return;
-  }
-
-  if (config.tracing.kafka.headerFormat !== defaults.tracing.kafka.headerFormat) {
-    logger.info(`Kafka trace correlation header format has been set to "${config.tracing.kafka.headerFormat}".`);
   }
 }
 
