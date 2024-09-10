@@ -552,7 +552,8 @@ function skipExitTracing(options) {
       isActive: true,
       extendedResponse: false,
       skipParentSpanCheck: false,
-      skipIsTracing: false
+      skipIsTracing: false,
+      checkReducedSpan: false
     },
     options
   );
@@ -574,7 +575,7 @@ function skipExitTracing(options) {
     else return false;
   }
 
-  if (!allowRootExitSpan && (!parentOrReduced || isExitSpan(parentOrReduced))) {
+  if (opts.checkReducedSpan && (!parentOrReduced || isExitSpan(parentSpan))) {
     if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
     else return true;
   }

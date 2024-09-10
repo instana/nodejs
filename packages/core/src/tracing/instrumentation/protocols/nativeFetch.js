@@ -84,8 +84,11 @@ function instrument() {
       isActive,
       extendedResponse: true,
       skipParentSpanCheck: true,
-      skipIsTracing: true
+      skipIsTracing: true,
+      checkReducedSpan: true
     });
+
+    const parentSpan = skipTracingResult.parentSpan;
 
     const originalThis = this;
     const originalArgs = new Array(arguments.length);
