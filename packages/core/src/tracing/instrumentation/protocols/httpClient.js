@@ -179,7 +179,8 @@ function instrument(coreModule, forceHttps) {
       isActive,
       extendedResponse: true,
       skipParentSpanCheck: true,
-      skipIsTracing: true
+      skipIsTracing: true,
+      checkReducedSpan: true
     });
 
     // If there is no active entry span, we fall back to the reduced span of the most recent entry span. See comment in

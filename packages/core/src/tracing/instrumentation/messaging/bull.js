@@ -45,6 +45,7 @@ function shimJobCreate(originalJobCreate) {
       skipIsTracing
     });
 
+    // TODO: -> check and remove skipTracingResult.isExitSpan check for allowRootExitSpan
     /**
      * Repeatable jobs cannot be persisted to a parent span, since we don't know for how long they will run.
      * The backend won't hold a reference to the parent entry span for too long, which will then make this span orphan.
