@@ -260,7 +260,7 @@ function init(event, arnInfo, _config) {
     );
   }
 
-  backendConnector.init(identityProvider, logger, true, false, 500, useLambdaExtension);
+  backendConnector.init(identityProvider, logger, false, false, 500, useLambdaExtension);
 
   // instanaCore.init also normalizes the config as a side effect
   instanaCore.init(config, backendConnector, identityProvider);
