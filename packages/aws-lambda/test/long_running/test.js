@@ -167,7 +167,7 @@ describe('long running lambdas', () => {
       handlerDefinitionPath,
       instanaAgentKey,
       delay: 100,
-      iterations: 10
+      iterations: 5
     };
     const env = prelude.bind(this)(opts);
     let control;

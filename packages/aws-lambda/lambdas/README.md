@@ -3,6 +3,11 @@ Example Lambdas
 
 Contains a few trivial example lambdas, mainly used to set up quick experiments.
 
+Manually creating the empty Lambda function
+-------------------------------------------
+
+Manually create the lambda function in the target region. The name needs to match.
+
 
 Building The Lambda Zip Files
 -----------------------------

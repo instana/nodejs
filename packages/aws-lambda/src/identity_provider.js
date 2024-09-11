@@ -11,6 +11,10 @@ exports.init = function init(arnInfo) {
   qualifiedArn = arnInfo.arn;
 };
 
+exports.getName = function getName() {
+  return 'aws-lambda';
+};
+
 exports.getHostHeader = function getHostHeader() {
   return qualifiedArn;
 };

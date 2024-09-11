@@ -260,7 +260,7 @@ function init(event, arnInfo, _config) {
     );
   }
 
-  backendConnector.init(identityProvider, logger, true, false, 500, useLambdaExtension);
+  backendConnector.init(identityProvider, logger, false, false, 500, useLambdaExtension, true);
 
   // instanaCore.init also normalizes the config as a side effect
   instanaCore.init(config, backendConnector, identityProvider);
@@ -321,6 +321,9 @@ function getRemainingTimeInMillis(context) {
   }
 }
 
+// NOTE: This function only "guesses" whether the Lambda extension should be used or not.
+// TODO: Figure out how we can reliably determine whether the Lambda extension should be
+//       used or not e.g. by checking the lambda handler name if that is possible.
 function shouldUseLambdaExtension() {
   if (process.env.INSTANA_DISABLE_LAMBDA_EXTENSION) {
     logger.info('INSTANA_DISABLE_LAMBDA_EXTENSION is set, not using the Lambda extension.');
