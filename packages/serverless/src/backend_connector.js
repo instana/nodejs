@@ -59,6 +59,8 @@ const getRequestId = () => {
   return 'instana';
 };
 
+const requests = {};
+
 exports.init = function init(opts) {
   options = Object.assign(defaults, opts);
   logger = options.config.logger;
@@ -120,12 +122,10 @@ exports.setLogger = function setLogger(_logger) {
 };
 
 /**
- *
  * "finalLambdaRequest":
  * When using AWS Lambda, we send metrics and spans together
- * using the function "sendBundle". The variable was invented to indicate
- * that this is the last request to be sent before the AWS Lambda runtime might freeze the process.
- * The span buffer sends data reguarly as soon as the tres hold is reached.
+ * using the function "sendBundle" at the end of the invocation - before the AWS Lambda
+ * runtime might freeze the process. The span buffer sends data reguarly using `sendSpans`.
  */
 exports.sendBundle = function sendBundle(bundle, finalLambdaRequest, callback) {
   const requestId = getRequestId();
@@ -308,7 +308,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   };
 
   logger.debug(
-    `${requestId} request options (${options.hostname}, ${options.port}, ${options.path}, 
+    `${requestId} Request options (${options.hostname}, ${options.port}, ${options.path}, 
     ${options.headers['Content-Length']}).`
   );
 
@@ -351,23 +351,29 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
       // reused for a different, unrelated invocation), it is safe to assume that  we are no longer interested in any
       // events emitted by the request or the underlying socket.
       if (finalLambdaRequest) {
-        cleanupRequest(req);
+        cleanupRequests();
       }
 
       handleCallback();
     });
   }
 
+  if (options.isLambdaRequest) {
+    requests[requestId] = req;
+  }
+
   req.on('response', res => {
     const { statusCode } = res;
 
     if (statusCode >= 200 && statusCode < 300) {
-      logger.debug(`${requestId} Sent data to Instana (${requestPath}).`);
+      logger.debug(`${requestId} Received response from Instana (${requestPath}).`);
     } else {
-      logger.debug(`${requestId} Sent data to Instana has failed (${requestPath}).`);
+      logger.debug(`${requestId} Received response from Instana has been failed (${requestPath}).`);
     }
 
     logger.debug(`${requestId} Received HTTP status code ${statusCode} from Instana (${requestPath}).`);
+
+    delete requests[requestId];
   });
 
   // See above for the difference between the timeout attribute in the request options and handling the 'timeout'
@@ -378,6 +384,10 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   // > socket.setTimeout() will be called.
   req.on('timeout', () => {
     logger.debug(`${requestId} Timeout while sending data to Instana (${requestPath}).`);
+
+    if (options.isLambdaRequest) {
+      delete requests[requestId];
+    }
 
     onTimeout(
       localUseLambdaExtension,
@@ -393,6 +403,10 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
 
   req.on('error', e => {
     logger.debug(`${requestId} Error while sending data to Instana (${requestPath}).`, e);
+
+    if (options.isLambdaRequest) {
+      delete requests[requestId];
+    }
 
     // CASE: we manually destroy streams, skip these errors
     // Otherwise we will produce `Error: socket hang up` errors in the logs
@@ -456,19 +470,18 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
 
   // This only indicates that the request has been successfully send! Independent of the response!
   req.on('finish', () => {
-    logger.debug(`[${requestId}] Sent data to Instana (${requestPath}).`);
-
+    logger.debug(`${requestId} The request data has been successfully send to Instana.`);
     if (options.useLambdaExtension && finalLambdaRequest) {
       clearInterval(heartbeatInterval);
     }
   });
 
   if (skipWaitingForHttpResponse) {
+    // NOTE: When the callback of `.end` is called, the data was successfully send to the server.
+    //       That does not mean the server has responded in any way!
     req.end(serializedPayload, () => {
-      logger.debug(`${requestId} Request to Instana has been flushed.`);
-
-      if (finalLambdaRequest) {
-        cleanupRequest(req);
+      if (options.isLambdaRequest && finalLambdaRequest) {
+        cleanupRequests();
       }
 
       // We finish as soon as the request has been flushed, without waiting for the response.
@@ -565,6 +578,13 @@ function cleanupRequest(req) {
   // not want to let pending IO actions linger in the event loop. This will also call request.destroy and
   // req.socket.destroy() internally.
   destroyRequest(req);
+}
+
+function cleanupRequests() {
+  Object.keys(requests).forEach(key => {
+    const requestToCleanup = requests[key];
+    cleanupRequest(requestToCleanup);
+  });
 }
 
 function destroyRequest(req) {
