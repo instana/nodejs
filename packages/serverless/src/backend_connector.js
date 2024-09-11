@@ -16,7 +16,9 @@ const layerExtensionHostname = 'localhost';
 const layerExtensionPort = process.env.INSTANA_LAYER_EXTENSION_PORT
   ? Number(process.env.INSTANA_LAYER_EXTENSION_PORT)
   : 7365;
+
 let useLambdaExtension = false;
+let isLambdaRequest = false;
 
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
 let defaultTimeout = 500;
@@ -35,6 +37,7 @@ const disableCaCheckEnvVar = 'INSTANA_DISABLE_CA_CHECK';
 const disableCaCheck = process.env[disableCaCheckEnvVar] === 'true';
 
 const getRequestId = () => crypto.randomBytes(16).toString('hex');
+const requests = {};
 
 if (process.env[proxyEnvVar] && !environmentUtil.sendUnencrypted) {
   const proxyUrl = process.env[proxyEnvVar];
@@ -60,12 +63,14 @@ exports.init = function init(
   _stopSendingOnFailure,
   _propagateErrorsUpstream,
   _defaultTimeout,
-  _useLambdaExtension
+  _useLambdaExtension,
+  _isLambdaRequest = false
 ) {
   propagateErrorsUpstream = _propagateErrorsUpstream == null ? false : _propagateErrorsUpstream;
   defaultTimeout = _defaultTimeout == null ? defaultTimeout : _defaultTimeout;
   useLambdaExtension = _useLambdaExtension;
   backendTimeout = defaultTimeout;
+  isLambdaRequest = _isLambdaRequest;
 
   if (process.env[timeoutEnvVar]) {
     backendTimeout = parseInt(process.env[timeoutEnvVar], 10);
@@ -105,12 +110,10 @@ exports.setLogger = function setLogger(_logger) {
 };
 
 /**
- *
  * "finalLambdaRequest":
  * When using AWS Lambda, we send metrics and spans together
- * using the function "sendBundle". The variable was invented to indicate
- * that this is the last request to be sent before the AWS Lambda runtime might freeze the process.
- * The span buffer sends data reguarly as soon as the tres hold is reached.
+ * using the function "sendBundle" at the end of the invocation - before the AWS Lambda
+ * runtime might freeze the process. The span buffer sends data reguarly using `sendSpans`.
  */
 exports.sendBundle = function sendBundle(bundle, finalLambdaRequest, callback) {
   const requestId = getRequestId();
@@ -278,7 +281,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback, tries, reques
   };
 
   logger.debug(
-    `${requestId} request options (${options.hostname}, ${options.port}, ${options.path}, 
+    `${requestId} Request options (${options.hostname}, ${options.port}, ${options.path}, 
     ${options.headers['Content-Length']}).`
   );
 
@@ -322,30 +325,30 @@ function send(resourcePath, payload, finalLambdaRequest, callback, tries, reques
       // reused for a different, unrelated invocation), it is safe to assume that  we are no longer interested in any
       // events emitted by the request or the underlying socket.
       if (finalLambdaRequest) {
-        req.removeAllListeners();
-        req.on('error', () => {});
-
-        // Finally, abort the request because from our end we are no longer interested in the response and we also do
-        // not want to let pending IO actions linger in the event loop. This will also call request.destoy and
-        // req.socket.destroy() internally.
-        destroyRequest(req);
+        cleanupRequests();
       }
 
       handleCallback();
     });
   }
 
+  if (isLambdaRequest) {
+    requests[requestId] = req;
+  }
+
   req.on('response', res => {
     const { statusCode } = res;
 
     if (statusCode >= 200 && statusCode < 300) {
-      logger.debug(`${requestId} Sent data to Instana (${requestPath}).`);
+      logger.debug(`${requestId} Received response from Instana (${requestPath}).`);
     } else {
-      logger.debug(`${requestId} Sent data to Instana has failed (${requestPath}).`);
+      logger.debug(`${requestId} Received response from Instana has been failed (${requestPath}).`);
     }
 
     logger.debug(`${requestId} Received HTTP status code ${statusCode} from Instana (${requestPath}).`);
-    logger.debug(`${requestId} Time to send data to Instana: ${Date.now() - start} ms.`);
+    logger.debug(`${requestId} Sending and receiving data in ms: ${Date.now() - start} ms.`);
+
+    delete requests[requestId];
   });
 
   // See above for the difference between the timeout attribute in the request options and handling the 'timeout'
@@ -356,6 +359,10 @@ function send(resourcePath, payload, finalLambdaRequest, callback, tries, reques
   // > socket.setTimeout() will be called.
   req.on('timeout', () => {
     logger.debug(`${requestId} Timeout while sending data to Instana (${requestPath}).`);
+
+    if (isLambdaRequest) {
+      delete requests[requestId];
+    }
 
     onTimeout(
       localUseLambdaExtension,
@@ -371,6 +378,10 @@ function send(resourcePath, payload, finalLambdaRequest, callback, tries, reques
 
   req.on('error', e => {
     logger.debug(`${requestId} Error while sending data to Instana (${requestPath}).`, e);
+
+    if (isLambdaRequest) {
+      delete requests[requestId];
+    }
 
     // CASE: we manually destroy streams, skip these errors
     // Otherwise we will produce `Error: socket hang up` errors in the logs
@@ -432,32 +443,18 @@ function send(resourcePath, payload, finalLambdaRequest, callback, tries, reques
 
   // This only indicates that the request has been successfully send! Independent of the response!
   req.on('finish', () => {
+    logger.debug(`${requestId} The request data has been successfully send to Instana.`);
     if (useLambdaExtension && finalLambdaRequest) {
       clearInterval(heartbeatInterval);
     }
   });
 
   if (skipWaitingForHttpResponse) {
+    // NOTE: When the callback of `.end` is called, the data was successfully send to the server.
+    //       That does not mean the server has responded in any way!
     req.end(serializedPayload, () => {
-      logger.debug(`${requestId} Request to Instana has been flushed.`);
-
-      if (finalLambdaRequest) {
-        // When the Node.js process is frozen while the request is pending, and then thawed later,
-        // this can trigger a stale, bogus timeout event (because from the perspective of the freshly thawed Node.js
-        // runtime, the request has been pending and inactive since a long time). To avoid that, we remove all listeners
-        // (including the timeout listener) on the request. Since the Lambda runtime will be frozen afterwards (or
-        // reused for a different, unrelated invocation), it is safe to assume that  we are no longer interested in any
-        // events emitted by the request or the underlying socket.
-        req.removeAllListeners();
-
-        // We need to have a listener for errors that ignores everything, otherwise aborting the request/socket will
-        // produce an "Unhandled 'error' event"
-        req.on('error', () => {});
-
-        // Finally, abort the request because from our end we are no longer interested in the response and we also do
-        // not want to let pending IO actions linger in the event loop. This will also call request.destoy and
-        // req.socket.destroy() internally.
-        destroyRequest(req);
+      if (isLambdaRequest && finalLambdaRequest) {
+        cleanupRequests();
       }
 
       // We finish as soon as the request has been flushed, without waiting for the response.
@@ -542,6 +539,30 @@ function onTimeout(
     logger.debug(`${requestId} Retrying...`);
     send(resourcePath, payload, finalLambdaRequest, handleCallback, tries + 1, requestId);
   }
+}
+
+function cleanupRequests() {
+  Object.keys(requests).forEach(key => {
+    const requestToCleanup = requests[key];
+    // When the Node.js process is frozen while the request is pending, and then thawed later,
+    // this can trigger a stale, bogus timeout event (because from the perspective of the freshly thawed Node.js
+    // runtime, the request has been pending and inactive since a long time).
+    // To avoid that, we remove all listeners
+    // (including the timeout listener) on the request. Since the Lambda runtime will be frozen afterwards (or
+    // reused for a different, unrelated invocation), it is safe to assume that
+    // we are no longer interested in any
+    // events emitted by the request or the underlying socket.
+    requestToCleanup.removeAllListeners();
+
+    // We need to have a listener for errors that ignores everything, otherwise aborting the request/socket will
+    // produce an "Unhandled 'error' event"
+    requestToCleanup.once('error', () => {});
+
+    // Finally, abort the request because from our end we are no longer interested in the response and we also do
+    // not want to let pending IO actions linger in the event loop. This will also call request.destoy and
+    // req.socket.destroy() internally.
+    destroyRequest(requestToCleanup);
+  });
 }
 
 function destroyRequest(req) {
