@@ -130,7 +130,8 @@ exports.setLogger = function setLogger(_logger) {
 exports.sendBundle = function sendBundle(bundle, finalLambdaRequest, callback) {
   const requestId = getRequestId();
   logger.debug(`[${requestId}] Sending bundle to Instana (no. of spans: ${bundle?.spans?.length ?? 'unknown'})`);
-  send({ resourcePath: '/bundle', payload: bundle, finalLambdaRequest, tries: 0, callback, requestId });
+  logger.debug(`First span is ${JSON.stringify(bundle.spans[0])}`);
+  send({ resourcePath: '/bundle', payload: bundle, finalLambdaRequest, tries: 0, callback });
 };
 
 exports.sendMetrics = function sendMetrics(metrics, callback) {
@@ -141,8 +142,9 @@ exports.sendMetrics = function sendMetrics(metrics, callback) {
 
 exports.sendSpans = function sendSpans(spans, callback) {
   const requestId = getRequestId();
-  logger.debug(`[${requestId}] Sending spans to Instana (no. of spans: ${spans?.length})`);
-  send({ resourcePath: '/traces', payload: spans, finalLambdaRequest: false, tries: 0, callback, requestId });
+  logger.debug(`[${requestId}] Sending spans to Instana (no. of spans: ${spans.length})`);
+  logger.debug(`First span is ${JSON.stringify(spans[0])}`);
+  send({ resourcePath: '/traces', payload: spans, finalLambdaRequest: false, tries: 0, callback });
 };
 
 let heartbeatInterval;
@@ -305,7 +307,13 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
     rejectUnauthorized: !disableCaCheck
   };
 
-  logger.debug(`${requestId} request options (${options.hostname}, ${options.port}, ${options.path}).`);
+  logger.debug(
+    `${requestId} request options (${options.hostname}, ${options.port}, ${options.path}, 
+    ${options.headers['Content-Length']}).`
+  );
+
+  // This timeout is for **inactivity** - Backend sends no data at all
+  // So if the timeout is set to 500ms, it does not mean that the request will be aborted after 500ms
   reqOptions.timeout = getBackendTimeout(localUseLambdaExtension);
 
   if (proxyAgent && !localUseLambdaExtension) {
@@ -353,11 +361,13 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   req.on('response', res => {
     const { statusCode } = res;
 
-    logger.debug(`${requestId} Received HTTP status code ${statusCode} from Instana (${requestPath}).`);
+    if (statusCode >= 200 && statusCode < 300) {
+      logger.debug(`${requestId} Sent data to Instana (${requestPath}).`);
+    } else {
+      logger.debug(`${requestId} Sent data to Instana has failed (${requestPath}).`);
+    }
 
-    res.on('end', () => {
-      logger.debug(`${requestId} Response ended (${requestPath}).`);
-    });
+    logger.debug(`${requestId} Received HTTP status code ${statusCode} from Instana (${requestPath}).`);
   });
 
   // See above for the difference between the timeout attribute in the request options and handling the 'timeout'
@@ -444,6 +454,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
     }
   });
 
+  // This only indicates that the request has been successfully send! Independent of the response!
   req.on('finish', () => {
     logger.debug(`[${requestId}] Sent data to Instana (${requestPath}).`);
 
