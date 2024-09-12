@@ -183,11 +183,7 @@ function instrument(coreModule, forceHttps) {
       checkReducedSpan: true
     });
 
-    // If there is no active entry span, we fall back to the reduced span of the most recent entry span. See comment in
-    // packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
-    const parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
-
-    if (skipTracingResult.skip || shouldBeBypassed(parentSpan, options)) {
+    if (skipTracingResult.skip || shouldBeBypassed(skipTracingResult.parentSpan, options)) {
       let traceLevelHeaderHasBeenAdded = false;
       if (skipTracingResult.suppressed) {
         traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0', w3cTraceContext);
