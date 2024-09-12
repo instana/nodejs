@@ -15,7 +15,7 @@ const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
 const { verifyHttpRootEntry, verifyExitSpan } = require('@instana/core/test/test_util/common_verifications');
 const SPAN_NAME = 'aws.lambda.invoke';
-const functionName = 'wrapped-async-v3';
+const functionName = 'nodejs-tracer-lambda';
 let appControls;
 
 const availableCtx = [null, '{"Custom": {"awesome_company": "Instana"}}', '{"Custom": "Something"}'];

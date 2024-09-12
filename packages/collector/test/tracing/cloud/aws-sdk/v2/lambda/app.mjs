@@ -16,7 +16,7 @@ import express from 'express';
 const logPrefix = `AWS SDK v2 Lambda (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const lambda = new AWS.Lambda();
-const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'wrapped-async';
+const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'nodejs-tracer-lambda';
 import getAppPort from '../../../../../test_util/app-port.js';
 const port = getAppPort();
 

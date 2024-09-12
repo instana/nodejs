@@ -17,7 +17,7 @@ const { verifyHttpRootEntry, verifyExitSpan } = require('@instana/core/test/test
 const { promisifyNonSequentialCases } = require('./promisify_non_sequential');
 
 // We are reusing the same function used for testing Lambda functions, as we are simply invoking it here.
-const functionName = 'wrapped-async';
+const functionName = 'nodejs-tracer-lambda';
 let mochaSuiteFn;
 
 const withErrorOptions = [false, true];

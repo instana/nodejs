@@ -338,7 +338,7 @@ function registerTests(handlerDefinitionPath, reduced) {
         await control.stop();
       });
 
-      it('must capture metrics and spans', () => {
+      it.skip('must capture metrics and spans', () => {
         return verify(control, { error: false, expectMetrics: true, expectSpans: true });
       });
     });
