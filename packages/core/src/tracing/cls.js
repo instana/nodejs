@@ -557,30 +557,36 @@ function skipExitTracing(options) {
     options
   );
 
-  const parentSpan = getCurrentSpan();
+  let parentSpan = getCurrentSpan();
+
+  // If there is no active entry span, we fall back to the reduced span of the most recent entry span.
+  // See comment in packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
+  if (opts.checkReducedSpan) {
+    parentSpan = getCurrentSpan() || getReducedSpan();
+  }
+
   const suppressed = tracingSuppressed();
   const isExitSpanResult = isExitSpan(parentSpan);
-  const parentOrReduced = parentSpan || getReducedSpan();
 
   // CASE: first ask for suppressed, because if we skip the entry span, we won't have a parentSpan
   //       on the exit span, which would create noisy log messages.
   if (suppressed) {
-    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
+    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult, parentSpan };
     return true;
   }
 
   if (allowRootExitSpan) {
-    if (opts.extendedResponse) return { skip: false, suppressed, isExitSpan: isExitSpanResult };
+    if (opts.extendedResponse) return { skip: false, suppressed, isExitSpan: isExitSpanResult, parentSpan };
     else return false;
   }
 
-  if (opts.checkReducedSpan && (!parentOrReduced || isExitSpan(parentSpan))) {
-    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
+  if (opts.checkReducedSpan && (!parentSpan || isExitSpan(parentSpan))) {
+    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult, parentSpan };
     else return true;
   }
 
   if (!opts.skipParentSpanCheck && (!parentSpan || isExitSpanResult)) {
-    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
+    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult, parentSpan };
     else return true;
   }
 
@@ -588,7 +594,7 @@ function skipExitTracing(options) {
   const skipIsTracing = !opts.skipIsTracing ? !isTracing() : false;
   const skip = skipIsActive || skipIsTracing;
 
-  if (opts.extendedResponse) return { skip, suppressed, isExitSpan: isExitSpanResult };
+  if (opts.extendedResponse) return { skip, suppressed, isExitSpan: isExitSpanResult, parentSpan };
   else return skip;
 }
 
