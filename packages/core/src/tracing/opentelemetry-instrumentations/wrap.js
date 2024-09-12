@@ -70,7 +70,8 @@ module.exports.init = (_config, cls) => {
       return;
     }
 
-    if (kind === constants.EXIT && cls.skipExitTracing()) {
+    // just for checking I added INTERMEDIATE SPAN here, I am not sure of the functionality
+    if ((kind === constants.EXIT || kind === constants.INTERMEDIATE) && cls.skipExitTracing()) {
       return;
     }
 

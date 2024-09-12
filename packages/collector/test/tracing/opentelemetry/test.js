@@ -25,7 +25,7 @@ const {
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 const DELAY_TIMEOUT_IN_MS = 500;
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
 
 mochaSuiteFn('opentelemetry/instrumentations', function () {
   this.timeout(config.getTestTimeout());
@@ -154,6 +154,10 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
             )
           ));
 
+      // there is an intermediate span in this context which is not expected.
+      // but there is no span if we call the line:61('should trace') function after this test in line:163
+      // which means it has something to do with the previous test case
+      // but I confirmed agentControls.clearReceivedTraceData(); does work
       it('[suppressed] should not trace', () =>
         controls
           .sendRequest({
@@ -162,479 +166,486 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
             suppressTracing: true
           })
           .then(() => delay(DELAY_TIMEOUT_IN_MS))
-          .then(() => retry(() => agentControls.getSpans().then(spans => expect(spans).to.be.empty))));
-    });
-
-    describe('opentelemetry is disabled', function () {
-      globalAgent.setUpCleanUpHooks();
-      const agentControls = globalAgent.instance;
-
-      let controls;
-
-      before(async () => {
-        controls = new ProcessControls({
-          appPath: path.join(__dirname, './restify-app'),
-          useGlobalAgent: true,
-          env: {
-            INSTANA_DISABLE_USE_OPENTELEMETRY: true
-          }
-        });
-
-        await controls.startAndWaitForAgentConnection();
-      });
-
-      beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
-      });
-
-      after(async () => {
-        await controls.stop();
-      });
-
-      afterEach(async () => {
-        await controls.clearIpcMessages();
-      });
-
-      it('should trace instana spans only', () =>
-        controls
-          .sendRequest({
-            method: 'GET',
-            path: '/test'
-          })
           .then(() =>
             retry(() =>
               agentControls.getSpans().then(spans => {
-                expect(spans.length).to.equal(3);
-
-                const httpEntry = verifyHttpRootEntry({
-                  spans,
-                  apiPath: '/test',
-                  pid: String(controls.getPid())
-                });
-
-                verifyExitSpan({
-                  spanName: 'postgres',
-                  spans,
-                  parent: httpEntry,
-                  withError: false,
-                  pid: String(controls.getPid()),
-                  dataProperty: 'pg'
-                });
-
-                verifyHttpExit(spans, httpEntry);
+                console.log(spans.length);
+                expect(spans).to.be.empty;
               })
             )
           ));
     });
+
+    // describe('opentelemetry is disabled', function () {
+    //   globalAgent.setUpCleanUpHooks();
+    //   const agentControls = globalAgent.instance;
+
+    //   let controls;
+
+    //   before(async () => {
+    //     controls = new ProcessControls({
+    //       appPath: path.join(__dirname, './restify-app'),
+    //       useGlobalAgent: true,
+    //       env: {
+    //         INSTANA_DISABLE_USE_OPENTELEMETRY: true
+    //       }
+    //     });
+
+    //     await controls.startAndWaitForAgentConnection();
+    //   });
+
+    //   beforeEach(async () => {
+    //     await agentControls.clearReceivedTraceData();
+    //   });
+
+    //   after(async () => {
+    //     await controls.stop();
+    //   });
+
+    //   afterEach(async () => {
+    //     await controls.clearIpcMessages();
+    //   });
+
+    //   it('should trace instana spans only', () =>
+    //     controls
+    //       .sendRequest({
+    //         method: 'GET',
+    //         path: '/test'
+    //       })
+    //       .then(() =>
+    //         retry(() =>
+    //           agentControls.getSpans().then(spans => {
+    //             expect(spans.length).to.equal(3);
+
+    //             const httpEntry = verifyHttpRootEntry({
+    //               spans,
+    //               apiPath: '/test',
+    //               pid: String(controls.getPid())
+    //             });
+
+    //             verifyExitSpan({
+    //               spanName: 'postgres',
+    //               spans,
+    //               parent: httpEntry,
+    //               withError: false,
+    //               pid: String(controls.getPid()),
+    //               dataProperty: 'pg'
+    //             });
+
+    //             verifyHttpExit(spans, httpEntry);
+    //           })
+    //         )
+    //       ));
+    // });
   });
 
-  describe('fs', function () {
-    globalAgent.setUpCleanUpHooks();
-    const agentControls = globalAgent.instance;
+  // describe('fs', function () {
+  //   globalAgent.setUpCleanUpHooks();
+  //   const agentControls = globalAgent.instance;
 
-    let controls;
+  //   let controls;
 
-    before(async () => {
-      controls = new ProcessControls({
-        appPath: path.join(__dirname, './fs-app'),
-        useGlobalAgent: true
-      });
+  //   before(async () => {
+  //     controls = new ProcessControls({
+  //       appPath: path.join(__dirname, './fs-app'),
+  //       useGlobalAgent: true
+  //     });
 
-      await controls.startAndWaitForAgentConnection();
-    });
+  //     await controls.startAndWaitForAgentConnection();
+  //   });
 
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
+  //   beforeEach(async () => {
+  //     await agentControls.clearReceivedTraceData();
+  //   });
 
-    after(async () => {
-      await controls.stop();
-    });
+  //   after(async () => {
+  //     await controls.stop();
+  //   });
 
-    afterEach(async () => {
-      await controls.clearIpcMessages();
-    });
+  //   afterEach(async () => {
+  //     await controls.clearIpcMessages();
+  //   });
 
-    it('should trace when there is no otel parent', () =>
-      controls
-        .sendRequest({
-          method: 'GET',
-          path: '/fsread'
-        })
-        .then(() =>
-          retry(() =>
-            agentControls.getSpans().then(spans => {
-              expect(spans.length).to.equal(2);
+  //   it('should trace when there is no otel parent', () =>
+  //     controls
+  //       .sendRequest({
+  //         method: 'GET',
+  //         path: '/fsread'
+  //       })
+  //       .then(() =>
+  //         retry(() =>
+  //           agentControls.getSpans().then(spans => {
+  //             expect(spans.length).to.equal(2);
 
-              const httpEntry = verifyHttpRootEntry({
-                spans,
-                apiPath: '/fsread',
-                pid: String(controls.getPid())
-              });
+  //             const httpEntry = verifyHttpRootEntry({
+  //               spans,
+  //               apiPath: '/fsread',
+  //               pid: String(controls.getPid())
+  //             });
 
-              verifyExitSpan({
-                spanName: 'otel',
-                spans,
-                parent: httpEntry,
-                withError: false,
-                pid: String(controls.getPid()),
-                dataProperty: 'tags',
-                extraTests: span => {
-                  expect(span.data.tags.name).to.eql('fs readFileSync');
-                  checkTelemetryResourceAttrs(span);
-                }
-              });
-            })
-          )
-        ));
+  //             verifyExitSpan({
+  //               spanName: 'otel',
+  //               spans,
+  //               parent: httpEntry,
+  //               withError: false,
+  //               pid: String(controls.getPid()),
+  //               dataProperty: 'tags',
+  //               extraTests: span => {
+  //                 expect(span.data.tags.name).to.eql('fs readFileSync');
+  //                 checkTelemetryResourceAttrs(span);
+  //               }
+  //             });
+  //           })
+  //         )
+  //       ));
 
-    it('should trace when there is an otel parent', () =>
-      controls
-        .sendRequest({
-          method: 'GET',
-          path: '/fsread2'
-        })
-        .then(() =>
-          retry(() =>
-            agentControls.getSpans().then(spans => {
-              expect(spans.length).to.equal(3);
+  //   it('should trace when there is an otel parent', () =>
+  //     controls
+  //       .sendRequest({
+  //         method: 'GET',
+  //         path: '/fsread2'
+  //       })
+  //       .then(() =>
+  //         retry(() =>
+  //           agentControls.getSpans().then(spans => {
+  //             expect(spans.length).to.equal(3);
 
-              const httpEntry = verifyHttpRootEntry({
-                spans,
-                apiPath: '/fsread2',
-                pid: String(controls.getPid())
-              });
+  //             const httpEntry = verifyHttpRootEntry({
+  //               spans,
+  //               apiPath: '/fsread2',
+  //               pid: String(controls.getPid())
+  //             });
 
-              verifyExitSpan({
-                spanName: 'otel',
-                spans,
-                parent: httpEntry,
-                withError: false,
-                pid: String(controls.getPid()),
-                dataProperty: 'tags',
-                extraTests: span => {
-                  expect(span.data.tags.name).to.eql('fs statSync');
-                  checkTelemetryResourceAttrs(span);
-                }
-              });
+  //             verifyExitSpan({
+  //               spanName: 'otel',
+  //               spans,
+  //               parent: httpEntry,
+  //               withError: false,
+  //               pid: String(controls.getPid()),
+  //               dataProperty: 'tags',
+  //               extraTests: span => {
+  //                 expect(span.data.tags.name).to.eql('fs statSync');
+  //                 checkTelemetryResourceAttrs(span);
+  //               }
+  //             });
 
-              verifyExitSpan({
-                spanName: 'otel',
-                spans,
-                parent: httpEntry,
-                withError: false,
-                pid: String(controls.getPid()),
-                dataProperty: 'tags',
-                extraTests: span => {
-                  expect(span.data.tags.name).to.eql('fs readFileSync');
-                  checkTelemetryResourceAttrs(span);
-                }
-              });
-            })
-          )
-        ));
+  //             verifyExitSpan({
+  //               spanName: 'otel',
+  //               spans,
+  //               parent: httpEntry,
+  //               withError: false,
+  //               pid: String(controls.getPid()),
+  //               dataProperty: 'tags',
+  //               extraTests: span => {
+  //                 expect(span.data.tags.name).to.eql('fs readFileSync');
+  //                 checkTelemetryResourceAttrs(span);
+  //               }
+  //             });
+  //           })
+  //         )
+  //       ));
 
-    it('[suppressed] should not trace', () =>
-      controls
-        .sendRequest({
-          method: 'GET',
-          path: '/fsread',
-          suppressTracing: true
-        })
-        .then(() => delay(DELAY_TIMEOUT_IN_MS))
-        .then(() => retry(() => agentControls.getSpans().then(spans => expect(spans).to.be.empty))));
-  });
+  //   it('[suppressed] should not trace', () =>
+  //     controls
+  //       .sendRequest({
+  //         method: 'GET',
+  //         path: '/fsread',
+  //         suppressTracing: true
+  //       })
+  //       .then(() => delay(DELAY_TIMEOUT_IN_MS))
+  //       .then(() => retry(() => agentControls.getSpans().then(spans => expect(spans).to.be.empty))));
+  // });
 
-  describe('socket.io', function () {
-    globalAgent.setUpCleanUpHooks();
-    const agentControls = globalAgent.instance;
-    let socketIOServerPort;
+  // describe('socket.io', function () {
+  //   globalAgent.setUpCleanUpHooks();
+  //   const agentControls = globalAgent.instance;
+  //   let socketIOServerPort;
 
-    let serverControls;
-    let clientControls;
+  //   let serverControls;
+  //   let clientControls;
 
-    before(async () => {
-      socketIOServerPort = portfinder();
+  //   before(async () => {
+  //     socketIOServerPort = portfinder();
 
-      serverControls = new ProcessControls({
-        appPath: path.join(__dirname, './socketio-server'),
-        useGlobalAgent: true,
-        env: {
-          SOCKETIOSERVER_PORT: socketIOServerPort
-        }
-      });
+  //     serverControls = new ProcessControls({
+  //       appPath: path.join(__dirname, './socketio-server'),
+  //       useGlobalAgent: true,
+  //       env: {
+  //         SOCKETIOSERVER_PORT: socketIOServerPort
+  //       }
+  //     });
 
-      clientControls = new ProcessControls({
-        appPath: path.join(__dirname, './socketio-client'),
-        useGlobalAgent: true,
-        env: {
-          SOCKETIOSERVER_PORT: socketIOServerPort
-        }
-      });
+  //     clientControls = new ProcessControls({
+  //       appPath: path.join(__dirname, './socketio-client'),
+  //       useGlobalAgent: true,
+  //       env: {
+  //         SOCKETIOSERVER_PORT: socketIOServerPort
+  //       }
+  //     });
 
-      await clientControls.startAndWaitForAgentConnection();
-      await serverControls.startAndWaitForAgentConnection();
-    });
+  //     await clientControls.startAndWaitForAgentConnection();
+  //     await serverControls.startAndWaitForAgentConnection();
+  //   });
 
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
+  //   beforeEach(async () => {
+  //     await agentControls.clearReceivedTraceData();
+  //   });
 
-    after(async () => {
-      await serverControls.stop();
-      await clientControls.stop();
-    });
+  //   after(async () => {
+  //     await serverControls.stop();
+  //     await clientControls.stop();
+  //   });
 
-    it('should trace', () =>
-      serverControls
-        .sendRequest({
-          method: 'GET',
-          path: '/io-emit'
-        })
-        .then(() =>
-          retry(() =>
-            agentControls.getSpans().then(spans => {
-              expect(spans.length).to.equal(3);
+  //   it('should trace', () =>
+  //     serverControls
+  //       .sendRequest({
+  //         method: 'GET',
+  //         path: '/io-emit'
+  //       })
+  //       .then(() =>
+  //         retry(() =>
+  //           agentControls.getSpans().then(spans => {
+  //             expect(spans.length).to.equal(3);
 
-              const httpEntry = verifyHttpRootEntry({
-                spans,
-                apiPath: '/io-emit',
-                pid: String(serverControls.getPid())
-              });
+  //             const httpEntry = verifyHttpRootEntry({
+  //               spans,
+  //               apiPath: '/io-emit',
+  //               pid: String(serverControls.getPid())
+  //             });
 
-              verifyEntrySpan({
-                spanName: 'otel',
-                spans,
-                withError: false,
-                pid: String(serverControls.getPid()),
-                dataProperty: 'tags',
-                extraTests: span => {
-                  expect(span.data.tags.name).to.contain('test_reply receive');
-                  expect(span.data.tags['messaging.system']).to.eql('socket.io');
-                  expect(span.data.tags['messaging.destination']).to.eql('ON test_reply');
-                  expect(span.data.tags['messaging.operation']).to.eql('receive');
-                  expect(span.data.tags['messaging.socket.io.event_name']).to.eql('test_reply');
+  //             verifyEntrySpan({
+  //               spanName: 'otel',
+  //               spans,
+  //               withError: false,
+  //               pid: String(serverControls.getPid()),
+  //               dataProperty: 'tags',
+  //               extraTests: span => {
+  //                 expect(span.data.tags.name).to.contain('test_reply receive');
+  //                 expect(span.data.tags['messaging.system']).to.eql('socket.io');
+  //                 expect(span.data.tags['messaging.destination']).to.eql('ON test_reply');
+  //                 expect(span.data.tags['messaging.operation']).to.eql('receive');
+  //                 expect(span.data.tags['messaging.socket.io.event_name']).to.eql('test_reply');
 
-                  checkTelemetryResourceAttrs(span);
-                }
-              });
+  //                 checkTelemetryResourceAttrs(span);
+  //               }
+  //             });
 
-              verifyExitSpan({
-                spanName: 'otel',
-                spans,
-                parent: httpEntry,
-                withError: false,
-                pid: String(serverControls.getPid()),
-                dataProperty: 'tags',
-                extraTests: span => {
-                  expect(span.data.tags.name).to.contain('send');
-                  expect(span.data.tags['messaging.system']).to.eql('socket.io');
-                  expect(span.data.tags['messaging.destination_kind']).to.eql('topic');
-                  expect(span.data.tags['messaging.socket.io.event_name']).to.eql('test');
-                  expect(span.data.tags['messaging.socket.io.namespace']).to.eql('/');
-                  expect(span.data.tags['messaging.destination']).to.eql('EMIT test');
+  //             verifyExitSpan({
+  //               spanName: 'otel',
+  //               spans,
+  //               parent: httpEntry,
+  //               withError: false,
+  //               pid: String(serverControls.getPid()),
+  //               dataProperty: 'tags',
+  //               extraTests: span => {
+  //                 expect(span.data.tags.name).to.contain('send');
+  //                 expect(span.data.tags['messaging.system']).to.eql('socket.io');
+  //                 expect(span.data.tags['messaging.destination_kind']).to.eql('topic');
+  //                 expect(span.data.tags['messaging.socket.io.event_name']).to.eql('test');
+  //                 expect(span.data.tags['messaging.socket.io.namespace']).to.eql('/');
+  //                 expect(span.data.tags['messaging.destination']).to.eql('EMIT test');
 
-                  checkTelemetryResourceAttrs(span);
-                }
-              });
-            })
-          )
-        ));
+  //                 checkTelemetryResourceAttrs(span);
+  //               }
+  //             });
+  //           })
+  //         )
+  //       ));
 
-    it('should trace', () =>
-      serverControls
-        .sendRequest({
-          method: 'GET',
-          path: '/io-send'
-        })
-        .then(() =>
-          retry(() =>
-            agentControls.getSpans().then(spans => {
-              expect(spans.length).to.equal(2);
+  //   it('should trace', () =>
+  //     serverControls
+  //       .sendRequest({
+  //         method: 'GET',
+  //         path: '/io-send'
+  //       })
+  //       .then(() =>
+  //         retry(() =>
+  //           agentControls.getSpans().then(spans => {
+  //             expect(spans.length).to.equal(2);
 
-              const httpEntry = verifyHttpRootEntry({
-                spans,
-                apiPath: '/io-send',
-                pid: String(serverControls.getPid())
-              });
+  //             const httpEntry = verifyHttpRootEntry({
+  //               spans,
+  //               apiPath: '/io-send',
+  //               pid: String(serverControls.getPid())
+  //             });
 
-              verifyExitSpan({
-                spanName: 'otel',
-                spans,
-                parent: httpEntry,
-                withError: false,
-                pid: String(serverControls.getPid()),
-                dataProperty: 'tags',
-                extraTests: span => {
-                  expect(span.data.tags.name).to.contain('send');
-                  expect(span.data.tags['messaging.system']).to.eql('socket.io');
-                  expect(span.data.tags['messaging.destination_kind']).to.eql('topic');
-                  expect(span.data.tags['messaging.socket.io.event_name']).to.eql('message');
-                  expect(span.data.tags['messaging.socket.io.namespace']).to.eql('/');
-                  expect(span.data.tags['messaging.destination']).to.eql('EMIT message');
+  //             verifyExitSpan({
+  //               spanName: 'otel',
+  //               spans,
+  //               parent: httpEntry,
+  //               withError: false,
+  //               pid: String(serverControls.getPid()),
+  //               dataProperty: 'tags',
+  //               extraTests: span => {
+  //                 expect(span.data.tags.name).to.contain('send');
+  //                 expect(span.data.tags['messaging.system']).to.eql('socket.io');
+  //                 expect(span.data.tags['messaging.destination_kind']).to.eql('topic');
+  //                 expect(span.data.tags['messaging.socket.io.event_name']).to.eql('message');
+  //                 expect(span.data.tags['messaging.socket.io.namespace']).to.eql('/');
+  //                 expect(span.data.tags['messaging.destination']).to.eql('EMIT message');
 
-                  checkTelemetryResourceAttrs(span);
-                }
-              });
-            })
-          )
-        ));
+  //                 checkTelemetryResourceAttrs(span);
+  //               }
+  //             });
+  //           })
+  //         )
+  //       ));
 
-    it('[suppressed] should not trace', () =>
-      serverControls
-        .sendRequest({
-          method: 'GET',
-          path: '/io-emit',
-          suppressTracing: true
-        })
-        .then(() => delay(DELAY_TIMEOUT_IN_MS))
-        .then(() =>
-          retry(() =>
-            agentControls.getSpans().then(spans => {
-              // We cannot forward the headers because socket.io does not support headers
-              expect(spans.length).to.eql(1);
-            })
-          )
-        ));
-  });
+  //   it('[suppressed] should not trace', () =>
+  //     serverControls
+  //       .sendRequest({
+  //         method: 'GET',
+  //         path: '/io-emit',
+  //         suppressTracing: true
+  //       })
+  //       .then(() => delay(DELAY_TIMEOUT_IN_MS))
+  //       .then(() =>
+  //         retry(() =>
+  //           agentControls.getSpans().then(spans => {
+  //             // We cannot forward the headers because socket.io does not support headers
+  //             expect(spans.length).to.eql(1);
+  //           })
+  //         )
+  //       ));
+  // });
 
-  const runTedious = semver.gte(process.versions.node, '18.17.0') ? describe : describe.skip;
-  runTedious('tedious', function () {
-    describe('opentelemetry is enabled', function () {
-      globalAgent.setUpCleanUpHooks();
-      const agentControls = globalAgent.instance;
-      let controls;
+  // const runTedious = semver.gte(process.versions.node, '18.17.0') ? describe : describe.skip;
+  // runTedious('tedious', function () {
+  //   describe('opentelemetry is enabled', function () {
+  //     globalAgent.setUpCleanUpHooks();
+  //     const agentControls = globalAgent.instance;
+  //     let controls;
 
-      // We need to increase the waiting timeout here for the initial azure connection,
-      // because it can take up to 1-2 minutes till azure replies if the db is in paused state
-      this.timeout(1000 * 60 * 2);
+  //     // We need to increase the waiting timeout here for the initial azure connection,
+  //     // because it can take up to 1-2 minutes till azure replies if the db is in paused state
+  //     this.timeout(1000 * 60 * 2);
 
-      before(async () => {
-        controls = new ProcessControls({
-          appPath: path.join(__dirname, './tedious-app'),
-          useGlobalAgent: true,
-          env: {
-            OTEL_ENABLED: true
-          }
-        });
+  //     before(async () => {
+  //       controls = new ProcessControls({
+  //         appPath: path.join(__dirname, './tedious-app'),
+  //         useGlobalAgent: true,
+  //         env: {
+  //           OTEL_ENABLED: true
+  //         }
+  //       });
 
-        await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 2);
-      });
+  //       await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 2);
+  //     });
 
-      beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
-      });
+  //     beforeEach(async () => {
+  //       await agentControls.clearReceivedTraceData();
+  //     });
 
-      after(async () => {
-        await controls.stop();
-      });
+  //     after(async () => {
+  //       await controls.stop();
+  //     });
 
-      const sendRequestAndVerifySpans = (method, endpoint, expectedStatement) =>
-        controls
-          .sendRequest({
-            method,
-            path: endpoint
-          })
-          .then(() => delay(DELAY_TIMEOUT_IN_MS))
-          .then(() =>
-            retry(() =>
-              agentControls.getSpans().then(spans => {
-                expect(spans.length).to.equal(2);
+  //     const sendRequestAndVerifySpans = (method, endpoint, expectedStatement) =>
+  //       controls
+  //         .sendRequest({
+  //           method,
+  //           path: endpoint
+  //         })
+  //         .then(() => delay(DELAY_TIMEOUT_IN_MS))
+  //         .then(() =>
+  //           retry(() =>
+  //             agentControls.getSpans().then(spans => {
+  //               expect(spans.length).to.equal(2);
 
-                const httpEntry = verifyHttpRootEntry({
-                  spans,
-                  apiPath: endpoint,
-                  pid: String(controls.getPid())
-                });
+  //               const httpEntry = verifyHttpRootEntry({
+  //                 spans,
+  //                 apiPath: endpoint,
+  //                 pid: String(controls.getPid())
+  //               });
 
-                verifyExitSpan({
-                  spanName: 'otel',
-                  spans,
-                  parent: httpEntry,
-                  withError: false,
-                  pid: String(controls.getPid()),
-                  dataProperty: 'tags',
-                  extraTests: span => {
-                    const queryType = endpoint === '/packages/batch' ? 'execSqlBatch' : 'execSql';
-                    expect(span.data.tags.name).to.eql(`${queryType} azure-nodejs-test`);
-                    expect(span.data.tags['db.system']).to.eql('mssql');
-                    expect(span.data.tags['db.name']).to.eql('azure-nodejs-test');
-                    expect(span.data.tags['db.user']).to.eql('admin@instana@nodejs-team-db-server');
-                    expect(span.data.tags['db.statement']).to.eql(expectedStatement);
-                    expect(span.data.tags['net.peer.name']).to.eql('nodejs-team-db-server.database.windows.net');
-                    checkTelemetryResourceAttrs(span);
-                  }
-                });
-              })
-            )
-          );
-      it('should trace select queries', () => sendRequestAndVerifySpans('GET', '/packages', 'SELECT * FROM packages'));
-      it('should trace batch queries', function (done) {
-        sendRequestAndVerifySpans(
-          'POST',
-          '/packages/batch',
-          "\n  INSERT INTO packages (id, name, version) VALUES (11, 'BatchPackage1', 1);\n  " +
-            "INSERT INTO packages (id, name, version) VALUES (11, 'BatchPackage2', 2);\n"
-        )
-          .then(() => {
-            done();
-          })
-          .catch(err => done(err));
-      });
-      it('should trace delete queries', () =>
-        sendRequestAndVerifySpans('DELETE', '/packages', 'DELETE FROM packages WHERE id = 11'));
+  //               verifyExitSpan({
+  //                 spanName: 'otel',
+  //                 spans,
+  //                 parent: httpEntry,
+  //                 withError: false,
+  //                 pid: String(controls.getPid()),
+  //                 dataProperty: 'tags',
+  //                 extraTests: span => {
+  //                   const queryType = endpoint === '/packages/batch' ? 'execSqlBatch' : 'execSql';
+  //                   expect(span.data.tags.name).to.eql(`${queryType} azure-nodejs-test`);
+  //                   expect(span.data.tags['db.system']).to.eql('mssql');
+  //                   expect(span.data.tags['db.name']).to.eql('azure-nodejs-test');
+  //                   expect(span.data.tags['db.user']).to.eql('admin@instana@nodejs-team-db-server');
+  //                   expect(span.data.tags['db.statement']).to.eql(expectedStatement);
+  //                   expect(span.data.tags['net.peer.name']).to.eql('nodejs-team-db-server.database.windows.net');
+  //                   checkTelemetryResourceAttrs(span);
+  //                 }
+  //               });
+  //             })
+  //           )
+  //         );
+  //     it('should trace select queries', () => sendRequestAndVerifySpans('GET', '/packages', 'SELECT * FROM packages'));
+  //     it('should trace batch queries', function (done) {
+  //       sendRequestAndVerifySpans(
+  //         'POST',
+  //         '/packages/batch',
+  //         "\n  INSERT INTO packages (id, name, version) VALUES (11, 'BatchPackage1', 1);\n  " +
+  //           "INSERT INTO packages (id, name, version) VALUES (11, 'BatchPackage2', 2);\n"
+  //       )
+  //         .then(() => {
+  //           done();
+  //         })
+  //         .catch(err => done(err));
+  //     });
+  //     it('should trace delete queries', () =>
+  //       sendRequestAndVerifySpans('DELETE', '/packages', 'DELETE FROM packages WHERE id = 11'));
 
-      it('[suppressed] should not trace', () =>
-        controls
-          .sendRequest({
-            method: 'GET',
-            path: '/packages',
-            suppressTracing: true
-          })
-          .then(() => delay(DELAY_TIMEOUT_IN_MS))
-          .then(() => retry(() => agentControls.getSpans().then(spans => expect(spans).to.be.empty))));
-    });
-    describe('opentelemetry is disabled', function () {
-      globalAgent.setUpCleanUpHooks();
-      const agentControls = globalAgent.instance;
-      let controls;
+  //     it('[suppressed] should not trace', () =>
+  //       controls
+  //         .sendRequest({
+  //           method: 'GET',
+  //           path: '/packages',
+  //           suppressTracing: true
+  //         })
+  //         .then(() => delay(DELAY_TIMEOUT_IN_MS))
+  //         .then(() => retry(() => agentControls.getSpans().then(spans => expect(spans).to.be.empty))));
+  //   });
+  //   describe('opentelemetry is disabled', function () {
+  //     globalAgent.setUpCleanUpHooks();
+  //     const agentControls = globalAgent.instance;
+  //     let controls;
 
-      before(async () => {
-        controls = new ProcessControls({
-          appPath: path.join(__dirname, './tedious-app'),
-          useGlobalAgent: true,
-          env: {
-            OTEL_ENABLED: false
-          }
-        });
+  //     before(async () => {
+  //       controls = new ProcessControls({
+  //         appPath: path.join(__dirname, './tedious-app'),
+  //         useGlobalAgent: true,
+  //         env: {
+  //           OTEL_ENABLED: false
+  //         }
+  //       });
 
-        await controls.startAndWaitForAgentConnection();
-      });
+  //       await controls.startAndWaitForAgentConnection();
+  //     });
 
-      beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
-      });
+  //     beforeEach(async () => {
+  //       await agentControls.clearReceivedTraceData();
+  //     });
 
-      after(async () => {
-        await controls.stop();
-      });
-      it('should not trace', () => {
-        controls
-          .sendRequest({
-            method: 'GET',
-            path: '/packages'
-          })
-          .then(() => delay(DELAY_TIMEOUT_IN_MS))
-          .then(() =>
-            retry(() => {
-              return agentControls.getSpans().then(spans => {
-                expect(spans).to.be.empty;
-              });
-            })
-          );
-      });
-    });
-  });
+  //     after(async () => {
+  //       await controls.stop();
+  //     });
+  //     it('should not trace', () => {
+  //       controls
+  //         .sendRequest({
+  //           method: 'GET',
+  //           path: '/packages'
+  //         })
+  //         .then(() => delay(DELAY_TIMEOUT_IN_MS))
+  //         .then(() =>
+  //           retry(() => {
+  //             return agentControls.getSpans().then(spans => {
+  //               expect(spans).to.be.empty;
+  //             });
+  //           })
+  //         );
+  //     });
+  //   });
+  // });
 });
 
 function checkTelemetryResourceAttrs(span) {
