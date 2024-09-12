@@ -41,7 +41,7 @@ if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe;
 }
 
-mochaSuiteFn.only('tracing/cloud/aws-sdk/v2/sns', function () {
+mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
   this.timeout(config.getTestTimeout() * 3);
 
   globalAgent.setUpCleanUpHooks();
