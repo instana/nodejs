@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.18.1](https://github.com/instana/nodejs/compare/v3.18.0...v3.18.1) (2024-09-12)
+
+### Bug Fixes
+
+- added deprecation warning for Kafka header migration ([#1311](https://github.com/instana/nodejs/issues/1311)) ([fa1e4bd](https://github.com/instana/nodejs/commit/fa1e4bd74df6937cb9e5091717b98bc2ff619736))
+
 # [3.18.0](https://github.com/instana/nodejs/compare/v3.17.1...v3.18.0) (2024-09-06)
 
 ### Bug Fixes
