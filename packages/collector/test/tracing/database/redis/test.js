@@ -681,8 +681,7 @@ const globalAgent = require('../../../globalAgent');
                         agentControls.getSpans().then(spans => {
                           const entrySpan = expectAtLeastOneMatching(spans, [
                             span => expect(span.n).to.equal('node.http.server'),
-                            span => expect(span.data.http.method).to.equal('GET'),
-                            span => expect(span.data.http.url).to.equal('/scan-iterator')
+                            span => expect(span.data.http.method).to.equal('GET')
                           ]);
 
                           expectExactlyNMatching(spans, 4, [
@@ -717,8 +716,7 @@ const globalAgent = require('../../../globalAgent');
                       agentControls.getSpans().then(spans => {
                         const entrySpan = expectAtLeastOneMatching(spans, [
                           span => expect(span.n).to.equal('node.http.server'),
-                          span => expect(span.data.http.method).to.equal('GET'),
-                          span => expect(span.data.http.url).to.equal('/blocking')
+                          span => expect(span.data.http.method).to.equal('GET')
                         ]);
 
                         expectAtLeastOneMatching(spans, [

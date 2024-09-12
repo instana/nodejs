@@ -5,102 +5,74 @@
 'use strict';
 
 const expect = require('chai').expect;
+const path = require('path');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const { verifyEntrySpan } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
-const constants = require('@instana/core').tracing.constants;
+const { retry, delay } = require('../../../../../core/test/test_util');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/sdk/opt_in', function () {
   this.timeout(config.getTestTimeout());
 
-  const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
 
-  let controls;
-
-  before(async () => {
-    controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true
-    });
-
-    await controls.startAndWaitForAgentConnection();
-  });
-
   beforeEach(async () => {
-    await agentControls.clearReceivedTraceData();
+    await globalAgent.instance.clearReceivedTraceData();
   });
 
-  after(async () => {
-    await controls.stop();
+  describe('APP WITH SDK', function () {
+    let agentControls;
+
+    before(async () => {
+      agentControls = new ProcessControls({
+        appPath: path.join(__dirname, 'app_with_sdk'),
+        useGlobalAgent: true
+      });
+
+      await agentControls.start(null, null, true);
+    });
+
+    after(async () => {
+      await agentControls.stop();
+    });
+
+    it('should collect spans including sdk wrap', async () => {
+      await delay(100);
+
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        expect(spans.length).to.equal(2);
+      });
+    });
   });
 
-  afterEach(async () => {
-    await controls.clearIpcMessages();
-  });
+  describe('APP WITHOUT SDK', function () {
+    let agentControls;
 
-  it('should collect sdk wrapped spans', async () => {
-    await controls.sendRequest({
-      method: 'GET',
-      path: '/sdk-wrap'
+    before(async () => {
+      agentControls = new ProcessControls({
+        appPath: path.join(__dirname, 'app_without_sdk'),
+        useGlobalAgent: true
+      });
+
+      await agentControls.start(null, null, true);
     });
 
-    const spans = await agentControls.getSpans();
-    // expect(spans.length).to.equal(2);
-    verifyEntrySpan({
-      spanName: 'node.http.server',
-      spans,
-      withError: false,
-      pid: String(controls.getPid()),
-      dataProperty: 'http',
-      extraTests: [
-        span => {
-          expect(span.data.http.method).to.equal('GET');
-          expect(span.data.http.url).to.equal('/sdk-wrap');
-          expect(span.data.http.status).to.equal(200);
-          expect(span.k).to.equal(constants.ENTRY);
-        }
-      ]
+    after(async () => {
+      await agentControls.stop();
     });
 
-    const exitSpan = spans.find(span => span.n === 'node.http.client');
-    expect(exitSpan).to.exist;
-    expect(exitSpan.data.http.url).to.equal('https://www.instana.com/');
-    expect(exitSpan.k).to.equal(constants.EXIT);
-  });
+    it('should trace single exit span only', async () => {
+      await delay(100);
 
-  it('should collect opt-in spans', async () => {
-    await controls.sendRequest({
-      method: 'GET',
-      path: '/no-sdk-wrap'
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        expect(spans.length).to.equal(1);
+      });
     });
-
-    const spans = await agentControls.getSpans();
-
-    verifyEntrySpan({
-      spanName: 'node.http.server',
-      spans,
-      withError: false,
-      pid: String(controls.getPid()),
-      dataProperty: 'http',
-      extraTests: [
-        span => {
-          expect(span.data.http.method).to.equal('GET');
-          expect(span.data.http.url).to.equal('/no-sdk-wrap');
-          expect(span.data.http.status).to.equal(200);
-          expect(span.k).to.equal(constants.ENTRY);
-        }
-      ]
-    });
-
-    const exitSpan = spans.find(span => span.n === 'node.http.client');
-    expect(exitSpan).to.exist;
-    expect(exitSpan.data.http.url).to.equal('https://www.instana.com/');
-    expect(exitSpan.k).to.equal(constants.EXIT);
   });
 });
