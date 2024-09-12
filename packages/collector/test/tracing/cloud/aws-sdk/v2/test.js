@@ -16,7 +16,8 @@ const globalAgent = require('../../../../globalAgent');
 const { verifyHttpRootEntry, verifyExitSpan } = require('@instana/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('./promisify_non_sequential');
 
-const functionName = 'team-nodejs-invoke-function';
+// We are reusing the same function used for testing Lambda functions, as we are simply invoking it here.
+const functionName = 'wrapped-async';
 let mochaSuiteFn;
 
 const withErrorOptions = [false, true];
