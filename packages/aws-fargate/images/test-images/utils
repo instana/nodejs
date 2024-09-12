@@ -11,7 +11,7 @@ function normalizeArgs {
     instana_layer_without_tag=instana-aws-fargate-nodejs-local
     INSTANA_LAYER_MODE=local
   elif [[ $instanaLayerMode = aws ]]; then
-    instana_layer_without_tag=410797082306.dkr.ecr.us-east-2.amazonaws.com/instana-aws-fargate-nodejs
+    instana_layer_without_tag=767398002385.dkr.ecr.us-east-2.amazonaws.com/instana-aws-fargate-nodejs
     INSTANA_LAYER_MODE=aws
   else
     echo "Unknown option for Instana layer: $instanaLayerMode"

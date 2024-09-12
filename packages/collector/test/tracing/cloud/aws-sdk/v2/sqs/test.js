@@ -25,7 +25,7 @@ const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
 const { sendSnsNotificationToSqsQueue } = require('./sendNonInstrumented');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
-const defaultPrefix = 'https://sqs.us-east-2.amazonaws.com/410797082306/';
+const defaultPrefix = 'https://sqs.us-east-2.amazonaws.com/767398002385/';
 const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
 
 const queueNamePrefix = process.env.SQS_QUEUE_NAME || 'nodejs-team';

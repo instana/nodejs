@@ -128,7 +128,7 @@ const sqsInfo = {
   api: sqs,
   listFunction: 'listQueues',
   listProperty: 'QueueUrls',
-  criteria: 'https://sqs.us-east-2.amazonaws.com/410797082306/nodejs-team',
+  criteria: 'https://sqs.us-east-2.amazonaws.com/767398002385/nodejs-team',
   attributesFunction: 'getQueueAttributes',
   getAttributesParams(item) {
     return { QueueUrl: item, AttributeNames: ['LastModifiedTimestamp'] };
@@ -156,7 +156,7 @@ const snsInfo = {
   listFunction: 'listTopics',
   listProperty: 'Topics',
   itemAttribute: 'TopicArn',
-  criteria: 'arn:aws:sns:us-east-2:410797082306:nodejs-team',
+  criteria: 'arn:aws:sns:us-east-2:767398002385:nodejs-team',
   attributesFunction: 'getTopicAttributes',
   getAttributesParams(item) {
     return item;

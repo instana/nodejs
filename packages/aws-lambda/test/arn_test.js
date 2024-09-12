@@ -9,7 +9,7 @@ const expect = require('chai').expect;
 
 const arnParser = require('../src/arn');
 
-const unqualifiedArn = 'arn:aws:lambda:us-east-2:410797082306:function:demo-http-api';
+const unqualifiedArn = 'arn:aws:lambda:us-east-2:767398002385:function:demo-http-api';
 
 describe('arn parser', () => {
   it('should parse $LATEST', () => {

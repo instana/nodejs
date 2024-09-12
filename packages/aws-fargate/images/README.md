@@ -57,7 +57,7 @@ instana-aws-fargate/build-and-push.sh npm next
 
 Instead of running `instana-aws-fargate/build-and-push.sh`, you can also only run `instana-aws-fargate/build.sh` if you are not interested in pushing the image to a registry or if you want to verify it can be built correctly first.
 
-With the default settings (default AWS ECR registry) you would find the image here: <https://us-east-2.console.aws.amazon.com/ecr/repositories/private/410797082306/instana-aws-fargate-nodejs?region=us-east-2>
+With the default settings (default AWS ECR registry) you would find the image here: <https://us-east-2.console.aws.amazon.com/ecr/repositories/private/767398002385/instana-aws-fargate-nodejs?region=us-east-2>
 
 Once the Instana Node.js Fargate base image with the release candidate has been created, you can create a test application image with it:
 

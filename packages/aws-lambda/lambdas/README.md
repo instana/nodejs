@@ -25,7 +25,7 @@ Use `bin/deploy-zip.sh <lambda-folder-name>` to deploy a Lambda zip files. They 
 
 If you have built the zip files with `BUILD_LAMBDAS_WITH=layer`, the script will try to add the Lambda layer "instana-nodejs" to the deployed Lambda function. The script will try to figure out the latest version of the Instana Node.js Lambda layer. Alternatively, you can also use `LAYER_VERSION` and `LAYER_ARN` to specifiy which layer you want to have added. Checkout the latest layers here: https://www.ibm.com/docs/en/instana-observability/current?topic=lambda-aws-native-tracing-nodejs
 
-E.g. run something like `LAYER_VERSION=167 LAYER_ARN=arn:aws:lambda:ap-southeast-1:410797082306:layer:instana-nodejs:167 bin/deploy-zip.sh`.
+E.g. run something like `LAYER_VERSION=167 LAYER_ARN=arn:aws:lambda:ap-southeast-1:767398002385:layer:instana-nodejs:167 bin/deploy-zip.sh`.
 
 Note that if you have use `BUILD_LAMBDAS_WITH=npm` or `BUILD_LAMBDAS_WITH=local` and the function already has the Instana Lambda layer, the deploy script will try to remove it and revert the handler back to `index.handler`.
 

@@ -38,7 +38,7 @@ const onlyLatest = process.env.ONLY_LATEST;
 const name = process.env.LAMBDA_FUNCTION_NAME || 'wrapped-async';
 const unqualifiedArn = anotherLambda
   ? `arn:aws:lambda:us-east-2:521808193417:function:${name}`
-  : `arn:aws:lambda:us-east-2:410797082306:function:${name}`;
+  : `arn:aws:lambda:us-east-2:767398002385:function:${name}`;
 
 function random(maxValue) {
   return Math.floor(Math.random() * (maxValue + 1));
