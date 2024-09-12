@@ -76,19 +76,17 @@ function instrumentSendCommand(original) {
       return original.apply(this, arguments);
     }
 
-    // ".multi()" commands could actually be recorded as multiple spans, but we ONLY want to record ONE
-    // batched span considering that a multi call represents a transaction.
-    // The same is true for pipeline calls, but they have a slightly different semantic.
+    // TODO: Why do we trace each sub command as separate spans (exec, hset, hget etc.)?
+    //       https://jsw.ibm.com/browse/INSTA-14540
+    // NOTE: there is separate "pipeline" call from "instrumentSendCommand"
+    //       only for "multi". Thats why we filter it out here.
     if (
       parentSpan.n === exports.spanName &&
-      (parentSpan.data.redis.command === 'multi' || parentSpan.data.redis.command === 'pipeline')
+      (parentSpan.data.redis.command === 'multi' || parentSpan.data.redis.command === 'pipeline') &&
+      command.name !== 'multi'
     ) {
-      // This is the initial .multi()/.pipeline() request. We do not want to record this as subCommand.
-      if (command.name === 'multi' || command.name === 'pipeline') return original.apply(this, arguments);
-
       const parentSpanSubCommands = (parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || []);
       parentSpanSubCommands.push(command.name);
-      return original.apply(this, arguments);
     } else if (constants.isExitSpan(parentSpan)) {
       // Apart from the special case of multi/pipeline calls, redis exits can't be child spans of other exits.
       return original.apply(this, arguments);
