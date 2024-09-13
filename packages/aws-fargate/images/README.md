@@ -86,6 +86,6 @@ You can find a list of all available images at <https://us-east-2.console.aws.am
 * Go to the [tasks tab](https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/clusters/bastian-krol-test/services/fargate-nodejs-service/tasks) and make sure that only the new task is running (old tasks might need to be stopped).
 * Go to the Instana environment you are reporting to (for example [test/pink](https://test-instana.pink.instana.rocks/#/physical?q=entity.type%3Afargate)) and inspect the data.
 * Test tracing:
-    * You can find the task's public IP on its [details tab](https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/clusters/bastian-krol-test/tasks/7c75d3e7628743ba864a5d6d2ab6770e/details). The port (4816) is in the `test-images/server.js`)  file.
+    * You can find the task's public IP on its [details tab](https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/clusters/bastian-krol-test/tasks/7c75d3e7628743ba864a5d6d2ab6770e/details). The port (4816) is in the `test-images/server.js`  file.
     * Execute a few requests: `watch curl http://$PUBLIC_TASK_IP:4816`.
     * Inspect the resulting calls in Instana.
