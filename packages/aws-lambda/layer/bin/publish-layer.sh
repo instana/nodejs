@@ -127,7 +127,7 @@ fi
 
 # The us-gov-* regions are only available to US government agencies, U.S. government etc. The regions have not been (and
 # maybe cannot be) enabled for our AWS account. We currently do not publish Lambda layers to these regions.
-SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1\ncn-north-1\ncn-northwest-1'
+SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1'
 
 # AWS China is completely separated from the rest of AWS. You cannot enable the Chinese regions in a global AWS account.
 # Instead, we have a separate account for AWS China.
