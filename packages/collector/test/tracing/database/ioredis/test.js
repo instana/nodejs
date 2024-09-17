@@ -27,7 +27,9 @@ const mochaSuiteFn =
 
 function checkConnection(span, setupType) {
   if (setupType === 'cluster') {
-    expect(span.data.redis.connection).to.equal(process.env.AZURE_REDIS_CLUSTER);
+    // NOTE: we currently extract the client ip address of the cluster
+    // TODO: https://jsw.ibm.com/browse/INSTA-14540
+    expect(span.data.redis.connection).to.exist;
   } else {
     expect(span.data.redis.connection).to.equal(process.env.REDIS);
   }
@@ -347,72 +349,125 @@ function checkConnection(span, setupType) {
                 span => expect(span.data.http.method).to.equal('GET')
               ]);
 
-              // 1 x entry
-              // 1 x multi containing the sub commands
-              // 1 x exec span
-              // 2 x sub commands
-              // TODO: https://jsw.ibm.com/browse/INSTA-14540
-              expect(spans.length).to.equal(5);
+              if (setupType === 'cluster') {
+                // 1 x entry
+                // NO multi
+                // 1 x exec span
+                // 2 x sub commands
+                // TODO: https://jsw.ibm.com/browse/INSTA-14540
+                expect(spans.length).to.equal(4);
+              } else {
+                // 1 x entry
+                // 1 x multi containing the sub commands
+                // 1 x exec span
+                // 2 x sub commands
+                expect(spans.length).to.equal(5);
+              }
 
-              const multiSpan = expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(writeEntrySpan.t),
-                span => expect(span.p).to.equal(writeEntrySpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b.s).to.equal(2),
-                span => expect(span.b.u).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('multi'),
-                span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
-              ]);
+              if (setupType !== 'cluster') {
+                const multiSpan = expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b.s).to.equal(2),
+                  span => expect(span.b.u).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('multi'),
+                  span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                ]);
 
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(writeEntrySpan.t),
-                span => expect(span.p).to.equal(multiSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('exec')
-              ]);
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(writeEntrySpan.t),
-                span => expect(span.p).to.equal(multiSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('hset')
-              ]);
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(writeEntrySpan.t),
-                span => expect(span.p).to.equal(multiSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('hget')
-              ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(multiSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('exec')
+                ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(multiSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hset')
+                ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(multiSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hget')
+                ]);
+              } else {
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('exec')
+                ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hset')
+                ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hget')
+                ]);
+              }
             })
           )
         ));
@@ -434,70 +489,121 @@ function checkConnection(span, setupType) {
                 span => expect(span.data.http.method).to.equal('GET')
               ]);
 
-              expect(spans).to.have.lengthOf(5);
+              // NOTE: no multi span for cluster, see https://jsw.ibm.com/browse/INSTA-14540
+              if (setupType === 'cluster') {
+                expect(spans).to.have.lengthOf(4);
+              } else {
+                expect(spans).to.have.lengthOf(5);
+              }
 
-              const multiSpan = expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(writeEntrySpan.t),
-                span => expect(span.p).to.equal(writeEntrySpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(2),
-                span => expect(span.b.s).to.equal(2),
-                span => expect(span.b.u).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('multi'),
-                span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']),
-                span => expect(span.data.redis.error).to.be.a('string')
-              ]);
+              if (setupType !== 'cluster') {
+                const multiSpan = expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(2),
+                  span => expect(span.b.s).to.equal(2),
+                  span => expect(span.b.u).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('multi'),
+                  span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']),
+                  span => expect(span.data.redis.error).to.be.a('string')
+                ]);
 
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(writeEntrySpan.t),
-                span => expect(span.p).to.equal(multiSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(1),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('exec')
-              ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(multiSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(1),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('exec')
+                ]);
 
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(writeEntrySpan.t),
-                span => expect(span.p).to.equal(multiSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('hset')
-              ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(multiSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hset')
+                ]);
 
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(writeEntrySpan.t),
-                span => expect(span.p).to.equal(multiSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(1),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('hget')
-              ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(multiSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(1),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hget')
+                ]);
+              } else {
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hset')
+                ]);
+
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(1),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hget')
+                ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(1),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('exec')
+                ]);
+              }
             })
           )
         ));
@@ -516,84 +622,151 @@ function checkConnection(span, setupType) {
                 span => expect(span.data.http.method).to.equal('POST')
               ]);
 
-              expect(spans).to.have.lengthOf(6);
+              // NOTE: no multi span for cluster, see https://jsw.ibm.com/browse/INSTA-14540
+              if (setupType === 'cluster') {
+                expect(spans).to.have.lengthOf(5);
+              } else {
+                expect(spans).to.have.lengthOf(6);
+              }
 
-              const multiSpan = expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(entrySpan.t),
-                span => expect(span.p).to.equal(entrySpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b.s).to.equal(2),
-                span => expect(span.b.u).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('multi'),
-                span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
-              ]);
+              if (setupType !== 'cluster') {
+                const multiSpan = expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b.s).to.equal(2),
+                  span => expect(span.b.u).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('multi'),
+                  span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                ]);
 
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(entrySpan.t),
-                span => expect(span.p).to.equal(multiSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('exec')
-              ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(multiSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('exec')
+                ]);
 
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(entrySpan.t),
-                span => expect(span.p).to.equal(multiSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('hget')
-              ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(multiSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hget')
+                ]);
 
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(entrySpan.t),
-                span => expect(span.p).to.equal(multiSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('hset')
-              ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(multiSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hset')
+                ]);
 
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(entrySpan.t),
-                span => expect(span.p).to.equal(entrySpan.s),
-                span => expect(span.n).to.equal('node.http.client'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.data.http.method).to.equal('GET'),
-                span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
-                span => expect(span.data.http.status).to.equal(200)
-              ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('node.http.client'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.data.http.method).to.equal('GET'),
+                  span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
+                  span => expect(span.data.http.status).to.equal(200)
+                ]);
+              } else {
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('exec')
+                ]);
+
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hget')
+                ]);
+
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hset')
+                ]);
+
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('node.http.client'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.data.http.method).to.equal('GET'),
+                  span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
+                  span => expect(span.data.http.status).to.equal(200)
+                ]);
+              }
             })
           )
         ));
@@ -612,58 +785,109 @@ function checkConnection(span, setupType) {
                 span => expect(span.data.http.method).to.equal('GET')
               ]);
 
-              // 1 x entry
-              // 1 x multi containing the sub commands
-              // NO exec span
-              // 3 x sub commands
-              // TODO: https://jsw.ibm.com/browse/INSTA-14540
-              expect(spans).to.have.lengthOf(5);
+              // NOTE: no pipeline span for cluster, see https://jsw.ibm.com/browse/INSTA-14540
+              if (setupType === 'cluster') {
+                expect(spans).to.have.lengthOf(4);
+              } else {
+                // 1 x entry
+                // 1 x pipeline containing the sub commands
+                // NO exec span
+                // 3 x sub commands
+                expect(spans).to.have.lengthOf(5);
+              }
 
-              const pipelineSpan = expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(writeEntrySpan.t),
-                span => expect(span.p).to.equal(writeEntrySpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b.s).to.equal(3),
-                span => expect(span.b.u).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('pipeline'),
-                span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hset', 'hget'])
-              ]);
+              if (setupType !== 'cluster') {
+                const pipelineSpan = expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b.s).to.equal(3),
+                  span => expect(span.b.u).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('pipeline'),
+                  span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hset', 'hget'])
+                ]);
 
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(writeEntrySpan.t),
-                span => expect(span.p).to.equal(pipelineSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('hget')
-              ]);
-              expectExactlyNMatching(spans, 2, [
-                span => expect(span.t).to.equal(writeEntrySpan.t),
-                span => expect(span.p).to.equal(pipelineSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('hset')
-              ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(pipelineSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hget')
+                ]);
+                expectExactlyNMatching(spans, 2, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(pipelineSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hset')
+                ]);
+              } else {
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hget')
+                ]);
+
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hset')
+                ]);
+
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hset')
+                ]);
+              }
             })
           )
         ));
@@ -682,70 +906,122 @@ function checkConnection(span, setupType) {
                 span => expect(span.data.http.method).to.equal('GET')
               ]);
 
-              expect(spans).to.have.lengthOf(5);
+              // NOTE: no pipeline span for cluster, see https://jsw.ibm.com/browse/INSTA-14540
+              if (setupType === 'cluster') {
+                expect(spans).to.have.lengthOf(4);
+              } else {
+                expect(spans).to.have.lengthOf(5);
+              }
 
-              const pipelineSpan = expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(writeEntrySpan.t),
-                span => expect(span.p).to.equal(writeEntrySpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(1),
-                span => expect(span.b.s).to.equal(3),
-                span => expect(span.b.u).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('pipeline'),
-                span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hset', 'hget']),
-                span => expect(span.data.redis.error).to.be.a('string')
-              ]);
+              if (setupType !== 'cluster') {
+                const pipelineSpan = expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(1),
+                  span => expect(span.b.s).to.equal(3),
+                  span => expect(span.b.u).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('pipeline'),
+                  span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hset', 'hget']),
+                  span => expect(span.data.redis.error).to.be.a('string')
+                ]);
 
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(writeEntrySpan.t),
-                span => expect(span.p).to.equal(pipelineSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(1),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('hset'),
-                span => expect(span.data.redis.error).to.exist
-              ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(pipelineSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(1),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hset'),
+                  span => expect(span.data.redis.error).to.exist
+                ]);
 
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(writeEntrySpan.t),
-                span => expect(span.p).to.equal(pipelineSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('hset')
-              ]);
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(writeEntrySpan.t),
-                span => expect(span.p).to.equal(pipelineSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('hget')
-              ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(pipelineSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hset')
+                ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(pipelineSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hget')
+                ]);
+              } else {
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(1),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hset')
+                ]);
+
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hget')
+                ]);
+
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hset')
+                ]);
+              }
             })
           )
         ));
@@ -764,68 +1040,119 @@ function checkConnection(span, setupType) {
                 span => expect(span.data.http.method).to.equal('POST')
               ]);
 
-              expect(spans).to.have.lengthOf(5);
+              // NOTE: no pipeline span for cluster, see https://jsw.ibm.com/browse/INSTA-14540
+              if (setupType === 'cluster') {
+                expect(spans).to.have.lengthOf(4);
+              } else {
+                expect(spans).to.have.lengthOf(5);
+              }
 
-              const pipelineSpan = expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(entrySpan.t),
-                span => expect(span.p).to.equal(entrySpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b.s).to.equal(2),
-                span => expect(span.b.u).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('pipeline'),
-                span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
-              ]);
+              if (setupType !== 'cluster') {
+                const pipelineSpan = expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b.s).to.equal(2),
+                  span => expect(span.b.u).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('pipeline'),
+                  span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                ]);
 
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(entrySpan.t),
-                span => expect(span.p).to.equal(pipelineSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('hget')
-              ]);
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(entrySpan.t),
-                span => expect(span.p).to.equal(pipelineSpan.s),
-                span => expect(span.n).to.equal('redis'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.b).to.not.exist,
-                span => checkConnection(span, setupType),
-                span => expect(span.data.redis.command).to.equal('hset')
-              ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(pipelineSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hget')
+                ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(pipelineSpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hset')
+                ]);
 
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(entrySpan.t),
-                span => expect(span.p).to.equal(entrySpan.s),
-                span => expect(span.n).to.equal('node.http.client'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.async).to.not.exist,
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.data.http.method).to.equal('GET'),
-                span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
-                span => expect(span.data.http.status).to.equal(200)
-              ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('node.http.client'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.data.http.method).to.equal('GET'),
+                  span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
+                  span => expect(span.data.http.status).to.equal(200)
+                ]);
+              } else {
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hget')
+                ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.not.exist,
+                  span => checkConnection(span, setupType),
+                  span => expect(span.data.redis.command).to.equal('hset')
+                ]);
+
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('node.http.client'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.data.http.method).to.equal('GET'),
+                  span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
+                  span => expect(span.data.http.status).to.equal(200)
+                ]);
+              }
             })
           )
         ));

@@ -29,37 +29,16 @@ exports.init = function init() {
   hook.onModuleLoad('ioredis', instrument);
 };
 
-let clusterConnectionString;
-
 function instrument(ioredis) {
-  class InstanaClusterClass extends ioredis.Cluster {
-    constructor() {
-      super(...arguments);
-
-      try {
-        clusterConnectionString = this.startupNodes.map(node => `${node.host}:${node.port}`).join(',');
-      } catch (e) {
-        // ignore
-      }
-    }
-  }
-
-  Object.defineProperty(ioredis, 'Cluster', {
-    value: InstanaClusterClass,
-    writable: false,
-    configurable: false,
-    enumerable: true
-  });
-
-  // We cannot register `ioredis.Cluster.prototype.sendCommand` otherwise we produce two spans for the same command.
-  // Because `ioredis.prototype.sendCommand` is triggerd when using a cluster, but `client.isCluster` is false.
-  // Thats why we override the Cluster Class and extract the connection string.
   shimmer.wrap(ioredis.prototype, 'sendCommand', instrumentSendCommand);
   shimmer.wrap(ioredis.prototype, 'multi', instrumentMultiCommand);
   shimmer.wrap(ioredis.prototype, 'pipeline', instrumentPipelineCommand);
 
-  shimmer.wrap(ioredis.Cluster.prototype, 'multi', instrumentMultiCommand);
-  shimmer.wrap(ioredis.Cluster.prototype, 'pipeline', instrumentPipelineCommand);
+  // TODO: https://jsw.ibm.com/browse/INSTA-14540
+  //       We currently have no multi/pipeline spans for clusters.
+  // shimmer.wrap(ioredis.Cluster.prototype, 'sendCommand', instrumentSendCommand);
+  // shimmer.wrap(ioredis.Cluster.prototype, 'multi', instrumentMultiCommand);
+  // shimmer.wrap(ioredis.Cluster.prototype, 'pipeline', instrumentPipelineCommand);
 }
 
 function instrumentSendCommand(original) {
@@ -96,8 +75,15 @@ function instrumentSendCommand(original) {
     return cls.ns.runAndReturn(() => {
       const span = cls.startSpan(exports.spanName, constants.EXIT);
       span.stack = tracingUtil.getStackTrace(wrappedInternalSendCommand);
+
+      const connection = `${client.options.host}:${client.options.port}`;
+
+      // TODO: https://jsw.ibm.com/browse/INSTA-14540
+      // if (client.isCluster) {
+      //  connection = client.startupNodes.map(node => `${node.host}:${node.port}`).join(',');
+
       span.data.redis = {
-        connection: clusterConnectionString || `${client.options.host}:${client.options.port}`,
+        connection,
         command: command.name.toLowerCase()
       };
 
@@ -147,14 +133,11 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
       return original.apply(this, arguments);
     }
 
-    let connection;
+    const connection = `${client.options.host}:${client.options.port}`;
 
-    // NOTE: here it works because we register the instrumentation on the cluster prototype
-    if (client.isCluster) {
-      connection = clusterConnectionString;
-    } else {
-      connection = `${client.options.host}:${client.options.port}`;
-    }
+    // TODO: https://jsw.ibm.com/browse/INSTA-14540
+    // if (client.isCluster) {
+    //   connection = client.startupNodes.map(node => `${node.host}:${node.port}`).join(',');
 
     // create a new cls context parent to track the multi/pipeline child calls
     const clsContextForMultiOrPipeline = cls.ns.createContext();
