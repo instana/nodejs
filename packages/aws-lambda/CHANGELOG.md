@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.18.2](https://github.com/instana/nodejs/compare/v3.18.1...v3.18.2) (2024-09-17)
+
+### Reverts
+
+- Revert "ci: skipping the chinese region from publishing the lambda layers" ([45dcbb0](https://github.com/instana/nodejs/commit/45dcbb00ec4718597ff53acb7bb9ea138ac135d9))
+
 ## [3.18.1](https://github.com/instana/nodejs/compare/v3.18.0...v3.18.1) (2024-09-12)
 
 **Note:** Version bump only for package @instana/aws-lambda
