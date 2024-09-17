@@ -14,14 +14,14 @@ const { normalizeConfig } = coreUtil;
 
 let logger = consoleLogger;
 
-const config = normalizeConfig({});
+if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL) {
+  logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL);
+}
+
+const config = normalizeConfig({}, identityProvider, logger);
 config.logger = logger;
 
 function init() {
-  if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL) {
-    logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL);
-  }
-
   // NOTE: This package will not collect metrics.
   // NOTE: This package does not support autotracing.
 

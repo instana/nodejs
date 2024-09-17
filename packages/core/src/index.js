@@ -50,7 +50,7 @@ function registerAdditionalInstrumentations(additionalInstrumentationModules) {
 }
 
 function preInit() {
-  const preliminaryConfig = normalizeConfig();
+  const preliminaryConfig = normalizeConfig({});
   util.hasThePackageBeenInitializedTooLate();
   util.requireHook.init(preliminaryConfig);
   tracing.preInit(preliminaryConfig);
@@ -68,7 +68,6 @@ function preInit() {
 function init(config, downstreamConnection, processIdentityProvider) {
   log.init(/** @type {log.LoggerConfig} */ (config));
   util.hasThePackageBeenInitializedTooLate();
-  config = normalizeConfig(config, processIdentityProvider);
   secrets.init(/** @type {secrets.SecretOption} */ (config));
   util.requireHook.init(config);
   tracing.init(config, downstreamConnection, processIdentityProvider);
