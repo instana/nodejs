@@ -16,7 +16,7 @@ require('../../../../src')({
   }
 });
 
-const url = 'https://www.instana.com';
+const url = 'https://www.example.com';
 
 function main() {
   setTimeout(async () => {
