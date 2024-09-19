@@ -12,13 +12,11 @@ process.on('SIGTERM', () => {
 
 require('../../../../..')();
 const { delay } = require('../../../../../../core/test/test_util');
-const fetch = require('node-fetch-v2');
 
 const main = async () => {
   try {
     setTimeout(async () => {
-      const req = new fetch.Request('https://example.com');
-      await fetch(req);
+      await fetch('https://example.com');
 
       await fetch('https://www.ibm.com/products/instana');
     }, 100);
