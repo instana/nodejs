@@ -546,7 +546,10 @@ function call(fn) {
  * @param {Object.<string, *>} options
  */
 function skipExitTracing(options) {
-  //  TODO: chckreducedspan explanation
+  // The checkReducedSpan attribute is used if there is no active entry span
+  // and need to fallback to the reduced span of the most recent entry span.
+  // In some instrumentations these checks were already present and thus moved the logic here
+  // To support deferred exit calls, instrumentations can fall back to the reduced span
   const opts = Object.assign(
     {
       isActive: true,
@@ -576,13 +579,13 @@ function skipExitTracing(options) {
   }
 
   // if allowRootExitSpan is true then we have to allow rootExitSpan,
-  // but if there is aleady a parent entry span is present then it will get traced eventually
   if (allowRootExitSpan) {
     if (opts.extendedResponse) return { skip: false, suppressed, isExitSpan: isExitSpanResult, parentSpan };
     else return false;
   }
 
-  // TODO: explanation
+  // This means there is already a context available and the current span is exit span
+  // need to expand
   if ((opts.checkReducedSpan || !opts.skipParentSpanCheck) && (!parentSpan || isExitSpanResult)) {
     if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult, parentSpan };
     else return true;
