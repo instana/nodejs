@@ -217,7 +217,7 @@ function normalizeTracingConfig(config) {
   normalizeSpanBatchingEnabled(config);
   normalizeDisableW3cTraceCorrelation(config);
   normalizeTracingKafka(config);
-  normalizeAllowExitRootSpan(config);
+  normalizeAllowRootExitSpan(config);
 }
 
 /**
@@ -245,7 +245,8 @@ function normalizeTracingEnabled(config) {
  *
  * @param {InstanaConfig} config
  */
-function normalizeAllowExitRootSpan(config) {
+
+function normalizeAllowRootExitSpan(config) {
   if (config.tracing.allowRootExitSpan === false) {
     return;
   }

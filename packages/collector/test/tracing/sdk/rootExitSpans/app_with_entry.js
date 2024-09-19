@@ -10,7 +10,9 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const instana = require('../../../..')({
+// Initiating the app with allowRootExitSpan configuration
+// to make sure the existing functionality is working fine along with SDK wrap code
+const instana = require('../../../../src')({
   tracing: {
     allowRootExitSpan: true
   }

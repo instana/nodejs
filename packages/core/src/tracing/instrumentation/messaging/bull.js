@@ -37,12 +37,12 @@ function shimJobCreate(originalJobCreate) {
     const repeatableJob = options && typeof options.jobId === 'string' && options.jobId.indexOf('repeat') === 0;
     const repeatableJobIsSuppressed = repeatableJob && options.X_INSTANA_L === '0';
     const skipIsTracing = !!repeatableJob;
-    const parentSpan = cls.getCurrentSpan();
     const skipTracingResult = cls.skipExitTracing({
       isActive,
       extendedResponse: true,
       skipParentSpanCheck: true,
-      skipIsTracing
+      skipIsTracing,
+      checkReducedSpan: false
     });
 
     /**
@@ -53,7 +53,7 @@ function shimJobCreate(originalJobCreate) {
     if (
       skipTracingResult.skip ||
       skipTracingResult.isExitSpan ||
-      (!parentSpan && !repeatableJob) ||
+      (!skipTracingResult.parentSpan && !repeatableJob) ||
       repeatableJobIsSuppressed
     ) {
       /**

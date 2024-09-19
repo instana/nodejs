@@ -12,15 +12,15 @@ process.on('SIGTERM', () => {
 
 require('../../../../..')();
 const { delay } = require('../../../../../../core/test/test_util');
-const nodeFetch = require('node-fetch-v2');
+const fetch = require('node-fetch-v2');
 
 const main = async () => {
   try {
     setTimeout(async () => {
-      const req = new nodeFetch.Request('https://example.com');
-      await nodeFetch(req);
+      const req = new fetch.Request('https://example.com');
+      await fetch(req);
 
-      await nodeFetch('https://www.ibm.com/products/instana');
+      await fetch('https://www.ibm.com/products/instana');
     }, 100);
   } catch (err) {
     /* eslint-disable no-console */
