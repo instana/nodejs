@@ -8,16 +8,15 @@ const expect = require('chai').expect;
 const path = require('path');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('@instana/core/test/config');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
-const { retry, delay, expectExactlyOneMatching } = require('@instana/core/test/test_util');
-const constants = require('@instana/core').tracing.constants;
+const config = require('@instana/core/test/config');
+const { retry, expectExactlyOneMatching } = require('@instana/core/test/test_util');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
-  this.timeout(100000);
+mochaSuiteFn.only('tracing/sdk/rootExitSpans', function () {
+  this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
 
@@ -27,42 +26,59 @@ mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
 
   // an sdk entry span is wrapped to track the exit span
   // TODO: revisit to update the span assertions
-  describe('APP WITH ENTRY SPAN', function () {
-    let agentControls;
+  describe('App with entry span', function () {
+    let appControls;
+    const agentControls = globalAgent.instance;
 
     before(async () => {
-      agentControls = new ProcessControls({
+      appControls = new ProcessControls({
         appPath: path.join(__dirname, 'app_with_entry'),
         useGlobalAgent: true
       });
 
-      await agentControls.start(null, null, true);
-    });
-
-    after(async () => {
-      await agentControls.stop();
+      await appControls.start(null, null, true);
     });
 
     it('should collect spans including sdk wrap', async () => {
-      await delay(100);
+      await retry(async () => {
+        const spans = await agentControls.getSpans();
 
-      await retry(
-        async () => {
-          const spans = await globalAgent.instance.getSpans();
-          console.log(spans, spans.length);
-          // expect(spans.length).to.equal(2);
-          expectExactlyOneMatching(spans, span => {
-            console.log(span.data);
-            expect(span.p).to.exist;
-            // expect(span.k).to.equal(constants.EXIT);
-          });
-        },
-        null,
-        null,
-        2
-      );
+        expect(spans.length).to.equal(2);
+
+        const entrySpan = expectEntrySpan(appControls, spans);
+        expectExitSpan(appControls, entrySpan, spans);
+      });
     });
   });
+
+  function expectEntrySpan(controls, spans) {
+    const expectations = [
+      span => expect(span.n).to.equal('sdk'),
+      span => expect(span.p).to.not.exist,
+      span => expect(span.k).to.equal(1),
+      span => expect(span.f.e).to.equal(String(controls.getPid())),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.error).to.not.exist,
+      span => expect(span.ec).to.equal(0)
+    ];
+
+    return expectExactlyOneMatching(spans, expectations);
+  }
+  function expectExitSpan(controls, entrySpan, spans) {
+    const expectations = [
+      span => expect(span.n).to.equal('node.http.client'),
+      span => expect(span.p).to.equal(entrySpan.s),
+      span => expect(span.k).to.equal(2),
+      span => expect(span.f.e).to.equal(String(controls.getPid())),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.error).to.not.exist,
+      span => expect(span.ec).to.equal(0)
+    ];
+
+    return expectExactlyOneMatching(spans, expectations);
+  }
 
   // no sdk wrap present, exit span stands alone
   // describe('APP WITHOUT ENTRY SPAN', function () {
