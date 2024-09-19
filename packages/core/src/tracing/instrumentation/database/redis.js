@@ -305,6 +305,8 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
     return original.apply(origCtx, origArgs);
   }
 
+  // NOTE: this is the entry http server span
+  // TODO: we still need to create the span if opt in as active
   const parentSpan = cls.getCurrentSpan();
 
   return cls.ns.runAndReturn(() => {
