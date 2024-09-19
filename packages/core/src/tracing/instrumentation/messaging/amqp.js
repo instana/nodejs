@@ -54,7 +54,7 @@ function shimSendMessage(originalFunction) {
 function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
   // We need to skip parentSpan condition because the parentSpan check is too specific in this fn
   const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true, skipParentSpanCheck: true });
-  const parentSpan = cls.getCurrentSpan();
+  const parentSpan = skipTracingResult.parentSpan;
   const isExitSpan = skipTracingResult.isExitSpan;
 
   if (skipTracingResult.skip) {
