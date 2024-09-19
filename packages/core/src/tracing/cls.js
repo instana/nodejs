@@ -574,29 +574,45 @@ function skipExitTracing(options) {
   // CASE: first ask for suppressed, because if we skip the entry span, we won't have a parentSpan
   //       on the exit span, which would create noisy log messages.
   if (suppressed) {
-    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult, parentSpan };
+    if (opts.extendedResponse) {
+      return { skip: true, suppressed, isExitSpan: isExitSpanResult, parentSpan, allowRootExitSpan };
+    }
+
     return true;
   }
 
-  // if allowRootExitSpan is true then we have to allow rootExitSpan,
+  // DESC: If `allowRootExitSpan` is true, then we have to ignore if there is a parent or not.
+  // NOTE: The feature completely ignores the state of `isTracing`, because
+  //       every exit span would be a separate trace. `isTracing` is always false,
+  //       because we don't have a parent span. The http server span also does not check of `isTracing`,
+  //       because it's the root span.
   if (allowRootExitSpan) {
-    if (opts.extendedResponse) return { skip: false, suppressed, isExitSpan: isExitSpanResult, parentSpan };
-    else return false;
+    if (opts.extendedResponse) {
+      return { skip: false, suppressed, isExitSpan: isExitSpanResult, parentSpan, allowRootExitSpan };
+    }
+
+    return false;
   }
 
   // This means there is already a context available and the current span is exit span
   // need to expand
   if ((opts.checkReducedSpan || !opts.skipParentSpanCheck) && (!parentSpan || isExitSpanResult)) {
-    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult, parentSpan };
-    else return true;
+    if (opts.extendedResponse) {
+      return { skip: true, suppressed, isExitSpan: isExitSpanResult, parentSpan, allowRootExitSpan };
+    }
+
+    return true;
   }
 
   const skipIsActive = opts.isActive === false;
   const skipIsTracing = !opts.skipIsTracing ? !isTracing() : false;
   const skip = skipIsActive || skipIsTracing;
 
-  if (opts.extendedResponse) return { skip, suppressed, isExitSpan: isExitSpanResult, parentSpan };
-  else return skip;
+  if (opts.extendedResponse) {
+    return { skip, suppressed, isExitSpan: isExitSpanResult, parentSpan, allowRootExitSpan };
+  }
+
+  return skip;
 }
 
 module.exports = {
