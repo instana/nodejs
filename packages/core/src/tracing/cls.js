@@ -546,6 +546,7 @@ function call(fn) {
  * @param {Object.<string, *>} options
  */
 function skipExitTracing(options) {
+  //  TODO: chckreducedspan explanation
   const opts = Object.assign(
     {
       isActive: true,
@@ -576,7 +577,7 @@ function skipExitTracing(options) {
 
   // if allowRootExitSpan is true then we have to allow rootExitSpan,
   // but if there is aleady a parent entry span is present then it will get traced eventually
-  if (allowRootExitSpan && !parentSpan) {
+  if (allowRootExitSpan) {
     if (opts.extendedResponse) return { skip: false, suppressed, isExitSpan: isExitSpanResult, parentSpan };
     else return false;
   }
