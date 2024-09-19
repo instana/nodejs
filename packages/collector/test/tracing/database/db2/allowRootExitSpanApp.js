@@ -16,11 +16,9 @@ require('../../../..')({
   }
 });
 
-const expect = require('chai').expect;
 const { promisify } = require('util');
 const ibmdb = require('ibm_db');
 const { delay } = require('@instana/core/test/test_util');
-const cls = require('@instana/core/src/tracing/cls');
 
 const logPrefix = `DB2 Allow Root Exit Span App (${process.pid}):\t`;
 
