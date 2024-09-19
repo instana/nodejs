@@ -558,6 +558,11 @@ function skipExitTracing(options) {
   );
 
   let parentSpan = getCurrentSpan();
+  // If there is no active entry span, we fall back to the reduced span of the most recent entry span.
+  // See comment in packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
+if (opts.checkReducedSpan && !parentSpan) {
+  parentSpan = getReducedSpan();
+}
 
   // If there is no active entry span, we fall back to the reduced span of the most recent entry span.
   // See comment in packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
