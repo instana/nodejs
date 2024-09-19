@@ -575,8 +575,8 @@ function skipExitTracing(options) {
   }
 
   // if allowRootExitSpan is true then we have to allow rootExitSpan,
-  // but if there is a parent entry span is present then it will get traced eventually
-  if (allowRootExitSpan && !suppressed && !parentSpan) {
+  // but if there is aleady a parent entry span is present then it will get traced eventually
+  if (allowRootExitSpan && !parentSpan) {
     if (opts.extendedResponse) return { skip: false, suppressed, isExitSpan: isExitSpanResult, parentSpan };
     else return false;
   }
