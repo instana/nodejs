@@ -560,14 +560,8 @@ function skipExitTracing(options) {
   let parentSpan = getCurrentSpan();
   // If there is no active entry span, we fall back to the reduced span of the most recent entry span.
   // See comment in packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
-if (opts.checkReducedSpan && !parentSpan) {
-  parentSpan = getReducedSpan();
-}
-
-  // If there is no active entry span, we fall back to the reduced span of the most recent entry span.
-  // See comment in packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
-  if (opts.checkReducedSpan) {
-    parentSpan = getCurrentSpan() || getReducedSpan();
+  if (opts.checkReducedSpan && !parentSpan) {
+    parentSpan = getReducedSpan();
   }
 
   const suppressed = tracingSuppressed();
@@ -580,17 +574,15 @@ if (opts.checkReducedSpan && !parentSpan) {
     return true;
   }
 
-  if (allowRootExitSpan) {
+  // if allowRootExitSpan is true then we have to allow rootExitSpan,
+  // but if there is a parent entry span is present then it will get traced eventually
+  if (allowRootExitSpan && !suppressed && !parentSpan) {
     if (opts.extendedResponse) return { skip: false, suppressed, isExitSpan: isExitSpanResult, parentSpan };
     else return false;
   }
 
-  if (opts.checkReducedSpan && (!parentSpan || isExitSpan(parentSpan))) {
-    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult, parentSpan };
-    else return true;
-  }
-
-  if (!opts.skipParentSpanCheck && (!parentSpan || isExitSpanResult)) {
+  // TODO: explanation
+  if ((opts.checkReducedSpan || !opts.skipParentSpanCheck) && (!parentSpan || isExitSpanResult)) {
     if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult, parentSpan };
     else return true;
   }
