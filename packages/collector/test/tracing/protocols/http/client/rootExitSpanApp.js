@@ -18,7 +18,7 @@ const main = async () => {
     setTimeout(async () => {
       await fetch('https://example.com');
 
-      await fetch('https://www.ibm.com/products/instana');
+      await fetch('https://www.example.com');
     }, 100);
   } catch (err) {
     /* eslint-disable no-console */

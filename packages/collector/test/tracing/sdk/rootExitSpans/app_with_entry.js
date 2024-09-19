@@ -16,7 +16,7 @@ const instana = require('../../../../src')({
   }
 });
 
-const url = 'https://www.instana.com';
+const url = 'https://www.example.com';
 
 /* eslint-disable no-console */
 function main() {
