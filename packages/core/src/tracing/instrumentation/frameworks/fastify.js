@@ -24,6 +24,8 @@ exports.deactivate = function deactivate() {
 
 let symbols;
 exports.init = function init() {
+  // v5 uses symbols
+  // https://github.com/fastify/fastify/blob/v5.0.0/test/handler-context.test.js#L36C16-L36C29
   hook.onFileLoad(/fastify\/lib\/symbols/, _symbols => {
     symbols = _symbols;
   });
