@@ -22,7 +22,12 @@ exports.deactivate = function deactivate() {
   active = false;
 };
 
+let symbols;
 exports.init = function init() {
+  hook.onFileLoad(/fastify\/lib\/symbols/, _symbols => {
+    symbols = _symbols;
+  });
+
   hook.onModuleLoad('fastify', instrument);
 };
 
@@ -59,8 +64,16 @@ function instrument(build) {
     app.addHook('onRequest', function onRequest(request, reply, done) {
       try {
         // NOTE: v1 uses _context https://github.com/fastify/fastify/blob/1.x/fastify.js#L276
-        //       v2/v3 uses context https://github.com/fastify/fastify/blob/2.x/test/handler-context.test.js#L41
-        const url = reply._context ? reply._context.config.url : reply.context.config.url;
+        //       v2/v3/v4 uses context https://github.com/fastify/fastify/blob/2.x/test/handler-context.test.js#L41
+        // eslint-disable-next-line max-len
+        //       v5 uses symbols https://github.com/fastify/fastify/blob/v5.0.0/test/handler-context.test.js#L36C16-L36C29
+        let url;
+
+        if (!reply._context && symbols?.kRouteContext) {
+          url = reply[symbols.kRouteContext].config.url;
+        } else {
+          url = reply._context ? reply._context.config.url : reply.context.config.url;
+        }
 
         annotateHttpEntrySpanWithPathTemplate(app, url);
       } catch (err) {
