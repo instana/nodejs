@@ -327,6 +327,8 @@ const globalAgent = require('../../../globalAgent');
                         span => expect(span.data.http.method).to.equal('GET')
                       ]);
 
+                      expect(spans.length).to.be.eql(3);
+
                       expectAtLeastOneMatching(spans, [
                         span => expect(span.t).to.equal(writeEntrySpan.t),
                         span => expect(span.p).to.equal(writeEntrySpan.s),

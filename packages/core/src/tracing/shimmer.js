@@ -40,6 +40,16 @@ exports.unwrap = shimmer.unwrap;
  *    instrumented library.
  */
 exports.wrap = (origObject, origMethod, instrumentationWrapperMethod) => {
+  // NOTE: We do not want to wrap a function of a library twice.
+  // CASE: Some instrumentations are really complex such as redis.
+  //       e.g. there is the concept of client and/or cluster connections.
+  //       We might use the same underlying object, but we call `.wrap` twice in the instrumentation
+  //       but we can't control it.
+  if (origObject[origMethod].__wrapped) {
+    logger.debug(`Method ${origMethod} of ${origObject} is already wrapped, not wrapping again.`);
+    return;
+  }
+
   shimmer.wrap(origObject, origMethod, function instanaShimmerWrap(originalFunction) {
     return function instanaShimmerWrapInner() {
       let originalCalled = false;
