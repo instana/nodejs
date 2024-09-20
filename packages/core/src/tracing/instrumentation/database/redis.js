@@ -301,16 +301,23 @@ function instrumentCommand(original, command, address, cbStyle) {
 }
 
 function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbStyle, queue) {
+  // checking skipExitTrace function result has the priority here
+  // because it checks for the allowRootExitSpan condition
   if (cls.skipExitTracing({ isActive })) {
     return original.apply(origCtx, origArgs);
   }
 
   // NOTE: this is the entry http server span
-  // TODO: we still need to create the span if opt in as active
   const parentSpan = cls.getCurrentSpan();
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan(exports.spanName, constants.EXIT, parentSpan.t, parentSpan.s);
+    let span;
+    if (parentSpan) {
+      span = cls.startSpan(exports.spanName, constants.EXIT, parentSpan.t, parentSpan.s);
+    } else {
+      // starting a span if opt in as active and no parent span is present
+      span = cls.startSpan(exports.spanName, constants.EXIT);
+    }
     span.stack = tracingUtil.getStackTrace(instrumentMultiExec);
     span.data.redis = {
       connection: address,
