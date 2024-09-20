@@ -37,8 +37,6 @@ let client;
 
     const result = await client.multi().set('key', 'value').get('key').exec();
     log('value:', result);
-
-    client.close();
   } catch (err) {
     log('Failed to connect to Redis:', err);
   }
