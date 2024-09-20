@@ -6,6 +6,8 @@
 'use strict';
 
 const shimmer = require('shimmer');
+const EventEmitter = require('events').EventEmitter;
+
 let logger;
 logger = require('../logger').getLogger('tracing/shimmer', newLogger => {
   logger = newLogger;
@@ -40,6 +42,22 @@ exports.unwrap = shimmer.unwrap;
  *    instrumented library.
  */
 exports.wrap = (origObject, origMethod, instrumentationWrapperMethod) => {
+  // NOTE: We do not want to wrap a function of a library twice.
+  // CASE: Some instrumentations are really complex such as redis.
+  //       e.g. there is the concept of client and/or cluster connections.
+  //       We might use the same underlying object, but we call `.wrap` twice in the instrumentation
+  //       but we can't control it.
+  // NOTE: EventEmitter can have multple wraps / listeners.
+  if (
+    origObject &&
+    origObject[origMethod] &&
+    origObject[origMethod].__wrapped &&
+    !(origObject instanceof EventEmitter)
+  ) {
+    shimmer.unwrap(origObject, origMethod);
+    logger.debug(`Method ${origMethod} of ${origObject} was already wrapped. Unwrapping.`);
+  }
+
   shimmer.wrap(origObject, origMethod, function instanaShimmerWrap(originalFunction) {
     return function instanaShimmerWrapInner() {
       let originalCalled = false;
