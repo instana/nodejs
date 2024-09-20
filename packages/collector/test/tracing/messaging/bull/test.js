@@ -17,6 +17,7 @@ const config = require('../../../../../core/test/config');
 const {
   expectExactlyOneMatching,
   expectAtLeastOneMatching,
+  expectExactlyNMatching,
   retry,
   delay,
   stringifyItems
@@ -43,6 +44,44 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
+
+  describe('allowRootExitSpan', function () {
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        useGlobalAgent: true,
+        appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+        env: {
+          REDIS_SERVER: `redis://${process.env.REDIS}`,
+          BULL_QUEUE_NAME: queueName,
+          BULL_JOB_NAME: 'steve'
+        }
+      });
+
+      await controls.start(null, null, true);
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    it('must trace', async function () {
+      await retry(async () => {
+        const spans = await agentControls.getSpans();
+
+        // TODO: all other bull tests also produce a huge number of spans
+        //       https://jsw.ibm.com/browse/INSTA-15029
+        expect(spans.length).to.be.eql(7);
+
+        expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('bull'), span => expect(span.k).to.equal(2)]);
+        expectExactlyNMatching(spans, 6, [
+          span => expect(span.n).to.equal('redis'),
+          span => expect(span.k).to.equal(2)
+        ]);
+      });
+    });
+  });
 
   describe('tracing enabled, no suppression', function () {
     let senderControls;

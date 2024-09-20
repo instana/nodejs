@@ -44,14 +44,10 @@ function instrument(ioredis) {
 function instrumentSendCommand(original) {
   return function wrappedInternalSendCommand(command) {
     const client = this;
-    const parentSpan = cls.getCurrentSpan();
+    const skipExitTracingResult = cls.skipExitTracing({ isActive, skipParentSpanCheck: true, extentedResponse: true });
     let callback;
 
-    if (
-      command.promise == null ||
-      typeof command.name !== 'string' ||
-      cls.skipExitTracing({ isActive, skipParentSpanCheck: true })
-    ) {
+    if (command.promise == null || typeof command.name !== 'string' || skipExitTracingResult.skip) {
       return original.apply(this, arguments);
     }
 
@@ -59,7 +55,11 @@ function instrumentSendCommand(original) {
     //       https://jsw.ibm.com/browse/INSTA-14540
     // NOTE: there is separate "pipeline" call from "instrumentSendCommand"
     //       only for "multi". Thats why we filter it out here.
+    const parentSpan = skipExitTracingResult.parentSpan;
+
     if (
+      !skipExitTracingResult.allowRootExitSpan &&
+      parentSpan &&
       parentSpan.n === exports.spanName &&
       (parentSpan.data.redis.command === 'multi' || parentSpan.data.redis.command === 'pipeline') &&
       command.name !== 'multi'
