@@ -50,43 +50,41 @@ const globalAgent = require('../../../globalAgent');
           }
 
           if (setupType !== 'cluster') {
-            mochaSuiteFn.only &&
-              mochaSuiteFn.only('When allowRootExitSpan: true is set', function () {
-                globalAgent.setUpCleanUpHooks();
-                let controls;
+            mochaSuiteFn('When allowRootExitSpan: true is set', function () {
+              globalAgent.setUpCleanUpHooks();
+              let controls;
 
-                before(async () => {
-                  controls = new ProcessControls({
-                    useGlobalAgent: true,
-                    appPath: path.join(__dirname, 'allowRootExitSpanApp'),
-                    env: {
-                      REDIS_VERSION: redisVersion,
-                      REDIS_PKG: redisPkg
-                    }
-                  });
-
-                  await controls.start(null, null, true);
+              before(async () => {
+                controls = new ProcessControls({
+                  useGlobalAgent: true,
+                  appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+                  env: {
+                    REDIS_VERSION: redisVersion,
+                    REDIS_PKG: redisPkg
+                  }
                 });
 
-                beforeEach(async () => {
-                  await agentControls.clearReceivedTraceData();
-                });
+                await controls.start(null, null, true);
+              });
 
-                it('must trace exit span', async function () {
-                  return retry(async () => {
-                    const spans = await agentControls.getSpans();
+              beforeEach(async () => {
+                await agentControls.clearReceivedTraceData();
+              });
 
-                    // TODO: there is a bug with redis exec being called twice.
-                    expect(spans.length).to.be.eql(1);
+              it('must trace exit span', async function () {
+                return retry(async () => {
+                  const spans = await agentControls.getSpans();
 
-                    expectAtLeastOneMatching(spans, [
-                      span => expect(span.n).to.equal('redis'),
-                      span => expect(span.k).to.equal(2),
-                      span => expect(span.p).to.not.exist
-                    ]);
-                  });
+                  expect(spans.length).to.be.eql(1);
+
+                  expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('redis'),
+                    span => expect(span.k).to.equal(2),
+                    span => expect(span.p).to.not.exist
+                  ]);
                 });
               });
+            });
           }
 
           mochaSuiteFn(`redis@${redisVersion}`, function () {
