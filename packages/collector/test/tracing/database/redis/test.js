@@ -76,12 +76,12 @@ const globalAgent = require('../../../globalAgent');
                   return retry(async () => {
                     const spans = await agentControls.getSpans();
 
-                    // TODO ? 2x multi?
-                    expect(spans.length).to.be.eql(2);
+                    expect(spans.length).to.be.eql(1);
 
                     expectAtLeastOneMatching(spans, [
                       span => expect(span.n).to.equal('redis'),
-                      span => expect(span.k).to.equal(2)
+                      span => expect(span.k).to.equal(2),
+                      span => expect(span.p).to.not.exist
                     ]);
                   });
                 });

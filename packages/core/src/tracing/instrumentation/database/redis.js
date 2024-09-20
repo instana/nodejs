@@ -301,143 +301,141 @@ function instrumentCommand(original, command, address, cbStyle) {
 }
 
 function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbStyle, queue) {
-  // checking skipExitTrace function result has the priority here
-  // because it checks for the allowRootExitSpan condition
-  if (cls.skipExitTracing({ isActive })) {
+  const skipExitResult = cls.skipExitTracing({ isActive, extendedResponse: true });
+
+  if (skipExitResult.skip) {
     return original.apply(origCtx, origArgs);
   }
 
-  // NOTE: this is the entry http server span
-  const parentSpan = cls.getCurrentSpan();
+  const parentSpan = skipExitResult.parentSpan;
 
-  return cls.ns.runAndReturn(() => {
-    let span;
+  if (!parentSpan || (parentSpan && !skipExitResult.isExitSpan && skipExitResult.allowRootExitSpan)) {
+    return cls.ns.runAndReturn(() => {
+      let span;
 
-    // TODO: why 2x multi span????
-    console.log('startspan');
-
-    if (parentSpan) {
-      span = cls.startSpan(exports.spanName, constants.EXIT, parentSpan.t, parentSpan.s);
-    } else {
-      // starting a span if opt in as active and no parent span is present
-      span = cls.startSpan(exports.spanName, constants.EXIT);
-    }
-    span.stack = tracingUtil.getStackTrace(instrumentMultiExec);
-    span.data.redis = {
-      connection: address,
-      // pipeline = batch
-      command: isAtomic ? 'multi' : 'pipeline'
-    };
-
-    const subCommands = (span.data.redis.subCommands = []);
-    let legacyMultiMarkerHasBeenSeen = false;
-    const len = queue.length;
-
-    for (let i = 0; i < len; i++) {
-      let subCommand;
-
-      // v3
-      if (typeof queue.get === 'function') {
-        subCommand = queue.get(i);
-        subCommands[i] = subCommand.command;
-
-        // CASE: a batch can succeed although an individual command failed
-        if (!isAtomic) {
-          subCommand.callback = buildSubCommandCallback(span, subCommand.callback);
-        }
+      if (!parentSpan) {
+        // starting a span if opt in as active and no parent span is present
+        span = cls.startSpan(exports.spanName, constants.EXIT);
       } else {
-        // v4
-        subCommand = queue[i];
-        if (!Array.isArray(subCommand) || subCommand.length === 0) {
-          continue;
-        }
-        if (subCommand[0] === 'MULTI') {
-          legacyMultiMarkerHasBeenSeen = true;
-          continue;
-        }
-        const idx = legacyMultiMarkerHasBeenSeen && i >= 1 ? i - 1 : i;
-        subCommands[idx] = subCommand[0];
+        span = cls.startSpan(exports.spanName, constants.EXIT, parentSpan.t, parentSpan.s);
       }
-    }
-
-    // must not send batch size 0
-    if (subCommands.length > 0) {
-      span.b = {
-        s: subCommands.length
+      span.stack = tracingUtil.getStackTrace(instrumentMultiExec);
+      span.data.redis = {
+        connection: address,
+        // pipeline = batch
+        command: isAtomic ? 'multi' : 'pipeline'
       };
-    }
-    span.ec = 0;
 
-    const modifiedArgs = [];
-    for (let i = 0; i < origArgs.length; i++) {
-      modifiedArgs[i] = origArgs[i];
-    }
+      const subCommands = (span.data.redis.subCommands = []);
+      let legacyMultiMarkerHasBeenSeen = false;
+      const len = queue.length;
 
-    let userProvidedCallback;
+      for (let i = 0; i < len; i++) {
+        let subCommand;
 
-    if (cbStyle) {
-      const callback = cls.ns.bind(onResult);
+        // v3
+        if (typeof queue.get === 'function') {
+          subCommand = queue.get(i);
+          subCommands[i] = subCommand.command;
 
-      userProvidedCallback = modifiedArgs[modifiedArgs.length - 1];
-      if (typeof userProvidedCallback !== 'function') {
-        userProvidedCallback = null;
-        modifiedArgs.push(callback);
-      } else {
-        modifiedArgs[modifiedArgs.length - 1] = callback;
-      }
-
-      return original.apply(origCtx, modifiedArgs);
-    } else {
-      try {
-        const promise = original.apply(origCtx, modifiedArgs);
-
-        if (typeof promise.then === 'function') {
-          promise
-            .then(value => {
-              onResult();
-              return value;
-            })
-            .catch(error => {
-              onResult(error);
-              return error;
-            });
-        }
-
-        return promise;
-      } catch (execSycnErr) {
-        onResult(execSycnErr);
-        throw execSycnErr;
-      }
-    }
-
-    function onResult(err) {
-      span.d = Date.now() - span.ts;
-
-      // NOTE: if customer is using batching, there won't be an error object
-      if (err) {
-        span.ec = 1;
-
-        if (err.message) {
-          span.data.redis.error = err.message;
-        } else if (err instanceof Array && err.length) {
-          span.data.redis.error = err[0].message;
+          // CASE: a batch can succeed although an individual command failed
+          if (!isAtomic) {
+            subCommand.callback = buildSubCommandCallback(span, subCommand.callback);
+          }
         } else {
-          span.data.redis.error = 'Unknown error';
-        }
-
-        // v3 = provides sub errors
-        if (err.errors && err.errors.length) {
-          span.data.redis.error = err.errors.map(subErr => subErr.message).join('\n');
+          // v4
+          subCommand = queue[i];
+          if (!Array.isArray(subCommand) || subCommand.length === 0) {
+            continue;
+          }
+          if (subCommand[0] === 'MULTI') {
+            legacyMultiMarkerHasBeenSeen = true;
+            continue;
+          }
+          const idx = legacyMultiMarkerHasBeenSeen && i >= 1 ? i - 1 : i;
+          subCommands[idx] = subCommand[0];
         }
       }
 
-      span.transmit();
-
-      if (typeof userProvidedCallback === 'function') {
-        return userProvidedCallback.apply(this, arguments);
+      // must not send batch size 0
+      if (subCommands.length > 0) {
+        span.b = {
+          s: subCommands.length
+        };
       }
-    }
-  });
+      span.ec = 0;
+
+      const modifiedArgs = [];
+      for (let i = 0; i < origArgs.length; i++) {
+        modifiedArgs[i] = origArgs[i];
+      }
+
+      let userProvidedCallback;
+
+      if (cbStyle) {
+        const callback = cls.ns.bind(onResult);
+
+        userProvidedCallback = modifiedArgs[modifiedArgs.length - 1];
+        if (typeof userProvidedCallback !== 'function') {
+          userProvidedCallback = null;
+          modifiedArgs.push(callback);
+        } else {
+          modifiedArgs[modifiedArgs.length - 1] = callback;
+        }
+
+        return original.apply(origCtx, modifiedArgs);
+      } else {
+        try {
+          const promise = original.apply(origCtx, modifiedArgs);
+
+          if (typeof promise.then === 'function') {
+            promise
+              .then(value => {
+                onResult();
+                return value;
+              })
+              .catch(error => {
+                onResult(error);
+                return error;
+              });
+          }
+
+          return promise;
+        } catch (execSycnErr) {
+          onResult(execSycnErr);
+          throw execSycnErr;
+        }
+      }
+
+      function onResult(err) {
+        span.d = Date.now() - span.ts;
+
+        // NOTE: if customer is using batching, there won't be an error object
+        if (err) {
+          span.ec = 1;
+
+          if (err.message) {
+            span.data.redis.error = err.message;
+          } else if (err instanceof Array && err.length) {
+            span.data.redis.error = err[0].message;
+          } else {
+            span.data.redis.error = 'Unknown error';
+          }
+
+          // v3 = provides sub errors
+          if (err.errors && err.errors.length) {
+            span.data.redis.error = err.errors.map(subErr => subErr.message).join('\n');
+          }
+        }
+
+        span.transmit();
+
+        if (typeof userProvidedCallback === 'function') {
+          return userProvidedCallback.apply(this, arguments);
+        }
+      }
+    });
+  }
 }
 
 // NOTE: We only need this function to capture errors in a batch command
