@@ -48,7 +48,12 @@ exports.wrap = (origObject, origMethod, instrumentationWrapperMethod) => {
   //       We might use the same underlying object, but we call `.wrap` twice in the instrumentation
   //       but we can't control it.
   // NOTE: EventEmitter can have multple wraps / listeners.
-  if (origObject[origMethod].__wrapped && !(origObject instanceof EventEmitter)) {
+  if (
+    origObject &&
+    origObject[origMethod] &&
+    origObject[origMethod].__wrapped &&
+    !(origObject instanceof EventEmitter)
+  ) {
     shimmer.unwrap(origObject, origMethod);
     logger.debug(`Method ${origMethod} of ${origObject} was already wrapped. Unwrapping.`);
   }
