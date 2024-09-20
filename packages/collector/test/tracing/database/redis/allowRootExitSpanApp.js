@@ -17,6 +17,7 @@ require('../../../..')({
 });
 
 const redis = require(process.env.REDIS_PKG);
+const { delay } = require('@instana/core/test/test_util');
 
 const logPrefix = `Redis allowRootExitSpan App (version: ${process.env.REDIS_VERSION}, 
 require: ${process.env.REDIS_PKG}):\t`;
@@ -26,6 +27,8 @@ log(logPrefix);
 let client;
 
 (async function connectRedis() {
+  await delay(1000);
+
   try {
     client = redis.createClient({ url: `redis://${process.env.REDIS}` });
     client.on('error', err => {
@@ -37,6 +40,8 @@ let client;
 
     const result = await client.multi().set('key', 'value').get('key').exec();
     log('value:', result);
+
+    await client.quit();
   } catch (err) {
     log('Failed to connect to Redis:', err);
   }
