@@ -814,6 +814,41 @@ const globalAgent = require('../../../globalAgent');
               });
             }
           });
+
+          describe('When allowRootExitSpan: true is set', function () {
+            globalAgent.setUpCleanUpHooks();
+            let controls;
+            before(async () => {
+              controls = new ProcessControls({
+                useGlobalAgent: true,
+                appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+                env: {
+                  REDIS_VERSION: redisVersion,
+                  REDIS_PKG: redisPkg
+                }
+              });
+
+              await controls.start(null, null, true);
+            });
+
+            beforeEach(async () => {
+              await agentControls.clearReceivedTraceData();
+            });
+
+            after(async () => {
+              await controls.stop();
+            });
+
+            it('must trace exit span', async function () {
+              const spans = await agentControls.getSpans();
+              expect(spans.length).to.be.eql(1);
+
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('redis'),
+                span => expect(span.k).to.equal('2')
+              ]);
+            });
+          });
         });
 
         function verifyHttpExit(controls, spans, parent) {
