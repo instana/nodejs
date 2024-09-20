@@ -6,6 +6,8 @@
 'use strict';
 
 const shimmer = require('shimmer');
+const EventEmitter = require('events').EventEmitter;
+
 let logger;
 logger = require('../logger').getLogger('tracing/shimmer', newLogger => {
   logger = newLogger;
@@ -45,7 +47,8 @@ exports.wrap = (origObject, origMethod, instrumentationWrapperMethod) => {
   //       e.g. there is the concept of client and/or cluster connections.
   //       We might use the same underlying object, but we call `.wrap` twice in the instrumentation
   //       but we can't control it.
-  if (origObject[origMethod].__wrapped) {
+  // NOTE: EventEmitter can have multple wraps / listeners.
+  if (origObject[origMethod].__wrapped && !(origObject instanceof EventEmitter)) {
     logger.debug(`Method ${origMethod} of ${origObject} is already wrapped, not wrapping again.`);
     return;
   }
