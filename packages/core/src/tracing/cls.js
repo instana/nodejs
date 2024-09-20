@@ -593,8 +593,7 @@ function skipExitTracing(options) {
     return false;
   }
 
-  // This means there is already a context available and the current span is exit span
-  // need to expand
+  // Parent span check is required skipParentSpanCheck/checkReducedSpan and no parent is present but an exit span only
   if ((opts.checkReducedSpan || !opts.skipParentSpanCheck) && (!parentSpan || isExitSpanResult)) {
     if (opts.extendedResponse) {
       return { skip: true, suppressed, isExitSpan: isExitSpanResult, parentSpan, allowRootExitSpan };
