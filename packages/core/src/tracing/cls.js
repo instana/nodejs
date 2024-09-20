@@ -542,14 +542,13 @@ function call(fn) {
  * | skipParentSpanCheck | Some instrumentations have a very specific handling for checking the parent span.
  * |                     | With this flag you can skip the default parent span check.
  * | skipIsTracing       | Instrumentation wants to handle `cls.isTracing` on it's own (e.g db2)
+ * | checkReducedSpan    | If no active entry span is present, there is an option for
+ * |                     | falling back to the most recent parent span stored as reduced span
+ * |                     | by setting checkReducedSpan attribute to true.
  *
  * @param {Object.<string, *>} options
  */
 function skipExitTracing(options) {
-  // The checkReducedSpan attribute is used if there is no active entry span
-  // and need to fallback to the reduced span of the most recent entry span.
-  // In some instrumentations these checks were already present and thus moved the logic here
-  // To support deferred exit calls, instrumentations can fall back to the reduced span
   const opts = Object.assign(
     {
       isActive: true,

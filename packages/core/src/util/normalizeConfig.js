@@ -254,8 +254,12 @@ function normalizeAllowRootExitSpan(config) {
     return;
   }
 
+  const INSTANA_ALLOW_ROOT_EXIT_SPAN = process.env['INSTANA_ALLOW_ROOT_EXIT_SPAN']?.toLowerCase();
+
   config.tracing.allowRootExitSpan =
-    process.env['INSTANA_ALLOW_ROOT_EXIT_SPAN']?.toLowerCase() === 'true' || defaults.tracing.allowRootExitSpan;
+    INSTANA_ALLOW_ROOT_EXIT_SPAN === '1' ||
+    INSTANA_ALLOW_ROOT_EXIT_SPAN === 'true' ||
+    defaults.tracing.allowRootExitSpan;
   return;
 }
 
