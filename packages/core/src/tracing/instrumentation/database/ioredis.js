@@ -126,10 +126,11 @@ function instrumentPipelineCommand(original) {
 function instrumentMultiOrPipelineCommand(commandName, original) {
   return function wrappedInternalMultiOrPipelineCommand() {
     const client = this;
-    const parentSpan = cls.getCurrentSpan();
+    const skipExitTracingResult = cls.skipExitTracing({ isActive, skipParentSpanCheck: true, extentedResponse: true });
+    const parentSpan = skipExitTracingResult.parentSpan;
 
     // NOTE: multiple redis transaction can have a parent ioredis call
-    if (cls.skipExitTracing({ isActive, skipParentSpanCheck: true }) || constants.isExitSpan(parentSpan)) {
+    if (skipExitTracingResult.skip || constants.isExitSpan(parentSpan)) {
       return original.apply(this, arguments);
     }
 
