@@ -312,6 +312,10 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
 
   return cls.ns.runAndReturn(() => {
     let span;
+
+    // TODO: why 2x multi span????
+    console.log('startspan');
+
     if (parentSpan) {
       span = cls.startSpan(exports.spanName, constants.EXIT, parentSpan.t, parentSpan.s);
     } else {
