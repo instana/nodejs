@@ -76,6 +76,7 @@ const globalAgent = require('../../../globalAgent');
                   return retry(async () => {
                     const spans = await agentControls.getSpans();
 
+                    // TODO: there is a bug with redis exec being called twice.
                     expect(spans.length).to.be.eql(1);
 
                     expectAtLeastOneMatching(spans, [
@@ -379,7 +380,7 @@ const globalAgent = require('../../../globalAgent');
                         span => expect(span.data.http.method).to.equal('GET')
                       ]);
 
-                      expect(spans.length).to.be.eql(3);
+                      expect(spans.length).to.eql(3);
 
                       expectAtLeastOneMatching(spans, [
                         span => expect(span.t).to.equal(writeEntrySpan.t),
