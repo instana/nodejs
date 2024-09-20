@@ -53,7 +53,7 @@ function shimJobCreate(originalJobCreate) {
     if (
       skipTracingResult.skip ||
       skipTracingResult.isExitSpan ||
-      (!skipTracingResult.parentSpan && !repeatableJob) ||
+      (!skipTracingResult.allowRootExitSpan && !skipTracingResult.parentSpan && !repeatableJob) ||
       repeatableJobIsSuppressed
     ) {
       /**
