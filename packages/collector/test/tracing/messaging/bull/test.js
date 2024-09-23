@@ -36,15 +36,6 @@ if (process.env.BULL_QUEUE_NAME) {
 }
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
-const sendingOptions = ['default', 'bulk=true', 'repeat=true'];
-// We don't need to test the callback case, as the Process case is handled as Callback already
-const receivingMethods = ['Process', 'Promise'];
-
-const withErrorCases = [false, true];
-
-const getNextSendingOption = require('@instana/core/test/test_util/circular_list').getCircularList(sendingOptions);
-const getNextReceivingMethod = require('@instana/core/test/test_util/circular_list').getCircularList(receivingMethods);
 const retryTime = 1000;
 
 mochaSuiteFn('tracing/messaging/bull', function () {
@@ -82,62 +73,392 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await senderControls.clearIpcMessages();
     });
 
-    receivingMethods.forEach(receiveMethod => {
-      describe(`receiving via ${receiveMethod} API`, () => {
-        let receiverControls;
+    describe('receiving via "Process" API', () => {
+      let receiverControls;
+      const receiveMethod = 'Process';
 
-        before(async () => {
-          receiverControls = new ProcessControls({
-            appPath: path.join(__dirname, 'receiver'),
-            useGlobalAgent: true,
-            env: {
-              REDIS_SERVER: 'redis://127.0.0.1:6379',
-              BULL_QUEUE_NAME: queueName,
-              BULL_RECEIVE_TYPE: receiveMethod,
-              BULL_JOB_NAME: 'steve',
-              BULL_JOB_NAME_ENABLED: 'true',
-              BULL_CONCURRENCY_ENABLED: 'true'
-            }
+      before(async () => {
+        receiverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'receiver'),
+          useGlobalAgent: true,
+          env: {
+            REDIS_SERVER: 'redis://127.0.0.1:6379',
+            BULL_QUEUE_NAME: queueName,
+            BULL_RECEIVE_TYPE: receiveMethod,
+            BULL_JOB_NAME: 'steve',
+            BULL_JOB_NAME_ENABLED: 'true',
+            BULL_CONCURRENCY_ENABLED: 'true'
+          }
+        });
+
+        await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
+      });
+
+      const testId = uuid();
+
+      describe('sendOption: default', function () {
+        const sendOption = 'default';
+
+        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+        describe('without error', () => {
+          const withError = false;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              testId,
+              spanLength: 6,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
           });
-
-          await receiverControls.startAndWaitForAgentConnection();
         });
 
-        beforeEach(async () => {
-          await agentControls.clearReceivedTraceData();
+        describe('with error', () => {
+          const withError = true;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              testId,
+              spanLength: 9,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+      });
+
+      describe('sendOption: bulk=true', function () {
+        const sendOption = 'bulk=true';
+
+        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+
+        describe('without error', () => {
+          const withError = false;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              testId,
+              spanLength: 16,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
         });
 
-        after(async () => {
-          await receiverControls.stop();
+        describe('with error', () => {
+          const withError = true;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              testId,
+              withError,
+              spanLength: 25,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+      });
+
+      describe('sendOption: repeat=true', function () {
+        const sendOption = 'repeat=true';
+
+        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+
+        describe('without error', () => {
+          const withError = false;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              testId,
+              withError,
+              spanLength: 11,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
         });
 
-        afterEach(async () => {
-          await receiverControls.clearIpcMessages();
+        describe('with error', () => {
+          const withError = true;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              spanLength: 17,
+              testId,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+      });
+    });
+
+    describe('receiving via "Promise" API', () => {
+      let receiverControls;
+      const receiveMethod = 'Promise';
+
+      before(async () => {
+        receiverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'receiver'),
+          useGlobalAgent: true,
+          env: {
+            REDIS_SERVER: 'redis://127.0.0.1:6379',
+            BULL_QUEUE_NAME: queueName,
+            BULL_RECEIVE_TYPE: receiveMethod,
+            BULL_JOB_NAME: 'steve',
+            BULL_JOB_NAME_ENABLED: 'true',
+            BULL_CONCURRENCY_ENABLED: 'true'
+          }
         });
 
-        const testId = uuid();
+        await receiverControls.startAndWaitForAgentConnection();
+      });
 
-        sendingOptions.forEach(sendOption => {
-          const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
-          withErrorCases.forEach(withError => {
-            const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
 
-            it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
-              const response = await senderControls.sendRequest({
-                method: 'POST',
-                path: urlWithParams
-              });
+      after(async () => {
+        await receiverControls.stop();
+      });
 
-              return verify({
-                receiverControls,
-                receiveMethod,
-                response,
-                apiPath,
-                testId,
-                withError,
-                isRepeatable: sendOption === 'repeat=true',
-                isBulk: sendOption === 'bulk=true'
-              });
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
+      });
+
+      const testId = uuid();
+
+      describe('sendOption: default', function () {
+        const sendOption = 'default';
+        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+
+        describe('without error', () => {
+          const withError = false;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              spanLength: 6,
+              testId,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+
+        describe('with error', () => {
+          const withError = true;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              spanLength: 9,
+              apiPath,
+              testId,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+      });
+
+      describe('sendOption: bulk=true', function () {
+        const sendOption = 'bulk=true';
+        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+
+        describe('without error', () => {
+          const withError = false;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              testId,
+              withError,
+              spanLength: 16,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+
+        describe('with error', () => {
+          const withError = true;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              spanLength: 25,
+              testId,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+      });
+
+      describe('sendOption: repeat=true', function () {
+        const sendOption = 'repeat=true';
+        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+
+        describe('without error', () => {
+          const withError = false;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              spanLength: 11,
+              testId,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+
+        describe('with error', () => {
+          const withError = true;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              spanLength: 17,
+              apiPath,
+              testId,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
             });
           });
         });
@@ -150,6 +471,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       receiveMethod,
       response,
       apiPath,
+      spanLength,
       testId,
       withError,
       isRepeatable,
@@ -167,7 +489,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         }
 
         await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
-        return agentControls.getSpans().then(spans =>
+
+        return agentControls.getSpans().then(spans => {
+          expect(spans.length).to.equal(spanLength);
+
           verifySpans({
             receiverControls,
             receiveMethod,
@@ -176,8 +501,8 @@ mochaSuiteFn('tracing/messaging/bull', function () {
             withError,
             isRepeatable,
             isBulk
-          })
-        );
+          });
+        });
       }, retryTime);
     }
 
@@ -319,9 +644,9 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await senderControls.clearIpcMessages();
     });
 
-    const receiveMethod = getNextReceivingMethod();
     describe('sending and receiving', () => {
       let receiverControls;
+      const receiveMethod = 'Process';
 
       before(async () => {
         receiverControls = new ProcessControls({
@@ -355,7 +680,8 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
       const testId = uuid();
 
-      sendingOptions.forEach(sendOption => {
+      describe('sendOption: default', function () {
+        const sendOption = 'default';
         const isRepeatable = sendOption === 'repeat=true';
         const isBulk = sendOption === 'bulk=true';
 
@@ -410,9 +736,9 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await senderControls.clearIpcMessages();
     });
 
-    const receiveMethod = getNextReceivingMethod();
     describe('tracing suppressed', () => {
       let receiverControls;
+      const receiveMethod = 'Promise';
 
       before(async () => {
         receiverControls = new ProcessControls({
@@ -445,7 +771,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
       const testId = uuid();
 
-      const sendOption = getNextSendingOption();
+      const sendOption = 'default';
       const isRepeatable = sendOption === 'repeat=true';
       const isBulk = sendOption === 'bulk=true';
 
