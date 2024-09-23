@@ -45,7 +45,7 @@ function checkConnection(span, setupType) {
 ['default', 'cluster'].forEach(setupType => {
   if (setupType !== 'cluster') {
     mochaSuiteFn &&
-      mochaSuiteFn.skip('When allowRootExitSpan: true is set', function () {
+      mochaSuiteFn.only('When allowRootExitSpan: true is set', function () {
         this.timeout(config.getTestTimeout() * 4);
 
         globalAgent.setUpCleanUpHooks();
@@ -76,7 +76,11 @@ function checkConnection(span, setupType) {
           return retry(async () => {
             const spans = await agentControls.getSpans();
 
-            expect(spans.length).to.be.eql(1);
+            // NO entry
+            // 1 x multi containing the sub commands
+            // 1 x exec span
+            // 2 x sub commands
+            expect(spans.length).to.be.eql(4);
 
             expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('redis'),

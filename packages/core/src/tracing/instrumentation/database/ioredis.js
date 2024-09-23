@@ -57,14 +57,17 @@ function instrumentSendCommand(original) {
     // NOTE: there is separate "pipeline" call from "instrumentSendCommand"
     //       only for "multi". Thats why we filter it out here.
     if (
-      !skipExitTracingResult.allowRootExitSpan &&
+      parentSpan &&
       parentSpan.n === exports.spanName &&
       (parentSpan.data.redis.command === 'multi' || parentSpan.data.redis.command === 'pipeline') &&
       command.name !== 'multi'
     ) {
       const parentSpanSubCommands = (parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || []);
       parentSpanSubCommands.push(command.name);
-    } else if (constants.isExitSpan(parentSpan)) {
+    } else if (
+      (parentSpan && constants.isExitSpan(parentSpan)) ||
+      (skipExitTracingResult.allowRootExitSpan && !parentSpan)
+    ) {
       // Apart from the special case of multi/pipeline calls, redis exits can't be child spans of other exits.
       return original.apply(this, arguments);
     }
