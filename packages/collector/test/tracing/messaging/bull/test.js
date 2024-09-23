@@ -17,7 +17,6 @@ const config = require('../../../../../core/test/config');
 const {
   expectExactlyOneMatching,
   expectAtLeastOneMatching,
-  expectExactlyNMatching,
   retry,
   delay,
   stringifyItems
@@ -39,13 +38,13 @@ if (process.env.BULL_QUEUE_NAME) {
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 const retryTime = 1000;
 
-mochaSuiteFn.only('tracing/messaging/bull', function () {
+mochaSuiteFn('tracing/messaging/bull', function () {
   this.timeout(config.getTestTimeout() * 3);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  describe.only('allowRootExitSpan', function () {
+  describe('allowRootExitSpan', function () {
     let controls;
 
     before(async () => {
@@ -70,17 +69,14 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
       await retry(async () => {
         const spans = await agentControls.getSpans();
 
-        // 1 x bull send?
-
         // TODO: all other bull tests also produce a huge number of spans
         //       https://jsw.ibm.com/browse/INSTA-15029
-        expect(spans.length).to.be.eql(6);
+        // 1 x redis
+        // 1 x bull
+        expect(spans.length).to.be.eql(2);
 
         expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('bull'), span => expect(span.k).to.equal(2)]);
-        expectExactlyNMatching(spans, 5, [
-          span => expect(span.n).to.equal('redis'),
-          span => expect(span.k).to.equal(2)
-        ]);
+        expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('redis'), span => expect(span.k).to.equal(2)]);
       });
     });
   });
@@ -153,7 +149,7 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
         const sendOption = 'default';
 
         const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
-        describe.only('without error', () => {
+        describe('without error', () => {
           const withError = false;
           const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
 
@@ -169,12 +165,6 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
               response,
               apiPath,
               testId,
-              // 1 x node.http.server 1
-              // 1 x bull receive
-              // 1 x otel (?)
-              // 1 x node.http.client (?)
-              // 1 x redis
-              // 1 x bull sender
               spanLength: 6,
               withError,
               isRepeatable: sendOption === 'repeat=true',
@@ -538,9 +528,6 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
         await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
 
         return agentControls.getSpans().then(spans => {
-          spans.forEach(element => {
-            console.log(element.n, element.k);
-          });
           expect(spans.length).to.equal(spanLength);
 
           verifySpans({
