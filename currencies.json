@@ -764,7 +764,7 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "deprecated": false,
+    "deprecated": true,
     "core": false
   },
   {
