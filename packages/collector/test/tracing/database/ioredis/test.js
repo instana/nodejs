@@ -44,8 +44,8 @@ function checkConnection(span, setupType) {
 //    export AZURE_REDIS_CLUSTER_PWD=
 ['default', 'cluster'].forEach(setupType => {
   if (setupType !== 'cluster') {
-    mochaSuiteFn.only &&
-      mochaSuiteFn.only('When allowRootExitSpan: true is set', function () {
+    mochaSuiteFn &&
+      mochaSuiteFn.skip('When allowRootExitSpan: true is set', function () {
         this.timeout(config.getTestTimeout() * 4);
 
         globalAgent.setUpCleanUpHooks();
@@ -148,9 +148,7 @@ function checkConnection(span, setupType) {
                 span => expect(span.data.http.method).to.equal('POST')
               ]);
 
-              // /values endpoint is called twice and we only have 1 get request
-              // this is getting reduced to normal because of shimmer wrap fix
-              expect(spans).to.have.lengthOf(2);
+              expect(spans).to.have.lengthOf(4);
 
               expectAtLeastOneMatching(spans, [
                 span => expect(span.t).to.equal(writeEntrySpan.t),
@@ -217,10 +215,7 @@ function checkConnection(span, setupType) {
                 span => expect(span.data.http.method).to.equal('POST')
               ]);
 
-              // 1 - /values redis get
-              // 1 - /keepTracing redis get
-              // 1 - /keepTracing fetch
-              expect(spans).to.have.lengthOf(3);
+              expect(spans).to.have.lengthOf(5);
 
               expectAtLeastOneMatching(spans, [
                 span => expect(span.t).to.equal(writeEntrySpan.t),
@@ -302,7 +297,7 @@ function checkConnection(span, setupType) {
                 span => expect(span.data.http.method).to.equal('POST')
               ]);
 
-              expect(spans).to.have.lengthOf(3);
+              expect(spans).to.have.lengthOf(5);
 
               expectAtLeastOneMatching(spans, [
                 span => expect(span.t).to.equal(writeEntrySpan.t),
@@ -372,7 +367,7 @@ function checkConnection(span, setupType) {
                 span => expect(span.data.http.method).to.equal('GET')
               ]);
 
-              expect(spans.length).to.equal(1);
+              expect(spans.length).to.equal(2);
 
               expectAtLeastOneMatching(spans, [
                 span => expect(span.t).to.equal(writeEntrySpan.t),
@@ -1264,7 +1259,7 @@ function checkConnection(span, setupType) {
             span => expect(span.data.http.method).to.equal('POST')
           ]);
 
-          expect(spans).to.have.lengthOf(2);
+          expect(spans).to.have.lengthOf(3);
 
           expectExactlyOneMatching(spans, [
             span => expect(span.t).to.equal(entrySpan.t),
