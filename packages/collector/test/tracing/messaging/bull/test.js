@@ -45,7 +45,7 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  describe('allowRootExitSpan', function () {
+  describe.only('allowRootExitSpan', function () {
     let controls;
 
     before(async () => {
@@ -69,6 +69,8 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
     it('must trace', async function () {
       await retry(async () => {
         const spans = await agentControls.getSpans();
+
+        // 1 x bull send?
 
         // TODO: all other bull tests also produce a huge number of spans
         //       https://jsw.ibm.com/browse/INSTA-15029
@@ -151,7 +153,7 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
         const sendOption = 'default';
 
         const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
-        describe('without error', () => {
+        describe.only('without error', () => {
           const withError = false;
           const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
 
@@ -167,6 +169,12 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
               response,
               apiPath,
               testId,
+              // 1 x node.http.server 1
+              // 1 x bull receive
+              // 1 x otel (?)
+              // 1 x node.http.client (?)
+              // 1 x redis
+              // 1 x bull sender
               spanLength: 6,
               withError,
               isRepeatable: sendOption === 'repeat=true',
@@ -530,6 +538,9 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
         await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
 
         return agentControls.getSpans().then(spans => {
+          spans.forEach(element => {
+            console.log(element.n, element.k);
+          });
           expect(spans.length).to.equal(spanLength);
 
           verifySpans({
