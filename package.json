@@ -70,7 +70,7 @@
     "depcheck": "lerna exec 'npx depcheck --skip-missing --ignores nan,agent-base,@types/*' --stream"
   },
   "devDependencies": {
-    "@apollo/gateway": "^2.9.0",
+    "@apollo/gateway": "^2.9.1",
     "@apollo/subgraph": "^2.9.0",
     "@aws-sdk/client-dynamodb": "^3.651.1",
     "@aws-sdk/client-dynamodb-v3": "npm:@aws-sdk/client-dynamodb@3.20.0",
@@ -149,8 +149,8 @@
     "express-v5-beta": "npm:express@^5.0.0-beta.3",
     "express-winston": "^4.2.0",
     "fastify": "^5.0.0",
-    "fastify-v4": "npm:fastify@^4.28.1",
     "fastify-v3": "npm:fastify@^3.21.5",
+    "fastify-v4": "npm:fastify@^4.28.1",
     "google-protobuf": "^3.21.4",
     "got": "^14.4.2",
     "got-v11": "npm:got@^11.8.6",
