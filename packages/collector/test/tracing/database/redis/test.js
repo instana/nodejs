@@ -213,6 +213,8 @@ const globalAgent = require('../../../globalAgent');
                       ]);
 
                       verifyHttpExit(controls, spans, entrySpan);
+
+                      expect(spans.length).to.be.eql(4);
                     })
                   );
                 }));
@@ -235,6 +237,13 @@ const globalAgent = require('../../../globalAgent');
                       ]);
 
                       verifyHttpExit(controls, spans, writeEntrySpan);
+
+                      // TODO: not sure what is the difference in span length with setupType
+                      if (setupType === 'cluster') {
+                        expect(spans.length).to.be.eql(2);
+                      } else {
+                        expect(spans.length).to.be.eql(3);
+                      }
                     })
                   )
                 ));
@@ -272,6 +281,8 @@ const globalAgent = require('../../../globalAgent');
                       ]);
 
                       verifyHttpExit(controls, spans, writeEntrySpan);
+
+                      expect(spans.length).to.be.eql(3);
                     })
                   )
                 ));
@@ -292,6 +303,8 @@ const globalAgent = require('../../../globalAgent');
                         span => expect(span.n).to.equal('node.http.server'),
                         span => expect(span.data.http.method).to.equal('GET')
                       ]);
+
+                      expect(spans.length).to.eql(3);
 
                       expectAtLeastOneMatching(spans, [
                         span => expect(span.t).to.equal(writeEntrySpan.t),
@@ -402,6 +415,8 @@ const globalAgent = require('../../../globalAgent');
                         ]);
 
                         verifyHttpExit(controls, spans, writeEntrySpan);
+
+                        expect(spans.length).to.be.eql(3);
                       })
                     )
                   ));
@@ -446,6 +461,8 @@ const globalAgent = require('../../../globalAgent');
                       ]);
 
                       verifyHttpExit(controls, spans, writeEntrySpan);
+
+                      expect(spans.length).to.be.eql(3);
                     })
                   )
                 ));
@@ -486,6 +503,8 @@ const globalAgent = require('../../../globalAgent');
                       ]);
 
                       verifyHttpExit(controls, spans, writeEntrySpan);
+
+                      expect(spans.length).to.be.eql(3);
                     })
                   )
                 ));
@@ -526,6 +545,8 @@ const globalAgent = require('../../../globalAgent');
                       ]);
 
                       verifyHttpExit(controls, spans, writeEntrySpan);
+
+                      expect(spans.length).to.be.eql(3);
                     })
                   )
                 ));
@@ -566,6 +587,8 @@ const globalAgent = require('../../../globalAgent');
                       ]);
 
                       verifyHttpExit(controls, spans, writeEntrySpan);
+
+                      expect(spans.length).to.be.eql(3);
                     })
                   )
                 ));
@@ -604,6 +627,7 @@ const globalAgent = require('../../../globalAgent');
                       ]);
 
                       verifyHttpExit(controls, spans, writeEntrySpan);
+                      expect(spans.length).to.be.eql(4);
                     })
                   )
                 ));
@@ -638,6 +662,8 @@ const globalAgent = require('../../../globalAgent');
                         ]);
 
                         verifyHttpExit(controls, spans, entrySpan);
+
+                        expect(spans.length).to.be.eql(3);
                       })
                     )
                   ));
@@ -708,6 +734,8 @@ const globalAgent = require('../../../globalAgent');
                         ]);
 
                         verifyHttpExit(controls, spans, entrySpan);
+
+                        expect(spans.length).to.be.eql(4);
                       })
                     )
                   ));
@@ -767,6 +795,7 @@ const globalAgent = require('../../../globalAgent');
                     span => expect(span.n).to.equal('node.http.server'),
                     span => expect(span.data.http.method).to.equal('POST')
                   ]);
+
                   expectExactlyOneMatching(spans, [
                     span => expect(span.t).to.equal(entrySpan.t),
                     span => expect(span.p).to.equal(entrySpan.s),
