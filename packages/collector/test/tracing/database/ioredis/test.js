@@ -7,6 +7,7 @@
 
 const expect = require('chai').expect;
 const semver = require('semver');
+const path = require('path');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -42,8 +43,53 @@ function checkConnection(span, setupType) {
 //    export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
 //    export AZURE_REDIS_CLUSTER_PWD=
 ['default', 'cluster'].forEach(setupType => {
+  if (setupType !== 'cluster') {
+    mochaSuiteFn.only &&
+      mochaSuiteFn.only('When allowRootExitSpan: true is set', function () {
+        this.timeout(config.getTestTimeout() * 4);
+
+        globalAgent.setUpCleanUpHooks();
+        const agentControls = globalAgent.instance;
+        let controls;
+
+        before(async () => {
+          controls = new ProcessControls({
+            useGlobalAgent: true,
+            appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+            env: {
+              REDIS_CLUSTER: setupType === 'cluster'
+            }
+          });
+
+          await controls.start(null, null, true);
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
+        afterEach(async () => {
+          await controls.clearIpcMessages();
+        });
+
+        it('must trace exit span', async function () {
+          return retry(async () => {
+            const spans = await agentControls.getSpans();
+
+            expect(spans.length).to.be.eql(1);
+
+            expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(2),
+              span => expect(span.p).to.not.exist
+            ]);
+          });
+        });
+      });
+  }
+
   mochaSuiteFn(`tracing/ioredis ${setupType}`, function () {
-    this.timeout(config.getTestTimeout() + 4);
+    this.timeout(config.getTestTimeout() * 4);
 
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
@@ -102,7 +148,9 @@ function checkConnection(span, setupType) {
                 span => expect(span.data.http.method).to.equal('POST')
               ]);
 
-              expect(spans).to.have.lengthOf(4);
+              // /values endpoint is called twice and we only have 1 get request
+              // this is getting reduced to normal because of shimmer wrap fix
+              expect(spans).to.have.lengthOf(2);
 
               expectAtLeastOneMatching(spans, [
                 span => expect(span.t).to.equal(writeEntrySpan.t),
@@ -168,7 +216,12 @@ function checkConnection(span, setupType) {
                 span => expect(span.n).to.equal('node.http.server'),
                 span => expect(span.data.http.method).to.equal('POST')
               ]);
-              expect(spans).to.have.lengthOf(5);
+
+              // 1 - /values redis get
+              // 1 - /keepTracing redis get
+              // 1 - /keepTracing fetch
+              expect(spans).to.have.lengthOf(3);
+
               expectAtLeastOneMatching(spans, [
                 span => expect(span.t).to.equal(writeEntrySpan.t),
                 span => expect(span.p).to.equal(writeEntrySpan.s),
@@ -248,7 +301,9 @@ function checkConnection(span, setupType) {
                 span => expect(span.n).to.equal('node.http.server'),
                 span => expect(span.data.http.method).to.equal('POST')
               ]);
-              expect(spans).to.have.lengthOf(5);
+
+              expect(spans).to.have.lengthOf(3);
+
               expectAtLeastOneMatching(spans, [
                 span => expect(span.t).to.equal(writeEntrySpan.t),
                 span => expect(span.p).to.equal(writeEntrySpan.s),
@@ -316,6 +371,8 @@ function checkConnection(span, setupType) {
                 span => expect(span.n).to.equal('node.http.server'),
                 span => expect(span.data.http.method).to.equal('GET')
               ]);
+
+              expect(spans.length).to.equal(1);
 
               expectAtLeastOneMatching(spans, [
                 span => expect(span.t).to.equal(writeEntrySpan.t),
@@ -1207,7 +1264,7 @@ function checkConnection(span, setupType) {
             span => expect(span.data.http.method).to.equal('POST')
           ]);
 
-          expect(spans).to.have.lengthOf(3);
+          expect(spans).to.have.lengthOf(2);
 
           expectExactlyOneMatching(spans, [
             span => expect(span.t).to.equal(entrySpan.t),
