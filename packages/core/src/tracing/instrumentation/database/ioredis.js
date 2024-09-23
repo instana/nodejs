@@ -45,6 +45,7 @@ function instrumentSendCommand(original) {
   return function wrappedInternalSendCommand(command) {
     const client = this;
     const skipExitTracingResult = cls.skipExitTracing({ isActive, skipParentSpanCheck: true, extendedResponse: true });
+    const parentSpan = skipExitTracingResult.parentSpan;
     let callback;
 
     if (command.promise == null || typeof command.name !== 'string' || skipExitTracingResult.skip) {
@@ -55,11 +56,8 @@ function instrumentSendCommand(original) {
     //       https://jsw.ibm.com/browse/INSTA-14540
     // NOTE: there is separate "pipeline" call from "instrumentSendCommand"
     //       only for "multi". Thats why we filter it out here.
-    const parentSpan = skipExitTracingResult.parentSpan;
-
     if (
       !skipExitTracingResult.allowRootExitSpan &&
-      parentSpan &&
       parentSpan.n === exports.spanName &&
       (parentSpan.data.redis.command === 'multi' || parentSpan.data.redis.command === 'pipeline') &&
       command.name !== 'multi'
@@ -126,10 +124,10 @@ function instrumentPipelineCommand(original) {
 function instrumentMultiOrPipelineCommand(commandName, original) {
   return function wrappedInternalMultiOrPipelineCommand() {
     const client = this;
-    const skipExitTracingResult = cls.skipExitTracing({ isActive, skipParentSpanCheck: true, extendedResponse: true });
+    const parentSpan = cls.getCurrentSpan();
 
     // NOTE: multiple redis transaction can have a parent ioredis call
-    if (skipExitTracingResult.skip || constants.isExitSpan(parentSpan)) {
+    if (cls.skipExitTracing({ isActive, skipParentSpanCheck: true }) || constants.isExitSpan(parentSpan)) {
       return original.apply(this, arguments);
     }
 
