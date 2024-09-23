@@ -39,7 +39,7 @@ if (process.env.BULL_QUEUE_NAME) {
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 const retryTime = 1000;
 
-mochaSuiteFn('tracing/messaging/bull', function () {
+mochaSuiteFn.only('tracing/messaging/bull', function () {
   this.timeout(config.getTestTimeout() * 3);
 
   globalAgent.setUpCleanUpHooks();
@@ -62,7 +62,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await controls.start(null, null, true);
     });
 
-    beforeEach(async () => {
+    afterEach(async () => {
       await agentControls.clearReceivedTraceData();
     });
 
