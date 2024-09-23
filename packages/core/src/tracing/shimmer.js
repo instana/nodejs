@@ -48,8 +48,6 @@ exports.wrap = (origObject, origMethod, instrumentationWrapperMethod) => {
   //       We might use the same underlying object, but we call `.wrap` twice in the instrumentation
   //       but we can't control it.
   // NOTE: EventEmitter can have multple wraps / listeners.
-
-  // moving this to inside of instanaShimmerWrapInner() resolves some issues I found in ioredis span assertions
   if (
     origObject &&
     origObject[origMethod] &&
@@ -62,17 +60,6 @@ exports.wrap = (origObject, origMethod, instrumentationWrapperMethod) => {
 
   shimmer.wrap(origObject, origMethod, function instanaShimmerWrap(originalFunction) {
     return function instanaShimmerWrapInner() {
-      // uncommenting this will fix the issue in ioredis tracking more than 1 exit span
-      // if (
-      //   origObject &&
-      //   origObject[origMethod] &&
-      //   origObject[origMethod].__wrapped &&
-      //   !(origObject instanceof EventEmitter)
-      // ) {
-      //   shimmer.unwrap(origObject, origMethod);
-      //   logger.debug(`Method ${origMethod} of ${origObject} was already wrapped. Unwrapping.`);
-      // }
-
       let originalCalled = false;
       const originalThis = this;
       const originalArgs = arguments;
