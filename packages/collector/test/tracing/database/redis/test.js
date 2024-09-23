@@ -238,7 +238,7 @@ const globalAgent = require('../../../globalAgent');
 
                       verifyHttpExit(controls, spans, writeEntrySpan);
 
-                      // TODO: not sure what is the difference in span length with setupType
+                      // TODO: Why do we have less spans with the cluster?
                       if (setupType === 'cluster') {
                         expect(spans.length).to.be.eql(2);
                       } else {
