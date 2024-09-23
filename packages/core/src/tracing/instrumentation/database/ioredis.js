@@ -44,7 +44,7 @@ function instrument(ioredis) {
 function instrumentSendCommand(original) {
   return function wrappedInternalSendCommand(command) {
     const client = this;
-    const skipExitTracingResult = cls.skipExitTracing({ isActive, skipParentSpanCheck: true, extentedResponse: true });
+    const skipExitTracingResult = cls.skipExitTracing({ isActive, skipParentSpanCheck: true, extendedResponse: true });
     let callback;
 
     if (command.promise == null || typeof command.name !== 'string' || skipExitTracingResult.skip) {
@@ -126,7 +126,7 @@ function instrumentPipelineCommand(original) {
 function instrumentMultiOrPipelineCommand(commandName, original) {
   return function wrappedInternalMultiOrPipelineCommand() {
     const client = this;
-    const skipExitTracingResult = cls.skipExitTracing({ isActive, skipParentSpanCheck: true, extentedResponse: true });
+    const skipExitTracingResult = cls.skipExitTracing({ isActive, skipParentSpanCheck: true, extendedResponse: true });
     const parentSpan = skipExitTracingResult.parentSpan;
 
     // NOTE: multiple redis transaction can have a parent ioredis call
