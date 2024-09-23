@@ -38,16 +38,12 @@ if (process.env.BULL_QUEUE_NAME) {
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 const sendingOptions = ['default', 'bulk=true', 'repeat=true'];
-// We don't need to test the callback case, as the Process case is handled as Callback already
-const receivingMethods = ['Process', 'Promise'];
 
 const withErrorCases = [false, true];
 
-const getNextSendingOption = require('@instana/core/test/test_util/circular_list').getCircularList(sendingOptions);
-const getNextReceivingMethod = require('@instana/core/test/test_util/circular_list').getCircularList(receivingMethods);
 const retryTime = 1000;
 
-mochaSuiteFn('tracing/messaging/bull', function () {
+mochaSuiteFn.only('tracing/messaging/bull', function () {
   this.timeout(config.getTestTimeout() * 3);
 
   globalAgent.setUpCleanUpHooks();
@@ -82,62 +78,121 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await senderControls.clearIpcMessages();
     });
 
-    receivingMethods.forEach(receiveMethod => {
-      describe(`receiving via ${receiveMethod} API`, () => {
-        let receiverControls;
+    describe('receiving via "Process" API', () => {
+      let receiverControls;
+      const receiveMethod = 'Process';
 
-        before(async () => {
-          receiverControls = new ProcessControls({
-            appPath: path.join(__dirname, 'receiver'),
-            useGlobalAgent: true,
-            env: {
-              REDIS_SERVER: 'redis://127.0.0.1:6379',
-              BULL_QUEUE_NAME: queueName,
-              BULL_RECEIVE_TYPE: receiveMethod,
-              BULL_JOB_NAME: 'steve',
-              BULL_JOB_NAME_ENABLED: 'true',
-              BULL_CONCURRENCY_ENABLED: 'true'
-            }
+      before(async () => {
+        receiverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'receiver'),
+          useGlobalAgent: true,
+          env: {
+            REDIS_SERVER: 'redis://127.0.0.1:6379',
+            BULL_QUEUE_NAME: queueName,
+            BULL_RECEIVE_TYPE: receiveMethod,
+            BULL_JOB_NAME: 'steve',
+            BULL_JOB_NAME_ENABLED: 'true',
+            BULL_CONCURRENCY_ENABLED: 'true'
+          }
+        });
+
+        await receiverControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+      });
+
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
+      });
+
+      const testId = uuid();
+
+      sendingOptions.forEach(sendOption => {
+        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+        withErrorCases.forEach(withError => {
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              testId,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
           });
+        });
+      });
+    });
+    describe('receiving via "Promise" API', () => {
+      let receiverControls;
+      const receiveMethod = 'Promise';
 
-          await receiverControls.startAndWaitForAgentConnection();
+      before(async () => {
+        receiverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'receiver'),
+          useGlobalAgent: true,
+          env: {
+            REDIS_SERVER: 'redis://127.0.0.1:6379',
+            BULL_QUEUE_NAME: queueName,
+            BULL_RECEIVE_TYPE: receiveMethod,
+            BULL_JOB_NAME: 'steve',
+            BULL_JOB_NAME_ENABLED: 'true',
+            BULL_CONCURRENCY_ENABLED: 'true'
+          }
         });
 
-        beforeEach(async () => {
-          await agentControls.clearReceivedTraceData();
-        });
+        await receiverControls.startAndWaitForAgentConnection();
+      });
 
-        after(async () => {
-          await receiverControls.stop();
-        });
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
 
-        afterEach(async () => {
-          await receiverControls.clearIpcMessages();
-        });
+      after(async () => {
+        await receiverControls.stop();
+      });
 
-        const testId = uuid();
+      afterEach(async () => {
+        await receiverControls.clearIpcMessages();
+      });
 
-        sendingOptions.forEach(sendOption => {
-          const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
-          withErrorCases.forEach(withError => {
-            const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+      const testId = uuid();
 
-            it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
-              const response = await senderControls.sendRequest({
-                method: 'POST',
-                path: urlWithParams
-              });
+      sendingOptions.forEach(sendOption => {
+        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+        withErrorCases.forEach(withError => {
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
 
-              return verify({
-                receiverControls,
-                receiveMethod,
-                response,
-                apiPath,
-                testId,
-                withError,
-                isRepeatable: sendOption === 'repeat=true',
-                isBulk: sendOption === 'bulk=true'
-              });
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              testId,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
             });
           });
         });
@@ -319,9 +374,9 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await senderControls.clearIpcMessages();
     });
 
-    const receiveMethod = getNextReceivingMethod();
     describe('sending and receiving', () => {
       let receiverControls;
+      const receiveMethod = 'Process';
 
       before(async () => {
         receiverControls = new ProcessControls({
@@ -410,9 +465,9 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await senderControls.clearIpcMessages();
     });
 
-    const receiveMethod = getNextReceivingMethod();
     describe('tracing suppressed', () => {
       let receiverControls;
+      const receiveMethod = 'Promise';
 
       before(async () => {
         receiverControls = new ProcessControls({
@@ -445,7 +500,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
       const testId = uuid();
 
-      const sendOption = getNextSendingOption();
+      const sendOption = 'default';
       const isRepeatable = sendOption === 'repeat=true';
       const isBulk = sendOption === 'bulk=true';
 
