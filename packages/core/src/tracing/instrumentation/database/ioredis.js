@@ -65,10 +65,10 @@ function instrumentSendCommand(original) {
       const parentSpanSubCommands = (parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || []);
       parentSpanSubCommands.push(command.name);
     } else if (
-      (parentSpan && constants.isExitSpan(parentSpan)) ||
+      (!skipExitTracingResult.allowRootExitSpan && parentSpan && constants.isExitSpan(parentSpan)) ||
       (skipExitTracingResult.allowRootExitSpan && !parentSpan)
     ) {
-      // Apart from the special case of multi/pipeline calls, redis exits can't be child spans of other exits.
+      // Apart from the special case of multi/pipeline calls, redis exits can't be child spans of other exits
       return original.apply(this, arguments);
     }
 
@@ -127,10 +127,15 @@ function instrumentPipelineCommand(original) {
 function instrumentMultiOrPipelineCommand(commandName, original) {
   return function wrappedInternalMultiOrPipelineCommand() {
     const client = this;
-    const parentSpan = cls.getCurrentSpan();
+    const skipExitTracingResult = cls.skipExitTracing({ isActive, skipParentSpanCheck: true, extendedResponse: true });
+    const parentSpan = skipExitTracingResult.parentSpan;
 
     // NOTE: multiple redis transaction can have a parent ioredis call
-    if (cls.skipExitTracing({ isActive, skipParentSpanCheck: true }) || constants.isExitSpan(parentSpan)) {
+    if (
+      skipExitTracingResult.skip ||
+      (!skipExitTracingResult.allowRootExitSpan && parentSpan && constants.isExitSpan(parentSpan)) ||
+      (!skipExitTracingResult.allowRootExitSpan && !parentSpan)
+    ) {
       return original.apply(this, arguments);
     }
 
