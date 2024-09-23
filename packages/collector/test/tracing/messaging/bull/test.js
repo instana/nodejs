@@ -36,14 +36,9 @@ if (process.env.BULL_QUEUE_NAME) {
 }
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
-const sendingOptions = ['default', 'bulk=true', 'repeat=true'];
-
-const withErrorCases = [false, true];
-
 const retryTime = 1000;
 
-mochaSuiteFn.only('tracing/messaging/bull', function () {
+mochaSuiteFn('tracing/messaging/bull', function () {
   this.timeout(config.getTestTimeout() * 3);
 
   globalAgent.setUpCleanUpHooks();
@@ -113,9 +108,90 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
 
       const testId = uuid();
 
-      sendingOptions.forEach(sendOption => {
+      describe('sendOption: default', function () {
+        const sendOption = 'default';
+
         const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
-        withErrorCases.forEach(withError => {
+        describe('without error', () => {
+          const withError = false;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              testId,
+              spanLength: 6,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+
+        describe('with error', () => {
+          const withError = true;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              testId,
+              spanLength: 9,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+      });
+
+      describe('sendOption: bulk=true', function () {
+        const sendOption = 'bulk=true';
+
+        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+
+        describe('without error', () => {
+          const withError = false;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              testId,
+              spanLength: 16,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+
+        describe('with error', () => {
+          const withError = true;
           const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
 
           it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
@@ -131,6 +207,61 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
               apiPath,
               testId,
               withError,
+              spanLength: 25,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+      });
+
+      describe('sendOption: repeat=true', function () {
+        const sendOption = 'repeat=true';
+
+        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+
+        describe('without error', () => {
+          const withError = false;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              testId,
+              withError,
+              spanLength: 11,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+
+        describe('with error', () => {
+          const withError = true;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              spanLength: 17,
+              testId,
+              withError,
               isRepeatable: sendOption === 'repeat=true',
               isBulk: sendOption === 'bulk=true'
             });
@@ -138,6 +269,7 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
         });
       });
     });
+
     describe('receiving via "Promise" API', () => {
       let receiverControls;
       const receiveMethod = 'Promise';
@@ -173,9 +305,12 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
 
       const testId = uuid();
 
-      sendingOptions.forEach(sendOption => {
+      describe('sendOption: default', function () {
+        const sendOption = 'default';
         const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
-        withErrorCases.forEach(withError => {
+
+        describe('without error', () => {
+          const withError = false;
           const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
 
           it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
@@ -188,6 +323,137 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
               receiverControls,
               receiveMethod,
               response,
+              apiPath,
+              spanLength: 6,
+              testId,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+
+        describe('with error', () => {
+          const withError = true;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              spanLength: 9,
+              apiPath,
+              testId,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+      });
+
+      describe('sendOption: bulk=true', function () {
+        const sendOption = 'bulk=true';
+        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+
+        describe('without error', () => {
+          const withError = false;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              testId,
+              withError,
+              spanLength: 16,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+
+        describe('with error', () => {
+          const withError = true;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              spanLength: 25,
+              testId,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+      });
+
+      describe('sendOption: repeat=true', function () {
+        const sendOption = 'repeat=true';
+        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+
+        describe('without error', () => {
+          const withError = false;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              apiPath,
+              spanLength: 11,
+              testId,
+              withError,
+              isRepeatable: sendOption === 'repeat=true',
+              isBulk: sendOption === 'bulk=true'
+            });
+          });
+        });
+
+        describe('with error', () => {
+          const withError = true;
+          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+
+          it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
+            });
+
+            return verify({
+              receiverControls,
+              receiveMethod,
+              response,
+              spanLength: 17,
               apiPath,
               testId,
               withError,
@@ -205,6 +471,7 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
       receiveMethod,
       response,
       apiPath,
+      spanLength,
       testId,
       withError,
       isRepeatable,
@@ -222,7 +489,10 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
         }
 
         await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
-        return agentControls.getSpans().then(spans =>
+
+        return agentControls.getSpans().then(spans => {
+          expect(spans.length).to.equal(spanLength);
+
           verifySpans({
             receiverControls,
             receiveMethod,
@@ -231,8 +501,8 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
             withError,
             isRepeatable,
             isBulk
-          })
-        );
+          });
+        });
       }, retryTime);
     }
 
@@ -410,7 +680,8 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
 
       const testId = uuid();
 
-      sendingOptions.forEach(sendOption => {
+      describe('sendOption: default', function () {
+        const sendOption = 'default';
         const isRepeatable = sendOption === 'repeat=true';
         const isBulk = sendOption === 'bulk=true';
 
