@@ -44,52 +44,51 @@ function checkConnection(span, setupType) {
 //    export AZURE_REDIS_CLUSTER_PWD=
 ['default', 'cluster'].forEach(setupType => {
   if (setupType !== 'cluster') {
-    mochaSuiteFn &&
-      mochaSuiteFn.only('When allowRootExitSpan: true is set', function () {
-        this.timeout(config.getTestTimeout() * 4);
+    mochaSuiteFn('When allowRootExitSpan: true is set', function () {
+      this.timeout(config.getTestTimeout() * 4);
 
-        globalAgent.setUpCleanUpHooks();
-        const agentControls = globalAgent.instance;
-        let controls;
+      globalAgent.setUpCleanUpHooks();
+      const agentControls = globalAgent.instance;
+      let controls;
 
-        before(async () => {
-          controls = new ProcessControls({
-            useGlobalAgent: true,
-            appPath: path.join(__dirname, 'allowRootExitSpanApp'),
-            env: {
-              REDIS_CLUSTER: setupType === 'cluster'
-            }
-          });
-
-          await controls.start(null, null, true);
+      before(async () => {
+        controls = new ProcessControls({
+          useGlobalAgent: true,
+          appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+          env: {
+            REDIS_CLUSTER: setupType === 'cluster'
+          }
         });
 
-        beforeEach(async () => {
-          await agentControls.clearReceivedTraceData();
-        });
+        await controls.start(null, null, true);
+      });
 
-        afterEach(async () => {
-          await controls.clearIpcMessages();
-        });
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
 
-        it('must trace exit span', async function () {
-          return retry(async () => {
-            const spans = await agentControls.getSpans();
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
 
-            // NO entry
-            // 1 x multi containing the sub commands
-            // 1 x exec span
-            // 2 x sub commands
-            expect(spans.length).to.be.eql(4);
+      it('must trace exit span', async function () {
+        return retry(async () => {
+          const spans = await agentControls.getSpans();
 
-            expectAtLeastOneMatching(spans, [
-              span => expect(span.n).to.equal('redis'),
-              span => expect(span.k).to.equal(2),
-              span => expect(span.p).to.not.exist
-            ]);
-          });
+          // NO entry
+          // 1 x multi containing the sub commands
+          // 1 x exec span
+          // 2 x sub commands
+          expect(spans.length).to.be.eql(4);
+
+          expectAtLeastOneMatching(spans, [
+            span => expect(span.n).to.equal('redis'),
+            span => expect(span.k).to.equal(2),
+            span => expect(span.p).to.not.exist
+          ]);
         });
       });
+    });
   }
 
   mochaSuiteFn(`tracing/ioredis ${setupType}`, function () {
