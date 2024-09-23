@@ -59,8 +59,16 @@ function instrument(build) {
     app.addHook('onRequest', function onRequest(request, reply, done) {
       try {
         // NOTE: v1 uses _context https://github.com/fastify/fastify/blob/1.x/fastify.js#L276
-        //       v2/v3 uses context https://github.com/fastify/fastify/blob/2.x/test/handler-context.test.js#L41
-        const url = reply._context ? reply._context.config.url : reply.context.config.url;
+        //       v2/v3/v4 uses context https://github.com/fastify/fastify/blob/2.x/test/handler-context.test.js#L41
+        //       v5 uses reply.routeOptions and no longer exposes `.context`
+        //       https://fastify.dev/docs/latest/Guides/Migration-Guide-V5/#streamlined-access-to-route-definition
+        let url;
+
+        if (reply?.routeOptions?.config?.url) {
+          url = reply.routeOptions.config.url;
+        } else {
+          url = reply._context ? reply._context.config.url : reply.context.config.url;
+        }
 
         annotateHttpEntrySpanWithPathTemplate(app, url);
       } catch (err) {

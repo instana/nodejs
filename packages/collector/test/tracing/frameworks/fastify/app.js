@@ -133,7 +133,11 @@ app.register(subRouter, { prefix: '/sub' });
 
 const start = async () => {
   try {
-    await app.listen(port);
+    if (FASTIFY_VERSION === 'latest') {
+      await app.listen({ port });
+    } else {
+      await app.listen(port);
+    }
     log(`listening on ${app.server.address().port} with Fastify version ${FASTIFY_VERSION}`);
   } catch (err) {
     log('startup failure', err);

@@ -7,6 +7,7 @@
 
 const path = require('path');
 const expect = require('chai').expect;
+const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -17,9 +18,14 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-['latest', 'v3'].forEach(version => {
+['latest', 'v4', 'v3'].forEach(version => {
   mochaSuiteFn('tracing/fastify', function () {
     this.timeout(config.getTestTimeout());
+
+    if (version === 'latest' && semver.lt(process.versions.node, '20.0.0')) {
+      it.skip(`"${version}" version requires Node.js version 20 or higher`);
+      return;
+    }
 
     describe(`${version}`, () => {
       const agentControls = globalAgent.instance;
