@@ -35,8 +35,6 @@ log(logPrefix);
 
     client.on('ready', () => {
       log(`Connected to client 1 (${process.env.REDIS}).`);
-
-      return client;
     });
 
     const multi = await client.multi().set('key', 'value').get('key').exec();
