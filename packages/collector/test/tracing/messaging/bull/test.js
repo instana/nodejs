@@ -69,8 +69,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await retry(async () => {
         const spans = await agentControls.getSpans();
 
-        // TODO: all other bull tests also produce a huge number of spans
-        //       https://jsw.ibm.com/browse/INSTA-15029
         // 1 x redis
         // 1 x bull
         expect(spans.length).to.be.eql(2);
@@ -165,6 +163,12 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               response,
               apiPath,
               testId,
+              // 1 x node.http.server 1
+              // 1 x bull receive
+              // 1 x otel (?)
+              // 1 x node.http.client (?)
+              // 1 x redis
+              // 1 x bull sender
               spanLength: 6,
               withError,
               isRepeatable: sendOption === 'repeat=true',
@@ -231,6 +235,8 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           const withError = true;
           const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
 
+          // TODO: all other bull tests also produce a huge number of spans
+          //       https://jsw.ibm.com/browse/INSTA-15029
           it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
             const response = await senderControls.sendRequest({
               method: 'POST',
