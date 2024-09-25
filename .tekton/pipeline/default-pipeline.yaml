@@ -203,6 +203,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -226,6 +228,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -249,6 +253,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -272,6 +278,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -295,6 +303,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -318,6 +328,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -341,6 +353,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -364,6 +378,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -387,6 +403,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -410,6 +428,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -433,6 +453,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -456,6 +478,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -479,6 +503,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -502,6 +528,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -525,6 +553,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -548,6 +578,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -571,6 +603,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -594,6 +628,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -617,6 +653,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -640,6 +678,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -663,6 +703,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -686,6 +728,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -709,6 +753,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
@@ -732,6 +778,8 @@ spec:
           value: "secure-properties"
         - name: esm
           value: $(params.esm)
+        - name: prerelease
+          value: $(params.prerelease)
         - name: coverage
           value: $(params.coverage)
       workspaces:
