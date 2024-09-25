@@ -22,6 +22,8 @@ spec:
       value: $(params.esm)
     - name: coverage
       value: $(params.coverage)
+    - name: prerelease
+      value: $(params.prerelease)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -72,6 +74,49 @@ spec:
         CIRCLE_COMPARE_URL=""
         MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
+
+        echo "Node.js version to install--------------------------------"
+        if [ -n "$(params.prerelease)" ]; then
+          NODE_VERSION="v23"
+          echo "Node.js version to install: $NODE_VERSION"
+          # Install NVM if not already installed
+          if ! command -v nvm &> /dev/null; then
+            echo "NVM not found. Installing NVM..."
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          else
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          fi
+          # Install the specified Node.js version using the RC mirror
+          echo "Attempting to install Node.js version $NODE_VERSION..."
+          NVM_NODEJS_ORG_MIRROR=https://nodejs.org/download/rc nvm install "$NODE_VERSION" || {
+            echo "RC installation failed. Attempting to install Node.js version $NODE_VERSION using Nightly mirror..."
+            NVM_NODEJS_ORG_MIRROR=https://nodejs.org/download/nightly nvm install "$NODE_VERSION"
+          }
+          # Use the installed version
+          nvm use "$NODE_VERSION"
+          echo "Node: $(node --version)"
+
+          # Fetch the latest Node.js version
+          latest_version=$(nvm ls-remote --lts | tail -1 | awk '{print $1}')
+          major_version=$(echo "$latest_version" | cut -d "v" -f 2 | cut -d "." -f 1)
+          echo "Node major_version: $(latest_version)"
+          next_major_version=$((major_version + 1))
+          echo "Node next_major_version : $(next_major_version)"
+        fi
+
+        if [ -n "$(params.npm-version)" ]; then
+          npm install npm@$(params.npm-version) -g
+        fi
+
+        if [ -n "$(params.revision)" ]; then
+          CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
+          MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+          GIT_COMMIT_DESC=$(git log --format=%B -n 1 $(params.revision))
+        fi
+
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi
