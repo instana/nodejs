@@ -1,0 +1,44 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: nodejs-pre-release-binding
+spec:
+  envFrom:
+    - configMapRef:
+        name: environment-properties
+  params:
+    - name: branch
+      value: $(params.target-branch)
+    - name: target-branch
+      value: $(params.target-branch)
+    - name: type
+      value: "nodejs-pre-release"
+    - name: repository
+      value: $(params.repository-url)
+    - name: commit-id
+      value: ""
+    - name: node-version
+      value: $(params.node-version)
+      default: ""
+    - name: npm-version
+      value: $(params.npm-version)
+      default: "" 
+    - name: prerelease
+      value: "true"
+    - name: pl-name
+      value: "nodejs-pre-release"
+    - name: pipeline-ref
+      value: "default-pipeline"
+
+---
+
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: nodejs-pre-release-listener
+spec:
+  triggers:
+    - bindings:
+        - name: nodejs-pre-release-binding
+      template:
+        name: custom-template

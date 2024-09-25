@@ -49,6 +49,9 @@ spec:
     - name: context
       default: "node-$(params.node-version)"
       value: $(params.context)
+    - name: prerelease
+      default: "false"
+      value: $(params.prerelease)
   resourcetemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
