@@ -71,15 +71,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         await delay(500);
         const spans = await agentControls.getSpans();
 
-        // TODO: all other bull tests also produce a huge number of spans
-        //       https://jsw.ibm.com/browse/INSTA-15029
-        expect(spans.length).to.be.eql(7);
+        expect(spans.length).to.be.eql(2);
 
         expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('bull'), span => expect(span.k).to.equal(2)]);
-        expectExactlyNMatching(spans, 6, [
-          span => expect(span.n).to.equal('redis'),
-          span => expect(span.k).to.equal(2)
-        ]);
+        expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('redis'), span => expect(span.k).to.equal(2)]);
       });
     });
   });
