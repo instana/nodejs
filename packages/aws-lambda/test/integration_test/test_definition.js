@@ -21,7 +21,7 @@ const { fail } = expect;
 
 const awsRegion = 'us-east-2';
 const functionName = 'functionName';
-const unqualifiedArn = `arn:aws:lambda:${awsRegion}:410797082306:function:${functionName}`;
+const unqualifiedArn = `arn:aws:lambda:${awsRegion}:767398002385:function:${functionName}`;
 const version = '$LATEST';
 const qualifiedArn = `${unqualifiedArn}:${version}`;
 

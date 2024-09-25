@@ -16,16 +16,16 @@ function getPolicy(topicName, queueName) {
     Id: '__default_policy_ID',
     Statement: [
       {
-        Sid: `topic-subscription-arn:aws:sns:us-east-2:410797082306:${topicName}`,
+        Sid: `topic-subscription-arn:aws:sns:us-east-2:767398002385:${topicName}`,
         Effect: 'Allow',
         Principal: {
           AWS: '*'
         },
         Action: 'SQS:SendMessage',
-        Resource: `arn:aws:sqs:us-east-2:410797082306:${queueName}`,
+        Resource: `arn:aws:sqs:us-east-2:767398002385:${queueName}`,
         Condition: {
           ArnLike: {
-            'aws:SourceArn': `arn:aws:sns:us-east-2:410797082306:${topicName}`
+            'aws:SourceArn': `arn:aws:sns:us-east-2:767398002385:${topicName}`
           }
         }
       }
@@ -85,7 +85,7 @@ exports.createTopic = async function createTopic(topicAndQueueName) {
     .subscribe({
       TopicArn: topicData.TopicArn,
       Protocol: 'sqs',
-      Endpoint: `arn:aws:sqs:us-east-2:410797082306:${topicAndQueueName}`,
+      Endpoint: `arn:aws:sqs:us-east-2:767398002385:${topicAndQueueName}`,
       Attributes: {
         RawMessageDelivery: 'true'
       }

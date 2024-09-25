@@ -15,7 +15,10 @@ const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
 const { verifyHttpRootEntry, verifyExitSpan } = require('@instana/core/test/test_util/common_verifications');
 const SPAN_NAME = 'aws.lambda.invoke';
-const functionName = 'wrapped-async-v3';
+// We are using a single function, 'nodejs-tracer-lambda', for our Lambda testing since we invoke an existing function.
+// Our tests focus on invoking function and retrieving details of the function, rather than creating new ones.
+// We originally created this function specifically for testing and are now using it across all test cases.
+const functionName = 'nodejs-tracer-lambda';
 let appControls;
 
 const availableCtx = [null, '{"Custom": {"awesome_company": "Instana"}}', '{"Custom": "Something"}'];

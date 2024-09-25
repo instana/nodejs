@@ -15,7 +15,7 @@ const globalAgent = require('../../../../../globalAgent');
 const { verifyHttpRootEntry, verifyExitSpan } = require('@instana/core/test/test_util/common_verifications');
 
 const SPAN_NAME = 'aws.lambda.invoke';
-const functionName = 'wrapped-async';
+const functionName = 'nodejs-tracer-lambda';
 let mochaSuiteFn;
 
 const withErrorOptions = [false, true];

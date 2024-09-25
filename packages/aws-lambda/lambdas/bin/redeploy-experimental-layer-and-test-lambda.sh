@@ -11,7 +11,7 @@ cd `dirname $BASH_SOURCE`/..
 
 pwd
 
-AWS_ACCNT=410797082306
+AWS_ACCNT=767398002385
 REGION=us-east-2
 LAYER_NAME=experimental-instana-nodejs-with-extension
 PREVIOUS_LAYER_VERSION=$(AWS_PAGER="" aws --region $REGION --output json lambda list-layer-versions --layer-name $LAYER_NAME | jq '.LayerVersions[0].Version')

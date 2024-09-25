@@ -57,7 +57,7 @@ instana-aws-fargate/build-and-push.sh npm next
 
 Instead of running `instana-aws-fargate/build-and-push.sh`, you can also only run `instana-aws-fargate/build.sh` if you are not interested in pushing the image to a registry or if you want to verify it can be built correctly first.
 
-With the default settings (default AWS ECR registry) you would find the image here: <https://us-east-2.console.aws.amazon.com/ecr/repositories/private/410797082306/instana-aws-fargate-nodejs?region=us-east-2>
+With the default settings (default AWS ECR registry) you would find the image here: <https://us-east-2.console.aws.amazon.com/ecr/repositories/private/767398002385/instana-aws-fargate-nodejs?region=us-east-2>
 
 Once the Instana Node.js Fargate base image with the release candidate has been created, you can create a test application image with it:
 
@@ -81,11 +81,11 @@ You can find a list of all available images at <https://us-east-2.console.aws.am
 * Scroll down to "Container definitions" section, click on the `fargate-nodejs-test-container` container name and paste the fully qualified image name into the "Image" field.
 * You might want to check the "Environment" section in the container definition to see to which environment the task will report later.If no specific environment is defined, you will need to provide both the URL and the environment key.
 * Go to clusters: <https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/clusters>
-* Create a new cluster from scratch or use the existing [test cluster](https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/clusters/bastian-krol-test/services)
+* Create a new cluster from scratch or use the existing one.
 * Update the cluster's only service with the new task definition version by clicking "Update".
-* Go to the [tasks tab](https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/clusters/bastian-krol-test/services/fargate-nodejs-service/tasks) and make sure that only the new task is running (old tasks might need to be stopped).
+* Go to the tasks tab and make sure that only the new task is running (old tasks might need to be stopped).
 * Go to the Instana environment you are reporting to (for example [test/pink](https://test-instana.pink.instana.rocks/#/physical?q=entity.type%3Afargate)) and inspect the data.
 * Test tracing:
-    * You can find the task's public IP on its [details tab](https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/clusters/bastian-krol-test/tasks/7c75d3e7628743ba864a5d6d2ab6770e/details). The port (4816) is in the `test-images/server.js`)  file.
+    * You can find the task's public IP on its details tab. The port (4816) is in the `test-images/server.js`  file.
     * Execute a few requests: `watch curl http://$PUBLIC_TASK_IP:4816`.
     * Inspect the resulting calls in Instana.

@@ -16,7 +16,7 @@ const config = require('@instana/core/test/config');
 const { isCI } = require('@instana/core/test/test_util');
 
 const functionName = 'functionName';
-const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
+const unqualifiedArn = `arn:aws:lambda:us-east-2:767398002385:function:${functionName}`;
 const version = '$LATEST';
 const qualifiedArn = `${unqualifiedArn}:${version}`;
 

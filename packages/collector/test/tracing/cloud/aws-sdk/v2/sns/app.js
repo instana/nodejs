@@ -22,7 +22,7 @@ const logPrefix = `AWS SDK v2 SNS (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const sns = new AWS.SNS();
 
-const topicArn = process.env.AWS_SNS_TOPIC_ARN || 'arn:aws:sns:us-east-2:410797082306:nodejs-team';
+const topicArn = process.env.AWS_SNS_TOPIC_ARN || 'arn:aws:sns:us-east-2:767398002385:nodejs-team';
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 
 const operationParams = {

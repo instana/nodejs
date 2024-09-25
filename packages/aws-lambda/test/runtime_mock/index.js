@@ -199,8 +199,8 @@ function createContext(callback) {
   const alias = process.env.LAMBDA_FUNCTION_ALIAS;
 
   const invokedFunctionArn = alias
-    ? `arn:aws:lambda:us-east-2:410797082306:function:${functionName}:${process.env.LAMBDA_FUNCTION_ALIAS}`
-    : `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
+    ? `arn:aws:lambda:us-east-2:767398002385:function:${functionName}:${process.env.LAMBDA_FUNCTION_ALIAS}`
+    : `arn:aws:lambda:us-east-2:767398002385:function:${functionName}`;
 
   const configuredTimeout = process.env.LAMBDA_TIMEOUT ? parseInt(process.env.LAMBDA_TIMEOUT, 10) : 3000;
 
@@ -329,7 +329,7 @@ function createEvent(error, trigger, eventOpts = { payloadFormatVersion: '1.0' }
         event.requestContext = {
           elb: {
             targetGroupArn:
-              'arn:aws:elasticloadbalancing:us-east-2:410797082306:targetgroup/' +
+              'arn:aws:elasticloadbalancing:us-east-2:767398002385:targetgroup/' +
               'lambda-trigger-test-group/752535aa89ba8d62'
           }
         };
@@ -525,7 +525,7 @@ function createEvent(error, trigger, eventOpts = { payloadFormatVersion: '1.0' }
               StreamViewType: 'NEW_AND_OLD_IMAGES'
             },
             eventSourceARN:
-              'arn:aws:dynamodb:us-east-2:410797082306:table/TeamNodeJsTrigger/stream/2021-10-22T09:34:19.198'
+              'arn:aws:dynamodb:us-east-2:767398002385:table/TeamNodeJsTrigger/stream/2021-10-22T09:34:19.198'
           },
           {
             eventID: 'qa3d5f7f756fca2d7c215f0cad839af4',
@@ -553,7 +553,7 @@ function createEvent(error, trigger, eventOpts = { payloadFormatVersion: '1.0' }
               StreamViewType: 'NEW_AND_OLD_IMAGES'
             },
             eventSourceARN:
-              'arn:aws:dynamodb:us-east-2:410797082306:table/TeamNodeJsTrigger/stream/2021-10-22T09:34:19.198'
+              'arn:aws:dynamodb:us-east-2:767398002385:table/TeamNodeJsTrigger/stream/2021-10-22T09:34:19.198'
           },
           {
             eventID: '1234387f756fca2d7c215f0caddfabf7',
@@ -581,7 +581,7 @@ function createEvent(error, trigger, eventOpts = { payloadFormatVersion: '1.0' }
               StreamViewType: 'NEW_AND_OLD_IMAGES'
             },
             eventSourceARN:
-              'arn:aws:dynamodb:us-east-2:410797082306:table/TeamNodeJsTrigger/stream/2021-10-22T09:34:19.198'
+              'arn:aws:dynamodb:us-east-2:767398002385:table/TeamNodeJsTrigger/stream/2021-10-22T09:34:19.198'
           },
           {
             eventID: '7890a87f756fca2d7c215f0cad83dce3',
@@ -609,7 +609,7 @@ function createEvent(error, trigger, eventOpts = { payloadFormatVersion: '1.0' }
               StreamViewType: 'NEW_AND_OLD_IMAGES'
             },
             eventSourceARN:
-              'arn:aws:dynamodb:us-east-2:410797082306:table/TeamNodeJsTrigger/stream/2021-10-22T09:34:19.198'
+              'arn:aws:dynamodb:us-east-2:767398002385:table/TeamNodeJsTrigger/stream/2021-10-22T09:34:19.198'
           }
         ];
         break;
