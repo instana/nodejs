@@ -76,6 +76,7 @@ spec:
         MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
 
+        echo "Node.js version to install--------------------------------"
         if [ -n "$(params.prerelease)" ]; then
           NODE_VERSION="v23"
           echo "Node.js version to install: $NODE_VERSION"
