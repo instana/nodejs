@@ -17,7 +17,6 @@ const config = require('../../../../../core/test/config');
 const {
   expectExactlyOneMatching,
   expectAtLeastOneMatching,
-  expectExactlyNMatching,
   retry,
   delay,
   stringifyItems
@@ -223,6 +222,8 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               response,
               apiPath,
               testId,
+              // TODO: all other bull tests also produce a huge number of spans
+              //       https://jsw.ibm.com/browse/INSTA-15029
               spanLength: 16,
               withError,
               isRepeatable: sendOption === 'repeat=true',
@@ -235,8 +236,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           const withError = true;
           const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
 
-          // TODO: all other bull tests also produce a huge number of spans
-          //       https://jsw.ibm.com/browse/INSTA-15029
           it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
             const response = await senderControls.sendRequest({
               method: 'POST',
