@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.19.0](https://github.com/instana/nodejs/compare/v3.18.2...v3.19.0) (2024-09-25)
+
+### Features
+
+- added support for fastify v5 ([#1336](https://github.com/instana/nodejs/issues/1336)) ([a646a14](https://github.com/instana/nodejs/commit/a646a145de933be8ecdec7c37f38f3821db2ef4f))
+
 ## [3.18.2](https://github.com/instana/nodejs/compare/v3.18.1...v3.18.2) (2024-09-17)
 
 ### Bug Fixes
