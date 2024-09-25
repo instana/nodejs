@@ -16,7 +16,9 @@ const globalAgent = require('../../../../globalAgent');
 const { verifyHttpRootEntry, verifyExitSpan } = require('@instana/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('./promisify_non_sequential');
 
-// We are reusing the same function used for testing Lambda functions, as we are simply invoking it here.
+// We are using a single function, 'nodejs-tracer-lambda', for our Lambda testing since we invoke an existing function.
+// Our tests focus on invoking function and retrieving details of the function, rather than creating new ones.
+// We originally created this function specifically for testing and are now using it across all test cases.
 const functionName = 'nodejs-tracer-lambda';
 let mochaSuiteFn;
 

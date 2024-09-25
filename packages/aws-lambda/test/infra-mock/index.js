@@ -34,7 +34,9 @@ const constants = require('../../../serverless/src/constants');
 const legacySensorMode = process.env.LEGACY_SENSOR != null;
 const anotherLambda = process.env.ANOTHER != null;
 const onlyLatest = process.env.ONLY_LATEST;
-
+// We are using a single function, 'nodejs-tracer-lambda', for our Lambda testing since we invoke an existing function.
+// Our tests focus on invoking function and retrieving details of the function, rather than creating new ones.
+// We originally created this function specifically for testing and are now using it across all test cases.
 const name = process.env.LAMBDA_FUNCTION_NAME || 'nodejs-tracer-lambda';
 const unqualifiedArn = anotherLambda
   ? `arn:aws:lambda:us-east-2:521808193417:function:${name}`

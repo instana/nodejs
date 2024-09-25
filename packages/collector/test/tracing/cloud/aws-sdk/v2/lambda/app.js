@@ -18,6 +18,9 @@ const express = require('express');
 const logPrefix = `AWS SDK v2 Lambda (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const lambda = new AWS.Lambda();
+// We are using a single function, 'nodejs-tracer-lambda', for our Lambda testing since we invoke an existing function.
+// Our tests focus on invoking function and retrieving details of the function, rather than creating new ones.
+// We originally created this function specifically for testing and are now using it across all test cases.
 const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'nodejs-tracer-lambda';
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 

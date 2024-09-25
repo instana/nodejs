@@ -19,7 +19,8 @@ functions:
       NODE_PATH: $NODE_PATH:/opt/nodejs/node_modules
       INSTANA_ENDPOINT_URL: ${env:INSTANA_ENDPOINT_URL}
       INSTANA_AGENT_KEY: ${env:INSTANA_AGENT_KEY}
-    # We will maintain the layer version for account 410797082306 until it is transitioned to another production account.
+    # We publish the Lambda layer in production under aws account 410797082306, and for serverless testing, 
+    # we are using this production layer and deploy it into our development account, 767398002385.
     layers:
       - arn:aws:lambda:us-east-2:410797082306:layer:instana-nodejs:110
     handler: instana-aws-lambda-auto-wrap.handler
