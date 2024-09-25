@@ -14,5 +14,5 @@ functions:
       INSTANA_AGENT_KEY: ${env:INSTANA_AGENT_KEY}
     # We will maintain the layer version for account 410797082306 until it is transitioned to another production account.
     layers:
-      - arn:aws:lambda:us-east-2:410797082306:layer:instana-nodejs:110 
+      - arn:aws:lambda:us-east-2:410797082306:layer:instana-nodejs:110
     handler: instana-aws-lambda-auto-wrap.handler
