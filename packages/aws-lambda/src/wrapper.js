@@ -345,16 +345,24 @@ function shouldUseLambdaExtension() {
       return false;
     }
     if (memorySize < 256) {
+      let logFn = logger.debug;
+
+      // CASE: We try to determine if the customer has the extension installed. We need to put a warning
+      //       because the extension is **not** working and might block the lambda extension when
+      //       its not used correctly e.g. slow startup of extension or waiting for invokes or incoming spans
+      //       from the tracer.
       if (process.env._HANDLER?.includes('instana-aws-lambda-auto-wrap')) {
-        logger.warn(
-          'The Lambda function is configured with less than 256 MB of memory according to the value of ' +
-            `AWS_LAMBDA_FUNCTION_MEMORY_SIZE: ${memorySetting}. The Lambda extension does ` +
-            'not work with 256mb reliably with low memory settings. ' +
-            'As the extension is already running, it might ' +
-            'block the lambda execution which can result in larger execution times. Please configure at least ' +
-            '256 MB of memory for your Lambda function.'
-        );
+        logFn = logger.warn;
       }
+
+      logFn(
+        'The Lambda function is configured with less than 256 MB of memory according to the value of ' +
+          `AWS_LAMBDA_FUNCTION_MEMORY_SIZE: ${memorySetting}. The Lambda extension does ` +
+          'not work with 256mb reliably with low memory settings. ' +
+          'As the extension is already running, it might ' +
+          'block the lambda execution which can result in larger execution times. Please configure at least ' +
+          '256 MB of memory for your Lambda function.'
+      );
 
       return false;
     }
