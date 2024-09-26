@@ -345,13 +345,20 @@ function shouldUseLambdaExtension() {
       return false;
     }
     if (memorySize < 256) {
-      logger.debug(
-        'The Lambda function is configured with less than 256 MB of memory according to the value of ' +
-          `AWS_LAMBDA_FUNCTION_MEMORY_SIZE: ${memorySetting}. Offloading data via a Lambda extension does currently ` +
-          'not work reliably with low memory settings, therefore not using the Lambda extension.'
-      );
+      if (process.env.LAMBDA_HANDLER.includes('instana-aws-lambda-auto-wrap')) {
+        logger.warn(
+          'The Lambda function is configured with less than 256 MB of memory according to the value of ' +
+            `AWS_LAMBDA_FUNCTION_MEMORY_SIZE: ${memorySetting}. The Lambda extension does ` +
+            'not work with 256mb reliably with low memory settings. ' +
+            'As the extension is already running, it might ' +
+            'block the lambda execution which can result in larger execution times. Please configure at least ' +
+            '256 MB of memory for your Lambda function.'
+        );
+      }
+
       return false;
     }
+
     return true;
   }
 }
