@@ -345,7 +345,7 @@ function shouldUseLambdaExtension() {
       return false;
     }
     if (memorySize < 256) {
-      if (process.env.LAMBDA_HANDLER.includes('instana-aws-lambda-auto-wrap')) {
+      if (process.env.LAMBDA_HANDLER?.includes('instana-aws-lambda-auto-wrap')) {
         logger.warn(
           'The Lambda function is configured with less than 256 MB of memory according to the value of ' +
             `AWS_LAMBDA_FUNCTION_MEMORY_SIZE: ${memorySetting}. The Lambda extension does ` +
