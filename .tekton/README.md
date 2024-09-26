@@ -18,9 +18,9 @@ https://github.com/tektoncd/dashboard/blob/97700646be7728e36f01120131da8620ee691
 
 ```
 cd .tekton
-node generate-test-files.yaml
-node generate-test-coverage.yaml
-node generate-pipeline.yaml
+node generate-test-files.js
+node generate-test-coverage.js
+node generate-pipeline.js
 ```
 
 ## Migrate to a new cluster

@@ -147,6 +147,29 @@ spec:
         CIRCLE_COMPARE_URL=""
         MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
+        if [ -n "$(params.prerelease)" ]; then
+          NODE_VERSION="v23"
+          echo "Node.js version to install: $NODE_VERSION"
+          # Install NVM if not already installed
+          if ! command -v nvm &> /dev/null; then
+            echo "NVM not found. Installing NVM..."
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          else
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          fi
+          # Install the specified Node.js version using the RC mirror
+          echo "Attempting to install Node.js version $NODE_VERSION..."
+          NVM_NODEJS_ORG_MIRROR=https://nodejs.org/download/rc nvm install "$NODE_VERSION" || {
+            echo "RC installation failed. Attempting to install Node.js version $NODE_VERSION using Nightly mirror..."
+            NVM_NODEJS_ORG_MIRROR=https://nodejs.org/download/nightly nvm install "$NODE_VERSION"
+          }
+          # Use the installed version
+          nvm use "$NODE_VERSION"
+          echo "Node: $(node --version)"
+        fi
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi
