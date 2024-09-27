@@ -134,6 +134,43 @@ function registerTests(useHttps) {
     await clientControls.clearIpcMessages();
   });
 
+  if (!useHttps) {
+    it('must trace request in background', () => {
+      return clientControls
+        .sendRequest({
+          method: 'GET',
+          path: '/request-deferred'
+        })
+        .then(() => {
+          return retry(() => {
+            return globalAgent.instance.getSpans().then(spans => {
+              expect(spans.length).to.equal(3);
+
+              const entryInClient = verifyRootHttpEntry({
+                spans,
+                host: `localhost:${clientControls.getPort()}`,
+                url: '/request-deferred'
+              });
+
+              verifyHttpExit({
+                spans,
+                parent: entryInClient,
+                url: 'http://example.com/',
+                params: 'k=1'
+              });
+
+              verifyHttpExit({
+                spans,
+                parent: entryInClient,
+                url: 'http://example.com/',
+                params: 'k=2'
+              });
+            });
+          });
+        });
+    });
+  }
+
   // HTTP requests can be triggered via http.request(...) + request.end(...) or http.get(...).
   // Both http.request and http.get accept
   // - an URL, an options object and a callback
@@ -142,9 +179,8 @@ function registerTests(useHttps) {
   // The URL can be a string or an URL object.
   //
   // This following tests cover all variants.
-
-  [false, true].forEach(urlObject => {
-    [false, true].forEach(withQuery => {
+  [true, false].forEach(urlObject => {
+    [true, false].forEach(withQuery => {
       const urlParam = urlObject ? 'urlObject' : 'urlString';
 
       it(`must trace request(${urlParam}, options, cb) with query: ${withQuery}`, () =>
@@ -846,7 +882,7 @@ function verifyHttpEntry({ spans, parent, host, url = '/', method = 'GET', statu
   return expectExactlyOneMatching(spans, expectations);
 }
 
-function verifyHttpExit({ spans, parent, url = '/', method = 'GET', status = 200, synthetic = false }) {
+function verifyHttpExit({ spans, parent, url = '/', method = 'GET', status = 200, synthetic = false, params = null }) {
   return expectExactlyOneMatching(spans, [
     span => expect(span.n).to.equal('node.http.client'),
     span => expect(span.k).to.equal(constants.EXIT),
@@ -856,6 +892,7 @@ function verifyHttpExit({ spans, parent, url = '/', method = 'GET', status = 200
     span => expect(span.data.http.url).to.equal(url),
     span => expect(span.data.http.method).to.equal(method),
     span => expect(span.data.http.status).to.equal(status),
+    span => (params ? expect(span.data.http.params).to.equal(params) : true),
     span => (!synthetic ? expect(span.sy).to.not.exist : expect(span.sy).to.be.true)
   ]);
 }

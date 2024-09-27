@@ -64,6 +64,41 @@ mochaSuiteFn('tracing/native fetch', function () {
     await clientControls.clearIpcMessages();
   });
 
+  it('must trace request in background', () => {
+    return clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/fetch-deferred'
+      })
+      .then(() => {
+        return retry(() => {
+          return globalAgent.instance.getSpans().then(spans => {
+            expect(spans.length).to.equal(3);
+
+            const entryInClient = verifyRootHttpEntry({
+              spans,
+              host: `localhost:${clientControls.getPort()}`,
+              url: '/fetch-deferred'
+            });
+
+            verifyHttpExit({
+              spans,
+              parent: entryInClient,
+              url: 'http://example.com/',
+              params: 'k=1'
+            });
+
+            verifyHttpExit({
+              spans,
+              parent: entryInClient,
+              url: 'http://example.com/',
+              params: 'k=2'
+            });
+          });
+        });
+      });
+  });
+
   // See https://developer.mozilla.org/en-US/docs/Web/API/fetch#parameters.
 
   describe('capture attributes from different resource types', () => {
@@ -689,7 +724,8 @@ function verifyHttpExit({
   withClientError,
   withServerError,
   withTimeout,
-  serverControls
+  serverControls,
+  params = null
 }) {
   const expectations = [
     span => expect(span.n).to.equal('node.http.client'),
@@ -700,6 +736,7 @@ function verifyHttpExit({
     span => expect(span.ec).to.equal(withClientError || withServerError || withTimeout ? 1 : 0),
     span => expect(span.data.http.url).to.equal(url),
     span => expect(span.data.http.method).to.equal(method),
+    span => (params ? expect(span.data.http.params).to.equal(params) : true),
     span => expect(span.sy).to.not.exist
   ];
   if (withClientError) {

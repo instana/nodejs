@@ -80,7 +80,12 @@ function instrument() {
     // eslint-disable-next-line no-unused-vars
     let w3cTraceContext = cls.getW3cTraceContext();
 
-    const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true, skipParentSpanCheck: true });
+    const skipTracingResult = cls.skipExitTracing({
+      isActive,
+      extendedResponse: true,
+      skipParentSpanCheck: true,
+      skipIsTracing: true
+    });
 
     // If there is no active entry span, we fall back to the reduced span of the most recent entry span. See comment in
     // packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
@@ -100,7 +105,7 @@ function instrument() {
     }
 
     return cls.ns.runAndReturn(() => {
-      const span = cls.startSpan('node.http.client', constants.EXIT);
+      const span = cls.startSpan('node.http.client', constants.EXIT, parentSpan.t, parentSpan.s);
 
       // startSpan updates the W3C trace context and writes it back to CLS, so we have to refetch the updated context
       w3cTraceContext = cls.getW3cTraceContext();

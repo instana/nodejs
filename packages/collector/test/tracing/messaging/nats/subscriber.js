@@ -20,7 +20,7 @@ const express = require('express');
 const fetch = require('node-fetch-v2');
 const NATS = require('nats');
 
-const log = require('@instana/core/test/test_util/log').getLogger('NATS Subscriber');
+const log = require('@instana/core/test/test_util/log').getLogger('NATS Subscriber: ');
 
 const app = express();
 const port = require('../../../test_util/app-port')();

@@ -43,6 +43,15 @@ app.use(bodyParser.json());
 
 app.get('/', (req, res) => res.sendStatus(200));
 
+app.get('/fetch-deferred', async (req, res) => {
+  setTimeout(async () => {
+    await fetch('http://example.com?k=2');
+  }, 500);
+
+  await fetch('http://example.com?k=1');
+  res.sendStatus(200);
+});
+
 app.get('/fetch', async (req, res) => {
   const resourceArgument = createResourceArgument(req, '/fetch');
   let response;
