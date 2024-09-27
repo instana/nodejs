@@ -37,6 +37,8 @@ function shimJobCreate(originalJobCreate) {
     const repeatableJob = options && typeof options.jobId === 'string' && options.jobId.indexOf('repeat') === 0;
     const repeatableJobIsSuppressed = repeatableJob && options.X_INSTANA_L === '0';
     const skipIsTracing = !!repeatableJob;
+
+    // We need to skip parentSpan condition because the parentSpan check is too specific in this fn
     const skipTracingResult = cls.skipExitTracing({
       isActive,
       extendedResponse: true,

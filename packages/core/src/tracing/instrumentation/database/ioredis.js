@@ -44,6 +44,8 @@ function instrument(ioredis) {
 function instrumentSendCommand(original) {
   return function wrappedInternalSendCommand(command) {
     const client = this;
+
+    // We need to skip parentSpan condition because the parentSpan check is too specific in this fn
     const skipExitTracingResult = cls.skipExitTracing({ isActive, skipParentSpanCheck: true, extendedResponse: true });
     const parentSpan = skipExitTracingResult.parentSpan;
     let callback;
