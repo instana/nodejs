@@ -64,6 +64,39 @@ mochaSuiteFn('tracing/native fetch', function () {
     await clientControls.clearIpcMessages();
   });
 
+  it('must trace request in background', () => {
+    return clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/fetch-deferred'
+      })
+      .then(() => {
+        return retry(() => {
+          return globalAgent.instance.getSpans().then(spans => {
+            const entryInClient = verifyRootHttpEntry({
+              spans,
+              host: `localhost:${clientControls.getPort()}`,
+              url: '/fetch-deferred'
+            });
+
+            verifyHttpExit({
+              spans,
+              parent: entryInClient,
+              url: 'http://example.com/',
+              params: 'k=1'
+            });
+
+            verifyHttpExit({
+              spans,
+              parent: entryInClient,
+              url: 'http://example.com/',
+              params: 'k=2'
+            });
+          });
+        });
+      });
+  });
+
   // See https://developer.mozilla.org/en-US/docs/Web/API/fetch#parameters.
 
   describe('capture attributes from different resource types', () => {

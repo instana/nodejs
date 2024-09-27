@@ -18,7 +18,7 @@ const globalAgent = require('../../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/http client', function () {
+mochaSuiteFn.only('tracing/http client', function () {
   this.timeout(config.getTestTimeout() * 2);
 
   beforeEach(async () => {
@@ -134,16 +134,51 @@ function registerTests(useHttps) {
     await clientControls.clearIpcMessages();
   });
 
-  // HTTP requests can be triggered via http.request(...) + request.end(...) or http.get(...).
-  // Both http.request and http.get accept
-  // - an URL, an options object and a callback
-  // - only an URL and a callback, or
-  // - only an options object (containing the parts of the URL) and a callback.
-  // The URL can be a string or an URL object.
-  //
-  // This following tests cover all variants.
+  it('must trace request in background', () => {
+    return clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/request-deferred'
+      })
+      .then(() => {
+        return retry(() => {
+          return globalAgent.instance.getSpans().then(spans => {
+            const entryInClient = verifyRootHttpEntry({
+              spans,
+              host: `localhost:${clientControls.getPort()}`,
+              url: '/request-deferred'
+            });
 
-  [false, true].forEach(urlObject => {
+            verifyHttpExit({
+              spans,
+              parent: entryInClient,
+              url: 'http://example.com/',
+              params: 'k=1'
+            });
+
+            verifyHttpExit({
+              spans,
+              parent: entryInClient,
+              url: 'http://example.com/',
+              params: 'k=2'
+            });
+          });
+        });
+      });
+  });
+
+  [
+    // HTTP requests can be triggered via http.request(...) + request.end(...) or http.get(...).
+    // Both http.request and http.get accept
+    // - an URL, an options object and a callback
+    // - only an URL and a callback, or
+    // - only an options object (containing the parts of the URL) and a callback.
+    // The URL can be a string or an URL object.
+    //
+    // This following tests cover all variants.
+
+    (false, true)
+  ].forEach(urlObject => {
     [false, true].forEach(withQuery => {
       const urlParam = urlObject ? 'urlObject' : 'urlString';
 
@@ -846,7 +881,7 @@ function verifyHttpEntry({ spans, parent, host, url = '/', method = 'GET', statu
   return expectExactlyOneMatching(spans, expectations);
 }
 
-function verifyHttpExit({ spans, parent, url = '/', method = 'GET', status = 200, synthetic = false }) {
+function verifyHttpExit({ spans, parent, url = '/', method = 'GET', status = 200, synthetic = false, params = null }) {
   return expectExactlyOneMatching(spans, [
     span => expect(span.n).to.equal('node.http.client'),
     span => expect(span.k).to.equal(constants.EXIT),
@@ -856,6 +891,7 @@ function verifyHttpExit({ spans, parent, url = '/', method = 'GET', status = 200
     span => expect(span.data.http.url).to.equal(url),
     span => expect(span.data.http.method).to.equal(method),
     span => expect(span.data.http.status).to.equal(status),
+    span => (params ? expect(span.data.http.params).to.equal(params) : expect(span.data.http.params).to.not.exist),
     span => (!synthetic ? expect(span.sy).to.not.exist : expect(span.sy).to.be.true)
   ]);
 }

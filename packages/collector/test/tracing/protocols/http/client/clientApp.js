@@ -53,6 +53,14 @@ app.get('/request-url-only', (req, res) => {
   httpModule.request(createUrl(req, '/request-only-url'), () => res.sendStatus(200)).end();
 });
 
+app.get('/request-deferred', (req, res) => {
+  setTimeout(() => {
+    httpModule.get('http://example.com?k=2', () => {}).end();
+  }, 500);
+
+  httpModule.get('http://example.com?k=1', () => res.sendStatus(200)).end();
+});
+
 app.get('/request-options-only', (req, res) => {
   const downStreamQuery = {};
   if (req.query.withQuery) {
