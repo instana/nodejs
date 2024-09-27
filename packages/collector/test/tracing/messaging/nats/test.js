@@ -328,10 +328,32 @@ mochaSuiteFn('tracing/nats', function () {
                     }
 
                     return agentControls.getSpans().then(spans => {
-                      const httpSpan = expectExactlyOneMatching(spans, [
+                      // 1 x http entry span
+                      // 1 x publish nats from publisher process
+                      // 1 x http client span from publisher process
+                      // 1 x subscribe nats
+                      // 1 x http client span from subscriber process
+                      expect(spans.length).to.equal(5);
+
+                      const httpEntrySpan = expectExactlyOneMatching(spans, [
                         span => expect(span.n).to.equal('node.http.server'),
                         span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
                         span => expect(span.p).to.not.exist
+                      ]);
+
+                      expectExactlyOneMatching(spans, [
+                        span => expect(span.n).to.equal('node.http.client'),
+                        span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
+                        span => expect(span.t).to.equal(httpEntrySpan.t),
+                        span => expect(span.p).to.equal(httpEntrySpan.s)
+                      ]);
+
+                      expectExactlyOneMatching(spans, [
+                        span => expect(span.n).to.equal('nats'),
+                        span => expect(span.k).to.equal(constants.EXIT),
+                        span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
+                        span => expect(span.t).to.equal(httpEntrySpan.t),
+                        span => expect(span.p).to.equal(httpEntrySpan.s)
                       ]);
 
                       // NATS 1.x does not support headers or metadata, so we do not have trace continuity.
@@ -339,8 +361,8 @@ mochaSuiteFn('tracing/nats', function () {
                       const expectations = [
                         span =>
                           version === 'latest'
-                            ? expect(span.t).to.equal(httpSpan.t)
-                            : expect(span.t).to.not.equal(httpSpan.t),
+                            ? expect(span.t).to.equal(httpEntrySpan.t)
+                            : expect(span.t).to.not.equal(httpEntrySpan.t),
                         span => (version === 'latest' ? expect(span.p).to.exist : expect(span.p).to.not.exist),
                         span => expect(span.k).to.equal(constants.ENTRY),
                         span => expect(span.n).to.equal('nats'),
@@ -349,7 +371,6 @@ mochaSuiteFn('tracing/nats', function () {
                         span => expect(span.async).to.not.exist,
                         span => expect(span.ts).to.be.a('number'),
                         span => expect(span.d).to.be.a('number'),
-
                         span => expect(span.data.nats).to.be.an('object'),
                         span => expect(span.data.nats.sort).to.equal('consume'),
                         span => expect(span.data.nats.subject).to.equal('subscribe-test-subject'),
@@ -368,19 +389,14 @@ mochaSuiteFn('tracing/nats', function () {
 
                       const natsEntry = expectExactlyOneMatching(spans, expectations);
 
-                      // verify that subsequent calls are correctly traced
                       expectExactlyOneMatching(spans, [
                         span => expect(span.n).to.equal('node.http.client'),
+                        span => expect(span.f.e).to.equal(String(subscriberControls.getPid())),
                         span =>
-                          // NOTE: the error is catched manually outside of the http request to the agent
-                          version === 'latest' && withError
-                            ? expect(span.t).to.not.equal(natsEntry.t)
-                            : expect(span.t).to.equal(natsEntry.t),
-                        span =>
-                          version === 'latest' && withError
-                            ? expect(span.p).to.not.equal(natsEntry.s)
-                            : expect(span.p).to.equal(natsEntry.s),
-                        span => expect(span.k).to.equal(constants.EXIT)
+                          version === 'latest'
+                            ? expect(span.t).to.equal(httpEntrySpan.t)
+                            : expect(span.t).to.not.equal(httpEntrySpan.t),
+                        span => expect(span.p).to.equal(natsEntry.s)
                       ]);
                     });
                   })

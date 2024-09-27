@@ -73,6 +73,8 @@ mochaSuiteFn('tracing/native fetch', function () {
       .then(() => {
         return retry(() => {
           return globalAgent.instance.getSpans().then(spans => {
+            expect(spans.length).to.equal(3);
+
             const entryInClient = verifyRootHttpEntry({
               spans,
               host: `localhost:${clientControls.getPort()}`,
