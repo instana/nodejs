@@ -83,7 +83,6 @@ function instrument() {
     const skipTracingResult = cls.skipExitTracing({
       isActive,
       extendedResponse: true,
-      skipParentSpanCheck: true,
       skipIsTracing: true,
       checkReducedSpan: true
     });
@@ -96,7 +95,11 @@ function instrument() {
       originalArgs[i] = arguments[i];
     }
 
-    if (skipTracingResult.skip) {
+    // If allowRootExitSpan is not enabled, then an exit span can't be traced alone
+    if (
+      skipTracingResult.skip ||
+      (!skipTracingResult.allowRootExitSpan && (!parentSpan || skipTracingResult.isExitSpan))
+    ) {
       if (skipTracingResult.suppressed) {
         injectSuppressionHeader(originalArgs, w3cTraceContext);
       }
@@ -104,7 +107,7 @@ function instrument() {
     }
 
     return cls.ns.runAndReturn(() => {
-      // NOTE: Check for parentSpan existence, because of allowExitRootSpan is being enabled
+      // NOTE: Check for parentSpan existence, because of allowRootExitSpan is being enabled
       const span = cls.startSpan('node.http.client', constants.EXIT, parentSpan?.t, parentSpan?.s);
 
       // startSpan updates the W3C trace context and writes it back to CLS, so we have to refetch the updated context
