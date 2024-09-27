@@ -562,11 +562,19 @@ function skipExitTracing(options) {
     options
   );
 
+  let isReducedSpan = false;
   let parentSpan = getCurrentSpan();
+
   // If there is no active entry span, we fall back to the reduced span of the most recent entry span.
   // See comment in packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
   if (opts.checkReducedSpan && !parentSpan) {
     parentSpan = getReducedSpan();
+
+    // We need to remember if a reduced span was used, because for reduced spans
+    // we do NOT trace anymore. The async context got already closed.
+    if (parentSpan) {
+      isReducedSpan = true;
+    }
   }
 
   const suppressed = tracingSuppressed();
@@ -606,7 +614,13 @@ function skipExitTracing(options) {
   }
 
   const skipIsActive = opts.isActive === false;
-  const skipIsTracing = !opts.skipIsTracing ? !isTracing() : false;
+  let skipIsTracing = !opts.skipIsTracing ? !isTracing() : false;
+
+  // See comment on top.
+  if (isReducedSpan) {
+    skipIsTracing = false;
+  }
+
   const skip = skipIsActive || skipIsTracing;
 
   if (opts.extendedResponse) {

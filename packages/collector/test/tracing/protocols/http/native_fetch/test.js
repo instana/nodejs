@@ -538,6 +538,7 @@ mochaSuiteFn('tracing/native fetch', function () {
 
       await retry(async () => {
         const spans = await globalAgent.instance.getSpans();
+
         expect(spans.length).to.equal(4);
         expect(spans.filter(obj => obj.k === constants.EXIT).length).to.be.equal(4);
         expect(spans.filter(obj => obj.k === constants.ENTRY).length).to.be.equal(0);
