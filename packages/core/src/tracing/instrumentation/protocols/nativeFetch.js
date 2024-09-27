@@ -104,7 +104,8 @@ function instrument() {
     }
 
     return cls.ns.runAndReturn(() => {
-      const span = cls.startSpan('node.http.client', constants.EXIT, parentSpan.t, parentSpan.s);
+      // NOTE: Check for parentSpan existence, because of allowExitRootSpan is being enabled
+      const span = cls.startSpan('node.http.client', constants.EXIT, parentSpan?.t, parentSpan?.s);
 
       // startSpan updates the W3C trace context and writes it back to CLS, so we have to refetch the updated context
       w3cTraceContext = cls.getW3cTraceContext();
