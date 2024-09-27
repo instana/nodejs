@@ -178,10 +178,6 @@ function instrument(coreModule, forceHttps) {
     const skipTracingResult = cls.skipExitTracing({
       isActive,
       extendedResponse: true,
-      // TODO: can be removed?
-      skipParentSpanCheck: true,
-      // TODO: can be removed?
-      skipIsTracing: true,
       checkReducedSpan: true
     });
 
