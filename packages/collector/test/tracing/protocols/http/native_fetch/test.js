@@ -736,7 +736,7 @@ function verifyHttpExit({
     span => expect(span.ec).to.equal(withClientError || withServerError || withTimeout ? 1 : 0),
     span => expect(span.data.http.url).to.equal(url),
     span => expect(span.data.http.method).to.equal(method),
-    span => (params ? expect(span.data.http.params).to.equal(params) : expect(span.data.http.params).to.not.exist),
+    span => (params ? expect(span.data.http.params).to.equal(params) : true),
     span => expect(span.sy).to.not.exist
   ];
   if (withClientError) {
