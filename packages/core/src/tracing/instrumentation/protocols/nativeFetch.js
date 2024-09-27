@@ -83,7 +83,6 @@ function instrument() {
     const skipTracingResult = cls.skipExitTracing({
       isActive,
       extendedResponse: true,
-      skipIsTracing: true,
       checkReducedSpan: true
     });
 
@@ -96,13 +95,11 @@ function instrument() {
     }
 
     // If allowRootExitSpan is not enabled, then an exit span can't be traced alone
-    if (
-      skipTracingResult.skip ||
-      (!skipTracingResult.allowRootExitSpan && (!parentSpan || skipTracingResult.isExitSpan))
-    ) {
+    if (skipTracingResult.skip) {
       if (skipTracingResult.suppressed) {
         injectSuppressionHeader(originalArgs, w3cTraceContext);
       }
+
       return originalFetch.apply(originalThis, originalArgs);
     }
 
