@@ -183,6 +183,8 @@ function instrument(coreModule, forceHttps) {
       checkReducedSpan: true
     });
 
+    const parentSpan = skipTracingResult.parentSpan;
+
     if (skipTracingResult.skip || shouldBeBypassed(skipTracingResult.parentSpan, options)) {
       let traceLevelHeaderHasBeenAdded = false;
       if (skipTracingResult.suppressed) {
@@ -199,7 +201,8 @@ function instrument(coreModule, forceHttps) {
     }
 
     cls.ns.run(() => {
-      const span = cls.startSpan('node.http.client', constants.EXIT, parentSpan.t, parentSpan.s);
+      // NOTE: Check for parentSpan existence, because of allowExitRootSpan is being enabled
+      const span = cls.startSpan('node.http.client', constants.EXIT, parentSpan?.t, parentSpan?.s);
 
       // startSpan updates the W3C trace context and writes it back to CLS, so we have to refetch the updated context
       // object from CLS.
