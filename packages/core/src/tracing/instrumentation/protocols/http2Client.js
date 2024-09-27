@@ -64,10 +64,10 @@ function instrumentClientHttp2Session(clientHttp2Session) {
   const originalRequest = clientHttp2Session.request;
   clientHttp2Session.request = function request(headers) {
     let w3cTraceContext = cls.getW3cTraceContext();
+
     const skipTracingResult = cls.skipExitTracing({
       isActive,
       extendedResponse: true,
-      skipParentSpanCheck: true,
       checkReducedSpan: true
     });
 
