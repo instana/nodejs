@@ -167,6 +167,9 @@ function traceSubscriptionUpdate(
     return originalFunction.apply(originalThis, originalArgs);
   }
 
+  // WE DO NOT MAKE USE OF `cls.skipExitTracing` in the graphql instrumentation,
+  // because we have a special usage of `cls.getReducedSpan(true)`. Feel free to refactor this.
+
   // CASE 1: We pass `fallbackToSharedContext: true` to getCurrentSpan to access the GraphQL query context, which then
   // triggered this subscription query. We need to connect them.
   // CASE 2: If there is no active entry span, we fall back to the reduced span of the most recent entry span. See
