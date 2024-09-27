@@ -310,11 +310,6 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
 
   const parentSpan = skipExitResult.parentSpan;
 
-  // CASE: we only allow no parent if `allowRootExitSpan` is set.
-  if (!parentSpan && !skipExitResult.allowRootExitSpan) {
-    return original.apply(origCtx, origArgs);
-  }
-
   return cls.ns.runAndReturn(() => {
     let span;
 
