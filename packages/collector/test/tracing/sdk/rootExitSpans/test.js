@@ -28,7 +28,7 @@ mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
   });
 
   // an sdk entry span is wrapped to track the exit span
-  describe('APP WITH ENTRY SPAN', function () {
+  describe('app with entry span', function () {
     let appControls;
     const agentControls = globalAgent.instance;
 
@@ -55,7 +55,7 @@ mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
   });
 
   // no sdk wrap present, exit span stands alone
-  describe('APP WITHOUT ENTRY SPAN', function () {
+  describe('app without entry span', function () {
     let agentControls;
 
     before(async () => {
