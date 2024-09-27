@@ -14,16 +14,11 @@ require('../../../../..')();
 const { delay } = require('../../../../../../core/test/test_util');
 
 const main = async () => {
-  try {
-    setTimeout(async () => {
-      await fetch('https://example.com');
+  setTimeout(async () => {
+    await fetch('https://example.com');
 
-      await fetch('https://www.example.com');
-    }, 100);
-  } catch (err) {
-    /* eslint-disable no-console */
-    console.log(err);
-  }
+    await fetch('https://www.example.com');
+  }, 100);
 };
 
 const app = async () => {
