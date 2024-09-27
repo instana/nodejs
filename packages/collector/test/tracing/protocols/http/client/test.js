@@ -18,7 +18,7 @@ const globalAgent = require('../../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn.only('tracing/http client', function () {
+mochaSuiteFn('tracing/http client', function () {
   this.timeout(config.getTestTimeout() * 2);
 
   beforeEach(async () => {
