@@ -545,6 +545,7 @@ function call(fn) {
  * | checkReducedSpan    | If no active entry span is present, there is an option for
  * |                     | falling back to the most recent parent span stored as reduced span
  * |                     | by setting checkReducedSpan attribute to true.
+ * | skipAllowRootExitSpanPresence | An instrumentation can ignore this feature to reduce noise.
  *
  * @param {Object.<string, *>} options
  */
@@ -555,7 +556,8 @@ function skipExitTracing(options) {
       extendedResponse: false,
       skipParentSpanCheck: false,
       skipIsTracing: false,
-      checkReducedSpan: false
+      checkReducedSpan: false,
+      skipAllowRootExitSpanPresence: false
     },
     options
   );
@@ -585,7 +587,8 @@ function skipExitTracing(options) {
   //       every exit span would be a separate trace. `isTracing` is always false,
   //       because we don't have a parent span. The http server span also does not check of `isTracing`,
   //       because it's the root span.
-  if (allowRootExitSpan) {
+  // CASE: Instrumentations can disable the `allowRootExitSpan` feature e.g. loggers.
+  if (!opts.skipAllowRootExitSpanPresence && allowRootExitSpan) {
     if (opts.extendedResponse) {
       return { skip: false, suppressed, isExitSpan: isExitSpanResult, parentSpan, allowRootExitSpan };
     }
