@@ -28,6 +28,8 @@ const w3cTraceContextKey = 'com.instana.w3ctc';
 let serviceName;
 /** @type {import('../../../collector/src/pidStore')} */
 let processIdentityProvider = null;
+/** @type {Boolean} */
+let allowRootExitSpan;
 
 /*
  * Access the Instana namespace in continuation local storage.
@@ -48,6 +50,7 @@ function init(config, _processIdentityProvider) {
     serviceName = config.serviceName;
   }
   processIdentityProvider = _processIdentityProvider;
+  allowRootExitSpan = config?.tracing?.allowRootExitSpan;
 }
 
 class InstanaSpan {
@@ -499,6 +502,10 @@ function call(fn) {
  * | skipParentSpanCheck | Some instrumentations have a very specific handling for checking the parent span.
  * |                     | With this flag you can skip the default parent span check.
  * | skipIsTracing       | Instrumentation wants to handle `cls.isTracing` on it's own (e.g db2)
+ * | checkReducedSpan    | If no active entry span is present, there is an option for
+ * |                     | falling back to the most recent parent span stored as reduced span
+ * |                     | by setting checkReducedSpan attribute to true.
+ * | skipAllowRootExitSpanPresence | An instrumentation can ignore this feature to reduce noise.
  *
  * @param {Object.<string, *>} options
  */
@@ -508,32 +515,79 @@ function skipExitTracing(options) {
       isActive: true,
       extendedResponse: false,
       skipParentSpanCheck: false,
-      skipIsTracing: false
+      skipIsTracing: false,
+      checkReducedSpan: false,
+      skipAllowRootExitSpanPresence: false
     },
     options
   );
 
-  const parentSpan = getCurrentSpan();
+  let isReducedSpan = false;
+  let parentSpan = getCurrentSpan();
+
+  // If there is no active entry span, we fall back to the reduced span of the most recent entry span.
+  // See comment in packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
+  if (opts.checkReducedSpan && !parentSpan) {
+    parentSpan = getReducedSpan();
+
+    // We need to remember if a reduced span was used, because for reduced spans
+    // we do NOT trace anymore. The async context got already closed.
+    if (parentSpan) {
+      isReducedSpan = true;
+    }
+  }
+
   const suppressed = tracingSuppressed();
-  const isExitSpanResult = isExitSpan(parentSpan);
+  const isParentSpanAnExitSpan = isExitSpan(parentSpan);
 
   // CASE: first ask for suppressed, because if we skip the entry span, we won't have a parentSpan
   //       on the exit span, which would create noisy log messages.
   if (suppressed) {
-    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
+    if (opts.extendedResponse) {
+      return { skip: true, suppressed, isExitSpan: isParentSpanAnExitSpan, parentSpan, allowRootExitSpan };
+    }
+
     return true;
   }
 
-  if (!opts.skipParentSpanCheck && (!parentSpan || isExitSpanResult)) {
-    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
-    else return true;
+  // DESC: If `allowRootExitSpan` is true, then we have to ignore if there is a parent or not.
+  // NOTE: The feature completely ignores the state of `isTracing`, because
+  //       every exit span would be a separate trace. `isTracing` is always false,
+  //       because we don't have a parent span. The http server span also does not check of `isTracing`,
+  //       because it's the root span.
+  // CASE: Instrumentations can disable the `allowRootExitSpan` feature e.g. loggers.
+  if (!opts.skipAllowRootExitSpanPresence && allowRootExitSpan) {
+    if (opts.extendedResponse) {
+      return { skip: false, suppressed, isExitSpan: isParentSpanAnExitSpan, parentSpan, allowRootExitSpan };
+    }
+
+    return false;
+  }
+
+  // Parent span check is required skipParentSpanCheck and no parent is present but an exit span only
+  if (!opts.skipParentSpanCheck && (!parentSpan || isParentSpanAnExitSpan)) {
+    if (opts.extendedResponse) {
+      return { skip: true, suppressed, isExitSpan: isParentSpanAnExitSpan, parentSpan, allowRootExitSpan };
+    }
+
+    return true;
   }
 
   const skipIsActive = opts.isActive === false;
-  const skipIsTracing = !opts.skipIsTracing ? !isTracing() : false;
+  let skipIsTracing = !opts.skipIsTracing ? !isTracing() : false;
+
+  // See comment on top.
+  if (isReducedSpan) {
+    skipIsTracing = false;
+  }
+
   const skip = skipIsActive || skipIsTracing;
-  if (opts.extendedResponse) return { skip, suppressed, isExitSpan: isExitSpanResult };
-  else return skip;
+
+  if (opts.extendedResponse) {
+    return { skip, suppressed, isExitSpan: isParentSpanAnExitSpan, parentSpan, allowRootExitSpan };
+  }
+
+  return skip;
 }
 
 module.exports = {

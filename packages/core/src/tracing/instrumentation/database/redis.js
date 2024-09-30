@@ -67,7 +67,7 @@ function instrument(redis) {
 
           // multi
           const wrapExec = execOriginalFn => {
-            return function instrumentedExecAsPipelineInstana() {
+            return function instrumentedExecAsMultiInstana() {
               return instrumentMultiExec(this, arguments, execOriginalFn, addressUrl, true, false, selfMadeQueue);
             };
           };
@@ -88,6 +88,7 @@ function instrument(redis) {
           // operations landed in this multi transaction. We are unable to access
           // redis internal queue anymore.
           shimmer.wrap(result, 'addCommand', wrapAddCommand);
+
           shimmer.wrap(result, 'exec', wrapExec);
 
           // `execAsPipeline` can be used to trigger batches in 4.x
@@ -301,14 +302,23 @@ function instrumentCommand(original, command, address, cbStyle) {
 }
 
 function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbStyle, queue) {
-  if (cls.skipExitTracing({ isActive })) {
+  const skipExitResult = cls.skipExitTracing({ isActive, extendedResponse: true });
+
+  if (skipExitResult.skip) {
     return original.apply(origCtx, origArgs);
   }
 
-  const parentSpan = cls.getCurrentSpan();
+  const parentSpan = skipExitResult.parentSpan;
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan(exports.spanName, constants.EXIT, parentSpan.t, parentSpan.s);
+    let span;
+
+    if (skipExitResult.allowRootExitSpan) {
+      span = cls.startSpan(exports.spanName, constants.EXIT);
+    } else {
+      span = cls.startSpan(exports.spanName, constants.EXIT, parentSpan.t, parentSpan.s);
+    }
+
     span.stack = tracingUtil.getStackTrace(instrumentMultiExec);
     span.data.redis = {
       connection: address,
