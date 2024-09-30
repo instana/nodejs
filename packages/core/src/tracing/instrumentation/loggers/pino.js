@@ -35,7 +35,7 @@ function shimGenLog(originalGenLog) {
       const originalLoggingFunction = originalGenLog.apply(this, arguments);
 
       return function log(mergingObject, message) {
-        if (cls.skipExitTracing({ isActive })) {
+        if (cls.skipExitTracing({ isActive, skipAllowRootExitSpanPresence: true })) {
           return originalLoggingFunction.apply(this, arguments);
         }
 

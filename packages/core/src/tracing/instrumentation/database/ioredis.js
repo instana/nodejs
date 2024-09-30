@@ -44,14 +44,13 @@ function instrument(ioredis) {
 function instrumentSendCommand(original) {
   return function wrappedInternalSendCommand(command) {
     const client = this;
-    const parentSpan = cls.getCurrentSpan();
+
+    // We need to skip parentSpan condition because the parentSpan check is too specific in this fn
+    const skipExitTracingResult = cls.skipExitTracing({ isActive, skipParentSpanCheck: true, extendedResponse: true });
+    const parentSpan = skipExitTracingResult.parentSpan;
     let callback;
 
-    if (
-      command.promise == null ||
-      typeof command.name !== 'string' ||
-      cls.skipExitTracing({ isActive, skipParentSpanCheck: true })
-    ) {
+    if (command.promise == null || typeof command.name !== 'string' || skipExitTracingResult.skip) {
       return original.apply(this, arguments);
     }
 
@@ -60,14 +59,19 @@ function instrumentSendCommand(original) {
     // NOTE: there is separate "pipeline" call from "instrumentSendCommand"
     //       only for "multi". Thats why we filter it out here.
     if (
+      parentSpan &&
       parentSpan.n === exports.spanName &&
       (parentSpan.data.redis.command === 'multi' || parentSpan.data.redis.command === 'pipeline') &&
       command.name !== 'multi'
     ) {
       const parentSpanSubCommands = (parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || []);
       parentSpanSubCommands.push(command.name);
-    } else if (constants.isExitSpan(parentSpan)) {
-      // Apart from the special case of multi/pipeline calls, redis exits can't be child spans of other exits.
+    } else if (
+      // If allowRootExitSpan is not enabled then an EXIT SPAN can't exist alone
+      (!skipExitTracingResult.allowRootExitSpan && parentSpan && constants.isExitSpan(parentSpan)) ||
+      !parentSpan
+    ) {
+      // Apart from the special case of multi/pipeline calls, redis exits can't be child spans of other exits
       return original.apply(this, arguments);
     }
 
@@ -126,10 +130,17 @@ function instrumentPipelineCommand(original) {
 function instrumentMultiOrPipelineCommand(commandName, original) {
   return function wrappedInternalMultiOrPipelineCommand() {
     const client = this;
-    const parentSpan = cls.getCurrentSpan();
+    const skipExitTracingResult = cls.skipExitTracing({ isActive, skipParentSpanCheck: true, extendedResponse: true });
+    const parentSpan = skipExitTracingResult.parentSpan;
 
     // NOTE: multiple redis transaction can have a parent ioredis call
-    if (cls.skipExitTracing({ isActive, skipParentSpanCheck: true }) || constants.isExitSpan(parentSpan)) {
+    // If cls.skipExitTracing wants to skip the tracing then skip it
+    // Also if allowRootExitSpan is not enabled then an EXIT SPAN can't exist alone
+    if (
+      skipExitTracingResult.skip ||
+      (!skipExitTracingResult.allowRootExitSpan && parentSpan && constants.isExitSpan(parentSpan)) ||
+      (!skipExitTracingResult.allowRootExitSpan && !parentSpan)
+    ) {
       return original.apply(this, arguments);
     }
 

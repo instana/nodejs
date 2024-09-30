@@ -26,6 +26,7 @@ const constants = require('../tracing/constants');
  * @property {boolean} [spanBatchingEnabled]
  * @property {boolean} [disableW3cTraceCorrelation]
  * @property {KafkaTracingOptions} [kafka]
+ * @property {boolean} [allowRootExitSpan]
  */
 
 /**
@@ -101,6 +102,7 @@ const defaults = {
   tracing: {
     enabled: true,
     useOpentelemetry: true,
+    allowRootExitSpan: false,
     automaticTracingEnabled: true,
     activateImmediately: false,
     forceTransmissionStartingAt: 500,
@@ -215,6 +217,7 @@ function normalizeTracingConfig(config) {
   normalizeSpanBatchingEnabled(config);
   normalizeDisableW3cTraceCorrelation(config);
   normalizeTracingKafka(config);
+  normalizeAllowRootExitSpan(config);
 }
 
 /**
@@ -236,6 +239,28 @@ function normalizeTracingEnabled(config) {
   }
 
   config.tracing.enabled = defaults.tracing.enabled;
+}
+
+/**
+ *
+ * @param {InstanaConfig} config
+ */
+
+function normalizeAllowRootExitSpan(config) {
+  if (config.tracing.allowRootExitSpan === false) {
+    return;
+  }
+  if (config.tracing.allowRootExitSpan === true) {
+    return;
+  }
+
+  const INSTANA_ALLOW_ROOT_EXIT_SPAN = process.env['INSTANA_ALLOW_ROOT_EXIT_SPAN']?.toLowerCase();
+
+  config.tracing.allowRootExitSpan =
+    INSTANA_ALLOW_ROOT_EXIT_SPAN === '1' ||
+    INSTANA_ALLOW_ROOT_EXIT_SPAN === 'true' ||
+    defaults.tracing.allowRootExitSpan;
+  return;
 }
 
 /**

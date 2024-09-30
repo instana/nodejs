@@ -516,6 +516,63 @@ mochaSuiteFn('tracing/native fetch', function () {
     });
   });
 
+  // When INSTANA_ALLOW_ROOT_EXIT_SPAN is set to TRUE via environment variable
+  // it should track the exit spans without parent
+  describe('Allow Root Exit Span Case 1', function () {
+    let agentControls;
+
+    before(async () => {
+      agentControls = new ProcessControls({
+        appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_ALLOW_ROOT_EXIT_SPAN: true
+        }
+      });
+
+      await agentControls.start(null, null, true);
+    });
+
+    it('should trace exit span without entry span if INSTANA_ALLOW_ROOT_EXIT_SPAN is true', async () => {
+      await delay(2500);
+
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+
+        expect(spans.length).to.equal(4);
+        expect(spans.filter(obj => obj.k === constants.EXIT).length).to.be.equal(4);
+        expect(spans.filter(obj => obj.k === constants.ENTRY).length).to.be.equal(0);
+      });
+    });
+  });
+
+  // When INSTANA_ALLOW_ROOT_EXIT_SPAN is set to FALSE via environment variable
+  // it should not track the exit spans without parent
+  describe('Allow Root Exit Span Case 2', function () {
+    let agentControls;
+
+    before(async () => {
+      agentControls = new ProcessControls({
+        appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_ALLOW_ROOT_EXIT_SPAN: false
+        }
+      });
+
+      await agentControls.start(null, null, true);
+    });
+
+    it('should not trace exit span without entry span if INSTANA_ALLOW_ROOT_EXIT_SPAN is false', async () => {
+      await delay(500);
+
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        expect(spans.length).to.equal(0);
+      });
+    });
+  });
+
   it('must suppress tracing ', async () => {
     const response = await clientControls.sendRequest({
       path: constructPath({}),

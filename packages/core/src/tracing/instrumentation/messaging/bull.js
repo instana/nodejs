@@ -37,14 +37,17 @@ function shimJobCreate(originalJobCreate) {
     const repeatableJob = options && typeof options.jobId === 'string' && options.jobId.indexOf('repeat') === 0;
     const repeatableJobIsSuppressed = repeatableJob && options.X_INSTANA_L === '0';
     const skipIsTracing = !!repeatableJob;
-    const parentSpan = cls.getCurrentSpan();
+
+    // We need to skip parentSpan condition because the parentSpan check is too specific in this fn
     const skipTracingResult = cls.skipExitTracing({
       isActive,
       extendedResponse: true,
       skipParentSpanCheck: true,
-      skipIsTracing
+      skipIsTracing,
+      checkReducedSpan: false
     });
 
+    // NOTE: it makes sense to skip EXIT span tracing only if skipTracingResult.allowRootExitSpan is not enabled
     /**
      * Repeatable jobs cannot be persisted to a parent span, since we don't know for how long they will run.
      * The backend won't hold a reference to the parent entry span for too long, which will then make this span orphan.
@@ -52,8 +55,8 @@ function shimJobCreate(originalJobCreate) {
      */
     if (
       skipTracingResult.skip ||
-      skipTracingResult.isExitSpan ||
-      (!parentSpan && !repeatableJob) ||
+      (!skipTracingResult.allowRootExitSpan && skipTracingResult.isExitSpan) ||
+      (!skipTracingResult.allowRootExitSpan && !skipTracingResult.parentSpan && !repeatableJob) ||
       repeatableJobIsSuppressed
     ) {
       /**
