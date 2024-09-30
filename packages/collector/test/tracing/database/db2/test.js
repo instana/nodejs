@@ -5,6 +5,7 @@
 'use strict';
 
 const dns = require('dns').promises;
+const path = require('path');
 const expect = require('chai').expect;
 const semver = require('semver');
 
@@ -1242,6 +1243,42 @@ mochaSuiteFn('tracing/db2', function () {
             })
           )
         );
+    });
+  });
+
+  describe('When allowRootExitSpan: true is set', function () {
+    before(async () => {
+      TABLE_NAME_1 = generateTableName();
+
+      controls = new ProcessControls({
+        useGlobalAgent: true,
+        appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+        env: {
+          DB2_CONN_STR,
+          DB2_DATABASE_NAME,
+          DB2_TABLE_NAME_1: TABLE_NAME_1
+        }
+      });
+
+      await controls.start(retryTime, Date.now() + testTimeout - 5000, true);
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    it('must trace', async function () {
+      await testUtils.retry(async () => {
+        const spans = await agentControls.getSpans();
+        expect(spans.length).to.be.eql(4);
+
+        // 4 spans, because we drop the table, create the table and do 2 x queries.
+        testUtils.expectExactlyNMatching(spans, 4, [
+          span => expect(span.n).to.equal('ibmdb2'),
+          span => expect(span.k).to.equal(2),
+          span => expect(span.data.db2.stmt).to.exist
+        ]);
+      });
     });
   });
 

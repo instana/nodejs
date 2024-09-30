@@ -48,12 +48,31 @@ function instrument(db2) {
   shimmer.wrap(db2.Database.prototype, 'prepareSync', instrumentPrepareSync);
 }
 
+/**
+ * We need to set `skipIsTracing` check for db2, because of e.g. prepare
+ * statements or transactions. We don't always know if we are tracing or not.
+ */
 function skipTracing(ignoreClsTracing = false) {
-  // CASES: instrumentation is disabled, db call is disabled via suppress header
-  return (
-    cls.skipExitTracing({ isActive, skipIsTracing: true, skipParentSpanCheck: true }) ||
-    (ignoreClsTracing ? false : !cls.isTracing())
-  );
+  const skipExitResult = cls.skipExitTracing({
+    isActive,
+    skipIsTracing: true,
+    skipParentSpanCheck: true,
+    extendedResponse: true
+  });
+
+  const isTracing = cls.isTracing();
+
+  // CASE: `cls.skipExitTracing` decided to skip, respect that
+  if (skipExitResult.skip) return true;
+
+  // CASE: the target parent function wants us to ignore cls.isTracing
+  //       because e.g. we don't know if we trace (parent got lost)
+  if (ignoreClsTracing) return false;
+
+  // CASE: We ignore if tracing or not for `allowRootExitSpan`. See cls file.
+  if (skipExitResult.allowRootExitSpan) return false;
+
+  return !isTracing;
 }
 
 function instrumentOpen(originalFunction) {
@@ -101,7 +120,11 @@ function instrumentBeginTransaction(originalFunction) {
 
     arguments[0] = cls.ns.bind(function instanaInstrumentBeginTransactionCallback() {
       // NOTE: See function description
-      cls.setCurrentSpan(parentSpan);
+      // NOTE: We need to ensure that there is a parentSpan, see 'allowRootExitSpan: true'.
+      if (parentSpan) {
+        cls.setCurrentSpan(parentSpan);
+      }
+
       return originalCallback.apply(this, arguments);
     });
 
@@ -330,8 +353,12 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParen
       rememberedParentSpan = parentSpan;
     }
 
-    // cls.isTracing is false when `execute` is minimum called twice
-    // then parentSpan is undefined, because there is no current span and no remembered span yet
+    // CASE 1: `cls.isTracing` is false when `execute` is minimum called twice, because
+    // because there is NO current span and no remembered span.
+    // We skip checking `cls.isTracing` because we want to trace the second call.
+    //
+    // CASE 2: `allowRootExitSpan: true` is set, we might not have an entry span at all on
+    //         the first execute call.
     if (skipTracing(!parentSpan || !!prepareCallParentSpan)) {
       return false;
     }
@@ -342,8 +369,11 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParen
      * We have to set the parent span here, reasons:
      *   - execute is called twice
      *   - prepare call happens in http context, we need to remember it
+     *
+     * CASE: When setting `allowRootExitSpan: true`, the parentSpan might be null.
      */
-    cls.setCurrentSpan(rememberedParentSpan || parentSpan);
+    const parentToSetAsCurrent = rememberedParentSpan || parentSpan;
+    if (parentToSetAsCurrent) cls.setCurrentSpan(parentToSetAsCurrent);
     return true;
   };
 
