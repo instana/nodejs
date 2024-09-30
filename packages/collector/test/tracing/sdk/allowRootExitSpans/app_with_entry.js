@@ -16,6 +16,8 @@ const instana = require('../../../../src')({
   }
 });
 
+const fetch = require('node-fetch-v2');
+
 const url = 'https://www.example.com';
 
 /* eslint-disable no-console */
