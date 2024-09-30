@@ -178,20 +178,12 @@ function instrument(coreModule, forceHttps) {
     const skipTracingResult = cls.skipExitTracing({
       isActive,
       extendedResponse: true,
-      skipParentSpanCheck: true,
-      skipIsTracing: true
+      checkReducedSpan: true
     });
 
-    // If there is no active entry span, we fall back to the reduced span of the most recent entry span. See comment in
-    // packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
-    const parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
+    const parentSpan = skipTracingResult.parentSpan;
 
-    if (
-      skipTracingResult.skip ||
-      !parentSpan ||
-      constants.isExitSpan(parentSpan) ||
-      shouldBeBypassed(parentSpan, options)
-    ) {
+    if (skipTracingResult.skip || shouldBeBypassed(skipTracingResult.parentSpan, options)) {
       let traceLevelHeaderHasBeenAdded = false;
       if (skipTracingResult.suppressed) {
         traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0', w3cTraceContext);
@@ -207,7 +199,8 @@ function instrument(coreModule, forceHttps) {
     }
 
     cls.ns.run(() => {
-      const span = cls.startSpan('node.http.client', constants.EXIT, parentSpan.t, parentSpan.s);
+      // NOTE: Check for parentSpan existence, because of allowRootExitSpan is being enabled
+      const span = cls.startSpan('node.http.client', constants.EXIT, parentSpan?.t, parentSpan?.s);
 
       // startSpan updates the W3C trace context and writes it back to CLS, so we have to refetch the updated context
       // object from CLS.
