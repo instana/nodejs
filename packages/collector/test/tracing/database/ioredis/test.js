@@ -6,7 +6,6 @@
 'use strict';
 
 const expect = require('chai').expect;
-const semver = require('semver');
 const path = require('path');
 
 const constants = require('@instana/core').tracing.constants;
@@ -24,7 +23,7 @@ const globalAgent = require('../../../globalAgent');
 const expectExactlyNMatching = require('@instana/core/test/test_util/expectExactlyNMatching');
 
 const mochaSuiteFn =
-  semver.gte(process.versions.node, '14.0.0') && supportedVersion(process.versions.node) ? describe : describe.skip;
+  supportedVersion(process.versions.node) ? describe : describe.skip;
 
 function checkConnection(span, setupType) {
   if (setupType === 'cluster') {

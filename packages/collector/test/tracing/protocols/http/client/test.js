@@ -36,7 +36,7 @@ mochaSuiteFn('tracing/http client', function () {
   registerConnectionRefusalTest.call(this, false);
   registerConnectionRefusalTest.call(this, true);
 
-  const runSuperagent = semver.gte(process.versions.node, '16.0.0') ? describe : describe.skip;
+  const runSuperagent = semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
   runSuperagent('superagent', function () {
     registerSuperagentTest.call(this);
   });

@@ -7,7 +7,7 @@
 
 const semver = require('semver');
 
-const minNodeJsVersion = '14.0.0';
+const minNodeJsVersion = '18.0.0';
 
 if (semver.lt(process.versions.node, minNodeJsVersion)) {
   exports.cleanup = async function () {

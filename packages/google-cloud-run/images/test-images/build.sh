@@ -25,7 +25,7 @@
 #     - gcr           -> use an image from the GCR registry with test base images
 # $2: Node.js version. One of:
 #     - 18
-#     - 16
+#     - 20
 # $3: Linux distribution. One of:
 #     - standard               -> (uses node:$version, that is, Debian)
 #     - alpine                 -> (uses node:$version-alpine, that is, Alpine)

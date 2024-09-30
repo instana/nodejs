@@ -23,7 +23,7 @@ const instrumentations = {
   '@opentelemetry/instrumentation-tedious': { name: 'tedious' }
 };
 
-module.exports.minimumNodeJsVersion = '14.0.0';
+module.exports.minimumNodeJsVersion = '18.0.0';
 
 // NOTE: using a logger might create a recursive execution
 //       logger.debug -> creates fs call -> calls transformToInstanaSpan -> calls logger.debug

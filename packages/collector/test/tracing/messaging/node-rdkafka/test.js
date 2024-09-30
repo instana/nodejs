@@ -18,7 +18,6 @@
 
 const path = require('path');
 const { expect } = require('chai');
-const semver = require('semver');
 const { fail } = expect;
 const {
   tracing: { constants }
@@ -54,7 +53,7 @@ const topic = 'rdkafka-topic';
 
 let mochaSuiteFn;
 
-if (!supportedVersion(process.versions.node) || semver.lte(process.versions.node, '16.0.0')) {
+if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe.skip;
 } else {
   mochaSuiteFn = describe;

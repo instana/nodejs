@@ -12,7 +12,7 @@ const semver = require('semver');
  * @returns {boolean} - True if ESM is supported, false otherwise.
  */
 exports.esmSupportedVersion = function esmSupportedVersion(version) {
-  return semver.gte(version, '14.0.0');
+  return semver.gte(version, '18.0.0');
 };
 
 /**

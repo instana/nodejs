@@ -10,7 +10,7 @@ const expect = require('chai').expect;
 const instana = require('@instana/aws-lambda');
 
 describe('esm wrapper', function () {
-  if (semver.lt(process.versions.node, '14.0.0')) {
+  if (semver.lt(process.versions.node, '18.0.0')) {
     const majorNodeVersion = semver.major(process.versions.node);
 
     it(`should throw error for Node v${majorNodeVersion}`, () => {

@@ -4,7 +4,6 @@
 
 'use strict';
 
-const semver = require('semver');
 const { expect } = require('chai');
 const { fail } = expect;
 const qs = require('querystring');
@@ -37,7 +36,7 @@ function start(version) {
   this.timeout(config.getTestTimeout() * 4);
 
   // https://github.com/aws/aws-sdk-js-v3/blob/v3.391.0/clients/client-sns/package.json#L70
-  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '14.0.0')) {
+  if (!supportedVersion(process.versions.node)) {
     it.skip(`npm: ${version}`, () => {});
     return;
   }

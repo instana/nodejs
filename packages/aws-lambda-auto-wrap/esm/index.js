@@ -12,8 +12,8 @@ const majorNodeVersion = Number(process.versions.node.split('.')[0]);
 // CASE: ES support was added in Node v14, throw error if the handler is used in < 14
 // NOTE: The esm handler can be used for Lambdas with commonjs or es module.
 //       See https://github.com/nodejs/node/pull/35249
-// NOTE: v3 dropped support for < Node v14
-if (majorNodeVersion < 14) {
+// NOTE: v4 dropped support for < Node v18
+if (majorNodeVersion < 18) {
   throw new localUtils.errors.lambda.ImportModuleError(
     `Your Lambda function is using ${majorNodeVersion}. This version is not supported.` +
       'Please use a layer version which is compatible with your Node.js version.' +

@@ -11,19 +11,20 @@ const semver = require('semver');
 
 /**
  * In order to increase Node.js version support, this loads an implementation of a CLS (continuation local storage) API
- * which is appropriate for the version of on Node.js that is running.
- * - Node.js 14.0 - 16.6: AsyncLocalStorage
- * - Node.js 16.7 - 16.6: our vendored-in fork of cls-hooked (based on async_hooks) (see below for reasons)
- * - Node.js >= 16.14: AsyncLocalStorage
+ * which is appropriate for the version of Node.js that is running.
+ * - Node.js >= 18: AsyncLocalStorage
+ * - Node.js < 18: Legacy implementation
  *
- * There is a bug introduced in Node 16.7 which breaks AsyncLocalStorage: https://github.com/nodejs/node/issues/40693
- * - AsyncLocalStorage fix introduced in v17.2: https://github.com/nodejs/node/blob/master/doc/changelogs/CHANGELOG_V17.md#commits-5
- * - AsyncLocalStorage fix introduced in v16.14: https://github.com/nodejs/node/blob/master/doc/changelogs/CHANGELOG_V16.md#commits
+ * Known Bugs:
+ * - Node.js 16.7 introduced a bug that breaks AsyncLocalStorage:
+ *   https://github.com/nodejs/node/issues/40693
+ *   This bug affected the functionality of AsyncLocalStorage until it was fixed in:
+ *   - Node.js 16.14: https://github.com/nodejs/node/blob/master/doc/changelogs/CHANGELOG_V16.md#commits
+ *   - Node.js 17.2: https://github.com/nodejs/node/blob/master/doc/changelogs/CHANGELOG_V17.md#commits-5
+ *
+ * Note: Previous versions are no longer supported as of this update.
  */
-if (
-  process.env.INSTANA_FORCE_LEGACY_CLS !== 'true' &&
-  semver.satisfies(process.versions.node, '14.0 - 16.6 || ^16.14 || >=17.2')
-) {
+if (process.env.INSTANA_FORCE_LEGACY_CLS !== 'true' && semver.satisfies(process.versions.node, '>= 18')) {
   module.exports = require('./async_local_storage_context');
 } else {
   module.exports = require('./context');

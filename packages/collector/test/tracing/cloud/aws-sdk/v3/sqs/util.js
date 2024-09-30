@@ -5,7 +5,7 @@
 
 'use strict';
 
-exports.minimumNodeJsVersion = '14.0.0';
+exports.minimumNodeJsVersion = '18.0.0';
 
 if (require('semver').lt(process.versions.node, exports.minimumNodeJsVersion)) {
   exports.createQueues = function () {};

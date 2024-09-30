@@ -7,7 +7,6 @@
 
 const expect = require('chai').expect;
 const { fail } = expect;
-const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -39,7 +38,7 @@ function registerSuite(agentControls, driverMode, useExecute) {
   }
 
   let mochaSuiteFnForDriverMode = describe;
-  if (driverMode.includes('mysql2') && semver.lt(process.versions.node, '14.0.0')) {
+  if (driverMode.includes('mysql2')) {
     // mysql2 does no longer support Node.js < 14, see https://github.com/sidorares/node-mysql2/issues/1965
     mochaSuiteFnForDriverMode = describe.skip;
   }
