@@ -14,7 +14,7 @@ const globalAgent = require('../../../globalAgent');
 const { retry, delay, expectExactlyOneMatching } = require('@instana/core/test/test_util');
 const constants = require('@instana/core').tracing.constants;
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
   this.timeout(config.getTestTimeout());
