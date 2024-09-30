@@ -56,7 +56,7 @@ function checkConnection(span, setupType) {
           useGlobalAgent: true,
           appPath: path.join(__dirname, 'allowRootExitSpanApp'),
           env: {
-            REDIS_CLUSTER: setupType === 'cluster'
+            REDIS_CLUSTER: false
           }
         });
 

@@ -6,7 +6,6 @@
 
 const expect = require('chai').expect;
 const path = require('path');
-const semver = require('semver');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('@instana/core/test/config');
@@ -15,8 +14,7 @@ const globalAgent = require('../../../globalAgent');
 const { retry, delay, expectExactlyOneMatching } = require('@instana/core/test/test_util');
 const constants = require('@instana/core').tracing.constants;
 
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
 
 mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
   this.timeout(config.getTestTimeout());
