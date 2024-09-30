@@ -54,7 +54,8 @@ function shimSendMessage(originalFunction) {
 function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
   // We need to skip parentSpan condition because the parentSpan check is too specific in this fn
   const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true, skipParentSpanCheck: true });
-  const parentSpan = cls.getCurrentSpan();
+
+  const parentSpan = skipTracingResult.parentSpan;
   const isExitSpan = skipTracingResult.isExitSpan;
 
   if (skipTracingResult.skip) {
@@ -66,7 +67,7 @@ function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
   }
 
   // allow rabbitmq parent exit spans, this is actually the span started in instrumentedChannelModelPublish
-  if (!parentSpan || (isExitSpan && parentSpan.n !== 'rabbitmq')) {
+  if (!skipTracingResult.allowRootExitSpan && (!parentSpan || (isExitSpan && parentSpan.n !== 'rabbitmq'))) {
     return originalSendMessage.apply(ctx, originalArgs);
   }
 
