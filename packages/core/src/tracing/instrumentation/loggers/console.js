@@ -29,7 +29,7 @@ function shimLog(options) {
         return originalLog.apply(this, arguments);
       }
 
-      if (cls.skipExitTracing({ isActive })) {
+      if (cls.skipExitTracing({ isActive, skipAllowRootExitSpanPresence: true })) {
         return originalLog.apply(this, arguments);
       }
 
