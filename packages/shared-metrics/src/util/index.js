@@ -10,7 +10,7 @@ const { setLogger: setLoggerForDependencyDistanceCalculator } = require('./Depen
 module.exports = {
   nativeModuleRetry,
   /**
-   * @param {import('@instana/core/src/logger').GenericLogger} logger
+   * @param {import('@instana/core/src/core').GenericLogger} logger
    */
   setLogger: function setLogger(logger) {
     nativeModuleRetry.setLogger(logger);

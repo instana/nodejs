@@ -84,7 +84,7 @@ const constants = require('../tracing/constants');
  * @property {string} [headerFormat]
  */
 
-/** @type {import('../logger').GenericLogger} */
+/** @type {import('../core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('configuration', newLogger => {
   logger = newLogger;

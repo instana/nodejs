@@ -11,7 +11,7 @@ const { uninstrumentedFs: fs } = require('@instana/core');
 const internalPidStore = require('./internalPidStore');
 const agentOpts = require('../agent/opts');
 
-/** @type {import('@instana/core/src/logger').GenericLogger} */
+/** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('pidStore', newLogger => {
   logger = newLogger;

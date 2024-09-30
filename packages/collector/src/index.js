@@ -12,6 +12,10 @@ if (!isProcessAvailable()) {
   // eslint-disable-next-line no-console
   console.error('The Node.js core module process is not available. This process will not be monitored by Instana.');
   module.exports = function noOp() {};
+
+  // ESM default exports for TS
+  module.exports.default = function noOp() {};
+
   // @ts-ignore TS1108 (return can only be used within a function body)
   return;
 }
@@ -22,7 +26,10 @@ if (isNodeJsTooOld()) {
     `The package @instana/collector requires at least Node.js ${minimumNodeJsVersion} but this process is ` +
       `running on Node.js ${process.version}. This process will not be monitored by Instana.`
   );
-  module.exports = function noOp() {};
+
+  // ESM default exports for TS
+  module.exports.default = function noOp() {};
+
   // @ts-ignore TS1108 (return can only be used within a function body)
   return;
 }
@@ -40,17 +47,18 @@ const instanaSharedMetrics = require('@instana/shared-metrics');
 
 require('./tracing'); // load additional instrumentations
 const log = require('./logger');
+
 const normalizeConfig = require('./util/normalizeConfig');
 const experimental = require('./experimental');
 
 /** @type {import('./agentConnection')} */
 let agentConnection;
 
-/** @type {import('./util/normalizeConfig').CollectorConfig} */
+/** @type {import('./types/collector').CollectorConfig} */
 let config;
 
 /**
- * @param {import('./util/normalizeConfig').CollectorConfig} [_config]
+ * @param {import('./types/collector').CollectorConfig} [_config]
  */
 function init(_config) {
   // @ts-ignore: Property '__INSTANA_INITIALIZED' does not exist on type global
@@ -129,7 +137,7 @@ init.isConnected = function isConnected() {
 };
 
 /**
- * @param {import('@instana/core/src/logger').GenericLogger} logger
+ * @param {import('@instana/core/src/core').GenericLogger} logger
  */
 init.setLogger = function setLogger(logger) {
   // NOTE: Override our default logger with customer's logger
@@ -153,3 +161,4 @@ if (process.env.INSTANA_IMMEDIATE_INIT != null && process.env.INSTANA_IMMEDIATE_
 }
 
 module.exports = init;
+module.exports.default = init;

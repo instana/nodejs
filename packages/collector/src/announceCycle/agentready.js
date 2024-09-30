@@ -37,7 +37,7 @@ let autoprofile;
 /** @type {*} */
 let profiler;
 
-/** @type {import('@instana/core/src/logger').GenericLogger} */
+/** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('announceCycle/agentready', newLogger => {
   logger = newLogger;

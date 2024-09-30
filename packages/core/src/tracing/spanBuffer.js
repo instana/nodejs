@@ -7,7 +7,7 @@
 
 const tracingMetrics = require('./metrics');
 
-/** @type {import('../logger').GenericLogger} */
+/** @type {import('../core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('tracing/spanBuffer', newLogger => {
   logger = newLogger;
@@ -47,7 +47,7 @@ let isFaaS;
 /** @type {boolean} */
 let transmitImmediate;
 
-/** @type {Array.<import('./cls').InstanaBaseSpan>} */
+/** @type {Array.<import('../core').InstanaBaseSpan>} */
 let spans = [];
 
 let batchThreshold = 10;
@@ -79,7 +79,7 @@ const batchBucketWidth = 18;
 // The batchingBuckets are cleared once the span buffer is flushed downstream.
 
 /**
- * @typedef {Map.<number, Array.<import('./cls').InstanaBaseSpan>>} BatchingBucket
+ * @typedef {Map.<number, Array.<import('../core').InstanaBaseSpan>>} BatchingBucket
  */
 /**
  * @typedef {Map.<string, BatchingBucket>} BatchingBucketMap
@@ -172,7 +172,7 @@ exports.addBatchableSpanName = function (spanName) {
 };
 
 /**
- * @param {import('./cls').InstanaBaseSpan} span
+ * @param {import('../core').InstanaBaseSpan} span
  */
 exports.addSpan = function (span) {
   if (!isActive) {
@@ -209,7 +209,7 @@ exports.addSpan = function (span) {
 };
 
 /**
- * @param {import('./cls').InstanaBaseSpan} span
+ * @param {import('../core').InstanaBaseSpan} span
  * @returns {boolean}
  */
 function addToBatch(span) {
@@ -234,7 +234,7 @@ function addToBatch(span) {
 
 /**
  *
- * @param {import('./cls').InstanaBaseSpan} newSpan
+ * @param {import('../core').InstanaBaseSpan} newSpan
  * @param {BatchingBucket} bucketsForTrace
  * @param {number} bucketKey
  * @returns
@@ -271,9 +271,9 @@ function findBatchPartnerAndMerge(newSpan, bucketsForTrace, bucketKey) {
 }
 
 /**
- * @param {import('./cls').InstanaBaseSpan} oldSpan
- * @param {import('./cls').InstanaBaseSpan} newSpan
- * @param {Array.<import('./cls').InstanaBaseSpan>} bucket
+ * @param {import('../core').InstanaBaseSpan} oldSpan
+ * @param {import('../core').InstanaBaseSpan} newSpan
+ * @param {Array.<import('../core').InstanaBaseSpan>} bucket
  * @param {number} bucketKey
  * @param {number} indexInBucket
  */
@@ -310,8 +310,8 @@ function mergeSpansAsBatch(oldSpan, newSpan, bucket, bucketKey, indexInBucket) {
 /**
  * Merges the source span into the target span. Assumes that target is already in the spanBuffer and source can be
  * discarded afterwards.
- * @param {import('./cls').InstanaBaseSpan} target
- * @param {import('./cls').InstanaBaseSpan} source
+ * @param {import('../core').InstanaBaseSpan} target
+ * @param {import('../core').InstanaBaseSpan} source
  * @param {number} originalBucketKey
  */
 function mergeIntoTargetSpan(target, source, originalBucketKey) {
@@ -351,8 +351,8 @@ function mergeIntoTargetSpan(target, source, originalBucketKey) {
 }
 
 /**
- * @param {import('./cls').InstanaBaseSpan} target
- * @param {import('./cls').InstanaBaseSpan} source
+ * @param {import('../core').InstanaBaseSpan} target
+ * @param {import('../core').InstanaBaseSpan} source
  */
 function setBatchSize(target, source) {
   if (target.b && target.b.s && source.b && source.b.s) {
@@ -376,7 +376,7 @@ function setBatchSize(target, source) {
 }
 
 /**
- * @param {import('./cls').InstanaBaseSpan} span
+ * @param {import('../core').InstanaBaseSpan} span
  * @param {number} [preComputedBucketKey]
  */
 function addToBucket(span, preComputedBucketKey) {
@@ -393,7 +393,7 @@ function addToBucket(span, preComputedBucketKey) {
 }
 
 /**
- * @param {import('./cls').InstanaBaseSpan} span
+ * @param {import('../core').InstanaBaseSpan} span
  * @returns {number}
  */
 function batchingBucketKey(span) {
@@ -402,7 +402,7 @@ function batchingBucketKey(span) {
 }
 
 /**
- * @param {import('./cls').InstanaBaseSpan} span
+ * @param {import('../core').InstanaBaseSpan} span
  * @returns {boolean}
  */
 function isBatchable(span) {

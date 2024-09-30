@@ -6,7 +6,7 @@
 
 const iitmHook = require('import-in-the-middle');
 
-/** @type {import('../logger').GenericLogger} */
+/** @type {import('../core').GenericLogger} */
 let logger = require('../logger').getLogger('util/iitmHook', newLogger => {
   logger = newLogger;
 });

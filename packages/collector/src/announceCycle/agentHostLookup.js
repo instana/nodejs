@@ -13,7 +13,7 @@ const agentOpts = require('../agent/opts');
 const defaultGatewayParser = require('./defaultGatewayParser');
 const readDefaultGateway = callbackify(defaultGatewayParser.parseProcSelfNetRouteFile);
 
-/** @type {import('@instana/core/src/logger').GenericLogger} */
+/** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('announceCycle/agentHostLookup', newLogger => {
   logger = newLogger;

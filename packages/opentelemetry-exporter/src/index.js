@@ -12,7 +12,7 @@ const instanaEndpointUrlEnvVar = 'INSTANA_ENDPOINT_URL';
 const instanaAgentKeyEnvVar = 'INSTANA_AGENT_KEY';
 
 /** @typedef {import('@opentelemetry/sdk-trace-base').ReadableSpan} ReadableSpan */
-/** @typedef {import('@instana/core/src/tracing/cls').InstanaBaseSpan} InstanaBaseSpan */
+/** @typedef {import('@instana/core/src/core').InstanaBaseSpan} InstanaBaseSpan */
 
 /** Span Kind
   Default value. Indicates that the span is used internally.
@@ -152,7 +152,7 @@ class InstanaExporter {
    * @returns {InstanaBaseSpan}
    */
   _transform(span) {
-    /** @type {import('@instana/core/src/tracing/cls').InstanaBaseSpan} */
+    /** @type {import('@instana/core/src/core').InstanaBaseSpan} */
     const result = {
       n: 'otel',
       f: {

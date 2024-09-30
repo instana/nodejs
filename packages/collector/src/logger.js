@@ -21,13 +21,13 @@ const { logger } = require('@instana/core');
 
 const bunyanToAgentStream = require('./agent/bunyanToAgentStream');
 
-/** @type {bunyan | import('@instana/core/src/logger').GenericLogger} */
+/** @type {bunyan | import('@instana/core/src/core').GenericLogger} */
 let parentLogger = null;
-/** @type {Object.<string, (logger: import('@instana/core/src/logger').GenericLogger) => *>} */
+/** @type {Object.<string, (logger: import('@instana/core/src/core').GenericLogger) => *>} */
 const registry = {};
 
 /**
- * @param {import('./util/normalizeConfig').CollectorConfig} config
+ * @param {import('./types/collector').CollectorConfig} config
  * @param {boolean} [isReInit]
  */
 exports.init = function init(config, isReInit) {
@@ -80,14 +80,13 @@ exports.init = function init(config, isReInit) {
 
 /**
  * @param {string} loggerName
- * @param {(logger: import('@instana/core/src/logger').GenericLogger) => *} [reInitFn]
- * @returns {import('@instana/core/src/logger').GenericLogger}
+ * @param {(logger: import('@instana/core/src/core').GenericLogger) => *} [reInitFn]
+ * @returns {import('@instana/core/src/core').GenericLogger}
  */
 exports.getLogger = function getLogger(loggerName, reInitFn) {
   if (!parentLogger) {
     exports.init({});
   }
-
   let _logger;
 
   if (typeof parentLogger.child === 'function') {
@@ -106,7 +105,8 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
     }
     registry[loggerName] = reInitFn;
   }
-  return _logger;
+
+  return /** @type {import('@instana/core/src/core').GenericLogger} */ (_logger);
 };
 
 /**
@@ -118,7 +118,7 @@ function isBunyan(_logger) {
 }
 
 /**
- * @param {import('@instana/core/src/logger').GenericLogger | *} _logger
+ * @param {import('@instana/core/src/core').GenericLogger | *} _logger
  * @returns {boolean}
  */
 function hasLoggingFunctions(_logger) {

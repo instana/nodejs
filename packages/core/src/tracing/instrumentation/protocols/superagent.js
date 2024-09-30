@@ -7,7 +7,7 @@
 
 const shimmer = require('../../shimmer');
 
-/** @type {import('../../../logger').GenericLogger} */
+/** @type {import('../../../core').GenericLogger} */
 let logger;
 logger = require('../../../logger').getLogger('tracing/superagent', newLogger => {
   logger = newLogger;

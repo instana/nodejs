@@ -9,9 +9,9 @@ const deepMerge = require('../../util/deepMerge');
 const tracingUtil = require('../tracingUtil');
 const constants = require('../constants');
 
-/** @typedef {import('../cls').InstanaBaseSpan} InstanaBaseSpan */
+/** @typedef {import('../../core').InstanaBaseSpan} InstanaBaseSpan */
 
-/** @type {import('../../logger').GenericLogger} */
+/** @type {import('../../core').GenericLogger} */
 let logger;
 logger = require('../../logger').getLogger('tracing/sdk', newLogger => {
   logger = newLogger;
@@ -295,7 +295,7 @@ module.exports = function (isCallbackApi) {
 
   /**
    * @param {Error} error
-   * @param {import('../cls').InstanaBaseSpan} span
+   * @param {import('../../core').InstanaBaseSpan} span
    * @param {Object.<string, *>} tags
    */
   function completeSpan(error, span, tags) {

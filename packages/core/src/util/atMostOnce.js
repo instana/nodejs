@@ -7,7 +7,7 @@
 
 'use strict';
 
-/** @type {import('../logger').GenericLogger} */
+/** @type {import('../core').GenericLogger} */
 let logger;
 
 logger = require('../logger').getLogger('util/atMostOnce', newLogger => {

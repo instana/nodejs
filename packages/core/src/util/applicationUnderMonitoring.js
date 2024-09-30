@@ -9,7 +9,7 @@ const fs = require('../uninstrumentedFs');
 const path = require('path');
 const isESMApp = require('./esm').isESMApp;
 
-/** @type {import('../logger').GenericLogger} */
+/** @type {import('../core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('util/applicationUnderMonitoring', newLogger => {
   logger = newLogger;

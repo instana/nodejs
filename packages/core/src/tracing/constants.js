@@ -76,7 +76,7 @@ exports.snsSqsInstanaHeaderPrefixRegex = /"X_INSTANA_/i;
 
 /**
  * Determine if <span> is an entry span (server span).
- * @param {import('./cls').InstanaBaseSpan} span
+ * @param {import('../core').InstanaBaseSpan} span
  * @returns {boolean}
  */
 exports.isEntrySpan = function isEntrySpan(span) {
@@ -85,7 +85,7 @@ exports.isEntrySpan = function isEntrySpan(span) {
 
 /**
  * Determine if <span> is an exit span (client span).
- * @param {import('./cls').InstanaBaseSpan} span
+ * @param {import('../core').InstanaBaseSpan} span
  * @returns {boolean}
  */
 exports.isExitSpan = function isExitSpan(span) {
@@ -94,7 +94,7 @@ exports.isExitSpan = function isExitSpan(span) {
 
 /**
  * Determine if <span> is an intermediate span (local span).
- * @param {import('./cls').InstanaBaseSpan} span
+ * @param {import('../core').InstanaBaseSpan} span
  * @returns {boolean}
  */
 exports.isIntermediateSpan = function isIntermediateSpan(span) {

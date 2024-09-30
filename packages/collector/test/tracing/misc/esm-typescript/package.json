@@ -1,0 +1,16 @@
+{
+  "name": "esm-typescript",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json",
+    "install": "npm install --prefix ./"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@instana/collector": "^3.19.0",
+    "typescript": "^5.6.2"
+  }
+}

@@ -11,7 +11,7 @@
 
 const serializeError = require('serialize-error');
 
-/** @type {import('@instana/core/src/logger').GenericLogger} */
+/** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('util/uncaughtExceptionHandler', newLogger => {
   logger = newLogger;
@@ -24,7 +24,7 @@ let processIdentityProvider = null;
 const unhandledRejectionEventName = 'unhandledRejection';
 let unhandledRejectionDeprecationWarningHasBeenEmitted = false;
 
-/** @type {import('../util/normalizeConfig').CollectorConfig} */
+/** @type {import('../types/collector').CollectorConfig} */
 let config;
 
 // see
@@ -40,7 +40,7 @@ for (let i = 0; i < process.execArgv.length; i++) {
 }
 
 /**
- * @param {import('../util/normalizeConfig').CollectorConfig} _config
+ * @param {import('../types/collector').CollectorConfig} _config
  * @param {import('../agentConnection')} _downstreamConnection
  * @param {import('../pidStore')} _processIdentityProvider
  */

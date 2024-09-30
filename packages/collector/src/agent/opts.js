@@ -20,7 +20,7 @@ exports.autoProfile = false;
 exports.config = {};
 
 /**
- * @param {import('../util/normalizeConfig').CollectorConfig} config
+ * @param {import('../types/collector').CollectorConfig} config
  */
 exports.init = function init(config) {
   // @ts-ignore - Cannot redeclare exported variable

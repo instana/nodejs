@@ -10,7 +10,7 @@ const leftPad = require('../leftPad');
 
 const W3cTraceContext = require('./W3cTraceContext');
 
-/** @type {import('../../logger').GenericLogger} */
+/** @type {import('../../core').GenericLogger} */
 let logger;
 logger = require('../../logger').getLogger('tracing/W3C trace context parser', newLogger => {
   logger = newLogger;

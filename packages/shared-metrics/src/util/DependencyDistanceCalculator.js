@@ -14,7 +14,7 @@ const CountDownLatch = require('./CountDownLatch');
 let logger = Logger.getLogger('metrics');
 
 /**
- * @param {import('@instana/core/src/logger').GenericLogger} _logger
+ * @param {import('@instana/core/src/core').GenericLogger} _logger
  */
 const setLogger = function (_logger) {
   logger = _logger;

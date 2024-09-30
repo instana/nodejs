@@ -28,7 +28,7 @@ const allMetrics = [
 const util = require('./util');
 
 /**
- * @param {import('@instana/core/src/logger').GenericLogger} logger
+ * @param {import('@instana/core/src/core').GenericLogger} logger
  */
 const setLogger = function (logger) {
   util.setLogger(logger);
@@ -38,7 +38,7 @@ const setLogger = function (logger) {
  * @typedef {Object} InstanaSharedMetrics
  * @property {Array.<import('@instana/core/src/metrics').InstanaMetricsModule>} allMetrics
  * @property {import('./util')} util
- * @property {(logger: import('@instana/core/src/logger').GenericLogger) => void} setLogger
+ * @property {(logger: import('@instana/core/src/core').GenericLogger) => void} setLogger
  */
 
 /** @type {InstanaSharedMetrics} */

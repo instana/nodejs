@@ -9,6 +9,7 @@
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/collector/README.md",
   "license": "MIT",
   "main": "src/index.js",
+  "types": "src/types/index.d.ts",
   "bin": {
     "instana-instrument-edgemicro-cli": "src/bin/instrument-edgemicro-cli.js"
   },

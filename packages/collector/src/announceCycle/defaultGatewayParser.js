@@ -6,7 +6,7 @@
 
 const fs = require('fs').promises;
 
-/** @type {import('@instana/core/src/logger').GenericLogger} */
+/** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('announceCycle/defaultGatewayParser', newLogger => {
   logger = newLogger;

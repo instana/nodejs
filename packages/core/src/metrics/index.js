@@ -32,7 +32,7 @@ exports.init = _config => {
  * @property {SnapshotOrMetricsPayload} currentPayload
  * @property {(config?: InstanaConfig) => void} [activate]
  * @property {() => void} [deactivate]
- * @property {(logger: import('../logger').GenericLogger) => void} [setLogger]
+ * @property {(logger: import('../core').GenericLogger) => void} [setLogger]
  */
 
 /**
@@ -95,7 +95,7 @@ exports.gatherData = function gatherData() {
 };
 
 /**
- * @param {import('../logger').GenericLogger} logger
+ * @param {import('../core').GenericLogger} logger
  */
 exports.setLogger = function setLogger(logger) {
   metricsModules.forEach(metricModule => {

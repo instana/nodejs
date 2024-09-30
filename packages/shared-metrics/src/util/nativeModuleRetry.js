@@ -283,7 +283,7 @@ loadNativeAddOn.setLogger = setLogger;
 loadNativeAddOn.selfNodeModulesPath = '';
 
 /**
- * @param {import('@instana/core/src/logger').GenericLogger} _logger
+ * @param {import('@instana/core/src/core').GenericLogger} _logger
  */
 function setLogger(_logger) {
   logger = _logger;

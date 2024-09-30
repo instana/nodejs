@@ -10,9 +10,9 @@ const http = uninstrumentedHttp.http;
 
 const pathUtil = require('path');
 
-/** @typedef {import('@instana/core/src/tracing/cls').InstanaBaseSpan} InstanaBaseSpan */
+/** @typedef {import('@instana/core/src/core').InstanaBaseSpan} InstanaBaseSpan */
 
-/** @type {import('@instana/core/src/logger').GenericLogger} */
+/** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 logger = require('./logger').getLogger('agentConnection', newLogger => {
   logger = newLogger;
