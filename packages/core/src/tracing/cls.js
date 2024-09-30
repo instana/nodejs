@@ -578,13 +578,13 @@ function skipExitTracing(options) {
   }
 
   const suppressed = tracingSuppressed();
-  const isExitSpanResult = isExitSpan(parentSpan);
+  const isParentSpanAnExitSpan = isExitSpan(parentSpan);
 
   // CASE: first ask for suppressed, because if we skip the entry span, we won't have a parentSpan
   //       on the exit span, which would create noisy log messages.
   if (suppressed) {
     if (opts.extendedResponse) {
-      return { skip: true, suppressed, isExitSpan: isExitSpanResult, parentSpan, allowRootExitSpan };
+      return { skip: true, suppressed, isExitSpan: isParentSpanAnExitSpan, parentSpan, allowRootExitSpan };
     }
 
     return true;
@@ -598,16 +598,16 @@ function skipExitTracing(options) {
   // CASE: Instrumentations can disable the `allowRootExitSpan` feature e.g. loggers.
   if (!opts.skipAllowRootExitSpanPresence && allowRootExitSpan) {
     if (opts.extendedResponse) {
-      return { skip: false, suppressed, isExitSpan: isExitSpanResult, parentSpan, allowRootExitSpan };
+      return { skip: false, suppressed, isExitSpan: isParentSpanAnExitSpan, parentSpan, allowRootExitSpan };
     }
 
     return false;
   }
 
   // Parent span check is required skipParentSpanCheck and no parent is present but an exit span only
-  if (!opts.skipParentSpanCheck && (!parentSpan || isExitSpanResult)) {
+  if (!opts.skipParentSpanCheck && (!parentSpan || isParentSpanAnExitSpan)) {
     if (opts.extendedResponse) {
-      return { skip: true, suppressed, isExitSpan: isExitSpanResult, parentSpan, allowRootExitSpan };
+      return { skip: true, suppressed, isExitSpan: isParentSpanAnExitSpan, parentSpan, allowRootExitSpan };
     }
 
     return true;
@@ -624,7 +624,7 @@ function skipExitTracing(options) {
   const skip = skipIsActive || skipIsTracing;
 
   if (opts.extendedResponse) {
-    return { skip, suppressed, isExitSpan: isExitSpanResult, parentSpan, allowRootExitSpan };
+    return { skip, suppressed, isExitSpan: isParentSpanAnExitSpan, parentSpan, allowRootExitSpan };
   }
 
   return skip;
