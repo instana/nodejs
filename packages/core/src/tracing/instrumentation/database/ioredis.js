@@ -69,7 +69,7 @@ function instrumentSendCommand(original) {
     } else if (
       // If allowRootExitSpan is not enabled then an EXIT SPAN can't exist alone
       (!skipExitTracingResult.allowRootExitSpan && parentSpan && constants.isExitSpan(parentSpan)) ||
-      !parentSpan
+      (!skipExitTracingResult.allowRootExitSpan && !parentSpan)
     ) {
       // Apart from the special case of multi/pipeline calls, redis exits can't be child spans of other exits
       return original.apply(this, arguments);

@@ -10,25 +10,30 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')({
+require('../../../../..')({
   tracing: {
     allowRootExitSpan: true
   }
 });
 
 const ioredis = require('ioredis');
+const connect = require('../connect-via');
+
 const { delay } = require('@instana/core/test/test_util');
 
 const logPrefix = `IORedis allowRootExitSpan App (${process.pid}):\t`;
 
 log(logPrefix);
 
-(async function connectRedis() {
+let client;
+
+(async () => {
+  const { connection } = await connect(ioredis, log);
+
+  client = connection;
+
   await delay(1000);
-
   try {
-    const client = new ioredis(`//${process.env.REDIS}`);
-
     client.on('error', err => {
       log('IORedis client error:', err);
     });
@@ -37,8 +42,9 @@ log(logPrefix);
       log(`Connected to client 1 (${process.env.REDIS}).`);
     });
 
-    const multi = await client.multi().set('key', 'value').get('key').exec();
-    log('multi result: %s', multi);
+    const resp = await client.multi().set('key', 'value').get('key').exec();
+
+    log('multi result: %s, %s', resp);
 
     await client.quit();
   } catch (err) {
