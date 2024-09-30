@@ -43,6 +43,7 @@ function checkConnection(span, setupType) {
 //    export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
 //    export AZURE_REDIS_CLUSTER_PWD=
 ['default', 'cluster'].forEach(setupType => {
+  // TODO: Add test for cluster mode https://jsw.ibm.com/browse/INSTA-15876
   if (setupType !== 'cluster') {
     mochaSuiteFn('When allowRootExitSpan: true is set', function () {
       this.timeout(config.getTestTimeout() * 4);
