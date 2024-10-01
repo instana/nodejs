@@ -142,6 +142,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
         port: layerExtensionPort,
         path: '/heartbeat',
         method: 'POST',
+        Connection: 'close',
         // This sets a timeout for establishing the socket connection, see setTimeout below for a timeout for an
         // idle connection after the socket has been opened.
         timeout: layerExtensionTimeout
