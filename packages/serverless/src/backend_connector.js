@@ -135,6 +135,7 @@ let heartbeatInterval;
 function scheduleLambdaExtensionHeartbeatRequest() {
   const executeHeartbeat = () => {
     logger.debug('Executing Heartbeat request to Lambda extension.');
+    const startTime = Date.now();
 
     const req = uninstrumented.http.request(
       {
@@ -142,6 +143,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
         port: layerExtensionPort,
         path: '/heartbeat',
         method: 'POST',
+        Connection: 'close',
         // This sets a timeout for establishing the socket connection, see setTimeout below for a timeout for an
         // idle connection after the socket has been opened.
         timeout: layerExtensionTimeout
@@ -156,8 +158,24 @@ function scheduleLambdaExtensionHeartbeatRequest() {
             )
           );
         }
+
+        res.once('data', () => {
+          // we need to register the handlers to avoid running into a timeout
+        });
+
+        res.once('end', () => {
+          const endTime = Date.now();
+          const duration = endTime - startTime;
+          logger.debug(`Took ${duration}ms to receive response from extension`);
+        });
       }
     );
+
+    req.once('finish', () => {
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      logger.debug(`Took ${duration}ms to send data to extension`);
+    });
 
     function handleHeartbeatError(e) {
       // Make sure we do not try to talk to the Lambda extension again.
@@ -171,7 +189,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
       );
     }
 
-    req.on('error', e => {
+    req.once('error', e => {
       // req.destroyed indicates that we have run into a timeout and have already handled the timeout error.
       if (req.destroyed) {
         return;

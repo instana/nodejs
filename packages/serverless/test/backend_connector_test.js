@@ -32,18 +32,23 @@ describe('[UNIT] backend connector', () => {
     this.timeout(config.getTestTimeout());
 
     let onStub;
+    let onceStub;
     let destroyStub;
+    let setTimeoutStub;
 
     beforeEach(() => {
       sinon.spy(global, 'setInterval');
       sinon.spy(global, 'clearInterval');
 
       onStub = sinon.stub();
+      onceStub = sinon.stub();
       destroyStub = sinon.stub();
+      setTimeoutStub = sinon.stub();
 
       sinon.stub(uninstrumentedHttp.http, 'request').returns({
         on: onStub,
-        setTimeout: sinon.stub(),
+        once: onceStub,
+        setTimeout: setTimeoutStub,
         end: sinon.stub(),
         removeAllListeners: sinon.stub(),
         destroy: destroyStub
@@ -72,7 +77,7 @@ describe('[UNIT] backend connector', () => {
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(1);
 
-      const onError = onStub.getCalls().find(call => call.firstArg === 'error').callback;
+      const onError = onceStub.getCalls().find(call => call.firstArg === 'error').callback;
       onError();
 
       expect(global.clearInterval.called).to.be.true;
@@ -86,19 +91,21 @@ describe('[UNIT] backend connector', () => {
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(1);
 
+      expect(setTimeoutStub.called).to.be.true;
+      expect(destroyStub.called).to.be.false;
+
+      const firstCallArgs = setTimeoutStub.getCall(0).args;
+
+      await delay(200);
+
+      // simulate timeout of extension
+      firstCallArgs[1]();
+
       return retry(async () => {
+        expect(destroyStub.called).to.be.true;
+
         const prom = sendBundle();
         await delay(200);
-
-        const onTimeout = onStub.getCalls().find(call => call.firstArg === 'timeout').callback;
-        const onEnd = uninstrumentedHttp.http.request
-          .getCalls()
-          .find(call => call.firstArg.path === '/bundle').callback;
-
-        onTimeout();
-        expect(global.clearInterval.called).to.be.true;
-
-        setTimeout(onEnd, 200);
         await prom;
 
         expect(destroyStub.called).to.be.true;
@@ -117,7 +124,7 @@ describe('[UNIT] backend connector', () => {
         const prom = sendBundle();
         await delay(200);
 
-        const onError = onStub.getCalls().find(call => call.firstArg === 'error').callback;
+        const onError = onceStub.getCalls().find(call => call.firstArg === 'error').callback;
         const onEnd = uninstrumentedHttp.http.request
           .getCalls()
           .find(call => call.firstArg.path === '/bundle').callback;
@@ -150,10 +157,13 @@ describe('[UNIT] backend connector', () => {
         const prom = sendBundle();
         await delay(200);
 
+        const onceFinish = onceStub.getCalls().find(call => call.firstArg === 'finish').callback;
         const onFinish = onStub.getCalls().find(call => call.firstArg === 'finish').callback;
         const onEnd = uninstrumentedHttp.http.request
           .getCalls()
           .find(call => call.firstArg.path === '/bundle').callback;
+
+        onceFinish();
 
         setTimeout(onEnd, 250);
         setTimeout(onFinish, 200);
