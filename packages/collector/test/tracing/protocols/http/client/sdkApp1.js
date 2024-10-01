@@ -31,6 +31,8 @@ const main = async () => {
 };
 
 const app = async () => {
+  await delay(1000);
+
   let count = 0;
 
   while (count < 2) {
