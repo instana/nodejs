@@ -7,5 +7,5 @@ set -e
 
 
 source ./build-and-run
-buildAndRun node-22.9.0
+buildAndRun node-v22-yarn
 

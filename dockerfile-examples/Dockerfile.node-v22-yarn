@@ -2,7 +2,7 @@
 # Native addons will work since the base image (Debian Buster) has all
 # dependencies installed out of the box.
 
-FROM node:22.9.0
+FROM node:22
 WORKDIR /usr/src/app
 COPY package*.json ./
 RUN yarn
