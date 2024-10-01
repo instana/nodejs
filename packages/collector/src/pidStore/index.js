@@ -21,7 +21,7 @@ const eventName = 'pidChanged';
 const eventEmitter = new EventEmitter();
 exports.onPidChange = eventEmitter.on.bind(eventEmitter, eventName);
 
-logger.info('Starting with pid %s', internalPidStore.pid);
+logger.info('PID Store starting with pid %s', internalPidStore.pid);
 
 Object.defineProperty(exports, 'pid', {
   get: function getPid() {
