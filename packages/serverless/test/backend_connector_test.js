@@ -11,7 +11,6 @@ const uninstrumentedHttp = require('../src/uninstrumentedHttp');
 const config = require('../../core/test/config');
 const delay = require('../../core/test/test_util/delay');
 const retry = require('../../core/test/test_util/retry');
-const { set } = require('lodash');
 
 const sendBundle = async () => {
   return new Promise(resolve => {
