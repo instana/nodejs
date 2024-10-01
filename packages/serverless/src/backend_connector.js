@@ -149,9 +149,17 @@ function scheduleLambdaExtensionHeartbeatRequest() {
         timeout: layerExtensionTimeout
       },
       res => {
-        const endTime = Date.now();
-        const duration = endTime - startTime;
-        logger.info(`Took ${duration}ms to receive response from extension`);
+        res.on('data', () => {
+          // do nothing
+        });
+
+        res.on('end', () => {
+          logger.debug('Response ended.');
+
+          const endTime = Date.now();
+          const duration = endTime - startTime;
+          logger.info(`Took ${duration}ms to receive response from extension`);
+        });
 
         if (res.statusCode === 200) {
           logger.debug('The Instana Lambda extension Heartbeat request has succeeded.');
