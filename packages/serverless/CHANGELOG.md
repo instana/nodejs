@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.20.0](https://github.com/instana/nodejs/compare/v3.19.0...v3.20.0) (2024-10-01)
+
+### Bug Fixes
+
+- **lambda:** fixed heartbeat error ([#1351](https://github.com/instana/nodejs/issues/1351)) ([0c001c8](https://github.com/instana/nodejs/commit/0c001c8bdcbdb1178625463f48db03a08e0fc2d0))
+
 # [3.19.0](https://github.com/instana/nodejs/compare/v3.18.2...v3.19.0) (2024-09-25)
 
 **Note:** Version bump only for package @instana/serverless

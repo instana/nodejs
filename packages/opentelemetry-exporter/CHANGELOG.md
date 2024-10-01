@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.20.0](https://github.com/instana/nodejs/compare/v3.19.0...v3.20.0) (2024-10-01)
+
+### Features
+
+- extended typescript support ([#1349](https://github.com/instana/nodejs/issues/1349)) ([3b8abea](https://github.com/instana/nodejs/commit/3b8abeada99cc5952dd8362db54adc66cd8be7da))
+
 # [3.19.0](https://github.com/instana/nodejs/compare/v3.18.2...v3.19.0) (2024-09-25)
 
 **Note:** Version bump only for package @instana/opentelemetry-exporter

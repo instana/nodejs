@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.20.0](https://github.com/instana/nodejs/compare/v3.19.0...v3.20.0) (2024-10-01)
+
+### Bug Fixes
+
+- connected deferred exit span with original entry span ([#1346](https://github.com/instana/nodejs/issues/1346)) ([98f99e1](https://github.com/instana/nodejs/commit/98f99e18ee8323d70f07b045ff740f4d12486c30)), closes [#1297](https://github.com/instana/nodejs/issues/1297)
+- **lambda:** changed memory warning when using the lambda extension ([#1344](https://github.com/instana/nodejs/issues/1344)) ([3e94f9e](https://github.com/instana/nodejs/commit/3e94f9eeb7ba35822cc4bf663f3a8f30c3e3bcda))
+- **lambda:** fixed heartbeat error ([#1351](https://github.com/instana/nodejs/issues/1351)) ([0c001c8](https://github.com/instana/nodejs/commit/0c001c8bdcbdb1178625463f48db03a08e0fc2d0))
+
+### Features
+
+- extended typescript support ([#1349](https://github.com/instana/nodejs/issues/1349)) ([3b8abea](https://github.com/instana/nodejs/commit/3b8abeada99cc5952dd8362db54adc66cd8be7da))
+
 # [3.19.0](https://github.com/instana/nodejs/compare/v3.18.2...v3.19.0) (2024-09-25)
 
 ### Features
