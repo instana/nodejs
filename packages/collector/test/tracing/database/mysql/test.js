@@ -37,13 +37,7 @@ function registerSuite(agentControls, driverMode, useExecute) {
     return;
   }
 
-  let mochaSuiteFnForDriverMode = describe;
-  if (driverMode.includes('mysql2')) {
-    // mysql2 does no longer support Node.js < 14, see https://github.com/sidorares/node-mysql2/issues/1965
-    mochaSuiteFnForDriverMode = describe.skip;
-  }
-
-  mochaSuiteFnForDriverMode(`driver mode: ${driverMode}, access function: ${useExecute ? 'execute' : 'query'}`, () => {
+  describe(`driver mode: ${driverMode}, access function: ${useExecute ? 'execute' : 'query'}`, () => {
     const env = {
       DRIVER_MODE: driverMode
     };
@@ -55,7 +49,7 @@ function registerSuite(agentControls, driverMode, useExecute) {
     test(env, agentControls);
   });
 
-  mochaSuiteFnForDriverMode('suppressed', function () {
+  describe('suppressed', function () {
     const env = {
       DRIVER_MODE: driverMode
     };
