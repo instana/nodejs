@@ -6,49 +6,19 @@
 'use strict';
 
 const { expect } = require('chai');
-const fsPromise = require('node:fs/promises');
-const os = require('os');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
 const config = require('../../../core/test/config');
 const { retry } = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 const globalAgent = require('../globalAgent');
+const { execSync } = require('child_process');
 
-/**
- * Test suite for verifying the fallback mechanism for loading native add-ons.
- *
- * This test ensures that if a native add-on (such as event-loop-stats or gcstats.js) cannot be loaded initially,
- * the system correctly falls back to using precompiled versions of these add-ons. This ensures the application
- * functions as expected even if the native module is missing or cannot be compiled. The function `attemptRequire`,
- * defined in the shared-metrics/src/util/nativeModuleRetry  is used for the initial attempt to load the native
- * add-on module. It tries to require the native module from the root for this test, because we use npm workspaces
- * and the dependencies are hoisted to the root. If this attempt fails, the fallback mechanism is triggered.
- *
- * **Design problem of the test**:
- *
- * With `npm workspaces`, dependencies are installed in the root `node_modules` folder instead of individual
- * package `node_modules` folders. This can complicate managing the installed native modules and their copied
- * precompiled binaries, as the fallback mechanism must copy to the correct path. This test verifying that
- *  precompiled binaries are copied and loaded correctly to the @instana/shared-metrics/node_modules folder.
- * The test is **mis-designed**, because the test should not use the local dev environment to check the presence
- * of precompiled binaries. Instead it should create a tmp folder.
- *
- * **Test Design**:
- *
- * 1. **Setup**:
- *    - The installed native module is temporarily moved to a backup directory to simulate its absence. As the system
- *      first tries to require the native module from the root, so we relocate the modules.
- *
- * 2. **Fallback Mechanism**:
- *    - The test checks if the fallback mechanism correctly copies the precompiled binaries to the appropriate directory
- *      when the native module is not found.
- *
- * Note: Currently, we are not addressing the wrong test design because there will be a migration to a tool called
- *  prebuildify in the near future, which will change the whole feature. refs: INSTA-770
- */
+const tmpFolder = path.join(os.tmpdir(), 'native-module-retry', process.pid.toString());
 
+// Test suite for verifying the fallback mechanism for loading native add-ons.
 describe('retry loading native addons', function () {
   const timeout = Math.max(config.getTestTimeout(), 20000);
   this.timeout(timeout);
@@ -59,8 +29,6 @@ describe('retry loading native addons', function () {
   const metricAddonsTestConfigs = [
     {
       name: 'event-loop-stats',
-      nativeModuleFolder: path.dirname(require.resolve('event-loop-stats/package.json')),
-      backupPath: path.join(os.tmpdir(), 'event-loop-stats-backup'),
       check: ([aggregated]) => {
         const libuv = aggregated.libuv;
         expect(libuv).to.exist;
@@ -75,8 +43,6 @@ describe('retry loading native addons', function () {
     },
     {
       name: 'gcstats.js',
-      nativeModuleFolder: path.dirname(require.resolve('gcstats.js/package.json')),
-      backupPath: path.join(os.tmpdir(), 'gcstats.js-backup'),
       check: ([aggregated]) => {
         // The for loop above ensures that the first metric POST that had the gc payload
         // had gc.statsSupported == undefined. Now we check that at some point, the supported flag changed to true.
@@ -91,114 +57,97 @@ describe('retry loading native addons', function () {
     }
   ];
 
-  describe('metrics are activated lazily by copying precompiled binaries when they are initially missing', () => {
-    metricAddonsTestConfigs.forEach(runCopyPrecompiledForNativeAddonTest.bind(this, agentControls));
+  metricAddonsTestConfigs.forEach(async opts => {
+    describe(`${opts.name}: expect metrics to show up`, function () {
+      let controls;
+
+      const check = async copiedBinaryPath => {
+        const targetDirectory = 'precompiled';
+
+        const directoryPath = path.join(copiedBinaryPath, targetDirectory);
+        ['binding.gyp', 'build', 'package.json', 'src'].forEach(file => {
+          expect(fs.existsSync(path.join(directoryPath, file))).to.be.true;
+        });
+
+        if (directoryPath.includes('event-loop-stats')) {
+          expect(fs.existsSync(path.join(directoryPath, 'src', 'eventLoopStats.cc'))).to.be.true;
+          expect(fs.existsSync(path.join(directoryPath, 'src', 'eventLoopStats.js'))).to.be.true;
+          expect(fs.existsSync(path.join(directoryPath, 'build', 'Release', 'eventLoopStats.node'))).to.be.true;
+        }
+
+        if (directoryPath.includes('gcstats.js')) {
+          expect(fs.existsSync(path.join(directoryPath, 'src', 'gcstats.cc'))).to.be.true;
+          expect(fs.existsSync(path.join(directoryPath, 'src', 'gcstats.js'))).to.be.true;
+          expect(fs.existsSync(path.join(directoryPath, 'build', 'Release', 'gcstats.node'))).to.be.true;
+        }
+      };
+
+      before(async () => {
+        execSync(`rm -rf ${tmpFolder}`, { cwd: __dirname, stdio: 'inherit' });
+        execSync(`mkdir -p ${tmpFolder}`, { cwd: __dirname, stdio: 'inherit' });
+
+        execSync(`cp app.js package.json ${tmpFolder}/`, { cwd: __dirname, stdio: 'inherit' });
+
+        // eslint-disable-next-line no-console
+        console.log('Running npm install in', tmpFolder);
+
+        execSync('rm -rf node_modules', { cwd: tmpFolder, stdio: 'inherit' });
+        execSync('npm install --prefix ./', { cwd: tmpFolder, stdio: 'inherit' });
+        execSync(`rm -rf node_modules/${opts.name}`, { cwd: tmpFolder, stdio: 'inherit' });
+
+        if (fs.existsSync(path.join(tmpFolder, 'node_modules', opts.name))) {
+          throw new Error('The module should not be present at this point');
+        }
+
+        // Currently we do not ship darwin prebuilds via shared-metrics
+        // See package.json
+        execSync(
+          `cp -R ../../../shared-metrics/addons/darwin ${tmpFolder}/node_modules/@instana/shared-metrics/addons/`,
+          {
+            cwd: __dirname,
+            stdio: 'inherit'
+          }
+        );
+
+        controls = new ProcessControls({
+          appPath: path.join(tmpFolder, 'app'),
+          agentControls,
+          useGlobalAgent: true,
+          env: {
+            DEV_PATH: __dirname
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
+
+      describe(opts.name, () => {
+        it('metrics from native add-ons should become available at some point', async () => {
+          await retry(() =>
+            Promise.all([
+              //
+              agentControls.getAggregatedMetrics(controls.getPid()),
+              agentControls.getEvents()
+            ]).then(opts.check)
+          );
+        });
+
+        it('should successfully copy the precompiled binaries', async () => {
+          await check(path.join(tmpFolder, 'node_modules', opts.name));
+        });
+      });
+    });
   });
 });
-
-function runCopyPrecompiledForNativeAddonTest(agentControls, opts) {
-  let controls;
-
-  const rename = async (oldPath, newPath) => {
-    try {
-      await fsPromise.rename(oldPath, newPath);
-    } catch (err) {
-      if (err.code === 'EXDEV' || err.code === 'ENOTEMPTY') {
-        await copyFolder(oldPath, newPath);
-        await fsPromise.rm(oldPath, { recursive: true });
-      } else {
-        throw err;
-      }
-    }
-  };
-
-  async function copyFolder(src, dest) {
-    await fsPromise.mkdir(dest, { recursive: true });
-    const entries = await fsPromise.readdir(src, { withFileTypes: true });
-
-    const copyPromises = entries.map(async entry => {
-      const srcPath = `${src}/${entry.name}`;
-      const destPath = `${dest}/${entry.name}`;
-
-      if (entry.isDirectory()) {
-        await copyFolder(srcPath, destPath);
-      } else {
-        await fsPromise.copyFile(srcPath, destPath);
-      }
-    });
-
-    await Promise.all(copyPromises);
-  }
-  const check = async copiedBinaryPath => {
-    const targetDirectory = 'precompiled';
-
-    const directoryPath = path.join(copiedBinaryPath, targetDirectory);
-    ['binding.gyp', 'build', 'package.json', 'src'].forEach(file => {
-      expect(fs.existsSync(path.join(directoryPath, file))).to.be.true;
-    });
-
-    if (directoryPath.includes('event-loop-stats')) {
-      expect(fs.existsSync(path.join(directoryPath, 'src', 'eventLoopStats.cc'))).to.be.true;
-      expect(fs.existsSync(path.join(directoryPath, 'src', 'eventLoopStats.js'))).to.be.true;
-      expect(fs.existsSync(path.join(directoryPath, 'build', 'Release', 'eventLoopStats.node'))).to.be.true;
-    }
-
-    if (directoryPath.includes('gcstats.js')) {
-      expect(fs.existsSync(path.join(directoryPath, 'src', 'gcstats.cc'))).to.be.true;
-      expect(fs.existsSync(path.join(directoryPath, 'src', 'gcstats.js'))).to.be.true;
-      expect(fs.existsSync(path.join(directoryPath, 'build', 'Release', 'gcstats.node'))).to.be.true;
-    }
-  };
-
-  before(async () => {
-    // remove the dependency temporarily
-    await rename(opts.nativeModuleFolder, opts.backupPath);
-
-    controls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      agentControls,
-      useGlobalAgent: true
-      // by default, only copying precompiled binaries is enabled and recompiling them on demand is not
-    });
-
-    await controls.startAndWaitForAgentConnection();
-  });
-
-  beforeEach(async () => {
-    await agentControls.clearReceivedTraceData();
-  });
-
-  after(async () => {
-    await controls.stop();
-    await rename(opts.backupPath, opts.nativeModuleFolder);
-  });
-
-  afterEach(async () => {
-    await controls.clearIpcMessages();
-  });
-
-  describe(opts.name, () => {
-    it('metrics from native add-ons should become available at some point', () =>
-      retry(() =>
-        Promise.all([
-          //
-          agentControls.getAggregatedMetrics(controls.getPid()),
-          agentControls.getEvents()
-        ]).then(opts.check)
-      ));
-    it('should successfully copy the precompiled binaries', async () => {
-      // During testing, the precompiled binaries are copied to the node_modules/@instana/shared-metrics directory.
-      // However, npm workspaces installs the packages in the root node_modules directory.
-      const copiedBinaryPath = require('path').join(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        'shared-metrics',
-        'node_modules',
-        `${opts.name}`
-      );
-      await check(copiedBinaryPath);
-    });
-  });
-}

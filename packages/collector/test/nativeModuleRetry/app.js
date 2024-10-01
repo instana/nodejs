@@ -11,23 +11,15 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const instana = require('../..');
-// In prodction, @instana/shared-metrics is in a path like node_modules/@instana/shared-metrics and nativeModuleRetry
-// relies on that structure. In this test scenario, it is in packages/shared-metrics and we need to work around this.
-instana.sharedMetrics.util.nativeModuleRetry.selfNodeModulesPath = require('path').join(
-  __dirname,
-  '..',
-  '..',
-  '..',
-  'shared-metrics',
-  'node_modules'
-);
-instana({
+require('@instana/collector')({
   level: 'debug'
 });
 
 const http = require('http');
-const port = require('../test_util/app-port')();
+const path = require('path');
+
+const devPath = process.env.DEV_PATH;
+const port = require(path.join(devPath, '..', 'test_util', 'app-port'))();
 
 const requestHandler = (request, response) => {
   if (request.url === '/') {
