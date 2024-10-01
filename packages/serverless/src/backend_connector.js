@@ -172,6 +172,18 @@ function scheduleLambdaExtensionHeartbeatRequest() {
       );
     }
 
+    const startTime = Date.now();
+    req.on('finish', () => {
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      logger.info(`Took ${duration}ms to send data to extension`);
+    });
+    req.on('response', () => {
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      logger.info(`Took ${duration}ms to receive response from extension`);
+    });
+
     req.on('error', e => {
       // req.destroyed indicates that we have run into a timeout and have already handled the timeout error.
       if (req.destroyed) {
