@@ -174,7 +174,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
     req.once('finish', () => {
       const endTime = Date.now();
       const duration = endTime - startTime;
-      logger.info(`Took ${duration}ms to send data to extension`);
+      logger.debug(`Took ${duration}ms to send data to extension`);
     });
 
     function handleHeartbeatError(e) {
