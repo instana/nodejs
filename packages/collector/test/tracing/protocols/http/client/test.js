@@ -7,7 +7,6 @@
 
 const path = require('path');
 const expect = require('chai').expect;
-const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -36,7 +35,7 @@ mochaSuiteFn('tracing/http client', function () {
   registerConnectionRefusalTest.call(this, false);
   registerConnectionRefusalTest.call(this, true);
 
-  const runSuperagent = semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
+  const runSuperagent = supportedVersion(process.versions.node) ? describe : describe.skip;
   runSuperagent('superagent', function () {
     registerSuperagentTest.call(this);
   });
@@ -342,11 +341,7 @@ function registerTests(useHttps) {
               span =>
                 expect(span.data.http.url).to.match(/ha-te-te-peh:\/\/999\.0\.0\.1(?:\/)?:not-a-port\/malformed-url/),
               span => {
-                if (semver.gte(process.version, '16.0.0')) {
-                  expect(span.data.http.error).to.match(/Invalid URL/);
-                } else {
-                  expect(span.data.http.error).to.match(/Protocol .* not supported./);
-                }
+                expect(span.data.http.error).to.match(/Invalid URL/);
               },
               span => expect(span.t).to.equal(entrySpan.t),
               span => expect(span.p).to.equal(entrySpan.s)

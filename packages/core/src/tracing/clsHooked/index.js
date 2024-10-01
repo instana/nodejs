@@ -15,7 +15,7 @@ const semver = require('semver');
  * - Node.js >= 18: AsyncLocalStorage
  * - Node.js < 18: Legacy implementation
  *
- * Known Bugs:
+ * Previous known Bugs:
  * - Node.js 16.7 introduced a bug that breaks AsyncLocalStorage:
  *   https://github.com/nodejs/node/issues/40693
  *   This bug affected the functionality of AsyncLocalStorage until it was fixed in:

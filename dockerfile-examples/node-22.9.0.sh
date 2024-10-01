@@ -7,5 +7,5 @@ set -e
 
 
 source ./build-and-run
-buildAndRun node-16.13.0-alpine-3.14
+buildAndRun node-22.9.0
 

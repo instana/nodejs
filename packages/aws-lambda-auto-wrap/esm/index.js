@@ -9,7 +9,6 @@ const localUtils = require('./utils');
 
 const majorNodeVersion = Number(process.versions.node.split('.')[0]);
 
-// CASE: ES support was added in Node v14, throw error if the handler is used in < 14
 // NOTE: The esm handler can be used for Lambdas with commonjs or es module.
 //       See https://github.com/nodejs/node/pull/35249
 // NOTE: v4 dropped support for < Node v18

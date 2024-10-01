@@ -5,7 +5,6 @@
 'use strict';
 
 const expect = require('chai').expect;
-const semver = require('semver');
 const fetch = require('node-fetch-v2');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -72,10 +71,8 @@ const verifySpans = (agentControls, controls, options = {}) =>
   });
 
 // The Couchbase Node.js client is compatible with supported LTS versions of Node.js.
-// The supported LTS versions start from v18, as support for Node.js v16.x is no longer maintained.
 // see: https://github.com/nodejs/node-addon-api/releases/tag/v8.0.0
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 let tries = 0;
 const maxTries = 100;
