@@ -149,18 +149,6 @@ function scheduleLambdaExtensionHeartbeatRequest() {
         timeout: layerExtensionTimeout
       },
       res => {
-        res.on('data', () => {
-          // do nothing
-        });
-
-        res.on('end', () => {
-          logger.debug('Response ended.');
-
-          const endTime = Date.now();
-          const duration = endTime - startTime;
-          logger.info(`Took ${duration}ms to receive response from extension`);
-        });
-
         if (res.statusCode === 200) {
           logger.debug('The Instana Lambda extension Heartbeat request has succeeded.');
         } else {
@@ -170,10 +158,20 @@ function scheduleLambdaExtensionHeartbeatRequest() {
             )
           );
         }
+
+        res.once('data', () => {
+          // we need to register the handlers to avoid running into a timeout
+        });
+
+        res.once('end', () => {
+          const endTime = Date.now();
+          const duration = endTime - startTime;
+          logger.debug(`Took ${duration}ms to receive response from extension`);
+        });
       }
     );
 
-    req.on('finish', () => {
+    req.once('finish', () => {
       const endTime = Date.now();
       const duration = endTime - startTime;
       logger.info(`Took ${duration}ms to send data to extension`);
@@ -191,7 +189,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
       );
     }
 
-    req.on('error', e => {
+    req.once('error', e => {
       // req.destroyed indicates that we have run into a timeout and have already handled the timeout error.
       if (req.destroyed) {
         return;
