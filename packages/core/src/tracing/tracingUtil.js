@@ -11,7 +11,7 @@ const StringDecoder = require('string_decoder').StringDecoder;
 
 const stackTrace = require('../util/stackTrace');
 
-/** @type {import('../logger').GenericLogger} */
+/** @type {import('../core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('tracing/tracingUtil', newLogger => {
   logger = newLogger;
@@ -156,7 +156,7 @@ function writeHexToBuffer(hexString, buffer, offset) {
 }
 
 /**
- * @param {import('./cls').InstanaBaseSpan} span
+ * @param {import('../core').InstanaBaseSpan} span
  * @returns {Buffer}
  */
 exports.renderTraceContextToBuffer = function renderTraceContextToBuffer(span) {

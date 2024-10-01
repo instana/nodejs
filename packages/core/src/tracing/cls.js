@@ -11,7 +11,7 @@ const tracingUtil = require('./tracingUtil');
 const { ENTRY, EXIT, INTERMEDIATE, isExitSpan } = require('./constants');
 const hooked = require('./clsHooked');
 const tracingMetrics = require('./metrics');
-/** @type {import('../logger').GenericLogger} */
+/** @type {import('../core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('tracing/cls', newLogger => {
   logger = newLogger;
@@ -49,46 +49,6 @@ function init(config, _processIdentityProvider) {
   }
   processIdentityProvider = _processIdentityProvider;
 }
-
-/**
- * This type is to be used across the code base, as we don't have a public explicit type for a span.
- * Also, it is often that we simply create a literal object and gradually throw few properties on it and
- * handle them as spans. This type has all span properties, but they are all optional, so we can safely
- * type these literal objects.
- * TODO: move InstanaSpan and InstanaPseudoSpan to their own file and make them publicly accessible?
- * @typedef {Object} InstanaBaseSpan
- * @property {string} [t] trace ID
- * @property {string} [p] parent span ID
- * @property {string} [s] span ID
- * @property {string} [n] type/name
- * @property {number} [k] kind
- * @property {number} [ec] error count
- * @property {number} [_ec] internal property for error count
- * @property {boolean} [ecHasBeenSetManually] whether the error count has been set manually via the SDK
- * @property {number} [ts] timestamp
- * @property {number} [d] duration
- * @property {{e?: string, h?: string, hl?: boolean, cp?: string}} [f] from section
- * @property {boolean} [tp] trace ID is from traceparent header
- * @property {string} [lt] long trace ID
- * @property {object} [ia] closest Instana ancestor span
- * @property {string} [crtp] correlation type
- * @property {string} [crid] correlation ID
- * @property {boolean} [sy] synthetic marker
- * @property {boolean} [pathTplFrozen] pathTplFrozen
- * @property {boolean} [transmitted] transmitted
- * @property {boolean} [manualEndMode] manualEndMode
- * @property {*} [stack] stack trace
- * @property {Object.<string, *>} [data]
- * @property {{s?: number, d?: number}} [b] batching information
- * @property {*} [gqd] GraphQL destination
- * @property {Function} [transmit]
- * @property {Function} [freezePathTemplate]
- * @property {Function} [disableAutoEnd]
- * @property {Function} [transmitManual]
- * @property {Function} [cancel]
- * @property {Function} [addCleanup]
- * @property {Function} [cleanup]
- */
 
 class InstanaSpan {
   /**
@@ -390,7 +350,7 @@ function setCurrentSpan(span) {
 /**
  * Get the currently active span.
  * @param {boolean} [fallbackToSharedContext=false]
- * @returns {InstanaBaseSpan}
+ * @returns {import('../core').InstanaBaseSpan}
  */
 function getCurrentSpan(fallbackToSharedContext = false) {
   return ns.get(currentSpanKey, fallbackToSharedContext);

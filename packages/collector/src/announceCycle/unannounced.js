@@ -12,7 +12,7 @@ const {
 } = require('@instana/core');
 const { constants: tracingConstants } = tracing;
 
-/** @type {import('@instana/core/src/logger').GenericLogger} */
+/** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('announceCycle/unannounced', newLogger => {
   logger = newLogger;

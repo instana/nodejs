@@ -13,7 +13,7 @@ coreMetrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
 const additionalCollectorMetrics = coreMetrics.findAndRequire(__dirname);
 coreMetrics.registerAdditionalMetrics(additionalCollectorMetrics);
 
-/** @type {import('@instana/core/src/logger').GenericLogger} */
+/** @type {import('@instana/core/src/core').GenericLogger} */
 const logger = require('../logger').getLogger('metrics', newLogger => {
   coreMetrics.setLogger(newLogger);
 });

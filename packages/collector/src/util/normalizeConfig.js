@@ -17,20 +17,9 @@ const defaults = {
 };
 
 /**
- * @typedef {Object} CollectorConfig
- * @property {number} [agentPort]
- * @property {string} [agentHost]
- * @property {Object.<string, *>} [tracing]
- * @property {boolean | string} [autoProfile]
- * @property {boolean} [reportUnhandledPromiseRejections]
- * @property {import('@instana/core/src/logger').GenericLogger} [logger]
- * @property {string | number} [level]
- */
-
-/**
  * Merges the config that was passed to the init function with environment variables and default values.
- * @param {CollectorConfig} config
- * @returns {CollectorConfig}
+ * @param {import('../types/collector').CollectorConfig} config
+ * @returns {import('../types/collector').CollectorConfig}
  */
 module.exports = function normalizeConfig(config = {}) {
   config.agentHost = config.agentHost || process.env.INSTANA_AGENT_HOST || defaults.agentHost;

@@ -5,7 +5,7 @@
 
 'use strict';
 
-/** @type {import('@instana/core/src/logger').GenericLogger} */
+/** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('util/initializedTooLate', newLogger => {
   logger = newLogger;

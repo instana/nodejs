@@ -8,7 +8,7 @@
 const { uninstrumentedFs: fs } = require('@instana/core');
 const path = require('path');
 
-/** @type {import('@instana/core/src/logger').GenericLogger} */
+/** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 logger = require('../../../logger').getLogger('tracing/selfPath', newLogger => {
   logger = newLogger;

@@ -372,7 +372,7 @@ exports.limitTraceId = function limitTraceId(result) {
 
 /**
  * Takes the result of fromHttpReques/fromHeaders and sets the required attributes on the span.
- * @param {import('./cls').InstanaBaseSpan} span
+ * @param {import('../core').InstanaBaseSpan} span
  * @param {TracingHeaders} tracingHeaders
  */
 exports.setSpanAttributes = function (span, tracingHeaders) {

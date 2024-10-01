@@ -7,7 +7,7 @@
 
 const constants = require('./constants');
 
-/** @type {import('../logger').GenericLogger} */
+/** @type {import('../core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('tracing/spanHandle', newLogger => {
   logger = newLogger;
@@ -15,7 +15,7 @@ logger = require('../logger').getLogger('tracing/spanHandle', newLogger => {
 
 /**
  * Provides very limited access from client code to the current active span.
- * @param {import('./cls').InstanaBaseSpan} _span
+ * @param {import('../core').InstanaBaseSpan} _span
  */
 function SpanHandle(_span) {
   this.span = _span;
@@ -261,7 +261,7 @@ SpanHandle.prototype._annotateErrorMessage = function _annotateErrorMessage(erro
 };
 
 /**
- * @param {import('./cls').InstanaBaseSpan} span
+ * @param {import('../core').InstanaBaseSpan} span
  * @param {string|Array.<string>} message
  */
 function findAndAnnotateErrorMessage(span, message) {

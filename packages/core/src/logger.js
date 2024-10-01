@@ -10,17 +10,7 @@ let parentLogger = null;
 /** @type {*} */
 const registry = {};
 
-/**
- * @typedef {Object} GenericLogger
- * @property {(...args: *) => void} [trace]
- * @property {(...args: *) => void} debug
- * @property {(...args: *) => void} info
- * @property {(...args: *) => void} warn
- * @property {(...args: *) => void} error
- * @property {*} [child]
- */
-
-/** @type {GenericLogger} */
+/** @type {import('./core').GenericLogger} */
 const consoleLogger = {
   /* eslint-disable no-console */
   debug: console.log,
@@ -72,7 +62,7 @@ exports.init = function init(config = {}) {
 /**
  * @param {string} loggerName
  * @param {(arg: *) => *} [reInitFn]
- * @returns {GenericLogger}
+ * @returns {import('./core').GenericLogger}
  */
 exports.getLogger = function getLogger(loggerName, reInitFn) {
   if (!parentLogger) {
@@ -102,7 +92,7 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
 };
 
 /**
- * @param {GenericLogger} logger
+ * @param {import('./core').GenericLogger} logger
  * @returns {boolean}
  */
 function hasLoggingFunctions(logger) {

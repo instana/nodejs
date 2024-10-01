@@ -35,7 +35,7 @@ let byModuleNameTransformers = {};
 let byFileNamePatternTransformers = [];
 const origLoad = /** @type {*} */ (Module)._load;
 
-/** @type {import('../logger').GenericLogger} */
+/** @type {import('../core').GenericLogger} */
 let logger;
 
 logger = require('../logger').getLogger('util/requireHook', newLogger => {

@@ -15,7 +15,7 @@ const getCls = tracing.getCls;
 
 const selfPath = require('./selfPath');
 
-/** @type {import('@instana/core/src/logger').GenericLogger} */
+/** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 logger = require('../../../logger').getLogger('tracing/child_process', newLogger => {
   logger = newLogger;

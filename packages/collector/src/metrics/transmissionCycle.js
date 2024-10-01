@@ -7,7 +7,7 @@
 
 const { clone, compression } = require('@instana/core').util;
 
-/** @type {import('@instana/core/src/logger').GenericLogger} */
+/** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('metrics/sender', newLogger => {
   logger = newLogger;

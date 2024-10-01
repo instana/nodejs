@@ -26,7 +26,7 @@ module.exports = function unset(context, key, value) {
  * like data, stackTrace, etc. are not stored.
  * @param {import('./context').InstanaCLSContext} context
  * @param {string} key
- * @param {import('../cls').InstanaBaseSpan} span
+ * @param {import('../../core').InstanaBaseSpan} span
  */
 function storeReducedSpan(context, key, span) {
   // We keep a reduced record of spans after having sent them to the agent. This serves two purposes:
