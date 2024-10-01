@@ -197,7 +197,12 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/get-${apiType}`
           })
           .then(resp => {
+            if (resp.err) {
+              throw new Error(resp.err);
+            }
+
             expect(resp.result).to.eql({ foo: 1, bar: 2 });
+
             return retry(() =>
               verifySpans(agentControls, controls, {
                 spanLength: 3,
@@ -230,6 +235,10 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/get-buckets-${apiType}`
           })
           .then(resp => {
+            if (resp.err) {
+              throw new Error(resp.err);
+            }
+
             expect(resp.success).to.eql(true);
 
             return retry(() =>
@@ -254,6 +263,10 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/getAndTouch-${apiType}`
           })
           .then(resp => {
+            if (resp.err) {
+              throw new Error(resp.err);
+            }
+
             expect(resp.success).to.eql(true);
             return retry(() => verifySpans(agentControls, controls, { sql: 'GETANDTOUCH' }));
           }));
@@ -265,7 +278,12 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/replace-${apiType}`
           })
           .then(resp => {
+            if (resp.err) {
+              throw new Error(resp.err);
+            }
+
             expect(resp.result).to.eql('replacedvalue');
+
             return retry(() =>
               verifySpans(agentControls, controls, {
                 spanLength: 3,
@@ -288,6 +306,10 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/insert-${apiType}`
           })
           .then(resp => {
+            if (resp.err) {
+              throw new Error(resp.err);
+            }
+
             expect(resp.success).to.eql(true);
             return retry(() => verifySpans(agentControls, controls, { sql: 'INSERT' }));
           }));
@@ -299,6 +321,10 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/upsert-${apiType}`
           })
           .then(resp => {
+            if (resp.err) {
+              throw new Error(resp.err);
+            }
+
             expect(resp.success).to.eql(true);
             return retry(() => verifySpans(agentControls, controls, { sql: 'UPSERT' }));
           }));
@@ -310,6 +336,10 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/mutateIn-${apiType}`
           })
           .then(resp => {
+            if (resp.err) {
+              throw new Error(resp.err);
+            }
+
             expect(resp.success).to.eql(true);
             return retry(() => verifySpans(agentControls, controls, { sql: 'MUTATEIN' }));
           }));
@@ -321,6 +351,10 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/lookupIn-${apiType}`
           })
           .then(resp => {
+            if (resp.err) {
+              throw new Error(resp.err);
+            }
+
             expect(resp.result).to.eql(2);
             return retry(() => verifySpans(agentControls, controls, { sql: 'LOOKUPIN' }));
           }));
@@ -332,6 +366,10 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/exists-${apiType}`
           })
           .then(resp => {
+            if (resp.err) {
+              throw new Error(resp.err);
+            }
+
             expect(resp.result).to.eql(true);
             return retry(() => verifySpans(agentControls, controls, { sql: 'EXISTS' }));
           }));
@@ -343,6 +381,10 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/remove-${apiType}`
           })
           .then(resp => {
+            if (resp.err) {
+              throw new Error(resp.err);
+            }
+
             expect(resp.success).to.eql(true);
             return retry(() => verifySpans(agentControls, controls, { sql: 'REMOVE' }));
           }));
@@ -354,7 +396,12 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/searchindexes-${apiType}`
           })
           .then(resp => {
+            if (resp.err) {
+              throw new Error(resp.err);
+            }
+
             expect(resp.success).to.eql(true);
+
             return retry(() =>
               verifySpans(agentControls, controls, {
                 spanLength: 5,
@@ -403,6 +450,10 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/analyticsindexes-${apiType}`
           })
           .then(resp => {
+            if (resp.err) {
+              throw new Error(resp.err);
+            }
+
             expect(resp.success).to.eql(true);
 
             return retry(() =>
@@ -492,7 +543,12 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/searchquery-${apiType}`
           })
           .then(resp => {
+            if (resp.err) {
+              throw new Error(resp.err);
+            }
+
             expect(resp.success).to.eql(true);
+
             return retry(() =>
               verifySpans(agentControls, controls, {
                 spanLength: 4,
@@ -519,6 +575,10 @@ mochaSuiteFn('tracing/couchbase', function () {
               path: `/transactions-${apiType}`
             })
             .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
               expect(resp.success).to.eql(true);
 
               return retry(() =>
@@ -564,6 +624,10 @@ mochaSuiteFn('tracing/couchbase', function () {
               path: `/transactions-${apiType}?rollback=true`
             })
             .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
               expect(resp.success).to.eql(true);
 
               return retry(() =>
@@ -603,6 +667,10 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/queryindexes-${apiType}`
           })
           .then(resp => {
+            if (resp.err) {
+              throw new Error(resp.err);
+            }
+
             expect(resp.success).to.eql(true);
 
             return retry(() =>
@@ -694,6 +762,10 @@ mochaSuiteFn('tracing/couchbase', function () {
               path: `/multiple-connections-${apiType}`
             })
             .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
               expect(resp.success).to.eql(true);
 
               return retry(() =>
@@ -731,6 +803,10 @@ mochaSuiteFn('tracing/couchbase', function () {
               path: `/datastructures-list-${apiType}`
             })
             .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
               expect(resp.iteratedItems).to.eql(['test1', 'test2']);
 
               return retry(() =>
@@ -770,6 +846,10 @@ mochaSuiteFn('tracing/couchbase', function () {
               path: `/datastructures-map-${apiType}`
             })
             .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
               expect(resp.iteratedItems).to.eql(['test1', 'test2']);
 
               return retry(() =>
@@ -810,6 +890,10 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/remove-${apiType}?error=true`
           })
           .then(resp => {
+            if (resp.err) {
+              throw new Error(resp.err);
+            }
+
             expect(resp.errMsg).to.eql(apiType === 'promise' ? 'invalid argument' : 'document not found');
 
             return retry(() =>
