@@ -135,6 +135,7 @@ let heartbeatInterval;
 function scheduleLambdaExtensionHeartbeatRequest() {
   const executeHeartbeat = () => {
     logger.debug('Executing Heartbeat request to Lambda extension.');
+    const startTime = Date.now();
 
     const req = uninstrumented.http.request(
       {
@@ -148,6 +149,10 @@ function scheduleLambdaExtensionHeartbeatRequest() {
         timeout: layerExtensionTimeout
       },
       res => {
+        const endTime = Date.now();
+        const duration = endTime - startTime;
+        logger.info(`Took ${duration}ms to receive response from extension`);
+
         if (res.statusCode === 200) {
           logger.debug('The Instana Lambda extension Heartbeat request has succeeded.');
         } else {
@@ -160,6 +165,12 @@ function scheduleLambdaExtensionHeartbeatRequest() {
       }
     );
 
+    req.on('finish', () => {
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      logger.info(`Took ${duration}ms to send data to extension`);
+    });
+
     function handleHeartbeatError(e) {
       // Make sure we do not try to talk to the Lambda extension again.
       useLambdaExtension = false;
@@ -171,18 +182,6 @@ function scheduleLambdaExtensionHeartbeatRequest() {
         e
       );
     }
-
-    const startTime = Date.now();
-    req.on('finish', () => {
-      const endTime = Date.now();
-      const duration = endTime - startTime;
-      logger.info(`Took ${duration}ms to send data to extension`);
-    });
-    req.on('response', () => {
-      const endTime = Date.now();
-      const duration = endTime - startTime;
-      logger.info(`Took ${duration}ms to receive response from extension`);
-    });
 
     req.on('error', e => {
       // req.destroyed indicates that we have run into a timeout and have already handled the timeout error.
