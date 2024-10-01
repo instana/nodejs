@@ -18,7 +18,7 @@ describe('esm wrapper', function () {
         require('../esm/index');
       } catch (e) {
         expect(e.message).to.eql(
-          `ES Module support was added in Node v14. Your Lambda function is using ${majorNodeVersion}.` +
+          `Your Lambda function is using ${majorNodeVersion}.` +
             "Please use the 'instana-aws-lambda-auto-wrap.handler' as runtime handler."
         );
       }
