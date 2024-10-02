@@ -6,15 +6,13 @@
 
 const instana = require('@instana/aws-lambda');
 const localUtils = require('./utils');
-
-const majorNodeVersion = Number(process.versions.node.split('.')[0]);
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
 // NOTE: The esm handler can be used for Lambdas with commonjs or es module.
 //       See https://github.com/nodejs/node/pull/35249
-// NOTE: v4 dropped support for < Node v18
-if (majorNodeVersion < 18) {
+if (!supportedVersion(process.versions.node)) {
   throw new localUtils.errors.lambda.ImportModuleError(
-    `Your Lambda function is using ${majorNodeVersion}. This version is not supported.` +
+    `Your Lambda function is using ${process.versions.node}. This version is not supported.` +
       'Please use a layer version which is compatible with your Node.js version.' +
       'See https://www.ibm.com/docs/en/instana-observability/current?topic=lambda-aws-native-tracing-nodejs'
   );

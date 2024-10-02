@@ -8,9 +8,10 @@ const sinon = require('sinon');
 const semver = require('semver');
 const expect = require('chai').expect;
 const instana = require('@instana/aws-lambda');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
 describe('esm wrapper', function () {
-  if (semver.lt(process.versions.node, '18.0.0')) {
+  if (!supportedVersion(process.versions.node)) {
     const majorNodeVersion = semver.major(process.versions.node);
 
     it(`should throw error for Node v${majorNodeVersion}`, () => {
