@@ -22,8 +22,7 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const expectExactlyNMatching = require('@instana/core/test/test_util/expectExactlyNMatching');
 
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 function checkConnection(span, setupType) {
   if (setupType === 'cluster') {
