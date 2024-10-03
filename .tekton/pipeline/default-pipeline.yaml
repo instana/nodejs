@@ -40,6 +40,8 @@ spec:
       value: $(params.context)
     - name: skip-cache
       value: $(params.skip-cache)
+    - name: prerelease
+      value: $(params.prerelease)   
   workspaces:
     - name: artifacts
   tasks:
@@ -201,6 +203,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -224,6 +228,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -247,6 +253,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -270,6 +278,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -293,6 +303,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -316,6 +328,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -339,6 +353,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -362,6 +378,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -385,6 +403,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -408,6 +428,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -431,6 +453,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -454,6 +478,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -477,6 +503,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -500,6 +528,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -523,6 +553,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -546,6 +578,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -569,6 +603,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -592,6 +628,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -615,6 +653,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -638,6 +678,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -661,6 +703,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -684,6 +728,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -707,6 +753,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
@@ -730,6 +778,8 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)    
       workspaces:
         - name: output
           workspace: artifacts
