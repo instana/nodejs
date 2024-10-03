@@ -371,7 +371,7 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
           --license-info $LICENSE \
           --zip-file fileb://$ZIP_NAME \
           --output json \
-          --compatible-runtimes nodejs14.x nodejs16.x nodejs18.x nodejs20.x \
+          --compatible-runtimes nodejs18.x nodejs20.x \
           | jq '.Version' \
       )
 
