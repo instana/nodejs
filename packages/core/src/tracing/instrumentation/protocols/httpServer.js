@@ -17,7 +17,10 @@ const {
 } = require('./captureHttpHeadersUtil');
 const shimmer = require('../../shimmer');
 const cls = require('../../cls');
-
+let logger;
+logger = require('../../../logger').getLogger('tracing/httpServer', newLogger => {
+  logger = newLogger;
+});
 let extraHttpHeadersToCapture;
 let isActive = false;
 
@@ -65,7 +68,7 @@ function shimEmit(realEmit) {
       if (res && res.on && res.addListener && res.emit) {
         cls.ns.bindEmitter(res);
       }
-
+      logInstanaHeaders(req);
       const headers = tracingHeaders.fromHttpRequest(req);
       const w3cTraceContext = headers.w3cTraceContext;
 
@@ -202,4 +205,13 @@ function shimEmit(realEmit) {
       return realEmit.apply(originalThis, originalArgs);
     });
   };
+}
+function logInstanaHeaders(req) {
+  if (req.headers) {
+    Object.keys(req.headers).forEach(header => {
+      if (header?.toLowerCase()?.startsWith('x-instana')) {
+        logger.debug(`Instana header found in the request: ${header}: ${req.headers[header]}`);
+      }
+    });
+  }
 }
