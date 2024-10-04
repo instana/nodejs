@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.20.1](https://github.com/instana/nodejs/compare/v3.20.0...v3.20.1) (2024-10-04)
+
+### Bug Fixes
+
+- added log to capture instana headers from incoming request ([89c3051](https://github.com/instana/nodejs/commit/89c30514385b90f78cdf3ca8f51e95c8db77f533))
+- resolved ts error "instana.currentSpan is not a type" ([#1357](https://github.com/instana/nodejs/issues/1357)) ([f32b3c1](https://github.com/instana/nodejs/commit/f32b3c1b1f448f2511454a3ad4d74456b8082b01))
+
 # [3.20.0](https://github.com/instana/nodejs/compare/v3.19.0...v3.20.0) (2024-10-01)
 
 ### Bug Fixes
