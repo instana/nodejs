@@ -17,6 +17,10 @@ export type InitFunction = {
   (config?: CollectorConfig): Init;
   sdk: any;
   core: any;
+  currentSpan: any;
+  isTracing: any;
+  isConnected: any;
+  setLogger: any;
   sharedMetrics: any;
   experimental: any;
   opentracing: any;

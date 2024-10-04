@@ -132,7 +132,7 @@ mochaSuiteFn('tracing/api', function () {
         path: '/span/mark-as-non-erroneous'
       });
       await retry(async () => {
-        const spans = await agentControls.getSpans();
+        const spans = await pans();
         expectExactlyOneMatching(spans, [
           span => expect(span.n).to.equal('node.http.server'),
           span => expect(span.ec).to.equal(0),
