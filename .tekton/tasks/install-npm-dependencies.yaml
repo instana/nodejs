@@ -45,12 +45,8 @@ spec:
           echo "Installing npm dependencies..."
           npm install --loglevel verbose
 
-          echo "Forcing the installation of optional dependencies for the test env..."
-
           # Force non optional dependency installation
           npm install gcstats.js event-loop-stats -w packages/shared-metrics --save-dev
-
-          echo "Installed npm dependencies..."
         else
           echo "Restoring node_modules cache..."
           curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
@@ -101,12 +97,10 @@ spec:
             echo "npm install: $npmInstall"
 
             if [ "$npmInstall" == true ]; then
-              echo "Download from main was not successful. Installing node_modules..."
               npm install --loglevel verbose
 
-              echo "Forcing the installation of optional dependencies for the test env..."
+              # Force non optional dependency installation
               npm install gcstats.js event-loop-stats -w packages/shared-metrics --save-dev
-              echo "Installed npm dependencies..."
 
               rm -rf node-modules.tar.zst
               rm -rf node-modules.tar
@@ -152,23 +146,18 @@ spec:
               rm -rf node-modules.tar
 
               if [ "$npmInstall" == true ]; then
-                echo "Download from main was not successful. Installing node_modules..."
                 npm install --loglevel verbose
 
-                echo "Forcing the installation of optional dependencies for the test env..."
+                # Force non optional dependency installation
                 npm install gcstats.js event-loop-stats -w packages/shared-metrics --save-dev
-
-                echo "Installed npm dependencies..."
               fi
 
               echo "Restored node_modules cache..."
             else
               echo "Download from main was not successful. Installing node_modules..."
               npm install --loglevel verbose
-
-              echo "Forcing the installation of optional dependencies for the test env..."
+              # Force non optional dependency installation
               npm install gcstats.js event-loop-stats -w packages/shared-metrics --save-dev
-              echo "Installed npm dependencies..."
             fi
           fi
         fi
