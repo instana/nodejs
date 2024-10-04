@@ -15,7 +15,9 @@ spec:
     - name: npm-version
       value: $(params.npm-version)
     - name: skip-cache
-      value: $(params.skip-cache)      
+      value: $(params.skip-cache)   
+    - name: prelease
+      value: $(params.prelease)   
   workspaces:
     - name: output
       mountPath: /artifacts
