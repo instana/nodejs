@@ -122,5 +122,5 @@ spec:
             value: $(params.context)
           - name: skip-cache
             value: $(params.skip-cache)         
-          - name: skip-cache
-            value: $(params.skip-cache)     
+          - name: prerelease
+            value: $(params.prerelease)     
