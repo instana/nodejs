@@ -3,4 +3,4 @@ test/apps/babel-typescript/
 test/metrics/app/node_modules/
 test/metrics/npmInstalledApp/node_modules/
 test/tracing/frameworks/tsoa/build/
-test/tracing/misc/esm-typescript/
+test/tracing/misc/typescript/
