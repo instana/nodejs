@@ -24,7 +24,6 @@ spec:
     - name: npm-version
       value: $(params.npm-version)
       default: "" 
-      default: "" 
     - name: pl-name
       value: "node-$(params.node-version)"
     - name: pipeline-ref
