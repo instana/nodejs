@@ -12,7 +12,7 @@ spec:
     - name: target-branch
       value: $(params.target-branch)
     - name: type
-      value: "node-prerelease"
+      value: "prerelease"
     - name: repository
       value: $(params.repository-url)
     - name: commit-id
