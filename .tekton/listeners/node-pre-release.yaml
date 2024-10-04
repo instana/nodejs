@@ -28,12 +28,11 @@ spec:
       value: "node-$(params.node-version)"
     - name: pipeline-ref
       value: "default-pipeline"
-    - name: esm
-      value: $(params.esm)
     - name: skip-cache
       value: $(params.skip-cache)   
     - name: prerelease
       value: "true"
+      default: "true"
 
 ---
 
