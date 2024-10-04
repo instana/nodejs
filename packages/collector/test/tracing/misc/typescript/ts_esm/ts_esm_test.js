@@ -12,14 +12,20 @@ const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 const testUtils = require('@instana/core/test/test_util');
 const isLatestEsmSupportedVersion = require('@instana/core').tracing.isLatestEsmSupportedVersion;
+const semver = require('semver');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
+
 const loaderPath = isLatestEsmSupportedVersion(process.versions.node)
   ? ['--import', path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-register.mjs')]
   : ['--experimental-loader', path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-loader.mjs')];
 
-describe('Typescript TS->ESM', function () {
+mochaSuiteFn('Typescript TS->ESM', function () {
   this.timeout(config.getTestTimeout() * 5);
 
-  describe('[CASE 1]', () => {
+  mochaSuiteFn('[CASE 1]', () => {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
@@ -62,7 +68,7 @@ describe('Typescript TS->ESM', function () {
     });
   });
 
-  describe('[CASE 2]', () => {
+  mochaSuiteFn('[CASE 2]', () => {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
