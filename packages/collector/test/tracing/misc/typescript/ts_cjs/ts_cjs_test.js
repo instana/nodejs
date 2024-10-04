@@ -11,11 +11,16 @@ const config = require('@instana/core/test/config');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 const testUtils = require('@instana/core/test/test_util');
+const semver = require('semver');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
-describe('Typescript TS->JS', function () {
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
+
+mochaSuiteFn('Typescript TS->JS', function () {
   this.timeout(config.getTestTimeout() * 5);
 
-  describe('[CASE 1]', () => {
+  mochaSuiteFn('[CASE 1]', () => {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
@@ -56,7 +61,7 @@ describe('Typescript TS->JS', function () {
     });
   });
 
-  describe('[CASE 2]', () => {
+  mochaSuiteFn('[CASE 2]', () => {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
