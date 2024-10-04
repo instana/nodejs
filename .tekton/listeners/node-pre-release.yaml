@@ -12,7 +12,7 @@ spec:
     - name: target-branch
       value: $(params.target-branch)
     - name: type
-      value: "prerelease"
+      value: "node-prerelease"
     - name: repository
       value: $(params.repository-url)
     - name: commit-id
@@ -30,8 +30,9 @@ spec:
       value: "default-pipeline"
     - name: skip-cache
       value: $(params.skip-cache)   
+      default: "true"
     - name: prerelease
-      value: "true"
+      value: $(params.prerelease) 
       default: "true"
 
 ---
