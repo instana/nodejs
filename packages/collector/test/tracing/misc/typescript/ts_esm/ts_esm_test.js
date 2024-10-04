@@ -11,6 +11,10 @@ const config = require('@instana/core/test/config');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 const testUtils = require('@instana/core/test/test_util');
+const isLatestEsmSupportedVersion = require('@instana/core').tracing.isLatestEsmSupportedVersion;
+const loaderPath = isLatestEsmSupportedVersion(process.versions.node)
+  ? ['--import', path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-register.mjs')]
+  : ['--experimental-loader', path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-loader.mjs')];
 
 describe('Typescript TS->ESM', function () {
   this.timeout(config.getTestTimeout() * 5);
@@ -35,7 +39,7 @@ describe('Typescript TS->ESM', function () {
       controls = new ProcessControls({
         appPath: path.join(__dirname, 'dist', 'app_1.js'),
         useGlobalAgent: true,
-        execArgv: ['--import', path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-register.mjs')]
+        execArgv: loaderPath
       });
 
       await controls.startAndWaitForAgentConnection();
@@ -78,7 +82,7 @@ describe('Typescript TS->ESM', function () {
       controls = new ProcessControls({
         appPath: path.join(__dirname, 'dist', 'app_2.js'),
         useGlobalAgent: true,
-        execArgv: ['--import', path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-register.mjs')]
+        execArgv: loaderPath
       });
 
       await controls.startAndWaitForAgentConnection();
