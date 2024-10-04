@@ -8,7 +8,13 @@
 const constants = require('./constants');
 const { generateRandomSpanId, generateRandomTraceId, readAttribCaseInsensitive } = require('./tracingUtil');
 const w3c = require('./w3c_trace_context');
-
+/**
+ * @type {import("../core").GenericLogger}
+ */
+let logger;
+logger = require('../logger').getLogger('tracing/headers', newLogger => {
+  logger = newLogger;
+});
 let disableW3cTraceCorrelation = false;
 
 /**
@@ -99,6 +105,12 @@ exports.fromHeaders = function fromHeaders(headers) {
   let xInstanaS = readInstanaParentId(headers);
   const levelAndCorrelation = readLevelAndCorrelation(headers);
   const level = levelAndCorrelation.level;
+  // TODO: We will revisit this to implement a more effective design for logging trace level information.
+  logger.debug(
+    `Instana incoming tracing header correlation: InstanaTraceId: '${xInstanaT}', InstanaSpanId: '${xInstanaS}',` +
+      `tracelevel: '${level}'`
+  );
+
   let correlationType = levelAndCorrelation.correlationType;
   let correlationId = levelAndCorrelation.correlationId;
   const synthetic = readSyntheticMarker(headers);
