@@ -79,7 +79,7 @@
     "@aws-sdk/client-s3": "^3.665.0",
     "@aws-sdk/client-s3-v3": "npm:@aws-sdk/client-s3@3.321.1",
     "@aws-sdk/client-sns": "^3.665.0",
-    "@aws-sdk/client-sqs": "^3.662.0",
+    "@aws-sdk/client-sqs": "^3.665.0",
     "@aws-sdk/client-sqs-v3": "npm:@aws-sdk/client-sqs@3.24.0",
     "@aws-sdk/lib-dynamodb": "^3.662.0",
     "@azure/storage-blob": "^12.25.0",
