@@ -70,8 +70,6 @@ const verifySpans = (agentControls, controls, options = {}) =>
     expectExactlyOneMatching(spans, verifyCouchbaseSpan(controls, entrySpan, options));
   });
 
-// The Couchbase Node.js client is compatible with supported LTS versions of Node.js.
-// see: https://github.com/nodejs/node-addon-api/releases/tag/v8.0.0
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 let tries = 0;

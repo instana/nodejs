@@ -5,8 +5,8 @@
 'use strict';
 
 const instana = require('@instana/aws-lambda');
-const localUtils = require('./utils');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const localUtils = require('./utils');
 
 // NOTE: The esm handler can be used for Lambdas with commonjs or es module.
 //       See https://github.com/nodejs/node/pull/35249

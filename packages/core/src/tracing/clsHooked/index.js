@@ -12,7 +12,7 @@
  * which is appropriate for the version of Node.js that is running.
  * If 'INSTANA_FORCE_LEGACY_CLS' is set to 'true', the legacy implementation will be used.
  *
- * Previous known Bugs:
+ * Previous known Issues:
  * - Node.js 16.7 introduced a bug that breaks AsyncLocalStorage:
  *   https://github.com/nodejs/node/issues/40693
  *   This bug affected the functionality of AsyncLocalStorage until it was fixed in:
