@@ -25,7 +25,7 @@ const loaderPath = isLatestEsmSupportedVersion(process.versions.node)
 mochaSuiteFn('Typescript TS->ESM', function () {
   this.timeout(config.getTestTimeout() * 5);
 
-  mochaSuiteFn('[CASE 1]', () => {
+  describe('[CASE 1]', () => {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
@@ -68,7 +68,7 @@ mochaSuiteFn('Typescript TS->ESM', function () {
     });
   });
 
-  mochaSuiteFn('[CASE 2]', () => {
+  describe('[CASE 2]', () => {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
