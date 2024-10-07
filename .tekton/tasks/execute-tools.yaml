@@ -27,6 +27,9 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        echo "Node: $(node --version)"
+        echo "NPM: $(npm --version)"
+
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi

@@ -19,13 +19,13 @@ spec:
       value: $(param.commit-id)
       default: ""
     - name: node-version
-      value: $(params.node-version)
+      value: "v23"
       default: ""
     - name: npm-version
       value: $(params.npm-version)
       default: "" 
     - name: pl-name
-      value: "node-$(params.node-version)"
+      value: "node-pre-release"
     - name: pipeline-ref
       value: "default-pipeline"
     - name: skip-cache
