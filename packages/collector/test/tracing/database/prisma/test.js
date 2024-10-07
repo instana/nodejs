@@ -9,7 +9,6 @@ const fs = require('fs').promises;
 const path = require('path');
 const recursiveCopy = require('recursive-copy');
 const rimraf = require('util').promisify(require('rimraf'));
-const semver = require('semver');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
@@ -29,15 +28,7 @@ describe('tracing/prisma', function () {
 
   ['latest', 'v4', 'v450'].forEach(version => {
     providers.forEach(provider => {
-      let mochaSuiteFn = describe;
-
-      if (supportedVersion(process.versions.node)) {
-        if (version === 'latest' && semver.lt(process.versions.node, '16.0.0')) {
-          mochaSuiteFn = describe.skip;
-        }
-      } else {
-        mochaSuiteFn = describe.skip;
-      }
+      const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
       mochaSuiteFn(`[${version}] with provider ${provider}`, () => {
         if (provider === 'postgresql' && !process.env.PRISMA_POSTGRES_URL) {

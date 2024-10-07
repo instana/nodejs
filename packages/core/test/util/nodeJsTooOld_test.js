@@ -64,17 +64,17 @@ describe('util.nodeJsTooOld', () => {
 
   it('should accept Node.js 14', () => {
     setProcessVersion('v14.18.2');
-    expect(isNodeJsTooOld()).to.be.false;
+    expect(isNodeJsTooOld()).to.be.true;
   });
 
   it('should accept Node.js 16', () => {
     setProcessVersion('v16.13.1');
-    expect(isNodeJsTooOld(10)).to.be.false;
+    expect(isNodeJsTooOld(10)).to.be.true;
   });
 
   it('should accept Node.js 17', () => {
     setProcessVersion('v17.3.0');
-    expect(isNodeJsTooOld()).to.be.false;
+    expect(isNodeJsTooOld()).to.be.true;
   });
 
   it('should accept if process.version is not set', () => {
