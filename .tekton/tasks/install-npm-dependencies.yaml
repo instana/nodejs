@@ -80,10 +80,12 @@ spec:
         fi
 
         if [ "$(params.skip-cache)" == "true" ]; then
+          echo "skip-cahe is not enabled"
           echo "Skipping npm cache..."
           echo "Installing npm dependencies..."
           npm install --loglevel verbose
         else
+          echo "skip-cache is not enabled"
           echo "Restoring node_modules cache..."
           curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
           ibmcloud plugin install cloud-object-storage -f -r 'IBM Cloud'
