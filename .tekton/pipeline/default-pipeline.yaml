@@ -130,7 +130,9 @@ spec:
         - name: npm-version
           value: $(params.npm-version)
         - name: skip-cache
-          value: $(params.skip-cache)                  
+          value: $(params.skip-cache)   
+        - name: prerelease
+          value: $(params.prerelease)                 
       workspaces:
         - name: output
           workspace: artifacts
