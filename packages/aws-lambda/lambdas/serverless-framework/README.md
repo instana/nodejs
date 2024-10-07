@@ -23,5 +23,3 @@ Deploy
 Invoke Lambda Function (serverless-offline only)
 
     npm run invoke
-
-**Note**: `serverless-offline` only works with Node v14, see https://github.com/lambci/docker-lambda/issues/329.
