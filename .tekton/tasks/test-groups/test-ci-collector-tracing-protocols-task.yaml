@@ -30,6 +30,8 @@ spec:
       value: $(params.esm)
     - name: coverage
       value: $(params.coverage)
+    - name: prerelease
+      value: $(params.prerelease)   
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -80,6 +82,40 @@ spec:
         CIRCLE_COMPARE_URL=""
         MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
+
+        NODE_VERSION="v23"
+        mirrors=("https://nodejs.org/download/rc" "https://nodejs.org/download/nightly")
+
+        if [ -n "$(params.prerelease)" ]; then
+          echo "Proceeding with Node.js version: $NODE_VERSION"
+
+            if ! command -v nvm &> /dev/null; then
+              echo "NVM not found. Installing NVM..."
+              curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+
+              # Load NVM
+              export NVM_DIR="$HOME/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            else
+              export NVM_DIR="$HOME/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            fi
+
+            for mirror in "${mirrors[@]}"; do
+              NVM_NODEJS_ORG_MIRROR="$mirror" nvm install "$NODE_VERSION" && break || \
+              echo "Installation failed with mirror: $mirror"
+            done
+
+            if ! nvm ls "$NODE_VERSION" >/dev/null; then
+              echo "Both RC and Nightly installations failed for Node.js version $NODE_VERSION."
+            fi
+
+            nvm use "$NODE_VERSION"
+            echo "Currently using node: $(node --version)"
+        else
+            echo "Skipping prerelease version and using default version"
+        fi
+
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi
