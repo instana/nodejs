@@ -16,17 +16,18 @@ function normalizeArgs {
   fi
 
   local nodeJsVersion=$2
+  ROOT_DIR=$(git rev-parse --show-toplevel)
+  local MINIMUM_NODEJS_VERSION=$(getMinimumNodeVersionFromPackageJson)
    if [[ -z "${nodeJsVersion-}" ]]; then
-    ROOT_DIR=$(git rev-parse --show-toplevel)
     NVMRC_PATH="$ROOT_DIR/.nvmrc"
     NODEJS_VERSION=$(cat "$NVMRC_PATH")
-  elif [[ $nodeJsVersion -lt 14 ]]; then
-    echo "Unsupported Node version: $nodeJsVersion"
-    exit 
   else
-    NODEJS_VERSION=$nodeJsVersion
-  fi
-
+      if ! printf "%s\n%s" "$MINIMUM_NODEJS_VERSION" "$nodeJsVersion" | sort -C -V; then
+        echo "Unsupported Node.js version: $nodeJsVersion. Minimum required: $MINIMUM_NODEJS_VERSION."
+        exit 1
+    fi
+      NODEJS_VERSION=$nodeJsVersion
+fi
   local distribution=$3
   if [[ -z "${distribution-}" || $distribution = standard ]]; then
     LINUX_DISTRIBUTION=standard
@@ -94,4 +95,14 @@ function setContainerName {
   local docker_tag=$5
 
   container_name=$prefix-$nodeJsVersion$distribution-$instanaLayerMode-$docker_tag
+}
+function getMinimumNodeVersionFromPackageJson {
+  local package_json_path="$ROOT_DIR/package.json"
+  if [[ -f "$package_json_path" ]]; then
+    MINIMUM_NODEJS_VERSION=$(grep '"node":' "$package_json_path" | awk -F '"' '{print $4}' | sed 's/^>=//; s/\..*//')
+    echo "$MINIMUM_NODEJS_VERSION"
+  else
+    echo "Could not find package.json in $ROOT_DIR"
+    exit 1
+  fi
 }

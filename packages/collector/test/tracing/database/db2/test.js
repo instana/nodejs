@@ -7,7 +7,6 @@
 const dns = require('dns').promises;
 const path = require('path');
 const expect = require('chai').expect;
-const semver = require('semver');
 
 const { supportedVersion, constants } = require('@instana/core').tracing;
 const testUtils = require('../../../../../core/test/test_util');
@@ -790,11 +789,7 @@ mochaSuiteFn('tracing/db2', function () {
     });
 
     it('[with fetch and error] must trace prepare execute mixed 1', function () {
-      let expectedError = 'TypeError: Cannot read properties of null (reading';
-      if (semver.lt(process.versions.node, '16.0.0')) {
-        // For Node.js 14 and earlier, the error message is slightly different.
-        expectedError = "TypeError: Cannot read property 'fetchMode' of null";
-      }
+      const expectedError = 'TypeError: Cannot read properties of null (reading';
 
       return controls
         .sendRequest({

@@ -8,9 +8,10 @@ const sinon = require('sinon');
 const semver = require('semver');
 const expect = require('chai').expect;
 const instana = require('@instana/aws-lambda');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
 describe('esm wrapper', function () {
-  if (semver.lt(process.versions.node, '14.0.0')) {
+  if (!supportedVersion(process.versions.node)) {
     const majorNodeVersion = semver.major(process.versions.node);
 
     it(`should throw error for Node v${majorNodeVersion}`, () => {
@@ -18,7 +19,7 @@ describe('esm wrapper', function () {
         require('../esm/index');
       } catch (e) {
         expect(e.message).to.eql(
-          `ES Module support was added in Node v14. Your Lambda function is using ${majorNodeVersion}.` +
+          `Your Lambda function is using ${majorNodeVersion}.` +
             "Please use the 'instana-aws-lambda-auto-wrap.handler' as runtime handler."
         );
       }
