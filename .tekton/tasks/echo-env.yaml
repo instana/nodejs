@@ -17,6 +17,8 @@ spec:
       script: |
         #!/bin/bash
 
+        echo "HEY THERE"
+
         echo "Node: $(node --version)"
 
         if [ -n "$(params.npm-version)" ]; then
