@@ -36,6 +36,8 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        echo "testing: verify console log"
+
         echo "Printing the environment variables => prerelease: $(params.prerelease) skip-cache: $(params.skip-cache)"
         
         NODE_VERSION="v23"
