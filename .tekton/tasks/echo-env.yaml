@@ -10,6 +10,7 @@ spec:
       value: $(params.npm-version)
     - name: prerelease
       value: $(params.prerelease)
+      default: "false"
   workspaces:
     - name: output
       mountPath: /artifacts
