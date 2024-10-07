@@ -32,8 +32,7 @@ spec:
       value: $(params.skip-cache)   
       default: "true"
     - name: prerelease
-      value: $(params.prerelease) 
-      default: "true"
+      value: "true"
 
 ---
 
