@@ -6,7 +6,6 @@
 'use strict';
 
 const path = require('path');
-const semver = require('semver');
 const { expect } = require('chai');
 const { fail } = expect;
 const constants = require('@instana/core').tracing.constants;
@@ -23,10 +22,6 @@ mochaSuiteFn('tracing/nats', function () {
   this.timeout(config.getTestTimeout() * 2);
 
   ['latest', 'v1'].forEach(version => {
-    if (version === 'latest' && semver.lt(process.versions.node, '14.0.0')) {
-      return;
-    }
-
     describe(`testing: ${version}`, function () {
       describe('tracing is enabled', function () {
         globalAgent.setUpCleanUpHooks();

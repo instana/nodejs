@@ -7,7 +7,6 @@
 const { expect } = require('chai');
 const { fail } = expect;
 const path = require('path');
-const semver = require('semver');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('@instana/core/test/config');
 const { retry, stringifyItems, delay } = require('@instana/core/test/test_util');
@@ -29,7 +28,7 @@ const getNextCallMethod = require('@instana/core/test/test_util/circular_list').
 async function start(version) {
   this.timeout(config.getTestTimeout() * 20);
 
-  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '14.0.0')) {
+  if (!supportedVersion(process.versions.node)) {
     it.skip(`npm: ${version}`, () => {});
     return;
   }

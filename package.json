@@ -18,6 +18,9 @@
     "packages/*"
   ],
   "license": "MIT",
+   "engines": {
+    "node": ">=18.0.0"
+  },
   "contributors": [
     {
       "name": "Katharina Irrgang",
