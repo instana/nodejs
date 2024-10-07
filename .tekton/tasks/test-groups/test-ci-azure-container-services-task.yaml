@@ -100,6 +100,8 @@ spec:
           fi
           nvm use "$NODE_VERSION"
           echo "Currently using node: $(node --version)"
+
+          npm install npm -g
         else
           echo "Skipping prerelease version and using default version"
           if [ -n "$(params.npm-version)" ]; then
@@ -108,7 +110,7 @@ spec:
             npm install npm -g
           fi
         fi
-        
+
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
           MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))

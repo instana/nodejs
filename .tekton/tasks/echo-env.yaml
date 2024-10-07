@@ -24,7 +24,7 @@ spec:
 
           NODE_VERSION="v23"
           mirrors=("https://nodejs.org/download/rc" "https://nodejs.org/download/nightly")
-          
+
           echo "Proceeding with Node.js version: $NODE_VERSION"
 
           if ! command -v nvm &> /dev/null; then
@@ -46,6 +46,8 @@ spec:
           fi
           nvm use "$NODE_VERSION"
           echo "Currently using node: $(node --version)"
+          
+          npm install npm -g
         else
           echo "Skipping prerelease version and using default version"
           if [ -n "$(params.npm-version)" ]; then

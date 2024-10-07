@@ -116,14 +116,8 @@ const groups = {
 const sidecars = require('./assets/sidecars.json');
 
 for (const [groupName, { sidecars: groupSidecars, condition }] of Object.entries(groups)) {
-  const templateContent = fs.readFileSync(
-    '/Users/abhi/instana/nodejs/.tekton/templates/test-task.yaml.template',
-    'utf-8'
-  );
-  const sidecarTemplate = fs.readFileSync(
-    '/Users/abhi/instana/nodejs/.tekton/templates/sidecar.yaml.template',
-    'utf-8'
-  );
+  const templateContent = fs.readFileSync('./templates/test-task.yaml.template', 'utf-8');
+  const sidecarTemplate = fs.readFileSync('./templates/sidecar.yaml.template', 'utf-8');
   const sanitizedGroupName = groupName.replace(/:/g, '-');
 
   const groupSidecarDetails = groupSidecars
@@ -233,7 +227,7 @@ for (const [groupName, { sidecars: groupSidecars, condition }] of Object.entries
     .join('\n');
 
   const fileName = `${sanitizedGroupName}-task.yaml`;
-  const location = `/Users/abhi/instana/nodejs/.tekton/tasks/test-groups/${fileName}`;
+  const location = `./tasks/test-groups/${fileName}`;
 
   if (fs.existsSync(location)) {
     fs.unlinkSync(location);
