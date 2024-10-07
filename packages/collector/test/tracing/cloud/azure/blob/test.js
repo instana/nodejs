@@ -6,7 +6,6 @@
 
 const { v4: uuid } = require('uuid');
 const expect = require('chai').expect;
-const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
@@ -20,7 +19,7 @@ const {
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 const { fail } = expect;
-const { createContainer, deleteContainer, minimumNodeJsVer } = require('./util');
+const { createContainer, deleteContainer } = require('./util');
 const { BlobServiceClient } = require('@azure/storage-blob');
 const expectExactlyOneMatching = require('@instana/core/test/test_util/expectExactlyOneMatching');
 const containerName = `nodejs-team-${uuid()}`;
@@ -36,8 +35,7 @@ const connStr = `DefaultEndpointsProtocol=https;AccountName=${storageAccount};Ac
 const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
 const containerClient = blobServiceClient.getContainerClient(containerName);
 
-let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-mochaSuiteFn = semver.lt(process.versions.node, minimumNodeJsVer) ? describe.skip : mochaSuiteFn;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 /**
  * This suite is skipped if no storage account or account key has been provided via AZURE_STORAGE_ACCOUNT_NAME

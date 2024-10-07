@@ -18,7 +18,6 @@
 
 const path = require('path');
 const { expect } = require('chai');
-const semver = require('semver');
 const { fail } = expect;
 const {
   tracing: { constants }
@@ -27,7 +26,7 @@ const {
 const {
   tracing: { supportedVersion }
 } = require('@instana/core');
-
+const semver = require('semver');
 const config = require('../../../../../core/test/config');
 const { expectExactlyOneMatching, retry, delay, stringifyItems } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');

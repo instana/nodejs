@@ -5,15 +5,6 @@
 
 'use strict';
 
-exports.minimumNodeJsVersion = '14.0.0';
-
-if (require('semver').lt(process.versions.node, exports.minimumNodeJsVersion)) {
-  exports.createQueues = function () {};
-  exports.deleteQueues = function () {};
-  exports.sendSnsNotificationToSqsQueue = function () {};
-  return;
-}
-
 const AWS = require('@aws-sdk/client-sqs');
 const sqs = new AWS.SQS({ region: 'us-east-2' });
 

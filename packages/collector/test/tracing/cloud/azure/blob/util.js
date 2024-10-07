@@ -4,8 +4,6 @@
 
 'use strict';
 
-exports.minimumNodeJsVer = '18.0.0';
-
 exports.deleteContainer = async function (containerClient) {
   try {
     await containerClient.delete();
