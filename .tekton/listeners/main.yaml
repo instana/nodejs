@@ -29,6 +29,8 @@ spec:
       value: "default-pipeline"
     - name: skip-cache
       value: $(params.skip-cache)      
+    - name: prerelease
+      value: $(params.prerelease) 
     - name: context
       value: "node-dev"
 ---
