@@ -25,15 +25,15 @@ describe('util.excludedFromInstrumentation', () => {
   });
 
   it('should exclude npm in global bin folder', () => {
-    expect(isExcluded('/home/somebody/.nvm/versions/node/v14.15.1/bin/npm')).to.be.true;
+    expect(isExcluded('/home/somebody/.nvm/versions/node/v22.0.0/bin/npm')).to.be.true;
   });
 
   it('should exclude npm-cli', () => {
-    expect(isExcluded('/home/somebody/.nvm/versions/node/v14.15.1/lib/node_modules/npm/bin/npm-cli')).to.be.true;
+    expect(isExcluded('/home/somebody/.nvm/versions/node/v22.0.0/lib/node_modules/npm/bin/npm-cli')).to.be.true;
   });
 
   it('should exclude npm-cli with .js suffix', () => {
-    expect(isExcluded('/home/somebody/.nvm/versions/node/v14.15.1/lib/node_modules/npm/bin/npm-cli.js')).to.be.true;
+    expect(isExcluded('/home/somebody/.nvm/versions/node/v22.0.0/lib/node_modules/npm/bin/npm-cli.js')).to.be.true;
   });
 
   it('should exclude system yarn executable', () => {
@@ -41,7 +41,7 @@ describe('util.excludedFromInstrumentation', () => {
   });
 
   it('should exclude yarn in global bin folder', () => {
-    expect(isExcluded('/home/somebody/.nvm/versions/node/v14.15.1/bin/yarn')).to.be.true;
+    expect(isExcluded('/home/somebody/.nvm/versions/node/v22.0.0/bin/yarn')).to.be.true;
   });
 
   it('should exclude yarn installed in opt', () => {
@@ -53,11 +53,11 @@ describe('util.excludedFromInstrumentation', () => {
   });
 
   it('should exclude yarn in node_modules/yarn/bin', () => {
-    expect(isExcluded('/home/somebody/.nvm/versions/node/v14.15.1/lib/node_modules/yarn/bin/yarn.js')).to.be.true;
+    expect(isExcluded('/home/somebody/.nvm/versions/node/v22.0.0/lib/node_modules/yarn/bin/yarn.js')).to.be.true;
   });
 
   it('should exclude yarn cli.js', () => {
-    expect(isExcluded('/home/somebody/.nvm/versions/node/v14.15.1/lib/node_modules/yarn/lib/cli.js')).to.be.true;
+    expect(isExcluded('/home/somebody/.nvm/versions/node/v22.0.0/lib/node_modules/yarn/lib/cli.js')).to.be.true;
   });
 
   it('should not exclude other processes', () => {

@@ -5,7 +5,7 @@ Dockerizing your Node.js application is a thing. Since the Instana Node.js colle
 
 This is probably relevant for you
 - dockerize your Node.js application
-- and are using a minimal Docker image (such as the popular Alpine variants of the popular official [Node.js Docker images](https://hub.docker.com/_/node/),
+- and are using a minimal Docker image such as the popular Alpine variants of the popular official [Node.js Docker images](https://hub.docker.com/_/node/),
 - or another base image that does not have all required packages installed,
 - see `node-gyp` errors during your Docker build (in particular the `npm install`/`yarn install` step).
 

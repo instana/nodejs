@@ -1,11 +1,11 @@
-# Bare Node.js 16 image.
+# Bare Node.js 22 image, using yarn.
 # Native addons will work since the base image (Debian Buster) has all
 # dependencies installed out of the box.
 
-FROM node:16
+FROM node:22
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm install --only=production
+RUN yarn
 COPY . .
 EXPOSE 3333
-CMD [ "npm", "start" ]
+CMD [ "yarn", "start" ]

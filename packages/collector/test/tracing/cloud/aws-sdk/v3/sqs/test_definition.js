@@ -26,7 +26,7 @@ const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test
 const defaultPrefix = 'https://sqs.us-east-2.amazonaws.com/767398002385/';
 const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
 
-const { createQueues, deleteQueues, minimumNodeJsVersion, sendSnsNotificationToSqsQueue } = require('./util');
+const { createQueues, deleteQueues, sendSnsNotificationToSqsQueue } = require('./util');
 
 const sendingMethods = ['v3', 'cb', 'v2'];
 const receivingMethods = ['v3', 'cb', 'v2'];
@@ -35,13 +35,7 @@ const getNextSendMethod = require('@instana/core/test/test_util/circular_list').
 const getNextReceiveMethod = require('@instana/core/test/test_util/circular_list').getCircularList(receivingMethods);
 
 function start(version) {
-  let mochaSuiteFn;
-
-  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, minimumNodeJsVersion)) {
-    mochaSuiteFn = describe.skip;
-  } else {
-    mochaSuiteFn = describe;
-  }
+  const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
   mochaSuiteFn(`npm: ${version}`, function () {
     this.timeout(config.getTestTimeout() * 4);
@@ -233,183 +227,181 @@ function start(version) {
         });
       });
 
-      if (semver.gte(process.versions.node, '18.0.0')) {
-        describe('sqs-consumer API', () => {
-          describe('[handleMessage] message processed with success', () => {
-            let sqsConsumerControls;
+      describe('sqs-consumer API', () => {
+        describe('[handleMessage] message processed with success', () => {
+          let sqsConsumerControls;
 
-            before(async () => {
-              sqsConsumerControls = new ProcessControls({
-                appPath: path.join(__dirname, 'sqs-consumer'),
-                useGlobalAgent: true,
-                env: {
-                  AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
-                  AWS_SDK_CLIENT_SQS_REQUIRE: version
-                }
-              });
-
-              await sqsConsumerControls.startAndWaitForAgentConnection();
+          before(async () => {
+            sqsConsumerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'sqs-consumer'),
+              useGlobalAgent: true,
+              env: {
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
+                AWS_SDK_CLIENT_SQS_REQUIRE: version
+              }
             });
 
-            beforeEach(async () => {
-              await agentControls.clearReceivedTraceData();
-            });
-            after(async () => {
-              await sqsConsumerControls.stop();
-            });
+            await sqsConsumerControls.startAndWaitForAgentConnection();
+          });
 
-            afterEach(async () => {
-              await sqsConsumerControls.clearIpcMessages();
-            });
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+          after(async () => {
+            await sqsConsumerControls.stop();
+          });
 
-            const apiPath = '/send-message/v3';
+          afterEach(async () => {
+            await sqsConsumerControls.clearIpcMessages();
+          });
 
-            it('receives message', async () => {
-              const response = await senderControlsSQSConsumer.sendRequest({
-                method: 'GET',
-                path: apiPath
-              });
+          const apiPath = '/send-message/v3';
 
-              await verify({
-                receiverControls: sqsConsumerControls,
-                senderControls: senderControlsSQSConsumer,
-                response,
-                apiPath,
-                withError: false,
-                isBatch: false
-              });
+          it('receives message', async () => {
+            const response = await senderControlsSQSConsumer.sendRequest({
+              method: 'GET',
+              path: apiPath
             });
 
-            it('receives messages', async () => {
-              const response = await senderControlsSQSConsumer.sendRequest({
-                method: 'GET',
-                path: `${apiPath}?isBatch=true`
-              });
-
-              await verify({
-                receiverControls: sqsConsumerControls,
-                senderControls: senderControlsSQSConsumer,
-                response,
-                apiPath,
-                withError: false,
-                isBatch: true
-              });
+            await verify({
+              receiverControls: sqsConsumerControls,
+              senderControls: senderControlsSQSConsumer,
+              response,
+              apiPath,
+              withError: false,
+              isBatch: false
             });
           });
 
-          describe('[handleMessageBatch] message processed with success', () => {
-            let sqsConsumerControls;
-
-            before(async () => {
-              sqsConsumerControls = new ProcessControls({
-                appPath: path.join(__dirname, 'sqs-consumer'),
-                useGlobalAgent: true,
-                env: {
-                  AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
-                  AWS_SDK_CLIENT_SQS_REQUIRE: version,
-                  HANDLE_MESSAGE_BATCH: true
-                }
-              });
-
-              await sqsConsumerControls.startAndWaitForAgentConnection();
+          it('receives messages', async () => {
+            const response = await senderControlsSQSConsumer.sendRequest({
+              method: 'GET',
+              path: `${apiPath}?isBatch=true`
             });
 
-            beforeEach(async () => {
-              await agentControls.clearReceivedTraceData();
-            });
-
-            after(async () => {
-              await sqsConsumerControls.stop();
-            });
-
-            afterEach(async () => {
-              await sqsConsumerControls.clearIpcMessages();
-            });
-
-            const apiPath = '/send-message/v3';
-
-            it('receives message', async () => {
-              const response = await senderControlsSQSConsumer.sendRequest({
-                method: 'GET',
-                path: apiPath
-              });
-              await verify({
-                receiverControls: sqsConsumerControls,
-                senderControls: senderControlsSQSConsumer,
-                response,
-                apiPath,
-                withError: false,
-                isBatch: false
-              });
-            });
-
-            it('receives messages', async () => {
-              const response = await senderControlsSQSConsumer.sendRequest({
-                method: 'GET',
-                path: `${apiPath}?isBatch=true`
-              });
-
-              await verify({
-                receiverControls: sqsConsumerControls,
-                senderControls: senderControlsSQSConsumer,
-                response,
-                apiPath,
-                withError: false,
-                isBatch: true,
-                isSQSConsumer: true
-              });
-            });
-          });
-
-          describe('message not processed with success', () => {
-            let sqsConsumerControls;
-
-            before(async () => {
-              sqsConsumerControls = new ProcessControls({
-                appPath: path.join(__dirname, 'sqs-consumer'),
-                useGlobalAgent: true,
-                env: {
-                  AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
-                  AWS_SDK_CLIENT_SQS_REQUIRE: version,
-                  AWS_SQS_RECEIVER_ERROR: 'true'
-                }
-              });
-
-              await sqsConsumerControls.startAndWaitForAgentConnection();
-            });
-
-            beforeEach(async () => {
-              await agentControls.clearReceivedTraceData();
-            });
-
-            after(async () => {
-              await sqsConsumerControls.stop();
-            });
-
-            afterEach(async () => {
-              await sqsConsumerControls.clearIpcMessages();
-            });
-
-            const apiPath = '/send-message/v3';
-
-            it('fails to receive a message', async () => {
-              const response = await senderControlsSQSConsumer.sendRequest({
-                method: 'GET',
-                path: apiPath
-              });
-
-              await verify({
-                receiverControls: sqsConsumerControls,
-                senderControls: senderControlsSQSConsumer,
-                response,
-                apiPath,
-                withError: 'receiver',
-                isBatch: false
-              });
+            await verify({
+              receiverControls: sqsConsumerControls,
+              senderControls: senderControlsSQSConsumer,
+              response,
+              apiPath,
+              withError: false,
+              isBatch: true
             });
           });
         });
-      }
+
+        describe('[handleMessageBatch] message processed with success', () => {
+          let sqsConsumerControls;
+
+          before(async () => {
+            sqsConsumerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'sqs-consumer'),
+              useGlobalAgent: true,
+              env: {
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
+                AWS_SDK_CLIENT_SQS_REQUIRE: version,
+                HANDLE_MESSAGE_BATCH: true
+              }
+            });
+
+            await sqsConsumerControls.startAndWaitForAgentConnection();
+          });
+
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+
+          after(async () => {
+            await sqsConsumerControls.stop();
+          });
+
+          afterEach(async () => {
+            await sqsConsumerControls.clearIpcMessages();
+          });
+
+          const apiPath = '/send-message/v3';
+
+          it('receives message', async () => {
+            const response = await senderControlsSQSConsumer.sendRequest({
+              method: 'GET',
+              path: apiPath
+            });
+            await verify({
+              receiverControls: sqsConsumerControls,
+              senderControls: senderControlsSQSConsumer,
+              response,
+              apiPath,
+              withError: false,
+              isBatch: false
+            });
+          });
+
+          it('receives messages', async () => {
+            const response = await senderControlsSQSConsumer.sendRequest({
+              method: 'GET',
+              path: `${apiPath}?isBatch=true`
+            });
+
+            await verify({
+              receiverControls: sqsConsumerControls,
+              senderControls: senderControlsSQSConsumer,
+              response,
+              apiPath,
+              withError: false,
+              isBatch: true,
+              isSQSConsumer: true
+            });
+          });
+        });
+
+        describe('message not processed with success', () => {
+          let sqsConsumerControls;
+
+          before(async () => {
+            sqsConsumerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'sqs-consumer'),
+              useGlobalAgent: true,
+              env: {
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
+                AWS_SDK_CLIENT_SQS_REQUIRE: version,
+                AWS_SQS_RECEIVER_ERROR: 'true'
+              }
+            });
+
+            await sqsConsumerControls.startAndWaitForAgentConnection();
+          });
+
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+
+          after(async () => {
+            await sqsConsumerControls.stop();
+          });
+
+          afterEach(async () => {
+            await sqsConsumerControls.clearIpcMessages();
+          });
+
+          const apiPath = '/send-message/v3';
+
+          it('fails to receive a message', async () => {
+            const response = await senderControlsSQSConsumer.sendRequest({
+              method: 'GET',
+              path: apiPath
+            });
+
+            await verify({
+              receiverControls: sqsConsumerControls,
+              senderControls: senderControlsSQSConsumer,
+              response,
+              apiPath,
+              withError: 'receiver',
+              isBatch: false
+            });
+          });
+        });
+      });
 
       describe('messages sent in batch', () => {
         receivingMethods.forEach(sqsReceiveMethod => {

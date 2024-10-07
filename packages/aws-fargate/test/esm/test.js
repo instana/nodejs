@@ -19,7 +19,7 @@ const account = '555123456789';
 const instrumentedContainerName = 'nodejs-fargate-test-container';
 const taskArn = `arn:aws:ecs:${region}:${account}:task/55566677-c1e5-5780-9806-aabbccddeeff`;
 const instrumentedContainerId = `${taskArn}::${instrumentedContainerName}`;
-const esmSupportedVersion = require('@instana/core').tracing.esmSupportedVersion;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const containerAppPath = path.join(__dirname, './app.mjs');
 const instanaAgentKey = 'aws-fargate-dummy-key';
 const requestHeaders = {
@@ -52,7 +52,7 @@ function prelude(opts = {}) {
 }
 
 // Run the tests only for supported node versions
-if (esmSupportedVersion(process.versions.node)) {
+if (supportedVersion(process.versions.node)) {
   describe('AWS fargate esm test', function () {
     this.timeout(config.getTestTimeout());
     this.slow(config.getTestTimeout() / 2);
