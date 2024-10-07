@@ -11,7 +11,6 @@ const path = require('path');
 const SPLIT_AT_DOT_REGEX = /^([^.]*)\.(.*)$/;
 const TWO_DOTS = '..';
 const DEFAULT_HANDLER = 'index.handler';
-const RUNTIME_PATH = '/var/runtime';
 
 class HandlerNotFound extends Error {}
 class MalformedHandlerName extends Error {}
@@ -37,12 +36,6 @@ function getLambdaRuntimeErrors() {
   if (lambdaRuntimeErrors) {
     return lambdaRuntimeErrors;
   }
-
-  // NOTE: Lambda v16 removed the ability to require `Error.js`
-  if (Number(process.versions.node.split('.')[0]) < 16) {
-    return require(`${RUNTIME_PATH}/Errors.js`);
-  }
-
   return lambdaRuntimeErrorsFallback;
 }
 
