@@ -8,6 +8,8 @@ spec:
       value: $(params.node-version)
     - name: npm-version
       value: $(params.npm-version)
+    - name: prerelease
+      value: $(params.prerelease)
   workspaces:
     - name: output
       mountPath: /artifacts
