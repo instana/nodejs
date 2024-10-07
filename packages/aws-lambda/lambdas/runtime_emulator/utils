@@ -12,18 +12,20 @@ function normalizeArgs {
   fi
 
   local nodeJsVersion=$2
+  ROOT_DIR=$(git rev-parse --show-toplevel)
+  local MINIMUM_NODEJS_VERSION=$(getMinimumNodeVersionFromPackageJson)
   if [[ -z "${nodeJsVersion-}" ]]; then
-    ROOT_DIR=$(git rev-parse --show-toplevel)
     NVMRC_PATH="$ROOT_DIR/.nvmrc"
     NODEJS_VERSION=$(cat "$NVMRC_PATH")
 
     # Used for local runtime simulator only.
     LAMBDA_BASE_IMAGE=public.ecr.aws/lambda/nodejs:${NODEJS_VERSION%.*}
-  elif [[ $nodeJsVersion -lt 18 ]]; then
-    echo "Unsupported Node version: $nodeJsVersion"
-    exit 1
-  else
-    NODEJS_VERSION=$nodeJsVersion
+    else
+      if ! printf "%s\n%s" "$MINIMUM_NODEJS_VERSION" "$nodeJsVersion" | sort -C -V; then
+        echo "Unsupported Node.js version: $nodeJsVersion. Minimum required: $MINIMUM_NODEJS_VERSION."
+        exit 1
+    fi
+      NODEJS_VERSION=$nodeJsVersion
   fi
 }
 
@@ -39,4 +41,14 @@ function setContainerName {
   local nodeJsVersion=$2
   local instanaLayerMode=$3
   container_name=$prefix-$nodeJsVersion-$instanaLayerMode
+}
+function getMinimumNodeVersionFromPackageJson {
+  local package_json_path="$ROOT_DIR/package.json"
+  if [[ -f "$package_json_path" ]]; then
+    MINIMUM_NODEJS_VERSION=$(grep '"node":' "$package_json_path" | awk -F '"' '{print $4}' | sed 's/^>=//; s/\..*//')
+    echo "$MINIMUM_NODEJS_VERSION"
+  else
+    echo "Could not find package.json in $ROOT_DIR"
+    exit 1
+  fi
 }
