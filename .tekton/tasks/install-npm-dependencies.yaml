@@ -70,7 +70,7 @@ spec:
             nvm use "$NODE_VERSION"
             echo "Currently using node: $(node --version)"
         else
-            echo "Skipping prerelease version"
+            echo "Skipping prerelease version and using default version"
         fi
 
         if [ -n "$(params.npm-version)" ]; then
