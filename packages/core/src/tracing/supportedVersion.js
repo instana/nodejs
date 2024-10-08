@@ -9,5 +9,7 @@ const semver = require('semver');
 
 /** @type {(version: string) => boolean} */
 module.exports = exports = function supportedVersion(version) {
-  return semver.satisfies(version, '>=14.0.0');
+  const baseVersion = version.split('-')[0];
+
+  return semver.satisfies(baseVersion, '>=14.0.0');
 };
