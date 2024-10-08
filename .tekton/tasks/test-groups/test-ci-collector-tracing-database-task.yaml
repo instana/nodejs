@@ -151,7 +151,7 @@ spec:
         GIT_COMMIT_DESC=""
         if [ -n "$(params.prerelease)" ]; then
           chmod +x ./.tekton/install-node.sh
-          ./.tekton/install-node.sh $(params.prerelease-node-version)
+          ./.tekton/install-node.sh "$(params.prerelease-node-version)"
         fi
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
