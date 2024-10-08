@@ -1,7 +1,6 @@
 #!/bin/bash
 
-NODE_VERSION=$1
-PRERELEASE_NODE_VERSION=$2
+PRERELEASE_NODE_VERSION=$1
 
 echo "Installing node prerelease version $PRERELEASE_NODE_VERSION.."
 
