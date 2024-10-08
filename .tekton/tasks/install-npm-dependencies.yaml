@@ -80,6 +80,7 @@ spec:
         fi
 
         if [ "$(params.skip-cache)" == "true" ]; then
+          echo "Skipping npm cache..."
 
           echo "Installing npm dependencies..."
           npm install --loglevel verbose
