@@ -42,6 +42,8 @@ spec:
       value: $(params.skip-cache)
     - name: prerelease
       value: $(params.prerelease)   
+    - name: prerelease-node-version
+      value: $(params.prerelease-node-version)
   workspaces:
     - name: artifacts
   tasks:

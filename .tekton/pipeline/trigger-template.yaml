@@ -51,6 +51,8 @@ spec:
       value: $(params.context)
     - name: prerelease
       value: $(params.prerelease)   
+    - name: prerelease-node-version
+      value: $(params.prerelease-node-version)
   resourcetemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
@@ -126,3 +128,5 @@ spec:
             value: $(params.skip-cache)         
           - name: prerelease
             value: $(params.prerelease)     
+          - name: prerelease-node-version
+            value: $(params.prerelease-node-version)
