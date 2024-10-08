@@ -163,14 +163,12 @@ spec:
         CIRCLE_COMPARE_URL=""
         MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
+        if [ -n "$(params.prerelease)" ]; then
+          chmod +x ./.tekton/install-node.sh
+          ./.tekton/install-node.sh $(params.prerelease-node-version)
+        fi
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
-        fi
-        # While trying to install node modules with latest prerelease versions, we are running into problems with some packages
-        # so changing the order of node version switch to avoid the issues
-        if [ -n "$(params.prerelease)" ]; then
-          chmod +x ../../install-node.sh
-          ../../install-node.sh $(params.prerelease-node-version)
         fi
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
