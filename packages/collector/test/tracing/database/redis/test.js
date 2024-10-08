@@ -35,6 +35,8 @@ const globalAgent = require('../../../globalAgent');
         this.timeout(config.getTestTimeout() * 4);
         const agentControls = globalAgent.instance;
 
+        console.log('redis TEST node version: ', process.versions.node);
+
         ['latest', 'v3'].forEach(redisVersion => {
           let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
