@@ -30,7 +30,7 @@ spec:
       value: "default-pipeline"
     - name: skip-cache
       value: $(params.skip-cache)   
-      default: "true"
+      default: ""
     - name: prerelease
       value: "true"
     - name: prerelease-node-version
