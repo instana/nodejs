@@ -38,17 +38,15 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        if [ -n "$(params.prerelease)" ]; then
+          chmod +x ./.tekton/install-node.sh
+          ./.tekton/install-node.sh $(params.prerelease-node-version)
+        fi
+
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         else
           npm install npm -g
-        fi
-
-        # While trying to install node modules with latest prerelease versions, we are running into problems with some packages
-        # so changing the order of node version switch to avoid the issues
-        if [ -n "$(params.prerelease)" ]; then
-          chmod +x ./.tekton/install-node.sh
-          ./.tekton/install-node.sh $(params.prerelease-node-version)
         fi
 
         if [ "$(params.skip-cache)" == "true" ]; then
