@@ -92,34 +92,30 @@ spec:
         CIRCLE_COMPARE_URL=""
         MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
-
         if [ -n "$(params.prerelease)" ]; then
-
           NODE_VERSION="v23"
-          mirrors=("https://nodejs.org/download/rc" "https://nodejs.org/download/nightly")
-          echo "Proceeding with Node.js version: $NODE_VERSION"
-
           if ! command -v nvm &> /dev/null; then
             echo "NVM not found. Installing NVM..."
             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-            # Load NVM
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           else
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           fi
-          for mirror in "${mirrors[@]}"; do
-            NVM_NODEJS_ORG_MIRROR="$mirror" nvm install "$NODE_VERSION" && break || \
-            echo "Installation failed with mirror: $mirror"
-          done
+          # Try to install RC version
+          NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/rc" nvm install "$NODE_VERSION" 
           if ! nvm ls "$NODE_VERSION" >/dev/null; then
-            echo "Both RC and Nightly installations failed for Node.js version $NODE_VERSION."
+            echo "RC installation failed for Node.js version $NODE_VERSION."
+            NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/nightly" nvm install "$NODE_VERSION" || \
+            echo "Installation failed with NIGHTLY mirror"
+          else 
+            nvm use "$NODE_VERSION"
+            # installing npm for RC versions 
+            npm install npm -g 
           fi
           nvm use "$NODE_VERSION"
           echo "Currently using node: $(node --version)"
-
-          npm install npm -g
         else
           echo "Skipping prerelease version and using default version"
           if [ -n "$(params.npm-version)" ]; then
@@ -128,7 +124,9 @@ spec:
             npm install npm -g
           fi
         fi
-
+        if [ -n "$(params.npm-version)" ]; then
+          npm install npm@$(params.npm-version) -g
+        fi
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
           MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
