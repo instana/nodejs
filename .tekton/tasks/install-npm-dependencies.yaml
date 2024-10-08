@@ -47,7 +47,7 @@ spec:
         # While trying to install node modules with latest prerelease versions, we are running into problems with some packages
         # so changing the order of node version switch to avoid the issues
         if [ -n "$(params.prerelease)" ]; then
-          chmod +x ./install-node.sh
+          chmod +x ../install-node.sh
           ../install-node.sh $(params.prerelease-node-version)
         fi
 
