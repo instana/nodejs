@@ -84,11 +84,13 @@ spec:
         CIRCLE_COMPARE_URL=""
         MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
-        if [ -n "$(params.prerelease)" ]; then
-          ./../../install-node.sh $(params.node-version) $(params.prerelease-node-version)
-        fi
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
+        fi
+        # While trying to install node modules with latest prerelease versions, we are running into problems with some packages
+        # so changing the order of node version switch to avoid the issues
+        if [ -n "$(params.prerelease)" ]; then
+          ./../../install-node.sh $(params.node-version) $(params.prerelease-node-version)
         fi
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
