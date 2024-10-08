@@ -877,10 +877,10 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              numberOfSpans: 14,
+              numberOfSpans: 15,
               // Spans:
               // 10 queries splitted from the file
-              // 4 fs operations on top (ours + from db2 internally fs-extra)
+              // 5 fs operations on top (ours + from db2 internally fs-extra)
               // https://github.com/ibmdb/node-ibm_db/blob/fb25937524d74d25917e9aa67fb4737971317986/lib/odbc.js#L916
               // If the Otel integration is disabled, we expect 11 spans.
               verifyCustom: (entrySpan, spans) => {
