@@ -82,7 +82,8 @@ spec:
         # While trying to install node modules with latest prerelease versions, we are running into problems with some packages
         # so changing the order of node version switch to avoid the issues
         if [ -n "$(params.prerelease)" ]; then
-          ./../../install-node.sh $(params.node-version) $(params.prerelease-node-version)
+          chmod +x ../../install-node.sh
+          ../../install-node.sh $(params.prerelease-node-version)
         fi
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
