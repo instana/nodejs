@@ -31,9 +31,11 @@ spec:
     - name: coverage
       value: $(params.coverage)
     - name: prerelease
-      value: $(params.prerelease)  
+      value: $(params.prerelease) 
+      default: "" 
     - name: prerelease-node-version 
       value: $(params.prerelease-node-version)
+      default: "" 
   workspaces:
     - name: output
       mountPath: /artifacts
