@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.20.2](https://github.com/instana/nodejs/compare/v3.20.1...v3.20.2) (2024-10-09)
+
+### Bug Fixes
+
+- enhanced typescript support for `currentSpan().span` ([#1370](https://github.com/instana/nodejs/issues/1370)) ([762af17](https://github.com/instana/nodejs/commit/762af17c4240cf18214857852b3e8d1d0c757ab4))
+
 ## [3.20.1](https://github.com/instana/nodejs/compare/v3.20.0...v3.20.1) (2024-10-04)
 
 ### Bug Fixes

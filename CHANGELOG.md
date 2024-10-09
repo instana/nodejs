@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.20.2](https://github.com/instana/nodejs/compare/v3.20.1...v3.20.2) (2024-10-09)
+
+### Bug Fixes
+
+- enhanced typescript support for `currentSpan().span` ([#1370](https://github.com/instana/nodejs/issues/1370)) ([762af17](https://github.com/instana/nodejs/commit/762af17c4240cf18214857852b3e8d1d0c757ab4))
+
+### Reverts
+
+- Revert "ci: skipping the chinese regions from publishing lambda layers" ([48adaca](https://github.com/instana/nodejs/commit/48adacac1c6e109f95c3280a40584e359d2f9c53))
+- Revert "ci: forced dev installation gcstats and event-loop-stats" ([25b39ea](https://github.com/instana/nodejs/commit/25b39ea3dc01b03c0aeabeb6de5b93b4e63a95db))
+- Revert "ci: added logs for installing npm dependencies" ([0bce3d7](https://github.com/instana/nodejs/commit/0bce3d7de6b401467ce5ed88c3137453becd3089))
+
 ## [3.20.1](https://github.com/instana/nodejs/compare/v3.20.0...v3.20.1) (2024-10-04)
 
 ### Bug Fixes
