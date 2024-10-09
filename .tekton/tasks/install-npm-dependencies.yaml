@@ -39,7 +39,7 @@ spec:
         cd $ARTIFACTS_PATH
 
         #enable this script after RC release bcz we need to install npm modules using the latest node version
-        # if [ -n "$(params.prerelease)" ]; then
+        # if [ "$(params.prerelease)" == "true" ]; then
         #   chmod +x ./.tekton/install-node.sh
         #   ./.tekton/install-node.sh "$(params.prerelease-node-version)"
         # fi
