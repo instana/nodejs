@@ -38,6 +38,8 @@ const globalAgent = require('../../../globalAgent');
         ['latest', 'v3'].forEach(redisVersion => {
           let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+          console.log('Added for testing: ', process.versions.node);
+
           // NOTE: clustering was added in v4
           //       https://github.com/redis/node-redis/blob/master/CHANGELOG.md#v400---24-nov-2021
           if (redisVersion !== 'latest' && setupType === 'cluster') {
