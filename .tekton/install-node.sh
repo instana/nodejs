@@ -1,11 +1,10 @@
 #!/bin/bash
 
-PRERELEASE_NODE_VERSION="$1"
+PRERELEASE_NODE_VERSION=$1
 
-echo "Installing node prerelease version $PRERELEASE_NODE_VERSION.."
+echo "Installing node.js prerelease version $PRERELEASE_NODE_VERSION.."
 
 mirrors=("https://nodejs.org/download/rc" "https://nodejs.org/download/nightly")
-echo "Proceeding with Node.js version: $PRERELEASE_NODE_VERSION"
   if ! command -v nvm &> /dev/null; then
     echo "NVM not found. Installing NVM..."
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
