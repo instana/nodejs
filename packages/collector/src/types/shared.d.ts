@@ -2,7 +2,7 @@ import { CollectorConfig } from './collector';
 import { GenericLogger, InstanaBaseSpan } from '@instana/core/src/core';
 
 export interface Init {
-  currentSpan(): InstanaBaseSpan;
+  currentSpan(): { span: InstanaBaseSpan };
   isTracing(): boolean;
   isConnected(): boolean;
   setLogger(logger: GenericLogger): void;
@@ -15,13 +15,13 @@ export interface Init {
 
 export type InitFunction = {
   (config?: CollectorConfig): Init;
-  sdk: any;
+  currentSpan(): { span: InstanaBaseSpan };
+  isTracing(): boolean;
+  isConnected(): boolean;
+  setLogger(logger: GenericLogger): void;
   core: any;
-  currentSpan: any;
-  isTracing: any;
-  isConnected: any;
-  setLogger: any;
   sharedMetrics: any;
   experimental: any;
   opentracing: any;
+  sdk: any;
 };

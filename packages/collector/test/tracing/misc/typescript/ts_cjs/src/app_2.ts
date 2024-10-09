@@ -28,7 +28,7 @@ app.get('/', async (req, res) => {
 app.get('/request', async (req, res) => {
   const currentSpan = instana.currentSpan();
 
-  if (!currentSpan) {
+  if (!currentSpan || !currentSpan.span || !currentSpan.span.t) {
     throw new Error('No current span available.');
   }
 
