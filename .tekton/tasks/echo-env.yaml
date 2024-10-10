@@ -33,5 +33,6 @@ spec:
           npm install npm@$(params.npm-version) -g
         fi
 
-        echo "Using node: $(node --version)"
+        nvm use "$(params.prerelease-node-version)"
+
         echo "Using NPM: $(npm --version)"
