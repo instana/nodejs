@@ -28,12 +28,12 @@ spec:
         if [ "$(params.prerelease)" == "true" ]; then
           bin/install-prerelease.sh "$(params.prerelease-node-version)"
           source "$HOME/.nvm/nvm.sh"
+          nvm use "$(params.prerelease-node-version)" > /dev/null 
         fi
 
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi
 
-        nvm use "$(params.prerelease-node-version)"
-        echo "ECHO file Using node: $(node --version)"
+        echo "Using node: $(node --version)"
         echo "Using NPM: $(npm --version)"

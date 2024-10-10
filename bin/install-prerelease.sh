@@ -5,7 +5,6 @@ PRERELEASE_NODE_VERSION=$1
 echo "Installing Node.js prerelease version $PRERELEASE_NODE_VERSION..."
 
 if ! command -v nvm &> /dev/null; then
-  echo "NVM not found. Installing NVM..."
   if ! curl -sSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash &> /dev/null; then
     echo "Failed to install NVM."
     exit 1
@@ -23,7 +22,3 @@ if ! nvm install "$PRERELEASE_NODE_VERSION" &> /dev/null; then
     exit 1
   fi
 fi
-
-nvm use "$PRERELEASE_NODE_VERSION"
-
-echo "Using node: $(node --version)"
