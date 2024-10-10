@@ -25,10 +25,10 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
-
+        ls -la
 
         if [ "$(params.prerelease)" == "true" ]; then
-          ./bin/install-prerelease.sh "$(params.prerelease-node-version)"
+          bin/install-prerelease.sh "$(params.prerelease-node-version)"
         fi
 
         if [ -n "$(params.npm-version)" ]; then
