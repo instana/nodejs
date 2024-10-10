@@ -79,3 +79,66 @@ export interface InstanaBaseSpan {
   /** function to perform cleanup */
   cleanup?: () => void;
 }
+
+export interface SpanHandle {
+  span: InstanaBaseSpan;
+
+  getTraceId(): string | null;
+  getSpanId(): string | null;
+  getParentSpanId(): string | null;
+  getName(): string | null;
+
+  isEntrySpan(): boolean;
+  isExitSpan(): boolean;
+  isIntermediateSpan(): boolean;
+
+  getTimestamp(): number;
+  getDuration(): number;
+  getErrorCount(): number;
+
+  getCorrelationId(): string | null;
+  setCorrelationId(correlationId: string): void;
+
+  getCorrelationType(): string | null;
+  setCorrelationType(correlationType: string): void;
+
+  annotate(path: string | string[], value: any): void;
+
+  markAsErroneous(errorMessage?: string, errorMessagePath?: string | string[]): void;
+  markAsNonErroneous(errorMessagePath?: string | string[]): void;
+
+  disableAutoEnd(): void;
+  end(errorCount?: boolean | number): void;
+  cancel(): void;
+}
+
+export interface NoopSpanHandle {
+  span: undefined;
+  getTraceId(): null;
+  getSpanId(): null;
+  getParentSpanId(): null;
+  getName(): null;
+
+  isEntrySpan(): boolean;
+  isExitSpan(): boolean;
+  isIntermediateSpan(): boolean;
+
+  getTimestamp(): number;
+  getDuration(): number;
+  getErrorCount(): number;
+
+  getCorrelationId(): null;
+  setCorrelationId(correlationId: string): void;
+
+  getCorrelationType(): null;
+  setCorrelationType(correlationType: string): void;
+
+  annotate(path: string | string[], value: any): void;
+
+  markAsErroneous(errorMessage?: string, errorMessagePath?: string | string[]): void;
+  markAsNonErroneous(errorMessagePath?: string | string[]): void;
+
+  disableAutoEnd(): void;
+  end(errorCount?: boolean | number): void;
+  cancel(): void;
+}

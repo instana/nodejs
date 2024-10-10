@@ -32,6 +32,10 @@ app.get('/request', async (req, res) => {
     throw new Error('No current span available.');
   }
 
+  if (!currentSpan.getTraceId()) {
+    throw new Error('getTraceId fn not available.');
+  }
+
   await fetch(`http://127.0.0.1:${agentPort}`);
   res.json({ success: true });
 });
