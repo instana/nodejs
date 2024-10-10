@@ -17,7 +17,6 @@ exports.minimumNodeJsVersion = 14;
  */
 exports.isNodeJsTooOld = function isNodeJsTooOld() {
   const currentVersion = process.version;
-
   if (typeof currentVersion === 'string') {
     const majorVersionStr = process.version.split('.')[0];
     if (majorVersionStr.length > 1 && majorVersionStr.charAt(0) === 'v') {
