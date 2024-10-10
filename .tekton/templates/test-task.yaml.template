@@ -24,10 +24,8 @@ spec:
       value: $(params.coverage)
     - name: prerelease
       value: $(params.prerelease) 
-      default: "" 
     - name: prerelease-node-version 
       value: $(params.prerelease-node-version)
-      default: "" 
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -81,8 +79,8 @@ spec:
         GIT_COMMIT_DESC=""
 
         if [ "$(params.prerelease)" == "true" ]; then
-          chmod +x ./.tekton/install-node.sh
-          ./.tekton/install-node.sh "$(params.prerelease-node-version)"
+          chmod +x ./.tekton/install-prerelease.sh
+          ./.tekton/install-prerelease.sh "$(params.prerelease-node-version)"
         fi
 
         if [ -n "$(params.npm-version)" ]; then
