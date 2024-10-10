@@ -38,6 +38,8 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        echo "path: $ARTIFACTS_PATH"
+
         #enable this script after RC release bcz we need to install npm modules using the latest node version
         if [ "$(params.prerelease)" == "true" ]; then
           chmod +x ./.tekton/install-prerelease.sh

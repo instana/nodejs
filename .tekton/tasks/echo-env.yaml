@@ -25,7 +25,7 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
-        echo "$ARTIFACTS_PATH, $(ARTIFACTS_PATH)"
+        echo "path: $ARTIFACTS_PATH"
 
         if [ "$(params.prerelease)" == "true" ]; then
           chmod +x ./.tekton/install-prerelease.sh
