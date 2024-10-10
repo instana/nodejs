@@ -19,9 +19,11 @@ spec:
       mountPath: /artifacts
   steps:
     - name: execute
-      image: node:$(params.node-version)
+      image: node:22
       script: |
         #!/bin/bash
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
 
         if [ "$(params.prerelease)" == "true" ]; then
           chmod +x ./.tekton/install-prerelease.sh
