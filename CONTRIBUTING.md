@@ -344,3 +344,28 @@ node --import  /path/to/instana/node_modules/@instana/collector/esm-register.mjs
 ```sh
 node --experimental-loader /path/to/instana/node_modules/@instana/collector/esm-loader.mjs entry-point
 ```
+
+## Node.js prerelease
+
+We have added support for prebuilds of Node.js for dev testing.
+We support [RC]("https://nodejs.org/download/rc") & [NIGHTLY]("https://nodejs.org/download/nightly") versions.
+
+- For local development follow the instructions to safely switch to Node.js prebuilds.
+
+Set the NVM_NODEJS_ORG_MIRROR environment variable to the appropriate mirror (either rc or nightly).
+
+```sh
+  NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/rc" nvm install 23.0.0
+```
+
+For nightly versions,
+
+```sh
+NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/nightly" nvm install 23.0.0
+```
+
+- To revert back to stable versions, unset the environment variable NVM_NODEJS_ORG_MIRROR and use an appropriate version.
+
+```sh
+unset NVM_NODEJS_ORG_MIRROR
+```
