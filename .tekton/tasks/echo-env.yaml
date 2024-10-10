@@ -24,23 +24,34 @@ spec:
       image: node:22
       script: |
         #!/bin/bash
+
         ARTIFACTS_PATH="$(workspaces.output.path)"
         echo "Listing current directory contents before cd:"
         ls -la
-        cd $ARTIFACTS_PATH
 
-        echo "path: $ARTIFACTS_PATH"
+        echo "Changing directory to $ARTIFACTS_PATH"
+        cd $ARTIFACTS_PATH || { echo "Failed to change directory to $ARTIFACTS_PATH"; exit 1; }
 
-        if [ "$(params.prerelease)" == "true" ]; then
-          echo "Checking for ./.tekton/install-prerelease.sh"
-          ls -la ./.tekton
-          if [ -f ./.tekton/install-prerelease.sh ]; then
-            chmod +x ./.tekton/install-prerelease.sh
+        # List the contents of the artifacts directory
+        echo "Listing contents of $ARTIFACTS_PATH:"
+        ls -la
+
+        echo "Searching for .tekton directory..."
+        if [ -d ".tekton" ]; then
+          echo "Found .tekton directory."
+          
+          # Check for the install script
+          if [ -f ".tekton/install-prerelease.sh" ]; then
+            chmod +x .tekton/install-prerelease.sh
+            echo "Executing .tekton/install-prerelease.sh"
             ./.tekton/install-prerelease.sh "$(params.prerelease-node-version)"
           else
-            echo "Error: ./.tekton/install-prerelease.sh not found."
+            echo "Error: .tekton/install-prerelease.sh not found."
             exit 1
           fi
+        else
+          echo "Error: .tekton directory not found."
+          exit 1
         fi
 
         echo "Node: $(node --version)"
