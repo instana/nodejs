@@ -25,3 +25,5 @@ if ! nvm install "$PRERELEASE_NODE_VERSION" &> /dev/null; then
 fi
 
 nvm use "$PRERELEASE_NODE_VERSION"
+
+echo "Using node: $(node --version)"
