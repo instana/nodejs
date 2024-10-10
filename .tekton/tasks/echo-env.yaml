@@ -21,7 +21,7 @@ spec:
       mountPath: /artifacts
   steps:
     - name: execute
-      image: node:22
+      image: node:$(params.node-version)
       script: |
         #!/bin/bash
 
