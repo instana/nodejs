@@ -47,23 +47,6 @@ spec:
   workspaces:
     - name: artifacts
   tasks:
-    - name: echo-env
-      taskRef:
-        name: echo-env
-      workspaces:
-        - name: output
-          workspace: artifacts        
-      params:
-        - name: target-branch
-          value: $(params.target-branch)
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)  
-        - name: prerelease
-          value: $(params.prerelease)      
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)   
     - name: extract-repository-url
       taskRef:
         name: toolchain-extract-value
@@ -100,6 +83,19 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
+    - name: echo-env
+      runAfter:
+        - git-fetch-repo
+      taskRef:
+        name: echo-env
+      workspaces:
+        - name: output
+          workspace: artifacts        
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)  
     - name: set-tests-running-start
       runAfter:
         - git-fetch-repo
@@ -139,10 +135,6 @@ spec:
           value: $(params.npm-version)
         - name: skip-cache
           value: $(params.skip-cache)                  
-        - name: prerelease
-          value: $(params.prerelease)      
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)                 
       workspaces:
         - name: output
           workspace: artifacts
@@ -215,10 +207,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -242,10 +230,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -269,10 +253,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -296,10 +276,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -323,10 +299,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -350,10 +322,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -377,10 +345,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -404,10 +368,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -431,10 +391,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -458,10 +414,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -485,10 +437,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -512,10 +460,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -539,10 +483,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -566,10 +506,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -593,10 +529,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -620,10 +552,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -647,10 +575,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -674,10 +598,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -701,10 +621,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -728,10 +644,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -755,10 +667,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -782,10 +690,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -809,10 +713,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
@@ -836,10 +736,6 @@ spec:
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)    
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
