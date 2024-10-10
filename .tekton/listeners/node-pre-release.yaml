@@ -33,6 +33,7 @@ spec:
       default: ""
     - name: prerelease
       value: "true"
+      default: ""
     - name: prerelease-node-version
       value: $(prerelease-node-version)
       default: ""
