@@ -31,7 +31,7 @@ spec:
     - name: esm
       value: $(params.esm)
     - name: skip-cache
-      value: $(params.skip-cache)     
+      value: $(params.skip-cache)      
 
 ---
 
