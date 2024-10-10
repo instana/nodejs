@@ -112,7 +112,7 @@ For example:
 
 ## Managing Dependencies In Packages
 
-We are using **npm workspaces** and **lerna v7**.
+We are using **npm workspaces** and **lerna**.
 There is no need to install lerna globally. Please use `npx lerna`.
 
 - https://lerna.js.org/docs/introduction

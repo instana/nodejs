@@ -18,7 +18,7 @@
     "packages/*"
   ],
   "license": "MIT",
-   "engines": {
+  "engines": {
     "node": ">=18.0.0"
   },
   "contributors": [
@@ -170,7 +170,7 @@
     "koa-bodyparser": "^4.4.1",
     "koa-morgan": "^1.0.1",
     "koa-router": "^13.0.1",
-    "lerna": "6.4.1",
+    "lerna": "^8.1.8",
     "lodash": "^4.17.21",
     "log4js": "^6.9.1",
     "memcached": "^2.2.2",
@@ -248,7 +248,6 @@
     "prisma": "^5.20.0"
   },
   "overrides": {
-    "nx": "15.8.9",
     "stream-shift": "1.0.2"
   },
   "config": {
