@@ -18,6 +18,10 @@
           value: $(params.esm)
         - name: coverage
           value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+        - name: prerelease-node-version
+          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
