@@ -38,9 +38,6 @@ exports.w3cTraceState = 'tracestate';
 exports.w3cInstana = 'in';
 exports.w3cInstanaEquals = `${exports.w3cInstana}=`;
 
-exports.serviceNameHeaderName = 'X-Instana-Service';
-exports.serviceNameHeaderNameLowerCase = exports.serviceNameHeaderName.toLowerCase();
-
 exports.ENTRY = 1;
 exports.EXIT = 2;
 exports.INTERMEDIATE = 3;
