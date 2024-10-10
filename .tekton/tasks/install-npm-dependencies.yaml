@@ -63,6 +63,11 @@ spec:
         #   nvm use "$PRERELEASE_NODE_VERSION"
         #   echo "Currently using node: $(node --version)"
         # fi
+
+        # if [ "$(params.prerelease)" == "true" ]; then
+        #   bin/install-prerelease.sh "$(params.prerelease-node-version)"
+        # fi
+
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         else
