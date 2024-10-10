@@ -15,7 +15,11 @@ spec:
     - name: npm-version
       value: $(params.npm-version)
     - name: skip-cache
-      value: $(params.skip-cache)      
+      value: $(params.skip-cache)   
+    - name: prerelease
+      value: $(params.prerelease)   
+    - name: prerelease-node-version
+      value: $(params.prerelease-node-version)   
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -34,6 +38,13 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        #enable this script after RC release bcz we need to install npm modules using the latest node version
+        # if [ "$(params.prerelease)" == "true" ]; then
+        #   bin/install-prerelease.sh "$(params.prerelease-node-version)"
+        #   source "$HOME/.nvm/nvm.sh"
+        #   nvm use "$(params.prerelease-node-version)" > /dev/null 
+        # fi
+        
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         else
@@ -42,6 +53,7 @@ spec:
 
         if [ "$(params.skip-cache)" == "true" ]; then
           echo "Skipping npm cache..."
+
           echo "Installing npm dependencies..."
           npm install --loglevel verbose
         else

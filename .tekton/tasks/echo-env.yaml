@@ -8,6 +8,12 @@ spec:
       value: $(params.node-version)
     - name: npm-version
       value: $(params.npm-version)
+    - name: prerelease
+      value: $(params.prerelease)   
+      default: ""
+    - name: prerelease-node-version
+      value: $(params.prerelease-node-version)   
+      default: ""
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -16,11 +22,18 @@ spec:
       image: node:$(params.node-version)
       script: |
         #!/bin/bash
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
 
-        echo "Node: $(node --version)"
+        if [ "$(params.prerelease)" == "true" ]; then
+          bin/install-prerelease.sh "$(params.prerelease-node-version)"
+          source "$HOME/.nvm/nvm.sh"
+          nvm use "$(params.prerelease-node-version)" > /dev/null 
+        fi
 
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi
 
-        echo "NPM: $(npm --version)"
+        echo "Using node: $(node --version)"
+        echo "Using NPM: $(npm --version)"

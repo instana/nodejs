@@ -106,6 +106,10 @@ spec:
           value: $(params.npm-version)          
         - name: skip-cache
           value: "false"
+        - name: prerelease
+          value: "false"
+        - name: prerelease-node-version
+          value: ""
       workspaces:
         - name: output
           workspace: artifacts
