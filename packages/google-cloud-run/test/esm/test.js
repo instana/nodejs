@@ -13,7 +13,7 @@ const Control = require('../Control');
 const { expectExactlyOneMatching } = require('../../../core/test/test_util');
 const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
-const esmSupportedVersion = require('@instana/core').tracing.esmSupportedVersion;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
 const region = 'us-central1';
 const instanceId =
@@ -44,7 +44,7 @@ function prelude(opts = {}) {
   return env;
 }
 // Run the tests only for supported node versions
-if (esmSupportedVersion(process.versions.node)) {
+if (supportedVersion(process.versions.node)) {
   describe('Google Cloud Run esm test', function () {
     this.timeout(config.getTestTimeout());
     this.slow(config.getTestTimeout() / 2);

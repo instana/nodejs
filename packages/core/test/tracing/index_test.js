@@ -118,8 +118,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     const extraConfigFromAgent = {
       tracing: {
         kafka: {
-          traceCorrelation: false,
-          headerFormat: 'string'
+          traceCorrelation: false
         }
       }
     };

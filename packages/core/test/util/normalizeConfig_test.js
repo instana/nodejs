@@ -29,8 +29,8 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_DISABLE_SPANBATCHING;
     delete process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION;
     delete process.env.INSTANA_KAFKA_TRACE_CORRELATION;
-    delete process.env.INSTANA_KAFKA_HEADER_FORMAT;
     delete process.env.INSTANA_PACKAGE_JSON_PATH;
+    delete process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN;
   }
 
   it('should apply all defaults', () => {
@@ -337,47 +337,6 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.kafka.traceCorrelation).to.be.false;
   });
 
-  it('should set Kafka header format to binary', () => {
-    const config = normalizeConfig({ tracing: { kafka: { headerFormat: 'binary' } } });
-    expect(config.tracing.kafka.headerFormat).to.equal('binary');
-  });
-
-  it('should set Kafka header format to string', () => {
-    const config = normalizeConfig({ tracing: { kafka: { headerFormat: 'string' } } });
-    expect(config.tracing.kafka.headerFormat).to.equal('string');
-  });
-
-  it('should set Kafka header format to both', () => {
-    const config = normalizeConfig({ tracing: { kafka: { headerFormat: 'both' } } });
-    expect(config.tracing.kafka.headerFormat).to.equal('both');
-  });
-
-  it('should ignore non-string Kafka header format', () => {
-    const config = normalizeConfig({ tracing: { kafka: { headerFormat: 13 } } });
-    // During phase 1 of the migration, 'both' will be the default value. In phase 2, the ability to configure the
-    // format will be removed and we will only use the 'string' format.
-    expect(config.tracing.kafka.headerFormat).to.equal('both');
-  });
-
-  it('should ignore invalid Kafka header format', () => {
-    const config = normalizeConfig({ tracing: { kafka: { headerFormat: 'whatever' } } });
-    // During phase 1 of the migration, 'both' will be the default value. In phase 2, the ability to configure the
-    // format will be removed and we will only use the 'string' format.
-    expect(config.tracing.kafka.headerFormat).to.equal('both');
-  });
-
-  it('should set Kafka header format to binary via INSTANA_KAFKA_HEADER_FORMAT', () => {
-    process.env.INSTANA_KAFKA_HEADER_FORMAT = 'binary';
-    const config = normalizeConfig();
-    expect(config.tracing.kafka.headerFormat).to.equal('binary');
-  });
-
-  it('should set Kafka header format to string via INSTANA_KAFKA_HEADER_FORMAT', () => {
-    process.env.INSTANA_KAFKA_HEADER_FORMAT = 'string';
-    const config = normalizeConfig();
-    expect(config.tracing.kafka.headerFormat).to.equal('string');
-  });
-
   it('should disable opentelemetry if config is set', () => {
     const config = normalizeConfig({
       tracing: { useOpentelemetry: false }
@@ -402,20 +361,6 @@ describe('util.normalizeConfig', () => {
     process.env.INSTANA_DISABLE_USE_OPENTELEMETRY = 'false';
     const config = normalizeConfig();
     expect(config.tracing.useOpentelemetry).to.equal(true);
-  });
-
-  it('should set Kafka header format to both via INSTANA_KAFKA_HEADER_FORMAT', () => {
-    process.env.INSTANA_KAFKA_HEADER_FORMAT = 'both';
-    const config = normalizeConfig();
-    expect(config.tracing.kafka.headerFormat).to.equal('both');
-  });
-
-  it('should ignore invalid Kafka header format in INSTANA_KAFKA_HEADER_FORMAT', () => {
-    process.env.INSTANA_KAFKA_HEADER_FORMAT = 'whatever';
-    const config = normalizeConfig();
-    // During phase 1 of the migration, 'both' will be the default value. In phase 2, the ability to configure the
-    // format will be removed and we will only use the 'string' format.
-    expect(config.tracing.kafka.headerFormat).to.equal('both');
   });
 
   it('should accept custom secrets config', () => {
@@ -501,6 +446,32 @@ describe('util.normalizeConfig', () => {
     expect(config.packageJsonPath).to.equal('/my/path');
   });
 
+  it('should disable allow root exit span if config is set to false', () => {
+    const config = normalizeConfig({
+      tracing: { allowRootExitSpan: false }
+    });
+    expect(config.tracing.allowRootExitSpan).to.equal(false);
+  });
+
+  it('should enable allow root exit span if config is set to true', () => {
+    const config = normalizeConfig({
+      tracing: { allowRootExitSpan: true }
+    });
+    expect(config.tracing.allowRootExitSpan).to.equal(true);
+  });
+
+  it('should disable allow root exit span if INSTANA_ALLOW_ROOT_EXIT_SPAN is not set', () => {
+    process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = false;
+    const config = normalizeConfig();
+    expect(config.tracing.allowRootExitSpan).to.equal(false);
+  });
+
+  it('should enable allow root exit span if INSTANA_ALLOW_ROOT_EXIT_SPAN is set', () => {
+    process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN = true;
+    const config = normalizeConfig();
+    expect(config.tracing.allowRootExitSpan).to.equal(true);
+  });
+
   function checkDefaults(config) {
     expect(config).to.be.an('object');
 
@@ -528,8 +499,8 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.spanBatchingEnabled).to.be.false;
     expect(config.tracing.disableW3cTraceCorrelation).to.be.false;
     expect(config.tracing.kafka.traceCorrelation).to.be.true;
-    expect(config.tracing.kafka.headerFormat).to.equal('both');
     expect(config.tracing.useOpentelemetry).to.equal(true);
+    expect(config.tracing.allowRootExitSpan).to.equal(false);
 
     expect(config.secrets).to.be.an('object');
     expect(config.secrets.matcherMode).to.equal('contains-ignore-case');

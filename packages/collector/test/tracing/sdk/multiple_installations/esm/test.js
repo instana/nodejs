@@ -7,7 +7,6 @@
 const expect = require('chai').expect;
 const path = require('path');
 const os = require('os');
-const semver = require('semver');
 const { mkdtempSync } = require('fs');
 const rimraf = require('rimraf');
 
@@ -17,8 +16,7 @@ const testUtils = require('@instana/core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 const isLatestEsmSupportedVersion = require('@instana/core').tracing.isLatestEsmSupportedVersion;
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('[ESM] tracing/sdk/multiple_installations', function () {
   this.timeout(Math.max(config.getTestTimeout() * 3, 30000));

@@ -18,7 +18,6 @@
 
 const path = require('path');
 const { expect } = require('chai');
-const semver = require('semver');
 const { fail } = expect;
 const {
   tracing: { constants }
@@ -54,7 +53,7 @@ const topic = 'rdkafka-topic';
 
 let mochaSuiteFn;
 
-if (!supportedVersion(process.versions.node) || semver.lte(process.versions.node, '16.0.0')) {
+if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe.skip;
 } else {
   mochaSuiteFn = describe;
@@ -309,10 +308,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     before(async () => {
       producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'producer'),
-        useGlobalAgent: true,
-        env: {
-          INSTANA_KAFKA_HEADER_FORMAT: 'string'
-        }
+        useGlobalAgent: true
       });
       consumerControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
@@ -364,9 +360,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     let consumerControls;
 
     before(async () => {
-      await customAgentControls.startAgent({
-        kafkaConfig: { headerFormat: 'string' }
-      });
+      await customAgentControls.startAgent();
 
       producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'producer'),

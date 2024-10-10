@@ -12,11 +12,9 @@ const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 const testUtils = require('@instana/core/test/test_util');
 const isLatestEsmSupportedVersion = require('@instana/core').tracing.isLatestEsmSupportedVersion;
-const semver = require('semver');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 const loaderPath = isLatestEsmSupportedVersion(process.versions.node)
   ? ['--import', path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-register.mjs')]

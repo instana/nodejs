@@ -68,7 +68,7 @@ function shimLevelMethod(derivedLogger, key, markAsError) {
 
 function instrumentedLevelMethod(originalMethod, markAsError) {
   return function (message) {
-    if (cls.skipExitTracing({ isActive })) {
+    if (cls.skipExitTracing({ isActive, skipAllowRootExitSpanPresence: true })) {
       return originalMethod.apply(this, arguments);
     }
 

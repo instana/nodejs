@@ -6,7 +6,6 @@
 
 const expect = require('chai').expect;
 const path = require('path');
-const semver = require('semver');
 const express = require('express');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -17,10 +16,8 @@ const portfinder = require('../test_util/portfinder');
 const globalAgent = require('../globalAgent');
 
 // NOTE: only run on the latest node version
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0')
-    ? describe.skip
-    : describe.skip;
+// This case is already skipped.
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.skip : describe.skip;
 
 // NOTE: Using @instana/collector and the OpenTelemetry SDK in the same process is not supported.
 //       Thus, this test does not verify desirable behavior but simply checks what exactly happens when

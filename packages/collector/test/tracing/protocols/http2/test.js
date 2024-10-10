@@ -30,8 +30,7 @@ mochaSuiteFn('tracing/http2', function () {
       extraHeaders: [
         //
         'X-My-Request-Header',
-        'X-My-Response-Header',
-        'x-iNsTanA-sErViCe'
+        'X-My-Response-Header'
       ],
       secretsList: ['remove']
     });
@@ -206,24 +205,6 @@ mochaSuiteFn('tracing/http2', function () {
         retry(() =>
           agentControls.getSpans().then(spans => {
             verifyRootHttpEntry(spans, `localhost:${serverControls.getPort()}`, '/request', 'GET', 200, false, true);
-          })
-        )
-      ));
-
-  it('must use x-service-service', () =>
-    serverControls
-      .sendRequest({
-        method: 'GET',
-        path: '/request',
-        headers: {
-          'x-instanA-SERVICE': 'Custom Service'
-        }
-      })
-      .then(() =>
-        retry(() =>
-          agentControls.getSpans().then(spans => {
-            const entry = verifyRootHttpEntry(spans, `localhost:${serverControls.getPort()}`, '/request');
-            expect(entry.data.service).to.equal('Custom Service');
           })
         )
       ));

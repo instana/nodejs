@@ -6,8 +6,9 @@
 'use strict';
 
 const semver = require('semver');
+const { minimumNodeJsVersion } = require('../util/nodeJsVersionCheck');
 
 /** @type {(version: string) => boolean} */
 module.exports = exports = function supportedVersion(version) {
-  return semver.satisfies(version, '>=14.0.0');
+  return semver.satisfies(version, `>=${minimumNodeJsVersion}`);
 };

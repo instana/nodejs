@@ -7,7 +7,7 @@
 /**
  * This is the minimum required Node.js version for all @instana packages.
  */
-exports.minimumNodeJsVersion = 14;
+exports.minimumNodeJsVersion = 18;
 
 /**
  * Checks if the value of process.version denotes a Node.js version that is not supported, that is, older than the given

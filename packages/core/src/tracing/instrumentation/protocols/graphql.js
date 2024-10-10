@@ -167,10 +167,15 @@ function traceSubscriptionUpdate(
     return originalFunction.apply(originalThis, originalArgs);
   }
 
-  // We pass `fallbackToSharedContext: true` to getCurrentSpan to access the GraphQL query context, which then
+  // WE DO NOT MAKE USE OF `cls.skipExitTracing` in the graphql instrumentation,
+  // because we have a special usage of `cls.getReducedSpan(true)`. Feel free to refactor this.
+
+  // CASE 1: We pass `fallbackToSharedContext: true` to getCurrentSpan to access the GraphQL query context, which then
   // triggered this subscription query. We need to connect them.
-  // Additionally, if there is no active entry span, we fall back to the reduced span of the most recent entry span. See
+  // CASE 2: If there is no active entry span, we fall back to the reduced span of the most recent entry span. See
   // comment in packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
+  // CASE 3: We can ignore `allowRootExitSpan` is enabled,  because subscriptions only work with the
+  //         apollo-server-express and it doesn't make sense to enable `allowRootExitSpan` for this case.
   const parentSpan = cls.getCurrentSpan(true) || cls.getReducedSpan(true);
 
   if (parentSpan && !constants.isExitSpan(parentSpan) && parentSpan.t && parentSpan.s) {
@@ -308,7 +313,9 @@ function shimApolloGatewayExecuteQueryPlanFunction(originalFunction) {
     if (!isActive || cls.tracingSuppressed()) {
       return originalFunction.apply(this, arguments);
     }
+
     const activeEntrySpan = cls.getCurrentSpan();
+
     if (activeEntrySpan && activeEntrySpan.k === constants.ENTRY) {
       // Most of the heavy lifting to trace Apollo Federation gateways (implemented by @apollo/gateway) is done by our
       // standard GraphQL tracing, because those gateway queries are all also run through normal resolvers, which we

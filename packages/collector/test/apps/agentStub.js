@@ -38,7 +38,6 @@ const enableSpanBatching = process.env.ENABLE_SPANBATCHING === 'true';
 const kafkaTraceCorrelation = process.env.KAFKA_TRACE_CORRELATION
   ? process.env.KAFKA_TRACE_CORRELATION === 'true'
   : null;
-const kafkaHeaderFormat = process.env.KAFKA_HEADER_FORMAT;
 
 let discoveries = {};
 let rejectAnnounceAttempts = 0;
@@ -87,20 +86,17 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     }
   };
 
-  if (kafkaTraceCorrelation != null || kafkaHeaderFormat || extraHeaders.length > 0 || enableSpanBatching) {
+  if (kafkaTraceCorrelation != null || extraHeaders.length > 0 || enableSpanBatching) {
     response.tracing = {};
 
     if (extraHeaders.length > 0) {
       response.tracing['extra-http-headers'] = extraHeaders;
     }
 
-    if (kafkaTraceCorrelation != null || kafkaHeaderFormat) {
+    if (kafkaTraceCorrelation != null) {
       response.tracing.kafka = {};
       if (kafkaTraceCorrelation != null) {
         response.tracing.kafka['trace-correlation'] = kafkaTraceCorrelation;
-      }
-      if (kafkaHeaderFormat) {
-        response.tracing.kafka['header-format'] = kafkaHeaderFormat;
       }
     }
 

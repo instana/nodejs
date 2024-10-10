@@ -9,9 +9,6 @@ const logger = require('./console_logger');
 
 const instanaEndpointUrlEnvVar = 'INSTANA_ENDPOINT_URL';
 const instanaAgentKeyEnvVar = 'INSTANA_AGENT_KEY';
-// The following two environment variables are deprecated and will be removed soon.
-const deprecatedInstanaUrlEnvVar = 'INSTANA_URL';
-const deprecatedInstanaKeyEnvVar = 'INSTANA_KEY';
 const instanaZoneEnvVar = 'INSTANA_ZONE';
 
 let valid = false;
@@ -29,11 +26,7 @@ exports.sendUnencrypted = process.env[exports.sendUnencryptedEnvVar] === 'true';
 const customZone = process.env[instanaZoneEnvVar] ? process.env[instanaZoneEnvVar] : undefined;
 
 exports.validate = function validate({ validateInstanaAgentKey } = {}) {
-  _validate(
-    process.env[instanaEndpointUrlEnvVar] || process.env[deprecatedInstanaUrlEnvVar],
-    process.env[instanaAgentKeyEnvVar] || process.env[deprecatedInstanaKeyEnvVar],
-    validateInstanaAgentKey
-  );
+  _validate(process.env[instanaEndpointUrlEnvVar], process.env[instanaAgentKeyEnvVar], validateInstanaAgentKey);
 };
 
 // exposed for testing

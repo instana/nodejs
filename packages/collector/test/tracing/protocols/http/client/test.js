@@ -7,7 +7,6 @@
 
 const path = require('path');
 const expect = require('chai').expect;
-const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -36,7 +35,7 @@ mochaSuiteFn('tracing/http client', function () {
   registerConnectionRefusalTest.call(this, false);
   registerConnectionRefusalTest.call(this, true);
 
-  const runSuperagent = semver.gte(process.versions.node, '16.0.0') ? describe : describe.skip;
+  const runSuperagent = supportedVersion(process.versions.node) ? describe : describe.skip;
   runSuperagent('superagent', function () {
     registerSuperagentTest.call(this);
   });
@@ -90,6 +89,62 @@ mochaSuiteFn('tracing/http client', function () {
       await retry(async () => {
         const spans = await globalAgent.instance.getSpans();
         expect(spans.length).to.equal(3);
+      });
+    });
+  });
+
+  // When INSTANA_ALLOW_ROOT_EXIT_SPAN is set to TRUE via environment variable
+  // it should track the exit spans without parent
+  describe('Allow Root Exit Span Case 1', function () {
+    let agentControls;
+
+    before(async () => {
+      agentControls = new ProcessControls({
+        appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_ALLOW_ROOT_EXIT_SPAN: true
+        }
+      });
+
+      await agentControls.start(null, null, true);
+    });
+
+    it('should trace exit span without entry span if INSTANA_ALLOW_ROOT_EXIT_SPAN is true', async () => {
+      await delay(2500);
+
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        expect(spans.length).to.equal(4);
+        expect(spans.filter(obj => obj.k === constants.EXIT).length).to.be.equal(4);
+        expect(spans.filter(obj => obj.k === constants.ENTRY).length).to.be.equal(0);
+      });
+    });
+  });
+
+  // When INSTANA_ALLOW_ROOT_EXIT_SPAN is set to FALSE via environment variable
+  // it should not track the exit spans without parent
+  describe('Allow Root Exit Span Case 2', function () {
+    let agentControls;
+
+    before(async () => {
+      agentControls = new ProcessControls({
+        appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_ALLOW_ROOT_EXIT_SPAN: false
+        }
+      });
+
+      await agentControls.start(null, null, true);
+    });
+
+    it('should not trace exit span without entry span if INSTANA_ALLOW_ROOT_EXIT_SPAN is false', async () => {
+      await delay(500);
+
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        expect(spans.length).to.equal(0);
       });
     });
   });
@@ -286,11 +341,7 @@ function registerTests(useHttps) {
               span =>
                 expect(span.data.http.url).to.match(/ha-te-te-peh:\/\/999\.0\.0\.1(?:\/)?:not-a-port\/malformed-url/),
               span => {
-                if (semver.gte(process.version, '16.0.0')) {
-                  expect(span.data.http.error).to.match(/Invalid URL/);
-                } else {
-                  expect(span.data.http.error).to.match(/Protocol .* not supported./);
-                }
+                expect(span.data.http.error).to.match(/Invalid URL/);
               },
               span => expect(span.t).to.equal(entrySpan.t),
               span => expect(span.p).to.equal(entrySpan.s)

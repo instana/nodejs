@@ -168,23 +168,6 @@ mochaSuiteFn('tracing/common', function () {
       );
     });
 
-    describe('with header when agent is configured to capture the header', function () {
-      const agentControls = new AgentStubControls();
-      const agentConfig = { extraHeaders: ['x-iNsTanA-sErViCe'] };
-
-      before(async () => {
-        await agentControls.startAgent(agentConfig);
-      });
-      after(async () => {
-        await agentControls.stopAgent();
-      });
-
-      registerServiceNameTest.call(this, agentControls, {
-        configMethod: 'X-Instana-Service header',
-        expectServiceNameOnSpans: 'on-entry-span'
-      });
-    });
-
     describe('with header when agent is _not_ configured to capture the header', function () {
       const agentControls = new AgentStubControls();
 
@@ -196,7 +179,6 @@ mochaSuiteFn('tracing/common', function () {
       });
 
       registerServiceNameTest.call(this, agentControls, {
-        configMethod: 'X-Instana-Service header',
         expectServiceNameOnSpans: 'no'
       });
     });
@@ -236,11 +218,6 @@ mochaSuiteFn('tracing/common', function () {
         const req = {
           path: '/with-intermediate-and-exit-spans'
         };
-        if (configMethod === 'X-Instana-Service header') {
-          req.headers = {
-            'x-InsTana-sErvice': 'much-custom-very-wow service'
-          };
-        }
         return controls.sendRequest(req).then(() => verifyServiceName(agentControls, expectServiceNameOnSpans));
       });
     }

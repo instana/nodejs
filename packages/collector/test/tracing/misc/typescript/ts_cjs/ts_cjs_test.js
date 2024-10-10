@@ -11,11 +11,9 @@ const config = require('@instana/core/test/config');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 const testUtils = require('@instana/core/test/test_util');
-const semver = require('semver');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('Typescript TS->JS', function () {
   this.timeout(config.getTestTimeout() * 5);

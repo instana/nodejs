@@ -15,12 +15,7 @@ const tracingUtil = require('./tracingUtil');
 const spanBuffer = require('./spanBuffer');
 const supportedVersion = require('./supportedVersion');
 const { otelInstrumentations } = require('./opentelemetry-instrumentations');
-const {
-  esmSupportedVersion,
-  isLatestEsmSupportedVersion,
-  hasExperimentalLoaderFlag,
-  isESMApp
-} = require('../util/esm');
+const { isLatestEsmSupportedVersion, hasExperimentalLoaderFlag, isESMApp } = require('../util/esm');
 const iitmHook = require('../util/iitmHook');
 const { getPreloadFlags } = require('../util/getPreloadFlags');
 
@@ -123,7 +118,6 @@ if (customInstrumentations.length > 0) {
 /**
  * @typedef {Object} KafkaTracingConfig
  * @property {boolean} [traceCorrelation]
- * @property {string} [headerFormat]
  */
 
 /** @type {Array.<InstanaInstrumentedModule>} */
@@ -138,7 +132,6 @@ exports.sdk = sdk;
 exports.spanBuffer = spanBuffer;
 exports.supportedVersion = supportedVersion;
 exports.util = tracingUtil;
-exports.esmSupportedVersion = esmSupportedVersion;
 exports.isLatestEsmSupportedVersion = isLatestEsmSupportedVersion;
 
 /**
