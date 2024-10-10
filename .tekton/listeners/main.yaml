@@ -31,6 +31,12 @@ spec:
       value: $(params.skip-cache)      
     - name: context
       value: "node-dev"
+    - name: prerelease
+      value: "true"
+      default: ""
+    - name: prerelease-node-version
+      value: $(prerelease-node-version)
+      default: ""
 ---
 
 apiVersion: triggers.tekton.dev/v1beta1
