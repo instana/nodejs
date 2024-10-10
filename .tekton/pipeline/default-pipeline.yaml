@@ -58,6 +58,10 @@ spec:
           value: $(params.node-version)
         - name: npm-version
           value: $(params.npm-version)  
+        - name: prerelease
+          value: $(params.prerelease)      
+        - name: prerelease-node-version
+          value: $(params.prerelease-node-version)   
     - name: extract-repository-url
       taskRef:
         name: toolchain-extract-value
