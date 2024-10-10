@@ -25,36 +25,28 @@ spec:
       script: |
         #!/bin/bash
 
-        ARTIFACTS_PATH="$(workspaces.output.path)"
-        echo "Listing current directory contents before cd:"
-        ls -la
-
-        echo "Changing directory to $ARTIFACTS_PATH"
-        cd $ARTIFACTS_PATH || { echo "Failed to change directory to $ARTIFACTS_PATH"; exit 1; }
-
-        # List the contents of the artifacts directory
-        echo "Listing contents of $ARTIFACTS_PATH:"
-        ls -la
-
-        echo "Searching for .tekton directory..."
-        if [ -d ".tekton" ]; then
-          echo "Found .tekton directory."
-          
-          # Check for the install script
-          if [ -f ".tekton/install-prerelease.sh" ]; then
-            chmod +x .tekton/install-prerelease.sh
-            echo "Executing .tekton/install-prerelease.sh"
-            ./.tekton/install-prerelease.sh "$(params.prerelease-node-version)"
-          else
-            echo "Error: .tekton/install-prerelease.sh not found."
-            exit 1
-          fi
+        PRERELEASE_NODE_VERSION="$(params.prerelease-node-version)"
+        echo "Installing node.js prerelease version $PRERELEASE_NODE_VERSION.."
+        mirrors=("https://nodejs.org/download/rc" "https://nodejs.org/download/nightly")
+        if ! command -v nvm &> /dev/null; then
+          echo "NVM not found. Installing NVM..."
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+          # Load NVM
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
         else
-          echo "Error: .tekton directory not found."
-          exit 1
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
         fi
-
-        echo "Node: $(node --version)"
+        for mirror in "${mirrors[@]}"; do
+          NVM_NODEJS_ORG_MIRROR="$mirror" nvm install "$PRERELEASE_NODE_VERSION" && break || \
+          echo "Installation failed with mirror: $mirror"
+        done
+        if ! nvm ls "$PRERELEASE_NODE_VERSION" >/dev/null; then
+          echo "Both RC and Nightly installations failed for Node.js version $PRERELEASE_NODE_VERSION."
+        fi
+        nvm use "$PRERELEASE_NODE_VERSION"
+        echo "Currently using node: $(node --version)"
 
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
