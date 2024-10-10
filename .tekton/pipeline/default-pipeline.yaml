@@ -54,6 +54,8 @@ spec:
         - name: output
           workspace: artifacts        
       params:
+        - name: target-branch
+          value: $(params.target-branch)
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
