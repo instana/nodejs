@@ -8,6 +8,10 @@ spec:
       value: $(params.node-version)
     - name: npm-version
       value: $(params.npm-version)
+    - name: prerelease
+      value: $(params.prerelease)   
+    - name: prerelease-node-version
+      value: $(params.prerelease-node-version)   
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -16,6 +20,12 @@ spec:
       image: node:$(params.node-version)
       script: |
         #!/bin/bash
+
+        if [ "$(params.prerelease)" == "true" ]; then
+          chmod +x ./.tekton/install-prerelease.sh
+          ./.tekton/install-prerelease.sh "$(params.prerelease-node-version)"
+        fi
+
         echo "Node: $(node --version)"
 
         if [ -n "$(params.npm-version)" ]; then
