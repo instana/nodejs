@@ -77,8 +77,6 @@ spec:
         MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
         if [ "$(params.prerelease)" == "true" ]; then
-        PRERELEASE_NODE_VERSION="$(params.prerelease-node-version)"
-        if [ "$(params.prerelease)" == "true" ]; then
           bin/install-prerelease.sh "$(params.prerelease-node-version)"
         fi
         if [ -n "$(params.npm-version)" ]; then
