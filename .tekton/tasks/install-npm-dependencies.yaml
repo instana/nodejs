@@ -36,7 +36,11 @@ spec:
       script: |
         #!/bin/bash
         ARTIFACTS_PATH="$(workspaces.output.path)"
+        echo "Listing current directory contents before cd:"
+        ls -la
         cd $ARTIFACTS_PATH
+        echo "Listing contents of $ARTIFACTS_PATH:"
+        ls -la
 
         echo "path: $ARTIFACTS_PATH"
 
