@@ -25,4 +25,5 @@ spec:
 
         echo "NPM: $(npm --version)"
         echo "MUMUMU"
+        echo "WAUAU"
         exit 1;
