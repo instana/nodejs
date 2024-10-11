@@ -45,7 +45,7 @@ spec:
           nvm use "$(params.prerelease-node-version)" > /dev/null 
 
           # TODO: autoprofile won't install with a prerelease yet.
-          lerna exec --ignore packages/autoprofile -- rm -rf node_modules && npm install --loglevel verbose --force
+          lerna exec --ignore packages/autoprofile -- npm install --loglevel verbose --force
           exit 0
         fi
         
