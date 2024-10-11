@@ -24,6 +24,10 @@ spec:
       value: $(params.esm)
     - name: coverage
       value: $(params.coverage)
+    - name: prerelease
+      value: $(params.prerelease) 
+    - name: prerelease-node-version 
+      value: $(params.prerelease-node-version)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -74,6 +78,11 @@ spec:
         CIRCLE_COMPARE_URL=""
         MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
+        if [ "$(params.prerelease)" == "true" ]; then
+          source bin/install-prerelease.sh "$(params.prerelease-node-version)"
+          nvm use "$(params.prerelease-node-version)" > /dev/null 
+          echo "Using node: $(node --version)"
+        fi
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi

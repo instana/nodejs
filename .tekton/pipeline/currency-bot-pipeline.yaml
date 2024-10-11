@@ -38,6 +38,10 @@ spec:
       value: $(params.coverage)
     - name: context
       value: $(params.context)
+    - name: prerelease
+      value: $(params.prerelease)
+    - name: prerelease-node-version
+      value: $(params.prerelease-node-version)
   workspaces:
     - name: artifacts
   tasks:
@@ -46,12 +50,16 @@ spec:
         name: echo-env
       workspaces:
         - name: output
-          workspace: artifacts        
+          workspace: artifacts
       params:
         - name: node-version
           value: $(params.node-version)
         - name: npm-version
-          value: $(params.npm-version)  
+          value: $(params.npm-version)
+        - name: prerelease
+          value: $(params.prerelease)
+        - name: prerelease-node-version
+          value: $(params.prerelease-node-version)     
     - name: extract-repository-url
       taskRef:
         name: toolchain-extract-value
@@ -106,6 +114,10 @@ spec:
           value: $(params.npm-version)          
         - name: skip-cache
           value: "false"
+        - name: prerelease
+          value: $(params.prerelease)
+        - name: prerelease-node-version
+          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts

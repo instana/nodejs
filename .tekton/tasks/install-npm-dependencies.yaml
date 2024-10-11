@@ -15,7 +15,11 @@ spec:
     - name: npm-version
       value: $(params.npm-version)
     - name: skip-cache
-      value: $(params.skip-cache)      
+      value: $(params.skip-cache)   
+    - name: prerelease
+      value: $(params.prerelease)   
+    - name: prerelease-node-version
+      value: $(params.prerelease-node-version)   
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -38,10 +42,21 @@ spec:
           npm install npm@$(params.npm-version) -g
         else
           npm install npm -g
+        fi     
+
+        if [ "$(params.prerelease)" == "true" ]; then
+          echo "Installing dependencies for prerelease..."
+
+          source bin/install-prerelease.sh "$(params.prerelease-node-version)"
+          nvm use "$(params.prerelease-node-version)" > /dev/null 
+
+          npm install --loglevel verbose          
+          exit 0
         fi
 
         if [ "$(params.skip-cache)" == "true" ]; then
           echo "Skipping npm cache..."
+
           echo "Installing npm dependencies..."
           npm install --loglevel verbose
         else

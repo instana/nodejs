@@ -9,5 +9,6 @@ const semver = require('semver');
 
 /** @type {(version: string) => boolean} */
 module.exports = exports = function supportedVersion(version) {
-  return semver.satisfies(version, '>=14.0.0');
+  const includePrerelease = process.env.NODE_ENV === 'test';
+  return semver.satisfies(version, '>=14.0.0', { includePrerelease });
 };
