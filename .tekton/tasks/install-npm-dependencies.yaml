@@ -38,11 +38,16 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
-        #enable this script after RC release bcz we need to install npm modules using the latest node version
-        # if [ "$(params.prerelease)" == "true" ]; then
-        #   source bin/install-prerelease.sh "$(params.prerelease-node-version)"
-        #   nvm use "$(params.prerelease-node-version)" > /dev/null 
-        # fi
+        if [ "$(params.prerelease)" == "true" ]; then
+          npm install lerna@6.1.4 -g
+
+          source bin/install-prerelease.sh "$(params.prerelease-node-version)"
+          nvm use "$(params.prerelease-node-version)" > /dev/null 
+
+          # TODO: autoprofile won't install with a prerelease yet.
+          lerna exec --ignore packages/autoprofile -- rm -rf node_modules && npm install --loglevel verbose --force
+          exit 0
+        fi
         
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
