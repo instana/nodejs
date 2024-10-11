@@ -38,6 +38,12 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        if [ -n "$(params.npm-version)" ]; then
+          npm install npm@$(params.npm-version) -g
+        else
+          npm install npm -g
+        fi     
+
         if [ "$(params.prerelease)" == "true" ]; then
           npm install lerna@6.4.1 -g
 
@@ -46,13 +52,10 @@ spec:
 
           # TODO: autoprofile won't install with a prerelease node version yet.
           npm run install-deps-prerelease
+
+          ls -la node_modules
+          
           exit 0
-        fi
-        
-        if [ -n "$(params.npm-version)" ]; then
-          npm install npm@$(params.npm-version) -g
-        else
-          npm install npm -g
         fi
 
         if [ "$(params.skip-cache)" == "true" ]; then
