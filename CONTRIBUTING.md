@@ -364,7 +364,7 @@ For nightly versions,
 NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/nightly" nvm install 23.0.0
 ```
 
-- To revert back to stable versions, unset the environment variable NVM_NODEJS_ORG_MIRROR and use an appropriate version.
+To revert back to stable versions, unset the environment variable NVM_NODEJS_ORG_MIRROR:
 
 ```sh
 unset NVM_NODEJS_ORG_MIRROR
