@@ -32,5 +32,5 @@ spec:
           npm install npm@$(params.npm-version) -g
         fi
 
-        echo "Using NODE: $(node --version)"
-        echo "Using NPM: $(npm --version)"
+        echo "Using node: $(node --version)"
+        echo "Using npm: $(npm --version)"
