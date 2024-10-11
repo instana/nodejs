@@ -347,7 +347,8 @@ node --experimental-loader /path/to/instana/node_modules/@instana/collector/esm-
 
 ## Node.js prerelease
 
-We have added support a prerelease [pipeline on Tekton](https://cloud.ibm.com/devops/pipelines/tekton/c2cd6a8d-ea5a-47b0-913e-cd172d63833f?env_id=ibm:yp:eu-de).
+We have added support for a prerelease [pipeline on Tekton](https://cloud.ibm.com/devops/pipelines/tekton/c2cd6a8d-ea5a-47b0-913e-cd172d63833f?env_id=ibm:yp:eu-de).
+
 We support [RC]("https://nodejs.org/download/rc") & [NIGHTLY]("https://nodejs.org/download/nightly") versions.
 
 If you would like to test something against a prerelease locally, follow these instructions:
