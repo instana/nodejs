@@ -8,9 +8,10 @@ if ! command -v nvm &> /dev/null; then
   if ! curl -sSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash &> /dev/null; then
     echo "Failed to install NVM."
     exit 1
-  fi
-  source "$HOME/.nvm/nvm.sh"
+  fi  
 fi
+
+source "$HOME/.nvm/nvm.sh"
 
 NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/rc"
 if ! nvm install "$PRERELEASE_NODE_VERSION" &> /dev/null; then
