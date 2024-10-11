@@ -8,6 +8,10 @@ Python3 (< 3.11) is required, otherwise the db2 package won't build, see https:/
 If you're having issues with distutils module, then double check the python3 version (python3 --version) and make sure that the version pointing to is < 3.12
 The error can be something like: ModuleNotFoundError: No module named 'distutils'
 
+`npm i lerna@6.1.4 -g`
+We need lerna being installed globally, because we have some
+package.json scripts, who rely on lerna e.g. `npm run reinstall-deps`.
+
 `brew install jq` for OSX (for other systems please look up [here](https://stedolan.github.io/jq/)) is required to run `npm run audit` or `lerna audit run`.
 
 Note: You might need to install `libpq-dev`/`postgresql-devel` or a similar package before running `npm install` because `pg-native` depends on it. (`@instana/collector` and friends do not depend on `pg-native` but our test suite depends on it.)
