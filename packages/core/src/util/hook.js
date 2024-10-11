@@ -19,7 +19,7 @@ const isESMApp = require('./esm').isESMApp;
  * Offers support for all native ECMAScript Modules within ESM applications.
  * However, it does not provide support for modules loaded from CJS applications.
  *
- * Note: In the next major release (4.x), we plan to transition all CJS modules in ESM applications to be
+ * Note: In the next major release (5.x), we plan to transition all CJS modules in ESM applications to be
  * supported with iitmHook. For now, this approach is chosen to minimize risk.
  */
 

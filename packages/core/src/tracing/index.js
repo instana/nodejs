@@ -181,7 +181,7 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
     console.debug(`The App is using the following preload flags: ${preloadFlags}`);
   }
 
-  // Consider removing this in the next major release(v4.x) of the @instana package.
+  // Consider removing this in the next major release(v5.x) of the @instana package.
   if (hasExperimentalLoaderFlag()) {
     // eslint-disable-next-line no-console
     console.warn(
