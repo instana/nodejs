@@ -45,10 +45,11 @@ spec:
         fi     
 
         if [ "$(params.prerelease)" == "true" ]; then
-          npm install lerna@6.4.1 -g
+          echo "Installing dependencies for prerelease..."
 
           source bin/install-prerelease.sh "$(params.prerelease-node-version)"
           nvm use "$(params.prerelease-node-version)" > /dev/null 
+
           npm install --loglevel verbose          
           exit 0
         fi
