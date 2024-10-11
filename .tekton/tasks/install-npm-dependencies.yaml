@@ -40,8 +40,7 @@ spec:
 
         #enable this script after RC release bcz we need to install npm modules using the latest node version
         # if [ "$(params.prerelease)" == "true" ]; then
-        #   bin/install-prerelease.sh "$(params.prerelease-node-version)"
-
+        #   source bin/install-prerelease.sh "$(params.prerelease-node-version)"
         #   nvm use "$(params.prerelease-node-version)" > /dev/null 
         # fi
         
