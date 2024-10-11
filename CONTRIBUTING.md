@@ -356,7 +356,7 @@ If you would like to test something against a prerelease locally, follow these i
 Set the NVM_NODEJS_ORG_MIRROR environment variable to the appropriate mirror (either rc or nightly).
 
 ```sh
-  NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/rc" nvm install 23.0.0
+NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/rc" nvm install 23.0.0
 ```
 
 For nightly versions,
