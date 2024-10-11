@@ -49,12 +49,7 @@ spec:
 
           source bin/install-prerelease.sh "$(params.prerelease-node-version)"
           nvm use "$(params.prerelease-node-version)" > /dev/null 
-
-          # TODO: autoprofile won't install with a prerelease node version yet.
-          npm run install-deps-prerelease
-
-          ls -la node_modules
-          
+          npm install --loglevel verbose          
           exit 0
         fi
 
