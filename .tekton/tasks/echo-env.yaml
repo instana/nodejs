@@ -24,6 +24,6 @@ spec:
         fi
 
         echo "NPM: $(npm --version)"
-        echo "MUMUMU"
-        echo "WAUAU"
+        echo "jopwjfweop"
+        echo "jfoepwjfewop"
         exit 1;
