@@ -39,13 +39,13 @@ spec:
         cd $ARTIFACTS_PATH
 
         if [ "$(params.prerelease)" == "true" ]; then
-          npm install lerna@6.1.4 -g
+          npm install lerna@6.4.1 -g
 
           source bin/install-prerelease.sh "$(params.prerelease-node-version)"
           nvm use "$(params.prerelease-node-version)" > /dev/null 
 
-          # TODO: autoprofile won't install with a prerelease yet.
-          lerna exec --ignore packages/autoprofile -- npm install --loglevel verbose --force
+          # TODO: autoprofile won't install with a prerelease node version yet.
+          npm run install-deps-prerelease
           exit 0
         fi
         
