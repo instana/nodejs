@@ -9,6 +9,7 @@ const { expect } = require('chai');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const semver = require('semver');
 
 const config = require('../../../core/test/config');
 const { retry } = require('../../../core/test/test_util');
@@ -18,8 +19,12 @@ const { execSync } = require('child_process');
 
 const tmpFolder = path.join(os.tmpdir(), 'native-module-retry', process.pid.toString());
 
+// NOTE: we skip this test on the prerelease pipeline because
+//       we add prereleases when the official Node.js release happens.
+const mochaSuiteFn = semver.prerelease(process.versions.node) ? describe.skip : describe;
+
 // Test suite for verifying the fallback mechanism for loading native add-ons.
-describe('retry loading native addons', function () {
+mochaSuiteFn('retry loading native addons', function () {
   const timeout = Math.max(config.getTestTimeout(), 20000);
   this.timeout(timeout);
 
