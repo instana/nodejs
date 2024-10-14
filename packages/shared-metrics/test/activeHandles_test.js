@@ -22,7 +22,7 @@ describe('metrics.activeHandles', function () {
   });
 
   it('should update handle count for a setTimeout', () => {
-    if (semver.satisfies(process.versions.node, '>=11')) {
+    if (semver.satisfies(process.versions.node, '>=11', { includePrerelease: true })) {
       // skip test beginning with Node.js 11, I suspect commit https://github.com/nodejs/node/commit/ccc3bb73db
       // (PR https://github.com/nodejs/node/pull/24264) to have broken this test. Seems timeouts do no longer add to
       // active handles. See 'with net client/server' for a test case that verifies this metric also for
