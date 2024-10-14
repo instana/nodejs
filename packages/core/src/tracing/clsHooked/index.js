@@ -20,9 +20,11 @@ const semver = require('semver');
  * - AsyncLocalStorage fix introduced in v17.2: https://github.com/nodejs/node/blob/master/doc/changelogs/CHANGELOG_V17.md#commits-5
  * - AsyncLocalStorage fix introduced in v16.14: https://github.com/nodejs/node/blob/master/doc/changelogs/CHANGELOG_V16.md#commits
  */
+
+const includePrerelease = process.env.NODE_ENV === 'test';
 if (
   process.env.INSTANA_FORCE_LEGACY_CLS !== 'true' &&
-  semver.satisfies(process.versions.node, '14.0 - 16.6 || ^16.14 || >=17.2')
+  semver.satisfies(process.versions.node, '14.0 - 16.6 || ^16.14 || >=17.2', { includePrerelease })
 ) {
   module.exports = require('./async_local_storage_context');
 } else {

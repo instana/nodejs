@@ -154,15 +154,21 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
             )
           ));
 
-      it('[suppressed] should not trace', () =>
-        controls
+      it('[suppressed] should not trace', async () => {
+        return controls
           .sendRequest({
             method: 'GET',
             path: '/test',
             suppressTracing: true
           })
           .then(() => delay(DELAY_TIMEOUT_IN_MS))
-          .then(() => retry(() => agentControls.getSpans().then(spans => expect(spans).to.be.empty))));
+          .then(() => {
+            return retry(async () => {
+              const spans = await agentControls.getSpans();
+              expect(spans).to.be.empty;
+            });
+          });
+      });
     });
 
     describe('opentelemetry is disabled', function () {
