@@ -20,12 +20,14 @@ describe('metrics.activeHandles', function () {
     expect(activeHandles.currentPayload).to.equal(process._getActiveHandles().length);
   });
 
-  // Skipping the test as we are not supporting node < 11.
-  // We can unskip the test once we move from the deprecated flag _getActiveHandles.
-  // The new flag works better https://nodejs.org/api/process.html#processgetactiveresourcesinfo
-  // refer https://github.com/instana/nodejs/pull/1387 for context
+  // This test is only compatible with Node.js versions lower than 11.
+  // The failure is due to changes introduced in commit:
+  //  https://github.com/nodejs/node/commit/ccc3bb73db.
+  // We can reintroduce the test once we switch from the deprecated
+  // _getActiveHandles flag to getActiveResourcesInfo, which is more reliable.
+  // More details: https://nodejs.org/api/process.html#processgetactiveresourcesinfo
+  // For additional context, see: https://github.com/instana/nodejs/pull/1387
 
-  // OLD issue (used to skip this test for node >= 11): https://github.com/nodejs/node/commit/ccc3bb73db
   it.skip('should update handle count for a setTimeout', () => {
     const previousCount = activeHandles.currentPayload;
     const timeoutHandle = setTimeout(() => {}, 100);
