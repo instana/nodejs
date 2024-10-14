@@ -31,8 +31,6 @@ awsProducts.forEach(awsProduct => {
 
 let isActive = false;
 
-exports.instrumentationName = 'aws-sdk/v3';
-
 exports.init = function init() {
   sqsConsumer.init();
 
