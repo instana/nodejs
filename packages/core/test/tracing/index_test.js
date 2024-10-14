@@ -138,6 +138,17 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     expect(initAwsSdkv3).to.have.been.called;
     expect(activateAwsSdkv3).to.have.been.called;
   });
+   it('deactivate aws-sdk/v3 and aws-sdk/v2', () => {
+     initAndActivate({ tracing: { disabledTracers: ['aws-sdk/v3', 'aws-sdk/v2'] } });
+
+     // aws-sdk/v2 has been disabled (via aws-sdk/v2)
+     expect(initAwsSdkv2).not.to.have.been.called;
+     expect(activateAwsSdkv2).not.to.have.been.called;
+
+     // aws-sdk/v3 has been disabled (via aws-sdk/v3)
+     expect(initAwsSdkv3).not.to.have.been.called;
+     expect(activateAwsSdkv3).not.to.have.been.called;
+   });
 
   function initAndActivate(initConfig, extraConfigForActivate) {
     normalizeConfig(initConfig);
