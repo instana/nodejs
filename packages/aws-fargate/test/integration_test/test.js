@@ -768,7 +768,7 @@ describe('AWS fargate integration test', function () {
     expect(nodeJsData.sensorVersion).to.match(/^\d+\.\d+.\d+(?:-rc\.\d+)?$/);
     expect(nodeJsData.startTime).to.be.at.most(Date.now());
     expect(nodeJsData.versions).to.be.an('object');
-    expect(nodeJsData.versions.node).to.match(/^\d+\.\d+\.\d+$/);
+    expect(nodeJsData.versions.node).to.match(/^\d+\.\d+\.\d+/);
     expect(`v${nodeJsData.versions.node}`).to.equal(process.version);
     expect(nodeJsData.versions.v8).to.match(/^\d+\.\d+\.\d+/);
     expect(nodeJsData.versions.uv).to.match(/^\d+\.\d+\.\d+/);

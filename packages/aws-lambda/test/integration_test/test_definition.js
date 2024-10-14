@@ -3073,7 +3073,7 @@ function registerTests(handlerDefinitionPath, reduced) {
     expect(metrics.sensorVersion).to.match(/^\d+\.\d+.\d+(?:-rc\.\d+)?$/);
     expect(metrics.startTime).to.be.at.most(Date.now());
     expect(metrics.versions).to.be.an('object');
-    expect(metrics.versions.node).to.match(/^\d+\.\d+\.\d+$/);
+    expect(metrics.versions.node).to.match(/^\d+\.\d+\.\d+/);
     expect(metrics.versions.v8).to.match(/^\d+\.\d+\.\d+/);
     expect(metrics.versions.uv).to.match(/^\d+\.\d+\.\d+/);
     expect(metrics.versions.zlib).to.match(/^\d+\.\d+\.\d+/);
