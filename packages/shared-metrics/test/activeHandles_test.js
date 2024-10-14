@@ -32,6 +32,9 @@ describe('metrics.activeHandles', function () {
 
     const previousCount = activeHandles.currentPayload;
     const timeoutHandle = setTimeout(() => {}, 100);
+
+    // TODO: getActiveResourcesInfo returns the correct value, but `_getActiveHandles` does not
+    //       for v23.
     expect(activeHandles.currentPayload).to.equal(previousCount + 1);
     clearTimeout(timeoutHandle);
   });
