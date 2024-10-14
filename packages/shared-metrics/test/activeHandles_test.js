@@ -6,7 +6,6 @@
 'use strict';
 
 const expect = require('chai').expect;
-const semver = require('semver');
 const net = require('net');
 
 const config = require('@instana/core/test/config');
@@ -22,9 +21,11 @@ describe('metrics.activeHandles', function () {
   });
 
   // Skipping the test as we are not supporting node < 11.
-  // We can unskip the test if we move away from the deprecated flag _getActiveHandles.
+  // We can unskip the test once we move from the deprecated flag _getActiveHandles.
   // The new flag works better https://nodejs.org/api/process.html#processgetactiveresourcesinfo
-  // refer https://github.com/instana/nodejs/pull/1387
+  // refer https://github.com/instana/nodejs/pull/1387 for context
+
+  // OLD issue (used to skip this test for node >= 11): https://github.com/nodejs/node/commit/ccc3bb73db
   it.skip('should update handle count for a setTimeout', () => {
     const previousCount = activeHandles.currentPayload;
     const timeoutHandle = setTimeout(() => {}, 100);
