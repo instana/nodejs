@@ -41,8 +41,8 @@ let processIdentityProvider = null;
 
 // Note: Also update initializedTooLateHeuristic.js and the accompanying test when adding instrumentations.
 let instrumentations = [
-  './instrumentation/cloud/aws-sdk/v2/index',
-  './instrumentation/cloud/aws-sdk/v3/index',
+  './instrumentation/cloud/aws-sdk/v2',
+  './instrumentation/cloud/aws-sdk/v3',
   './instrumentation/cloud/aws-sdk/v2/sdk',
   './instrumentation/cloud/aws-sdk/v2/sqs',
   './instrumentation/cloud/azure/blob',
