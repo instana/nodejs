@@ -78,8 +78,13 @@ mochaSuiteFn('tracing/stackTraces', function () {
       await expressProxyControls.stop();
     });
 
-    beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
-    beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
+    beforeEach(async () => {
+      await agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid());
+    });
+
+    beforeEach(async () => {
+      await agentControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid());
+    });
 
     it('must not add stack traces to entry spans', () =>
       expressProxyControls

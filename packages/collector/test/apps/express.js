@@ -14,7 +14,6 @@ process.on('SIGTERM', () => {
 // This is a tiny express app which responds to all methods and has configurable
 // latency and response codes. This can be used a baselines for many tests, e.g.
 // to test distributed tracing.
-
 const instana = require('../..')({
   agentPort: process.env.AGENT_PORT,
   tracing: {
