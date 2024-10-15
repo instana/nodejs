@@ -34,7 +34,7 @@ spec:
 
         # we do not want to cache the prerelease node modules as we might change the node version inside container.
         # The node modules are stored along with branch and pre defined node version of the container (e.g. node-modules-main-20).
-        # and that might broke other pipeline configurations to use the incompatible node modules
+        # That might brake the target pipeline because its using a wrong node_modules installation.
         if [ "$(params.prerelease)" != "true" ] && [ ! -e "node-modules.tar.zst" ]; then
           echo "Saving node_modules cache..."
 
