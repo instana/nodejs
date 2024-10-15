@@ -11,7 +11,9 @@ spec:
     - name: target-branch
       value: $(params.target-branch)
     - name: node-version
-      value: $(params.node-version)      
+      value: $(params.node-version)     
+    - name: prerelease
+      value: $(params.prerelease)    
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -30,7 +32,10 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
-        if [ ! -e "node-modules.tar.zst" ]; then
+        # We do not want to cache the prerelease node modules as we might change the node version inside container.
+        # The node modules are stored along with branch and pre defined node version of the container (e.g. node-modules-main-20).
+        # That might break the target pipeline because its using a wrong node_modules installation.
+        if [ "$(params.prerelease)" != "true" ] && [ ! -e "node-modules.tar.zst" ]; then
           echo "Saving node_modules cache..."
 
           curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
