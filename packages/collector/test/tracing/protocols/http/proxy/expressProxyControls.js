@@ -17,15 +17,31 @@ let appPort;
 let expressProxyApp;
 
 // TODO: rewrite to use a class
-
 function waitUntilServerIsUp() {
-  return testUtils.retry(() =>
-    fetch(`http://localhost:${appPort}`, {
-      headers: {
-        'X-INSTANA-L': '0'
-      }
-    }).then(response => response.text())
-  );
+  try {
+    return testUtils
+      .retry(async () => {
+        const resp = await fetch(`http://localhost:${appPort}`, {
+          method: 'GET',
+          headers: {
+            'X-INSTANA-L': '0'
+          }
+        });
+
+        if (!expressProxyApp.collectorInitialized) throw new Error('Collector not fullly initialized.');
+
+        return resp;
+      })
+      .then(resp => {
+        // eslint-disable-next-line no-console
+        console.log('[ExpressProxyControls:start] started');
+        return resp.text();
+      });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.log(`[ExpressProxyControls] Error waiting until server is up: ${err.message}`);
+    throw err;
+  }
 }
 
 exports.getPid = () => expressProxyApp.pid;
@@ -44,6 +60,12 @@ exports.start = async (opts = {}) => {
   expressProxyApp = spawn('node', [path.join(__dirname, 'expressProxy.js')], {
     stdio: config.getAppStdio(),
     env
+  });
+
+  expressProxyApp.on('message', message => {
+    if (message === 'instana.collector.initialized') {
+      expressProxyApp.collectorInitialized = true;
+    }
   });
 
   return waitUntilServerIsUp();
@@ -68,6 +90,7 @@ exports.sendRequest = opts => {
     httpLib: opts.httpLib
   });
   const url = `http://localhost:${appPort}${opts.path}?${queryParams.toString()}`;
+
   return fetch(url, {
     method: opts.method,
     url: `http://localhost:${appPort}${opts.path}`,
