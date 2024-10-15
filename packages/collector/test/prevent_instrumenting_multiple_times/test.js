@@ -27,7 +27,24 @@ describe('prevent initializing @instana/collector multiple times', function () {
   let controls;
 
   before(async () => {
-    runCommandSync('npm install --production --no-optional --no-audit @instana/collector', tmpDir);
+    const copath = path.join(__dirname, '..', '..', '..', 'collector');
+    runCommandSync('npm pack', copath);
+
+    const coversion = require(`${copath}/package.json`).version;
+    runCommandSync(
+      `npm install --production --no-optional --no-audit ${copath}/instana-collector-${coversion}.tgz`,
+      tmpDir
+    );
+
+    // NOTE: Override the core npm dependency with the local code base
+    const corepath = path.join(__dirname, '..', '..', '..', 'core');
+    runCommandSync('npm pack', corepath);
+
+    const coreversion = require(`${copath}/package.json`).version;
+    runCommandSync(
+      `npm install --production --no-optional --no-audit ${corepath}/instana-core-${coreversion}.tgz`,
+      tmpDir
+    );
 
     controls = new ProcessControls({
       appPath: path.join(__dirname, '..', 'apps', 'express'),
@@ -79,9 +96,12 @@ describe('prevent initializing @instana/collector multiple times', function () {
     const response = await controls.sendRequest({
       path: '/trace-id-and-span-id'
     });
-    expect(response.t).to.be.a('string');
-    expect(response.t).to.have.lengthOf.at.least(16);
-    expect(response.s).to.be.a('string');
-    expect(response.s).to.have.lengthOf(16);
+
+    return retry(async () => {
+      expect(response.t).to.be.a('string');
+      expect(response.t).to.have.lengthOf.at.least(16);
+      expect(response.s).to.be.a('string');
+      expect(response.s).to.have.lengthOf(16);
+    });
   });
 });
