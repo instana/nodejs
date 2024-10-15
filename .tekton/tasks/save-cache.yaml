@@ -33,7 +33,7 @@ spec:
         cd $ARTIFACTS_PATH
 
         # we do not want to cache the prerelease node modules as we might change the node version inside container.
-        # because the node modules are stored along with branch and pre defined node version of the container.
+        # The node modules are stored along with branch and pre defined node version of the container (e.g. node-modules-main-20).
         # and that might broke other pipeline configurations to use the incompatible node modules
         if [ "$(params.prerelease)" != "true" ] && [ ! -e "node-modules.tar.zst" ]; then
           echo "Saving node_modules cache..."
