@@ -65,15 +65,47 @@ mochaSuiteFn('[CJS] tracing/sdk/multiple_installations', function () {
   });
 
   it('should trace http & sdk spans', async () => {
-    await controls.sendRequest({ url: '/trace' });
+    let spans = await agentControls.getSpans();
+    expect(spans.length).to.eql(0);
 
-    await testUtils.retry(async () => {
-      await testUtils.delay(1000);
+    await controls.sendRequest({ path: '/trace' });
+    await testUtils.delay(3 * 1000);
 
-      const spans = await agentControls.getSpans();
+    spans = await agentControls.getSpans();
 
-      // 2x SDK, 1x HTTP ENTRY
-      expect(spans.length).to.eql(3);
+    // 2x SDK, 1x HTTP ENTRY
+    expect(spans.length).to.eql(3);
+
+    testUtils.verifyEntrySpan({
+      spanName: 'node.http.server',
+      spans,
+      withError: false,
+      pid: String(controls.getPid()),
+      dataProperty: 'http',
+      extraTests: span => {
+        expect(span.data.http.url).to.eql('/trace');
+      }
+    });
+
+    const entrySdk = testUtils.verifyEntrySpan({
+      spanName: 'sdk',
+      spans,
+      withError: false,
+      pid: String(controls.getPid()),
+      extraTests: span => {
+        expect(span.data.sdk.name).to.eql('entryspan');
+      }
+    });
+
+    testUtils.verifyIntermediateSpan({
+      spanName: 'sdk',
+      spans,
+      parent: entrySdk,
+      withError: false,
+      pid: String(controls.getPid()),
+      extraTests: span => {
+        expect(span.data.sdk.name).to.eql('intermediate-span-name');
+      }
     });
   });
 });
