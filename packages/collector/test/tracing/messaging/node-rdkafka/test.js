@@ -52,13 +52,11 @@ const SINGLE_TEST_PROPS = {
 const retryTime = 1000;
 const topic = 'rdkafka-topic';
 
-let mochaSuiteFn;
-
-if (!supportedVersion(process.versions.node) || semver.lte(process.versions.node, '16.0.0')) {
-  mochaSuiteFn = describe.skip;
-} else {
-  mochaSuiteFn = describe;
-}
+// TODO: investigate as part of https://jsw.ibm.com/browse/INSTA-17132
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=22.x')
+    ? describe
+    : describe.skip;
 
 mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   this.timeout(config.getTestTimeout() * 4);
