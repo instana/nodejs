@@ -780,18 +780,6 @@
     "core": false
   },
   {
-    "name": "q",
-    "policy": "45-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": "",
-    "deprecated": true,
-    "core": false
-  },
-  {
     "name": "prisma",
     "policy": "45-days",
     "lastSupportedVersion": "",

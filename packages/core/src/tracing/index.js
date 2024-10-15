@@ -51,7 +51,6 @@ let instrumentations = [
   './instrumentation/control_flow/bluebird',
   './instrumentation/control_flow/clsHooked',
   './instrumentation/control_flow/graphqlSubscriptions',
-  './instrumentation/control_flow/q',
   './instrumentation/database/elasticsearch',
   './instrumentation/database/ioredis',
   './instrumentation/database/memcached',
