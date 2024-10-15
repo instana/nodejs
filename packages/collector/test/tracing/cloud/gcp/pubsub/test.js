@@ -46,7 +46,7 @@ if (
   let mochaSuiteFn;
   const projectId = process.env.GCP_PROJECT;
 
-  if (!supportedVersion(process.versions.node) || !projectId || semver.lt(process.versions.node, '14.0.0')) {
+  if (!supportedVersion(process.versions.node) || !projectId) {
     mochaSuiteFn = describe.skip;
   } else {
     mochaSuiteFn = describe;

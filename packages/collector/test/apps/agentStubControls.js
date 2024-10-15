@@ -42,9 +42,6 @@ class AgentStubControls {
       if (opts.kafkaConfig.traceCorrelation != null) {
         env.KAFKA_TRACE_CORRELATION = opts.kafkaConfig.traceCorrelation.toString();
       }
-      if (opts.kafkaConfig.headerFormat) {
-        env.KAFKA_HEADER_FORMAT = opts.kafkaConfig.headerFormat;
-      }
     }
 
     this.agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {

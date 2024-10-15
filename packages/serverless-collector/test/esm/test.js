@@ -11,11 +11,11 @@ const Control = require('../Control');
 const { expectExactlyOneMatching } = require('@instana/core/test/test_util');
 const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
-const esmSupportedVersion = require('@instana/core').tracing.esmSupportedVersion;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const containerAppPath = path.join(__dirname, './app.mjs');
 const instanaAgentKey = 'serverless-collector-dummy-key';
 
-if (!esmSupportedVersion(process.versions.node)) {
+if (!supportedVersion(process.versions.node)) {
   // eslint-disable-next-line no-console
   console.log(`Skipping tests. Node.js version ${process.versions.node} is not supported.`);
   it.skip('[serverless-collector] esm', function () {});

@@ -7,5 +7,5 @@ set -e
 
 
 source ./build-and-run
-buildAndRun node-16.13.0
+buildAndRun node-v22
 

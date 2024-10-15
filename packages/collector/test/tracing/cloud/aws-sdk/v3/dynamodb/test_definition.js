@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { checkTableExistence, cleanup, minimumNodeJsVersion } = require('./util');
+const { checkTableExistence, cleanup } = require('./util');
 const semver = require('semver');
 const { v4: uuid } = require('uuid');
 const path = require('path');
@@ -21,8 +21,6 @@ const {
   verifyHttpExit
 } = require('@instana/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
-
-let mochaSuiteFn;
 
 const availableOperations = [
   'createTable',
@@ -44,11 +42,7 @@ const createTableName = () => {
 };
 
 function start(version, requestMethod, reducedTestSuite = false) {
-  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, minimumNodeJsVersion)) {
-    mochaSuiteFn = describe.skip;
-  } else {
-    mochaSuiteFn = describe;
-  }
+  const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
   mochaSuiteFn(`npm: ${version}, style: ${requestMethod}`, function () {
     this.timeout(config.getTestTimeout() * 5);

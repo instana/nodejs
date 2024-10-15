@@ -15,8 +15,6 @@ describe('environment util', () => {
     //
     'INSTANA_ENDPOINT_URL',
     'INSTANA_AGENT_KEY',
-    'INSTANA_URL',
-    'INSTANA_KEY',
     'INSTANA_ZONE',
     'INSTANA_TAGS'
   ];

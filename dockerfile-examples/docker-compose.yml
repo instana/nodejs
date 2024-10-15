@@ -2,7 +2,7 @@ version: '3'
 
 services:
   node:
-    image: node-16.13.0-instana
+    image: node-22-instana
     networks:
       node-agent-network:
         aliases:

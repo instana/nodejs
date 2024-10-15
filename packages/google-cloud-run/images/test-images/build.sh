@@ -24,8 +24,8 @@
 #     - local         -> use a local Docker base image
 #     - gcr           -> use an image from the GCR registry with test base images
 # $2: Node.js version. One of:
+#     - 20
 #     - 18
-#     - 16
 # $3: Linux distribution. One of:
 #     - standard               -> (uses node:$version, that is, Debian)
 #     - alpine                 -> (uses node:$version-alpine, that is, Alpine)

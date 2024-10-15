@@ -7,7 +7,6 @@
 
 const expect = require('chai').expect;
 const { v4: uuid } = require('uuid');
-const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -24,17 +23,9 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
 // v8 (latest) uses mongodb v6
 
 ['latest', 'v854', 'v7', 'v6', 'v5'].forEach(version => {
-  let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+  const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
   const isLatestMajor = version === 'latest' || version === 'v854';
-
-  if (isLatestMajor) {
-    mochaSuiteFn = semver.lt(process.versions.node, '16.0.0') ? describe.skip : mochaSuiteFn;
-  } else if (version === 'v7') {
-    mochaSuiteFn = semver.lt(process.versions.node, '14.0.0') ? describe.skip : mochaSuiteFn;
-  } else if (version === 'v6') {
-    mochaSuiteFn = semver.lt(process.versions.node, '12.0.0') ? describe.skip : mochaSuiteFn;
-  }
 
   // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
   if (process.env.RUN_ESM && !isLatestMajor) return;
