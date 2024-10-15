@@ -33,7 +33,30 @@ mochaSuiteFn('[CJS] tracing/sdk/multiple_installations', function () {
   let controls;
 
   before(async () => {
-    testUtils.runCommandSync('npm install --production --no-optional --no-audit @instana/collector', tmpDir);
+    /**
+     * NOTE: We install the current code base, not the codebase from npm.
+     *       Because otherwise there could be a mismatch between the logic
+     *       e.g. We added Node v23 support on main, we pull the latest version from npm
+     *       and tracing won't work.
+     */
+    const copath = path.join(__dirname, '..', '..', '..', '..', '..', '..', 'collector');
+    testUtils.runCommandSync('npm pack', copath);
+
+    const coversion = require(`${copath}/package.json`).version;
+    testUtils.runCommandSync(
+      `npm install --production --no-optional --no-audit ${copath}/instana-collector-${coversion}.tgz`,
+      tmpDir
+    );
+
+    // NOTE: Override the core npm dependency with the local code base to be able to debug.
+    const corepath = path.join(__dirname, '..', '..', '..', '..', '..', '..', 'core');
+    testUtils.runCommandSync('npm pack', corepath);
+
+    const coreversion = require(`${copath}/package.json`).version;
+    testUtils.runCommandSync(
+      `npm install --production --no-optional --no-audit ${corepath}/instana-core-${coreversion}.tgz`,
+      tmpDir
+    );
 
     controls = new ProcessControls({
       useGlobalAgent: true,
@@ -69,43 +92,44 @@ mochaSuiteFn('[CJS] tracing/sdk/multiple_installations', function () {
     expect(spans.length).to.eql(0);
 
     await controls.sendRequest({ path: '/trace' });
-    await testUtils.delay(3 * 1000);
 
-    spans = await agentControls.getSpans();
+    return testUtils.retry(async () => {
+      spans = await agentControls.getSpans();
 
-    // 2x SDK, 1x HTTP ENTRY
-    expect(spans.length).to.eql(3);
+      // 2x SDK, 1x HTTP ENTRY
+      expect(spans.length).to.eql(3);
 
-    testUtils.verifyEntrySpan({
-      spanName: 'node.http.server',
-      spans,
-      withError: false,
-      pid: String(controls.getPid()),
-      dataProperty: 'http',
-      extraTests: span => {
-        expect(span.data.http.url).to.eql('/trace');
-      }
-    });
+      testUtils.verifyEntrySpan({
+        spanName: 'node.http.server',
+        spans,
+        withError: false,
+        pid: String(controls.getPid()),
+        dataProperty: 'http',
+        extraTests: span => {
+          expect(span.data.http.url).to.eql('/trace');
+        }
+      });
 
-    const entrySdk = testUtils.verifyEntrySpan({
-      spanName: 'sdk',
-      spans,
-      withError: false,
-      pid: String(controls.getPid()),
-      extraTests: span => {
-        expect(span.data.sdk.name).to.eql('entryspan');
-      }
-    });
+      const entrySdk = testUtils.verifyEntrySpan({
+        spanName: 'sdk',
+        spans,
+        withError: false,
+        pid: String(controls.getPid()),
+        extraTests: span => {
+          expect(span.data.sdk.name).to.eql('entryspan');
+        }
+      });
 
-    testUtils.verifyIntermediateSpan({
-      spanName: 'sdk',
-      spans,
-      parent: entrySdk,
-      withError: false,
-      pid: String(controls.getPid()),
-      extraTests: span => {
-        expect(span.data.sdk.name).to.eql('intermediate-span-name');
-      }
+      testUtils.verifyIntermediateSpan({
+        spanName: 'sdk',
+        spans,
+        parent: entrySdk,
+        withError: false,
+        pid: String(controls.getPid()),
+        extraTests: span => {
+          expect(span.data.sdk.name).to.eql('intermediate-span-name');
+        }
+      });
     });
   });
 });

@@ -17,7 +17,7 @@ process.on('SIGTERM', () => {
 // NOTE: This works, because we call the init fn of the collector again and
 //       the cached exports from the first initialization (see load-instana.js) is returned.
 // TODO: #125683
-const instana = require('../../../../../../src')({ agentPort: process.env.AGENT_PORT });
+const instana = require('../../../../../../src')({ agentPort: process.env.INSTANA_AGENT_PORT });
 
 // NOTE: Does not work, because this is a new instance in the require cache and this code
 //       was never initialized.
@@ -37,8 +37,7 @@ async function createSDKSpans() {
   //       delay, because we need to ensure that the test has already started and won't call
   //       beforeEach(() => this.clearReceivedData());
   // TODO: ticket #125682
-  await testUtils.delay(500);
-  await testUtils.delay(2000);
+  await testUtils.delay(2500);
 
   await instana.sdk.async.startEntrySpan('entryspan');
   // console.log(initializedInstana.currentSpan());
@@ -55,7 +54,10 @@ async function createSDKSpans() {
 }
 
 app.get('/', (req, res) => res.status(200).send('OK'));
-app.get('/trace', (req, res) => res.status(200).send('OK'));
+app.get('/trace', (req, res) => {
+  log('/trace');
+  res.status(200).send('OK');
+});
 
 app.listen(port, () => {
   log(`Listening on port: ${port}`);
