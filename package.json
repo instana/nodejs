@@ -230,7 +230,7 @@
     "superagent": "^10.1.0",
     "tedious": "^19.0.0",
     "tsoa": "^6.5.1",
-    "typescript": "^5.0.4",
+    "typescript": "5.3.3",
     "underscore": "^1.13.1",
     "uuid": "^9.0.1",
     "winston": "^3.15.0",
