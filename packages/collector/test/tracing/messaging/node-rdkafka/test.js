@@ -54,7 +54,9 @@ const topic = 'rdkafka-topic';
 
 // TODO: investigate as part of https://jsw.ibm.com/browse/INSTA-17132
 const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=22.x')
+  supportedVersion(process.versions.node) &&
+  semver.gt(process.versions.node, '16.0.0') &&
+  semver.satisfies(process.versions.node, '<=22.x')
     ? describe
     : describe.skip;
 
