@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.21.0](https://github.com/instana/nodejs/compare/v3.20.2...v3.21.0) (2024-10-17)
+
+### Features
+
+- added v23 support ([#1385](https://github.com/instana/nodejs/issues/1385)) ([34b990f](https://github.com/instana/nodejs/commit/34b990f2ab2a88aa6f2b0730296b7ae75e613ab0))
+
 ## [3.20.2](https://github.com/instana/nodejs/compare/v3.20.1...v3.20.2) (2024-10-09)
 
 **Note:** Version bump only for package @instana/shared-metrics
