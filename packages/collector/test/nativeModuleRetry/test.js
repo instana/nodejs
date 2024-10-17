@@ -115,6 +115,17 @@ mochaSuiteFn('retry loading native addons', function () {
           tmpFolder
         );
 
+        // Install the shared metrics module
+        const sharedMetricsPath = path.join(__dirname, '..', '..', '..', 'shared-metrics');
+        runCommandSync('npm pack', sharedMetricsPath);
+
+        const sharedMetricsVersion = require(`${copath}/package.json`).version;
+        runCommandSync(
+          // eslint-disable-next-line max-len
+          `npm install  --prefix ./ --production --no-optional --no-audit ${sharedMetricsPath}/instana-shared-metrics-${sharedMetricsVersion}.tgz`,
+          tmpFolder
+        );
+
         // Remove the target c++ module
         execSync(`rm -rf node_modules/${opts.name}`, { cwd: tmpFolder, stdio: 'inherit' });
 
