@@ -12,7 +12,7 @@ const os = require('os');
 const semver = require('semver');
 
 const config = require('../../../core/test/config');
-const { retry } = require('../../../core/test/test_util');
+const { retry, runCommandSync } = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 const globalAgent = require('../globalAgent');
 const { execSync } = require('child_process');
@@ -24,9 +24,8 @@ const tmpFolder = path.join(os.tmpdir(), 'native-module-retry', process.pid.toSt
 const mochaSuiteFn = semver.prerelease(process.versions.node) ? describe.skip : describe;
 
 // Test suite for verifying the fallback mechanism for loading native add-ons.
-mochaSuiteFn.only('retry loading native addons', function () {
-  const timeout = Math.max(config.getTestTimeout(), 20000);
-  this.timeout(timeout);
+mochaSuiteFn('retry loading native addons', function () {
+  this.timeout(config.getTestTimeout() * 5);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
@@ -91,13 +90,32 @@ mochaSuiteFn.only('retry loading native addons', function () {
         execSync(`rm -rf ${tmpFolder}`, { cwd: __dirname, stdio: 'inherit' });
         execSync(`mkdir -p ${tmpFolder}`, { cwd: __dirname, stdio: 'inherit' });
 
-        execSync(`cp app.js package.json ${tmpFolder}/`, { cwd: __dirname, stdio: 'inherit' });
+        execSync(`cp app.js ${tmpFolder}/`, { cwd: __dirname, stdio: 'inherit' });
 
         // eslint-disable-next-line no-console
         console.log('Running npm install in', tmpFolder);
-
         execSync('rm -rf node_modules', { cwd: tmpFolder, stdio: 'inherit' });
-        execSync('npm install --prefix ./', { cwd: tmpFolder, stdio: 'inherit' });
+
+        const copath = path.join(__dirname, '..', '..', '..', 'collector');
+        runCommandSync('npm pack', copath);
+
+        const coversion = require(`${copath}/package.json`).version;
+        runCommandSync(
+          `npm install --production --no-optional --no-audit ${copath}/instana-collector-${coversion}.tgz`,
+          tmpFolder
+        );
+
+        // NOTE: Override the core npm dependency with the local code base
+        const corepath = path.join(__dirname, '..', '..', '..', 'core');
+        runCommandSync('npm pack', corepath);
+
+        const coreversion = require(`${copath}/package.json`).version;
+        runCommandSync(
+          `npm install  --prefix ./ --production --no-optional --no-audit ${corepath}/instana-core-${coreversion}.tgz`,
+          tmpFolder
+        );
+
+        // Remove the target c++ module
         execSync(`rm -rf node_modules/${opts.name}`, { cwd: tmpFolder, stdio: 'inherit' });
 
         if (fs.existsSync(path.join(tmpFolder, 'node_modules', opts.name))) {
@@ -119,8 +137,7 @@ mochaSuiteFn.only('retry loading native addons', function () {
           agentControls,
           useGlobalAgent: true,
           env: {
-            DEV_PATH: __dirname,
-            INSTANA_DEBUG: 'true'
+            DEV_PATH: __dirname
           }
         });
 
