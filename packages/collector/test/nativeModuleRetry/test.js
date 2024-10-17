@@ -24,7 +24,7 @@ const tmpFolder = path.join(os.tmpdir(), 'native-module-retry', process.pid.toSt
 const mochaSuiteFn = semver.prerelease(process.versions.node) ? describe.skip : describe;
 
 // Test suite for verifying the fallback mechanism for loading native add-ons.
-mochaSuiteFn('retry loading native addons', function () {
+mochaSuiteFn.only('retry loading native addons', function () {
   const timeout = Math.max(config.getTestTimeout(), 20000);
   this.timeout(timeout);
 
@@ -119,7 +119,8 @@ mochaSuiteFn('retry loading native addons', function () {
           agentControls,
           useGlobalAgent: true,
           env: {
-            DEV_PATH: __dirname
+            DEV_PATH: __dirname,
+            INSTANA_DEBUG: 'true'
           }
         });
 
