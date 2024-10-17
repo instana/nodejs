@@ -169,15 +169,14 @@ mochaSuiteFn('retry loading native addons', function () {
 
       describe(opts.name, () => {
         it('metrics from native add-ons should become available at some point', async () => {
-          await retry(() =>
-            Promise.all([
-              //
+          await retry(async () => {
+            const [aggregatedMetrics, events] = await Promise.all([
               agentControls.getAggregatedMetrics(controls.getPid()),
               agentControls.getEvents()
-            ]).then(opts.check)
-          );
+            ]);
+            await opts.check([aggregatedMetrics, events]);
+          });
         });
-
         it('should successfully copy the precompiled binaries', async () => {
           await check(path.join(tmpFolder, 'node_modules', opts.name));
         });
