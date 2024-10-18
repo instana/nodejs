@@ -6,10 +6,11 @@
 'use strict';
 
 const expect = require('chai').expect;
-
+const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
+const ProcessControls = require('../../../test_util/ProcessControls');
 const { delay, expectExactlyOneMatching, retry } = require('../../../../../core/test/test_util');
 const globalAgent = require('../../../globalAgent');
 
@@ -38,6 +39,37 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
         registerTests.call(this, apiType);
       });
     });
+
+    if (version === 'latest') {
+      describe('allowRootExitSpan', function () {
+        let controls;
+
+        before(async () => {
+          controls = new ProcessControls({
+            useGlobalAgent: true,
+            appPath: path.join(__dirname, 'allowRootExitSpanApp')
+          });
+
+          await controls.start(null, null, true);
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
+        it('must trace', async function () {
+          await retry(async () => {
+            const spans = await agentControls.getSpans();
+            expect(spans.length).to.be.eql(1);
+
+            expectExactlyOneMatching(spans, [
+              span => expect(span.n).to.equal('rabbitmq'),
+              span => expect(span.k).to.equal(2)
+            ]);
+          });
+        });
+      });
+    }
   });
 
   function registerTests(apiType) {

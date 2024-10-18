@@ -5,8 +5,8 @@
 'use strict';
 
 const dns = require('dns').promises;
+const path = require('path');
 const expect = require('chai').expect;
-const semver = require('semver');
 
 const { supportedVersion, constants } = require('@instana/core').tracing;
 const testUtils = require('../../../../../core/test/test_util');
@@ -789,11 +789,7 @@ mochaSuiteFn('tracing/db2', function () {
     });
 
     it('[with fetch and error] must trace prepare execute mixed 1', function () {
-      let expectedError = 'TypeError: Cannot read properties of null (reading';
-      if (semver.lt(process.versions.node, '16.0.0')) {
-        // For Node.js 14 and earlier, the error message is slightly different.
-        expectedError = "TypeError: Cannot read property 'fetchMode' of null";
-      }
+      const expectedError = 'TypeError: Cannot read properties of null (reading';
 
       return controls
         .sendRequest({
@@ -881,10 +877,10 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              numberOfSpans: 14,
+              numberOfSpans: 15,
               // Spans:
               // 10 queries splitted from the file
-              // 4 fs operations on top (ours + from db2 internally fs-extra)
+              // 5 fs operations on top (ours + from db2 internally fs-extra)
               // https://github.com/ibmdb/node-ibm_db/blob/fb25937524d74d25917e9aa67fb4737971317986/lib/odbc.js#L916
               // If the Otel integration is disabled, we expect 11 spans.
               verifyCustom: (entrySpan, spans) => {
@@ -1242,6 +1238,42 @@ mochaSuiteFn('tracing/db2', function () {
             })
           )
         );
+    });
+  });
+
+  describe('When allowRootExitSpan: true is set', function () {
+    before(async () => {
+      TABLE_NAME_1 = generateTableName();
+
+      controls = new ProcessControls({
+        useGlobalAgent: true,
+        appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+        env: {
+          DB2_CONN_STR,
+          DB2_DATABASE_NAME,
+          DB2_TABLE_NAME_1: TABLE_NAME_1
+        }
+      });
+
+      await controls.start(retryTime, Date.now() + testTimeout - 5000, true);
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    it('must trace', async function () {
+      await testUtils.retry(async () => {
+        const spans = await agentControls.getSpans();
+        expect(spans.length).to.be.eql(4);
+
+        // 4 spans, because we drop the table, create the table and do 2 x queries.
+        testUtils.expectExactlyNMatching(spans, 4, [
+          span => expect(span.n).to.equal('ibmdb2'),
+          span => expect(span.k).to.equal(2),
+          span => expect(span.data.db2.stmt).to.exist
+        ]);
+      });
     });
   });
 

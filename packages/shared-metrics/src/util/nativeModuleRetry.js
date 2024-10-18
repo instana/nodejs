@@ -13,7 +13,6 @@ const os = require('os');
 const tar = require('tar');
 const path = require('path');
 const detectLibc = require('detect-libc');
-const fse = require('fs-extra');
 
 /**
  * @typedef {Object} InstanaSharedMetricsOptions
@@ -188,8 +187,8 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
           `Copying the precompiled build for ${opts.nativeModuleName} ${label} from ${sourceDir} to ${targetDir}.`
         );
 
-        fse
-          .copy(sourceDir, targetDir)
+        fs.promises
+          .cp(sourceDir, targetDir, { recursive: true })
           .then(() => {
             // We have unpacked and copied the correct precompiled native addon. The next attempt to require the
             // dependency should work.

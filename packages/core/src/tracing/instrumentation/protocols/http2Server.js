@@ -131,12 +131,6 @@ function shimEmit(realEmit) {
         header: getExtraHeadersFromNormalizedObjectLiteral(headers, extraHttpHeadersToCapture)
       };
 
-      const incomingServiceName =
-        span.data.http.header && span.data.http.header[constants.serviceNameHeaderNameLowerCase];
-      if (incomingServiceName != null) {
-        span.data.service = incomingServiceName;
-      }
-
       if (!headers['x-instana-t']) {
         // In cases where we have started a fresh trace (that is, there is no X-INSTANA-T in the incoming request
         // headers, we add the new trace ID to the incoming request so a customer's app can render it reliably into the

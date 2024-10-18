@@ -18,7 +18,6 @@
 
 const path = require('path');
 const { expect } = require('chai');
-const semver = require('semver');
 const { fail } = expect;
 const {
   tracing: { constants }
@@ -27,7 +26,7 @@ const {
 const {
   tracing: { supportedVersion }
 } = require('@instana/core');
-
+const semver = require('semver');
 const config = require('../../../../../core/test/config');
 const { expectExactlyOneMatching, retry, delay, stringifyItems } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
@@ -309,10 +308,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     before(async () => {
       producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'producer'),
-        useGlobalAgent: true,
-        env: {
-          INSTANA_KAFKA_HEADER_FORMAT: 'string'
-        }
+        useGlobalAgent: true
       });
       consumerControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
@@ -364,9 +360,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     let consumerControls;
 
     before(async () => {
-      await customAgentControls.startAgent({
-        kafkaConfig: { headerFormat: 'string' }
-      });
+      await customAgentControls.startAgent();
 
       producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'producer'),

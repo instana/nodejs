@@ -49,6 +49,40 @@ mochaSuiteFn('tracing/messaging/bull', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
+  describe('allowRootExitSpan', function () {
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        useGlobalAgent: true,
+        appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+        env: {
+          REDIS_SERVER: `redis://${process.env.REDIS}`,
+          BULL_QUEUE_NAME: queueName,
+          BULL_JOB_NAME: 'steve'
+        }
+      });
+
+      await controls.start(null, null, true);
+    });
+
+    afterEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    it('must trace', async function () {
+      await retry(async () => {
+        await delay(500);
+        const spans = await agentControls.getSpans();
+
+        expect(spans.length).to.be.eql(2);
+
+        expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('bull'), span => expect(span.k).to.equal(2)]);
+        expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('redis'), span => expect(span.k).to.equal(2)]);
+      });
+    });
+  });
+
   describe('tracing enabled, no suppression', function () {
     let senderControls;
 
@@ -133,6 +167,12 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               response,
               apiPath,
               testId,
+              // 1 x node.http.server 1
+              // 1 x bull receive
+              // 1 x otel (?)
+              // 1 x node.http.client (?)
+              // 1 x redis
+              // 1 x bull sender
               spanLength: 6,
               withError,
               isRepeatable: sendOption === 'repeat=true',
@@ -187,6 +227,8 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               response,
               apiPath,
               testId,
+              // TODO: all other bull tests also produce a huge number of spans
+              //       https://jsw.ibm.com/browse/INSTA-15029
               spanLength: 16,
               withError,
               isRepeatable: sendOption === 'repeat=true',

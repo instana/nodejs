@@ -26,6 +26,7 @@ const constants = require('../tracing/constants');
  * @property {boolean} [spanBatchingEnabled]
  * @property {boolean} [disableW3cTraceCorrelation]
  * @property {KafkaTracingOptions} [kafka]
+ * @property {boolean} [allowRootExitSpan]
  */
 
 /**
@@ -36,7 +37,6 @@ const constants = require('../tracing/constants');
 /**
  * @typedef {Object} KafkaTracingOptions
  * @property {boolean} [traceCorrelation]
- * @property {import('../tracing/constants').KafkaTraceCorrelationFormat} [headerFormat]
  */
 
 /**
@@ -81,7 +81,6 @@ const constants = require('../tracing/constants');
 /**
  * @typedef {Object} AgentTracingKafkaConfig
  * @property {boolean} [traceCorrelation]
- * @property {string} [headerFormat]
  */
 
 /** @type {import('../core').GenericLogger} */
@@ -103,6 +102,7 @@ const defaults = {
   tracing: {
     enabled: true,
     useOpentelemetry: true,
+    allowRootExitSpan: false,
     automaticTracingEnabled: true,
     activateImmediately: false,
     forceTransmissionStartingAt: 500,
@@ -116,8 +116,7 @@ const defaults = {
     spanBatchingEnabled: false,
     disableW3cTraceCorrelation: false,
     kafka: {
-      traceCorrelation: true,
-      headerFormat: constants.kafkaHeaderFormatDefault
+      traceCorrelation: true
     }
   },
   secrets: {
@@ -125,8 +124,6 @@ const defaults = {
     keywords: ['key', 'pass', 'secret']
   }
 };
-
-const validKafkaHeaderFormats = ['binary', 'string', 'both'];
 
 const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
 
@@ -220,6 +217,7 @@ function normalizeTracingConfig(config) {
   normalizeSpanBatchingEnabled(config);
   normalizeDisableW3cTraceCorrelation(config);
   normalizeTracingKafka(config);
+  normalizeAllowRootExitSpan(config);
 }
 
 /**
@@ -241,6 +239,28 @@ function normalizeTracingEnabled(config) {
   }
 
   config.tracing.enabled = defaults.tracing.enabled;
+}
+
+/**
+ *
+ * @param {InstanaConfig} config
+ */
+
+function normalizeAllowRootExitSpan(config) {
+  if (config.tracing.allowRootExitSpan === false) {
+    return;
+  }
+  if (config.tracing.allowRootExitSpan === true) {
+    return;
+  }
+
+  const INSTANA_ALLOW_ROOT_EXIT_SPAN = process.env['INSTANA_ALLOW_ROOT_EXIT_SPAN']?.toLowerCase();
+
+  config.tracing.allowRootExitSpan =
+    INSTANA_ALLOW_ROOT_EXIT_SPAN === '1' ||
+    INSTANA_ALLOW_ROOT_EXIT_SPAN === 'true' ||
+    defaults.tracing.allowRootExitSpan;
+  return;
 }
 
 /**
@@ -547,33 +567,6 @@ function normalizeTracingKafka(config) {
     config.tracing.kafka.traceCorrelation = false;
   } else {
     config.tracing.kafka.traceCorrelation = defaults.tracing.kafka.traceCorrelation;
-  }
-
-  // @ts-ignore
-  config.tracing.kafka.headerFormat =
-    config.tracing.kafka.headerFormat || process.env.INSTANA_KAFKA_HEADER_FORMAT || defaults.tracing.kafka.headerFormat;
-  if (typeof config.tracing.kafka.headerFormat !== 'string') {
-    logger.warn(
-      `The value of config.tracing.kafka.headerFormat ("${config.tracing.kafka.headerFormat}") is not a string. ` +
-        `Assuming the default value "${defaults.tracing.kafka.headerFormat}".`
-    );
-    config.tracing.kafka.headerFormat = defaults.tracing.kafka.headerFormat;
-    return;
-  }
-  // @ts-ignore
-  config.tracing.kafka.headerFormat = config.tracing.kafka.headerFormat.toLowerCase();
-  if (validKafkaHeaderFormats.indexOf(config.tracing.kafka.headerFormat) < 0) {
-    logger.warn(
-      'The value of config.tracing.kafka.headerFormat (or the value of INSTANA_KAFKA_HEADER_FORMAT) ' +
-        `("${config.tracing.kafka.headerFormat}") is not a supported header format. Assuming the default ` +
-        `value "${defaults.tracing.kafka.headerFormat}".`
-    );
-    config.tracing.kafka.headerFormat = defaults.tracing.kafka.headerFormat;
-    return;
-  }
-
-  if (config.tracing.kafka.headerFormat !== defaults.tracing.kafka.headerFormat) {
-    logger.info(`Kafka trace correlation header format has been set to "${config.tracing.kafka.headerFormat}".`);
   }
 }
 

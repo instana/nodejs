@@ -5,14 +5,6 @@
 
 'use strict';
 
-exports.minimumNodeJsVersion = '14.0.0';
-
-if (require('semver').lte(process.versions.node, exports.minimumNodeJsVersion)) {
-  exports.checkTableExistence = function () {};
-  exports.cleanup = function () {};
-  return;
-}
-
 const AWS = require('@aws-sdk/client-dynamodb');
 const dynamoDB = new AWS.DynamoDB({ region: 'us-east-2' });
 const interval = 1000;

@@ -764,23 +764,11 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "deprecated": false,
-    "core": false
-  },
-  {
-    "name": "node-rdkafka",
-    "policy": "45-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": "",
     "deprecated": true,
     "core": false
   },
   {
-    "name": "q",
+    "name": "node-rdkafka",
     "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",

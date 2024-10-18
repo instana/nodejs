@@ -15,12 +15,7 @@ const tracingUtil = require('./tracingUtil');
 const spanBuffer = require('./spanBuffer');
 const supportedVersion = require('./supportedVersion');
 const { otelInstrumentations } = require('./opentelemetry-instrumentations');
-const {
-  esmSupportedVersion,
-  isLatestEsmSupportedVersion,
-  hasExperimentalLoaderFlag,
-  isESMApp
-} = require('../util/esm');
+const { isLatestEsmSupportedVersion, hasExperimentalLoaderFlag, isESMApp } = require('../util/esm');
 const iitmHook = require('../util/iitmHook');
 const { getPreloadFlags } = require('../util/getPreloadFlags');
 
@@ -46,8 +41,8 @@ let processIdentityProvider = null;
 
 // Note: Also update initializedTooLateHeuristic.js and the accompanying test when adding instrumentations.
 let instrumentations = [
-  './instrumentation/cloud/aws-sdk/v2/index',
-  './instrumentation/cloud/aws-sdk/v3/index',
+  './instrumentation/cloud/aws-sdk/v2',
+  './instrumentation/cloud/aws-sdk/v3',
   './instrumentation/cloud/aws-sdk/v2/sdk',
   './instrumentation/cloud/aws-sdk/v2/sqs',
   './instrumentation/cloud/azure/blob',
@@ -56,7 +51,6 @@ let instrumentations = [
   './instrumentation/control_flow/bluebird',
   './instrumentation/control_flow/clsHooked',
   './instrumentation/control_flow/graphqlSubscriptions',
-  './instrumentation/control_flow/q',
   './instrumentation/database/elasticsearch',
   './instrumentation/database/ioredis',
   './instrumentation/database/memcached',
@@ -123,7 +117,6 @@ if (customInstrumentations.length > 0) {
 /**
  * @typedef {Object} KafkaTracingConfig
  * @property {boolean} [traceCorrelation]
- * @property {string} [headerFormat]
  */
 
 /** @type {Array.<InstanaInstrumentedModule>} */
@@ -138,7 +131,6 @@ exports.sdk = sdk;
 exports.spanBuffer = spanBuffer;
 exports.supportedVersion = supportedVersion;
 exports.util = tracingUtil;
-exports.esmSupportedVersion = esmSupportedVersion;
 exports.isLatestEsmSupportedVersion = isLatestEsmSupportedVersion;
 
 /**
@@ -188,7 +180,7 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
     console.debug(`The App is using the following preload flags: ${preloadFlags}`);
   }
 
-  // Consider removing this in the next major release(v4.x) of the @instana package.
+  // Consider removing this in the next major release of the @instana package.
   if (hasExperimentalLoaderFlag()) {
     // eslint-disable-next-line no-console
     console.warn(

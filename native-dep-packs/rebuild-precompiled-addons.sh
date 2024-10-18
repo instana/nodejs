@@ -11,8 +11,6 @@ cd `dirname $BASH_SOURCE`
 # Maintenance Note:
 # This should be kept in sync with packages/autoprofile/precompile/build-all-addons.js-> ABI_VERSIONS.
 declare -A ABI_VERSIONS=( \
-  ["83"]="14.21.3" \
-  ["93"]="16.20.2" \
   ["108"]="18.18.2" \
   ["115"]="20.3.0" \
   ["120"]="21.2.0" \
@@ -74,4 +72,3 @@ if [[ ! -z "$BUILD_FOR_MACOS" ]]; then
     exit 1
   fi
 fi
-
