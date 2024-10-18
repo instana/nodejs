@@ -8,7 +8,7 @@ Python3 (< 3.11) is required, otherwise the db2 package won't build, see https:/
 If you're having issues with distutils module, then double check the python3 version (python3 --version) and make sure that the version pointing to is < 3.12
 The error can be something like: ModuleNotFoundError: No module named 'distutils'
 
-`npm i lerna@6.4.1 -g`
+`npm i lerna@8.1.8 -g`
 We need lerna being installed globally, because we have some
 package.json scripts, who rely on lerna e.g. `npm run reinstall-deps`.
 
@@ -116,7 +116,7 @@ For example:
 
 ## Managing Dependencies In Packages
 
-We are using **npm workspaces** and **lerna v7**.
+We are using **npm workspaces** and **lerna v8**.
 
 - https://lerna.js.org/docs/introduction
 - https://docs.npmjs.com/cli/v7/using-npm/workspaces/
