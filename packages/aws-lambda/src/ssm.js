@@ -32,7 +32,7 @@ module.exports.validate = () => {
   return true;
 };
 
-module.exports.init = ({ logger }) => {
+module.exports.init = async ({ logger }) => {
   // CASE: Customer did not set INSTANA_SSM_PARAM_NAME, skip
   if (!exports.isUsed()) {
     return;
@@ -70,7 +70,7 @@ module.exports.init = ({ logger }) => {
     const client = new SSMClient({ region: process.env.AWS_REGION });
     const command = new GetParameterCommand(params);
 
-    client
+    return client
       .send(command)
       .then(response => {
         // CASE: Customer created key with decryption KMS key, but does not tell us
