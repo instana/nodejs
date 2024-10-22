@@ -33,8 +33,6 @@ module.exports.validate = () => {
 };
 
 module.exports.init = ({ logger }) => {
-  let AWS;
-
   // CASE: Customer did not set INSTANA_SSM_PARAM_NAME, skip
   if (!exports.isUsed()) {
     return;
@@ -48,17 +46,16 @@ module.exports.init = ({ logger }) => {
   initTimeoutInMs = Date.now();
 
   try {
+    let SSMClient;
+    let GetParameterCommand;
     /**
      * From https://docs.aws.amazon.com/lambda/latest/dg/lambda-nodejs.html:
      *
      * Your code runs in an environment that includes the AWS SDK for JavaScript,
      * with credentials from an AWS Identity and Access Management (IAM) role that you manage.
      */
-    // eslint-disable-next-line instana/no-unsafe-require, import/no-extraneous-dependencies
-    AWS = require('aws-sdk');
-
-    // https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
-    const ssm = new AWS.SSM({ region: process.env.AWS_REGION });
+    // eslint-disable-next-line import/no-extraneous-dependencies, instana/no-unsafe-require, prefer-const
+    ({ SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm'));
     const params = {
       Name: envValue,
       /**
@@ -69,26 +66,25 @@ module.exports.init = ({ logger }) => {
       WithDecryption: process.env[ENV_DECRYPTION] === 'true'
     };
 
-    logger.debug(`INSTANA_SSM_PARAM_NAME is ${envValue}.`);
+    logger.debug(`INSTANA_SSM_PARAM_NAME is ${process.env.INSTANA_SSM_PARAM_NAME}.`);
+    const client = new SSMClient({ region: process.env.AWS_REGION });
+    const command = new GetParameterCommand(params);
 
-    ssm.getParameter(params, (err, data) => {
-      if (err) {
-        errorFromAWS = `Error from AWS-SDK SSM Parameter Store: ${err.message}`;
-      } else {
-        try {
-          // CASE: Customer created key with decryption KMS key, but does not tell us
-          if (data.Parameter.Type === 'SecureString' && process.env[ENV_DECRYPTION] !== 'true') {
-            errorFromAWS = 'SSM Key is a SecureString. Please pass INSTANA_SSM_DECRYPTION=true';
-          } else {
-            fetchedValue = data.Parameter.Value;
-            errorFromAWS = null;
-            logger.debug(`INSTANA AGENT KEY: ${fetchedValue}`);
-          }
-        } catch (readError) {
-          errorFromAWS = `Could not read returned response from AWS-SDK SSM Parameter Store: ${readError.message}`;
+    client
+      .send(command)
+      .then(response => {
+        // CASE: Customer created key with decryption KMS key, but does not tell us
+        if (response.Parameter.Type === 'SecureString' && process.env[ENV_DECRYPTION] !== 'true') {
+          errorFromAWS = 'SSM Key is a SecureString. Please pass INSTANA_SSM_DECRYPTION=true';
+        } else {
+          fetchedValue = response.Parameter.Value;
+          errorFromAWS = null;
+          logger.debug(`INSTANA AGENT KEY: ${fetchedValue}`);
         }
-      }
-    });
+      })
+      .catch(error => {
+        errorFromAWS = `Could not read returned response from AWS-SDK SSM Parameter Store: ${error.message}`;
+      });
   } catch (err) {
     logger.warn('AWS SDK not available.');
     errorFromAWS =
