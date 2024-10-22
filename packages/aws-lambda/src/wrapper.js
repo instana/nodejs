@@ -233,7 +233,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
 /**
  * Initialize the wrapper.
  */
-function init(event, arnInfo, _config) {
+async function init(event, arnInfo, _config) {
   config = _config || {};
 
   if (config.logger) {
@@ -247,7 +247,7 @@ function init(event, arnInfo, _config) {
     logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : config.level || process.env.INSTANA_LOG_LEVEL);
   }
 
-  ssm.init({ logger });
+  await ssm.init({ logger });
 
   identityProvider.init(arnInfo);
   const useLambdaExtension = shouldUseLambdaExtension();
