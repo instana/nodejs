@@ -278,7 +278,7 @@ function registerTests(handlerDefinitionPath, reduced) {
       let control;
 
       before(callback => {
-        const AWS = require('aws-sdk');
+        const AWS = require('@aws-sdk/client-ssm');
         const ssm = new AWS.SSM({ region: awsRegion });
         const params = {
           Name: '/Nodejstest/MyAgentKey',
@@ -344,7 +344,8 @@ function registerTests(handlerDefinitionPath, reduced) {
     });
 
     describeOrSkipIfReduced(reduced)('[with decryption] error', () => {
-      const AWS = require('aws-sdk');
+      const AWSssm = require('@aws-sdk/client-ssm');
+      const AWSkms = require('@aws-sdk/client-kms');
       let kmsKeyId;
 
       // - INSTANA_ENDPOINT_URL is configured
@@ -379,7 +380,7 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
 
       after(callback => {
-        const kms = new AWS.KMS({ region: awsRegion });
+        const kms = new AWSkms.KMS({ region: awsRegion });
         kms.scheduleKeyDeletion(
           {
             KeyId: kmsKeyId,
@@ -396,8 +397,8 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
 
       before(callback => {
-        const ssm = new AWS.SSM({ region: awsRegion });
-        const kms = new AWS.KMS({ region: awsRegion });
+        const ssm = new AWSssm.SSM({ region: awsRegion });
+        const kms = new AWSkms.KMS({ region: awsRegion });
 
         kms.createKey({}, (kmsErr, data) => {
           if (kmsErr) {
@@ -452,7 +453,7 @@ function registerTests(handlerDefinitionPath, reduced) {
     });
 
     describeOrSkipIfReduced(reduced)('[with decryption] succeeds', () => {
-      const AWS = require('aws-sdk');
+      const AWS = require('@aws-sdk/client-ssm');
       let kmsKeyId;
 
       // - INSTANA_ENDPOINT_URL is configured
