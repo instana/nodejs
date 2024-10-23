@@ -409,7 +409,7 @@ if [[ -z $SKIP_DOCKER_IMAGE ]]; then
   echo "step 7/9: building docker image for container image based Lambda layer"
   docker build . -t "$DOCKER_IMAGE_NAME:$VERSION"
 
-  # NOTE: serverless/ci/pipeline.yaml passes PACKAGE_VERSION=1 for 1.x branch
+  # NOTE: serverless/ci/pipeline.yaml passes PACKAGE_VERSION=X for e.g. 1.x or 2.x or 3.x branch
   if [[ $PACKAGE_VERSION == latest ]]; then
     docker tag $DOCKER_IMAGE_NAME:$VERSION $DOCKER_IMAGE_NAME:latest
   fi
