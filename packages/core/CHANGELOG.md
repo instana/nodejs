@@ -3,6 +3,41 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.0.0](https://github.com/instana/nodejs/compare/v3.21.0...v4.0.0) (2024-10-23)
+
+### Bug Fixes
+
+- deprecated kafka-avro ([#1337](https://github.com/instana/nodejs/issues/1337)) ([5647c3f](https://github.com/instana/nodejs/commit/5647c3fc8383329b187b6edd54dcbbfd5a90f021))
+- dropped support for disabling AWS SDK instrumentation in old syntax ([#1383](https://github.com/instana/nodejs/issues/1383)) ([48bebf3](https://github.com/instana/nodejs/commit/48bebf3d2342a2dbe1f9c06ab0a5a3ad10a26c29))
+- dropped support for node v14 and v16 ([#1348](https://github.com/instana/nodejs/issues/1348)) ([aaa9ad4](https://github.com/instana/nodejs/commit/aaa9ad41ebf82b11eedcf913afc31d3addd53868))
+- dropped support for q library ([#1377](https://github.com/instana/nodejs/issues/1377)) ([c7f1fa5](https://github.com/instana/nodejs/commit/c7f1fa57f76a0cb8faefafaa0a30eb45a898b53a))
+- dropped support for x-instana-service header ([#1355](https://github.com/instana/nodejs/issues/1355)) ([7aa5f4b](https://github.com/instana/nodejs/commit/7aa5f4b87e07fc5d1d804aeae1eaea173fdb33c6))
+- **kafka:** enforced string format for Kafka trace headers and dropped binary support ([#1296](https://github.com/instana/nodejs/issues/1296)) ([2c822d3](https://github.com/instana/nodejs/commit/2c822d3c68966737a1e83d4141bd5a5ac3958cc8))
+
+### Features
+
+- added support for root exit spans ([#1297](https://github.com/instana/nodejs/issues/1297)) ([f1e1f30](https://github.com/instana/nodejs/commit/f1e1f30b87983bf9109a0ac097ec10458edd3643))
+
+### BREAKING CHANGES
+
+- - Removed the ability to disable AWS SDK instrumentation using the old syntax disabledTracers: ['aws-sdk/v2/index'].
+
+* Migrate to the new syntax for disabling instrumentation: disabledTracers: ['aws-sdk/v2'].
+
+- - Migration: Please configure the Instana agent to capture the X-Instana-Service header in the agent's configuration file.
+
+* For details, see: https://www.ibm.com/docs/en/instana-observability/current?topic=applications-services#specify-the-x-instana-service-http-header.
+
+- - Dropped support for Node.js versions 14 and 16.
+
+* Reason: These versions have reached their end of life.
+* More info: https://github.com/nodejs/Release?tab=readme-ov-file#end-of-life-releases
+
+- **kafka:** - Removed the ability to configure the header format; headers will always be sent in 'string' format.
+
+* Removed support for 'binary' format and code related to sending headers in 'binary' or 'both' formats.
+  refs INSTA-809
+
 # [3.21.0](https://github.com/instana/nodejs/compare/v3.20.2...v3.21.0) (2024-10-17)
 
 ### Features

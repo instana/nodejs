@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.0.0](https://github.com/instana/nodejs/compare/v3.21.0...v4.0.0) (2024-10-23)
+
+### Bug Fixes
+
+- dropped support for lambda runtimes v14 and v16 ([#1352](https://github.com/instana/nodejs/issues/1352)) ([4d28d6b](https://github.com/instana/nodejs/commit/4d28d6b13b0299570b8b59c3f095fd76484e6f8b))
+- dropped support for node v14 and v16 ([#1348](https://github.com/instana/nodejs/issues/1348)) ([aaa9ad4](https://github.com/instana/nodejs/commit/aaa9ad41ebf82b11eedcf913afc31d3addd53868))
+
+### Reverts
+
+- Revert "ci: skipping the chinese regions from publishing lambda layers" ([8475d69](https://github.com/instana/nodejs/commit/8475d6967311308bd36cc4ce4331bcb232beb031))
+
+### BREAKING CHANGES
+
+- - Dropped support for Node.js versions 14 and 16.
+
+* Reason: These versions have reached their end of life.
+* More info: https://github.com/nodejs/Release?tab=readme-ov-file#end-of-life-releases
+
+- - Node.js Lambda runtimes v14 and v16 are no longer supported.
+
+* Refer to the Lambda deprecation policy here: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
+
 # [3.21.0](https://github.com/instana/nodejs/compare/v3.20.2...v3.21.0) (2024-10-17)
 
 **Note:** Version bump only for package @instana/aws-lambda

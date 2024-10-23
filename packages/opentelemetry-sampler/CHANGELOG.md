@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.0.0](https://github.com/instana/nodejs/compare/v3.21.0...v4.0.0) (2024-10-23)
+
+### Bug Fixes
+
+- dropped support for node v14 and v16 ([#1348](https://github.com/instana/nodejs/issues/1348)) ([aaa9ad4](https://github.com/instana/nodejs/commit/aaa9ad41ebf82b11eedcf913afc31d3addd53868))
+
+### BREAKING CHANGES
+
+- - Dropped support for Node.js versions 14 and 16.
+
+* Reason: These versions have reached their end of life.
+* More info: https://github.com/nodejs/Release?tab=readme-ov-file#end-of-life-releases
+
 # [3.21.0](https://github.com/instana/nodejs/compare/v3.20.2...v3.21.0) (2024-10-17)
 
 **Note:** Version bump only for package @instana/opentelemetry-sampler
