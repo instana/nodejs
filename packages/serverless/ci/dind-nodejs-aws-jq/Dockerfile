@@ -51,28 +51,23 @@ RUN apk --update --no-cache add \
 # AWS CLI v2 is fetched directly from Amazon’s servers using a static
 # download link, which always provides the latest release of the CLI tool.
 # https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html#getting-started-install-instructions
-RUN apk --no-cache add \
-        binutils \
-    && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub \
-    && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk \
-    && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk \
-    && apk add --no-cache \
-        glibc-${GLIBC_VER}.apk \
-        glibc-bin-${GLIBC_VER}.apk \
-    && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip \
-    && unzip awscliv2.zip \
-    && aws/install \
-    && rm -rf \
-        awscliv2.zip \
-        aws \
-        /usr/local/aws-cli/v2/*/dist/aws_completer \
-        /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index \
-        /usr/local/aws-cli/v2/*/dist/awscli/examples \
-    && apk --no-cache del \
-        binutils \
-    && rm glibc-${GLIBC_VER}.apk \
-    && rm glibc-bin-${GLIBC_VER}.apk \
-    && rm -rf /var/cache/apk/*
+ARG ALPINE_GLIBC_REPO="https://github.com/sgerrand/alpine-pkg-glibc/releases/download"
+RUN apk add --no-cache --virtual .build-deps curl binutils zstd gcompat && \
+    curl -LfsS https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub && \
+    curl -LfsS ${ALPINE_GLIBC_REPO}/${GLIBC_VER}/glibc-${GLIBC_VER}.apk -o /tmp/glibc-${GLIBC_VER}.apk && \
+    apk add --force-overwrite --no-cache /tmp/glibc-${GLIBC_VER}.apk && \
+    apk del gcompat && \
+    curl -LfsS ${ALPINE_GLIBC_REPO}/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk -o /tmp/glibc-bin-${GLIBC_VER}.apk && \
+    apk add --no-cache /tmp/glibc-bin-${GLIBC_VER}.apk && \
+    curl -Ls ${ALPINE_GLIBC_REPO}/${GLIBC_VER}/glibc-i18n-${GLIBC_VER}.apk -o /tmp/glibc-i18n-${GLIBC_VER}.apk && \
+    apk add --no-cache /tmp/glibc-i18n-${GLIBC_VER}.apk && \
+    curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip && \
+    unzip awscliv2.zip && \
+    aws/install && \
+    rm -rf awscliv2.zip aws /usr/local/aws-cli/v2/*/dist/aws_completer /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index /usr/local/aws-cli/v2/*/dist/awscli/examples && \
+    apk --no-cache del binutils && \
+    rm -f /tmp/glibc-${GLIBC_VER}.apk /tmp/glibc-bin-${GLIBC_VER}.apk /tmp/glibc-i18n-${GLIBC_VER}.apk && \
+    rm -rf /var/cache/apk/*
 
 COPY entrypoint.sh /bin/entrypoint.sh
 
