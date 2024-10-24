@@ -241,7 +241,7 @@
     "yargs": "^17.5.1"
   },
   "optionalDependencies": {
-    "couchbase": "^4.4.2",
+    "couchbase": "^4.4.3",
     "ibm_db": "^3.2.4",
     "kafka-avro": "^3.2.0",
     "node-rdkafka": "^3.1.1",
