@@ -6,8 +6,9 @@
 # Modifications:
 # - Use a Node.js base image instead of raw alpine,
 # - add glibc because the AWS cli requires that (does not work with muslc)
-# - DOCKER_VERSION=20.10.11 instead of 19.03.2
-# - removed docker-compose and some related package (py-pip, python3-dev)
+# - Updated DOCKER_VERSION to the latest stable release
+# - Updated GLIBC_VER to the latest stable release
+# - removed docker-compose and some related packages (py-pip, python3-dev)
 # - removed docker squash support,
 # - added jq, and
 # - added/removed a bunch apk packages.
@@ -18,8 +19,8 @@
 FROM node:22-alpine
 
 ENV DOCKER_CHANNEL=stable \
-    DOCKER_VERSION=20.10.11 \
-    GLIBC_VER=2.34-r0
+    DOCKER_VERSION=27.3.1 \  
+    GLIBC_VER=2.35-r1 
 
 RUN apk --update --no-cache add \
         bash \
@@ -45,6 +46,11 @@ RUN apk --update --no-cache add \
     rm -rf /root/.cache
 
 # Install glibc compatibility for alpine plus AWS cli
+# ----------------------------------------------------------------------------
+# This section installs the latest version of AWS CLI (v2) and glibc.
+# AWS CLI v2 is fetched directly from Amazon’s servers using a static
+# download link, which always provides the latest release of the CLI tool.
+# https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html#getting-started-install-instructions
 RUN apk --no-cache add \
         binutils \
     && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub \
