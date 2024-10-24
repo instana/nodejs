@@ -278,8 +278,8 @@ function registerTests(handlerDefinitionPath, reduced) {
       let control;
 
       before(callback => {
-        const AWS = require('@aws-sdk/client-ssm');
-        const ssm = new AWS.SSM({ region: awsRegion });
+        const { SSMClient, PutParameterCommand } = require('@aws-sdk/client-ssm');
+        const ssmClient = new SSMClient({ region: awsRegion });
         const params = {
           Name: '/Nodejstest/MyAgentKey',
           Value: instanaAgentKey,
@@ -287,35 +287,29 @@ function registerTests(handlerDefinitionPath, reduced) {
           Overwrite: true
         };
 
-        const createSSMKey = cb => {
-          ssm.putParameter(params, err => {
-            if (err) {
-              // eslint-disable-next-line no-console
-              console.log('DEBUG', err);
-              return cb(new Error(`Cannot set SSM parameter store value: ${err.name} ${err.message}`));
-            }
-
-            return cb();
-          });
+        const createSSMKey = async () => {
+          try {
+            await ssmClient.send(new PutParameterCommand(params));
+          } catch (error) {
+            // eslint-disable-next-line no-console
+            console.log('DEBUG', error);
+            throw new Error(`Cannot set SSM parameter store value: ${error.name} ${error.message}`);
+          }
         };
 
-        let retries = 0;
-        const run = () => {
-          createSSMKey(err => {
-            if (err) {
-              if (retries > 2) {
-                return callback(new Error('Could not create SSM key.'));
-              }
-
-              retries += 1;
-              return run();
+        const run = async (retries = 0) => {
+          try {
+            await createSSMKey();
+            callback();
+          } catch (error) {
+            if (retries >= 2) {
+              return callback(new Error('Could not create SSM key.'));
             }
-
-            return callback();
-          });
+            await run(retries + 1);
+          }
         };
 
-        return run();
+        run();
       });
 
       before(async () => {
