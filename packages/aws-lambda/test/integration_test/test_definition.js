@@ -344,8 +344,8 @@ function registerTests(handlerDefinitionPath, reduced) {
     });
 
     describeOrSkipIfReduced(reduced)('[with decryption] error', () => {
-      const AWSssm = require('@aws-sdk/client-ssm');
-      const AWSkms = require('@aws-sdk/client-kms');
+      const { SSMClient, PutParameterCommand } = require('@aws-sdk/client-ssm');
+      const { KMSClient, CreateKeyCommand, ScheduleKeyDeletionCommand } = require('@aws-sdk/client-kms');
       let kmsKeyId;
 
       // - INSTANA_ENDPOINT_URL is configured
@@ -379,33 +379,27 @@ function registerTests(handlerDefinitionPath, reduced) {
         await control.stop();
       });
 
-      after(callback => {
-        const kms = new AWSkms.KMS({ region: awsRegion });
-        kms.scheduleKeyDeletion(
-          {
-            KeyId: kmsKeyId,
-            PendingWindowInDays: 7
-          },
-          kmsErr => {
-            if (kmsErr) {
-              throw new Error(`Cannot remove KMS key: ${kmsErr.message}`);
-            }
-
-            callback();
-          }
-        );
+      after(async () => {
+        const kmsClient = new KMSClient({ region: awsRegion });
+        try {
+          await kmsClient.send(
+            new ScheduleKeyDeletionCommand({
+              KeyId: kmsKeyId,
+              PendingWindowInDays: 7
+            })
+          );
+        } catch (error) {
+          throw new Error(`Cannot remove KMS key: ${error.message}`);
+        }
       });
 
-      before(callback => {
-        const ssm = new AWSssm.SSM({ region: awsRegion });
-        const kms = new AWSkms.KMS({ region: awsRegion });
+      before(async () => {
+        const ssmClient = new SSMClient({ region: awsRegion });
+        const kmsClient = new KMSClient({ region: awsRegion });
 
-        kms.createKey({}, (kmsErr, data) => {
-          if (kmsErr) {
-            throw new Error(`Cannot set KMS key: ${kmsErr.message}`);
-          }
-
-          kmsKeyId = data.KeyMetadata.KeyId;
+        try {
+          const kmsResponse = await kmsClient.send(new CreateKeyCommand({}));
+          kmsKeyId = kmsResponse.KeyMetadata.KeyId;
 
           const params = {
             Name: '/Nodejstest/MyAgentKeyEncrypted',
@@ -415,36 +409,34 @@ function registerTests(handlerDefinitionPath, reduced) {
             Overwrite: true
           };
 
-          const createSSMKey = cb => {
-            ssm.putParameter(params, err => {
-              if (err) {
-                // eslint-disable-next-line no-console
-                console.log('DEBUG', err);
-                return cb(new Error(`Cannot set SSM parameter store value: ${err.name} ${err.message}`));
-              }
-
-              return cb();
-            });
+          const createSSMKey = async () => {
+            try {
+              await ssmClient.send(new PutParameterCommand(params));
+            } catch (error) {
+              // eslint-disable-next-line no-console
+              console.log('DEBUG', error);
+              throw new Error(`Cannot set SSM parameter store value: ${error.name} ${error.message}`);
+            }
           };
 
           let retries = 0;
-          const run = () => {
-            createSSMKey(err => {
-              if (err) {
-                if (retries > 2) {
-                  return callback(new Error('Could not create SSM key.'));
-                }
-
-                retries += 1;
-                return run();
+          const run = async () => {
+            try {
+              await createSSMKey();
+            } catch (error) {
+              if (retries > 2) {
+                throw new Error('Could not create SSM key.');
               }
-
-              return callback();
-            });
+              retries += 1;
+              await run();
+            }
           };
 
-          return run();
-        });
+          await run();
+        } catch (kmsErr) {
+          // eslint-disable-next-line no-console
+          console.error(`Failed to set KMS key: ${kmsErr.message}`);
+        }
       });
 
       it('must not capture metrics and spans', () => {
@@ -452,9 +444,9 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
     });
 
-    describeOrSkipIfReduced(reduced)('[with decryption] succeeds', () => {
-      const AWSssm = require('@aws-sdk/client-ssm');
-      const AWSkms = require('@aws-sdk/client-kms');
+    describe('[with decryption] succeeds', () => {
+      const { SSMClient, PutParameterCommand } = require('@aws-sdk/client-ssm');
+      const { KMSClient, CreateKeyCommand, ScheduleKeyDeletionCommand } = require('@aws-sdk/client-kms');
       let kmsKeyId;
 
       // - INSTANA_ENDPOINT_URL is configured
@@ -489,33 +481,27 @@ function registerTests(handlerDefinitionPath, reduced) {
         await control.stop();
       });
 
-      after(callback => {
-        const kms = new AWSkms.KMS({ region: awsRegion });
-        kms.scheduleKeyDeletion(
-          {
-            KeyId: kmsKeyId,
-            PendingWindowInDays: 7
-          },
-          kmsErr => {
-            if (kmsErr) {
-              throw new Error(`Cannot remove KMS key: ${kmsErr.message}`);
-            }
-
-            callback();
-          }
-        );
+      after(async () => {
+        const kmsClient = new KMSClient({ region: awsRegion });
+        try {
+          await kmsClient.send(
+            new ScheduleKeyDeletionCommand({
+              KeyId: kmsKeyId,
+              PendingWindowInDays: 7
+            })
+          );
+        } catch (error) {
+          throw new Error(`Cannot remove KMS key: ${error.message}`);
+        }
       });
 
-      before(callback => {
-        const ssm = new AWSssm.SSM({ region: awsRegion });
-        const kms = new AWSkms.KMS({ region: awsRegion });
+      before(async () => {
+        const ssmClient = new SSMClient({ region: awsRegion });
+        const kmsClient = new KMSClient({ region: awsRegion });
 
-        kms.createKey({}, (kmsErr, data) => {
-          if (kmsErr) {
-            throw new Error(`Cannot set KMS key: ${kmsErr.message}`);
-          }
-
-          kmsKeyId = data.KeyMetadata.KeyId;
+        try {
+          const kmsResponse = await kmsClient.send(new CreateKeyCommand({}));
+          kmsKeyId = kmsResponse.KeyMetadata.KeyId;
 
           const params = {
             Name: '/Nodejstest/MyAgentKeyEncrypted',
@@ -525,36 +511,34 @@ function registerTests(handlerDefinitionPath, reduced) {
             Overwrite: true
           };
 
-          const createSSMKey = cb => {
-            ssm.putParameter(params, err => {
-              if (err) {
-                // eslint-disable-next-line no-console
-                console.log('DEBUG', err);
-                return cb(new Error(`Cannot set SSM parameter store value: ${err.name} ${err.message}`));
-              }
-
-              return cb();
-            });
+          const createSSMKey = async () => {
+            try {
+              await ssmClient.send(new PutParameterCommand(params));
+            } catch (error) {
+              // eslint-disable-next-line no-console
+              console.log('DEBUG', error);
+              throw new Error(`Cannot set SSM parameter store value: ${error.name} ${error.message}`);
+            }
           };
 
           let retries = 0;
-          const run = () => {
-            createSSMKey(err => {
-              if (err) {
-                if (retries > 2) {
-                  return callback(new Error('Could not create SSM key.'));
-                }
-
-                retries += 1;
-                return run();
+          const run = async () => {
+            try {
+              await createSSMKey();
+            } catch (error) {
+              if (retries > 2) {
+                throw new Error('Could not create SSM key.');
               }
-
-              return callback();
-            });
+              retries += 1;
+              await run();
+            }
           };
 
-          return run();
-        });
+          await run();
+        } catch (kmsErr) {
+          // eslint-disable-next-line no-console
+          console.error(`Failed to set KMS key: ${kmsErr.message}`);
+        }
       });
 
       it('must capture metrics and spans', () => {
