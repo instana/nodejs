@@ -33,12 +33,12 @@ module.exports.validate = () => {
 };
 
 module.exports.init = ({ logger }) => {
-  // CASE: INSTANA_SSM_PARAM_NAME is not set by the customer, skip initialization
+  // CASE: INSTANA_SSM_PARAM_NAME is not set, skip
   if (!exports.isUsed()) {
     return;
   }
 
-  // CASE: The SSM parameter value has already been fetched, skip further fetching
+  // CASE: We already fetched the SSM value, skip
   if (fetchedValue) {
     return;
   }
@@ -46,16 +46,12 @@ module.exports.init = ({ logger }) => {
   initTimeoutInMs = Date.now();
 
   try {
-    let SSMClient;
-    let GetParameterCommand;
-
     /**
-     * As per AWS Lambda Node.js documentation:
-     *
+     * As per AWS Lambda Node.js documentation: https://docs.aws.amazon.com/lambda/latest/dg/lambda-nodejs.html
      * The environment includes the AWS SDK for JavaScript, with credentials from an IAM role that you manage.
      */
     // eslint-disable-next-line import/no-extraneous-dependencies, instana/no-unsafe-require, prefer-const
-    ({ SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm'));
+    const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm');
 
     const params = {
       Name: envValue,
@@ -71,7 +67,6 @@ module.exports.init = ({ logger }) => {
     logger.debug(`INSTANA_SSM_PARAM_NAME is ${process.env.INSTANA_SSM_PARAM_NAME}.`);
     const client = new SSMClient({ region: process.env.AWS_REGION });
     const command = new GetParameterCommand(params);
-
     client
       .send(command)
       .then(response => {
@@ -96,7 +91,7 @@ module.exports.init = ({ logger }) => {
 };
 
 module.exports.waitAndGetInstanaKey = callback => {
-  // CASE: The SSM parameter value has already been fetched, skip the wait
+  // CASE: We already fetched the SSM value, skip & save time
   if (fetchedValue) {
     return callback(null, fetchedValue);
   }
@@ -108,7 +103,7 @@ module.exports.waitAndGetInstanaKey = callback => {
   const endInMs = Date.now();
   const awsTimeoutInMs = process.env.INSTANA_AWS_SSM_TIMEOUT_IN_MS
     ? Number(process.env.INSTANA_AWS_SSM_TIMEOUT_IN_MS)
-    : 2000;
+    : 1000;
 
   // CASE: The time between SSM initialization and waitAndGetInstanaKey is too long to wait for the AWS response
   if (endInMs - initTimeoutInMs > awsTimeoutInMs) {
@@ -116,11 +111,10 @@ module.exports.waitAndGetInstanaKey = callback => {
   }
 
   /**
-   * Typically, the `GetParameterCommand` call within AWS takes around 300-500ms.
-   * Since the fetching is initiated before the customer's handler is invoked,
-   * the likelihood of needing this interval is low.
-   *
-   * In tests, the remote call generally takes ~500ms.
+   * The `GetParameterCommand` call in AWS typically takes about 80 to 500ms.
+   * This fetching process starts before the customer's handler is invoked,
+   * and a delay was noticed during a cold start, so this interval may be significant in that case.
+   * However, it's unlikely that this interval will be needed in other scenarios.
    */
   let stopIntervalAfterMs = 500;
   let ssmTimeOutEnv = process.env.INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS;
@@ -141,9 +135,11 @@ module.exports.waitAndGetInstanaKey = callback => {
 
     if (fetchedValue) {
       clearInterval(waiting);
+
       callback(null, fetchedValue);
     } else if (end - start > stopIntervalAfterMs) {
       clearInterval(waiting);
+
       callback(
         `Could not fetch instana key from SSM parameter store using "${process.env.INSTANA_SSM_PARAM_NAME}"` +
           ', because we have not received a response from AWS.'
