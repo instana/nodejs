@@ -15,7 +15,7 @@
 # Note: Needs to be run with --privileged.
 # ----------------------------------------------------------------------------
 
-FROM node:22
+FROM node:22-alpine
 
 ENV DOCKER_CHANNEL=stable \
     DOCKER_VERSION=20.10.11 \
