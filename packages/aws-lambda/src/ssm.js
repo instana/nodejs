@@ -33,9 +33,7 @@ module.exports.validate = () => {
 };
 
 module.exports.init = ({ logger }) => {
-  let AWS;
-
-  // CASE: Customer did not set INSTANA_SSM_PARAM_NAME, skip
+  // CASE: INSTANA_SSM_PARAM_NAME is not set, skip
   if (!exports.isUsed()) {
     return;
   }
@@ -49,52 +47,46 @@ module.exports.init = ({ logger }) => {
 
   try {
     /**
-     * From https://docs.aws.amazon.com/lambda/latest/dg/lambda-nodejs.html:
-     *
-     * Your code runs in an environment that includes the AWS SDK for JavaScript,
-     * with credentials from an AWS Identity and Access Management (IAM) role that you manage.
+     * As per AWS Lambda Node.js documentation: https://docs.aws.amazon.com/lambda/latest/dg/lambda-nodejs.html
+     * The environment includes the AWS SDK for JavaScript, with credentials from an IAM role that you manage.
      */
-    // eslint-disable-next-line instana/no-unsafe-require, import/no-extraneous-dependencies
-    AWS = require('aws-sdk');
+    // eslint-disable-next-line import/no-extraneous-dependencies, instana/no-unsafe-require, prefer-const
+    const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm');
 
-    // https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
-    const ssm = new AWS.SSM({ region: process.env.AWS_REGION });
     const params = {
       Name: envValue,
       /**
-       * See https://docs.aws.amazon.com/cli/latest/reference/ssm/get-parameter.html#options
-       * The value in the parameter store was either created with type "string" or "safestring"
-       * A "safestring" uses a KMS key to encrypt/decrypt the value in the store.
+       * For more details, see:
+       * https://docs.aws.amazon.com/cli/latest/reference/ssm/get-parameter.html#options
+       * The parameter in the store is either a "string" or a "SecureString".
+       * A "SecureString" uses a KMS key for encryption/decryption.
        */
       WithDecryption: process.env[ENV_DECRYPTION] === 'true'
     };
 
-    logger.debug(`INSTANA_SSM_PARAM_NAME is ${envValue}.`);
-
-    ssm.getParameter(params, (err, data) => {
-      if (err) {
-        errorFromAWS = `Error from AWS-SDK SSM Parameter Store: ${err.message}`;
-      } else {
-        try {
-          // CASE: Customer created key with decryption KMS key, but does not tell us
-          if (data.Parameter.Type === 'SecureString' && process.env[ENV_DECRYPTION] !== 'true') {
-            errorFromAWS = 'SSM Key is a SecureString. Please pass INSTANA_SSM_DECRYPTION=true';
-          } else {
-            fetchedValue = data.Parameter.Value;
-            errorFromAWS = null;
-            logger.debug(`INSTANA AGENT KEY: ${fetchedValue}`);
-          }
-        } catch (readError) {
-          errorFromAWS = `Could not read returned response from AWS-SDK SSM Parameter Store: ${readError.message}`;
+    logger.debug(`INSTANA_SSM_PARAM_NAME is ${process.env.INSTANA_SSM_PARAM_NAME}.`);
+    const client = new SSMClient({ region: process.env.AWS_REGION });
+    const command = new GetParameterCommand(params);
+    client
+      .send(command)
+      .then(response => {
+        // CASE: The parameter is of type SecureString, but decryption wasn't specified
+        if (response.Parameter.Type === 'SecureString' && process.env[ENV_DECRYPTION] !== 'true') {
+          errorFromAWS = 'The SSM parameter is a SecureString. Please set INSTANA_SSM_DECRYPTION=true.';
+        } else {
+          fetchedValue = response.Parameter.Value;
+          errorFromAWS = null;
+          logger.debug(`INSTANA AGENT KEY: ${fetchedValue}`);
         }
-      }
-    });
+      })
+      .catch(error => {
+        errorFromAWS = `Could not read returned response from AWS-SDK SSM Parameter Store: ${error.message}`;
+      });
   } catch (err) {
-    logger.warn('AWS SDK not available.');
+    logger.warn('AWS SDK is not available.');
     errorFromAWS =
-      'Could not fetch instana key from SSM parameter store using ' +
-      `"${process.env.INSTANA_SSM_PARAM_NAME}", because the AWS SDK is not available. ` +
-      `Reason: ${err.message}`;
+      `Unable to fetch the Instana key from the SSM Parameter Store using "${process.env.INSTANA_SSM_PARAM_NAME}",` +
+      ` as the AWS SDK is unavailable. Reason: ${err.message}`;
   }
 };
 
@@ -103,34 +95,34 @@ module.exports.waitAndGetInstanaKey = callback => {
   if (fetchedValue) {
     return callback(null, fetchedValue);
   }
-  // CASE: Customer has set INSTANA_SSM_PARAM_NAME, but we were not able to fetch the value from AWS
+  // CASE: INSTANA_SSM_PARAM_NAME was set, but AWS response could not be fetched
   if (errorFromAWS) {
     return callback(errorFromAWS);
   }
 
   const endInMs = Date.now();
-  const awsTimeoutInMs = process.env.INSTANA_AWS_SSM_TIMEOUT_IN_MS ? Number(process.env.INSTANA_AWS_SSM_TIMEOUT) : 1000;
+  const awsTimeoutInMs = process.env.INSTANA_AWS_SSM_TIMEOUT_IN_MS
+    ? Number(process.env.INSTANA_AWS_SSM_TIMEOUT_IN_MS)
+    : 1000;
 
-  // CASE: the time between ssm lib initialisation and waitAndGetInstanaKey call
-  //       (which is the end of the customers lambda handler) is already too big to wait for the AWS response
+  // CASE: The time between SSM initialization and waitAndGetInstanaKey is too long to wait for the AWS response
   if (endInMs - initTimeoutInMs > awsTimeoutInMs) {
     return callback(`Stopped waiting for AWS SSM response after ${awsTimeoutInMs}ms.`);
   }
 
   /**
-   * Inside AWS the call to `getParameter` mostly takes 30-50ms
-   * Because we initialise the fetch already before the customer's handler is called,
-   * the chance is very high that the interval is not even used.
-   *
-   * In our tests it takes usually ~>150ms (remote call)
+   * The `GetParameterCommand` call in AWS typically takes about 80 to 500ms.
+   * This fetching process starts before the customer's handler is invoked,
+   * and a delay was noticed during a cold start, so this interval may be significant in that case.
+   * However, it's unlikely that this interval will be needed in other scenarios.
    */
-  let stopIntervalAfterMs = 250;
+  let stopIntervalAfterMs = 500;
   let ssmTimeOutEnv = process.env.INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS;
 
   if (ssmTimeOutEnv && ssmTimeOutEnv.length > 0) {
     ssmTimeOutEnv = Number(ssmTimeOutEnv);
 
-    // NOTE: Customer could set the timeout higher than the lambda timeout, but that is up to him
+    // NOTE: The customer might set a timeout greater than the Lambda timeout
     if (!isNaN(ssmTimeOutEnv)) {
       stopIntervalAfterMs = ssmTimeOutEnv;
     }
