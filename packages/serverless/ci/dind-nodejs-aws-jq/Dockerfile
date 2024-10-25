@@ -16,11 +16,11 @@
 # Note: Needs to be run with --privileged.
 # ----------------------------------------------------------------------------
 
-FROM node:16.13.1-alpine3.14
+FROM node:18-alpine
 
 ENV DOCKER_CHANNEL=stable \
-    DOCKER_VERSION=20.10.11 \
-    GLIBC_VER=2.34-r0
+    DOCKER_VERSION=24.0.9 \
+    GLIBC_VER=2.35-r0
 
 RUN apk --update --no-cache add \
         bash \
