@@ -1,7 +1,5 @@
 #!/bin/bash
 
-CONFIGURED_PRERELEASE_NODE_VERSION=$1
-
 fetch_latest_prerelease_node_version() {
   local latest_version
   
@@ -12,12 +10,7 @@ fetch_latest_prerelease_node_version() {
   echo "${major}"
 }
 
-
-if [ -z "$PRERELEASE_NODE_VERSION" ]; then
-  PRERELEASE_NODE_VERSION=$(fetch_latest_prerelease_node_version)
-else 
-  PRERELEASE_NODE_VERSION=$CONFIGURED_PRERELEASE_NODE_VERSION
-fi
+PRERELEASE_NODE_VERSION=$(fetch_latest_prerelease_node_version)
 
 if ! command -v nvm &> /dev/null; then
   if ! curl -sSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash &> /dev/null; then
@@ -42,11 +35,11 @@ install_node_version() {
 
     if ! nvm install "$PRERELEASE_NODE_VERSION"; then
       echo "Installation failed with both RC and Nightly mirrors."
-      echo "Trying to install configured version $CONFIGURED_PRERELEASE_NODE_VERSION..."
-      install_node_version "$CONFIGURED_PRERELEASE_NODE_VERSION"
       exit 1
     fi
   fi
+
+	nvm use "$PRERELEASE_NODE_VERSION" > /dev/null 
 
   echo "Node.js prerelease version $PRERELEASE_NODE_VERSION installed successfully."
 }
