@@ -9,10 +9,15 @@ fetch_latest_prerelease_node_version() {
   latest_version=${latest_version#v}
   IFS='.' read -r major minor patch <<< "$latest_version"
   major=$((major + 1))
-  echo "${major}.0.0-rc"
+  echo "${major}"
 }
 
-PRERELEASE_NODE_VERSION=$(fetch_latest_prerelease_node_version)
+
+if [ -z "$PRERELEASE_NODE_VERSION" ]; then
+  PRERELEASE_NODE_VERSION=$(fetch_latest_prerelease_node_version)
+else 
+  PRERELEASE_NODE_VERSION=$CONFIGURED_PRERELEASE_NODE_VERSION
+fi
 
 if ! command -v nvm &> /dev/null; then
   if ! curl -sSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash &> /dev/null; then
