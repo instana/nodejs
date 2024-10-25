@@ -42,8 +42,6 @@ spec:
       value: $(params.skip-cache)
     - name: prerelease
       value: $(params.prerelease)   
-    - name: prerelease-node-version
-      value: $(params.prerelease-node-version)
   workspaces:
     - name: artifacts
   tasks:
@@ -98,8 +96,6 @@ spec:
           value: $(params.npm-version) 
         - name: prerelease
           value: $(params.prerelease)   
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version) 
     - name: set-tests-running-start
       runAfter:
         - git-fetch-repo
@@ -141,8 +137,6 @@ spec:
           value: $(params.skip-cache)                  
         - name: prerelease
           value: $(params.prerelease)   
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts

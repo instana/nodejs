@@ -10,8 +10,6 @@ spec:
       value: $(params.npm-version)
     - name: prerelease
       value: $(params.prerelease)   
-    - name: prerelease-node-version
-      value: $(params.prerelease-node-version)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -24,8 +22,7 @@ spec:
         cd $ARTIFACTS_PATH
 
         if [ "$(params.prerelease)" == "true" ]; then
-          source bin/install-prerelease.sh "$(params.prerelease-node-version)"
-          nvm use "$(params.prerelease-node-version)" > /dev/null 
+          source bin/install-prerelease.sh 
         fi
 
         if [ -n "$(params.npm-version)" ]; then

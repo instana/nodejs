@@ -40,8 +40,6 @@ spec:
       value: $(params.context)
     - name: prerelease
       value: $(params.prerelease)
-    - name: prerelease-node-version
-      value: $(params.prerelease-node-version)
   workspaces:
     - name: artifacts
   tasks:
@@ -57,9 +55,7 @@ spec:
         - name: npm-version
           value: $(params.npm-version)
         - name: prerelease
-          value: $(params.prerelease)
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)     
+          value: $(params.prerelease) 
     - name: extract-repository-url
       taskRef:
         name: toolchain-extract-value
@@ -116,8 +112,6 @@ spec:
           value: "false"
         - name: prerelease
           value: $(params.prerelease)
-        - name: prerelease-node-version
-          value: $(params.prerelease-node-version)
       workspaces:
         - name: output
           workspace: artifacts
