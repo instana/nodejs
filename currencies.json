@@ -25,7 +25,7 @@
   },
   {
     "name": "@apollo/federation",
-    "policy": "45-days",
+    "policy": "Deprecated",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -421,7 +421,7 @@
   },
   {
     "name": "kafka-node",
-    "policy": "45-days",
+    "policy": "Deprecated",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -757,7 +757,7 @@
   },
   {
     "name": "kafka-avro",
-    "policy": "45-days",
+    "policy": "Deprecated",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -853,7 +853,7 @@
   },
   {
     "name": "request",
-    "policy": "45-days",
+    "policy": "Deprecated",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
@@ -865,7 +865,7 @@
   },
   {
     "name": "request-promise",
-    "policy": "45-days",
+    "policy": "Deprecated",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
