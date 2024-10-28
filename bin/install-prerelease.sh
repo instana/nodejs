@@ -3,7 +3,7 @@
 fetch_latest_prerelease_node_version() {
   local latest_version
   
-  latest_version=$(curl -sL https://nodejs.org/dist/index.json | jq -r '[.[]][0].version')
+  latest_version=$(curl -sL https://nodejs.org/dist/index.json | grep -m 1 '"version"' | grep -o 'v[0-9]*\.[0-9]*\.[0-9]*')
   latest_version=${latest_version#v}
   IFS='.' read -r major minor patch <<< "$latest_version"
   major=$((major + 1))
