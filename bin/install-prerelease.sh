@@ -24,23 +24,17 @@ source "$HOME/.nvm/nvm.sh"
 install_node_version() {
   local PRERELEASE_NODE_VERSION=$1
   echo "Installing Node.js prerelease version $PRERELEASE_NODE_VERSION..."
-
   NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/rc"
-  export NVM_NODEJS_ORG_MIRROR
-
-  if ! nvm install "$PRERELEASE_NODE_VERSION"; then
+  if ! nvm install "$PRERELEASE_NODE_VERSION" &> /dev/null; then
     echo "RC installation failed. Trying Nightly mirror..."
     NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/nightly"
-    export NVM_NODEJS_ORG_MIRROR
-
-    if ! nvm install "$PRERELEASE_NODE_VERSION"; then
+    if ! nvm install "$PRERELEASE_NODE_VERSION" &> /dev/null; then
       echo "Installation failed with both RC and Nightly mirrors."
-      exit 1
+    exit 1
     fi
   fi
 
-	nvm use "$PRERELEASE_NODE_VERSION" > /dev/null 
-
+  nvm use "$PRERELEASE_NODE_VERSION" > /dev/null 
   echo "Node.js prerelease version $PRERELEASE_NODE_VERSION installed successfully."
 }
 
