@@ -110,6 +110,10 @@ spec:
           MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
           GIT_COMMIT_DESC=$(git log --format=%B -n 1 $(params.revision))
         fi
+        if ! command -v lerna &> /dev/null; then
+          echo "Lerna nor found. Installing..."
+          npm install -g lerna@8.1.8 || exit 1
+        fi
         echo "BASE_REVISION: $BASE_REVISION"
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
         echo "MODIFIED_FILES: $MODIFIED_FILES"
