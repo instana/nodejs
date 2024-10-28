@@ -18,8 +18,6 @@ spec:
       value: $(params.skip-cache)   
     - name: prerelease
       value: $(params.prerelease)   
-    - name: prerelease-node-version
-      value: $(params.prerelease-node-version)   
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -47,8 +45,7 @@ spec:
         if [ "$(params.prerelease)" == "true" ]; then
           echo "Installing dependencies for prerelease..."
 
-          source bin/install-prerelease.sh "$(params.prerelease-node-version)"
-          nvm use "$(params.prerelease-node-version)" > /dev/null 
+          source bin/install-prerelease.sh 
 
           npm install --loglevel verbose          
           exit 0
