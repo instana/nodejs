@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.0.1](https://github.com/instana/nodejs/compare/v4.0.0...v4.0.1) (2024-10-28)
+
+### Bug Fixes
+
+- **aws-lambda:** fixed error caused by missing aws-sdk during agent key retrieval from SSM ([#1402](https://github.com/instana/nodejs/issues/1402)) ([6329c66](https://github.com/instana/nodejs/commit/6329c6623e99d1f7eee5570dd9ebfa72bb953917))
+
+### Reverts
+
+- Revert "ci: skipped all other regions and only china region with debug" ([71f4643](https://github.com/instana/nodejs/commit/71f46431791c80af82e927361de9c9f5dd10e222))
+- Revert "ci: skipping the Chinese regions from publishing lambda layers" ([1099189](https://github.com/instana/nodejs/commit/1099189dbce7840d0bebcae7a881a32d58c8fb27))
+
 # [4.0.0](https://github.com/instana/nodejs/compare/v3.21.0...v4.0.0) (2024-10-23)
 
 ### Bug Fixes
