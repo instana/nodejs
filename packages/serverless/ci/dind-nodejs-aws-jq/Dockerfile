@@ -1,23 +1,20 @@
 # ----------------------------------------------------------------------------
-# Loosely based on
-#
-# https://github.com/karlkfi/concourse-dcind/blob/477674e4a27d79fa62099a86aa032017d4292d12/Dockerfile
-#
 # Modifications:
 # - Use a Node.js base image instead of raw alpine.
-# - Set DOCKER_VERSION=20.10.11
-#
+# - Set latest DOCKER_VERSION=27.3.1
+# https://docs.docker.com/engine/release-notes/27/
 # Note: Needs to be run with --privileged.
 #
 # Note: Starting from Alpine 3.18, aws-cli v2 is available as a 'main' package,
-# so you can install it directly using `apk add aws-cli`.
+# so we can install it directly using `apk add aws-cli`.
+# https://pkgs.alpinelinux.org/packages?name=aws-cli
 # ----------------------------------------------------------------------------
 
-FROM node:20-alpine
+FROM node:22-alpine
 
 # Environment variables for Docker 
 ENV DOCKER_CHANNEL=stable \
-    DOCKER_VERSION=20.10.11
+    DOCKER_VERSION=27.3.1
 
 # Install necessary packages and Docker
 RUN apk --update --no-cache add \
@@ -34,6 +31,7 @@ RUN apk --update --no-cache add \
         musl-dev \
         openssl-dev \
         util-linux \
+        jq \
         zip \
     && apk upgrade \
     && curl -fL "https://download.docker.com/linux/static/${DOCKER_CHANNEL}/x86_64/docker-${DOCKER_VERSION}.tgz" | tar zx \
