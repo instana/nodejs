@@ -12,7 +12,6 @@
 
 FROM node:22-alpine
 
-# Environment variables for Docker 
 ENV DOCKER_CHANNEL=stable \
     DOCKER_VERSION=27.3.1
 
