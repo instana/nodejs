@@ -65,7 +65,7 @@ if [[ -z $LAMBDA_ARCHITECTURE ]]; then
 fi
 
 if [[ -z $AWS_DEFAULT_REGION ]]; then
-  export AWS_DEFAULT_REGION="cn-north-1"
+  export AWS_DEFAULT_REGION="us-east-1"
 fi
 
 PACKAGE_NAMES="@instana/aws-lambda@$PACKAGE_VERSION instana-aws-lambda-auto-wrap@$PACKAGE_VERSION"
@@ -353,6 +353,7 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
         # AWS credential environment variables will be reverted after the publish for this region is done.
         AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_CHINA
         AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_CHINA
+        AWS_DEFAULT_REGION="cn-north-1"
         aws_cli_timeout_options="--cli-read-timeout $AWS_CLI_TIMEOUT_FOR_CHINA --cli-connect-timeout $AWS_CLI_TIMEOUT_FOR_CHINA"
       fi
 
@@ -398,6 +399,7 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
         # Revert access key swap for publishing to a Chinese AWS region:
         AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_BACKUP
         AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_BACKUP
+        AWS_DEFAULT_REGION="us-east-1"
       fi
     fi
   done <<< "$REGIONS"
