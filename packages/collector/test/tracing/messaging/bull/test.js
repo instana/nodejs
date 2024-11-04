@@ -35,11 +35,8 @@ if (process.env.BULL_QUEUE_NAME) {
   queueName = `${process.env.BULL_QUEUE_NAME}${semver.major(process.versions.node)}`;
 }
 
-// TODO: bull is broken in v23. Investigate currency as part of https://jsw.ibm.com/browse/INSTA-17032
 const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=22.x')
-    ? describe
-    : describe.skip;
+  supportedVersion(process.versions.node) ? describe : describe.skip;
 
 const retryTime = 1000;
 
