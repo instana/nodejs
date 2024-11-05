@@ -116,7 +116,7 @@ TMP_ZIP_DIR=tmp
 
 AWS_CLI_RETRY_MAX_ATTEMPTS=5
 AWS_CLI_TIMEOUT_DEFAULT=100
-AWS_CLI_TIMEOUT_FOR_CHINA=600
+AWS_CLI_TIMEOUT_FOR_CHINA=6000
 
 if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
   printf "Warning: Environment variables AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are not set.\n"
@@ -127,7 +127,7 @@ fi
 
 # The us-gov-* regions are only available to US government agencies, U.S. government etc. The regions have not been (and
 # maybe cannot be) enabled for our AWS account. We currently do not publish Lambda layers to these regions.
-SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1\naf-south-1\nap-east-1\nap-northeast-1\nap-northeast-2\nap-northeast-3\nap-south-1\nap-south-2\nap-southeast-1\nap-southeast-2\nap-southeast-3\nap-southeast-4\nap-southeast-5\nca-central-1\nca-west-1\neu-central-1\neu-central-2\neu-north-1\neu-south-1\neu-south-2\neu-west-1\neu-west-2\neu-west-3\nil-central-1\nme-central-1\nme-south-1\nsa-east-1\nus-east-1\nus-east-2\nus-gov-east-1\nus-gov-west-1\nus-west-1\nus-west-2'
+SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1\naf-south-1\nap-east-1\nap-northeast-1\nap-northeast-2\nap-northeast-3\nap-south-1\nap-south-2\nap-southeast-1\nap-southeast-2\nap-southeast-3\nap-southeast-4\nap-southeast-5\nca-central-1\nca-west-1\neu-central-1\neu-central-2\neu-north-1\neu-south-1\neu-south-2\neu-west-1\neu-west-2\neu-west-3\nil-central-1\nme-central-1\nme-south-1\nsa-east-1\nus-east-1\nus-east-2\nus-gov-east-1\nus-gov-west-1\nus-west-1\nus-west-2\ncn-north-1'
 
 # AWS China is completely separated from the rest of AWS. You cannot enable the Chinese regions in a global AWS account.
 # Instead, we have a separate account for AWS China.
@@ -353,7 +353,6 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
         # AWS credential environment variables will be reverted after the publish for this region is done.
         AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_CHINA
         AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_CHINA
-        AWS_DEFAULT_REGION="cn-north-1"
         aws_cli_timeout_options="--cli-read-timeout $AWS_CLI_TIMEOUT_FOR_CHINA --cli-connect-timeout $AWS_CLI_TIMEOUT_FOR_CHINA"
       fi
 
@@ -399,7 +398,6 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
         # Revert access key swap for publishing to a Chinese AWS region:
         AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_BACKUP
         AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_BACKUP
-        AWS_DEFAULT_REGION="us-east-1"
       fi
     fi
   done <<< "$REGIONS"
