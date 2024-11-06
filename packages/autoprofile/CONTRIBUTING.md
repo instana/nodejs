@@ -39,3 +39,13 @@ node scripts/prebuilds.js --node=22.0.0,21.0.0                        [build spe
 ```sh
 node scripts/prebuilds.js --node=22.0.0                               [build specific node version]
 ```
+### Troubleshooting Tips
+
+If you encounter an error like the following:
+
+```
+Error: Could not detect abi for version 23.0.0 and runtime node.
+```
+Solution:
+
+Update [`node-abi`](https://www.npmjs.com/package/node-abi), a sub-dependency of `prebuildify`, to the latest version for Node.js compatibility.

@@ -251,7 +251,8 @@
     "prisma": "^5.22.0"
   },
   "overrides": {
-    "stream-shift": "1.0.2"
+    "stream-shift": "1.0.2",
+    "node-abi":"3.71.0"
   },
   "config": {
     "commitizen": {
