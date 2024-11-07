@@ -6,7 +6,6 @@
 
 const path = require('path');
 const expect = require('chai').expect;
-const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../../core/test/config');
@@ -17,8 +16,6 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-const mochaSuiteFn = semver.satisfies(process.versions.node, '>=8.13.0') ? describe : describe.skip;
-
 /**
  * @grpc/grpc-js 1.10 is no longer compatible with mali server
  *   - https://github.com/malijs/mali/issues/376
@@ -26,7 +23,7 @@ const mochaSuiteFn = semver.satisfies(process.versions.node, '>=8.13.0') ? descr
  *   - we removed the test cases for now
  */
 ['latest', 'v1'].forEach(version => {
-  mochaSuiteFn(`tracing/grpc-js@${version}`, function () {
+  describe(`tracing/grpc-js@${version}`, function () {
     this.timeout(config.getTestTimeout());
 
     globalAgent.setUpCleanUpHooks();
