@@ -49,6 +49,8 @@ module.exports.init = ({ logger }) => {
     /**
      * As per AWS Lambda Node.js documentation: https://docs.aws.amazon.com/lambda/latest/dg/lambda-nodejs.html
      * The environment includes the AWS SDK for JavaScript, with credentials from an IAM role that you manage.
+     *
+     * https://aws.amazon.com/blogs/compute/node-js-18-x-runtime-now-available-in-aws-lambda/
      */
     // eslint-disable-next-line import/no-extraneous-dependencies, instana/no-unsafe-require, prefer-const
     const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm');
