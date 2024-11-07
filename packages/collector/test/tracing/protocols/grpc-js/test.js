@@ -10,11 +10,14 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const { expectExactlyOneMatching, getSpansByName, retry } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
+
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 /**
  * @grpc/grpc-js 1.10 is no longer compatible with mali server
@@ -23,7 +26,7 @@ const agentControls = globalAgent.instance;
  *   - we removed the test cases for now
  */
 ['latest', 'v1'].forEach(version => {
-  describe(`tracing/grpc-js@${version}`, function () {
+  mochaSuiteFn(`tracing/grpc-js@${version}`, function () {
     this.timeout(config.getTestTimeout());
 
     globalAgent.setUpCleanUpHooks();
