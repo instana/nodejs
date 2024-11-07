@@ -89,8 +89,16 @@ currencies = currencies.map(currency => {
     // We have the currency bot running daily, which bumps us patch and minor releases.
     // There is a bot which generates JIRA cards for all libraries which are "up-to-date"
     // false. It runs daily in the night. We do not want these JIRA cards.
-    if (Number(daysBehind) < Number(currency.policy.match(/(\d+)-/)[1]) && diff !== 'major') {
+
+    // NOTE: Possible values are 0-days, 45-days or Deprecated
+    if (currency.policy === 'Deprecated') {
       upToDate = true;
+    } else {
+      const policyDays = currency.policy.match(/(\d+)-/);
+
+      if (policyDays && Number(daysBehind) < Number(policyDays[1]) && diff !== 'major') {
+        upToDate = true;
+      }
     }
   }
 
