@@ -9,6 +9,7 @@ const proxyquire = require('proxyquire');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const normalizeConfig = require('../../src/util/normalizeConfig');
 const kafkaJs = require('../../src/tracing/instrumentation/messaging/kafkaJs');
 const rdKafka = require('../../src/tracing/instrumentation/messaging/rdkafka');
@@ -20,7 +21,9 @@ const testConfig = require('../config');
 const expect = chai.expect;
 chai.use(sinonChai);
 
-describe('[UNIT] tracing/index', function () {
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+
+mochaSuiteFn('[UNIT] tracing/index', function () {
   this.timeout(testConfig.getTestTimeout());
 
   let tracing;
