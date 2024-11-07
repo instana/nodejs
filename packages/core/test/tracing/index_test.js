@@ -6,7 +6,6 @@
 
 const chai = require('chai');
 const proxyquire = require('proxyquire');
-const semver = require('semver');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 
@@ -21,9 +20,7 @@ const testConfig = require('../config');
 const expect = chai.expect;
 chai.use(sinonChai);
 
-const mochaSuiteFn = semver.satisfies(process.versions.node, '>=8.13.0') ? describe : describe.skip;
-
-mochaSuiteFn('[UNIT] tracing/index', function () {
+describe('[UNIT] tracing/index', function () {
   this.timeout(testConfig.getTestTimeout());
 
   let tracing;
