@@ -115,7 +115,7 @@ function jsonToMarkdown(data) {
     '# Node.js supported core & third party packages' +
     '\n\n' +
     // eslint-disable-next-line max-len
-    '| Package name | Last Supported Version | Latest Version | Latest Version Published At | Support Policy | Days behind | Up-to-date | Note | Depri-cated | Cloud Native | Beta version |\n';
+    '| Package name | Last Supported Version | Latest Version | Latest Version Published At | Support Policy | Days behind | Up-to-date | Note | Cloud Native | Beta version |\n';
 
   markdown +=
     // eslint-disable-next-line max-len
@@ -124,7 +124,7 @@ function jsonToMarkdown(data) {
   // eslint-disable-next-line no-restricted-syntax
   for (const entry of data) {
     // eslint-disable-next-line max-len
-    markdown += `| ${entry.name} | ${entry.lastSupportedVersion} | ${entry.latestVersion} | ${entry.publishedAt} | ${entry.policy} | ${entry.daysBehind} day/s | ${entry.upToDate} | ${entry.note} | ${entry.deprecated} | ${entry.cloudNative} | ${entry.isBeta} |\n`;
+    markdown += `| ${entry.name} | ${entry.lastSupportedVersion} | ${entry.latestVersion} | ${entry.publishedAt} | ${entry.policy} | ${entry.daysBehind} day/s | ${entry.upToDate} | ${entry.note} | ${entry.cloudNative} | ${entry.isBeta} |\n`;
   }
 
   return markdown;
