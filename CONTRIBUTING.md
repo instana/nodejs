@@ -43,7 +43,8 @@ node bin/add-test-aliases.js bash|zsh
 Add a mocha `.only` on the test you would like to execute and then run the target scope:
 
 ```sh
-runcollector
+runcollector        # Run the 'collector' scope with watch mode
+runcollector-nw     # Run the 'collector' scope without watch mode
 runcollector-nw (no watch)
 ```
 
