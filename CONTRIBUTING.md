@@ -26,15 +26,33 @@ Install the [`aws-cli`](https://docs.aws.amazon.com/cli/latest/userguide/getting
 
 ## Executing Tests Locally
 
-Some of the tests require infrastructure components (databases etc.) to run locally. The easiest way to run all required components locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/). Start the script `node bin/start-test-containers.js` to run all containers (not recommended).
-
-Instead:
+Some of the tests require infrastructure components (databases etc.) to run locally. The easiest way to run required components locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/). 
 
 ```sh
 node bin/start-test-containers.js --mongo --redis
 ```
 
-It's not recommended to run all tests using `bin/run-tests.sh` - it takes too long. Take a look at the root package.json and run a specific test group or run e.g. `bin/run-collector-tests.sh` with the mocha `.only` attribute.
+### Using terminal aliases
+
+Add aliases to your terminal:
+
+```sh
+node bin/add-test-aliases.js bash|zsh
+```
+
+Add a mocha `.only` on the test you would like to execute and then run the target scope:
+
+```sh
+runcollector
+runcollector-nw (no watch)
+```
+
+### Manually
+
+```sh
+bin/run-tests.sh --scope=@instana/collector
+bin/run-tests.sh --scope=@instana/collector --watch
+```
 
 If you want to see the Node.js collector's debug output while running the tests, make sure the environment variable `WITH_STDOUT` is set to a non-empty string.
 
