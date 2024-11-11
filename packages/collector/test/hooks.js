@@ -10,14 +10,20 @@
 // scripts for running tests take care of that.
 //
 // The globalAgent module manages an agent stub instance that can be used globally for all tests.
-
-const { startGlobalAgent, stopGlobalAgent } = require('./globalAgent');
+const path = require('path');
 const isCI = require('@instana/core/test/test_util/is_ci');
 const config = require('@instana/core/test/config');
 const fs = require('fs');
 
 exports.mochaHooks = {
   async beforeAll() {
+    // NOTE: mocha --watch has a bug (https://github.com/mochajs/mocha/issues/5149)
+    //       We manually clear the file from the cache here.
+    const globalAgentModulePath = path.resolve(__dirname, './globalAgent');
+    delete require.cache[globalAgentModulePath];
+
+    const { startGlobalAgent } = require('./globalAgent');
+
     // eslint-disable-next-line no-console
     console.log(`@instana/collector test suite starting at ${timestamp()}.`);
     this.timeout(config.getTestTimeout());
@@ -54,6 +60,15 @@ exports.mochaHooks = {
   },
 
   async afterAll() {
+    // NOTE: mocha --watch has a bug (https://github.com/mochajs/mocha/issues/5149)
+    //       We manually clear the file from the cache here.
+    const globalAgentModulePath = path.resolve(__dirname, './globalAgent');
+    delete require.cache[globalAgentModulePath];
+
+    const { stopGlobalAgent } = require('./globalAgent');
+
+    // eslint-disable-next-line no-console
+    console.log(`@instana/collector test suite stopping at ${timestamp()}.`);
     this.timeout(config.getTestTimeout());
     await stopGlobalAgent();
   }
