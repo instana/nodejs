@@ -45,7 +45,6 @@ Add a mocha `.only` on the test you would like to execute and then run the targe
 ```sh
 runcollector        # Run the 'collector' scope with watch mode
 runcollector-nw     # Run the 'collector' scope without watch mode
-runcollector-nw (no watch)
 ```
 
 ### Manually
