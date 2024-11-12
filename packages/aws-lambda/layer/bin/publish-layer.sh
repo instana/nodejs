@@ -377,7 +377,7 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
           | jq '.Version' \
       ) || true  # NOTE: If the upload fails, the bash script should not fail.
 
-      if [[ ! $lambda_layer_version =~ ^[0-9]+$ ]]; then
+      if [[ -z $lambda_layer_version ]] || [[ ! $lambda_layer_version =~ ^[0-9]+$ ]]; then
         echo "   + ERROR: Layer upload failed for region $region. Skipping region."
         BUILD_SHOULD_FAIL=1
         continue
