@@ -39,7 +39,7 @@ node scripts/prebuilds.js --node=22.0.0,21.0.0                        [build spe
 ```sh
 node scripts/prebuilds.js --node=22.0.0                               [build specific node version]
 ```
-### Troubleshooting Tips
+### Troubleshooting
 
 If you encounter an error like the following:
 
