@@ -6,7 +6,7 @@
 'use strict';
 
 const expect = require('chai').expect;
-
+const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
@@ -20,9 +20,9 @@ const {
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-// skipping this test because this is failing for v22 and v23
-// previous condition was semver.lt(process.versions.node, '18.0.0') ? describe : describe.skip;
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.skip : describe.skip;
+// v23 broken: https://github.com/brianc/node-postgres/issues/3332
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.lt(process.versions.node, '23.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing/pg-native', function () {
   this.timeout(config.getTestTimeout());
