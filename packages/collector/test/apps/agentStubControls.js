@@ -162,6 +162,9 @@ class AgentStubControls {
   }
 
   async reset() {
+    // eslint-disable-next-line no-console
+    console.log(`[AgentStubControls] reset ${this.agentPort}`);
+
     return retry(async () => {
       await fetch(`http://127.0.0.1:${this.agentPort}/`, {
         method: 'DELETE',
