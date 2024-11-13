@@ -160,6 +160,7 @@
     "got": "^14.4.4",
     "got-v11": "npm:got@^11.8.6",
     "graphql": "^16.9.0",
+    "graphql-subscriptions-v2": "npm:graphql-subscriptions@^2.0.0",
     "graphql-subscriptions": "^3.0.0",
     "graphql-tag": "^2.12.6",
     "graphql-ws": "^5.16.0",
