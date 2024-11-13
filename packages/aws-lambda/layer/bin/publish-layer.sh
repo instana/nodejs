@@ -114,9 +114,9 @@ fi
 ZIP_NAME=$ZIP_PREFIX.zip
 TMP_ZIP_DIR=tmp
 
-AWS_CLI_RETRY_MAX_ATTEMPTS=5
+AWS_CLI_RETRY_MAX_ATTEMPTS=3
 AWS_CLI_TIMEOUT_DEFAULT=100
-AWS_CLI_TIMEOUT_FOR_CHINA=600
+AWS_CLI_TIMEOUT_FOR_CHINA=300
 
 if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
   printf "Warning: Environment variables AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are not set.\n"
@@ -315,6 +315,8 @@ popd > /dev/null
 export AWS_PAGER=""
 export AWS_MAX_ATTEMPTS=$AWS_CLI_RETRY_MAX_ATTEMPTS
 
+BUILD_SHOULD_FAIL=0
+
 if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
   echo "step 6/9: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to specifed regions"
 
@@ -373,7 +375,13 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
           --output json \
           --compatible-runtimes nodejs18.x nodejs20.x \
           | jq '.Version' \
-      )
+      ) || true  # NOTE: If the upload fails, the bash script should not fail.
+
+      if [[ -z $lambda_layer_version ]] || [[ ! $lambda_layer_version =~ ^[0-9]+$ ]]; then
+        echo "   + ERROR: Failed to publish layer in region $region, continuing to the next region."
+        BUILD_SHOULD_FAIL=1
+        continue
+      fi
 
       echo "   + published version $lambda_layer_version to region $region"
 
@@ -439,3 +447,8 @@ fi
 echo "step 9/9: cleaning up"
 rm -rf $TMP_ZIP_DIR
 rm -rf $ZIP_NAME
+
+if [[ $BUILD_SHOULD_FAIL -eq 1 ]]; then
+  echo "Error: At least one layer upload failed. Exiting with error code 1."
+  exit 1
+fi
