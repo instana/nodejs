@@ -81,7 +81,7 @@
   "dependencies": {
     "@instana/core": "4.5.0",
     "@instana/shared-metrics": "4.5.0",
-    "bunyan": "^1.8.15",
+    "pino": "^9.5.0",
     "semver": "^7.5.4",
     "serialize-error": "^8.1.0"
   },
@@ -89,7 +89,6 @@
     "@instana/autoprofile": "4.5.0"
   },
   "devDependencies": {
-    "@types/bunyan": "^1.8.8",
     "opentracing": "^0.14.5",
     "typeorm": "^0.3.20"
   }
