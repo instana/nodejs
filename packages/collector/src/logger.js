@@ -16,11 +16,12 @@ try {
   // thread (0).
 }
 
-const pino = require('pino');
+// @ts-ignore
+const pino = require('pino')();
 const { logger } = require('@instana/core');
 const pinoToAgentStream = require('./agent/loggerToAgentStream');
 
-/** @type {pino.Logger | import('@instana/core/src/core').GenericLogger} */
+/** @type {pino | import('@instana/core/src/core').GenericLogger} */
 let parentLogger = null;
 /** @type {Object.<string, (logger: import('@instana/core/src/core').GenericLogger) => *>} */
 const registry = {};
@@ -108,7 +109,7 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
 };
 
 /**
- * @param {import('pino').Logger | *} _logger
+ * @param {import('pino') | *} _logger
  * @returns {boolean}
  */
 function isPino(_logger) {
