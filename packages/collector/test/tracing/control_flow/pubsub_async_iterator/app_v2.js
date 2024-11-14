@@ -1,6 +1,5 @@
 /*
- * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2019
+ * (c) Copyright IBM Corp. 2024
  */
 
 'use strict';
@@ -17,15 +16,15 @@ const cls = require('../../../../../core/src/tracing/cls');
 
 const express = require('express');
 const morgan = require('morgan');
-const graphqlSubscriptions = require('graphql-subscriptions');
+const graphqlSubscriptions = require('graphql-subscriptions-v2');
 const port = require('../../../test_util/app-port')();
 
 const pubsub = new graphqlSubscriptions.PubSub();
 const eventName = 'event-name';
-const asyncIterableIterator = pubsub.asyncIterableIterator(eventName);
+const asyncIterator = pubsub.asyncIterator(eventName);
 
 const app = express();
-const logPrefix = `PubSub AsyncIterableIterator pull-before-push app (${process.pid}):\t`;
+const logPrefix = `PubSub AsyncIterator pull-before-push app (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -37,17 +36,17 @@ app.get('/', (req, res) => {
 
 const valuesReadFromCls = [];
 
-// Calling asyncIterableIterator.pullValue is what happens _before_ the pubsub.publish happens (possibly during
+// Calling asyncIterator.pullValue is what happens _before_ the pubsub.publish happens (possibly during
 // pubsub.subscribe). The promises returned by pullValue will only resolve after we have pushed values.
-asyncIterableIterator.pullValue().then(event1 => {
+asyncIterator.pullValue().then(event1 => {
   // Chronologically, everything inside the then-handler this happens after cls.ns.set (see below). Due to custom
   // queueing in pubsub_async_iterator, the cls context would get lost though (unless we fix it).
   log(event1);
   valuesReadFromCls.push(cls.ns.get('key', true));
-  asyncIterableIterator.pullValue().then(event2 => {
+  asyncIterator.pullValue().then(event2 => {
     log(event2);
     valuesReadFromCls.push(cls.ns.get('key', true));
-    asyncIterableIterator.pullValue().then(event3 => {
+    asyncIterator.pullValue().then(event3 => {
       log(event3);
       valuesReadFromCls.push(cls.ns.get('key', true));
     });
@@ -59,9 +58,9 @@ app.get('/pull-before-push', (req, res) => {
 
   // Calling asyncIterator.pushValue is what happens during pubsub.publish('event-name', { ... })
   cls.ns.set('key', 'test-value');
-  asyncIterableIterator.pushValue({ name: 'event-01' });
-  asyncIterableIterator.pushValue({ name: 'event-02' });
-  asyncIterableIterator.pushValue({ name: 'event-03' });
+  asyncIterator.pushValue({ name: 'event-01' });
+  asyncIterator.pushValue({ name: 'event-02' });
+  asyncIterator.pushValue({ name: 'event-03' });
   setTimeout(() => {
     res.send(valuesReadFromCls);
   }, 200);
