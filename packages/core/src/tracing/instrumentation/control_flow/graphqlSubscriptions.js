@@ -18,8 +18,7 @@ exports.init = () => {
   hook.onModuleLoad('graphql-subscriptions', instrumentModule);
   hook.onFileLoad(/\/graphql-subscriptions\/dist\/pubsub-async-iterator\.js/, instrumentAsyncIterableIterator);
 
-  hook.onModuleLoad('graphql-subscriptions-v2', instrumentModule);
-  hook.onFileLoad(/\/graphql-subscriptions-v2\/dist\/pubsub-async-iterator\.js/, instrumentAsyncIterator);
+  hook.onFileLoad(/\/graphql-subscriptions-v2\/dist\/pubsub-async-iterable-iterator\.js/, instrumentAsyncIterator);
 };
 
 function instrumentModule(graphQlSubscriptions) {
