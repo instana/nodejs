@@ -10,11 +10,8 @@ const fieldMappings = {
 };
 
 /**
- * Transform the span object by renaming the Redis fields based on defined mappings.
- *
- * @param {Object} span - The span object containing Redis data to transform.
- * @param {boolean} log - Flag to enable/disable logging of transformations.
- * @returns {Object} - The transformed span object.
+ * @param {Object} span
+ * @returns {Object}
  */
 function transform(span) {
   if (span.data?.redis) {

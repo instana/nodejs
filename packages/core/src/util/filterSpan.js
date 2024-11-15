@@ -4,12 +4,15 @@
 
 'use strict';
 
+/** @type {import('../core').GenericLogger} */
+let logger;
+logger = require('../logger').getLogger('tracing/util/filterSpan', newLogger => {
+  logger = newLogger;
+});
 /**
- * To check whether a span should be ignored based on the command.
- *
- * @param {import('../core').InstanaBaseSpan} span - The span object to check.
- * @param {Array<string>} ignoreEndpoints - An array of endpoints to ignore.
- * @returns {boolean} - Returns true if the span should be ignored, false otherwise.
+ * @param {import('../core').InstanaBaseSpan} span
+ * @param {Array<string>} ignoreEndpoints
+ * @returns {boolean}
  */
 function shouldIgnore(span, ignoreEndpoints) {
   if (span.data?.[span.n]?.operation && ignoreEndpoints) {
@@ -20,13 +23,15 @@ function shouldIgnore(span, ignoreEndpoints) {
 }
 
 /**
- * Filters a span based on ignore criteria.
- *
  * @param {{ span: import('../core').InstanaBaseSpan, ignoreEndpoints: { [key: string]: Array<string> } }} params
  * @returns {import('../core').InstanaBaseSpan | null}
  */
 function filterSpan({ span, ignoreEndpoints }) {
   if (ignoreEndpoints && shouldIgnore(span, ignoreEndpoints[span.n])) {
+    logger.debug('Span ignored due to matching ignore endpoint', {
+      spanType: span.n,
+      ignoredOperation: span.data[span.n]?.operation
+    });
     return null;
   }
   return span;

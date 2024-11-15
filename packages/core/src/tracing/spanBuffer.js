@@ -189,9 +189,13 @@ exports.addSpan = function (span) {
     return;
   }
 
-  // transform the spans
-  // filter the spans
-  span = manageSpan(span);
+  // Transform the span
+  const processedSpan = manageSpan(span);
+  if (!processedSpan) {
+    logger.warn('Span of type %s has no trace ID. Not transmitting this span', span.n);
+    return;
+  }
+  span = processedSpan;
 
   if (span.t == null) {
     logger.warn('Span of type %s has no trace ID. Not transmitting this span', span.n);

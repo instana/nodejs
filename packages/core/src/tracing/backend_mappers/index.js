@@ -12,8 +12,8 @@ const cachedMappers = {};
 /**
  * Dynamically require the mapper based on span.n.
  *
- * @param {string} spanName - The spanName name (e.g., 'redis', 'http').
- * @returns {Function|null} - The BE transformation function for the span.n
+ * @param {string} spanName
+ * @returns {Function|null}
  */
 function loadMapper(spanName) {
   if (cachedMappers[spanName]) {
@@ -31,8 +31,8 @@ function loadMapper(spanName) {
 }
 
 /**
- * @param {import('../../core').InstanaBaseSpan} span - The span object that needs to be processed.
- * @param {import('../../core').InstanaBaseSpan} span - The transformed span.
+ * @param {import('../../core').InstanaBaseSpan} span
+ * @param {import('../../core').InstanaBaseSpan} span .
  */
 function transform(span) {
   const transformFunction = loadMapper(span.n);

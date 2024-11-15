@@ -88,7 +88,7 @@ function instrumentSendCommand(original) {
 
       span.data.redis = {
         connection,
-        command: command.name.toLowerCase()
+        operation: command.name.toLowerCase()
       };
 
       callback = cls.ns.bind(onResult);
@@ -157,7 +157,7 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
     span.stack = tracingUtil.getStackTrace(wrappedInternalMultiOrPipelineCommand);
     span.data.redis = {
       connection,
-      command: commandName
+      operation: commandName
     };
 
     const multiOrPipeline = original.apply(this, arguments);

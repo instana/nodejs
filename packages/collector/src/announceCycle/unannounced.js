@@ -236,7 +236,7 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
     const endpointTracingConfig = {};
     // eslint-disable-next-line no-restricted-syntax
     for (const [service, actions] of Object.entries(endpointTracingConfigFromAgent)) {
-      // From agent, the commands are separated by a pipe ('|'), split the actions into an array.
+      // From agent, the commands are separated by a pipe ('|')
       // @ts-ignore
       endpointTracingConfig[service.toLowerCase()] =
         // @ts-ignore
@@ -244,7 +244,6 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
     }
 
     ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
-    // @ts-ignore
     agentOpts.config.tracing.ignoreEndpoints = endpointTracingConfig;
   }
 }
