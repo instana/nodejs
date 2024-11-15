@@ -213,7 +213,7 @@ describe('unannounced state', () => {
         }
       });
     });
-    it('should apply the configuration to ignore specified endpoints for a single technology', done => {
+    it('should apply the configuration to ignore specified endpoints for a single module', done => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
@@ -234,7 +234,7 @@ describe('unannounced state', () => {
         }
       });
     });
-    it('should apply the tracing configuration to ignore multiple endpoints across different technologies', done => {
+    it('should apply the tracing configuration to ignore multiple endpoints across different modules', done => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {

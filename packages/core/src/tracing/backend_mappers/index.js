@@ -10,38 +10,32 @@
 const cachedMappers = {};
 
 /**
- * Dynamically require the mapper only if needed, based on span.n.
- * This method will only load the mapper file for the specific technology.
+ * Dynamically require the mapper based on span.n.
  *
- * @param {string} technology - The technology name (e.g., 'redis', 'http').
- * @returns {Function|null} - The transformation function for the technology or null if not found.
+ * @param {string} spanName - The spanName name (e.g., 'redis', 'http').
+ * @returns {Function|null} - The BE transformation function for the span.n
  */
-function loadMapper(technology) {
-  if (cachedMappers[technology]) {
-    return cachedMappers[technology];
+function loadMapper(spanName) {
+  if (cachedMappers[spanName]) {
+    return cachedMappers[spanName];
   }
 
   try {
-    const mapper = require(`./${technology}_mapper.js`).transform;
-    cachedMappers[technology] = mapper;
-
+    // While adding a new mapper file, always expected in the same format.
+    const mapper = require(`./${spanName}_mapper.js`).transform;
+    cachedMappers[spanName] = mapper;
     return mapper;
   } catch (err) {
-    return null; // Return null if the mapper doesn't exist or failed to load
+    return null;
   }
 }
 
 /**
- * A function that applies the transformation for the span based on span.n.
- * If no mapper is found, the span is returned unmodified without causing failure.
- *
  * @param {import('../../core').InstanaBaseSpan} span - The span object that needs to be processed.
  * @param {import('../../core').InstanaBaseSpan} span - The transformed span.
  */
 function transform(span) {
-  const technology = span.n;
-
-  const transformFunction = loadMapper(technology);
+  const transformFunction = loadMapper(span.n);
 
   if (transformFunction) {
     return transformFunction(span);

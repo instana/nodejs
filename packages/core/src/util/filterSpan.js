@@ -5,13 +5,8 @@
 'use strict';
 
 // TODO: read from config
-const config = {
-  tracing: {
-    ignoreEndpoints: {
-      redis: ['type']
-    }
-  }
-};
+// @ts-ignore
+let config;
 
 /**
  * To check whether a span should be ignored based on the command.
@@ -35,8 +30,10 @@ function shouldIgnore(span) {
  * @param {Object} span - The span object to check.
  * @returns {Object|null} - Returns the span if not ignored, or null if the span should be ignored.
  */
-function filterSpan(span) {
-  if (shouldIgnore(span)) {
+function filterSpan(span, configuration = {}) {
+  // @ts-ignore
+  config = configuration || config;
+  if (config?.tracing?.ignoreEndpoints && shouldIgnore(span)) {
     return null;
   }
   return span;
