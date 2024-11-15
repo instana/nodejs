@@ -172,6 +172,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
 
         res.once('data', () => {
           // we need to register the handlers to avoid running into a timeout
+          // because the request expects to receive body data
         });
 
         res.once('end', () => {
