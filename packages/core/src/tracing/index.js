@@ -119,6 +119,11 @@ if (customInstrumentations.length > 0) {
  * @property {boolean} [traceCorrelation]
  */
 
+/**
+ * @typedef {Object} IgnoreEndpoints
+ * @property {Object.<string, Array.<string>>} [endpoints]
+ */
+
 /** @type {Array.<InstanaInstrumentedModule>} */
 let additionalInstrumentationModules = [];
 /** @type {Object.<string, InstanaInstrumentedModule>} */

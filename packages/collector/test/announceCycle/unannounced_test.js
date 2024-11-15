@@ -213,6 +213,50 @@ describe('unannounced state', () => {
         }
       });
     });
+    it('should apply the configuration to ignore specified endpoints for a single technology', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          'ignore-endpoints': {
+            redis: 'get'
+          }
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              ignoreEndpoints: {
+                redis: ['get']
+              }
+            }
+          });
+          done();
+        }
+      });
+    });
+    it('should apply the tracing configuration to ignore multiple endpoints across different technologies', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          'ignore-endpoints': {
+            REDIS: 'get | type',
+            dynamodb: 'query'
+          }
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              ignoreEndpoints: {
+                redis: ['get', 'type'],
+                dynamodb: ['query']
+              }
+            }
+          });
+          done();
+        }
+      });
+    });
 
     function prepareAnnounceResponse(announceResponse) {
       agentConnectionStub.announceNodeCollector.callsArgWithAsync(0, null, JSON.stringify(announceResponse));

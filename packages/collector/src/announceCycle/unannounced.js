@@ -43,12 +43,18 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @typedef {Object} TracingConfig
  * @property {Array.<string>} [extra-http-headers]
  * @property {KafkaTracingConfig} [kafka]
+ * @property {IgnoreEndpoints} [ignore-endpoints]
  * @property {boolean} [span-batching-enabled]
  */
 
 /**
  * @typedef {Object} KafkaTracingConfig
  * @property {boolean} [trace-correlation]
+ */
+
+/**
+ * @typedef {Object} IgnoreEndpoints
+ * @property {Object.<string, Array.<string>>} [endpoints]
  */
 
 module.exports = {
@@ -126,6 +132,7 @@ function applyAgentConfiguration(agentResponse) {
   applyExtraHttpHeaderConfiguration(agentResponse);
   applyKafkaTracingConfiguration(agentResponse);
   applySpanBatchingConfiguration(agentResponse);
+  applyIgnoreEndpointsConfiguration(agentResponse);
 }
 
 /**
@@ -218,5 +225,26 @@ function applySpanBatchingConfiguration(agentResponse) {
     logger.info('Enabling span batching via Instana host agent configuration.');
     ensureNestedObjectExists(agentOpts.config, ['tracing']);
     agentOpts.config.tracing.spanBatchingEnabled = true;
+  }
+}
+/**
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyIgnoreEndpointsConfiguration(agentResponse) {
+  if (agentResponse.tracing && agentResponse.tracing['ignore-endpoints']) {
+    const endpointTracingConfigFromAgent = agentResponse.tracing['ignore-endpoints'];
+    const endpointTracingConfig = {};
+    // eslint-disable-next-line no-restricted-syntax
+    for (const [service, actions] of Object.entries(endpointTracingConfigFromAgent)) {
+      // From agent, the commands are separated by a pipe ('|'), split the actions into an array.
+      // @ts-ignore
+      endpointTracingConfig[service.toLowerCase()] =
+        // @ts-ignore
+        actions != null ? actions?.split('|')?.map(action => action?.trim()?.toLowerCase()) : [];
+    }
+
+    ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
+    // @ts-ignore
+    agentOpts.config.tracing.ignoreEndpoints = endpointTracingConfig;
   }
 }

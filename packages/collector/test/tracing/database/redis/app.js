@@ -12,8 +12,18 @@ process.on('SIGTERM', () => {
 });
 
 require('./mockVersion');
-require('../../../..')();
-
+const ignoreEndpointsEnabled = process.env.IGNORE_ENDPOINTS === 'true';
+if (!ignoreEndpointsEnabled) {
+  require('../../../..')();
+} else {
+  require('../../../..')({
+    tracing: {
+      ignoreEndpoints: {
+        redis: process.env.IGNORE_COMMANDS ? JSON.parse(process.env.IGNORE_COMMANDS) : []
+      }
+    }
+  });
+}
 const redis = require(process.env.REDIS_PKG);
 const bodyParser = require('body-parser');
 const express = require('express');

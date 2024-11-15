@@ -27,6 +27,7 @@ const constants = require('../tracing/constants');
  * @property {boolean} [disableW3cTraceCorrelation]
  * @property {KafkaTracingOptions} [kafka]
  * @property {boolean} [allowRootExitSpan]
+ * @property {Object} [ignoreEndpoints]
  */
 
 /**
@@ -62,6 +63,11 @@ const constants = require('../tracing/constants');
  */
 
 /**
+ * @typedef {Object} IgnoreEndpoints
+ * @property {Object.<string, Array.<string>>} [endpoints]
+ */
+
+/**
  * @typedef {Object} AgentConfig
  * @property {AgentTracingConfig} [tracing]
  */
@@ -71,6 +77,7 @@ const constants = require('../tracing/constants');
  * @property {AgentTracingHttpConfig} [http]
  * @property {AgentTracingKafkaConfig} [kafka]
  * @property {boolean|string} [spanBatchingEnabled]
+ * @property {Object} [AgentTracingIgnoreEndpoints]
  */
 
 /**
@@ -81,6 +88,11 @@ const constants = require('../tracing/constants');
 /**
  * @typedef {Object} AgentTracingKafkaConfig
  * @property {boolean} [traceCorrelation]
+ */
+
+/**
+ * @typedef {Object} AgentTracingIgnoreEndpoints
+ * @property {Object.<string, Array.<string>>} [endpoints]
  */
 
 /** @type {import('../core').GenericLogger} */
@@ -117,7 +129,8 @@ const defaults = {
     disableW3cTraceCorrelation: false,
     kafka: {
       traceCorrelation: true
-    }
+    },
+    ignoreEndpoints: {}
   },
   secrets: {
     matcherMode: 'contains-ignore-case',
@@ -218,6 +231,7 @@ function normalizeTracingConfig(config) {
   normalizeDisableW3cTraceCorrelation(config);
   normalizeTracingKafka(config);
   normalizeAllowRootExitSpan(config);
+  normalizeIgnoredEndpoints(config);
 }
 
 /**
@@ -673,4 +687,28 @@ function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) 
     return defaultValue;
   }
   return configValue;
+}
+/**
+ * @param {InstanaConfig} config
+ */
+function normalizeIgnoredEndpoints(config) {
+  if (!config.tracing.ignoreEndpoints) {
+    config.tracing.ignoreEndpoints = {};
+  }
+
+  for (const [service, methods] of Object.entries(config.tracing.ignoreEndpoints)) {
+    const normalizedService = service.toLowerCase();
+    if (!Array.isArray(methods)) {
+      console.warn(
+        `Invalid configuration for ${normalizedService}: ignoredEndpoints.${normalizedService} is not an array, the value will be ignored: ${JSON.stringify(
+          methods
+        )}`
+      );
+      // @ts-ignore
+      config.tracing.ignoreEndpoints[normalizedService] = [];
+    } else {
+      // @ts-ignore
+      config.tracing.ignoreEndpoints[normalizedService] = methods.map(method => method.toLowerCase());
+    }
+  }
 }

@@ -6,6 +6,8 @@
 'use strict';
 
 const tracingMetrics = require('./metrics');
+const { filterSpan } = require('../util/filterSpan');
+const { transform } = require('./backend_mappers');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -178,6 +180,10 @@ exports.addSpan = function (span) {
   if (!isActive) {
     return;
   }
+
+  // transform the spans
+  // filter the spans
+  span = manageSpan(span);
 
   if (span.t == null) {
     logger.warn('Span of type %s has no trace ID. Not transmitting this span', span.n);
@@ -482,4 +488,16 @@ function removeSpansIfNecessary() {
     // retain the last maxBufferedSpans elements, drop everything before that
     spans = spans.slice(-maxBufferedSpans);
   }
+}
+// @ts-ignore
+function manageSpan(span) {
+  if (!span || typeof span.n !== 'string') {
+    return span;
+  }
+  const filteredSpan = filterSpan(span);
+
+  if (!filteredSpan) {
+    return null; // Return null if span was ignored
+  }
+  return transform(filteredSpan);
 }
