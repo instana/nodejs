@@ -89,6 +89,10 @@ const batchBucketWidth = 18;
 
 /** @type {BatchingBucketMap} */
 const batchingBuckets = new Map();
+/**
+ * @type {Object}
+ */
+let ignoreEndpoints;
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} config
@@ -103,6 +107,7 @@ exports.init = function init(config, _downstreamConnection) {
   initialDelayBeforeSendingSpans = Math.max(transmissionDelay, minDelayBeforeSendingSpans);
   isFaaS = false;
   transmitImmediate = false;
+  ignoreEndpoints = config.tracing?.ignoreEndpoints;
 
   if (config.tracing.activateImmediately) {
     preActivationCleanupIntervalHandle = setInterval(() => {
@@ -131,6 +136,9 @@ exports.activate = function activate(extraConfig) {
 
   if (extraConfig && extraConfig.tracing && extraConfig.tracing.spanBatchingEnabled) {
     batchingEnabled = true;
+  }
+  if (extraConfig?.tracing?.ignoreEndpoints) {
+    ignoreEndpoints = extraConfig.tracing.ignoreEndpoints;
   }
 
   isActive = true;
@@ -489,15 +497,23 @@ function removeSpansIfNecessary() {
     spans = spans.slice(-maxBufferedSpans);
   }
 }
-// @ts-ignore
+/**
+ * @param {import('../core').InstanaBaseSpan} span
+ * @returns {import('../core').InstanaBaseSpan} span
+ */
 function manageSpan(span) {
   if (!span || typeof span.n !== 'string') {
     return span;
   }
-  const filteredSpan = filterSpan(span);
 
-  if (!filteredSpan) {
-    return null; // Return null if span was ignored
+  // Currently only filter if ignoreEndpoint is configured
+  if (ignoreEndpoints) {
+    // @ts-ignore
+    span = filterSpan({ span, ignoreEndpoints });
+
+    if (!span) {
+      return null;
+    }
   }
-  return transform(filteredSpan);
+  return transform(span);
 }

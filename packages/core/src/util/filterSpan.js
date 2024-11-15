@@ -4,36 +4,29 @@
 
 'use strict';
 
-// TODO: read from config
-// @ts-ignore
-let config;
-
 /**
  * To check whether a span should be ignored based on the command.
  *
  * @param {import('../core').InstanaBaseSpan} span - The span object to check.
+ * @param {Array<string>} ignoreEndpoints - An array of endpoints to ignore.
  * @returns {boolean} - Returns true if the span should be ignored, false otherwise.
  */
-function shouldIgnore(span) {
-  // @ts-ignore
-  const ignoreEndpoints = config.tracing.ignoreEndpoints[span.n];
-
-  // @ts-ignore
-  if (span.data?.[span.n]?.command && ignoreEndpoints) {
-    return ignoreEndpoints.includes(span.data[span.n].command);
+function shouldIgnore(span, ignoreEndpoints) {
+  if (span.data?.[span.n]?.operation && ignoreEndpoints) {
+    return ignoreEndpoints.includes(span.data[span.n].operation);
   }
 
   return false;
 }
 
 /**
- * @param {Object} span - The span object to check.
- * @returns {Object|null} - Returns the span if not ignored, or null if the span should be ignored.
+ * Filters a span based on ignore criteria.
+ *
+ * @param {{ span: import('../core').InstanaBaseSpan, ignoreEndpoints: { [key: string]: Array<string> } }} params
+ * @returns {import('../core').InstanaBaseSpan | null}
  */
-function filterSpan(span, configuration = {}) {
-  // @ts-ignore
-  config = configuration || config;
-  if (config?.tracing?.ignoreEndpoints && shouldIgnore(span)) {
+function filterSpan({ span, ignoreEndpoints }) {
+  if (ignoreEndpoints && shouldIgnore(span, ignoreEndpoints[span.n])) {
     return null;
   }
   return span;

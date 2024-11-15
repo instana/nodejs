@@ -77,7 +77,7 @@ const constants = require('../tracing/constants');
  * @property {AgentTracingHttpConfig} [http]
  * @property {AgentTracingKafkaConfig} [kafka]
  * @property {boolean|string} [spanBatchingEnabled]
- * @property {Object} [AgentTracingIgnoreEndpoints]
+ * @property {Object} [ignoreEndpoints]
  */
 
 /**
@@ -91,7 +91,7 @@ const constants = require('../tracing/constants');
  */
 
 /**
- * @typedef {Object} AgentTracingIgnoreEndpoints
+ * @typedef {Object} ignoreEndpoints
  * @property {Object.<string, Array.<string>>} [endpoints]
  */
 

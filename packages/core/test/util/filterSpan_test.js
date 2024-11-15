@@ -15,50 +15,37 @@ const span = {
   k: 2,
   data: {
     redis: {
-      command: ''
+      operation: ''
     }
   }
 };
-let config = {
-  tracing: {
-    ignoreEndpoints: {
-      redis: ['GET', 'SET']
-    }
-  }
+let ignoreEndpoints = {
+  redis: ['GET', 'SET']
 };
 
 describe('filterSpan', () => {
   it('should return null when the span should be ignored', () => {
-    span.data.redis.command = 'GET';
-    expect(filterSpan(span, config)).equal(null);
+    span.data.redis.operation = 'GET';
+    expect(filterSpan({ span, ignoreEndpoints })).equal(null);
   });
 
   it('should return the span when it should not be ignored', () => {
-    span.data.redis.command = 'DEL';
-    expect(filterSpan(span, config)).equal(span);
+    span.data.redis.operation = 'DEL';
+    expect(filterSpan({ span, ignoreEndpoints })).equal(span);
   });
 
   it('should return the span when command is not in the ignore list', () => {
-    span.data.redis.command = 'HGET';
-    expect(filterSpan(span, config)).equal(span);
+    span.data.redis.operation = 'HGET';
+    expect(filterSpan({ span, ignoreEndpoints })).equal(span);
   });
 
   it('should return the span when span.n does not match any endpoint in config', () => {
-    const otherSpan = {
-      n: 'node.http.client',
-      data: {
-        http: {
-          command: 'GET'
-        }
-      }
-    };
-    expect(filterSpan(otherSpan)).equal(otherSpan);
+    span.n = 'node.http.client';
+    expect(filterSpan({ span, ignoreEndpoints })).equal(span);
   });
   it('should return span when no ignoreconfiguration', () => {
-    config = {
-      tracing: {}
-    };
-    span.data.redis.command = 'GET';
-    expect(filterSpan(span, config)).equal(span);
+    ignoreEndpoints = {};
+    span.data.redis.operation = 'GET';
+    expect(filterSpan({ span, ignoreEndpoints })).equal(span);
   });
 });
