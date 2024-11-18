@@ -202,7 +202,14 @@ module.exports = function exportSchema() {
           },
           subscribe: (__, { id }) => {
             pinoLogger.warn(`subscribe: ${id}`);
-            return pubsub.asyncIterator('characterUpdated');
+
+            // for graphql-subscriptions, asyncIterator is replaced with asyncIterableIterator in v3
+            if (pubsub?.asyncIterableIterator) {
+              return pubsub.asyncIterableIterator('characterUpdated');
+            } else {
+              // v2 or lesser
+              return pubsub.asyncIterator('characterUpdated');
+            }
           }
         }
       }

@@ -14,43 +14,48 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/graphql-subscriptions - PubSub/async iterator (pull before push)', function () {
-  this.timeout(config.getTestTimeout());
+['latest', 'v2'].forEach(version => {
+  mochaSuiteFn(`tracing/graphql-subscriptions@${version} - PubSub/async iterator (pull before push)`, function () {
+    this.timeout(config.getTestTimeout());
 
-  globalAgent.setUpCleanUpHooks();
-  let controls;
+    globalAgent.setUpCleanUpHooks();
+    let controls;
 
-  before(async () => {
-    controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        env: {
+          GRAPHQL_SUBSCRIPTIONS_VERSION: version
+        },
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
     });
 
-    await controls.startAndWaitForAgentConnection();
-  });
+    beforeEach(async () => {
+      await globalAgent.instance.clearReceivedTraceData();
+    });
 
-  beforeEach(async () => {
-    await globalAgent.instance.clearReceivedTraceData();
-  });
+    after(async () => {
+      await controls.stop();
+    });
 
-  after(async () => {
-    await controls.stop();
-  });
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
 
-  afterEach(async () => {
-    await controls.clearIpcMessages();
+    it('should keep cls context when pulling before pushing', () =>
+      controls
+        .sendRequest({
+          method: 'GET',
+          path: '/pull-before-push'
+        })
+        .then(valuesReadFromCls => {
+          expect(valuesReadFromCls).to.have.lengthOf(3);
+          expect(valuesReadFromCls[0]).to.equal('test-value');
+          expect(valuesReadFromCls[1]).to.equal('test-value');
+          expect(valuesReadFromCls[2]).to.equal('test-value');
+        }));
   });
-
-  it('should keep cls context when pulling before pushing', () =>
-    controls
-      .sendRequest({
-        method: 'GET',
-        path: '/pull-before-push'
-      })
-      .then(valuesReadFromCls => {
-        expect(valuesReadFromCls).to.have.lengthOf(3);
-        expect(valuesReadFromCls[0]).to.equal('test-value');
-        expect(valuesReadFromCls[1]).to.equal('test-value');
-        expect(valuesReadFromCls[2]).to.equal('test-value');
-      }));
 });

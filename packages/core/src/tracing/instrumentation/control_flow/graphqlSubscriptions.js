@@ -16,6 +16,10 @@ const CLS_CONTEXT_SYMBOL = Symbol('_instana_cls_context');
 
 exports.init = () => {
   hook.onModuleLoad('graphql-subscriptions', instrumentModule);
+  // In v3, pubsub-async-iterator is replaced with pubsub-async-iterable-iterator
+  hook.onFileLoad(/\/graphql-subscriptions\/dist\/pubsub-async-iterable-iterator\.js/, instrumentAsyncIterableIterator);
+
+  // In v2, pubsub-async-iterator is available
   hook.onFileLoad(/\/graphql-subscriptions\/dist\/pubsub-async-iterator\.js/, instrumentAsyncIterator);
 };
 
@@ -40,11 +44,17 @@ function instrumentAsyncIterator(pubSubAsyncIterator) {
   shimmer.wrap(pubSubAsyncIterator.PubSubAsyncIterator.prototype, 'pullValue', shimPullValue);
 }
 
+function instrumentAsyncIterableIterator(pubSubAsyncIterator) {
+  shimmer.wrap(pubSubAsyncIterator.PubSubAsyncIterableIterator.prototype, 'pushValue', shimPushValue);
+  shimmer.wrap(pubSubAsyncIterator.PubSubAsyncIterableIterator.prototype, 'pullValue', shimPullValue);
+}
+
 function shimPushValue(originalFunction) {
   return function (event) {
     if (isActive && event && typeof event === 'object' && cls.ns.active) {
       event[CLS_CONTEXT_SYMBOL] = cls.ns.active;
     }
+
     return originalFunction.apply(this, arguments);
   };
 }

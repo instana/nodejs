@@ -814,6 +814,9 @@ function verifySpansForSubscriptionUpdates(spans, triggerUpdateVia) {
   }
 
   const subscribeHttpEntryInClientApp = verifyHttpEntry(null, /\/subscription/, spans);
+
+  expect(spans.length).to.be.eql(8);
+
   // verify that the subscription entry has no children
   spans.forEach(span => {
     expect(span.p).to.not.equal(subscribeHttpEntryInClientApp.s);
