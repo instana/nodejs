@@ -199,65 +199,6 @@ const globalAgent = require('../../../globalAgent');
                     })
                   );
                 }));
-            // TODO
-            it.skip('should not create spans for ignored commands via ignoredEndpoints', async () => {
-              const ignoreControls = new ProcessControls({
-                useGlobalAgent: true,
-                appPath:
-                  redisVersion === 'latest' ? path.join(__dirname, 'app.js') : path.join(__dirname, 'legacyApp.js'),
-                env: {
-                  REDIS_VERSION: redisVersion,
-                  REDIS_PKG: redisPkg,
-                  REDIS_CLUSTER: setupType === 'cluster',
-                  IGNORE_ENDPOINTS: true,
-                  IGNORE_COMMANDS: JSON.stringify(['get', 'set'])
-                }
-              });
-
-              await ignoreControls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
-
-              await ignoreControls
-                .sendRequest({
-                  method: 'POST',
-                  path: '/values',
-                  qs: {
-                    key: 'price',
-                    value: 42
-                  }
-                })
-                .then(() =>
-                  ignoreControls.sendRequest({
-                    method: 'GET',
-                    path: '/values',
-                    qs: {
-                      key: 'price'
-                    }
-                  })
-                )
-                .then(async response => {
-                  expect(String(response)).to.equal('42');
-
-                  return retry(async () => {
-                    const spans = await agentControls.getSpans();
-                    spans.forEach(span => {
-                      expect(span.n).not.to.equal('redis');
-                    });
-                    expectAtLeastOneMatching(spans, [
-                      span => expect(span.n).to.equal('node.http.server'),
-                      span => expect(span.data.http.method).to.equal('POST')
-                    ]);
-
-                    expectAtLeastOneMatching(spans, [
-                      span => expect(span.n).to.equal('node.http.server'),
-                      span => expect(span.data.http.method).to.equal('GET')
-                    ]);
-                  });
-                })
-                .finally(async () => {
-                  await ignoreControls.stop();
-                });
-            });
-
             it('must trace hset/hget calls', () =>
               controls
                 .sendRequest({
@@ -867,6 +808,173 @@ const globalAgent = require('../../../globalAgent');
               if (spans.length > 0) {
                 expect.fail(`Unexpected spans: ${stringifyItems(spans)}`);
               }
+            });
+            it('should not create Redis spans for commands listed in the ignoredEndpoints', async () => {
+              const ignoreControls = new ProcessControls({
+                useGlobalAgent: true,
+                appPath:
+                  redisVersion === 'latest' ? path.join(__dirname, 'app.js') : path.join(__dirname, 'legacyApp.js'),
+                env: {
+                  REDIS_VERSION: redisVersion,
+                  REDIS_PKG: redisPkg,
+                  REDIS_CLUSTER: setupType === 'cluster',
+                  IGNORE_ENDPOINTS: true,
+                  IGNORE_COMMANDS: JSON.stringify(['get', 'set'])
+                }
+              });
+
+              await ignoreControls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
+
+              await ignoreControls
+                .sendRequest({
+                  method: 'POST',
+                  path: '/values',
+                  qs: {
+                    key: 'price',
+                    value: 42
+                  }
+                })
+                .then(() =>
+                  ignoreControls.sendRequest({
+                    method: 'GET',
+                    path: '/values',
+                    qs: {
+                      key: 'price'
+                    }
+                  })
+                )
+                .then(async response => {
+                  expect(String(response)).to.equal('42');
+
+                  return retry(async () => {
+                    const spans = await agentControls.getSpans();
+                    spans.forEach(span => {
+                      expect(span.n).not.to.equal('redis');
+                    });
+
+                    expectAtLeastOneMatching(spans, [
+                      span => expect(span.n).to.equal('node.http.server'),
+                      span => expect(span.data.http.method).to.equal('POST')
+                    ]);
+
+                    expectAtLeastOneMatching(spans, [
+                      span => expect(span.n).to.equal('node.http.server'),
+                      span => expect(span.data.http.method).to.equal('GET')
+                    ]);
+                  });
+                })
+                .finally(async () => {
+                  await ignoreControls.stop();
+                });
+            });
+
+            it('should not create Redis spans for the ignored "set" command', async () => {
+              const ignoreControls = new ProcessControls({
+                useGlobalAgent: true,
+                appPath:
+                  redisVersion === 'latest' ? path.join(__dirname, 'app.js') : path.join(__dirname, 'legacyApp.js'),
+                env: {
+                  REDIS_VERSION: redisVersion,
+                  REDIS_PKG: redisPkg,
+                  REDIS_CLUSTER: setupType === 'cluster',
+                  IGNORE_ENDPOINTS: true,
+                  IGNORE_COMMANDS: JSON.stringify(['set'])
+                }
+              });
+
+              await ignoreControls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
+
+              await ignoreControls
+                .sendRequest({
+                  method: 'POST',
+                  path: '/values',
+                  qs: {
+                    key: 'discount',
+                    value: 50
+                  }
+                })
+                .then(async () => {
+                  const spans = await agentControls.getSpans();
+                  spans.forEach(span => {
+                    expect(span.n).to.not.equal('redis');
+                  });
+                });
+            });
+
+            it('should create spans for non-ignored Redis commands', async () => {
+              const ignoreControls = new ProcessControls({
+                useGlobalAgent: true,
+                appPath:
+                  redisVersion === 'latest' ? path.join(__dirname, 'app.js') : path.join(__dirname, 'legacyApp.js'),
+                env: {
+                  REDIS_VERSION: redisVersion,
+                  REDIS_PKG: redisPkg,
+                  REDIS_CLUSTER: setupType === 'cluster',
+                  IGNORE_ENDPOINTS: true,
+                  IGNORE_COMMANDS: JSON.stringify(['get', 'set'])
+                }
+              });
+
+              await ignoreControls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
+
+              await ignoreControls
+                .sendRequest({
+                  method: 'GET',
+                  path: '/hset-hget'
+                })
+                .then(async () => {
+                  const spans = await agentControls.getSpans();
+
+                  expect(spans.some(span => span.n === 'redis')).to.be.true;
+                });
+            });
+            describe('ignore-endpoints enabled via agent config', function () {
+              const { AgentStubControls } = require('../../../apps/agentStubControls');
+              const customAgentControls = new AgentStubControls();
+              let ignoreControls;
+              before(async () => {
+                await customAgentControls.startAgent({
+                  ignoreEndpoints: { redis: 'type|set' }
+                });
+
+                ignoreControls = new ProcessControls({
+                  agentControls: customAgentControls,
+                  appPath:
+                    redisVersion === 'latest' ? path.join(__dirname, 'app.js') : path.join(__dirname, 'legacyApp.js'),
+                  env: {
+                    REDIS_VERSION: redisVersion,
+                    REDIS_PKG: redisPkg,
+                    REDIS_CLUSTER: setupType === 'cluster'
+                  }
+                });
+
+                await ignoreControls.start();
+              });
+
+              beforeEach(async () => {
+                await customAgentControls.clearReceivedTraceData();
+              });
+
+              after(async () => {
+                await ignoreControls.stop();
+                await customAgentControls.stopAgent();
+              });
+
+              it('should ignore redis spans when configured to ignore endpoints', async () => {
+                await ignoreControls.sendRequest({
+                  method: 'POST',
+                  path: '/values',
+                  qs: {
+                    key: 'discount',
+                    value: 50
+                  }
+                });
+
+                const spans = await customAgentControls.getSpans();
+                spans.forEach(span => {
+                  expect(span.n).not.to.equal('redis');
+                });
+              });
             });
 
             // Does not make sense for cluster.

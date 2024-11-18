@@ -61,7 +61,7 @@ function instrumentSendCommand(original) {
     if (
       parentSpan &&
       parentSpan.n === exports.spanName &&
-      (parentSpan.data.redis.command === 'multi' || parentSpan.data.redis.command === 'pipeline') &&
+      (parentSpan.data.redis.operation === 'multi' || parentSpan.data.redis.operation === 'pipeline') &&
       command.name !== 'multi'
     ) {
       const parentSpanSubCommands = (parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || []);

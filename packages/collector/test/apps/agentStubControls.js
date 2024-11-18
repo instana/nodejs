@@ -43,6 +43,9 @@ class AgentStubControls {
         env.KAFKA_TRACE_CORRELATION = opts.kafkaConfig.traceCorrelation.toString();
       }
     }
+    if (opts?.ignoreEndpoints?.redis) {
+      env.INSTANA_IGNORE_ENDPOINTS_REDIS = JSON.stringify(opts.ignoreEndpoints);
+    }
 
     this.agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {
       stdio: config.getAppStdio(),

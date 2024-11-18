@@ -1238,7 +1238,61 @@ function checkConnection(span, setupType) {
         expect.fail(`Unexpected spans: ${stringifyItems(spans)}`);
       }
     });
+    it('should not create Redis spans for commands listed in the ignoredEndpoints', async () => {
+      const ignoreControls = new ProcessControls({
+        useGlobalAgent: true,
+        dirname: __dirname,
+        env: {
+          REDIS_CLUSTER: setupType === 'cluster',
+          IGNORE_ENDPOINTS: true,
+          IGNORE_COMMANDS: JSON.stringify(['get', 'set'])
+        }
+      });
 
+      await ignoreControls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
+
+      await ignoreControls
+        .sendRequest({
+          method: 'POST',
+          path: '/values',
+          qs: {
+            key: 'price',
+            value: 42
+          }
+        })
+        .then(() =>
+          ignoreControls.sendRequest({
+            method: 'GET',
+            path: '/values',
+            qs: {
+              key: 'price'
+            }
+          })
+        )
+        .then(async response => {
+          expect(String(response)).to.equal('42');
+
+          return retry(async () => {
+            const spans = await agentControls.getSpans();
+            spans.forEach(span => {
+              expect(span.n).not.to.equal('redis');
+            });
+
+            expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('POST')
+            ]);
+
+            expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('GET')
+            ]);
+          });
+        })
+        .finally(async () => {
+          await ignoreControls.stop();
+        });
+    });
     if (setupType !== 'cluster') {
       it('call two different hosts/clients', async () => {
         const response = await controls.sendRequest({
