@@ -868,7 +868,7 @@ const globalAgent = require('../../../globalAgent');
                 });
             });
 
-            it.skip('should not create redis spans for the ignored "set" command', async () => {
+            it('should not create redis spans for the ignored "set" command', async () => {
               const ignoreControls = new ProcessControls({
                 useGlobalAgent: true,
                 appPath:
