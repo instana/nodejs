@@ -58,7 +58,7 @@ asyncIterableIterator.pullValue().then(event1 => {
 app.get('/pull-before-push', (req, res) => {
   // This order of events (pulling values before pushing values) does not work without some tracing blood magic.
 
-  // Calling asyncIterator.pushValue is what happens during pubsub.publish('event-name', { ... })
+  // Calling asyncIterableIterator.pushValue is what happens during pubsub.publish('event-name', { ... })
   cls.ns.set('key', 'test-value');
   asyncIterableIterator.pushValue({ name: 'event-01' });
   asyncIterableIterator.pushValue({ name: 'event-02' });
