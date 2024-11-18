@@ -23,10 +23,14 @@ const port = require('../../../test_util/app-port')();
 
 const pubsub = new graphqlSubscriptions.PubSub();
 const eventName = 'event-name';
-const asyncIterableIterator = pubsub.asyncIterableIterator(eventName);
+
+const version = process.env.GRAPHQL_SUBSCRIPTIONS_VERSION;
+const isV2 = version === 'v2';
+
+const iterator = isV2 ? pubsub.asyncIterator(eventName) : pubsub.asyncIterableIterator(eventName);
 
 const app = express();
-const logPrefix = `PubSub AsyncIterableIterator pull-before-push app (${process.pid}):\t`;
+const logPrefix = `PubSub iterator pull-before-push app (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -38,17 +42,17 @@ app.get('/', (req, res) => {
 
 const valuesReadFromCls = [];
 
-// Calling asyncIterableIterator.pullValue is what happens _before_ the pubsub.publish happens (possibly during
+// Calling iterator.pullValue is what happens _before_ the pubsub.publish happens (possibly during
 // pubsub.subscribe). The promises returned by pullValue will only resolve after we have pushed values.
-asyncIterableIterator.pullValue().then(event1 => {
+iterator.pullValue().then(event1 => {
   // Chronologically, everything inside the then-handler this happens after cls.ns.set (see below). Due to custom
   // queueing in pubsub_async_iterator, the cls context would get lost though (unless we fix it).
   log(event1);
   valuesReadFromCls.push(cls.ns.get('key', true));
-  asyncIterableIterator.pullValue().then(event2 => {
+  iterator.pullValue().then(event2 => {
     log(event2);
     valuesReadFromCls.push(cls.ns.get('key', true));
-    asyncIterableIterator.pullValue().then(event3 => {
+    iterator.pullValue().then(event3 => {
       log(event3);
       valuesReadFromCls.push(cls.ns.get('key', true));
     });
@@ -58,11 +62,11 @@ asyncIterableIterator.pullValue().then(event1 => {
 app.get('/pull-before-push', (req, res) => {
   // This order of events (pulling values before pushing values) does not work without some tracing blood magic.
 
-  // Calling asyncIterableIterator.pushValue is what happens during pubsub.publish('event-name', { ... })
+  // Calling iterator.pushValue is what happens during pubsub.publish('event-name', { ... })
   cls.ns.set('key', 'test-value');
-  asyncIterableIterator.pushValue({ name: 'event-01' });
-  asyncIterableIterator.pushValue({ name: 'event-02' });
-  asyncIterableIterator.pushValue({ name: 'event-03' });
+  iterator.pushValue({ name: 'event-01' });
+  iterator.pushValue({ name: 'event-02' });
+  iterator.pushValue({ name: 'event-03' });
   setTimeout(() => {
     res.send(valuesReadFromCls);
   }, 200);

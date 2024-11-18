@@ -6,7 +6,6 @@
 'use strict';
 
 const expect = require('chai').expect;
-const path = require('path');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
@@ -24,7 +23,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 
     before(async () => {
       controls = new ProcessControls({
-        appPath: version === 'latest' ? path.join(__dirname, 'app') : path.join(__dirname, 'app_v2'),
+        dirname: __dirname,
         env: {
           GRAPHQL_SUBSCRIPTIONS_VERSION: version
         },
