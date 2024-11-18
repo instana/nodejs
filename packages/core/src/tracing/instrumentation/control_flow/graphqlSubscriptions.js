@@ -16,9 +16,11 @@ const CLS_CONTEXT_SYMBOL = Symbol('_instana_cls_context');
 
 exports.init = () => {
   hook.onModuleLoad('graphql-subscriptions', instrumentModule);
-  hook.onFileLoad(/\/graphql-subscriptions\/dist\/pubsub-async-iterator\.js/, instrumentAsyncIterableIterator);
+  // In v3, pubsub-async-iterator is replaced with pubsub-async-iterable-iterator
+  hook.onFileLoad(/\/graphql-subscriptions\/dist\/pubsub-async-iterable-iterator\.js/, instrumentAsyncIterableIterator);
 
-  hook.onFileLoad(/\/graphql-subscriptions-v2\/dist\/pubsub-async-iterable-iterator\.js/, instrumentAsyncIterator);
+  // In v2, pubsub-async-iterator is available
+  hook.onFileLoad(/\/graphql-subscriptions\/dist\/pubsub-async-iterator\.js/, instrumentAsyncIterator);
 };
 
 function instrumentModule(graphQlSubscriptions) {
@@ -52,6 +54,7 @@ function shimPushValue(originalFunction) {
     if (isActive && event && typeof event === 'object' && cls.ns.active) {
       event[CLS_CONTEXT_SYMBOL] = cls.ns.active;
     }
+
     return originalFunction.apply(this, arguments);
   };
 }
