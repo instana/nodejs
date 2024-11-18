@@ -471,12 +471,12 @@ describe('util.normalizeConfig', () => {
     const config = normalizeConfig();
     expect(config.tracing.allowRootExitSpan).to.equal(true);
   });
-  it('should not disable ignore endpoints tracers by default', () => {
+  it('should not set ignore endpoints tracers by default', () => {
     const config = normalizeConfig();
     expect(config.tracing.ignoreEndpoints).to.deep.equal({});
   });
 
-  it('should apply ignore endpoints tracers via config', () => {
+  it('should apply ignore endpoints via config', () => {
     const config = normalizeConfig({
       tracing: {
         ignoreEndpoints: { redis: ['get'] }
@@ -485,7 +485,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get'] });
   });
 
-  it('should apply ignore endpoints tracers via config', () => {
+  it('should apply ignore endpoints via config for multiple packages', () => {
     const config = normalizeConfig({
       tracing: {
         ignoreEndpoints: { redis: ['get'], dynamodb: ['querey'] }

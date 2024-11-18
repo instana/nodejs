@@ -1238,7 +1238,7 @@ function checkConnection(span, setupType) {
         expect.fail(`Unexpected spans: ${stringifyItems(spans)}`);
       }
     });
-    it('should not create Redis spans for commands listed in the ignoredEndpoints', async () => {
+    it('should not create redis spans for commands listed in the ignoredEndpoints', async () => {
       const ignoreControls = new ProcessControls({
         useGlobalAgent: true,
         dirname: __dirname,

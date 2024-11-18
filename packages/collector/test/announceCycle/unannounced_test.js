@@ -213,7 +213,7 @@ describe('unannounced state', () => {
         }
       });
     });
-    it('should apply the configuration to ignore specified endpoints for a single module', done => {
+    it('should apply the configuration to ignore specified endpoints for a single package', done => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
@@ -234,11 +234,11 @@ describe('unannounced state', () => {
         }
       });
     });
-    it('should apply the tracing configuration to ignore multiple endpoints across different modules', done => {
+    it('should apply the tracing configuration to ignore multiple endpoints across different packages', done => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
-            REDIS: 'get | type',
+            REDIS: 'get|type',
             dynamodb: 'query'
           }
         }

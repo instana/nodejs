@@ -566,6 +566,51 @@ describe('tracing/spanBuffer', () => {
         verifyNoBatching(span1, span2);
       });
     });
+    describe('manageSpan test', () => {
+      before(() => {
+        spanBuffer.init(
+          {
+            tracing: {
+              ignoreEndpoints: { redis: ['get'] }
+            }
+          },
+          {
+            /* downstreamConnection */
+            sendSpans: function () {}
+          }
+        );
+      });
+
+      beforeEach(() => spanBuffer.activate());
+
+      afterEach(() => spanBuffer.deactivate());
+      const span = {
+        t: '1234567803',
+        s: '1234567892',
+        p: '1234567891',
+        n: 'redis',
+        k: 2,
+        data: {
+          redis: {
+            operation: 'get'
+          }
+        }
+      };
+      it('should return the span if span is not valid', () => {
+        expect(spanBuffer.manageSpan(null)).to.equal(null);
+      });
+
+      it('should filter out the span when command is listed in ignoreEndpoints config', () => {
+        expect(spanBuffer.manageSpan(span)).to.equal(null);
+      });
+
+      it('should transform and return the span  for command not specified in ignoreEndpoints config', () => {
+        span.data.redis.operation = 'set';
+        const result = spanBuffer.manageSpan(span);
+        expect(result.data.redis.command).to.equal('set');
+        expect(result.data.redis).to.not.have.property('operation');
+      });
+    });
   });
 
   function timestamp(offset) {

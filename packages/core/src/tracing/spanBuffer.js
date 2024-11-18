@@ -521,3 +521,7 @@ function manageSpan(span) {
   }
   return transform(span);
 }
+// export the manageSpan function for use in test.
+if (process.env.NODE_ENV === 'test') {
+  module.exports.manageSpan = manageSpan;
+}

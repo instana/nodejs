@@ -809,7 +809,7 @@ const globalAgent = require('../../../globalAgent');
                 expect.fail(`Unexpected spans: ${stringifyItems(spans)}`);
               }
             });
-            it('should not create Redis spans for commands listed in the ignoredEndpoints', async () => {
+            it('should not create redis spans for commands listed in the ignoredEndpoints', async () => {
               const ignoreControls = new ProcessControls({
                 useGlobalAgent: true,
                 appPath:
@@ -868,7 +868,7 @@ const globalAgent = require('../../../globalAgent');
                 });
             });
 
-            it('should not create Redis spans for the ignored "set" command', async () => {
+            it('should not create redis spans for the ignored "set" command', async () => {
               const ignoreControls = new ProcessControls({
                 useGlobalAgent: true,
                 appPath:
@@ -928,7 +928,7 @@ const globalAgent = require('../../../globalAgent');
                   expect(spans.some(span => span.n === 'redis')).to.be.true;
                 });
             });
-            describe('ignore-endpoints enabled via agent config', function () {
+            mochaSuiteFn('ignore-endpoints enabled via agent config', function () {
               const { AgentStubControls } = require('../../../apps/agentStubControls');
               const customAgentControls = new AgentStubControls();
               let ignoreControls;
@@ -957,10 +957,13 @@ const globalAgent = require('../../../globalAgent');
 
               after(async () => {
                 await ignoreControls.stop();
-                await customAgentControls.stopAgent();
+                customAgentControls.stopAgent();
+              });
+              afterEach(async () => {
+                await ignoreControls.clearIpcMessages();
               });
 
-              it('should ignore redis spans when configured to ignore endpoints', async () => {
+              it('should ignore redis spans for configured ignore endpoints', async () => {
                 await ignoreControls.sendRequest({
                   method: 'POST',
                   path: '/values',

@@ -5,26 +5,25 @@
 'use strict';
 
 const expect = require('chai').expect;
-const { transform: indexTransform } = require('../../../src/tracing/backend_mappers/index');
+const { transform } = require('../../../src/tracing/backend_mappers/index');
 
-describe('Transformation Tests', () => {
+describe('BE span transformation test', () => {
   let span;
 
   beforeEach(() => {
     span = { n: 'redis', t: '1234567803', s: '1234567892', p: '1234567891', data: { redis: { operation: 'GET' } } };
   });
 
-  describe('index.js transform function', () => {
-    it('should transform span using the redis mapper for "redis"', () => {
-      const result = indexTransform(span);
+  describe('should invoke transform function', () => {
+    it('should transform redis span using the redis mapper', () => {
+      const result = transform(span);
       expect(result.data.redis.command).equal('GET');
       expect(result.data.redis).to.not.have.property('operation');
     });
-    it('should not modify other fields in the span', () => {
+    it('should not modify fields that need not be transformed in the redis span', () => {
       span = { data: { redis: { command: 'SET' }, otherField: 'value' } };
 
-      const result = indexTransform(span);
-
+      const result = transform(span);
       expect(result.data.redis).to.not.have.property('operation');
       expect(result.data.redis.command).to.equal('SET');
       expect(result.data.otherField).to.equal('value');
@@ -32,13 +31,13 @@ describe('Transformation Tests', () => {
 
     it('should return the span unmodified if no mapper is found', () => {
       span.n = 'http';
-      const result = indexTransform(span);
+      const result = transform(span);
       expect(result).to.equal(span);
     });
 
     it('should cache the mapper after the first load', () => {
-      indexTransform(span);
-      expect(indexTransform(span)).to.deep.equal(span);
+      transform(span);
+      expect(transform(span)).to.deep.equal(span);
     });
   });
 });

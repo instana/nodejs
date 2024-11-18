@@ -20,18 +20,13 @@ const span = {
   }
 };
 let ignoreEndpoints = {
-  redis: ['GET', 'SET']
+  redis: ['GET', 'TYPE']
 };
 
-describe('filterSpan', () => {
+describe('util.filterSpan', () => {
   it('should return null when the span should be ignored', () => {
     span.data.redis.operation = 'GET';
     expect(filterSpan({ span, ignoreEndpoints })).equal(null);
-  });
-
-  it('should return the span when it should not be ignored', () => {
-    span.data.redis.operation = 'DEL';
-    expect(filterSpan({ span, ignoreEndpoints })).equal(span);
   });
 
   it('should return the span when command is not in the ignore list', () => {
