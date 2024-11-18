@@ -1238,61 +1238,7 @@ function checkConnection(span, setupType) {
         expect.fail(`Unexpected spans: ${stringifyItems(spans)}`);
       }
     });
-    it('should not create redis spans for commands listed in the ignoredEndpoints', async () => {
-      const ignoreControls = new ProcessControls({
-        useGlobalAgent: true,
-        dirname: __dirname,
-        env: {
-          REDIS_CLUSTER: setupType === 'cluster',
-          IGNORE_ENDPOINTS: true,
-          IGNORE_COMMANDS: JSON.stringify(['get', 'set'])
-        }
-      });
 
-      await ignoreControls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
-
-      await ignoreControls
-        .sendRequest({
-          method: 'POST',
-          path: '/values',
-          qs: {
-            key: 'price',
-            value: 42
-          }
-        })
-        .then(() =>
-          ignoreControls.sendRequest({
-            method: 'GET',
-            path: '/values',
-            qs: {
-              key: 'price'
-            }
-          })
-        )
-        .then(async response => {
-          expect(String(response)).to.equal('42');
-
-          return retry(async () => {
-            const spans = await agentControls.getSpans();
-            spans.forEach(span => {
-              expect(span.n).not.to.equal('redis');
-            });
-
-            expectAtLeastOneMatching(spans, [
-              span => expect(span.n).to.equal('node.http.server'),
-              span => expect(span.data.http.method).to.equal('POST')
-            ]);
-
-            expectAtLeastOneMatching(spans, [
-              span => expect(span.n).to.equal('node.http.server'),
-              span => expect(span.data.http.method).to.equal('GET')
-            ]);
-          });
-        })
-        .finally(async () => {
-          await ignoreControls.stop();
-        });
-    });
     if (setupType !== 'cluster') {
       it('call two different hosts/clients', async () => {
         const response = await controls.sendRequest({
@@ -1334,5 +1280,138 @@ function checkConnection(span, setupType) {
         });
       });
     }
+  });
+  mochaSuiteFn('ignore-endpoints tests', function () {
+    this.timeout(config.getTestTimeout() * 4);
+    describe('ignore-endpoints enabled via agent config', () => {
+      const { AgentStubControls } = require('../../../apps/agentStubControls');
+      const customAgentControls = new AgentStubControls();
+      let ignoreControls;
+
+      before(async () => {
+        await customAgentControls.startAgent({
+          ignoreEndpoints: { redis: 'type|set' }
+        });
+
+        ignoreControls = new ProcessControls({
+          agentControls: customAgentControls,
+          dirname: __dirname,
+          env: {
+            REDIS_CLUSTER: setupType === 'cluster'
+          }
+        });
+        await ignoreControls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
+      });
+
+      beforeEach(async () => {
+        await customAgentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await customAgentControls.stopAgent();
+        await ignoreControls.stop();
+      });
+
+      it('should ignore redis spans for configured ignore endpoints', async () => {
+        await ignoreControls.sendRequest({
+          method: 'POST',
+          path: '/values',
+          qs: {
+            key: 'discount',
+            value: 50
+          }
+        });
+
+        const spans = await customAgentControls.getSpans();
+        spans.forEach(span => {
+          expect(span.n).not.to.equal('redis');
+        });
+      });
+    });
+    describe('ignore-endpoints enabled via tracing config', async () => {
+      globalAgent.setUpCleanUpHooks();
+      const agentControls = globalAgent.instance;
+      let ignoreControls;
+
+      before(async () => {
+        ignoreControls = new ProcessControls({
+          useGlobalAgent: true,
+          dirname: __dirname,
+          env: {
+            REDIS_CLUSTER: setupType === 'cluster',
+            IGNORE_ENDPOINTS: true,
+            IGNORE_COMMANDS: JSON.stringify(['get'])
+          }
+        });
+        await ignoreControls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      before(async () => {
+        await ignoreControls.sendRequest({
+          method: 'POST',
+          path: '/clearkeys'
+        });
+      });
+
+      after(async () => {
+        await ignoreControls.stop();
+      });
+
+      afterEach(async () => {
+        await ignoreControls.clearIpcMessages();
+      });
+      it('should not create redis spans for the ignored commands', async function () {
+        ignoreControls
+          .sendRequest({
+            method: 'GET',
+            path: '/values',
+            qs: {
+              key: 'price'
+            }
+          })
+
+          .then(async response => {
+            expect(String(response)).to.equal('42');
+
+            return retry(async () => {
+              const spans = await agentControls.getSpans();
+              spans.forEach(span => {
+                expect(span.n).not.to.equal('redis');
+              });
+
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.data.http.method).to.equal('POST')
+              ]);
+
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.data.http.method).to.equal('GET')
+              ]);
+            });
+          });
+      });
+      it('should create spans for non-ignored Redis commands', async () => {
+        await ignoreControls
+          .sendRequest({
+            method: 'POST',
+            path: '/values',
+            qs: {
+              key: 'price',
+              value: 42
+            }
+          })
+          .then(async () => {
+            return retry(async () => {
+              const spans = await agentControls.getSpans();
+              expect(spans.some(span => span.n === 'redis')).to.be.true;
+            });
+          });
+      });
+    });
   });
 });
