@@ -5,7 +5,7 @@
 'use strict';
 
 const expect = require('chai').expect;
-const { transform } = require('../../../src/tracing/backend_mappers/index');
+const { transform } = require('../../../src/tracing/backend_mappers');
 
 describe('BE span transformation test', () => {
   let span;
