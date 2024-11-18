@@ -10,13 +10,14 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('./mockVersion');
 require('../../../..')();
 
 const cls = require('../../../../../core/src/tracing/cls');
 
 const express = require('express');
 const morgan = require('morgan');
-const graphqlSubscriptions = require('graphql-subscriptions-v2');
+const graphqlSubscriptions = require('graphql-subscriptions');
 const port = require('../../../test_util/app-port')();
 
 const pubsub = new graphqlSubscriptions.PubSub();

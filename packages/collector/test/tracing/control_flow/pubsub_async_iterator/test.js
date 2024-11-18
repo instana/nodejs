@@ -13,7 +13,7 @@ const config = require('../../../../../core/test/config');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 ['latest', 'v2'].forEach(version => {
   mochaSuiteFn(`tracing/graphql-subscriptions@${version} - PubSub/async iterator (pull before push)`, function () {
@@ -24,7 +24,10 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : d
 
     before(async () => {
       controls = new ProcessControls({
-        appPath: version === 'v2' ? path.join(__dirname, 'app_v2') : path.join(__dirname, 'app'),
+        appPath: version === 'latest' ? path.join(__dirname, 'app') : path.join(__dirname, 'app_v2'),
+        env: {
+          GRAPHQL_SUBSCRIPTIONS_VERSION: version
+        },
         useGlobalAgent: true
       });
 

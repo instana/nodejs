@@ -11,6 +11,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('./mockVersion');
 require('../../../..')();
 
 const cls = require('../../../../../core/src/tracing/cls');
