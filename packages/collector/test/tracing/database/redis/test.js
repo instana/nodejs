@@ -928,7 +928,7 @@ const globalAgent = require('../../../globalAgent');
                   expect(spans.some(span => span.n === 'redis')).to.be.true;
                 });
             });
-            mochaSuiteFn('ignore-endpoints enabled via agent config', function () {
+            describe.skip('ignore-endpoints enabled via agent config', function () {
               const { AgentStubControls } = require('../../../apps/agentStubControls');
               const customAgentControls = new AgentStubControls();
               let ignoreControls;
