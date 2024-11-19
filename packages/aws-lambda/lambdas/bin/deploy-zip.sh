@@ -80,7 +80,11 @@ if [[ -z $LAYER_ARN ]]; then
 fi
 
 if [[ ! -e $lambda_zip_file ]]; then
+<<<<<<< HEAD
   echo "Zip file "$lambda_zip_file" does not exist, terminating. Usage: ./deploy-zip.sh <zip-file>"
+=======
+  echo "Zip file $lambda_zip_file does not exist, terminating. Usage: ./deploy-zip.sh <zip-file>"
+>>>>>>> d545a608 (chore: added load test scripts)
   exit 1
 fi
 
