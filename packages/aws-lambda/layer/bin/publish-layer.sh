@@ -315,7 +315,13 @@ popd > /dev/null
 export AWS_PAGER=""
 export AWS_MAX_ATTEMPTS=$AWS_CLI_RETRY_MAX_ATTEMPTS
 
-BUILD_SHOULD_FAIL=0
+if [[ -z "$BUILD_X86_64_FAIL" ]]; then
+    export BUILD_X86_64_FAIL=0
+fi
+
+if [[ -z "$BUILD_arm64_FAIL" ]]; then
+    export BUILD_arm64_FAIL=0
+fi
 
 if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
   echo "step 6/9: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to specifed regions"
@@ -379,7 +385,12 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
 
       if [[ -z $lambda_layer_version ]] || [[ ! $lambda_layer_version =~ ^[0-9]+$ ]]; then
         echo "   + ERROR: Failed to publish layer in region $region, continuing to the next region."
-        BUILD_SHOULD_FAIL=1
+        if [[ $LAMBDA_ARCHITECTURE == "arm64" ]]; then
+          export BUILD_arm64_FAIL=1
+        fi
+        if [[ $LAMBDA_ARCHITECTURE == "x86_64" ]]; then
+          export BUILD_X86_64_FAIL=1
+        fi
         continue
       fi
 
@@ -448,7 +459,7 @@ echo "step 9/9: cleaning up"
 rm -rf $TMP_ZIP_DIR
 rm -rf $ZIP_NAME
 
-if [[ $BUILD_SHOULD_FAIL -eq 1 ]]; then
+if [[ $BUILD_X86_64_FAIL -eq 1 && $BUILD_arm64_FAIL -eq 1 ]]; then
   echo "Error: At least one layer upload failed. Exiting with error code 1."
   exit 1
 fi
