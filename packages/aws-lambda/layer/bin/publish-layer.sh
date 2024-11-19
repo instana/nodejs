@@ -461,7 +461,6 @@ rm -rf $ZIP_NAME
 
 echo "Build status: ARM64=$BUILD_arm64_FAIL, X86_64=$BUILD_X86_64_FAIL"
 
-# Check ARM64 build failure status only after all tasks have completed, 
 # since ARM64 is built after X86_64 and should not cause an early exit.
 # Check if the architecture is arm64 and if either ARM or X86_64 failed
 if [[ "$LAMBDA_ARCHITECTURE" == "arm64" && ( $BUILD_arm64_FAIL -eq 1 || $BUILD_X86_64_FAIL -eq 1 ) ]]; then
