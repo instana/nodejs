@@ -462,7 +462,7 @@ rm -rf $ZIP_NAME
 echo "Build status: ARM64=$BUILD_arm64_FAIL, X86_64=$BUILD_X86_64_FAIL"
 
 # We only run the condition below when the ARM64 build is running to avoid an early exit. X86 runs first.
-# Check if the architecture is arm64 and if either ARM or X86_64 failed
+# refs https://jsw.ibm.com/browse/INSTA-19906
 if [[ "$LAMBDA_ARCHITECTURE" == "arm64" && ( $BUILD_arm64_FAIL -eq 1 || $BUILD_X86_64_FAIL -eq 1 ) ]]; then
   echo "Error: At least one layer upload failed. Exiting with error code 1."
   exit 1
