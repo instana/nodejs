@@ -116,7 +116,7 @@ TMP_ZIP_DIR=tmp
 
 AWS_CLI_RETRY_MAX_ATTEMPTS=3
 AWS_CLI_TIMEOUT_DEFAULT=100
-AWS_CLI_TIMEOUT_FOR_CHINA=300
+AWS_CLI_TIMEOUT_FOR_CHINA=100
 
 if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
   printf "Warning: Environment variables AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are not set.\n"
@@ -459,7 +459,11 @@ echo "step 9/9: cleaning up"
 rm -rf $TMP_ZIP_DIR
 rm -rf $ZIP_NAME
 
-if [[ $BUILD_X86_64_FAIL -eq 1 && $BUILD_arm64_FAIL -eq 1 ]]; then
+echo "Build status: ARM64=$BUILD_arm64_FAIL, X86_64 $BUILD_X86_64_FAIL"
+
+# Check ARM64 build failure status only after all tasks have completed, 
+# since ARM64 is built after X86_64 and should not cause an early exit.
+if [[ $BUILD_arm64_FAIL -eq 1 ]]; then
   echo "Error: At least one layer upload failed. Exiting with error code 1."
   exit 1
 fi
