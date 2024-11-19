@@ -37,7 +37,7 @@ echo
 echo Building all local tar.gz files.
 
 if [[ -z "${BUILD_LAMBDAS_WITH-}" ]]; then
-  echo "Environmant variable BUILD_LAMBDAS_WITH has not been provided, assuming \"npm\" (build with latest npm package)."
+  echo "Environment variable BUILD_LAMBDAS_WITH has not been provided, assuming \"npm\" (build with latest npm package)."
 fi
 
 # We will want to install/uninstall local npm package tar files, which means we need to build them first. Note: Even for
