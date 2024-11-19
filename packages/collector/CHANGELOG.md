@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.1.0](https://github.com/instana/nodejs/compare/v4.0.1...v4.1.0) (2024-11-19)
+
+### Features
+
+- added support for graphql-subscriptions v3 ([#1446](https://github.com/instana/nodejs/issues/1446)) ([e4a978c](https://github.com/instana/nodejs/commit/e4a978cf517de3c3fb1dd8bf27f1ba7c5632017a))
+
 ## [4.0.1](https://github.com/instana/nodejs/compare/v4.0.0...v4.0.1) (2024-10-28)
 
 **Note:** Version bump only for package @instana/collector

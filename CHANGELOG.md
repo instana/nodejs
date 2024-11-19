@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.1.0](https://github.com/instana/nodejs/compare/v4.0.1...v4.1.0) (2024-11-19)
+
+### Bug Fixes
+
+- made the latest version of instana-aws-lambda-auto-wrap available on npm ([#1452](https://github.com/instana/nodejs/issues/1452)) ([94cac7a](https://github.com/instana/nodejs/commit/94cac7a86187369f4b109312af5904f4bddef47d))
+
+### Features
+
+- added support for graphql-subscriptions v3 ([#1446](https://github.com/instana/nodejs/issues/1446)) ([e4a978c](https://github.com/instana/nodejs/commit/e4a978cf517de3c3fb1dd8bf27f1ba7c5632017a))
+
+### Reverts
+
+- Revert "test: updated test for aws lambda running in v24 prerelease" ([66e1d10](https://github.com/instana/nodejs/commit/66e1d10dd78f7874e33137c4c3bfaa376643a6e6))
+- Revert "ci: removed chinese regions from publishing aws lambda layer" ([d44b619](https://github.com/instana/nodejs/commit/d44b6196ed10c272aa0e5186508bb70f7faee1c5))
+
 ## [4.0.1](https://github.com/instana/nodejs/compare/v4.0.0...v4.0.1) (2024-10-28)
 
 ### Bug Fixes

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.1.0](https://github.com/instana/nodejs/compare/v4.0.1...v4.1.0) (2024-11-19)
+
+### Bug Fixes
+
+- made the latest version of instana-aws-lambda-auto-wrap available on npm ([#1452](https://github.com/instana/nodejs/issues/1452)) ([94cac7a](https://github.com/instana/nodejs/commit/94cac7a86187369f4b109312af5904f4bddef47d))
+
 ## [4.0.1](https://github.com/instana/nodejs/compare/v4.0.0...v4.0.1) (2024-10-28)
 
 **Note:** Version bump only for package instana-aws-lambda-auto-wrap

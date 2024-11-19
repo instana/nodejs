@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.1.0](https://github.com/instana/nodejs/compare/v4.0.1...v4.1.0) (2024-11-19)
+
+### Reverts
+
+- Revert "test: updated test for aws lambda running in v24 prerelease" ([66e1d10](https://github.com/instana/nodejs/commit/66e1d10dd78f7874e33137c4c3bfaa376643a6e6))
+- Revert "ci: removed chinese regions from publishing aws lambda layer" ([d44b619](https://github.com/instana/nodejs/commit/d44b6196ed10c272aa0e5186508bb70f7faee1c5))
+
 ## [4.0.1](https://github.com/instana/nodejs/compare/v4.0.0...v4.0.1) (2024-10-28)
 
 ### Bug Fixes
