@@ -459,7 +459,7 @@ echo "step 9/9: cleaning up"
 rm -rf $TMP_ZIP_DIR
 rm -rf $ZIP_NAME
 
-echo "Build status: ARM64=$BUILD_arm64_FAIL, X86_64 $BUILD_X86_64_FAIL"
+echo "Build status: ARM64=$BUILD_arm64_FAIL, X86_64=$BUILD_X86_64_FAIL"
 
 # Check ARM64 build failure status only after all tasks have completed, 
 # since ARM64 is built after X86_64 and should not cause an early exit.
