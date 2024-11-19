@@ -31,7 +31,7 @@ const registry = {};
  * @param {boolean} [isReInit]
  */
 exports.init = function init(config, isReInit) {
-  if (config.logger && isPino(config.logger)) {
+  if (config.logger && typeof config.logger.child === 'function') {
     // A pino logger has been provided via config; create a child logger directly under it.
     parentLogger = config.logger.child({
       module: 'instana-nodejs-logger-parent',
@@ -42,7 +42,7 @@ exports.init = function init(config, isReInit) {
     parentLogger = config.logger;
   } else {
     // No custom logger has been provided; create a new pino logger as the parent logger for all loggers
-    parentLogger = pino({
+    parentLogger = pino.child({
       name: '@instana/collector',
       level: 'info',
       base: {
