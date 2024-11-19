@@ -13,8 +13,8 @@ const delay = ms => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
 
-const DELAY = process.env.DELAY || 1000;
-const ITERATIONS = process.env.ITERATIONS || 10;
+const DELAY = process.env.DELAY || 100;
+const ITERATIONS = process.env.ITERATIONS || 100;
 
 // exports.handler = instana.wrap(async () => {
 //   console.log('Running handler.');
