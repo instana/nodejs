@@ -44,13 +44,11 @@ exports.init = function init(config, isReInit) {
     // No custom logger has been provided; create a new pino logger as the parent logger for all loggers
     parentLogger = pino.child({
       name: '@instana/collector',
-      level: 'info',
       base: {
         thread: threadId,
         __in: 1
       },
       transport: {
-        target: 'pino/file',
         options: {
           destination: pinoToAgentStream,
           sync: false
