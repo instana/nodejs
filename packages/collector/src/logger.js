@@ -107,15 +107,6 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
 };
 
 /**
- * @param {import('pino') | *} _logger
- * @returns {boolean}
- */
-function isPino(_logger) {
-  // _logger.hasOwnProperty('pino')
-  return _logger && _logger[Symbol.for('pino.logger')] === true;
-}
-
-/**
  * @param {import('@instana/core/src/core').GenericLogger | *} _logger
  * @returns {boolean}
  */
