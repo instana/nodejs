@@ -75,6 +75,7 @@
   "devDependencies": {
     "@apollo/gateway": "^2.9.3",
     "@apollo/subgraph": "^2.9.3",
+    "@aws-sdk/client-cloudwatch-logs": "^3.696.0",
     "@aws-sdk/client-dynamodb": "^3.693.0",
     "@aws-sdk/client-dynamodb-v3": "npm:@aws-sdk/client-dynamodb@3.20.0",
     "@aws-sdk/client-kinesis": "^3.693.0",
@@ -160,8 +161,8 @@
     "got": "^14.4.4",
     "got-v11": "npm:got@^11.8.6",
     "graphql": "^16.9.0",
-    "graphql-subscriptions-v2": "npm:graphql-subscriptions@^2.0.0",
     "graphql-subscriptions": "^3.0.0",
+    "graphql-subscriptions-v2": "npm:graphql-subscriptions@^2.0.0",
     "graphql-tag": "^2.12.6",
     "graphql-ws": "^5.16.0",
     "husky": "^7.0.4",
