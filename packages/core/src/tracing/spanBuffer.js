@@ -22,16 +22,8 @@ let isActive = false;
 /** @type {number} */
 let activatedAt = null;
 
-let minDelayBeforeSendingSpans = 1000;
-if (process.env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS != null) {
-  minDelayBeforeSendingSpans = parseInt(process.env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS, 10);
-  if (isNaN(minDelayBeforeSendingSpans)) {
-    minDelayBeforeSendingSpans = 1000;
-  }
-}
-
 /** @type {number} */
-let initialDelayBeforeSendingSpans;
+let initialTransmissionDelay;
 /** @type {number} */
 let transmissionDelay;
 /** @type {number} */
@@ -98,7 +90,19 @@ exports.init = function init(config, _downstreamConnection) {
   forceTransmissionStartingAt = config.tracing.forceTransmissionStartingAt;
   transmissionDelay = config.tracing.transmissionDelay;
   batchingEnabled = config.tracing.spanBatchingEnabled;
-  initialDelayBeforeSendingSpans = Math.max(transmissionDelay, minDelayBeforeSendingSpans);
+  initialTransmissionDelay = config.tracing.initialTransmissionDelay;
+
+  // TODO: drop undocumented env variable in v4 major release
+  if (process.env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS != null) {
+    initialTransmissionDelay = parseInt(process.env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS, 10);
+    if (isNaN(initialTransmissionDelay)) {
+      initialTransmissionDelay = config.tracing.initialTransmissionDelay;
+    }
+  }
+
+  // TODO: remove in v4 and make initialTransmissionDelay configurable instead
+  initialTransmissionDelay = Math.max(transmissionDelay, initialTransmissionDelay);
+
   isFaaS = false;
   transmitImmediate = false;
 
@@ -146,7 +150,7 @@ exports.activate = function activate(extraConfig) {
   //       On AWS Lambda we wait till the handler finishes and then transmit all collected spans via
   //       `sendBundle`. Any detected span will be sent directly to the BE.
   if (!isFaaS) {
-    transmissionTimeoutHandle = setTimeout(transmitSpans, initialDelayBeforeSendingSpans);
+    transmissionTimeoutHandle = setTimeout(transmitSpans, initialTransmissionDelay);
     transmissionTimeoutHandle.unref();
   }
 
@@ -201,8 +205,8 @@ exports.addSpan = function (span) {
       addToBucket(span);
     }
 
-    // NOTE: we send out spans directly if the number of spans reaches > 500 [default] and if the min delay is reached.
-    if (spans.length >= forceTransmissionStartingAt && Date.now() - minDelayBeforeSendingSpans > activatedAt) {
+    // NOTE: we send out spans directly if the number of spans reaches > X [default] and if the min delay is reached.
+    if (spans.length >= forceTransmissionStartingAt && Date.now() - initialTransmissionDelay > activatedAt) {
       transmitSpans();
     }
   }
@@ -402,6 +406,11 @@ function batchingBucketKey(span) {
 }
 
 /**
+ * IMPORTANT: Only some instrumentations are enabled to be batchable.
+ *            e.g. mysql, pg, redis, elasticsearch, etc.
+ *            Batching spans means to collect multiple spans of the same type
+ *            and merge them into one span.
+ *
  * @param {import('../core').InstanaBaseSpan} span
  * @returns {boolean}
  */
@@ -431,8 +440,6 @@ function transmitSpans() {
   const spansToSend = spans;
   spans = [];
   batchingBuckets.clear();
-
-  logger.debug(`Sending spans via span buffer (no. of spans: ${spansToSend.length})`);
 
   // We restore the content of the spans array if sending them downstream was not successful. We do not restore
   // batchingBuckets, though. This is deliberate. In the worst case, we might miss some batching opportunities, but

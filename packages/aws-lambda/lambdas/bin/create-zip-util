@@ -1,6 +1,6 @@
 function createZip {
   name=${PWD##*/}
-  echo "creating $name.zip"
+  echo "create-zip-util: $name.zip"
   rm -f $name.zip
   mkdir -p ../zip
   rm -f ../zip/$name.zip
