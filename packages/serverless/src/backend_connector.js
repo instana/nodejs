@@ -18,6 +18,8 @@ const layerExtensionPort = process.env.INSTANA_LAYER_EXTENSION_PORT
   : 7365;
 
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
+const heartbeatTimeout = 200;
+
 const layerExtensionTimeout = process.env.INSTANA_LAMBDA_EXTENSION_TIMEOUT_IN_MS
   ? Number(process.env.INSTANA_LAMBDA_EXTENSION_TIMEOUT_IN_MS)
   : 2000;
@@ -153,7 +155,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
         method: 'POST',
         // This sets a timeout for establishing the socket connection, see setTimeout below for a timeout for an
         // idle connection after the socket has been opened.
-        timeout: layerExtensionTimeout,
+        timeout: heartbeatTimeout,
         headers: {
           Connection: 'keep-alive'
         }
@@ -199,6 +201,27 @@ function scheduleLambdaExtensionHeartbeatRequest() {
       );
     });
 
+    // CASE: socket is open but no data is sent (should not happen from we know but we need to handle it)
+    req.setTimeout(heartbeatTimeout, () => {
+      // req.destroyed indicates that we have run into a timeout and have already handled the timeout error.
+      if (req.destroyed) {
+        return;
+      }
+
+      // Make sure we do not try to talk to the Lambda extension again.
+      options.useLambdaExtension = false;
+      clearInterval(heartbeatInterval);
+
+      // Destroy timed out request manually as mandated in https://nodejs.org/api/http.html#event-timeout.
+      if (req && !req.destroyed) {
+        try {
+          destroyRequest(req);
+        } catch (e) {
+          // ignore
+        }
+      }
+    });
+
     req.end();
   };
 
@@ -206,7 +229,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
   // timeout is bigger because of possible coldstart
   executeHeartbeat();
 
-  heartbeatInterval = setInterval(executeHeartbeat, 500);
+  heartbeatInterval = setInterval(executeHeartbeat, 300);
   heartbeatInterval.unref();
 }
 
