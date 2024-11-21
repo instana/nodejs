@@ -369,6 +369,7 @@ function normalizeTracingTransmission(config) {
     'INSTANA_TRACING_TRANSMISSION_DELAY'
   );
 
+  // TODO: make it possible to disable the feature - opt in ??
   config.tracing.forceTransmissionStartingAt = normalizeSingleValue(
     config.tracing.forceTransmissionStartingAt,
     defaults.tracing.forceTransmissionStartingAt,
