@@ -19,6 +19,7 @@ const {
 
 const region = process.env.REGION || 'us-east-1';
 const released = process.env.RELEASED ? Boolean(process.env.RELEASED) : false;
+const filterTimedOuts = process.env.FILTER_TIMED_OUTS ? Boolean(process.env.FILTER_TIMED_OUTS) : false;
 const functionName = released ? 'teamnodejstracer-released-many-spans' : 'teamnodejstracer-many-spans';
 const cloudWatchLogsClient = new CloudWatchLogsClient({ region });
 
@@ -28,7 +29,7 @@ async function getFunctionUrl() {
   return functionUrl;
 }
 
-const requests = 2;
+const requests = process.env.REQUESTS ? parseInt(process.env.REQUESTS, 10) : 10;
 let logStreamsResponse;
 
 async function getBilledDurationByRequestId(logGroupName, requestId) {
@@ -49,9 +50,13 @@ async function getBilledDurationByRequestId(logGroupName, requestId) {
   }
 
   let billedDuration;
+  let timeoutErrorFound = false;
+  let requestIdStart = false;
+  let requestIdEnd = false;
+
   for (const obj of logStreamsResponse.logStreams) {
     const logStreamName = obj.logStreamName;
-    console.log(`Log Stream Name: ${logStreamName}`);
+    // console.log(`Log Stream Name: ${logStreamName}`);
 
     const getLogEventsCommand = new GetLogEventsCommand({
       logGroupName,
@@ -62,13 +67,32 @@ async function getBilledDurationByRequestId(logGroupName, requestId) {
     const logEventsResponse = await cloudWatchLogsClient.send(getLogEventsCommand);
 
     for (const event of logEventsResponse.events) {
+      if (filterTimedOuts) {
+        if (requestIdStart && !requestIdEnd) {
+          if (event.message.includes('request failed')) {
+            timeoutErrorFound = true;
+          }
+        }
+      }
+
       if (event.message.includes(requestId)) {
+        requestIdStart = true;
         const match = event.message.match(/Billed Duration: (\d+) ms/);
         if (match) {
           billedDuration = parseInt(match[1], 10);
         }
+      } else if (requestIdStart) {
+        requestIdEnd = true;
       }
     }
+  }
+
+  if (filterTimedOuts) {
+    if (timeoutErrorFound) {
+      return billedDuration;
+    }
+
+    return null;
   }
 
   if (billedDuration) {
@@ -81,12 +105,16 @@ async function getBilledDurationByRequestId(logGroupName, requestId) {
 async function loadTest() {
   const functionUrl = await getFunctionUrl();
   const logGroupName = `/aws/lambda/${functionName}`;
-  const requestIds = [];
-  const responseTimes = [];
+  const requestIds = {};
 
   console.log(`Function Name: ${functionName}`);
   console.log(`Function URL: ${functionUrl}`);
-  console.log('Starting...');
+
+  if (filterTimedOuts) {
+    console.log('Filtering requests by timed out.');
+  }
+
+  console.log(`Executing ${requests}...`);
 
   // Avoid cold start
   let response = await fetch(functionUrl);
@@ -97,35 +125,49 @@ async function loadTest() {
 
     response = await fetch(functionUrl);
     const requestId = response.headers.get('x-amzn-requestid');
-    requestIds.push(requestId);
 
     const end = process.hrtime.bigint();
-
     const durationMs = Number(end - start) / 1e6;
-    console.log(`${requestId} http response: ${durationMs.toFixed(3)}ms`);
 
-    responseTimes.push(durationMs);
+    requestIds[requestId] = { durationMs };
 
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
-  // log the average response time for all requests responseTimes
-  const averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
-  console.log(`Average Response Time: ${averageResponseTime.toFixed(3)}ms`);
+  console.log(`Executed ${requests}...`);
 
-  console.log(`Fetching billed duration for ${requestIds.length} requests...`);
+  console.log('Fetching billed duration...');
   await new Promise(resolve => setTimeout(resolve, 1000 * 120));
 
   const billedDurations = [];
-  for (const id of requestIds) {
+  for (const id of Object.keys(requestIds)) {
     try {
       const billedDuration = await getBilledDurationByRequestId(logGroupName, id);
+
+      if (!billedDuration) {
+        delete requestIds[id];
+        continue;
+      }
+
+      console.log(`${id} HTTP Response Time: ${requestIds[id].durationMs}ms`);
       console.log(`${id} Billed: ${billedDuration}ms`);
       billedDurations.push(billedDuration);
     } catch (error) {
       console.error(`Failed to get billed duration for Request ${id}:`, error.message);
     }
   }
+
+  if (Object.keys(requestIds).length === 0) {
+    console.error('No results.');
+    return;
+  }
+
+  console.log(`Total Requests: ${Object.keys(requestIds).length}`);
+
+  // log the average response time for all requests responseTimes
+  const averageResponseTime =
+    Object.values(requestIds).reduce((a, b) => a + b.durationMs, 0) / Object.keys(requestIds).length;
+  console.log(`Average Response Time: ${averageResponseTime.toFixed(3)}ms`);
 
   // log the average billed duration for all requests billedDurations
   const averageBilledDuration = billedDurations.reduce((a, b) => a + b, 0) / billedDurations.length;
