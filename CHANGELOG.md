@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.2.0](https://github.com/instana/nodejs/compare/v4.1.0...v4.2.0) (2024-11-22)
+
+### Features
+
+- **aws-lambda:** added support for Node v22 runtime ([#1456](https://github.com/instana/nodejs/issues/1456)) ([8b53e06](https://github.com/instana/nodejs/commit/8b53e06529517ec19067c7c49915f54b7e124e6c))
+
 # [4.1.0](https://github.com/instana/nodejs/compare/v4.0.1...v4.1.0) (2024-11-19)
 
 ### Bug Fixes
