@@ -1281,7 +1281,7 @@ function checkConnection(span, setupType) {
       });
     }
   });
-  mochaSuiteFn('ignore-endpoints tests', function () {
+  mochaSuiteFn('ignore-endpoints test:', function () {
     this.timeout(config.getTestTimeout() * 4);
     describe('ignore-endpoints enabled via agent config', () => {
       const { AgentStubControls } = require('../../../apps/agentStubControls');
@@ -1364,7 +1364,7 @@ function checkConnection(span, setupType) {
       afterEach(async () => {
         await ignoreControls.clearIpcMessages();
       });
-      it('should not create redis spans for the ignored commands', async function () {
+      it('should ignore redis spans for configured ignore endpoints', async function () {
         ignoreControls
           .sendRequest({
             method: 'GET',
@@ -1395,7 +1395,7 @@ function checkConnection(span, setupType) {
             });
           });
       });
-      it('should create spans for non-ignored Redis commands', async () => {
+      it('should create redis spans for non-ignored redis endpoints', async () => {
         await ignoreControls
           .sendRequest({
             method: 'POST',

@@ -851,7 +851,7 @@ const globalAgent = require('../../../globalAgent');
               });
             }
           });
-          mochaSuiteFn('ignore-endpoints tests', function () {
+          mochaSuiteFn('ignore-endpoints test:', function () {
             describe('ignore-endpoints enabled via agent config', () => {
               const { AgentStubControls } = require('../../../apps/agentStubControls');
               const customAgentControls = new AgentStubControls();
@@ -937,7 +937,7 @@ const globalAgent = require('../../../globalAgent');
               afterEach(async () => {
                 await ignoreControls.clearIpcMessages();
               });
-              it('should not create redis spans for the ignored commands', async function () {
+              it('should ignore redis spans for configured ignore endpoints', async function () {
                 await ignoreControls
                   .sendRequest({
                     method: 'POST',
@@ -977,7 +977,7 @@ const globalAgent = require('../../../globalAgent');
                     });
                   });
               });
-              it('should create spans for non-ignored Redis commands', async () => {
+              it('should create redis spans for non-ignored redis endpoints', async () => {
                 await ignoreControls
                   .sendRequest({
                     method: 'GET',
