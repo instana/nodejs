@@ -184,14 +184,20 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   });
 
   function verify(_producerControls, _consumerControls, response, apiPath, withError, objectMode, producerMethod) {
-    return retry(() => {
+    return retry(async () => {
       verifyResponseAndMessage(response, _producerControls, withError, objectMode, producerMethod);
 
-      return agentControls
-        .getSpans()
-        .then(spans =>
-          verifySpans(_producerControls, _consumerControls, spans, apiPath, null, withError, objectMode, producerMethod)
-        );
+      const spans = await agentControls.getSpans();
+      return verifySpans(
+        _producerControls,
+        _consumerControls,
+        spans,
+        apiPath,
+        null,
+        withError,
+        objectMode,
+        producerMethod
+      );
     }, retryTime);
   }
 

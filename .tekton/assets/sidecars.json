@@ -46,7 +46,7 @@
     },
     {
       "name": "kafka",
-      "image": "wurstmeister/kafka:2.12-2.2.1",
+      "image": "wurstmeister/kafka:2.13-2.8.1",
       "env": [
         { "name": "KAFKA_LISTENERS", "value": "EXTERNAL://:9092,PLAINTEXT://:29092" },
         { "name": "KAFKA_ADVERTISED_LISTENERS", "value": "PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" },
