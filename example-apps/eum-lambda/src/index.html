@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script>
+      (function (s, t, a, n) {
+        s[t] ||
+          ((s[t] = a),
+          (n = s[a] =
+            function () {
+              n.q.push(arguments);
+            }),
+          (n.q = []),
+          (n.v = 2),
+          (n.l = 1 * new Date()));
+      })(window, "InstanaEumObject", "ineum");
+
+      ineum("reportingUrl", "https://example.com");
+      ineum("key", "website-key");
+      ineum("trackSessions");
+    </script>
+    <script
+      defer
+      crossorigin="anonymous"
+      src="https://example.com/1.6.6/eum.min.js"
+      integrity="sha-xxxxx"
+    ></script>
+    <meta charset="utf-8" />
+    <title>MyLambdaApp</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  </head>
+  <body>
+    <app-root></app-root>
+  </body>
+</html>
