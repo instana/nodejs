@@ -1,7 +1,6 @@
-# Dummy App
+# Collector Example app
 
-This is a trivial Node.js application suitable for quick experiments with the @instana/collector. By default, it will
-connect to a local agent on port 42699.
+This is a trivial Node.js application suitable for quick experiments with the @instana/collector. By default, it will connect to a local agent on port 42699.
 
 ## Configuring And Starting The App
 
