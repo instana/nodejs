@@ -566,7 +566,7 @@ describe('tracing/spanBuffer', () => {
         verifyNoBatching(span1, span2);
       });
     });
-    describe('manageSpan test', () => {
+    describe('processSpan test', () => {
       before(() => {
         spanBuffer.init(
           {
@@ -597,16 +597,16 @@ describe('tracing/spanBuffer', () => {
         }
       };
       it('should return the span if span is not valid', () => {
-        expect(spanBuffer.manageSpan(null)).to.equal(null);
+        expect(spanBuffer.processSpan(null)).to.equal(null);
       });
 
       it('should filter out the span when command is listed in ignoreEndpoints config', () => {
-        expect(spanBuffer.manageSpan(span)).to.equal(null);
+        expect(spanBuffer.processSpan(span)).to.equal(null);
       });
 
       it('should transform and return the span  for command not specified in ignoreEndpoints config', () => {
         span.data.redis.operation = 'set';
-        const result = spanBuffer.manageSpan(span);
+        const result = spanBuffer.processSpan(span);
         expect(result.data.redis.command).to.equal('set');
         expect(result.data.redis).to.not.have.property('operation');
       });

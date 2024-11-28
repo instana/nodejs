@@ -5,7 +5,7 @@
 'use strict';
 
 const expect = require('chai').expect;
-const { filterSpan } = require('../../src/util/filterSpan');
+const { applyFilter } = require('../../src/util/spanFilter');
 
 const span = {
   t: '1234567803',
@@ -23,24 +23,24 @@ let ignoreEndpoints = {
   redis: ['GET', 'TYPE']
 };
 
-describe('util.filterSpan', () => {
+describe('util.spanFilter', () => {
   it('should return null when the span should be ignored', () => {
     span.data.redis.operation = 'GET';
-    expect(filterSpan({ span, ignoreEndpoints })).equal(null);
+    expect(applyFilter({ span, ignoreEndpoints })).equal(null);
   });
 
   it('should return the span when command is not in the ignore list', () => {
     span.data.redis.operation = 'HGET';
-    expect(filterSpan({ span, ignoreEndpoints })).equal(span);
+    expect(applyFilter({ span, ignoreEndpoints })).equal(span);
   });
 
   it('should return the span when span.n does not match any endpoint in config', () => {
     span.n = 'node.http.client';
-    expect(filterSpan({ span, ignoreEndpoints })).equal(span);
+    expect(applyFilter({ span, ignoreEndpoints })).equal(span);
   });
   it('should return span when no ignoreconfiguration', () => {
     ignoreEndpoints = {};
     span.data.redis.operation = 'GET';
-    expect(filterSpan({ span, ignoreEndpoints })).equal(span);
+    expect(applyFilter({ span, ignoreEndpoints })).equal(span);
   });
 });

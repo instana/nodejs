@@ -27,7 +27,7 @@ const constants = require('../tracing/constants');
  * @property {boolean} [disableW3cTraceCorrelation]
  * @property {KafkaTracingOptions} [kafka]
  * @property {boolean} [allowRootExitSpan]
- * @property {Object} [ignoreEndpoints]
+ * @property {Object.<string, Array.<string>>} [ignoreEndpoints]
  */
 
 /**
@@ -60,11 +60,6 @@ const constants = require('../tracing/constants');
  * @property {InstanaTracingOption} [tracing]
  * @property {InstanaSecretsOption} [secrets]
  * @property {number} [timeBetweenHealthcheckCalls]
- */
-
-/**
- * @typedef {Object} IgnoreEndpoints
- * @property {Object.<string, Array.<string>>} [endpoints]
  */
 
 /**
@@ -231,7 +226,7 @@ function normalizeTracingConfig(config) {
   normalizeDisableW3cTraceCorrelation(config);
   normalizeTracingKafka(config);
   normalizeAllowRootExitSpan(config);
-  normalizeIgnoredEndpoints(config);
+  normalizeIgnoreEndpoints(config);
 }
 
 /**
@@ -691,15 +686,15 @@ function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) 
 /**
  * @param {InstanaConfig} config
  */
-function normalizeIgnoredEndpoints(config) {
-  if (!config.tracing.ignoreEndpoints) {
+function normalizeIgnoreEndpoints(config) {
+  if (!config.tracing?.ignoreEndpoints) {
     config.tracing.ignoreEndpoints = {};
   }
 
   for (const [service, methods] of Object.entries(config.tracing.ignoreEndpoints)) {
     const normalizedService = service.toLowerCase();
     if (!Array.isArray(methods)) {
-      console.warn(
+      logger.warn(
         `Invalid configuration for ${normalizedService}: ignoredEndpoints.${normalizedService} is not an array, the value will be ignored: ${JSON.stringify(
           methods
         )}`
@@ -708,7 +703,7 @@ function normalizeIgnoredEndpoints(config) {
       config.tracing.ignoreEndpoints[normalizedService] = [];
     } else {
       // @ts-ignore
-      config.tracing.ignoreEndpoints[normalizedService] = methods.map(method => method.toLowerCase());
+      config.tracing.ignoreEndpoints[normalizedService] = methods.map(method => method?.toLowerCase());
     }
   }
 }

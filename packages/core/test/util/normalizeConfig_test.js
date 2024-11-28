@@ -484,7 +484,14 @@ describe('util.normalizeConfig', () => {
     });
     expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get'] });
   });
-
+  it('should apply multiple ignore endpoints via config', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: { redis: ['GET', 'TYPE'] }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get', 'type'] });
+  });
   it('should apply ignore endpoints via config for multiple packages', () => {
     const config = normalizeConfig({
       tracing: {

@@ -6,7 +6,7 @@
 'use strict';
 
 const tracingMetrics = require('./metrics');
-const { filterSpan } = require('../util/filterSpan');
+const { applyFilter } = require('../util/spanFilter');
 const { transform } = require('./backend_mappers');
 
 /** @type {import('../core').GenericLogger} */
@@ -189,8 +189,8 @@ exports.addSpan = function (span) {
     return;
   }
 
-  // Transform the span
-  const processedSpan = manageSpan(span);
+  // Process the span, apply any transformations, and implement filtering if necessary.
+  const processedSpan = processSpan(span);
   if (!processedSpan) {
     logger.warn('Span of type %s has no trace ID. Not transmitting this span', span.n);
     return;
@@ -505,15 +505,16 @@ function removeSpansIfNecessary() {
  * @param {import('../core').InstanaBaseSpan} span
  * @returns {import('../core').InstanaBaseSpan} span
  */
-function manageSpan(span) {
+function processSpan(span) {
   if (!span || typeof span.n !== 'string') {
     return span;
   }
 
-  // Currently only filter if ignoreEndpoint is configured
+  // Currently, filter only if the ignoreEndpoint is configured.
+  // In the next phase, this check will be removed.
   if (ignoreEndpoints) {
     // @ts-ignore
-    span = filterSpan({ span, ignoreEndpoints });
+    span = applyFilter({ span, ignoreEndpoints });
 
     if (!span) {
       return null;
@@ -521,7 +522,7 @@ function manageSpan(span) {
   }
   return transform(span);
 }
-// export the manageSpan function for use in test.
+// export the processSpan function for use in test.
 if (process.env.NODE_ENV === 'test') {
-  module.exports.manageSpan = manageSpan;
+  module.exports.processSpan = processSpan;
 }

@@ -213,7 +213,7 @@ describe('unannounced state', () => {
         }
       });
     });
-    it('should apply the configuration to ignore specified endpoints for a single package', done => {
+    it('should apply the configuration to ignore specified endpoint for a single package', done => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
@@ -227,6 +227,27 @@ describe('unannounced state', () => {
             tracing: {
               ignoreEndpoints: {
                 redis: ['get']
+              }
+            }
+          });
+          done();
+        }
+      });
+    });
+    it('should apply the configuration to ignore multiple endpoints for a single package', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          'ignore-endpoints': {
+            redis: 'TYPE|GET'
+          }
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              ignoreEndpoints: {
+                redis: ['type', 'get']
               }
             }
           });

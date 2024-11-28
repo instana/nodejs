@@ -5,8 +5,7 @@
 'use strict';
 
 /** @type {import('../core').GenericLogger} */
-let logger;
-logger = require('../logger').getLogger('tracing/util/filterSpan', newLogger => {
+let logger = require('../logger').getLogger('util/spanFilter', newLogger => {
   logger = newLogger;
 });
 /**
@@ -26,15 +25,15 @@ function shouldIgnore(span, ignoreEndpoints) {
  * @param {{ span: import('../core').InstanaBaseSpan, ignoreEndpoints: { [key: string]: Array<string> } }} params
  * @returns {import('../core').InstanaBaseSpan | null}
  */
-function filterSpan({ span, ignoreEndpoints }) {
+function applyFilter({ span, ignoreEndpoints }) {
   if (ignoreEndpoints && shouldIgnore(span, ignoreEndpoints[span.n])) {
     logger.debug('Span ignored due to matching ignore endpoint', {
       spanType: span.n,
-      ignoredOperation: span.data[span.n]?.operation
+      ignoreOperation: span.data[span.n]?.operation
     });
     return null;
   }
   return span;
 }
 
-module.exports = { filterSpan };
+module.exports = { applyFilter };
