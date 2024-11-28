@@ -36,17 +36,25 @@ spec:
         && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
         && apt update \
         && apt install gh -y
-
+        apt install jq -y
+        
         gh auth login --with-token
-
+        
+        OPEN_PRS=$(gh pr list --head currency-bot --base main --state open --json number | jq 'length')
+  
         git ls-remote --exit-code --heads origin currency-bot >/dev/null 2>&1
         EXIT_CODE=$?
 
-        if [[ $EXIT_CODE != '0' ]]; then          
+        if [[ $EXIT_CODE -eq 0 && $OPEN_PRS -eq 0]]; then
+          echo "No open PRs found. Deleting branch currency-bot."
+          git push origin --delete currency-bot
+        fi
+
+        if [[ $EXIT_CODE != 0 ]]; then
           echo "Running patch and minor updates..."
           MAJOR_UPDATES_MODE=false BRANCH=currency-bot node bin/currency/update-currencies.js    
         else
-          echo "Skipping patch/minor updates. Branch exists."
+          echo "Open PRs exist for branch currency-bot. Skipping patch/minor updates."
         fi        
 
         echo "Running major updates..."
