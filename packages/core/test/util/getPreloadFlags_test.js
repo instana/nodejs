@@ -8,7 +8,7 @@ const expect = require('chai').expect;
 
 const { getPreloadFlags } = require('../../src/util/getPreloadFlags');
 
-describe.only('util.getPreloadFlags', () => {
+describe('util.getPreloadFlags', () => {
   const originalNodeOptions = process.env.NODE_OPTIONS;
   const originalExecArgv = process.execArgv.slice();
 
