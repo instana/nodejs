@@ -90,7 +90,7 @@ const batchBucketWidth = 18;
 /** @type {BatchingBucketMap} */
 const batchingBuckets = new Map();
 /**
- * @type {Object}
+ * @type {import('../tracing').IgnoreEndpoints}
  */
 let ignoreEndpoints;
 
@@ -104,10 +104,10 @@ exports.init = function init(config, _downstreamConnection) {
   forceTransmissionStartingAt = config.tracing.forceTransmissionStartingAt;
   transmissionDelay = config.tracing.transmissionDelay;
   batchingEnabled = config.tracing.spanBatchingEnabled;
+  ignoreEndpoints = config.tracing.ignoreEndpoints;
   initialDelayBeforeSendingSpans = Math.max(transmissionDelay, minDelayBeforeSendingSpans);
   isFaaS = false;
   transmitImmediate = false;
-  ignoreEndpoints = config.tracing?.ignoreEndpoints;
 
   if (config.tracing.activateImmediately) {
     preActivationCleanupIntervalHandle = setInterval(() => {
@@ -134,11 +134,13 @@ exports.activate = function activate(extraConfig) {
     return;
   }
 
-  if (extraConfig && extraConfig.tracing && extraConfig.tracing.spanBatchingEnabled) {
-    batchingEnabled = true;
-  }
-  if (extraConfig?.tracing?.ignoreEndpoints) {
-    ignoreEndpoints = extraConfig.tracing.ignoreEndpoints;
+  if (extraConfig?.tracing) {
+    if (extraConfig.tracing.spanBatchingEnabled) {
+      batchingEnabled = true;
+    }
+    if (extraConfig.tracing.ignoreEndpoints) {
+      ignoreEndpoints = extraConfig.tracing.ignoreEndpoints;
+    }
   }
 
   isActive = true;
@@ -192,7 +194,6 @@ exports.addSpan = function (span) {
   // Process the span, apply any transformations, and implement filtering if necessary.
   const processedSpan = processSpan(span);
   if (!processedSpan) {
-    logger.warn('Span of type %s has no trace ID. Not transmitting this span', span.n);
     return;
   }
   span = processedSpan;
@@ -506,14 +507,7 @@ function removeSpansIfNecessary() {
  * @returns {import('../core').InstanaBaseSpan} span
  */
 function processSpan(span) {
-  if (!span || typeof span.n !== 'string') {
-    return span;
-  }
-
-  // Currently, filter only if the ignoreEndpoint is configured.
-  // In the next phase, this check will be removed.
   if (ignoreEndpoints) {
-    // @ts-ignore
     span = applyFilter({ span, ignoreEndpoints });
 
     if (!span) {

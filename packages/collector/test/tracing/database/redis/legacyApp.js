@@ -15,14 +15,14 @@ process.on('SIGTERM', () => {
 
 require('./mockVersion');
 
-const ignoreEndpointsEnabled = process.env.IGNORE_ENDPOINTS === 'true';
-if (!ignoreEndpointsEnabled) {
+const ignoreEndpoints = process.env.IGNORE_ENDPOINTS ? JSON.parse(process.env.IGNORE_ENDPOINTS) : null;
+if (!ignoreEndpoints) {
   require('../../../..')();
 } else {
   require('../../../..')({
     tracing: {
       ignoreEndpoints: {
-        redis: process.env.IGNORE_COMMANDS ? JSON.parse(process.env.IGNORE_COMMANDS) : []
+        redis: ignoreEndpoints
       }
     }
   });

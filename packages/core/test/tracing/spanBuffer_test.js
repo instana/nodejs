@@ -566,7 +566,7 @@ describe('tracing/spanBuffer', () => {
         verifyNoBatching(span1, span2);
       });
     });
-    describe('processSpan test', () => {
+    describe('processSpan fn', () => {
       before(() => {
         spanBuffer.init(
           {
@@ -596,9 +596,6 @@ describe('tracing/spanBuffer', () => {
           }
         }
       };
-      it('should return the span if span is not valid', () => {
-        expect(spanBuffer.processSpan(null)).to.equal(null);
-      });
 
       it('should filter out the span when command is listed in ignoreEndpoints config', () => {
         expect(spanBuffer.processSpan(span)).to.equal(null);

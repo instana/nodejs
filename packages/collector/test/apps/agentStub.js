@@ -87,7 +87,7 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     }
   };
 
-  if (kafkaTraceCorrelation != null || extraHeaders.length > 0 || enableSpanBatching) {
+  if (kafkaTraceCorrelation != null || extraHeaders.length > 0 || enableSpanBatching || ignoreRedisEndpoints) {
     response.tracing = {};
 
     if (extraHeaders.length > 0) {
@@ -104,10 +104,10 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     if (enableSpanBatching) {
       response.tracing['span-batching-enabled'] = true;
     }
-  }
-  if (ignoreRedisEndpoints != null) {
-    response.tracing = {};
-    response.tracing['ignore-endpoints'] = ignoreRedisEndpoints;
+    if (ignoreRedisEndpoints) {
+      response.tracing = {};
+      response.tracing['ignore-endpoints'] = ignoreRedisEndpoints;
+    }
   }
   res.send(response);
 });

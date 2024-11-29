@@ -6,6 +6,7 @@
 
 // Configuration for Redis-specific field mappings for BE
 const fieldMappings = {
+  // internal-format: backend-format
   operation: 'command'
 };
 

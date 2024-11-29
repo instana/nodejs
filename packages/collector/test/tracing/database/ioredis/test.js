@@ -1282,25 +1282,24 @@ function checkConnection(span, setupType) {
     }
   });
   mochaSuiteFn('ignore-endpoints test:', function () {
-    this.timeout(config.getTestTimeout() * 4);
     describe('ignore-endpoints enabled via agent config', () => {
       const { AgentStubControls } = require('../../../apps/agentStubControls');
       const customAgentControls = new AgentStubControls();
-      let ignoreControls;
+      let controls;
 
       before(async () => {
         await customAgentControls.startAgent({
-          ignoreEndpoints: { redis: 'type|set' }
+          ignoreEndpoints: { redis: 'get|set' }
         });
 
-        ignoreControls = new ProcessControls({
+        controls = new ProcessControls({
           agentControls: customAgentControls,
           dirname: __dirname,
           env: {
             REDIS_CLUSTER: setupType === 'cluster'
           }
         });
-        await ignoreControls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
+        await controls.startAndWaitForAgentConnection();
       });
 
       beforeEach(async () => {
@@ -1309,63 +1308,60 @@ function checkConnection(span, setupType) {
 
       after(async () => {
         await customAgentControls.stopAgent();
-        await ignoreControls.stop();
+        await controls.stop();
       });
 
       it('should ignore redis spans for configured ignore endpoints', async () => {
-        await ignoreControls.sendRequest({
-          method: 'POST',
-          path: '/values',
-          qs: {
-            key: 'discount',
-            value: 50
-          }
-        });
-
-        const spans = await customAgentControls.getSpans();
-        spans.forEach(span => {
-          expect(span.n).not.to.equal('redis');
-        });
+        await controls
+          .sendRequest({
+            method: 'POST',
+            path: '/values',
+            qs: {
+              key: 'discount',
+              value: 50
+            }
+          })
+          .then(async () => {
+            return retry(async () => {
+              const spans = await customAgentControls.getSpans();
+              expect(spans.length).to.equal(1);
+              spans.forEach(span => {
+                expect(span.n).not.to.equal('redis');
+              });
+            });
+          });
       });
     });
     describe('ignore-endpoints enabled via tracing config', async () => {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
-      let ignoreControls;
+      let controls;
 
       before(async () => {
-        ignoreControls = new ProcessControls({
+        controls = new ProcessControls({
           useGlobalAgent: true,
           dirname: __dirname,
           env: {
             REDIS_CLUSTER: setupType === 'cluster',
-            IGNORE_ENDPOINTS: true,
-            IGNORE_COMMANDS: JSON.stringify(['get'])
+            IGNORE_ENDPOINTS: JSON.stringify(['get'])
           }
         });
-        await ignoreControls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
+        await controls.start();
       });
 
       beforeEach(async () => {
         await agentControls.clearReceivedTraceData();
       });
 
-      before(async () => {
-        await ignoreControls.sendRequest({
-          method: 'POST',
-          path: '/clearkeys'
-        });
-      });
-
       after(async () => {
-        await ignoreControls.stop();
+        await controls.stop();
       });
 
       afterEach(async () => {
-        await ignoreControls.clearIpcMessages();
+        await controls.clearIpcMessages();
       });
       it('should ignore redis spans for configured ignore endpoints', async function () {
-        ignoreControls
+        await controls
           .sendRequest({
             method: 'GET',
             path: '/values',
@@ -1379,14 +1375,10 @@ function checkConnection(span, setupType) {
 
             return retry(async () => {
               const spans = await agentControls.getSpans();
+              expect(spans.length).to.equal(1);
               spans.forEach(span => {
                 expect(span.n).not.to.equal('redis');
               });
-
-              expectAtLeastOneMatching(spans, [
-                span => expect(span.n).to.equal('node.http.server'),
-                span => expect(span.data.http.method).to.equal('POST')
-              ]);
 
               expectAtLeastOneMatching(spans, [
                 span => expect(span.n).to.equal('node.http.server'),
@@ -1396,7 +1388,7 @@ function checkConnection(span, setupType) {
           });
       });
       it('should create redis spans for non-ignored redis endpoints', async () => {
-        await ignoreControls
+        await controls
           .sendRequest({
             method: 'POST',
             path: '/values',
@@ -1408,7 +1400,12 @@ function checkConnection(span, setupType) {
           .then(async () => {
             return retry(async () => {
               const spans = await agentControls.getSpans();
+              expect(spans.length).to.equal(2);
               expect(spans.some(span => span.n === 'redis')).to.be.true;
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.data.http.method).to.equal('POST')
+              ]);
             });
           });
       });

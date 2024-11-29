@@ -255,7 +255,7 @@ describe('unannounced state', () => {
         }
       });
     });
-    it('should apply the tracing configuration to ignore multiple endpoints across different packages', done => {
+    it('should apply the tracing configuration across different packages', done => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {

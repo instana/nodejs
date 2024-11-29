@@ -120,8 +120,7 @@ if (customInstrumentations.length > 0) {
  */
 
 /**
- * @typedef {Object} IgnoreEndpoints
- * @property {Object.<string, Array.<string>>} [endpoints]
+ * @typedef {Object.<string, string[]>}  IgnoreEndpoints
  */
 
 /** @type {Array.<InstanaInstrumentedModule>} */

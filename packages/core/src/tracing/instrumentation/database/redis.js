@@ -239,7 +239,6 @@ function instrumentCommand(original, command, address, cbStyle) {
       const span = cls.startSpan(exports.spanName, constants.EXIT);
       span.stack = tracingUtil.getStackTrace(instrumentCommand);
 
-      // Internal property `operation` to hold command
       span.data.redis = {
         connection: address || origCtx.address,
         operation: command

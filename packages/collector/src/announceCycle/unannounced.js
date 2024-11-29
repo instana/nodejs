@@ -43,7 +43,7 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @typedef {Object} TracingConfig
  * @property {Array.<string>} [extra-http-headers]
  * @property {KafkaTracingConfig} [kafka]
- * @property {Object.<string, Array.<string>>} [ignore-endpoints]
+ * @property {Object.<string, string>} [ignore-endpoints]
  * @property {boolean} [span-batching-enabled]
  */
 
@@ -228,15 +228,15 @@ function applySpanBatchingConfiguration(agentResponse) {
 function applyIgnoreEndpointsConfiguration(agentResponse) {
   if (agentResponse?.tracing?.['ignore-endpoints']) {
     const endpointTracingConfigFromAgent = agentResponse.tracing['ignore-endpoints'];
+
     const endpointTracingConfig = {};
     // eslint-disable-next-line no-restricted-syntax
     for (const [service, actions] of Object.entries(endpointTracingConfigFromAgent)) {
       // From agent, the commands are separated by a pipe ('|')
       // @ts-ignore
       endpointTracingConfig[service.toLowerCase()] = actions
-        ? // @ts-ignore
-          actions?.split(/[|,]/).map(action => action?.trim()?.toLowerCase())
-        : [];
+        ? actions?.split(/[|,]/).map(action => action?.trim()?.toLowerCase())
+        : null;
     }
 
     ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);

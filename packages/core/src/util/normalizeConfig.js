@@ -27,7 +27,7 @@ const constants = require('../tracing/constants');
  * @property {boolean} [disableW3cTraceCorrelation]
  * @property {KafkaTracingOptions} [kafka]
  * @property {boolean} [allowRootExitSpan]
- * @property {Object.<string, Array.<string>>} [ignoreEndpoints]
+ * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
  */
 
 /**
@@ -72,7 +72,7 @@ const constants = require('../tracing/constants');
  * @property {AgentTracingHttpConfig} [http]
  * @property {AgentTracingKafkaConfig} [kafka]
  * @property {boolean|string} [spanBatchingEnabled]
- * @property {Object} [ignoreEndpoints]
+ * @property {import('../tracing').IgnoreEndpoints|{}} [ignoreEndpoints]
  */
 
 /**
@@ -83,11 +83,6 @@ const constants = require('../tracing/constants');
 /**
  * @typedef {Object} AgentTracingKafkaConfig
  * @property {boolean} [traceCorrelation]
- */
-
-/**
- * @typedef {Object} ignoreEndpoints
- * @property {Object.<string, Array.<string>>} [endpoints]
  */
 
 /** @type {import('../core').GenericLogger} */
@@ -687,7 +682,7 @@ function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) 
  * @param {InstanaConfig} config
  */
 function normalizeIgnoreEndpoints(config) {
-  if (!config.tracing?.ignoreEndpoints) {
+  if (!config.tracing.ignoreEndpoints) {
     config.tracing.ignoreEndpoints = {};
   }
 
@@ -699,10 +694,8 @@ function normalizeIgnoreEndpoints(config) {
           methods
         )}`
       );
-      // @ts-ignore
-      config.tracing.ignoreEndpoints[normalizedService] = [];
+      config.tracing.ignoreEndpoints[normalizedService] = null;
     } else {
-      // @ts-ignore
       config.tracing.ignoreEndpoints[normalizedService] = methods.map(method => method?.toLowerCase());
     }
   }

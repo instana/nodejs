@@ -4,33 +4,34 @@
 
 'use strict';
 
-/** @type {import('../core').GenericLogger} */
-let logger = require('../logger').getLogger('util/spanFilter', newLogger => {
-  logger = newLogger;
-});
+// List of span types to allowed to ignore
+const IGNORABLE_SPAN_TYPES = ['redis'];
+
 /**
  * @param {import('../core').InstanaBaseSpan} span
- * @param {Array<string>} ignoreEndpoints
+ * @param {import('../tracing').IgnoreEndpoints} endpoints
  * @returns {boolean}
  */
-function shouldIgnore(span, ignoreEndpoints) {
-  if (span.data?.[span.n]?.operation && ignoreEndpoints) {
-    return ignoreEndpoints.includes(span.data[span.n].operation);
+function shouldIgnore(span, endpoints) {
+  // Skip if the span type is not in the ignored list
+  if (!IGNORABLE_SPAN_TYPES.includes(span.n)) {
+    return false;
+  }
+  const operation = span.data?.[span.n]?.operation;
+
+  if (operation && endpoints[span.n]) {
+    return endpoints[span.n].includes(operation);
   }
 
   return false;
 }
 
 /**
- * @param {{ span: import('../core').InstanaBaseSpan, ignoreEndpoints: { [key: string]: Array<string> } }} params
+ * @param {{ span: import('../core').InstanaBaseSpan, ignoreEndpoints: import('../tracing').IgnoreEndpoints}} params
  * @returns {import('../core').InstanaBaseSpan | null}
  */
 function applyFilter({ span, ignoreEndpoints }) {
-  if (ignoreEndpoints && shouldIgnore(span, ignoreEndpoints[span.n])) {
-    logger.debug('Span ignored due to matching ignore endpoint', {
-      spanType: span.n,
-      ignoreOperation: span.data[span.n]?.operation
-    });
+  if (ignoreEndpoints && shouldIgnore(span, ignoreEndpoints)) {
     return null;
   }
   return span;
