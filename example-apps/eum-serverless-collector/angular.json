@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "eum-lambda": {
+    "eum-serverless-collector": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/eum-lambda",
+            "outputPath": "dist/eum-serverless-collector",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
@@ -55,10 +55,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "eum-lambda:build:production"
+              "buildTarget": "eum-serverless-collector:build:production"
             },
             "development": {
-              "buildTarget": "eum-lambda:build:development"
+              "buildTarget": "eum-serverless-collector:build:development"
             }
           },
           "defaultConfiguration": "development"

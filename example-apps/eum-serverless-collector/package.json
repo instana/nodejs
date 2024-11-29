@@ -1,5 +1,5 @@
 {
-  "name": "eum-lambda",
+  "name": "eum-serverless-collector",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
