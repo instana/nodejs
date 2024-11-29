@@ -4,5 +4,14 @@
 
 'use strict';
 
-// Entry point for the mappers module.
-module.exports = require('./mapper');
+Object.defineProperty(module.exports, 'transform', {
+  get() {
+    return (/** @type {import('../../core').InstanaBaseSpan} */ span) => {
+      try {
+        return require(`./${span.n}_mapper`).transform(span);
+      } catch {
+        return span;
+      }
+    };
+  }
+});

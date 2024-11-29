@@ -229,15 +229,13 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
   if (agentResponse?.tracing?.['ignore-endpoints']) {
     const endpointTracingConfigFromAgent = agentResponse.tracing['ignore-endpoints'];
 
-    const endpointTracingConfig = {};
-    // eslint-disable-next-line no-restricted-syntax
-    for (const [service, actions] of Object.entries(endpointTracingConfigFromAgent)) {
-      // From agent, the commands are separated by a pipe ('|')
-      // @ts-ignore
-      endpointTracingConfig[service.toLowerCase()] = actions
-        ? actions?.split(/[|,]/).map(action => action?.trim()?.toLowerCase())
-        : null;
-    }
+    // From agent, the commands are separated by a pipe ('|')
+    const endpointTracingConfig = Object.fromEntries(
+      Object.entries(endpointTracingConfigFromAgent).map(([service, actions]) => [
+        service.toLowerCase(),
+        actions?.split('|').map(action => action?.trim()?.toLowerCase()) || null
+      ])
+    );
 
     ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
     agentOpts.config.tracing.ignoreEndpoints = endpointTracingConfig;
