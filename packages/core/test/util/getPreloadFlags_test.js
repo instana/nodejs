@@ -32,7 +32,7 @@ describe('util.getPreloadFlags', () => {
 
   it('should return relevant flags from NODE_OPTIONS', () => {
     process.env.NODE_OPTIONS =
-      "INSTANA_DEBUG=true node --require '@instana/collector/src/immediate.js' ./dummy-app/src/index.js";
+      "INSTANA_DEBUG=true node --require '@instana/collector/src/immediate.js' ./something/src/index.js";
 
     const result = getPreloadFlags();
 

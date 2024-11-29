@@ -1,0 +1,14 @@
+{
+  "name": "serverless-collector-example-app",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@instana/serverless-collector": "latest",
+    "cors": "^2.8.5",
+    "dotenv": "^5.0.1",
+    "express": "^4.16.3"
+  }
+}

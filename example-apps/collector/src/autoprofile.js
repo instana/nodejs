@@ -7,7 +7,7 @@
 
 const config = require('./config');
 
-let packageToRequire = '../..';
+let packageToRequire = '../../packages/collector';
 if (config.mode === 'npm') {
   packageToRequire = '@instana/collector';
 }
