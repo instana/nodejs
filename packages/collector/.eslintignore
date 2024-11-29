@@ -1,4 +1,3 @@
-dummy-app/node_modules/
 test/apps/babel-typescript/
 test/metrics/app/node_modules/
 test/metrics/npmInstalledApp/node_modules/
