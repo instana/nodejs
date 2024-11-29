@@ -48,6 +48,7 @@ spec:
         if [[ $EXIT_CODE -eq 0 && $OPEN_PRS -eq 0 ]]; then
           echo "No open PRs found. Deleting branch currency-bot."
           git push origin --delete currency-bot
+          EXIT_CODE=1
         fi
 
         if [[ $EXIT_CODE != 0 ]]; then
