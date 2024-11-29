@@ -516,7 +516,3 @@ function processSpan(span) {
   }
   return transform(span);
 }
-// export the processSpan function for use in test.
-if (process.env.NODE_ENV === 'test') {
-  module.exports.processSpan = processSpan;
-}
