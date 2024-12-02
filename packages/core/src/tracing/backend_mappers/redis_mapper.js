@@ -4,22 +4,23 @@
 
 'use strict';
 
-// Configuration for Redis-specific field mappings for BE
 const fieldMappings = {
   // internal-format: backend-format
   operation: 'command'
 };
 
 /**
- * @param {Object} span
- * @returns {Object}
+ * Transforms Redis-related span data fields to match the backend format.
+ *
+ * @param {import('../../core').InstanaBaseSpan} span
+ * @returns {import('../../core').InstanaBaseSpan} The transformed span.
  */
 function transform(span) {
   if (span.data?.redis) {
-    Object.entries(fieldMappings).forEach(([oldKey, newKey]) => {
-      if (span.data.redis[oldKey]) {
-        span.data.redis[newKey] = span.data.redis[oldKey];
-        delete span.data.redis[oldKey];
+    Object.entries(fieldMappings).forEach(([internalField, backendField]) => {
+      if (span.data.redis[internalField]) {
+        span.data.redis[backendField] = span.data.redis[internalField];
+        delete span.data.redis[internalField];
       }
     });
   }

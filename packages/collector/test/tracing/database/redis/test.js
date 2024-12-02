@@ -28,7 +28,7 @@ const globalAgent = require('../../../globalAgent');
 // Please set the environment variables to run the tests against azure redis cluster:
 //    export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
 //    export AZURE_REDIS_CLUSTER_PWD=
-['default'].forEach(setupType => {
+['default', 'cluster'].forEach(setupType => {
   describe(`tracing/redis ${setupType}`, function () {
     ['redis', '@redis/client'].forEach(redisPkg => {
       describe(`require: ${redisPkg}`, function () {
@@ -199,6 +199,7 @@ const globalAgent = require('../../../globalAgent');
                     })
                   );
                 }));
+
             it('must trace hset/hget calls', () =>
               controls
                 .sendRequest({
@@ -851,8 +852,8 @@ const globalAgent = require('../../../globalAgent');
               });
             }
           });
-          mochaSuiteFn('ignore-endpoints test:', function () {
-            describe('ignore-endpoints enabled via agent config', () => {
+          mochaSuiteFn('ignore-endpoints:', function () {
+            describe('when ignore-endpoints is enabled via agent configuration', () => {
               const { AgentStubControls } = require('../../../apps/agentStubControls');
               const customAgentControls = new AgentStubControls();
               let controls;
@@ -867,8 +868,7 @@ const globalAgent = require('../../../globalAgent');
                     redisVersion === 'latest' ? path.join(__dirname, 'app.js') : path.join(__dirname, 'legacyApp.js'),
                   env: {
                     REDIS_VERSION: redisVersion,
-                    REDIS_PKG: redisPkg,
-                    REDIS_CLUSTER: setupType === 'cluster'
+                    REDIS_PKG: redisPkg
                   }
                 });
                 await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
@@ -883,7 +883,7 @@ const globalAgent = require('../../../globalAgent');
                 await controls.stop();
               });
 
-              it('should ignore redis spans for configured ignore endpoints', async () => {
+              it('should ignore redis spans for ignored endpoints (get, set)', async () => {
                 await controls
                   .sendRequest({
                     method: 'POST',
@@ -918,8 +918,7 @@ const globalAgent = require('../../../globalAgent');
                   env: {
                     REDIS_VERSION: redisVersion,
                     REDIS_PKG: redisPkg,
-                    REDIS_CLUSTER: setupType === 'cluster',
-                    INSTANA_IGNORE_ENDPOINTS: '{"redis": ["get"}'
+                    INSTANA_IGNORE_ENDPOINTS: '{"redis": ["get","set"]}'
                   }
                 });
                 await controls.start();
@@ -943,7 +942,7 @@ const globalAgent = require('../../../globalAgent');
               afterEach(async () => {
                 await controls.clearIpcMessages();
               });
-              it('should ignore redis spans for configured ignore endpoints', async function () {
+              it('should ignore spans for configured ignore endpoints(get,set)', async function () {
                 await controls
                   .sendRequest({
                     method: 'POST',
@@ -987,7 +986,7 @@ const globalAgent = require('../../../globalAgent');
                     });
                   });
               });
-              it('should create redis spans for non-ignored redis endpoints', async () => {
+              it('should not ignore spans for endpoints that are not in the ignore list', async () => {
                 await controls
                   .sendRequest({
                     method: 'GET',

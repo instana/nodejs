@@ -685,6 +685,23 @@ function normalizeIgnoreEndpoints(config) {
   if (!config.tracing.ignoreEndpoints) {
     config.tracing.ignoreEndpoints = {};
   }
+  if (Object.keys(config.tracing.ignoreEndpoints).length) {
+    for (const [service, endpoints] of Object.entries(config.tracing.ignoreEndpoints)) {
+      const normalizedService = service.toLowerCase();
+
+      if (!Array.isArray(endpoints)) {
+        logger.warn(
+          `Invalid configuration for ${normalizedService}: ignoredEndpoints.${normalizedService} is not an array. The value will be ignored: ${JSON.stringify(
+            endpoints
+          )}`
+        );
+        config.tracing.ignoreEndpoints[normalizedService] = null; // Set to null for invalid configuration
+      } else {
+        config.tracing.ignoreEndpoints[normalizedService] = endpoints.map(endpoint => endpoint?.toLowerCase());
+      }
+    }
+    return;
+  }
 
   if (process.env.INSTANA_IGNORE_ENDPOINTS) {
     try {
@@ -695,20 +712,6 @@ function normalizeIgnoreEndpoints(config) {
       logger.warn(
         `Failed to parse INSTANA_IGNORE_ENDPOINTS: ${process.env.INSTANA_IGNORE_ENDPOINTS}. Error: ${error.message}`
       );
-      // Fallback to existing config if parsing fails
-    }
-  }
-  for (const [service, endpoints] of Object.entries(config.tracing.ignoreEndpoints)) {
-    const normalizedService = service.toLowerCase();
-    if (!Array.isArray(endpoints)) {
-      logger.warn(
-        `Invalid configuration for ${normalizedService}: ignoredEndpoints.${normalizedService} is not an array. The value will be ignored: ${JSON.stringify(
-          endpoints
-        )}`
-      );
-      config.tracing.ignoreEndpoints[normalizedService] = null;
-    } else {
-      config.tracing.ignoreEndpoints[normalizedService] = endpoints.map(endpoint => endpoint?.toLowerCase());
     }
   }
 }

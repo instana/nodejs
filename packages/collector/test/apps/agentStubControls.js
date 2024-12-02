@@ -43,7 +43,7 @@ class AgentStubControls {
         env.KAFKA_TRACE_CORRELATION = opts.kafkaConfig.traceCorrelation.toString();
       }
     }
-    if (opts?.ignoreEndpoints) {
+    if (opts.ignoreEndpoints) {
       env.INSTANA_IGNORE_ENDPOINTS = JSON.stringify(opts.ignoreEndpoints);
     }
 

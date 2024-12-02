@@ -38,7 +38,7 @@ const enableSpanBatching = process.env.ENABLE_SPANBATCHING === 'true';
 const kafkaTraceCorrelation = process.env.KAFKA_TRACE_CORRELATION
   ? process.env.KAFKA_TRACE_CORRELATION === 'true'
   : null;
-const ignoreRedisEndpoints = process.env.INSTANA_IGNORE_ENDPOINTS && JSON.parse(process.env.INSTANA_IGNORE_ENDPOINTS);
+const ignoreEndpoints = process.env.INSTANA_IGNORE_ENDPOINTS && JSON.parse(process.env.INSTANA_IGNORE_ENDPOINTS);
 
 let discoveries = {};
 let rejectAnnounceAttempts = 0;
@@ -87,7 +87,7 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     }
   };
 
-  if (kafkaTraceCorrelation != null || extraHeaders.length > 0 || enableSpanBatching || ignoreRedisEndpoints) {
+  if (kafkaTraceCorrelation != null || extraHeaders.length > 0 || enableSpanBatching || ignoreEndpoints) {
     response.tracing = {};
 
     if (extraHeaders.length > 0) {
@@ -104,9 +104,8 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     if (enableSpanBatching) {
       response.tracing['span-batching-enabled'] = true;
     }
-    if (ignoreRedisEndpoints) {
-      response.tracing = {};
-      response.tracing['ignore-endpoints'] = ignoreRedisEndpoints;
+    if (ignoreEndpoints) {
+      response.tracing['ignore-endpoints'] = ignoreEndpoints;
     }
   }
   res.send(response);
