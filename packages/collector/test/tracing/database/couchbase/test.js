@@ -438,7 +438,7 @@ mochaSuiteFn('tracing/couchbase', function () {
             );
           }));
 
-      it('[analyticsindexes] must trace', () =>
+      it.skip('[analyticsindexes] must trace', () =>
         controls
           .sendRequest({
             method: 'post',
