@@ -686,17 +686,29 @@ function normalizeIgnoreEndpoints(config) {
     config.tracing.ignoreEndpoints = {};
   }
 
-  for (const [service, methods] of Object.entries(config.tracing.ignoreEndpoints)) {
-    const normalizedService = service.toLowerCase();
-    if (!Array.isArray(methods)) {
+  if (process.env.INSTANA_IGNORE_ENDPOINTS) {
+    try {
+      logger.info('Ignore endpoints have been added via environment variable INSTANA_IGNORE_ENDPOINTS.');
+      config.tracing.ignoreEndpoints = JSON.parse(process.env.INSTANA_IGNORE_ENDPOINTS);
+      return;
+    } catch (error) {
       logger.warn(
-        `Invalid configuration for ${normalizedService}: ignoredEndpoints.${normalizedService} is not an array, the value will be ignored: ${JSON.stringify(
-          methods
+        `Failed to parse INSTANA_IGNORE_ENDPOINTS: ${process.env.INSTANA_IGNORE_ENDPOINTS}. Error: ${error.message}`
+      );
+      // Fallback to existing config if parsing fails
+    }
+  }
+  for (const [service, endpoints] of Object.entries(config.tracing.ignoreEndpoints)) {
+    const normalizedService = service.toLowerCase();
+    if (!Array.isArray(endpoints)) {
+      logger.warn(
+        `Invalid configuration for ${normalizedService}: ignoredEndpoints.${normalizedService} is not an array. The value will be ignored: ${JSON.stringify(
+          endpoints
         )}`
       );
       config.tracing.ignoreEndpoints[normalizedService] = null;
     } else {
-      config.tracing.ignoreEndpoints[normalizedService] = methods.map(method => method?.toLowerCase());
+      config.tracing.ignoreEndpoints[normalizedService] = endpoints.map(endpoint => endpoint?.toLowerCase());
     }
   }
 }

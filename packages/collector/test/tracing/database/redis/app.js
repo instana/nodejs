@@ -12,18 +12,8 @@ process.on('SIGTERM', () => {
 });
 
 require('./mockVersion');
-const ignoreEndpoints = process.env.IGNORE_ENDPOINTS ? JSON.parse(process.env.IGNORE_ENDPOINTS) : null;
-if (!ignoreEndpoints) {
-  require('../../../..')();
-} else {
-  require('../../../..')({
-    tracing: {
-      ignoreEndpoints: {
-        redis: ignoreEndpoints
-      }
-    }
-  });
-}
+require('../../../..')();
+
 const redis = require(process.env.REDIS_PKG);
 const bodyParser = require('body-parser');
 const express = require('express');

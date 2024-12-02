@@ -43,7 +43,7 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @typedef {Object} TracingConfig
  * @property {Array.<string>} [extra-http-headers]
  * @property {KafkaTracingConfig} [kafka]
- * @property {Object.<string, string>} [ignore-endpoints]
+ * @property {Object.<string, (string | string[])>} [ignore-endpoints]
  * @property {boolean} [span-batching-enabled]
  */
 
@@ -229,12 +229,19 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
   if (agentResponse?.tracing?.['ignore-endpoints']) {
     const endpointTracingConfigFromAgent = agentResponse.tracing['ignore-endpoints'];
 
-    // From agent, the commands are separated by a pipe ('|')
     const endpointTracingConfig = Object.fromEntries(
-      Object.entries(endpointTracingConfigFromAgent).map(([service, actions]) => [
-        service.toLowerCase(),
-        actions?.split('|').map(action => action?.trim()?.toLowerCase()) || null
-      ])
+      Object.entries(endpointTracingConfigFromAgent).map(([service, endpoints]) => {
+        let normalizedEndpoints = null;
+        if (typeof endpoints === 'string') {
+          normalizedEndpoints = endpoints
+            .split(/[|,]/) // From agent, the commands are separated by a pipe ('|')
+            .map(endpoint => endpoint?.trim()?.toLowerCase());
+        } else if (Array.isArray(endpoints)) {
+          normalizedEndpoints = endpoints.map(endpoint => endpoint?.toLowerCase());
+        }
+
+        return [service.toLowerCase(), normalizedEndpoints];
+      })
     );
 
     ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);

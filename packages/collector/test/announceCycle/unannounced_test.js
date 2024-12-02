@@ -213,7 +213,7 @@ describe('unannounced state', () => {
         }
       });
     });
-    it('should apply the configuration to ignore specified endpoint for a single package', done => {
+    it('should  apply the configuration to ignore a single endpoint for a package', done => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
@@ -234,11 +234,12 @@ describe('unannounced state', () => {
         }
       });
     });
-    it('should apply the configuration to ignore multiple endpoints for a single package', done => {
+
+    it('should apply the configuration to ignore multiple endpoints for a package', done => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
-            redis: 'TYPE|GET'
+            redis: 'SET|GET'
           }
         }
       });
@@ -247,7 +248,7 @@ describe('unannounced state', () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
-                redis: ['type', 'get']
+                redis: ['set', 'get']
               }
             }
           });
@@ -255,11 +256,36 @@ describe('unannounced state', () => {
         }
       });
     });
-    it('should apply the tracing configuration across different packages', done => {
+
+    it('should apply tracing configuration to ignore specified endpoints across different packages', done => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
-            REDIS: 'get|type',
+            REDIS: 'get|set',
+            dynamodb: 'query'
+          }
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              ignoreEndpoints: {
+                redis: ['get', 'set'],
+                dynamodb: ['query']
+              }
+            }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should apply tracing configuration to ignore endpoints when specified using array format', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          'ignore-endpoints': {
+            REDIS: ['get', 'type'],
             dynamodb: 'query'
           }
         }

@@ -1343,7 +1343,7 @@ function checkConnection(span, setupType) {
           dirname: __dirname,
           env: {
             REDIS_CLUSTER: setupType === 'cluster',
-            IGNORE_ENDPOINTS: JSON.stringify(['get'])
+            INSTANA_IGNORE_ENDPOINTS: '{"redis": ["get"}'
           }
         });
         await controls.start();

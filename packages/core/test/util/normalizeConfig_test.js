@@ -476,6 +476,17 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.ignoreEndpoints).to.deep.equal({});
   });
 
+  it('should apply ignore endpoints if the INSTANA_IGNORE_ENDPOINTS is set and valid', () => {
+    process.env.INSTANA_IGNORE_ENDPOINTS = '{"redis": ["get", "set"]}';
+    const config = normalizeConfig();
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get', 'set'] });
+  });
+
+  it('should fallback to default if INSTANA_IGNORE_ENDPOINTS is set but has an invalid format', () => {
+    process.env.INSTANA_IGNORE_ENDPOINTS = '"redis": ["get", "set"]';
+    const config = normalizeConfig();
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({});
+  });
   it('should apply ignore endpoints via config', () => {
     const config = normalizeConfig({
       tracing: {
@@ -499,6 +510,15 @@ describe('util.normalizeConfig', () => {
       }
     });
     expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get'], dynamodb: ['querey'] });
+  });
+  it('should apply ignore endpoints from the config when INSTANA_IGNORE_ENDPOINTS contains invalid JSON', () => {
+    process.env.INSTANA_IGNORE_ENDPOINTS = '"redis": ["get", "set"]';
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: { redis: ['get'] }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get'] });
   });
 
   function checkDefaults(config) {

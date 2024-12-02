@@ -15,18 +15,7 @@ process.on('SIGTERM', () => {
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-const ignoreEndpoints = process.env.IGNORE_ENDPOINTS ? JSON.parse(process.env.IGNORE_ENDPOINTS) : null;
-if (!ignoreEndpoints) {
-  require('../../../..')();
-} else {
-  require('../../../..')({
-    tracing: {
-      ignoreEndpoints: {
-        redis: ignoreEndpoints
-      }
-    }
-  });
-}
+require('../../../..')();
 
 const bodyParser = require('body-parser');
 const express = require('express');

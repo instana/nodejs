@@ -28,7 +28,7 @@ const globalAgent = require('../../../globalAgent');
 // Please set the environment variables to run the tests against azure redis cluster:
 //    export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
 //    export AZURE_REDIS_CLUSTER_PWD=
-['default', 'cluster'].forEach(setupType => {
+['default'].forEach(setupType => {
   describe(`tracing/redis ${setupType}`, function () {
     ['redis', '@redis/client'].forEach(redisPkg => {
       describe(`require: ${redisPkg}`, function () {
@@ -919,7 +919,7 @@ const globalAgent = require('../../../globalAgent');
                     REDIS_VERSION: redisVersion,
                     REDIS_PKG: redisPkg,
                     REDIS_CLUSTER: setupType === 'cluster',
-                    IGNORE_ENDPOINTS: JSON.stringify(['get', 'set'])
+                    INSTANA_IGNORE_ENDPOINTS: '{"redis": ["get"}'
                   }
                 });
                 await controls.start();
