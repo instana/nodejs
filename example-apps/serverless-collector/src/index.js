@@ -5,19 +5,19 @@
 'use strict';
 
 const path = require('path');
-const cors = require('cors');
-
 const MODE = process.env.MODE || 'npm';
 const APP_PORT = process.env.APP_PORT || 9191;
 const DOWNSTREAM_URL = process.env.DOWNSTREAM_URL;
+
 let packageToRequire = path.join(__dirname, '..', '..', '..', 'packages', 'serverless-collector');
 
 if (MODE === 'npm') {
   packageToRequire = '@instana/serverless-collector';
 }
 
-console.log(`Enabling @instana/serverless-collector (requiring ${packageToRequire})`);
 require(packageToRequire);
+
+const cors = require('cors');
 
 const express = require('express');
 const app = express();
@@ -45,5 +45,5 @@ app.get('/trace', (req, res) => {
 });
 
 app.listen(APP_PORT, () => {
-  console.log('Listening on port', APP_PORT);
+  console.log(`serverless-collector app started on port ${APP_PORT} in mode ${MODE}`);
 });

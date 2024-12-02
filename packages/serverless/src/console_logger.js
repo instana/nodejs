@@ -7,6 +7,7 @@
 
 'use strict';
 
+// 30 = info
 let minLevel = 30;
 
 module.exports = exports = {
