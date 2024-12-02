@@ -42,7 +42,7 @@ async function init() {
     instanaCore.init(config, backendConnector, identityProvider);
     tracing.activate();
 
-    logger.debug('@instana/serverless-collector initialized.');
+    logger.info('@instana/serverless-collector initialized.');
 
     // eslint-disable-next-line no-unused-expressions
     process.send && process.send('instana.serverless-collector.initialized');
