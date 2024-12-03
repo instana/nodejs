@@ -38,7 +38,7 @@ const enableSpanBatching = process.env.ENABLE_SPANBATCHING === 'true';
 const kafkaTraceCorrelation = process.env.KAFKA_TRACE_CORRELATION
   ? process.env.KAFKA_TRACE_CORRELATION === 'true'
   : null;
-const ignoreEndpoints = process.env.INSTANA_IGNORE_ENDPOINTS && JSON.parse(process.env.INSTANA_IGNORE_ENDPOINTS);
+const ignoreEndpoints = process.env.IGNORE_ENDPOINTS && JSON.parse(process.env.IGNORE_ENDPOINTS);
 
 let discoveries = {};
 let rejectAnnounceAttempts = 0;

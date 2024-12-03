@@ -4,8 +4,8 @@
 
 'use strict';
 
-Object.defineProperty(module.exports, 'transform', {
-  get() {
+module.exports = {
+  get transform() {
     return (/** @type {import('../../core').InstanaBaseSpan} */ span) => {
       try {
         return require(`./${span.n}_mapper`).transform(span);
@@ -14,4 +14,4 @@ Object.defineProperty(module.exports, 'transform', {
       }
     };
   }
-});
+};

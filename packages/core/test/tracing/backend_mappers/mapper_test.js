@@ -7,7 +7,7 @@
 const expect = require('chai').expect;
 const { transform } = require('../../../src/tracing/backend_mappers');
 
-describe('BE span transformation test', () => {
+describe('tracing/backend_mappers', () => {
   let span;
 
   beforeEach(() => {

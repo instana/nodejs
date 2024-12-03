@@ -222,7 +222,13 @@ function applySpanBatchingConfiguration(agentResponse) {
     agentOpts.config.tracing.spanBatchingEnabled = true;
   }
 }
+
 /**
+ * - The agent configuration currently uses a pipe ('|') as a separator for endpoints.
+ * - This function splits the string by both pipe ('|') and comma (',') to ensure compatibility.
+ * - Additionally, it supports the `string[]` format for backward compatibility,
+ *   as this was the previously used standard.
+ *
  * @param {AgentAnnounceResponse} agentResponse
  */
 function applyIgnoreEndpointsConfiguration(agentResponse) {
@@ -233,9 +239,7 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
       Object.entries(endpointTracingConfigFromAgent).map(([service, endpoints]) => {
         let normalizedEndpoints = null;
         if (typeof endpoints === 'string') {
-          normalizedEndpoints = endpoints
-            .split(/[|,]/) // From agent, the commands are separated by a pipe ('|')
-            .map(endpoint => endpoint?.trim()?.toLowerCase());
+          normalizedEndpoints = endpoints.split(/[|,]/).map(endpoint => endpoint?.trim()?.toLowerCase());
         } else if (Array.isArray(endpoints)) {
           normalizedEndpoints = endpoints.map(endpoint => endpoint?.toLowerCase());
         }

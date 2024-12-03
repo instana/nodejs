@@ -44,7 +44,7 @@ class AgentStubControls {
       }
     }
     if (opts.ignoreEndpoints) {
-      env.INSTANA_IGNORE_ENDPOINTS = JSON.stringify(opts.ignoreEndpoints);
+      env.IGNORE_ENDPOINTS = JSON.stringify(opts.ignoreEndpoints);
     }
 
     this.agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {

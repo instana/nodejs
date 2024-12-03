@@ -20,7 +20,7 @@ function shouldIgnore(span, endpoints) {
   const operation = span.data?.[span.n]?.operation;
 
   if (operation && endpoints[span.n]) {
-    return endpoints[span.n].includes(operation);
+    return endpoints[span.n].some(op => op === operation);
   }
 
   return false;

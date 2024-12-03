@@ -15,7 +15,7 @@ const fieldMappings = {
  * @param {import('../../core').InstanaBaseSpan} span
  * @returns {import('../../core').InstanaBaseSpan} The transformed span.
  */
-function transform(span) {
+module.exports.transform = span => {
   if (span.data?.redis) {
     Object.entries(fieldMappings).forEach(([internalField, backendField]) => {
       if (span.data.redis[internalField]) {
@@ -26,6 +26,4 @@ function transform(span) {
   }
 
   return span;
-}
-
-module.exports = { transform };
+};

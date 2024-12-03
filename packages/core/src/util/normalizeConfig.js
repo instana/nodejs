@@ -685,13 +685,26 @@ function normalizeIgnoreEndpoints(config) {
   if (!config.tracing.ignoreEndpoints) {
     config.tracing.ignoreEndpoints = {};
   }
-  if (Object.keys(config.tracing.ignoreEndpoints).length) {
-    for (const [service, endpoints] of Object.entries(config.tracing.ignoreEndpoints)) {
+
+  const ignoreEndpoints = config.tracing.ignoreEndpoints;
+
+  if (typeof ignoreEndpoints !== 'object' || Array.isArray(ignoreEndpoints)) {
+    logger.warn(
+      `Invalid tracing.ignoreEndpoints configuration. Expected an object, but received: ${JSON.stringify(
+        ignoreEndpoints
+      )}`
+    );
+    config.tracing.ignoreEndpoints = {};
+    return;
+  }
+
+  if (Object.keys(ignoreEndpoints).length) {
+    for (const [service, endpoints] of Object.entries(ignoreEndpoints)) {
       const normalizedService = service.toLowerCase();
 
       if (!Array.isArray(endpoints)) {
         logger.warn(
-          `Invalid configuration for ${normalizedService}: ignoredEndpoints.${normalizedService} is not an array. The value will be ignored: ${JSON.stringify(
+          `Invalid configuration for ${normalizedService}: tracing.ignoreEndpoints.${normalizedService} is not an array. The value will be ignored: ${JSON.stringify(
             endpoints
           )}`
         );
@@ -700,14 +713,11 @@ function normalizeIgnoreEndpoints(config) {
         config.tracing.ignoreEndpoints[normalizedService] = endpoints.map(endpoint => endpoint?.toLowerCase());
       }
     }
-    return;
-  }
-
-  if (process.env.INSTANA_IGNORE_ENDPOINTS) {
+  } else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
+    // The environment variable name and its format are still under discussion.
+    // It is currently private and will not be documented or publicly shared.
     try {
-      logger.info('Ignore endpoints have been added via environment variable INSTANA_IGNORE_ENDPOINTS.');
       config.tracing.ignoreEndpoints = JSON.parse(process.env.INSTANA_IGNORE_ENDPOINTS);
-      return;
     } catch (error) {
       logger.warn(
         `Failed to parse INSTANA_IGNORE_ENDPOINTS: ${process.env.INSTANA_IGNORE_ENDPOINTS}. Error: ${error.message}`
