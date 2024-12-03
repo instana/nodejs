@@ -44,7 +44,7 @@ mochaSuiteFn('tracing/mysql', function () {
   });
 });
 
-function registerSuite(agentControls, driverMode, useExecute, mysql2Version = null) {
+function registerSuite(agentControls, driverMode, useExecute, mysql2Version) {
   if ((driverMode === 'mysql' || driverMode === 'mysql-cluster') && useExecute) {
     // Not applicable, mysql does not provide an execute function, only the query function whereas mysql2 provides both.
     return;
