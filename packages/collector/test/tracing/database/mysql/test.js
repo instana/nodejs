@@ -46,7 +46,7 @@ function registerSuite(agentControls, driverMode, useExecute) {
       env.USE_EXECUTE = 'true';
     }
 
-    test(env, agentControls);
+    test(env, agentControls, driverMode);
   });
 
   describe('suppressed', function () {
@@ -102,7 +102,7 @@ function registerSuite(agentControls, driverMode, useExecute) {
   });
 }
 
-function test(env, agentControls) {
+function test(env, agentControls, driverMode) {
   let controls;
 
   before(async () => {
@@ -139,6 +139,11 @@ function test(env, agentControls) {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
+            // 1 x mysql
+            // 1 x httpserver
+            // 1 x otel fs(not included in mysql2/promise)
+            const expectedSpanCount = driverMode === 'mysql2/promises' ? 2 : 3;
+            expect(spans.length).to.equal(expectedSpanCount);
             const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.f.e).to.equal(String(controls.getPid())),
@@ -181,6 +186,9 @@ function test(env, agentControls) {
 
         return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
+            // 2 x mysql
+            // 2 x httpserver
+            expect(spans.length).to.equal(4);
             const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.f.e).to.equal(String(controls.getPid())),
@@ -245,6 +253,12 @@ function test(env, agentControls) {
 
         return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
+            // 1 x mysql
+            // 1 x httpserver
+            // 1 x httpclient
+            // 1 x otel fs(included in mysql2/promise)
+            const expectedSpanCount = driverMode === 'mysql2/promises' ? 4 : 3;
+            expect(spans.length).to.equal(expectedSpanCount);
             const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.f.e).to.equal(String(controls.getPid())),
