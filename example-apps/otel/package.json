@@ -1,0 +1,22 @@
+{
+  "name": "otel",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@opentelemetry/api": "^1.8.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.46.1",
+    "@opentelemetry/exporter-metrics-otlp-grpc": "^0.51.1",
+    "@opentelemetry/exporter-trace-otlp-grpc": "^0.51.1",
+    "@opentelemetry/instrumentation-kafkajs": "^0.5.0",
+    "@opentelemetry/sdk-node": "^0.51.1",
+    "express": "^4.19.2",
+    "kafkajs": "^2.2.4"
+  }
+}
