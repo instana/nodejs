@@ -43,6 +43,8 @@ class AgentStubControls {
         env.KAFKA_TRACE_CORRELATION = opts.kafkaConfig.traceCorrelation.toString();
       }
     }
+    // This is not the INSTANA_IGNORE_ENDPOINTS env. We  use this "IGNORE_ENDPOINTS" env for the fake agent to
+    // serve the ignore endpoints config to our tracer.
     if (opts.ignoreEndpoints) {
       env.IGNORE_ENDPOINTS = JSON.stringify(opts.ignoreEndpoints);
     }

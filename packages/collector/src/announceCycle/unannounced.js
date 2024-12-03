@@ -225,9 +225,10 @@ function applySpanBatchingConfiguration(agentResponse) {
 
 /**
  * - The agent configuration currently uses a pipe ('|') as a separator for endpoints.
- * - This function splits the string by both pipe ('|') and comma (',') to ensure compatibility.
+ * - This function supports both ('|') and comma (',') to ensure future compatibility.
  * - Additionally, it supports the `string[]` format for backward compatibility,
- *   as this was the previously used standard.
+ *   as this was the previously used standard. The final design decision is not yet completed.
+ *   https://github.ibm.com/instana/requests-for-discussion/pull/84
  *
  * @param {AgentAnnounceResponse} agentResponse
  */
