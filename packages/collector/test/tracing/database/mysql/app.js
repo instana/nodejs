@@ -14,6 +14,9 @@ process.on('SIGTERM', () => {
 });
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
+if (process.env.MYSQL2_VERSION) {
+  require('./mockVersion');
+}
 const instana = require('../../../..')();
 
 const accessFunction = process.env.USE_EXECUTE ? 'execute' : 'query';

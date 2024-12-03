@@ -23,23 +23,39 @@ mochaSuiteFn('tracing/mysql', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  ['mysql', 'mysql-cluster', 'mysql2', 'mysql2/promises'].forEach(driverMode => {
-    [false, true].forEach(function (useExecute) {
-      // connection.query or connection.execute
-      registerSuite.bind(this)(agentControls, driverMode, useExecute);
-    });
+  const drivers = ['mysql', 'mysql-cluster', 'mysql2', 'mysql2/promises'];
+  const mysql2Versions = ['latest', 'v3114'];
+  const executionModes = [false, true];
+
+  drivers.forEach(driverMode => {
+    if (driverMode === 'mysql2') {
+      // Handling for 'mysql2' with different versions
+      mysql2Versions.forEach(version => {
+        executionModes.forEach(useExecute => {
+          registerSuite.call(this, agentControls, driverMode, useExecute, version);
+        });
+      });
+    } else {
+      // Generic handling for other drivers
+      executionModes.forEach(useExecute => {
+        registerSuite.call(this, agentControls, driverMode, useExecute);
+      });
+    }
   });
 });
 
-function registerSuite(agentControls, driverMode, useExecute) {
+function registerSuite(agentControls, driverMode, useExecute, mysql2Version = null) {
   if ((driverMode === 'mysql' || driverMode === 'mysql-cluster') && useExecute) {
     // Not applicable, mysql does not provide an execute function, only the query function whereas mysql2 provides both.
     return;
   }
 
-  describe(`driver mode: ${driverMode}, access function: ${useExecute ? 'execute' : 'query'}`, () => {
+  describe(`driver mode: ${driverMode} version: ${mysql2Version || 'default'}, access function: ${
+    useExecute ? 'execute' : 'query'
+  }`, () => {
     const env = {
-      DRIVER_MODE: driverMode
+      DRIVER_MODE: driverMode,
+      MYSQL2_VERSION: mysql2Version
     };
 
     if (useExecute) {
@@ -51,7 +67,8 @@ function registerSuite(agentControls, driverMode, useExecute) {
 
   describe('suppressed', function () {
     const env = {
-      DRIVER_MODE: driverMode
+      DRIVER_MODE: driverMode,
+      MYSQL2_VERSION: mysql2Version
     };
     if (useExecute) {
       env.USE_EXECUTE = 'true';
