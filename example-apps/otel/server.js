@@ -9,39 +9,41 @@
 'use strict';
 
 const process = require('process');
-
+const { ExportResultCode } = require('@opentelemetry/core');
 const opentelemetry = require('@opentelemetry/sdk-node');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
 const { Resource } = require('@opentelemetry/resources');
+const { SimpleSpanProcessor } = require('@opentelemetry/tracing');
 const { SEMRESATTRS_SERVICE_NAME } = require('@opentelemetry/semantic-conventions');
-const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-grpc');
+// const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-grpc');
 // const { MeterProvider, PeriodicExportingMetricReader } = require('@opentelemetry/sdk-metrics');
-const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-grpc');
+// const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-grpc');
+const { MeterProvider, PeriodicExportingMetricReader } = require('@opentelemetry/sdk-metrics');
 const { BasicTracerProvider, TraceIdRatioBasedSampler, ParentBasedSampler } = require('@opentelemetry/sdk-trace-base');
 const { KafkaJsInstrumentation } = require('@opentelemetry/instrumentation-kafkajs');
+const { InstanaExporter } = require('@instana/opentelemetry-exporter');
+const instanaTraceExporter = new InstanaExporter();
 
-const metricExporter = new OTLPMetricExporter();
+class CustomMetricsExporter {
+  export(data, resultCallback) {
+    console.log('CustomMetricsExporter.export', data.resource);
+
+    data.scopeMetrics.forEach(scope => {
+      console.log('CustomMetricsExporter.export', scope);
+    });
+    resultCallback({ code: ExportResultCode.SUCCESS });
+  }
+
+  shutdown() {
+    console.log('CustomMetricsExporter.shutdown');
+  }
+}
+
+const customMetricsExporter = new CustomMetricsExporter();
 
 const resource = new Resource({
   [SEMRESATTRS_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || 'js standalone app'
 });
-
-// NOTE: application metrics are not working without Otel Collector!
-/*
-const meterProvider = new MeterProvider({
-  resource,
-  readers: [
-    new PeriodicExportingMetricReader({
-      exporter: metricExporter,
-      exportIntervalMillis: 5000
-    })
-  ]
-});
-
-const meter = meterProvider.getMeter('my-meter');
-const counter = meter.createCounter('metric_name');
-counter.add(10, { key: 'value' });
-*/
 
 const tracerProvider = new BasicTracerProvider({
   // See details of ParentBasedSampler below
@@ -53,12 +55,15 @@ const tracerProvider = new BasicTracerProvider({
   })
 });
 
-tracerProvider.register();
+// tracerProvider.addSpanProcessor(new SimpleSpanProcessor(new OTLPTraceExporter()));
+tracerProvider.addSpanProcessor(new SimpleSpanProcessor(instanaTraceExporter));
 
 const sdk = new opentelemetry.NodeSDK({
   resource,
-  traceExporter: new OTLPTraceExporter(),
-  metricExporter,
+  metricReader: new PeriodicExportingMetricReader({
+    exporter: customMetricsExporter,
+    exportIntervalMillis: 1000 * 5
+  }),
   instrumentations: [
     getNodeAutoInstrumentations({
       // NOTE: creates ~2.5k spans on bootstrap because node core reads node_modules
@@ -67,6 +72,8 @@ const sdk = new opentelemetry.NodeSDK({
     new KafkaJsInstrumentation()
   ]
 });
+
+tracerProvider.register();
 
 sdk.start();
 
