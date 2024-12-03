@@ -29,9 +29,26 @@ function instrumentMysql(mysql) {
 }
 
 function instrumentMysql2(mysql) {
-  instrumentConnection(mysql.Connection.prototype, true);
-  if (mysql.Pool) {
-    instrumentPool(mysql.Pool.prototype);
+  /**
+   * In mysql2 version 3.11.5 and later, the internal structure of the `Connection` and `Pool` classes was reorganized.
+   * Methods like `query` and `execute` were moved into the `BaseConnection` class located in `lib/base/connection.js`,
+   * and similar changes were applied to the `Pool` class. See: https://github.com/sidorares/node-mysql2/pull/3081
+   *
+   * Prior to v3.11.5, the `Connection` and `Pool` prototypes were directly used for instrumentation.
+   */
+  const connectionPrototype =
+    Object.getPrototypeOf(mysql.Connection.prototype)?.constructor?.name === 'BaseConnection'
+      ? Object.getPrototypeOf(mysql.Connection.prototype)
+      : mysql.Connection.prototype;
+
+  const poolPrototype =
+    mysql.Pool && Object.getPrototypeOf(mysql.Pool.prototype)?.constructor?.name === 'BasePool'
+      ? Object.getPrototypeOf(mysql.Pool.prototype)
+      : mysql.Pool?.prototype;
+
+  instrumentConnection(connectionPrototype, true);
+  if (poolPrototype) {
+    instrumentPool(poolPrototype);
   }
 }
 
