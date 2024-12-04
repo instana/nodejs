@@ -699,20 +699,24 @@ function normalizeIgnoreEndpoints(config) {
   }
 
   if (Object.keys(ignoreEndpoints).length) {
-    for (const [service, endpoints] of Object.entries(ignoreEndpoints)) {
+    Object.entries(ignoreEndpoints).forEach(([service, endpoints]) => {
       const normalizedService = service.toLowerCase();
 
-      if (!Array.isArray(endpoints)) {
+      if (Array.isArray(endpoints)) {
+        config.tracing.ignoreEndpoints[normalizedService] = endpoints.map(endpoint =>
+          typeof endpoint === 'string' ? endpoint.toLowerCase() : endpoint
+        );
+      } else if (typeof endpoints === 'string') {
+        config.tracing.ignoreEndpoints[normalizedService] = [endpoints?.toLowerCase()];
+      } else {
         logger.warn(
-          `Invalid configuration for ${normalizedService}: tracing.ignoreEndpoints.${normalizedService} is not an array. The value will be ignored: ${JSON.stringify(
+          `Invalid configuration for ${normalizedService}: tracing.ignoreEndpoints.${normalizedService} is neither a string nor an array. Value will be ignored: ${JSON.stringify(
             endpoints
           )}`
         );
-        config.tracing.ignoreEndpoints[normalizedService] = null; // Set to null for invalid configuration
-      } else {
-        config.tracing.ignoreEndpoints[normalizedService] = endpoints.map(endpoint => endpoint?.toLowerCase());
+        config.tracing.ignoreEndpoints[normalizedService] = null;
       }
-    }
+    });
   } else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
     // The environment variable name and its format are still under discussion.
     // It is currently private and will not be documented or publicly shared.
