@@ -306,43 +306,6 @@ function instrumentAnalyticsIndexes(cluster, connectionStr) {
   cluster.analyticsIndexes = function instanaAnalyticsIndexes() {
     const analyticsIndexes = origAnalyticsIndex.apply(this, arguments);
 
-    // ['createIndex', 'getAllIndexes', 'dropIndex', 'createDataverse', 'dropDataverse'].forEach(fnName => {
-    //   shimmer.wrap(analyticsIndexes, fnName, function instanaInstrumentOperationWrapped(original) {
-    //     return function instanaInstrumentOperationWrappedInner() {
-    //       const origThis = this;
-    //       const origArgs = arguments;
-
-    //       console.log(fnName, arguments);
-
-    //       // // const obj = origArgs[0];
-
-    //       // // console.log('bucket in scope ', bkt);
-    //       let bucketName;
-    //       let getBucketTypeFn;
-
-    //       return instrumentOperation(
-    //         {
-    //           connectionStr,
-    //           sql: fnName.toUpperCase(),
-    //           resultHandler: (span, result) => {
-    //             console.log('==============', fnName, result);
-    //             if (result && result.sourceName) {
-    //               // CASE: getindex
-    //               span.data.couchbase.bucket = result.sourceName;
-    //               span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
-    //             } else if (result && Array.isArray(result) && result.length > 0) {
-    //               // CASE: getAllIndexes
-    //               span.data.couchbase.bucket = result[0].sourceName;
-    //               span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
-    //             }
-    //           }
-    //         },
-    //         original
-    //       ).apply(origThis, origArgs);
-    //     };
-    //   });
-    // });
-
     [
       'createIndex',
       'getAllIndexes',
@@ -357,62 +320,20 @@ function instrumentAnalyticsIndexes(cluster, connectionStr) {
         return function instanaInstrumentOperationWrappedInner() {
           const originalThis = this;
           const originalArgs = arguments;
-          const sqlStatement = fnName.toUpperCase();
 
           return instrumentOperation(
             {
               connectionStr,
-              sql: tracingUtil.shortenDatabaseStatement(sqlStatement),
+              sql: camelCaseToUpperWords(fnName),
               resultHandler: (span, result) => {
-                if (result && result.rows && result.rows.length > 0 && result.rows[0].BucketName) {
-                  span.data.couchbase.bucket = result.rows[0].BucketName;
+                if (result) {
+                  span.data.couchbase.bucket = result[0].BucketName;
                   span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
                 }
               }
             },
             original
           ).apply(originalThis, originalArgs);
-
-          /** **** */
-          // const origThis = this;
-          // const origArgs = arguments;
-
-          // const bucketName = fnName === 'createDataset' ? origArgs[0] : '';
-
-          // console.log(fnName, bucketName);
-
-          // const getBucketTypeFn = getBucketType(cluster, bucketName);
-
-          // return instrumentOperation(
-          //   {
-          //     connectionStr,
-          //     sql: fnName.toUpperCase(),
-          //     bucketName,
-          //     getBucketTypeFn
-          //   },
-          //   original
-          // ).apply(origThis, origArgs);
-
-          // return instrumentOperation(
-          //   {
-          //     connectionStr,
-          //     sql: fnName.toUpperCase(),
-          //     bucketName,
-          //     getBucketTypeFn,
-          //     resultHandler: (span, result) => {
-          //       if (result && result.sourceName) {
-          //         // CASE: getindex
-          //         span.data.couchbase.bucket = result.sourceName;
-          //         span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
-          //       } else if (result && Array.isArray(result) && result.length > 0) {
-          //         // CASE: getAllIndexes
-          //         span.data.couchbase.bucket = result[0].sourceName;
-          //         span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
-          //       }
-          //     }
-          //   },
-          //   original
-          // ).apply(origThis, origArgs);
         };
       });
     });
@@ -616,4 +537,9 @@ function getBucketType(c, n) {
   return () => {
     return bucketType;
   };
+}
+
+// converts the operation into query format in uppercase
+function camelCaseToUpperWords(op) {
+  return `${op.replace(/([a-z])([A-Z])/g, '$1 $2').toUpperCase()} `;
 }
