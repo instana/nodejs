@@ -566,6 +566,59 @@ describe('tracing/spanBuffer', () => {
         verifyNoBatching(span1, span2);
       });
     });
+    describe('when ignoreEndpoints is configured', () => {
+      before(() => {
+        spanBuffer.init(
+          {
+            tracing: {
+              ignoreEndpoints: { redis: ['get'] }
+            }
+          },
+          {
+            /* downstreamConnection */
+            sendSpans: function () {}
+          }
+        );
+      });
+
+      beforeEach(() => spanBuffer.activate());
+
+      afterEach(() => spanBuffer.deactivate());
+      const span = {
+        t: '1234567803',
+        s: '1234567892',
+        p: '1234567891',
+        n: 'redis',
+        k: 2,
+        data: {
+          redis: {
+            operation: 'get'
+          }
+        }
+      };
+
+      it('should ignore the redis span when the operation is listed in the ignoreEndpoints config', () => {
+        spanBuffer.addSpan(span);
+        const spans = spanBuffer.getAndResetSpans();
+        expect(spans).to.have.lengthOf(0);
+      });
+
+      it('should transform the redis span if the operation is not specified in the ignoreEndpoints config', () => {
+        span.data.redis.operation = 'set';
+        spanBuffer.addSpan(span);
+        const spans = spanBuffer.getAndResetSpans();
+        expect(spans).to.have.lengthOf(1);
+        expect(span.data.redis.command).to.equal('set');
+        expect(span.data.redis).to.not.have.property('operation');
+      });
+      it('should return the span unmodified for unsupported ignore endpoints', () => {
+        span.n = 'http';
+        spanBuffer.addSpan(span);
+        const spans = spanBuffer.getAndResetSpans();
+        expect(spans).to.have.lengthOf(1);
+        expect(span).to.deep.equal(span);
+      });
+    });
   });
 
   function timestamp(offset) {

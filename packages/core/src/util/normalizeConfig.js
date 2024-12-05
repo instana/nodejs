@@ -27,6 +27,7 @@ const constants = require('../tracing/constants');
  * @property {boolean} [disableW3cTraceCorrelation]
  * @property {KafkaTracingOptions} [kafka]
  * @property {boolean} [allowRootExitSpan]
+ * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
  */
 
 /**
@@ -71,6 +72,7 @@ const constants = require('../tracing/constants');
  * @property {AgentTracingHttpConfig} [http]
  * @property {AgentTracingKafkaConfig} [kafka]
  * @property {boolean|string} [spanBatchingEnabled]
+ * @property {import('../tracing').IgnoreEndpoints|{}} [ignoreEndpoints]
  */
 
 /**
@@ -117,7 +119,8 @@ const defaults = {
     disableW3cTraceCorrelation: false,
     kafka: {
       traceCorrelation: true
-    }
+    },
+    ignoreEndpoints: {}
   },
   secrets: {
     matcherMode: 'contains-ignore-case',
@@ -218,6 +221,7 @@ function normalizeTracingConfig(config) {
   normalizeDisableW3cTraceCorrelation(config);
   normalizeTracingKafka(config);
   normalizeAllowRootExitSpan(config);
+  normalizeIgnoreEndpoints(config);
 }
 
 /**
@@ -673,4 +677,59 @@ function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) 
     return defaultValue;
   }
   return configValue;
+}
+/**
+ * @param {InstanaConfig} config
+ */
+function normalizeIgnoreEndpoints(config) {
+  if (!config.tracing.ignoreEndpoints) {
+    config.tracing.ignoreEndpoints = {};
+  }
+
+  const ignoreEndpoints = config.tracing.ignoreEndpoints;
+
+  if (typeof ignoreEndpoints !== 'object' || Array.isArray(ignoreEndpoints)) {
+    logger.warn(
+      `Invalid tracing.ignoreEndpoints configuration. Expected an object, but received: ${JSON.stringify(
+        ignoreEndpoints
+      )}`
+    );
+    config.tracing.ignoreEndpoints = {};
+    return;
+  }
+
+  if (Object.keys(ignoreEndpoints).length) {
+    Object.entries(ignoreEndpoints).forEach(([service, endpoints]) => {
+      const normalizedService = service.toLowerCase();
+
+      if (Array.isArray(endpoints)) {
+        config.tracing.ignoreEndpoints[normalizedService] = endpoints.map(endpoint =>
+          typeof endpoint === 'string' ? endpoint.toLowerCase() : endpoint
+        );
+      } else if (typeof endpoints === 'string') {
+        config.tracing.ignoreEndpoints[normalizedService] = [endpoints?.toLowerCase()];
+      } else {
+        logger.warn(
+          `Invalid configuration for ${normalizedService}: tracing.ignoreEndpoints.${normalizedService} is neither a string nor an array. Value will be ignored: ${JSON.stringify(
+            endpoints
+          )}`
+        );
+        config.tracing.ignoreEndpoints[normalizedService] = null;
+      }
+    });
+  } else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
+    // The environment variable name and its format are still under discussion.
+    // It is currently private and will not be documented or publicly shared.
+    try {
+      config.tracing.ignoreEndpoints = JSON.parse(process.env.INSTANA_IGNORE_ENDPOINTS);
+    } catch (error) {
+      logger.warn(
+        `Failed to parse INSTANA_IGNORE_ENDPOINTS: ${process.env.INSTANA_IGNORE_ENDPOINTS}. Error: ${error.message}`
+      );
+    }
+  } else {
+    return;
+  }
+
+  logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
 }

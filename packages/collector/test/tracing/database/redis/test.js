@@ -852,6 +852,160 @@ const globalAgent = require('../../../globalAgent');
               });
             }
           });
+          mochaSuiteFn('ignore-endpoints:', function () {
+            describe('when ignore-endpoints is enabled via agent configuration', () => {
+              const { AgentStubControls } = require('../../../apps/agentStubControls');
+              const customAgentControls = new AgentStubControls();
+              let controls;
+              before(async () => {
+                await customAgentControls.startAgent({
+                  ignoreEndpoints: { redis: 'get|set' }
+                });
+
+                controls = new ProcessControls({
+                  agentControls: customAgentControls,
+                  appPath:
+                    redisVersion === 'latest' ? path.join(__dirname, 'app.js') : path.join(__dirname, 'legacyApp.js'),
+                  env: {
+                    REDIS_VERSION: redisVersion,
+                    REDIS_PKG: redisPkg
+                  }
+                });
+                await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
+              });
+
+              beforeEach(async () => {
+                await customAgentControls.clearReceivedTraceData();
+              });
+
+              after(async () => {
+                await customAgentControls.stopAgent();
+                await controls.stop();
+              });
+
+              it('should ignore redis spans for ignored endpoints (get, set)', async () => {
+                await controls
+                  .sendRequest({
+                    method: 'POST',
+                    path: '/values',
+                    qs: {
+                      key: 'discount',
+                      value: 50
+                    }
+                  })
+                  .then(async () => {
+                    return retry(async () => {
+                      const spans = await customAgentControls.getSpans();
+                      // 1 x http entry span
+                      // 1 x http client span
+                      expect(spans.length).to.equal(2);
+                      spans.forEach(span => {
+                        expect(span.n).not.to.equal('redis');
+                      });
+                    });
+                  });
+              });
+            });
+            describe('ignore-endpoints enabled via tracing config', async () => {
+              globalAgent.setUpCleanUpHooks();
+              let controls;
+
+              before(async () => {
+                controls = new ProcessControls({
+                  useGlobalAgent: true,
+                  appPath:
+                    redisVersion === 'latest' ? path.join(__dirname, 'app.js') : path.join(__dirname, 'legacyApp.js'),
+                  env: {
+                    REDIS_VERSION: redisVersion,
+                    REDIS_PKG: redisPkg,
+                    INSTANA_IGNORE_ENDPOINTS: '{"redis": ["get","set"]}'
+                  }
+                });
+                await controls.start();
+              });
+
+              beforeEach(async () => {
+                await agentControls.clearReceivedTraceData();
+              });
+
+              before(async () => {
+                await controls.sendRequest({
+                  method: 'POST',
+                  path: '/clearkeys'
+                });
+              });
+
+              after(async () => {
+                await controls.stop();
+              });
+
+              afterEach(async () => {
+                await controls.clearIpcMessages();
+              });
+              it('should ignore spans for configured ignore endpoints(get,set)', async function () {
+                await controls
+                  .sendRequest({
+                    method: 'POST',
+                    path: '/values',
+                    qs: {
+                      key: 'price',
+                      value: 42
+                    }
+                  })
+                  .then(() =>
+                    controls.sendRequest({
+                      method: 'GET',
+                      path: '/values',
+                      qs: {
+                        key: 'price'
+                      }
+                    })
+                  )
+                  .then(async response => {
+                    expect(String(response)).to.equal('42');
+
+                    return retry(async () => {
+                      const spans = await agentControls.getSpans();
+                      // 2 x http entry span
+                      // 2 x http client span
+                      expect(spans.length).to.equal(4);
+
+                      spans.forEach(span => {
+                        expect(span.n).not.to.equal('redis');
+                      });
+
+                      expectAtLeastOneMatching(spans, [
+                        span => expect(span.n).to.equal('node.http.server'),
+                        span => expect(span.data.http.method).to.equal('POST')
+                      ]);
+
+                      expectAtLeastOneMatching(spans, [
+                        span => expect(span.n).to.equal('node.http.server'),
+                        span => expect(span.data.http.method).to.equal('GET')
+                      ]);
+                    });
+                  });
+              });
+              it('should not ignore spans for endpoints that are not in the ignore list', async () => {
+                await controls
+                  .sendRequest({
+                    method: 'GET',
+                    path: '/hset-hget'
+                  })
+                  .then(async () => {
+                    return retry(async () => {
+                      const spans = await agentControls.getSpans();
+                      // 1 x http entry span
+                      // 1 x http client span
+                      // 1 x redis hSet span
+                      // 1 x redis hGetAll span
+                      expect(spans.length).to.equal(4);
+                      expect(spans.some(span => span.n === 'redis')).to.be.true;
+                    });
+                  });
+              });
+            });
+          });
         });
 
         function verifyHttpExit(controls, spans, parent) {

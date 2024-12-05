@@ -61,7 +61,7 @@ function instrumentSendCommand(original) {
     if (
       parentSpan &&
       parentSpan.n === exports.spanName &&
-      (parentSpan.data.redis.command === 'multi' || parentSpan.data.redis.command === 'pipeline') &&
+      (parentSpan.data.redis.operation === 'multi' || parentSpan.data.redis.operation === 'pipeline') &&
       command.name !== 'multi'
     ) {
       const parentSpanSubCommands = (parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || []);
@@ -88,7 +88,7 @@ function instrumentSendCommand(original) {
 
       span.data.redis = {
         connection,
-        command: command.name.toLowerCase()
+        operation: command.name.toLowerCase()
       };
 
       callback = cls.ns.bind(onResult);
@@ -157,7 +157,7 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
     span.stack = tracingUtil.getStackTrace(wrappedInternalMultiOrPipelineCommand);
     span.data.redis = {
       connection,
-      command: commandName
+      operation: commandName
     };
 
     const multiOrPipeline = original.apply(this, arguments);

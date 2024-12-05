@@ -471,6 +471,46 @@ describe('util.normalizeConfig', () => {
     const config = normalizeConfig();
     expect(config.tracing.allowRootExitSpan).to.equal(true);
   });
+  it('should not set ignore endpoints tracers by default', () => {
+    const config = normalizeConfig();
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({});
+  });
+
+  it('should apply ignore endpoints if the INSTANA_IGNORE_ENDPOINTS is set and valid', () => {
+    process.env.INSTANA_IGNORE_ENDPOINTS = '{"redis": ["get", "set"]}';
+    const config = normalizeConfig();
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get', 'set'] });
+  });
+
+  it('should fallback to default if INSTANA_IGNORE_ENDPOINTS is set but has an invalid format', () => {
+    process.env.INSTANA_IGNORE_ENDPOINTS = '"redis": ["get", "set"]';
+    const config = normalizeConfig();
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({});
+  });
+  it('should apply ignore endpoints via config', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: { redis: ['get'] }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get'] });
+  });
+  it('should apply multiple ignore endpoints via config', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: { redis: ['GET', 'TYPE'] }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get', 'type'] });
+  });
+  it('should apply ignore endpoints via config for multiple packages', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: { redis: ['get'], dynamodb: ['querey'] }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get'], dynamodb: ['querey'] });
+  });
 
   function checkDefaults(config) {
     expect(config).to.be.an('object');

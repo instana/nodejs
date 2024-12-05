@@ -1281,4 +1281,142 @@ function checkConnection(span, setupType) {
       });
     }
   });
+  mochaSuiteFn('ignore-endpoints:', function () {
+    describe('when ignore-endpoints is enabled via agent configuration', () => {
+      const { AgentStubControls } = require('../../../apps/agentStubControls');
+      const customAgentControls = new AgentStubControls();
+      let controls;
+
+      before(async () => {
+        await customAgentControls.startAgent({
+          ignoreEndpoints: { redis: 'get|set' }
+        });
+
+        controls = new ProcessControls({
+          agentControls: customAgentControls,
+          dirname: __dirname
+        });
+        await controls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await customAgentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await customAgentControls.stopAgent();
+        await controls.stop();
+      });
+
+      it('should ignore redis spans for ignored endpoints (get, set)', async () => {
+        await controls
+          .sendRequest({
+            method: 'POST',
+            path: '/values',
+            qs: {
+              key: 'discount',
+              value: 50
+            }
+          })
+          .then(async () => {
+            return retry(async () => {
+              const spans = await customAgentControls.getSpans();
+              // 1 x http entry span
+              expect(spans.length).to.equal(1);
+              spans.forEach(span => {
+                expect(span.n).not.to.equal('redis');
+              });
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.data.http.method).to.equal('POST')
+              ]);
+            });
+          });
+      });
+    });
+    describe('when ignore-endpoints is enabled via tracing configuration', async () => {
+      globalAgent.setUpCleanUpHooks();
+      const agentControls = globalAgent.instance;
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          useGlobalAgent: true,
+          dirname: __dirname,
+          env: {
+            INSTANA_IGNORE_ENDPOINTS: '{"redis": ["get"]}'
+          }
+        });
+        await controls.start();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
+      it('should ignore spans for ignored endpoint (get)', async function () {
+        await controls
+          .sendRequest({
+            method: 'GET',
+            path: '/values',
+            qs: {
+              key: 'discount',
+              value: 50
+            }
+          })
+
+          .then(async () => {
+            return retry(async () => {
+              const spans = await agentControls.getSpans();
+              // 1 x http entry span
+              expect(spans.length).to.equal(1);
+              spans.forEach(span => {
+                expect(span.n).not.to.equal('redis');
+              });
+
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.data.http.method).to.equal('GET')
+              ]);
+            });
+          });
+      });
+      it('should not ignore spans for endpoints that are not in the ignore list', async () => {
+        await controls
+          .sendRequest({
+            method: 'POST',
+            path: '/values',
+            qs: {
+              key: 'discount',
+              value: 50
+            }
+          })
+          .then(async () => {
+            return retry(async () => {
+              const spans = await agentControls.getSpans();
+              expect(spans.length).to.equal(2);
+
+              const entrySpan = expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.data.http.method).to.equal('POST')
+              ]);
+
+              expectExactlyOneMatching(spans, [
+                span => expect(span.t).to.equal(entrySpan.t),
+                span => expect(span.p).to.equal(entrySpan.s),
+                span => expect(span.n).to.equal('redis'),
+                span => expect(span.data.redis.command).to.equal('set')
+              ]);
+            });
+          });
+      });
+    });
+  });
 });

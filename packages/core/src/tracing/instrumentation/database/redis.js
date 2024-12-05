@@ -241,7 +241,7 @@ function instrumentCommand(original, command, address, cbStyle) {
 
       span.data.redis = {
         connection: address || origCtx.address,
-        command
+        operation: command
       };
 
       let userProvidedCallback;
@@ -323,7 +323,7 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
     span.data.redis = {
       connection: address,
       // pipeline = batch
-      command: isAtomic ? 'multi' : 'pipeline'
+      operation: isAtomic ? 'multi' : 'pipeline'
     };
 
     const subCommands = (span.data.redis.subCommands = []);
