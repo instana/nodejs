@@ -48,8 +48,8 @@ exports.init = function init() {
 // CRUD operations:
 // https://github.com/couchbase/couchnode/blob/e855b094cd1b0140ffefc40f32a828b9134d181c/src/connection_autogen.cpp#L210
 function instrument(cb) {
-  // cb.RawBinaryTranscoder is added in v4.4.4,
-  // so inorder to distinguish version with v4.4.3 and lesser, we can rely on this
+  // RawBinaryTranscoder function is added in v4.4.4,
+  // so inorder to check version, we can rely on this logic
   instrumentV444 = typeof cb.RawBinaryTranscoder === 'function';
 
   // NOTE: we could instrument `cb.Collection.prototype` here, but we want to instrument each cluster connection.
@@ -124,7 +124,7 @@ function instrumentCluster(cluster, connectionStr) {
   });
 
   if (instrumentV444) {
-    // #### ANALYTICS SERVICES (.analyticsIndexes().)
+    // #### ANALYTICS SERVICES (.analyticsIndexes().) v >= 4.4.4
     instrumentAnalyticsIndexes(cluster, connectionStr);
   } else {
     // #### ANALYTICS SERVICE (.analyticsIndexes().) v <= 4.4.3
