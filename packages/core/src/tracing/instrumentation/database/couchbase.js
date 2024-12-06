@@ -23,6 +23,8 @@ exports.deactivate = function deactivate() {
   isActive = false;
 };
 
+let instrumentV444 = false;
+
 exports.init = function init() {
   hook.onModuleLoad('couchbase', instrument);
 
@@ -46,6 +48,10 @@ exports.init = function init() {
 // CRUD operations:
 // https://github.com/couchbase/couchnode/blob/e855b094cd1b0140ffefc40f32a828b9134d181c/src/connection_autogen.cpp#L210
 function instrument(cb) {
+  // RawBinaryTranscoder function is added in v4.4.4,
+  // so inorder to check version, we can rely on this logic
+  instrumentV444 = typeof cb.RawBinaryTranscoder === 'function';
+
   // NOTE: we could instrument `cb.Collection.prototype` here, but we want to instrument each cluster connection.
   shimmer.wrap(cb, 'connect', instrumentConnect);
 }
@@ -117,28 +123,33 @@ function instrumentCluster(cluster, connectionStr) {
     };
   });
 
-  // #### ANALYTICS SERVICE
-  shimmer.wrap(cluster, 'analyticsQuery', function instanaClusterAnalyticsQuery(original) {
-    return function instanaClusterAnalyticsQueryWrapped() {
-      const originalThis = this;
-      const originalArgs = arguments;
-      const sqlStatement = originalArgs[0] || '';
+  if (instrumentV444) {
+    // #### ANALYTICS SERVICES (.analyticsIndexes().) v >= 4.4.4
+    instrumentAnalyticsIndexes(cluster, connectionStr);
+  } else {
+    // #### ANALYTICS SERVICE (.analyticsIndexes().) v <= 4.4.3
+    shimmer.wrap(cluster, 'analyticsQuery', function instanaClusterAnalyticsQuery(original) {
+      return function instanaClusterAnalyticsQueryWrapped() {
+        const originalThis = this;
+        const originalArgs = arguments;
+        const sqlStatement = originalArgs[0] || '';
 
-      return instrumentOperation(
-        {
-          connectionStr,
-          sql: tracingUtil.shortenDatabaseStatement(sqlStatement),
-          resultHandler: (span, result) => {
-            if (result && result.rows && result.rows.length > 0 && result.rows[0].BucketName) {
-              span.data.couchbase.bucket = result.rows[0].BucketName;
-              span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
+        return instrumentOperation(
+          {
+            connectionStr,
+            sql: tracingUtil.shortenDatabaseStatement(sqlStatement),
+            resultHandler: (span, result) => {
+              if (result && result.rows && result.rows.length > 0 && result.rows[0].BucketName) {
+                span.data.couchbase.bucket = result.rows[0].BucketName;
+                span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
+              }
             }
-          }
-        },
-        original
-      ).apply(originalThis, originalArgs);
-    };
-  });
+          },
+          original
+        ).apply(originalThis, originalArgs);
+      };
+    });
+  }
 }
 
 function instrumentCollection(cluster, connectionStr) {
@@ -294,6 +305,48 @@ function instrumentQueryIndexes(cluster, connectionStr) {
     });
 
     return queryIndexes;
+  };
+}
+
+function instrumentAnalyticsIndexes(cluster, connectionStr) {
+  const origAnalyticsIndex = cluster.analyticsIndexes;
+
+  cluster.analyticsIndexes = function instanaAnalyticsIndexes() {
+    const analyticsIndexes = origAnalyticsIndex.apply(this, arguments);
+
+    [
+      'createIndex',
+      'getAllIndexes',
+      'dropIndex',
+      'createDataverse',
+      'dropDataverse',
+      'createDataset',
+      'getAllDatasets',
+      'dropDataset'
+    ].forEach(fnName => {
+      shimmer.wrap(analyticsIndexes, fnName, function instanaInstrumentOperationWrapped(original) {
+        return function instanaInstrumentOperationWrappedInner() {
+          const originalThis = this;
+          const originalArgs = arguments;
+
+          return instrumentOperation(
+            {
+              connectionStr,
+              sql: camelCaseToUpperWords(fnName),
+              resultHandler: (span, result) => {
+                if (result) {
+                  span.data.couchbase.bucket = result[0].BucketName;
+                  span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
+                }
+              }
+            },
+            original
+          ).apply(originalThis, originalArgs);
+        };
+      });
+    });
+
+    return analyticsIndexes;
   };
 }
 
@@ -492,4 +545,9 @@ function getBucketType(c, n) {
   return () => {
     return bucketType;
   };
+}
+
+// converts the operation into query format in uppercase
+function camelCaseToUpperWords(op) {
+  return `${op.replace(/([a-z])([A-Z])/g, '$1 $2').toUpperCase()} `;
 }
