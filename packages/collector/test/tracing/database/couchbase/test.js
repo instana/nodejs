@@ -149,408 +149,254 @@ async function configureCouchbase() {
   }
 }
 
-// NOTE: it takes 1-2 minutes till the couchbase server can be reached via docker
-mochaSuiteFn('tracing/couchbase', function () {
-  this.timeout(config.getTestTimeout() * 4);
+const couchbaseVersions = ['latest', 'v443'];
 
-  globalAgent.setUpCleanUpHooks();
-  const agentControls = globalAgent.instance;
+couchbaseVersions.forEach(version => {
+  // NOTE: it takes 1-2 minutes till the couchbase server can be reached via docker
+  mochaSuiteFn(`tracing/couchbase@${version}`, function () {
+    this.timeout(config.getTestTimeout() * 4);
 
-  let controls;
+    globalAgent.setUpCleanUpHooks();
+    const agentControls = globalAgent.instance;
 
-  before(async () => {
-    await configureCouchbase();
+    let controls;
 
-    controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        COUCHBASE_CONN_STR_1: connStr1,
-        COUCHBASE_CONN_STR_2: connStr2
-      }
+    before(async () => {
+      await configureCouchbase();
+
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          COUCHBASE_CONN_STR_1: connStr1,
+          COUCHBASE_CONN_STR_2: connStr2,
+          COUCHBASE_VERSION: version
+        }
+      });
+
+      // The operations for bootstrapping & cleanup can take a while.
+      await controls.startAndWaitForAgentConnection(1000, Date.now() + 60 * 1000);
     });
 
-    // The operations for bootstrapping & cleanup can take a while.
-    await controls.startAndWaitForAgentConnection(1000, Date.now() + 60 * 1000);
-  });
+    beforeEach(async () => {
+      await delay(2000);
+      await agentControls.clearReceivedTraceData();
+    });
 
-  beforeEach(async () => {
-    await delay(2000);
-    await agentControls.clearReceivedTraceData();
-  });
+    after(async () => {
+      await controls.stop();
+    });
 
-  after(async () => {
-    await controls.stop();
-  });
-
-  ['promise', 'callback'].forEach(apiType => {
-    describe(apiType, function () {
-      it('[crud] must trace get', () =>
-        controls
-          .sendRequest({
-            method: 'get',
-            path: `/get-${apiType}`
-          })
-          .then(resp => {
-            if (resp.err) {
-              throw new Error(resp.err);
-            }
-
-            expect(resp.result).to.eql({ foo: 1, bar: 2 });
-
-            return retry(() =>
-              verifySpans(agentControls, controls, {
-                spanLength: 3,
-                verifyCustom: (entrySpan, spans) => {
-                  expectExactlyOneMatching(spans, verifyCouchbaseSpan(controls, entrySpan));
-
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('node.http.client'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    span => expect(span.async).to.not.exist,
-                    span => expect(span.error).to.not.exist,
-                    span => expect(span.ec).to.equal(0),
-                    span => expect(span.data.http.method).to.equal('GET'),
-                    span => expect(span.data.http.url).to.contain('/'),
-                    span => expect(span.data.http.status).to.equal(200)
-                  ]);
-                }
-              })
-            );
-          }));
-
-      it('[crud] must trace two different buckets', () =>
-        controls
-          .sendRequest({
-            method: 'get',
-            path: `/get-buckets-${apiType}`
-          })
-          .then(resp => {
-            if (resp.err) {
-              throw new Error(resp.err);
-            }
-
-            expect(resp.success).to.eql(true);
-
-            return retry(() =>
-              verifySpans(agentControls, controls, {
-                spanLength: 3,
-                verifyCustom: (entrySpan, spans) => {
-                  expectExactlyOneMatching(spans, verifyCouchbaseSpan(controls, entrySpan));
-
-                  expectExactlyOneMatching(
-                    spans,
-                    verifyCouchbaseSpan(controls, entrySpan, { bucket: 'companies', type: 'ephemeral', sql: 'INSERT' })
-                  );
-                }
-              })
-            );
-          }));
-
-      it('[crud] must trace getAndTouch', () =>
-        controls
-          .sendRequest({
-            method: 'post',
-            path: `/getAndTouch-${apiType}`
-          })
-          .then(resp => {
-            if (resp.err) {
-              throw new Error(resp.err);
-            }
-
-            expect(resp.success).to.eql(true);
-            return retry(() => verifySpans(agentControls, controls, { sql: 'GETANDTOUCH' }));
-          }));
-
-      it('[crud] must trace replace', () =>
-        controls
-          .sendRequest({
-            method: 'post',
-            path: `/replace-${apiType}`
-          })
-          .then(resp => {
-            if (resp.err) {
-              throw new Error(resp.err);
-            }
-
-            expect(resp.result).to.eql('replacedvalue');
-
-            return retry(() =>
-              verifySpans(agentControls, controls, {
-                spanLength: 3,
-                verifyCustom: (entrySpan, spans) => {
-                  expectExactlyOneMatching(
-                    spans,
-                    verifyCouchbaseSpan(controls, entrySpan, { bucket: 'projects', type: 'membase', sql: 'REPLACE' })
-                  );
-
-                  expectExactlyOneMatching(spans, verifyCouchbaseSpan(controls, entrySpan));
-                }
-              })
-            );
-          }));
-
-      it('[crud] must trace insert', () =>
-        controls
-          .sendRequest({
-            method: 'post',
-            path: `/insert-${apiType}`
-          })
-          .then(resp => {
-            if (resp.err) {
-              throw new Error(resp.err);
-            }
-
-            expect(resp.success).to.eql(true);
-            return retry(() => verifySpans(agentControls, controls, { sql: 'INSERT' }));
-          }));
-
-      it('[crud] must trace upsert', () =>
-        controls
-          .sendRequest({
-            method: 'post',
-            path: `/upsert-${apiType}`
-          })
-          .then(resp => {
-            if (resp.err) {
-              throw new Error(resp.err);
-            }
-
-            expect(resp.success).to.eql(true);
-            return retry(() => verifySpans(agentControls, controls, { sql: 'UPSERT' }));
-          }));
-
-      it('[crud] must trace mutateIn', () =>
-        controls
-          .sendRequest({
-            method: 'post',
-            path: `/mutateIn-${apiType}`
-          })
-          .then(resp => {
-            if (resp.err) {
-              throw new Error(resp.err);
-            }
-
-            expect(resp.success).to.eql(true);
-            return retry(() => verifySpans(agentControls, controls, { sql: 'MUTATEIN' }));
-          }));
-
-      it('[crud] must trace lookupIn', () =>
-        controls
-          .sendRequest({
-            method: 'get',
-            path: `/lookupIn-${apiType}`
-          })
-          .then(resp => {
-            if (resp.err) {
-              throw new Error(resp.err);
-            }
-
-            expect(resp.result).to.eql(2);
-            return retry(() => verifySpans(agentControls, controls, { sql: 'LOOKUPIN' }));
-          }));
-
-      it('[crud] must trace exists', () =>
-        controls
-          .sendRequest({
-            method: 'get',
-            path: `/exists-${apiType}`
-          })
-          .then(resp => {
-            if (resp.err) {
-              throw new Error(resp.err);
-            }
-
-            expect(resp.result).to.eql(true);
-            return retry(() => verifySpans(agentControls, controls, { sql: 'EXISTS' }));
-          }));
-
-      it('[crud] must trace remove', () =>
-        controls
-          .sendRequest({
-            method: 'post',
-            path: `/remove-${apiType}`
-          })
-          .then(resp => {
-            if (resp.err) {
-              throw new Error(resp.err);
-            }
-
-            expect(resp.success).to.eql(true);
-            return retry(() => verifySpans(agentControls, controls, { sql: 'REMOVE' }));
-          }));
-
-      it('[searchIndexes] must trace', () =>
-        controls
-          .sendRequest({
-            method: 'post',
-            path: `/searchindexes-${apiType}`
-          })
-          .then(resp => {
-            if (resp.err) {
-              throw new Error(resp.err);
-            }
-
-            expect(resp.success).to.eql(true);
-
-            return retry(() =>
-              verifySpans(agentControls, controls, {
-                spanLength: 5,
-                verifyCustom: (entrySpan, spans) => {
-                  expectExactlyOneMatching(
-                    spans,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: 'projects',
-                      type: 'membase',
-                      sql: 'UPSERTINDEX'
-                    })
-                  );
-                  expectExactlyOneMatching(
-                    spans,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: 'projects',
-                      type: 'membase',
-                      sql: 'GETINDEX'
-                    })
-                  );
-                  expectExactlyOneMatching(
-                    spans,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: 'projects',
-                      type: 'membase',
-                      sql: 'GETALLINDEXES'
-                    })
-                  );
-                  expectExactlyOneMatching(
-                    spans,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: '',
-                      type: '',
-                      sql: 'DROPINDEX'
-                    })
-                  );
-                }
-              })
-            );
-          }));
-
-      it('[analyticsindexes] must trace', () =>
-        controls
-          .sendRequest({
-            method: 'post',
-            path: `/analyticsindexes-${apiType}`
-          })
-          .then(resp => {
-            if (resp.err) {
-              throw new Error(resp.err);
-            }
-
-            expect(resp.success).to.eql(true);
-
-            return retry(() =>
-              verifySpans(agentControls, controls, {
-                spanLength: 9,
-                verifyCustom: (entrySpan, spans) => {
-                  expectExactlyNMatching(
-                    spans,
-                    1,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: '',
-                      type: '',
-                      sql: 'CREATE DATAVERSE '
-                    })
-                  );
-                  expectExactlyNMatching(
-                    spans,
-                    1,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: '',
-                      type: '',
-                      sql: 'CREATE DATASET '
-                    })
-                  );
-                  expectExactlyNMatching(
-                    spans,
-                    1,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: '',
-                      type: '',
-                      sql: 'CREATE INDEX '
-                    })
-                  );
-                  expectExactlyNMatching(
-                    spans,
-                    1,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: '',
-                      type: '',
-                      sql: 'DROP INDEX '
-                    })
-                  );
-                  expectExactlyNMatching(
-                    spans,
-                    1,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: '',
-                      type: '',
-                      sql: 'DROP DATASET '
-                    })
-                  );
-                  expectExactlyNMatching(
-                    spans,
-                    1,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: '',
-                      type: '',
-                      sql: 'DROP DATAVERSE '
-                    })
-                  );
-                }
-              })
-            );
-          }));
-
-      it('[searchquery] must trace', () =>
-        controls
-          .sendRequest({
-            method: 'get',
-            path: `/searchquery-${apiType}`
-          })
-          .then(resp => {
-            if (resp.err) {
-              throw new Error(resp.err);
-            }
-
-            expect(resp.success).to.eql(true);
-
-            return retry(() =>
-              verifySpans(agentControls, controls, {
-                spanLength: 4,
-                verifyCustom: (entrySpan, spans) => {
-                  expectExactlyOneMatching(
-                    spans,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: '',
-                      type: '',
-                      sql: 'SEARCHQUERY'
-                    })
-                  );
-                }
-              })
-            );
-          }));
-
-      // NOTE: callbacks for transactions are not supported.
-      if (apiType === 'promise') {
-        it('must trace transactions', () =>
+    ['promise', 'callback'].forEach(apiType => {
+      describe(apiType, function () {
+        it('[crud] must trace get', () =>
           controls
             .sendRequest({
               method: 'get',
-              path: `/transactions-${apiType}`
+              path: `/get-${apiType}`
+            })
+            .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
+              expect(resp.result).to.eql({ foo: 1, bar: 2 });
+
+              return retry(() =>
+                verifySpans(agentControls, controls, {
+                  spanLength: 3,
+                  verifyCustom: (entrySpan, spans) => {
+                    expectExactlyOneMatching(spans, verifyCouchbaseSpan(controls, entrySpan));
+
+                    expectExactlyOneMatching(spans, [
+                      span => expect(span.t).to.equal(entrySpan.t),
+                      span => expect(span.p).to.equal(entrySpan.s),
+                      span => expect(span.n).to.equal('node.http.client'),
+                      span => expect(span.k).to.equal(constants.EXIT),
+                      span => expect(span.f.e).to.equal(String(controls.getPid())),
+                      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                      span => expect(span.async).to.not.exist,
+                      span => expect(span.error).to.not.exist,
+                      span => expect(span.ec).to.equal(0),
+                      span => expect(span.data.http.method).to.equal('GET'),
+                      span => expect(span.data.http.url).to.contain('/'),
+                      span => expect(span.data.http.status).to.equal(200)
+                    ]);
+                  }
+                })
+              );
+            }));
+
+        it('[crud] must trace two different buckets', () =>
+          controls
+            .sendRequest({
+              method: 'get',
+              path: `/get-buckets-${apiType}`
+            })
+            .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
+              expect(resp.success).to.eql(true);
+
+              return retry(() =>
+                verifySpans(agentControls, controls, {
+                  spanLength: 3,
+                  verifyCustom: (entrySpan, spans) => {
+                    expectExactlyOneMatching(spans, verifyCouchbaseSpan(controls, entrySpan));
+
+                    expectExactlyOneMatching(
+                      spans,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        bucket: 'companies',
+                        type: 'ephemeral',
+                        sql: 'INSERT'
+                      })
+                    );
+                  }
+                })
+              );
+            }));
+
+        it('[crud] must trace getAndTouch', () =>
+          controls
+            .sendRequest({
+              method: 'post',
+              path: `/getAndTouch-${apiType}`
+            })
+            .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
+              expect(resp.success).to.eql(true);
+              return retry(() => verifySpans(agentControls, controls, { sql: 'GETANDTOUCH' }));
+            }));
+
+        it('[crud] must trace replace', () =>
+          controls
+            .sendRequest({
+              method: 'post',
+              path: `/replace-${apiType}`
+            })
+            .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
+              expect(resp.result).to.eql('replacedvalue');
+
+              return retry(() =>
+                verifySpans(agentControls, controls, {
+                  spanLength: 3,
+                  verifyCustom: (entrySpan, spans) => {
+                    expectExactlyOneMatching(
+                      spans,
+                      verifyCouchbaseSpan(controls, entrySpan, { bucket: 'projects', type: 'membase', sql: 'REPLACE' })
+                    );
+
+                    expectExactlyOneMatching(spans, verifyCouchbaseSpan(controls, entrySpan));
+                  }
+                })
+              );
+            }));
+
+        it('[crud] must trace insert', () =>
+          controls
+            .sendRequest({
+              method: 'post',
+              path: `/insert-${apiType}`
+            })
+            .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
+              expect(resp.success).to.eql(true);
+              return retry(() => verifySpans(agentControls, controls, { sql: 'INSERT' }));
+            }));
+
+        it('[crud] must trace upsert', () =>
+          controls
+            .sendRequest({
+              method: 'post',
+              path: `/upsert-${apiType}`
+            })
+            .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
+              expect(resp.success).to.eql(true);
+              return retry(() => verifySpans(agentControls, controls, { sql: 'UPSERT' }));
+            }));
+
+        it('[crud] must trace mutateIn', () =>
+          controls
+            .sendRequest({
+              method: 'post',
+              path: `/mutateIn-${apiType}`
+            })
+            .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
+              expect(resp.success).to.eql(true);
+              return retry(() => verifySpans(agentControls, controls, { sql: 'MUTATEIN' }));
+            }));
+
+        it('[crud] must trace lookupIn', () =>
+          controls
+            .sendRequest({
+              method: 'get',
+              path: `/lookupIn-${apiType}`
+            })
+            .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
+              expect(resp.result).to.eql(2);
+              return retry(() => verifySpans(agentControls, controls, { sql: 'LOOKUPIN' }));
+            }));
+
+        it('[crud] must trace exists', () =>
+          controls
+            .sendRequest({
+              method: 'get',
+              path: `/exists-${apiType}`
+            })
+            .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
+              expect(resp.result).to.eql(true);
+              return retry(() => verifySpans(agentControls, controls, { sql: 'EXISTS' }));
+            }));
+
+        it('[crud] must trace remove', () =>
+          controls
+            .sendRequest({
+              method: 'post',
+              path: `/remove-${apiType}`
+            })
+            .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
+              expect(resp.success).to.eql(true);
+              return retry(() => verifySpans(agentControls, controls, { sql: 'REMOVE' }));
+            }));
+
+        it('[searchIndexes] must trace', () =>
+          controls
+            .sendRequest({
+              method: 'post',
+              path: `/searchindexes-${apiType}`
             })
             .then(resp => {
               if (resp.err) {
@@ -566,28 +412,33 @@ mochaSuiteFn('tracing/couchbase', function () {
                     expectExactlyOneMatching(
                       spans,
                       verifyCouchbaseSpan(controls, entrySpan, {
-                        sql: 'GET'
+                        bucket: 'projects',
+                        type: 'membase',
+                        sql: 'UPSERTINDEX'
                       })
                     );
                     expectExactlyOneMatching(
                       spans,
                       verifyCouchbaseSpan(controls, entrySpan, {
-                        sql: 'INSERT'
+                        bucket: 'projects',
+                        type: 'membase',
+                        sql: 'GETINDEX'
                       })
                     );
                     expectExactlyOneMatching(
                       spans,
                       verifyCouchbaseSpan(controls, entrySpan, {
-                        sql: 'REMOVE'
+                        bucket: 'projects',
+                        type: 'membase',
+                        sql: 'GETALLINDEXES'
                       })
                     );
-
                     expectExactlyOneMatching(
                       spans,
                       verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: '',
                         type: '',
-                        sql: 'COMMIT'
+                        sql: 'DROPINDEX'
                       })
                     );
                   }
@@ -595,11 +446,109 @@ mochaSuiteFn('tracing/couchbase', function () {
               );
             }));
 
-        it('must trace transactions on rollback', () =>
+        it('[analyticsindexes] must trace', () =>
+          controls
+            .sendRequest({
+              method: 'post',
+              path: `/analyticsindexes-${apiType}`
+            })
+            .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
+              expect(resp.success).to.eql(true);
+
+              return retry(() =>
+                verifySpans(agentControls, controls, {
+                  spanLength: 9,
+                  verifyCustom: (entrySpan, spans) => {
+                    expectExactlyNMatching(
+                      spans,
+                      1,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        bucket: '',
+                        type: '',
+                        sql: 'CREATE DATAVERSE '
+                      })
+                    );
+                    expectExactlyNMatching(
+                      spans,
+                      1,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        bucket: '',
+                        type: '',
+                        sql: 'CREATE DATASET '
+                      })
+                    );
+                    expectExactlyNMatching(
+                      spans,
+                      1,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        bucket: '',
+                        type: '',
+                        sql: 'CREATE INDEX '
+                      })
+                    );
+                    expectExactlyNMatching(
+                      spans,
+                      1,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        bucket: '',
+                        type: '',
+                        sql: 'DROP INDEX '
+                      })
+                    );
+                    expectExactlyNMatching(
+                      spans,
+                      1,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        bucket: '',
+                        type: '',
+                        sql: 'DROP DATASET '
+                      })
+                    );
+                    expectExactlyNMatching(
+                      spans,
+                      1,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        bucket: '',
+                        type: '',
+                        sql: 'DROP DATAVERSE '
+                      })
+                    );
+
+                    // It is difficult to get exact query from couchbase after v4.4.4 release
+                    // as they are not generating queries from JS anymore
+                    if (version !== 'latest') {
+                      expectExactlyNMatching(
+                        spans,
+                        1,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          bucket: '',
+                          type: '',
+                          sql: 'SELECT'
+                        })
+                      );
+                      expectExactlyOneMatching(
+                        spans,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          bucket: 'projects',
+                          type: 'membase',
+                          sql: 'SELECT '
+                        })
+                      );
+                    }
+                  }
+                })
+              );
+            }));
+
+        it('[searchquery] must trace', () =>
           controls
             .sendRequest({
               method: 'get',
-              path: `/transactions-${apiType}?rollback=true`
+              path: `/searchquery-${apiType}`
             })
             .then(resp => {
               if (resp.err) {
@@ -615,129 +564,115 @@ mochaSuiteFn('tracing/couchbase', function () {
                     expectExactlyOneMatching(
                       spans,
                       verifyCouchbaseSpan(controls, entrySpan, {
-                        sql: 'GET'
-                      })
-                    );
-                    expectExactlyOneMatching(
-                      spans,
-                      verifyCouchbaseSpan(controls, entrySpan, {
-                        sql: 'INSERT'
-                      })
-                    );
-                    expectExactlyOneMatching(
-                      spans,
-                      verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: '',
                         type: '',
-                        sql: 'ROLLBACK'
+                        sql: 'SEARCHQUERY'
                       })
                     );
                   }
                 })
               );
             }));
-      }
 
-      it('[queryindexes] must trace', () =>
-        controls
-          .sendRequest({
-            method: 'post',
-            path: `/queryindexes-${apiType}`
-          })
-          .then(resp => {
-            if (resp.err) {
-              throw new Error(resp.err);
-            }
-
-            expect(resp.success).to.eql(true);
-
-            return retry(() =>
-              verifySpans(agentControls, controls, {
-                spanLength: 9,
-                verifyCustom: (entrySpan, spans) => {
-                  expectExactlyOneMatching(
-                    spans,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      sql: 'CREATEINDEX'
-                    })
-                  );
-                  expectExactlyOneMatching(
-                    spans,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: 'companies',
-                      type: 'ephemeral',
-                      sql: 'CREATEINDEX'
-                    })
-                  );
-
-                  // cluster query
-                  expectExactlyNMatching(
-                    spans,
-                    1,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: '',
-                      type: '',
-                      sql: 'SELECT * FROM projects WHERE name='
-                    })
-                  );
-
-                  // bucket query success
-                  expectExactlyNMatching(
-                    spans,
-                    1,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: 'companies',
-                      type: 'ephemeral',
-                      sql: 'SELECT * FROM _default WHERE name='
-                    })
-                  );
-
-                  // bucket query error
-                  expectExactlyNMatching(
-                    spans,
-                    1,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: 'companies',
-                      // FYI: this error msg does not come from us.
-                      error: 'bucket not found',
-                      type: 'ephemeral',
-                      sql: 'SELECT * FROM TABLE_DOES_NOT_EXIST WHERE name'
-                    })
-                  );
-
-                  expectExactlyOneMatching(
-                    spans,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      sql: 'DROPINDEX'
-                    })
-                  );
-                  expectExactlyOneMatching(
-                    spans,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: 'companies',
-                      type: 'ephemeral',
-                      sql: 'DROPINDEX'
-                    })
-                  );
-                  expectExactlyOneMatching(
-                    spans,
-                    verifyCouchbaseSpan(controls, entrySpan, {
-                      bucket: 'companies',
-                      type: 'ephemeral',
-                      sql: 'GETALLINDEXES'
-                    })
-                  );
-                }
+        // NOTE: callbacks for transactions are not supported.
+        if (apiType === 'promise') {
+          it('must trace transactions', () =>
+            controls
+              .sendRequest({
+                method: 'get',
+                path: `/transactions-${apiType}`
               })
-            );
-          }));
+              .then(resp => {
+                if (resp.err) {
+                  throw new Error(resp.err);
+                }
 
-      if (apiType === 'promise') {
-        it('[multiple connections] must trace', () =>
+                expect(resp.success).to.eql(true);
+
+                return retry(() =>
+                  verifySpans(agentControls, controls, {
+                    spanLength: 5,
+                    verifyCustom: (entrySpan, spans) => {
+                      expectExactlyOneMatching(
+                        spans,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          sql: 'GET'
+                        })
+                      );
+                      expectExactlyOneMatching(
+                        spans,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          sql: 'INSERT'
+                        })
+                      );
+                      expectExactlyOneMatching(
+                        spans,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          sql: 'REMOVE'
+                        })
+                      );
+
+                      expectExactlyOneMatching(
+                        spans,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          bucket: '',
+                          type: '',
+                          sql: 'COMMIT'
+                        })
+                      );
+                    }
+                  })
+                );
+              }));
+
+          it('must trace transactions on rollback', () =>
+            controls
+              .sendRequest({
+                method: 'get',
+                path: `/transactions-${apiType}?rollback=true`
+              })
+              .then(resp => {
+                if (resp.err) {
+                  throw new Error(resp.err);
+                }
+
+                expect(resp.success).to.eql(true);
+
+                return retry(() =>
+                  verifySpans(agentControls, controls, {
+                    spanLength: 4,
+                    verifyCustom: (entrySpan, spans) => {
+                      expectExactlyOneMatching(
+                        spans,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          sql: 'GET'
+                        })
+                      );
+                      expectExactlyOneMatching(
+                        spans,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          sql: 'INSERT'
+                        })
+                      );
+                      expectExactlyOneMatching(
+                        spans,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          bucket: '',
+                          type: '',
+                          sql: 'ROLLBACK'
+                        })
+                      );
+                    }
+                  })
+                );
+              }));
+        }
+
+        it('[queryindexes] must trace', () =>
           controls
             .sendRequest({
-              method: 'get',
-              path: `/multiple-connections-${apiType}`
+              method: 'post',
+              path: `/queryindexes-${apiType}`
             })
             .then(resp => {
               if (resp.err) {
@@ -748,111 +683,78 @@ mochaSuiteFn('tracing/couchbase', function () {
 
               return retry(() =>
                 verifySpans(agentControls, controls, {
-                  spanLength: 5,
+                  spanLength: 9,
                   verifyCustom: (entrySpan, spans) => {
                     expectExactlyOneMatching(
                       spans,
                       verifyCouchbaseSpan(controls, entrySpan, {
-                        bucket: '',
-                        type: '',
-                        sql: 'SELECT * FROM'
+                        sql: 'CREATEINDEX'
                       })
                     );
                     expectExactlyOneMatching(
                       spans,
                       verifyCouchbaseSpan(controls, entrySpan, {
+                        bucket: 'companies',
+                        type: 'ephemeral',
+                        sql: 'CREATEINDEX'
+                      })
+                    );
+
+                    // cluster query
+                    expectExactlyNMatching(
+                      spans,
+                      1,
+                      verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: '',
-                        hostname: connStr2,
                         type: '',
-                        sql: 'SELECT * FROM'
+                        sql: 'SELECT * FROM projects WHERE name='
                       })
                     );
-                  }
-                })
-              );
-            }));
-      }
 
-      if (apiType === 'promise') {
-        it('[datastructures list] must trace', () =>
-          controls
-            .sendRequest({
-              method: 'get',
-              path: `/datastructures-list-${apiType}`
-            })
-            .then(resp => {
-              if (resp.err) {
-                throw new Error(resp.err);
-              }
-
-              expect(resp.iteratedItems).to.eql(['test1', 'test2']);
-
-              return retry(() =>
-                verifySpans(agentControls, controls, {
-                  spanLength: 9,
-                  verifyCustom: (entrySpan, spans) => {
+                    // bucket query success
                     expectExactlyNMatching(
                       spans,
-                      3,
+                      1,
                       verifyCouchbaseSpan(controls, entrySpan, {
-                        sql: 'MUTATEIN'
+                        bucket: 'companies',
+                        type: 'ephemeral',
+                        sql: 'SELECT * FROM _default WHERE name='
                       })
                     );
-                    expectExactlyNMatching(
-                      spans,
-                      2,
-                      verifyCouchbaseSpan(controls, entrySpan, {
-                        sql: 'LOOKUPIN'
-                      })
-                    );
-                    expectExactlyNMatching(
-                      spans,
-                      3,
-                      verifyCouchbaseSpan(controls, entrySpan, {
-                        sql: 'GET'
-                      })
-                    );
-                  }
-                })
-              );
-            }));
 
-        it('[datastructures map] must trace', () =>
-          controls
-            .sendRequest({
-              method: 'get',
-              path: `/datastructures-map-${apiType}`
-            })
-            .then(resp => {
-              if (resp.err) {
-                throw new Error(resp.err);
-              }
-
-              expect(resp.iteratedItems).to.eql(['test1', 'test2']);
-
-              return retry(() =>
-                verifySpans(agentControls, controls, {
-                  spanLength: 9,
-                  verifyCustom: (entrySpan, spans) => {
+                    // bucket query error
                     expectExactlyNMatching(
                       spans,
-                      3,
+                      1,
                       verifyCouchbaseSpan(controls, entrySpan, {
-                        sql: 'MUTATEIN'
+                        bucket: 'companies',
+                        // FYI: this error msg does not come from us.
+                        error: 'bucket not found',
+                        type: 'ephemeral',
+                        sql: 'SELECT * FROM TABLE_DOES_NOT_EXIST WHERE name'
                       })
                     );
-                    expectExactlyNMatching(
+
+                    expectExactlyOneMatching(
                       spans,
-                      3,
                       verifyCouchbaseSpan(controls, entrySpan, {
-                        sql: 'LOOKUPIN'
+                        sql: 'DROPINDEX'
                       })
                     );
-                    expectExactlyNMatching(
+                    expectExactlyOneMatching(
                       spans,
-                      2,
                       verifyCouchbaseSpan(controls, entrySpan, {
-                        sql: 'GET'
+                        bucket: 'companies',
+                        type: 'ephemeral',
+                        sql: 'DROPINDEX'
+                      })
+                    );
+                    expectExactlyOneMatching(
+                      spans,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        bucket: 'companies',
+                        type: 'ephemeral',
+                        sql: 'GETALLINDEXES'
                       })
                     );
                   }
@@ -860,39 +762,168 @@ mochaSuiteFn('tracing/couchbase', function () {
               );
             }));
 
-        // Error handling in callback is affected with v4.4.4,
-        // see issue here: https://github.com/couchbase/couchnode/issues/123
-        it('[error] must trace remove', () =>
+        if (apiType === 'promise') {
+          it('[multiple connections] must trace', () =>
+            controls
+              .sendRequest({
+                method: 'get',
+                path: `/multiple-connections-${apiType}`
+              })
+              .then(resp => {
+                if (resp.err) {
+                  throw new Error(resp.err);
+                }
+
+                expect(resp.success).to.eql(true);
+
+                return retry(() =>
+                  verifySpans(agentControls, controls, {
+                    spanLength: 5,
+                    verifyCustom: (entrySpan, spans) => {
+                      expectExactlyOneMatching(
+                        spans,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          bucket: '',
+                          type: '',
+                          sql: 'SELECT * FROM'
+                        })
+                      );
+                      expectExactlyOneMatching(
+                        spans,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          bucket: '',
+                          hostname: connStr2,
+                          type: '',
+                          sql: 'SELECT * FROM'
+                        })
+                      );
+                    }
+                  })
+                );
+              }));
+        }
+
+        if (apiType === 'promise') {
+          it('[datastructures list] must trace', () =>
+            controls
+              .sendRequest({
+                method: 'get',
+                path: `/datastructures-list-${apiType}`
+              })
+              .then(resp => {
+                if (resp.err) {
+                  throw new Error(resp.err);
+                }
+
+                expect(resp.iteratedItems).to.eql(['test1', 'test2']);
+
+                return retry(() =>
+                  verifySpans(agentControls, controls, {
+                    spanLength: 9,
+                    verifyCustom: (entrySpan, spans) => {
+                      expectExactlyNMatching(
+                        spans,
+                        3,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          sql: 'MUTATEIN'
+                        })
+                      );
+                      expectExactlyNMatching(
+                        spans,
+                        2,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          sql: 'LOOKUPIN'
+                        })
+                      );
+                      expectExactlyNMatching(
+                        spans,
+                        3,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          sql: 'GET'
+                        })
+                      );
+                    }
+                  })
+                );
+              }));
+
+          it('[datastructures map] must trace', () =>
+            controls
+              .sendRequest({
+                method: 'get',
+                path: `/datastructures-map-${apiType}`
+              })
+              .then(resp => {
+                if (resp.err) {
+                  throw new Error(resp.err);
+                }
+
+                expect(resp.iteratedItems).to.eql(['test1', 'test2']);
+
+                return retry(() =>
+                  verifySpans(agentControls, controls, {
+                    spanLength: 9,
+                    verifyCustom: (entrySpan, spans) => {
+                      expectExactlyNMatching(
+                        spans,
+                        3,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          sql: 'MUTATEIN'
+                        })
+                      );
+                      expectExactlyNMatching(
+                        spans,
+                        3,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          sql: 'LOOKUPIN'
+                        })
+                      );
+                      expectExactlyNMatching(
+                        spans,
+                        2,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          sql: 'GET'
+                        })
+                      );
+                    }
+                  })
+                );
+              }));
+
+          // Error handling in callback is affected with v4.4.4,
+          // see issue here: https://github.com/couchbase/couchnode/issues/123
+          it('[error] must trace remove', () =>
+            controls
+              .sendRequest({
+                method: 'post',
+                path: `/remove-${apiType}?error=true`
+              })
+              .then(resp => {
+                if (resp.err) {
+                  throw new Error(resp.err);
+                }
+
+                expect(resp.errMsg).to.eql(apiType === 'promise' ? 'invalid argument' : 'document not found');
+
+                return retry(() =>
+                  verifySpans(agentControls, controls, {
+                    sql: 'REMOVE',
+                    error: apiType === 'promise' ? 'invalid argument' : 'document not found'
+                  })
+                );
+              }));
+        }
+
+        it('[supressed] must not trace', () =>
           controls
             .sendRequest({
               method: 'post',
-              path: `/remove-${apiType}?error=true`
+              path: `/upsert-${apiType}`,
+              suppressTracing: true
             })
-            .then(resp => {
-              if (resp.err) {
-                throw new Error(resp.err);
-              }
-
-              expect(resp.errMsg).to.eql(apiType === 'promise' ? 'invalid argument' : 'document not found');
-
-              return retry(() =>
-                verifySpans(agentControls, controls, {
-                  sql: 'REMOVE',
-                  error: apiType === 'promise' ? 'invalid argument' : 'document not found'
-                })
-              );
-            }));
-      }
-
-      it('[supressed] must not trace', () =>
-        controls
-          .sendRequest({
-            method: 'post',
-            path: `/upsert-${apiType}`,
-            suppressTracing: true
-          })
-          .then(() => delay(DELAY_TIMEOUT_IN_MS))
-          .then(() => retry(() => verifySpans(agentControls, controls, { expectSpans: false }))));
+            .then(() => delay(DELAY_TIMEOUT_IN_MS))
+            .then(() => retry(() => verifySpans(agentControls, controls, { expectSpans: false }))));
+      });
     });
   });
 });
