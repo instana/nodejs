@@ -95,6 +95,7 @@ const db2OpenPromisified = promisify(ibmdb.open);
 async function connect(connectionStr) {
   /* eslint-disable no-console */
   console.log(`Trying to connect to DB2, attempt ${tries} of ${MAX_TRIES}`);
+  console.log(`Connection string: ${connectionStr}`);
 
   let conn;
   try {
