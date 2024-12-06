@@ -94,7 +94,7 @@ function instrumentCluster(cluster, connectionStr) {
   // #### FTS SERVICE (.searchIndexes().)
   instrumentSearchIndexes(cluster, connectionStr);
 
-  // #### ANALYTICS SERVICES (.analyticsIndexes().) version >= 4.4.4
+  // #### ANALYTICS SERVICES (.analyticsIndexes().)
   instrumentAnalyticsIndexes(cluster, connectionStr);
 
   // #### N1QL SERVICE (.queryIndexes().)
@@ -114,29 +114,6 @@ function instrumentCluster(cluster, connectionStr) {
         {
           connectionStr,
           sql: tracingUtil.shortenDatabaseStatement(sqlStatement)
-        },
-        original
-      ).apply(originalThis, originalArgs);
-    };
-  });
-
-  // #### ANALYTICS SERVICE (.analyticsIndexes().) v <= 4.4.3
-  shimmer.wrap(cluster, 'analyticsQuery', function instanaClusterAnalyticsQuery(original) {
-    return function instanaClusterAnalyticsQueryWrapped() {
-      const originalThis = this;
-      const originalArgs = arguments;
-      const sqlStatement = originalArgs[0] || '';
-
-      return instrumentOperation(
-        {
-          connectionStr,
-          sql: tracingUtil.shortenDatabaseStatement(sqlStatement),
-          resultHandler: (span, result) => {
-            if (result && result.rows && result.rows.length > 0 && result.rows[0].BucketName) {
-              span.data.couchbase.bucket = result.rows[0].BucketName;
-              span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
-            }
-          }
         },
         original
       ).apply(originalThis, originalArgs);
