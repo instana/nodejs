@@ -876,28 +876,30 @@ mochaSuiteFn('tracing/couchbase', function () {
                 })
               );
             }));
+
+        // Error handling in callback is affected with v4.4.4,
+        // see issue here: https://github.com/couchbase/couchnode/issues/123
+        it('[error] must trace remove', () =>
+          controls
+            .sendRequest({
+              method: 'post',
+              path: `/remove-${apiType}?error=true`
+            })
+            .then(resp => {
+              if (resp.err) {
+                throw new Error(resp.err);
+              }
+
+              expect(resp.errMsg).to.eql(apiType === 'promise' ? 'invalid argument' : 'document not found');
+
+              return retry(() =>
+                verifySpans(agentControls, controls, {
+                  sql: 'REMOVE',
+                  error: apiType === 'promise' ? 'invalid argument' : 'document not found'
+                })
+              );
+            }));
       }
-
-      it('[error] must trace remove', () =>
-        controls
-          .sendRequest({
-            method: 'post',
-            path: `/remove-${apiType}?error=true`
-          })
-          .then(resp => {
-            if (resp.err) {
-              throw new Error(resp.err);
-            }
-
-            expect(resp.errMsg).to.eql(apiType === 'promise' ? 'invalid argument' : 'document not found');
-
-            return retry(() =>
-              verifySpans(agentControls, controls, {
-                sql: 'REMOVE',
-                error: apiType === 'promise' ? 'invalid argument' : 'document not found'
-              })
-            );
-          }));
 
       it('[supressed] must not trace', () =>
         controls

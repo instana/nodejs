@@ -15,7 +15,6 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import { v1 } from 'uuid';
 import morgan from 'morgan';
-import fetch from 'node-fetch';
 import portFactory from '../../../test_util/app-port.js';
 import testUtil from '../../../../../core/test/test_util/index.js';
 
@@ -567,15 +566,20 @@ app.post('/queryindexes-callback', (req, res) => {
     cluster.queryIndexes().createIndex(bucket2.name, idx2, ['name'], () => {
       cluster.query(qs, () => {
         scope2.query(qs1, () => {
-          scope2.query(qs2, () => {
-            cluster.queryIndexes().dropIndex(bucket1.name, idx1, () => {
-              cluster.queryIndexes().dropPrimaryIndex(bucket2.name, { name: idx2 }, () => {
-                cluster.queryIndexes().getAllIndexes(bucket2.name, () => {
-                  res.json({ success: true });
+          scope2
+            .query(qs2)
+            .catch(() => {
+              // Ignore this error because we expect it to fail
+            })
+            .finally(() => {
+              cluster.queryIndexes().dropIndex(bucket1.name, idx1, () => {
+                cluster.queryIndexes().dropPrimaryIndex(bucket2.name, { name: idx2 }, () => {
+                  cluster.queryIndexes().getAllIndexes(bucket2.name, () => {
+                    res.json({ success: true });
+                  });
                 });
               });
             });
-          });
         });
       });
     });

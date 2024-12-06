@@ -17,7 +17,6 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const uuid = require('uuid');
 const morgan = require('morgan');
-const fetch = require('node-fetch-v2');
 const port = require('../../../test_util/app-port')();
 const { delay } = require('../../../../../core/test/test_util');
 const agentPort = process.env.INSTANA_AGENT_PORT;
@@ -685,23 +684,26 @@ app.post('/queryindexes-callback', (req, res) => {
         scope2.query(qs1, err3 => {
           if (err3) return res.status(500).json({ err: err3.message });
 
-          scope2.query(qs2, () => {
-            // ignore this error because we expect it to fail
+          scope2
+            .query(qs2)
+            .catch(() => {
+              // Ignore this error because we expect it to fail
+            })
+            .finally(() => {
+              cluster.queryIndexes().dropIndex(bucket2.name, idx2, err5 => {
+                if (err5) return res.status(500).json({ err: err5.message });
 
-            cluster.queryIndexes().dropIndex(bucket2.name, idx2, err5 => {
-              if (err5) return res.status(500).json({ err: err5.message });
+                cluster.queryIndexes().dropPrimaryIndex(bucket1.name, { name: idx1 }, err6 => {
+                  if (err6) return res.status(500).json({ err: err6.message });
 
-              cluster.queryIndexes().dropPrimaryIndex(bucket1.name, { name: idx1 }, err6 => {
-                if (err6) return res.status(500).json({ err: err6.message });
+                  cluster.queryIndexes().getAllIndexes(bucket2.name, err7 => {
+                    if (err7) return res.status(500).json({ err: err7.message });
 
-                cluster.queryIndexes().getAllIndexes(bucket2.name, err7 => {
-                  if (err7) return res.status(500).json({ err: err7.message });
-
-                  res.json({ success: true });
+                    res.json({ success: true });
+                  });
                 });
               });
             });
-          });
         });
       });
     });
