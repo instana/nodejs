@@ -150,7 +150,7 @@
     "eslint-plugin-instana": "file:./misc/eslint-plugin",
     "eslint-plugin-mocha": "^10.1.0",
     "eslint-plugin-monorepo-cop": "^1.0.2",
-    "express": "^4.21.1",
+    "express": "^4.21.2",
     "express-v5-beta": "npm:express@^5.0.0-beta.3",
     "express-winston": "^4.2.0",
     "fastify": "^5.1.0",
@@ -186,7 +186,7 @@
     "mongodb": "^6.11.0",
     "mongodb-v4": "npm:mongodb@^4.16.0",
     "mongodb-v5": "npm:mongodb@^5.4.0",
-    "mongoose": "^8.8.3",
+    "mongoose": "^8.8.4",
     "mongoose-v5": "npm:mongoose@^5.13.22",
     "mongoose-v6": "npm:mongoose@^6.12.7",
     "mongoose-v7": "npm:mongoose@^7.6.10",
@@ -245,8 +245,8 @@
     "yargs": "^17.5.1"
   },
   "optionalDependencies": {
-    "couchbase": "^4.4.3",
-    "ibm_db": "^3.2.5",
+    "couchbase": "^4.4.4",
+    "ibm_db": "^3.3.0",
     "kafka-avro": "^3.2.0",
     "node-rdkafka": "^3.2.1",
     "pg-native": "^3.2.0",
