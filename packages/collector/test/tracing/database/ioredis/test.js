@@ -1289,7 +1289,7 @@ function checkConnection(span, setupType) {
 
       before(async () => {
         await customAgentControls.startAgent({
-          ignoreEndpoints: { redis: 'get|set' }
+          ignoreEndpoints: { redis: ['get', 'set'] }
         });
 
         controls = new ProcessControls({

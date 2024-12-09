@@ -477,13 +477,13 @@ describe('util.normalizeConfig', () => {
   });
 
   it('should apply ignore endpoints if the INSTANA_IGNORE_ENDPOINTS is set and valid', () => {
-    process.env.INSTANA_IGNORE_ENDPOINTS = '{"redis": ["get", "set"]}';
+    process.env.INSTANA_IGNORE_ENDPOINTS = 'redis:get,set;"';
     const config = normalizeConfig();
     expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get', 'set'] });
   });
 
   it('should fallback to default if INSTANA_IGNORE_ENDPOINTS is set but has an invalid format', () => {
-    process.env.INSTANA_IGNORE_ENDPOINTS = '"redis": ["get", "set"]';
+    process.env.INSTANA_IGNORE_ENDPOINTS = '"redis=get,set"';
     const config = normalizeConfig();
     expect(config.tracing.ignoreEndpoints).to.deep.equal({});
   });

@@ -718,10 +718,23 @@ function normalizeIgnoreEndpoints(config) {
       }
     });
   } else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
-    // The environment variable name and its format are still under discussion.
-    // It is currently private and will not be documented or publicly shared.
+    // Expected format: "service:endpoint1,endpoint2;service2:endpoint1"
     try {
-      config.tracing.ignoreEndpoints = JSON.parse(process.env.INSTANA_IGNORE_ENDPOINTS);
+      const parsedEndpoints = Object.fromEntries(
+        process.env.INSTANA_IGNORE_ENDPOINTS.split(';')
+          .map(entry => {
+            const [service, endpoints] = (entry || '').split(':');
+            if (!service || !endpoints) {
+              logger.warn(
+                `Invalid entry in INSTANA_IGNORE_ENDPOINTS ${process.env.INSTANA_IGNORE_ENDPOINTS}: ${entry}. Expected format is "service:endpoint1,endpoint2".`
+              );
+              return null;
+            }
+            return [service.toLowerCase(), endpoints.split(',').map(endpoint => endpoint.trim().toLowerCase())];
+          })
+          .filter(Boolean)
+      );
+      config.tracing.ignoreEndpoints = parsedEndpoints;
     } catch (error) {
       logger.warn(
         `Failed to parse INSTANA_IGNORE_ENDPOINTS: ${process.env.INSTANA_IGNORE_ENDPOINTS}. Error: ${error.message}`
