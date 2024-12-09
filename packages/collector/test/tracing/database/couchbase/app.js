@@ -686,6 +686,8 @@ app.post('/queryindexes-callback', (req, res) => {
         scope2.query(qs1, err3 => {
           if (err3) return res.status(500).json({ err: err3.message });
 
+          // Forcing the error handling due to an issue in the package.
+          // see https://github.com/couchbase/couchnode/issues/123
           scope2
             .query(qs2)
             .catch(() => {

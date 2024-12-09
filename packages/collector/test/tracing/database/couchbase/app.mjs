@@ -566,6 +566,8 @@ app.post('/queryindexes-callback', (req, res) => {
     cluster.queryIndexes().createIndex(bucket2.name, idx2, ['name'], () => {
       cluster.query(qs, () => {
         scope2.query(qs1, () => {
+          // Forcing the error handling due to an issue in the package.
+          // see https://github.com/couchbase/couchnode/issues/123
           scope2
             .query(qs2)
             .catch(() => {
