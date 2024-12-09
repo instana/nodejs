@@ -224,7 +224,7 @@ function applySpanBatchingConfiguration(agentResponse) {
 }
 
 /**
- * The agent configuration currently follows the `string[]` format.
+ * The agent configuration returns the `string[]` format.
  * For more information, see the related design discussion:
  * https://github.ibm.com/instana/requests-for-discussion/pull/84
  *

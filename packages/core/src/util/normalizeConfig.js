@@ -718,23 +718,24 @@ function normalizeIgnoreEndpoints(config) {
       }
     });
   } else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
-    // Expected format: "service:endpoint1,endpoint2;service2:endpoint1"
     try {
-      const parsedEndpoints = Object.fromEntries(
+      const ignoreEndpoints = Object.fromEntries(
         process.env.INSTANA_IGNORE_ENDPOINTS.split(';')
-          .map(entry => {
-            const [service, endpoints] = (entry || '').split(':');
-            if (!service || !endpoints) {
+          .map(serviceEntry => {
+            const [serviceName, endpointList] = (serviceEntry || '').split(':').map(part => part.trim());
+
+            if (!serviceName || !endpointList) {
               logger.warn(
-                `Invalid entry in INSTANA_IGNORE_ENDPOINTS ${process.env.INSTANA_IGNORE_ENDPOINTS}: ${entry}. Expected format is "service:endpoint1,endpoint2".`
+                `Invalid entry in INSTANA_IGNORE_ENDPOINTS ${process.env.INSTANA_IGNORE_ENDPOINTS}: "${serviceEntry}". Expected format is e.g. "service:endpoint1,endpoint2".`
               );
               return null;
             }
-            return [service.toLowerCase(), endpoints.split(',').map(endpoint => endpoint.trim().toLowerCase())];
+
+            return [serviceName.toLowerCase(), endpointList.split(',').map(endpoint => endpoint.trim().toLowerCase())];
           })
           .filter(Boolean)
       );
-      config.tracing.ignoreEndpoints = parsedEndpoints;
+      config.tracing.ignoreEndpoints = ignoreEndpoints;
     } catch (error) {
       logger.warn(
         `Failed to parse INSTANA_IGNORE_ENDPOINTS: ${process.env.INSTANA_IGNORE_ENDPOINTS}. Error: ${error.message}`
