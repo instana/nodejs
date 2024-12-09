@@ -2,7 +2,8 @@
 
 const mochaOptions = {
   file: ['test/initEnv.js'],
-  ignore: ['node_modules/**/*', 'test/**/node_modules/**/*']
+  ignore: ['node_modules/**/*', 'test/**/node_modules/**/*'],
+  watchFiles: ['test/**/*', '../*/src/**/*']
 };
 
 // To address the certificate authorization issue with node-fetch, process.env.NODE_TLS_REJECT_UNAUTHORIZED
