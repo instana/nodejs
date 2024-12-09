@@ -224,11 +224,9 @@ function applySpanBatchingConfiguration(agentResponse) {
 }
 
 /**
- * - The agent configuration currently uses a pipe ('|') as a separator for endpoints.
- * - This function supports both ('|') and comma (',') to ensure future compatibility.
- * - Additionally, it supports the `string[]` format for backward compatibility,
- *   as this was the previously used standard. The final design decision is not yet completed.
- *   https://github.ibm.com/instana/requests-for-discussion/pull/84
+ * The agent configuration returns the `string[]` format.
+ * For more information, see the related design discussion:
+ * https://github.ibm.com/instana/requests-for-discussion/pull/84
  *
  * @param {AgentAnnounceResponse} agentResponse
  */
@@ -239,9 +237,7 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
     const endpointTracingConfig = Object.fromEntries(
       Object.entries(endpointTracingConfigFromAgent).map(([service, endpoints]) => {
         let normalizedEndpoints = null;
-        if (typeof endpoints === 'string') {
-          normalizedEndpoints = endpoints.split(/[|,]/).map(endpoint => endpoint?.trim()?.toLowerCase());
-        } else if (Array.isArray(endpoints)) {
+        if (Array.isArray(endpoints)) {
           normalizedEndpoints = endpoints.map(endpoint => endpoint?.toLowerCase());
         }
 

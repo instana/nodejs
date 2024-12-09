@@ -1289,7 +1289,7 @@ function checkConnection(span, setupType) {
 
       before(async () => {
         await customAgentControls.startAgent({
-          ignoreEndpoints: { redis: 'get|set' }
+          ignoreEndpoints: { redis: ['get', 'set'] }
         });
 
         controls = new ProcessControls({
@@ -1344,7 +1344,7 @@ function checkConnection(span, setupType) {
           useGlobalAgent: true,
           dirname: __dirname,
           env: {
-            INSTANA_IGNORE_ENDPOINTS: '{"redis": ["get"]}'
+            INSTANA_IGNORE_ENDPOINTS: 'redis:get'
           }
         });
         await controls.start();

@@ -217,7 +217,7 @@ describe('unannounced state', () => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
-            redis: 'get'
+            redis: ['get']
           }
         }
       });
@@ -239,7 +239,7 @@ describe('unannounced state', () => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
-            redis: 'SET|GET'
+            redis: ['SET', 'GET']
           }
         }
       });
@@ -261,8 +261,8 @@ describe('unannounced state', () => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
-            REDIS: 'get|set',
-            dynamodb: 'query'
+            REDIS: ['GET', 'SET'],
+            dynamodb: ['query']
           }
         }
       });
@@ -281,11 +281,11 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should apply tracing configuration to ignore endpoints when specified using array format', done => {
+    it('should set ignoreEndpoints to null when the format is invalid', done => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
-            REDIS: ['get', 'type'],
+            REDIS: 'get|set',
             dynamodb: 'query'
           }
         }
@@ -295,8 +295,8 @@ describe('unannounced state', () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
-                redis: ['get', 'type'],
-                dynamodb: ['query']
+                redis: null,
+                dynamodb: null
               }
             }
           });

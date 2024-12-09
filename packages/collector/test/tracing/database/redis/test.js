@@ -859,7 +859,7 @@ const globalAgent = require('../../../globalAgent');
               let controls;
               before(async () => {
                 await customAgentControls.startAgent({
-                  ignoreEndpoints: { redis: 'get|set' }
+                  ignoreEndpoints: { redis: ['get', 'set'] }
                 });
 
                 controls = new ProcessControls({
@@ -918,7 +918,7 @@ const globalAgent = require('../../../globalAgent');
                   env: {
                     REDIS_VERSION: redisVersion,
                     REDIS_PKG: redisPkg,
-                    INSTANA_IGNORE_ENDPOINTS: '{"redis": ["get","set"]}'
+                    INSTANA_IGNORE_ENDPOINTS: 'redis:get,set;'
                   }
                 });
                 await controls.start();
