@@ -1344,7 +1344,7 @@ function checkConnection(span, setupType) {
           useGlobalAgent: true,
           dirname: __dirname,
           env: {
-            INSTANA_IGNORE_ENDPOINTS: '{"redis": ["get"]}'
+            INSTANA_IGNORE_ENDPOINTS: 'redis:get'
           }
         });
         await controls.start();
