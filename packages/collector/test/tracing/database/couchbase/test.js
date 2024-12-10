@@ -519,26 +519,25 @@ couchbaseVersions.forEach(version => {
                     );
 
                     // It is difficult to get exact query from couchbase after v4.4.4 release
-                    // as they are not generating queries from JS anymore
-                    if (version !== 'latest') {
-                      expectExactlyNMatching(
-                        spans,
-                        1,
-                        verifyCouchbaseSpan(controls, entrySpan, {
-                          bucket: '',
-                          type: '',
-                          sql: 'SELECT'
-                        })
-                      );
-                      expectExactlyOneMatching(
-                        spans,
-                        verifyCouchbaseSpan(controls, entrySpan, {
-                          bucket: 'projects',
-                          type: 'membase',
-                          sql: 'SELECT '
-                        })
-                      );
-                    }
+                    // as they are not generating queries from JS anymore, so we use the function name instead
+                    // for v443, we use partial query statement
+                    expectExactlyNMatching(
+                      spans,
+                      1,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        bucket: '',
+                        type: '',
+                        sql: version === 'v443' ? 'SELECT ' : 'GET ALL INDEXES'
+                      })
+                    );
+                    expectExactlyOneMatching(
+                      spans,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        bucket: 'projects',
+                        type: 'membase',
+                        sql: version === 'v443' ? 'SELECT ' : 'GET ALL DATASETS '
+                      })
+                    );
                   }
                 })
               );
