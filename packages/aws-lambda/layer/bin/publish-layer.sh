@@ -40,8 +40,8 @@ if [[ -z $AWS_DEFAULT_REGION ]]; then
   export AWS_DEFAULT_REGION="us-east-1"
 fi
 
-if [[ -z $AWS_CHINA_REGION ]]; then
-  AWS_CHINA_REGION=false
+if [[ -z $PUBLISH_TO_CHINA_REGIONS ]]; then
+  PUBLISH_TO_CHINA_REGIONS=false
 fi
 
 
@@ -132,6 +132,7 @@ echo "REGIONS: $REGIONS"
 echo "SKIPPED: $SKIPPED_REGIONS"
 echo "CHINESE_REGIONS: $CHINESE_REGIONS"
 echo "PACKAGE_VERSION: $PACKAGE_VERSION"
+echo "PUBLISH_TO_CHINA_REGIONS: $PUBLISH_TO_CHINA_REGIONS"
 echo "BUILD_LAYER_WITH: $BUILD_LAYER_WITH"
 echo "SKIP_AWS_PUBLISH_LAYER: $SKIP_AWS_PUBLISH_LAYER"
 printf "####\n\n"
@@ -286,7 +287,7 @@ export AWS_MAX_ATTEMPTS=$AWS_CLI_RETRY_MAX_ATTEMPTS
 if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
   echo "step 6/9: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to specifed regions"
   
-  if [[ "$AWS_CHINA_REGION" == "true" ]]; then
+  if [[ "$PUBLISH_TO_CHINA_REGIONS" == "true" ]]; then
     echo "Publishing only to Chinese regions: $CHINESE_REGIONS"
     REGIONS="$CHINESE_REGIONS"
   else
@@ -313,9 +314,11 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
     fi
 
     # Publish to AWS, handle Chinese regions
+    echo Publishing AWS Lambda layer in region $region.
+
     aws_cli_timeout_options="--cli-connect-timeout $AWS_CLI_TIMEOUT_DEFAULT"
 
-    if [[ "$AWS_CHINA_REGION" == "true" && "$CHINESE_REGIONS" == *"$region"* ]]; then
+    if [[ "$PUBLISH_TO_CHINA_REGIONS" == "true" && "$CHINESE_REGIONS" == *"$region"* ]]; then
 
       if [[ -z $AWS_ACCESS_KEY_ID_CHINA ]] || [[ -z $AWS_SECRET_ACCESS_KEY_CHINA ]]; then
         printf "Error: Trying to publish to Chinese region $region, but at least one of the environment variables\n"
@@ -371,8 +374,6 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
       else
         echo "   + WARNING: Lambda layer version $lambda_layer_version does not seem to be numeric, will not set permissions in region $region"
       fi
-
-    fi
   done <<< "$REGIONS"
 else
   echo "step 6/9: publishing AWS Lambda layer $LAYER_NAME (skipping)"

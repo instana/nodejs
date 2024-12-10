@@ -440,7 +440,7 @@ jobs:
             - |
                 BUILD_LAYER_WITH=npm \
                 NO_PROMPT=true \
-                AWS_CHINA_REGION=true \
+                PUBLISH_TO_CHINA_REGIONS=true \
                 CONTAINER_REGISTRY_USER=iamapikey \
                 CONTAINER_REGISTRY_PASSWORD=((concourse-icr-containers-public.password)) \
                 AWS_ACCESS_KEY_ID=((aws-ci-manage-lambda-layers.aws_access_key_id)) \
@@ -465,7 +465,7 @@ jobs:
                 BUILD_LAYER_WITH=npm \
                 NO_PROMPT=true \
                 LAMBDA_ARCHITECTURE=arm64 \
-                AWS_CHINA_REGION=true \
+                PUBLISH_TO_CHINA_REGIONS=true \
                 CONTAINER_REGISTRY_USER=iamapikey \
                 CONTAINER_REGISTRY_PASSWORD=((concourse-icr-containers-public.password)) \
                 AWS_ACCESS_KEY_ID=((aws-ci-manage-lambda-layers.aws_access_key_id)) \
