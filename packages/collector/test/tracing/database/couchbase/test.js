@@ -271,7 +271,7 @@ couchbaseVersions.forEach(version => {
               }
 
               expect(resp.success).to.eql(true);
-              return retry(() => verifySpans(agentControls, controls, { sql: 'GETANDTOUCH' }));
+              return retry(() => verifySpans(agentControls, controls, { sql: 'GET AND TOUCH' }));
             }));
 
         it('[crud] must trace replace', () =>
@@ -344,7 +344,7 @@ couchbaseVersions.forEach(version => {
               }
 
               expect(resp.success).to.eql(true);
-              return retry(() => verifySpans(agentControls, controls, { sql: 'MUTATEIN' }));
+              return retry(() => verifySpans(agentControls, controls, { sql: 'MUTATE IN' }));
             }));
 
         it('[crud] must trace lookupIn', () =>
@@ -359,7 +359,7 @@ couchbaseVersions.forEach(version => {
               }
 
               expect(resp.result).to.eql(2);
-              return retry(() => verifySpans(agentControls, controls, { sql: 'LOOKUPIN' }));
+              return retry(() => verifySpans(agentControls, controls, { sql: 'LOOKUP IN' }));
             }));
 
         it('[crud] must trace exists', () =>
@@ -414,7 +414,7 @@ couchbaseVersions.forEach(version => {
                       verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: 'projects',
                         type: 'membase',
-                        sql: 'UPSERTINDEX'
+                        sql: 'UPSERT INDEX'
                       })
                     );
                     expectExactlyOneMatching(
@@ -422,7 +422,7 @@ couchbaseVersions.forEach(version => {
                       verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: 'projects',
                         type: 'membase',
-                        sql: 'GETINDEX'
+                        sql: 'GET INDEX'
                       })
                     );
                     expectExactlyOneMatching(
@@ -430,7 +430,7 @@ couchbaseVersions.forEach(version => {
                       verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: 'projects',
                         type: 'membase',
-                        sql: 'GETALLINDEXES'
+                        sql: 'GET ALL INDEXES'
                       })
                     );
                     expectExactlyOneMatching(
@@ -438,7 +438,7 @@ couchbaseVersions.forEach(version => {
                       verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: '',
                         type: '',
-                        sql: 'DROPINDEX'
+                        sql: 'DROP INDEX'
                       })
                     );
                   }
@@ -565,7 +565,7 @@ couchbaseVersions.forEach(version => {
                       verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: '',
                         type: '',
-                        sql: 'SEARCHQUERY'
+                        sql: 'SEARCH QUERY'
                       })
                     );
                   }
@@ -687,7 +687,7 @@ couchbaseVersions.forEach(version => {
                     expectExactlyOneMatching(
                       spans,
                       verifyCouchbaseSpan(controls, entrySpan, {
-                        sql: 'CREATEINDEX'
+                        sql: 'CREATE INDEX'
                       })
                     );
                     expectExactlyOneMatching(
@@ -695,7 +695,7 @@ couchbaseVersions.forEach(version => {
                       verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: 'companies',
                         type: 'ephemeral',
-                        sql: 'CREATEINDEX'
+                        sql: 'CREATE INDEX'
                       })
                     );
 
@@ -737,7 +737,7 @@ couchbaseVersions.forEach(version => {
                     expectExactlyOneMatching(
                       spans,
                       verifyCouchbaseSpan(controls, entrySpan, {
-                        sql: 'DROPINDEX'
+                        sql: 'DROP INDEX'
                       })
                     );
                     expectExactlyOneMatching(
@@ -745,7 +745,7 @@ couchbaseVersions.forEach(version => {
                       verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: 'companies',
                         type: 'ephemeral',
-                        sql: 'DROPINDEX'
+                        sql: 'DROP INDEX'
                       })
                     );
                     expectExactlyOneMatching(
@@ -753,7 +753,7 @@ couchbaseVersions.forEach(version => {
                       verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: 'companies',
                         type: 'ephemeral',
-                        sql: 'GETALLINDEXES'
+                        sql: 'GET ALL INDEXES'
                       })
                     );
                   }
@@ -824,14 +824,14 @@ couchbaseVersions.forEach(version => {
                         spans,
                         3,
                         verifyCouchbaseSpan(controls, entrySpan, {
-                          sql: 'MUTATEIN'
+                          sql: 'MUTATE IN'
                         })
                       );
                       expectExactlyNMatching(
                         spans,
                         2,
                         verifyCouchbaseSpan(controls, entrySpan, {
-                          sql: 'LOOKUPIN'
+                          sql: 'LOOKUP IN'
                         })
                       );
                       expectExactlyNMatching(
@@ -867,14 +867,14 @@ couchbaseVersions.forEach(version => {
                         spans,
                         3,
                         verifyCouchbaseSpan(controls, entrySpan, {
-                          sql: 'MUTATEIN'
+                          sql: 'MUTATE IN'
                         })
                       );
                       expectExactlyNMatching(
                         spans,
                         3,
                         verifyCouchbaseSpan(controls, entrySpan, {
-                          sql: 'LOOKUPIN'
+                          sql: 'LOOKUP IN'
                         })
                       );
                       expectExactlyNMatching(

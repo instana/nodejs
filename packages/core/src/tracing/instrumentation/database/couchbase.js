@@ -92,7 +92,11 @@ function instrumentCluster(cluster, connectionStr) {
   if (!cluster) return;
 
   // #### SEARCH QUERY
-  shimmer.wrap(cluster, 'searchQuery', instrumentOperation.bind(null, { connectionStr, sql: 'SEARCHQUERY' }));
+  shimmer.wrap(
+    cluster,
+    'searchQuery',
+    instrumentOperation.bind(null, { connectionStr, sql: camelCaseToUpperWords('searchQuery') })
+  );
 
   // #### CRUD
   instrumentCollection(cluster, connectionStr);
@@ -188,7 +192,7 @@ function instrumentCollection(cluster, connectionStr) {
                     connectionStr,
                     bucketName,
                     getBucketTypeFn,
-                    sql: op.toUpperCase()
+                    sql: camelCaseToUpperWords(op)
                   },
                   original
                 ).apply(this, arguments);
@@ -253,7 +257,7 @@ function instrumentSearchIndexes(cluster, connectionStr) {
           return instrumentOperation(
             {
               connectionStr,
-              sql: fnName.toUpperCase(),
+              sql: camelCaseToUpperWords(fnName),
               bucketName,
               getBucketTypeFn,
               resultHandler: (span, result) => {
@@ -298,7 +302,7 @@ function instrumentQueryIndexes(cluster, connectionStr) {
           return instrumentOperation(
             {
               connectionStr,
-              sql: fnName.toUpperCase(),
+              sql: camelCaseToUpperWords(fnName),
               bucketName,
               getBucketTypeFn
             },
@@ -392,7 +396,7 @@ function instrumentTransactions(cluster, connectionStr) {
                     connectionStr,
                     bucketName,
                     getBucketTypeFn,
-                    sql: op.toUpperCase()
+                    sql: camelCaseToUpperWords(op)
                   },
                   original
                 ).apply(originalThis1, originalArgs1);
