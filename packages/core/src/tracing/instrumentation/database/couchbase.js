@@ -129,7 +129,7 @@ function instrumentCluster(cluster, connectionStr) {
 
   // v4.4.4 introduced a breaking code change.
   // We are no longer able to extract the SQL statements for "analyticsindexes".
-  // see chnages: https://github.com/couchbase/couchnode/compare/v4.4.3...v4.4.4?diff=split&w=
+  // see changes: https://github.com/couchbase/couchnode/commit/b8118b8dd05c710e0f0d898ba8e16372028ea294
   if (instrumentLatest) {
     // #### ANALYTICS SERVICES (.analyticsIndexes().) v >= 4.4.4
     instrumentAnalyticsIndexes(cluster, connectionStr);
