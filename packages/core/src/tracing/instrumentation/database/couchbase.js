@@ -123,6 +123,8 @@ function instrumentCluster(cluster, connectionStr) {
     };
   });
 
+  // v444 and v443 is instrumented differently because of the underlying changes in analytics query execution
+  // see chnages: https://github.com/couchbase/couchnode/compare/v4.4.3...v4.4.4?diff=split&w=
   if (instrumentV444) {
     // #### ANALYTICS SERVICES (.analyticsIndexes().) v >= 4.4.4
     instrumentAnalyticsIndexes(cluster, connectionStr);
@@ -139,6 +141,8 @@ function instrumentCluster(cluster, connectionStr) {
             connectionStr,
             sql: tracingUtil.shortenDatabaseStatement(sqlStatement),
             resultHandler: (span, result) => {
+              // response structure in v4.4.3,
+              // we need to check inside result.rows for the data here
               if (result && result.rows && result.rows.length > 0 && result.rows[0].BucketName) {
                 span.data.couchbase.bucket = result.rows[0].BucketName;
                 span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
@@ -334,8 +338,10 @@ function instrumentAnalyticsIndexes(cluster, connectionStr) {
               connectionStr,
               sql: camelCaseToUpperWords(fnName),
               resultHandler: (span, result) => {
-                if (result) {
-                  span.data.couchbase.bucket = result[0].BucketName;
+                // response structure is also different in v4.4.4,
+                // we can check for bucketName directly inside the result here
+                if (result && Array.isArray(result) && result.length > 0 && result[0].bucketName) {
+                  span.data.couchbase.bucket = result[0].bucketName;
                   span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
                 }
               }
