@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.3.0](https://github.com/instana/nodejs/compare/v4.2.0...v4.3.0) (2024-12-10)
+
+### Features
+
+- added support for mysql2 v3.11.5 ([#1467](https://github.com/instana/nodejs/issues/1467)) ([45414f5](https://github.com/instana/nodejs/commit/45414f502a7be304ce475ad1a0a46e2d2bb2652f))
+- added support for prisma v6 ([#1464](https://github.com/instana/nodejs/issues/1464)) ([d2996e1](https://github.com/instana/nodejs/commit/d2996e184e648ecb727eda73fac1fb382c1b8faa))
+- **redis:** added endpoint filtering ([#1448](https://github.com/instana/nodejs/issues/1448)) ([2f45ff7](https://github.com/instana/nodejs/commit/2f45ff75d68fd782ac511448bad6fc5e484cecb8))
+- **serverless-collector:** added service name detection ([#1468](https://github.com/instana/nodejs/issues/1468)) ([5491461](https://github.com/instana/nodejs/commit/54914613bf40c6e81c652801899f2d3136308073))
+
+### Reverts
+
+- Revert "test: upgraded the mysql docker image for M1 compatibility (#1469)" ([50b8e6a](https://github.com/instana/nodejs/commit/50b8e6a1fe674310f2e121ce99916fc3785f8c4d)), closes [#1469](https://github.com/instana/nodejs/issues/1469)
+
 # [4.2.0](https://github.com/instana/nodejs/compare/v4.1.0...v4.2.0) (2024-11-22)
 
 ### Features

@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.3.0](https://github.com/instana/nodejs/compare/v4.2.0...v4.3.0) (2024-12-10)
+
+### Features
+
+- added support for mysql2 v3.11.5 ([#1467](https://github.com/instana/nodejs/issues/1467)) ([45414f5](https://github.com/instana/nodejs/commit/45414f502a7be304ce475ad1a0a46e2d2bb2652f))
+- **redis:** added endpoint filtering ([#1448](https://github.com/instana/nodejs/issues/1448)) ([2f45ff7](https://github.com/instana/nodejs/commit/2f45ff75d68fd782ac511448bad6fc5e484cecb8))
+
 # [4.2.0](https://github.com/instana/nodejs/compare/v4.1.0...v4.2.0) (2024-11-22)
 
 **Note:** Version bump only for package @instana/collector

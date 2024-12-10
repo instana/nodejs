@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.3.0](https://github.com/instana/nodejs/compare/v4.2.0...v4.3.0) (2024-12-10)
+
+### Features
+
+- **serverless-collector:** added service name detection ([#1468](https://github.com/instana/nodejs/issues/1468)) ([5491461](https://github.com/instana/nodejs/commit/54914613bf40c6e81c652801899f2d3136308073))
+
 # [4.2.0](https://github.com/instana/nodejs/compare/v4.1.0...v4.2.0) (2024-11-22)
 
 **Note:** Version bump only for package @instana/serverless-collector
