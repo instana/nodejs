@@ -23,7 +23,7 @@ exports.deactivate = function deactivate() {
   isActive = false;
 };
 
-let instrumentV444 = false;
+let instrumentLatest = false;
 
 exports.init = function init() {
   hook.onModuleLoad('couchbase', instrument);
@@ -50,7 +50,7 @@ exports.init = function init() {
 function instrument(cb) {
   // RawBinaryTranscoder function is added in v4.4.4,
   // so inorder to check version, we can rely on this logic
-  instrumentV444 = typeof cb.RawBinaryTranscoder === 'function';
+  instrumentLatest = typeof cb.RawBinaryTranscoder === 'function';
 
   // NOTE: we could instrument `cb.Collection.prototype` here, but we want to instrument each cluster connection.
   shimmer.wrap(cb, 'connect', instrumentConnect);
@@ -127,13 +127,15 @@ function instrumentCluster(cluster, connectionStr) {
     };
   });
 
-  // v444 and v443 is instrumented differently because of the underlying changes in analytics query execution
+  // v4.4.4 introduced a breaking code change.
+  // We are no longer able to extract the SQL statements for "analyticsindexes".
   // see chnages: https://github.com/couchbase/couchnode/compare/v4.4.3...v4.4.4?diff=split&w=
-  if (instrumentV444) {
+  if (instrumentLatest) {
     // #### ANALYTICS SERVICES (.analyticsIndexes().) v >= 4.4.4
     instrumentAnalyticsIndexes(cluster, connectionStr);
   } else {
     // #### ANALYTICS SERVICE (.analyticsIndexes().) v <= 4.4.3
+    // TODO: Remove the logic for v4.4.3 upon v5 release
     shimmer.wrap(cluster, 'analyticsQuery', function instanaClusterAnalyticsQuery(original) {
       return function instanaClusterAnalyticsQueryWrapped() {
         const originalThis = this;
@@ -342,7 +344,7 @@ function instrumentAnalyticsIndexes(cluster, connectionStr) {
               connectionStr,
               sql: camelCaseToUpperWords(fnName),
               resultHandler: (span, result) => {
-                // response structure is also different in v4.4.4,
+                // response structure is different in v4.4.4,
                 // we can check for bucketName directly inside the result here
                 if (result && Array.isArray(result) && result.length > 0 && result[0].bucketName) {
                   span.data.couchbase.bucket = result[0].bucketName;
