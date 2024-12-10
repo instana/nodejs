@@ -44,7 +44,6 @@ if [[ -z $PUBLISH_TO_CHINA_REGIONS ]]; then
   PUBLISH_TO_CHINA_REGIONS=false
 fi
 
-
 PACKAGE_NAMES="@instana/aws-lambda@$PACKAGE_VERSION instana-aws-lambda-auto-wrap@$PACKAGE_VERSION"
 
 # The default layer name is instana-nodejs. If you want to push experimental changes under a different layer name, you
@@ -288,7 +287,7 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
   echo "step 6/9: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to specifed regions"
   
   if [[ "$PUBLISH_TO_CHINA_REGIONS" == "true" ]]; then
-    echo "Publishing only to Chinese regions: $CHINESE_REGIONS"
+    echo "Publishing to Chinese regions: $CHINESE_REGIONS"
     REGIONS="$CHINESE_REGIONS"
   else
     # Remove Chinese regions from REGIONS
@@ -303,7 +302,7 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
       # Update REGIONS with the filtered list
       REGIONS="$FILTERED_REGIONS"
     done
-    echo "Publishing to  regions except Chinese regions.."
+    echo "Publishing to regions except Chinese regions.."
   fi
 
 
