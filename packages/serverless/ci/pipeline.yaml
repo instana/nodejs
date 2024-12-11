@@ -425,6 +425,54 @@ jobs:
                 AWS_ACCESS_KEY_ID_CHINA=((aws-ci-manage-lambda-layers-china.aws_access_key_id)) \
                 AWS_SECRET_ACCESS_KEY_CHINA=((aws-ci-manage-lambda-layers-china.aws_secret_access_key)) \
                 nodejs-repository/packages/aws-lambda/layer/bin/publish-layer.sh
+      - task: build-and-publish-aws-lambda-layer-and-image-china-x86_64
+        privileged: true
+        image: dind-nodejs-aws-jq-image
+        config:
+          platform: linux
+          inputs:
+            - name: nodejs-repository
+          run:
+            path: entrypoint.sh
+            args:
+            - bash
+            - -ceux
+            - |
+                BUILD_LAYER_WITH=npm \
+                NO_PROMPT=true \
+                PUBLISH_TO_CHINA_REGIONS=true \
+                CONTAINER_REGISTRY_USER=iamapikey \
+                CONTAINER_REGISTRY_PASSWORD=((concourse-icr-containers-public.password)) \
+                AWS_ACCESS_KEY_ID=((aws-ci-manage-lambda-layers.aws_access_key_id)) \
+                AWS_SECRET_ACCESS_KEY=((aws-ci-manage-lambda-layers.aws_secret_access_key)) \
+                AWS_ACCESS_KEY_ID_CHINA=((aws-ci-manage-lambda-layers-china.aws_access_key_id)) \
+                AWS_SECRET_ACCESS_KEY_CHINA=((aws-ci-manage-lambda-layers-china.aws_secret_access_key)) \
+                nodejs-repository/packages/aws-lambda/layer/bin/publish-layer.sh
+
+      - task: build-and-publish-aws-lambda-layer-and-image-china-arm64
+        privileged: true
+        image: dind-nodejs-aws-jq-image
+        config:
+          platform: linux
+          inputs:
+            - name: nodejs-repository
+          run:
+            path: entrypoint.sh
+            args:
+            - bash
+            - -ceux
+            - |
+                BUILD_LAYER_WITH=npm \
+                NO_PROMPT=true \
+                LAMBDA_ARCHITECTURE=arm64 \
+                PUBLISH_TO_CHINA_REGIONS=true \
+                CONTAINER_REGISTRY_USER=iamapikey \
+                CONTAINER_REGISTRY_PASSWORD=((concourse-icr-containers-public.password)) \
+                AWS_ACCESS_KEY_ID=((aws-ci-manage-lambda-layers.aws_access_key_id)) \
+                AWS_SECRET_ACCESS_KEY=((aws-ci-manage-lambda-layers.aws_secret_access_key)) \
+                AWS_ACCESS_KEY_ID_CHINA=((aws-ci-manage-lambda-layers-china.aws_access_key_id)) \
+                AWS_SECRET_ACCESS_KEY_CHINA=((aws-ci-manage-lambda-layers-china.aws_secret_access_key)) \
+                nodejs-repository/packages/aws-lambda/layer/bin/publish-layer.sh
 
     on_success:
       put: slack-alert
