@@ -16,7 +16,7 @@ EOF
   }
 }
 
-
+# Ensure required tools are installed.
 check_installation npm
 check_installation aws
 check_installation docker
@@ -24,7 +24,6 @@ check_installation jq
 check_installation zip
 
 echo "Using AWS CLI version: $(aws --version)"
-
 
 cd "$(dirname "$BASH_SOURCE")/.."
 
@@ -66,20 +65,18 @@ if [[ -z $DOCKER_IMAGE_NAME ]]; then
   if [[ $BUILD_LAYER_WITH == local ]]; then
     DOCKER_IMAGE_NAME=instana-aws-lambda-nodejs-local
   elif [[ $BUILD_LAYER_WITH == npm ]] && [[ $LAYER_NAME == instana-nodejs ]]; then
-      DOCKER_IMAGE_NAME=$CONTAINER_REGISTRY/instana/aws-lambda-nodejs
+    DOCKER_IMAGE_NAME=$CONTAINER_REGISTRY/instana/aws-lambda-nodejs
   else
     DOCKER_IMAGE_NAME=$CONTAINER_REGISTRY/instana/aws-lambda-nodejs-experimental
   fi
 fi
 
 if [[ -n $SKIP_DOCKER_IMAGE ]]; then
-  # SKIP_DOCKER_IMAGE implies SKIP_DOCKER_IMAGE_PUSH
   SKIP_DOCKER_IMAGE_PUSH=true
 fi
 
 LICENSE=MIT
 ZIP_PREFIX=instana-nodejs-layer
-
 
 if [[ $LAMBDA_ARCHITECTURE == arm64 ]]; then
   LAYER_NAME=$LAYER_NAME-$LAMBDA_ARCHITECTURE
@@ -97,7 +94,7 @@ AWS_CLI_TIMEOUT_FOR_CHINA=100
 if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
   printf "Warning: Environment variables AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are not set.\n"
   printf "This might be okay if you have set up AWS authentication via other means.\n"
-  printf "If not, the AWS cli commands will fail.\n"
+  printf "If not, the AWS CLI commands will fail.\n"
 fi
 
 
@@ -105,9 +102,6 @@ fi
 # maybe cannot be) enabled for our AWS account. We currently do not publish Lambda layers to these regions.
 SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1'
 
-# AWS China is completely separated from the rest of AWS. You cannot enable the Chinese regions in a global AWS account.
-# Instead, we have a separate account for AWS China.
-CHINESE_REGIONS=$'cn-northwest-1\ncn-north-1'
 
 
 if [[ -z $REGIONS ]]; then
@@ -121,15 +115,33 @@ else
   printf "\nstep 1/9: Using provided AWS regions\n"
 fi
 
+# Separate regions into China and non-China groups.
+# Lambda layers in China regions are published using a different AWS account.
+REGIONS_CN=()
+REGIONS_OTHERS=()
+while IFS= read -r region; do
+  if [[ $region == cn-* ]]; then
+    REGIONS_CN+=("$region")
+  else
+    REGIONS_OTHERS+=("$region")
+  fi
+done <<< "$REGIONS"
+
+if [[ "$PUBLISH_TO_CHINA_REGIONS" == "true" ]]; then
+  REGIONS=("${REGIONS_CN[@]}")
+else
+  REGIONS=("${REGIONS_OTHERS[@]}")
+fi
+
 printf "\n#### Summary ####\n\n"
 echo "LAYER_NAME: $LAYER_NAME"
 echo "ZIP_NAME: $ZIP_NAME"
 echo "LAMBDA_ARCHITECTURE: $LAMBDA_ARCHITECTURE"
 echo "SKIP_DOCKER_IMAGE: $SKIP_DOCKER_IMAGE"
 echo "DOCKER_IMAGE_NAME: $DOCKER_IMAGE_NAME"
-echo "REGIONS: $REGIONS"
+echo "REGIONS: ${REGIONS[@]}"
 echo "SKIPPED: $SKIPPED_REGIONS"
-echo "CHINESE_REGIONS: $CHINESE_REGIONS"
+echo "CHINESE_REGIONS: ${REGIONS_CN[@]}"
 echo "PACKAGE_VERSION: $PACKAGE_VERSION"
 echo "PUBLISH_TO_CHINA_REGIONS: $PUBLISH_TO_CHINA_REGIONS"
 echo "BUILD_LAYER_WITH: $BUILD_LAYER_WITH"
@@ -138,12 +150,12 @@ printf "####\n\n"
 
 if [[ -z $NO_PROMPT ]]; then
   while true; do
-      read -p "Do you wish to continue (yes or no)? " yn
-      case $yn in
-          [Yy]* ) echo "Let's go!"; break;;
-          [Nn]* ) exit 1;;
-          * ) echo "Please answer yes or no.";;
-      esac
+    read -p "Do you wish to continue (yes or no)? " yn
+    case $yn in
+      [Yy]* ) echo "Let's go!"; break;;
+      [Nn]* ) exit 1;;
+      * ) echo "Please answer yes or no.";;
+    esac
   done
 fi
 
@@ -266,7 +278,6 @@ cd ..
 
 echo "step 4/9: Add extension to layer"
 mkdir -p extensions
-
 cp ../include/$LAMBDA_ARCHITECTURE/instana-lambda-extension extensions/instana-lambda-extension
 
 # ES module support for AWS Lambda
@@ -285,94 +296,74 @@ export AWS_MAX_ATTEMPTS=$AWS_CLI_RETRY_MAX_ATTEMPTS
 
 if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
   echo "step 6/9: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to specifed regions"
-  
-  if [[ "$PUBLISH_TO_CHINA_REGIONS" == "true" ]]; then
-    echo "Publishing to Chinese regions: $CHINESE_REGIONS"
-    REGIONS="$CHINESE_REGIONS"
-  else
-    # Remove Chinese regions from REGIONS
-    for china_region in $CHINESE_REGIONS; do
-
-      FILTERED_REGIONS=""
-      for region in $REGIONS; do
-        if [[ "$region" != "$china_region" ]]; then
-          FILTERED_REGIONS+="$region "
-        fi
-      done
-      # Update REGIONS with the filtered list
-      REGIONS="$FILTERED_REGIONS"
-    done
-    echo "Publishing to regions except Chinese regions.."
-  fi
 
 
-  while read -r region; do
+  for region in "${REGIONS[@]}"; do
     if [[ "$SKIPPED_REGIONS" == *"$region"* ]]; then
       echo "Skipping region: $region"
       continue
     fi
 
-    # Publish to AWS, handle Chinese regions
+    # Publish to AWS Lambda Layer
     echo Publishing AWS Lambda layer in region $region.
 
     aws_cli_timeout_options="--cli-connect-timeout $AWS_CLI_TIMEOUT_DEFAULT"
 
-    if [[ "$PUBLISH_TO_CHINA_REGIONS" == "true" && "$CHINESE_REGIONS" == *"$region"* ]]; then
+    if [[ "$PUBLISH_TO_CHINA_REGIONS" == "true" ]]; then
 
       if [[ -z $AWS_ACCESS_KEY_ID_CHINA ]] || [[ -z $AWS_SECRET_ACCESS_KEY_CHINA ]]; then
         printf "Error: Trying to publish to Chinese region $region, but at least one of the environment variables\n"
         printf "AWS_ACCESS_KEY_ID_CHINA or AWS_SECRET_ACCESS_KEY_CHINA is not set.\n"
         exit 1
       fi
-      # Publishing to a Chinese regions requires different credentials, because it is a different AWS account. The
-      # AWS credential environment variables will be reverted after the publish for this region is done.
+      # Publishing to a Chinese regions requires different credentials, because it is a different AWS account.
       AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_CHINA
       AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_CHINA
       aws_cli_timeout_options="--cli-read-timeout $AWS_CLI_TIMEOUT_FOR_CHINA --cli-connect-timeout $AWS_CLI_TIMEOUT_FOR_CHINA"
     fi
 
-      echo "   + using aws_cli_timeout_options: $aws_cli_timeout_options and retrying $AWS_CLI_RETRY_MAX_ATTEMPTS times"
+    echo "   + using aws_cli_timeout_options: $aws_cli_timeout_options and retrying $AWS_CLI_RETRY_MAX_ATTEMPTS times"
 
-      # See https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html for documentation.
-      # NOTE: --compatible-architectures $LAMBDA_ARCHITECTURE is not working in all regions.
-      lambda_layer_version=$( \
-        aws \
-        --region $region  \
-        $aws_cli_timeout_options \
-        lambda \
-          publish-layer-version \
-          --layer-name $LAYER_NAME \
-          --description "Provides Instana tracing and monitoring for AWS Lambdas (@instana/aws-lambda@$VERSION)" \
-          --license-info $LICENSE \
-          --zip-file fileb://$ZIP_NAME \
-          --output json \
-          --compatible-runtimes nodejs18.x nodejs20.x nodejs22.x \
-          | jq '.Version' \
-      ) || true  # NOTE: If the upload fails, the bash script should not fail.
+    # See https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html for documentation.
+    # NOTE: --compatible-architectures $LAMBDA_ARCHITECTURE is not working in all regions.
+    lambda_layer_version=$( \
+      aws \
+      --region $region  \
+      $aws_cli_timeout_options \
+      lambda \
+        publish-layer-version \
+        --layer-name $LAYER_NAME \
+        --description "Provides Instana tracing and monitoring for AWS Lambdas (@instana/aws-lambda@$VERSION)" \
+        --license-info $LICENSE \
+        --zip-file fileb://$ZIP_NAME \
+        --output json \
+        --compatible-runtimes nodejs18.x nodejs20.x nodejs22.x \
+        | jq '.Version' \
+    ) || true  # NOTE: If the upload fails, the bash script should not fail.
 
-      if [[ -z $lambda_layer_version ]] || [[ ! $lambda_layer_version =~ ^[0-9]+$ ]]; then
-        echo "   + ERROR: Failed to publish layer in region $region, continuing to the next region."
-        continue
-      fi
+    if [[ -z $lambda_layer_version ]] || [[ ! $lambda_layer_version =~ ^[0-9]+$ ]]; then
+      echo "   + ERROR: Failed to publish layer in region $region, continuing to the next region."
+      continue
+    fi
 
-      echo "   + published version $lambda_layer_version to region $region"
+    echo "   + published version $lambda_layer_version to region $region"
 
-      if [[ $lambda_layer_version =~ ^[0-9]+$ ]]; then
-        echo "   + setting required permission on Lambda layer $LAYER_NAME / version $lambda_layer_version in region $region"
-        aws \
-        --region $region \
-        $aws_cli_timeout_options \
-        lambda \
-        add-layer-version-permission \
-          --layer-name $LAYER_NAME \
-          --version-number $lambda_layer_version \
-          --statement-id public-permission-all-accounts \
-          --principal \* \
-          --action lambda:GetLayerVersion \
-          --output text
-      else
-        echo "   + WARNING: Lambda layer version $lambda_layer_version does not seem to be numeric, will not set permissions in region $region"
-      fi
+    if [[ $lambda_layer_version =~ ^[0-9]+$ ]]; then
+      echo "   + setting required permission on Lambda layer $LAYER_NAME / version $lambda_layer_version in region $region"
+      aws \
+      --region $region \
+      $aws_cli_timeout_options \
+      lambda \
+      add-layer-version-permission \
+        --layer-name $LAYER_NAME \
+        --version-number $lambda_layer_version \
+        --statement-id public-permission-all-accounts \
+        --principal \* \
+        --action lambda:GetLayerVersion \
+        --output text
+    else
+      echo "   + WARNING: Lambda layer version $lambda_layer_version does not seem to be numeric, will not set permissions in region $region"
+    fi
   done <<< "$REGIONS"
 else
   echo "step 6/9: publishing AWS Lambda layer $LAYER_NAME (skipping)"
