@@ -304,7 +304,6 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
       continue
     fi
 
-    # Publish to AWS Lambda Layer
     echo Publishing AWS Lambda layer in region $region.
 
     aws_cli_timeout_options="--cli-connect-timeout $AWS_CLI_TIMEOUT_DEFAULT"
