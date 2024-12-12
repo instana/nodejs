@@ -58,7 +58,9 @@ jobs:
         run: .github/workflows/disallow-major-release.sh
 
       - name: Add token to .npmrc
-        run: echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' >> .npmrc
+        run: |
+          echo "" >> .npmrc
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
 
       # This is required to make sure that new packages (@instana packages that we publish for the first time) can be
       # published to the npm registry. The default visibility for scoped packages is private, but our npm account
