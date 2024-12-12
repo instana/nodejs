@@ -152,6 +152,9 @@ async function configureCouchbase() {
 const couchbaseVersions = ['latest', 'v443'];
 
 couchbaseVersions.forEach(version => {
+  // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
+  if (process.env.RUN_ESM && version !== 'latest') return;
+
   // NOTE: it takes 1-2 minutes till the couchbase server can be reached via docker
   mochaSuiteFn(`tracing/couchbase@${version}`, function () {
     this.timeout(config.getTestTimeout() * 4);
