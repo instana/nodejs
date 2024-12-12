@@ -60,7 +60,7 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
 
   buildSpanData(operation, params) {
     const spanData = {
-      op: this.convertOperationName(operation)
+      operation: this.convertOperationName(operation)
     };
 
     if (params && params.TableName) {
