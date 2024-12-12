@@ -5,7 +5,7 @@
 'use strict';
 
 // List of span types to allowed to ignore
-const IGNORABLE_SPAN_TYPES = ['redis'];
+const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb'];
 
 /**
  * @param {import('../core').InstanaBaseSpan} span
@@ -17,15 +17,21 @@ function shouldIgnore(span, endpoints) {
   if (!IGNORABLE_SPAN_TYPES.includes(span.n)) {
     return false;
   }
-  const operation = span.data?.[span.n]?.operation;
+  const endpoint = endpoints[span.n];
+  if (!endpoint) return false;
 
-  if (operation && endpoints[span.n]) {
-    const endpoint = endpoints[span.n];
-    if (Array.isArray(endpoint)) {
-      return endpoint.some(op => op === operation);
-    } else if (typeof endpoint === 'string') {
-      return endpoint === operation;
-    }
+  // The endpoint already been converted to lowercase during parsing, so here we are normalizing
+  // the operation for case-insensitive comparison
+  const operation = span.data?.[span.n]?.operation?.toLowerCase();
+  if (!operation) return false;
+
+  // We support both array and string formats for endpoints, but the string format is not shared publicly.
+  if (Array.isArray(endpoint)) {
+    return endpoint.some(op => op.toLowerCase() === operation);
+  }
+
+  if (typeof endpoint === 'string') {
+    return endpoint.toLowerCase() === operation;
   }
 
   return false;

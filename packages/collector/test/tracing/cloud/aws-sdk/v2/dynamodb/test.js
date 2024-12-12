@@ -12,7 +12,7 @@ const { expect } = require('chai');
 const { fail } = expect;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../../core/test/config');
-const { retry, stringifyItems, delay } = require('../../../../../../../core/test/test_util');
+const { retry, stringifyItems, delay, expectAtLeastOneMatching } = require('../../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
 const {
@@ -250,6 +250,86 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
           }
         });
       });
+    });
+  });
+  describe('when ignore-endpoints enabled via tracing config', async () => {
+    let appControls;
+    before(async () => {
+      appControls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          AWS_DYNAMODB_TABLE_NAME: tableName,
+          INSTANA_IGNORE_ENDPOINTS: 'dynamodb:list'
+        }
+      });
+      await appControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await appControls.stop();
+    });
+
+    afterEach(async () => {
+      await appControls.clearIpcMessages();
+    });
+
+    const requestMethod = getNextCallMethod();
+    it('should ignore spans for configured ignore endpoints(listTables)', async function () {
+      const apiPath = `/listTables/${requestMethod}`;
+
+      await appControls.sendRequest({
+        method: 'GET',
+        path: `${apiPath}`
+      });
+      await delay(1000);
+      const spans = await agentControls.getSpans();
+      // 1 x http entry span
+      // 1 x http client span
+      expect(spans.length).to.equal(2);
+      spans.forEach(span => {
+        expect(span.n).not.to.equal('dynamodb');
+      });
+      expectAtLeastOneMatching(spans, [
+        span => expect(span.n).to.equal('node.http.server'),
+        span => expect(span.data.http.method).to.equal('GET')
+      ]);
+      expectAtLeastOneMatching(spans, [
+        span => expect(span.n).to.equal('node.http.client'),
+        span => expect(span.data.http.method).to.equal('GET')
+      ]);
+    });
+    it('should not ignore spans for endpoints that are not in the ignore list', async () => {
+      const apiPath = `/scan/${requestMethod}`;
+
+      await appControls.sendRequest({
+        method: 'GET',
+        path: `${apiPath}`
+      });
+      await delay(1000);
+      const spans = await agentControls.getSpans();
+
+      // 1 x http entry span
+      // 1 x http client span
+      // 1 x dynamodb span
+      expect(spans.length).to.equal(3);
+
+      expectAtLeastOneMatching(spans, [
+        span => expect(span.n).to.equal('dynamodb'),
+        span => expect(span.data.dynamodb.op).to.equal('scan')
+      ]);
+      expectAtLeastOneMatching(spans, [
+        span => expect(span.n).to.equal('node.http.server'),
+        span => expect(span.data.http.method).to.equal('GET')
+      ]);
+      expectAtLeastOneMatching(spans, [
+        span => expect(span.n).to.equal('node.http.client'),
+        span => expect(span.data.http.method).to.equal('GET')
+      ]);
     });
   });
 });

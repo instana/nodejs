@@ -7,11 +7,7 @@
 module.exports = {
   get transform() {
     return (/** @type {import('../../core').InstanaBaseSpan} */ span) => {
-      try {
-        return require(`./${span.n}_mapper`).transform(span);
-      } catch {
-        return span;
-      }
+      return require('./mapper').transform(span);
     };
   }
 };
