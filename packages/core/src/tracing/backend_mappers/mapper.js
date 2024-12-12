@@ -38,22 +38,20 @@ const fieldMappings = {
  */
 module.exports.transform = span => {
   const spanName = span.n;
-  if (!fieldMappings[spanName]) return span;
-
   const mappings = fieldMappings[spanName];
-  if (span.data[spanName]) {
-    Object.entries(mappings).forEach(([internalField, backendField]) => {
-      if (span.data[spanName][internalField]) {
-        if (!backendField) {
-          // If backendField is falsy, remove the internalField from span data
-          delete span.data[spanName][internalField];
-        } else {
-          span.data[spanName][backendField] = span.data[spanName][internalField];
-          delete span.data[spanName][internalField];
-        }
-      }
-    });
-  }
+  if (!mappings || !span.data[spanName]) return span;
+
+  Object.keys(span.data[spanName]).forEach(internalField => {
+    const backendField = mappings[internalField];
+
+    if (backendField) {
+      span.data[spanName][backendField] = span.data[spanName][internalField];
+      delete span.data[spanName][internalField];
+    } else {
+      // If backendField is falsy, remove the internalField from span data
+      delete span.data[spanName][internalField];
+    }
+  });
 
   return span;
 };

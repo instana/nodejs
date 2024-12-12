@@ -20,9 +20,12 @@ function shouldIgnore(span, endpoints) {
   const endpoint = endpoints[span.n];
   if (!endpoint) return false;
 
+  // The endpoint already been converted to lowercase during parsing, so here we are normalizing
+  // the operation for case-insensitive comparison
   const operation = span.data?.[span.n]?.operation?.toLowerCase();
   if (!operation) return false;
 
+  // We support both array and string formats for endpoints, but the string format is not shared publicly.
   if (Array.isArray(endpoint)) {
     return endpoint.some(op => op.toLowerCase() === operation);
   }
