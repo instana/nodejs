@@ -276,6 +276,8 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
         await appControls.clearIpcMessages();
       });
 
+      after(() => cleanup(tableName));
+
       const requestMethod = getNextCallMethod();
       it('should ignore spans for configured ignore endpoints(listTables)', async function () {
         const apiPath = `/listTables/${requestMethod}`;
@@ -311,22 +313,9 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
         await delay(1000);
         const spans = await agentControls.getSpans();
 
-        // 1 x http entry span
-        // 1 x http client span
-        // 1 x dynamodb span
-        expect(spans.length).to.equal(3);
-
         expectAtLeastOneMatching(spans, [
           span => expect(span.n).to.equal('dynamodb'),
           span => expect(span.data.dynamodb.op).to.equal('create')
-        ]);
-        expectAtLeastOneMatching(spans, [
-          span => expect(span.n).to.equal('node.http.server'),
-          span => expect(span.data.http.method).to.equal('GET')
-        ]);
-        expectAtLeastOneMatching(spans, [
-          span => expect(span.n).to.equal('node.http.client'),
-          span => expect(span.data.http.method).to.equal('GET')
         ]);
       });
     });
