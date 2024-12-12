@@ -19,8 +19,9 @@ const span = {
     }
   }
 };
-let ignoreEndpoints = {
-  redis: ['GET', 'TYPE']
+const ignoreEndpoints = {
+  redis: ['GET', 'TYPE'],
+  dynamodb: ['QUERY']
 };
 
 describe('util.spanFilter', () => {
@@ -39,8 +40,21 @@ describe('util.spanFilter', () => {
     expect(applyFilter({ span, ignoreEndpoints })).equal(span);
   });
   it('should return span when no ignoreconfiguration', () => {
-    ignoreEndpoints = {};
     span.data.redis.operation = 'GET';
+    expect(applyFilter({ span, ignoreEndpoints: {} })).equal(span);
+  });
+  it('should return null when the dynamodb span operation is in the ignore list', () => {
+    span.n = 'dynamodb';
+    span.data = {
+      dynamodb: {
+        operation: 'Query'
+      }
+    };
+    expect(applyFilter({ span, ignoreEndpoints })).equal(null);
+  });
+
+  it('should return the dynamodb span when the operation is not in the ignore list', () => {
+    span.data.dynamodb.operation = 'PutItem';
     expect(applyFilter({ span, ignoreEndpoints })).equal(span);
   });
 });
