@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.4.0](https://github.com/instana/nodejs/compare/v4.3.0...v4.4.0) (2024-12-12)
+
+### Features
+
+- added support for couchbase v4.4.4 ([#1466](https://github.com/instana/nodejs/issues/1466)) ([fb06bdc](https://github.com/instana/nodejs/commit/fb06bdc1f4f15f0501ae957a8b36f5f095f363cf))
+
 # [4.3.0](https://github.com/instana/nodejs/compare/v4.2.0...v4.3.0) (2024-12-10)
 
 ### Features
