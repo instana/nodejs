@@ -100,7 +100,7 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
   buildSpanData(ctx, operation, params) {
     const operationInfo = operationsInfo[operation];
     const spanData = {
-      op: operationInfo.op,
+      operation: operationInfo.op,
       region: ctx.config.region
     };
 
