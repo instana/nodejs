@@ -4,10 +4,15 @@
 
 'use strict';
 
+const mapper = require('./mapper');
 module.exports = {
   get transform() {
     return (/** @type {import('../../core').InstanaBaseSpan} */ span) => {
-      return require('./mapper').transform(span);
+      try {
+        return mapper.transform(span);
+      } catch (error) {
+        return span;
+      }
     };
   }
 };
