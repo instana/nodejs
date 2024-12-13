@@ -39,17 +39,21 @@ const fieldMappings = {
 module.exports.transform = span => {
   const spanName = span.n;
   const mappings = fieldMappings[spanName];
+  // If no mappings exist for the span name or the span data, return the original span
   if (!mappings || !span.data[spanName]) return span;
 
   Object.keys(span.data[spanName]).forEach(internalField => {
-    const backendField = mappings[internalField];
+    // Only proceed if there's a mapping for the internal field in the current span type
+    if (internalField in mappings) {
+      const backendField = mappings[internalField];
 
-    if (backendField) {
-      span.data[spanName][backendField] = span.data[spanName][internalField];
-      delete span.data[spanName][internalField];
-    } else {
-      // If backendField is falsy, remove the internalField from span data
-      delete span.data[spanName][internalField];
+      if (backendField) {
+        span.data[spanName][backendField] = span.data[spanName][internalField];
+        delete span.data[spanName][internalField];
+      } else {
+        // If backendField is falsy, remove the internalField from span data
+        delete span.data[spanName][internalField];
+      }
     }
   });
 
