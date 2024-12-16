@@ -188,19 +188,16 @@ describe.only('logger', () => {
 });
 
 /**
- * function to check if the given object is a Pino logger.
- * @param {any} logger
+ * @param {*} _logger
  * @returns {boolean}
  */
-function isPinoLogger(logger) {
+function isPinoLogger(_logger) {
   return (
-    logger &&
-    typeof logger.trace === 'function' &&
-    typeof logger.debug === 'function' &&
-    typeof logger.info === 'function' &&
-    typeof logger.warn === 'function' &&
-    typeof logger.error === 'function' &&
-    typeof logger.fatal === 'function'
+    _logger &&
+    typeof _logger === 'object' &&
+    typeof _logger.child === 'function' &&
+    typeof _logger.level === 'string' &&
+    typeof _logger[pino.symbols.streamSym] !== 'undefined'
   );
 }
 
