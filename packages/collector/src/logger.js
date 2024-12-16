@@ -17,11 +17,11 @@ try {
 }
 
 // @ts-ignore
-const pino = require('pino')();
+const pino = require('pino');
 const { logger } = require('@instana/core');
 const pinoToAgentStream = require('./agent/loggerToAgentStream');
 
-/** @type {pino | import('@instana/core/src/core').GenericLogger} */
+/** @type {pino.Logger | import('@instana/core/src/core').GenericLogger} */
 let parentLogger = null;
 /** @type {Object.<string, (logger: import('@instana/core/src/core').GenericLogger) => *>} */
 const registry = {};
@@ -31,6 +31,8 @@ const registry = {};
  * @param {boolean} [isReInit]
  */
 exports.init = function init(config, isReInit) {
+  const consoleStream = pino.destination(1);
+
   if (config.logger && typeof config.logger.child === 'function') {
     // A pino logger has been provided via config; create a child logger directly under it.
     parentLogger = config.logger.child({
@@ -42,19 +44,37 @@ exports.init = function init(config, isReInit) {
     parentLogger = config.logger;
   } else {
     // No custom logger has been provided; create a new pino logger as the parent logger for all loggers
-    parentLogger = pino.child({
+
+    parentLogger = pino({
       name: '@instana/collector',
       base: {
         thread: threadId,
         __in: 1
-      },
-      transport: {
-        options: {
-          destination: pinoToAgentStream,
-          sync: false
-        }
       }
     });
+  }
+
+  if (isPino(parentLogger)) {
+    const multiStream = {
+      /**
+       * Custom write method to send logs to multiple destinations
+       * @param {string} chunk
+       */
+      write(chunk) {
+        consoleStream.write(chunk);
+
+        const logRecord = JSON.parse(chunk);
+        pinoToAgentStream.write(logRecord);
+      }
+    };
+
+    parentLogger = pino(
+      {
+        ...parentLogger.levels,
+        base: parentLogger.bindings()
+      },
+      multiStream
+    );
 
     if (process.env['INSTANA_DEBUG']) {
       parentLogger.level = 'debug';
@@ -105,6 +125,20 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
 
   return /** @type {import('@instana/core/src/core').GenericLogger} */ (_logger);
 };
+
+/**
+ * @param {*} _logger
+ * @returns {boolean}
+ */
+function isPino(_logger) {
+  return (
+    _logger &&
+    typeof _logger === 'object' &&
+    typeof _logger.child === 'function' &&
+    typeof _logger.level === 'string' &&
+    typeof _logger[pino.symbols.streamSym] !== 'undefined'
+  );
+}
 
 /**
  * @param {import('@instana/core/src/core').GenericLogger | *} _logger
