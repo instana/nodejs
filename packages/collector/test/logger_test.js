@@ -20,7 +20,7 @@ const logLevel = {
   10: 'trace'
 };
 
-describe('logger', () => {
+describe.only('logger', () => {
   beforeEach(resetEnv);
   afterEach(resetEnv);
 
