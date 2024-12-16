@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.5.0](https://github.com/instana/nodejs/compare/v4.4.0...v4.5.0) (2024-12-16)
+
+### Features
+
+- **dynamodb:** added endpoint filtering ([#1484](https://github.com/instana/nodejs/issues/1484)) ([93e4023](https://github.com/instana/nodejs/commit/93e4023058bf4324ad6f287be92960786cc319ad))
+
 # [4.4.0](https://github.com/instana/nodejs/compare/v4.3.0...v4.4.0) (2024-12-12)
 
 ### Features
