@@ -44,7 +44,6 @@ exports.init = function init(config, isReInit) {
     parentLogger = config.logger;
   } else {
     // No custom logger has been provided; create a new pino logger as the parent logger for all loggers
-
     parentLogger = pino({
       name: '@instana/collector',
       base: {
@@ -71,6 +70,7 @@ exports.init = function init(config, isReInit) {
     parentLogger = pino(
       {
         ...parentLogger.levels,
+        level: parentLogger.level || 'info',
         base: parentLogger.bindings()
       },
       multiStream
