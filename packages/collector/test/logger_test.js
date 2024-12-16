@@ -20,7 +20,7 @@ const logLevel = {
   10: 'trace'
 };
 
-describe.only('logger', () => {
+describe('logger', () => {
   beforeEach(resetEnv);
   afterEach(resetEnv);
 
@@ -38,20 +38,23 @@ describe.only('logger', () => {
   it('should return a child logger if requested', () => {
     log.init({});
     const logger = log.getLogger('childName');
+    const metadata = getLoggerMetadata(logger);
+
     expect(isPinoLogger(logger)).to.be.true;
 
-    // expect(logger.logger.fields).to.have.property('module');
-    // expect(logger.logger.fields.module).to.equal('childName');
+    expect(metadata).to.have.property('module');
+    expect(metadata.module).to.equal('childName');
   });
 
   it('should use the parent logger if defined', () => {
     const logger = pino({ name: 'myParentLogger' });
     log.init({ logger });
     const childLogger = log.getLogger('childName');
+    const metadata = getLoggerMetadata(childLogger);
 
     expect(isPinoLogger(logger)).to.be.true;
-    // expect(childLogger.logger.fields).to.have.property('module');
-    // expect(childLogger.logger.fields.module).to.equal('childName');
+    expect(metadata).to.have.property('module');
+    expect(metadata.module).to.equal('childName');
   });
 
   it('should add child logger to defined parent', () => {
@@ -59,8 +62,10 @@ describe.only('logger', () => {
     log.init({ logger });
     const childLogger = log.getLogger('childName');
 
-    // expect(parentLogger.logger.fields).to.have.property('module');
-    // expect(parentLogger.logger.fields.module).to.equal('childName');
+    const childtMetaData = getLoggerMetadata(childLogger);
+
+    expect(childtMetaData).to.have.property('module');
+    expect(childtMetaData?.module).to.equal('childName');
   });
 
   it('should use default log level if not defined', () => {
@@ -71,7 +76,7 @@ describe.only('logger', () => {
   });
 
   it('should use defined log level', () => {
-    log.init({ logger: pino({ name: 'myParentLogger', level: 'error' }) });
+    log.init({ logger: pino({ name: 'myParentLogger', level: 50 }) });
     const logger = log.getLogger('childName');
 
     expect(logger.level).to.equal(logLevel[50]);
@@ -140,11 +145,9 @@ describe.only('logger', () => {
 
     expect(isPinoLogger(logger)).to.be.true;
 
-    const data = logger; // [Symbol.for('pino.chindings')];
-
     const metadata = getLoggerMetadata(logger);
 
-    // expect(metadata.name).to.equal('@instana/collector');
+    expect(metadata.name).to.equal('@instana/collector');
     const originalLogger = logger;
 
     const logger2 = pino({ name: 'new-logger' });
@@ -154,7 +157,9 @@ describe.only('logger', () => {
     expect(isPinoLogger(logger)).to.be.true;
     expect(logger === originalLogger).to.not.be.true;
 
-    // expect(logger.name).to.equal('new-logger');
+    const metadata2 = getLoggerMetadata(logger2);
+
+    expect(metadata2.name).to.equal('new-logger');
   });
 
   it('should not choke on re-initialization when there is no reInit callback', () => {
@@ -163,7 +168,9 @@ describe.only('logger', () => {
 
     // first getLogger call should yield the default pino logger
     expect(isPinoLogger(logger)).to.be.true;
-    // expect(logger.logger.fields.name).to.equal('@instana/collector');
+
+    const metadata = getLoggerMetadata(logger);
+    expect(metadata.name).to.equal('@instana/collector');
 
     const logger2 = pino({ name: 'new-logger' });
     log.init({ logger: logger2 });
@@ -205,15 +212,7 @@ function isPinoLogger(_logger) {
  * function to extract logger metadata from Pino's internal `chindings` symbol.
  */
 function getLoggerMetadata(logger) {
-  // if (logger.fields)
-  const chindings = logger[Symbol.for('pino.chindings')];
+  const metadata = logger.bindings() || {};
 
-  // console.log(Object.values(logger));
-
-  // console.log('val:', chindings);
-  if (chindings) {
-    const metadata = JSON.parse(chindings);
-    return metadata;
-  }
-  return {};
+  return metadata;
 }
