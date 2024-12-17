@@ -3,8 +3,6 @@
  * (c) Copyright Instana Inc. and contributors 2020
  */
 
-/* eslint-disable no-restricted-syntax */
-
 'use strict';
 
 const process = require('process');

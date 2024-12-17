@@ -29,7 +29,6 @@ module.exports = function clone(x) {
   if (typeof x === 'object') {
     r = {};
 
-    // eslint-disable-next-line no-restricted-syntax
     for (const key in x) {
       // eslint-disable-next-line no-prototype-builtins
       if (x.hasOwnProperty(key)) {

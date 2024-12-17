@@ -57,7 +57,6 @@ function gatherHealthcheckResults() {
       /** @type {Object.<string, *>} */
       const previousResults = exports.currentPayload;
 
-      // eslint-disable-next-line no-restricted-syntax
       for (const key in adminHealthcheckResults) {
         // eslint-disable-next-line no-prototype-builtins
         if (adminHealthcheckResults.hasOwnProperty(key)) {

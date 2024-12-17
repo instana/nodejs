@@ -67,7 +67,6 @@ function applyCompressionToObject(path, prev, next, excludeList) {
   const result = {};
   let addedProps = 0;
 
-  // eslint-disable-next-line no-restricted-syntax
   for (const nKey in next) {
     // eslint-disable-next-line no-prototype-builtins
     if (next.hasOwnProperty(nKey)) {
@@ -121,7 +120,7 @@ function isExcluded(path, excludeList) {
   }
 
   // Compare the given path to all excludeList entries.
-  // eslint-disable-next-line no-restricted-syntax
+
   outer: for (let i = 0; i < excludeList.length; i++) {
     if (excludeList[i].length !== path.length) {
       // The excludeList entry and then given path have different lengths, this cannot be a match. Continue with next

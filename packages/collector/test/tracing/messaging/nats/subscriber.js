@@ -38,7 +38,6 @@ if (process.env.NATS_VERSION === 'latest') {
     const sub = nats.subscribe('publish-test-subject');
 
     (async () => {
-      // eslint-disable-next-line no-restricted-syntax
       for await (const m of sub) {
         const msg = sc.decode(m.data);
         log(`publish-test-subject: received: "${msg}"`);
@@ -57,7 +56,6 @@ if (process.env.NATS_VERSION === 'latest') {
     let currentSpan;
 
     (async () => {
-      // eslint-disable-next-line no-restricted-syntax
       for await (const m of sub2) {
         const msg = sc.decode(m.data);
         log(`subscribe-test-subject: received: "${msg}"`);

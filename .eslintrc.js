@@ -70,6 +70,7 @@ module.exports = {
     'no-plusplus': 'off',
     'no-promise-executor-return': 'off',
     'no-restricted-globals': 'off',
+    'no-restricted-syntax': 'off',
     'no-underscore-dangle': 'off',
     'no-use-before-define': ['error', 'nofunc'],
     'no-var': 'error',

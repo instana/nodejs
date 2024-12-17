@@ -302,7 +302,6 @@ function instrumentedSubscribe(ctx, originalSubscribe, originalSubscribeArgs, is
       const createIterator = async function* instanaIterator() {
         cls.ns.enter(currentCtx);
 
-        // eslint-disable-next-line no-restricted-syntax
         for await (const msg of sub) {
           await new Promise(resolve => {
             instrumentedSubscribeCallback(ctx._natsUrl, subject, resolve, currentCtx, isLatest)(null, msg);
@@ -332,7 +331,6 @@ function instrumentedSubscribeCallback(natsUrl, subject, originalSubscribeCallba
     }
 
     if (isLatest && msg && msg.headers) {
-      // eslint-disable-next-line no-restricted-syntax
       for (const [key, value] of msg.headers) {
         if (key === constants.traceLevelHeaderName && value[0] === '0') {
           suppressed = true;
