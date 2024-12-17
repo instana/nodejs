@@ -13,14 +13,11 @@ const {
 const AdmZip = require('adm-zip');
 const { isCI } = require('@instana/core/test/test_util');
 /**
- *  Local stack is disabled if running in CI environment or on an ARM64 architecture.
- *  Lambda invocation is currently not running on ARM64 architectures, and we haven't tested
- *  it on Tekton yet.
- *  refs https://github.com/localstack/localstack/issues/8878
- *  TODO: Implement support for running Lambda function tests on LocalStack with Tekton and ARM64 architecture.
+ * Lambda invocation has not yet been tested on Tekton(CI environment).
+ * TODO: Implement support for running Lambda function tests on LocalStack with Tekton (INSTA-771).
  */
 exports.isLocalStackDisabled = function () {
-  return isCI() || process.arch === 'arm64';
+  return isCI();
 };
 
 exports.getClientConfig = function () {

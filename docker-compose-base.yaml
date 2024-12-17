@@ -204,7 +204,7 @@ services:
        - ./db2/db2_data:/db2_data
 
   localstack:
-    container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
+    container_name: "${LOCALSTACK_DOCKER_NAME:-localstack-main}"
     image: localstack/localstack:latest
     hostname: localstack
     ports:
