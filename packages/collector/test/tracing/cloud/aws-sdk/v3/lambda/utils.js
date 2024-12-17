@@ -13,9 +13,8 @@ const {
 const AdmZip = require('adm-zip');
 const { isCI } = require('@instana/core/test/test_util');
 /**
- * LocalStack is disabled when running in a CI environment.
- * Lambda invocation has not yet been tested on Tekton.
- * TODO: Add support for running Lambda function tests on LocalStack with Tekton.
+ * Lambda invocation has not yet been tested on Tekton(CI environment).
+ * TODO: Implement support for running Lambda function tests on LocalStack with Tekton (INSTA-771).
  */
 exports.isLocalStackDisabled = function () {
   return isCI();
