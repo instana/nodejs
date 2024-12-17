@@ -18,6 +18,7 @@ try {
 
 // @ts-ignore
 const pino = require('pino');
+// @ts-ignore
 const { logger } = require('@instana/core');
 const pinoToAgentStream = require('./agent/loggerToAgentStream');
 
@@ -44,6 +45,7 @@ exports.init = function init(config, isReInit) {
     parentLogger = config.logger;
   } else {
     // No custom logger has been provided; create a new pino logger as the parent logger for all loggers
+    // @ts-ignore
     parentLogger = pino({
       name: '@instana/collector',
       base: {
@@ -67,6 +69,7 @@ exports.init = function init(config, isReInit) {
       }
     };
 
+    // @ts-ignore
     parentLogger = pino(
       {
         ...parentLogger.levels,
