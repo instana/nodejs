@@ -14,8 +14,7 @@ const testUtils = require('../../../../../core/test/test_util');
 const globalAgent = require('../../../globalAgent');
 const ProcessControls = require('../../../test_util/ProcessControls');
 
-// Skip for now. correct it later
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.skip : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/logger/bunyan', function () {
   this.timeout(config.getTestTimeout());
@@ -74,7 +73,7 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
       runTest('error-object-only', true, 'This is an error.', controls));
 
     it("must capture a nested error object's message", async () => {
-      await runTest('nested-error-object-only', true, 'This is a nested error.');
+      await runTest('nested-error-object-only', true, 'This is a nested error.', controls);
     });
 
     it('must serialize random object', () => runTest('error-random-object-only', true, '{"foo":"[Object]"}', controls));
