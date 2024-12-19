@@ -129,7 +129,6 @@ function jsonToMarkdown(data) {
     // eslint-disable-next-line max-len
     '|--------------|---------|---------|-----------------------------|----------------|-------------|------------|------|--------------|--------------|\n';
 
-  // eslint-disable-next-line no-restricted-syntax
   for (const entry of data) {
     // eslint-disable-next-line max-len
     markdown += `| ${entry.name} | ${entry.lastSupportedVersion} | ${entry.latestVersion} | ${entry.publishedAt} | ${entry.policy} | ${entry.daysBehind} day/s | ${entry.upToDate} | ${entry.note} | ${entry.cloudNative} | ${entry.isBeta} |\n`;

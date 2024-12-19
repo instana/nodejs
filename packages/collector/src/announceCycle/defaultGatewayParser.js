@@ -51,7 +51,6 @@ exports._parseFile = async function _parseFile(filename) {
   }
 
   logger.debug(`Successfully opened ${filename} for reading to determine the default gateway IP.`);
-  // eslint-disable-next-line no-restricted-syntax
   for (const line of fileContent.split('\n')) {
     const fields = line.split('\t');
     if (exports._isDefaultGatewayLine(fields)) {
