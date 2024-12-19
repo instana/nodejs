@@ -13,12 +13,11 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-describe.only('tracing/logger/pino', function () {
+describe('tracing/logger/pino', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
-  // const appControls = require('./controls');
 
   ['latest', 'v8'].forEach(pinoVersion => {
     const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
