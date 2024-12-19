@@ -16,7 +16,7 @@ const instana = require('../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const pino = require('pino')();
+const bunyan = require('bunyan').createLogger({ name: 'test-app' });
 
 const app = express();
 const logPrefix = `Restore Context (${process.pid}):\t`;
@@ -39,7 +39,7 @@ app.post('/run', (req, res) => {
   const activeContext = instana.sdk.getAsyncContext();
   customCallbackQueue.push(() => {
     instana.sdk.runInAsyncContext(activeContext, () => {
-      pino.warn('Should be traced.');
+      bunyan.warn('Should be traced.');
       return res.send('Done! ✅');
     });
   });
@@ -58,7 +58,7 @@ app.post('/enter-and-leave', (req, res) => {
     if (instana.core.tracing.getCls()) {
       instana.core.tracing.getCls().enterAsyncContext(activeContext);
     }
-    pino.warn('Should be traced.');
+    bunyan.warn('Should be traced.');
     res.send('Done! ✅');
     if (instana.core.tracing.getCls()) {
       instana.core.tracing.getCls().leaveAsyncContext(activeContext);
@@ -68,7 +68,7 @@ app.post('/enter-and-leave', (req, res) => {
 
 function createPromise(res) {
   return new Promise(resolve => {
-    pino.warn('Should be traced.');
+    bunyan.warn('Should be traced.');
     res.send('Done! ✅');
     resolve();
   });
