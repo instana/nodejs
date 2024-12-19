@@ -86,7 +86,7 @@ function registerTests(usePreInit) {
 
         if (usePreInit) {
           testUtils.expectAtLeastOneMatching(spans, [
-            span => expect(span.n).to.equal('log.pino'),
+            span => expect(span.n).to.equal('log.bunyan'),
             span => expect(span.k).to.equal(constants.EXIT),
             span => expect(span.p).to.equal(httpEntry.s),
             span =>

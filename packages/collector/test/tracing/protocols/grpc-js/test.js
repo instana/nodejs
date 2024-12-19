@@ -336,7 +336,7 @@ function waitForTrace(serverControls, clientControls, url, cancel, erroneous) {
       // client side, because the grpc-js server instrumentation might never be triggered. In that case we end up with
       // an HTTP entry span from the connection attempt made by the grpc-js client before the call has been cancelled.
       // That is why we sometimes get 4 instead of 3 spans. In other cases, the call gets processed on the server side
-      // before it is cancelled, in that case we get an rpc-server and an additional log.pino span from processing the
+      // before it is cancelled, in that case we get an rpc-server and an additional log.bunyan span from processing the
       // call on the server side (which amounts to 5 spans then).
       expect(spans).to.have.lengthOf.at.least(3);
       expect(spans).to.have.lengthOf.at.most(5);
@@ -440,7 +440,7 @@ function checkGrpcServerSpan({ grpcExit, serverControls, url, erroneous }) {
 
 function checkLogSpanAfterGrpcExit({ httpEntry, url, cancel, erroneous }) {
   const expectations = [
-    span => expect(span.n).to.equal('log.pino'),
+    span => expect(span.n).to.equal('log.bunyan'),
     span => expect(span.k).to.equal(constants.EXIT),
     span => expect(span.t).to.equal(httpEntry.t),
     span => expect(span.p).to.equal(httpEntry.s)
@@ -457,7 +457,7 @@ function checkLogSpanAfterGrpcExit({ httpEntry, url, cancel, erroneous }) {
 
 function checkLogSpanDuringGrpcEntry({ grpcEntry, url, erroneous }) {
   const expectations = [
-    span => expect(span.n).to.equal('log.pino'),
+    span => expect(span.n).to.equal('log.bunyan'),
     span => expect(span.k).to.equal(constants.EXIT),
     span => expect(span.t).to.equal(grpcEntry.t),
     span => expect(span.p).to.equal(grpcEntry.s)
