@@ -13,17 +13,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const agentPort = process.env.AGENT_PORT;
-
-const instana = require('../../../..');
-instana({
-  agentPort,
-  level: 'warn',
-  tracing: {
-    enabled: process.env.TRACING_ENABLED !== 'false',
-    forceTransmissionStartingAt: 1
-  }
-});
+require('../../../..')();
 
 const fetch = require('node-fetch-v2');
 const bodyParser = require('body-parser');
@@ -34,6 +24,8 @@ const port = require('../../../test_util/app-port')();
 const path = require('path');
 const bunyan = require('bunyan');
 const logger = bunyan.createLogger({ name: 'test-logger' });
+
+const agentPort = process.env.INSTANA_AGENT_PORT;
 
 const app = express();
 const logPrefix = `Bunyan (${process.pid}):\t`;
