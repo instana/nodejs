@@ -21,7 +21,7 @@ const logPrefix = `PreInit (${process.env.INSTANA_EARLY_INSTRUMENTATION === 'tru
 const http = require('http');
 
 // Deliberately requiring pino _before_ calling @instana/collector#init.
-const pino = require('pino')();
+const bunyan = require('bunyan').createLogger({ name: 'pre-init-test' });
 
 const port = require('../../../test_util/app-port')();
 const app = new http.Server();
@@ -43,7 +43,7 @@ app.on('request', (req, res) => {
     }
   } else if (req.url === '/trigger') {
     if (req.method === 'POST') {
-      pino.warn('Should be traced if INSTANA_EARLY_INSTRUMENTATION has been set.');
+      bunyan.warn('Should be traced if INSTANA_EARLY_INSTRUMENTATION has been set.');
       return res.end();
     } else {
       res.statusCode = 405;

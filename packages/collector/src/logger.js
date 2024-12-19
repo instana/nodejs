@@ -38,8 +38,7 @@ exports.init = function init(config, isReInit) {
   if (config.logger && typeof config.logger.child === 'function') {
     // A pino logger has been provided via config; create a child logger directly under it.
     parentLogger = config.logger.child({
-      module: 'instana-nodejs-logger-parent',
-      __in: 1
+      module: 'instana-nodejs-logger-parent'
     });
   } else if (config.logger && hasLoggingFunctions(config.logger)) {
     // A custom logger has been provided; use it as is.
@@ -49,10 +48,7 @@ exports.init = function init(config, isReInit) {
     // @ts-ignore
     parentLogger = pino({
       name: '@instana/collector',
-      base: {
-        thread: threadId,
-        __in: 1
-      }
+      thread: threadId
     });
   }
 
