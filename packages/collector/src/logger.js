@@ -16,13 +16,14 @@ try {
   // thread (0).
 }
 
-// @ts-ignore
-const pino = require('pino');
-// @ts-ignore
+const { uninstrumentedLogger: pinoCopy } = require('@instana/core');
+
+const pino = pinoCopy;
+
 const { logger } = require('@instana/core');
 const pinoToAgentStream = require('./agent/loggerToAgentStream');
 
-/** @type {pino.Logger | import('@instana/core/src/core').GenericLogger} */
+/** @type {import('@instana/core/src/core').GenericLogger} */
 let parentLogger = null;
 /** @type {Object.<string, (logger: import('@instana/core/src/core').GenericLogger) => *>} */
 const registry = {};
