@@ -186,7 +186,5 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
 
   function trigger(level, controls, headers = {}) {
     return controls.sendRequest({ path: `/${level}`, headers });
-
-    // fetch(`http://127.0.0.1:${appPort}/${level}`, { headers });
   }
 });
