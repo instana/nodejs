@@ -29,13 +29,6 @@ function instrument(Logger) {
 function shimLog(markAsError) {
   return originalLog =>
     function () {
-      if (arguments.length === 0 || (this.fields && !!this.fields.__in)) {
-        // * arguments.length === 0 -> This is a logger.warn() type of call (without arguments), this will not log
-        // anything but simply return whether the log level in question is enabled for this logger.
-        // * this.fields.__in -> This is one of Instana's own loggers, we never want to trace those log calls.
-        return originalLog.apply(this, arguments);
-      }
-
       if (cls.skipExitTracing({ isActive, skipAllowRootExitSpanPresence: true })) {
         return originalLog.apply(this, arguments);
       }
