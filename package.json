@@ -205,7 +205,7 @@
     "node-gyp": "^9.4.1",
     "node-nats-streaming": "^0.3.2",
     "pg": "^8.13.1",
-    "pino": "^9.5.0",
+    "pino": "^9.6.0",
     "pino-http": "^9.0.0",
     "pino-v8": "npm:pino@^8.21.0",
     "pkg-up": "^3.1.0",
