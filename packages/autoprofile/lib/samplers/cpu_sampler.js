@@ -50,7 +50,6 @@ class CpuSampler {
 
   buildProfile(duration, timespan) {
     const roots = new Set();
-    // eslint-disable-next-line no-restricted-syntax
     for (const child of this.top.children.values()) {
       roots.add(child);
     }
