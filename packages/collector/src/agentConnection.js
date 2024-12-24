@@ -267,11 +267,11 @@ exports.sendSpans = function sendSpans(spans, cb) {
     if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
       logLargeSpans(spans);
     } else if (err) {
-      const obj = getSpanLengthInfo(spans);
-      logger.debug({ obj }, 'Failed to transmit.');
+      const spanInfo = getSpanLengthInfo(spans);
+      logger.debug({ spanInfo }, 'Failed to send.');
     } else {
-      const obj = getSpanLengthInfo(spans);
-      logger.debug({ obj }, 'Successfully transmitted');
+      const spanInfo = getSpanLengthInfo(spans);
+      logger.debug({ spanInfo }, 'Successfully sent');
     }
     cb(err);
   });
