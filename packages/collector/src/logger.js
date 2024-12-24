@@ -33,26 +33,20 @@ const registry = {};
  * @param {boolean} [isReInit]
  */
 exports.init = function init(config, isReInit) {
-  const consoleStream = pino.destination(1);
-
   if (config.logger && typeof config.logger.child === 'function') {
-    // A pino logger has been provided via config; create a child logger directly under it.
+    // A bunyan or pino logger has been provided via config. In either case we create a child logger directly under the
+    // given logger which serves as the parent for all loggers we create later on.
     parentLogger = config.logger.child({
       module: 'instana-nodejs-logger-parent'
     });
   } else if (config.logger && hasLoggingFunctions(config.logger)) {
-    // A custom logger has been provided; use it as is.
+    // A custom non-bunyan/non-pino logger has been provided via config. We use it as is.
     parentLogger = config.logger;
   } else {
-    // No custom logger has been provided; create a new pino logger as the parent logger for all loggers
-    // @ts-ignore
-    parentLogger = pino({
-      name: '@instana/collector',
-      thread: threadId
-    });
-  }
+    // This consoleStream creates a destination stream for the Pino logger that writes log data to the standard output.
+    // Since we are using multistream here, this needs to be specified explicitly
+    const consoleStream = pino.destination(process.stdout);
 
-  if (isPino(parentLogger)) {
     const multiStream = {
       /**
        * Custom write method to send logs to multiple destinations
@@ -66,12 +60,13 @@ exports.init = function init(config, isReInit) {
       }
     };
 
-    // @ts-ignore
+    // No custom logger has been provided via config, we create a new pino logger as the parent logger for all loggers
+    // we create later on.
     parentLogger = pino(
       {
-        ...parentLogger.levels,
-        level: parentLogger.level || 'info',
-        base: parentLogger.bindings()
+        name: '@instana/collector',
+        thread: threadId,
+        level: 'info'
       },
       multiStream
     );
@@ -125,20 +120,6 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
 
   return /** @type {import('@instana/core/src/core').GenericLogger} */ (_logger);
 };
-
-/**
- * @param {*} _logger
- * @returns {boolean}
- */
-function isPino(_logger) {
-  return (
-    _logger &&
-    typeof _logger === 'object' &&
-    typeof _logger.child === 'function' &&
-    typeof _logger.level === 'string' &&
-    typeof _logger[pino.symbols.streamSym] !== 'undefined'
-  );
-}
 
 /**
  * @param {import('@instana/core/src/core').GenericLogger | *} _logger

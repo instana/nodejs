@@ -57,7 +57,7 @@ describe('tracing/logger/pino', function () {
       await controls.clearIpcMessages();
     });
 
-    it(`must not trace info${suffix}`, () => {
+    it(`must not trace info${suffix}`, () =>
       trigger('info', useExpressPino, controls).then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
@@ -71,8 +71,7 @@ describe('tracing/logger/pino', function () {
             expect(pinoSpans).to.be.empty;
           })
         )
-      );
-    });
+      ));
 
     it('[suppressed] should not trace', async function () {
       await controls.sendRequest({
@@ -91,51 +90,48 @@ describe('tracing/logger/pino', function () {
         });
     });
 
-    it(`must trace warn${suffix}`, () => {
-      runTest('warn', useExpressPino, false, 'Warn message - should be traced.', controls);
-    });
+    it(`must trace warn${suffix}`, () =>
+      runTest('warn', useExpressPino, false, 'Warn message - should be traced.', controls));
 
-    it(`must trace error${suffix}`, () => {
-      runTest('error', useExpressPino, true, 'Error message - should be traced.', controls);
-    });
+    it(`must trace error${suffix}`, () =>
+      runTest('error', useExpressPino, true, 'Error message - should be traced.', controls));
 
-    it(`must trace fatal${suffix}`, () => {
-      runTest('fatal', useExpressPino, true, 'Fatal message - should be traced.', controls);
-    });
+    it(`must trace fatal${suffix}`, () =>
+      runTest('fatal', useExpressPino, true, 'Fatal message - should be traced.', controls));
 
     // prettier-ignore
-    it(`must trace error object without message${suffix}`, () => {
-      runTest('error-object-only', useExpressPino, true, 'This is an error.', controls);
-  });
+    it(`must trace error object without message${suffix}`, () =>
+      runTest('error-object-only', useExpressPino, true, 'This is an error.', controls)
+  );
 
     // prettier-ignore
-    it(`should serialize random objects one level deep${suffix}`, () => {
+    it(`should serialize random objects one level deep${suffix}`, () =>
       runTest(
         'error-random-object-only',
         useExpressPino,
         true,
         ['{ payload: ', 'statusCode: 404', "error: 'Not Found'", 'very: [Object'],
         controls
-      );
-  });
+      )
+  );
 
     // prettier-ignore
-    it(`must trace error object and string${suffix}`, () => {
+    it(`must trace error object and string${suffix}`, () =>
       runTest(
         'error-object-and-string',
         useExpressPino,
         true,
         'This is an error. -- Error message - should be traced.',
         controls
-      );
-});
+      )
+);
 
     // prettier-ignore
-    it(`must trace random object and string${suffix}`, () => {
-      runTest('error-random-object-and-string', useExpressPino, true, 'Error message - should be traced.', controls);
-  });
+    it(`must trace random object and string${suffix}`, () =>
+      runTest('error-random-object-and-string', useExpressPino, true, 'Error message - should be traced.', controls)
+  );
 
-    it(`must not trace custom info${suffix}`, () => {
+    it(`must not trace custom info${suffix}`, () =>
       trigger('custom-info', useExpressPino, controls).then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
@@ -149,18 +145,16 @@ describe('tracing/logger/pino', function () {
             expect(pinoSpans).to.be.empty;
           })
         )
-      );
-    });
+      ));
 
-    it(`must trace custom error${suffix}`, () => {
-      runTest('custom-error', useExpressPino, true, 'Custom error level message - should be traced.', controls);
-    });
+    it(`must trace custom error${suffix}`, () =>
+      runTest('custom-error', useExpressPino, true, 'Custom error level message - should be traced.', controls));
 
     it(`must trace child logger error${suffix}`, () => {
-      // if (useExpressPino) {
-      // return
-      // }
-      // return runTest('child-error', false, true, 'Child logger error message - should be traced.', controls);
+      if (useExpressPino) {
+        return;
+      }
+      return runTest('child-error', false, true, 'Child logger error message - should be traced.', controls);
     });
   }
 
