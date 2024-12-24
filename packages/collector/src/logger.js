@@ -69,11 +69,11 @@ exports.init = function init(config, isReInit) {
     );
 
     if (process.env['INSTANA_DEBUG']) {
-      parentLogger.level = 'debug';
+      setLoggerLevel(parentLogger, 'debug');
     } else if (config.level) {
-      parentLogger.level = config.level;
+      setLoggerLevel(parentLogger, config.level);
     } else if (process.env['INSTANA_LOG_LEVEL']) {
-      parentLogger.level = process.env['INSTANA_LOG_LEVEL'].toLowerCase();
+      setLoggerLevel(parentLogger, process.env['INSTANA_LOG_LEVEL'].toLowerCase());
     }
   }
 
@@ -129,4 +129,16 @@ function hasLoggingFunctions(_logger) {
     typeof _logger.warn === 'function' &&
     typeof _logger.error === 'function'
   );
+}
+
+/**
+ * @param {import("@instana/core/src/core").GenericLogger} _logger
+ * @param {string|number} level
+ */
+function setLoggerLevel(_logger, level) {
+  if (typeof _logger.setLevel === 'function') {
+    _logger.setLevel(level);
+  } else {
+    _logger.level = level;
+  }
 }
