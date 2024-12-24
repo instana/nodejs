@@ -1,6 +1,5 @@
 /*
- * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2018
+ * (c) Copyright IBM Corp. 2024
  */
 
 /* eslint-disable no-console */
@@ -14,7 +13,16 @@ process.on('SIGTERM', () => {
 });
 
 const agentPort = process.env.AGENT_PORT;
-const buynan = require('bunyan');
+
+const dummyLogger = {
+  debug: function () {
+    // omit debug calls to not pollute test logs
+  },
+  info: console.log,
+  warn: console.warn,
+  error: console.error
+};
+
 const instana = require('../../../..')({
   agentPort,
   level: 'warn',
@@ -23,7 +31,8 @@ const instana = require('../../../..')({
     forceTransmissionStartingAt: 1
   }
 });
-instana.setLogger(buynan.createLogger({ name: 'app-logger' }));
+
+instana.setLogger(dummyLogger);
 
 let instanaLogger;
 instanaLogger = require('../../../../src/logger').getLogger('test-module-name', newLogger => {
@@ -35,7 +44,7 @@ const express = require('express');
 const morgan = require('morgan');
 const port = require('../../../test_util/app-port')();
 const app = express();
-const logPrefix = `Bunyan App [Instana receives Bunyan logger] (${process.pid}):\t`;
+const logPrefix = `Pino App [Instana receives non-Pino logger] (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

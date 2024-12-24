@@ -1,12 +1,10 @@
 /*
- * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2016
+ * (c) Copyright IBM Corp. 2024
  */
 
 'use strict';
 
 const spawn = require('child_process').spawn;
-const fetch = require('node-fetch-v2');
 const path = require('path');
 const portfinder = require('../../../test_util/portfinder');
 
@@ -19,20 +17,18 @@ const agentControls = require('../../../globalAgent').instance;
 let appProcess;
 let appPort;
 
-// TODO: transform into class
-
 exports.registerTestHooks = (opts = {}) => {
   let appName = 'app.js';
   if (opts.instanaLoggingMode) {
     switch (opts.instanaLoggingMode) {
-      case 'instana-creates-bunyan-logger':
-        appName = 'app-instana-creates-bunyan-logger.js';
+      case 'instana-creates-pino-logger':
+        appName = 'app-instana-creates-pino-logger.js';
         break;
-      case 'instana-receives-bunyan-logger':
-        appName = 'app-instana-receives-bunyan-logger.js';
+      case 'instana-receives-pino-logger':
+        appName = 'app-instana-receives-pino-logger.js';
         break;
-      case 'instana-receives-non-bunyan-logger':
-        appName = 'app-instana-receives-non-bunyan-logger.js';
+      case 'instana-receives-non-pino-logger':
+        appName = 'app-instana-receives-non-pino-logger.js';
         break;
       default:
         throw new Error(`Unknown instanaLoggingMode: ${opts.instanaLoggingMode}`);
@@ -48,6 +44,7 @@ exports.registerTestHooks = (opts = {}) => {
     env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
     env.TRACING_ENABLED = opts.enableTracing !== false;
     env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;
+    env.PINO_VERSION = opts.PINO_VERSION;
 
     appProcess = spawn('node', [path.join(__dirname, appName)], {
       stdio: config.getAppStdio(),
@@ -84,3 +81,7 @@ function waitUntilServerIsUp() {
 exports.getPid = () => appProcess.pid;
 
 exports.trigger = (level, headers = {}) => fetch(`http://127.0.0.1:${appPort}/${level}`, { headers });
+
+exports.stop = async () => {
+  await this.kill();
+};

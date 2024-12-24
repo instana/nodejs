@@ -101,7 +101,8 @@ describe('tracing/logger/pino', function () {
 
     // prettier-ignore
     it(`must trace error object without message${suffix}`, () =>
-      runTest('error-object-only', useExpressPino, true, 'This is an error.', controls));
+      runTest('error-object-only', useExpressPino, true, 'This is an error.', controls)
+  );
 
     // prettier-ignore
     it(`should serialize random objects one level deep${suffix}`, () =>
@@ -111,7 +112,8 @@ describe('tracing/logger/pino', function () {
         true,
         ['{ payload: ', 'statusCode: 404', "error: 'Not Found'", 'very: [Object'],
         controls
-      ));
+      )
+  );
 
     // prettier-ignore
     it(`must trace error object and string${suffix}`, () =>
@@ -121,11 +123,13 @@ describe('tracing/logger/pino', function () {
         true,
         'This is an error. -- Error message - should be traced.',
         controls
-      ));
+      )
+);
 
     // prettier-ignore
     it(`must trace random object and string${suffix}`, () =>
-      runTest('error-random-object-and-string', useExpressPino, true, 'Error message - should be traced.', controls));
+      runTest('error-random-object-and-string', useExpressPino, true, 'Error message - should be traced.', controls)
+  );
 
     it(`must not trace custom info${suffix}`, () =>
       trigger('custom-info', useExpressPino, controls).then(() =>
@@ -150,7 +154,6 @@ describe('tracing/logger/pino', function () {
       if (useExpressPino) {
         return;
       }
-
       return runTest('child-error', false, true, 'Child logger error message - should be traced.', controls);
     });
   }
