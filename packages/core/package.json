@@ -69,6 +69,7 @@
     "lru-cache": "^10.1.0",
     "methods": "^1.1.2",
     "opentracing": "^0.14.5",
+    "pino": "9.6.0",
     "semver": "^7.5.4",
     "shimmer": "^1.2.1"
   }
