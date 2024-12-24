@@ -8,12 +8,12 @@
 const logger = require('pino');
 
 function createCustomLogger() {
-  const customPino = Object.assign(function (/** @type {any} */ ...args) {
+  const customLogger = Object.assign(function (/** @type {any} */ ...args) {
     // @ts-ignore
     return logger(...args);
   }, logger);
 
-  return customPino;
+  return customLogger;
 }
 
 module.exports = createCustomLogger();
