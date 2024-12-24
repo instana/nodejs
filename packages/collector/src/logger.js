@@ -16,9 +16,7 @@ try {
   // thread (0).
 }
 
-const { uninstrumentedLogger: pinoCopy } = require('@instana/core');
-
-const pino = pinoCopy;
+const { uninstrumentedLogger: pino } = require('@instana/core');
 
 const { logger } = require('@instana/core');
 const pinoToAgentStream = require('./agent/loggerToAgentStream');
@@ -55,8 +53,7 @@ exports.init = function init(config, isReInit) {
       write(chunk) {
         consoleStream.write(chunk);
 
-        const logRecord = JSON.parse(chunk);
-        pinoToAgentStream.write(logRecord);
+        pinoToAgentStream.write(chunk);
       }
     };
 
