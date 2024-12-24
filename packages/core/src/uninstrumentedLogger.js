@@ -4,7 +4,6 @@
 
 'use strict';
 
-// instana/no-unsafe-require
 // eslint-disable-next-line import/no-extraneous-dependencies, instana/no-unsafe-require
 const logger = require('pino');
 
