@@ -19,7 +19,7 @@ const express = require('express');
 const http = require('http');
 const morgan = require('morgan');
 
-const { schema, pubsub, bunyanLogger } = require('./schema')();
+const { schema, pubsub, pinoLogger } = require('./schema')();
 const data = require('./data');
 
 const port = require('../../../test_util/app-port')();
@@ -51,7 +51,7 @@ app.post('/publish-update', (req, res) => {
   const character = data.characters[id - 1];
   character.name = name;
   character.profession = profession;
-  bunyanLogger.warn(`update: ${character.id}: ${character.name} ${character.profession}`);
+  pinoLogger.warn(`update: ${character.id}: ${character.name} ${character.profession}`);
   pubsub.publish('characterUpdated', {
     characterUpdated: character
   });

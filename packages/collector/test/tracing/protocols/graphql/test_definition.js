@@ -349,7 +349,7 @@ function start(graphqlVersion) {
               .then(() => {
                 return agentControls.getSpans().then(spans => {
                   expect(getSpansByName(spans, 'graphql.server')).to.have.lengthOf(0);
-                  expect(getSpansByName(spans, 'log.bunyan')).to.have.lengthOf(0);
+                  expect(getSpansByName(spans, 'log.pino')).to.have.lengthOf(0);
                 });
               });
           });
@@ -1044,7 +1044,7 @@ function verifyGraphQLSubscriptionUpdateExit(parentSpan, span) {
 
 function verifyFollowUpLogExit(parentSpan, expectedMessage, spans) {
   return expectExactlyOneMatching(spans, [
-    span => expect(span.n).to.equal('log.bunyan'),
+    span => expect(span.n).to.equal('log.pino'),
     span => expect(span.k).to.equal(constants.EXIT),
     span => expect(span.t).to.equal(parentSpan.t),
     span => expect(span.p).to.equal(parentSpan.s),

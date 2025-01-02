@@ -8,18 +8,18 @@ const graphQL = require('graphql');
 const graphqlSubscriptions = require('graphql-subscriptions');
 const data = require('./data');
 // Pino log spans are used to verify that follow up calls are traced correctly in a GraphQL entry.
-const bunyanLogger = require('bunyan').createLogger({ name: 'test-logger' });
+const pinoLogger = require('pino')();
 
 module.exports = function exportSchema() {
   const pubsub = new graphqlSubscriptions.PubSub();
 
   function logAndResolve(logMsg, value) {
-    bunyanLogger.warn(logMsg);
+    pinoLogger.warn(logMsg);
     return Promise.resolve(value);
   }
 
   function logAndReject(logMsg, error) {
-    bunyanLogger.warn(logMsg);
+    pinoLogger.warn(logMsg);
     return Promise.reject(error);
   }
 
@@ -83,7 +83,7 @@ module.exports = function exportSchema() {
             }
           },
           resolve(__, { crewMember }) {
-            bunyanLogger.warn('value');
+            pinoLogger.warn('value');
             return data.filterCharacters(crewMember);
           }
         },
@@ -95,7 +95,7 @@ module.exports = function exportSchema() {
             }
           },
           resolve() {
-            bunyanLogger.warn('valueError');
+            pinoLogger.warn('valueError');
             throw new Error('Boom');
           }
         },
@@ -180,7 +180,7 @@ module.exports = function exportSchema() {
             const character = data.characters[id - 1];
             character.name = name;
             character.profession = profession;
-            bunyanLogger.warn(`update: ${character.id}: ${character.name} ${character.profession}`);
+            pinoLogger.warn(`update: ${character.id}: ${character.name} ${character.profession}`);
             pubsub.publish('characterUpdated', {
               characterUpdated: character
             });
@@ -201,7 +201,7 @@ module.exports = function exportSchema() {
             }
           },
           subscribe: (__, { id }) => {
-            bunyanLogger.warn(`subscribe: ${id}`);
+            pinoLogger.warn(`subscribe: ${id}`);
 
             // for graphql-subscriptions, asyncIterator is replaced with asyncIterableIterator in v3
             if (pubsub?.asyncIterableIterator) {
@@ -218,7 +218,7 @@ module.exports = function exportSchema() {
 
   return {
     schema,
-    bunyanLogger,
+    pinoLogger,
     pubsub
   };
 };

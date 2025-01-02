@@ -90,7 +90,7 @@ describe('tracing/no-conflict-with-cls-hooked', function () {
       ]);
 
       expectExactlyOneMatching(spans, [
-        span => expect(span.n).to.equal('log.bunyan'),
+        span => expect(span.n).to.equal('log.pino'),
         span => expect(span.k).to.equal(constants.EXIT),
         span => expect(span.t).to.equal(traceId),
         span => expect(span.p).to.equal(httpEntry.s),
