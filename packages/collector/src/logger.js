@@ -108,6 +108,11 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
     _logger = parentLogger;
   }
 
+  // Extended method to set log level
+  _logger.setLoggerLevel = function (/** @type {string | number} */ level) {
+    setLoggerLevel(_logger, level);
+  };
+
   if (reInitFn) {
     if (registry[loggerName]) {
       throw new Error(`Duplicate logger name: ${loggerName}.`);
