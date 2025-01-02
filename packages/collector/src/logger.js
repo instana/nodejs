@@ -96,7 +96,8 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
   if (!parentLogger) {
     exports.init({});
   }
-  let _logger;
+   /** @type {import('@instana/core/src/core').GenericLogger} */
+   let _logger;
 
   if (typeof parentLogger.child === 'function') {
     // Either bunyan or pino, both support parent-child relationships between loggers.
