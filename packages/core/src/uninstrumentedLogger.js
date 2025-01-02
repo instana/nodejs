@@ -4,6 +4,14 @@
 
 'use strict';
 
+const pinoWasRequiredBeforeUs = Object.keys(require.cache).every(key => {
+  if (key.includes('pino')) {
+    return true;
+  }
+
+  return false;
+});
+
 // eslint-disable-next-line import/no-extraneous-dependencies, instana/no-unsafe-require
 const logger = require('pino');
 
@@ -12,11 +20,14 @@ const logger = require('pino');
 //       See https://jsw.ibm.com/browse/INSTA-23066
 // NOTE: We need the removal of the cache here anyway, because we do not want to trigger the pino instrumentation.
 //       This is an uninstrumented pino logger.
-Object.keys(require.cache).forEach(key => {
-  if (key.includes('pino')) {
-    delete require.cache[key];
-  }
-});
+//       If pino was required before us, we leave the cache as it is.
+if (!pinoWasRequiredBeforeUs) {
+  Object.keys(require.cache).forEach(key => {
+    if (key.includes('pino')) {
+      delete require.cache[key];
+    }
+  });
+}
 
 function createCustomLogger() {
   const customLogger = Object.assign(function (/** @type {any} */ ...args) {
