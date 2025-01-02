@@ -15,6 +15,9 @@ const logger = require('pino');
 // NOTE: We need the removal of the cache here anyway, because we do not want to trigger the pino instrumentation.
 //       This is an uninstrumented pino logger.
 //       If pino was required before us, we leave the cache as it is.
+// Clearing the require cache is only needed because of onFileLoad usage in the pino instrumentation.
+// As soon as we can migrate to use onModuleLoad in the instrumentation,
+// we can remove this and we just need to ensure that the internal logger is called before the instr initialization.
 if (!pinoWasRequiredBeforeUs) {
   Object.keys(require.cache).forEach(key => {
     if (key.includes('node_modules/pino')) {
