@@ -4,13 +4,7 @@
 
 'use strict';
 
-const pinoWasRequiredBeforeUs = Object.keys(require.cache).every(key => {
-  if (key.includes('pino')) {
-    return true;
-  }
-
-  return false;
-});
+const pinoWasRequiredBeforeUs = Object.keys(require.cache).some(key => key.includes('node_modules/pino'));
 
 // eslint-disable-next-line import/no-extraneous-dependencies, instana/no-unsafe-require
 const logger = require('pino');
@@ -23,7 +17,7 @@ const logger = require('pino');
 //       If pino was required before us, we leave the cache as it is.
 if (!pinoWasRequiredBeforeUs) {
   Object.keys(require.cache).forEach(key => {
-    if (key.includes('pino')) {
+    if (key.includes('node_modules/pino')) {
       delete require.cache[key];
     }
   });
