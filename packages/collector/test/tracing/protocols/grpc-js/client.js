@@ -16,7 +16,7 @@ const port = require('../../../test_util/app-port')();
 require('../../../..')();
 
 const bodyParser = require('body-parser');
-const bunyanLogger = require('bunyan').createLogger({ name: 'grpc-client' });
+const pinoLogger = require('pino')();
 const express = require('express');
 const morgan = require('morgan');
 const grpc = require('@grpc/grpc-js');
@@ -187,11 +187,11 @@ app.get('/', (req, res) => {
 app.post('/unary-call', (req, res) => {
   makeUnaryCall(optionsFromRequest(req), (err, reply) => {
     if (err) {
-      bunyanLogger.error(err);
+      pinoLogger.error(err);
       return res.send(err);
     }
     const message = typeof reply.getMessage === 'function' ? reply.getMessage() : reply.message;
-    bunyanLogger.warn('/unary-call');
+    pinoLogger.warn('/unary-call');
     return res.send({ reply: message });
   });
 });
@@ -199,11 +199,11 @@ app.post('/unary-call', (req, res) => {
 app.post('/server-stream', (req, res) => {
   startServerSideStreaming(optionsFromRequest(req), (err, replyMessages) => {
     if (err) {
-      bunyanLogger.error(err);
+      pinoLogger.error(err);
       return res.send(err);
     }
 
-    bunyanLogger.warn('/server-stream');
+    pinoLogger.warn('/server-stream');
     return res.send({ reply: replyMessages });
   });
 });
@@ -211,11 +211,11 @@ app.post('/server-stream', (req, res) => {
 app.post('/client-stream', (req, res) => {
   startClientSideStreaming(optionsFromRequest(req), (err, reply) => {
     if (err) {
-      bunyanLogger.error(err);
+      pinoLogger.error(err);
       return res.send(err);
     }
     const message = typeof reply.getMessage === 'function' ? reply.getMessage() : reply.message;
-    bunyanLogger.warn('/client-stream');
+    pinoLogger.warn('/client-stream');
     return res.send({ reply: message });
   });
 });
@@ -223,10 +223,10 @@ app.post('/client-stream', (req, res) => {
 app.post('/bidi-stream', (req, res) => {
   startBidiStreaming(optionsFromRequest(req), (err, replyMessages) => {
     if (err) {
-      bunyanLogger.error(err);
+      pinoLogger.error(err);
       return res.send(err);
     }
-    bunyanLogger.warn('/bidi-stream');
+    pinoLogger.warn('/bidi-stream');
     return res.send({ reply: replyMessages });
   });
 });

@@ -18,7 +18,7 @@ require('../../../..')();
 const express = require('express');
 const morgan = require('morgan');
 const path = require('path');
-const bunyanLogger = require('bunyan').createLogger({ name: 'grpc-server' });
+const pinoLogger = require('pino')();
 const app = express();
 
 const logPrefix = `GRPC-JS Server (${process.pid}):\t`;
@@ -71,10 +71,10 @@ runServer();
 function unaryCall(call, callback) {
   if (callWantsError(call)) {
     const error = new Error('Boom!');
-    bunyanLogger.error(error);
+    pinoLogger.error(error);
     callback(error);
   } else {
-    bunyanLogger.warn('/unary-call');
+    pinoLogger.warn('/unary-call');
     callback(null, replyForCall(call));
   }
 }
@@ -86,16 +86,16 @@ function serverSideStreaming(call) {
 
   // now trigger an error or continue non-erroneous flow
   if (callWantsCancel(call)) {
-    bunyanLogger.warn('/server-stream');
+    pinoLogger.warn('/server-stream');
     call.write(createReply('please cancel'));
   } else if (callWantsError(call)) {
     const error = new Error('Boom!');
-    bunyanLogger.error(error);
+    pinoLogger.error(error);
     call.emit('error', error);
   } else {
     call.write(createReply('more'));
     call.write(createReply('data'));
-    bunyanLogger.warn('/server-stream');
+    pinoLogger.warn('/server-stream');
     call.end();
   }
 }
@@ -108,7 +108,7 @@ function clientSideStreaming(call, callback) {
     if (requestWantsError(request)) {
       hadError = true;
       const error = new Error('Boom!');
-      bunyanLogger.error(error);
+      pinoLogger.error(error);
       return callback(error);
     }
 
@@ -118,7 +118,7 @@ function clientSideStreaming(call, callback) {
   call.on('end', () => {
     if (!hadError) {
       const replyMessage = requests.map(getParameterFrom).join('; ');
-      bunyanLogger.warn('/client-stream');
+      pinoLogger.warn('/client-stream');
       callback(null, createReply(replyMessage));
     }
   });
@@ -130,12 +130,12 @@ function bidiStreaming(call) {
 
   call.on('data', request => {
     if (requestWantsCancel(request)) {
-      bunyanLogger.warn('/bidi-stream');
+      pinoLogger.warn('/bidi-stream');
       call.write(createReply('please cancel'));
     } else if (requestWantsError(request)) {
       hadError = true;
       const error = new Error('Boom!');
-      bunyanLogger.error(error);
+      pinoLogger.error(error);
       call.emit('error', error);
     } else {
       call.write(replyForRequest(call, request));
@@ -147,7 +147,7 @@ function bidiStreaming(call) {
 
   call.on('end', () => {
     if (!hadError) {
-      bunyanLogger.warn('/bidi-stream');
+      pinoLogger.warn('/bidi-stream');
       call.end();
     }
   });
