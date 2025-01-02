@@ -4,7 +4,7 @@
 
 'use strict';
 
-const mock = require('mock-require');
+const mock = require('@instana/core/test/test_util/mockRequire');
 const EXPRESS_VERSION = process.env.EXPRESS_VERSION;
 const EXPRESS_REQUIRE = process.env.EXPRESS_VERSION === 'latest' ? 'express' : `express-${EXPRESS_VERSION}`;
 

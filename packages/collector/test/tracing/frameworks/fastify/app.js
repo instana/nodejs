@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 const FASTIFY_VERSION = process.env.FASTIFY_VERSION || 'latest';
 const FASTIFY_REQUIRE = FASTIFY_VERSION === 'latest' ? 'fastify' : `fastify-${FASTIFY_VERSION}`;
 
-const mock = require('mock-require');
+const mock = require('@instana/core/test/test_util/mockRequire');
 
 /**
  * NOTE:

@@ -4,7 +4,7 @@
 
 'use strict';
 
-const mock = require('mock-require');
+const mock = require('@instana/core/test/test_util/mockRequire');
 const hook = require('../../../../../core/src/util/hook');
 const PINO_VERSION = process.env.PINO_VERSION || 'latest';
 const PINO_REQUIRE = PINO_VERSION === 'latest' ? 'pino' : `pino-${PINO_VERSION}`;

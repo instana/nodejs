@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const mock = require('mock-require');
+const mock = require('@instana/core/test/test_util/mockRequire');
 
 /**
  * NOTE:
