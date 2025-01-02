@@ -5,6 +5,10 @@ export interface GenericLogger {
   info: (...args: any[]) => void;
   [key: string]: any;
   child?: (fields: Record<string, any>) => GenericLogger;
+  /**
+   * @param level - desired logging level (e.g., 'debug', 'warn').
+   */
+  setLoggerLevel?: (level: string | number) => void;
 }
 
 export interface InstanaBaseSpan {
