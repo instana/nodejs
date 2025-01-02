@@ -4,7 +4,7 @@
 
 'use strict';
 
-const mock = require('mock-require');
+const mock = require('@instana/core/test/test_util/mockRequire');
 const sinon = require('sinon');
 const expect = require('chai').expect;
 const ssm = require('../src/ssm');

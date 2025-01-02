@@ -4,7 +4,7 @@
 
 'use strict';
 
-const mock = require('mock-require');
+const mock = require('@instana/core/test/test_util/mockRequire');
 const hook = require('../../../../../core/src/util/hook');
 const ELASTIC_VERSION = process.env.ELASTIC_VERSION;
 const ELASTIC_REQUIRE =

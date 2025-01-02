@@ -23,5 +23,6 @@ module.exports = {
   runCommandSync: require('./runCommand').runCommandSync,
   sendToParent: require('./sendToParent'),
   stringifyItems: require('./stringifyItems'),
+  mockRequire: require('./mockRequire'),
   ...commonVerifications
 };

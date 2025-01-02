@@ -5,7 +5,7 @@
 'use strict';
 
 const Module = require('module');
-const mock = require('mock-require');
+const mock = require('@instana/core/test/test_util/mockRequire');
 const hook = require('../../../../../core/src/util/hook');
 
 const AMQPLIB_REQUIRE = process.env.AMQPLIB_VERSION === 'latest' ? 'amqplib' : `amqplib-${process.env.AMQPLIB_VERSION}`;

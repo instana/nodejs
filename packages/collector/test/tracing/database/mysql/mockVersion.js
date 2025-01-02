@@ -4,7 +4,7 @@
 
 'use strict';
 
-const mock = require('mock-require');
+const mock = require('@instana/core/test/test_util/mockRequire');
 const MYSQL2_VERSION = process.env.MYSQL2_VERSION;
 const MYSQL2_REQUIRE = process.env.MYSQL2_VERSION === 'latest' ? 'mysql2' : `mysql2-${MYSQL2_VERSION}`;
 

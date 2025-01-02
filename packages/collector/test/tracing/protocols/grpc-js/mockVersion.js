@@ -4,7 +4,7 @@
 
 'use strict';
 
-const mock = require('mock-require');
+const mock = require('@instana/core/test/test_util/mockRequire');
 const hook = require('../../../../../core/src/util/hook');
 
 const INSTANA_GRPC_VERSION = process.env.INSTANA_GRPC_VERSION;

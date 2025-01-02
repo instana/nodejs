@@ -4,7 +4,7 @@
 
 'use strict';
 
-const mock = require('mock-require');
+const mock = require('@instana/core/test/test_util/mockRequire');
 const COUCHBASE_VERSION = process.env.COUCHBASE_VERSION;
 const COUCHBASE_REQUIRE = process.env.COUCHBASE_VERSION === 'latest' ? 'couchbase' : `couchbase-${COUCHBASE_VERSION}`;
 
