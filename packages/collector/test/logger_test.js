@@ -32,7 +32,6 @@ describe('logger', () => {
   it('should return the default parent logger if no config is available', () => {
     log.init({});
     const logger = log.getLogger('myLogger');
-    // console.log(logger);
     expect(isPinoLogger(logger)).to.be.true;
   });
 
@@ -200,7 +199,9 @@ describe('logger', () => {
  * @returns {boolean}
  */
 function isPinoLogger(_logger) {
-  return _logger && typeof _logger === 'object' && _logger.constructor === pino().constructor;
+  return (
+    _logger && typeof _logger === 'object' && typeof _logger.child === 'function' && typeof _logger.level === 'string'
+  );
 }
 
 /**
