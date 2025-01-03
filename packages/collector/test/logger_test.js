@@ -10,6 +10,7 @@ const bunyan = require('bunyan');
 const pino = require('pino');
 
 const log = require('../src/logger');
+const { expectAtLeastOneMatching } = require('../../core/test/test_util');
 
 describe('logger', () => {
   beforeEach(resetEnv);
@@ -151,5 +152,22 @@ describe('logger', () => {
 
     const logger2 = bunyan.createLogger({ name: 'new-logger' });
     log.init({ logger: logger2 });
+  });
+
+  it('should verify the output streams', () => {
+    log.init({});
+    const logger = log.getLogger('myLogger');
+    expect(logger).to.be.an.instanceOf(bunyan);
+
+    expect(logger.streams).to.be.an('array');
+    // 1 x default stream that prints to stdout
+    // 1 x custom stream that goes to agent stream
+    expect(logger.streams).to.have.lengthOf(2);
+
+    expectAtLeastOneMatching(
+      logger.streams,
+      stream => expect(stream.type).to.equal('raw'),
+      stream => expect(stream.level).to.equal('info')
+    );
   });
 });
