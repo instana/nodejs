@@ -7,6 +7,8 @@
 
 const expect = require('chai').expect;
 const pino = require('pino');
+const bunyan = require('bunyan');
+const { expectAtLeastOneMatching } = require('../../core/test/test_util');
 
 const log = require('../src/logger');
 
@@ -166,10 +168,27 @@ describe('logger', () => {
     log.init({ logger: logger2 });
   });
 
+  it('should verify bunyan output streams', () => {
+    log.init({
+      logger: bunyan.createLogger({ name: 'test-bunyan-logger' })
+    });
+    const logger = log.getLogger('myLogger');
+    expect(logger).to.be.an.instanceOf(bunyan);
+    expect(logger.streams).to.be.an('array');
+    // 1 x default stream that prints to stdout
+    // 1 x custom stream that goes to agent stream
+    expect(logger.streams).to.have.lengthOf(2);
+    expectAtLeastOneMatching(
+      logger.streams,
+      stream => expect(stream.type).to.equal('raw'),
+      stream => expect(stream.level).to.equal('info')
+    );
+  });
+
   // This test case is not consistent.
   // Need to investigate further why its failing in the initial run and succeeding after that
 
-  // it('should verify the output streams', () => {
+  // it('should verify pino output streams', () => {
   //   log.init({});
   //   const logger = log.getLogger('myLogger');
 
