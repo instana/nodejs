@@ -58,8 +58,8 @@ mochaSuiteFn('tracing/instana-logger', function () {
   });
 
   function verifyInstanaLoggingIsNotTraced() {
-    return appControls.trigger('trigger').then(() => {
-      testUtils.delay(250);
+    return appControls.trigger('trigger').then(async () => {
+      await testUtils.delay(250);
 
       testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
@@ -78,8 +78,8 @@ mochaSuiteFn('tracing/instana-logger', function () {
   }
 
   function verifyNonInstanaLoggingIsTraced() {
-    return appControls.trigger('trigger').then(() => {
-      testUtils.delay(250);
+    return appControls.trigger('trigger').then(async () => {
+      await testUtils.delay(250);
 
       testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
