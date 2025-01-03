@@ -16,7 +16,7 @@ try {
   // thread (0).
 }
 
-const { uninstrumentedLogger: pino } = require('@instana/core');
+const pino = require('./uninstrumentedLogger');
 
 const { logger } = require('@instana/core');
 const pinoToAgentStream = require('./agent/loggerToAgentStream');
@@ -59,6 +59,7 @@ exports.init = function init(config, isReInit) {
 
     // No custom logger has been provided via config, we create a new pino logger as the parent logger for all loggers
     // we create later on.
+    // @ts-ignore
     parentLogger = pino(
       {
         name: '@instana/collector',
@@ -76,6 +77,11 @@ exports.init = function init(config, isReInit) {
       setLoggerLevel(parentLogger, process.env['INSTANA_LOG_LEVEL'].toLowerCase());
     }
   }
+
+  // Extended method to set log level
+  parentLogger.setLoggerLevel = function (/** @type {string | number} */ level) {
+    setLoggerLevel(parentLogger, level);
+  };
 
   if (isReInit) {
     Object.keys(registry).forEach(loggerName => {
@@ -96,8 +102,8 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
   if (!parentLogger) {
     exports.init({});
   }
-   /** @type {import('@instana/core/src/core').GenericLogger} */
-   let _logger;
+
+  let _logger;
 
   if (typeof parentLogger.child === 'function') {
     // Either bunyan or pino, both support parent-child relationships between loggers.
@@ -108,11 +114,6 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
     // Unknown logger type (neither bunyan nor pino), we simply return the user provided custom logger as-is.
     _logger = parentLogger;
   }
-
-  // Extended method to set log level
-  _logger.setLoggerLevel = function (/** @type {string | number} */ level) {
-    setLoggerLevel(_logger, level);
-  };
 
   if (reInitFn) {
     if (registry[loggerName]) {

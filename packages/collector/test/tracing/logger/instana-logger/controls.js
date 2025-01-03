@@ -81,7 +81,3 @@ function waitUntilServerIsUp() {
 exports.getPid = () => appProcess.pid;
 
 exports.trigger = (level, headers = {}) => fetch(`http://127.0.0.1:${appPort}/${level}`, { headers });
-
-exports.stop = async () => {
-  await this.kill();
-};

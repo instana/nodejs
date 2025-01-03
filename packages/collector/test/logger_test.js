@@ -11,15 +11,6 @@ const pino = require('pino');
 const log = require('../src/logger');
 const { expectAtLeastOneMatching } = require('../../core/test/test_util');
 
-const logLevel = {
-  60: 'fatal',
-  50: 'error',
-  40: 'warn',
-  30: 'info',
-  20: 'debug',
-  10: 'trace'
-};
-
 describe('logger', () => {
   beforeEach(resetEnv);
   afterEach(resetEnv);
@@ -72,28 +63,28 @@ describe('logger', () => {
     log.init({ logger: pino({ name: 'myParentLogger' }) });
     const logger = log.getLogger('childName');
 
-    expect(logger.level).to.equal(logLevel[30]);
+    expect(logger.level).to.equal('info');
   });
 
   it('should use defined log level', () => {
     log.init({ logger: pino({ name: 'myParentLogger', level: 50 }) });
     const logger = log.getLogger('childName');
 
-    expect(logger.level).to.equal(logLevel[50]);
+    expect(logger.level).to.equal('error');
   });
 
   it('should use log level from env var', () => {
     process.env.INSTANA_LOG_LEVEL = 'warn';
     log.init({});
     const logger = log.getLogger('childName');
-    expect(logger.level).to.equal(logLevel[40]);
+    expect(logger.level).to.equal('warn');
   });
 
   it('should use debug log level when INSTANA_DEBUG is set', () => {
     process.env.INSTANA_DEBUG = 'true';
     log.init({});
     const logger = log.getLogger('childName');
-    expect(logger.level).to.equal(logLevel[20]);
+    expect(logger.level).to.equal('debug');
   });
 
   it('should not detect pino as bunyan', () => {
