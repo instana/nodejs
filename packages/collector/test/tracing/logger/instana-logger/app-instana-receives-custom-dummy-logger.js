@@ -44,7 +44,7 @@ const express = require('express');
 const morgan = require('morgan');
 const port = require('../../../test_util/app-port')();
 const app = express();
-const logPrefix = `Pino App [Instana receives non-Pino logger] (${process.pid}):\t`;
+const logPrefix = `Pino App [Instana receives custom dummy logger] (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

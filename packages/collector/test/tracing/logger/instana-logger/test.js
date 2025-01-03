@@ -22,9 +22,9 @@ mochaSuiteFn('tracing/instana-logger', function () {
 
   // verify that Instana's own pino logging does not get traced
   describe('do not trace Instana log calls', () => {
-    describe('Instana creates a new pino logger', () => {
+    describe('Instana creates a new default logger', () => {
       appControls.registerTestHooks({
-        instanaLoggingMode: 'instana-creates-pino-logger'
+        instanaLoggingMode: 'instana-uses-default-logger'
       });
 
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
@@ -40,10 +40,20 @@ mochaSuiteFn('tracing/instana-logger', function () {
 
     describe('Instana receives a non-pino logger', () => {
       appControls.registerTestHooks({
-        instanaLoggingMode: 'instana-receives-non-pino-logger'
+        instanaLoggingMode: 'instana-receives-custom-dummy-logger'
       });
 
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
+    });
+
+    describe('Instana receives a bunyan logger', () => {
+      appControls.registerTestHooks({
+        instanaLoggingMode: 'instana-receives-bunyan-logger'
+      });
+
+      it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
+
+      it('bunyan calls should be traced', () => verifyNonInstanaLoggingIsTraced());
     });
   });
 
@@ -62,6 +72,25 @@ mochaSuiteFn('tracing/instana-logger', function () {
           // verify that nothing logged by Instana has been traced
           const allPinoSpans = testUtils.getSpansByName(spans, 'log.pino');
           expect(allPinoSpans).to.be.empty;
+        })
+      );
+    });
+  }
+
+  function verifyNonInstanaLoggingIsTraced() {
+    return appControls.trigger('trigger').then(() => {
+      testUtils.delay(250);
+
+      testUtils.retry(() =>
+        agentControls.getSpans().then(spans => {
+          testUtils.expectAtLeastOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.f.e).to.equal(String(appControls.getPid())),
+            span => expect(span.f.h).to.equal('agent-stub-uuid')
+          ]);
+
+          const allBunyanSpans = testUtils.getSpansByName(spans, 'log.bunyan');
+          expect(allBunyanSpans.length).to.be.greaterThan(0);
         })
       );
     });

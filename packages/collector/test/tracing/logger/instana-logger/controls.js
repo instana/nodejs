@@ -21,14 +21,17 @@ exports.registerTestHooks = (opts = {}) => {
   let appName = 'app.js';
   if (opts.instanaLoggingMode) {
     switch (opts.instanaLoggingMode) {
-      case 'instana-creates-pino-logger':
-        appName = 'app-instana-creates-pino-logger.js';
+      case 'instana-uses-default-logger':
+        appName = 'app-instana-uses-default-logger.js';
         break;
       case 'instana-receives-pino-logger':
         appName = 'app-instana-receives-pino-logger.js';
         break;
-      case 'instana-receives-non-pino-logger':
-        appName = 'app-instana-receives-non-pino-logger.js';
+      case 'instana-receives-custom-dummy-logger':
+        appName = 'app-instana-receives-custom-dummy-logger.js';
+        break;
+      case 'instana-receives-bunyan-logger':
+        appName = 'app-instana-receives-bunyan-logger.js';
         break;
       default:
         throw new Error(`Unknown instanaLoggingMode: ${opts.instanaLoggingMode}`);
