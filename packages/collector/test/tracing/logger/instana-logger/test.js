@@ -48,7 +48,9 @@ mochaSuiteFn('tracing/instana-logger', function () {
   });
 
   function verifyInstanaLoggingIsNotTraced() {
-    return appControls.trigger('trigger').then(() =>
+    return appControls.trigger('trigger').then(() => {
+      testUtils.delay(250);
+
       testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
           testUtils.expectAtLeastOneMatching(spans, [
@@ -58,10 +60,10 @@ mochaSuiteFn('tracing/instana-logger', function () {
           ]);
 
           // verify that nothing logged by Instana has been traced
-          const allpinoSpans = testUtils.getSpansByName(spans, 'log.pino');
-          expect(allpinoSpans).to.be.empty;
+          const allPinoSpans = testUtils.getSpansByName(spans, 'log.pino');
+          expect(allPinoSpans).to.be.empty;
         })
-      )
-    );
+      );
+    });
   }
 });
