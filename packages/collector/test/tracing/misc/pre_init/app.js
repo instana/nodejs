@@ -22,7 +22,6 @@ const http = require('http');
 
 // Deliberately requiring pino _before_ calling @instana/collector#init.
 const pino = require('pino')();
-
 const port = require('../../../test_util/app-port')();
 const app = new http.Server();
 

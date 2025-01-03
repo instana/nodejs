@@ -1,6 +1,5 @@
 /*
- * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2018
+ * (c) Copyright IBM Corp. 2024
  */
 
 /* eslint-disable no-console */
@@ -45,7 +44,7 @@ const express = require('express');
 const morgan = require('morgan');
 const port = require('../../../test_util/app-port')();
 const app = express();
-const logPrefix = `Bunyan App [Instana receives non-Bunyan logger] (${process.pid}):\t`;
+const logPrefix = `Pino App [Instana receives custom dummy logger] (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

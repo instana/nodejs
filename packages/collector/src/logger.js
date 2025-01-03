@@ -16,12 +16,12 @@ try {
   // thread (0).
 }
 
-const bunyan = require('bunyan');
+const pino = require('./uninstrumentedLogger');
+
 const { logger } = require('@instana/core');
+const loggerToAgentStream = require('./agent/loggerToAgentStream');
 
-const bunyanToAgentStream = require('./agent/bunyanToAgentStream');
-
-/** @type {bunyan | import('@instana/core/src/core').GenericLogger} */
+/** @type {import('@instana/core/src/core').GenericLogger} */
 let parentLogger = null;
 /** @type {Object.<string, (logger: import('@instana/core/src/core').GenericLogger) => *>} */
 const registry = {};
@@ -39,33 +39,68 @@ exports.init = function init(config, isReInit) {
       __in: 1
     });
   } else if (config.logger && hasLoggingFunctions(config.logger)) {
-    // A custom non-bunyan logger has been provided via config. We use it as is.
+    // A custom non-bunyan/non-pino logger has been provided via config. We use it as is.
     parentLogger = config.logger;
   } else {
-    // No custom logger has been provided via config, we create a new bunyan logger as the parent logger for all loggers
+    // No custom logger has been provided via config, we create a new pino logger as the parent logger for all loggers
     // we create later on.
-    parentLogger = bunyan.createLogger({
+    // @ts-ignore
+    parentLogger = pino({
       name: '@instana/collector',
       thread: threadId,
+      level: 'info',
       __in: 1
     });
   }
-  if (isBunyan(parentLogger)) {
+
+  // Passing the log stream to agentStream for Debugging purposes
+  // TODO: consider adding winston and other major loggers also for this
+  if (isPinoLogger(parentLogger)) {
+    // This consoleStream creates a destination stream for the logger that writes log data to the standard output.
+    // Since we are using multistream here, this needs to be specified explicitly
+    const consoleStream = pino.destination(process.stdout);
+
+    const multiStream = {
+      /**
+       * Custom write method to send logs to multiple destinations
+       * @param {string} chunk
+       */
+      write(chunk) {
+        consoleStream.write(chunk);
+
+        loggerToAgentStream.write(chunk);
+      }
+    };
+
+    // @ts-ignore
+    parentLogger = pino(
+      {
+        ...parentLogger.levels,
+        level: parentLogger.level || 'info',
+        base: parentLogger.bindings()
+      },
+      multiStream
+    );
+  } else if (parentLogger && parentLogger.addStream) {
     // in case we are using a bunyan logger we also forward logs to the agent
-    /** @type {bunyan} */ (parentLogger).addStream({
+    parentLogger.addStream({
       type: 'raw',
-      stream: bunyanToAgentStream,
+      stream: loggerToAgentStream,
       level: 'info'
     });
-    if (process.env['INSTANA_DEBUG']) {
-      /** @type {bunyan} */ (parentLogger).level('debug');
-    } else if (config.level) {
-      /** @type {bunyan} */ (parentLogger).level(/** @type {import('bunyan').LogLevel} */ (config.level));
-    } else if (process.env['INSTANA_LOG_LEVEL']) {
-      /** @type {bunyan} */ (parentLogger).level(
-        /** @type {import('bunyan').LogLevel} */ (process.env['INSTANA_LOG_LEVEL'].toLowerCase())
-      );
-    }
+  }
+
+  // attaching custom method after reinitializing logger
+  parentLogger.setLoggerLevel = function (/** @type {string | number} */ level) {
+    setLoggerLevel(parentLogger, level);
+  };
+
+  if (process.env['INSTANA_DEBUG']) {
+    setLoggerLevel(parentLogger, 'debug');
+  } else if (config.level) {
+    setLoggerLevel(parentLogger, config.level);
+  } else if (process.env['INSTANA_LOG_LEVEL']) {
+    setLoggerLevel(parentLogger, process.env['INSTANA_LOG_LEVEL'].toLowerCase());
   }
 
   if (isReInit) {
@@ -87,6 +122,7 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
   if (!parentLogger) {
     exports.init({});
   }
+
   let _logger;
 
   if (typeof parentLogger.child === 'function') {
@@ -110,14 +146,6 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
 };
 
 /**
- * @param {import('bunyan') | *} _logger
- * @returns {boolean}
- */
-function isBunyan(_logger) {
-  return _logger instanceof bunyan;
-}
-
-/**
  * @param {import('@instana/core/src/core').GenericLogger | *} _logger
  * @returns {boolean}
  */
@@ -127,5 +155,27 @@ function hasLoggingFunctions(_logger) {
     typeof _logger.info === 'function' &&
     typeof _logger.warn === 'function' &&
     typeof _logger.error === 'function'
+  );
+}
+
+/**
+ * @param {import("@instana/core/src/core").GenericLogger} _logger
+ * @param {string|number} level
+ */
+function setLoggerLevel(_logger, level) {
+  if (typeof _logger.setLevel === 'function') {
+    _logger.setLevel(level);
+  } else {
+    _logger.level = level;
+  }
+}
+
+/**
+ * @param {*} _logger
+ * @returns {boolean}
+ */
+function isPinoLogger(_logger) {
+  return (
+    _logger && typeof _logger === 'object' && typeof _logger.child === 'function' && typeof _logger.level === 'string'
   );
 }
