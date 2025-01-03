@@ -53,11 +53,6 @@ exports.init = function init(config, isReInit) {
     });
   }
 
-  // Extended method to set log level
-  parentLogger.setLoggerLevel = function (/** @type {string | number} */ level) {
-    setLoggerLevel(parentLogger, level);
-  };
-
   if (isPinoLogger(parentLogger)) {
     // This consoleStream creates a destination stream for the logger that writes log data to the standard output.
     // Since we are using multistream here, this needs to be specified explicitly
@@ -85,11 +80,6 @@ exports.init = function init(config, isReInit) {
       multiStream
     );
 
-    // attaching custom method after reinitializing logger
-    parentLogger.setLoggerLevel = function (/** @type {string | number} */ level) {
-      setLoggerLevel(parentLogger, level);
-    };
-
     if (process.env['INSTANA_DEBUG']) {
       setLoggerLevel(parentLogger, 'debug');
     } else if (config.level) {
@@ -98,6 +88,11 @@ exports.init = function init(config, isReInit) {
       setLoggerLevel(parentLogger, process.env['INSTANA_LOG_LEVEL'].toLowerCase());
     }
   }
+
+  // attaching custom method after reinitializing logger
+  parentLogger.setLoggerLevel = function (/** @type {string | number} */ level) {
+    setLoggerLevel(parentLogger, level);
+  };
 
   if (isReInit) {
     Object.keys(registry).forEach(loggerName => {
