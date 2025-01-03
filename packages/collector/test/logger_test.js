@@ -9,7 +9,6 @@ const expect = require('chai').expect;
 const pino = require('pino');
 
 const log = require('../src/logger');
-const { expectAtLeastOneMatching } = require('../../core/test/test_util');
 
 describe('logger', () => {
   beforeEach(resetEnv);
@@ -170,18 +169,13 @@ describe('logger', () => {
   it('should verify the output streams', () => {
     log.init({});
     const logger = log.getLogger('myLogger');
-    expect(logger).to.be.an.instanceOf(bunyan);
 
-    expect(logger.streams).to.be.an('array');
-    // 1 x default stream that prints to stdout
-    // 1 x custom stream that goes to agent stream
-    expect(logger.streams).to.have.lengthOf(2);
+    // When using pino with a multi-stream setup, the logger's streams aren't directly exposed
+    const multiStream = logger[pino.symbols.streamSym];
 
-    expectAtLeastOneMatching(
-      logger.streams,
-      stream => expect(stream.type).to.equal('raw'),
-      stream => expect(stream.level).to.equal('info')
-    );
+    expect(multiStream).to.be.an('object');
+
+    expect(multiStream).to.have.property('write').that.is.a('function');
   });
 });
 

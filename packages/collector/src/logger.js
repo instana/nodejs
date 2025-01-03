@@ -35,13 +35,31 @@ exports.init = function init(config, isReInit) {
     // A bunyan or pino logger has been provided via config. In either case we create a child logger directly under the
     // given logger which serves as the parent for all loggers we create later on.
     parentLogger = config.logger.child({
-      module: 'instana-nodejs-logger-parent'
+      module: 'instana-nodejs-logger-parent',
+      __in: 1
     });
   } else if (config.logger && hasLoggingFunctions(config.logger)) {
     // A custom non-bunyan/non-pino logger has been provided via config. We use it as is.
     parentLogger = config.logger;
   } else {
-    // This consoleStream creates a destination stream for the Pino logger that writes log data to the standard output.
+    // No custom logger has been provided via config, we create a new pino logger as the parent logger for all loggers
+    // we create later on.
+    // @ts-ignore
+    parentLogger = pino({
+      name: '@instana/collector',
+      thread: threadId,
+      level: 'info',
+      __in: 1
+    });
+  }
+
+  // Extended method to set log level
+  parentLogger.setLoggerLevel = function (/** @type {string | number} */ level) {
+    setLoggerLevel(parentLogger, level);
+  };
+
+  if (isPinoLogger(parentLogger)) {
+    // This consoleStream creates a destination stream for the logger that writes log data to the standard output.
     // Since we are using multistream here, this needs to be specified explicitly
     const consoleStream = pino.destination(process.stdout);
 
@@ -57,18 +75,15 @@ exports.init = function init(config, isReInit) {
       }
     };
 
-    // No custom logger has been provided via config, we create a new pino logger as the parent logger for all loggers
-    // we create later on.
     // @ts-ignore
     parentLogger = pino(
       {
-        name: '@instana/collector',
-        thread: threadId,
-        level: 'info'
+        ...parentLogger.levels,
+        level: parentLogger.level || 'info',
+        base: parentLogger.bindings()
       },
       multiStream
     );
-
     if (process.env['INSTANA_DEBUG']) {
       setLoggerLevel(parentLogger, 'debug');
     } else if (config.level) {
@@ -77,11 +92,6 @@ exports.init = function init(config, isReInit) {
       setLoggerLevel(parentLogger, process.env['INSTANA_LOG_LEVEL'].toLowerCase());
     }
   }
-
-  // Extended method to set log level
-  parentLogger.setLoggerLevel = function (/** @type {string | number} */ level) {
-    setLoggerLevel(parentLogger, level);
-  };
 
   if (isReInit) {
     Object.keys(registry).forEach(loggerName => {
@@ -148,4 +158,14 @@ function setLoggerLevel(_logger, level) {
   } else {
     _logger.level = level;
   }
+}
+
+/**
+ * @param {*} _logger
+ * @returns {boolean}
+ */
+function isPinoLogger(_logger) {
+  return (
+    _logger && typeof _logger === 'object' && typeof _logger.child === 'function' && typeof _logger.level === 'string'
+  );
 }
