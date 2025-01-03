@@ -19,7 +19,7 @@ try {
 const pino = require('./uninstrumentedLogger');
 
 const { logger } = require('@instana/core');
-const pinoToAgentStream = require('./agent/loggerToAgentStream');
+const loggerToAgentStream = require('./agent/loggerToAgentStream');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let parentLogger = null;
@@ -53,6 +53,8 @@ exports.init = function init(config, isReInit) {
     });
   }
 
+  // Passing the log stream to agentStream for Debugging purposes
+  // TODO: consider adding winston and other major loggers also for this
   if (isPinoLogger(parentLogger)) {
     // This consoleStream creates a destination stream for the logger that writes log data to the standard output.
     // Since we are using multistream here, this needs to be specified explicitly
@@ -66,7 +68,7 @@ exports.init = function init(config, isReInit) {
       write(chunk) {
         consoleStream.write(chunk);
 
-        pinoToAgentStream.write(chunk);
+        loggerToAgentStream.write(chunk);
       }
     };
 
@@ -79,20 +81,27 @@ exports.init = function init(config, isReInit) {
       },
       multiStream
     );
-
-    if (process.env['INSTANA_DEBUG']) {
-      setLoggerLevel(parentLogger, 'debug');
-    } else if (config.level) {
-      setLoggerLevel(parentLogger, config.level);
-    } else if (process.env['INSTANA_LOG_LEVEL']) {
-      setLoggerLevel(parentLogger, process.env['INSTANA_LOG_LEVEL'].toLowerCase());
-    }
+  } else if (parentLogger && parentLogger.addStream) {
+    // in case we are using a bunyan logger we also forward logs to the agent
+    parentLogger.addStream({
+      type: 'raw',
+      stream: loggerToAgentStream,
+      level: 'info'
+    });
   }
 
   // attaching custom method after reinitializing logger
   parentLogger.setLoggerLevel = function (/** @type {string | number} */ level) {
     setLoggerLevel(parentLogger, level);
   };
+
+  if (process.env['INSTANA_DEBUG']) {
+    setLoggerLevel(parentLogger, 'debug');
+  } else if (config.level) {
+    setLoggerLevel(parentLogger, config.level);
+  } else if (process.env['INSTANA_LOG_LEVEL']) {
+    setLoggerLevel(parentLogger, process.env['INSTANA_LOG_LEVEL'].toLowerCase());
+  }
 
   if (isReInit) {
     Object.keys(registry).forEach(loggerName => {
