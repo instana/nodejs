@@ -84,6 +84,12 @@ exports.init = function init(config, isReInit) {
       },
       multiStream
     );
+
+    // attaching custom method after reinitializing logger
+    parentLogger.setLoggerLevel = function (/** @type {string | number} */ level) {
+      setLoggerLevel(parentLogger, level);
+    };
+
     if (process.env['INSTANA_DEBUG']) {
       setLoggerLevel(parentLogger, 'debug');
     } else if (config.level) {
