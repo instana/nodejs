@@ -268,7 +268,7 @@ exports.sendSpans = function sendSpans(spans, cb) {
       logLargeSpans(spans);
     } else if (err) {
       const spanInfo = getSpanLengthInfo(spans);
-      logger.debug(`Failed to sent: ${JSON.stringify(spanInfo)}`);
+      logger.debug(`Failed to send: ${JSON.stringify(spanInfo)}`);
     } else {
       const spanInfo = getSpanLengthInfo(spans);
       logger.debug(`Successfully sent:${JSON.stringify(spanInfo)}`);
