@@ -35,8 +35,7 @@ exports.init = function init(config, isReInit) {
     // A bunyan or pino logger has been provided via config. In either case we create a child logger directly under the
     // given logger which serves as the parent for all loggers we create later on.
     parentLogger = config.logger.child({
-      module: 'instana-nodejs-logger-parent',
-      __in: 1
+      module: 'instana-nodejs-logger-parent'
     });
   } else if (config.logger && hasLoggingFunctions(config.logger)) {
     // A custom non-bunyan/non-pino logger has been provided via config. We use it as is.
@@ -48,8 +47,7 @@ exports.init = function init(config, isReInit) {
     parentLogger = pino({
       name: '@instana/collector',
       thread: threadId,
-      level: 'info',
-      __in: 1
+      level: 'info'
     });
   }
 
@@ -91,7 +89,7 @@ exports.init = function init(config, isReInit) {
   }
 
   // attaching custom method after reinitializing logger
-  parentLogger.setLoggerLevel = function (/** @type {string | number} */ level) {
+  parentLogger._setInstanaLogLevel = function (/** @type {string | number} */ level) {
     setLoggerLevel(parentLogger, level);
   };
 

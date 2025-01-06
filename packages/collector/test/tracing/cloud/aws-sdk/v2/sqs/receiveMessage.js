@@ -32,7 +32,7 @@ const TeeLogger = require('../../../../../test_util/TeeLogger');
 const { sqs } = require('./sqsUtil');
 
 const instanaLogger = require('../../../../../../src/logger').getLogger('SQS receiver');
-instanaLogger.setLoggerLevel('warn');
+instanaLogger._setInstanaLogLevel('warn');
 const collectingLogger = new CollectingLogger();
 const teeLogger = new TeeLogger(instanaLogger, collectingLogger);
 instana.setLogger(teeLogger);

@@ -185,7 +185,7 @@ describe('logger', () => {
     );
   });
 
-  // This test case is not consistent.
+  // TODO: This test case is not consistent.
   // Need to investigate further why its failing in the initial run and succeeding after that
 
   // it('should verify pino output streams', () => {
