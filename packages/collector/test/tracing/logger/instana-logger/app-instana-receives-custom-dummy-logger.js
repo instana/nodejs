@@ -1,5 +1,6 @@
 /*
- * (c) Copyright IBM Corp. 2024
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. and contributors 2018
  */
 
 /* eslint-disable no-console */
