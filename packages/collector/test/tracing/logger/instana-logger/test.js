@@ -56,8 +56,6 @@ mochaSuiteFn('tracing/instana-logger', function () {
       });
 
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
-
-      it('bunyan calls should not be traced', () => verifyCustomInstanaLoggingIsNotTraced());
     });
   });
 
@@ -79,26 +77,8 @@ mochaSuiteFn('tracing/instana-logger', function () {
           // verify that nothing logged by Instana has been traced
           const allPinoSpans = testUtils.getSpansByName(spans, 'log.pino');
           expect(allPinoSpans).to.be.empty;
-        })
-      );
-    });
-  }
 
-  // Using a custom logger as InstanaLogger
-  function verifyCustomInstanaLoggingIsNotTraced() {
-    return appControls.trigger('trigger').then(async () => {
-      await testUtils.delay(250);
-
-      return testUtils.retry(() =>
-        agentControls.getSpans().then(spans => {
-          testUtils.expectAtLeastOneMatching(spans, [
-            span => expect(span.n).to.equal('node.http.server'),
-            span => expect(span.f.e).to.equal(String(appControls.getPid())),
-            span => expect(span.f.h).to.equal('agent-stub-uuid')
-          ]);
-          // 1 x http span
-          expect(spans.length).to.be.eq(1);
-
+          // In a custom applicatoin, we are using bunyan as default logger, that should also not be traced
           const allBunyanSpans = testUtils.getSpansByName(spans, 'log.bunyan');
           expect(allBunyanSpans).to.be.empty;
         })
