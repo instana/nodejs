@@ -185,20 +185,17 @@ describe('logger', () => {
     );
   });
 
-  // TODO: This test case is not consistent.
-  // Need to investigate further why its failing in the initial run and succeeding after that
+  it('should verify pino output streams', () => {
+    log.init({});
+    const logger = log.getLogger('myLogger');
 
-  // it('should verify pino output streams', () => {
-  //   log.init({});
-  //   const logger = log.getLogger('myLogger');
+    // When using pino with a multi-stream setup, the logger's streams aren't directly exposed
+    const multiStream = logger[pino.symbols.streamSym];
 
-  //   // When using pino with a multi-stream setup, the logger's streams aren't directly exposed
-  //   const multiStream = logger[pino.symbols.streamSym];
+    expect(multiStream).to.be.an('object');
 
-  //   expect(multiStream).to.be.an('object');
-
-  //   expect(multiStream).to.have.property('write').that.is.a('function');
-  // });
+    expect(multiStream).to.have.property('write').that.is.a('function');
+  });
 });
 
 /**

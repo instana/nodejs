@@ -56,7 +56,8 @@ exports.init = function init(config, isReInit) {
   if (isPinoLogger(parentLogger)) {
     // This consoleStream creates a destination stream for the logger that writes log data to the standard output.
     // Since we are using multistream here, this needs to be specified explicitly
-    const consoleStream = pino.destination(process.stdout);
+
+    const consoleStream = pino.destination(parentLogger.destination);
 
     const multiStream = {
       /**
