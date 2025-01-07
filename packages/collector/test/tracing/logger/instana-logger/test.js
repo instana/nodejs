@@ -78,7 +78,7 @@ mochaSuiteFn('tracing/instana-logger', function () {
           const allPinoSpans = testUtils.getSpansByName(spans, 'log.pino');
           expect(allPinoSpans).to.be.empty;
 
-          // In a custom applicatoin, we are using bunyan as default logger, that should also not be traced
+          // verify that nothing logged by Instana has been traced with bunyan
           const allBunyanSpans = testUtils.getSpansByName(spans, 'log.bunyan');
           expect(allBunyanSpans).to.be.empty;
         })

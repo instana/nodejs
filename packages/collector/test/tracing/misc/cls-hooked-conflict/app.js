@@ -17,6 +17,7 @@ const clsHooked = require('cls-hooked');
 const express = require('express');
 const morgan = require('morgan');
 const pino = require('pino')();
+
 const logPrefix = `cls-hooked-no-conflict (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 
