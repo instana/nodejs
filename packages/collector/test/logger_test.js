@@ -7,30 +7,23 @@
 
 const expect = require('chai').expect;
 const bunyan = require('bunyan');
-const pino2 = require('pino');
-const pino = require('../src/uninstrumentedLogger');
+let pino = require('pino');
+let uninstrumentedLogger = require('../src/uninstrumentedLogger');
+let log = require('../src/logger');
 const { expectAtLeastOneMatching } = require('../../core/test/test_util');
 
-const savedCache = {};
-
-describe.only('logger', () => {
+describe('logger', () => {
   before(() => {
     Object.keys(require.cache).forEach(key => {
-      if (key.includes('src/logger') || key.includes('src/uninstrumentedLogger')) {
-        console.log('====, ', key);
+      if (key.includes('uninstrumentedLogger') || key.includes('src/logger') || key.includes('node_modules/pino')) {
         delete require.cache[key];
       }
     });
-
-    console.log('-------BEFORE--------');
-    // savedCache = require.cache;
   });
 
   beforeEach(resetEnv);
   afterEach(() => {
     resetEnv();
-
-    // require.cache = savedCache;
   });
 
   function resetEnv() {
@@ -38,26 +31,24 @@ describe.only('logger', () => {
     delete process.env.INSTANA_DEBUG;
   }
 
-  it.only('should verify pino output streams are not there for the logger', () => {
-    const log = require('../src/logger');
-
-    log.init({});
-    const logger = log.getLogger('myLogger');
-
-    // When using pino with a multi-stream setup, the logger's streams aren't directly exposed
-    const multiStream = logger[pino2.symbols.streamSym];
-
-    expect(multiStream).to.be.an('object');
-
-    expect(multiStream).to.not.have.property('write').that.is.a('function');
-  });
-
-  it('should verify pino output streams are there ', () => {
+  it('should verify pino output streams are not there for the logger', () => {
+    log = require('../src/logger');
     log.init({});
     const logger = log.getLogger('myLogger');
 
     // When using pino with a multi-stream setup, the logger's streams aren't directly exposed
     const multiStream = logger[pino.symbols.streamSym];
+
+    expect(multiStream).to.be.undefined;
+  });
+
+  it('should verify pino output streams are there ', () => {
+    uninstrumentedLogger = require('../src/uninstrumentedLogger');
+    log.init({});
+    const logger = log.getLogger('myLogger');
+
+    // When using pino with a multi-stream setup, the logger's streams aren't directly exposed
+    const multiStream = logger[uninstrumentedLogger.symbols.streamSym];
 
     expect(multiStream).to.be.an('object');
 
@@ -82,6 +73,7 @@ describe.only('logger', () => {
   });
 
   it('should use the parent logger if defined', () => {
+    pino = require('pino');
     const logger = pino({ name: 'myParentLogger' });
     log.init({ logger });
     const childLogger = log.getLogger('childName');
@@ -93,6 +85,7 @@ describe.only('logger', () => {
   });
 
   it('should add child logger to defined parent', () => {
+    pino = require('pino');
     const logger = pino({ name: 'myParentLogger' });
     log.init({ logger });
     const childLogger = log.getLogger('childName');
