@@ -6,20 +6,63 @@
 'use strict';
 
 const expect = require('chai').expect;
-const pino = require('pino');
 const bunyan = require('bunyan');
+const pino2 = require('pino');
+const pino = require('../src/uninstrumentedLogger');
 const { expectAtLeastOneMatching } = require('../../core/test/test_util');
 
-const log = require('../src/logger');
+const savedCache = {};
 
-describe('logger', () => {
+describe.only('logger', () => {
+  before(() => {
+    Object.keys(require.cache).forEach(key => {
+      if (key.includes('src/logger') || key.includes('src/uninstrumentedLogger')) {
+        console.log('====, ', key);
+        delete require.cache[key];
+      }
+    });
+
+    console.log('-------BEFORE--------');
+    // savedCache = require.cache;
+  });
+
   beforeEach(resetEnv);
-  afterEach(resetEnv);
+  afterEach(() => {
+    resetEnv();
+
+    // require.cache = savedCache;
+  });
 
   function resetEnv() {
     delete process.env.INSTANA_LOG_LEVEL;
     delete process.env.INSTANA_DEBUG;
   }
+
+  it.only('should verify pino output streams are not there for the logger', () => {
+    const log = require('../src/logger');
+
+    log.init({});
+    const logger = log.getLogger('myLogger');
+
+    // When using pino with a multi-stream setup, the logger's streams aren't directly exposed
+    const multiStream = logger[pino2.symbols.streamSym];
+
+    expect(multiStream).to.be.an('object');
+
+    expect(multiStream).to.not.have.property('write').that.is.a('function');
+  });
+
+  it('should verify pino output streams are there ', () => {
+    log.init({});
+    const logger = log.getLogger('myLogger');
+
+    // When using pino with a multi-stream setup, the logger's streams aren't directly exposed
+    const multiStream = logger[pino.symbols.streamSym];
+
+    expect(multiStream).to.be.an('object');
+
+    expect(multiStream).to.have.property('write').that.is.a('function');
+  });
 
   it('should return the default parent logger if no config is available', () => {
     log.init({});
@@ -183,18 +226,6 @@ describe('logger', () => {
       stream => expect(stream.type).to.equal('raw'),
       stream => expect(stream.level).to.equal('info')
     );
-  });
-
-  it('should verify pino output streams', () => {
-    log.init({});
-    const logger = log.getLogger('myLogger');
-
-    // When using pino with a multi-stream setup, the logger's streams aren't directly exposed
-    const multiStream = logger[pino.symbols.streamSym];
-
-    expect(multiStream).to.be.an('object');
-
-    expect(multiStream).to.have.property('write').that.is.a('function');
   });
 });
 
