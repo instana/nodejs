@@ -15,16 +15,8 @@ process.on('SIGTERM', () => {
 
 const agentPort = process.env.AGENT_PORT;
 
-const dummyLogger = {
-  debug: function () {
-    // omit debug calls to not pollute test logs
-  },
-  info: console.log,
-  warn: console.warn,
-  error: console.error
-};
-
-const instana = require('../../../..')({
+const instana = require('../../../..');
+instana({
   agentPort,
   level: 'warn',
   tracing: {
@@ -32,9 +24,6 @@ const instana = require('../../../..')({
     forceTransmissionStartingAt: 1
   }
 });
-
-instana.setLogger(dummyLogger);
-
 let instanaLogger;
 instanaLogger = require('../../../../src/logger').getLogger('test-module-name', newLogger => {
   instanaLogger = newLogger;
@@ -45,7 +34,7 @@ const express = require('express');
 const morgan = require('morgan');
 const port = require('../../../test_util/app-port')();
 const app = express();
-const logPrefix = `Bunyan App [Instana receives non-Bunyan logger] (${process.pid}):\t`;
+const logPrefix = `Pino App [Instana creates Pino logger] (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

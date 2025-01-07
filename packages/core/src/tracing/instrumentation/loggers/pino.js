@@ -18,6 +18,9 @@ const cls = require('../../cls');
 let isActive = false;
 
 exports.init = function init() {
+  // TODO: Fix the issue with Pino instrumentation. If Pino is required multiple times,
+  //       only the first instance gets instrumented. This behavior is caused by `onFileLoad`.
+  //       Fix is being tracked in https://jsw.ibm.com/browse/INSTA-23066.
   hook.onFileLoad(/\/pino\/lib\/tools\.js/, instrumentPinoTools);
 };
 

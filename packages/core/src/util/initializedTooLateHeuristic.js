@@ -32,7 +32,7 @@ let patterns = [
   /\/@redis\/client\/dist\/index.js/,
   /\/amqplib\/lib\//,
   /\/aws-sdk\/lib\//,
-  // deliberately not including bunyan because we depend on bunyan ourselves
+  /\/bunyan\/lib\//,
   /\/bull\/index.js/,
   /\/cls-hooked\/index.js/,
   /\/express\/index.js/,
@@ -62,7 +62,9 @@ let patterns = [
   /\/node-rdkafka\/lib\//,
   /\/pg-native\/index.js/,
   /\/pg\/lib\//,
-  /\/pino\/lib\//,
+  // deliberately not including pino because we depend on pino as our default logger
+  // this is not a clean way of skipping it, but this is the workaround for now.
+  // investigate as part of https://jsw.ibm.com/browse/INSTA-22756
   /\/redis\/dist\/index.js/,
   /\/redis\/index.js/,
   /\/sqs-consumer\/dist\//,
