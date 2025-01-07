@@ -7,7 +7,8 @@
 const pinoWasRequiredBeforeUs = Object.keys(require.cache).some(key => key.includes('node_modules/pino'));
 
 // eslint-disable-next-line import/no-extraneous-dependencies, instana/no-unsafe-require
-const logger = require('pino');
+
+const pino = require('pino').default;
 
 // TODO: Fix the issue with Pino instrumentation. If Pino is required multiple times,
 //       only the first require is instrumented. `onFileLoad` causes the behavior for that.
@@ -26,4 +27,4 @@ if (!pinoWasRequiredBeforeUs) {
   });
 }
 
-module.exports = logger;
+module.exports = pino;

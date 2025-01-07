@@ -16,7 +16,7 @@ try {
   // thread (0).
 }
 
-const pino = require('./uninstrumentedLogger');
+const uninstrumentedLogger = require('./uninstrumentedLogger');
 
 const { logger } = require('@instana/core');
 const loggerToAgentStream = require('./agent/loggerToAgentStream');
@@ -43,10 +43,8 @@ exports.init = function init(config, isReInit) {
   } else {
     // No custom logger has been provided via config, we create a new pino logger as the parent logger for all loggers
     // we create later on.
-    // @ts-ignore
-    parentLogger = pino({
+    parentLogger = uninstrumentedLogger({
       name: '@instana/collector',
-      thread: threadId,
       level: 'info'
     });
   }
@@ -57,7 +55,7 @@ exports.init = function init(config, isReInit) {
     // This consoleStream creates a destination stream for the logger that writes log data to the standard output.
     // Since we are using multistream here, this needs to be specified explicitly
 
-    const consoleStream = pino.destination(parentLogger.destination);
+    const consoleStream = uninstrumentedLogger.destination(parentLogger.destination);
 
     const multiStream = {
       /**
@@ -71,8 +69,7 @@ exports.init = function init(config, isReInit) {
       }
     };
 
-    // @ts-ignore
-    parentLogger = pino(
+    parentLogger = uninstrumentedLogger(
       {
         ...parentLogger.levels,
         level: parentLogger.level || 'info',
@@ -123,7 +120,8 @@ exports.getLogger = function getLogger(loggerName, reInitFn, level) {
   if (typeof parentLogger.child === 'function') {
     // Either bunyan or pino, both support parent-child relationships between loggers.
     _logger = parentLogger.child({
-      module: loggerName
+      module: loggerName,
+      threadId
     });
   } else {
     // Unknown logger type (neither bunyan nor pino), we simply return the user provided custom logger as-is.
