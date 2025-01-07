@@ -20,6 +20,10 @@ mochaSuiteFn('tracing/instana-logger', function () {
   const agentControls = globalAgent.instance;
   const appControls = require('./controls');
 
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
   // verify that Instana's own pino logging does not get traced
   describe('do not trace Instana log calls', () => {
     describe('Instana creates a new default logger', () => {
@@ -53,7 +57,7 @@ mochaSuiteFn('tracing/instana-logger', function () {
 
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
 
-      it('bunyan calls should be traced', () => verifyNonInstanaLoggingIsTraced());
+      it('bunyan calls should not be traced', () => verifyCustomInstanaLoggingIsNotTraced());
     });
   });
 
@@ -61,13 +65,16 @@ mochaSuiteFn('tracing/instana-logger', function () {
     return appControls.trigger('trigger').then(async () => {
       await testUtils.delay(250);
 
-      testUtils.retry(() =>
+      return testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
           testUtils.expectAtLeastOneMatching(spans, [
             span => expect(span.n).to.equal('node.http.server'),
             span => expect(span.f.e).to.equal(String(appControls.getPid())),
             span => expect(span.f.h).to.equal('agent-stub-uuid')
           ]);
+
+          // 1 x http span
+          expect(spans.length).to.be.eq(1);
 
           // verify that nothing logged by Instana has been traced
           const allPinoSpans = testUtils.getSpansByName(spans, 'log.pino');
@@ -77,20 +84,23 @@ mochaSuiteFn('tracing/instana-logger', function () {
     });
   }
 
-  function verifyNonInstanaLoggingIsTraced() {
+  // Using a custom logger as InstanaLogger
+  function verifyCustomInstanaLoggingIsNotTraced() {
     return appControls.trigger('trigger').then(async () => {
       await testUtils.delay(250);
 
-      testUtils.retry(() =>
+      return testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
           testUtils.expectAtLeastOneMatching(spans, [
             span => expect(span.n).to.equal('node.http.server'),
             span => expect(span.f.e).to.equal(String(appControls.getPid())),
             span => expect(span.f.h).to.equal('agent-stub-uuid')
           ]);
+          // 1 x http span
+          expect(spans.length).to.be.eq(1);
 
           const allBunyanSpans = testUtils.getSpansByName(spans, 'log.bunyan');
-          expect(allBunyanSpans.length).to.be.greaterThan(0);
+          expect(allBunyanSpans).to.be.empty;
         })
       );
     });
