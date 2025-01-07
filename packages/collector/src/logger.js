@@ -89,11 +89,6 @@ exports.init = function init(config, isReInit) {
     });
   }
 
-  // attaching custom method after reinitializing logger
-  parentLogger._setInstanaLogLevel = function (/** @type {string | number} */ level) {
-    setLoggerLevel(parentLogger, level);
-  };
-
   if (process.env['INSTANA_DEBUG']) {
     setLoggerLevel(parentLogger, 'debug');
   } else if (config.level) {
@@ -115,9 +110,10 @@ exports.init = function init(config, isReInit) {
 /**
  * @param {string} loggerName
  * @param {(logger: import('@instana/core/src/core').GenericLogger) => *} [reInitFn]
+ * @param {string|null} [level] - Optional log level
  * @returns {import('@instana/core/src/core').GenericLogger}
  */
-exports.getLogger = function getLogger(loggerName, reInitFn) {
+exports.getLogger = function getLogger(loggerName, reInitFn, level) {
   if (!parentLogger) {
     exports.init({});
   }
@@ -139,6 +135,10 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
       throw new Error(`Duplicate logger name: ${loggerName}.`);
     }
     registry[loggerName] = reInitFn;
+  }
+
+  if (level) {
+    setLoggerLevel(_logger, level);
   }
 
   return /** @type {import('@instana/core/src/core').GenericLogger} */ (_logger);
