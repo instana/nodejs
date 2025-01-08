@@ -40,7 +40,7 @@ mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
     });
 
     it('should collect spans including sdk wrap', async () => {
-      await delay(100);
+      await delay(200);
 
       await retry(async () => {
         const spans = await agentControls.getSpans();
@@ -66,7 +66,7 @@ mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
     });
 
     it('should trace single exit span only', async () => {
-      await delay(100);
+      await delay(200);
 
       await retry(async () => {
         const spans = await globalAgent.instance.getSpans();
