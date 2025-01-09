@@ -19,4 +19,4 @@ npm i @instana/serverless-collector --save
 require('@instana/serverless-collector');
 ```
 
-For more in-depth documentation, refer to this [page](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-serverless-collector-installation).
+For more in-depth documentation, refer to this [page](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-agentless-monitoring-public-preview).
