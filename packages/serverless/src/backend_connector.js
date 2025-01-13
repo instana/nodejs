@@ -400,11 +400,14 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
         if (proxyAgent) {
           logger.warn(
             'Could not send traces and metrics to Instana. Could not connect to the configured proxy ' +
-              `${process.env[proxyEnvVar]}.`,
-            e
+              `${process.env[proxyEnvVar]}.` +
+              `${e.message} ${e.stack}`
           );
         } else {
-          logger.warn('Could not send traces and metrics to Instana. The Instana back end seems to be unavailable.', e);
+          logger.warn(
+            `Could not send traces and metrics to Instana. The Instana back end seems to be unavailable. 
+            ${e.message} , ${e.stack}`
+          );
         }
       }
 

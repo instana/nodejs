@@ -47,7 +47,9 @@ async function init() {
     // eslint-disable-next-line no-unused-expressions
     process.send && process.send('instana.serverless-collector.initialized');
   } catch (e) {
-    logger.error('Initializing @instana/serverless-collector failed. This process will not be traced.', e);
+    logger.error(
+      `Initializing @instana/serverless-collector failed. This process will not be traced. ${e.message} ${e.stack}`
+    );
   }
 }
 

@@ -271,7 +271,7 @@ exports.sendSpans = function sendSpans(spans, cb) {
       logger.debug(`Failed to send: ${JSON.stringify(spanInfo)}`);
     } else {
       const spanInfo = getSpanLengthInfo(spans);
-      logger.debug(`Successfully sent:${JSON.stringify(spanInfo)}`);
+      logger.debug(`Successfully sent: ${JSON.stringify(spanInfo)}`);
     }
     cb(err);
   });
@@ -372,9 +372,9 @@ function sendData(path, data, cb, ignore404 = false) {
 
   const payloadAsString = JSON.stringify(data, circularReferenceRemover());
   if (typeof logger.trace === 'function') {
-    logger.trace('Sending data to %s', path);
+    logger.trace(`Sending data to ${path}.`);
   } else {
-    logger.debug('Sending data to %s', path, agentOpts);
+    logger.debug(`Sending data to ${path}, ${agentOpts}`);
   }
 
   // Convert payload to a buffer to correctly identify content-length ahead of time.

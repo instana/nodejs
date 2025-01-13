@@ -79,7 +79,7 @@ function gatherHealthcheckResults() {
     .catch(function onHealthcheckResultFailure(/** @type {*} */ err) {
       // @ts-ignore
       exports.currentPayload = {};
-      logger.warn('Unexpected error while getting healthcheck results', err);
+      logger.warn(`Unexpected error while getting healthcheck results. ${err.message} ${err.stack}`);
       timeoutHandle = setTimeout(gatherHealthcheckResults, timeBetweenHealthcheckCalls);
       timeoutHandle.unref();
     });

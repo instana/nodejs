@@ -19,7 +19,7 @@ module.exports = (config, logger) => {
   return new Promise(resolve => {
     instanaCore.util.applicationUnderMonitoring.getMainPackageJsonStartingAtMainModule(config, (err, packageJson) => {
       if (err) {
-        logger.debug('Failed to determine main package.json.', err);
+        logger.debug(`Failed to determine main package.json. ${err.message} ${err.stack}`);
         return resolve();
       }
 
