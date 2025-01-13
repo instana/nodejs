@@ -250,7 +250,7 @@ function findNativeModulePath(opts) {
     return true;
   } catch (e) {
     logger.debug(
-      `Could not find location for ${opts.nativeModuleName}. Will create a path for it. ${e?.message} ${e.stack}`
+      `Could not find location for ${opts.nativeModuleName}. Will create a path for it. ${e.message} ${e.stack}`
     );
     return createNativeModulePath(opts);
   }

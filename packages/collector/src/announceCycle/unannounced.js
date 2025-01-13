@@ -95,7 +95,7 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
       logger.error(
         "Failed to parse the JSON payload from the Instana host agent's response. Establishing the connection" +
           `to the Instana host agent will be retried in ${retryDelay} ms. The response payload was ${rawResponse}.` +
-          `${e?.message} ${e?.stack}`
+          `${e.message} ${e.stack}`
       );
       setTimeout(tryToAnnounce, retryDelay, ctx, nextRetryDelay).unref();
       return;
