@@ -15,6 +15,12 @@ module.exports = {
    * @param {*} record
    */
   write: function write(record) {
+    try {
+      record = JSON.parse(record);
+    } catch (error) {
+      // ignore
+    }
+
     const logLevel = getAgentLogLevel(record.level);
     let message = `Node.js collector (pid: ${process.pid}, reporting pid: ${pidStore.pid}): ${record.msg}`;
     let stack = null;
