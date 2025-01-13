@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.5.2](https://github.com/instana/nodejs/compare/v4.5.1...v4.5.2) (2025-01-13)
+
+### Bug Fixes
+
+- pino agent stream messages were undefined ([9472c5c](https://github.com/instana/nodejs/commit/9472c5c03a2527078f7f8c68cd68c0f1f7e39c82))
+- resolved logging objects being undefined or missing ([#1509](https://github.com/instana/nodejs/issues/1509)) ([7715fed](https://github.com/instana/nodejs/commit/7715fed5843716a6e49d79f221efcec33a9a1c9d))
+
 ## [4.5.1](https://github.com/instana/nodejs/compare/v4.5.0...v4.5.1) (2025-01-13)
 
 ### Bug Fixes
