@@ -118,7 +118,7 @@ function init(_config) {
     require('./metrics').init(config);
   }
 
-  logger.info('@instana/collector module version:', require(path.join(__dirname, '..', 'package.json')).version);
+  logger.info('@instana/collector module version: %s', require(path.join(__dirname, '..', 'package.json')).version);
   require('./announceCycle').start();
 
   return init;

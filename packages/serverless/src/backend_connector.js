@@ -404,7 +404,10 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
             e
           );
         } else {
-          logger.warn('Could not send traces and metrics to Instana. The Instana back end seems to be unavailable.', e);
+          logger.warn(
+            `Could not send traces and metrics to Instana. The Instana back end seems to be unavailable. 
+            ${JSON.stringify(e)}`
+          );
         }
       }
 

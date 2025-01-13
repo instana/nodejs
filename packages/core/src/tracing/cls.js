@@ -310,11 +310,11 @@ function putPseudoSpan(spanName, kind, traceId, spanId) {
   span.k = kind;
 
   if (!traceId) {
-    logger.warn('Cannot start a pseudo span without a trace ID', spanName, kind);
+    logger.warn(`Cannot start a pseudo span without a trace ID": ${spanName}, ${kind}`);
     return;
   }
   if (!spanId) {
-    logger.warn('Cannot start a pseudo span without a span ID', spanName, kind);
+    logger.warn(`Cannot start a pseudo span without a span ID": ${spanName}, ${kind}`);
     return;
   }
 

@@ -32,9 +32,10 @@ module.exports = function atMostOnce(name, cb) {
     if (callCount === 1) {
       return cb.apply(null, arguments);
     }
-
-    logger.debug('Function %s was called %s times. This time with the following arguments.', name, callCount, {
+    const argObj = {
       args: Array.prototype.slice.call(arguments)
-    });
+    };
+
+    logger.debug(`Function ${name} was called ${callCount} times. This time with the following arguments: ${argObj}`);
   };
 };

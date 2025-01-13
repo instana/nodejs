@@ -206,12 +206,12 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
             callback(true);
           })
           .catch(error => {
-            logger.warn(`Copying the precompiled build for ${opts.nativeModuleName} ${label} failed.`, error);
+            logger.warn(`Copying the precompiled build for ${opts.nativeModuleName} ${label} failed. ${error}`);
             callback(false);
           });
       })
       .catch(tarErr => {
-        logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed.`, tarErr);
+        logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed. ${tarErr}`);
         callback(false);
       });
   });
@@ -245,7 +245,9 @@ function findNativeModulePath(opts) {
     opts.nativeModuleParentPath = path.join(opts.nativeModulePath, '..');
     return true;
   } catch (e) {
-    logger.debug(`Could not find location for ${opts.nativeModuleName}. Will create a path for it.`, e);
+    logger.debug(
+      `Could not find location for ${opts.nativeModuleName}. Will create a path for it. ${e?.message} ${e.stack}`
+    );
     return createNativeModulePath(opts);
   }
 }

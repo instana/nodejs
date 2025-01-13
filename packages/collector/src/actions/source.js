@@ -37,7 +37,7 @@ exports.getSourceFile = (request, multiCb) => {
 function readFile(request, multiCb) {
   fs.readFile(request.args.file, { encoding: 'utf8' }, (error, content) => {
     if (error) {
-      logger.debug('Failed to retrieve source file for user request: %s.', request.args.file, { error });
+      logger.debug(`Failed to retrieve source file for user request: ${request.args.file}. ${error}`);
       multiCb({
         error: `Could not load file. Error: ${error.message}`
       });

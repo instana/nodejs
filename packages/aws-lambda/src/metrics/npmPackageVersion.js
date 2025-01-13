@@ -16,7 +16,7 @@ exports.currentPayload = undefined;
 exports.activate = function activate() {
   coreUtil.applicationUnderMonitoring.getMainPackageJsonStartingAtDirectory(rootDir.root, (err, pckg) => {
     if (err) {
-      logger.warn('Failed to determine main package json. Reason: ', err.message, err.stack);
+      logger.warn(`Failed to determine main package json. Reason: ${err.message} ${err.stack}`);
     }
 
     if (!err && pckg) {

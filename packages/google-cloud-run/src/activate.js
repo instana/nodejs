@@ -38,8 +38,7 @@ function init() {
   metrics.init(config, function onReady(err, serviceRevisionPayload) {
     if (err) {
       logger.error(
-        'Initializing @instana/google-cloud-run failed. This container instance will not be monitored.',
-        err
+        `Initializing @instana/google-cloud-run failed. This container instance will not be monitored. ${err}`
       );
       metrics.deactivate();
       return;
