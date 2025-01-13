@@ -314,7 +314,7 @@ function putPseudoSpan(spanName, kind, traceId, spanId) {
     return;
   }
   if (!spanId) {
-    logger.warn(`Cannot start a pseudo span without a span ID": ${spanName}, ${kind}`);
+    logger.warn(`Cannot start a pseudo span without a span ID: ${spanName}, ${kind}`);
     return;
   }
 
