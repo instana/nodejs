@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.5.1](https://github.com/instana/nodejs/compare/v4.5.0...v4.5.1) (2025-01-13)
+
+### Bug Fixes
+
+- resolved bunyan npm installation warning ([#1447](https://github.com/instana/nodejs/issues/1447)) ([c4abc75](https://github.com/instana/nodejs/commit/c4abc75e8f0fb347310ce2bc6a0c24f8c3343b15))
+
 # [4.5.0](https://github.com/instana/nodejs/compare/v4.4.0...v4.5.0) (2024-12-16)
 
 ### Features

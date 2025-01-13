@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.5.1](https://github.com/instana/nodejs/compare/v4.5.0...v4.5.1) (2025-01-13)
+
+**Note:** Version bump only for package instana-aws-lambda-auto-wrap
+
 # [4.5.0](https://github.com/instana/nodejs/compare/v4.4.0...v4.5.0) (2024-12-16)
 
 **Note:** Version bump only for package instana-aws-lambda-auto-wrap
