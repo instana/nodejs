@@ -62,7 +62,7 @@ function sendResponse(request, response) {
   agentConnection.sendAgentResponseToAgent(request.messageId, response, error => {
     if (error) {
       logger.warn(`Failed to send agent response for action ${request.action} and message ID ${request.messageId}`);
-      logger.warn(`Error: ${error}`);
+      logger.warn(`Error: ${error.message} ${error.stack}`);
     }
   });
 }

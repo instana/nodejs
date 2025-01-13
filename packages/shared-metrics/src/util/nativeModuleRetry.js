@@ -206,12 +206,16 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
             callback(true);
           })
           .catch(error => {
-            logger.warn(`Copying the precompiled build for ${opts.nativeModuleName} ${label} failed. ${error}`);
+            logger.warn(
+              `Copying the precompiled build for ${opts.nativeModuleName} ${label} failed. 
+              ${error.message} ${error.stack}`
+            );
             callback(false);
           });
       })
       .catch(tarErr => {
-        logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed. ${tarErr}`);
+        logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed. 
+          ${tarErr.message} ${tarErr.stack}`);
         callback(false);
       });
   });

@@ -215,7 +215,7 @@ function sendEOLEvent() {
     err => {
       if (err) {
         logger.debug(
-          `Sending a monitoring event for the Node.js version end-of-life check has failed. ${JSON.stringify(err)}`
+          `Sending a monitoring event for the Node.js version end-of-life check has failed. ${err.message} ${err.stack}`
         );
       }
     }

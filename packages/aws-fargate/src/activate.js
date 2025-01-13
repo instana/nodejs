@@ -70,8 +70,9 @@ function init() {
       // eslint-disable-next-line no-unused-expressions
       process.send && process.send('instana.aws-fargate.initialized');
     } catch (e) {
-      logger.error(`Initializing @instana/aws-fargate failed. This fargate task will not be monitored. 
-        ${JSON.stingify(e)}`);
+      logger.error(
+        `Initializing @instana/aws-fargate failed. This fargate task will not be monitored. ${e.message} ${e.stack}`
+      );
     }
   });
 }
