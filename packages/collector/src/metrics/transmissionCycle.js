@@ -114,7 +114,7 @@ function sendMetrics() {
  */
 function onMetricsHaveBeenSent(isFullTransmission, transmittedValue, error, responsePayload) {
   if (error) {
-    logger.error('Error received while trying to send snapshot data and metrics: %s', error.message);
+    logger.error(`Error received while trying to send snapshot data and metrics: ${error?.message} ${error?.stack}`);
     if (onError) {
       onError();
     }

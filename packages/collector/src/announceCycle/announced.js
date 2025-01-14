@@ -37,9 +37,8 @@ function checkWhetherAgentIsReadyToAccept(totalNumberOfAttempts, ctx) {
       ctx.transitionTo('agentready');
     } else if (totalNumberOfAttempts > MAX_RETRIES) {
       logger.warn(
-        'The Instana host agent is not yet ready to accept data after %s attempts. Restarting the cycle to establish ' +
-          'a connection.',
-        totalNumberOfAttempts
+        `The Instana host agent is not yet ready to accept data after ${totalNumberOfAttempts} attempts. 
+        Restarting the cycle to establish a connection.`
       );
       ctx.transitionTo('unannounced');
     } else {

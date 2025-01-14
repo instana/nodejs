@@ -423,11 +423,9 @@ function normalizeTracingStackTraceLength(config) {
       parseStringStackTraceLength(config, config.tracing.stackTraceLength);
     } else {
       logger.warn(
-        'The value of config.tracing.stackTraceLength has the non-supported type %s (the value is "%s"). Assuming ' +
-          'the default stack trace length %s.',
-        typeof config.tracing.stackTraceLength,
-        config.tracing.stackTraceLength,
-        defaults.tracing.stackTraceLength
+        `The value of config.tracing.stackTraceLength has the non-supported type ${typeof config.tracing
+          .stackTraceLength} (the value is "${config.tracing.stackTraceLength}").` +
+          `Assuming the default stack trace length ${defaults.tracing.stackTraceLength}.`
       );
       config.tracing.stackTraceLength = defaults.tracing.stackTraceLength;
     }
@@ -446,10 +444,8 @@ function parseStringStackTraceLength(config, value) {
     config.tracing.stackTraceLength = normalizeNumericalStackTraceLength(config.tracing.stackTraceLength);
   } else {
     logger.warn(
-      'The value of config.tracing.stackTraceLength ("%s") has type string and cannot be parsed to a numerical ' +
-        'value. Assuming the default stack trace length %s.',
-      value,
-      defaults.tracing.stackTraceLength
+      `The value of config.tracing.stackTraceLength ("${value}") has type string and cannot be parsed to a numerical ` +
+        `value. Assuming the default stack trace length ${defaults.tracing.stackTraceLength}.`
     );
     config.tracing.stackTraceLength = defaults.tracing.stackTraceLength;
   }
@@ -464,9 +460,7 @@ function normalizeNumericalStackTraceLength(numericalLength) {
   const normalized = Math.abs(Math.round(numericalLength));
   if (normalized !== numericalLength) {
     logger.warn(
-      'Normalized the provided value of config.tracing.stackTraceLength (%s) to %s.',
-      numericalLength,
-      normalized
+      `Normalized the provided value of config.tracing.stackTraceLength (${numericalLength}) to ${normalized}.`
     );
   }
   return normalized;
@@ -593,23 +587,17 @@ function normalizeSecrets(config) {
 
   if (typeof config.secrets.matcherMode !== 'string') {
     logger.warn(
-      'The value of config.secrets.matcherMode ("%s") is not a string. Assuming the default value %s.',
-      config.secrets.matcherMode,
-      defaults.secrets.matcherMode
+      `The value of config.secrets.matcherMode ("${config.secrets.matcherMode}") is not a string. Assuming the default value ${defaults.secrets.matcherMode}.`
     );
     config.secrets.matcherMode = defaults.secrets.matcherMode;
   } else if (validSecretsMatcherModes.indexOf(config.secrets.matcherMode) < 0) {
     logger.warn(
-      'The value of config.secrets.matcherMode (or the matcher mode parsed from INSTANA_SECRETS) (%s) is not a supported matcher mode. Assuming the default value %s.',
-      config.secrets.matcherMode,
-      defaults.secrets.matcherMode
+      `The value of config.secrets.matcherMode (or the matcher mode parsed from INSTANA_SECRETS) (${config.secrets.matcherMode}) is not a supported matcher mode. Assuming the default value ${defaults.secrets.matcherMode}.`
     );
     config.secrets.matcherMode = defaults.secrets.matcherMode;
   } else if (!Array.isArray(config.secrets.keywords)) {
     logger.warn(
-      'The value of config.secrets.keywords (%s) is not an array. Assuming the default value %s.',
-      config.secrets.keywords,
-      defaults.secrets.keywords
+      `The value of config.secrets.keywords (${config.secrets.keywords}) is not an array. Assuming the default value ${defaults.secrets.keywords}.`
     );
     config.secrets.keywords = defaults.secrets.keywords;
   }
@@ -636,8 +624,7 @@ function parseSecretsEnvVar(envVarValue) {
   if (!keywords) {
     // a list of keywords (with at least one element) is mandatory for all matcher modes except "none"
     logger.warn(
-      'The value of INSTANA_SECRETS (%s) cannot be parsed. Please use the following format: INSTANA_SECRETS=<matcher>:<secret>[,<secret>]. This setting will be ignored.',
-      envVarValue
+      `The value of INSTANA_SECRETS (${envVarValue}) cannot be parsed. Please use the following format: INSTANA_SECRETS=<matcher>:<secret>[,<secret>]. This setting will be ignored.`
     );
     return {};
   }
@@ -667,12 +654,8 @@ function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) 
 
   if (typeof configValue !== 'number' || isNaN(configValue)) {
     logger.warn(
-      'The value of %s (or %s) ("%s") is ' +
-        'not numerical or cannot be parsed to a numerical value. Assuming the default value %s.',
-      configPath,
-      envVarKey,
-      originalValue,
-      defaultValue
+      `The value of ${configPath} (or ${envVarKey}) ("${originalValue}") is ' +
+        'not numerical or cannot be parsed to a numerical value. Assuming the default value ${defaultValue}.`
     );
     return defaultValue;
   }
@@ -738,7 +721,7 @@ function normalizeIgnoreEndpoints(config) {
       config.tracing.ignoreEndpoints = ignoreEndpoints;
     } catch (error) {
       logger.warn(
-        `Failed to parse INSTANA_IGNORE_ENDPOINTS: ${process.env.INSTANA_IGNORE_ENDPOINTS}. Error: ${error.message}`
+        `Failed to parse INSTANA_IGNORE_ENDPOINTS: ${process.env.INSTANA_IGNORE_ENDPOINTS}. Error: ${error?.message}`
       );
     }
   } else {

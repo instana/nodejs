@@ -39,7 +39,7 @@ const ctx = {
    * @param {string} newStateName
    */
   transitionTo: function (newStateName) {
-    logger.info('Transitioning from %s to %s', currentState || '<init>', newStateName);
+    logger.info(`Transitioning from ${currentState || '<init>'} to ${newStateName}`);
 
     if (currentState) {
       states[currentState].leave(ctx);

@@ -157,8 +157,8 @@ function sendTracingMetrics() {
   agentConnection.sendTracingMetricsToAgent(payload, error => {
     if (error) {
       logger.info(
-        'Error received while trying to send tracing metrics to agent: %s. This will not affect monitoring or tracing.',
-        error.message
+        `Error received while trying to send tracing metrics to agent: ${error?.message}.` +
+          ' This will not affect monitoring or tracing.'
       );
       if (typeof error.message === 'string' && error.message.indexOf('Got status code 404')) {
         logger.info(
@@ -188,8 +188,7 @@ function fireMonitoringEvent() {
   agentConnection.sendAgentMonitoringEvent('nodejs_collector_native_addon_autoprofile_missing', 'PROFILER', error => {
     if (error) {
       logger.error(
-        'Error received while trying to send a monitoring event to the Instana host agent: %s',
-        error.message
+        `Error received while trying to send a monitoring event to the Instana host agent: ${error?.message}`
       );
     }
   });
@@ -215,7 +214,8 @@ function sendEOLEvent() {
     err => {
       if (err) {
         logger.debug(
-          `Sending a monitoring event for the Node.js version end-of-life check has failed. ${err.message} ${err.stack}`
+          `Sending a monitoring event for the Node.js version end-of-life check has failed. 
+          ${err?.message} ${err?.stack}`
         );
       }
     }

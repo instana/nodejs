@@ -88,7 +88,7 @@ module.exports.init = ({ logger }) => {
     logger.warn('AWS SDK is not available.');
     errorFromAWS =
       `Unable to fetch the Instana key from the SSM Parameter Store using "${process.env.INSTANA_SSM_PARAM_NAME}",` +
-      ` as the AWS SDK is unavailable. Reason: ${err.message}`;
+      ` as the AWS SDK is unavailable. Reason: ${err?.message}`;
   }
 };
 

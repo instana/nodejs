@@ -21,7 +21,7 @@ const eventName = 'pidChanged';
 const eventEmitter = new EventEmitter();
 exports.onPidChange = eventEmitter.on.bind(eventEmitter, eventName);
 
-logger.info('PID Store starting with pid %s', internalPidStore.pid);
+logger.info(`PID Store starting with pid ${internalPidStore.pid}`);
 
 Object.defineProperty(exports, 'pid', {
   get: function getPid() {
@@ -29,7 +29,7 @@ Object.defineProperty(exports, 'pid', {
   },
   set: function setPid(newPid) {
     if (internalPidStore.pid !== newPid) {
-      logger.info('Changing pid to %s', newPid);
+      logger.info(`Changing pid to ${newPid}`);
       internalPidStore.pid = newPid;
       eventEmitter.emit(eventName, internalPidStore.pid);
     }
@@ -52,7 +52,7 @@ if (!process.env.CONTINUOUS_INTEGRATION) {
   const pidInParentNamespace = getPidFromParentNamespace();
   if (pidInParentNamespace) {
     internalPidStore.pid = pidInParentNamespace;
-    logger.info('Changing pid to %s due to successful identification of PID in parent namespace', pidInParentNamespace);
+    logger.info(`Changing pid to ${pidInParentNamespace} due to successful identification of PID in parent namespace`);
   }
 }
 
@@ -75,7 +75,7 @@ function getPidFromParentNamespace() {
     return pidInSchedFile;
   } catch (err) {
     if (err.code !== 'ENOENT') {
-      logger.warn('PID could not be read from sched file. Reason: %s', err.message);
+      logger.warn(`PID could not be read from sched file. Reason: ${err?.message}`);
     }
   }
 }

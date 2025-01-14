@@ -184,8 +184,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
 
       logger.debug(
         'The Instana Lambda extension Heartbeat request did not succeed. Falling back to talking to the Instana back ' +
-          'end directly.',
-        e
+          `end directly. ${e?.message} ${e?.stack}`
       );
     }
 
@@ -380,8 +379,8 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
       // talking to serverless-acceptor directly. We also immediately retry the current request with that new downstream
       // target in place.
       logger.debug(
-        'Could not connect to the Instana Lambda extension. Falling back to talking to the Instana back end directly.',
-        e
+        `Could not connect to the Instana Lambda extension. Falling back to talking to the Instana back end directly. 
+        ${e?.message} ${e?.stack}`
       );
 
       // Make sure we do not try to talk to the Lambda extension again.
@@ -401,12 +400,12 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
           logger.warn(
             'Could not send traces and metrics to Instana. Could not connect to the configured proxy ' +
               `${process.env[proxyEnvVar]}.` +
-              `${e.message} ${e.stack}`
+              `${e?.message} ${e?.stack}`
           );
         } else {
           logger.warn(
             `Could not send traces and metrics to Instana. The Instana back end seems to be unavailable. 
-            ${e.message} , ${e.stack}`
+            ${e?.message} , ${e?.stack}`
           );
         }
       }

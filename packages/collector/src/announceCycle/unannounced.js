@@ -78,11 +78,9 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
   agentConnection.announceNodeCollector((err, rawResponse) => {
     if (err) {
       logger.info(
-        'Establishing the connection to the Instana host agent has failed: %s. This usually means that the Instana ' +
-          'host agent is not yet ready to accept connections. This is not an error. Establishing the connection will ' +
-          'be retried in %s ms.',
-        err.message,
-        retryDelay
+        `Establishing the connection to the Instana host agent has failed: ${err?.message}. ` +
+          'This usually means that the Instana host agent is not yet ready to accept connections.' +
+          `This is not an error. Establishing the connection will be retried in ${retryDelay} ms.`
       );
       setTimeout(tryToAnnounce, retryDelay, ctx, nextRetryDelay).unref();
       return;
@@ -95,7 +93,7 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
       logger.error(
         "Failed to parse the JSON payload from the Instana host agent's response. Establishing the connection" +
           `to the Instana host agent will be retried in ${retryDelay} ms. The response payload was ${rawResponse}.` +
-          `${e.message} ${e.stack}`
+          `${e?.message} ${e?.stack}`
       );
       setTimeout(tryToAnnounce, retryDelay, ctx, nextRetryDelay).unref();
       return;
@@ -103,10 +101,8 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
 
     if (pidStore.pid !== agentResponse.pid) {
       logger.info(
-        'Reporting data to the Instana host agent with the PID from the root namespace (%s) instead of the ' +
-          'in-container PID (%s).',
-        agentResponse.pid,
-        pidStore.pid
+        `Reporting data to the Instana host agent with the PID from the root namespace (${agentResponse.pid}) ` +
+          `instead of the in-container PID (${pidStore.pid}).`
       );
       pidStore.pid = agentResponse.pid;
     }
@@ -135,18 +131,18 @@ function applySecretsConfiguration(agentResponse) {
   if (agentResponse.secrets) {
     if (!(typeof agentResponse.secrets.matcher === 'string')) {
       logger.warn(
-        'Received an invalid secrets configuration from the Instana host agent, attribute matcher is not a string: $s',
-        agentResponse.secrets.matcher
+        `Received an invalid secrets configuration from the Instana host agent, attribute matcher is not a string: 
+          ${agentResponse.secrets.matcher}`
       );
     } else if (Object.keys(secrets.matchers).indexOf(agentResponse.secrets.matcher) < 0) {
       logger.warn(
-        'Received an invalid secrets configuration from the Intana agent, matcher is not supported: $s',
-        agentResponse.secrets.matcher
+        `Received an invalid secrets configuration from the Intana agent, matcher is not supported: 
+          ${agentResponse.secrets.matcher}`
       );
     } else if (!Array.isArray(agentResponse.secrets.list)) {
       logger.warn(
-        'Received an invalid secrets configuration from the Instana host agent, attribute list is not an array: $s',
-        agentResponse.secrets.list
+        `Received an invalid secrets configuration from the Instana host agent, attribute list is not an array: 
+          ${agentResponse.secrets.list}`
       );
     } else {
       secrets.setMatcher(agentResponse.secrets.matcher, agentResponse.secrets.list);

@@ -44,7 +44,7 @@ exports.activate = function activate() {
   const started = Date.now();
   util.applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, mainPackageJsonPath) => {
     if (err) {
-      return logger.warn('Failed to determine main package.json. Reason: %s %s ', err.message, err.stack);
+      return logger.warn(`Failed to determine main package.json. Reason: ${err?.message}, ${err?.stack}`);
     } else if (!mainPackageJsonPath && attempts < exports.MAX_ATTEMPTS) {
       logger.debug(`Main package.json could not be found at ${mainPackageJsonPath}. Will try again later.`);
       setTimeout(exports.activate, DELAY).unref();
@@ -55,7 +55,7 @@ exports.activate = function activate() {
       );
       util.applicationUnderMonitoring.findNodeModulesFolder((errNodeModules, nodeModulesFolder) => {
         if (errNodeModules) {
-          return logger.warn('Failed to determine node_modules folder. Reason: %s %s ', err.message, err.stack);
+          return logger.warn(`Failed to determine node_modules folder. Reason: ${err?.message}, ${err?.stack}`);
         } else if (!nodeModulesFolder) {
           return logger.warn(
             'Neither the package.json file nor the node_modules folder could be found. Stopping dependency analysis.'
@@ -116,7 +116,7 @@ function addAllDependencies(dependencyDir, started, packageJsonPath) {
 function addDependenciesFromDir(dependencyDir, callback) {
   fs.readdir(dependencyDir, (readDirErr, dependencies) => {
     if (readDirErr || !dependencies) {
-      logger.warn('Cannot analyse dependencies due to %s', readDirErr.message);
+      logger.warn(`Cannot analyse dependencies due to ${readDirErr?.message}`);
       callback();
       return;
     }
@@ -150,7 +150,7 @@ function addDependenciesFromDir(dependencyDir, callback) {
         fs.stat(fullDirPath, (statErr, stats) => {
           if (statErr) {
             countDownLatch.countDown();
-            logger.warn('Cannot analyse dependency %s due to %s', fullDirPath, statErr.message);
+            logger.warn(`Cannot analyse dependency ${fullDirPath} due to ${statErr?.message}`);
             return;
           }
           if (!stats.isDirectory()) {
@@ -185,10 +185,8 @@ function addDependency(dependency, dependencyDirPath, countDownLatch) {
     } else if (err) {
       countDownLatch.countDown();
       logger.info(
-        'Failed to identify version of %s dependency due to: %s. This means that you will not be ' +
-          'able to see details about this dependency within Instana.',
-        dependency,
-        err.message
+        `Failed to identify version of ${dependency} dependency due to: ${err?.message}. ` +
+          'This means that you will not be able to see details about this dependency within Instana.'
       );
       return;
     }
@@ -200,10 +198,8 @@ function addDependency(dependency, dependencyDirPath, countDownLatch) {
       }
     } catch (parseErr) {
       return logger.info(
-        'Failed to identify version of %s dependency due to: %s. This means that you will not be ' +
-          'able to see details about this dependency within Instana.',
-        dependency,
-        parseErr.message
+        `Failed to identify version of ${dependency} dependency due to: ${parseErr?.message}. 
+          This means that you will not be able to see details about this dependency within Instana.`
       );
     }
 

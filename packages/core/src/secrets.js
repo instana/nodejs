@@ -123,8 +123,7 @@ exports.matchers = {
         regexes.push(new RegExp(regexString));
       } catch (e) {
         logger.warn(
-          'Received invalid regex from agent: %s - this regex will not be used for removing secrets',
-          regexString
+          `Received invalid regex from agent: ${regexString} - this regex will not be used for removing secrets`
         );
       }
     });
@@ -166,7 +165,7 @@ function checkSecrets(configuredSecrets) {
     if (typeof s === 'string') {
       secrets.push(s);
     } else {
-      logger.warn('Received invalid secret key from agent: %s - this key will not be used for removing secrets', s);
+      logger.warn(`Received invalid secret key from agent: ${s} - this key will not be used for removing secrets`);
     }
   });
   return secrets;
@@ -185,7 +184,7 @@ function toLowerCase(configuredSecrets) {
     if (typeof s === 'string') {
       secrets.push(s.toLowerCase());
     } else {
-      logger.warn('Received invalid secret key from agent: %s - this key will not be used for removing secrets', s);
+      logger.warn(`Received invalid secret key from agent: ${s} - this key will not be used for removing secrets`);
     }
   });
   return secrets;
@@ -224,11 +223,11 @@ exports.init = function init(config) {
  */
 exports.setMatcher = function setMatcher(matcherId, secretsList) {
   if (!(typeof matcherId === 'string')) {
-    logger.warn('Received invalid secrets configuration, attribute matcher is not a string: $s', matcherId);
+    logger.warn(`Received invalid secrets configuration, attribute matcher is not a string: ${matcherId}`);
   } else if (Object.keys(exports.matchers).indexOf(matcherId) < 0) {
-    logger.warn('Received invalid secrets configuration, matcher is not supported: $s', matcherId);
+    logger.warn(`Received invalid secrets configuration, matcher is not supported: ${matcherId}`);
   } else if (!Array.isArray(secretsList)) {
-    logger.warn('Received invalid secrets configuration, attribute list is not an array: $s', secretsList);
+    logger.warn(`Received invalid secrets configuration, attribute list is not an array: ${secretsList}`);
   } else {
     isSecretInternal = exports.matchers[matcherId](secretsList);
   }

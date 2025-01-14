@@ -38,7 +38,7 @@ function readFile(request, multiCb) {
   fs.readFile(request.args.file, { encoding: 'utf8' }, (error, content) => {
     if (error) {
       logger.debug(
-        `Failed to retrieve source file for user request: ${request.args.file}. ${error.message} ${error.stack}`
+        `Failed to retrieve source file for user request: ${request.args.file}. ${error?.message} ${error?.stack}`
       );
       multiCb({
         error: `Could not load file. Error: ${error.message}`

@@ -39,7 +39,7 @@ function init() {
     if (err) {
       logger.error(
         `Initializing @instana/google-cloud-run failed. This container instance will not be monitored. 
-        Error: ${err.message} ${err.stack}`
+        Error: ${err?.message} ${err?.stack}`
       );
       metrics.deactivate();
       return;
@@ -69,8 +69,8 @@ function init() {
       process.send && process.send('instana.google-cloud-run.initialized');
     } catch (e) {
       logger.error(
-        'Initializing @instana/google-cloud-run failed. This Cloud Run container instance will not be monitored.',
-        e
+        `Initializing @instana/google-cloud-run failed. This Cloud Run container instance will not be monitored.
+          ${e?.message} ${e?.stack}`
       );
     }
   });

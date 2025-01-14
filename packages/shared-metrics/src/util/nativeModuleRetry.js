@@ -115,7 +115,9 @@ function attemptRequire(opts, loaderEmitter, mechanism) {
     logger.debug(`Attempt to load native add-on ${opts.nativeModuleName} ${mechanism} has been successful.`);
     return true;
   } catch (e) {
-    logger.debug(`Attempt to load native add-on ${opts.nativeModuleName} ${mechanism} has failed.`, e);
+    logger.debug(
+      `Attempt to load native add-on ${opts.nativeModuleName} ${mechanism} has failed. ${e?.message} ${e?.stack}`
+    );
     return false;
   }
 }
@@ -167,7 +169,10 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
       callback(false);
       return;
     } else if (statsErr) {
-      logger.warn(`Looking for a precompiled version for ${opts.nativeModuleName} ${label} failed.`, statsErr);
+      logger.warn(
+        `Looking for a precompiled version for ${opts.nativeModuleName} ${label} failed. 
+        ${statsErr?.message} ${statsErr?.stack}`
+      );
       callback(false);
       return;
     }
@@ -208,14 +213,14 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
           .catch(error => {
             logger.warn(
               `Copying the precompiled build for ${opts.nativeModuleName} ${label} failed. 
-              ${error.message} ${error.stack}`
+              ${error?.message} ${error?.stack}`
             );
             callback(false);
           });
       })
       .catch(tarErr => {
         logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed. 
-          ${tarErr.message} ${tarErr.stack}`);
+          ${tarErr?.message} ${tarErr?.stack}`);
         callback(false);
       });
   });
@@ -250,7 +255,7 @@ function findNativeModulePath(opts) {
     return true;
   } catch (e) {
     logger.debug(
-      `Could not find location for ${opts.nativeModuleName}. Will create a path for it. ${e.message} ${e.stack}`
+      `Could not find location for ${opts.nativeModuleName}. Will create a path for it. ${e?.message} ${e?.stack}`
     );
     return createNativeModulePath(opts);
   }

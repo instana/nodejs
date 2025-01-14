@@ -73,10 +73,8 @@ class DependencyDistanceCalculator {
       fs.readFile(packageJsonPath, { encoding: 'utf8' }, (err, contents) => {
         if (err) {
           logger.debug(
-            'Failed to calculate transitive distances for some dependencies, could not read package.json file at ' +
-              '%s: %s.',
-            packageJsonPath,
-            err.message
+            `Failed to calculate transitive distances for some dependencies, could not read package.json file at
+              ${packageJsonPath}: ${err?.message}.`
           );
 
           // If we cannot parse the package.json or if it does not exist, we need to decrement by 3 immediately because
@@ -90,10 +88,8 @@ class DependencyDistanceCalculator {
           parsedPackageJson = JSON.parse(contents);
         } catch (parseErr) {
           logger.debug(
-            'Failed to calculate transitive distances for some dependencies, could not parse package.json file at ' +
-              '%s: %s',
-            packageJsonPath,
-            parseErr.message
+            `Failed to calculate transitive distances for some dependencies, could not parse package.json file at 
+              ${packageJsonPath}: ${parseErr?.message}.`
           );
           this.globalCountDownLatchAllPackages.countDown(3);
           return;
@@ -109,9 +105,8 @@ class DependencyDistanceCalculator {
       // This catch-block is for synchronous errors from fs.readFile, which can also happen in addition to the callback
       // being called with an error.
       logger.debug(
-        'Failed to calculate transitive distances for some dependencies, synchronous error from fs.readFile for %s:',
-        packageJsonPath,
-        fsReadFileErr
+        `Failed to calculate transitive distances for some dependencies, synchronous error from fs.readFile for 
+          ${packageJsonPath}: ${fsReadFileErr?.message}`
       );
       this.globalCountDownLatchAllPackages.countDown(3);
     }
@@ -197,8 +192,7 @@ class DependencyDistanceCalculator {
         localCountDownLatchForThisNode.countDown();
         logger.debug(
           `Ignoring failure to find the package.json file for dependency ${dependency} for dependency distance ` +
-            'calculation.',
-          err
+            `calculation. ${err?.message} ${err?.stack}`
         );
         return;
       }

@@ -43,7 +43,7 @@ exports.check = function check() {
 function fireMonitoringEvent() {
   agentConnection.sendAgentMonitoringEvent('nodejs_collector_initialized_too_late', 'TRACER', error => {
     if (error) {
-      logger.error('Error received while trying to send Agent Monitoring Event to agent: %s', error.message);
+      logger.error(`Error received while trying to send Agent Monitoring Event to agent: ${error?.message}`);
     }
   });
 }

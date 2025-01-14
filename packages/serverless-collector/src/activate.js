@@ -48,7 +48,7 @@ async function init() {
     process.send && process.send('instana.serverless-collector.initialized');
   } catch (e) {
     logger.error(
-      `Initializing @instana/serverless-collector failed. This process will not be traced. ${e.message} ${e.stack}`
+      `Initializing @instana/serverless-collector failed. This process will not be traced. ${e?.message} ${e?.stack}`
     );
   }
 }

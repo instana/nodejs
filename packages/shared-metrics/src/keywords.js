@@ -31,7 +31,7 @@ exports.activate = function activate(config) {
   attempts++;
   applicationUnderMonitoring.getMainPackageJsonStartingAtMainModule(config, (err, packageJson) => {
     if (err) {
-      return logger.warn(`Failed to determine main package json. Reason: ${err.message} ${err.stack}`);
+      return logger.warn(`Failed to determine main package json. Reason: ${err?.message} ${err?.stack}`);
     } else if (!packageJson && attempts < MAX_ATTEMPTS) {
       setTimeout(() => {
         exports.activate(config);

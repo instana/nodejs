@@ -199,7 +199,7 @@ exports.addSpan = function (span) {
   span = processedSpan;
 
   if (span.t == null) {
-    logger.warn('Span of type %s has no trace ID. Not transmitting this span', span.n);
+    logger.warn(`Span of type ${span.n} has no trace ID. Not transmitting this span`);
     return;
   }
 
@@ -458,7 +458,7 @@ function transmitSpans() {
   // since sending spans downstream will take a few milliseconds, even that will be rare (and it is acceptable).
   downstreamConnection.sendSpans(spansToSend, function sendSpans(/** @type {Error} */ error) {
     if (error) {
-      logger.warn(`Failed to transmit spans, will retry in ${transmissionDelay} ms. ${error.message} ${error.stack}`);
+      logger.warn(`Failed to transmit spans, will retry in ${transmissionDelay} ms. ${error?.message} ${error?.stack}`);
       spans = spans.concat(spansToSend);
       removeSpansIfNecessary();
     }
