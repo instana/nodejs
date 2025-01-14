@@ -78,11 +78,9 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
   agentConnection.announceNodeCollector((err, rawResponse) => {
     if (err) {
       logger.info(
-        'Establishing the connection to the Instana host agent has failed: %s. This usually means that the Instana ' +
-          'host agent is not yet ready to accept connections. This is not an error. Establishing the connection will ' +
-          'be retried in %s ms.',
-        err?.message,
-        retryDelay
+        `Establishing the connection to the Instana host agent has failed: ${err?.message}. ` +
+          'This usually means that the Instana host agent is not yet ready to accept connections.' +
+          `This is not an error. Establishing the connection will be retried in ${retryDelay} ms.`
       );
       setTimeout(tryToAnnounce, retryDelay, ctx, nextRetryDelay).unref();
       return;

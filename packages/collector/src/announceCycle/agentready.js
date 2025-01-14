@@ -157,8 +157,8 @@ function sendTracingMetrics() {
   agentConnection.sendTracingMetricsToAgent(payload, error => {
     if (error) {
       logger.info(
-        `Error received while trying to send tracing metrics to agent: %s. This will not affect monitoring or tracing. 
-        ${error?.message}`
+        `Error received while trying to send tracing metrics to agent: ${error?.message}.` +
+          ' This will not affect monitoring or tracing.'
       );
       if (typeof error.message === 'string' && error.message.indexOf('Got status code 404')) {
         logger.info(
