@@ -198,8 +198,8 @@ function addDependency(dependency, dependencyDirPath, countDownLatch) {
       }
     } catch (parseErr) {
       return logger.info(
-        `Failed to identify version of ${dependency} dependency due to: ${parseErr?.message}.` +
-          'This means that you will not be able to see details about this dependency within Instana.'
+        `Failed to identify version of ${dependency} dependency due to: ${parseErr?.message}. 
+          This means that you will not be able to see details about this dependency within Instana.`
       );
     }
 

@@ -131,18 +131,18 @@ function applySecretsConfiguration(agentResponse) {
   if (agentResponse.secrets) {
     if (!(typeof agentResponse.secrets.matcher === 'string')) {
       logger.warn(
-        'Received an invalid secrets configuration from the Instana host agent, attribute matcher is not a string: ' +
-          `${agentResponse.secrets.matcher}`
+        `Received an invalid secrets configuration from the Instana host agent, attribute matcher is not a string: 
+          ${agentResponse.secrets.matcher}`
       );
     } else if (Object.keys(secrets.matchers).indexOf(agentResponse.secrets.matcher) < 0) {
       logger.warn(
-        'Received an invalid secrets configuration from the Intana agent, matcher is not supported: ' +
-          `${agentResponse.secrets.matcher}`
+        `Received an invalid secrets configuration from the Intana agent, matcher is not supported: 
+          ${agentResponse.secrets.matcher}`
       );
     } else if (!Array.isArray(agentResponse.secrets.list)) {
       logger.warn(
-        'Received an invalid secrets configuration from the Instana host agent, attribute list is not an array: ' +
-          `${agentResponse.secrets.list}`
+        `Received an invalid secrets configuration from the Instana host agent, attribute list is not an array: 
+          ${agentResponse.secrets.list}`
       );
     } else {
       secrets.setMatcher(agentResponse.secrets.matcher, agentResponse.secrets.list);
