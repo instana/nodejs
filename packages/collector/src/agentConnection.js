@@ -169,7 +169,7 @@ exports.announceNodeCollector = function announceNodeCollector(cb) {
           payload.inode = payload.inode.substring(linkPathPrefix.length);
         }
       } catch (e) {
-        logger.debug(`Failed to retrieve inode for file descriptor ${payload.fd}: ${e.message}`);
+        logger.debug(`Failed to retrieve inode for file descriptor ${payload.fd}: ${e?.message}`);
       }
     }
 
