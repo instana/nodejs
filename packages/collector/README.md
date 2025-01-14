@@ -13,7 +13,7 @@ Monitor your Node.js applications with Instana!
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 - [Restrictions](#restrictions)
-- [Breaking Changes](https://www.ibm.com/docs/en/instana-observability/current?topic=technologies-monitoring-nodejs#breaking-changes)
+- [Breaking Changes](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-support-information#breaking-changes)
 - [Installation And Usage](#installation-and-usage)
 - [CPU Profiling, Garbage Collection And Event Loop Information](#cpu-profiling-garbage-collection-and-event-loop-information)
 - [API / SDK](#api)
