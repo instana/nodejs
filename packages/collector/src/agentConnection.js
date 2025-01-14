@@ -449,7 +449,7 @@ function getCpuSetFileContent() {
     return content;
   } catch (err) {
     if (err.code !== 'ENOENT') {
-      logger.warn(`cpuset file could not be read. Reason: ${err.message}`);
+      logger.warn(`cpuset file could not be read. Reason: ${err?.message}`);
     }
     return null;
   }
