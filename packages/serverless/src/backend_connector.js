@@ -184,8 +184,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
 
       logger.debug(
         'The Instana Lambda extension Heartbeat request did not succeed. Falling back to talking to the Instana back ' +
-          'end directly.',
-        e
+          `end directly. ${e?.message} ${e?.stack}`
       );
     }
 

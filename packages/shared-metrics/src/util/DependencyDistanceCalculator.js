@@ -197,8 +197,7 @@ class DependencyDistanceCalculator {
         localCountDownLatchForThisNode.countDown();
         logger.debug(
           `Ignoring failure to find the package.json file for dependency ${dependency} for dependency distance ` +
-            'calculation.',
-          err
+            `calculation. ${err?.message} ${err?.stack}`
         );
         return;
       }

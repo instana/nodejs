@@ -169,7 +169,10 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
       callback(false);
       return;
     } else if (statsErr) {
-      logger.warn(`Looking for a precompiled version for ${opts.nativeModuleName} ${label} failed.`, statsErr);
+      logger.warn(
+        `Looking for a precompiled version for ${opts.nativeModuleName} ${label} failed. 
+        ${statsErr?.message} ${statsErr?.stack}`
+      );
       callback(false);
       return;
     }
