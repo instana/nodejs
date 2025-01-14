@@ -738,7 +738,7 @@ function normalizeIgnoreEndpoints(config) {
       config.tracing.ignoreEndpoints = ignoreEndpoints;
     } catch (error) {
       logger.warn(
-        `Failed to parse INSTANA_IGNORE_ENDPOINTS: ${process.env.INSTANA_IGNORE_ENDPOINTS}. Error: ${error.message}`
+        `Failed to parse INSTANA_IGNORE_ENDPOINTS: ${process.env.INSTANA_IGNORE_ENDPOINTS}. Error: ${error?.message}`
       );
     }
   } else {

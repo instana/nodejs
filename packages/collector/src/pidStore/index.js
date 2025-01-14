@@ -75,7 +75,7 @@ function getPidFromParentNamespace() {
     return pidInSchedFile;
   } catch (err) {
     if (err.code !== 'ENOENT') {
-      logger.warn('PID could not be read from sched file. Reason: %s', err.message);
+      logger.warn('PID could not be read from sched file. Reason: %s', err?.message);
     }
   }
 }

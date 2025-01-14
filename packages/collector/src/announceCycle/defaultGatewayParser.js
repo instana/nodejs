@@ -42,7 +42,9 @@ exports._parseFile = async function _parseFile(filename) {
     fileContent = await fs.readFile(filename, { encoding: 'utf8' });
   } catch (e) {
     cachedResult = null;
-    logger.debug(`Could not open ${filename} when trying to retrieve the default gateway IP.`, e);
+    logger.debug(
+      `Could not open ${filename} when trying to retrieve the default gateway IP. ${e?.message} ${e?.stack}`
+    );
     if (e.code === 'ENOENT') {
       throw new Error(`Failed to determine the default gateway: The file ${filename} does not exist`);
     } else {

@@ -224,11 +224,11 @@ exports.init = function init(config) {
  */
 exports.setMatcher = function setMatcher(matcherId, secretsList) {
   if (!(typeof matcherId === 'string')) {
-    logger.warn('Received invalid secrets configuration, attribute matcher is not a string: $s', matcherId);
+    logger.warn(`Received invalid secrets configuration, attribute matcher is not a string: ${matcherId}`);
   } else if (Object.keys(exports.matchers).indexOf(matcherId) < 0) {
-    logger.warn('Received invalid secrets configuration, matcher is not supported: $s', matcherId);
+    logger.warn(`Received invalid secrets configuration, matcher is not supported: ${matcherId}`);
   } else if (!Array.isArray(secretsList)) {
-    logger.warn('Received invalid secrets configuration, attribute list is not an array: $s', secretsList);
+    logger.warn(`Received invalid secrets configuration, attribute list is not an array: ${secretsList}`);
   } else {
     isSecretInternal = exports.matchers[matcherId](secretsList);
   }

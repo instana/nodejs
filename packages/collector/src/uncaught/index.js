@@ -101,7 +101,7 @@ function onUnhandledRejection(reason) {
 
   downstreamConnection.sendEvent(createEventForUnhandledRejection(reason), error => {
     if (error) {
-      logger.error('Error received while trying to send event to agent: %s', error.message);
+      logger.error('Error received while trying to send event to agent: %s', error?.message);
     }
   });
 }

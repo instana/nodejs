@@ -63,7 +63,7 @@ function addDirectDependenciesFromMainPackageJson(packageJsonPath) {
   const started = Date.now();
   fs.readFile(packageJsonPath, { encoding: 'utf8' }, (err, contents) => {
     if (err) {
-      return logger.debug('Failed to analyze direct dependencies dependency due to: %s.', err.message);
+      return logger.debug(`Failed to analyze direct dependencies dependency due to: ${err?.message}`);
     }
 
     try {

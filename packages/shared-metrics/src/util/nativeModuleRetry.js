@@ -115,7 +115,9 @@ function attemptRequire(opts, loaderEmitter, mechanism) {
     logger.debug(`Attempt to load native add-on ${opts.nativeModuleName} ${mechanism} has been successful.`);
     return true;
   } catch (e) {
-    logger.debug(`Attempt to load native add-on ${opts.nativeModuleName} ${mechanism} has failed.`, e);
+    logger.debug(
+      `Attempt to load native add-on ${opts.nativeModuleName} ${mechanism} has failed. ${e?.message} ${e?.stack}`
+    );
     return false;
   }
 }
@@ -250,7 +252,7 @@ function findNativeModulePath(opts) {
     return true;
   } catch (e) {
     logger.debug(
-      `Could not find location for ${opts.nativeModuleName}. Will create a path for it. ${e.message} ${e.stack}`
+      `Could not find location for ${opts.nativeModuleName}. Will create a path for it. ${e?.message} ${e?.stack}`
     );
     return createNativeModulePath(opts);
   }

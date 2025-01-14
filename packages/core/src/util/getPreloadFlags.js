@@ -44,7 +44,7 @@ exports.getPreloadFlags = function getPreloadFlags() {
     const result = [nodeOptions, execArgs].filter(Boolean).join(', ') || 'noFlags';
     return result;
   } catch (error) {
-    logger.error('Error occurred while doing preload flag filtering: %s ', error);
+    logger.error(`Error occurred while doing preload flag filtering: ${error?.message} ${error?.stack}`);
     return '';
   }
 };

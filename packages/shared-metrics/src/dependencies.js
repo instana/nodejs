@@ -44,7 +44,7 @@ exports.activate = function activate() {
   const started = Date.now();
   util.applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, mainPackageJsonPath) => {
     if (err) {
-      return logger.warn('Failed to determine main package.json. Reason: %s %s ', err.message, err.stack);
+      return logger.warn(`Failed to determine main package.json. Reason: ${err?.message}, ${err?.stack}`);
     } else if (!mainPackageJsonPath && attempts < exports.MAX_ATTEMPTS) {
       logger.debug(`Main package.json could not be found at ${mainPackageJsonPath}. Will try again later.`);
       setTimeout(exports.activate, DELAY).unref();
@@ -55,7 +55,7 @@ exports.activate = function activate() {
       );
       util.applicationUnderMonitoring.findNodeModulesFolder((errNodeModules, nodeModulesFolder) => {
         if (errNodeModules) {
-          return logger.warn('Failed to determine node_modules folder. Reason: %s %s ', err.message, err.stack);
+          return logger.warn(`Failed to determine node_modules folder. Reason: ${err?.message}, ${err?.stack}`);
         } else if (!nodeModulesFolder) {
           return logger.warn(
             'Neither the package.json file nor the node_modules folder could be found. Stopping dependency analysis.'
