@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.5.3](https://github.com/instana/nodejs/compare/v4.5.2...v4.5.3) (2025-01-14)
+
+### Bug Fixes
+
+- resolved more logging objects structure ([#1510](https://github.com/instana/nodejs/issues/1510)) ([bd4c9bb](https://github.com/instana/nodejs/commit/bd4c9bbda2c82aee7f6c59fcca03ac5588566839))
+
 ## [4.5.2](https://github.com/instana/nodejs/compare/v4.5.1...v4.5.2) (2025-01-13)
 
 ### Bug Fixes
