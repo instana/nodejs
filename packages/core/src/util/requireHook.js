@@ -129,24 +129,18 @@ function patchedModuleLoad(moduleName) {
         try {
           cacheEntry.moduleExports = transformerFn(cacheEntry.moduleExports, filename) || cacheEntry.moduleExports;
         } catch (e) {
-          logger.error(`Cannot instrument ${moduleName} due to an error in instrumentation: ${e}`);
-          if (e.message) {
-            logger.error(e.message);
-          }
-          if (e.stack) {
-            logger.error(e.stack);
-          }
+          logger.error(
+            `Cannot instrument ${moduleName} due to an error in instrumentation: ${e?.message}, ${e?.stack}`
+          );
         }
       } else {
         logger.error(
-          'A requireHook invariant has been violated for module name %s, index %s. The transformer is not a function ' +
-            'but of type "%s" (details: %s). The most likely cause is that something has messed with Node.js\' ' +
+          `A requireHook invariant has been violated for module name ${moduleName}, index ${i}. ` +
+            `The transformer is not a function but of type "${typeof transformerFn}" (details:  ${
+              transformerFn == null ? 'null/undefined' : transformerFn
+            }). The most likely cause is that something has messed with Node.js' ` +
             'module cache. This can result in limited tracing and health check functionality (for example, missing ' +
-            'calls in Instana).',
-          moduleName,
-          i,
-          typeof transformerFn,
-          transformerFn == null ? 'null/undefined' : transformerFn
+            'calls in Instana).'
         );
       }
     }

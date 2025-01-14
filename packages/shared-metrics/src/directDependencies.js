@@ -38,9 +38,8 @@ exports.activate = function activate() {
   util.applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, packageJsonPath) => {
     if (err) {
       return logger.info(
-        'Failed to determine main package.json for analysis of direct dependencies. Reason: %s %s ',
-        err.message,
-        err.stack
+        `Failed to determine main package.json for analysis of direct dependencies. 
+        Reason: ${err?.message} ${err?.stack}`
       );
     } else if (!packageJsonPath && attempts < MAX_ATTEMPTS) {
       setTimeout(exports.activate, DELAY).unref();
@@ -75,7 +74,7 @@ function addDirectDependenciesFromMainPackageJson(packageJsonPath) {
       logger.debug(`Collection of direct dependencies took ${Date.now() - started} ms.`);
     } catch (subErr) {
       logger.debug(`Collection of direct dependencies took ${Date.now() - started} ms.`);
-      return logger.debug('Failed to parse package.json %s dependency due to: %s', packageJsonPath, subErr.message);
+      return logger.debug(`Failed to parse package.json ${packageJsonPath} dependency due to: ${subErr?.message}`);
     }
   });
 }

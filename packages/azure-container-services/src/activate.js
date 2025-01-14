@@ -53,8 +53,8 @@ function init() {
     process.send && process.send('instana.azure-app-service.initialized');
   } catch (e) {
     logger.error(
-      'Initializing @instana/azure-container-services failed. This azure container service will not be monitored.',
-      e
+      'Initializing @instana/azure-container-services failed. This azure container service will not be monitored.' +
+        `${e?.message} ${e?.stack}`
     );
   }
 }

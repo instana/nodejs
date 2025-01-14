@@ -231,6 +231,6 @@ function safelyExtractErrorMessage(error) {
  * @param {string} host
  */
 function setAgentHost(host) {
-  logger.info('Found an agent on %s:%s, proceeding to announce request.', host, agentOpts.port);
+  logger.info(`Found an agent on ${host}:${agentOpts.port}, proceeding to announce request.`);
   agentOpts.host = host;
 }

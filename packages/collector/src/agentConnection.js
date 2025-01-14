@@ -169,7 +169,7 @@ exports.announceNodeCollector = function announceNodeCollector(cb) {
           payload.inode = payload.inode.substring(linkPathPrefix.length);
         }
       } catch (e) {
-        logger.debug('Failed to retrieve inode for file descriptor %s: %s', payload.fd, e.message);
+        logger.debug(`Failed to retrieve inode for file descriptor ${payload.fd}: ${e.message}`);
       }
     }
 
@@ -449,7 +449,7 @@ function getCpuSetFileContent() {
     return content;
   } catch (err) {
     if (err.code !== 'ENOENT') {
-      logger.warn('cpuset file could not be read. Reason: %s', err.message);
+      logger.warn(`cpuset file could not be read. Reason: ${err.message}`);
     }
     return null;
   }

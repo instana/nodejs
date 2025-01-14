@@ -31,7 +31,8 @@ function init() {
   metrics.init(config, function onReady(err, ecsContainerPayload) {
     if (err) {
       logger.error(
-        `Initializing @instana/aws-fargate failed. This fargate task will not be monitored. ${err.message} ${err.stack}`
+        `Initializing @instana/aws-fargate failed. This fargate task will not be monitored. 
+        ${err?.message} ${err?.stack}`
       );
       metrics.deactivate();
       return;
@@ -71,7 +72,7 @@ function init() {
       process.send && process.send('instana.aws-fargate.initialized');
     } catch (e) {
       logger.error(
-        `Initializing @instana/aws-fargate failed. This fargate task will not be monitored. ${e.message} ${e.stack}`
+        `Initializing @instana/aws-fargate failed. This fargate task will not be monitored. ${e?.message} ${e?.stack}`
       );
     }
   });

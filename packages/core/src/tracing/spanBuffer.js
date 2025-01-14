@@ -199,7 +199,7 @@ exports.addSpan = function (span) {
   span = processedSpan;
 
   if (span.t == null) {
-    logger.warn('Span of type %s has no trace ID. Not transmitting this span', span.n);
+    logger.warn(`Span of type ${span.n} has no trace ID. Not transmitting this span`);
     return;
   }
 

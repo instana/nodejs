@@ -231,7 +231,7 @@ class InstanaPseudoSpan extends InstanaSpan {
 function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext) {
   tracingMetrics.incrementOpened();
   if (!kind || (kind !== ENTRY && kind !== EXIT && kind !== INTERMEDIATE)) {
-    logger.warn('Invalid span (%s) without kind/with invalid kind: %s, assuming EXIT.', spanName, kind);
+    logger.warn(`Invalid span (${spanName}) without kind/with invalid kind: ${kind}, assuming EXIT.`);
     kind = EXIT;
   }
   const span = new InstanaSpan(spanName);
@@ -303,7 +303,7 @@ function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext) {
  */
 function putPseudoSpan(spanName, kind, traceId, spanId) {
   if (!kind || (kind !== ENTRY && kind !== EXIT && kind !== INTERMEDIATE)) {
-    logger.warn('Invalid pseudo span (%s) without kind/with invalid kind: %s, assuming EXIT.', spanName, kind);
+    logger.warn(`Invalid pseudo span (${spanName}) without kind/with invalid kind: ${kind}, assuming EXIT.`);
     kind = EXIT;
   }
   const span = new InstanaPseudoSpan(spanName);

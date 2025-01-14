@@ -123,8 +123,7 @@ exports.matchers = {
         regexes.push(new RegExp(regexString));
       } catch (e) {
         logger.warn(
-          'Received invalid regex from agent: %s - this regex will not be used for removing secrets',
-          regexString
+          `Received invalid regex from agent: ${regexString} - this regex will not be used for removing secrets`
         );
       }
     });
@@ -166,7 +165,7 @@ function checkSecrets(configuredSecrets) {
     if (typeof s === 'string') {
       secrets.push(s);
     } else {
-      logger.warn('Received invalid secret key from agent: %s - this key will not be used for removing secrets', s);
+      logger.warn(`Received invalid secret key from agent: ${s} - this key will not be used for removing secrets`);
     }
   });
   return secrets;
@@ -185,7 +184,7 @@ function toLowerCase(configuredSecrets) {
     if (typeof s === 'string') {
       secrets.push(s.toLowerCase());
     } else {
-      logger.warn('Received invalid secret key from agent: %s - this key will not be used for removing secrets', s);
+      logger.warn(`Received invalid secret key from agent: ${s} - this key will not be used for removing secrets`);
     }
   });
   return secrets;

@@ -63,7 +63,7 @@ function sendResponse(request, response) {
     if (error) {
       logger.warn(
         `Failed to send agent response for action ${request.action} and message ID ${request.messageId}.
-        Error: ${error.message} ${error.stack}`
+        Error: ${error?.message} ${error?.stack}`
       );
     }
   });

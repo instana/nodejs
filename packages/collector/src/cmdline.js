@@ -35,7 +35,7 @@ exports.getCmdline = function getCmdline() {
     }
   } catch (err) {
     if (err.code !== 'ENOENT') {
-      logger.warn('cmdline could not be retrieved via proc file. Reason: %s', err.message);
+      logger.warn(`cmdline could not be retrieved via proc file. Reason: ${err.message}`);
     }
   }
 
