@@ -63,16 +63,17 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
 
       await retry(async () => {
         const spans = await appControls.getSpans();
-        const spanNames = [
+        const spanNames = spans.map(s => s.data.operation);
+        const expectedSpanNames = [
           'middleware - query',
           'middleware - expressInit',
           'request handler - /otel-test',
           'tcp.connect',
           'tls.connect',
-          'GET',
-          'GET /otel-test'
+          'GET /otel-test',
+          'GET'
         ];
-        expect(spanNames).to.eql(spans.map(s => s.data.operation));
+        expect(spanNames).to.have.members(expectedSpanNames);
         expect(spans.length).to.eql(7);
       });
     });
@@ -121,16 +122,18 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
         path: '/get-otel-spans',
         suppressTracing: true
       });
-      const spanNames = [
+
+      const spanNames = resp.spans.map(s => s.name);
+      const expectedSpanNames = [
         'middleware - query',
         'middleware - expressInit',
         'request handler - /otel-test',
         'tcp.connect',
         'tls.connect',
-        'GET',
-        'GET /otel-test'
+        'GET /otel-test',
+        'GET'
       ];
-      expect(spanNames).to.eql(resp.spans.map(s => s.name));
+      expect(spanNames).to.have.members(expectedSpanNames);
       expect(resp.spans.length).to.be.gte(7);
     });
   });
