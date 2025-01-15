@@ -23,7 +23,7 @@ const agentOpts = require('./agent/opts');
 // This file can be used with NODE_OPTIONS or `node --require` to instrument a Node.js app with Instana without
 // modifying the source code. See
 // eslint-disable-next-line max-len
-// https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#installation-without-modifying-the-source-code
+// https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#activating-the-collector
 
 const isExcludedFromInstrumentation = coreUtil.excludedFromInstrumentation && coreUtil.excludedFromInstrumentation();
 

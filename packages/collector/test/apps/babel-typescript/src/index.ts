@@ -39,7 +39,7 @@
 //     import morgan from 'morgan';
 //
 //     // The following statement is optional; it is only required if you want to use
-//     // Instana's Node.js API (https://www.ibm.com/docs/de/obi/current?topic=nodejs-instana-api):
+//     // Instana's Node.js API (https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-instana-api):
 //     @ts-ignore (in case you are using TypeScript, to avoid 'Could not find a declaration for '@instana/collector')
 //     import instana from '@instana/collector';
 //
@@ -61,7 +61,7 @@ import express from 'express';
 import morgan from 'morgan';
 
 // The following statement is optional; it is only required if you want to use
-// Instana's Node.js API (https://www.ibm.com/docs/de/obi/current?topic=nodejs-instana-api):
+// Instana's Node.js API (https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-instana-api):
 // @ts-ignore
 import instana from '@instana/collector';
 
