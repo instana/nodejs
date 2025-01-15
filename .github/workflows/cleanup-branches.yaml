@@ -1,0 +1,70 @@
+name: cleanup-merged-branches
+
+on:
+  schedule:
+    # Every week on Monday morning at 00:00
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: "Dry Run"
+        required: false
+        default: true
+        type: choice
+        options:
+        - false
+        - true
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    env:
+      DRY_RUN: ${{ inputs.dryRun }}    
+    steps:
+      - name: Checkout the repository
+      - uses: actions/checkout@v3
+        with:
+          # With fetch-depth 0 the checkout action will also fetch all tags and branches.
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Configure git name/email
+        run: |
+          git config user.name "IBM/Instana/Team Node.js"
+          git config user.email github-actions@github.com          
+
+      - name: Fetch all branches
+        run: git fetch --prune --all
+
+      - name: Delete old merged branches
+        run: |
+          threshold_date=$(date +%s -d '60 days ago')
+
+          # NOTE: "--merged origin/main" ensures that we only filter branches
+          git branch -r --merged origin/main | grep -E 'origin/(chore-|docs-|fix-|feat-|test-|refactor-)' | while read -r branch; do
+            branch_name=$(echo $branch | sed 's|origin/||')
+
+            # NOTE: We figure out the date when the branch got merged into main
+            merge_commit_date=$(git log origin/main --merges --grep="Merge branch '$branch_name'" -1 --format=%ct)
+
+            # NOTE: That case is actually not possible because we use `--merged`.
+            if [ -z "$merge_commit_date" ]; then
+              echo "Branch $branch_name has not been merged yet. Skipping."
+              continue
+            fi
+
+            # NOTE: Ensure no new commits are on this branch
+            last_commit_date=$(git log -1 --format=%ct origin/$branch_name)
+
+            if [[ $merge_commit_date -lt $threshold_date && $last_commit_date -le $merge_commit_date ]]; then
+              echo "Deleting branch: $branch_name"
+
+              if [[ $DRY_RUN = true ]]; then
+                echo "Dry run: git push origin --delete $branch_name"
+              else
+                git push origin --delete $branch_name
+              fi
+            else
+              echo "Skipping branch: $branch_name (either not 60 days old or has new commits)."
+            fi
+          done
