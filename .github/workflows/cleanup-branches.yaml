@@ -41,6 +41,7 @@ jobs:
           threshold_date=$(date +%s -d '60 days ago')
 
           # NOTE: "--merged origin/main" ensures that we only filter branches
+          #       that have been merged into main.
           git branch -r --merged origin/main | grep -E 'origin/(chore-|docs-|fix-|feat-|test-|refactor-)' | while read -r branch; do
             branch_name=$(echo $branch | sed 's|origin/||')
 
