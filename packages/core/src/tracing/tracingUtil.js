@@ -234,10 +234,10 @@ exports.readAttribCaseInsensitive = function readAttribCaseInsensitive(object, k
  *
  * The situation is different when we are loaded via "--require" from a global installation -- this is the norm for
  * @instana/aws-fargate, @instana/google-cloud-run, the Kubernetes autotrace webhook
- * (https://www.ibm.com/docs/de/obi/current?topic=kubernetes-instana-autotrace-webhook) or when using the global
- * installation pattern for @instana/collector that does not require modifying the source code
- * (see * https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#global-installation).
- *
+ * (https://www.ibm.com/docs/en/instana-observability/current?topic=kubernetes-instana-autotrace-webhook) or when
+ * using the global installation pattern for @instana/collector that does not require modifying the source code see(
+ * https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#installing-the-
+ * collector-globally).
  * In these scenarios, the module load path list does not include the application's node_module folder. Thus we need to
  * be a bit more clever when requiring a module from the application's dependencies. We solve this by constructing the
  * file system path of the desired module by using a known path from a module of the same package and the relative path

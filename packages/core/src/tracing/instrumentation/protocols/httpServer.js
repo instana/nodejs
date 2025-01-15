@@ -109,7 +109,7 @@ function shimEmit(realEmit) {
         // headers, we add the new trace ID to the incoming request so a customer's app can render it reliably into the
         // EUM snippet, see
         // eslint-disable-next-line max-len
-        // https://www.ibm.com/docs/de/obi/current?topic=websites-backend-correlation#retrieve-the-backend-trace-id-in-nodejs
+        // https://www.ibm.com/docs/en/instana-observability/current?topic=websites-backend-correlation#retrieve-the-backend-trace-id-in-nodejs
         req.headers['x-instana-t'] = span.t;
       }
 

@@ -15,7 +15,7 @@
 // edgemicro start -o $org -e $env -k $key -s $secret
 //
 // Thus, there is no user controlled code when that Node.js process is starting up, and in turn our usual installation
-// documented at https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation can not be performed (in particular, there
+// documented at https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#installing-the-collector can not be performed (in particular, there
 // is no user controlled code to put the require('@instana/collector')(); into.
 //
 // The purpose of this executable is to fill this gap. It needs to be called after the edgemicro package has been

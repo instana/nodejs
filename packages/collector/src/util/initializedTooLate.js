@@ -27,9 +27,9 @@ exports.check = function check() {
         'It seems you have initialized the @instana/collector package too late. Please check our documentation on ' +
           'that, in particular ' +
           // eslint-disable-next-line max-len
-          'https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#installing-the-nodejs-collector-package and ' +
+          'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#installing-the-collector and ' +
           // eslint-disable-next-line max-len
-          'https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#common-pitfalls. Tracing might only work ' +
+          'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-troubleshooting. Tracing might only work ' +
           'partially with this setup, that is, some calls will not be captured.'
       );
       warningHasBeenLogged = true;

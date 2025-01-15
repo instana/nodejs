@@ -8,7 +8,7 @@ An [OpenTelemetry exporter](https://opentelemetry.io/docs/js/exporters/) to Inst
 
 ## Instana and OpenTelemetry Versions
 
-Even though the [Instana Node.js SDK supports several versions of Node.js](https://www.ibm.com/docs/de/obi/current?topic=technologies-monitoring-nodejs#supported-nodejs-versions),
+Even though the [Instana Node.js SDK supports several versions of Node.js](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-support-information#supported-nodejs-versions),
 users of the Instana Exporter must take into consideration the
 [versions supported by the OpenTelemetry instrumentator](https://github.com/open-telemetry/opentelemetry-js#supported-runtimes).
 
