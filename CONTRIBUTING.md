@@ -125,6 +125,7 @@ When creating a development branch, please follow these guidelines:
 - You have to use one of the following prefixes: `fix-`, `feat-`, `chore-`, `docs-`, `test-`
   - Those will be automatically deleted after 60 days.
   - We do not delete branches after merge.
+  - Branches who do not use the prefix won't get cleaned up.
   
 For example:
 
