@@ -164,7 +164,7 @@
     "graphql-subscriptions": "^3.0.0",
     "graphql-subscriptions-v2": "npm:graphql-subscriptions@^2.0.0",
     "graphql-tag": "^2.12.6",
-    "graphql-ws": "^5.16.2",
+    "graphql-ws": "^6.0.0",
     "husky": "^7.0.4",
     "ioredis": "^5.4.2",
     "js-yaml": "^4.1.0",
