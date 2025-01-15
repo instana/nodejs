@@ -122,15 +122,20 @@ When creating a development branch, please follow these guidelines:
 - Use lowercase alphanumeric characters (a-z, 0-9).
 - Hyphens (-) can be used for separation, but cannot be the first or last character of the name.
 - The name must begin and end with an alphanumeric character.
+- You have to use one of the following prefixes: `fix-`, `feat-`, `chore-`, `docs-`, `test-`
+- We are using the same prefix names as commit prefixes, see https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c716
+  - Those will be automatically deleted after 60 days.
+  - We do not delete branches after merge.
+  - Branches who do not use the prefix won't get cleaned up.
   
 For example:
 
 - Good branch names:
-  - `feature-redis`
+  - `feat-redis`
   - `fix-lambda-timeout`
 
 - Avoid using:
-  - `feature/redis`
+  - `feat/redis`
 
 ## Managing Dependencies In Packages
 
