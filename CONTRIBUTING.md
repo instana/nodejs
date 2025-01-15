@@ -123,6 +123,8 @@ When creating a development branch, please follow these guidelines:
 - Hyphens (-) can be used for separation, but cannot be the first or last character of the name.
 - The name must begin and end with an alphanumeric character.
 - You have to use one of the following prefixes: `fix-`, `feat-`, `chore-`, `docs-`, `test-`
+  - Those will be automatically deleted after 60 days.
+  - We do not delete branches after merge.
   
 For example:
 
