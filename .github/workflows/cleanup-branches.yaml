@@ -31,13 +31,8 @@ jobs:
           git config user.email github-actions@github.com          
 
       - name: Authenticate GitHub CLI
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          echo "${GITHUB_TOKEN}" | gh auth login --with-token
-
-      - name: Fetch all branches
-        run: git fetch --prune --all
+          gh auth login --with-token <<< "${{ secrets.GH_PAT }}"
 
       - name: Delete old merged branches
         env:
@@ -49,6 +44,8 @@ jobs:
           else
             THRESHOLD_DATE=$(date +%s -d '60 days ago')
           fi
+
+          git fetch --prune --all
 
           for branch in $(git branch -r | grep -E 'origin/(chore-|docs-|fix-|feat-|test-|refactor-)'); do
             branch_name=$(echo "$branch" | sed 's|origin/||')
