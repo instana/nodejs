@@ -70,7 +70,7 @@ startServer();
 
 const httpServer = http.createServer(app);
 
-const { useServer } = require('graphql-ws/lib/use/ws');
+const { useServer } = require('graphql-ws/use/ws');
 const ws = require('ws');
 
 httpServer.listen({ port }, () => {
