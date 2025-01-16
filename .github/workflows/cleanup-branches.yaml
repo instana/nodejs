@@ -68,6 +68,7 @@ jobs:
               if [[ "$DRY_RUN" == "true" ]]; then
                 echo "Dry run: git push origin --delete $branch_name"
               else
+                echo "Deleting branch: $branch_name"
                 git push origin --delete "$branch_name"
               fi
             else
