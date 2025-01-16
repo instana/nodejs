@@ -73,7 +73,8 @@ exports.init = function init(config, isReInit) {
       {
         ...parentLogger.levels,
         level: parentLogger.level || 'info',
-        base: parentLogger.bindings()
+        base: parentLogger.bindings(),
+        timestamp: () => `,"time":"${new Date().toISOString()}"`
       },
       multiStream
     );
