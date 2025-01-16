@@ -15,29 +15,26 @@ const instana = require('../../../../src')({
     allowRootExitSpan: true
   }
 });
-
+const { delay } = require('../../../../../core/test/test_util');
 const fetch = require('node-fetch-v2');
 
-const url = 'https://www.example.com';
+const executeRequest = async () => {
+  let error;
 
-/* eslint-disable no-console */
-function main() {
-  setTimeout(() => {
-    instana.sdk.async
-      .startEntrySpan('test-timeout-span')
-      .then(async () => {
-        try {
-          await fetch(url);
-        } catch (error) {
-          console.log(error);
-        } finally {
-          instana.sdk.async.completeEntrySpan();
-        }
-      })
-      .catch(err => {
-        instana.sdk.async.completeEntrySpan(err);
-        console.log('Error starting test-timeout-span:', err);
-      });
-  }, 100);
-}
-main();
+  try {
+    await instana.sdk.async.startEntrySpan('my-translation-service');
+    await fetch('https://example.com');
+  } catch (err) {
+    error = err;
+  } finally {
+    instana.sdk.async.completeEntrySpan(error);
+  }
+};
+
+// Main function to execute the request with delay
+const runApp = async () => {
+  await delay(200);
+  await executeRequest(); // Execute the request
+};
+
+runApp();

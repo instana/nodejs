@@ -4,7 +4,7 @@
 
 'use strict';
 
-const expect = require('chai').expect;
+const { expect } = require('chai');
 const path = require('path');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -19,16 +19,16 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
   this.timeout(config.getTestTimeout());
 
+  const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
 
   beforeEach(async () => {
-    await globalAgent.instance.clearReceivedTraceData();
+    await agentControls.clearReceivedTraceData();
   });
 
   // an sdk entry span is wrapped to track the exit span
   describe('app with entry span', function () {
     let appControls;
-    const agentControls = globalAgent.instance;
 
     before(async () => {
       appControls = new ProcessControls({
@@ -39,7 +39,7 @@ mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
       await appControls.start(null, null, true);
     });
 
-    it('should collect spans including sdk wrap', async () => {
+    it('should collect entry and exit spans', async () => {
       await delay(200);
 
       await retry(async () => {
@@ -54,29 +54,24 @@ mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
 
   // no sdk wrap present, exit span stands alone
   describe('app without entry span', function () {
-    let agentControls;
+    let appControls;
 
     before(async () => {
-      agentControls = new ProcessControls({
+      appControls = new ProcessControls({
         appPath: path.join(__dirname, 'app_default'),
         useGlobalAgent: true
       });
 
-      await agentControls.start(null, null, true);
+      await appControls.start(null, null, true);
     });
 
-    it('should trace single exit span only', async () => {
+    it('should trace only a single exit span', async () => {
       await delay(200);
 
       await retry(async () => {
-        const spans = await globalAgent.instance.getSpans();
+        const spans = await agentControls.getSpans();
         expect(spans.length).to.equal(1);
-        expectExactlyOneMatching(spans, span => {
-          expect(span.t).to.exist;
-          expect(span.p).to.not.exist;
-          expect(span.s).to.exist;
-          expect(span.k).to.equal(constants.EXIT);
-        });
+        assertSingleExitSpan(spans);
       });
     });
   });
@@ -109,5 +104,14 @@ mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
     ];
 
     return expectExactlyOneMatching(spans, expectations);
+  }
+
+  function assertSingleExitSpan(spans) {
+    expectExactlyOneMatching(spans, span => {
+      expect(span.t).to.exist;
+      expect(span.p).to.not.exist;
+      expect(span.s).to.exist;
+      expect(span.k).to.equal(constants.EXIT);
+    });
   }
 });

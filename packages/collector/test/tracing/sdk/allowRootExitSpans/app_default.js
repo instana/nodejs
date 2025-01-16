@@ -18,11 +18,9 @@ require('../../../../src')({
 
 const fetch = require('node-fetch-v2');
 
-const url = 'https://www.example.com';
-
 function main() {
   setTimeout(async () => {
-    await fetch(url);
+    await fetch('https://example.com');
   }, 100);
 }
 
