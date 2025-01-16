@@ -1,0 +1,77 @@
+name: cleanup-merged-branches
+
+on:
+  schedule:
+    # Every week on Monday morning at 00:00
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: "Dry Run"
+        required: false
+        default: true
+        type: choice
+        options:
+        - false
+        - true
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # With fetch-depth 0 the checkout action will also fetch all tags and branches.
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Configure git name/email
+        run: |
+          git config user.name "IBM/Instana/Team Node.js"
+          git config user.email github-actions@github.com          
+
+      - name: Authenticate GitHub CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          echo "${GITHUB_TOKEN}" | gh auth login --with-token
+
+      - name: Fetch all branches
+        run: git fetch --prune --all
+
+      - name: Delete old merged branches
+        env:
+          DRY_RUN: ${{ github.event.inputs.dryRun }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [[ "$(uname)" == "Darwin" ]]; then
+            THRESHOLD_DATE=$(date -v-60d +%s)
+          else
+            THRESHOLD_DATE=$(date +%s -d '60 days ago')
+          fi
+
+          for branch in $(git branch -r | grep -E 'origin/(chore-|docs-|fix-|feat-|test-|refactor-)'); do
+            branch_name=$(echo "$branch" | sed 's|origin/||')
+
+            pr_info=$(gh pr list --state merged --base main --head "$branch_name" --json mergedAt)
+            pr_merged_at=$(echo "$pr_info" | jq -r '.[0].mergedAt' 2>/dev/null)
+
+            if [[ -z "$pr_merged_at" || "$pr_merged_at" == "null" ]]; then
+                echo "Branch $branch_name has no merged PR. Skipping."
+                continue
+            fi
+
+            pr_merged_at_cleaned=$(echo "$pr_merged_at" | sed 's/Z$//')
+            pr_merged_timestamp=$(date -d "$pr_merged_at_cleaned" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "$pr_merged_at_cleaned" +%s)
+
+            if [[ $pr_merged_timestamp -lt $THRESHOLD_DATE ]]; then
+              if [[ "$DRY_RUN" == "true" ]]; then
+                echo "Dry run: git push origin --delete $branch_name"
+              else
+                echo "Deleting branch: $branch_name"
+                git push origin --delete "$branch_name"
+              fi
+            else
+              echo "Skipping branch: $branch_name (merged less than 60 days ago)."
+            fi
+          done
