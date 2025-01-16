@@ -30,44 +30,47 @@ jobs:
           git config user.name "IBM/Instana/Team Node.js"
           git config user.email github-actions@github.com          
 
+      - name: Authenticate GitHub CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          echo "${GITHUB_TOKEN}" | gh auth login --with-token
+
       - name: Fetch all branches
         run: git fetch --prune --all
 
       - name: Delete old merged branches
         env:
           DRY_RUN: ${{ github.event.inputs.dryRun }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          threshold_date=$(date +%s -d '60 days ago')
+          if [[ "$(uname)" == "Darwin" ]]; then
+            THRESHOLD_DATE=$(date -v-60d +%s)
+          else
+            THRESHOLD_DATE=$(date +%s -d '60 days ago')
+          fi
 
-          # NOTE: "--merged origin/main" ensures that we only filter branches
-          #       that have been merged into main.
-          git branch -r --merged origin/main | grep -E 'origin/(chore-|docs-|fix-|feat-|test-|refactor-)' | while read -r branch; do
-            branch_name=$(echo $branch | sed 's|origin/||')
+          for branch in $(git branch -r | grep -E 'origin/(chore-|docs-|fix-|feat-|test-|refactor-)'); do
+            branch_name=$(echo "$branch" | sed 's|origin/||')
 
-            # NOTE: We figure out the last commit from the branch in main
-            last_commit_in_main=$(git log origin/main --oneline --grep="$branch_name" -1 --format=%H)
+            pr_info=$(gh pr list --state merged --base main --head "$branch_name" --json mergedAt)
+            pr_merged_at=$(echo "$pr_info" | jq -r '.[0].mergedAt' 2>/dev/null)
 
-            # NOTE: If no commit from the branch is found in main, skip it.
-            if [ -z "$last_commit_in_main" ]; then
-              echo "Branch $branch_name has no commits in main. Skipping."
-              continue
+            if [[ -z "$pr_merged_at" || "$pr_merged_at" == "null" ]]; then
+                echo "Branch $branch_name has no merged PR. Skipping."
+                continue
             fi
 
-            # NOTE: We get the date of the last commit from the branch in main.
-            merge_commit_date=$(git log -1 --format=%ct $last_commit_in_main)
+            pr_merged_at_cleaned=$(echo "$pr_merged_at" | sed 's/Z$//')
+            pr_merged_timestamp=$(date -d "$pr_merged_at_cleaned" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "$pr_merged_at_cleaned" +%s)
 
-            # NOTE: Ensure no new commits are on this branch
-            last_commit_date=$(git log -1 --format=%ct origin/$branch_name)
-
-            if [[ $merge_commit_date -lt $threshold_date && $last_commit_date -le $merge_commit_date ]]; then
-              echo "Deleting branch: $branch_name"
-
-              if [[ $DRY_RUN == "true" ]]; then
+            if [[ $pr_merged_timestamp -lt $THRESHOLD_DATE ]]; then
+              if [[ "$DRY_RUN" == "true" ]]; then
                 echo "Dry run: git push origin --delete $branch_name"
               else
-                git push origin --delete $branch_name
+                git push origin --delete "$branch_name"
               fi
             else
-              echo "Skipping branch: $branch_name (either not 60 days old or has new commits)."
+              echo "Skipping branch: $branch_name (merged less than 60 days ago)."
             fi
           done
