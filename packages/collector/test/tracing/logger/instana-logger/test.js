@@ -57,6 +57,14 @@ mochaSuiteFn('tracing/instana-logger', function () {
 
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
+
+    describe('Instana receives a winston logger', () => {
+      appControls.registerTestHooks({
+        instanaLoggingMode: 'instana-receives-winston-logger'
+      });
+
+      it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
+    });
   });
 
   function verifyInstanaLoggingIsNotTraced() {
@@ -81,6 +89,10 @@ mochaSuiteFn('tracing/instana-logger', function () {
           // verify that nothing logged by Instana has been traced with bunyan
           const allBunyanSpans = testUtils.getSpansByName(spans, 'log.bunyan');
           expect(allBunyanSpans).to.be.empty;
+
+          // verify that nothing logged by Instana has been traced with winston
+          const allWinstonSpans = testUtils.getSpansByName(spans, 'log.winston');
+          expect(allWinstonSpans).to.be.empty;
         })
       );
     });
