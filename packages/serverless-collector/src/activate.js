@@ -14,7 +14,11 @@ const customMetrics = require('./metrics');
 
 let logger = consoleLogger;
 
-const config = normalizeConfig({});
+const config = normalizeConfig({
+  tracing: {
+    allowRootExitSpan: false
+  }
+});
 config.logger = logger;
 
 async function init() {
