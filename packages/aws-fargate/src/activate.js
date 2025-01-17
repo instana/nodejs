@@ -17,7 +17,11 @@ const { normalizeConfig } = coreUtil;
 
 let logger = consoleLogger;
 
-const config = normalizeConfig({});
+const config = normalizeConfig({
+  tracing: {
+    allowRootExitSpan: false
+  }
+});
 config.logger = logger;
 
 function init() {
