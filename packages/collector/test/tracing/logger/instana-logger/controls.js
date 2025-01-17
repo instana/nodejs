@@ -34,6 +34,9 @@ exports.registerTestHooks = (opts = {}) => {
       case 'instana-receives-bunyan-logger':
         appName = 'app-instana-receives-bunyan-logger.js';
         break;
+      case 'instana-receives-winston-logger':
+        appName = 'app-instana-receives-winston-logger.js';
+        break;
       default:
         throw new Error(`Unknown instanaLoggingMode: ${opts.instanaLoggingMode}`);
     }
