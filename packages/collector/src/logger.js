@@ -55,29 +55,33 @@ exports.init = function init(config, isReInit) {
     // This consoleStream creates a destination stream for the logger that writes log data to the standard output.
     // Since we are using multistream here, this needs to be specified explicitly
 
-    const consoleStream = uninstrumentedLogger.destination(parentLogger.destination);
+    try {
+      const consoleStream = uninstrumentedLogger.destination(parentLogger.destination);
 
-    const multiStream = {
-      /**
-       * Custom write method to send logs to multiple destinations
-       * @param {string} chunk
-       */
-      write(chunk) {
-        consoleStream.write(chunk);
+      const multiStream = {
+        /**
+         * Custom write method to send logs to multiple destinations
+         * @param {string} chunk
+         */
+        write(chunk) {
+          consoleStream.write(chunk);
 
-        loggerToAgentStream.write(chunk);
-      }
-    };
+          loggerToAgentStream.write(chunk);
+        }
+      };
 
-    parentLogger = uninstrumentedLogger(
-      {
-        ...parentLogger.levels,
-        level: parentLogger.level || 'info',
-        base: parentLogger.bindings(),
-        timestamp: () => `,"time":"${new Date().toISOString()}"`
-      },
-      multiStream
-    );
+      parentLogger = uninstrumentedLogger(
+        {
+          ...parentLogger.levels,
+          level: parentLogger.level || 'info',
+          base: parentLogger.bindings(),
+          timestamp: () => `,"time":"${new Date().toISOString()}"`
+        },
+        multiStream
+      );
+    } catch (error) {
+      // ignore the error here
+    }
   } else if (parentLogger && parentLogger.addStream) {
     // in case we are using a bunyan logger we also forward logs to the agent
     parentLogger.addStream({
