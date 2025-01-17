@@ -80,7 +80,7 @@ exports.init = function init(config, isReInit) {
         multiStream
       );
     } catch (error) {
-      // ignore the error here
+      parentLogger.debug(`An issue occurred while modifying the current logger: ${error.message}`);
     }
   } else if (parentLogger && parentLogger.addStream) {
     // in case we are using a bunyan logger we also forward logs to the agent
