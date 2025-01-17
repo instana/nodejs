@@ -174,6 +174,10 @@ function setLoggerLevel(_logger, level) {
  */
 function isPinoLogger(_logger) {
   return (
-    _logger && typeof _logger === 'object' && typeof _logger.child === 'function' && typeof _logger.level === 'string'
+    _logger &&
+    typeof _logger === 'object' &&
+    typeof _logger.child === 'function' &&
+    typeof _logger.level === 'string' &&
+    typeof _logger.bindings === 'function'
   );
 }
