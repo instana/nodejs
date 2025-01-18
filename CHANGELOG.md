@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.6.0](https://github.com/instana/nodejs/compare/v4.5.3...v4.6.0) (2025-01-18)
+
+### Bug Fixes
+
+- changed internal logger timestamp to ISO string ([#1518](https://github.com/instana/nodejs/issues/1518)) ([0a6af07](https://github.com/instana/nodejs/commit/0a6af07056563479bb24c58420a0d9efeb74c873))
+- resolved issue in setLogger function with winston logger ([#1522](https://github.com/instana/nodejs/issues/1522)) ([52f102e](https://github.com/instana/nodejs/commit/52f102ec4e198d2d974f5b2503b8d16acc47e593))
+
+### Features
+
+- added support for graphql-ws v6 ([#1516](https://github.com/instana/nodejs/issues/1516)) ([1da50b8](https://github.com/instana/nodejs/commit/1da50b861e391052defe36eb9bf2ab5aa7a6621a))
+
 ## [4.5.3](https://github.com/instana/nodejs/compare/v4.5.2...v4.5.3) (2025-01-14)
 
 ### Bug Fixes
