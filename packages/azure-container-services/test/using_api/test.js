@@ -77,7 +77,6 @@ describe('Using the API', function () {
           instanaAgentKey,
           startDownstreamDummy: false,
           startBackend: true,
-
           appPath: path.join(__dirname, 'allowRootExitSpanApp'),
           env: { ...env, INSTANA_ALLOW_ROOT_EXIT_SPAN: true }
         });
@@ -104,7 +103,6 @@ describe('Using the API', function () {
           instanaAgentKey,
           startDownstreamDummy: false,
           startBackend: true,
-
           appPath: path.join(__dirname, 'allowRootExitSpanApp'),
           env: { ...env, INSTANA_ALLOW_ROOT_EXIT_SPAN: false }
         });
