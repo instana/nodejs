@@ -9,7 +9,7 @@ const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
-const { expectExactlyOneMatching } = require('../../../core/test/test_util');
+const { expectExactlyOneMatching, delay } = require('../../../core/test/test_util');
 const config = require('@instana/core/test/config');
 const retry = require('@instana/core/test/test_util/retry');
 
@@ -41,7 +41,8 @@ describe('Using the API', function () {
         containerAppPath,
         instanaAgentKey,
         startDownstreamDummy: false,
-        startBackend: true
+        startBackend: true,
+        appPath: path.join(__dirname, 'app')
       });
 
       await control.start();
@@ -65,6 +66,60 @@ describe('Using the API', function () {
         .then(response => {
           return verify(control, response);
         });
+    });
+
+    describe('Allow Root Exit Span Case 1', async function () {
+      let agentControls;
+
+      before(async () => {
+        agentControls = new Control({
+          containerAppPath,
+          instanaAgentKey,
+          startDownstreamDummy: false,
+          startBackend: true,
+
+          appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+          env: { ...env, INSTANA_ALLOW_ROOT_EXIT_SPAN: true }
+        });
+
+        await agentControls.start();
+      });
+
+      it('should not trace exit span without entry span even if INSTANA_ALLOW_ROOT_EXIT_SPAN is true', async () => {
+        await delay(2500);
+
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          expect(spans).to.be.empty;
+        });
+      });
+    });
+
+    describe('Allow Root Exit Span Case 2', async function () {
+      let agentControls;
+
+      before(async () => {
+        agentControls = new Control({
+          containerAppPath,
+          instanaAgentKey,
+          startDownstreamDummy: false,
+          startBackend: true,
+
+          appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+          env: { ...env, INSTANA_ALLOW_ROOT_EXIT_SPAN: false }
+        });
+
+        await agentControls.start();
+      });
+
+      it('should not trace exit span without entry span even if INSTANA_ALLOW_ROOT_EXIT_SPAN is false', async () => {
+        await delay(2500);
+
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          expect(spans).to.be.empty;
+        });
+      });
     });
   });
 
