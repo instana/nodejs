@@ -215,6 +215,15 @@ services:
       - DOCKER_HOST=unix:///var/run/docker.sock 
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
+      
+  cassandra:
+    image: cassandra:latest
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=my_cluster
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
 
 networks:
   redis-cluster-network:

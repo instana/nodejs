@@ -7,5 +7,8 @@
 module.exports = {
   get otelInstrumentations() {
     return require('./wrap');
+  },
+  get otelCustomInstrumentations() {
+    return require('./customTracing');
   }
 };

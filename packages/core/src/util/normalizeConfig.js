@@ -60,6 +60,7 @@ const constants = require('../tracing/constants');
  * @property {InstanaTracingOption} [tracing]
  * @property {InstanaSecretsOption} [secrets]
  * @property {number} [timeBetweenHealthcheckCalls]
+ * @property {Array.<Object>} [instrumentation]
  */
 
 /**
@@ -95,7 +96,7 @@ logger = require('../logger').getLogger('configuration', newLogger => {
 const defaults = {
   serviceName: null,
   packageJsonPath: null,
-
+  instrumentation: [],
   metrics: {
     transmissionDelay: 1000,
     timeBetweenHealthcheckCalls: 3000
@@ -222,6 +223,7 @@ function normalizeTracingConfig(config) {
   normalizeTracingKafka(config);
   normalizeAllowRootExitSpan(config);
   normalizeIgnoreEndpoints(config);
+  normalizeInstrumentations(config);
 }
 
 /**
@@ -729,4 +731,15 @@ function normalizeIgnoreEndpoints(config) {
   }
 
   logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
+}
+/**
+ * @param {InstanaConfig} config
+ */
+function normalizeInstrumentations(config) {
+    if (!Array.isArray(config.instrumentation)) {
+    logger.warn(
+      `Invalid configuration: config.instrumentation is not a string, the value will be ignored: ${config.instrumentation}`
+    );
+    config.instrumentation = defaults.instrumentation;
+  }
 }

@@ -14,7 +14,7 @@ const tracingHeaders = require('./tracingHeaders');
 const tracingUtil = require('./tracingUtil');
 const spanBuffer = require('./spanBuffer');
 const supportedVersion = require('./supportedVersion');
-const { otelInstrumentations } = require('./opentelemetry-instrumentations');
+const { otelInstrumentations, otelCustomInstrumentations } = require('./opentelemetry-instrumentations');
 const { isLatestEsmSupportedVersion, hasExperimentalLoaderFlag, isESMApp } = require('../util/esm');
 const iitmHook = require('../util/iitmHook');
 const { getPreloadFlags } = require('../util/getPreloadFlags');
@@ -215,6 +215,9 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
 
       if (_config.tracing.useOpentelemetry) {
         otelInstrumentations.init(config, cls);
+      }
+      if (config.instrumentation) {
+        otelCustomInstrumentations.init(config, cls);
       }
       if (isESMApp()) {
         iitmHook.init();
