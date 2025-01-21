@@ -6,6 +6,13 @@
 
 'use strict';
 
+// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
+process.on('SIGTERM', () => {
+  process.disconnect();
+  process.exit(0);
+});
+
+const port = require('../../test_util/app-port')();
 const { CassandraDriverInstrumentation } = require('@opentelemetry/instrumentation-cassandra-driver');
 require('../../../src')({
   instrumentations: [CassandraDriverInstrumentation]
@@ -30,15 +37,28 @@ const client = new cassandra.Client({
   keyspace: 'nodejs_keyspace'
 });
 
+let connected = false;
 client
   .connect()
-  .then(() => console.log('Connected to Cassandra!'))
+  .then(() => {
+    connected = true;
+    console.log('Connected to Cassandra!');
+  })
   .catch(err => {
     console.error('Failed to connect to Cassandra:', err);
     process.exit(1);
   });
 
+app.get('/', (req, res) => {
+  if (!connected) {
+    res.sendStatus(500);
+  }
+
+  res.sendStatus(200);
+});
+
 app.get('/data', async (req, res) => {
+  console.log('GET /data');
   const query = 'SELECT * FROM team LIMIT 10';
   try {
     const result = await client.execute(query);
@@ -73,7 +93,6 @@ app.delete('/data/:id', async (req, res) => {
   }
 });
 
-const PORT = 3005;
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 });

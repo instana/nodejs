@@ -234,7 +234,53 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     });
   });
 
-  describe.only('fs', function () {
+  describe.only('cassandra', function () {
+    globalAgent.setUpCleanUpHooks();
+    const agentControls = globalAgent.instance;
+
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        appPath: path.join(__dirname, './cassandra-app'),
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
+    it('should trace', () =>
+      controls
+        .sendRequest({
+          method: 'GET',
+          path: '/data'
+        })
+        .then(() =>
+          retry(() =>
+            agentControls.getSpans().then(spans => {
+              spans.forEach(span => {
+                console.log(span, span.data);
+              });
+
+              expect(spans.length).to.equal(2);
+            })
+          )
+        ));
+  });
+
+  describe('fs', function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
