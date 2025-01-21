@@ -20,6 +20,7 @@ const {
   verifyEntrySpan,
   expectExactlyNMatching,
   delay,
+  runCommandSync,
   expectExactlyOneMatching
 } = require('../../../../core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
@@ -27,8 +28,39 @@ const globalAgent = require('../../globalAgent');
 const DELAY_TIMEOUT_IN_MS = 500;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
 
+// TODO: why does runcollector not work? only runcollector-nw. pls fix
 mochaSuiteFn('opentelemetry/instrumentations', function () {
-  this.timeout(config.getTestTimeout());
+  this.timeout(config.getTestTimeout() * 3);
+  const dir = __dirname;
+
+  before(() => {
+    runCommandSync('rm -rf ./node_modules', dir);
+
+    const copath = path.join(dir, '..', '..', '..', '..', 'collector');
+    runCommandSync('npm pack', copath);
+
+    const coversion = require(`${copath}/package.json`).version;
+    runCommandSync(
+      // eslint-disable-next-line max-len
+      `npm install --prefix ./ --production --no-optional --no-audit ${copath}/instana-collector-${coversion}.tgz`,
+      dir
+    );
+
+    const corepath = path.join(__dirname, '..', '..', '..', '..', 'core');
+    runCommandSync('npm pack', corepath);
+
+    const coreversion = require(`${copath}/package.json`).version;
+    runCommandSync(
+      // eslint-disable-next-line max-len
+      `npm install --prefix ./ --production --no-optional --no-audit ${corepath}/instana-core-${coreversion}.tgz`,
+      dir
+    );
+
+    runCommandSync(
+      'npm install --prefix ./ --production --no-audit @opentelemetry/instrumentation-cassandra-driver@0.45.0',
+      dir
+    );
+  });
 
   describe('restify', function () {
     describe('opentelemetry is enabled', function () {
@@ -272,11 +304,10 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
 
           return retry(() =>
             agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
               spans.forEach(span => {
                 console.log(span.data);
               });
-
-              expect(spans.length).to.equal(1);
             })
           );
         }));

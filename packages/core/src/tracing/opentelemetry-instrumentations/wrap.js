@@ -18,8 +18,7 @@ const supportedVersion = require('../supportedVersion');
 //       resulting in suboptimal code coverage and potential vulnerabilities.
 const instrumentations = {
   // removed to easily test fs against otel
-  // TODO: revert
-  // '@opentelemetry/instrumentation-fs': { name: 'fs' },
+  '@opentelemetry/instrumentation-fs': { name: 'fs' },
   '@opentelemetry/instrumentation-restify': { name: 'restify' },
   '@opentelemetry/instrumentation-socket.io': { name: 'socket.io' },
   '@opentelemetry/instrumentation-tedious': { name: 'tedious' }
@@ -44,7 +43,6 @@ module.exports.init = (_config, cls) => {
   let targetInstrumentations = customInstrumentationsObject || {};
 
   if (!useOpentelemetry) {
-    // join targetInstrumentations object with the default instrumentations
     targetInstrumentations = Object.assign({}, instrumentations, targetInstrumentations);
   }
 
@@ -54,7 +52,6 @@ module.exports.init = (_config, cls) => {
 
     try {
       instrumentation = require(`./${value.name}`);
-
       instrumentation.init(cls, value);
       value.module = instrumentation;
     } catch (e) {
@@ -63,7 +60,7 @@ module.exports.init = (_config, cls) => {
           instrumentation = require('./any');
           instrumentation.init(cls, value);
           value.module = instrumentation;
-        } catch (e) {
+        } catch (err) {
           // ignore e
         }
       }
@@ -71,7 +68,6 @@ module.exports.init = (_config, cls) => {
   });
 
   const transformToInstanaSpan = otelSpan => {
-    console.log(otelSpan);
     if (!otelSpan || !otelSpan.instrumentationLibrary) {
       return;
     }
@@ -79,8 +75,8 @@ module.exports.init = (_config, cls) => {
     const targetInstrumentionName = otelSpan.instrumentationLibrary.name;
     let kind = constants.EXIT;
 
-    if (instrumentations[targetInstrumentionName] && instrumentations[targetInstrumentionName].module) {
-      const targetInstrumentationModule = instrumentations[targetInstrumentionName].module;
+    if (targetInstrumentations[targetInstrumentionName] && targetInstrumentations[targetInstrumentionName].module) {
+      const targetInstrumentationModule = targetInstrumentations[targetInstrumentionName].module;
 
       if (targetInstrumentationModule.getKind) {
         kind = targetInstrumentationModule.getKind(otelSpan);
@@ -142,7 +138,7 @@ module.exports.init = (_config, cls) => {
    * This is an npm workspace issue. Nohoisting missing.
    */
   const orig = api.trace.setSpan;
-  // For cassandra not hitting here, while debugging always getting  NonRecordingSpan
+
   api.trace.setSpan = function instanaSetSpan(ctx, span) {
     transformToInstanaSpan(span);
     return orig.apply(this, arguments);

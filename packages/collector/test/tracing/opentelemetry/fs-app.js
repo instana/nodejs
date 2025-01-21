@@ -12,13 +12,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const opentelemetryDisabled = process.env.INSTANA_DISABLE_USE_OPENTELEMETRY === 'true';
-
-require('../../../src')({
-  tracing: {
-    useOpentelemetry: !opentelemetryDisabled
-  }
-});
+require('@instana/collector')();
 
 const express = require('express');
 const fs = require('fs');

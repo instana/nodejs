@@ -7,6 +7,7 @@
 const constants = require('../constants');
 
 // TODO: optimize so that we will always find the class
+// @ts-ignore
 const findClass = obj => {
   return (
     Object.keys(obj).find(
@@ -15,6 +16,7 @@ const findClass = obj => {
   );
 };
 
+// @ts-ignore
 module.exports.init = (cls, value) => {
   try {
     const resp = require(value.pkg);
@@ -34,7 +36,13 @@ module.exports.init = (cls, value) => {
   }
 };
 
+// @ts-ignore
 module.exports.getKind = otelSpan => {
   const kind = constants.EXIT;
+
+  // eslint-disable-next-line no-constant-condition
+  if (false && otelSpan) {
+    // TODO: implement generic solution to figure out the kind
+  }
   return kind;
 };

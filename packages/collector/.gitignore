@@ -10,3 +10,5 @@ test/tracing/database/prisma/package-lock.json
 
 test/tracing/misc/typescript/ts_esm/dist
 test/tracing/misc/typescript/ts_cjs/dist
+
+test/tracing/opentelemetry/package.json

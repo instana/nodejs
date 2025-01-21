@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../..')();
+require('@instana/collector')();
 
 const socketioclient = require('socket.io-client');
 const express = require('express');

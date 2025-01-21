@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../src')();
+require('@instana/collector')();
 
 const express = require('express');
 const port = require('../../test_util/app-port')();

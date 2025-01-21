@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 
 const port = require('../../test_util/app-port')();
 // const { CassandraDriverInstrumentation } = require('@opentelemetry/instrumentation-cassandra-driver');
-require('../../../src')({
+require('@instana/collector')({
   // TODO: rename to customInstrumentations?
   instrumentations: ['@opentelemetry/instrumentation-cassandra-driver']
 });
@@ -24,6 +24,8 @@ const cassandra = require('cassandra-driver');
 
 const app = express();
 app.use(express.json());
+
+// TODO: put to the test and automate
 // Ensure the following steps are completed before starting the server:
 //  Run the cassandra db  ->  node bin/start-test-containers.js --cassandra
 // 1. Run the command: `docker exec -it nodejs-cassandra-1 cqlsh`
