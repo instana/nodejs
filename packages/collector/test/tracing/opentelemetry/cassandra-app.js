@@ -17,6 +17,7 @@ const cassandra = require('cassandra-driver');
 const app = express();
 app.use(express.json());
 // Ensure the following steps are completed before starting the server:
+//  Run the cassandra db  ->  node bin/start-test-containers.js --cassandra
 // 1. Run the command: `docker exec -it nodejs-cassandra-1 cqlsh`
 // eslint-disable-next-line max-len
 // 2. Create the keyspace: `CREATE KEYSPACE nodejs_keyspace WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': 1 };`
