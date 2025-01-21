@@ -13,7 +13,12 @@ process.on('SIGTERM', () => {
 });
 
 const port = require('../../test_util/app-port')();
+
+// NOTE: This is harder to implement because we loose the information how the npm pkg
+//       is called and we need it to match the otel span against the target instrumentation.
+//       This is for sure fixable, but it is not a priority.
 // const { CassandraDriverInstrumentation } = require('@opentelemetry/instrumentation-cassandra-driver');
+
 require('@instana/collector')({
   // TODO: rename to customInstrumentations?
   instrumentations: ['@opentelemetry/instrumentation-cassandra-driver']
