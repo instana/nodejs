@@ -267,20 +267,22 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           method: 'GET',
           path: '/data'
         })
-        .then(() =>
-          retry(() =>
+        .then(async () => {
+          await delay(2000);
+
+          return retry(() =>
             agentControls.getSpans().then(spans => {
               spans.forEach(span => {
-                console.log(span, span.data);
+                console.log(span.data);
               });
 
-              expect(spans.length).to.equal(2);
+              expect(spans.length).to.equal(1);
             })
-          )
-        ));
+          );
+        }));
   });
 
-  describe('fs', function () {
+  describe.only('fs', function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 

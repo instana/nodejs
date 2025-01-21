@@ -213,12 +213,8 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
     if (automaticTracingEnabled) {
       initInstrumenations(config);
 
-      if (_config.tracing.useOpentelemetry) {
-        otelInstrumentations.init(config, cls);
-      }
-      if (config.instrumentations) {
-        otelCustomInstrumentations.init(config);
-      }
+      otelInstrumentations.init(config, cls);
+
       if (isESMApp()) {
         iitmHook.init();
       }

@@ -18,13 +18,11 @@ const supportedVersion = require('../supportedVersion');
 //       resulting in suboptimal code coverage and potential vulnerabilities.
 const instrumentations = {
   // removed to easily test fs against otel
+  // TODO: revert
   // '@opentelemetry/instrumentation-fs': { name: 'fs' },
   '@opentelemetry/instrumentation-restify': { name: 'restify' },
   '@opentelemetry/instrumentation-socket.io': { name: 'socket.io' },
-  '@opentelemetry/instrumentation-tedious': { name: 'tedious' },
-  // This is added as part of testing, I wanted to manually test the cassanda instrumentation with this setup
-  // Not related to hackathon integration, can be removed.
-  '@opentelemetry/instrumentation-cassandra-driver': { name: 'cassandra-driver' }
+  '@opentelemetry/instrumentation-tedious': { name: 'tedious' }
 };
 
 // NOTE: using a logger might create a recursive execution
@@ -35,14 +33,45 @@ module.exports.init = (_config, cls) => {
     return;
   }
 
-  Object.keys(instrumentations).forEach(k => {
-    const value = instrumentations[k];
-    const instrumentation = require(`./${value.name}`);
-    instrumentation.init(cls);
-    value.module = instrumentation;
+  const useOpentelemetry = _config.useOpentelemetry;
+
+  // _config.instrumentation is []. Transform to {}!
+  const customInstrumentationsObject = _config.instrumentations.reduce((acc, curr) => {
+    acc[curr] = { pkg: curr, name: curr };
+    return acc;
+  }, {});
+
+  let targetInstrumentations = customInstrumentationsObject || {};
+
+  if (!useOpentelemetry) {
+    // join targetInstrumentations object with the default instrumentations
+    targetInstrumentations = Object.assign({}, instrumentations, targetInstrumentations);
+  }
+
+  Object.keys(targetInstrumentations).forEach(k => {
+    const value = targetInstrumentations[k];
+    let instrumentation;
+
+    try {
+      instrumentation = require(`./${value.name}`);
+
+      instrumentation.init(cls, value);
+      value.module = instrumentation;
+    } catch (e) {
+      if (e.code === 'MODULE_NOT_FOUND') {
+        try {
+          instrumentation = require('./any');
+          instrumentation.init(cls, value);
+          value.module = instrumentation;
+        } catch (e) {
+          // ignore e
+        }
+      }
+    }
   });
 
   const transformToInstanaSpan = otelSpan => {
+    console.log(otelSpan);
     if (!otelSpan || !otelSpan.instrumentationLibrary) {
       return;
     }

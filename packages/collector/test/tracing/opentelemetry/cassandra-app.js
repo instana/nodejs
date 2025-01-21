@@ -13,9 +13,10 @@ process.on('SIGTERM', () => {
 });
 
 const port = require('../../test_util/app-port')();
-const { CassandraDriverInstrumentation } = require('@opentelemetry/instrumentation-cassandra-driver');
+// const { CassandraDriverInstrumentation } = require('@opentelemetry/instrumentation-cassandra-driver');
 require('../../../src')({
-  instrumentations: [CassandraDriverInstrumentation]
+  // TODO: rename to customInstrumentations?
+  instrumentations: ['@opentelemetry/instrumentation-cassandra-driver']
 });
 
 const express = require('express');

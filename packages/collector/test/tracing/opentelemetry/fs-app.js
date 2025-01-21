@@ -12,10 +12,12 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-// For testing Opentelemetry FS instrumentation
-const { FsInstrumentation } = require('@opentelemetry/instrumentation-fs');
+const opentelemetryDisabled = process.env.INSTANA_DISABLE_USE_OPENTELEMETRY === 'true';
+
 require('../../../src')({
-  instrumentations: [FsInstrumentation]
+  tracing: {
+    useOpentelemetry: !opentelemetryDisabled
+  }
 });
 
 const express = require('express');
