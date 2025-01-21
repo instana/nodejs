@@ -23,7 +23,7 @@ const instrumentations = {
   '@opentelemetry/instrumentation-tedious': { name: 'tedious' },
   // This is added as part of testing, I wanted to manually test the cassanda instrumentation with this setup
   // Not related to hackathon integration, can be removed.
-  '@opentelemetry/instrumentation-cassandra-driver': { name: 'cassandra' }
+  '@opentelemetry/instrumentation-cassandra-driver': { name: 'cassandra-driver' }
 };
 
 // NOTE: using a logger might create a recursive execution
