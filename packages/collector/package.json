@@ -83,7 +83,6 @@
     "url": "https://github.com/instana/nodejs/issues"
   },
   "dependencies": {
-    "@instana/collector": "file:instana-collector-4.6.0.tgz",
     "@instana/core": "4.6.0",
     "@instana/shared-metrics": "4.6.0",
     "pino": "^9.6.0",
