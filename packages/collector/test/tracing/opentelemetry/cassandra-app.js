@@ -8,7 +8,7 @@
 
 const { CassandraDriverInstrumentation } = require('@opentelemetry/instrumentation-cassandra-driver');
 require('../../../src')({
-  instrumentation: [CassandraDriverInstrumentation]
+  instrumentations: [CassandraDriverInstrumentation]
 });
 
 const express = require('express');
