@@ -17,7 +17,8 @@ const supportedVersion = require('../supportedVersion');
 //       Third-party instrumentations typically bypass a review process,
 //       resulting in suboptimal code coverage and potential vulnerabilities.
 const instrumentations = {
-  '@opentelemetry/instrumentation-fs': { name: 'fs' },
+  // removed to easily test fs against otel
+  // '@opentelemetry/instrumentation-fs': { name: 'fs' },
   '@opentelemetry/instrumentation-restify': { name: 'restify' },
   '@opentelemetry/instrumentation-socket.io': { name: 'socket.io' },
   '@opentelemetry/instrumentation-tedious': { name: 'tedious' },

@@ -12,7 +12,11 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../src')();
+// For testing Opentelemetry FS instrumentation
+const { FsInstrumentation } = require('@opentelemetry/instrumentation-fs');
+require('../../../src')({
+  instrumentations: [FsInstrumentation]
+});
 
 const express = require('express');
 const fs = require('fs');

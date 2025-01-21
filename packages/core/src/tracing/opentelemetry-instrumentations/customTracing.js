@@ -14,7 +14,7 @@ const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
 module.exports.init = _config => {
   try {
     const instrumentationModules = _config.instrumentations;
-    // TODO: we need to forcefully reload the package here
+    // TODO: we need to forcefully reload the package here for getting the spans
     // Object.keys(require.cache).forEach(key => {
     //   if (key.includes('node_modules/@opentelemetry/instrumentation-')) {
     //     delete require.cache[key];
@@ -31,7 +31,8 @@ module.exports.init = _config => {
     const orig = api.trace.setSpan;
     api.trace.setSpan = function instanaSetSpan(ctx, span) {
       // eslint-disable-next-line no-console
-      console.log('------------span--------------------', span); // Currently not receiving any span
+      // // Currently not receiving any span unless we reload the package inside the init function
+      console.log('------------span--------------------', span);
       // transformToInstanaSpan(span);  // TODO
       return orig.apply(this, arguments);
     };
