@@ -20,7 +20,10 @@ const instrumentations = {
   '@opentelemetry/instrumentation-fs': { name: 'fs' },
   '@opentelemetry/instrumentation-restify': { name: 'restify' },
   '@opentelemetry/instrumentation-socket.io': { name: 'socket.io' },
-  '@opentelemetry/instrumentation-tedious': { name: 'tedious' }
+  '@opentelemetry/instrumentation-tedious': { name: 'tedious' },
+  // This is added as part of testing, I wanted to manually test the cassanda instrumentation with this setup
+  // Not related to hackathon integration, can be removed.
+  '@opentelemetry/instrumentation-cassandra-driver': { name: 'cassandra' }
 };
 
 // NOTE: using a logger might create a recursive execution
@@ -109,6 +112,7 @@ module.exports.init = (_config, cls) => {
    * This is an npm workspace issue. Nohoisting missing.
    */
   const orig = api.trace.setSpan;
+  // For cassandra not hitting here, while debugging always getting  NonRecordingSpan
   api.trace.setSpan = function instanaSetSpan(ctx, span) {
     transformToInstanaSpan(span);
     return orig.apply(this, arguments);
