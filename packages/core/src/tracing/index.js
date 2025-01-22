@@ -210,6 +210,15 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
     cls.init(config, processIdentityProvider);
     sdk.init(cls);
 
+    if (!config.instrumentations.length) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        "Warning: The Instana Node.js tracer does not currently support tracing for the 'cassandra-driver'. " +
+          'To add tracing support, use the appropriate OpenTelemetry instrumentation.' +
+          'For more details, check all available OpenTelemetry instrumentations here: ' +
+          'https://opentelemetry.io/ecosystem/registry/?language=js&component=instrumentation'
+      );
+    }
     if (automaticTracingEnabled) {
       initInstrumenations(config);
 
