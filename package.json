@@ -140,6 +140,7 @@
     "cls-hooked": "^4.2.2",
     "commitizen": "^4.2.4",
     "cz-conventional-changelog": "^3.3.0",
+    "dataloader": "^2.2.3",
     "depcheck": "^1.4.3",
     "dev-null": "^0.1.1",
     "doctoc": "^2.1.0",

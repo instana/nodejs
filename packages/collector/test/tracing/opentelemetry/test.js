@@ -62,6 +62,10 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     );
 
     runCommandSync('npm install --prefix ./ --production --no-audit @opentelemetry/instrumentation-knex@0.44.0', dir);
+    runCommandSync(
+      'npm install --prefix ./ --production --no-audit @opentelemetry/instrumentation-dataloader@0.16.0',
+      dir
+    );
   });
 
   describe('restify', function () {
@@ -354,6 +358,53 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           return retry(() =>
             agentControls.getSpans().then(spans => {
               expect(spans.length).to.equal(2);
+              spans.forEach(span => {
+                // eslint-disable-next-line no-console
+                console.log(span.data);
+              });
+            })
+          );
+        }));
+  });
+  describe.only('dataloader', function () {
+    globalAgent.setUpCleanUpHooks();
+    const agentControls = globalAgent.instance;
+
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        appPath: path.join(__dirname, './dataloader-app'),
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
+    it('should trace', () =>
+      controls
+        .sendRequest({
+          method: 'GET',
+          path: '/user/1'
+        })
+        .then(async () => {
+          await delay(2000);
+
+          return retry(() =>
+            agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(5);
               spans.forEach(span => {
                 // eslint-disable-next-line no-console
                 console.log(span.data);
