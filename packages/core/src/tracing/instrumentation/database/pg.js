@@ -18,7 +18,8 @@ exports.spanName = 'postgres';
 exports.batchable = true;
 
 exports.init = function init() {
-  hook.onModuleLoad('pg', instrumentPg);
+  // Removed our instrumentation for checking support of opentelemetry knex
+  // hook.onModuleLoad('pg', instrumentPg);
 };
 
 function instrumentPg(pg) {

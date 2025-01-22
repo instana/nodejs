@@ -60,6 +60,8 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       'npm install --prefix ./ --production --no-audit @opentelemetry/instrumentation-cassandra-driver@0.45.0',
       dir
     );
+
+    runCommandSync('npm install --prefix ./ --production --no-audit @opentelemetry/instrumentation-knex@0.44.0', dir);
   });
 
   describe('restify', function () {
