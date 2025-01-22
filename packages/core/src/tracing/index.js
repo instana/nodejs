@@ -213,15 +213,15 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
     if (!config.instrumentations.length) {
       // eslint-disable-next-line no-console
       console.warn(
-        "Warning: The Instana Node.js tracer does not support tracing for the 'cassandra-driver'.\n" +
-          'Please visit our official documentation to check library support: ' +
-          'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-supported-libraries-frameworks. ' +
-          'To add tracing support, visit the OpenTelemetry registry and search for your library: ' +
-          'https://opentelemetry.io/ecosystem/registry/?language=js&component=instrumentation.' +
-          'To add the instrumentation, use the following example:\n' +
+        "Warning: The Instana Node.js tracer does not support tracing for the 'cassandra-driver'.\n\n" +
+          'For more details on supported libraries and frameworks, visit our official documentation:\n' +
+          'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-supported-libraries-frameworks\n\n' +
+          'To add tracing support, you can explore the OpenTelemetry registry and search for your library:\n' +
+          'https://opentelemetry.io/ecosystem/registry/?language=js&component=instrumentation\n\n' +
+          'To add the instrumentation, use the following example:\n\n' +
           "require('@instana/collector')({\n" +
           "  instrumentations: ['@opentelemetry/instrumentation-cassandra-driver'],\n" +
-          '});'
+          '});\n\n'
       );
     }
     if (automaticTracingEnabled) {
