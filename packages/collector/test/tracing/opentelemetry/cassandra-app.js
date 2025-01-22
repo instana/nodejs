@@ -29,33 +29,39 @@ const cassandra = require('cassandra-driver');
 
 const app = express();
 app.use(express.json());
-
-// TODO: put to the test and automate
-// Ensure the following steps are completed before starting the server:
-//  Run the cassandra db  ->  node bin/start-test-containers.js --cassandra
-// 1. Run the command: `docker exec -it nodejs-cassandra-1 cqlsh`
-// eslint-disable-next-line max-len
-// 2. Create the keyspace: `CREATE KEYSPACE nodejs_keyspace WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': 1 };`
-// 3. Switch to the keyspace: `USE nodejs_keyspace;`
-// 4. Create the table: `CREATE TABLE team (id BIGINT PRIMARY KEY, name TEXT);`
+// Run the cassandra db  ->  node bin/start-test-containers.js --cassandra
 
 const client = new cassandra.Client({
   contactPoints: ['127.0.0.1'],
-  localDataCenter: 'datacenter1',
-  keyspace: 'nodejs_keyspace'
+  localDataCenter: 'datacenter1'
 });
 
 let connected = false;
-client
-  .connect()
-  .then(() => {
+
+async function setupCassandra() {
+  console.log('Starting Cassandra setup...');
+  try {
+    await client.connect();
+
+    await client.execute(`
+      CREATE KEYSPACE IF NOT EXISTS nodejs_keyspace 
+      WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': 1 };
+    `);
+    client.keyspace = 'nodejs_keyspace';
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS team (
+        id BIGINT PRIMARY KEY,
+        name TEXT
+      );
+    `);
+
     connected = true;
-    console.log('Connected to Cassandra!');
-  })
-  .catch(err => {
-    console.error('Failed to connect to Cassandra:', err);
+    console.log('Cassandra setup completed successfully.');
+  } catch (error) {
+    console.error('Failed to set up Cassandra:', error);
     process.exit(1);
-  });
+  }
+}
 
 app.get('/', (req, res) => {
   if (!connected) {
@@ -101,6 +107,8 @@ app.delete('/data/:id', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+setupCassandra().then(() => {
+  app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+  });
 });
