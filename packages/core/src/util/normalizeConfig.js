@@ -736,7 +736,7 @@ function normalizeIgnoreEndpoints(config) {
  * @param {InstanaConfig} config
  */
 function normalizeInstrumentations(config) {
-    if (!Array.isArray(config.instrumentations)) {
+  if (!Array.isArray(config.instrumentations)) {
     logger.warn(
       `Invalid configuration: config.instrumentations is not a string, the value will be ignored: ${config.instrumentations}`
     );
