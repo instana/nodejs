@@ -306,6 +306,54 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
             agentControls.getSpans().then(spans => {
               expect(spans.length).to.equal(2);
               spans.forEach(span => {
+                // eslint-disable-next-line no-console
+                console.log(span.data);
+              });
+            })
+          );
+        }));
+  });
+  describe.only('knex', function () {
+    globalAgent.setUpCleanUpHooks();
+    const agentControls = globalAgent.instance;
+
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        appPath: path.join(__dirname, './knex-app'),
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
+    it('should trace', () =>
+      controls
+        .sendRequest({
+          method: 'GET',
+          path: '/users'
+        })
+        .then(async () => {
+          await delay(2000);
+
+          return retry(() =>
+            agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
+              spans.forEach(span => {
+                // eslint-disable-next-line no-console
                 console.log(span.data);
               });
             })
@@ -313,7 +361,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         }));
   });
 
-  describe.only('fs', function () {
+  describe('fs', function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 

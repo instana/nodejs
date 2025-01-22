@@ -67,7 +67,6 @@ app.get('/', (req, res) => {
   if (!connected) {
     res.sendStatus(500);
   }
-
   res.sendStatus(200);
 });
 
