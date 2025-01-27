@@ -29,6 +29,15 @@ module.exports = function (isCallbackApi) {
   let runInContext = null;
 
   /**
+   * Suppression for SDK entry spans do not have a use case right now.
+   *
+   * The known use case for SDK entry spans are:
+   *   - receive a message from any external source (which is not traced e.g. IPC)
+   *     and you start a span for that.
+   *   - a worker who executes a task in a loop and you want to trace the task.
+   *
+   * Sampling could be added for SDK entry spans in the future.
+   *
    * @param {string} name
    * @param {Object.<string, *> | Function} tags
    * @param {Object.<string, *> | Function | string} traceId

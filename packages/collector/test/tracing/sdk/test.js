@@ -636,6 +636,54 @@ mochaSuiteFn('tracing/sdk', function () {
     }
   });
 
+  describe('Suppression', () => {
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+
+    it('[suppressed] should not trace sdk exit span', async () => {
+      await controls.sendRequest({
+        method: 'POST',
+        path: '/promise/create-exit',
+        suppressTracing: true
+      });
+
+      await delay(waitForSpans);
+      const spans = await agentControls.getSpans();
+
+      expect(spans.length).to.equal(0);
+    });
+
+    // NOTE: Not supported. See packages/core/src/tracing/sdk/sdk.js
+    it.skip('[suppressed] should not trace sdk entry', async () => {
+      controls.sendViaIpc({ command: 'start-entry', type: 'async' });
+
+      await delay(waitForSpans);
+      const spans = await agentControls.getSpans();
+
+      expect(spans.length).to.equal(0);
+    });
+  });
+
   function expectCustomEntry({
     spans,
     pid,
