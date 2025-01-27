@@ -17,7 +17,7 @@ const { AgentStubControls } = require('../../../apps/agentStubControls');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn.only('tracing/http2', function () {
+mochaSuiteFn('tracing/http2', function () {
   this.timeout(config.getTestTimeout() * 2);
 
   const agentControls = new AgentStubControls();
