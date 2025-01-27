@@ -181,7 +181,11 @@ mochaSuiteFn('tracing/http2', function () {
       .then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            const entryInClient = verifyRootHttpEntry(spans, `localhost:${serverControls.getPort()}`, '/request');
+            const entryInClient = verifyRootHttpEntry({
+              spans,
+              host: `localhost:${serverControls.getPort()}`,
+              url: '/request'
+            });
             expect(entryInClient.t).to.be.a('string');
             expect(entryInClient.t).to.have.lengthOf(16);
             expect(entryInClient.t).to.not.equal('84e588b697868fee');
@@ -204,7 +208,15 @@ mochaSuiteFn('tracing/http2', function () {
       .then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyRootHttpEntry(spans, `localhost:${serverControls.getPort()}`, '/request', 'GET', 200, false, true);
+            verifyRootHttpEntry({
+              spans,
+              host: `localhost:${serverControls.getPort()}`,
+              url: '/request',
+              method: 'GET',
+              status: 200,
+              erroneous: false,
+              synthetic: true
+            });
           })
         )
       ));
@@ -301,8 +313,51 @@ mochaSuiteFn('tracing/http2', function () {
         const traceId = /^Instana Trace ID: ([a-f0-9]{16})$/.exec(response)[1];
         return retry(() =>
           agentControls.getSpans().then(spans => {
-            const span = verifyRootHttpEntry(spans, `localhost:${serverControls.getPort()}`, '/inject-trace-id');
+            const span = verifyRootHttpEntry({
+              spans,
+              host: `localhost:${serverControls.getPort()}`,
+              url: '/inject-trace-id'
+            });
             expect(span.t).to.equal(traceId);
+          })
+        );
+      }));
+  it('should trace deferred request', () =>
+    clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/request-deferred'
+      })
+      .then(() => delay(500))
+      .then(() => {
+        return retry(() =>
+          agentControls.getSpans().then(spans => {
+            // 1 x http server entry span
+            // 2 x http client exit spans
+            expect(spans.length).to.equal(3);
+
+            const entrySpan = verifyRootHttpEntry({
+              spans,
+              host: `localhost:${clientControls.getPort()}`,
+              url: '/request-deferred',
+              expectHeaders: false
+            });
+            verifyHttpExit({
+              spans,
+              parent: entrySpan,
+              url: 'https://example.com:443/',
+              method: 'GET',
+              expectHeaders: false,
+              params: 'k=1'
+            });
+            verifyHttpExit({
+              spans,
+              parent: entrySpan,
+              url: 'https://example.com:443',
+              method: 'GET',
+              expectHeaders: false,
+              params: 'k=2'
+            });
           })
         );
       }));
@@ -315,45 +370,56 @@ function constructPath(basePath, withQuery) {
     return basePath;
   }
 }
-
 function verifySpans(spans, method, erroneous, withQuery, serverControls, clientControls) {
-  const entryInClient = verifyRootHttpEntry(
+  const entryInClient = verifyRootHttpEntry({
     spans,
-    `localhost:${clientControls.getPort()}`,
-    '/trigger-downstream',
+    host: `localhost:${clientControls.getPort()}`,
+    url: '/trigger-downstream',
     method,
-    erroneous ? 500 : 200,
+    status: erroneous ? 500 : 200,
     erroneous
-  );
-  const exitInClient = verifyHttpExit(
+  });
+  const exitInClient = verifyHttpExit({
     spans,
-    entryInClient,
-    `https://localhost:${serverControls.getPort()}/request`,
+    parent: entryInClient,
+    url: `https://localhost:${serverControls.getPort()}/request`,
     method,
-    true, // expectHeaders
-    erroneous ? 500 : 200,
+    expectHeaders: true,
+    status: erroneous ? 500 : 200,
     erroneous
-  );
+  });
+
   checkQuery(exitInClient, withQuery, erroneous);
-  const entryInServer = verifyHttpEntry(
+
+  const entryInServer = verifyHttpEntry({
     spans,
-    exitInClient,
-    `localhost:${serverControls.getPort()}`,
-    '/request',
+    parent: exitInClient,
+    host: `localhost:${serverControls.getPort()}`,
+    url: '/request',
     method,
-    true, // expectHeaders
-    erroneous ? 500 : 200,
+    expectHeaders: true,
+    status: erroneous ? 500 : 200,
     erroneous
-  );
+  });
   checkQuery(entryInServer, withQuery, erroneous);
   expect(spans).to.have.lengthOf.greaterThanOrEqual(3);
 }
 
-function verifyRootHttpEntry(spans, host, url, method = 'GET', status = 200, erroneous = false, synthetic = false) {
-  return verifyHttpEntry(spans, null, host, url, method, false, status, erroneous, synthetic);
+function verifyRootHttpEntry({ spans, host, url, method = 'GET', status = 200, erroneous = false, synthetic = false }) {
+  return verifyHttpEntry({
+    spans,
+    parent: null,
+    host,
+    url,
+    method,
+    expectHeaders: false,
+    status,
+    erroneous,
+    synthetic
+  });
 }
 
-function verifyHttpEntry(
+function verifyHttpEntry({
   spans,
   parent,
   host,
@@ -363,7 +429,7 @@ function verifyHttpEntry(
   status = 200,
   erroneous = false,
   synthetic = false
-) {
+}) {
   let expectations = [
     span => expect(span.n).to.equal('node.http.server'),
     span => expect(span.k).to.equal(constants.ENTRY),
@@ -407,7 +473,7 @@ function verifyHttpEntry(
   return expectExactlyOneMatching(spans, expectations);
 }
 
-function verifyHttpExit(
+function verifyHttpExit({
   spans,
   parent,
   url,
@@ -415,8 +481,9 @@ function verifyHttpExit(
   expectHeaders = true,
   status = 200,
   erroneous = false,
-  synthetic = false
-) {
+  synthetic = false,
+  params = null
+}) {
   let expectations = [
     span => expect(span.n).to.equal('node.http.client'),
     span => expect(span.k).to.equal(constants.EXIT),
@@ -428,7 +495,8 @@ function verifyHttpExit(
     span => expect(span.stack[0].c).to.contain('packages/collector/test/test_util/http2Promise.js'),
     span => expect(span.data.http.url).contains(url),
     span => expect(span.data.http.method).to.equal(method),
-    span => expect(span.data.http.status).to.equal(status)
+    span => expect(span.data.http.status).to.equal(status),
+    span => (params ? expect(span.data.http.params).to.equal(params) : true)
   ];
   if (erroneous) {
     expectations.push(span => expect(span.ec).to.equal(1));

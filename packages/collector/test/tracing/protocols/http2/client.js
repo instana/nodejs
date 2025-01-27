@@ -51,8 +51,32 @@ const routes = {
     PUT: (stream, query) => triggerDownstream('PUT', stream, query),
     PATCH: (stream, query) => triggerDownstream('PATCH', stream, query),
     DELETE: (stream, query) => triggerDownstream('DELETE', stream, query)
+  },
+  '/request-deferred': {
+    GET: stream => triggerDeferredRequest('GET', stream)
   }
 };
+
+function triggerDeferredRequest(method, stream) {
+  setTimeout(() => {
+    http2Promise.request({
+      method,
+      baseUrl: 'https://example.com',
+      path: '/?k=2'
+    });
+  }, 500);
+
+  http2Promise
+    .request({
+      method,
+      baseUrl: 'https://example.com',
+      path: '/?k=1'
+    })
+    .then(response => {
+      stream.respond({ [HTTP2_HEADER_STATUS]: response.statusCode || 200 });
+      stream.end();
+    });
+}
 
 function triggerDownstream(method, stream, query) {
   const downStreamQuery = {};
