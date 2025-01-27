@@ -20,7 +20,7 @@ const agentControls = globalAgent.instance;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 // FYI: officially deprecated. No release since 4 years. But still very
-//      high usage on npm trends. We will drop in 4.x v4.
+//      high usage on npm trends. We will drop in any upcoming major release.
 mochaSuiteFn('tracing/kafka-node', function () {
   // Too many moving parts with Kafka involved. Increase the default timeout.
   // This is especially important since the Kafka client has an
@@ -227,11 +227,56 @@ mochaSuiteFn('tracing/kafka-node', function () {
     });
   });
 
-  function send(producerControls, key, value, useSendBatch, useEachBatch) {
+  // kafka-node does not support headers: https://github.com/SOHU-Co/kafka-node/issues/1309
+  // We cannot inject our Instana headers.
+  describe.skip('Suppression', () => {
+    let producerControls;
+    let consumerControls;
+
+    before(async () => {
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        useGlobalAgent: true,
+        env: {
+          PRODUCER_TYPE: 'plain'
+        }
+      });
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        useGlobalAgent: true,
+        env: {
+          CONSUMER_TYPE: 'plain'
+        }
+      });
+
+      await producerControls.startAndWaitForAgentConnection();
+      await consumerControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
+    });
+
+    it('[suppressed] should not trace', async () => {
+      await send(producerControls, 'someKey', 'someMessage', false, false, true);
+      await testUtils.delay(1000);
+
+      const spans = await agentControls.getSpans();
+      expect(spans.length).to.equal(0);
+    });
+  });
+
+  function send(producerControls, key, value, useSendBatch, useEachBatch, isSuppressed = false) {
     return producerControls.sendRequest({
       method: 'POST',
       path: '/send-message',
       simple: true,
+      suppressTracing: isSuppressed,
       body: JSON.stringify({
         useSendBatch,
         useEachBatch,
