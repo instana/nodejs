@@ -18,11 +18,22 @@ const cls = require('../../cls');
 let isActive = false;
 let clientHasBeenInstrumented = false;
 
+let logger;
+logger = require('../../../logger').getLogger('tracing/natsStreaming', newLogger => {
+  logger = newLogger;
+});
+
 exports.init = function init() {
   hook.onModuleLoad('node-nats-streaming', instrumentNatsStreaming);
 };
 
 function instrumentNatsStreaming(natsStreamingModule) {
+  logger.warn(
+    // eslint-disable-next-line max-len
+    '[Deprecation Warning] The support for nats-steaming library is deprecated and might be removed ' +
+      'in the next major release. The library is EOL, see https://github.com/nats-io/stan.js?tab=readme-ov-file.'
+  );
+
   shimmer.wrap(natsStreamingModule, 'connect', shimConnect);
 }
 

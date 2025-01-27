@@ -518,7 +518,7 @@
   },
   {
     "name": "node-nats-streaming",
-    "policy": "45-days",
+    "policy": "Deprecated",
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
