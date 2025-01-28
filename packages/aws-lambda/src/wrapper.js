@@ -262,6 +262,10 @@ function init(event, arnInfo, _config) {
 
   backendConnector.init(identityProvider, logger, true, false, 500, useLambdaExtension);
 
+  // deliberately setting the rootExitSpan false here
+  config.tracing = config.tracing || {};
+  config.tracing.allowRootExitSpan = false;
+
   // instanaCore.init also normalizes the config as a side effect
   instanaCore.init(config, backendConnector, identityProvider);
 
