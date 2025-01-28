@@ -20,7 +20,7 @@ logger = require('../../../logger').getLogger('tracing/kafka-node', newLogger =>
 let isActive = false;
 
 // FYI: officially deprecated. No release since 4 years. But still very
-//      high usage on npm trends. We will drop in 4.x v4.
+//      high usage on npm trends. We will drop it in any upcoming major release.
 exports.init = function init() {
   hook.onModuleLoad('kafka-node', instrument);
 };
@@ -59,6 +59,9 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
     if (cb) {
       args.push(cb);
     }
+
+    // kafka-node does not support headers: https://github.com/SOHU-Co/kafka-node/issues/1309
+    // We cannot inject our Instana headers.
 
     return originalSend.apply(ctx, args);
   }
