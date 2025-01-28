@@ -30,7 +30,7 @@ exports.init = function init() {
 function instrumentNatsStreaming(natsStreamingModule) {
   logger.warn(
     // eslint-disable-next-line max-len
-    '[Deprecation Warning] The support for nats-steaming library is deprecated and might be removed ' +
+    '[Deprecation Warning] The support for node-nats-streaming library is deprecated and might be removed ' +
       'in the next major release. The library is EOL, see https://github.com/nats-io/stan.js?tab=readme-ov-file.'
   );
 
