@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.6.1](https://github.com/instana/nodejs/compare/v4.6.0...v4.6.1) (2025-01-29)
+
+### Bug Fixes
+
+- resolved tracing for deferred exit spans in http2 ([#1531](https://github.com/instana/nodejs/issues/1531)) ([2e5c912](https://github.com/instana/nodejs/commit/2e5c912a1bf16414680902b4707257f9fadec99f))
+
 # [4.6.0](https://github.com/instana/nodejs/compare/v4.5.3...v4.6.0) (2025-01-18)
 
 ### Bug Fixes
