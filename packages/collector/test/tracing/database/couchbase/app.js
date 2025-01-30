@@ -686,28 +686,21 @@ app.post('/queryindexes-callback', (req, res) => {
         scope2.query(qs1, err3 => {
           if (err3) return res.status(500).json({ err: err3.message });
 
-          // Added a temporary promise catch handler due to an issue in the package.
-          // see https://github.com/couchbase/couchnode/issues/123
-          scope2
-            .query(qs2)
-            .catch(() => {
-              // Ignore this error because we expect it to fail
-            })
-            .finally(() => {
-              cluster.queryIndexes().dropIndex(bucket2.name, idx2, err5 => {
-                if (err5) return res.status(500).json({ err: err5.message });
+          scope2.query(qs2, () => {
+            cluster.queryIndexes().dropIndex(bucket2.name, idx2, err5 => {
+              if (err5) return res.status(500).json({ err: err5.message });
 
-                cluster.queryIndexes().dropPrimaryIndex(bucket1.name, { name: idx1 }, err6 => {
-                  if (err6) return res.status(500).json({ err: err6.message });
+              cluster.queryIndexes().dropPrimaryIndex(bucket1.name, { name: idx1 }, err6 => {
+                if (err6) return res.status(500).json({ err: err6.message });
 
-                  cluster.queryIndexes().getAllIndexes(bucket2.name, err7 => {
-                    if (err7) return res.status(500).json({ err: err7.message });
+                cluster.queryIndexes().getAllIndexes(bucket2.name, err7 => {
+                  if (err7) return res.status(500).json({ err: err7.message });
 
-                    res.json({ success: true });
-                  });
+                  res.json({ success: true });
                 });
               });
             });
+          });
         });
       });
     });
