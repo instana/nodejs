@@ -566,22 +566,15 @@ app.post('/queryindexes-callback', (req, res) => {
     cluster.queryIndexes().createIndex(bucket2.name, idx2, ['name'], () => {
       cluster.query(qs, () => {
         scope2.query(qs1, () => {
-          // Added a temporary promise catch handler due to an issue in the package.
-          // see https://github.com/couchbase/couchnode/issues/123
-          scope2
-            .query(qs2)
-            .catch(() => {
-              // Ignore this error because we expect it to fail
-            })
-            .finally(() => {
-              cluster.queryIndexes().dropIndex(bucket1.name, idx1, () => {
-                cluster.queryIndexes().dropPrimaryIndex(bucket2.name, { name: idx2 }, () => {
-                  cluster.queryIndexes().getAllIndexes(bucket2.name, () => {
-                    res.json({ success: true });
-                  });
+          scope2.query(qs2, () => {
+            cluster.queryIndexes().dropIndex(bucket1.name, idx1, () => {
+              cluster.queryIndexes().dropPrimaryIndex(bucket2.name, { name: idx2 }, () => {
+                cluster.queryIndexes().getAllIndexes(bucket2.name, () => {
+                  res.json({ success: true });
                 });
               });
             });
+          });
         });
       });
     });
