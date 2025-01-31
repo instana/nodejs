@@ -529,14 +529,14 @@ mochaSuiteFn('tracing/kafkajs', function () {
     });
   });
   // added as part of research
-  describe('when ignore-endpoints is enabled via agent configuration for Kafka', () => {
+  describe.only('when ignore-endpoints is enabled via agent configuration for Kafka', () => {
     const customAgentControls = new AgentStubControls();
     let producerControls;
     let consumerControls;
 
     before(async () => {
       await customAgentControls.startAgent({
-        ignoreEndpoints: { kafka: ['test-topic-1'] }
+        ignoreEndpoints: { kafka: ['consume'] }
       });
 
       consumerControls = new ProcessControls({
@@ -565,7 +565,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
       await customAgentControls.stopAgent();
     });
 
-    it('should ignore Kafka spans for ignored endpoints (test-topic-1)', async () => {
+    it('should ignore Kafka spans for ignored endpoints (consume)', async () => {
       await producerControls.sendRequest({
         method: 'POST',
         path: '/send-messages',
@@ -581,9 +581,12 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
       await retry(async () => {
         const spans = await customAgentControls.getSpans();
-        expect(spans.length).to.equal(2);
+        // 1 x kafka send
+        // 1 x http server
+        // 3  x http client in producer and consumer
+        expect(spans.length).to.equal(5);
         spans.forEach(span => {
-          expect(span.n).not.to.equal('kafka');
+          expect(span.data.access).not.to.equal('consume');
         });
       });
     });

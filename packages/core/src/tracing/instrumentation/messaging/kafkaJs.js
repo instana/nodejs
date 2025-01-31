@@ -89,8 +89,8 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
     }
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
     span.data.kafka = {
-      operation: topic,
-      access: 'send'
+      service: topic,
+      operation: 'send'
     };
     // Added part of testing
     // eslint-disable-next-line no-console
@@ -160,8 +160,8 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
     });
 
     span.data.kafka = {
-      operation: topics.join(','),
-      access: 'send'
+      service: topics.join(','),
+      operation: 'send'
     };
     if (messageCount > 0) {
       span.b = { s: messageCount };
@@ -268,10 +268,9 @@ function instrumentedEachMessage(originalEachMessage) {
       }
       span.stack = [];
       span.data.kafka = {
-        access: 'consume',
-        operation: topic
+        operation: 'consume',
+        service: topic
       };
-
       try {
         return originalEachMessage.apply(ctx, originalArgs);
       } finally {
@@ -351,7 +350,7 @@ function instrumentedEachBatch(originalEachBatch) {
       }
       span.stack = [];
       span.data.kafka = {
-        access: 'consume',
+        operation: 'consume',
         service: batch ? batch.topic : undefined
       };
 
