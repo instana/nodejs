@@ -89,10 +89,15 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
     }
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
     span.data.kafka = {
-      service: topic,
+      operation: topic,
       access: 'send'
     };
-
+    // Added part of testing
+    // eslint-disable-next-line no-console
+    console.log(
+      '------------------------------OriginalMessage----------------------------------',
+      originalArgs[0].messages
+    );
     return originalSend
       .apply(ctx, originalArgs)
       .then(result => {
@@ -155,7 +160,7 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
     });
 
     span.data.kafka = {
-      service: topics.join(','),
+      operation: topics.join(','),
       access: 'send'
     };
     if (messageCount > 0) {
@@ -264,7 +269,7 @@ function instrumentedEachMessage(originalEachMessage) {
       span.stack = [];
       span.data.kafka = {
         access: 'consume',
-        service: topic
+        operation: topic
       };
 
       try {

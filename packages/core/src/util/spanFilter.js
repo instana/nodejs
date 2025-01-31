@@ -5,7 +5,7 @@
 'use strict';
 
 // List of span types to allowed to ignore
-const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb'];
+const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka'];
 
 /**
  * @param {import('../core').InstanaBaseSpan} span
@@ -43,9 +43,11 @@ function shouldIgnore(span, endpoints) {
  */
 function applyFilter({ span, ignoreEndpoints }) {
   if (ignoreEndpoints && shouldIgnore(span, ignoreEndpoints)) {
+    // eslint-disable-next-line no-console
+    console.log('--------ignored span----------------------', span);
     return null;
   }
   return span;
 }
 
-module.exports = { applyFilter };
+module.exports = { applyFilter, shouldIgnore };

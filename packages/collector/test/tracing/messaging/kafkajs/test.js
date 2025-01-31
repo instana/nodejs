@@ -528,6 +528,66 @@ mochaSuiteFn('tracing/kafkajs', function () {
       });
     });
   });
+  // added as part of research
+  describe('when ignore-endpoints is enabled via agent configuration for Kafka', () => {
+    const customAgentControls = new AgentStubControls();
+    let producerControls;
+    let consumerControls;
+
+    before(async () => {
+      await customAgentControls.startAgent({
+        ignoreEndpoints: { kafka: ['test-topic-1'] }
+      });
+
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        agentControls: customAgentControls,
+        useGlobalAgent: true
+      });
+
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        agentControls: customAgentControls,
+        useGlobalAgent: true
+      });
+
+      await consumerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await customAgentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
+      await customAgentControls.stopAgent();
+    });
+
+    it('should ignore Kafka spans for ignored endpoints (test-topic-1)', async () => {
+      await producerControls.sendRequest({
+        method: 'POST',
+        path: '/send-messages',
+        body: JSON.stringify({
+          key: 'someKey',
+          value: 'someMessage',
+          useSendBatch: false
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      await retry(async () => {
+        const spans = await customAgentControls.getSpans();
+        expect(spans.length).to.equal(2);
+        spans.forEach(span => {
+          expect(span.n).not.to.equal('kafka');
+        });
+      });
+    });
+  });
 
   function resetMessages(consumer) {
     return consumer.sendRequest({
