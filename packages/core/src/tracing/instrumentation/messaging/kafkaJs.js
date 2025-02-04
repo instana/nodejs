@@ -247,6 +247,7 @@ function instrumentedEachMessage(originalEachMessage) {
         }
       }
       if (message.headers[constants.kafkaSpanIdHeaderName]) {
+        // we need to preserve the spanid in case of endpoint filtering
         parentSpanId = String(message.headers[constants.kafkaSpanIdHeaderName]);
       }
       if (message.headers[constants.kafkaTraceLevelHeaderName]) {
@@ -261,16 +262,19 @@ function instrumentedEachMessage(originalEachMessage) {
         cls.setTracingLevel('0');
         return originalEachMessage.apply(ctx, originalArgs);
       }
-
-      const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
+      let span = {};
       if (longTraceId) {
         span.lt = longTraceId;
       }
       span.stack = [];
+      span.data = {};
       span.data.kafka = {
         operation: 'consume',
         service: topic
       };
+
+      span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId, null, span);
+
       try {
         return originalEachMessage.apply(ctx, originalArgs);
       } finally {

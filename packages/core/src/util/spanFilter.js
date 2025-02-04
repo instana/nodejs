@@ -42,9 +42,10 @@ function shouldIgnore(span, endpoints) {
  * @returns {import('../core').InstanaBaseSpan | null}
  */
 function applyFilter({ span, ignoreEndpoints }) {
+  console.log('--------ignored span----------------------', ignoreEndpoints);
   if (ignoreEndpoints && shouldIgnore(span, ignoreEndpoints)) {
     // eslint-disable-next-line no-console
-    console.log('--------ignored span----------------------', span);
+    // span.cancel();
     return null;
   }
   return span;

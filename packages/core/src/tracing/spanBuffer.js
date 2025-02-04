@@ -192,11 +192,11 @@ exports.addSpan = function (span) {
   }
 
   // Process the span, apply any transformations, and implement filtering if necessary.
-  const processedSpan = processSpan(span);
-  if (!processedSpan) {
-    return;
-  }
-  span = processedSpan;
+  // const processedSpan = processSpan(span);
+  // if (!processedSpan) {
+  //   return 'Hello';
+  // }
+  // span = processedSpan;
 
   if (span.t == null) {
     logger.warn(`Span of type ${span.n} has no trace ID. Not transmitting this span`);
@@ -506,13 +506,3 @@ function removeSpansIfNecessary() {
  * @param {import('../core').InstanaBaseSpan} span
  * @returns {import('../core').InstanaBaseSpan} span
  */
-function processSpan(span) {
-  if (ignoreEndpoints) {
-    span = applyFilter({ span, ignoreEndpoints });
-
-    if (!span) {
-      return null;
-    }
-  }
-  return transform(span);
-}

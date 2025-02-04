@@ -5,12 +5,15 @@
 
 'use strict';
 
+// const { shouldIgnore } = require('../util/spanFilter');
 const leftPad = require('./leftPad');
 const spanBuffer = require('./spanBuffer');
 const tracingUtil = require('./tracingUtil');
 const { ENTRY, EXIT, INTERMEDIATE, isExitSpan } = require('./constants');
 const hooked = require('./clsHooked');
 const tracingMetrics = require('./metrics');
+const { applyFilter } = require('../util/spanFilter');
+const { transform } = require('./backend_mappers');
 /** @type {import('../core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('tracing/cls', newLogger => {
@@ -30,6 +33,10 @@ let serviceName;
 let processIdentityProvider = null;
 /** @type {Boolean} */
 let allowRootExitSpan;
+/**
+ * @type {import('../tracing').IgnoreEndpoints}
+ */
+let ignoreEndpoints;
 
 /*
  * Access the Instana namespace in continuation local storage.
@@ -51,6 +58,7 @@ function init(config, _processIdentityProvider) {
   }
   processIdentityProvider = _processIdentityProvider;
   allowRootExitSpan = config?.tracing?.allowRootExitSpan;
+  ignoreEndpoints = { kafka: ['consume'] };
 }
 
 class InstanaSpan {
@@ -152,7 +160,11 @@ class InstanaSpan {
 
   transmit() {
     if (!this.transmitted && !this.manualEndMode) {
-      spanBuffer.addSpan(this);
+      const result = spanBuffer.addSpan(this);
+      if (result === 'Hello') {
+        console.log('Kate says hai');
+        return;
+      }
       this.cleanup();
       tracingMetrics.incrementClosed();
       this.transmitted = true;
@@ -169,7 +181,9 @@ class InstanaSpan {
   }
 
   cancel() {
+    console.log('Kate says ok');
     if (!this.transmitted) {
+      console.log('Kate says bye');
       this.cleanup();
       tracingMetrics.incrementClosed();
       this.transmitted = true;
@@ -228,7 +242,7 @@ class InstanaPseudoSpan extends InstanaSpan {
  * @param {import('./w3c_trace_context/W3cTraceContext')} [w3cTraceContext]
  * @returns {InstanaSpan}
  */
-function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext) {
+function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext, spanData) {
   tracingMetrics.incrementOpened();
   if (!kind || (kind !== ENTRY && kind !== EXIT && kind !== INTERMEDIATE)) {
     logger.warn(`Invalid span (${spanName}) without kind/with invalid kind: ${kind}, assuming EXIT.`);
@@ -279,7 +293,17 @@ function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext) {
     w3cTraceContext.updateParent(span.t, span.s);
     span.addCleanup(ns.set(w3cTraceContextKey, w3cTraceContext));
   }
-
+  if (spanData) {
+    console.log('spanData: ', spanData);
+    span.data = spanData.data;
+    span.stack = spanData.stack;
+  }
+  const result = processSpan(span);
+  console.log('result: ', result);
+  if (!result) {
+    console.log('Hello arya');
+    return new InstanaPseudoSpan(span.n);
+  }
   if (span.k === ENTRY) {
     // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at
     // any given moment). This is used by the instrumentations of web frameworks like Express.js to add path templates
@@ -290,9 +314,19 @@ function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext) {
   // Set the span object as the currently active span in the active CLS context and also add a cleanup hook for when
   // this span is transmitted.
   span.addCleanup(ns.set(currentSpanKey, span));
+
   return span;
 }
+function processSpan(span) {
+  if (ignoreEndpoints) {
+    span = applyFilter({ span, ignoreEndpoints });
 
+    if (!span) {
+      return null;
+    }
+  }
+  return transform(span);
+}
 /**
  * Puts a pseudo span in the CLS context that is simply a holder for a trace ID and span ID. This pseudo span will act
  * as the parent for other child span that are produced but will not be transmitted to the agent itself.
@@ -589,7 +623,9 @@ function skipExitTracing(options) {
 
   return skip;
 }
-
+// function ignoreTracing(span, config) {
+//   return shouldIgnore(span, config);
+// }
 module.exports = {
   skipExitTracing,
   currentEntrySpanKey,
@@ -616,4 +652,5 @@ module.exports = {
   leaveAsyncContext,
   runInAsyncContext,
   runPromiseInAsyncContext
+  // ignoreTracing
 };
