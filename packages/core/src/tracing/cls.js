@@ -38,6 +38,8 @@ let allowRootExitSpan;
  */
 let ignoreEndpoints;
 
+// eslint-disable-next-line no-unused-vars
+let isActive = false;
 /*
  * Access the Instana namespace in continuation local storage.
  *
@@ -58,9 +60,20 @@ function init(config, _processIdentityProvider) {
   }
   processIdentityProvider = _processIdentityProvider;
   allowRootExitSpan = config?.tracing?.allowRootExitSpan;
-  ignoreEndpoints = { kafka: ['consume'] };
+  ignoreEndpoints = config?.tracing?.ignoreEndpoints;
 }
-
+/**
+ * @param {import('../util/normalizeConfig').AgentConfig} extraConfig
+ */
+function activate(extraConfig) {
+  isActive = true;
+  if (extraConfig.tracing.ignoreEndpoints) {
+    ignoreEndpoints = extraConfig.tracing.ignoreEndpoints;
+  }
+}
+function deactivate() {
+  isActive = false;
+}
 class InstanaSpan {
   /**
    * @param {string} name
@@ -160,11 +173,7 @@ class InstanaSpan {
 
   transmit() {
     if (!this.transmitted && !this.manualEndMode) {
-      const result = spanBuffer.addSpan(this);
-      if (result === 'Hello') {
-        console.log('Kate says hai');
-        return;
-      }
+      spanBuffer.addSpan(this);
       this.cleanup();
       tracingMetrics.incrementClosed();
       this.transmitted = true;
@@ -181,9 +190,7 @@ class InstanaSpan {
   }
 
   cancel() {
-    console.log('Kate says ok');
     if (!this.transmitted) {
-      console.log('Kate says bye');
       this.cleanup();
       tracingMetrics.incrementClosed();
       this.transmitted = true;
@@ -301,8 +308,8 @@ function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext, spanD
   const result = processSpan(span);
   console.log('result: ', result);
   if (!result) {
-    console.log('Hello arya');
-    return new InstanaPseudoSpan(span.n);
+    // return new InstanaPseudoSpan(span.n);
+    return putPseudoSpan(span.n, span.k, span.t, span.p);
   }
   if (span.k === ENTRY) {
     // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at
@@ -330,6 +337,7 @@ function processSpan(span) {
 /**
  * Puts a pseudo span in the CLS context that is simply a holder for a trace ID and span ID. This pseudo span will act
  * as the parent for other child span that are produced but will not be transmitted to the agent itself.
+ * applicable for ignore spans
  * @param {string} spanName
  * @param {number} kind
  * @param {string} traceId
@@ -651,6 +659,7 @@ module.exports = {
   enterAsyncContext,
   leaveAsyncContext,
   runInAsyncContext,
-  runPromiseInAsyncContext
-  // ignoreTracing
+  runPromiseInAsyncContext,
+  activate,
+  deactivate
 };

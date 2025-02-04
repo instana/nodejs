@@ -18,13 +18,14 @@ const { otelInstrumentations } = require('./opentelemetry-instrumentations');
 const { isLatestEsmSupportedVersion, hasExperimentalLoaderFlag, isESMApp } = require('../util/esm');
 const iitmHook = require('../util/iitmHook');
 const { getPreloadFlags } = require('../util/getPreloadFlags');
+const cls = require('./cls');
 
 let tracingEnabled = false;
 let tracingActivated = false;
 let instrumenationsInitialized = false;
 let automaticTracingEnabled = false;
 /** @type {import('./cls')} */
-let cls = null;
+// let cls = null;
 /** @type {import('../util/normalizeConfig').InstanaConfig} */
 let config = null;
 
@@ -206,7 +207,7 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
     tracingHeaders.init(config);
     spanBuffer.init(config, downstreamConnection);
     opentracing.init(config, automaticTracingEnabled, processIdentityProvider);
-    cls = require('./cls');
+    // cls = require('./cls');
     cls.init(config, processIdentityProvider);
     sdk.init(cls);
 
@@ -263,6 +264,7 @@ exports.activate = function activate(extraConfig = {}) {
   if (tracingEnabled && !tracingActivated) {
     tracingActivated = true;
     spanBuffer.activate(extraConfig);
+    cls.activate(extraConfig);
     opentracing.activate();
     sdk.activate();
 
@@ -289,6 +291,7 @@ exports.deactivate = function deactivate() {
     opentracing.deactivate();
     spanBuffer.deactivate();
     sdk.deactivate();
+    cls.deactivate();
   }
 };
 
