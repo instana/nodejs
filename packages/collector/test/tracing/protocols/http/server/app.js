@@ -17,7 +17,6 @@ require('../../../../..')();
 
 const fs = require('fs');
 const path = require('path');
-const url = require('url');
 
 const readSymbolProperty = require('../../../../../../core/src/util/readSymbolProperty');
 const streamSymbol = 'Symbol(stream)';
@@ -52,7 +51,10 @@ server.on('request', (req, res) => {
   if (process.env.WITH_STDOUT) {
     log(`${req.method} ${req.url}`);
   }
-  const query = url.parse(req.url, true).query || {};
+
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const query = Object.fromEntries(url.searchParams);
+
   let body = null;
 
   if (req.url === '/dont-respond') {

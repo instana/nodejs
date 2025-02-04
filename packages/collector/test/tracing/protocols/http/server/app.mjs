@@ -15,7 +15,6 @@ process.on('SIGTERM', () => {
 
 import fs from 'fs';
 import path from 'path';
-import url from 'url';
 import http from 'http';
 import https from 'https';
 import http2 from 'http2';
@@ -56,7 +55,10 @@ server.on('request', (req, res) => {
   if (process.env.WITH_STDOUT) {
     log(`${req.method} ${req.url}`);
   }
-  const query = url.parse(req.url, true).query || {};
+
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const query = Object.fromEntries(url.searchParams);
+
   let body = null;
 
   if (req.url === '/dont-respond') {

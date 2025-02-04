@@ -8,7 +8,6 @@
 'use strict';
 
 const instana = require('../..');
-const url = require('url');
 
 // In production, the package @instana/aws-lambda is located in
 // /var/task/node_modules/@instana/aws-lambda/src/metrics while the main package.json of the Lambda is in
@@ -62,7 +61,7 @@ const handler = function handler(event, context, callback) {
     throw new Error('Boom!');
   }
 
-  const downstream = url.parse(downstreamDummyUrl);
+  const downstream = new URL(downstreamDummyUrl);
   const req = http.request(
     {
       host: downstream.hostname,
