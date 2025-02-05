@@ -8,6 +8,7 @@ coverage
 instana-*.tgz
 .vscode
 currency-report.md
+*.zip
 
 # CI
 node-modules*.tar
