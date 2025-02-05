@@ -83,6 +83,10 @@ function shimmedSend(originalSend) {
 function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan('kafka', constants.EXIT);
+
+    // is span filtered? -> suppress downstream! we have to implement this for kafka
+    // exit span filtering + downstream suppression.
+
     if (Array.isArray(messages)) {
       span.b = { s: messages.length };
       addTraceContextHeaderToAllMessages(messages, span);
@@ -102,6 +106,10 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
       .apply(ctx, originalArgs)
       .then(result => {
         span.d = Date.now() - span.ts;
+
+        // main branch filtering happens here!
+        // its again too late, because we have to add the decision before calling the
+        // original fn.
         span.transmit();
         return result;
       })
@@ -259,6 +267,7 @@ function instrumentedEachMessage(originalEachMessage) {
 
     return cls.ns.runAndReturn(() => {
       if (isSuppressed(level)) {
+        // this is not our use case!
         cls.setTracingLevel('0');
         return originalEachMessage.apply(ctx, originalArgs);
       }
@@ -273,13 +282,22 @@ function instrumentedEachMessage(originalEachMessage) {
         service: topic
       };
 
+      // filtering on this branch happens here
       span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId, null, span);
+
+      // if span is InstanaPseudoSpan -> filtered out
+      // -> suppress!
+      // -> cls.setTracingLevel('0');
 
       try {
         return originalEachMessage.apply(ctx, originalArgs);
       } finally {
         setImmediate(() => {
           span.d = Date.now() - span.ts;
+
+          // filtering in main branch happens here
+          // too late, because
+
           span.transmit();
         });
       }

@@ -55,6 +55,9 @@ let receivedMessages = [];
       const span = instana.currentSpan();
       span.disableAutoEnd();
 
+      // await fetch(www.instana.com) -> exit
+      // instana.currentSpan() -> entry
+
       log(
         'incoming message',
         topic,
