@@ -9,7 +9,7 @@ on:
       dryRun:
         description: "Dry Run"
         required: false
-        default: true
+        default: false
         type: choice
         options:
         - false
