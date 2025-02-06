@@ -525,7 +525,6 @@ jobs:
                 AWS_ACCESS_KEY_ID_CHINA=((aws-ci-manage-lambda-layers-china.aws_access_key_id)) \
                 AWS_SECRET_ACCESS_KEY_CHINA=((aws-ci-manage-lambda-layers-china.aws_secret_access_key)) \
                 nodejs-repository/packages/aws-lambda/layer/bin/publish-layer.sh
-
         on_success:
           put: slack-alert
           params:
