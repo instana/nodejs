@@ -62,7 +62,7 @@ jobs:
             pr_merged_timestamp=$(date -d "$pr_merged_at_cleaned" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "$pr_merged_at_cleaned" +%s)
 
             if [[ $pr_merged_timestamp -lt $THRESHOLD_DATE ]]; then
-              if [[ "$DRY_RUN" == "true" ]]; then
+              if [[ $DRY_RUN = true ]]; then
                 echo "Dry run: git push origin --delete $branch_name"
               else
                 echo "Deleting branch: $branch_name"
