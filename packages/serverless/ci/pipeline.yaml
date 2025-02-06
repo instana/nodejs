@@ -365,14 +365,15 @@ jobs:
   - name: aws-lambda-layer-and-container-image
     serial: true
     plan:
-      - get: dind-nodejs-aws-jq-image
-      - get: instana-aws-lambda-npm-package
-        trigger: true
-        params:
-          skip_download: true
-      - get: nodejs-repository
-        passed:
-        - self-update
+      - in_parallel:
+        - get: dind-nodejs-aws-jq-image
+        - get: instana-aws-lambda-npm-package
+          trigger: true
+          params:
+            skip_download: true
+        - get: nodejs-repository
+          passed:
+          - self-update
 
       - load_var: package-version
         file: instana-aws-lambda-npm-package/version
@@ -407,7 +408,7 @@ jobs:
               channel: '#team-node'
               icon_emoji: ':white_check_mark:'
               text: |
-                    :white_check_mark: The Instana Node.js AWS Lambda layer for package version ((.:package-version)). Successfully completed task `build-and-publish-aws-lambda-layer-and-image-x86_64`."
+                    :white_check_mark: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has been successfully deployed to the AWS regions (x86_64 architecture).
               attachments: *slack-alert-attachements-success
           on_failure: &slack-notify-failure-lambda
             put: slack-alert
@@ -415,7 +416,7 @@ jobs:
               channel: '#team-node'
               icon_emoji: ':check-failed:'
               text: |
-                    :x: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has failed during the task `build-and-publish-aws-lambda-layer-and-image-x86_64`."
+                    :x: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has failed while publishing to the AWS regions (x86_64 architecture).
               attachments: *slack-alert-attachements-failure
           on_error: *slack-notify-failure-lambda
 
@@ -448,7 +449,7 @@ jobs:
               channel: '#team-node'
               icon_emoji: ':white_check_mark:'
               text: |
-                    :white_check_mark: The Instana Node.js AWS Lambda layer for package version ((.:package-version)). Successfully completed task `build-and-publish-aws-lambda-layer-and-image-arm64`."
+                    :white_check_mark: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has been successfully deployed to the AWS regions (arm64 architecture).
               attachments: *slack-alert-attachements-success
           on_failure: &slack-notify-failure-lambda
             put: slack-alert
@@ -456,7 +457,7 @@ jobs:
               channel: '#team-node'
               icon_emoji: ':check-failed:'
               text: |
-                    :x: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has failed during the task `build-and-publish-aws-lambda-layer-and-image-arm64`."
+                    :x: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has failed while publishing to the AWS regions (arm64 architecture).
               attachments: *slack-alert-attachements-failure
           on_error: *slack-notify-failure-lambda
 
@@ -489,7 +490,7 @@ jobs:
               channel: '#team-node'
               icon_emoji: ':white_check_mark:'
               text: |
-                    :white_check_mark: The Instana Node.js AWS Lambda layer for package version ((.:package-version)). Successfully completed task `build-and-publish-aws-lambda-layer-and-image-china-x86_64`."
+                    :white_check_mark: The AWS Lambda layer for the Instana Node.js package version ((.:package-version)) has been successfully deployed to the China regions (x86_64 architecture).
               attachments: *slack-alert-attachements-success
           on_failure: &slack-notify-failure-lambda
             put: slack-alert
@@ -497,7 +498,7 @@ jobs:
               channel: '#team-node'
               icon_emoji: ':check-failed:'
               text: |
-                    :x: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has failed during the task `build-and-publish-aws-lambda-layer-and-image-china-x86_64`."
+                    :x: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has failed while publishing to the China regions (x86_64 architecture).
               attachments: *slack-alert-attachements-failure
           on_error: *slack-notify-failure-lambda
 
@@ -531,7 +532,7 @@ jobs:
               channel: '#team-node'
               icon_emoji: ':white_check_mark:'
               text: |
-                    :white_check_mark: The Instana Node.js AWS Lambda layer for package version ((.:package-version)). Successfully completed task `build-and-publish-aws-lambda-layer-and-image-china-arm64`."
+                    :white_check_mark: The AWS Lambda layer for the Instana Node.js package version ((.:package-version)) has been successfully deployed to the China regions (arm64 architecture).
               attachments: *slack-alert-attachements-success
           on_failure: &slack-notify-failure-lambda
             put: slack-alert
@@ -539,7 +540,7 @@ jobs:
               channel: '#team-node'
               icon_emoji: ':check-failed:'
               text: |
-                    :x: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has failed during the task `build-and-publish-aws-lambda-layer-and-image-china-arm64`."
+                    :x: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has failed while publishing to the China regions (arm64 architecture).
               attachments: *slack-alert-attachements-failure
           on_error: *slack-notify-failure-lambda
 
