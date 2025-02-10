@@ -252,7 +252,7 @@ function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext, spanC
     kind = EXIT;
   }
   const spanData = spanContextData?.data || {};
-  const span = new InstanaSpan(spanName, spanData);
+  let span = new InstanaSpan(spanName, spanData);
   span.k = kind;
 
   const parentSpan = getCurrentSpan();
@@ -302,8 +302,9 @@ function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext, spanC
   // If ignored, return a pseudospan, meaning there's no need to transmit it.
   // Since the current span is ignored, we retain its parent ID to maintain trace continuity.
   // This ensures the parent information is not lost.
-  const sanitizedSpan = sanitizeSpan(span);
-  if (!sanitizedSpan) {
+  // @ts-ignore
+  span = sanitizeSpan(span);
+  if (!span) {
     return putPseudoSpan(span.n, span.k, span.t, span.p);
   }
 

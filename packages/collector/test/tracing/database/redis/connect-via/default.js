@@ -6,7 +6,7 @@
 
 module.exports = async function (redis, log) {
   const client = redis.createClient({ url: `redis://${process.env.REDIS}` });
-  const client2 = redis.createClient({ url: `redis://${process.env.REDIS_ALTERNATIVE}` });
+  const client2 = redis.createClient({ url: `redis://${process.env.REDIS}` });
 
   [client, client2].forEach(c => {
     c.on('error', err => log('Redis Client Error', err));

@@ -314,20 +314,18 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
   const parentSpan = skipExitResult.parentSpan;
 
   return cls.ns.runAndReturn(() => {
-    let span = {
-      data: {
-        redis: {
-          connection: address,
-          // pipeline = batch
-          operation: isAtomic ? 'multi' : 'pipeline'
-        }
+    const data = {
+      redis: {
+        connection: address,
+        // pipeline = batch
+        operation: isAtomic ? 'multi' : 'pipeline'
       }
     };
 
     if (skipExitResult.allowRootExitSpan) {
-      span = cls.startSpan(exports.spanName, constants.EXIT, null, null, null, span);
+      const span = cls.startSpan(exports.spanName, constants.EXIT, null, null, null, data);
     } else {
-      span = cls.startSpan(exports.spanName, constants.EXIT, parentSpan.t, parentSpan.s, null, span);
+      span = cls.startSpan(exports.spanName, constants.EXIT, parentSpan.t, parentSpan.s, null, data);
     }
     span.stack = tracingUtil.getStackTrace(instrumentMultiExec);
 

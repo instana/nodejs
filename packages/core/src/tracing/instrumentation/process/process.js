@@ -50,7 +50,7 @@ function shimProcessEmitForBullChildWorker(originalProcessEmit) {
     if (!traceContext || !traceContext.X_INSTANA_T || !traceContext.X_INSTANA_S) {
       return originalProcessEmit.apply(this, arguments);
     }
-
+// why???
     return cls.ns.runAndReturn(() => {
       currentlyActiveBullEntrySpan = cls.putPseudoSpan(
         bullSpanName,
