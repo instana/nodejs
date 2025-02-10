@@ -234,15 +234,18 @@ function instrumentCommand(original, command, address, cbStyle) {
     if (cls.skipExitTracing({ isActive })) {
       return original.apply(origCtx, origArgs);
     }
+    let span = {
+      data: {
+        redis: {
+          connection: address || origCtx.address,
+          operation: command
+        }
+      }
+    };
 
     return cls.ns.runAndReturn(() => {
-      const span = cls.startSpan(exports.spanName, constants.EXIT);
+      span = cls.startSpan(exports.spanName, constants.EXIT, null, null, null, span);
       span.stack = tracingUtil.getStackTrace(instrumentCommand);
-
-      span.data.redis = {
-        connection: address || origCtx.address,
-        operation: command
-      };
 
       let userProvidedCallback;
 
@@ -311,20 +314,22 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
   const parentSpan = skipExitResult.parentSpan;
 
   return cls.ns.runAndReturn(() => {
-    let span;
+    let span = {
+      data: {
+        redis: {
+          connection: address,
+          // pipeline = batch
+          operation: isAtomic ? 'multi' : 'pipeline'
+        }
+      }
+    };
 
     if (skipExitResult.allowRootExitSpan) {
-      span = cls.startSpan(exports.spanName, constants.EXIT);
+      span = cls.startSpan(exports.spanName, constants.EXIT, null, null, null, span);
     } else {
-      span = cls.startSpan(exports.spanName, constants.EXIT, parentSpan.t, parentSpan.s);
+      span = cls.startSpan(exports.spanName, constants.EXIT, parentSpan.t, parentSpan.s, null, span);
     }
-
     span.stack = tracingUtil.getStackTrace(instrumentMultiExec);
-    span.data.redis = {
-      connection: address,
-      // pipeline = batch
-      operation: isAtomic ? 'multi' : 'pipeline'
-    };
 
     const subCommands = (span.data.redis.subCommands = []);
     let legacyMultiMarkerHasBeenSeen = false;
