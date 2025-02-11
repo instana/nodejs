@@ -9,8 +9,12 @@ const shimmer = require('../../shimmer');
 const hook = require('../../../util/hook');
 const cls = require('../../cls');
 
+/** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
 exports.init = function (config) {
   logger = config.logger;
 
