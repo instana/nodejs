@@ -165,7 +165,10 @@ function instrumentedPublish(ctx, originalPublish, originalArgs, isLatest) {
   const originalCallback = callbackIndex >= 0 ? originalArgs[callbackIndex] : null;
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('nats', constants.EXIT);
+    const span = cls.startSpan({
+      spanName: 'nats',
+      kind: constants.EXIT
+    });
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedPublish);
     span.data.nats = {
@@ -355,7 +358,12 @@ function instrumentedSubscribeCallback(natsUrl, subject, originalSubscribeCallba
       }
 
       if (isActive) {
-        const span = cls.startSpan('nats', constants.ENTRY, traceId, parentSpanId);
+        const span = cls.startSpan({
+          spanName: 'nats',
+          kind: constants.ENTRY,
+          traceId: traceId,
+          parentSpanId: parentSpanId
+        });
         span.ts = Date.now();
         span.stack = tracingUtil.getStackTrace(instrumentedSubscribeCallback);
 

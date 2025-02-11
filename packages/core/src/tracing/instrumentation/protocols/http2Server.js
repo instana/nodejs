@@ -105,13 +105,13 @@ function shimEmit(realEmit) {
         return realEmit.apply(originalThis, originalArgs);
       }
 
-      const span = cls.startSpan(
-        exports.spanName,
-        constants.ENTRY,
-        processedHeaders.traceId,
-        processedHeaders.parentId,
-        w3cTraceContext
-      );
+      const span = cls.startSpan({
+        spanName: exports.spanName,
+        kind: constants.ENTRY,
+        traceId: processedHeaders.traceId,
+        parentSpanId: processedHeaders.parentId,
+        w3cTraceContext: w3cTraceContext
+      });
       tracingHeaders.setSpanAttributes(span, processedHeaders);
 
       const authority = headers[HTTP2_HEADER_AUTHORITY];

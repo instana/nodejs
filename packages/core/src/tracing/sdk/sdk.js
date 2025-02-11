@@ -282,7 +282,12 @@ module.exports = function (isCallbackApi) {
         null;
 
     return runInContext(() => {
-      const span = cls.startSpan('sdk', kind, traceId, parentSpanId);
+      const span = cls.startSpan({
+        spanName: 'sdk',
+        kind: kind,
+        traceId: traceId,
+        parentSpanId: parentSpanId
+      });
       span.stack = tracingUtil.getStackTrace(stackTraceRef);
       span.data.sdk = {
         name,

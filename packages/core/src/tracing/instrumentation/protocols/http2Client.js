@@ -88,7 +88,12 @@ function instrumentClientHttp2Session(clientHttp2Session) {
     }
 
     return cls.ns.runAndReturn(() => {
-      const span = cls.startSpan('node.http.client', constants.EXIT, parentSpan?.t, parentSpan?.s);
+      const span = cls.startSpan({
+        spanName: 'node.http.client',
+        kind: constants.EXIT,
+        traceId: parentSpan?.t,
+        parentSpanId: parentSpan?.s
+      });
 
       // startSpan updates the W3C trace context and writes it back to CLS, so we have to refetch the updated context
       // object from CLS.

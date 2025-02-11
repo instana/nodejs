@@ -20,7 +20,10 @@ class InstanaAWSKinesis extends InstanaAWSProduct {
     const command = smithySendArgs[0];
     return cls.ns.runAndReturn(() => {
       const self = this;
-      const span = cls.startSpan(this.spanName, EXIT);
+      const span = cls.startSpan({
+        spanName: this.spanName,
+        kind: EXIT
+      });
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(this.instrumentedSmithySend, 1);
       const operation = this.convertOperationName(command.constructor.name);

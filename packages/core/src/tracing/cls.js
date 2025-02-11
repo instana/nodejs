@@ -250,14 +250,18 @@ class InstanaIgnoredSpan extends InstanaSpan {
 
 /**
  * Start a new span and set it as the current span.
- * @param {string} spanName
- * @param {number} kind
- * @param {string} traceId
- * @param {string} parentSpanId
- * @param {import('./w3c_trace_context/W3cTraceContext')} [w3cTraceContext]
+ * @param {Object} spanAttributes
+ * @param {string} [spanAttributes.spanName]
+ * @param {number} [spanAttributes.kind]
+ * @param {string} [spanAttributes.traceId]
+ * @param {string} [spanAttributes.parentSpanId]
+ * @param {import('./w3c_trace_context/W3cTraceContext')} [spanAttributes.w3cTraceContext]
  * @returns {InstanaSpan}
  */
-function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext) {
+
+function startSpan(spanAttributes = {}) {
+  let { spanName, kind, traceId, parentSpanId, w3cTraceContext } = spanAttributes;
+
   tracingMetrics.incrementOpened();
   if (!kind || (kind !== ENTRY && kind !== EXIT && kind !== INTERMEDIATE)) {
     logger.warn(`Invalid span (${spanName}) without kind/with invalid kind: ${kind}, assuming EXIT.`);

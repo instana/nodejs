@@ -96,15 +96,13 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
         w3cTraceContext.disableSampling();
       }
     } else {
-      entrySpan = tracing
-        .getCls()
-        .startSpan(
-          'aws.lambda.entry',
-          constants.ENTRY,
-          traceCorrelationData.traceId,
-          traceCorrelationData.parentId,
-          w3cTraceContext
-        );
+      entrySpan = tracing.getCls().startSpan({
+        spanName: 'aws.lambda.entry',
+        kind: constants.ENTRY,
+        traceId: traceCorrelationData.traceId,
+        parentSpanId: traceCorrelationData.parentId,
+        w3cTraceContext: w3cTraceContext
+      });
       tracingHeaders.setSpanAttributes(entrySpan, traceCorrelationData);
       const { arn, alias } = arnInfo;
       entrySpan.data.lambda = {

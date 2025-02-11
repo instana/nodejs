@@ -87,7 +87,14 @@ function shimEmit(realEmit) {
         return realEmit.apply(originalThis, originalArgs);
       }
 
-      const span = cls.startSpan(exports.spanName, constants.ENTRY, headers.traceId, headers.parentId, w3cTraceContext);
+      const span = cls.startSpan({
+        spanName: exports.spanName,
+        kind: constants.ENTRY,
+        traceId: headers.traceId,
+        parentSpanId: headers.parentId,
+        w3cTraceContext: w3cTraceContext
+      });
+
       tracingHeaders.setSpanAttributes(span, headers);
 
       // Capture the URL before application code gets access to the incoming message. Libraries like express manipulate

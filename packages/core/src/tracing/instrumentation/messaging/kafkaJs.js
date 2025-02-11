@@ -82,7 +82,10 @@ function shimmedSend(originalSend) {
 
 function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('kafka', constants.EXIT);
+    const span = cls.startSpan({
+      spanName: 'kafka',
+      kind: constants.EXIT
+    });
     if (Array.isArray(messages)) {
       span.b = { s: messages.length };
       addTraceContextHeaderToAllMessages(messages, span);
@@ -148,7 +151,10 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
   });
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('kafka', constants.EXIT);
+    const span = cls.startSpan({
+      spanName: 'kafka',
+      kind: constants.EXIT
+    });
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
     topicMessages.forEach(topicMessage => {
       addTraceContextHeaderToAllMessages(topicMessage.messages, span);
@@ -257,7 +263,12 @@ function instrumentedEachMessage(originalEachMessage) {
         return originalEachMessage.apply(ctx, originalArgs);
       }
 
-      const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
+      const span = cls.startSpan({
+        spanName: 'kafka',
+        kind: constants.ENTRY,
+        traceId: traceId,
+        parentSpanId: parentSpanId
+      });
       if (longTraceId) {
         span.lt = longTraceId;
       }
@@ -340,7 +351,12 @@ function instrumentedEachBatch(originalEachBatch) {
         return originalEachBatch.apply(ctx, originalArgs);
       }
 
-      const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
+      const span = cls.startSpan({
+        spanName: 'kafka',
+        kind: constants.ENTRY,
+        traceId: traceId,
+        parentSpanId: parentSpanId
+      });
       if (longTraceId) {
         span.lt = longTraceId;
       }

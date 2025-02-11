@@ -135,7 +135,10 @@ function shimCmapGetMore(original) {
 
 function instrumentedCmapQuery(ctx, originalQuery, originalArgs) {
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan(exports.spanName, constants.EXIT);
+    const span = cls.startSpan({
+      spanName: exports.spanName,
+      kind: constants.EXIT
+    });
     span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
 
     const namespace = originalArgs[0];
@@ -165,7 +168,10 @@ function instrumentedCmapQuery(ctx, originalQuery, originalArgs) {
 
 function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command) {
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan(exports.spanName, constants.EXIT);
+    const span = cls.startSpan({
+      spanName: exports.spanName,
+      kind: constants.EXIT
+    });
     span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
 
     let namespace = originalArgs[0];
@@ -205,7 +211,10 @@ function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command) {
 
 function instrumentedCmapGetMore(ctx, originalMethod, originalArgs) {
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan(exports.spanName, constants.EXIT);
+    const span = cls.startSpan({
+      spanName: exports.spanName,
+      kind: constants.EXIT
+    });
     span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
 
     const namespace = originalArgs[0];
@@ -247,7 +256,10 @@ function shimLegacyWrite(original) {
 
 function instrumentedLegacyWrite(ctx, originalWrite, originalArgs) {
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan(exports.spanName, constants.EXIT);
+    const span = cls.startSpan({
+      spanName: exports.spanName,
+      kind: constants.EXIT
+    });
     span.stack = tracingUtil.getStackTrace(instrumentedLegacyWrite);
 
     let hostname;

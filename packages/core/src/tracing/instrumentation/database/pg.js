@@ -53,7 +53,10 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
   const config = argsForOriginalQuery[0];
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan(exports.spanName, constants.EXIT);
+    const span = cls.startSpan({
+      spanName: exports.spanName,
+      kind: constants.EXIT
+    });
     span.stack = tracingUtil.getStackTrace(instrumentedQuery);
     span.data.pg = {
       stmt: tracingUtil.shortenDatabaseStatement(typeof config === 'string' ? config : config.text),

@@ -140,7 +140,10 @@ function instrumentRequest(original) {
 
 function instrumentedRequest(ctx, originalRequest, argsForOriginalRequest) {
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('prisma', EXIT);
+    const span = cls.startSpan({
+      spanName: 'prisma',
+      kind: EXIT
+    });
     span.stack = getStackTrace(instrumentedRequest, 1);
     const params = argsForOriginalRequest[0] || {};
 

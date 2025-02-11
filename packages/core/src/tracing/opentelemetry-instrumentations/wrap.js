@@ -72,7 +72,10 @@ module.exports.init = (_config, cls) => {
 
     try {
       cls.ns.runAndReturn(() => {
-        const instanaSpan = cls.startSpan('otel', kind);
+        const instanaSpan = cls.startSpan({
+          spanName: 'otel',
+          kind: kind
+        });
         instanaSpan.data = {
           tags: Object.assign({ name: otelSpan.name }, otelSpan.attributes),
           resource: otelSpan.resource.attributes

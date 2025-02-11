@@ -393,7 +393,10 @@ function shim(instrumented, original) {
 
 function instrumentedOperation(operation, extractorPre, extractorPost, ctx, original, originalArgs) {
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('gcs', constants.EXIT);
+    const span = cls.startSpan({
+      spanName: 'gcs',
+      kind: constants.EXIT
+    });
     span.stack = tracingUtil.getStackTrace(instrumentedOperation, 1);
     span.data.gcs = {
       op: operation
@@ -425,7 +428,10 @@ function instrumentedOperation(operation, extractorPre, extractorPost, ctx, orig
 
 function instrumentedCreateStream(operation, bindEvent, finalEvent, ctx, original, originalArgs) {
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('gcs', constants.EXIT);
+    const span = cls.startSpan({
+      spanName: 'gcs',
+      kind: constants.EXIT
+    });
     span.stack = tracingUtil.getStackTrace(instrumentedCreateStream, 1);
     span.data.gcs = {
       op: operation

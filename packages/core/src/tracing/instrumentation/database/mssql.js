@@ -60,7 +60,10 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
   const command = commandProvider(originalArgs);
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan(exports.spanName, constants.EXIT);
+    const span = cls.startSpan({
+      spanName: exports.spanName,
+      kind: constants.EXIT
+    });
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
     span.data.mssql = {
       stmt: tracingUtil.shortenDatabaseStatement(command),

@@ -330,7 +330,12 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
       const incomingTraceId = readMetadata(metadata, constants.traceIdHeaderName);
       const incomingSpanId = readMetadata(metadata, constants.spanIdHeaderName);
 
-      const span = cls.startSpan('rpc-server', constants.ENTRY, incomingTraceId, incomingSpanId);
+      const span = cls.startSpan({
+        spanName: 'rpc-server',
+        kind: constants.ENTRY,
+        traceId: incomingTraceId,
+        parentSpanId: incomingSpanId
+      });
       span.data.rpc = {
         call: dropLeadingSlash(name),
         flavor: 'grpc'
@@ -394,7 +399,10 @@ function instrumentedClientMethod(
   modifyArgsFn
 ) {
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('rpc-client', constants.EXIT);
+    const span = cls.startSpan({
+      spanName: 'rpc-client',
+      kind: constants.EXIT
+    });
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedClientMethod);
 

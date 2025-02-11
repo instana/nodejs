@@ -139,7 +139,10 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
     typeof ctx._cb_configs.event.delivery_cb === 'function';
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('kafka', constants.EXIT);
+    const span = cls.startSpan({
+      spanName: 'kafka',
+      kind: constants.EXIT
+    });
     const topic = originalArgs[0];
 
     span.stack = tracingUtil.getStackTrace(instrumentedProduce, 1);
@@ -270,7 +273,13 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
         return originalEmit.apply(ctx, originalArgs);
       }
 
-      const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
+      const span = cls.startSpan({
+        spanName: 'kafka',
+        kind: constants.ENTRY,
+        traceId: traceId,
+        parentSpanId: parentSpanId
+      });
+
       if (longTraceId) {
         span.lt = longTraceId;
       }

@@ -74,7 +74,10 @@ class InstanaAWSLambda extends InstanaAWSProduct {
     }
 
     return cls.ns.runAndReturn(() => {
-      const span = cls.startSpan(SPAN_NAME, EXIT);
+      const span = cls.startSpan({
+        spanName: SPAN_NAME,
+        kind: EXIT
+      });
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(this.instrumentedMakeRequest, 1);
       span.data[this.spanName] = this.buildSpanData(smithySendArgs[0], smithySendArgs[0].input);

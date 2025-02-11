@@ -28,7 +28,10 @@ describe('tracing/cls', () => {
 
   it('must initialize a new valid span', () => {
     cls.ns.run(() => {
-      const span = cls.startSpan('cls-test-run', constants.EXIT);
+      const span = cls.startSpan({
+        spanName: 'cls-test-run',
+        kind: constants.EXIT
+      });
       expect(span).to.be.an('object');
       expect(span.n).to.equal('cls-test-run');
       expect(span.t).to.be.a('string');
@@ -66,7 +69,11 @@ describe('tracing/cls', () => {
 
   it('must not set span.f without process identity provider', () => {
     cls.ns.run(() => {
-      const newSpan = cls.startSpan('cls-test-run', constants.EXIT);
+      const newSpan = cls.startSpan({
+        spanName: 'cls-test-run',
+        kind: constants.EXIT
+      });
+
       expect(newSpan).to.not.have.property('f');
     });
   });
@@ -74,7 +81,11 @@ describe('tracing/cls', () => {
   it('must not set span.f if process identity provider does not support getFrom', () => {
     cls.init({}, {});
     cls.ns.run(() => {
-      const newSpan = cls.startSpan('cls-test-run', constants.EXIT);
+      const newSpan = cls.startSpan({
+        spanName: 'cls-test-run',
+        kind: constants.EXIT
+      });
+
       expect(newSpan).to.not.have.property('f');
     });
   });
@@ -92,7 +103,11 @@ describe('tracing/cls', () => {
       }
     );
     cls.ns.run(() => {
-      const newSpan = cls.startSpan('cls-test-run', constants.EXIT);
+      const newSpan = cls.startSpan({
+        spanName: 'cls-test-run',
+        kind: constants.EXIT
+      });
+
       expect(newSpan.f).to.deep.equal({
         e: String(process.pid),
         h: undefined
@@ -105,8 +120,14 @@ describe('tracing/cls', () => {
     let newSpan;
 
     cls.ns.run(() => {
-      parentSpan = cls.startSpan('Mr-Brady', constants.ENTRY);
-      newSpan = cls.startSpan('Peter-Brady', constants.EXIT);
+      parentSpan = cls.startSpan({
+        spanName: 'Mr-Brady',
+        kind: constants.ENTRY
+      });
+      newSpan = cls.startSpan({
+        spanName: 'Peter-Brady',
+        kind: constants.EXIT
+      });
     });
     expect(newSpan.t).to.equal(parentSpan.t);
     expect(newSpan.p).to.equal(parentSpan.s);
@@ -116,40 +137,87 @@ describe('tracing/cls', () => {
     cls.ns.run(() => {
       cls.setTracingLevel('0');
       expect(cls.tracingSuppressed()).to.equal(true);
-      cls.startSpan('Antonio-Andolini', constants.ENTRY);
+      cls.startSpan({
+        spanName: 'Antonio-Andolini',
+        kind: constants.ENTRY
+      });
       expect(cls.tracingSuppressed()).to.equal(true);
-      cls.startSpan('Vito-Corleone', constants.EXIT);
+
+      cls.startSpan({
+        spanName: 'Vito-Corleone',
+        kind: constants.EXIT
+      });
       expect(cls.tracingSuppressed()).to.equal(true);
-      cls.startSpan('Michael-Corleone', constants.EXIT);
+
+      cls.startSpan({
+        spanName: 'Michael-Corleone',
+        kind: constants.EXIT
+      });
       expect(cls.tracingSuppressed()).to.equal(true);
 
       cls.ns.run(() => {
         cls.setTracingLevel('1');
         expect(cls.tracingSuppressed()).to.equal(false);
-        cls.startSpan('Antonio-Andolini', constants.EXIT);
+
+        cls.startSpan({
+          spanName: 'Antonio-Andolini',
+          kind: constants.EXIT
+        });
         expect(cls.tracingSuppressed()).to.equal(false);
-        cls.startSpan('Vito-Corleone', constants.EXIT);
+
+        cls.startSpan({
+          spanName: 'Vito-Corleone',
+          kind: constants.EXIT
+        });
         expect(cls.tracingSuppressed()).to.equal(false);
-        cls.startSpan('Michael-Corleone', constants.EXIT);
+
+        cls.startSpan({
+          spanName: 'Michael-Corleone',
+          kind: constants.EXIT
+        });
         expect(cls.tracingSuppressed()).to.equal(false);
 
         cls.ns.run(() => {
           cls.setTracingLevel('0');
           expect(cls.tracingSuppressed()).to.equal(true);
-          cls.startSpan('Antonio-Andolini', constants.EXIT);
+
+          cls.startSpan({
+            spanName: 'Antonio-Andolini',
+            kind: constants.EXIT
+          });
           expect(cls.tracingSuppressed()).to.equal(true);
-          cls.startSpan('Vito-Corleone', constants.EXIT);
+
+          cls.startSpan({
+            spanName: 'Vito-Corleone',
+            kind: constants.EXIT
+          });
           expect(cls.tracingSuppressed()).to.equal(true);
-          cls.startSpan('Michael-Corleone', constants.EXIT);
+
+          cls.startSpan({
+            spanName: 'Michael-Corleone',
+            kind: constants.EXIT
+          });
           expect(cls.tracingSuppressed()).to.equal(true);
 
           cls.ns.run(() => {
             expect(cls.tracingSuppressed()).to.equal(true);
-            cls.startSpan('Antonio-Andolini', constants.EXIT);
+
+            cls.startSpan({
+              spanName: 'Antonio-Andolini',
+              kind: constants.EXIT
+            });
             expect(cls.tracingSuppressed()).to.equal(true);
-            cls.startSpan('Vito-Corleone', constants.EXIT);
+
+            cls.startSpan({
+              spanName: 'Vito-Corleone',
+              kind: constants.EXIT
+            });
             expect(cls.tracingSuppressed()).to.equal(true);
-            cls.startSpan('Michael-Corleone', constants.EXIT);
+
+            cls.startSpan({
+              spanName: 'Michael-Corleone',
+              kind: constants.EXIT
+            });
             expect(cls.tracingSuppressed()).to.equal(true);
           });
         });
@@ -163,9 +231,18 @@ describe('tracing/cls', () => {
     let intermediateSpan;
 
     cls.ns.run(() => {
-      entrySpan = cls.startSpan('node.http.server', constants.ENTRY);
-      exitSpan = cls.startSpan('mongo', constants.EXIT);
-      intermediateSpan = cls.startSpan('intermediate', constants.INTERMEDIATE);
+      entrySpan = cls.startSpan({
+        spanName: 'node.http.server',
+        kind: constants.ENTRY
+      });
+      exitSpan = cls.startSpan({
+        spanName: 'mongo',
+        kind: constants.EXIT
+      });
+      intermediateSpan = cls.startSpan({
+        spanName: 'intermediate',
+        kind: constants.INTERMEDIATE
+      });
     });
 
     expect(entrySpan.k).to.equal(constants.ENTRY);
@@ -187,7 +264,10 @@ describe('tracing/cls', () => {
   it('new spans need to have an empty data object', () => {
     cls.init({}, {});
     cls.ns.run(() => {
-      const span = cls.startSpan('something.something', constants.ENTRY);
+      const span = cls.startSpan({
+        spanName: 'something.something',
+        kind: constants.ENTRY
+      });
       expect(span.data).to.be.an('object');
       expect(Object.keys(span.data)).to.have.lengthOf(0);
       expect(span.data.service).to.not.exist;
@@ -197,7 +277,10 @@ describe('tracing/cls', () => {
   it('must use the configured service name', () => {
     cls.init({ serviceName: 'Forsvarets Efterretningstjeneste' }, {});
     cls.ns.run(() => {
-      const span = cls.startSpan('something.something', constants.ENTRY);
+      const span = cls.startSpan({
+        spanName: 'something.something',
+        kind: constants.ENTRY
+      });
       expect(span.data.service).to.equal('Forsvarets Efterretningstjeneste');
     });
   });
@@ -207,7 +290,10 @@ describe('tracing/cls', () => {
       expect(context[cls.currentEntrySpanKey]).to.equal(undefined);
       expect(context[cls.currentSpanKey]).to.equal(undefined);
 
-      const span = cls.startSpan('node.http.server', constants.ENTRY);
+      const span = cls.startSpan({
+        spanName: 'node.http.server',
+        kind: constants.ENTRY
+      });
       expect(context[cls.currentEntrySpanKey]).to.equal(span);
       expect(context[cls.currentSpanKey]).to.equal(span);
 
@@ -227,7 +313,11 @@ describe('tracing/cls', () => {
         }
       });
 
-      cls.startSpan('Vito-Corleone', constants.EXIT);
+      cls.startSpan({
+        spanName: 'Vito-Corleone',
+        kind: constants.ENTRY
+      });
+
       expect(cls.skipExitTracing()).to.equal(false);
     });
   });
@@ -242,7 +332,11 @@ describe('tracing/cls', () => {
       });
 
       expect(cls.skipExitTracing()).to.equal(true);
-      cls.startSpan('Antonio-Andolini', constants.EXIT);
+
+      cls.startSpan({
+        spanName: 'Antonio-Andolini',
+        kind: constants.EXIT
+      });
       expect(cls.skipExitTracing()).to.equal(true);
     });
   });
@@ -252,7 +346,10 @@ describe('tracing/cls', () => {
       expect(context[cls.currentEntrySpanKey]).to.equal(undefined);
       expect(context[cls.currentSpanKey]).to.equal(undefined);
 
-      const span = cls.startSpan('node.http.server', constants.ENTRY);
+      const span = cls.startSpan({
+        spanName: 'node.http.server',
+        kind: constants.ENTRY
+      });
       span.data.much = 'data';
       span.stack = ['a', 'b', 'c'];
       expect(context[cls.currentEntrySpanKey]).to.equal(span);

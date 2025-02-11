@@ -100,7 +100,10 @@ function instrumentedPublishMessage(ctx, originalPublishMessage, originalArgs) {
   }
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('gcps', EXIT);
+    const span = cls.startSpan({
+      spanName: 'gcps',
+      kind: EXIT
+    });
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedPublishMessage);
     span.data.gcps = {
@@ -192,12 +195,12 @@ function instrumentedEmitMessage(ctx, originalEmit, originalArgs) {
     }
 
     const { projid, sub } = parseSubscription(message._subscriber && message._subscriber._subscription);
-    const span = cls.startSpan(
-      'gcps',
-      ENTRY,
-      tracingUtil.readAttribCaseInsensitive(attribtes, traceIdHeaderNameLowerCase),
-      tracingUtil.readAttribCaseInsensitive(attribtes, spanIdHeaderNameLowerCase)
-    );
+    const span = cls.startSpan({
+      spanName: 'gcps',
+      kind: ENTRY,
+      traceId: tracingUtil.readAttribCaseInsensitive(attribtes, traceIdHeaderNameLowerCase),
+      parentSpanId: tracingUtil.readAttribCaseInsensitive(attribtes, spanIdHeaderNameLowerCase)
+    });
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedEmitMessage);
     span.data.gcps = {
