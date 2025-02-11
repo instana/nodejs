@@ -218,9 +218,10 @@ class InstanaPseudoSpan extends InstanaSpan {
     }
   }
 }
-
-// This class represents an ignored span and overrides the `transmit` and `cancel` methods
-// to ensure that the span is never sent, only cleaned up.
+/**
+ * This class represents an ignored span when accessing the `currentSpan`.
+ * It overrides the `transmit` and `cancel` methods to to ensure that the span is never sent, only cleaned up.
+ */
 // eslint-disable-next-line no-unused-vars
 class InstanaIgnoredSpan extends InstanaSpan {
   transmit() {
