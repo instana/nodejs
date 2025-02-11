@@ -92,19 +92,22 @@ function init(_config) {
       return init;
     }
   }
+
+  let logger;
+  logger = log.getLogger('index', newLogger => {
+    logger = newLogger;
+  });
+
   // @ts-ignore: Property '__INSTANA_INITIALIZED' does not exist on type global
   global.__INSTANA_INITIALIZED = true;
+
+  // TODO: ?
   config = normalizeConfig(_config);
 
   agentConnection = require('./agentConnection');
   const agentOpts = require('./agent/opts');
   const pidStore = require('./pidStore');
   const uncaught = require('./uncaught');
-
-  let logger;
-  logger = log.getLogger('index', newLogger => {
-    logger = newLogger;
-  });
 
   // NOTE: By default we set our instana internal bunyan logger
   config.logger = logger;

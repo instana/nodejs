@@ -9,7 +9,6 @@
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
 const deepMerge = require('../util/deepMerge');
-const constants = require('../tracing/constants');
 
 /**
  * @typedef {Object} InstanaTracingOption
