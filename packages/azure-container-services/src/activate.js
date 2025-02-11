@@ -13,6 +13,7 @@ const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
 
 let logger = consoleLogger;
+logger.init();
 
 // TODO: Why do we normalize the config from core here?
 const config = normalizeConfig({});
@@ -23,10 +24,6 @@ const config = normalizeConfig({});
 config.logger = logger;
 
 function init() {
-  // NOTE: We accept for `process.env.INSTANA_DEBUG` any string value - does not have to be "true".
-  if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL) {
-    logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL);
-  }
   // For more details about environment variables in azure, please see
   // https://learn.microsoft.com/en-us/azure/app-service/reference-app-settings?tabs=kudu%2Cdotnet#app-environment
   if (!process.env.WEBSITE_OWNER_NAME && !process.env.WEBSITE_SITE_NAME && !process.env.WEBSITE_RESOURCE_GROUP) {

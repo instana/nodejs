@@ -17,7 +17,7 @@ const captureHeaders = require('./capture_headers');
 
 const { tracing } = instanaCore;
 const { tracingHeaders, constants, spanBuffer } = tracing;
-let logger = consoleLogger;
+let logger;
 let config;
 
 let coldStart = true;
@@ -239,12 +239,10 @@ function init(event, arnInfo, _config) {
   if (config.logger) {
     logger = config.logger;
   } else {
-    config.logger = logger;
-  }
+    logger = consoleLogger;
+    logger.init(config);
 
-  // NOTE: We accept for `process.env.INSTANA_DEBUG` any string value - does not have to be "true".
-  if (process.env.INSTANA_DEBUG || config.level || process.env.INSTANA_LOG_LEVEL) {
-    logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : config.level || process.env.INSTANA_LOG_LEVEL);
+    config.logger = logger;
   }
 
   ssm.init({ logger });

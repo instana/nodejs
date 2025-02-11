@@ -15,16 +15,12 @@ const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
 
 let logger = consoleLogger;
+logger.init();
 
 const config = normalizeConfig({});
 config.logger = logger;
 
 function init() {
-  // NOTE: We accept for `process.env.INSTANA_DEBUG` any string value - does not have to be "true".
-  if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL) {
-    logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL);
-  }
-
   if (!process.env.K_REVISION) {
     logger.error(
       'Initializing @instana/google-cloud-run failed. The environment variable K_REVISION is not set. This container ' +

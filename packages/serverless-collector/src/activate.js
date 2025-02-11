@@ -13,16 +13,12 @@ const { normalizeConfig } = coreUtil;
 const customMetrics = require('./metrics');
 
 let logger = consoleLogger;
+logger.init();
 
 const config = normalizeConfig({});
 config.logger = logger;
 
 async function init() {
-  // NOTE: We accept for `process.env.INSTANA_DEBUG` any string value - does not have to be "true".
-  if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL) {
-    logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL);
-  }
-
   // NOTE: This package does not support autotracing.
   // NOTE: This package does not support metrics.
 
