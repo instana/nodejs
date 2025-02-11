@@ -70,6 +70,17 @@ class ProcessControls {
           // eslint-disable-next-line no-console
           console.log('Unable to load the target app.mjs', err);
         }
+      } else if (opts.appPath) {
+        const appPath = opts.appPath;
+        const updatedPath = appPath.endsWith('.js') ? appPath.replace(/\.js$/, '.mjs') : `${appPath}.mjs`;
+
+        if (fs.existsSync(updatedPath)) {
+          opts.execArgv = isLatestEsmSupportedVersion(process.versions.node)
+            ? [`--import=${path.join(__dirname, '..', '..', 'esm-register.mjs')}`]
+            : [`--experimental-loader=${path.join(__dirname, '..', '..', 'esm-loader.mjs')}`];
+
+          opts.appPath = updatedPath;
+        }
       }
     }
 
