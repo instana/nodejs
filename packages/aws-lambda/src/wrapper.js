@@ -275,10 +275,10 @@ function init(event, arnInfo, _config) {
   backendConnector.init({
     config,
     identityProvider,
-    stopSendingOnFailure: true,
     propagateErrorsUpstream: false,
     defaultTimeout: 500,
-    useLambdaExtension
+    useLambdaExtension,
+    isLambdaRequest: true
   });
 
   // instanaCore.init also normalizes the config as a side effect
