@@ -20,7 +20,7 @@ const layerExtensionPort = process.env.INSTANA_LAYER_EXTENSION_PORT
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
 const layerExtensionTimeout = process.env.INSTANA_LAMBDA_EXTENSION_TIMEOUT_IN_MS
   ? Number(process.env.INSTANA_LAMBDA_EXTENSION_TIMEOUT_IN_MS)
-  : 500;
+  : 2000;
 
 const proxyEnvVar = 'INSTANA_ENDPOINT_PROXY';
 const disableCaCheckEnvVar = 'INSTANA_DISABLE_CA_CHECK';
@@ -132,9 +132,18 @@ exports.sendSpans = function sendSpans(spans, callback) {
 
 let heartbeatInterval;
 function scheduleLambdaExtensionHeartbeatRequest() {
+  /**
+   * Ignore any timeout. We just send the beat every 500ms.
+   * The heartbeat is for the extension only:
+   *   We have discovered that a single request between tracer & extension is not enough,
+   *   because the communication problems such as sockets, emfile etc can occur during the Lambda
+   *   runtime at anytime.
+   */
   const executeHeartbeat = () => {
-    logger.debug('Executing Heartbeat request to Lambda extension.');
     const startTime = Date.now();
+    const requestId = getRequestId();
+
+    logger.debug(`${requestId} Executing Heartbeat request to Lambda extension.`);
 
     const req = uninstrumented.http.request(
       {
@@ -145,17 +154,20 @@ function scheduleLambdaExtensionHeartbeatRequest() {
         Connection: 'close',
         // This sets a timeout for establishing the socket connection, see setTimeout below for a timeout for an
         // idle connection after the socket has been opened.
-        timeout: layerExtensionTimeout
+        timeout: layerExtensionTimeout,
+        headers: {
+          Connection: 'keep-alive'
+        }
       },
       res => {
+        logger.debug(
+          `${requestId} Sending and receiving data for extension heartbeat in ms: ${Date.now() - startTime} ms.`
+        );
+
         if (res.statusCode === 200) {
-          logger.debug('The Instana Lambda extension Heartbeat request has succeeded.');
+          logger.debug(`${requestId} The Instana Lambda extension heartbeat request has succeeded.`);
         } else {
-          handleHeartbeatError(
-            new Error(
-              `The Instana Lambda extension Heartbeat request has returned an unexpected status code: ${res.statusCode}`
-            )
-          );
+          logger.debug(`${requestId} The Instana Lambda extension heartbeat request has failed: ${res.statusCode}`);
         }
 
         res.once('data', () => {
@@ -170,46 +182,30 @@ function scheduleLambdaExtensionHeartbeatRequest() {
       }
     );
 
-    req.once('finish', () => {
-      const endTime = Date.now();
-      const duration = endTime - startTime;
-      logger.debug(`Took ${duration}ms to send data to extension`);
-    });
-
-    function handleHeartbeatError(e) {
-      // Make sure we do not try to talk to the Lambda extension again.
-      options.useLambdaExtension = false;
-      clearInterval(heartbeatInterval);
-
-      logger.debug(
-        'The Instana Lambda extension Heartbeat request did not succeed. Falling back to talking to the Instana back ' +
-          `end directly. ${e?.message} ${e?.stack}`
-      );
-    }
-
     req.once('error', e => {
       // req.destroyed indicates that we have run into a timeout and have already handled the timeout error.
       if (req.destroyed) {
         return;
       }
 
-      handleHeartbeatError(e);
-    });
+      // Make sure we do not try to talk to the Lambda extension again.
+      options.useLambdaExtension = false;
+      clearInterval(heartbeatInterval);
 
-    // Handle timeouts that occur after connecting to the socket (no response from the extension).
-    req.setTimeout(layerExtensionTimeout, () => {
-      handleHeartbeatError(new Error('The Lambda extension Heartbeat request timed out.'));
-
-      destroyRequest(req);
+      logger.debug(
+        `${requestId} The Instana Lambda extension Heartbeat request did not succeed. 
+        Falling back to talking to the Instana back end directly.`,
+        e
+      );
     });
 
     req.end();
   };
 
   // call immediately
+  // timeout is bigger because of possible coldstart
   executeHeartbeat();
 
-  // NOTE: it is fine to use interval, because the req timeout is 300ms and the interval is 500
   heartbeatInterval = setInterval(executeHeartbeat, 500);
   heartbeatInterval.unref();
 }
@@ -350,7 +346,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
     }
 
     logger.debug(`${requestId} Received HTTP status code ${statusCode} from Instana (${requestPath}).`);
-    logger.debug(`${requestId} Sending and receiving data in ms: ${Date.now() - start} ms.`);
+    logger.debug(`${requestId} Sending and receiving data to Instana in ms: ${Date.now() - start} ms.`);
 
     delete requests[requestId];
   });
@@ -539,6 +535,13 @@ function onTimeout(
   }
 }
 
+function cleanupRequests() {
+  Object.keys(requests).forEach(key => {
+    const requestToCleanup = requests[key];
+    cleanupRequest(requestToCleanup);
+  });
+}
+
 function cleanupRequest(req) {
   // When the Node.js process is frozen while the request is pending, and then thawed later,
   // this can trigger a stale, bogus timeout event (because from the perspective of the freshly thawed Node.js
@@ -555,16 +558,9 @@ function cleanupRequest(req) {
   req.once('error', () => {});
 
   // Finally, abort the request because from our end we are no longer interested in the response and we also do
-  // not want to let pending IO actions linger in the event loop. This will also call request.destroy and
+  // not want to let pending IO actions linger in the event loop. This will also call request.destoy and
   // req.socket.destroy() internally.
   destroyRequest(req);
-}
-
-function cleanupRequests() {
-  Object.keys(requests).forEach(key => {
-    const requestToCleanup = requests[key];
-    cleanupRequest(requestToCleanup);
-  });
 }
 
 function destroyRequest(req) {
