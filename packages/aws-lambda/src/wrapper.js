@@ -281,7 +281,6 @@ function init(event, arnInfo, _config) {
     isLambdaRequest: true
   });
 
-  // instanaCore.init also normalizes the config as a side effect
   instanaCore.init(config, backendConnector, identityProvider);
 
   // After core init, because ssm requires require('@aws-sdk/client-ssm'), which triggers

@@ -16,7 +16,22 @@ const delay = ms => {
 const DELAY = process.env.DELAY || 1000;
 const ITERATIONS = process.env.ITERATIONS || 10;
 
-exports.handler = instana.wrap(async () => {
+// exports.handler = instana.wrap(async () => {
+//   console.log('Running handler.');
+
+//   for (let i = 0; i < ITERATIONS; i++) {
+//     await instana.sdk.async.startExitSpan(`custom-span ${i}`);
+//     await delay(DELAY);
+//     instana.sdk.async.completeExitSpan();
+//   }
+
+//   return {
+//     body: {
+//       message: 'Stan says hi!'
+//     }
+//   };
+// });
+exports.handler = async () => {
   console.log('Running handler.');
 
   for (let i = 0; i < ITERATIONS; i++) {
@@ -30,4 +45,4 @@ exports.handler = instana.wrap(async () => {
       message: 'Stan says hi!'
     }
   };
-});
+};
