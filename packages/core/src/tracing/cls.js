@@ -218,6 +218,35 @@ class InstanaPseudoSpan extends InstanaSpan {
     }
   }
 }
+/**
+ * This class represents an ignored span. We need this representation for the endpoint filtering feature because
+ * when a customer accesses the current span via `instana.currentSpan()`, we do not want to return a "NoopSpan".
+ * Instead, we return this ignored span instance so the trace ID remains accessible.
+ * It overrides the `transmit` and `cancel` methods to to ensure that the span is never sent, only cleaned up.
+ */
+// eslint-disable-next-line no-unused-vars
+class InstanaIgnoredSpan extends InstanaSpan {
+  transmit() {
+    if (!this.transmitted && !this.manualEndMode) {
+      this.cleanup();
+      this.transmitted = true;
+    }
+  }
+
+  transmitManual() {
+    if (!this.transmitted) {
+      this.cleanup();
+      this.transmitted = true;
+    }
+  }
+
+  cancel() {
+    if (!this.transmitted) {
+      this.cleanup();
+      this.transmitted = true;
+    }
+  }
+}
 
 /**
  * Start a new span and set it as the current span.
