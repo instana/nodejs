@@ -9,6 +9,8 @@ const deepMerge = require('../../util/deepMerge');
 const tracingUtil = require('../tracingUtil');
 const constants = require('../constants');
 
+/** @typedef {import('../../core').InstanaBaseSpan} InstanaBaseSpan */
+
 /** @type {import('../../core').GenericLogger} */
 let logger;
 let isActive = false;

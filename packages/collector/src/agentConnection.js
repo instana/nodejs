@@ -11,6 +11,8 @@ const circularReferenceRemover = require('./util/removeCircular');
 const agentOpts = require('./agent/opts');
 const cmdline = require('./cmdline');
 
+/** @typedef {import('@instana/core/src/core').InstanaBaseSpan} InstanaBaseSpan */
+
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 /** @type {{ pid: number }} */
