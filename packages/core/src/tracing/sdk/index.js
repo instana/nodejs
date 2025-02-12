@@ -10,22 +10,18 @@ const sdk = require('./sdk');
 /** @type {import('../cls')} */
 let cls;
 
-/** @type {ReturnType<typeof sdk>} */
-let callback;
-/** @type {ReturnType<typeof sdk>} */
-let promise;
+const callback = sdk.generate(true);
+const promise = sdk.generate(false);
 
 /**
  * @param {import('../../util/normalizeConfig').InstanaConfig} config
  * @param {import('../cls')} _cls
  */
 exports.init = function init(config, _cls) {
-  callback = sdk(config, true);
-  promise = sdk(config, false);
-
   cls = _cls;
-  callback.init(_cls);
-  promise.init(_cls);
+
+  callback.init(config, _cls);
+  promise.init(config, _cls);
 };
 
 exports.activate = function activate() {

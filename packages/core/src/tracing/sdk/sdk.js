@@ -11,17 +11,14 @@ const constants = require('../constants');
 
 /** @typedef {import('../../core').InstanaBaseSpan} InstanaBaseSpan */
 
-/** @type {import('../../core').GenericLogger} */
-let logger;
 let isActive = false;
 
 /**
- * @param {import('../../util/normalizeConfig').InstanaConfig} config
  * @param {boolean} isCallbackApi
  */
-module.exports = function (config, isCallbackApi) {
-  logger = config.logger;
-
+exports.generate = function (isCallbackApi) {
+  /** @type {import('../../core').GenericLogger} */
+  let logger;
   /** @type {import('../cls')} */
   let cls = null;
   /** @type {Function} */
@@ -366,9 +363,11 @@ module.exports = function (config, isCallbackApi) {
   }
 
   /**
+   * @param {import('../../util/normalizeConfig').InstanaConfig} config
    * @param {import('../cls')} _cls
    */
-  function init(_cls) {
+  function init(config, _cls) {
+    logger = config.logger;
     cls = _cls;
     runInContext = isCallbackApi ? cls.ns.runAndReturn.bind(cls.ns) : cls.ns.runPromise.bind(cls.ns);
   }
