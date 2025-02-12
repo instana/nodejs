@@ -23,7 +23,7 @@ async function init() {
     // NOTE: We have to call pre-init because we are running an async call to get the service name.
     //       The goal is to register our instrumentations as early as possible.
     //       Otherwise we can easily run into errors e.g. from `hasThePackageBeenInitializedTooLate`.
-    instanaCore.preInit();
+    instanaCore.preInit(config);
 
     const serviceName = await customMetrics.name(config);
     if (serviceName) {

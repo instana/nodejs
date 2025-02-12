@@ -8,9 +8,10 @@ const expect = require('chai').expect;
 const sinon = require('sinon');
 const backendConnector = require('../src/backend_connector');
 const uninstrumentedHttp = require('../src/uninstrumentedHttp');
-const config = require('../../core/test/config');
+const testConfig = require('../../core/test/config');
 const delay = require('../../core/test/test_util/delay');
 const retry = require('../../core/test/test_util/retry');
+const { createFakeLogger } = require('../../core/test/test_util');
 
 const sendBundle = async () => {
   return new Promise(resolve => {
@@ -28,8 +29,10 @@ const sendSpans = async () => {
 };
 
 describe('[UNIT] backend connector', () => {
+  const config = { logger: createFakeLogger() };
+
   describe('Lambda Heartbeat', function () {
-    this.timeout(config.getTestTimeout());
+    this.timeout(testConfig.getTestTimeout());
 
     let onStub;
     let onceStub;
@@ -60,7 +63,7 @@ describe('[UNIT] backend connector', () => {
     });
 
     it('when lambda extension is not used', async () => {
-      backendConnector.init();
+      backendConnector.init(config);
 
       expect(uninstrumentedHttp.http.request.called).to.be.false;
       await delay(750);
@@ -72,7 +75,7 @@ describe('[UNIT] backend connector', () => {
     it('when lambda extension is used & heartbeat is not working', async () => {
       expect(global.clearInterval.called).to.be.false;
 
-      backendConnector.init(null, null, null, null, null, true);
+      backendConnector.init(config, null, null, null, null, null, true);
 
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(1);
@@ -86,7 +89,7 @@ describe('[UNIT] backend connector', () => {
     it('when lambda extension is used & heartbeat is working, but timeout when talking to extension', async () => {
       expect(global.clearInterval.called).to.be.false;
 
-      backendConnector.init(null, null, null, null, null, true);
+      backendConnector.init(config, null, null, null, null, null, true);
 
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(1);
@@ -115,7 +118,7 @@ describe('[UNIT] backend connector', () => {
     it('when lambda extension is used & heartbeat is working, but error when talking to extension', async () => {
       expect(global.clearInterval.called).to.be.false;
 
-      backendConnector.init(null, null, null, null, null, true);
+      backendConnector.init(config, null, null, null, null, null, true);
 
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(1);
@@ -140,7 +143,7 @@ describe('[UNIT] backend connector', () => {
     });
 
     it('when lambda extension is used & heartbeat is working & send once', async () => {
-      backendConnector.init(null, null, null, null, null, true);
+      backendConnector.init(config, null, null, null, null, null, true);
 
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(1);
@@ -186,7 +189,7 @@ describe('[UNIT] backend connector', () => {
     });
 
     it('when lambda extension is used & heartbeat is working & more data is incoming', async () => {
-      backendConnector.init(null, null, null, null, null, true);
+      backendConnector.init(config, null, null, null, null, null, true);
 
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(1);
