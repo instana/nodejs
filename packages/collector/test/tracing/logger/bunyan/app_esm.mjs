@@ -24,6 +24,11 @@ import path from 'path';
 import bunyan from 'bunyan';
 const logger = bunyan.createLogger({ name: 'test-logger' });
 
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 const app = express();
