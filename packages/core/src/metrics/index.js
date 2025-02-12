@@ -46,6 +46,7 @@ exports.findAndRequire = function findAndRequire(baseDir) {
       .filter(
         moduleName =>
           moduleName.indexOf('.js') === moduleName.length - 3 &&
+          // TODO: move the extra metrics into a separate folder
           moduleName.indexOf('index.js') < 0 &&
           moduleName.indexOf('transmissionCycle.js') < 0
       )

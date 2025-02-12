@@ -53,13 +53,15 @@ const ctx = {
 
 /**
  * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {any} pidStore
  */
-exports.init = function init(config) {
+exports.init = function init(config, pidStore) {
   logger = config.logger;
+
   agentHostLookup.init(config);
-  unannounced.init(config);
   announced.init(config);
-  agentready.init(config);
+  agentready.init(config, pidStore);
+  unannounced.init(config, pidStore);
 };
 
 exports.start = function start() {

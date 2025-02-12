@@ -10,6 +10,7 @@ const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 
 const { FakeRequestHandler, FakeRequest, FakeResponse } = require('../test_util/fake_http');
+const testUtils = require('@instana/core/test/test_util');
 
 const { expect } = chai;
 chai.use(sinonChai);
@@ -91,6 +92,7 @@ describe('agent host lookup state', () => {
     parseProcSelfNetRouteFileStub = sinon.stub();
     defaultGatewayParserMock = {
       '@noCallThru': true,
+      init: () => {},
       parseProcSelfNetRouteFile: parseProcSelfNetRouteFileStub
     };
 
@@ -105,6 +107,7 @@ describe('agent host lookup state', () => {
       './defaultGatewayParser': defaultGatewayParserMock
     });
 
+    agentHostLookupState.init({ logger: testUtils.createFakeLogger() });
     transitionTo = sinon.stub();
     ctxStub = { transitionTo };
   });

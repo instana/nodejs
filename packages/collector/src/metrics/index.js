@@ -8,13 +8,21 @@
 const coreMetrics = require('@instana/core').metrics;
 const sharedMetrics = require('@instana/shared-metrics');
 const transmissionCycle = require('./transmissionCycle');
+const pid = require('./pid');
+
+const additionalMetrics = [pid];
 
 /**
  * @param {import('@instana/core/src/metrics').InstanaConfig} config
+ * @param {any} pidStore
  */
-exports.init = function init(config) {
+exports.init = function init(config, pidStore) {
   coreMetrics.init(config);
   transmissionCycle.init(config);
+
+  additionalMetrics.forEach(metric => {
+    metric.init(config, pidStore);
+  });
 
   coreMetrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
   const additionalCollectorMetrics = coreMetrics.findAndRequire(__dirname);

@@ -18,8 +18,6 @@ let logger;
 /** @type {{ pid: number }} */
 let pidStore;
 
-const cpuSetFileContent = getCpuSetFileContent();
-
 // How many extra characters are to be reserved for the inode and
 // file descriptor fields in the collector announce cycle.
 const paddingForInodeAndFileDescriptor = 200;
@@ -30,15 +28,19 @@ let maxContentErrorHasBeenLogged = false;
 const http = uninstrumentedHttp.http;
 let isConnected = false;
 
+/** @type {string | null} */
+let cpuSetFileContent = null;
+
 /**
  * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
  * @param {any} _pidStore
  */
 exports.init = function init(config, _pidStore) {
   logger = config.logger;
-
   cmdline.init(config);
   pidStore = _pidStore;
+
+  cpuSetFileContent = getCpuSetFileContent();
 };
 
 exports.AgentEventSeverity = {

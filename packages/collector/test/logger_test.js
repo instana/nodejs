@@ -36,7 +36,7 @@ describe('logger', () => {
     const logger = log.init({});
 
     // When using pino with a multi-stream setup, the logger's streams aren't directly exposed
-    const multiStream = logger[pino.symbols.streamSym];
+    const multiStream = logger.logger[pino.symbols.streamSym];
 
     expect(multiStream).to.be.undefined;
   });
@@ -46,7 +46,7 @@ describe('logger', () => {
     const logger = log.init({});
 
     // When using pino with a multi-stream setup, the logger's streams aren't directly exposed
-    const multiStream = logger[uninstrumentedLogger.symbols.streamSym];
+    const multiStream = logger.logger[uninstrumentedLogger.symbols.streamSym];
 
     expect(multiStream).to.be.an('object');
 
@@ -55,59 +55,59 @@ describe('logger', () => {
 
   it('should return the default parent logger if no config is available', () => {
     const logger = log.init({});
-    expect(isPinoLogger(logger)).to.be.true;
+    expect(isPinoLogger(logger.logger)).to.be.true;
   });
 
   it('should use the parent logger if defined', () => {
     pino = require('pino');
     const parentLogger = pino({ name: 'myParentLogger' });
     const logger = log.init({ logger: parentLogger });
-    const metadata = getLoggerMetadata(logger);
+    const metadata = getLoggerMetadata(logger.logger);
 
-    expect(isPinoLogger(logger)).to.be.true;
+    expect(isPinoLogger(logger.logger)).to.be.true;
     expect(metadata).to.have.property('module');
     expect(metadata.module).to.equal('instana-nodejs-logger');
   });
 
   it('should use default log level if not defined', () => {
     const logger = log.init({ logger: pino({ name: 'myParentLogger' }) });
-    expect(logger.level).to.equal('info');
+    expect(logger.logger.level).to.equal('info');
   });
 
   it('should use defined log level', () => {
     const logger = log.init({ logger: pino({ name: 'myParentLogger', level: 50 }) });
-    expect(logger.level).to.equal('error');
+    expect(logger.logger.level).to.equal('error');
   });
 
   it('should use log level from env var', () => {
     process.env.INSTANA_LOG_LEVEL = 'warn';
     const logger = log.init({});
-    expect(logger.level).to.equal('warn');
+    expect(logger.logger.level).to.equal('warn');
   });
 
   it('should use debug log level when INSTANA_DEBUG is set', () => {
     process.env.INSTANA_DEBUG = 'true';
     const logger = log.init({});
-    expect(logger.level).to.equal('debug');
+    expect(logger.logger.level).to.equal('debug');
   });
 
   it('should not detect pino as bunyan', () => {
     const pinoLogger = pino();
     const logger = log.init({ logger: pinoLogger });
-    expect(isPinoLogger(logger)).to.be.true;
-    expect(logger.constructor.name).to.equal('Pino');
+    expect(isPinoLogger(logger.logger)).to.be.true;
+    expect(logger.logger.constructor.name).to.equal('Pino');
   });
 
   it('should create a child logger for pino', () => {
     const pinoLogger = pino();
     const logger = log.init({ logger: pinoLogger });
-    expect(logger === pinoLogger).to.be.not.true;
+    expect(logger.logger === pinoLogger).to.be.not.true;
   });
 
   it('should not accept non-pino loggers without necessary logging functions', () => {
     const nonPinoLogger = {};
     const logger = log.init({ logger: nonPinoLogger });
-    expect(isPinoLogger(logger)).to.be.true;
+    expect(isPinoLogger(logger.logger)).to.be.true;
   });
 
   it('should accept non-pino loggers with necessary logging functions', () => {
@@ -120,7 +120,7 @@ describe('logger', () => {
 
     const logger = log.init({ logger: nonPinoLogger });
 
-    expect(isPinoLogger(logger)).to.be.false;
+    expect(isPinoLogger(logger.logger)).to.be.false;
   });
 
   it('should verify bunyan output streams', () => {
@@ -128,13 +128,13 @@ describe('logger', () => {
       logger: bunyan.createLogger({ name: 'test-bunyan-logger' })
     });
 
-    expect(logger).to.be.an.instanceOf(bunyan);
-    expect(logger.streams).to.be.an('array');
+    expect(logger.logger).to.be.an.instanceOf(bunyan);
+    expect(logger.logger.streams).to.be.an('array');
     // 1 x default stream that prints to stdout
     // 1 x custom stream that goes to agent stream
-    expect(logger.streams).to.have.lengthOf(2);
+    expect(logger.logger.streams).to.have.lengthOf(2);
     expectAtLeastOneMatching(
-      logger.streams,
+      logger.logger.streams,
       stream => expect(stream.type).to.equal('raw'),
       stream => expect(stream.level).to.equal('info')
     );
