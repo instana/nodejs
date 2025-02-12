@@ -8,12 +8,16 @@ const fs = require('fs').promises;
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('announceCycle/defaultGatewayParser', newLogger => {
-  logger = newLogger;
-});
 
 /** @type string */
 let cachedResult;
+
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+};
 
 /**
  * Parses the /proc/self/net/route and returns the default gateway IP. The result of the first invocation is cached,

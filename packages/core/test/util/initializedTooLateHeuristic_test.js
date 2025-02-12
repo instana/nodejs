@@ -10,10 +10,12 @@ const path = require('path');
 const fs = require('fs');
 const hook = require('../../src/util/hook');
 const initializedTooLateHeurstic = require('../../src/util/initializedTooLateHeuristic');
-const config = require('../config');
+const testConfig = require('../config');
+const testUtils = require('../test_util');
+const { normalizeConfig } = require('../../src/util');
 
 describe('[UNIT] util.initializedTooLateHeurstic', function () {
-  this.timeout(config.getTestTimeout());
+  this.timeout(testConfig.getTestTimeout());
 
   const instrumentedModules = [];
 
@@ -27,8 +29,10 @@ describe('[UNIT] util.initializedTooLateHeurstic', function () {
 
     require.cache['/@contrast/agent/'] = {};
 
+    const fakeLogger = testUtils.createFakeLogger();
     const tracing = require('../../src');
-    tracing.init();
+    const config = normalizeConfig({}, fakeLogger);
+    tracing.init(config);
   });
 
   after(() => {
@@ -41,13 +45,13 @@ describe('[UNIT] util.initializedTooLateHeurstic', function () {
   });
 
   it('hasBeenInitializedTooLate is false', () => {
-    expect(initializedTooLateHeurstic()).to.be.false;
+    expect(initializedTooLateHeurstic.activate()).to.be.false;
   });
 
   it('hasBeenInitializedTooLate is false', () => {
     const p = '/Users/myuser/dev/instana/nodejs/node_modules/nope';
     require.cache[p] = {};
-    expect(initializedTooLateHeurstic()).to.be.false;
+    expect(initializedTooLateHeurstic.activate()).to.be.false;
     delete require.cache[p];
   });
 
@@ -77,9 +81,9 @@ describe('[UNIT] util.initializedTooLateHeurstic', function () {
       const excluded = exclude.filter(n => resolvedPath.indexOf(n) !== -1);
 
       if (excluded.length) {
-        expect(initializedTooLateHeurstic()).to.be.false;
+        expect(initializedTooLateHeurstic.activate()).to.be.false;
       } else {
-        expect(initializedTooLateHeurstic()).to.be.true;
+        expect(initializedTooLateHeurstic.activate()).to.be.true;
       }
 
       delete require.cache[resolvedPath];

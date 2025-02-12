@@ -48,7 +48,7 @@ const instanaSharedMetrics = require('@instana/shared-metrics');
 require('./tracing'); // load additional instrumentations
 const log = require('./logger');
 
-const normalizeConfig = require('./util/normalizeConfig');
+const normalizeCollectorConfig = require('./util/normalizeConfig');
 const experimental = require('./experimental');
 
 /** @type {import('./agentConnection')} */
@@ -94,32 +94,33 @@ function init(_config) {
   }
   // @ts-ignore: Property '__INSTANA_INITIALIZED' does not exist on type global
   global.__INSTANA_INITIALIZED = true;
-  config = normalizeConfig(_config);
+
+  /** @type {import('@instana/core/src/core').GenericLogger} */
+  const logger = log.init(_config);
+  config = normalizeCollectorConfig(_config);
+  config = instanaNodeJsCore.util.normalizeConfig(config, logger);
 
   agentConnection = require('./agentConnection');
   const agentOpts = require('./agent/opts');
   const pidStore = require('./pidStore');
   const uncaught = require('./uncaught');
+  const announceCycle = require('./announceCycle');
+  const metrics = require('./metrics');
 
-  let logger;
-  logger = log.getLogger('index', newLogger => {
-    logger = newLogger;
-  });
-
-  // NOTE: By default we set our instana internal logger
-  config.logger = logger;
-
+  pidStore.init(config);
+  announceCycle.init(config);
   agentOpts.init(config);
+  agentConnection.init(config, pidStore);
   instanaNodeJsCore.init(config, agentConnection, pidStore);
-  instanaSharedMetrics.setLogger(logger);
+  instanaSharedMetrics.init(config);
 
   if (isMainThread) {
     uncaught.init(config, agentConnection, pidStore);
-    require('./metrics').init(config);
+    metrics.init(config);
   }
 
   logger.info(`@instana/collector module version: ${require(path.join(__dirname, '..', 'package.json')).version}`);
-  require('./announceCycle').start();
+  announceCycle.start();
 
   return init;
 }
@@ -141,8 +142,8 @@ init.isConnected = function isConnected() {
  */
 init.setLogger = function setLogger(logger) {
   // NOTE: Override our default logger with customer's logger
+  log.init({ logger });
   config.logger = logger;
-  log.init(config, true);
 };
 
 init.core = instanaNodeJsCore;
@@ -157,7 +158,7 @@ if (process.env.INSTANA_IMMEDIATE_INIT != null && process.env.INSTANA_IMMEDIATE_
   process.env.INSTANA_EARLY_INSTRUMENTATION != null &&
   process.env.INSTANA_EARLY_INSTRUMENTATION.toLowerCase() === 'true'
 ) {
-  instanaNodeJsCore.preInit();
+  instanaNodeJsCore.preInit({});
 }
 
 module.exports = init;

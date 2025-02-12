@@ -7,10 +7,6 @@
 
 /** @type {import('../core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('util/initializedTooLateHeuristic', newLogger => {
-  logger = newLogger;
-});
-
 let firstCall = true;
 let hasBeenInitializedTooLate = false;
 
@@ -84,9 +80,16 @@ const extraPatterns = [
 ];
 
 /**
+ * @param {import('../util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+};
+
+/**
  * @returns {boolean}
  */
-module.exports = function hasThePackageBeenInitializedTooLate() {
+exports.activate = function hasThePackageBeenInitializedTooLate() {
   if (firstCall) {
     const loadedModules = Object.keys(require.cache);
 

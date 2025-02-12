@@ -6,8 +6,8 @@
 'use strict';
 
 const path = require('path');
-
 const slidingWindow = require('@instana/core').util.slidingWindow;
+const nativeModuleRetry = require('./util/nativeModuleRetry');
 
 const windowOpts = { duration: 1000 };
 const minorGcWindow = slidingWindow.create(windowOpts);
@@ -41,6 +41,31 @@ exports.currentPayload = {
   statsSupported: false
 };
 
+exports.init = function init() {
+  const nativeModuleLoader = nativeModuleRetry.loadNativeAddOn({
+    nativeModuleName: 'gcstats.js',
+    moduleRoot: path.join(__dirname, '..'),
+    message:
+      'Could not load gcstats.js. You will not be able to see GC information in Instana for this application. This ' +
+      'typically occurs when native addons could not be built during module installation (npm install/yarn) or when ' +
+      'npm install --no-optional or yarn --ignore-optional have been used to install dependencies. See the ' +
+      'instructions to learn more about the requirements of the collector: ' +
+      'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#native-add-ons'
+  });
+
+  nativeModuleLoader.once('loaded', gcStats_ => {
+    gcStats = gcStats_;
+    exports.currentPayload.statsSupported = true;
+    if (activateHasBeenCalled) {
+      actuallyActivate();
+    }
+  });
+
+  nativeModuleLoader.once('failed', () => {
+    exports.currentPayload.statsSupported = false;
+  });
+};
+
 exports.activate = function activate() {
   activateHasBeenCalled = true;
   if (gcStats) {
@@ -48,31 +73,8 @@ exports.activate = function activate() {
   }
 };
 
-const nativeModuleLoader = require('./util/nativeModuleRetry')({
-  nativeModuleName: 'gcstats.js',
-  moduleRoot: path.join(__dirname, '..'),
-  message:
-    'Could not load gcstats.js. You will not be able to see GC information in Instana for this application. This ' +
-    'typically occurs when native addons could not be built during module installation (npm install/yarn) or when ' +
-    'npm install --no-optional or yarn --ignore-optional have been used to install dependencies. See the ' +
-    'instructions to learn more about the requirements of the collector: ' +
-    'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#native-add-ons'
-});
-
 /** @type {NodeJS.Timeout} */
 let senseIntervalHandle;
-
-nativeModuleLoader.once('loaded', gcStats_ => {
-  gcStats = gcStats_;
-  exports.currentPayload.statsSupported = true;
-  if (activateHasBeenCalled) {
-    actuallyActivate();
-  }
-});
-
-nativeModuleLoader.once('failed', () => {
-  exports.currentPayload.statsSupported = false;
-});
 
 function actuallyActivate() {
   if (hasBeenActivated) {

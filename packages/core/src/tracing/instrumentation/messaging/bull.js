@@ -12,15 +12,13 @@ const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const { getFunctionArguments } = require('../../../util/function_arguments');
 
-let logger = require('../../../logger').getLogger('tracing/bull', newLogger => {
-  logger = newLogger;
-});
-
+let logger;
 let isActive = false;
 
 exports.spanName = 'bull';
 
-exports.init = function init() {
+exports.init = function init(config) {
+  logger = config.logger;
   hook.onModuleLoad('bull', instrumentBull);
 };
 

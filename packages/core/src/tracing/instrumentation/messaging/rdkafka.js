@@ -12,15 +12,14 @@ const constants = require('../../constants');
 const cls = require('../../cls');
 const shimmer = require('../../shimmer');
 const { getFunctionArguments } = require('../../../util/function_arguments');
-let logger;
-logger = require('../../../logger').getLogger('tracing/rdkafka', newLogger => {
-  logger = newLogger;
-});
-
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
+
+let logger;
 let isActive = false;
 
 exports.init = function init(config) {
+  logger = config.logger;
+
   hook.onFileLoad(/\/node-rdkafka\/lib\/producer\.js/, instrumentProducer);
   hook.onFileLoad(/\/node-rdkafka\/lib\/kafka-consumer-stream\.js/, instrumentConsumerAsStream);
   hook.onModuleLoad('node-rdkafka', instrumentConsumer);

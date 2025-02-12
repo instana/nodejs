@@ -12,14 +12,12 @@ const {
 } = require('@instana/core');
 const { constants: tracingConstants } = tracing;
 
-/** @type {import('@instana/core/src/core').GenericLogger} */
-let logger;
-logger = require('../logger').getLogger('announceCycle/unannounced', newLogger => {
-  logger = newLogger;
-});
 const agentConnection = require('../agentConnection');
 const agentOpts = require('../agent/opts');
 const pidStore = require('../pidStore');
+
+/** @type {import('@instana/core/src/core').GenericLogger} */
+let logger;
 
 const initialRetryDelay = 10 * 1000; // 10 seconds
 const backoffFactor = 1.5;
@@ -52,16 +50,12 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {boolean} [trace-correlation]
  */
 
-module.exports = {
-  /**
-   * @param {import('./').AnnounceCycleContext} ctx
-   */
-  enter: function (ctx) {
-    tryToAnnounce(ctx);
-  },
-
-  leave: function () {}
-};
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
+function init(config) {
+  logger = config.logger;
+}
 
 /**
  * @param {import('./').AnnounceCycleContext} ctx
@@ -243,3 +237,16 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
     agentOpts.config.tracing.ignoreEndpoints = endpointTracingConfig;
   }
 }
+
+module.exports = {
+  init,
+
+  /**
+   * @param {import('./').AnnounceCycleContext} ctx
+   */
+  enter: function (ctx) {
+    tryToAnnounce(ctx);
+  },
+
+  leave: function () {}
+};

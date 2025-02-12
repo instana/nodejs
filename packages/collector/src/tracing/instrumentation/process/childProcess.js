@@ -17,9 +17,6 @@ const selfPath = require('./selfPath');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('../../../logger').getLogger('tracing/child_process', newLogger => {
-  logger = newLogger;
-});
 
 // This instruments the code that is used when edgemicro is started with the forever monitor, that is, via
 // `edgemicro forever -a start`. It adds --require /path/to/@instana/collecor/src/immediate to the arguments,
@@ -27,7 +24,9 @@ logger = require('../../../logger').getLogger('tracing/child_process', newLogger
 //
 // There is also ./edgemicro.js, which is responsible for instrumenting the code that is used to spawn the individual
 // edgemicro workers.
-exports.init = function () {
+exports.init = function (config) {
+  logger = config.logger;
+
   shimmer.wrap(coreChildProcess, 'spawn', shimSpawn);
   shimmer.wrap(coreChildProcess, 'fork', shimFork);
 };

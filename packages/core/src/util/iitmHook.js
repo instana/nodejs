@@ -7,17 +7,22 @@
 const iitmHook = require('import-in-the-middle');
 
 /** @type {import('../core').GenericLogger} */
-let logger = require('../logger').getLogger('util/iitmHook', newLogger => {
-  logger = newLogger;
-});
+let logger;
 
 /** @type {Object.<string, Function[]>} */
 const byModuleNameTransformers = {};
 
 /**
+ * @param {import('../util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+};
+
+/**
  * Initializes the import-in-the-middle hooking.
  */
-exports.init = function init() {
+exports.activate = function activate() {
   Object.entries(byModuleNameTransformers).forEach(([moduleName, applicableTransformers]) => {
     if (applicableTransformers) {
       applicableTransformers.forEach(transformerFn => {

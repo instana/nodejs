@@ -33,8 +33,7 @@ describe('logger', () => {
 
   it('should verify pino output streams are not there for the logger', () => {
     log = require('../src/logger');
-    log.init({});
-    const logger = log.getLogger('myLogger');
+    const logger = log.init({});
 
     // When using pino with a multi-stream setup, the logger's streams aren't directly exposed
     const multiStream = logger[pino.symbols.streamSym];
@@ -44,8 +43,7 @@ describe('logger', () => {
 
   it('should verify pino output streams are there ', () => {
     uninstrumentedLogger = require('../src/uninstrumentedLogger');
-    log.init({});
-    const logger = log.getLogger('myLogger');
+    const logger = log.init({});
 
     // When using pino with a multi-stream setup, the logger's streams aren't directly exposed
     const multiStream = logger[uninstrumentedLogger.symbols.streamSym];
@@ -56,95 +54,59 @@ describe('logger', () => {
   });
 
   it('should return the default parent logger if no config is available', () => {
-    log.init({});
-    const logger = log.getLogger('myLogger');
+    const logger = log.init({});
     expect(isPinoLogger(logger)).to.be.true;
-  });
-
-  it('should return a child logger if requested', () => {
-    log.init({});
-    const logger = log.getLogger('childName');
-    const metadata = getLoggerMetadata(logger);
-
-    expect(isPinoLogger(logger)).to.be.true;
-
-    expect(metadata).to.have.property('module');
-    expect(metadata.module).to.equal('childName');
   });
 
   it('should use the parent logger if defined', () => {
     pino = require('pino');
-    const logger = pino({ name: 'myParentLogger' });
-    log.init({ logger });
-    const childLogger = log.getLogger('childName');
-    const metadata = getLoggerMetadata(childLogger);
+    const parentLogger = pino({ name: 'myParentLogger' });
+    const logger = log.init({ logger: parentLogger });
+    const metadata = getLoggerMetadata(logger);
 
     expect(isPinoLogger(logger)).to.be.true;
     expect(metadata).to.have.property('module');
-    expect(metadata.module).to.equal('childName');
-  });
-
-  it('should add child logger to defined parent', () => {
-    pino = require('pino');
-    const logger = pino({ name: 'myParentLogger' });
-    log.init({ logger });
-    const childLogger = log.getLogger('childName');
-
-    const childtMetaData = getLoggerMetadata(childLogger);
-
-    expect(childtMetaData).to.have.property('module');
-    expect(childtMetaData?.module).to.equal('childName');
+    expect(metadata.module).to.equal('instana-nodejs-logger');
   });
 
   it('should use default log level if not defined', () => {
-    log.init({ logger: pino({ name: 'myParentLogger' }) });
-    const logger = log.getLogger('childName');
-
+    const logger = log.init({ logger: pino({ name: 'myParentLogger' }) });
     expect(logger.level).to.equal('info');
   });
 
   it('should use defined log level', () => {
-    log.init({ logger: pino({ name: 'myParentLogger', level: 50 }) });
-    const logger = log.getLogger('childName');
-
+    const logger = log.init({ logger: pino({ name: 'myParentLogger', level: 50 }) });
     expect(logger.level).to.equal('error');
   });
 
   it('should use log level from env var', () => {
     process.env.INSTANA_LOG_LEVEL = 'warn';
-    log.init({});
-    const logger = log.getLogger('childName');
+    const logger = log.init({});
     expect(logger.level).to.equal('warn');
   });
 
   it('should use debug log level when INSTANA_DEBUG is set', () => {
     process.env.INSTANA_DEBUG = 'true';
-    log.init({});
-    const logger = log.getLogger('childName');
+    const logger = log.init({});
     expect(logger.level).to.equal('debug');
   });
 
   it('should not detect pino as bunyan', () => {
     const pinoLogger = pino();
-    log.init({ logger: pinoLogger });
-    const logger = log.getLogger('myLogger');
+    const logger = log.init({ logger: pinoLogger });
     expect(isPinoLogger(logger)).to.be.true;
     expect(logger.constructor.name).to.equal('Pino');
   });
 
   it('should create a child logger for pino', () => {
     const pinoLogger = pino();
-    log.init({ logger: pinoLogger });
-    const logger = log.getLogger('myLogger');
+    const logger = log.init({ logger: pinoLogger });
     expect(logger === pinoLogger).to.be.not.true;
   });
 
   it('should not accept non-pino loggers without necessary logging functions', () => {
     const nonPinoLogger = {};
-
-    log.init({ logger: nonPinoLogger });
-
-    const logger = log.getLogger('myLogger');
+    const logger = log.init({ logger: nonPinoLogger });
     expect(isPinoLogger(logger)).to.be.true;
   });
 
@@ -156,59 +118,16 @@ describe('logger', () => {
       error: function () {}
     };
 
-    log.init({ logger: nonPinoLogger });
+    const logger = log.init({ logger: nonPinoLogger });
 
-    const logger = log.getLogger('myLogger');
     expect(isPinoLogger(logger)).to.be.false;
   });
 
-  it('should reset loggers when the logger is set after initialization', () => {
-    log.init({});
-    let reInitCalled = false;
-    let logger;
-    logger = log.getLogger('myLogger', newLogger => {
-      reInitCalled = true;
-      logger = newLogger;
-    });
-
-    expect(isPinoLogger(logger)).to.be.true;
-
-    const metadata = getLoggerMetadata(logger);
-
-    expect(metadata.name).to.equal('@instana/collector');
-    const originalLogger = logger;
-
-    const logger2 = pino({ name: 'new-logger' });
-    log.init({ logger: logger2 }, true);
-
-    expect(reInitCalled).to.be.true;
-    expect(isPinoLogger(logger)).to.be.true;
-    expect(logger === originalLogger).to.not.be.true;
-
-    const metadata2 = getLoggerMetadata(logger2);
-
-    expect(metadata2.name).to.equal('new-logger');
-  });
-
-  it('should not choke on re-initialization when there is no reInit callback', () => {
-    log.init({});
-    const logger = log.getLogger('myLogger');
-
-    // first getLogger call should yield the default pino logger
-    expect(isPinoLogger(logger)).to.be.true;
-
-    const metadata = getLoggerMetadata(logger);
-    expect(metadata.name).to.equal('@instana/collector');
-
-    const logger2 = pino({ name: 'new-logger' });
-    log.init({ logger: logger2 });
-  });
-
   it('should verify bunyan output streams', () => {
-    log.init({
+    const logger = log.init({
       logger: bunyan.createLogger({ name: 'test-bunyan-logger' })
     });
-    const logger = log.getLogger('myLogger');
+
     expect(logger).to.be.an.instanceOf(bunyan);
     expect(logger.streams).to.be.an('array');
     // 1 x default stream that prints to stdout

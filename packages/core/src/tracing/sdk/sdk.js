@@ -9,20 +9,17 @@ const deepMerge = require('../../util/deepMerge');
 const tracingUtil = require('../tracingUtil');
 const constants = require('../constants');
 
-/** @typedef {import('../../core').InstanaBaseSpan} InstanaBaseSpan */
-
 /** @type {import('../../core').GenericLogger} */
 let logger;
-logger = require('../../logger').getLogger('tracing/sdk', newLogger => {
-  logger = newLogger;
-});
-
 let isActive = false;
 
 /**
+ * @param {import('../../util/normalizeConfig').InstanaConfig} config
  * @param {boolean} isCallbackApi
  */
-module.exports = function (isCallbackApi) {
+module.exports = function (config, isCallbackApi) {
+  logger = config.logger;
+
   /** @type {import('../cls')} */
   let cls = null;
   /** @type {Function} */

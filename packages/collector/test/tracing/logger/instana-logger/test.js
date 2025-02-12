@@ -125,6 +125,7 @@ mochaSuiteFn('tracing/instana-logger', function () {
             span => expect(span.f.h).to.equal('agent-stub-uuid')
           ]);
 
+          spans.forEach(span => console.log(span.n, span.data));
           // 1 x http span
           expect(spans.length).to.be.eq(1);
 

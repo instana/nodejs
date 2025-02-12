@@ -15,8 +15,7 @@ const customMetrics = require('./metrics');
 let logger = consoleLogger;
 logger.init();
 
-const config = normalizeConfig({});
-config.logger = logger;
+const config = normalizeConfig({}, logger);
 
 async function init() {
   // NOTE: This package does not support autotracing.
@@ -28,7 +27,7 @@ async function init() {
     //       Otherwise we can easily run into errors e.g. from `hasThePackageBeenInitializedTooLate`.
     instanaCore.preInit();
 
-    const serviceName = await customMetrics.name(config, logger);
+    const serviceName = await customMetrics.name(config);
     if (serviceName) {
       config.serviceName = serviceName;
     }

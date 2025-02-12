@@ -7,18 +7,22 @@
 
 const expect = require('chai').expect;
 const sinon = require('sinon');
-
-const atMostOnce = require('../../src/util/atMostOnce');
+const util = require('../../src/util');
+const testUtils = require('../test_util');
 
 describe('util.atMostOnce', () => {
   let cb;
+
+  before(() => {
+    util.init({ logger: testUtils.createFakeLogger() });
+  });
 
   beforeEach(() => {
     cb = sinon.stub();
   });
 
   it('should forward calls with parameters', () => {
-    const wrapped = atMostOnce('test', cb);
+    const wrapped = util.atMostOnce('test', cb);
     expect(cb.callCount).to.equal(0);
 
     wrapped('foo', true, 1);
@@ -30,7 +34,7 @@ describe('util.atMostOnce', () => {
   });
 
   it('should not permit any successive calls', () => {
-    const wrapped = atMostOnce('test', cb);
+    const wrapped = util.atMostOnce('test', cb);
     wrapped('a');
 
     wrapped();

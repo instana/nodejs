@@ -13,7 +13,6 @@ try {
 }
 
 const { tracing } = require('@instana/core');
-
 const agentConnection = require('../agentConnection');
 const agentOpts = require('../agent/opts');
 const initializedTooLate = require('../util/initializedTooLate');
@@ -39,9 +38,6 @@ let profiler;
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('announceCycle/agentready', newLogger => {
-  logger = newLogger;
-});
 
 if (agentOpts.autoProfile) {
   try {
@@ -77,10 +73,13 @@ if (typeof process.env.INSTANA_TRACER_METRICS_INTERVAL === 'string') {
 /** @type {NodeJS.Timeout} */
 let tracingMetricsTimeout = null;
 
-module.exports = exports = {
-  enter,
-  leave
-};
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
+function init(config) {
+  logger = config.logger;
+  initializedTooLate.init(config);
+}
 
 /**
  * @param {import('./').AnnounceCycleContext} _ctx
@@ -248,3 +247,9 @@ function detectEOLNodeVersion() {
     }, 2000);
   }
 }
+
+module.exports = exports = {
+  init,
+  enter,
+  leave
+};

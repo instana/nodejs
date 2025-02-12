@@ -8,16 +8,14 @@
 const proxyquire = require('proxyquire');
 const expect = require('chai').expect;
 const sinon = require('sinon');
+const testUtils = require('../../test_util');
 
 describe('util/requireHook', () => {
   let requireHook;
   let hook;
 
   beforeEach(() => {
-    requireHook = proxyquire('../../../src/util/requireHook', {
-      // We need to proxyquire logger, too, to work around the duplicate module logger name check.
-      '../logger': proxyquire('../../../src/logger', {})
-    });
+    requireHook = proxyquire('../../../src/util/requireHook', {});
     hook = sinon.stub();
   });
 
@@ -36,7 +34,7 @@ describe('util/requireHook', () => {
     });
 
     it('must not forcefully load modules', done => {
-      requireHook.init();
+      requireHook.init({ logger: testUtils.createFakeLogger() });
       requireHook.onModuleLoad('./testModuleA', hook);
 
       setTimeout(() => {
@@ -46,7 +44,7 @@ describe('util/requireHook', () => {
     });
 
     it('must inform about loaded modules', () => {
-      requireHook.init();
+      requireHook.init({ logger: testUtils.createFakeLogger() });
       requireHook.onModuleLoad('./testModuleA', hook);
 
       expect(require('./testModuleA')).to.equal('module a');
@@ -56,7 +54,7 @@ describe('util/requireHook', () => {
     });
 
     it('must not inform aboute loaded modules twice', () => {
-      requireHook.init();
+      requireHook.init({ logger: testUtils.createFakeLogger() });
       requireHook.onModuleLoad('./testModuleA', hook);
 
       expect(require('./testModuleA')).to.equal('module a');
@@ -67,7 +65,7 @@ describe('util/requireHook', () => {
     });
 
     it('must support loading of two separate modules', () => {
-      requireHook.init();
+      requireHook.init({ logger: testUtils.createFakeLogger() });
       requireHook.onModuleLoad('./testModuleA', hook);
       requireHook.onModuleLoad('./testModuleB', hook);
 
@@ -80,7 +78,7 @@ describe('util/requireHook', () => {
     });
 
     it('must support redefinition of module exports', () => {
-      requireHook.init();
+      requireHook.init({ logger: testUtils.createFakeLogger() });
       requireHook.onModuleLoad('./testModuleA', hook);
       hook.returns('a');
 
@@ -92,7 +90,7 @@ describe('util/requireHook', () => {
     });
 
     it('must support require chains', () => {
-      requireHook.init();
+      requireHook.init({ logger: testUtils.createFakeLogger() });
       requireHook.onModuleLoad('./testModuleA', hook);
       hook.returns('42');
 
@@ -114,7 +112,7 @@ describe('util/requireHook', () => {
     });
 
     it('must not forcefully load modules', done => {
-      requireHook.init();
+      requireHook.init({ logger: testUtils.createFakeLogger() });
       requireHook.onFileLoad(/testModuleA/, hook);
 
       setTimeout(() => {
@@ -124,7 +122,7 @@ describe('util/requireHook', () => {
     });
 
     it('must inform about loaded modules', () => {
-      requireHook.init();
+      requireHook.init({ logger: testUtils.createFakeLogger() });
       requireHook.onFileLoad(/testModuleA/, hook);
 
       expect(require('./testModuleA')).to.equal('module a');
@@ -134,7 +132,7 @@ describe('util/requireHook', () => {
     });
 
     it('must not inform aboute loaded modules twice', () => {
-      requireHook.init();
+      requireHook.init({ logger: testUtils.createFakeLogger() });
       requireHook.onFileLoad(/testModuleA/, hook);
 
       expect(require('./testModuleA')).to.equal('module a');
@@ -145,7 +143,7 @@ describe('util/requireHook', () => {
     });
 
     it('must support loading of two separate modules', () => {
-      requireHook.init();
+      requireHook.init({ logger: testUtils.createFakeLogger() });
       requireHook.onFileLoad(/testModuleA/, hook);
       requireHook.onFileLoad(/testModuleB/, hook);
 
@@ -158,7 +156,7 @@ describe('util/requireHook', () => {
     });
 
     it('must support redefinition of module exports', () => {
-      requireHook.init();
+      requireHook.init({ logger: testUtils.createFakeLogger() });
       requireHook.onFileLoad(/testModuleA/, hook);
       hook.returns('a');
 
@@ -177,7 +175,7 @@ describe('util/requireHook', () => {
           }
         });
 
-        requireHook.init();
+        requireHook.init({ logger: testUtils.createFakeLogger() });
         const pattern = requireHook.buildFileNamePattern(['node_modules', 'express', 'lib', 'router', 'route.js']);
         requireHook.onFileLoad(pattern, hook);
 

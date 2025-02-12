@@ -5,9 +5,6 @@
 
 'use strict';
 
-const log = require('./logger');
-const normalizeConfig = require('./util/normalizeConfig');
-
 // Require this first to ensure that we have non-instrumented http available.
 const uninstrumentedHttp = require('./uninstrumentedHttp');
 const uninstrumentedFs = require('./uninstrumentedFs');
@@ -49,10 +46,12 @@ function registerAdditionalInstrumentations(additionalInstrumentationModules) {
   tracing.registerAdditionalInstrumentations(additionalInstrumentationModules);
 }
 
-function preInit() {
-  const preliminaryConfig = normalizeConfig();
-  util.hasThePackageBeenInitializedTooLate();
-  util.requireHook.init(preliminaryConfig);
+/**
+ * @param {import('./util/normalizeConfig').InstanaConfig} preliminaryConfig
+ */
+function preInit(preliminaryConfig) {
+  util.init(preliminaryConfig);
+  util.hasThePackageBeenInitializedTooLate.activate();
   tracing.preInit(preliminaryConfig);
   // Initialize secrets as early as possible, in particular for env var collection in fargate/google-cloud-run when
   // the config comes from INSTANA_SECRETS.
@@ -66,16 +65,13 @@ function preInit() {
  * @param {import('../../collector/src/pidStore')} processIdentityProvider
  */
 function init(config, downstreamConnection, processIdentityProvider) {
-  log.init(/** @type {log.LoggerConfig} */ (config));
-  util.hasThePackageBeenInitializedTooLate();
-  config = normalizeConfig(config);
+  util.init(config);
+  util.hasThePackageBeenInitializedTooLate.activate();
   secrets.init(config);
-  util.requireHook.init(config);
   tracing.init(config, downstreamConnection, processIdentityProvider);
 }
 
 module.exports = {
-  logger: log,
   metrics,
   secrets,
   tracing,

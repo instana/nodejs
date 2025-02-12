@@ -12,21 +12,17 @@ const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
-
-let logger;
-logger = require('../../../logger').getLogger('tracing/elasticsearch', newLogger => {
-  logger = newLogger;
-});
-
 const methodToActionRegex = /^(\w+?)(?:Api)?\.(?:.+) \[as (\w+)\]$/;
 const endpointToIdRegex = /^\/[^/]+\/_doc\/([^/]+)$/;
 
+let logger;
 let isActive = false;
 
 exports.spanName = 'elasticsearch';
 exports.batchable = true;
 
-exports.init = function init() {
+exports.init = function init(config) {
+  logger = config.logger;
   hook.onModuleLoad('@elastic/elasticsearch', instrument);
 };
 

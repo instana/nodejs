@@ -7,12 +7,17 @@
 
 /** @type {import('./core').GenericLogger} */
 let logger;
-logger = require('./logger').getLogger('secrets', newLogger => {
-  logger = newLogger;
-});
-
-const defaultMatcherMode = 'contains-ignore-case';
 const defaultSecrets = ['key', 'pass', 'secret'];
+
+/** @type {(key: string) => boolean} */
+let isSecretInternal;
+/**
+ * @param {import('./util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+  isSecretInternal = exports.matchers[config.secrets.matcherMode](config.secrets.keywords);
+};
 
 exports.matchers = {
   /**
@@ -137,9 +142,6 @@ exports.matchers = {
   }
 };
 
-/** @type {(key: string) => boolean} */
-let isSecretInternal = exports.matchers[defaultMatcherMode](defaultSecrets);
-
 /**
  * @param {Array.<string>} configuredSecrets
  * @returns {Array.<string>}
@@ -182,13 +184,6 @@ function toLowerCase(configuredSecrets) {
 /** @type {(key: string) => boolean} */
 exports.isSecret = function isSecret(key) {
   return isSecretInternal(key);
-};
-
-/**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
- */
-exports.init = function init(config) {
-  isSecretInternal = exports.matchers[config.secrets.matcherMode](config.secrets.keywords);
 };
 
 /**
