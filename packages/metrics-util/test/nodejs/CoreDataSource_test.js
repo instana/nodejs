@@ -10,11 +10,10 @@ const semver = require('semver');
 
 const { metrics: coreMetrics } = require('@instana/core');
 
-const { delay, retry } = require('../../../core/test/test_util');
+const { delay, retry, createFakeLogger } = require('../../../core/test/test_util');
 const config = require('@instana/core/test/config');
 
 const sharedMetrics = require('@instana/shared-metrics');
-
 const CoreDataSource = require('../../src/nodejs/CoreDataSource');
 
 describe('core data source', function () {
@@ -22,12 +21,20 @@ describe('core data source', function () {
 
   let dataSource;
   before(() => {
-    coreMetrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
+    const logger = createFakeLogger();
+
+    sharedMetrics.init({
+      logger
+    });
+
     coreMetrics.init({
+      logger,
       metrics: {
         transmissionDelay: 1000
       }
     });
+
+    coreMetrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
     dataSource = new CoreDataSource(coreMetrics);
   });
 
