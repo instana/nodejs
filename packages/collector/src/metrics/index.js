@@ -13,14 +13,10 @@ coreMetrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
 const additionalCollectorMetrics = coreMetrics.findAndRequire(__dirname);
 coreMetrics.registerAdditionalMetrics(additionalCollectorMetrics);
 
-/** @type {import('@instana/core/src/core').GenericLogger} */
-let logger;
 /**
  * @param {import('@instana/core/src/metrics').InstanaConfig} config
  */
 exports.init = function init(config) {
-  logger = config.logger;
-  coreMetrics.setLogger(logger);
   coreMetrics.init(config);
   transmissionCycle.init(config);
 };

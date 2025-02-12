@@ -8,7 +8,6 @@
 const transmissionCycle = require('./transmissionCycle');
 
 let logger;
-
 const metadataUriKey = 'ECS_CONTAINER_METADATA_URI';
 
 exports.init = function init(config, onReady) {

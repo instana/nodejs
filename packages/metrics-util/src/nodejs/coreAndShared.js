@@ -6,11 +6,9 @@
 'use strict';
 
 const { metrics: coreMetrics } = require('@instana/core');
-const { consoleLogger } = require('@instana/serverless');
 const sharedMetrics = require('@instana/shared-metrics');
 
 coreMetrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
-coreMetrics.setLogger(consoleLogger);
 
 exports.init = function init(config) {
   coreMetrics.init(config);

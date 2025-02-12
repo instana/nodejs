@@ -5,12 +5,13 @@
 
 'use strict';
 
-const logger = require('./console_logger');
-
 const instanaEndpointUrlEnvVar = 'INSTANA_ENDPOINT_URL';
 const instanaAgentKeyEnvVar = 'INSTANA_AGENT_KEY';
 const instanaZoneEnvVar = 'INSTANA_ZONE';
 
+// TODO: We have to move the validation into the initialization of the serverless packages.
+//       Then we can use the logger instance.
+const logger = console;
 let valid = false;
 let backendHost = null;
 let backendPort = null;
