@@ -14,6 +14,7 @@ coreMetrics.setLogger(consoleLogger);
 
 exports.init = function init(config) {
   coreMetrics.init(config);
+  sharedMetrics.init(config);
 };
 
 exports.setLogger = function setLogger(_logger) {
