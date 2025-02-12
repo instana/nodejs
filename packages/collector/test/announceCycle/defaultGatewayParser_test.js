@@ -7,12 +7,21 @@
 const path = require('path');
 const chai = require('chai');
 chai.use(require('chai-as-promised'));
+const {
+  _convertToIp,
+  _isDefaultGatewayLine,
+  _parseFile,
+  init
+} = require('../../src/announceCycle/defaultGatewayParser');
+const testUtils = require('@instana/core/test/test_util');
 
 const { expect } = chai;
 
-const { _convertToIp, _isDefaultGatewayLine, _parseFile } = require('../../src/announceCycle/defaultGatewayParser');
-
 describe('get default gateway from /proc/self/net/route', () => {
+  before(() => {
+    init({ logger: testUtils.createFakeLogger() });
+  });
+
   it('should recognize default gateway line', () => {
     expect(_isDefaultGatewayLine(['eth0', '00000000', '010011AC', '0003', '0', '0', '0', '000000000', '0', '0'])).to.be
       .true;

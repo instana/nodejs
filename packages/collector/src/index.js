@@ -44,18 +44,17 @@ try {
 const path = require('path');
 const instanaNodeJsCore = require('@instana/core');
 const instanaSharedMetrics = require('@instana/shared-metrics');
-
 require('./tracing'); // load additional instrumentations
 const log = require('./logger');
-let logger;
 const normalizeCollectorConfig = require('./util/normalizeConfig');
 const experimental = require('./experimental');
+const { pid } = require('process');
 
+let logger = log.init();
+/** @type {import('./types/collector').CollectorConfig} */
+let config = instanaNodeJsCore.util.normalizeConfig({}, logger);
 /** @type {import('./agentConnection')} */
 let agentConnection;
-
-/** @type {import('./types/collector').CollectorConfig} */
-let config;
 
 /**
  * @param {import('./types/collector').CollectorConfig} [_config]
@@ -108,7 +107,7 @@ function init(_config) {
   const metrics = require('./metrics');
 
   pidStore.init(config);
-  announceCycle.init(config);
+  announceCycle.init(config, pidStore);
   agentOpts.init(config);
   agentConnection.init(config, pidStore);
   instanaNodeJsCore.init(config, agentConnection, pidStore);
@@ -116,7 +115,7 @@ function init(_config) {
 
   if (isMainThread) {
     uncaught.init(config, agentConnection, pidStore);
-    metrics.init(config);
+    metrics.init(config, pidStore);
   }
 
   logger.info(`@instana/collector module version: ${require(path.join(__dirname, '..', 'package.json')).version}`);
@@ -157,7 +156,7 @@ if (process.env.INSTANA_IMMEDIATE_INIT != null && process.env.INSTANA_IMMEDIATE_
   process.env.INSTANA_EARLY_INSTRUMENTATION != null &&
   process.env.INSTANA_EARLY_INSTRUMENTATION.toLowerCase() === 'true'
 ) {
-  instanaNodeJsCore.preInit({});
+  instanaNodeJsCore.preInit(config);
 }
 
 module.exports = init;

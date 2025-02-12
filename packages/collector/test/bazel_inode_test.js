@@ -7,6 +7,7 @@
 const { expect } = require('chai');
 const proxyquire = require('proxyquire');
 const EventEmitter = require('events');
+const testUtils = require('@instana/core/test/test_util');
 
 class MockRequestEmitter extends EventEmitter {
   setTimeout() {}
@@ -30,11 +31,10 @@ describe('agent connection/bazel', function () {
     before(() => {
       agentConnection = proxyquire('../src/agentConnection', {
         // stub out the http communication part of the announce request
-        '@instana/core': mockInstanaCoreHttp(),
-
-        // We need to proxyquire logger, too, to work around the duplicate module logger name check.
-        './logger': proxyquire('../src/logger', {})
+        '@instana/core': mockInstanaCoreHttp()
       });
+
+      agentConnection.init({ logger: testUtils.createFakeLogger() }, { pid: 1234 });
     });
 
     it('should remove the leading path segmentes which node-patches prepends', done => {
@@ -56,11 +56,10 @@ describe('agent connection/bazel', function () {
         fs: mockFs('socket:[12345]'),
 
         // stub out the http communication part of the announce request
-        '@instana/core': mockInstanaCoreHttp(),
-
-        // We need to proxyquire logger, too, to work around the duplicate module logger name check.
-        './logger': proxyquire('../src/logger', {})
+        '@instana/core': mockInstanaCoreHttp()
       });
+
+      agentConnection.init({ logger: testUtils.createFakeLogger() }, { pid: 1234 });
     });
 
     it('should not modify the readlinkSync result', done => {

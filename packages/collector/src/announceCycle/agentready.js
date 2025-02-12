@@ -17,7 +17,6 @@ const agentConnection = require('../agentConnection');
 const agentOpts = require('../agent/opts');
 const initializedTooLate = require('../util/initializedTooLate');
 const metrics = require('../metrics');
-const pidStore = require('../pidStore');
 const requestHandler = require('../agent/requestHandler');
 const transmissionCycle = require('../metrics/transmissionCycle');
 const uncaught = require('../uncaught');
@@ -73,11 +72,18 @@ if (typeof process.env.INSTANA_TRACER_METRICS_INTERVAL === 'string') {
 /** @type {NodeJS.Timeout} */
 let tracingMetricsTimeout = null;
 
+/** @type {{ pid: number }} */
+let pidStore;
+
 /**
  * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {any} _pidStore
  */
-function init(config) {
+function init(config, _pidStore) {
+  console.log('INIT', process.pid);
   logger = config.logger;
+  pidStore = _pidStore;
+
   initializedTooLate.init(config);
 }
 
@@ -165,6 +171,7 @@ function leave() {
 
 function sendTracingMetrics() {
   const payload = tracing._getAndResetTracingMetrics();
+
   agentConnection.sendTracingMetricsToAgent(payload, error => {
     if (error) {
       logger.info(
@@ -184,6 +191,7 @@ function sendTracingMetrics() {
 }
 
 function scheduleTracingMetrics() {
+  deScheduleTracingMetrics();
   tracingMetricsTimeout = setTimeout(sendTracingMetrics, tracingMetricsDelay);
   tracingMetricsTimeout.unref();
 }

@@ -14,10 +14,11 @@ const { constants: tracingConstants } = tracing;
 
 const agentConnection = require('../agentConnection');
 const agentOpts = require('../agent/opts');
-const pidStore = require('../pidStore');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
+/** @type {{ pid: number }} */
+let pidStore;
 
 const initialRetryDelay = 10 * 1000; // 10 seconds
 const backoffFactor = 1.5;
@@ -52,9 +53,11 @@ const maxRetryDelay = 60 * 1000; // one minute
 
 /**
  * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {any} _pidStore
  */
-function init(config) {
+function init(config, _pidStore) {
   logger = config.logger;
+  pidStore = _pidStore;
 }
 
 /**
