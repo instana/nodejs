@@ -24,6 +24,17 @@ exports.init = function init(config) {
   logger = config.logger;
 
   logger.info(`PID Store starting with pid ${internalPidStore.pid}`);
+
+  if (!process.env.CONTINUOUS_INTEGRATION) {
+    const pidInParentNamespace = getPidFromParentNamespace();
+
+    if (pidInParentNamespace) {
+      internalPidStore.pid = pidInParentNamespace;
+      logger.info(
+        `Changing pid to ${pidInParentNamespace} due to successful identification of PID in parent namespace`
+      );
+    }
+  }
 };
 
 exports.onPidChange = eventEmitter.on.bind(eventEmitter, eventName);
@@ -52,14 +63,6 @@ exports.getFrom = function getFrom() {
     h: agentOpts.agentUuid
   };
 };
-
-if (!process.env.CONTINUOUS_INTEGRATION) {
-  const pidInParentNamespace = getPidFromParentNamespace();
-  if (pidInParentNamespace) {
-    internalPidStore.pid = pidInParentNamespace;
-    logger.info(`Changing pid to ${pidInParentNamespace} due to successful identification of PID in parent namespace`);
-  }
-}
 
 function getPidFromParentNamespace() {
   try {
