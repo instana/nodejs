@@ -15,7 +15,7 @@ const { fullyQualifiedContainerId } = require('./metrics/container/containerUtil
 const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
 
-let logger = log.init();
+const logger = log.init();
 const config = normalizeConfig({}, logger);
 
 function init() {
@@ -82,10 +82,7 @@ exports.sdk = tracing.sdk;
 
 // NOTE: this is the external interface for the customer. They can set a custom logger.
 exports.setLogger = function setLogger(_logger) {
-  logger = log.init({ logger: _logger });
-
-  // finally update the logger instance
-  config.logger = logger;
+  log.init({ logger: _logger });
 };
 
 exports.opentracing = tracing.opentracing;

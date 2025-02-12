@@ -20,12 +20,71 @@ const uninstrumentedLogger = require('./uninstrumentedLogger');
 const loggerToAgentStream = require('./agent/loggerToAgentStream');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
-let parentLogger = null;
+let instanaLogger;
+
+class InstanaLogger {
+  /**
+   * @param {import('@instana/core/src/core').GenericLogger} logger
+   */
+  constructor(logger) {
+    this.logger = logger;
+  }
+
+  /**
+   * @param {import('@instana/core/src/core').GenericLogger} _logger
+   */
+  setLogger(_logger) {
+    this.logger = _logger;
+  }
+
+  info() {
+    if (!this.logger.info) {
+      return;
+    }
+
+    this.logger.info.apply(this.logger, arguments);
+  }
+
+  warn() {
+    if (!this.logger.warn) {
+      return;
+    }
+
+    this.logger.warn.apply(this.logger, arguments);
+  }
+
+  error() {
+    if (!this.logger.error) {
+      return;
+    }
+
+    this.logger.error.apply(this.logger, arguments);
+  }
+
+  debug() {
+    if (!this.logger.debug) {
+      return;
+    }
+
+    this.logger.debug.apply(this.logger, arguments);
+  }
+
+  trace() {
+    if (!this.logger.trace) {
+      return;
+    }
+
+    this.logger.trace.apply(this.logger, arguments);
+  }
+}
 
 /**
  * @param {import('./types/collector').CollectorConfig} config
  */
 exports.init = function init(config = {}) {
+  /** @type {import('@instana/core/src/core').GenericLogger} */
+  let parentLogger;
+
   if (config.logger && typeof config.logger.child === 'function') {
     // A bunyan or pino logger has been provided via config. In either case we create a child logger directly under the
     // given logger which serves as the parent for all loggers we create later on.
@@ -108,10 +167,16 @@ exports.init = function init(config = {}) {
     setLoggerLevel(parentLogger, process.env['INSTANA_LOG_LEVEL'].toLowerCase());
   }
 
-  return parentLogger;
+  if (!instanaLogger) {
+    instanaLogger = new InstanaLogger(parentLogger);
+  } else {
+    instanaLogger.setLogger(parentLogger);
+  }
+
+  return instanaLogger;
 };
 
-exports.getLogger = () => parentLogger;
+exports.getLogger = () => instanaLogger;
 
 /**
  * @param {import('@instana/core/src/core').GenericLogger | *} _logger

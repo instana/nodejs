@@ -142,8 +142,7 @@ init.isConnected = function isConnected() {
  */
 init.setLogger = function setLogger(_logger) {
   // NOTE: Override our default logger with customer's logger
-  logger = log.init({ logger: _logger });
-  config.logger = logger;
+  log.init({ logger: _logger });
 };
 
 init.core = instanaNodeJsCore;

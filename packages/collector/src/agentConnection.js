@@ -378,11 +378,7 @@ function sendData(path, data, cb, ignore404 = false) {
   cb = util.atMostOnce(`callback for sendData: ${path}`, cb);
 
   const payloadAsString = JSON.stringify(data, circularReferenceRemover());
-  if (typeof logger.trace === 'function') {
-    logger.trace(`Sending data to ${path}.`);
-  } else {
-    logger.debug(`Sending data to ${path}, ${agentOpts}`);
-  }
+  logger.debug(`Sending data to ${path}, ${agentOpts}`);
 
   // Convert payload to a buffer to correctly identify content-length ahead of time.
   const payload = Buffer.from(payloadAsString, 'utf8');

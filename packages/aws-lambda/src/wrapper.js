@@ -517,8 +517,7 @@ exports.currentSpan = function getHandleForCurrentSpan() {
 exports.sdk = tracing.sdk;
 
 exports.setLogger = function setLogger(_logger) {
-  logger = log.init({ logger: _logger });
-  config.logger = logger;
+  log.init({ logger: _logger });
 };
 
 exports.opentracing = tracing.opentracing;
