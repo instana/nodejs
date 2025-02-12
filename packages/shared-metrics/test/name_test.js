@@ -14,6 +14,7 @@ const { applicationUnderMonitoring } = require('@instana/core').util;
 
 describe('metrics.name', () => {
   afterEach(() => {
+    name.init({ logger: testUtils.createFakeLogger() });
     name.reset();
     applicationUnderMonitoring.reset();
   });
