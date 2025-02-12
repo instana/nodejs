@@ -27,20 +27,10 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
     let controls;
 
     before(async () => {
-      let configObj = {};
-      if (process.env.RUN_ESM) {
-        configObj = {
-          appPath: path.join(__dirname, 'app_esm'),
-          useGlobalAgent: true
-        };
-      } else {
-        configObj = {
-          dirname: __dirname,
-          useGlobalAgent: true
-        };
-      }
-
-      controls = new ProcessControls(configObj);
+      controls = new ProcessControls({
+        appPath: path.join(__dirname, 'bunyanApp'),
+        useGlobalAgent: true
+      });
 
       await controls.startAndWaitForAgentConnection();
     });
