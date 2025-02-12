@@ -13,7 +13,7 @@ const proxyquire = require('proxyquire');
 const { logger } = require('@instana/serverless');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 
-const { retry } = require('../../../core/test/test_util');
+const { retry, createFakeLogger } = require('../../../core/test/test_util');
 const config = require('@instana/core/test/config');
 
 let transmissionCycle;
@@ -102,6 +102,7 @@ describe('transmission cycle', function () {
   function init() {
     transmissionCycle.init(
       {
+        logger: createFakeLogger(),
         metrics: { transmissionDelay: 1000 }
       },
       metadataMockUrl,
