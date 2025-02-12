@@ -72,7 +72,7 @@ if (typeof process.env.INSTANA_TRACER_METRICS_INTERVAL === 'string') {
 /** @type {NodeJS.Timeout} */
 let tracingMetricsTimeout = null;
 
-/** @type {{ pid: number }} */
+/** @type {{ pid: number, getEntityId: Function }} */
 let pidStore;
 
 /**
@@ -80,7 +80,6 @@ let pidStore;
  * @param {any} _pidStore
  */
 function init(config, _pidStore) {
-  console.log('INIT', process.pid);
   logger = config.logger;
   pidStore = _pidStore;
 
