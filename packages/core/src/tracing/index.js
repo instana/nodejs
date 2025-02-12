@@ -15,14 +15,14 @@ const tracingUtil = require('./tracingUtil');
 const spanBuffer = require('./spanBuffer');
 const supportedVersion = require('./supportedVersion');
 const { otelInstrumentations } = require('./opentelemetry-instrumentations');
+const cls = require('./cls');
 const coreUtil = require('../util');
 
 let tracingEnabled = false;
 let tracingActivated = false;
 let instrumenationsInitialized = false;
 let automaticTracingEnabled = false;
-/** @type {import('./cls')} */
-let cls = null;
+
 /** @type {import('../util/normalizeConfig').InstanaConfig} */
 let config = null;
 
@@ -203,7 +203,6 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
     tracingHeaders.init(config);
     spanBuffer.init(config, downstreamConnection);
     opentracing.init(config, automaticTracingEnabled, processIdentityProvider);
-    cls = require('./cls');
     cls.init(config, processIdentityProvider);
     sdk.init(cls);
 
@@ -262,6 +261,7 @@ exports.activate = function activate(extraConfig = {}) {
     spanBuffer.activate(extraConfig);
     opentracing.activate();
     sdk.activate();
+    cls.activate(extraConfig);
 
     if (automaticTracingEnabled) {
       instrumentations.forEach(instrumentationKey => {
