@@ -95,7 +95,7 @@ exports.init = function init(config = {}) {
     //      Setting INSTANA_DEBUG=true has no affect in the child winston logger.
     //      It takes the parent logger level.
     parentLogger = config.logger.child({
-      module: 'instana-nodejs-console-logger'
+      module: 'instana-nodejs-serverless-logger'
     });
   } else {
     parentLogger = consoleLogger;
