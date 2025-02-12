@@ -26,7 +26,7 @@ function init() {
     return;
   }
 
-  instanaCore.preInit();
+  instanaCore.preInit(config);
 
   metrics.init(config, function onReady(err, serviceRevisionPayload) {
     if (err) {
