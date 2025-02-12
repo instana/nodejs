@@ -97,6 +97,9 @@ exports.init = function init(config = {}) {
     parentLogger = config.logger.child({
       module: 'instana-nodejs-serverless-logger'
     });
+  } else if (config.logger && hasLoggingFunctions(config.logger)) {
+    // A custom non-bunyan/non-pino logger has been provided via config. We use it as is.
+    parentLogger = config.logger;
   } else {
     parentLogger = consoleLogger;
   }
@@ -118,6 +121,19 @@ exports.init = function init(config = {}) {
 exports.getLogger = () => {
   return instanaServerlessLogger;
 };
+
+/**
+ * @param {import('@instana/core/src/core').GenericLogger | *} _logger
+ * @returns {boolean}
+ */
+function hasLoggingFunctions(_logger) {
+  return (
+    typeof _logger.debug === 'function' &&
+    typeof _logger.info === 'function' &&
+    typeof _logger.warn === 'function' &&
+    typeof _logger.error === 'function'
+  );
+}
 
 function setLoggerLevel(level) {
   // eslint-disable-next-line yoda

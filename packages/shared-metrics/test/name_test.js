@@ -13,8 +13,11 @@ const name = require('../src/name');
 const { applicationUnderMonitoring } = require('@instana/core').util;
 
 describe('metrics.name', () => {
-  afterEach(() => {
+  beforeEach(() => {
     name.init({ logger: testUtils.createFakeLogger() });
+  });
+
+  afterEach(() => {
     name.reset();
     applicationUnderMonitoring.reset();
   });
