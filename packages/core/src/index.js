@@ -47,6 +47,12 @@ function registerAdditionalInstrumentations(additionalInstrumentationModules) {
 }
 
 /**
+ * TODO: `preinit` is needed on serverless because we have to initialize the
+ *       instrumentations as early as possible. On serverless we use async
+ *       calls before we initialize the core module. But: `preinit` is broken,
+ *       because we use our default serverless logger, which ignores the config
+ *       from the customer (such as log level) and some logs would appear BEFORE
+ *       the core initialization because of the `preinit` call.
  * @param {import('./util/normalizeConfig').InstanaConfig} preliminaryConfig
  */
 function preInit(preliminaryConfig) {

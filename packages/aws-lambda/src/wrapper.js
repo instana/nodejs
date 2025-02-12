@@ -15,16 +15,19 @@ const { enrichSpanWithTriggerData, readTraceCorrelationData } = require('./trigg
 const processResult = require('./process_result');
 const captureHeaders = require('./capture_headers');
 
-const { tracing } = instanaCore;
+const { tracing, util: coreUtil } = instanaCore;
+const { normalizeConfig } = coreUtil;
 const { tracingHeaders, constants, spanBuffer } = tracing;
-let logger;
-let config;
+
+let logger = consoleLogger;
+logger.init();
+let config = normalizeConfig({}, logger);
 
 let coldStart = true;
 
 // Initialize instrumentations early to allow for require statements after our package has been required but before the
 // actual instana.wrap(...) call.
-instanaCore.preInit();
+instanaCore.preInit(config);
 
 /**
  * Wraps an AWS Lambda handler so that metrics and traces are reported to Instana. This function will figure out if the
@@ -234,18 +237,18 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
 function init(event, arnInfo, _config) {
   config = _config || {};
 
+  // CASE: customer provides a custom logger
   if (config.logger) {
     logger = config.logger;
-  } else {
-    logger = consoleLogger;
+  } else if (config.level) {
+    // Re-init because we have to respect `config.level`
     logger.init(config);
-
-    config.logger = logger;
   }
 
+  config = normalizeConfig(config, logger);
   ssm.init({ logger });
-
   identityProvider.init(arnInfo);
+
   const useLambdaExtension = shouldUseLambdaExtension();
   if (useLambdaExtension) {
     logger.info('@instana/aws-lambda will use the Instana Lambda extension to send data to the Instana back end.');

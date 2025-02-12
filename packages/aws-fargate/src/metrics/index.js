@@ -5,14 +5,14 @@
 
 'use strict';
 
-const { consoleLogger } = require('@instana/serverless');
 const transmissionCycle = require('./transmissionCycle');
 
-let logger = consoleLogger;
-
+let logger;
 const metadataUriKey = 'ECS_CONTAINER_METADATA_URI';
 
 exports.init = function init(config, onReady) {
+  logger = config.logger;
+
   const metadataUri = process.env.ECS_CONTAINER_METADATA_URI;
   if (!metadataUri) {
     logger.error(`${metadataUriKey} is not set. This fargate task will not be monitored.`);
@@ -28,9 +28,4 @@ exports.activate = function activate() {
 
 exports.deactivate = function deactivate() {
   transmissionCycle.deactivate();
-};
-
-exports.setLogger = function setLogger(_logger) {
-  logger = _logger;
-  transmissionCycle.setLogger(logger);
 };

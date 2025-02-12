@@ -20,7 +20,7 @@ logger.init();
 const config = normalizeConfig({}, logger);
 
 function init() {
-  instanaCore.preInit();
+  instanaCore.preInit(config);
 
   metrics.init(config, function onReady(err, ecsContainerPayload) {
     if (err) {

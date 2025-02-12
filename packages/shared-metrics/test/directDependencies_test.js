@@ -14,6 +14,10 @@ const config = require('@instana/core/test/config');
 describe('metrics.directDependencies', function () {
   this.timeout(config.getTestTimeout());
 
+  before(() => {
+    directDependencies.init({ logger: testUtils.createFakeLogger() });
+  });
+
   it('should use the correct payload prefix', () => {
     expect(directDependencies.payloadPrefix).to.equal('directDependencies');
   });
