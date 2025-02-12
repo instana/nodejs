@@ -11,12 +11,11 @@ const { InstanaAWSProduct } = require('./instana_aws_product');
 const { logTooManyAttributesWarningOnce } = require('../aws_utils');
 
 const SPAN_NAME = 'sns';
-let logger = require('../../../../../logger').getLogger('tracing/sns/v3', newLogger => {
-  logger = newLogger;
-});
+let logger;
 
 class InstanaAWSNS extends InstanaAWSProduct {
-  constructor() {
+  constructor(config) {
+    logger = config.logger;
     super(SPAN_NAME);
   }
 

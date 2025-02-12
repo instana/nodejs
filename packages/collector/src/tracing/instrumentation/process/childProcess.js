@@ -17,11 +17,10 @@ const selfPath = require('./selfPath');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('../../../logger').getLogger('tracing/child_process', newLogger => {
-  logger = newLogger;
-});
 
-exports.init = function () {
+exports.init = function (config) {
+  logger = config.logger;
+
   shimmer.wrap(coreChildProcess, 'spawn', shimSpawn);
   shimmer.wrap(coreChildProcess, 'fork', shimFork);
 };

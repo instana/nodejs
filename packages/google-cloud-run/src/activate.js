@@ -16,9 +16,7 @@ const { normalizeConfig } = coreUtil;
 
 let logger = consoleLogger;
 logger.init();
-
-const config = normalizeConfig({});
-config.logger = logger;
+const config = normalizeConfig({}, logger);
 
 function init() {
   if (!process.env.K_REVISION) {

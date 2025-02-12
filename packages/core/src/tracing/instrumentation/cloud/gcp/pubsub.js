@@ -17,17 +17,14 @@ const {
 } = require('../../../constants');
 const hook = require('../../../../util/hook');
 const tracingUtil = require('../../../tracingUtil');
-
-let logger;
-logger = require('../../../../logger').getLogger('tracing/pubsub', newLogger => {
-  logger = newLogger;
-});
-
 const subscriptionRegex = /^projects\/([^/]+)\/subscriptions\/(.+)$/;
 
+let logger;
 let isActive = false;
 
-exports.init = function init() {
+exports.init = function init(config) {
+  logger = config.logger;
+
   hook.onFileLoad(/\/@google-cloud\/pubsub\/build\/src\/publisher\/index.js/, instrumentPublisher);
   hook.onFileLoad(/\/@google-cloud\/pubsub\/build\/src\/subscriber.js/, instrumentSubscriber);
 };

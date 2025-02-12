@@ -14,14 +14,7 @@ const { normalizeConfig } = coreUtil;
 
 let logger = consoleLogger;
 logger.init();
-
-// TODO: Why do we normalize the config from core here?
-const config = normalizeConfig({});
-
-// NOTE: We have to pass the custom logger via the config object from the packages
-//       into the core module. This will respect the log level from the customer
-//       across the application.
-config.logger = logger;
+const config = normalizeConfig({}, logger);
 
 function init() {
   // For more details about environment variables in azure, please see

@@ -38,15 +38,12 @@ const origLoad = /** @type {*} */ (Module)._load;
 /** @type {import('../core').GenericLogger} */
 let logger;
 
-logger = require('../logger').getLogger('util/requireHook', newLogger => {
-  logger = newLogger;
-});
-
 /**
  * @param {import('./normalizeConfig').InstanaConfig} [config]
  */
-// eslint-disable-next-line no-unused-vars
 exports.init = function (config) {
+  logger = config.logger;
+
   /** @type {*} */ (Module)._load = patchedModuleLoad;
 };
 

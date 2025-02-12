@@ -7,9 +7,6 @@
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('util/initializedTooLate', newLogger => {
-  logger = newLogger;
-});
 
 const FIRE_MONITORING_EVENT_DURATION_IN_MS = process.env.INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS
   ? Number(process.env.INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS)
@@ -20,8 +17,15 @@ const agentConnection = require('../agentConnection');
 
 let warningHasBeenLogged = false;
 
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+};
+
 exports.check = function check() {
-  if (hasThePackageBeenInitializedTooLate()) {
+  if (hasThePackageBeenInitializedTooLate.activate()) {
     if (!warningHasBeenLogged) {
       logger.warn(
         'It seems you have initialized the @instana/collector package too late. Please check our documentation on ' +

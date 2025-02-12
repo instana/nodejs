@@ -6,22 +6,15 @@
 'use strict';
 
 const { util, uninstrumentedHttp, uninstrumentedFs: fs } = require('@instana/core');
-const http = uninstrumentedHttp.http;
-
 const pathUtil = require('path');
-
-/** @typedef {import('@instana/core/src/core').InstanaBaseSpan} InstanaBaseSpan */
+const circularReferenceRemover = require('./util/removeCircular');
+const agentOpts = require('./agent/opts');
+const cmdline = require('./cmdline');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('./logger').getLogger('agentConnection', newLogger => {
-  logger = newLogger;
-});
-
-const circularReferenceRemover = require('./util/removeCircular');
-const agentOpts = require('./agent/opts');
-const pidStore = require('./pidStore');
-const cmdline = require('./cmdline');
+/** @type {{ pid: number }} */
+let pidStore;
 
 const cpuSetFileContent = getCpuSetFileContent();
 
@@ -32,7 +25,19 @@ const paddingForInodeAndFileDescriptor = 200;
 const maxContentLength = 1024 * 1024 * 5;
 let maxContentErrorHasBeenLogged = false;
 
+const http = uninstrumentedHttp.http;
 let isConnected = false;
+
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {any} _pidStore
+ */
+exports.init = function init(config, _pidStore) {
+  logger = config.logger;
+
+  cmdline.init(config);
+  pidStore = _pidStore;
+};
 
 exports.AgentEventSeverity = {
   SLI_EVENT: -4,

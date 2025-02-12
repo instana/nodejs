@@ -5,33 +5,59 @@
 
 'use strict';
 
-/** @type {Array.<import('@instana/core/src/metrics').InstanaMetricsModule>} */
-const allMetrics = [
-  require('./activeHandles'),
-  require('./activeRequests'),
-  require('./args'),
-  require('./dependencies'),
-  require('./directDependencies'),
-  require('./description'),
-  require('./execArgs'),
-  require('./gc'),
-  require('./healthchecks'),
-  require('./heapSpaces'),
-  require('./http'),
-  require('./keywords'),
-  require('./libuv'),
-  require('./memory'),
-  require('./name'),
-  require('./version')
-];
-
+const activeHandles = require('./activeHandles');
+const activeRequests = require('./activeRequests');
+const args = require('./args');
+const dependencies = require('./dependencies');
+const directDependencies = require('./directDependencies');
+const description = require('./description');
+const execArgs = require('./execArgs');
+const gc = require('./gc');
+const healthchecks = require('./healthchecks');
+const heapSpaces = require('./heapSpaces');
+const http = require('./http');
+const keywords = require('./keywords');
+const libuv = require('./libuv');
+const memory = require('./memory');
+const name = require('./name');
+const version = require('./version');
 const util = require('./util');
 
+/** @type {Array.<import('@instana/core/src/metrics').InstanaMetricsModule>} */
+const allMetrics = [
+  activeHandles,
+  activeRequests,
+  args,
+  dependencies,
+  directDependencies,
+  description,
+  execArgs,
+  gc,
+  healthchecks,
+  heapSpaces,
+  http,
+  keywords,
+  libuv,
+  memory,
+  name,
+  version
+];
+
 /**
- * @param {import('@instana/core/src/core').GenericLogger} logger
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
  */
-const setLogger = function (logger) {
-  util.setLogger(logger);
+const init = function (config) {
+  util.init(config);
+  dependencies.init(config);
+  description.init(config);
+  directDependencies.init(config);
+  healthchecks.init(config);
+  keywords.init(config);
+  name.init(config);
+  version.init(config);
+
+  gc.init();
+  libuv.init();
 };
 
 /**
@@ -45,5 +71,5 @@ const setLogger = function (logger) {
 module.exports = {
   allMetrics,
   util,
-  setLogger
+  init
 };

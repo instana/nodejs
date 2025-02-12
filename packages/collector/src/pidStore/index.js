@@ -13,15 +13,20 @@ const agentOpts = require('../agent/opts');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('pidStore', newLogger => {
-  logger = newLogger;
-});
 
 const eventName = 'pidChanged';
 const eventEmitter = new EventEmitter();
-exports.onPidChange = eventEmitter.on.bind(eventEmitter, eventName);
 
-logger.info(`PID Store starting with pid ${internalPidStore.pid}`);
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+
+  logger.info(`PID Store starting with pid ${internalPidStore.pid}`);
+};
+
+exports.onPidChange = eventEmitter.on.bind(eventEmitter, eventName);
 
 Object.defineProperty(exports, 'pid', {
   get: function getPid() {

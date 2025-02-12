@@ -7,14 +7,10 @@
 
 const constants = require('../constants');
 const leftPad = require('../leftPad');
-
 const W3cTraceContext = require('./W3cTraceContext');
 
 /** @type {import('../../core').GenericLogger} */
 let logger;
-logger = require('../../logger').getLogger('tracing/W3C trace context parser', newLogger => {
-  logger = newLogger;
-});
 
 const versionRegex = /^([0-9a-f]{2})-.*$/;
 const regexVersion00 = /^[0-9a-f]{2}-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$/;
@@ -22,11 +18,18 @@ const regexUnknownVersion = /^[0-9a-f]{2}-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f
 const instanaVendorKeyOffset = constants.w3cInstanaEquals.length;
 
 /**
+ * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+};
+
+/**
  * @param {string} traceParentRaw
  * @param {string} traceStateRaw
  * @returns {W3cTraceContext}
  */
-module.exports = function parse(traceParentRaw, traceStateRaw) {
+exports.execute = (traceParentRaw, traceStateRaw) => {
   const parsed = new W3cTraceContext();
   parseTraceParent(traceParentRaw, parsed);
   if (!parsed.traceParentValid) {

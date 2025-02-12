@@ -13,6 +13,7 @@ const spanHandle = require('./spanHandle');
 const tracingHeaders = require('./tracingHeaders');
 const tracingUtil = require('./tracingUtil');
 const spanBuffer = require('./spanBuffer');
+const shimmer = require('./shimmer');
 const supportedVersion = require('./supportedVersion');
 const { otelInstrumentations } = require('./opentelemetry-instrumentations');
 const cls = require('./cls');
@@ -198,13 +199,16 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
   tracingEnabled = config.tracing.enabled;
   automaticTracingEnabled = config.tracing.automaticTracingEnabled;
 
+  spanHandle.init(config);
+  shimmer.init(config);
+
   if (tracingEnabled) {
     tracingUtil.init(config);
     tracingHeaders.init(config);
     spanBuffer.init(config, downstreamConnection);
     opentracing.init(config, automaticTracingEnabled, processIdentityProvider);
     cls.init(config, processIdentityProvider);
-    sdk.init(cls);
+    sdk.init(config, cls);
 
     if (automaticTracingEnabled) {
       initInstrumenations(config);
@@ -212,8 +216,9 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
       if (_config.tracing.useOpentelemetry) {
         otelInstrumentations.init(config, cls);
       }
+
       if (coreUtil.esm.isESMApp()) {
-        coreUtil.iitmHook.init();
+        coreUtil.iitmHook.activate();
       }
     }
   }

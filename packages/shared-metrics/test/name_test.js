@@ -36,7 +36,7 @@ describe('metrics.name', () => {
 
   describe('when the package.json cannot be found', function () {
     before(() => {
-      sinon.stub(applicationUnderMonitoring, 'getMainPackageJsonStartingAtMainModule').callsFake((config, cb) => {
+      sinon.stub(applicationUnderMonitoring, 'getMainPackageJsonStartingAtMainModule').callsFake(cb => {
         cb(null, null);
       });
     });

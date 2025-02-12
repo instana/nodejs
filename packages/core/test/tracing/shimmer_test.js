@@ -31,13 +31,8 @@ const stubShimmerLogger = () => {
     warn: sinon.stub()
   };
 
-  shimmer = proxyquire('../../src/tracing/shimmer', {
-    '../logger': {
-      getLogger: () => {
-        return loggerStub;
-      }
-    }
-  });
+  shimmer = proxyquire('../../src/tracing/shimmer', {});
+  shimmer.init({ logger: loggerStub });
 };
 
 describe('tracing/shimmer', () => {

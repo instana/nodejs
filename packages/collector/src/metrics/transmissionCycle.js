@@ -9,9 +9,6 @@ const core = require('@instana/core');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('metrics/sender', newLogger => {
-  logger = newLogger;
-});
 
 const resendFullDataEveryXTransmissions = process.env.INSTANA_FULL_METRICS_INTERNAL_IN_S
   ? Number(process.env.INSTANA_FULL_METRICS_INTERNAL_IN_S)
@@ -39,6 +36,7 @@ let isActive = false;
  * @param {import('@instana/core/src/metrics').InstanaConfig} config
  */
 exports.init = function init(config) {
+  logger = config.logger;
   transmissionDelay = config.metrics.transmissionDelay;
 };
 

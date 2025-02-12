@@ -5,26 +5,18 @@
 
 'use strict';
 
-/** @type {import('@instana/core/src/core').GenericLogger} */
-let logger;
-logger = require('../logger').getLogger('announceCycle/announced', newLogger => {
-  logger = newLogger;
-});
-
-const MAX_RETRIES = 60;
-
 const agentConnection = require('../agentConnection');
 
-module.exports = {
-  /**
-   * @param {import('./').AnnounceCycleContext} ctx
-   */
-  enter: function (ctx) {
-    checkWhetherAgentIsReadyToAccept(0, ctx);
-  },
+/** @type {import('@instana/core/src/core').GenericLogger} */
+let logger;
+const MAX_RETRIES = 60;
 
-  leave: function () {}
-};
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
+function init(config) {
+  logger = config.logger;
+}
 
 /**
  * @param {number} totalNumberOfAttempts
@@ -46,3 +38,15 @@ function checkWhetherAgentIsReadyToAccept(totalNumberOfAttempts, ctx) {
     }
   });
 }
+
+module.exports = {
+  init,
+  /**
+   * @param {import('./').AnnounceCycleContext} ctx
+   */
+  enter: function (ctx) {
+    checkWhetherAgentIsReadyToAccept(0, ctx);
+  },
+
+  leave: function () {}
+};

@@ -6,17 +6,14 @@
 'use strict';
 
 const shimmer = require('../../shimmer');
-
-/** @type {import('../../../core').GenericLogger} */
-let logger;
-logger = require('../../../logger').getLogger('tracing/superagent', newLogger => {
-  logger = newLogger;
-});
-
 const hook = require('../../../util/hook');
 const cls = require('../../cls');
 
-exports.init = function () {
+let logger;
+
+exports.init = function (config) {
+  logger = config.logger;
+
   hook.onModuleLoad('superagent', exports.instrument);
 };
 

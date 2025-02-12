@@ -15,9 +15,14 @@ const readDefaultGateway = callbackify(defaultGatewayParser.parseProcSelfNetRout
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('announceCycle/agentHostLookup', newLogger => {
-  logger = newLogger;
-});
+
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
+const init = config => {
+  logger = config.logger;
+  defaultGatewayParser.init(config);
+};
 
 /* eslint-disable max-len */
 /*
@@ -42,11 +47,6 @@ const requestTimeout = 5000;
 const retryTimeoutMillis = process.env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS
   ? Number(process.env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS)
   : 60 * 1000;
-
-module.exports = {
-  enter,
-  leave: function () {}
-};
 
 /**
  * @param {import('./').AnnounceCycleContext} ctx
@@ -234,3 +234,9 @@ function setAgentHost(host) {
   logger.info(`Found an agent on ${host}:${agentOpts.port}, proceeding to announce request.`);
   agentOpts.host = host;
 }
+
+module.exports = {
+  init,
+  enter,
+  leave: function () {}
+};

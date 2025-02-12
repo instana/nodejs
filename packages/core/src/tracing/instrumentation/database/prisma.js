@@ -5,22 +5,18 @@
 'use strict';
 
 const shimmer = require('../../shimmer');
-
-let logger;
-logger = require('../../../logger').getLogger('tracing/prisma', newLogger => {
-  logger = newLogger;
-});
-
 const hook = require('../../../util/hook');
 const { getErrorDetails, getStackTrace } = require('../../tracingUtil');
 const { EXIT } = require('../../constants');
 const cls = require('../../cls');
 
+let logger;
 let isActive = false;
 
 const providerAndDataSourceUriMap = new WeakMap();
 
-exports.init = function init() {
+exports.init = function init(config) {
+  logger = config.logger;
   hook.onModuleLoad('@prisma/client', instrumentPrismaClient);
 };
 
