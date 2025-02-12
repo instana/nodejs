@@ -100,6 +100,7 @@ describe('Using the API', function () {
 
   function verify(control, response) {
     expect(response).to.be.an('object');
+
     expect(response.message).to.equal('Hello Cloud Run!');
     expect(response.logs.debug).to.contain('Sending data to Instana (/serverless/metrics).');
     expect(response.logs.debug).to.contain('Sent data to Instana (/serverless/metrics).');
