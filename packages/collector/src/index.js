@@ -48,7 +48,6 @@ require('./tracing'); // load additional instrumentations
 const log = require('./logger');
 const normalizeCollectorConfig = require('./util/normalizeConfig');
 const experimental = require('./experimental');
-const { pid } = require('process');
 
 let logger = log.init();
 /** @type {import('./types/collector').CollectorConfig} */
