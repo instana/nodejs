@@ -9,16 +9,16 @@ const coreMetrics = require('@instana/core').metrics;
 const sharedMetrics = require('@instana/shared-metrics');
 const transmissionCycle = require('./transmissionCycle');
 
-coreMetrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
-const additionalCollectorMetrics = coreMetrics.findAndRequire(__dirname);
-coreMetrics.registerAdditionalMetrics(additionalCollectorMetrics);
-
 /**
  * @param {import('@instana/core/src/metrics').InstanaConfig} config
  */
 exports.init = function init(config) {
   coreMetrics.init(config);
   transmissionCycle.init(config);
+
+  coreMetrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
+  const additionalCollectorMetrics = coreMetrics.findAndRequire(__dirname);
+  coreMetrics.registerAdditionalMetrics(additionalCollectorMetrics);
 };
 
 exports.activate = function activate() {
