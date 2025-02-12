@@ -25,6 +25,13 @@ function createLogFn(level, fn) {
   };
 }
 
+exports.init = function init(config = {}) {
+  // NOTE: We accept for `process.env.INSTANA_DEBUG` any string value - does not have to be "true".
+  if (process.env.INSTANA_DEBUG || config.level || process.env.INSTANA_LOG_LEVEL) {
+    exports.setLevel(process.env.INSTANA_DEBUG ? 'debug' : config.level || process.env.INSTANA_LOG_LEVEL);
+  }
+};
+
 exports.setLevel = function setLevel(level) {
   // eslint-disable-next-line yoda
   if (typeof level === 'number' && 0 < level && level <= 50) {

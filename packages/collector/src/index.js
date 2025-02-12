@@ -106,7 +106,7 @@ function init(_config) {
     logger = newLogger;
   });
 
-  // NOTE: By default we set our instana internal bunyan logger
+  // NOTE: By default we set our instana internal logger
   config.logger = logger;
 
   agentOpts.init(config);
