@@ -11,6 +11,8 @@ const tracingUtil = require('./tracingUtil');
 const { ENTRY, EXIT, INTERMEDIATE, isExitSpan } = require('./constants');
 const hooked = require('./clsHooked');
 const tracingMetrics = require('./metrics');
+const { applyFilter } = require('../util/spanFilter');
+
 /** @type {import('../core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('tracing/cls', newLogger => {
@@ -30,6 +32,10 @@ let serviceName;
 let processIdentityProvider = null;
 /** @type {Boolean} */
 let allowRootExitSpan;
+/**
+ * @type {import('../tracing').IgnoreEndpoints}
+ */
+let ignoreEndpoints;
 
 /*
  * Access the Instana namespace in continuation local storage.
@@ -51,13 +57,23 @@ function init(config, _processIdentityProvider) {
   }
   processIdentityProvider = _processIdentityProvider;
   allowRootExitSpan = config?.tracing?.allowRootExitSpan;
+  ignoreEndpoints = config?.tracing?.ignoreEndpoints;
+}
+/**
+ * @param {import('../util/normalizeConfig').AgentConfig} extraConfig
+ */
+function activate(extraConfig) {
+  if (extraConfig.tracing.ignoreEndpoints) {
+    ignoreEndpoints = extraConfig.tracing.ignoreEndpoints;
+  }
 }
 
 class InstanaSpan {
   /**
    * @param {string} name
+   * @param {object} [data]
    */
-  constructor(name) {
+  constructor(name, data) {
     // properties that part of our span model
     this.t = undefined;
     this.s = undefined;
@@ -98,7 +114,7 @@ class InstanaSpan {
     /** @type {Array.<*>} */
     this.stack = [];
     /** @type {Object.<string, *>} */
-    this.data = {};
+    this.data = data || {};
 
     // Properties for the span that are only used internally but will not be transmitted to the agent/backend,
     // therefore defined as non-enumerabled. NOTE: If you add a new property, make sure that it is also defined as
@@ -256,18 +272,21 @@ class InstanaIgnoredSpan extends InstanaSpan {
  * @param {string} [spanAttributes.traceId]
  * @param {string} [spanAttributes.parentSpanId]
  * @param {import('./w3c_trace_context/W3cTraceContext')} [spanAttributes.w3cTraceContext]
+ * @param {Object} [spanAttributes.spanContextData]
  * @returns {InstanaSpan}
  */
 
 function startSpan(spanAttributes = {}) {
-  let { spanName, kind, traceId, parentSpanId, w3cTraceContext } = spanAttributes;
+  let { spanName, kind, traceId, parentSpanId, w3cTraceContext, spanContextData } = spanAttributes;
 
   tracingMetrics.incrementOpened();
   if (!kind || (kind !== ENTRY && kind !== EXIT && kind !== INTERMEDIATE)) {
     logger.warn(`Invalid span (${spanName}) without kind/with invalid kind: ${kind}, assuming EXIT.`);
     kind = EXIT;
   }
-  const span = new InstanaSpan(spanName);
+  const spanData = spanContextData || {};
+
+  const span = new InstanaSpan(spanName, spanData);
   span.k = kind;
 
   const parentSpan = getCurrentSpan();
@@ -311,6 +330,16 @@ function startSpan(spanAttributes = {}) {
   if (w3cTraceContext) {
     w3cTraceContext.updateParent(span.t, span.s);
     span.addCleanup(ns.set(w3cTraceContextKey, w3cTraceContext));
+  }
+
+  const sanitizedspan = sanitizeSpan(span);
+  if (!sanitizedspan) {
+    return setIgnoredSpan({
+      spanName: span.n,
+      kind: span.k,
+      traceId: span.t,
+      spanId: span.p
+    });
   }
 
   if (span.k === ENTRY) {
@@ -364,6 +393,53 @@ function putPseudoSpan(spanName, kind, traceId, spanId) {
   // Set the span object as the currently active span in the active CLS context and also add a cleanup hook for when
   // this span is transmitted.
   span.addCleanup(ns.set(currentSpanKey, span));
+  return span;
+}
+
+/**
+ * Adds an ignored span to the CLS context, serving as a holder for a trace ID and span ID.
+ * Customers can access the current span via `instana.currentSpan()`, and we avoid returning a "NoopSpan".
+ * Instead, we need this ignored span instance to ensure the trace ID remains accessible.
+ * These spans will not be sent to the backend.
+ * @param {Object} options - The options for the span.
+ * @param {string} options.spanName - The name of the span.
+ * @param {number} options.kind - The kind of span (ENTRY, EXIT, or INTERMEDIATE).
+ * @param {string} options.traceId - The trace ID associated with the span.
+ * @param {string} options.spanId - The span ID.
+ */
+function setIgnoredSpan({ spanName, kind, traceId, spanId }) {
+  if (!kind || (kind !== ENTRY && kind !== EXIT && kind !== INTERMEDIATE)) {
+    logger.warn(`Invalid ignored span (${spanName}) without kind/with invalid kind: ${kind}, assuming EXIT.`);
+    kind = EXIT;
+  }
+
+  const span = new InstanaIgnoredSpan(spanName);
+  span.k = kind;
+
+  if (!traceId) {
+    logger.warn(`Cannot start an ignored span without a trace ID: ${spanName}, ${kind}`);
+    return;
+  }
+
+  if (!spanId) {
+    logger.warn(`Cannot start an ignored span without a span ID: ${spanName}, ${kind}`);
+    return;
+  }
+
+  span.t = traceId;
+  span.s = spanId;
+
+  if (span.k === ENTRY) {
+    // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at
+    // any given moment). This is used by the instrumentations of web frameworks like Express.js to add path templates
+    // and error messages to the entry span.
+    span.addCleanup(ns.set(currentEntrySpanKey, span));
+  }
+
+  // Set the span object as the currently active span in the active CLS context and also add a cleanup hook for when
+  // this span is transmitted.
+  span.addCleanup(ns.set(currentSpanKey, span));
+
   return span;
 }
 
@@ -622,6 +698,14 @@ function skipExitTracing(options) {
 
   return skip;
 }
+/**
+ * @param {InstanaSpan | import("../core").InstanaBaseSpan} span
+ */
+function sanitizeSpan(span) {
+  if (ignoreEndpoints) {
+    return applyFilter({ span, ignoreEndpoints });
+  }
+}
 
 module.exports = {
   skipExitTracing,
@@ -648,5 +732,6 @@ module.exports = {
   enterAsyncContext,
   leaveAsyncContext,
   runInAsyncContext,
-  runPromiseInAsyncContext
+  runPromiseInAsyncContext,
+  activate
 };
