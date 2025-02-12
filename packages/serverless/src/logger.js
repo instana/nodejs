@@ -10,7 +10,7 @@
 // 30 = info
 let minLevel = 30;
 
-module.exports = exports = {
+let logger = {
   debug: createLogFn(20, console.debug || console.log),
   info: createLogFn(30, console.log),
   warn: createLogFn(40, console.warn),
@@ -26,10 +26,25 @@ function createLogFn(level, fn) {
 }
 
 exports.init = function init(config = {}) {
+  // CASE: customer overrides logger in serverless land.
+  if (config.logger && typeof config.logger.child === 'function') {
+    // A bunyan or pino logger has been provided via config. In either case we create a child logger directly under the
+    // given logger which serves as the parent for all loggers we create later on.
+    logger = config.logger.child({
+      module: 'instana-nodejs-console-logger'
+    });
+  }
+
   // NOTE: We accept for `process.env.INSTANA_DEBUG` any string value - does not have to be "true".
   if (process.env.INSTANA_DEBUG || config.level || process.env.INSTANA_LOG_LEVEL) {
     exports.setLevel(process.env.INSTANA_DEBUG ? 'debug' : config.level || process.env.INSTANA_LOG_LEVEL);
   }
+
+  return logger;
+};
+
+exports.getLogger = () => {
+  return logger;
 };
 
 exports.setLevel = function setLevel(level) {

@@ -10,8 +10,10 @@
 // Ths is aws-lambda!
 const instana = require('../..');
 
-const { consoleLogger } = require('@instana/serverless');
+const { log } = require('@instana/serverless');
 const delay = require('../../../core/test/test_util/delay');
+
+const logger = log.getLogger();
 
 exports.handler = instana.wrap(async () => {
   console.warn('this is a warning');
@@ -19,7 +21,7 @@ exports.handler = instana.wrap(async () => {
 
   // NOTE: Is never captured, because aws-lambda package initialises serverless first and then core.
   //       That means the console logger in serverless is never instrumented.
-  consoleLogger.warn('Meh');
+  logger.warn('Meh');
 
   await delay(2000);
 

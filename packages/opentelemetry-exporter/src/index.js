@@ -89,7 +89,7 @@ class InstanaExporter {
     instanaEnvironment.validate();
 
     if (instanaEnvironment.isValid()) {
-      instanaBackendConnector.init(null, diag, null, true);
+      instanaBackendConnector.init({}, null, diag, null, true);
       this._isShutdown = false;
     }
   }

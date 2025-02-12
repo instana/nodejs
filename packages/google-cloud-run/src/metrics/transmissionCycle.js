@@ -5,17 +5,16 @@
 
 'use strict';
 
-const { backendConnector, consoleLogger } = require('@instana/serverless');
-
+const { backendConnector } = require('@instana/serverless');
 const processorRegistry = require('./processorRegistry');
 
-let logger = consoleLogger;
-
+let logger;
 let transmissionDelay = 1000;
 let transmissionTimeoutHandle;
 let isActive = false;
 
 exports.init = function init(config, metadataBaseUrl, onReady) {
+  logger = config.logger;
   transmissionDelay = config.metrics.transmissionDelay;
   processorRegistry.init(config, metadataBaseUrl, onReady);
 };
@@ -77,7 +76,3 @@ function onMetricsHaveBeenSent(transmittedPayloadPerProcessor, error) {
     processor.setLastTransmittedPayload(transmittedPayloadPerProcessor[processor.getId()]);
   });
 }
-
-exports.setLogger = function setLogger(_logger) {
-  logger = _logger;
-};

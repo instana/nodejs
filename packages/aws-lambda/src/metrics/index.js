@@ -6,15 +6,17 @@
 'use strict';
 
 const { metrics: coreMetrics } = require('@instana/core');
+const npmPackageName = require('./npmPackageName');
+const npmPackageVersion = require('./npmPackageVersion');
+const npmPackageDescription = require('./npmPackageDescription');
 
-coreMetrics.registerAdditionalMetrics([
-  require('./npmPackageName'),
-  require('./npmPackageVersion'),
-  require('./npmPackageDescription')
-]);
+coreMetrics.registerAdditionalMetrics([npmPackageName, npmPackageVersion, npmPackageDescription]);
 
 exports.init = function init(config) {
   coreMetrics.init(config);
+  npmPackageName.init(config);
+  npmPackageVersion.init(config);
+  npmPackageDescription.init(config);
 };
 
 exports.activate = function activate() {

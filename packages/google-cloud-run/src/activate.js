@@ -6,7 +6,7 @@
 'use strict';
 
 const instanaCore = require('@instana/core');
-const { backendConnector, consoleLogger } = require('@instana/serverless');
+const { backendConnector, logger: log } = require('@instana/serverless');
 
 const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
@@ -14,8 +14,7 @@ const metrics = require('./metrics');
 const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
 
-let logger = consoleLogger;
-logger.init();
+let logger = log.init();
 const config = normalizeConfig({}, logger);
 
 function init() {
@@ -52,7 +51,7 @@ function init() {
 
     try {
       identityProvider.init(containerInstanceId);
-      backendConnector.init(identityProvider, logger, false, true, 950);
+      backendConnector.init(config, identityProvider, logger, false, true, 950);
       instanaCore.init(config, backendConnector, identityProvider);
       metrics.activate(backendConnector);
       tracing.activate();
@@ -78,11 +77,12 @@ exports.currentSpan = function getHandleForCurrentSpan() {
 
 exports.sdk = tracing.sdk;
 
+// NOTE: this is the external interface for the customer. They can set a custom logger.
 exports.setLogger = function setLogger(_logger) {
-  logger = _logger;
+  logger = log.init({ logger: _logger });
+
+  // finally update the logger instance
   config.logger = logger;
-  instanaCore.logger.init(config);
-  metrics.setLogger(_logger);
 };
 
 exports.opentracing = tracing.opentracing;

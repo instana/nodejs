@@ -47,7 +47,7 @@ const instanaSharedMetrics = require('@instana/shared-metrics');
 
 require('./tracing'); // load additional instrumentations
 const log = require('./logger');
-
+let logger;
 const normalizeCollectorConfig = require('./util/normalizeConfig');
 const experimental = require('./experimental');
 
@@ -96,7 +96,7 @@ function init(_config) {
   global.__INSTANA_INITIALIZED = true;
 
   /** @type {import('@instana/core/src/core').GenericLogger} */
-  const logger = log.init(_config);
+  logger = log.init(_config);
   config = normalizeCollectorConfig(_config);
   config = instanaNodeJsCore.util.normalizeConfig(config, logger);
 
@@ -138,11 +138,11 @@ init.isConnected = function isConnected() {
 };
 
 /**
- * @param {import('@instana/core/src/core').GenericLogger} logger
+ * @param {import('@instana/core/src/core').GenericLogger} _logger
  */
-init.setLogger = function setLogger(logger) {
+init.setLogger = function setLogger(_logger) {
   // NOTE: Override our default logger with customer's logger
-  log.init({ logger });
+  logger = log.init({ logger: _logger });
   config.logger = logger;
 };
 

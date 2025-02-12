@@ -5,12 +5,7 @@
 
 'use strict';
 
-const { consoleLogger } = require('@instana/serverless');
-
 const transmissionCycle = require('./transmissionCycle');
-
-let logger = consoleLogger;
-
 const metadataHost = process.env.CUSTOM_METADATA_HOST || 'http://metadata.google.internal';
 exports.metadataBaseUrl = `${metadataHost}/computeMetadata/v1/`;
 
@@ -24,9 +19,4 @@ exports.activate = function activate() {
 
 exports.deactivate = function deactivate() {
   transmissionCycle.deactivate();
-};
-
-exports.setLogger = function setLogger(_logger) {
-  logger = _logger;
-  transmissionCycle.setLogger(logger);
 };

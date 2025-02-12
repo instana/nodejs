@@ -6,7 +6,7 @@
 'use strict';
 
 const instanaCore = require('@instana/core');
-const { backendConnector, consoleLogger, environment } = require('@instana/serverless');
+const { backendConnector, logger: log, environment } = require('@instana/serverless');
 const arnParser = require('./arn');
 const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
@@ -19,8 +19,7 @@ const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
 const { tracingHeaders, constants, spanBuffer } = tracing;
 
-let logger = consoleLogger;
-logger.init();
+let logger = log.init();
 let config = normalizeConfig({}, logger);
 
 let coldStart = true;
@@ -259,7 +258,7 @@ function init(event, arnInfo, _config) {
     );
   }
 
-  backendConnector.init(identityProvider, logger, true, false, 500, useLambdaExtension);
+  backendConnector.init(config, identityProvider, logger, true, false, 500, useLambdaExtension);
 
   // instanaCore.init also normalizes the config as a side effect
   instanaCore.init(config, backendConnector, identityProvider);
@@ -518,10 +517,8 @@ exports.currentSpan = function getHandleForCurrentSpan() {
 exports.sdk = tracing.sdk;
 
 exports.setLogger = function setLogger(_logger) {
-  logger = _logger;
+  logger = log.init({ logger: _logger });
   config.logger = logger;
-  instanaCore.logger.init(config);
-  backendConnector.setLogger(logger);
 };
 
 exports.opentracing = tracing.opentracing;

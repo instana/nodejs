@@ -6,12 +6,16 @@
 'use strict';
 
 const { util: coreUtil } = require('@instana/core');
-const { consoleLogger: logger } = require('@instana/serverless');
-
 const rootDir = require('./rootDir');
 
 exports.payloadPrefix = 'npmPackageName';
 exports.currentPayload = undefined;
+
+let logger;
+
+exports.init = config => {
+  logger = config.logger;
+};
 
 exports.activate = function activate() {
   coreUtil.applicationUnderMonitoring.getMainPackageJsonStartingAtDirectory(rootDir.root, (err, pckg) => {
