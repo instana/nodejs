@@ -55,7 +55,7 @@ const init = function (config) {
   keywords.init(config);
   name.init(config);
   version.init(config);
-
+  name.init(config);
   gc.init();
   libuv.init();
 };

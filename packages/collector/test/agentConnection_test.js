@@ -9,7 +9,8 @@ const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../core/test/config');
+const testConfig = require('../../core/test/config');
+const testUtils = require('../../core/test/test_util');
 
 const dummyEntry = {
   n: 'dummy.entry',
@@ -56,13 +57,16 @@ const dummySpansWithCircularReference = [dummyExit, circularSpan, dummyEntry];
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('agent connection', function () {
-  this.timeout(config.getTestTimeout());
+  this.timeout(testConfig.getTestTimeout());
 
   const { AgentStubControls } = require('./apps/agentStubControls');
   const agentControls = new AgentStubControls();
 
   const agentOpts = require('../src/agent/opts');
   const originalPort = agentOpts.port;
+
+  const config = { logger: testUtils.createFakeLogger() };
+  const pidStore = require('../src/pidStore');
   let agentConnection;
 
   before(async () => {
@@ -75,6 +79,9 @@ mochaSuiteFn('agent connection', function () {
   beforeEach(async () => {
     agentOpts.port = agentControls.getPort();
     agentConnection = require('../src/agentConnection');
+    pidStore.init(config);
+    agentConnection.init(config, pidStore);
+
     await agentControls.simulateDiscovery(process.pid);
     await agentControls.clearReceivedData();
   });
