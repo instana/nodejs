@@ -505,7 +505,10 @@ function instrumentQueryResultHelper(ctx, originalArgs, originalFunction, stmt, 
 function createSpan(stmt, fn, connectionStr) {
   // eslint-disable-next-line max-len
   // https://github.ibm.com/instana/backend/blob/develop/forge/src/main/java/com/instana/forge/connection/database/ibmdb2/IbmDb2Span.java
-  const span = cls.startSpan(exports.spanName, constants.EXIT);
+  const span = cls.startSpan({
+    spanName: exports.spanName,
+    kind: constants.EXIT
+  });
   span.stack = tracingUtil.getStackTrace(fn);
   span.ts = Date.now();
   span.data.db2 = {

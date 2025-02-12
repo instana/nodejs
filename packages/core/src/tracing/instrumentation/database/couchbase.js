@@ -413,7 +413,10 @@ function instrumentTransactions(cluster, connectionStr) {
 
               shimmer.wrap(attempt, obj[0].fnName, originalFn => {
                 return function instanaCommitRollbackOverride() {
-                  const span = cls.startSpan(exports.spanName, constants.EXIT);
+                  const span = cls.startSpan({
+                    spanName: exports.spanName,
+                    kind: constants.EXIT
+                  });
                   span.stack = tracingUtil.getStackTrace(instanaCommitRollbackOverride);
                   span.ts = Date.now();
                   span.data.couchbase = {
@@ -465,7 +468,10 @@ function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sql, 
 
     return cls.ns.runAndReturn(() => {
       const bucketType = getBucketTypeFn && getBucketTypeFn();
-      const span = cls.startSpan(exports.spanName, constants.EXIT);
+      const span = cls.startSpan({
+        spanName: exports.spanName,
+        kind: constants.EXIT
+      });
       span.stack = tracingUtil.getStackTrace(original);
       span.ts = Date.now();
       span.data.couchbase = {

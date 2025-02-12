@@ -69,7 +69,10 @@ function instrumentedCommand(ctx, originalCommand, originaCommandArgs) {
   return cls.ns.runAndReturn(() => {
     const originalQuery = originaCommandArgs[0];
 
-    const span = cls.startSpan(SPAN_NAME, EXIT);
+    const span = cls.startSpan({
+      spanName: SPAN_NAME,
+      kind: EXIT
+    });
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedCommand);
 

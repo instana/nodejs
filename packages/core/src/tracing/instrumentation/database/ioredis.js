@@ -77,7 +77,10 @@ function instrumentSendCommand(original) {
 
     const argsForOriginal = arguments;
     return cls.ns.runAndReturn(() => {
-      const span = cls.startSpan(exports.spanName, constants.EXIT);
+      const span = cls.startSpan({
+        spanName: exports.spanName,
+        kind: constants.EXIT
+      });
       span.stack = tracingUtil.getStackTrace(wrappedInternalSendCommand);
 
       const connection = `${client.options.host}:${client.options.port}`;
@@ -153,7 +156,10 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
     // create a new cls context parent to track the multi/pipeline child calls
     const clsContextForMultiOrPipeline = cls.ns.createContext();
     cls.ns.enter(clsContextForMultiOrPipeline);
-    const span = cls.startSpan(exports.spanName, constants.EXIT);
+    const span = cls.startSpan({
+      spanName: exports.spanName,
+      kind: constants.EXIT
+    });
     span.stack = tracingUtil.getStackTrace(wrappedInternalMultiOrPipelineCommand);
     span.data.redis = {
       connection,

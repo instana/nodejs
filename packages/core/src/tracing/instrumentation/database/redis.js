@@ -236,7 +236,10 @@ function instrumentCommand(original, command, address, cbStyle) {
     }
 
     return cls.ns.runAndReturn(() => {
-      const span = cls.startSpan(exports.spanName, constants.EXIT);
+      const span = cls.startSpan({
+        spanName: exports.spanName,
+        kind: constants.EXIT
+      });
       span.stack = tracingUtil.getStackTrace(instrumentCommand);
 
       span.data.redis = {
@@ -314,9 +317,17 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
     let span;
 
     if (skipExitResult.allowRootExitSpan) {
-      span = cls.startSpan(exports.spanName, constants.EXIT);
+      span = cls.startSpan({
+        spanName: exports.spanName,
+        kind: constants.EXIT
+      });
     } else {
-      span = cls.startSpan(exports.spanName, constants.EXIT, parentSpan.t, parentSpan.s);
+      span = cls.startSpan({
+        spanName: exports.spanName,
+        kind: constants.EXIT,
+        traceId: parentSpan.t,
+        parentSpanId: parentSpan.s
+      });
     }
 
     span.stack = tracingUtil.getStackTrace(instrumentMultiExec);

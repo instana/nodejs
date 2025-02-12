@@ -50,7 +50,10 @@ class InstanaAWSKinesis extends InstanaAWSProduct {
     }
 
     return cls.ns.runAndReturn(() => {
-      const span = cls.startSpan(this.spanName, EXIT);
+      const span = cls.startSpan({
+        spanName: this.spanName,
+        kind: EXIT
+      });
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(this.instrumentedMakeRequest, 1);
       // Data attribs: op and stream

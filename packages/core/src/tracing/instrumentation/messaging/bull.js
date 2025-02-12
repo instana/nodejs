@@ -86,7 +86,10 @@ function instrumentedJobCreate(ctx, originalJobCreate, originalArgs, options) {
   return cls.ns.runAndReturn(() => {
     // inherit parent if exists. eg: ENTRY http server
     // or is root if no parent present
-    const span = cls.startSpan(exports.spanName, EXIT);
+    const span = cls.startSpan({
+      spanName: exports.spanName,
+      kind: EXIT
+    });
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedJobCreate, 1);
     span.data.bull = {
@@ -146,7 +149,10 @@ function instrumentedJobCreateBulk(ctx, originalJobCreateBulk, originalArgs) {
 
   immediateJobs.forEach(job => {
     cls.ns.run(() => {
-      const span = cls.startSpan(exports.spanName, EXIT);
+      const span = cls.startSpan({
+        spanName: exports.spanName,
+        kind: EXIT
+      });
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(instrumentedJobCreateBulk, 2);
       span.data.bull = {
@@ -233,7 +239,13 @@ function instrumentedProcessJob(ctx, originalProcessJob, originalArgs) {
       return originalProcessJob.apply(ctx, originalArgs);
     }
 
-    const span = cls.startSpan(exports.spanName, ENTRY, spanT, spanP);
+    const span = cls.startSpan({
+      spanName: exports.spanName,
+      kind: ENTRY,
+      traceId: spanT,
+      parentSpanId: spanP
+    });
+
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedProcessJob, 1);
     span.data.bull = {

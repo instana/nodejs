@@ -65,7 +65,10 @@ function instrumentedLog(ctx, originalArgs, originalLog, markAsError) {
       message = util.format(...originalArgs.slice(1));
     }
 
-    const span = cls.startSpan('log.log4js', constants.EXIT);
+    const span = cls.startSpan({
+      spanName: 'log.log4js',
+      kind: constants.EXIT
+    });
     span.stack = tracingUtil.getStackTrace(instrumentedLog);
     span.data.log = {
       message

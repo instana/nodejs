@@ -140,7 +140,10 @@ function traceQueryOrMutation(
     if (!span) {
       // If there hasn't been an entry span that we repurposed into a graphql.server entry span, we need to start a new
       // root entry span here.
-      span = cls.startSpan('graphql.server', constants.ENTRY);
+      span = cls.startSpan({
+        spanName: 'graphql.server',
+        kind: constants.ENTRY
+      });
     }
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
     span.data.graphql = {
@@ -180,7 +183,12 @@ function traceSubscriptionUpdate(
 
   if (parentSpan && !constants.isExitSpan(parentSpan) && parentSpan.t && parentSpan.s) {
     return cls.ns.runAndReturn(() => {
-      const span = cls.startSpan('graphql.client', constants.EXIT, parentSpan.t, parentSpan.s);
+      const span = cls.startSpan({
+        spanName: 'graphql.client',
+        kind: constants.EXIT,
+        traceId: parentSpan.t,
+        parentSpanId: parentSpan.s
+      });
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(stackTraceRef);
       span.data.graphql = {

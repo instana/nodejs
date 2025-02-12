@@ -49,7 +49,10 @@ function shimLog(markAsError) {
 
 function instrumentedLog(ctx, originalLog, originalArgs, markAsError) {
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('log.bunyan', constants.EXIT);
+    const span = cls.startSpan({
+      spanName: 'log.bunyan',
+      kind: constants.EXIT
+    });
     span.stack = tracingUtil.getStackTrace(instrumentedLog);
     const fields = originalArgs[0];
     let message = originalArgs[1];

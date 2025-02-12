@@ -30,7 +30,10 @@ class InstanaAWSNS extends InstanaAWSProduct {
 
     return cls.ns.runAndReturn(() => {
       const self = this;
-      const span = cls.startSpan(this.spanName, EXIT);
+      const span = cls.startSpan({
+        spanName: this.spanName,
+        kind: EXIT
+      });
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(this.instrumentedSmithySend, 1);
 

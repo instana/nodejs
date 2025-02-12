@@ -163,7 +163,10 @@ function instrumentedAccessFunction(
   }
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan(exports.spanName, constants.EXIT);
+    const span = cls.startSpan({
+      spanName: exports.spanName,
+      kind: constants.EXIT
+    });
     span.b = { s: 1 };
     span.stack = tracingUtil.getStackTrace(instrumentedAccessFunction);
     span.data.mysql = {

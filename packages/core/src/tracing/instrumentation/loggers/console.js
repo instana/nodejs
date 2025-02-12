@@ -45,7 +45,10 @@ function shimLog(options) {
 
 function instrumentedLog(ctx, originalLog, originalArgs, options) {
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('log.console', constants.EXIT);
+    const span = cls.startSpan({
+      spanName: 'log.console',
+      kind: constants.EXIT
+    });
 
     span.stack = tracingUtil.getStackTrace(instrumentedLog);
     const firstArg = originalArgs[0];

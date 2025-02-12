@@ -36,7 +36,10 @@ function instrument(orgModule) {
       return originalCalculateSquare.apply(this, arguments);
     }
     return cls.ns.runAndReturn(() => {
-      const span = cls.startSpan('square-calc', EXIT, null, null);
+      const span = cls.startSpan({
+        spanName: 'square-calc',
+        kind: EXIT
+      });
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(instrument, 1);
 

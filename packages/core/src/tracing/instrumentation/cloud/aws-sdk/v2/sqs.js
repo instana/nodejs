@@ -129,7 +129,10 @@ function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
   }
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('sqs', EXIT);
+    const span = cls.startSpan({
+      spanName: 'sqs',
+      kind: EXIT
+    });
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedSendMessage);
     span.data.sqs = {
@@ -243,7 +246,10 @@ function shimReceiveMessage(originalReceiveMessage) {
 
 function instrumentedReceiveMessage(ctx, originalReceiveMessage, originalArgs) {
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('sqs', ENTRY);
+    const span = cls.startSpan({
+      spanName: 'sqs',
+      kind: ENTRY
+    });
     span.stack = tracingUtil.getStackTrace(instrumentedSendMessage);
     span.data.sqs = {
       sort: sortTypes.ENTRY,

@@ -157,7 +157,10 @@ function levelIsError(level) {
 
 function createSpan(ctx, originalMethod, originalArgs, message, markAsError) {
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('log.winston', constants.EXIT);
+    const span = cls.startSpan({
+      spanName: 'log.winston',
+      kind: constants.EXIT
+    });
     span.stack = tracingUtil.getStackTrace(createSpan);
     span.data.log = {
       message

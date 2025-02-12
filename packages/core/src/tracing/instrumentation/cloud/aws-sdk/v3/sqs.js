@@ -155,7 +155,10 @@ class InstanaAWSSQS extends InstanaAWSProduct {
 
     return cls.ns.runAndReturn(() => {
       const self = this;
-      const span = cls.startSpan(SPAN_NAME, EXIT);
+      const span = cls.startSpan({
+        spanName: SPAN_NAME,
+        kind: EXIT
+      });
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(this.instrumentExit, 2);
       span.data.sqs = this.buildSpanData(operation, sendMessageInput);
@@ -223,7 +226,10 @@ class InstanaAWSSQS extends InstanaAWSProduct {
     return cls.ns.runAndReturn(() => {
       const self = this;
 
-      const span = cls.startSpan(SPAN_NAME, ENTRY);
+      const span = cls.startSpan({
+        spanName: SPAN_NAME,
+        kind: ENTRY
+      });
       span.stack = tracingUtil.getStackTrace(this.instrumentEntry, 2);
       span.data.sqs = this.buildSpanData(operation, sendMessageInput);
 

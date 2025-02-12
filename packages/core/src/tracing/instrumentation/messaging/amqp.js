@@ -81,7 +81,10 @@ function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
   } else {
     // Otherwise, a normal channel was used and we need to create the context here as usual.
     return cls.ns.runAndReturn(() => {
-      const span = cls.startSpan('rabbitmq', constants.EXIT);
+      const span = cls.startSpan({
+        spanName: 'rabbitmq',
+        kind: constants.EXIT
+      });
       processExitSpan(ctx, span, originalArgs);
       try {
         return originalSendMessage.apply(ctx, originalArgs);
@@ -188,12 +191,12 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
       return originalDispatchMessage.apply(ctx, originalArgs);
     }
 
-    const span = cls.startSpan(
-      'rabbitmq',
-      constants.ENTRY,
-      tracingUtil.readAttribCaseInsensitive(headers, constants.traceIdHeaderName),
-      tracingUtil.readAttribCaseInsensitive(headers, constants.spanIdHeaderName)
-    );
+    const span = cls.startSpan({
+      spanName: 'rabbitmq',
+      kind: constants.ENTRY,
+      traceId: tracingUtil.readAttribCaseInsensitive(headers, constants.traceIdHeaderName),
+      parentSpanId: tracingUtil.readAttribCaseInsensitive(headers, constants.spanIdHeaderName)
+    });
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedDispatchMessage);
     span.data.rabbitmq = {
@@ -244,7 +247,10 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
   // *before* get is called, in case it indeed ends up fetching a new message. If the call ends up fetching no message,
   // we simply cancel the span instead of transmitting it.
   return cls.ns.runPromise(() => {
-    const span = cls.startSpan('rabbitmq', constants.ENTRY);
+    const span = cls.startSpan({
+      spanName: 'rabbitmq',
+      kind: constants.ENTRY
+    });
 
     return originalGet.apply(ctx, originalArgs).then(result => {
       if (!result) {
@@ -350,12 +356,12 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
         return;
       }
 
-      const span = cls.startSpan(
-        'rabbitmq',
-        constants.ENTRY,
-        tracingUtil.readAttribCaseInsensitive(headers, constants.traceIdHeaderName),
-        tracingUtil.readAttribCaseInsensitive(headers, constants.spanIdHeaderName)
-      );
+      const span = cls.startSpan({
+        spanName: 'rabbitmq',
+        kind: constants.ENTRY,
+        traceId: tracingUtil.readAttribCaseInsensitive(headers, constants.traceIdHeaderName),
+        parentSpanId: tracingUtil.readAttribCaseInsensitive(headers, constants.spanIdHeaderName)
+      });
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(instrumentedChannelModelGet);
       span.data.rabbitmq = {
@@ -411,7 +417,10 @@ function instrumentedChannelModelPublish(ctx, originalFunction, originalArgs) {
   }
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('rabbitmq', constants.EXIT);
+    const span = cls.startSpan({
+      spanName: 'rabbitmq',
+      kind: constants.EXIT
+    });
 
     // everything else is handled in instrumentedSendMessage/processExitSpan
     if (originalArgs.length >= 5 && typeof originalArgs[4] === 'function') {
@@ -450,7 +459,11 @@ function instrumentedCallbackModelPublish(ctx, originalFunction, originalArgs) {
   }
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('rabbitmq', constants.EXIT);
+    const span = cls.startSpan({
+      spanName: 'rabbitmq',
+      kind: constants.EXIT
+    });
+
     // everything else is handled in instrumentedSendMessage/processExitSpan
     if (originalArgs.length >= 5 && typeof originalArgs[4] === 'function') {
       const originalCb = originalArgs[4];

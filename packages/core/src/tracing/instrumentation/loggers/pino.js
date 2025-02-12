@@ -50,7 +50,10 @@ function shimGenLog(originalGenLog) {
 
         const ctx = this;
         return cls.ns.runAndReturn(() => {
-          const span = cls.startSpan('log.pino', constants.EXIT);
+          const span = cls.startSpan({
+            spanName: 'log.pino',
+            kind: constants.EXIT
+          });
           span.stack = tracingUtil.getStackTrace(log);
 
           if (typeof mergingObject === 'string') {

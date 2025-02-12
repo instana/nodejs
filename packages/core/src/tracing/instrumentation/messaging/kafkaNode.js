@@ -67,7 +67,10 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
   }
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('kafka', constants.EXIT);
+    const span = cls.startSpan({
+      spanName: 'kafka',
+      kind: constants.EXIT
+    });
     const produceRequest = produceRequests[0];
     span.b = { s: produceRequests.length };
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
@@ -117,7 +120,10 @@ function shimEmit(original) {
     }
 
     return cls.ns.runAndReturn(() => {
-      const span = cls.startSpan('kafka', constants.ENTRY);
+      const span = cls.startSpan({
+        spanName: 'kafka',
+        kind: constants.ENTRY
+      });
       span.stack = [];
       span.data.kafka = {
         access: 'consume',

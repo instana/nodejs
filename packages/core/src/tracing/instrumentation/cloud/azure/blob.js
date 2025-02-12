@@ -72,7 +72,10 @@ function instrumentingOperation({
   const accountName = accntName;
   const op = operation;
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan(exports.spanName, constants.EXIT);
+    const span = cls.startSpan({
+      spanName: exports.spanName,
+      kind: constants.EXIT
+    });
     span.stack = tracingUtil.getStackTrace(instrumentingOperation);
     span.data.azstorage = {
       containerName,

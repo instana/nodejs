@@ -70,7 +70,10 @@ function instrumentedPublish(ctx, originalPublish, originalArgs) {
   const originalCallback = typeof originalArgs[2] === 'function' ? originalArgs[2] : null;
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('nats.streaming', constants.EXIT);
+    const span = cls.startSpan({
+      spanName: 'nats.streaming',
+      kind: constants.EXIT
+    });
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedPublish);
     span.data.nats = {
@@ -153,7 +156,10 @@ function captureMessageSpan(ctx, originalEmit, originalArgs, subject) {
     if (!span) {
       // Unexpected: There was no raw nats entry, in fact, there was no active span at all. We can still trace the
       // current nats.streaming entry.
-      span = cls.startSpan('nats.streaming', constants.ENTRY);
+      span = cls.startSpan({
+        spanName: 'nats.streaming',
+        kind: constants.ENTRY
+      });
     }
 
     span.ts = Date.now();
