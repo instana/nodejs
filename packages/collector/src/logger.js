@@ -25,7 +25,7 @@ let parentLogger = null;
 /**
  * @param {import('./types/collector').CollectorConfig} config
  */
-exports.init = function init(config) {
+exports.init = function init(config = {}) {
   if (config.logger && typeof config.logger.child === 'function') {
     // A bunyan or pino logger has been provided via config. In either case we create a child logger directly under the
     // given logger which serves as the parent for all loggers we create later on.
