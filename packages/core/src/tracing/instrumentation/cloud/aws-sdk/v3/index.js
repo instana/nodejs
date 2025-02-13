@@ -28,8 +28,6 @@ const operationMap = {};
 let isActive = false;
 
 exports.init = function init(config) {
-  const awsProductInstances = [];
-
   awsProducts.forEach(AwsProductClass => {
     const awsProductInstance = new AwsProductClass(config);
     awsProductInstances.push(awsProductInstance);
