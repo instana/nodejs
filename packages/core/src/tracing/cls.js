@@ -63,7 +63,7 @@ function init(config, _processIdentityProvider) {
  * @param {import('../util/normalizeConfig').AgentConfig} extraConfig
  */
 function activate(extraConfig) {
-  if (extraConfig.tracing.ignoreEndpoints) {
+  if (extraConfig?.tracing?.ignoreEndpoints) {
     ignoreEndpoints = extraConfig.tracing.ignoreEndpoints;
   }
 }
@@ -705,6 +705,7 @@ function sanitizeSpan(span) {
   if (ignoreEndpoints) {
     return applyFilter({ span, ignoreEndpoints });
   }
+  return span;
 }
 
 module.exports = {
