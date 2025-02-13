@@ -236,17 +236,14 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
 function init(event, arnInfo, _config) {
   config = _config || {};
 
-  // CASE: customer provides a custom logger
+  // CASE: customer provides a custom logger or custom level
   if (config.logger) {
-    logger = config.logger;
+    log.init(config);
   } else if (config.level) {
-    // Re-init because we have to respect `config.level`
-    logger.init(config);
+    log.init(config);
   }
 
   config = normalizeConfig(config, logger);
-  ssm.init({ logger });
-  identityProvider.init(arnInfo);
 
   const useLambdaExtension = shouldUseLambdaExtension();
   if (useLambdaExtension) {
@@ -262,6 +259,9 @@ function init(event, arnInfo, _config) {
 
   // instanaCore.init also normalizes the config as a side effect
   instanaCore.init(config, backendConnector, identityProvider);
+
+  ssm.init(config);
+  identityProvider.init(arnInfo);
 
   spanBuffer.setIsFaaS(true);
   captureHeaders.init(config);
