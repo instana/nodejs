@@ -234,7 +234,7 @@ function instrumentCommand(original, command, address, cbStyle) {
     if (cls.skipExitTracing({ isActive })) {
       return original.apply(origCtx, origArgs);
     }
-    const data = {
+    const spanData = {
       redis: {
         connection: address || origCtx.address,
         operation: command
@@ -244,14 +244,9 @@ function instrumentCommand(original, command, address, cbStyle) {
       const span = cls.startSpan({
         spanName: exports.spanName,
         kind: constants.EXIT,
-        spanContextData: data
+        spanContextData: spanData
       });
       span.stack = tracingUtil.getStackTrace(instrumentCommand);
-
-      span.data.redis = {
-        connection: address || origCtx.address,
-        operation: command
-      };
 
       let userProvidedCallback;
 
@@ -321,7 +316,7 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
 
   return cls.ns.runAndReturn(() => {
     let span;
-    const data = {
+    const spanData = {
       redis: {
         connection: address,
         // pipeline = batch
@@ -332,7 +327,7 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
       span = cls.startSpan({
         spanName: exports.spanName,
         kind: constants.EXIT,
-        spanContextData: data
+        spanContextData: spanData
       });
     } else {
       span = cls.startSpan({
@@ -340,7 +335,7 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
         kind: constants.EXIT,
         traceId: parentSpan.t,
         parentSpanId: parentSpan.s,
-        spanContextData: data
+        spanContextData: spanData
       });
     }
 
