@@ -250,7 +250,7 @@
     "ibm_db": "^3.3.0",
     "kafka-avro": "^3.2.0",
     "node-rdkafka": "^3.2.1",
-    "pg-native": "^3.2.1",
+    "pg-native": "^3.2.2",
     "prisma": "^6.3.1"
   },
   "overrides": {
