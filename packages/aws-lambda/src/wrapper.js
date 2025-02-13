@@ -19,7 +19,7 @@ const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
 const { tracingHeaders, constants, spanBuffer } = tracing;
 
-let logger = log.init();
+const logger = log.init();
 let config = normalizeConfig({}, logger);
 
 let coldStart = true;
