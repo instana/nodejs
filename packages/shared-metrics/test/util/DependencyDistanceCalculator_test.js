@@ -9,7 +9,7 @@ const path = require('path');
 const { expect } = require('chai');
 
 const config = require('../../../core/test/config');
-
+const testUtils = require('../../../core/test/test_util');
 const depDistCalculator = require('../../src/util/DependencyDistanceCalculator');
 const { DependencyDistanceCalculator, __moduleRefExportedForTest: dependencyDistanceCalculatorModule } =
   depDistCalculator;
@@ -20,6 +20,11 @@ describe('dependency distance calculation', function () {
   // @ts-ignore
   const modulePathsOriginal = dependencyDistanceCalculatorModule.paths;
   const maxDepthOriginal = depDistCalculator.MAX_DEPTH;
+
+  before(() => {
+    depDistCalculator.init({ logger: testUtils.createFakeLogger() });
+  });
+
   afterEach(() => {
     // @ts-ignore
     dependencyDistanceCalculatorModule.paths = modulePathsOriginal;
