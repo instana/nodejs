@@ -50,26 +50,37 @@ class ProcessControls {
     if (opts.appPath && opts.dirname) {
       throw new Error('Invalid config, appPath and dirname are mutually exclusive.');
     }
+
     if (!opts.appPath && opts.dirname) {
       opts.appPath = path.join(opts.dirname, 'app.js');
     }
 
     if (process.env.RUN_ESM && !opts.execArgv) {
-      if (opts.dirname) {
-        try {
-          const files = fs.readdirSync(opts.dirname);
-          const esmApp = files.find(f => f.indexOf('.mjs') !== -1);
+      const resolveEsmLoader = () =>
+        isLatestEsmSupportedVersion(process.versions.node)
+          ? [`--import=${path.join(__dirname, '..', '..', 'esm-register.mjs')}`]
+          : [`--experimental-loader=${path.join(__dirname, '..', '..', 'esm-loader.mjs')}`];
 
+      try {
+        // custom appPath is provided, use that
+        if (opts?.appPath) {
+          const updatedPath = opts.appPath.endsWith('.js')
+            ? opts.appPath.replace(/\.js$/, '.mjs')
+            : `${opts.appPath}.mjs`;
+          if (fs.existsSync(updatedPath)) {
+            opts.execArgv = resolveEsmLoader();
+            opts.appPath = updatedPath;
+          }
+        } else if (opts?.dirname) {
+          const esmApp = fs.readdirSync(opts.dirname).find(f => f.endsWith('.mjs'));
           if (esmApp) {
-            opts.execArgv = isLatestEsmSupportedVersion(process.versions.node)
-              ? [`--import=${path.join(__dirname, '..', '..', 'esm-register.mjs')}`]
-              : [`--experimental-loader=${path.join(__dirname, '..', '..', 'esm-loader.mjs')}`];
+            opts.execArgv = resolveEsmLoader();
             opts.appPath = path.join(opts.dirname, 'app.mjs');
           }
-        } catch (err) {
-          // eslint-disable-next-line no-console
-          console.log('Unable to load the target app.mjs', err);
         }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.log('Unable to load the target app.mjs', err);
       }
     }
 

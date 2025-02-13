@@ -6,6 +6,7 @@
 'use strict';
 
 const expect = require('chai').expect;
+const path = require('path');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -27,7 +28,7 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
 
     before(async () => {
       controls = new ProcessControls({
-        dirname: __dirname,
+        appPath: path.join(__dirname, 'bunyanApp'),
         useGlobalAgent: true
       });
 
