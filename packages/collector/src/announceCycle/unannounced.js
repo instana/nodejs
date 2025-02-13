@@ -231,8 +231,22 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
     const endpointTracingConfig = Object.fromEntries(
       Object.entries(endpointTracingConfigFromAgent).map(([service, endpoints]) => {
         let normalizedEndpoints = null;
+
+        // Check if the endpoints is an array of objects (like Kafka)
         if (Array.isArray(endpoints)) {
-          normalizedEndpoints = endpoints.map(endpoint => endpoint?.toLowerCase());
+          normalizedEndpoints = endpoints.map(endpoint => {
+            if (typeof endpoint === 'object') {
+              // Handle object structure, e.g., { topic: [Array] }
+              return Object.fromEntries(
+                Object.entries(endpoint).map(([key, value]) => [
+                  key.toLowerCase(),
+                  Array.isArray(value) ? value.map(v => v?.toLowerCase()) : value
+                ])
+              );
+            } else {
+              return endpoint?.toLowerCase();
+            }
+          });
         }
 
         return [service.toLowerCase(), normalizedEndpoints];
