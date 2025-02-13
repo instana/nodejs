@@ -24,12 +24,12 @@ const morgan = require('morgan');
 const path = require('path');
 const fetch = require('node-fetch-v2');
 const port = require('../../test_util/app-port')();
-const { delay, getLogger } = require('../../../../core/test/test_util');
+const { delay, getTestAppLogger } = require('../../../../core/test/test_util');
 const DummyEmitter = require('./dummyEmitter');
 
 const app = express();
 const logPrefix = `SDK: Server (${process.pid}):\t`;
-const log = getLogger(logPrefix);
+const log = getTestAppLogger(logPrefix);
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
