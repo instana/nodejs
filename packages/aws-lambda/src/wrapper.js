@@ -255,13 +255,14 @@ function init(event, arnInfo, _config) {
     );
   }
 
+  identityProvider.init(arnInfo);
   backendConnector.init(config, identityProvider, logger, true, false, 500, useLambdaExtension);
 
   // instanaCore.init also normalizes the config as a side effect
   instanaCore.init(config, backendConnector, identityProvider);
 
+  // After core init, because we need the logger from core
   ssm.init(config);
-  identityProvider.init(arnInfo);
 
   spanBuffer.setIsFaaS(true);
   captureHeaders.init(config);
