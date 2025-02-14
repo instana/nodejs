@@ -261,7 +261,9 @@ function init(event, arnInfo, _config) {
   // instanaCore.init also normalizes the config as a side effect
   instanaCore.init(config, backendConnector, identityProvider);
 
-  // After core init, because we need the logger from core
+  // After core init, because ssm requires require('@aws-sdk/client-ssm'), which triggers
+  // the requireHook + shimmer. Any module which requires another external module has to be
+  // initialized after the core.
   ssm.init(config);
 
   spanBuffer.setIsFaaS(true);
