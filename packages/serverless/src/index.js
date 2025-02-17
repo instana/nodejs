@@ -6,7 +6,7 @@
 'use strict';
 
 exports.backendConnector = require('./backend_connector');
-exports.logger = require('./logger');
+exports.consoleLogger = require('./logger');
 exports.constants = require('./constants');
 exports.environment = require('./environment');
 exports.headers = require('./headers');
