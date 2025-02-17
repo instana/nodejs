@@ -18,7 +18,8 @@ const slidingWindow = require('./slidingWindow');
 const stackTrace = require('./stackTrace');
 const iitmHook = require('./iitmHook');
 const hook = require('./hook');
-const getPreloadFlags = require('./getPreloadFlags');
+const esm = require('./esm');
+const preloadFlags = require('./getPreloadFlags');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -31,7 +32,7 @@ exports.init = function init(config) {
   hasThePackageBeenInitializedTooLate.init(config);
   applicationUnderMonitoring.init(config);
   requireHook.init(config);
-  getPreloadFlags.init(config);
+  preloadFlags.init(config);
   iitmHook.init(config);
 };
 
@@ -63,7 +64,7 @@ exports.atMostOnce = function atMostOnce(name, cb) {
   };
 };
 
-exports.getPreloadFlags = getPreloadFlags;
+exports.preloadFlags = preloadFlags;
 exports.clone = clone;
 exports.compression = compression;
 exports.ensureNestedObjectExists = ensureNestedObjectExists;
@@ -76,3 +77,4 @@ exports.slidingWindow = slidingWindow;
 exports.stackTrace = stackTrace;
 exports.iitmHook = iitmHook;
 exports.hook = hook;
+exports.esm = esm;
