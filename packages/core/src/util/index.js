@@ -19,5 +19,7 @@ module.exports = {
   slidingWindow: require('./slidingWindow'),
   stackTrace: require('./stackTrace'),
   iitmHook: require('./iitmHook'),
-  hook: require('./hook')
+  hook: require('./hook'),
+  esm: require('./esm'),
+  preloadFlags: require('./getPreloadFlags')
 };

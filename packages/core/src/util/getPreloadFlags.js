@@ -10,7 +10,7 @@ logger = require('../logger').getLogger('util/getPreloadFlags', newLogger => {
   logger = newLogger;
 });
 
-exports.getPreloadFlags = function getPreloadFlags() {
+exports.get = () => {
   const flags = ['--require', '--import', '--experimental-loader'];
 
   /**
