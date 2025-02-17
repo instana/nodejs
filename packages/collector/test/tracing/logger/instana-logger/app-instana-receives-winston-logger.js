@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 });
 
 const agentPort = process.env.AGENT_PORT;
-const winston = require('winston');
+
 const instana = require('../../../..')({
   agentPort,
   level: 'warn',
@@ -22,6 +22,8 @@ const instana = require('../../../..')({
     forceTransmissionStartingAt: 1
   }
 });
+
+const winston = require('winston');
 
 instana.setLogger(
   winston.createLogger({
