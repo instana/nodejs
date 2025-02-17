@@ -5,9 +5,15 @@
 
 'use strict';
 
-const { backendConnector: instanaBackendConnector, environment: instanaEnvironment } = require('@instana/serverless');
+const {
+  backendConnector: instanaBackendConnector,
+  environment: instanaEnvironment,
+  consoleLogger: log
+} = require('@instana/serverless');
 const { ExportResultCode } = require('@opentelemetry/core');
 const { diag } = require('@opentelemetry/api');
+
+const logger = log.init();
 const instanaEndpointUrlEnvVar = 'INSTANA_ENDPOINT_URL';
 const instanaAgentKeyEnvVar = 'INSTANA_AGENT_KEY';
 
@@ -89,7 +95,7 @@ class InstanaExporter {
     instanaEnvironment.validate();
 
     if (instanaEnvironment.isValid()) {
-      instanaBackendConnector.init({}, null, diag, null, true);
+      instanaBackendConnector.init({ logger }, null, diag, null, true);
       this._isShutdown = false;
     }
   }
