@@ -190,8 +190,6 @@ function sendTracingMetrics() {
 }
 
 function scheduleTracingMetrics() {
-  // TODO: Do we really need this?
-  // deScheduleTracingMetrics();
   tracingMetricsTimeout = setTimeout(sendTracingMetrics, tracingMetricsDelay);
   tracingMetricsTimeout.unref();
 }
