@@ -56,6 +56,16 @@ mochaSuiteFn('[CJS] tracing/sdk/multiple_installations', function () {
       tmpDir
     );
 
+    // NOTE: Override the shared-metrics npm dependency with the local code base to be able to debug.
+    const sharedMetricsPath = path.join(__dirname, '..', '..', '..', '..', '..', '..', 'shared-metrics');
+    testUtils.runCommandSync('npm pack', copath);
+
+    const smVersion = require(`${sharedMetricsPath}/package.json`).version;
+    testUtils.runCommandSync(
+      `npm install --production --no-optional --no-audit ${sharedMetricsPath}/instana-shared-metrics-${smVersion}.tgz`,
+      tmpDir
+    );
+
     controls = new ProcessControls({
       useGlobalAgent: true,
       cwd: path.join(__dirname, 'src'),
