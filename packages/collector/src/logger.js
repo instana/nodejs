@@ -64,7 +64,6 @@ exports.init = function init(config, isReInit) {
 
     try {
       const consoleStream = uninstrumentedLogger.destination(parentLogger.destination);
-
       const multiStream = {
         /**
          * Custom write method to send logs to multiple destinations
@@ -72,7 +71,6 @@ exports.init = function init(config, isReInit) {
          */
         write(chunk) {
           consoleStream.write(chunk);
-
           loggerToAgentStream.write(chunk);
         }
       };
