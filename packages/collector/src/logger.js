@@ -18,7 +18,6 @@ try {
 
 const uninstrumentedLogger = require('./uninstrumentedLogger');
 const loggerToAgentStream = require('./agent/loggerToAgentStream');
-const { hostname } = require('os');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let instanaLogger;
