@@ -624,7 +624,7 @@ function parseMatcherMode(matcherMode) {
   if (isSecretMatcher) {
     return /** @type {MatchingOption} */ (trimmed);
   } else {
-    return /** @type {MatchingOption} */ 'none';
+    return /** @type {MatchingOption} */ 'contains-ignore-case';
   }
 }
 
