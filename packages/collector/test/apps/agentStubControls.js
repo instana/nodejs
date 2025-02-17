@@ -80,7 +80,7 @@ class AgentStubControls {
       );
 
       // eslint-disable-next-line no-console
-      console.log('[AgentStubControls] started');
+      console.log(`[AgentStubControls] started with pid ${this.agentStub.pid}`);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.log(`agentStubControls: error waiting until server (${url}) is up: ${err.message}`);
