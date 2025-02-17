@@ -5,8 +5,7 @@
 'use strict';
 
 const expect = require('chai').expect;
-
-const { getPreloadFlags } = require('../../src/util/getPreloadFlags');
+const preloadFlags = require('../../src/util/getPreloadFlags');
 
 describe('util.getPreloadFlags', () => {
   const originalNodeOptions = process.env.NODE_OPTIONS;
@@ -34,7 +33,7 @@ describe('util.getPreloadFlags', () => {
     process.env.NODE_OPTIONS =
       "INSTANA_DEBUG=true node --require '@instana/collector/src/immediate.js' ./something/src/index.js";
 
-    const result = getPreloadFlags();
+    const result = preloadFlags.get();
 
     expect(result).equal("--require '@instana/collector/src/immediate.js'");
   });
@@ -42,7 +41,7 @@ describe('util.getPreloadFlags', () => {
   it('should return relevant flags from execArgv', () => {
     process.execArgv = ['--require', '@instana/collector/src/immediate.js'];
 
-    const result = getPreloadFlags();
+    const result = preloadFlags.get();
 
     expect(result).equal('--require @instana/collector/src/immediate.js');
   });
@@ -51,7 +50,7 @@ describe('util.getPreloadFlags', () => {
     process.env.NODE_OPTIONS = '--require /path/to/some/file';
     process.execArgv = ['--import', '/path/to/instana/node_modules/@instana/collector/esm-register.mjs'];
 
-    const result = getPreloadFlags();
+    const result = preloadFlags.get();
 
     expect(result).equal(
       '--require /path/to/some/file, --import /path/to/instana/node_modules/@instana/collector/esm-register.mjs'
@@ -62,13 +61,13 @@ describe('util.getPreloadFlags', () => {
     process.env.NODE_OPTIONS = '--inspect value';
     process.execArgv = ['--anotherFlag', 'value'];
 
-    const result = getPreloadFlags();
+    const result = preloadFlags.get();
 
     expect(result).equal('noFlags');
   });
 
   it('should return "noFlags" when NODE_OPTIONS and execArgv are empty', () => {
-    const result = getPreloadFlags();
+    const result = preloadFlags.get();
 
     expect(result).equal('noFlags');
   });
