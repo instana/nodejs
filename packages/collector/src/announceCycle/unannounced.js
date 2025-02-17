@@ -36,7 +36,7 @@ const maxRetryDelay = 60 * 1000; // one minute
 /**
  * @typedef {Object} SecretsConfig
  * @property {Array.<string>} list
- * @property {import('@instana/core/src/secrets').MatchingOptions} matcher
+ * @property {import('@instana/core/src/util/normalizeConfig').MatchingOption} matcher
  */
 
 /**

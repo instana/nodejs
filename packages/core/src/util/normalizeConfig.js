@@ -47,10 +47,17 @@ const constants = require('../tracing/constants');
  */
 
 /**
+ * @typedef {'contains' | 'equals-ignore-case' | 'equals' | 'contains-ignore-case' | 'regex' | 'none'} MatchingOption
+ */
+
+/**
  * @typedef {Object} InstanaSecretsOption
- * @property {string} [matcherMode]
+ * @property {MatchingOption} [matcherMode]
  * @property {Array<string>} [keywords]
  */
+
+/** @type {String[]} */
+const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'contains-ignore-case', 'regex', 'none'];
 
 /**
  * @typedef {Object} InstanaConfig
@@ -607,16 +614,32 @@ function normalizeSecrets(config) {
 }
 
 /**
+ * @param {string} matcherMode
+ * @returns {MatchingOption}
+ */
+function parseMatcherMode(matcherMode) {
+  const trimmed = matcherMode.trim().toLowerCase();
+  const isSecretMatcher = allowedSecretMatchers.includes(trimmed);
+
+  if (isSecretMatcher) {
+    return /** @type {MatchingOption} */ (trimmed);
+  } else {
+    return /** @type {MatchingOption} */ 'none';
+  }
+}
+
+/**
  * @param {string} envVarValue
  * @returns {InstanaSecretsOption}
  */
 function parseSecretsEnvVar(envVarValue) {
   let [matcherMode, keywords] = envVarValue.split(':', 2);
-  matcherMode = matcherMode.trim().toLowerCase();
 
-  if (matcherMode === 'none') {
+  const parsedMatcherMode = parseMatcherMode(matcherMode);
+
+  if (parsedMatcherMode === 'none') {
     return {
-      matcherMode,
+      matcherMode: parsedMatcherMode,
       keywords: []
     };
   }
@@ -628,9 +651,10 @@ function parseSecretsEnvVar(envVarValue) {
     );
     return {};
   }
+
   const keywordsArray = keywords.split(',').map(word => word.trim());
   return {
-    matcherMode,
+    matcherMode: parsedMatcherMode,
     keywords: keywordsArray
   };
 }
