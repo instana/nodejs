@@ -9,8 +9,15 @@ const instanaEndpointUrlEnvVar = 'INSTANA_ENDPOINT_URL';
 const instanaAgentKeyEnvVar = 'INSTANA_AGENT_KEY';
 const instanaZoneEnvVar = 'INSTANA_ZONE';
 
-// TODO: We have to move the validation into the initialization of the serverless packages.
-//       Then we can use the logger instance.
+/**
+ * TODO:
+ *
+ * This module is called BEFORE the serverless packages is required - see preactivate.js.
+ * At this stage, we don't have any logger initialized yet.
+ * For now, we just assign the Node.js inbuild `console` instance.
+ *
+ * We have to move the validation into the initialization of the serverless packages.
+ */
 const logger = console;
 let valid = false;
 let backendHost = null;
