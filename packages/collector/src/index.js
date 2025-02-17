@@ -49,7 +49,8 @@ const log = require('./logger');
 const normalizeCollectorConfig = require('./util/normalizeConfig');
 const experimental = require('./experimental');
 
-let logger = log.init();
+// NOTE: Default collector logger && config for cases like `preinit`.
+const logger = log.init();
 /** @type {import('./types/collector').CollectorConfig} */
 let config = instanaNodeJsCore.util.normalizeConfig({}, logger);
 /** @type {import('./agentConnection')} */
@@ -93,8 +94,13 @@ function init(_config) {
   // @ts-ignore: Property '__INSTANA_INITIALIZED' does not exist on type global
   global.__INSTANA_INITIALIZED = true;
 
-  /** @type {import('@instana/core/src/core').GenericLogger} */
-  logger = log.init(_config);
+  // CASE: reinit logger if custom logger or log level is provided.
+  if (_config && (_config.logger || _config.level)) {
+    log.init(_config);
+  }
+
+  // TODO: The idea of having a config per parent module probably makes, sense
+  //       but as far as I can see, the code in the collector config module is a duplicate.
   config = normalizeCollectorConfig(_config);
   config = instanaNodeJsCore.util.normalizeConfig(config, logger);
 
