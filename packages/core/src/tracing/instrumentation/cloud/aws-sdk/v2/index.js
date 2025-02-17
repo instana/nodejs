@@ -20,11 +20,6 @@ const awsProducts = [
 
 /** @type {Object.<string, import('./instana_aws_product').InstanaAWSProduct} */
 const operationMap = {};
-
-awsProducts.forEach(awsProduct => {
-  Object.assign(operationMap, awsProduct.getOperations());
-});
-
 let isActive = false;
 
 exports.isActive = function () {
@@ -32,6 +27,11 @@ exports.isActive = function () {
 };
 
 exports.init = function init() {
+  awsProducts.forEach(AwsProductClass => {
+    const awsProduct = new AwsProductClass();
+    Object.assign(operationMap, awsProduct.getOperations());
+  });
+
   hook.onModuleLoad('aws-sdk', instrumentAWS);
 };
 

@@ -53,6 +53,10 @@ const operations = Object.keys(s3MethodsInfo);
 const SPAN_NAME = 's3';
 
 class InstanaAWSS3 extends InstanaAWSProduct {
+  constructor() {
+    super(SPAN_NAME, operations);
+  }
+
   /**
    * Original args for ALL AWS SDK Requets: [method, params, callback]
    */
@@ -129,4 +133,4 @@ class InstanaAWSS3 extends InstanaAWSProduct {
   }
 }
 
-module.exports = new InstanaAWSS3(SPAN_NAME, operations);
+module.exports = InstanaAWSS3;

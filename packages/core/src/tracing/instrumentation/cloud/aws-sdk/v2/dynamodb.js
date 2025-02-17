@@ -27,6 +27,10 @@ const operations = Object.keys(operationsInfo);
 const SPAN_NAME = 'dynamodb';
 
 class InstanaAWSDynamoDB extends InstanaAWSProduct {
+  constructor() {
+    super(SPAN_NAME, operations);
+  }
+
   instrumentedMakeRequest(ctx, isActive, originalMakeRequest, originalArgs) {
     if (cls.skipExitTracing({ isActive })) {
       return originalMakeRequest.apply(ctx, originalArgs);
@@ -115,4 +119,4 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
   }
 }
 
-module.exports = new InstanaAWSDynamoDB(SPAN_NAME, operations);
+module.exports = InstanaAWSDynamoDB;

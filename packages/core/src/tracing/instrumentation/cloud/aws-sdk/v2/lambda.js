@@ -16,6 +16,10 @@ const SPAN_NAME = 'aws.lambda.invoke';
 const operations = ['invoke', 'invokeAsync'];
 
 class InstanaAWSLambda extends InstanaAWSProduct {
+  constructor() {
+    super(SPAN_NAME, operations);
+  }
+
   propagateInstanaHeaders(originalArgs, span, suppressed = false) {
     /** @type {import('aws-sdk').Lambda.Types.InvocationRequest | import('aws-sdk').Lambda.Types.InvokeAsyncRequest} */
     const params = originalArgs[1];
@@ -143,4 +147,4 @@ class InstanaAWSLambda extends InstanaAWSProduct {
   }
 }
 
-module.exports = new InstanaAWSLambda(SPAN_NAME, operations);
+module.exports = InstanaAWSLambda;
