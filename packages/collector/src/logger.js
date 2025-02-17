@@ -18,6 +18,7 @@ try {
 
 const uninstrumentedLogger = require('./uninstrumentedLogger');
 const loggerToAgentStream = require('./agent/loggerToAgentStream');
+const { hostname } = require('os');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let instanaLogger;
@@ -103,12 +104,18 @@ exports.init = function init(config = {}) {
     // A custom non-bunyan/non-pino logger has been provided via config. We use it as is.
     parentLogger = config.logger;
   } else {
-    // No custom logger has been provided via config, we create a new pino logger as the parent logger for all loggers
-    // we create later on.
+    const os = require('os');
+
+    // No custom logger has been provided via config, we create a new pino logger as our internal
+    // Instana logger.
+
+    // If we override `base`, we have to provide the default pino values too.
+    // Pino does not merge them together.
+    // See https://github.com/pinojs/pino/blob/main/docs/api.md#base-object
     parentLogger = uninstrumentedLogger({
       name: '@instana/collector',
       level: 'info',
-      base: { threadId }
+      base: { threadId, pid: process.pid, hostname: os.hostname() }
     });
   }
 
