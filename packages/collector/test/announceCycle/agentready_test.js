@@ -76,6 +76,7 @@ describe('agent ready state', () => {
 
     after(() => {
       sinon.restore();
+      agentreadyState.leave();
     });
 
     it('should activate all components', () => {
