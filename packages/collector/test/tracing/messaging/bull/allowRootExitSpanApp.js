@@ -25,7 +25,7 @@ const redisServer = process.env.REDIS_SERVER;
 const bullJobName = process.env.BULL_JOB_NAME;
 
 (async function run() {
-  // wait til Instana is ready
+  // wait till Instana is ready
   await delay(1000);
 
   log(`Creating job queue ${queueName} with job name ${bullJobName} with redis server ${redisServer}`);

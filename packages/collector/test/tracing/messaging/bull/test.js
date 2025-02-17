@@ -508,6 +508,53 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       });
     });
 
+    describe.only('index file', function () {
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          useGlobalAgent: true,
+          appPath: path.join(__dirname, 'index'),
+          env: {
+            REDIS_SERVER: `redis://${process.env.REDIS}`,
+            BULL_QUEUE_NAME: queueName,
+            BULL_JOB_NAME: 'steve'
+          }
+        });
+
+        await controls.start(null, null, true);
+      });
+
+      afterEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      it('must trace', async function () {
+        const response = await senderControls.sendRequest({
+          method: 'GET',
+          path: '/process-jobs'
+        });
+
+        return verify({
+          response,
+
+          spanLength: 7
+        });
+
+        // await retry(async () => {
+        //   await delay(500);
+        //   const spans = await agentControls.getSpans();
+
+        //   expect(spans.length).to.be.eql(7);
+
+        //   // expectExactlyOneMatching(spans, [
+        //   //   span => expect(span.n).to.equal('redis'),
+        //   //   span => expect(span.k).to.equal(2)
+        //   // ]);
+        // });
+      });
+    });
+
     async function verify({
       //
       receiverControls,
@@ -534,6 +581,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
 
         return agentControls.getSpans().then(spans => {
+          // console.log(spans);
           expect(spans.length).to.equal(spanLength);
 
           verifySpans({
