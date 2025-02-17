@@ -10,7 +10,7 @@ const { fork } = require('child_process');
 const { expect } = require('chai');
 const proxyquire = require('proxyquire');
 
-const { logger: log } = require('@instana/serverless');
+const { consoleLogger: log } = require('@instana/serverless');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 const logger = log.init();
 const { retry, createFakeLogger } = require('../../../core/test/test_util');

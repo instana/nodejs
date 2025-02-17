@@ -9,8 +9,6 @@ const path = require('path');
 const { fork } = require('child_process');
 const { expect } = require('chai');
 const proxyquire = require('proxyquire');
-
-const { logger } = require('@instana/serverless');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 
 const { retry, createFakeLogger } = require('../../../core/test/test_util');
@@ -54,8 +52,7 @@ describe('transmission cycle', function () {
     onReadyError = null;
     transmissionCycle = proxyquire('../../src/metrics/transmissionCycle', {
       '@instana/serverless': {
-        backendConnector: { sendMetrics },
-        logger
+        backendConnector: { sendMetrics }
       }
     });
   });

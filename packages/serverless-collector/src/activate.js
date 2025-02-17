@@ -5,7 +5,7 @@
 'use strict';
 
 const instanaCore = require('@instana/core');
-const { backendConnector, logger: log } = require('@instana/serverless');
+const { backendConnector, consoleLogger: log } = require('@instana/serverless');
 const identityProvider = require('./identity_provider');
 
 const { tracing, util: coreUtil } = instanaCore;
