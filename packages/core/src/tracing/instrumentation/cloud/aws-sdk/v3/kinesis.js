@@ -12,6 +12,10 @@ const { InstanaAWSProduct } = require('./instana_aws_product');
 const SPAN_NAME = 'kinesis';
 
 class InstanaAWSKinesis extends InstanaAWSProduct {
+  constructor() {
+    super(SPAN_NAME);
+  }
+
   instrumentedSmithySend(ctx, isActive, originalSend, smithySendArgs) {
     if (cls.skipExitTracing({ isActive })) {
       return originalSend.apply(ctx, smithySendArgs);
@@ -81,4 +85,4 @@ class InstanaAWSKinesis extends InstanaAWSProduct {
   }
 }
 
-module.exports = new InstanaAWSKinesis(SPAN_NAME);
+module.exports = InstanaAWSKinesis;

@@ -11,12 +11,15 @@ const { InstanaAWSProduct } = require('./instana_aws_product');
 const { logTooManyAttributesWarningOnce } = require('../aws_utils');
 
 const SPAN_NAME = 'sns';
-
 let logger = require('../../../../../logger').getLogger('tracing/sns/v3', newLogger => {
   logger = newLogger;
 });
 
 class InstanaAWSNS extends InstanaAWSProduct {
+  constructor() {
+    super(SPAN_NAME);
+  }
+
   instrumentedSmithySend(ctx, isActive, originalSend, smithySendArgs) {
     const skipTracingResult = cls.skipExitTracing({ extendedResponse: true, isActive });
 
@@ -130,4 +133,4 @@ class InstanaAWSNS extends InstanaAWSProduct {
   }
 }
 
-module.exports = new InstanaAWSNS(SPAN_NAME);
+module.exports = InstanaAWSNS;

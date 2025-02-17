@@ -13,6 +13,10 @@ const { InstanaAWSProduct } = require('./instana_aws_product');
 const SPAN_NAME = 'dynamodb';
 
 class InstanaAWSDynamoDB extends InstanaAWSProduct {
+  constructor() {
+    super(SPAN_NAME);
+  }
+
   instrumentedSmithySend(ctx, isActive, originalSend, smithySendArgs) {
     if (cls.skipExitTracing({ isActive })) {
       return originalSend.apply(ctx, smithySendArgs);
@@ -93,4 +97,4 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
   }
 }
 
-module.exports = new InstanaAWSDynamoDB(SPAN_NAME);
+module.exports = InstanaAWSDynamoDB;

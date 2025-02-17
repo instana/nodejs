@@ -35,10 +35,13 @@ const operationsInfo = {
 };
 
 const operations = Object.keys(operationsInfo);
-
 const SPAN_NAME = 'sqs';
 
 class InstanaAWSSQS extends InstanaAWSProduct {
+  constructor() {
+    super(SPAN_NAME, operations);
+  }
+
   init(hook, shimmer) {
     // < 3.481.0
     // refs https://github.com/instana/nodejs/commit/6ae90e74fee5c47cc4ade67d21c4885d34c08847
@@ -403,4 +406,4 @@ class InstanaAWSSQS extends InstanaAWSProduct {
   }
 }
 
-module.exports = new InstanaAWSSQS(SPAN_NAME, operations);
+module.exports = InstanaAWSSQS;

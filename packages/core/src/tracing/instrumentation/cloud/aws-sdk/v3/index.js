@@ -20,22 +20,27 @@ const awsProducts = [
   require('./lambda')
 ];
 
+const awsProductInstances = [];
 const sqsConsumer = require('./sqs-consumer');
 
 /** @type {Object.<string, import('./instana_aws_product').InstanaAWSProduct} */
 const operationMap = {};
-
-awsProducts.forEach(awsProduct => {
-  Object.assign(operationMap, awsProduct.getOperations());
-});
-
 let isActive = false;
 
 exports.init = function init() {
-  sqsConsumer.init();
+  awsProducts.forEach(AwsProductClass => {
+    const awsProductInstance = new AwsProductClass();
+    awsProductInstances.push(awsProductInstance);
 
-  // NOTE: each aws product can have it's own init fn to wrap or unwrap specific functions
-  awsProducts.forEach(awsProduct => awsProduct.init && awsProduct.init(hook, shimmer));
+    Object.assign(operationMap, awsProductInstance.getOperations());
+
+    // NOTE: each aws product can have it's own init fn to wrap or unwrap specific functions
+    if (awsProductInstance.init) {
+      awsProductInstance.init(hook, shimmer);
+    }
+  });
+
+  sqsConsumer.init();
 
   /**
    * @aws-sdk/smithly-client >= 3.36.0 changed how the dist structure gets delivered
@@ -78,7 +83,7 @@ function shimSmithySend(originalSend) {
     const command = smithySendArgs[0];
 
     const serviceId = self.config && self.config.serviceId;
-    let awsProduct = serviceId && awsProducts.find(aws => aws.getServiceIdName() === serviceId.toLowerCase());
+    let awsProduct = serviceId && awsProductInstances.find(aws => aws.getServiceIdName() === serviceId.toLowerCase());
     if (awsProduct && awsProduct.supportsOperation(command.constructor.name)) {
       return awsProduct.instrumentedSmithySend(self, isActive, originalSend, smithySendArgs);
     } else {
