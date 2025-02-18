@@ -29,7 +29,7 @@ body:
     attributes:
       label: Node.js Version
       description: Which version of Node.js are you using?
-      placeholder: "22.9.0"
+      placeholder: "v22.9.0"
     validations:
       required: true
   - type: textarea
