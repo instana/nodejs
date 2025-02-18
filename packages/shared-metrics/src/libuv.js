@@ -42,7 +42,8 @@ Object.defineProperty(exports, 'currentPayload', {
 });
 
 function sense() {
-  if (eventLoopStats) {
+  // CASE: if the c++ module does not support the env, it might export `sense` undefined.
+  if (eventLoopStats && eventLoopStats.sense) {
     const stats = eventLoopStats.sense();
     stats.statsSupported = true;
     return stats;
