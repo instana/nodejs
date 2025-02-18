@@ -15,6 +15,10 @@ const SPAN_NAME = 'aws.lambda.invoke';
 const CUSTOM_SERVICE_NAME = 'lambda';
 
 class InstanaAWSLambda extends InstanaAWSProduct {
+  constructor() {
+    super(SPAN_NAME, null, CUSTOM_SERVICE_NAME);
+  }
+
   propagateInstanaHeaders(originalArgs, span, suppressed = false) {
     const params = originalArgs[0].input;
     let clientContextContentBase64;
@@ -118,4 +122,4 @@ class InstanaAWSLambda extends InstanaAWSProduct {
   }
 }
 
-module.exports = new InstanaAWSLambda(SPAN_NAME, null, CUSTOM_SERVICE_NAME);
+module.exports = InstanaAWSLambda;

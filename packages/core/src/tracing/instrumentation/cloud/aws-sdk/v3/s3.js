@@ -50,10 +50,13 @@ const operationsInfo = {
 };
 
 const operations = Object.keys(operationsInfo);
-
 const SPAN_NAME = 's3';
 
 class InstanaAWSS3 extends InstanaAWSProduct {
+  constructor() {
+    super(SPAN_NAME, operations);
+  }
+
   instrumentedSmithySend(ctx, isActive, originalSend, smithySendArgs) {
     if (cls.skipExitTracing({ isActive })) {
       return originalSend.apply(ctx, smithySendArgs);
@@ -119,4 +122,4 @@ class InstanaAWSS3 extends InstanaAWSProduct {
   }
 }
 
-module.exports = new InstanaAWSS3(SPAN_NAME, operations);
+module.exports = InstanaAWSS3;
