@@ -214,7 +214,7 @@ class ProcessControls {
   async startAndWaitForAgentConnection(retryTime, until) {
     // eslint-disable-next-line no-console
     console.log(
-      `[ProcessControls] start with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()} and appPath: ${
+      `[ProcessControls] start with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()}, appPath: ${
         this.appPath
       }`
     );
@@ -224,7 +224,11 @@ class ProcessControls {
     await this.agentControls.waitUntilAppIsCompletelyInitialized(this.getPid(), retryTime, until);
 
     // eslint-disable-next-line no-console
-    console.log('[ProcessControls] started');
+    console.log(
+      `[ProcessControls] started with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()}, appPath: ${
+        this.appPath
+      }, pid: ${this.process.pid}`
+    );
   }
 
   async waitForAgentConnection() {
@@ -352,9 +356,24 @@ class ProcessControls {
       return Promise.resolve();
     }
 
+    // eslint-disable-next-line no-console
+    console.log(
+      `[ProcessControls] stopping with port: ${this.getPort()}, agentPort: ${
+        this.agentControls && this.agentControls.getPort && this.agentControls.getPort()
+      }, appPath: ${this.appPath}, pid: ${this.process.pid}`
+    );
+
     return new Promise(resolve => {
       this.process.once('exit', () => {
         this.process.pid = null;
+
+        // eslint-disable-next-line no-console
+        console.log(
+          `[ProcessControls] stopped with port: ${this.getPort()}, agentPort: ${
+            this.agentControls && this.agentControls.getPort && this.agentControls.getPort()
+          }, appPath: ${this.appPath}, pid: ${this.process.pid}`
+        );
+
         resolve();
       });
 

@@ -77,7 +77,10 @@ function waitUntilServerIsUp(useHttps, retryTime, collectorUninitialized) {
       }, retryTime)
       .then(resp => {
         // eslint-disable-next-line no-console
-        console.log('[ExpressControls:start] started');
+        console.log(
+          // eslint-disable-next-line max-len
+          `[ExpressControls:start] started with port: ${appPort} and pid ${expressApp.pid}`
+        );
 
         return resp.text();
       });
