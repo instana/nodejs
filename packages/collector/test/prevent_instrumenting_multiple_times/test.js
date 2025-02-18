@@ -46,6 +46,17 @@ describe('prevent initializing @instana/collector multiple times', function () {
       tmpDir
     );
 
+    // NOTE: Override the shared metrics npm dependency with the local code base
+    const sharedMetrics = path.join(__dirname, '..', '..', '..', 'shared-metrics');
+    runCommandSync('npm pack', sharedMetrics);
+
+    const sharedMetricsVersion = require(`${copath}/package.json`).version;
+    runCommandSync(
+      // eslint-disable-next-line max-len
+      `npm install --production --no-optional --no-audit ${sharedMetrics}/instana-shared-metrics-${sharedMetricsVersion}.tgz`,
+      tmpDir
+    );
+
     controls = new ProcessControls({
       appPath: path.join(__dirname, '..', 'apps', 'express'),
       execArgv: ['--require', pathToSeparateInstanaCollector],
