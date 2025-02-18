@@ -42,6 +42,10 @@ const operationsInfo = {
 const operations = Object.keys(operationsInfo);
 
 class InstanaAWSKinesis extends InstanaAWSProduct {
+  constructor() {
+    super(SPAN_NAME, operations);
+  }
+
   instrumentedMakeRequest(ctx, isActive, originalMakeRequest, originalArgs) {
     const self = this;
 
@@ -132,4 +136,4 @@ class InstanaAWSKinesis extends InstanaAWSProduct {
   }
 }
 
-module.exports = new InstanaAWSKinesis(SPAN_NAME, operations);
+module.exports = InstanaAWSKinesis;

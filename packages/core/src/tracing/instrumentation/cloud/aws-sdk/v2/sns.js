@@ -28,6 +28,10 @@ const operations = Object.keys(operationsInfo);
 const SPAN_NAME = 'sns';
 
 class InstanaAWSSNS extends InstanaAWSProduct {
+  constructor() {
+    super(SPAN_NAME, operations);
+  }
+
   instrumentedMakeRequest(ctx, isActive, originalMakeRequest, originalArgs) {
     const messageBody = originalArgs[1];
 
@@ -146,4 +150,4 @@ class InstanaAWSSNS extends InstanaAWSProduct {
   }
 }
 
-module.exports = new InstanaAWSSNS(SPAN_NAME, operations);
+module.exports = InstanaAWSSNS;
