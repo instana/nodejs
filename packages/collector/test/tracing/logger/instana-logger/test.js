@@ -43,7 +43,7 @@ mochaSuiteFn('tracing/instana-logger', function () {
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
 
-    describe('Instana receives a non-pino logger', () => {
+    describe('Instana receives a custom dummy logger', () => {
       appControls.registerTestHooks({
         instanaLoggingMode: 'instana-receives-custom-dummy-logger'
       });
@@ -125,7 +125,7 @@ mochaSuiteFn('tracing/instana-logger', function () {
 
   function verifyInstanaLoggingIsNotTraced() {
     return appControls.trigger('trigger').then(async () => {
-      await testUtils.delay(250);
+      await testUtils.delay(500);
 
       return testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
