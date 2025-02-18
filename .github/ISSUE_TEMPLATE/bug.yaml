@@ -19,9 +19,9 @@ body:
   - type: input
     id: tracer-version
     attributes:
-      label: Tracer Version(s)
-      description: "Version(s) of the tracer affected by this bug"
-      placeholder: 3.0.0, 3.2.1
+      label: Instana Node.js Tracer Version
+      description: "Version of the Instana Node.js tracer affected by this bug"
+      placeholder: v3.2.1
     validations:
       required: true
   - type: input
@@ -44,6 +44,14 @@ body:
     attributes:
       label: Logs & Error Messages
       description: "If possible please provide relevant logs, stack traces, or error messages."
+    validations:
+      required: false
+  - type: textarea
+    id: package-json
+    attributes:
+      label: package.json
+      description: Please paste the contents of the package.json for the application that was affected by this bug.
+      render: shell
     validations:
       required: false
   - type: textarea
