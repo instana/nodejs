@@ -12,8 +12,9 @@ process.on('SIGTERM', () => {
 });
 
 const config = require('./config');
+const path = require('path');
 
-let packageToRequire = '../../packages/collector';
+let packageToRequire = path.join(__dirname, '..', '..', '..', 'packages/collector');
 if (config.mode === 'npm') {
   packageToRequire = '@instana/collector';
 }
