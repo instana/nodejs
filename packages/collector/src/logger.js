@@ -43,11 +43,14 @@ exports.init = function init(config, isReInit) {
     //      https://github.com/winstonjs/winston/issues/1854#issuecomment-710195110
     parentLogger = config.logger.child({
       module: 'instana-nodejs-logger-parent',
-      __in: 1
+      __instana: 1
     });
   } else if (config.logger && hasLoggingFunctions(config.logger)) {
     // A custom non-bunyan/non-pino logger has been provided via config. We use it as is.
-    parentLogger = config.logger;
+    parentLogger = {
+      ...config.logger,
+      __instana: 1
+    };
   } else {
     // No custom logger has been provided via config, we create a new pino logger as the parent logger for all loggers
     // we create later on.
