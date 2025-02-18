@@ -47,6 +47,8 @@ exports.init = function init(config, isReInit) {
     });
   } else if (config.logger && hasLoggingFunctions(config.logger)) {
     // A custom non-bunyan/non-pino logger has been provided via config. We use it as is.
+    // The __instana attribute identifies the Instana logger, distinguishing it from the client application logger,
+    // and also prevents these logs from being traced
     parentLogger = {
       ...config.logger,
       __instana: 1
