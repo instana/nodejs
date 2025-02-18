@@ -15,9 +15,7 @@ const tracingUtil = require('./tracingUtil');
 const spanBuffer = require('./spanBuffer');
 const supportedVersion = require('./supportedVersion');
 const { otelInstrumentations } = require('./opentelemetry-instrumentations');
-const { isLatestEsmSupportedVersion, hasExperimentalLoaderFlag, isESMApp } = require('../util/esm');
-const iitmHook = require('../util/iitmHook');
-const { getPreloadFlags } = require('../util/getPreloadFlags');
+const coreUtil = require('../util');
 
 let tracingEnabled = false;
 let tracingActivated = false;
@@ -135,7 +133,6 @@ exports.sdk = sdk;
 exports.spanBuffer = spanBuffer;
 exports.supportedVersion = supportedVersion;
 exports.util = tracingUtil;
-exports.isLatestEsmSupportedVersion = isLatestEsmSupportedVersion;
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} cfg
@@ -178,14 +175,14 @@ exports.preInit = function preInit(preliminaryConfig) {
  */
 exports.init = function init(_config, downstreamConnection, _processIdentityProvider) {
   if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL === 'debug') {
-    const preloadFlags = getPreloadFlags();
+    const preloadFlags = coreUtil.preloadFlags.get();
 
     // eslint-disable-next-line no-console
     console.debug(`The App is using the following preload flags: ${preloadFlags}`);
   }
 
   // Consider removing this in the next major release of the @instana package.
-  if (hasExperimentalLoaderFlag()) {
+  if (coreUtil.esm.hasExperimentalLoaderFlag()) {
     // eslint-disable-next-line no-console
     console.warn(
       'Node.js introduced breaking changes in versions 18.19.0 and above, leading to the discontinuation of support ' +
@@ -216,8 +213,8 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
       if (_config.tracing.useOpentelemetry) {
         otelInstrumentations.init(config, cls);
       }
-      if (isESMApp()) {
-        iitmHook.init();
+      if (coreUtil.esm.isESMApp()) {
+        coreUtil.iitmHook.init();
       }
     }
   }

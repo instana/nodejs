@@ -11,7 +11,7 @@ const config = require('@instana/core/test/config');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 const testUtils = require('@instana/core/test/test_util');
-const isLatestEsmSupportedVersion = require('@instana/core').tracing.isLatestEsmSupportedVersion;
+const isLatestEsmSupportedVersion = require('@instana/core').util.esm.isLatestEsmSupportedVersion;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
