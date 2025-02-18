@@ -332,8 +332,9 @@ function startSpan(spanAttributes = {}) {
     span.addCleanup(ns.set(w3cTraceContextKey, w3cTraceContext));
   }
 
-  const sanitizedspan = sanitizeSpan(span);
-  if (!sanitizedspan) {
+  const filteredSpan = applySpanFilter(span);
+  // If the span is filtered out, we return 'InstanaIgnoredSpan' class to indicate the span is ignored.
+  if (!filteredSpan) {
     return setIgnoredSpan({
       spanName: span.n,
       kind: span.k,
@@ -701,7 +702,7 @@ function skipExitTracing(options) {
 /**
  * @param {InstanaSpan | import("../core").InstanaBaseSpan} span
  */
-function sanitizeSpan(span) {
+function applySpanFilter(span) {
   if (ignoreEndpoints) {
     return applyFilter({ span, ignoreEndpoints });
   }

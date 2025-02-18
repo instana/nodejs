@@ -4,10 +4,9 @@
 
 'use strict';
 
-// TODO: Refactoring of this function.
+// TODO:
 // Currently, filtering is based solely on span.data[span.n].operation.
 // In the future, additional fields (like operation) may need to be considered for filtering.
-// Endpoint configuration for ignoring might also change.
 
 // List of span types to allowed to ignore
 const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb'];
@@ -27,7 +26,6 @@ function shouldIgnore(span, endpoints) {
 
   // Retrieve the operation(s) from the span data. In some cases, the 'operation' field may be an array.
   // This handles both the cases where 'operation' is a string or an array of strings.
-
   const operations = Array.isArray(span.data?.[span.n]?.operation)
     ? span.data[span.n].operation
     : [span.data?.[span.n]?.operation];
