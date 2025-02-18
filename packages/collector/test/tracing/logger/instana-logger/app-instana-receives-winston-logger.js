@@ -25,7 +25,8 @@ const instana = require('../../../..')({
 
 instana.setLogger(
   winston.createLogger({
-    level: 'info'
+    level: 'info',
+    transports: [new winston.transports.Console()]
   })
 );
 
