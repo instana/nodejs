@@ -5,11 +5,12 @@
 'use strict';
 
 const expect = require('chai').expect;
-
+const path = require('path');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const globalAgent = require('../../../globalAgent');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
@@ -64,6 +65,51 @@ mochaSuiteFn('tracing/instana-logger', function () {
       });
 
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
+    });
+  });
+
+  describe('Instana logger & worker threads', () => {
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        appPath: path.join(__dirname, 'app-instana-threads.js'),
+        useGlobalAgent: true,
+        env: {
+          INSTANA_LOG_LEVEL: 'debug',
+          WITH_FULL_STDIO: 'true'
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    it('Expect correct thread ids', async () => {
+      return testUtils
+        .retry(() => testUtils.delay(5 * 1000))
+        .then(() => agentControls.getSpans())
+        .then(spans => {
+          expect(spans.length).to.equal(2);
+
+          let minimumOneAssert = false;
+          controls.getProcessLogs().forEach(msg => {
+            if (msg.indexOf('level') !== -1) {
+              // threadId 0 is always the main thread.
+              expect(msg).to.contain('"threadId":1');
+              minimumOneAssert = true;
+            }
+          });
+
+          expect(minimumOneAssert).to.be.true;
+        });
     });
   });
 

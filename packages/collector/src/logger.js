@@ -34,6 +34,13 @@ exports.init = function init(config, isReInit) {
   if (config.logger && typeof config.logger.child === 'function') {
     // A bunyan or pino logger has been provided via config. In either case we create a child logger directly under the
     // given logger which serves as the parent for all loggers we create later on.
+
+    // BUG: Winston does not support child logger levels!
+    //      Neither in `.child(...)` nor with `level(...)`.
+    //      Setting INSTANA_DEBUG=true has no affect in the child winston logger.
+    //      It takes the parent logger level.
+    //      We cannot fix this in our side.
+    //      https://github.com/winstonjs/winston/issues/1854#issuecomment-710195110
     parentLogger = config.logger.child({
       module: 'instana-nodejs-logger-parent'
     });
@@ -57,7 +64,6 @@ exports.init = function init(config, isReInit) {
 
     try {
       const consoleStream = uninstrumentedLogger.destination(parentLogger.destination);
-
       const multiStream = {
         /**
          * Custom write method to send logs to multiple destinations
@@ -65,7 +71,6 @@ exports.init = function init(config, isReInit) {
          */
         write(chunk) {
           consoleStream.write(chunk);
-
           loggerToAgentStream.write(chunk);
         }
       };

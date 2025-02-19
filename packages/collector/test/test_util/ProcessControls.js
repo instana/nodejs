@@ -21,6 +21,7 @@ const portFinder = require('./portfinder');
 const sslDir = path.join(__dirname, '..', 'apps', 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
 const isLatestEsmSupportedVersion = require('@instana/core').util.esm.isLatestEsmSupportedVersion;
+
 class ProcessControls {
   /**
    * @typedef {Object} ProcessControlsOptions
@@ -85,6 +86,8 @@ class ProcessControls {
     }
 
     this.collectorUninitialized = opts.collectorUninitialized;
+
+    this.processLogs = [];
 
     // absolute path to .js file that should be executed
     this.appPath = opts.appPath;
@@ -155,8 +158,10 @@ class ProcessControls {
     const that = this;
     this.receivedIpcMessages = [];
 
+    const stdio = this.env.WITH_FULL_STDIO ? ['pipe', 'pipe', 'pipe', 'ipc'] : config.getAppStdio();
+
     const forkConfig = {
-      stdio: config.getAppStdio(),
+      stdio,
       env: this.env
     };
 
@@ -176,6 +181,9 @@ class ProcessControls {
         that.receivedIpcMessages.push(message);
       }
     });
+
+    this.process.stdout && this.process.stdout.on('data', data => this.processLogs.push(data.toString()));
+    this.process.stderr && this.process.stderr.on('data', data => this.processLogs.push(data.toString()));
 
     if (skipWaitUntilServerIsUp) return;
     await this.waitUntilServerIsUp(retryTime, until);
@@ -209,6 +217,10 @@ class ProcessControls {
       console.log(`[ProcessControls] error: ${err}`);
       throw err;
     }
+  }
+
+  getProcessLogs() {
+    return this.processLogs;
   }
 
   async startAndWaitForAgentConnection(retryTime, until) {

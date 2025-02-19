@@ -131,8 +131,20 @@ function enter(_ctx) {
 
   logger.info('The Instana Node.js collector is now fully initialized and connected to the Instana host agent.');
 
+  // CASE: This is an IPC message only for a parent process.
+  // TODO: Add an EventEmitter functionality for the current process
+  //       such as `instana.on('instana.collector.initialized')`.
   // eslint-disable-next-line no-unused-expressions
   process.send && process.send('instana.collector.initialized');
+
+  if (!isMainThread) {
+    const { parentPort } = require('worker_threads');
+
+    if (parentPort) {
+      // CASE: This is for the worker thread if available.
+      parentPort.postMessage('instana.collector.initialized');
+    }
+  }
 }
 
 function leave() {
