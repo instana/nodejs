@@ -508,6 +508,67 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       });
     });
 
+    describe('app server', function () {
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          useGlobalAgent: true,
+          appPath: path.join(__dirname, 'app'),
+          env: {
+            REDIS_SERVER: `redis://${process.env.REDIS}`,
+            BULL_QUEUE_NAME: queueName,
+            BULL_JOB_NAME: 'steve'
+          }
+        });
+
+        await controls.start(null, null, true);
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
+
+      it('must trace the bull job', async function () {
+        const request = {
+          method: 'POST',
+          path: '/add-job'
+        };
+        return controls.sendRequest(request).then(() => {
+          return retry(() =>
+            agentControls.getSpans().then(spans => {
+              // 1 x http entry span
+              // 1 x bull exit span
+              expect(spans.length).to.be.eql(2);
+
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.k).to.equal(constants.ENTRY),
+                span => expect(span.data.http.path_tpl).to.equal('/add-job')
+              ]);
+
+              expectExactlyOneMatching(spans, [
+                span => expect(span.n).to.equal('bull'),
+                span => expect(span.k).to.equal(constants.EXIT),
+                span => expect(span.error).to.not.exist,
+                span => expect(span.data).to.exist,
+                span => expect(span.data.bull).to.be.an('object'),
+                span => expect(span.data.bull.queue).to.equal(queueName)
+              ]);
+            })
+          );
+        });
+      });
+    });
+
     async function verify({
       //
       receiverControls,
