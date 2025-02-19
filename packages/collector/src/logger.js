@@ -96,7 +96,8 @@ exports.init = function init(config = {}) {
     //      We cannot fix this in our side.
     //      https://github.com/winstonjs/winston/issues/1854#issuecomment-710195110
     parentLogger = config.logger.child({
-      module: 'instana-nodejs-logger',
+      // TODO: Rename to "instana-nodejs-logger" in next major version.
+      module: 'instana-nodejs-logger-parent',
       threadId
     });
 
