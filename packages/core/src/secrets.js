@@ -131,17 +131,6 @@ const matchers = {
   }
 };
 
-/** @type {(key: string) => boolean} */
-let isSecretInternal;
-
-/**
- * @param {import('./util/normalizeConfig').InstanaConfig} config
- */
-exports.init = function init(config) {
-  logger = config.logger;
-  isSecretInternal = matchers[config.secrets.matcherMode](config.secrets.keywords);
-};
-
 /**
  * @param {Array.<string>} configuredSecrets
  * @returns {Array.<string>}
@@ -180,6 +169,19 @@ function toLowerCase(configuredSecrets) {
   });
   return secrets;
 }
+
+/** @type {(key: string) => boolean} */
+let isSecretInternal;
+
+/**
+ * @param {import('./util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+  isSecretInternal = matchers[config.secrets.matcherMode](config.secrets.keywords);
+};
+
+exports.matchers = matchers;
 
 /** @type {(key: string) => boolean} */
 exports.isSecret = function isSecret(key) {
