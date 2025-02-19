@@ -7,13 +7,11 @@
 
 const DataProcessor = require('../DataProcessor');
 
-const CoreDataSource = require('./CoreDataSource');
-
 class NodeJsProcessor extends DataProcessor {
-  constructor(coreAndShared, pid) {
+  constructor(coreAndSharedMetricsDataSource, pid) {
     super('com.instana.plugin.nodejs');
     this.pid = pid;
-    this.addSource('core', new CoreDataSource(coreAndShared));
+    this.addSource('core', coreAndSharedMetricsDataSource);
   }
 
   getEntityId() {
