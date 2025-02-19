@@ -16,6 +16,22 @@ body:
       description: What was the issue that caused you to file this bug?
     validations:
       required: true
+  - type: input
+    id: tracer-version
+    attributes:
+      label: Instana Node.js Tracer Version
+      description: "Version of the Instana Node.js tracer affected by this bug"
+      placeholder: v3.2.1
+    validations:
+      required: true
+  - type: input
+    id: nodejs-version
+    attributes:
+      label: Node.js Version
+      description: Which version of Node.js are you using?
+      placeholder: "v22.9.0"
+    validations:
+      required: true
   - type: textarea
     id: mcve
     attributes:
@@ -23,14 +39,13 @@ body:
       description: Can you provide steps to reproduce this issue outside of your application? Or better yet, can you provide a [short, self contained reproducer](http://sscce.org/) as a zip file?
     validations:
       required: false
-  - type: input
-    id: nodejs-version
+  - type: textarea
+    id: logs
     attributes:
-      label: Node.js Version
-      description: Which version of Node.js are you using?
-      placeholder: "Node.js 22.9.0"
+      label: Logs & Error Messages
+      description: "If possible please provide relevant logs, stack traces, or error messages."
     validations:
-      required: true
+      required: false
   - type: textarea
     id: package-json
     attributes:
@@ -38,13 +53,12 @@ body:
       description: Please paste the contents of the package.json for the application that was affected by this bug.
       render: shell
     validations:
-      required: true
+      required: false
   - type: textarea
-    id: package-lockfile
+    id: additional-info
     attributes:
-      label: package-lock.json
-      description: Please paste the contents of the package-lock.json or yarn.lock file for the application that was affected by this bug.
-      render: shell
+      label: Additional Information
+      description: "Tell us anything else you think we should know."
     validations:
-      required: true
+      required: false
 
