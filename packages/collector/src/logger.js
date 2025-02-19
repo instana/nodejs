@@ -42,11 +42,19 @@ exports.init = function init(config, isReInit) {
     //      We cannot fix this in our side.
     //      https://github.com/winstonjs/winston/issues/1854#issuecomment-710195110
     parentLogger = config.logger.child({
-      module: 'instana-nodejs-logger-parent'
+      module: 'instana-nodejs-logger-parent',
+      __instana: 1
     });
   } else if (config.logger && hasLoggingFunctions(config.logger)) {
     // A custom non-bunyan/non-pino logger has been provided via config. We use it as is.
-    parentLogger = config.logger;
+    // The __instana attribute identifies the Instana logger, distinguishing it from the client application logger,
+    // and also prevents these logs from being traced
+    // parentLogger = {
+    //   ...config.logger,
+    //   __instana: 1
+    // };
+
+    parentLogger = Object.assign(Object.create(Object.getPrototypeOf(config.logger)), config.logger, { __instana: 1 });
   } else {
     // No custom logger has been provided via config, we create a new pino logger as the parent logger for all loggers
     // we create later on.

@@ -14,7 +14,6 @@ process.on('SIGTERM', () => {
 });
 
 const agentPort = process.env.AGENT_PORT;
-const buynan = require('bunyan');
 const instana = require('../../../..')({
   agentPort,
   level: 'warn',
@@ -23,6 +22,8 @@ const instana = require('../../../..')({
     forceTransmissionStartingAt: 1
   }
 });
+
+const buynan = require('bunyan');
 instana.setLogger(buynan.createLogger({ name: 'app-logger' }));
 
 let instanaLogger;

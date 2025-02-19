@@ -15,15 +15,6 @@ process.on('SIGTERM', () => {
 
 const agentPort = process.env.AGENT_PORT;
 
-const dummyLogger = {
-  debug: function () {
-    // omit debug calls to not pollute test logs
-  },
-  info: console.log,
-  warn: console.warn,
-  error: console.error
-};
-
 const instana = require('../../../..')({
   agentPort,
   level: 'warn',
@@ -32,6 +23,15 @@ const instana = require('../../../..')({
     forceTransmissionStartingAt: 1
   }
 });
+
+const dummyLogger = {
+  debug: function () {
+    // omit debug calls to not pollute test logs
+  },
+  info: console.log,
+  warn: console.warn,
+  error: console.error
+};
 
 instana.setLogger(dummyLogger);
 
