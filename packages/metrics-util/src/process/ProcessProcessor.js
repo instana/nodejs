@@ -5,7 +5,7 @@
 
 'use strict';
 
-const { secrets } = require('@instana/core');
+const core = require('@instana/core');
 
 const DataProcessor = require('../DataProcessor');
 const ProcessSnapshotDataSource = require('./ProcessSnapshotDataSource');
@@ -56,7 +56,7 @@ class ProcessProcessor extends DataProcessor {
       // the application sees.
       snapshot.env = Object.assign({}, snapshot.env);
       Object.keys(snapshot.env).forEach(envVar => {
-        if (secrets.isSecret(envVar) || envVar === 'INSTANA_AGENT_KEY') {
+        if (core.secrets.isSecret(envVar) || envVar === 'INSTANA_AGENT_KEY') {
           snapshot.env[envVar] = '<redacted>';
         }
       });

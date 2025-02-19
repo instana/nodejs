@@ -5,33 +5,48 @@
 
 'use strict';
 
+const core = require('@instana/core');
+const sharedMetrics = require('@instana/shared-metrics');
+const { consoleLogger } = require('@instana/serverless');
 const DataSource = require('../DataSource');
 
 /**
- * A source for snapshot data and metrics that adapts the metrics from @instana/core and @instana/shared-metrics.
+ * This data source holds metrics from @instana/core and @instana/shared-metrics.
+ * This source depends on external libraries.
+ * The NodejsProcessor owns this source.
+ *
+ * A data source class defines how to collect or define data from a specific source.
+ * The outside does not need to know how the data is collected.
  */
 class CoreDataSource extends DataSource {
-  constructor(coreMetrics, refreshDelay) {
+  constructor(config, refreshDelay) {
     super(refreshDelay);
-    this.coreMetrics = coreMetrics;
+
+    core.metrics.init(config);
+    core.metrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
+
+    // This will be removed by the new logger refactoring PR.
+    core.metrics.setLogger(consoleLogger);
   }
 
   activate() {
     if (!this.active) {
-      this.coreMetrics.activate();
+      core.metrics.activate();
     }
+
     super.activate();
   }
 
   deactivate() {
     if (this.active) {
-      this.coreMetrics.deactivate();
+      core.metrics.deactivate();
     }
+
     super.deactivate();
   }
 
   doRefresh(callback) {
-    this.rawData = this.coreMetrics.gatherData();
+    this.rawData = core.metrics.gatherData();
     process.nextTick(() => callback(null, this.rawData));
   }
 }

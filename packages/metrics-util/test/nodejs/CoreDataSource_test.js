@@ -8,27 +8,18 @@
 const { expect } = require('chai');
 const semver = require('semver');
 
-const { metrics: coreMetrics } = require('@instana/core');
-
+const core = require('@instana/core');
 const { delay, retry } = require('../../../core/test/test_util');
-const config = require('@instana/core/test/config');
-
-const sharedMetrics = require('@instana/shared-metrics');
-
+const testConfig = require('@instana/core/test/config');
 const CoreDataSource = require('../../src/nodejs/CoreDataSource');
 
 describe('core data source', function () {
-  this.timeout(config.getTestTimeout());
+  this.timeout(testConfig.getTestTimeout());
 
   let dataSource;
   before(() => {
-    coreMetrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
-    coreMetrics.init({
-      metrics: {
-        transmissionDelay: 1000
-      }
-    });
-    dataSource = new CoreDataSource(coreMetrics);
+    const config = core.util.normalizeConfig({});
+    dataSource = new CoreDataSource(config);
   });
 
   afterEach(() => {

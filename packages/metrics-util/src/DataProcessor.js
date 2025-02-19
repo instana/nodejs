@@ -6,10 +6,7 @@
 'use strict';
 
 const EventEmitter = require('events');
-
-const {
-  util: { compression: applyCompression }
-} = require('@instana/core');
+const core = require('@instana/core');
 
 const SKIPPED = {};
 
@@ -156,7 +153,7 @@ class DataProcessor extends EventEmitter {
     if (shouldSendUncompressedUpdate) {
       dataToBeSent = uncompressedData;
     } else {
-      dataToBeSent = applyCompression(this.lastTransmittedPayload, uncompressedData, this.compressionExcludeList);
+      dataToBeSent = core.util.compression(this.lastTransmittedPayload, uncompressedData, this.compressionExcludeList);
     }
 
     if (this.compressedTransmissionsSinceLastUncompressed >= this.sendUncompressedEveryXTransmissions) {
