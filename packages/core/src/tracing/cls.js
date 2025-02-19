@@ -339,7 +339,8 @@ function startSpan(spanAttributes = {}) {
       spanName: span.n,
       kind: span.k,
       traceId: span.t,
-      spanId: span.p
+      parentId: span.p,
+      data: span.data
     });
   }
 
@@ -403,18 +404,19 @@ function putPseudoSpan(spanName, kind, traceId, spanId) {
  * Instead, we need this ignored span instance to ensure the trace ID remains accessible.
  * These spans will not be sent to the backend.
  * @param {Object} options - The options for the span.
- * @param {string} options.spanName - The name of the span.
- * @param {number} options.kind - The kind of span (ENTRY, EXIT, or INTERMEDIATE).
- * @param {string} options.traceId - The trace ID associated with the span.
- * @param {string} options.spanId - The span ID.
+ * @param {string} options.spanName
+ * @param {number} options.kind
+ * @param {string} options.traceId
+ * @param {string} options.parentId
+ * @param {Object} options.data
  */
-function setIgnoredSpan({ spanName, kind, traceId, spanId }) {
+function setIgnoredSpan({ spanName, kind, traceId, parentId, data = {} }) {
   if (!kind || (kind !== ENTRY && kind !== EXIT && kind !== INTERMEDIATE)) {
     logger.warn(`Invalid ignored span (${spanName}) without kind/with invalid kind: ${kind}, assuming EXIT.`);
     kind = EXIT;
   }
 
-  const span = new InstanaIgnoredSpan(spanName);
+  const span = new InstanaIgnoredSpan(spanName, data);
   span.k = kind;
 
   if (!traceId) {
@@ -422,13 +424,14 @@ function setIgnoredSpan({ spanName, kind, traceId, spanId }) {
     return;
   }
 
-  if (!spanId) {
-    logger.warn(`Cannot start an ignored span without a span ID: ${spanName}, ${kind}`);
-    return;
-  }
-
   span.t = traceId;
-  span.s = spanId;
+  span.p = parentId;
+
+  // Setting the 'parentId' of the span to 'span.s' to ensure trace continuity.
+  // Although this span doesn't physically exist, we are ignoring it, but retaining its parentId.
+  // This parentId is propagated downstream.
+  // The spanId does not need to be retained.
+  span.s = parentId;
 
   if (span.k === ENTRY) {
     // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at
@@ -440,7 +443,6 @@ function setIgnoredSpan({ spanName, kind, traceId, spanId }) {
   // Set the span object as the currently active span in the active CLS context and also add a cleanup hook for when
   // this span is transmitted.
   span.addCleanup(ns.set(currentSpanKey, span));
-
   return span;
 }
 
