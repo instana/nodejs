@@ -369,4 +369,58 @@ describe('tracing/cls', () => {
       expect(reducedSpan.stack).to.not.exist;
     });
   });
+it('should return the span with correct data when span data is provided', () => {
+    cls.ns.run(() => {
+      const span = cls.startSpan({
+        spanName: 'redis',
+        kind: constants.EXIT,
+        spanContextData: {
+          redis: {
+            operation: 'get',
+            connection: 'http://localhost'
+          }
+        }
+      });
+      expect(span).to.be.an('object');
+      expect(span.n).to.equal('redis');
+      expect(span.t).to.be.a('string');
+      expect(span.s).to.be.a('string');
+      expect(span.k).to.equal(constants.EXIT);
+      expect(span.error).to.not.exist;
+      expect(span.ec).to.equal(0);
+      expect(span.ts).to.be.a('number');
+      expect(span.d).to.equal(0);
+      expect(span.stack).to.deep.equal([]);
+      expect(span.data).to.be.an('object');
+      expect(Object.keys(span.data)).to.have.lengthOf(1);
+    });
+  });
+  it('should return InstanaIgnoredSpan when the span is configured to be ignored', () => {
+    cls.ns.run(() => {
+      cls.init({
+        tracing: {
+          ignoreEndpoints: {
+            redis: ['get']
+          }
+        }
+      });
+      const span = cls.startSpan({
+        spanName: 'redis',
+        kind: constants.EXIT,
+        spanContextData: {
+          redis: {
+            operation: 'get',
+            connection: 'http://localhost'
+          }
+        }
+      });
+      expect(span.constructor.name).to.equal('InstanaIgnoredSpan');
+      expect(span).to.be.an('object');
+      expect(span.n).to.equal('redis');
+      expect(span.t).to.be.a('string');
+      expect(span.k).to.equal(constants.EXIT);
+      expect(span.data).to.be.an('object');
+      expect(Object.keys(span.data)).to.have.lengthOf(1);
+    });
+  });
 });
