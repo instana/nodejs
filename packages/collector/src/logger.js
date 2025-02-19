@@ -163,10 +163,23 @@ function hasLoggingFunctions(_logger) {
 /**
  * @param {import("@instana/core/src/core").GenericLogger} _logger
  * @param {string|number} level
+ *
+ * Bunyan uses `level()` function to set the log level.
+ * https://www.npmjs.com/package/bunyan#levels
+ *
+ * Pino uses `level = LEVEL`.
+ * https://github.com/pinojs/pino/blob/main/docs/api.md#logger-level
+ *
+ * As far as I could figure out, Winston uses `level = LEVEL` or
+ * `transports.console.level = 'info';`
+ *
+ * I could not figure out who uses `setLevel`.
  */
 function setLoggerLevel(_logger, level) {
   if (typeof _logger.setLevel === 'function') {
     _logger.setLevel(level);
+  } else if (typeof _logger.level === 'function') {
+    _logger.level(level);
   } else {
     _logger.level = level;
   }
