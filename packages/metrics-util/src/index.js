@@ -5,10 +5,14 @@
 
 'use strict';
 
-exports = module.exports = {
-  DataProcessor: require('./DataProcessor'),
-  DataSource: require('./DataSource'),
-  HttpDataSource: require('./HttpDataSource'),
-  nodejs: require('./nodejs'),
-  process: require('./process')
-};
+const DataProcessor = require('./DataProcessor');
+const DataSource = require('./DataSource');
+const HttpDataSource = require('./HttpDataSource');
+const nodejs = require('./nodejs');
+const process = require('./process');
+
+exports.nodejs = nodejs;
+exports.process = process;
+exports.DataProcessor = DataProcessor;
+exports.DataSource = DataSource;
+exports.HttpDataSource = HttpDataSource;

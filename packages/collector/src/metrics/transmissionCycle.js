@@ -5,7 +5,7 @@
 
 'use strict';
 
-const { clone, compression } = require('@instana/core').util;
+const core = require('@instana/core');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -92,7 +92,7 @@ function sendMetrics() {
   }
 
   // clone retrieved objects to allow mutations in metric retrievers
-  const newValueToTransmit = clone(metrics.gatherData());
+  const newValueToTransmit = core.util.clone(metrics.gatherData());
 
   /** @type {Object<string, *>} */
   let payload;
@@ -100,7 +100,7 @@ function sendMetrics() {
   if (isFullTransmission) {
     payload = newValueToTransmit;
   } else {
-    payload = compression(previousTransmittedValue, newValueToTransmit);
+    payload = core.util.compression(previousTransmittedValue, newValueToTransmit);
   }
 
   downstreamConnection.sendMetrics(payload, onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit));

@@ -6,7 +6,6 @@
 'use strict';
 
 const { backendConnector, consoleLogger } = require('@instana/serverless');
-
 const processorRegistry = require('./processorRegistry');
 
 let logger = consoleLogger;
