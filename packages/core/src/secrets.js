@@ -11,15 +11,8 @@ const defaultSecrets = ['key', 'pass', 'secret'];
 
 /** @type {(key: string) => boolean} */
 let isSecretInternal;
-/**
- * @param {import('./util/normalizeConfig').InstanaConfig} config
- */
-exports.init = function init(config) {
-  logger = config.logger;
-  isSecretInternal = exports.matchers[config.secrets.matcherMode](config.secrets.keywords);
-};
 
-exports.matchers = {
+const matchers = {
   /**
    * @param {Array.<string>} secrets
    * @returns {(key: string) => boolean}
@@ -140,6 +133,14 @@ exports.matchers = {
       return false;
     };
   }
+};
+
+/**
+ * @param {import('./util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+  isSecretInternal = matchers[config.secrets.matcherMode](config.secrets.keywords);
 };
 
 /**

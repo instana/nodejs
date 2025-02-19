@@ -8,14 +8,19 @@
 const { expect } = require('chai');
 
 const { delay, retry } = require('../../../core/test/test_util');
-const config = require('@instana/core/test/config');
-
+const testConfig = require('@instana/core/test/config');
+const core = require('@instana/core');
 const ProcessProcessor = require('../../src/process/ProcessProcessor');
 
 describe('Process processor', function () {
-  this.timeout(config.getTestTimeout());
+  this.timeout(testConfig.getTestTimeout());
 
   let dataProcessor;
+
+  before(() => {
+    const config = core.util.normalizeConfig({});
+    core.secrets.init(config);
+  });
 
   beforeEach(() => {
     dataProcessor = new ProcessProcessor();
