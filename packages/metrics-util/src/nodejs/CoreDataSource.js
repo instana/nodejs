@@ -11,15 +11,12 @@ const { consoleLogger } = require('@instana/serverless');
 const DataSource = require('../DataSource');
 
 /**
- * A source for snapshot data and metrics that adapts the metrics
- * from @instana/core and @instana/shared-metrics.
+ * This data source holds metrics from @instana/core and @instana/shared-metrics.
+ * This source depends on external libraries.
+ * The NodejsProcessor owns this source.
  *
- * `activate` will be called from the registry.
- * The NodejsProcessor owns the CoreDataSource.
- *
- * > allProcessors.forEach(processor => processor.activate());
- *
- * This will activate core & shared-metrics.
+ * A data source class defines how to collect or define data from a specific source.
+ * The outside does not need to know how the data is collected.
  */
 class CoreDataSource extends DataSource {
   constructor(config, refreshDelay) {
