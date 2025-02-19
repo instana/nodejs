@@ -4,10 +4,6 @@
 
 'use strict';
 
-// TODO:
-// Currently, filtering is based solely on span.data[span.n].operation.
-// In the future, additional fields (like operation) may need to be considered for filtering.
-
 // List of span types to allowed to ignore
 const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb'];
 
@@ -24,23 +20,18 @@ function shouldIgnore(span, endpoints) {
   const endpoint = endpoints[span.n];
   if (!endpoint) return false;
 
-  // Retrieve the operation(s) from the span data. In some cases, the 'operation' field may be an array.
-  // This handles both the cases where 'operation' is a string or an array of strings.
-  const operations = Array.isArray(span.data?.[span.n]?.operation)
-    ? span.data[span.n].operation
-    : [span.data?.[span.n]?.operation];
-
-  if (!operations.length) return false;
+  // The endpoint already been converted to lowercase during parsing, so here we are normalizing
+  // the operation for case-insensitive comparison
+  const operation = span.data?.[span.n]?.operation?.toLowerCase();
+  if (!operation) return false;
 
   // We support both array and string formats for endpoints, but the string format is not shared publicly.
   if (Array.isArray(endpoint)) {
-    return endpoint.some(op =>
-      operations.some((/** @type {string} */ operation) => op.toLowerCase() === operation.toLowerCase())
-    );
+    return endpoint.some(op => op.toLowerCase() === operation);
   }
 
   if (typeof endpoint === 'string') {
-    return operations.some((/** @type {string} */ operation) => operation.toLowerCase() === endpoint.toLowerCase());
+    return endpoint.toLowerCase() === operation;
   }
 
   return false;
