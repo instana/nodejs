@@ -7,12 +7,12 @@
 const expect = require('chai').expect;
 const path = require('path');
 const { execSync } = require('child_process');
-const config = require('@instana/core/test/config');
+const config = require('../../../../../../core/test/config');
+const testUtils = require('../../../../../../core/test/test_util');
+const isLatestEsmSupportedVersion = require('../../../../../../core').util.esm.isLatestEsmSupportedVersion;
+const supportedVersion = require('../../../../../../core').tracing.supportedVersion;
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
-const testUtils = require('@instana/core/test/test_util');
-const isLatestEsmSupportedVersion = require('@instana/core').util.esm.isLatestEsmSupportedVersion;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
