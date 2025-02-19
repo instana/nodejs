@@ -33,12 +33,18 @@ class CoreDataSource extends DataSource {
   }
 
   activate() {
-    core.metrics.activate();
+    if (!this.active) {
+      core.metrics.activate();
+    }
+
     super.activate();
   }
 
   deactivate() {
-    core.metrics.deactivate();
+    if (this.active) {
+      core.metrics.deactivate();
+    }
+
     super.deactivate();
   }
 
