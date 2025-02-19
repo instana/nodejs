@@ -14,17 +14,6 @@ logger = require('./logger').getLogger('secrets', newLogger => {
 const defaultMatcherMode = 'contains-ignore-case';
 const defaultSecrets = ['key', 'pass', 'secret'];
 
-/**
- * @typedef {Object} SecretMatchers
- * @property {(secrets: Array.<string>) => (key: string) => boolean} equals-ignore-case
- * @property {(secrets: Array.<string>) => (key: string) => boolean} equals
- * @property {(secrets: Array.<string>) => (key: string) => boolean} contains-ignore-case
- * @property {(secrets: Array.<string>) => (key: string) => boolean} contains
- * @property {(secrets: Array.<string>) => (key: string) => boolean} regex
- * @property {() => () => boolean} none
- */
-
-/** @type {SecretMatchers} */
 exports.matchers = {
   /**
    * @param {Array.<string>} secrets
@@ -190,35 +179,20 @@ function toLowerCase(configuredSecrets) {
   return secrets;
 }
 
-/**
- * @typedef {'contains' | 'equals-ignore-case' | 'equals' | 'contains-ignore-case' | 'regex'} MatchingOptions
- */
-
 /** @type {(key: string) => boolean} */
 exports.isSecret = function isSecret(key) {
   return isSecretInternal(key);
 };
 
 /**
- * @typedef {Object} Secrets
- * @property {*} keywords
- * @property {MatchingOptions} matcherMode
- */
-
-/**
- * @typedef {Object} SecretOption
- * @property {Secrets} secrets
- */
-
-/**
- * @param {SecretOption} config
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
  */
 exports.init = function init(config) {
   isSecretInternal = exports.matchers[config.secrets.matcherMode](config.secrets.keywords);
 };
 
 /**
- * @param {MatchingOptions} matcherId
+ * @param {import('@instana/core/src/util/normalizeConfig').MatchingOption} matcherId
  * @param {Array.<string>} secretsList
  */
 exports.setMatcher = function setMatcher(matcherId, secretsList) {
