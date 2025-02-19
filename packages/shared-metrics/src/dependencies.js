@@ -8,16 +8,17 @@
 const path = require('path');
 const { util, uninstrumentedFs: fs } = require('@instana/core');
 
-let logger = require('@instana/core').logger.getLogger('metrics');
-
 const CountDownLatch = require('./util/CountDownLatch');
 const { DependencyDistanceCalculator, MAX_DEPTH } = require('./util/DependencyDistanceCalculator');
 
+/** @type {import('@instana/core/src/core').GenericLogger} */
+let logger;
+
 /**
- * @param {import('@instana/core/src/core').GenericLogger} _logger
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
  */
-exports.setLogger = function setLogger(_logger) {
-  logger = _logger;
+exports.init = function init(config) {
+  logger = config.logger;
 };
 
 /** @type {number} */

@@ -8,19 +8,21 @@
 const constants = require('./constants');
 const { generateRandomSpanId, generateRandomTraceId, readAttribCaseInsensitive } = require('./tracingUtil');
 const w3c = require('./w3c_trace_context');
+
 /**
  * @type {import("../core").GenericLogger}
  */
 let logger;
-logger = require('../logger').getLogger('tracing/headers', newLogger => {
-  logger = newLogger;
-});
+
 let disableW3cTraceCorrelation = false;
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} config
  */
 exports.init = function (config) {
+  logger = config.logger;
+
+  w3c.init(config);
   disableW3cTraceCorrelation = config.tracing.disableW3cTraceCorrelation;
 };
 

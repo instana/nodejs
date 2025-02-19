@@ -6,17 +6,12 @@
 'use strict';
 
 const shimmer = require('../../shimmer');
-
-let logger;
-logger = require('../../../logger').getLogger('tracing/graphql', newLogger => {
-  logger = newLogger;
-});
-
 const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
 
+let logger;
 let isActive = false;
 
 const queryOperationType = 'query';
@@ -26,7 +21,9 @@ const operationTypes = [queryOperationType, mutationOperationType, subscriptionO
 
 const subscriptionUpdate = 'subscription-update';
 
-exports.init = function init() {
+exports.init = function init(config) {
+  logger = config.logger;
+
   hook.onFileLoad(/\/graphql\/execution\/execute.js/, instrumentExecute);
   hook.onFileLoad(/\/@apollo\/gateway\/dist\/executeQueryPlan.js/, instrumentApolloGatewayExecuteQueryPlan);
   hook.onModuleLoad('@apollo/federation', logDeprecatedWarning);

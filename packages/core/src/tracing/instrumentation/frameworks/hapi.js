@@ -12,13 +12,10 @@ const httpServer = require('../protocols/httpServer');
 const cls = require('../../cls');
 
 let logger;
-logger = require('../../../logger').getLogger('tracing/hapi', newLogger => {
-  logger = newLogger;
-});
-
 let isActive = false;
 
-exports.init = function init() {
+exports.init = function init(config) {
+  logger = config.logger;
   hook.onModuleLoad('@hapi/call', instrumentHapiCall);
 };
 

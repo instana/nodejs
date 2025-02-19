@@ -6,14 +6,18 @@
 'use strict';
 
 const nativeModuleRetry = require('./nativeModuleRetry');
-const { setLogger: setLoggerForDependencyDistanceCalculator } = require('./DependencyDistanceCalculator');
+const dependencyDistanceCalculator = require('./DependencyDistanceCalculator');
+
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
+const init = config => {
+  nativeModuleRetry.init(config);
+  dependencyDistanceCalculator.init(config);
+};
+
 module.exports = {
+  init,
   nativeModuleRetry,
-  /**
-   * @param {import('@instana/core/src/core').GenericLogger} logger
-   */
-  setLogger: function setLogger(logger) {
-    nativeModuleRetry.setLogger(logger);
-    setLoggerForDependencyDistanceCalculator(logger);
-  }
+  dependencyDistanceCalculator
 };

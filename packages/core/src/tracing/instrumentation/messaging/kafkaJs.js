@@ -12,16 +12,13 @@ const leftPad = require('../../leftPad');
 const constants = require('../../constants');
 const cls = require('../../cls');
 
-let logger;
-logger = require('../../../logger').getLogger('tracing/kafkajs', newLogger => {
-  logger = newLogger;
-});
-
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
-
+let logger;
 let isActive = false;
 
 exports.init = function init(config) {
+  logger = config.logger;
+
   hook.onFileLoad(/\/kafkajs\/src\/producer\/messageProducer\.js/, instrumentProducer);
   hook.onFileLoad(/\/kafkajs\/src\/consumer\/runner\.js/, instrumentConsumer);
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;

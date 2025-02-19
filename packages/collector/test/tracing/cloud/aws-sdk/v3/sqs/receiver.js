@@ -33,9 +33,9 @@ const { sendToParent } = require('@instana/core/test/test_util');
 const CollectingLogger = require('../../../../../test_util/CollectingLogger');
 const TeeLogger = require('../../../../../test_util/TeeLogger');
 
-const instanaLogger = require('../../../../../../src/logger').getLogger('SQS receiver', false, 'warn');
+const instanaLogger = require('../../../../../../src/logger').getLogger();
 const collectingLogger = new CollectingLogger();
-const teeLogger = new TeeLogger(instanaLogger, collectingLogger);
+const teeLogger = new TeeLogger(instanaLogger.logger, collectingLogger);
 instana.setLogger(teeLogger);
 
 const port = require('../../../../../test_util/app-port')();

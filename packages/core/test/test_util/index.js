@@ -16,7 +16,15 @@ module.exports = {
   expectExactlyNMatching: require('./expectExactlyNMatching'),
   expectExactlyOneMatching: require('./expectExactlyOneMatching'),
   getSpansByName: require('./getSpansByName'),
-  getLogger: require('./log').getLogger,
+  getTestAppLogger: require('./log').getLogger,
+  createFakeLogger: () => {
+    return {
+      debug: () => {},
+      info: () => {},
+      warn: () => {},
+      error: () => {}
+    };
+  },
   isCI: require('./is_ci'),
   retry: require('./retry'),
   retryUntilSpansMatch: require('./retryUntilSpansMatch'),

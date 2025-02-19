@@ -7,14 +7,8 @@
 
 /** @type {import('./core').GenericLogger} */
 let logger;
-logger = require('./logger').getLogger('secrets', newLogger => {
-  logger = newLogger;
-});
-
-const defaultMatcherMode = 'contains-ignore-case';
 const defaultSecrets = ['key', 'pass', 'secret'];
-
-exports.matchers = {
+const matchers = {
   /**
    * @param {Array.<string>} secrets
    * @returns {(key: string) => boolean}
@@ -137,9 +131,6 @@ exports.matchers = {
   }
 };
 
-/** @type {(key: string) => boolean} */
-let isSecretInternal = exports.matchers[defaultMatcherMode](defaultSecrets);
-
 /**
  * @param {Array.<string>} configuredSecrets
  * @returns {Array.<string>}
@@ -180,15 +171,21 @@ function toLowerCase(configuredSecrets) {
 }
 
 /** @type {(key: string) => boolean} */
-exports.isSecret = function isSecret(key) {
-  return isSecretInternal(key);
-};
+let isSecretInternal;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('./util/normalizeConfig').InstanaConfig} config
  */
 exports.init = function init(config) {
-  isSecretInternal = exports.matchers[config.secrets.matcherMode](config.secrets.keywords);
+  logger = config.logger;
+  isSecretInternal = matchers[config.secrets.matcherMode](config.secrets.keywords);
+};
+
+exports.matchers = matchers;
+
+/** @type {(key: string) => boolean} */
+exports.isSecret = function isSecret(key) {
+  return isSecretInternal(key);
 };
 
 /**

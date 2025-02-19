@@ -9,11 +9,15 @@ const { uninstrumentedFs: fs } = require('@instana/core');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('actions/source', newLogger => {
-  logger = newLogger;
-});
 
 const validFileRequests = /\.(js|ts|jsx)$|(^|\/)package\.json$/i;
+
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+};
 
 /**
  * @param {import('../agent/requestHandler').AnnounceRequest} request

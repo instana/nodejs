@@ -13,18 +13,14 @@ const stackTrace = require('../util/stackTrace');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('tracing/tracingUtil', newLogger => {
-  logger = newLogger;
-});
-
 const hexDecoder = new StringDecoder('hex');
-
 let stackTraceLength = 10;
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} config
  */
 exports.init = function (config) {
+  logger = config.logger;
   stackTraceLength = config.tracing.stackTraceLength;
 };
 

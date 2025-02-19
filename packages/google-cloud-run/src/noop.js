@@ -17,8 +17,8 @@ exports.currentSpan = function getHandleForCurrentSpan() {
 
 exports.sdk = tracing.sdk;
 
-exports.setLogger = function setLogger(logger) {
-  instanaCore.logger.init({ logger });
+exports.setLogger = function setLogger() {
+  // We do nothing.
 };
 
 exports.opentracing = tracing.opentracing;

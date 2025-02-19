@@ -33,13 +33,13 @@ const sortTypes = {
   EXIT: 'exit'
 };
 
-let logger = require('../../../../../logger').getLogger('tracing/sqs/v2', newLogger => {
-  logger = newLogger;
-});
+let logger;
 
 let isActive = false;
 
-exports.init = function init() {
+exports.init = function init(config) {
+  logger = config.logger;
+
   hook.onModuleLoad('aws-sdk', instrumentSQS);
   hook.onModuleLoad('sqs-consumer', instrumentSQSConsumer);
 };

@@ -9,9 +9,13 @@ const { uninstrumentedFs: fs } = require('@instana/core');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('./logger').getLogger('cmdline', newLogger => {
-  logger = newLogger;
-});
+
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+};
 
 exports.getCmdline = function getCmdline() {
   let name;

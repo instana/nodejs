@@ -11,11 +11,9 @@ const tracingUtil = require('./tracingUtil');
 const { ENTRY, EXIT, INTERMEDIATE, isExitSpan } = require('./constants');
 const hooked = require('./clsHooked');
 const tracingMetrics = require('./metrics');
+
 /** @type {import('../core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('tracing/cls', newLogger => {
-  logger = newLogger;
-});
 
 const currentEntrySpanKey = 'com.instana.entry';
 const currentSpanKey = 'com.instana.span';
@@ -46,6 +44,8 @@ const ns = hooked.createNamespace('instana.collector');
  * @param {import('../../../collector/src/pidStore')} _processIdentityProvider
  */
 function init(config, _processIdentityProvider) {
+  logger = config.logger;
+
   if (config && config.serviceName) {
     serviceName = config.serviceName;
   }

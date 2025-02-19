@@ -15,40 +15,41 @@ chai.use(sinonChai);
 const { secrets, tracing } = require('@instana/core');
 const { constants } = tracing;
 const agentConnection = require('../../src/agentConnection');
+const testUtils = require('@instana/core/test/test_util');
 
 describe('unannounced state', () => {
   let unannouncedState;
 
-  let pidStoreStub;
   let agentOptsStub;
   let agentConnectionStub;
   let tracingStub;
   let secretsStub;
+  let pidStoreStub;
 
   describe('enter', () => {
     before(() => {
-      pidStoreStub = {};
       agentOptsStub = {};
       agentConnectionStub = sinon.stub(agentConnection);
       tracingStub = sinon.stub(tracing);
       secretsStub = sinon.stub(secrets);
+      pidStoreStub = sinon.stub();
 
       unannouncedState = proxyquire('../../src/announceCycle/unannounced', {
         '@instana/core': {
           secrets: secretsStub,
           tracing: tracingStub
         },
-        '../pidStore': pidStoreStub,
         '../agent/opts': agentOptsStub,
         '../agentConnection': agentConnectionStub
       });
+
+      unannouncedState.init({ logger: testUtils.createFakeLogger() }, pidStoreStub);
     });
 
     afterEach(() => {
       agentConnectionStub.announceNodeCollector.reset();
       tracingStub.activate.reset();
       secretsStub.setMatcher.reset();
-      pidStoreStub.pid = undefined;
       agentOptsStub.agentUuid = undefined;
       agentOptsStub.config = {};
     });

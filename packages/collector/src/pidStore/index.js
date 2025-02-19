@@ -13,15 +13,31 @@ const agentOpts = require('../agent/opts');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('pidStore', newLogger => {
-  logger = newLogger;
-});
 
 const eventName = 'pidChanged';
 const eventEmitter = new EventEmitter();
-exports.onPidChange = eventEmitter.on.bind(eventEmitter, eventName);
 
-logger.info(`PID Store starting with pid ${internalPidStore.pid}`);
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+
+  logger.info(`PID Store starting with pid ${internalPidStore.pid}`);
+
+  if (!process.env.CONTINUOUS_INTEGRATION) {
+    const pidInParentNamespace = getPidFromParentNamespace();
+
+    if (pidInParentNamespace) {
+      internalPidStore.pid = pidInParentNamespace;
+      logger.info(
+        `Changing pid to ${pidInParentNamespace} due to successful identification of PID in parent namespace`
+      );
+    }
+  }
+};
+
+exports.onPidChange = eventEmitter.on.bind(eventEmitter, eventName);
 
 Object.defineProperty(exports, 'pid', {
   get: function getPid() {
@@ -47,14 +63,6 @@ exports.getFrom = function getFrom() {
     h: agentOpts.agentUuid
   };
 };
-
-if (!process.env.CONTINUOUS_INTEGRATION) {
-  const pidInParentNamespace = getPidFromParentNamespace();
-  if (pidInParentNamespace) {
-    internalPidStore.pid = pidInParentNamespace;
-    logger.info(`Changing pid to ${pidInParentNamespace} due to successful identification of PID in parent namespace`);
-  }
-}
 
 function getPidFromParentNamespace() {
   try {

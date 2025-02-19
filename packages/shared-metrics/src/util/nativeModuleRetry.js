@@ -5,14 +5,22 @@
 
 'use strict';
 
-const { logger: Logger, uninstrumentedFs: fs } = require('@instana/core');
-let logger = Logger.getLogger('shared-metrics/native-module-retry');
-
+const { uninstrumentedFs: fs } = require('@instana/core');
 const EventEmitter = require('events');
 const os = require('os');
 const tar = require('tar');
 const path = require('path');
 const detectLibc = require('detect-libc');
+
+/** @type {import('@instana/core/src/core').GenericLogger} */
+let logger;
+
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+};
 
 /**
  * @typedef {Object} InstanaSharedMetricsOptions
@@ -289,14 +297,6 @@ function createNativeModulePath(opts) {
   return true;
 }
 
-loadNativeAddOn.setLogger = setLogger;
 loadNativeAddOn.selfNodeModulesPath = '';
 
-/**
- * @param {import('@instana/core/src/core').GenericLogger} _logger
- */
-function setLogger(_logger) {
-  logger = _logger;
-}
-
-module.exports = loadNativeAddOn;
+exports.loadNativeAddOn = loadNativeAddOn;

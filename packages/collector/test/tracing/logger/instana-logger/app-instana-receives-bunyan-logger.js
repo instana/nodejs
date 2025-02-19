@@ -25,10 +25,7 @@ const instana = require('../../../..')({
 });
 instana.setLogger(buynan.createLogger({ name: 'app-logger' }));
 
-let instanaLogger;
-instanaLogger = require('../../../../src/logger').getLogger('test-module-name', newLogger => {
-  instanaLogger = newLogger;
-});
+const instanaLogger = require('../../../../src/logger').getLogger();
 
 const bodyParser = require('body-parser');
 const express = require('express');

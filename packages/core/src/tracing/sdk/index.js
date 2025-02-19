@@ -5,18 +5,23 @@
 
 'use strict';
 
-const callback = require('./sdk')(true);
-const promise = require('./sdk')(false);
+const sdk = require('./sdk');
+
 /** @type {import('../cls')} */
 let cls;
 
+const callback = sdk.generate(true);
+const promise = sdk.generate(false);
+
 /**
+ * @param {import('../../util/normalizeConfig').InstanaConfig} config
  * @param {import('../cls')} _cls
  */
-exports.init = function init(_cls) {
+exports.init = function init(config, _cls) {
   cls = _cls;
-  callback.init(_cls);
-  promise.init(_cls);
+
+  callback.init(config, _cls);
+  promise.init(config, _cls);
 };
 
 exports.activate = function activate() {

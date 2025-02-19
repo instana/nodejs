@@ -26,9 +26,9 @@ exports.isActive = function () {
   return isActive;
 };
 
-exports.init = function init() {
+exports.init = function init(config) {
   awsProducts.forEach(AwsProductClass => {
-    const awsProduct = new AwsProductClass();
+    const awsProduct = new AwsProductClass(config);
     Object.assign(operationMap, awsProduct.getOperations());
   });
 

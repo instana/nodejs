@@ -8,6 +8,7 @@
 const proxyquire = require('proxyquire');
 const expect = require('chai').expect;
 const sinon = require('sinon');
+const testUtils = require('@instana/core/test/test_util');
 
 describe('pidStore', () => {
   let pidStore;
@@ -35,11 +36,10 @@ describe('pidStore', () => {
       },
       './internalPidStore': {
         pid: process.pid
-      },
-
-      // We need to proxyquire logger, too, to work around the duplicate module logger name check.
-      '../logger': proxyquire('../../src/logger', {})
+      }
     });
+
+    pidStore.init({ logger: testUtils.createFakeLogger() });
   }
 
   it('should by default return the process pid', () => {

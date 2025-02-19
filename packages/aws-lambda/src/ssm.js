@@ -10,6 +10,7 @@ let fetchedValue = null;
 let envValue = null;
 let errorFromAWS = null;
 let initTimeoutInMs = 0;
+let logger;
 
 module.exports.reset = () => {
   fetchedValue = null;
@@ -32,7 +33,9 @@ module.exports.validate = () => {
   return true;
 };
 
-module.exports.init = ({ logger }) => {
+module.exports.init = config => {
+  logger = config.logger;
+
   // CASE: INSTANA_SSM_PARAM_NAME is not set, skip
   if (!exports.isUsed()) {
     return;

@@ -19,7 +19,7 @@ exports.currentPayload = undefined;
  */
 
 exports.activate = function activate() {
-  if (hasThePackageBeenInitializedTooLate()) {
+  if (hasThePackageBeenInitializedTooLate.activate()) {
     exports.currentPayload = true;
   }
 };

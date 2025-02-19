@@ -11,9 +11,7 @@ const tracingUtil = require('../../../../tracingUtil');
 const { InstanaAWSProduct } = require('./instana_aws_product');
 const { logTooManyAttributesWarningOnce } = require('../aws_utils');
 
-let logger = require('../../../../../logger').getLogger('tracing/sns/v2', newLogger => {
-  logger = newLogger;
-});
+let logger;
 
 /**
  * We only instrument publish() for now.
@@ -28,7 +26,9 @@ const operations = Object.keys(operationsInfo);
 const SPAN_NAME = 'sns';
 
 class InstanaAWSSNS extends InstanaAWSProduct {
-  constructor() {
+  constructor(config) {
+    logger = config.logger;
+
     super(SPAN_NAME, operations);
   }
 

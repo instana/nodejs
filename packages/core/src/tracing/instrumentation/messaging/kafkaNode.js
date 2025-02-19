@@ -13,15 +13,13 @@ const constants = require('../../constants');
 const cls = require('../../cls');
 
 let logger;
-logger = require('../../../logger').getLogger('tracing/kafka-node', newLogger => {
-  logger = newLogger;
-});
-
 let isActive = false;
 
 // FYI: officially deprecated. No release since 4 years. But still very
 //      high usage on npm trends. We will drop it in any upcoming major release.
-exports.init = function init() {
+exports.init = function init(config) {
+  logger = config.logger;
+
   hook.onModuleLoad('kafka-node', instrument);
 };
 

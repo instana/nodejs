@@ -5,17 +5,12 @@
 'use strict';
 
 const shimmer = require('../../shimmer');
-
-let logger;
-logger = require('../../../logger').getLogger('tracing/grpcjs', newLogger => {
-  logger = newLogger;
-});
-
 const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
 
+let logger;
 let Metadata;
 let isActive = false;
 
@@ -30,7 +25,9 @@ const ALL_TYPES = [TYPES.UNARY, TYPES.SERVER_STREAM, TYPES.CLIENT_STREAM, TYPES.
 const TYPES_WITH_CALLBACK = [TYPES.UNARY, TYPES.CLIENT_STREAM];
 const TYPES_WITH_CALL_END = [TYPES.SERVER_STREAM, TYPES.BIDI];
 
-exports.init = function () {
+exports.init = function (config) {
+  logger = config.logger;
+
   hook.onModuleLoad('@grpc/grpc-js', instrumentModule);
   hook.onFileLoad(/\/@grpc\/grpc-js\/build\/src\/server\.js/, instrumentServer);
   hook.onFileLoad(/\/@grpc\/grpc-js\/build\/src\/client\.js/, instrumentClient);

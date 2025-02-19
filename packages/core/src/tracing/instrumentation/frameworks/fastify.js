@@ -8,10 +8,8 @@
 const hook = require('../../../util/hook');
 const httpServer = require('../protocols/httpServer');
 const cls = require('../../cls');
-let logger = require('../../../logger').getLogger('tracing/fastify', newLogger => {
-  logger = newLogger;
-});
 
+let logger;
 let active = false;
 
 exports.activate = function activate() {
@@ -22,7 +20,8 @@ exports.deactivate = function deactivate() {
   active = false;
 };
 
-exports.init = function init() {
+exports.init = function init(config) {
+  logger = config.logger;
   hook.onModuleLoad('fastify', instrument);
 };
 
