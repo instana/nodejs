@@ -7,30 +7,24 @@
 
 const { expect } = require('chai');
 const semver = require('semver');
-
-const { metrics: coreMetrics } = require('@instana/core');
-
+const sinon = require('sinon');
 const { delay, retry } = require('../../../core/test/test_util');
-const config = require('@instana/core/test/config');
-
-const sharedMetrics = require('@instana/shared-metrics');
-
+const testConfig = require('@instana/core/test/config');
 const NodeJsProcessor = require('../../src/nodejs/NodeJsProcessor');
 
 describe('Node.js processor', function () {
-  this.timeout(config.getTestTimeout());
+  this.timeout(testConfig.getTestTimeout());
+  const coreAndSharedMetricsDataSource = sinon.stub();
+  coreAndSharedMetricsDataSource.on = sinon.stub();
+  coreAndSharedMetricsDataSource.activate = sinon.stub();
+  coreAndSharedMetricsDataSource.deactivate = sinon.stub();
+  coreAndSharedMetricsDataSource.hasRefreshedAtLeastOnce = sinon.stub();
+  coreAndSharedMetricsDataSource.getRawData = sinon.stub();
 
   let dataProcessor;
 
   before(() => {
-    coreMetrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
-    coreMetrics.init({
-      metrics: {
-        transmissionDelay: 1000
-      }
-    });
-
-    dataProcessor = new NodeJsProcessor(coreMetrics, 42);
+    dataProcessor = new NodeJsProcessor(coreAndSharedMetricsDataSource, 42);
   });
 
   afterEach(() => {
@@ -38,16 +32,20 @@ describe('Node.js processor', function () {
     dataProcessor.resetSources();
   });
 
-  it("should not get ready if core metrics haven't been activated", () =>
+  it("should not get ready if core metrics haven't been activated", () => {
+    coreAndSharedMetricsDataSource.hasRefreshedAtLeastOnce.returns(false);
     // deliberately not activating the source
-    delay(50).then(() => expect(dataProcessor.isReady()).to.be.false));
+    delay(50).then(() => expect(dataProcessor.isReady()).to.be.false);
+  });
 
   it('should get ready if core metrics have been activated', () => {
+    coreAndSharedMetricsDataSource.hasRefreshedAtLeastOnce.returns(true);
     dataProcessor.activate();
     return retry(() => expect(dataProcessor.isReady()).to.be.true);
   });
 
   it('should get the entity ID', () => {
+    coreAndSharedMetricsDataSource.hasRefreshedAtLeastOnce.returns(true);
     dataProcessor.activate();
     return retry(() => {
       expect(dataProcessor.getEntityId()).to.equal(42);
@@ -55,6 +53,16 @@ describe('Node.js processor', function () {
   });
 
   it('should collect snapshot data and metrics from core and shared metrics modules', () => {
+    coreAndSharedMetricsDataSource.hasRefreshedAtLeastOnce.returns(true);
+    coreAndSharedMetricsDataSource.getRawData.returns({
+      sensorVersion: '1.2.3',
+      versions: {},
+      activeHandles: 42,
+      activeRequests: 23,
+      args: [],
+      dependencies: {}
+    });
+
     dataProcessor.activate();
     return retry(() => {
       const processedData = dataProcessor._getProcessedData();
@@ -69,6 +77,7 @@ describe('Node.js processor', function () {
   });
 
   it('should provide payload when ready', () => {
+    coreAndSharedMetricsDataSource.hasRefreshedAtLeastOnce.returns(true);
     dataProcessor.activate();
 
     return retry(() => {
@@ -87,6 +96,18 @@ describe('Node.js processor', function () {
   });
 
   it('should emit ready event', () => {
+    coreAndSharedMetricsDataSource.hasRefreshedAtLeastOnce.returns(true);
+    setTimeout(() => {
+      coreAndSharedMetricsDataSource.on.getCalls()[0].args[1]({
+        sensorVersion: '1.2.3',
+        versions: {},
+        activeHandles: 42,
+        activeRequests: 23,
+        args: [],
+        dependencies: {}
+      });
+    }, 500);
+
     let emittedPayload;
     dataProcessor.on('ready', payload => {
       emittedPayload = payload;
