@@ -10,15 +10,15 @@ const { fork } = require('child_process');
 const { expect } = require('chai');
 const proxyquire = require('proxyquire');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
-
 const { retry, createFakeLogger } = require('../../../core/test/test_util');
-const config = require('@instana/core/test/config');
+const testConfig = require('@instana/core/test/config');
+const core = require('@instana/core');
 
 let transmissionCycle;
 
 describe('transmission cycle', function () {
-  this.timeout(config.getTestTimeout());
-  this.slow(config.getTestTimeout() / 2);
+  this.timeout(testConfig.getTestTimeout());
+  this.slow(testConfig.getTestTimeout() / 2);
 
   let messagesFromMetadataMock = [];
   let metadataMock;
@@ -28,12 +28,15 @@ describe('transmission cycle', function () {
   let onReadyError;
 
   before(() => {
+    const config = core.util.normalizeConfig({});
+    core.secrets.init(config);
+
     const metadataMockPort = portfinder();
     metadataMockUrl = `http://localhost:${metadataMockPort}`;
 
     messagesFromMetadataMock = [];
     metadataMock = fork(path.join(__dirname, '../metadata_mock'), {
-      stdio: config.getAppStdio(),
+      stdio: testConfig.getAppStdio(),
       env: Object.assign({ METADATA_MOCK_PORT: metadataMockPort })
     });
     metadataMock.on('message', message => {

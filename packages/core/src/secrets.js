@@ -8,10 +8,6 @@
 /** @type {import('./core').GenericLogger} */
 let logger;
 const defaultSecrets = ['key', 'pass', 'secret'];
-
-/** @type {(key: string) => boolean} */
-let isSecretInternal;
-
 const matchers = {
   /**
    * @param {Array.<string>} secrets
@@ -134,6 +130,9 @@ const matchers = {
     };
   }
 };
+
+/** @type {(key: string) => boolean} */
+let isSecretInternal;
 
 /**
  * @param {import('./util/normalizeConfig').InstanaConfig} config
