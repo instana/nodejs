@@ -24,7 +24,7 @@ function shimLog(options) {
   return originalLog =>
     function () {
       // The __instana attribute identifies the Instana logger, so prevent these logs from being traced.
-      if (arguments.length === 0 || !!this.__instana) {
+      if (arguments.length === 0 || !!this?.__instana) {
         // * arguments.length === 0 -> This is a console.warn() type of call (without arguments), this will not log
         // anything but simply return whether the log level in question is enabled for this logger.
         return originalLog.apply(this, arguments);
