@@ -6,6 +6,7 @@
 'use strict';
 
 const nativeModuleRetry = require('./nativeModuleRetry');
+const { setLogger: setLoggerForDependencyDistanceCalculator } = require('./DependencyDistanceCalculator');
 module.exports = {
   nativeModuleRetry,
   /**
@@ -13,5 +14,6 @@ module.exports = {
    */
   setLogger: function setLogger(logger) {
     nativeModuleRetry.setLogger(logger);
+    setLoggerForDependencyDistanceCalculator(logger);
   }
 };

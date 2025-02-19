@@ -13,7 +13,6 @@ const allMetrics = [
   require('./dependencies'),
   require('./directDependencies'),
   require('./description'),
-  require('./directDependencies'),
   require('./execArgs'),
   require('./gc'),
   require('./healthchecks'),
