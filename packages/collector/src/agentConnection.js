@@ -37,9 +37,9 @@ let cpuSetFileContent = null;
  */
 exports.init = function init(config, _pidStore) {
   logger = config.logger;
-  cmdline.init(config);
   pidStore = _pidStore;
 
+  cmdline.init(config);
   cpuSetFileContent = getCpuSetFileContent();
 };
 

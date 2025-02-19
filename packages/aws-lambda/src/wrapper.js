@@ -237,12 +237,15 @@ function init(event, arnInfo, _config) {
   config = _config || {};
 
   // CASE: customer provides a custom logger or custom level
-  if (config.logger) {
-    log.init(config);
-  } else if (config.level) {
+  if (config.logger || config.level) {
     log.init(config);
   }
 
+  // NOTE: We SHOULD renormalize because of:
+  //         - in-code _config object
+  //         - late env variables (less likely)
+  //         - custom logger
+  //         - safe decision to renormalize
   config = normalizeConfig(config, logger);
 
   const useLambdaExtension = shouldUseLambdaExtension();

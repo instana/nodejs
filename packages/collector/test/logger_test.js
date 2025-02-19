@@ -66,7 +66,7 @@ describe('logger', () => {
 
     expect(isPinoLogger(logger.logger)).to.be.true;
     expect(metadata).to.have.property('module');
-    expect(metadata.module).to.equal('instana-nodejs-logger');
+    expect(metadata.module).to.equal('instana-nodejs-logger-parent');
   });
 
   it('should use default log level if not defined', () => {
