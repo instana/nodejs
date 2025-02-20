@@ -6,6 +6,7 @@
 'use strict';
 
 exports.backendConnector = require('./backend_connector');
+// TODO: rename in major release to simply "exports.logger"
 exports.consoleLogger = require('./logger');
 exports.constants = require('./constants');
 exports.environment = require('./environment');

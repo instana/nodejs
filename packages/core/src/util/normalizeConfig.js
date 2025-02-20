@@ -152,7 +152,8 @@ module.exports = function normalizeConfig(config, _logger) {
       debug: console.log,
       info: console.log,
       warn: console.warn,
-      error: console.error
+      error: console.error,
+      trace: console.trace
     };
   }
 
