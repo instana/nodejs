@@ -1,6 +1,6 @@
 {
   "name": "@instana/autoprofile",
-  "version": "2.36.1",
+  "version": "2.36.2-beta.0",
   "description": "Automatic Node.js Profiler",
   "author": {
     "name": "Dmitri Melikyan",
@@ -48,7 +48,7 @@
     }
   ],
   "dependencies": {
-    "@instana/core": "2.36.1",
+    "@instana/core": "2.36.2-beta.0",
     "detect-libc": "^1.0.3",
     "nan": "^2.14.2"
   },
