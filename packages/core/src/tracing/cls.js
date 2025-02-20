@@ -402,7 +402,7 @@ function putPseudoSpan(spanName, kind, traceId, spanId) {
 /**
  * Adds an ignored span to the CLS context, serving as a holder for a trace ID and span ID.
  * Customers can access the current span via `instana.currentSpan()`, and we avoid returning a "NoopSpan".
- * Instead, we need this ignored span instance to ensure the trace ID remains accessible.
+ * We need this ignored span instance to ensure the trace ID remains accessible for future cases such as propagating the trace ID although suppression is on to reactivate a trace.
  * These spans will not be sent to the backend.
  * @param {Object} options - The options for the span.
  * @param {string} options.spanName

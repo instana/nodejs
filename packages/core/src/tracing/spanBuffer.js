@@ -182,7 +182,7 @@ exports.addSpan = function (span) {
     return;
   }
 
-  // Apply necessary transformations to the span (e.g., renaming properties, modifying data).
+  // Transform internal span data format into external (backend) readable format.
   span = applySpanTransformation(span);
 
   if (span.t == null) {

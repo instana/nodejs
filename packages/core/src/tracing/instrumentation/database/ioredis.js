@@ -92,7 +92,7 @@ function instrumentSendCommand(original) {
       const span = cls.startSpan({
         spanName: exports.spanName,
         kind: constants.EXIT,
-        spanData: spanData
+        spanData
       });
       span.stack = tracingUtil.getStackTrace(wrappedInternalSendCommand);
 
@@ -167,7 +167,7 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
     const span = cls.startSpan({
       spanName: exports.spanName,
       kind: constants.EXIT,
-      spanData: spanData
+      spanData
     });
     span.stack = tracingUtil.getStackTrace(wrappedInternalMultiOrPipelineCommand);
 
