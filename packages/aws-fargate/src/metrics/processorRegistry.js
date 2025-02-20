@@ -5,11 +5,7 @@
 
 'use strict';
 
-const {
-  HttpDataSource,
-  nodejs: { coreAndShared, NodeJsProcessor },
-  process: { ProcessProcessor }
-} = require('@instana/metrics-util');
+const metricsUtil = require('@instana/metrics-util');
 
 const InstrumentedEcsContainerProcessor = require('./container/InstrumentedEcsContainerProcessor');
 const SecondaryEcsContainerFactory = require('./container/SecondaryEcsContainerFactory');
@@ -21,23 +17,30 @@ const SecondaryDockerProcessor = require('./docker/SecondaryDockerProcessor');
 const allProcessors = [];
 
 exports.init = function init(config, metadataUri, onReady) {
-  coreAndShared.init(config);
-
   const oneMinute = 60 * 1000;
-  const metadataRootDataSource = new HttpDataSource(metadataUri, oneMinute);
-  const metadataTaskDataSource = new HttpDataSource(`${metadataUri}/task`, oneMinute);
-  const metadataRootStatsDataSource = new HttpDataSource(`${metadataUri}/stats`);
-  const metadataTaskStatsDataSource = new HttpDataSource(`${metadataUri}/task/stats`);
 
+  // Common processors from metrics-util
+  const metadataRootDataSource = new metricsUtil.HttpDataSource(metadataUri, oneMinute);
+  const metadataTaskDataSource = new metricsUtil.HttpDataSource(`${metadataUri}/task`, oneMinute);
+  const metadataRootStatsDataSource = new metricsUtil.HttpDataSource(`${metadataUri}/stats`);
+  const metadataTaskStatsDataSource = new metricsUtil.HttpDataSource(`${metadataUri}/task/stats`);
+  const coreAndSharedMetricsDataSource = new metricsUtil.nodejs.CoreDataSource(config);
+  const nodeJsProcessor = new metricsUtil.nodejs.NodeJsProcessor(coreAndSharedMetricsDataSource, process.pid);
+  const processProcessor = new metricsUtil.process.ProcessProcessor('docker');
+
+  // Local fargate specific processors
   const ecsTaskProcessor = new EcsTaskProcessor(metadataTaskDataSource);
-  allProcessors.push(ecsTaskProcessor);
   const instrumentedEcsContainerProcessor = new InstrumentedEcsContainerProcessor(metadataRootDataSource);
-  allProcessors.push(instrumentedEcsContainerProcessor);
-  allProcessors.push(new InstrumentedDockerProcessor(metadataRootDataSource, metadataRootStatsDataSource));
+  const instrumentedDockerProcessor = new InstrumentedDockerProcessor(
+    metadataRootDataSource,
+    metadataRootStatsDataSource
+  );
 
-  const processProcessor = new ProcessProcessor('docker');
+  allProcessors.push(ecsTaskProcessor);
+  allProcessors.push(instrumentedEcsContainerProcessor);
+  allProcessors.push(instrumentedDockerProcessor);
   allProcessors.push(processProcessor);
-  allProcessors.push(new NodeJsProcessor(coreAndShared, process.pid));
+  allProcessors.push(nodeJsProcessor);
 
   instrumentedEcsContainerProcessor.once('ready', ecsContainerPayload => {
     onReady(null, ecsContainerPayload);

@@ -5,11 +5,7 @@
 
 'use strict';
 
-const {
-  HttpDataSource,
-  process: { ProcessProcessor },
-  nodejs: { coreAndShared, NodeJsProcessor }
-} = require('@instana/metrics-util');
+const metricsUtil = require('@instana/metrics-util');
 
 const CloudRunServiceRevisionInstanceProcessor = require('./instance/CloudRunServiceRevisionInstanceProcessor');
 const identityProvider = require('../identity_provider');
@@ -17,28 +13,38 @@ const identityProvider = require('../identity_provider');
 const allProcessors = [];
 
 exports.init = function init(config, metadataBaseUrl, onReady) {
-  coreAndShared.init(config);
-
   const neverRefresh = 2147483647; // max 32 bit int = max value for setTimeout
   const fetchOptions = {
     headers: { 'Metadata-Flavor': 'Google' }
   };
-  const projectDataSource = new HttpDataSource(`${metadataBaseUrl}project/?recursive=true`, neverRefresh, fetchOptions);
-  const instanceDataSource = new HttpDataSource(
+
+  // Common processors from metrics-util
+  const projectDataSource = new metricsUtil.HttpDataSource(
+    `${metadataBaseUrl}project/?recursive=true`,
+    neverRefresh,
+    fetchOptions
+  );
+  const instanceDataSource = new metricsUtil.HttpDataSource(
     `${metadataBaseUrl}instance/?recursive=true`,
     neverRefresh,
     fetchOptions
   );
+  const processProcessor = new metricsUtil.process.ProcessProcessor(
+    'gcpCloudRunInstance',
+    identityProvider.getHostHeader()
+  );
+  const coreAndSharedMetricsDataSource = new metricsUtil.nodejs.CoreDataSource(config);
+  const nodeJsProcessor = new metricsUtil.nodejs.NodeJsProcessor(coreAndSharedMetricsDataSource, process.pid);
 
+  // Local GC processors
   const cloudRunServiceRevisionProcessor = new CloudRunServiceRevisionInstanceProcessor(
     projectDataSource,
     instanceDataSource
   );
-  allProcessors.push(cloudRunServiceRevisionProcessor);
 
-  const processProcessor = new ProcessProcessor('gcpCloudRunInstance', identityProvider.getHostHeader());
+  allProcessors.push(cloudRunServiceRevisionProcessor);
   allProcessors.push(processProcessor);
-  allProcessors.push(new NodeJsProcessor(coreAndShared, process.pid));
+  allProcessors.push(nodeJsProcessor);
 
   cloudRunServiceRevisionProcessor.once('ready', payload => {
     if (onReady) {

@@ -6,7 +6,6 @@
 'use strict';
 
 const { consoleLogger } = require('@instana/serverless');
-
 const transmissionCycle = require('./transmissionCycle');
 
 let logger = consoleLogger;
