@@ -369,12 +369,12 @@ describe('tracing/cls', () => {
       expect(reducedSpan.stack).to.not.exist;
     });
   });
-it('should return the span with correct data when span data is provided', () => {
+  it('should return the span with correct data when span data is provided', () => {
     cls.ns.run(() => {
       const span = cls.startSpan({
         spanName: 'redis',
         kind: constants.EXIT,
-        spanContextData: {
+        spanData: {
           redis: {
             operation: 'get',
             connection: 'http://localhost'
@@ -407,7 +407,7 @@ it('should return the span with correct data when span data is provided', () => 
       const span = cls.startSpan({
         spanName: 'redis',
         kind: constants.EXIT,
-        spanContextData: {
+        spanData: {
           redis: {
             operation: 'get',
             connection: 'http://localhost'

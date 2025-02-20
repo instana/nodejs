@@ -244,7 +244,7 @@ function instrumentCommand(original, command, address, cbStyle) {
       const span = cls.startSpan({
         spanName: exports.spanName,
         kind: constants.EXIT,
-        spanContextData: spanData
+        spanData: spanData
       });
       span.stack = tracingUtil.getStackTrace(instrumentCommand);
 
@@ -327,7 +327,7 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
       span = cls.startSpan({
         spanName: exports.spanName,
         kind: constants.EXIT,
-        spanContextData: spanData
+        spanData: spanData
       });
     } else {
       span = cls.startSpan({
@@ -335,7 +335,7 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
         kind: constants.EXIT,
         traceId: parentSpan.t,
         parentSpanId: parentSpan.s,
-        spanContextData: spanData
+        spanData: spanData
       });
     }
 

@@ -45,7 +45,7 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
       const span = cls.startSpan({
         spanName: this.spanName,
         kind: EXIT,
-        spanContextData: spanData
+        spanData: spanData
       });
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(this.instrumentedMakeRequest, 1);
