@@ -59,7 +59,7 @@ let agentConnection;
 /**
  * @param {import('./types/collector').CollectorConfig} [_config]
  */
-function init(_config) {
+function init(_config = {}) {
   // @ts-ignore: Property '__INSTANA_INITIALIZED' does not exist on type global
   if (global.__INSTANA_INITIALIZED) {
     // Prevent initializing @instana/collector multiple times for the same process: @instana/collector has already been
@@ -95,7 +95,7 @@ function init(_config) {
   global.__INSTANA_INITIALIZED = true;
 
   // CASE: reinit logger if custom logger or log level is provided.
-  if (_config && (_config.logger || _config.level)) {
+  if (_config.logger || _config.level) {
     log.init(_config);
   }
 
