@@ -116,7 +116,6 @@ function init(_config) {
   agentOpts.init(config);
   agentConnection.init(config, pidStore);
   instanaNodeJsCore.init(config, agentConnection, pidStore);
-  instanaSharedMetrics.init(config);
 
   if (isMainThread) {
     uncaught.init(config, agentConnection, pidStore);

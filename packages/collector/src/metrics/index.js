@@ -18,6 +18,7 @@ const additionalMetrics = [pid];
  */
 exports.init = function init(config, pidStore) {
   coreMetrics.init(config);
+  sharedMetrics.init(config);
   transmissionCycle.init(config);
 
   additionalMetrics.forEach(metric => {
