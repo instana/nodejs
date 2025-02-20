@@ -7,7 +7,6 @@
 
 const core = require('@instana/core');
 const sharedMetrics = require('@instana/shared-metrics');
-const { consoleLogger } = require('@instana/serverless');
 const DataSource = require('../DataSource');
 
 /**
@@ -23,10 +22,9 @@ class CoreDataSource extends DataSource {
     super(refreshDelay);
 
     core.metrics.init(config);
-    core.metrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
+    sharedMetrics.init(config);
 
-    // This will be removed by the new logger refactoring PR.
-    core.metrics.setLogger(consoleLogger);
+    core.metrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
   }
 
   activate() {
