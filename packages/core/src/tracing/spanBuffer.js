@@ -183,11 +183,7 @@ exports.addSpan = function (span) {
   }
 
   // Apply necessary transformations to the span (e.g., renaming properties, modifying data).
-  const processedSpan = applySpanTransformation(span);
-  if (!processedSpan) {
-    return;
-  }
-  span = processedSpan;
+  span = applySpanTransformation(span);
 
   if (span.t == null) {
     logger.warn(`Span of type ${span.n} has no trace ID. Not transmitting this span`);
