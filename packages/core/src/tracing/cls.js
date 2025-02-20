@@ -417,12 +417,6 @@ function setIgnoredSpan({ spanName, kind, traceId, parentId, data = {} }) {
 
   const span = new InstanaIgnoredSpan(spanName, data);
   span.k = kind;
-
-  if (!traceId) {
-    logger.warn(`Cannot start an ignored span without a trace ID: ${spanName}, ${kind}`);
-    return;
-  }
-
   span.t = traceId;
   span.p = parentId;
 
