@@ -538,7 +538,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
 
         return agentControls.getSpans().then(spans => {
-          // console.log(spans);
           expect(spans.length).to.equal(spanLength);
 
           verifySpans({
