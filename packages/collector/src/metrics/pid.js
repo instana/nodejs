@@ -16,8 +16,7 @@ exports.init = function init(config, pidStore) {
 
   exports.currentPayload = pid;
 
-  pidStore.onPidChange((/** @type {number} */ _pid) => {
-    // @ts-ignore - Cannot redeclare exported variable
+  pidStore.onPidChange(_pid => {
     exports.currentPayload = _pid;
   });
 };
