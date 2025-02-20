@@ -332,7 +332,9 @@ function startSpan(spanAttributes = {}) {
   }
 
   const filteredSpan = applySpanFilter(span);
-  // If the span is filtered out, we return 'InstanaIgnoredSpan' class to indicate the span is ignored.
+
+  // If the span was filtered out, we do not process it further.
+  // Instead, we return an 'InstanaIgnoredSpan' instance to explicitly indicate that it was excluded from tracing.
   if (!filteredSpan) {
     return setIgnoredSpan({
       spanName: span.n,
