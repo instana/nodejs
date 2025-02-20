@@ -25,7 +25,6 @@ exports.init = function init() {
 };
 
 function instrumentBull(Bull) {
-  console.log('==================================');
   shimmer.wrap(Bull.Job, 'create', shimJobCreate);
   shimmer.wrap(Bull.Job, 'createBulk', shimJobCreateBulk);
   shimmer.wrap(Bull.prototype, 'processJob', shimProcessJob);

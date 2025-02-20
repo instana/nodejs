@@ -11,15 +11,17 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const logPrefix = `Bull (${process.pid}):\t`;
-const { default: Queue } = await import('bull');
+const logPrefix = `Bull Sender ESM (${process.pid}):\t`;
+
+import express from 'express';
+import Queue from 'bull';
+
+const app = express();
+import portFactory from '../../../test_util/app-port.js';
+const port = portFactory();
+
 const redisServer = process.env.REDIS_SERVER || 'redis://127.0.0.1:6379';
 const queueName = process.env.BULL_QUEUE_NAME || 'nodejs-team';
-const express = (await import('express')).default;
-const app = express();
-
-const { default: getAppPort } = await import('../../../test_util/app-port.js');
-const port = getAppPort();
 
 const bullJobName = process.env.BULL_JOB_NAME || 'steve';
 const sender = new Queue(queueName, redisServer);
@@ -41,7 +43,7 @@ function getJobData(testId, bulkIndex, withError) {
   };
 }
 
-const { getLogger } = await import('@instana/core/test/test_util/log.js');
+import { getLogger } from '@instana/core/test/test_util/log.js';
 const log = getLogger(logPrefix);
 
 /**

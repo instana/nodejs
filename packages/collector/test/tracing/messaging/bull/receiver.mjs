@@ -11,22 +11,16 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const sendToParent = require('@instana/core/test/test_util/sendToParent.js');
+const logPrefix = `Bull Receiver ESM (${process.pid}):\t`;
 
-const logPrefix = `Bull (${process.pid}):\t`;
-const { default: Queue } = await import('bull');
-import { ProcessTypes, buildReceiver } from './util.mjs';
+import express from 'express';
+import Queue from 'bull';
 
-// const util = await import('./util.js');
-// const { ProcessTypes, buildReceiver } = util.default;
-
-const express = (await import('express')).default;
 const app = express();
+import portFactory from '../../../test_util/app-port.js';
+const port = portFactory();
 
-const { default: getAppPort } = await import('../../../test_util/app-port.js');
-const port = getAppPort();
+import { ProcessTypes, buildReceiver } from './util.mjs';
 
 const redisServer = process.env.REDIS_SERVER || 'redis://127.0.0.1:6379';
 const queueName = process.env.BULL_QUEUE_NAME || 'nodejs-team';
@@ -37,7 +31,7 @@ const bullJobName = process.env.BULL_JOB_NAME || 'steve';
 const jobNameEnabled = process.env.BULL_JOB_NAME_ENABLED === 'true';
 const concurrencyEnabled = process.env.BULL_CONCURRENCY_ENABLED === 'true';
 
-const { getLogger } = await import('@instana/core/test/test_util/log.js');
+import { getLogger } from '@instana/core/test/test_util/log.js';
 const log = getLogger(logPrefix);
 
 /**
