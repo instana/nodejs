@@ -258,10 +258,10 @@ function initInstrumenations(_config) {
 exports.activate = function activate(extraConfig = {}) {
   if (tracingEnabled && !tracingActivated) {
     tracingActivated = true;
+    cls.activate(extraConfig);
     spanBuffer.activate(extraConfig);
     opentracing.activate();
     sdk.activate();
-    cls.activate(extraConfig);
 
     if (automaticTracingEnabled) {
       instrumentations.forEach(instrumentationKey => {
