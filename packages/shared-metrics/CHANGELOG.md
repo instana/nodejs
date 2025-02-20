@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.36.2-beta.0](https://github.com/instana/nodejs/compare/v2.36.1...v2.36.2-beta.0) (2025-02-20)
+
+
+### Bug Fixes
+
+* resolved logging issue for the  dependency distance calculator ([3d1816e](https://github.com/instana/nodejs/commit/3d1816e95de11ea41e0482af7abed6ed1c1adf53)), closes [#1019](https://github.com/instana/nodejs/issues/1019)
+* resolved TypeError "eventLoopStats.sense is not a function" ([#1575](https://github.com/instana/nodejs/issues/1575)) ([65b8ee7](https://github.com/instana/nodejs/commit/65b8ee72caf90f6c3103c17e1ee00b3c7d118cb3))
+
+
+
+
+
 ## [2.36.1](https://github.com/instana/nodejs/compare/v2.36.0...v2.36.1) (2023-12-04)
 
 **Note:** Version bump only for package @instana/shared-metrics
