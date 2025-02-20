@@ -49,8 +49,8 @@ exports.init = function init(config, isReInit) {
     // A custom non-bunyan/non-pino logger has been provided via config. We use it as is.
     // The __instana attribute identifies the Instana logger, distinguishing it from the client application logger,
     // and also prevents these logs from being traced
-
-    parentLogger = Object.assign({}, config.logger, { __instana: 1 });
+    // This setPropertyOf syntax preserves the properties and prototypes of config.logger
+    parentLogger = Object.setPrototypeOf({ ...config.logger, __instana: 1 }, Object.getPrototypeOf(config.logger));
   } else {
     // No custom logger has been provided via config, we create a new pino logger as the parent logger for all loggers
     // we create later on.
