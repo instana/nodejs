@@ -567,20 +567,6 @@ describe('tracing/spanBuffer', () => {
       });
     });
     describe('when applying span transformations', () => {
-      before(() => {
-        spanBuffer.init(
-          {
-            tracing: {
-              maxBufferedSpans: 1000
-            }
-          },
-          {
-            /* downstreamConnection */
-            sendSpans: function () {}
-          }
-        );
-      });
-
       beforeEach(() => spanBuffer.activate());
 
       afterEach(() => spanBuffer.deactivate());
