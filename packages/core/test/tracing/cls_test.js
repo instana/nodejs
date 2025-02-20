@@ -393,6 +393,9 @@ describe('tracing/cls', () => {
       expect(span.stack).to.deep.equal([]);
       expect(span.data).to.be.an('object');
       expect(Object.keys(span.data)).to.have.lengthOf(1);
+      expect(span.data.redis).to.be.exist;
+      expect(span.data.redis.operation).to.equal('get');
+      expect(span.data.redis.connection).to.equal('http://localhost');
     });
   });
   it('should return InstanaIgnoredSpan when the span is configured to be ignored', () => {
@@ -421,6 +424,9 @@ describe('tracing/cls', () => {
       expect(span.k).to.equal(constants.EXIT);
       expect(span.data).to.be.an('object');
       expect(Object.keys(span.data)).to.have.lengthOf(1);
+      expect(span.data.redis).to.be.exist;
+      expect(span.data.redis.operation).to.equal('get');
+      expect(span.data.redis.connection).to.equal('http://localhost');
     });
   });
 });
