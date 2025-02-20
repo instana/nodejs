@@ -245,7 +245,7 @@ function init(event, arnInfo, _config) {
   //         - in-code _config object
   //         - late env variables (less likely)
   //         - custom logger
-  //         - safe decision to renormalize
+  //         - we renormalize no matter what without conditions for safety reasons
   config = normalizeConfig(config, logger);
 
   const useLambdaExtension = shouldUseLambdaExtension();
