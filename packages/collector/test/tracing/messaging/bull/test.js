@@ -35,11 +35,11 @@ if (process.env.BULL_QUEUE_NAME) {
   queueName = `${process.env.BULL_QUEUE_NAME}${semver.major(process.versions.node)}`;
 }
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
 
 const retryTime = 1000;
 
-mochaSuiteFn('tracing/messaging/bull', function () {
+mochaSuiteFn('tracing/messaging/bull', async function () {
   this.timeout(config.getTestTimeout() * 3);
 
   globalAgent.setUpCleanUpHooks();
@@ -71,6 +71,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         await delay(500);
         const spans = await agentControls.getSpans();
 
+        spans.forEach(span => {
+          console.log('span: ', span);
+          console.log('span.data', span.data);
+        });
+
         expect(spans.length).to.be.eql(2);
 
         expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('bull'), span => expect(span.k).to.equal(2)]);
@@ -79,7 +84,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     });
   });
 
-  describe('tracing enabled, no suppression', function () {
+  describe('tracing enabled, no suppression', async function () {
     let senderControls;
 
     before(async () => {
@@ -112,7 +117,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     //       See: https://github.com/OptimalBits/bull/blob/489c6ab8466c1db122f92af3ddef12eacc54179e/lib/queue.js#L712
     //       Related issue: https://github.com/OptimalBits/bull/issues/924
     if (!process.env.RUN_ESM) {
-      describe('receiving via "Process" API', () => {
+      describe('receiving via "Process" API', async () => {
         let receiverControls;
         const receiveMethod = 'Process';
 
