@@ -11,6 +11,8 @@ const tracingUtil = require('./tracingUtil');
 const { ENTRY, EXIT, INTERMEDIATE, isExitSpan } = require('./constants');
 const hooked = require('./clsHooked');
 const tracingMetrics = require('./metrics');
+const { applyFilter } = require('../util/spanFilter');
+
 /** @type {import('../core').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('tracing/cls', newLogger => {
@@ -30,6 +32,10 @@ let serviceName;
 let processIdentityProvider = null;
 /** @type {Boolean} */
 let allowRootExitSpan;
+/**
+ * @type {import('../tracing').IgnoreEndpoints}
+ */
+let ignoreEndpoints;
 
 /*
  * Access the Instana namespace in continuation local storage.
@@ -51,13 +57,23 @@ function init(config, _processIdentityProvider) {
   }
   processIdentityProvider = _processIdentityProvider;
   allowRootExitSpan = config?.tracing?.allowRootExitSpan;
+  ignoreEndpoints = config?.tracing?.ignoreEndpoints;
+}
+/**
+ * @param {import('../util/normalizeConfig').AgentConfig} extraConfig
+ */
+function activate(extraConfig) {
+  if (extraConfig?.tracing?.ignoreEndpoints) {
+    ignoreEndpoints = extraConfig.tracing.ignoreEndpoints;
+  }
 }
 
 class InstanaSpan {
   /**
    * @param {string} name
+   * @param {object} [data]
    */
-  constructor(name) {
+  constructor(name, data) {
     // properties that part of our span model
     this.t = undefined;
     this.s = undefined;
@@ -98,7 +114,7 @@ class InstanaSpan {
     /** @type {Array.<*>} */
     this.stack = [];
     /** @type {Object.<string, *>} */
-    this.data = {};
+    this.data = data || {};
 
     // Properties for the span that are only used internally but will not be transmitted to the agent/backend,
     // therefore defined as non-enumerabled. NOTE: If you add a new property, make sure that it is also defined as
@@ -256,18 +272,20 @@ class InstanaIgnoredSpan extends InstanaSpan {
  * @param {string} [spanAttributes.traceId]
  * @param {string} [spanAttributes.parentSpanId]
  * @param {import('./w3c_trace_context/W3cTraceContext')} [spanAttributes.w3cTraceContext]
+ * @param {Object} [spanAttributes.spanData]
  * @returns {InstanaSpan}
  */
 
 function startSpan(spanAttributes = {}) {
-  let { spanName, kind, traceId, parentSpanId, w3cTraceContext } = spanAttributes;
+  let { spanName, kind, traceId, parentSpanId, w3cTraceContext, spanData } = spanAttributes;
 
   tracingMetrics.incrementOpened();
   if (!kind || (kind !== ENTRY && kind !== EXIT && kind !== INTERMEDIATE)) {
     logger.warn(`Invalid span (${spanName}) without kind/with invalid kind: ${kind}, assuming EXIT.`);
     kind = EXIT;
   }
-  const span = new InstanaSpan(spanName);
+
+  const span = new InstanaSpan(spanName, spanData);
   span.k = kind;
 
   const parentSpan = getCurrentSpan();
@@ -313,6 +331,20 @@ function startSpan(spanAttributes = {}) {
     span.addCleanup(ns.set(w3cTraceContextKey, w3cTraceContext));
   }
 
+  const filteredSpan = applySpanFilter(span);
+
+  // If the span was filtered out, we do not process it further.
+  // Instead, we return an 'InstanaIgnoredSpan' instance to explicitly indicate that it was excluded from tracing.
+  if (!filteredSpan) {
+    return setIgnoredSpan({
+      spanName: span.n,
+      kind: span.k,
+      traceId: span.t,
+      parentId: span.p,
+      data: span.data
+    });
+  }
+
   if (span.k === ENTRY) {
     // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at
     // any given moment). This is used by the instrumentations of web frameworks like Express.js to add path templates
@@ -353,6 +385,49 @@ function putPseudoSpan(spanName, kind, traceId, spanId) {
 
   span.t = traceId;
   span.s = spanId;
+
+  if (span.k === ENTRY) {
+    // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at
+    // any given moment). This is used by the instrumentations of web frameworks like Express.js to add path templates
+    // and error messages to the entry span.
+    span.addCleanup(ns.set(currentEntrySpanKey, span));
+  }
+
+  // Set the span object as the currently active span in the active CLS context and also add a cleanup hook for when
+  // this span is transmitted.
+  span.addCleanup(ns.set(currentSpanKey, span));
+  return span;
+}
+
+/**
+ * Adds an ignored span to the CLS context, serving as a holder for a trace ID and span ID.
+ * Customers can access the current span via `instana.currentSpan()`, and we avoid returning a "NoopSpan".
+ * We need this ignored span instance to ensure the trace ID remains accessible for future cases such as propagating
+ * the trace ID although suppression is on to reactivate a trace.
+ * These spans will not be sent to the backend.
+ * @param {Object} options - The options for the span.
+ * @param {string} options.spanName
+ * @param {number} options.kind
+ * @param {string} options.traceId
+ * @param {string} options.parentId
+ * @param {Object} options.data
+ */
+function setIgnoredSpan({ spanName, kind, traceId, parentId, data = {} }) {
+  if (!kind || (kind !== ENTRY && kind !== EXIT && kind !== INTERMEDIATE)) {
+    logger.warn(`Invalid ignored span (${spanName}) without kind/with invalid kind: ${kind}, assuming EXIT.`);
+    kind = EXIT;
+  }
+
+  const span = new InstanaIgnoredSpan(spanName, data);
+  span.k = kind;
+  span.t = traceId;
+  span.p = parentId;
+
+  // Setting the 'parentId' of the span to 'span.s' to ensure trace continuity.
+  // Although this span doesn't physically exist, we are ignoring it, but retaining its parentId.
+  // This parentId is propagated downstream.
+  // The spanId does not need to be retained.
+  span.s = parentId;
 
   if (span.k === ENTRY) {
     // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at
@@ -622,6 +697,15 @@ function skipExitTracing(options) {
 
   return skip;
 }
+/**
+ * @param {InstanaSpan | import("../core").InstanaBaseSpan} span
+ */
+function applySpanFilter(span) {
+  if (ignoreEndpoints) {
+    return applyFilter({ span, ignoreEndpoints });
+  }
+  return span;
+}
 
 module.exports = {
   skipExitTracing,
@@ -648,5 +732,6 @@ module.exports = {
   enterAsyncContext,
   leaveAsyncContext,
   runInAsyncContext,
-  runPromiseInAsyncContext
+  runPromiseInAsyncContext,
+  activate
 };

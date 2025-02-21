@@ -566,21 +566,7 @@ describe('tracing/spanBuffer', () => {
         verifyNoBatching(span1, span2);
       });
     });
-    describe('when ignoreEndpoints is configured', () => {
-      before(() => {
-        spanBuffer.init(
-          {
-            tracing: {
-              ignoreEndpoints: { redis: ['get'] }
-            }
-          },
-          {
-            /* downstreamConnection */
-            sendSpans: function () {}
-          }
-        );
-      });
-
+    describe('when applying span transformations', () => {
       beforeEach(() => spanBuffer.activate());
 
       afterEach(() => spanBuffer.deactivate());
@@ -597,13 +583,7 @@ describe('tracing/spanBuffer', () => {
         }
       };
 
-      it('should ignore the redis span when the operation is listed in the ignoreEndpoints config', () => {
-        spanBuffer.addSpan(span);
-        const spans = spanBuffer.getAndResetSpans();
-        expect(spans).to.have.lengthOf(0);
-      });
-
-      it('should transform the redis span if the operation is not specified in the ignoreEndpoints config', () => {
+      it('should correctly transform the Redis span by renaming the operation property', () => {
         span.data.redis.operation = 'set';
         spanBuffer.addSpan(span);
         const spans = spanBuffer.getAndResetSpans();
@@ -611,7 +591,7 @@ describe('tracing/spanBuffer', () => {
         expect(span.data.redis.command).to.equal('set');
         expect(span.data.redis).to.not.have.property('operation');
       });
-      it('should return the span unmodified for unsupported ignore endpoints', () => {
+      it('should return the span unchanged for non-mapped types', () => {
         span.n = 'http';
         spanBuffer.addSpan(span);
         const spans = spanBuffer.getAndResetSpans();

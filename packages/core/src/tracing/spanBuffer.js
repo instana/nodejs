@@ -6,7 +6,6 @@
 'use strict';
 
 const tracingMetrics = require('./metrics');
-const { applyFilter } = require('../util/spanFilter');
 const { transform } = require('./backend_mappers');
 
 /** @type {import('../core').GenericLogger} */
@@ -89,10 +88,6 @@ const batchBucketWidth = 18;
 
 /** @type {BatchingBucketMap} */
 const batchingBuckets = new Map();
-/**
- * @type {import('../tracing').IgnoreEndpoints}
- */
-let ignoreEndpoints;
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} config
@@ -104,7 +99,6 @@ exports.init = function init(config, _downstreamConnection) {
   forceTransmissionStartingAt = config.tracing.forceTransmissionStartingAt;
   transmissionDelay = config.tracing.transmissionDelay;
   batchingEnabled = config.tracing.spanBatchingEnabled;
-  ignoreEndpoints = config.tracing.ignoreEndpoints;
   initialDelayBeforeSendingSpans = Math.max(transmissionDelay, minDelayBeforeSendingSpans);
   isFaaS = false;
   transmitImmediate = false;
@@ -137,9 +131,6 @@ exports.activate = function activate(extraConfig) {
   if (extraConfig?.tracing) {
     if (extraConfig.tracing.spanBatchingEnabled) {
       batchingEnabled = true;
-    }
-    if (extraConfig.tracing.ignoreEndpoints) {
-      ignoreEndpoints = extraConfig.tracing.ignoreEndpoints;
     }
   }
 
@@ -191,12 +182,8 @@ exports.addSpan = function (span) {
     return;
   }
 
-  // Process the span, apply any transformations, and implement filtering if necessary.
-  const processedSpan = processSpan(span);
-  if (!processedSpan) {
-    return;
-  }
-  span = processedSpan;
+  // Transform internal span data format into external (backend) readable format.
+  span = applySpanTransformation(span);
 
   if (span.t == null) {
     logger.warn(`Span of type ${span.n} has no trace ID. Not transmitting this span`);
@@ -506,13 +493,6 @@ function removeSpansIfNecessary() {
  * @param {import('../core').InstanaBaseSpan} span
  * @returns {import('../core').InstanaBaseSpan} span
  */
-function processSpan(span) {
-  if (ignoreEndpoints) {
-    span = applyFilter({ span, ignoreEndpoints });
-
-    if (!span) {
-      return null;
-    }
-  }
+function applySpanTransformation(span) {
   return transform(span);
 }

@@ -76,23 +76,25 @@ function instrumentSendCommand(original) {
     }
 
     const argsForOriginal = arguments;
+    const connection = `${client.options.host}:${client.options.port}`;
+
+    // TODO: https://jsw.ibm.com/browse/INSTA-14540
+    // if (client.isCluster) {
+    //  connection = client.startupNodes.map(node => `${node.host}:${node.port}`).join(',');
+
     return cls.ns.runAndReturn(() => {
+      const spanData = {
+        redis: {
+          connection,
+          operation: command.name.toLowerCase()
+        }
+      };
       const span = cls.startSpan({
         spanName: exports.spanName,
-        kind: constants.EXIT
+        kind: constants.EXIT,
+        spanData
       });
       span.stack = tracingUtil.getStackTrace(wrappedInternalSendCommand);
-
-      const connection = `${client.options.host}:${client.options.port}`;
-
-      // TODO: https://jsw.ibm.com/browse/INSTA-14540
-      // if (client.isCluster) {
-      //  connection = client.startupNodes.map(node => `${node.host}:${node.port}`).join(',');
-
-      span.data.redis = {
-        connection,
-        operation: command.name.toLowerCase()
-      };
 
       callback = cls.ns.bind(onResult);
       command.promise.then(
@@ -156,15 +158,18 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
     // create a new cls context parent to track the multi/pipeline child calls
     const clsContextForMultiOrPipeline = cls.ns.createContext();
     cls.ns.enter(clsContextForMultiOrPipeline);
+    const spanData = {
+      redis: {
+        connection,
+        operation: commandName
+      }
+    };
     const span = cls.startSpan({
       spanName: exports.spanName,
-      kind: constants.EXIT
+      kind: constants.EXIT,
+      spanData
     });
     span.stack = tracingUtil.getStackTrace(wrappedInternalMultiOrPipelineCommand);
-    span.data.redis = {
-      connection,
-      operation: commandName
-    };
 
     const multiOrPipeline = original.apply(this, arguments);
     shimmer.wrap(
