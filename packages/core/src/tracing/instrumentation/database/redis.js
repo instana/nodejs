@@ -234,13 +234,14 @@ function instrumentCommand(original, command, address, cbStyle) {
     if (cls.skipExitTracing({ isActive })) {
       return original.apply(origCtx, origArgs);
     }
-    const spanData = {
-      redis: {
-        connection: address || origCtx.address,
-        operation: command
-      }
-    };
+
     return cls.ns.runAndReturn(() => {
+      const spanData = {
+        redis: {
+          connection: address || origCtx.address,
+          operation: command
+        }
+      };
       const span = cls.startSpan({
         spanName: exports.spanName,
         kind: constants.EXIT,

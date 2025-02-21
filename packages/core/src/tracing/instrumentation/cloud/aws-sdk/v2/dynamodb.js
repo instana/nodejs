@@ -35,13 +35,15 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
     if (cls.skipExitTracing({ isActive })) {
       return originalMakeRequest.apply(ctx, originalArgs);
     }
-    // Data attributes: operation, table
-    const spanData = {
-      [this.spanName]: this.buildSpanData(ctx, originalArgs[0], originalArgs[1])
-    };
 
     return cls.ns.runAndReturn(() => {
       const self = this;
+
+      // Data attributes: operation, table
+      const spanData = {
+        [this.spanName]: this.buildSpanData(ctx, originalArgs[0], originalArgs[1])
+      };
+
       const span = cls.startSpan({
         spanName: this.spanName,
         kind: EXIT,

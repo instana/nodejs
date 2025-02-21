@@ -82,13 +82,13 @@ function instrumentSendCommand(original) {
     // if (client.isCluster) {
     //  connection = client.startupNodes.map(node => `${node.host}:${node.port}`).join(',');
 
-    const spanData = {
-      redis: {
-        connection,
-        operation: command.name.toLowerCase()
-      }
-    };
     return cls.ns.runAndReturn(() => {
+      const spanData = {
+        redis: {
+          connection,
+          operation: command.name.toLowerCase()
+        }
+      };
       const span = cls.startSpan({
         spanName: exports.spanName,
         kind: constants.EXIT,

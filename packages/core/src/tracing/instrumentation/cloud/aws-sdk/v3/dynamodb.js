@@ -23,11 +23,12 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
     }
 
     const command = smithySendArgs[0];
-    const spanData = {
-      [this.spanName]: this.buildSpanData(command.constructor.name, command.input)
-    };
     return cls.ns.runAndReturn(() => {
       const self = this;
+
+      const spanData = {
+        [this.spanName]: this.buildSpanData(command.constructor.name, command.input)
+      };
       const span = cls.startSpan({
         spanName: this.spanName,
         kind: EXIT,
