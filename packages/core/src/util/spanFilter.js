@@ -8,33 +8,48 @@
 const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb'];
 
 /**
+ * Determines whether a span should be ignored based on configured filters.
+ * Filtering is done based on both `operation` and `endpoints` fields.
+ *
  * @param {import('../core').InstanaBaseSpan} span
- * @param {import('../tracing').IgnoreEndpoints} endpoints
+ * @param {import('../tracing').IgnoreEndpoints} ignoreConfig
  * @returns {boolean}
  */
-function shouldIgnore(span, endpoints) {
+function shouldIgnore(span, ignoreConfig) {
   // Skip if the span type is not in the ignored list
   if (!IGNORABLE_SPAN_TYPES.includes(span.n)) {
     return false;
   }
-  const endpoint = endpoints[span.n];
-  if (!endpoint) return false;
 
-  // The endpoint already been converted to lowercase during parsing, so here we are normalizing
-  // the operation for case-insensitive comparison
-  const operation = span.data?.[span.n]?.operation?.toLowerCase();
+  const config = ignoreConfig[span.n];
+  if (!config) return false;
+
+  const operation = span.data?.[span.n]?.operation;
   if (!operation) return false;
 
-  // We support both array and string formats for endpoints, but the string format is not shared publicly.
-  if (Array.isArray(endpoint)) {
-    return endpoint.some(op => op.toLowerCase() === operation);
-  }
+  const spanEndpoints = Array.isArray(span.data?.[span.n]?.endpoints)
+    ? span.data[span.n].endpoints
+    : [span.data?.[span.n]?.endpoints].filter(Boolean);
 
-  if (typeof endpoint === 'string') {
-    return endpoint.toLowerCase() === operation;
-  }
+  // @ts-ignore
+  return config?.some(rule => {
+    if (typeof rule === 'string') {
+      return rule.toLowerCase() === operation.toLowerCase();
+    }
+    // Object based filtering: Requires matching both method and endpoints.
+    if (typeof rule === 'object' && rule.endpoints) {
+      // If `method` is '*', we only check for endpoint matches.
+      const methodMatches = rule.method === '*' || rule.method.toLowerCase() === operation.toLowerCase();
 
-  return false;
+      const ruleEndpoints = Array.isArray(rule.endpoints) ? rule.endpoints : [rule.endpoints];
+
+      const endpointMatches = spanEndpoints.some((/** @type {any} */ endpoint) => ruleEndpoints.includes(endpoint));
+
+      return methodMatches && endpointMatches;
+    }
+
+    return false;
+  });
 }
 
 /**
