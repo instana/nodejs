@@ -35,7 +35,7 @@ if (process.env.BULL_QUEUE_NAME) {
   queueName = `${process.env.BULL_QUEUE_NAME}${semver.major(process.versions.node)}`;
 }
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 const retryTime = 1000;
 
@@ -70,11 +70,6 @@ mochaSuiteFn('tracing/messaging/bull', async function () {
       await retry(async () => {
         await delay(500);
         const spans = await agentControls.getSpans();
-
-        spans.forEach(span => {
-          console.log('span: ', span);
-          console.log('span.data', span.data);
-        });
 
         expect(spans.length).to.be.eql(2);
 
