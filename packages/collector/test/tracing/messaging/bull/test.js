@@ -62,7 +62,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await controls.start(null, null, true);
     });
 
-    afterEach(async () => {
+    beforeEach(async () => {
       await agentControls.clearReceivedTraceData();
     });
 
@@ -317,7 +317,8 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         });
       });
     }
-    describe('receiving via "Promise" API', () => {
+
+    describe('receiving via "Promise" API', async () => {
       let receiverControls;
       const receiveMethod = 'Promise';
 
