@@ -202,13 +202,17 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
   spanHandle.init(config);
   shimmer.init(config);
 
+  // NOTE: We have to init cls & SDK if tracing disabled, because
+  //       you can use the SDK to create spans and SDK needs CLS.
+  //       The initialization only sets the logger and gets ready for traffic.
+  cls.init(config, processIdentityProvider);
+  sdk.init(config, cls);
+
   if (tracingEnabled) {
     tracingUtil.init(config);
     tracingHeaders.init(config);
     spanBuffer.init(config, downstreamConnection);
     opentracing.init(config, automaticTracingEnabled, processIdentityProvider);
-    cls.init(config, processIdentityProvider);
-    sdk.init(config, cls);
 
     if (automaticTracingEnabled) {
       initInstrumenations(config);
