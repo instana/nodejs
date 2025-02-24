@@ -13,7 +13,8 @@ const {
 const { ExportResultCode } = require('@opentelemetry/core');
 const { diag } = require('@opentelemetry/api');
 
-const logger = log.init();
+// NOTE: Use the Opentelemetry logger.
+const logger = log.init({ logger: diag });
 const instanaEndpointUrlEnvVar = 'INSTANA_ENDPOINT_URL';
 const instanaAgentKeyEnvVar = 'INSTANA_AGENT_KEY';
 
@@ -95,7 +96,7 @@ class InstanaExporter {
     instanaEnvironment.validate();
 
     if (instanaEnvironment.isValid()) {
-      instanaBackendConnector.init({ logger }, null, diag, null, true);
+      instanaBackendConnector.init({ logger }, null, null, true);
       this._isShutdown = false;
     }
   }

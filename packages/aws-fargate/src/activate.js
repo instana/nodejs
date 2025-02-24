@@ -54,7 +54,7 @@ function init() {
       }
 
       identityProvider.init(taskArn, containerId);
-      backendConnector.init(config, identityProvider, logger, false, true, 950);
+      backendConnector.init(config, identityProvider, false, true, 950);
       instanaCore.init(config, backendConnector, identityProvider);
       metrics.activate(backendConnector);
       tracing.activate();

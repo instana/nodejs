@@ -41,7 +41,6 @@ let hostHeader;
 exports.init = function init(
   config,
   identityProvider,
-  _logger,
   _stopSendingOnFailure,
   _propagateErrorsUpstream,
   _defaultTimeout,
@@ -90,10 +89,6 @@ exports.init = function init(
     }
   } else {
     hostHeader = 'nodejs-serverless';
-  }
-
-  if (_logger) {
-    logger = _logger;
   }
 
   requestHasFailed = false;
