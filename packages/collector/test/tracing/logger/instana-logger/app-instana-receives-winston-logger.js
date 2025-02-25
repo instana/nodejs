@@ -13,8 +13,6 @@ process.on('SIGTERM', () => {
 });
 
 const agentPort = process.env.AGENT_PORT;
-// TODO: move the import from here to below the collector initialization
-const winston = require('winston');
 const instana = require('../../../..')({
   agentPort,
   level: 'warn',
@@ -24,6 +22,7 @@ const instana = require('../../../..')({
   }
 });
 
+const winston = require('winston');
 instana.setLogger(
   winston.createLogger({
     level: 'info',

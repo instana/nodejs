@@ -42,9 +42,12 @@ exports.init = function init(config, isReInit) {
     //      We cannot fix this in our side.
     //      https://github.com/winstonjs/winston/issues/1854#issuecomment-710195110
     parentLogger = config.logger.child({
-      module: 'instana-nodejs-logger-parent',
-      __instana: 1
+      module: 'instana-nodejs-logger-parent'
     });
+
+    // CASE: Attach custom instana meta attribute to filter out internal instana logs.
+    //       This will prevent these logs from being traced.
+    parentLogger.__instana = true;
   } else if (config.logger && hasLoggingFunctions(config.logger)) {
     // A custom non-bunyan/non-pino logger has been provided via config. We use it as is.
     // The __instana attribute identifies the Instana logger, distinguishing it from the client application logger,
@@ -137,6 +140,11 @@ exports.getLogger = function getLogger(loggerName, reInitFn, level) {
       module: loggerName,
       threadId
     });
+
+    // CASE: Attach custom instana meta attribute to filter out internal instana logs.
+    //       This will prevent these logs from being traced.
+    // TODO: Will be removed in the refactoring PR for getLogger
+    _logger.__instana = true;
   } else {
     // Unknown logger type (neither bunyan nor pino), we simply return the user provided custom logger as-is.
     _logger = parentLogger;
