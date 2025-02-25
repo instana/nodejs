@@ -184,7 +184,7 @@ class DependencyDistanceCalculator {
       // Could not find the package.json for this dependency so we cannot analyze it further, which means we are done
       // with it.
       localCountDownLatchForThisNode.countDown();
-      logger.trace(`No main module path for dependency ${dependency}.`);
+      logger.trace(`Ignoring ${dependency} for dependency distance calculation, could not find main module path.`);
       return;
     }
 
