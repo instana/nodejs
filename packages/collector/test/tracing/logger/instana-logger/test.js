@@ -58,7 +58,7 @@ mochaSuiteFn('tracing/instana-logger', function () {
 
       // TODO: This test is failing. We can check for `this.__instana` in log4js instrumentation
       //       in https://github.com/instana/nodejs/pull/1562
-      it.skip('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
+      it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
 
     describe('Instana receives a bunyan logger', () => {
