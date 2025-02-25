@@ -710,6 +710,8 @@ function normalizeIgnoreEndpoints(config) {
       const normalizedService = service.toLowerCase();
 
       if (Array.isArray(endpoints)) {
+        // temprory fix, will be removed. 
+        // @ts-ignore
         config.tracing.ignoreEndpoints[normalizedService] = endpoints.map(endpoint =>
           typeof endpoint === 'string' ? endpoint.toLowerCase() : endpoint
         );
