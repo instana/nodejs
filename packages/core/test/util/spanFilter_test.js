@@ -19,18 +19,7 @@ const span = {
     }
   }
 };
-const span1 = {
-  t: '1234567803',
-  s: '1234567892',
-  p: '1234567891',
-  n: 'kafka',
-  k: 2,
-  data: {
-    kafka: {
-      operation: ''
-    }
-  }
-};
+
 let ignoreEndpoints = {
   redis: ['GET', 'TYPE'],
   dynamodb: ['QUERY']
@@ -70,7 +59,8 @@ describe('util.spanFilter', () => {
     expect(applyFilter({ span, ignoreEndpoints })).equal(span);
   });
   describe('applyFilter Advanced Filtering', () => {
-    it.skip('should return null for a Redis span matching the string rule', () => {
+    it('should return null for `Redis` when advanced configuration is applied with other services', () => {
+      span.n = 'redis';
       ignoreEndpoints = {
         redis: ['type', 'get'],
         kafka: [
@@ -87,45 +77,62 @@ describe('util.spanFilter', () => {
       };
       expect(applyFilter({ span, ignoreEndpoints })).to.equal(null);
     });
-    it('should return null for a Kafka span with matching operation and endpoint', () => {
+
+    it('should return null for Kafka span with matching operation and endpoint', () => {
       ignoreEndpoints = {
         kafka: [{ method: ['publish', 'consume'], endpoints: ['topic3'] }]
       };
-      span1.data = {
+      span.n = 'kafka';
+      span.data = {
         kafka: {
           operation: 'publish',
           endpoints: ['topic3']
         }
       };
-      expect(applyFilter({ span: span1, ignoreEndpoints })).to.equal(null);
+      expect(applyFilter({ span: span, ignoreEndpoints })).to.equal(null);
     });
 
     it('should return null for a Kafka span using wildcard method filtering', () => {
       ignoreEndpoints = {
-        redis: ['type', 'get'],
         kafka: [{ method: ['*'], endpoints: ['topic1', 'topic2'] }]
       };
-      span1.data = {
+      span.n = 'kafka';
+      span.data = {
         kafka: {
           operation: 'consume',
           endpoints: 'topic1'
         }
       };
-      expect(applyFilter({ span: span1, ignoreEndpoints })).to.equal(null);
+      expect(applyFilter({ span: span, ignoreEndpoints })).to.equal(null);
     });
+
+     it.skip('should return null for a Kafka span using wildcard endpoint filtering', () => {
+       ignoreEndpoints = {
+         kafka: [{ method: ['consume'], endpoints: ['*'] }]
+       };
+       span.n = 'kafka';
+       span.data = {
+         kafka: {
+           operation: 'consume',
+           endpoints: 'topic1'
+         }
+       };
+       expect(applyFilter({ span: span, ignoreEndpoints })).to.equal(null);
+     });
 
     it('should return null for a Kafka span matching a string rule in a mixed configuration', () => {
       ignoreEndpoints = {
-        redis: ['type', 'get'],
-        kafka: ['consume', 'publish', { method: ['publish'], endpoints: ['topic3'] }]
+        kafka: 'consume'
       };
-      span1.data = {
+      span.n = 'kafka';
+
+      span.data = {
         kafka: {
           operation: 'consume',
           endpoints: 'topic3'
         }
       };
-      expect(applyFilter({ span: span1, ignoreEndpoints })).to.equal(null);
+      expect(applyFilter({ span: span, ignoreEndpoints })).to.equal(null);
     });
   });
 });

@@ -118,9 +118,14 @@ if (customInstrumentations.length > 0) {
  */
 
 /**
- * @typedef {Object.<string, string[]|string>}  IgnoreEndpoints
+ * @typedef {Object.<string, string[]|string|IgnoreEndpointConfig[]>}  IgnoreEndpoints
  */
 
+/**
+ * @typedef {Object} IgnoreEndpointConfig
+ * @property {string | string[]} method - A method or list of methods to ignore.
+ * @property {string[]=} [endpoints] - A list of endpoints to ignore (optional).
+ */
 /** @type {Array.<InstanaInstrumentedModule>} */
 let additionalInstrumentationModules = [];
 /** @type {Object.<string, InstanaInstrumentedModule>} */

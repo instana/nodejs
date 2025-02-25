@@ -16,31 +16,29 @@ const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka'];
  * @returns {boolean}
  */
 function shouldIgnore(span, ignoreEndpoints) {
-  const spanType = span.n;
-  if (!spanType) return false;
-
   // Skip if the span type is not in the ignored list
-  if (!IGNORABLE_SPAN_TYPES.includes(spanType)) return false;
-
-  const ignoreConfigs = ignoreEndpoints[spanType];
+  if (!IGNORABLE_SPAN_TYPES.includes(span.n)) return false;
+  const ignoreConfigs = ignoreEndpoints[span.n];
   if (!ignoreConfigs) return false;
 
-  const spanData = span.data[spanType];
-  const operation = spanData.operation;
+  const operation = span.data[span.n]?.operation;
   if (!operation) return false;
 
-  // Normalize endpoints into an array.
-  const endpointsRaw = spanData.endpoints;
-  const spanEndpoints = Array.isArray(endpointsRaw) ? endpointsRaw : [endpointsRaw].filter(Boolean);
+  const spanEndpoints = Array.isArray(span.data[span.n]?.endpoints)
+    ? span.data[span.n].endpoints
+    : [span.data[span.n]?.endpoints].filter(Boolean);
 
-  // @ts-ignore
+  // We support string, array, object formats for endpoints, but the string format is not shared publicly.
+  // If the ignoreConfigs is a simple string, compare it with the operation (case-insensitively).
+  if (typeof ignoreConfigs === 'string') {
+    return ignoreConfigs?.toLowerCase() === operation?.toLowerCase();
+  }
+
   return ignoreConfigs.some(config => {
-    // If the config is a simple string, compare it with the operation (case-insensitively).
     if (typeof config === 'string') {
-      return config.toLowerCase() === operation.toLowerCase();
+      return config?.toLowerCase() === operation?.toLowerCase();
     }
 
-    // For object-based configurations, both method and endpoint(s) must match.
     if (typeof config === 'object' && config) {
       let methodMatches = false;
       if (config.method) {
@@ -64,7 +62,7 @@ function shouldIgnore(span, ignoreEndpoints) {
       let ruleEndpoints = config.endpoints;
       ruleEndpoints = Array.isArray(ruleEndpoints) ? ruleEndpoints : [ruleEndpoints];
 
-      return spanEndpoints.some(ep => ruleEndpoints.includes(ep));
+      return spanEndpoints.some((/** @type {string} */ ep) => ruleEndpoints.includes(ep));
     }
 
     return false;
@@ -77,10 +75,8 @@ function shouldIgnore(span, ignoreEndpoints) {
  */
 function applyFilter({ span, ignoreEndpoints }) {
   if (ignoreEndpoints && shouldIgnore(span, ignoreEndpoints)) {
-    // console.log('----------------------------------ignored------------------------------', true);
     return null;
   }
-  // console.log('------------------------------not----ignored------------------------------', false);
   return span;
 }
 
