@@ -24,7 +24,7 @@ function shimLog(options) {
   return originalLog =>
     function () {
       // The __instana attribute identifies the Instana logger, so prevent these logs from being traced.
-      if (this.__instana) {
+      if (this?.__instana) {
         return originalLog.apply(this, arguments);
       }
 
