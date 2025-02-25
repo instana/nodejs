@@ -35,10 +35,7 @@ const dummyLogger = {
 
 instana.setLogger(dummyLogger);
 
-let instanaLogger;
-instanaLogger = require('../../../../src/logger').getLogger('test-module-name', newLogger => {
-  instanaLogger = newLogger;
-});
+const instanaLogger = require('../../../../src/logger').getLogger();
 
 const bodyParser = require('body-parser');
 const express = require('express');

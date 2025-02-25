@@ -32,7 +32,6 @@ exports.init = _config => {
  * @property {SnapshotOrMetricsPayload} currentPayload
  * @property {(config?: InstanaConfig) => void} [activate]
  * @property {() => void} [deactivate]
- * @property {(logger: import('../core').GenericLogger) => void} [setLogger]
  */
 
 /**
@@ -47,6 +46,7 @@ exports.findAndRequire = function findAndRequire(baseDir) {
       .filter(
         moduleName =>
           moduleName.indexOf('.js') === moduleName.length - 3 &&
+          // TODO: move the extra metrics into a separate folder
           moduleName.indexOf('index.js') < 0 &&
           moduleName.indexOf('transmissionCycle.js') < 0
       )
@@ -92,15 +92,4 @@ exports.gatherData = function gatherData() {
   });
 
   return payload;
-};
-
-/**
- * @param {import('../core').GenericLogger} logger
- */
-exports.setLogger = function setLogger(logger) {
-  metricsModules.forEach(metricModule => {
-    if (typeof metricModule.setLogger === 'function') {
-      metricModule.setLogger(logger);
-    }
-  });
 };

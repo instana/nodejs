@@ -7,8 +7,7 @@
 
 const coreHttpModule = require('http');
 const coreHttpsModule = require('https');
-const URL = require('url').URL;
-
+const url = require('url');
 const tracingUtil = require('../../tracingUtil');
 const { dropLeadingQuestionMark, filterParams, sanitizeUrl, splitAndFilter } = require('../../../util/url');
 const {
@@ -18,22 +17,22 @@ const {
 } = require('./captureHttpHeadersUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
-const url = require('url');
 const hook = require('../../../util/hook');
-let logger;
-logger = require('../../../logger').getLogger('tracing/httpClient', newLogger => {
-  logger = newLogger;
-});
 
+const URL = url.URL;
 let extraHttpHeadersToCapture;
+let logger;
 let isActive = false;
 
 exports.init = function init(config) {
+  logger = config.logger;
+
   instrument(coreHttpModule, false);
   instrument(coreHttpsModule, true);
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
   hook.onModuleLoad('request', logDeprecatedWarning);
 };
+
 function logDeprecatedWarning() {
   logger.warn(
     // eslint-disable-next-line max-len

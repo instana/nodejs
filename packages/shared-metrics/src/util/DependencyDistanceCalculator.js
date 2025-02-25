@@ -6,18 +6,19 @@
 'use strict';
 
 const assert = require('assert');
-const { logger: Logger, uninstrumentedFs: fs } = require('@instana/core');
+const { uninstrumentedFs: fs } = require('@instana/core');
 const path = require('path');
 
 const CountDownLatch = require('./CountDownLatch');
 
-let logger = Logger.getLogger('metrics');
+/** @type {import('@instana/core/src/core').GenericLogger} */
+let logger;
 
 /**
- * @param {import('@instana/core/src/core').GenericLogger} _logger
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
  */
-const setLogger = function (_logger) {
-  logger = _logger;
+const init = config => {
+  logger = config.logger;
 };
 
 class DependencyDistanceCalculator {
@@ -269,8 +270,8 @@ function searchInParentDir(dir, onParentDir, callback) {
 }
 
 module.exports = {
+  init,
   DependencyDistanceCalculator,
   MAX_DEPTH: 15,
-  __moduleRefExportedForTest: module,
-  setLogger
+  __moduleRefExportedForTest: module
 };

@@ -9,8 +9,6 @@
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
 
-const constants = require('../tracing/constants');
-
 /**
  * @typedef {Object} InstanaTracingOption
  * @property {boolean} [enabled]
@@ -62,6 +60,7 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
 /**
  * @typedef {Object} InstanaConfig
  * @property {string} [serviceName]
+ * @property {import('../core').GenericLogger} [logger]
  * @property {string} [packageJsonPath]
  * @property {InstanaMetricsOption} [metrics]
  * @property {InstanaTracingOption} [tracing]
@@ -94,9 +93,6 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
 
 /** @type {import('../core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('configuration', newLogger => {
-  logger = newLogger;
-});
 
 /** @type {InstanaConfig} */
 const defaults = {
@@ -143,12 +139,29 @@ const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-igno
 
 /**
  * @param {InstanaConfig} [config]
+ * @param {import('../core').GenericLogger} [_logger]
  * @returns {InstanaConfig}
  */
-module.exports = function normalizeConfig(config) {
+module.exports = function normalizeConfig(config, _logger) {
+  if (_logger) {
+    logger = _logger;
+  } else {
+    // NOTE: This is only a hard backup. This should not happen. We always pass in
+    //       our custom logger from the upper package.
+    logger = {
+      debug: console.log,
+      info: console.log,
+      warn: console.warn,
+      error: console.error,
+      trace: console.trace
+    };
+  }
+
   if (config == null) {
     config = {};
   }
+
+  config.logger = logger;
 
   normalizeServiceName(config);
   normalizePackageJsonPath(config);

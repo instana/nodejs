@@ -9,18 +9,15 @@ const path = require('path');
 const { fork } = require('child_process');
 const { expect } = require('chai');
 const proxyquire = require('proxyquire');
-
-const { consoleLogger } = require('@instana/serverless');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
-
-const { retry } = require('../../../core/test/test_util');
-const config = require('@instana/core/test/config');
-
+const { retry, createFakeLogger } = require('../../../core/test/test_util');
+const testConfig = require('@instana/core/test/config');
+const core = require('@instana/core');
 let transmissionCycle;
 
 describe('transmission cycle', function () {
-  this.timeout(config.getTestTimeout());
-  this.slow(config.getTestTimeout() / 2);
+  this.timeout(testConfig.getTestTimeout());
+  this.slow(testConfig.getTestTimeout() / 2);
 
   let metadataMockPort;
   let metadataMockUrl;
@@ -32,12 +29,15 @@ describe('transmission cycle', function () {
   let onReadyError;
 
   before(() => {
+    const config = core.util.normalizeConfig({});
+    core.secrets.init(config);
+
     metadataMockPort = portfinder();
     metadataMockUrl = `http://localhost:${metadataMockPort}/computeMetadata/v1/`;
 
     messagesFromMetadataMock = [];
     metadataMock = fork(path.join(__dirname, '../metadata_mock'), {
-      stdio: config.getAppStdio(),
+      stdio: testConfig.getAppStdio(),
       env: Object.assign({
         METADATA_MOCK_PORT: metadataMockPort
       })
@@ -58,8 +58,7 @@ describe('transmission cycle', function () {
     onReadyError = null;
     transmissionCycle = proxyquire('../../src/metrics/transmissionCycle', {
       '@instana/serverless': {
-        backendConnector: { sendMetrics },
-        consoleLogger
+        backendConnector: { sendMetrics }
       }
     });
   });
@@ -103,6 +102,7 @@ describe('transmission cycle', function () {
   function init() {
     transmissionCycle.init(
       {
+        logger: createFakeLogger(),
         metrics: { transmissionDelay: 1000 }
       },
       metadataMockUrl,

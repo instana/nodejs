@@ -6,24 +6,17 @@
 'use strict';
 
 const { util, uninstrumentedHttp, uninstrumentedFs: fs } = require('@instana/core');
-const http = uninstrumentedHttp.http;
-
 const pathUtil = require('path');
+const circularReferenceRemover = require('./util/removeCircular');
+const agentOpts = require('./agent/opts');
+const cmdline = require('./cmdline');
 
 /** @typedef {import('@instana/core/src/core').InstanaBaseSpan} InstanaBaseSpan */
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('./logger').getLogger('agentConnection', newLogger => {
-  logger = newLogger;
-});
-
-const circularReferenceRemover = require('./util/removeCircular');
-const agentOpts = require('./agent/opts');
-const pidStore = require('./pidStore');
-const cmdline = require('./cmdline');
-
-const cpuSetFileContent = getCpuSetFileContent();
+/** @type {{ pid: number }} */
+let pidStore;
 
 // How many extra characters are to be reserved for the inode and
 // file descriptor fields in the collector announce cycle.
@@ -32,7 +25,23 @@ const paddingForInodeAndFileDescriptor = 200;
 const maxContentLength = 1024 * 1024 * 5;
 let maxContentErrorHasBeenLogged = false;
 
+const http = uninstrumentedHttp.http;
 let isConnected = false;
+
+/** @type {string | null} */
+let cpuSetFileContent = null;
+
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {any} _pidStore
+ */
+exports.init = function init(config, _pidStore) {
+  logger = config.logger;
+  pidStore = _pidStore;
+
+  cmdline.init(config);
+  cpuSetFileContent = getCpuSetFileContent();
+};
 
 exports.AgentEventSeverity = {
   SLI_EVENT: -4,

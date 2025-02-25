@@ -9,7 +9,6 @@
 'use strict';
 
 const shimmer = require('../../shimmer');
-
 const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
@@ -17,13 +16,11 @@ const cls = require('../../cls');
 
 let isActive = false;
 let clientHasBeenInstrumented = false;
-
 let logger;
-logger = require('../../../logger').getLogger('tracing/natsStreaming', newLogger => {
-  logger = newLogger;
-});
 
-exports.init = function init() {
+exports.init = function init(config) {
+  logger = config.logger;
+
   hook.onModuleLoad('node-nats-streaming', instrumentNatsStreaming);
 };
 

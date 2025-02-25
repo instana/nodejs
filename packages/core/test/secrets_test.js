@@ -5,11 +5,15 @@
 
 'use strict';
 
+const testUtil = require('@instana/core/test/test_util');
 const secrets = require('../src/secrets');
-
 const expect = require('chai').expect;
 
 describe('secrets with matcher mode', () => {
+  before(() => {
+    secrets.init({ logger: testUtil.createFakeLogger(), secrets: { matcherMode: 'contains-ignore-case' } });
+  });
+
   describe('equals-ignore-case', () => {
     let matcher;
 

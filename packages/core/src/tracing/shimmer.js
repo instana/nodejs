@@ -7,11 +7,11 @@
 
 const shimmer = require('shimmer');
 const EventEmitter = require('events').EventEmitter;
-
 let logger;
-logger = require('../logger').getLogger('tracing/shimmer', newLogger => {
-  logger = newLogger;
-});
+
+exports.init = function init(config) {
+  logger = config.logger;
+};
 
 exports.unwrap = shimmer.unwrap;
 

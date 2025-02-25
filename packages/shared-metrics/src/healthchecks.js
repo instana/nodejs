@@ -7,13 +7,14 @@
 
 const { hook } = require('@instana/core').util;
 
-let logger = require('@instana/core').logger.getLogger('metrics');
+/** @type {import('@instana/core/src/core').GenericLogger} */
+let logger;
 
 /**
- * @param {import('@instana/core/src/core').GenericLogger} _logger
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
  */
-exports.setLogger = function setLogger(_logger) {
-  logger = _logger;
+exports.init = function init(config) {
+  logger = config.logger;
 };
 
 /** @type {number} */

@@ -17,20 +17,74 @@ try {
 }
 
 const uninstrumentedLogger = require('./uninstrumentedLogger');
-
-const { logger } = require('@instana/core');
 const loggerToAgentStream = require('./agent/loggerToAgentStream');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
-let parentLogger = null;
-/** @type {Object.<string, (logger: import('@instana/core/src/core').GenericLogger) => *>} */
-const registry = {};
+let instanaLogger;
+
+class InstanaLogger {
+  /**
+   * @param {import('@instana/core/src/core').GenericLogger} logger
+   */
+  constructor(logger) {
+    this.logger = logger;
+  }
+
+  /**
+   * @param {import('@instana/core/src/core').GenericLogger} _logger
+   */
+  setLogger(_logger) {
+    this.logger = _logger;
+  }
+
+  info() {
+    if (!this.logger.info) {
+      return;
+    }
+
+    this.logger.info.apply(this.logger, arguments);
+  }
+
+  warn() {
+    if (!this.logger.warn) {
+      return;
+    }
+
+    this.logger.warn.apply(this.logger, arguments);
+  }
+
+  error() {
+    if (!this.logger.error) {
+      return;
+    }
+
+    this.logger.error.apply(this.logger, arguments);
+  }
+
+  debug() {
+    if (!this.logger.debug) {
+      return;
+    }
+
+    this.logger.debug.apply(this.logger, arguments);
+  }
+
+  trace() {
+    if (!this.logger.trace) {
+      return;
+    }
+
+    this.logger.trace.apply(this.logger, arguments);
+  }
+}
 
 /**
  * @param {import('./types/collector').CollectorConfig} config
- * @param {boolean} [isReInit]
  */
-exports.init = function init(config, isReInit) {
+exports.init = function init(config = {}) {
+  /** @type {import('@instana/core/src/core').GenericLogger} */
+  let parentLogger;
+
   if (config.logger && typeof config.logger.child === 'function') {
     // A bunyan or pino logger has been provided via config. In either case we create a child logger directly under the
     // given logger which serves as the parent for all loggers we create later on.
@@ -42,7 +96,9 @@ exports.init = function init(config, isReInit) {
     //      We cannot fix this in our side.
     //      https://github.com/winstonjs/winston/issues/1854#issuecomment-710195110
     parentLogger = config.logger.child({
-      module: 'instana-nodejs-logger-parent'
+      // TODO: Rename to "instana-nodejs-logger" in next major version.
+      module: 'instana-nodejs-logger-parent',
+      threadId
     });
 
     // CASE: Attach custom instana meta attribute to filter out internal instana logs.
@@ -55,11 +111,18 @@ exports.init = function init(config, isReInit) {
     // Extends config.logger with __instana while preserving its prototype and methods.
     parentLogger = Object.setPrototypeOf({ ...config.logger, __instana: 1 }, Object.getPrototypeOf(config.logger));
   } else {
-    // No custom logger has been provided via config, we create a new pino logger as the parent logger for all loggers
-    // we create later on.
+    const os = require('os');
+
+    // No custom logger has been provided via config, we create a new pino logger as our internal
+    // Instana logger.
+
+    // If we override `base`, we have to provide the default pino values too.
+    // Pino does not merge them together.
+    // See https://github.com/pinojs/pino/blob/main/docs/api.md#base-object
     parentLogger = uninstrumentedLogger({
       name: '@instana/collector',
-      level: 'info'
+      level: 'info',
+      base: { threadId, pid: process.pid, hostname: os.hostname() }
     });
   }
 
@@ -111,58 +174,16 @@ exports.init = function init(config, isReInit) {
     setLoggerLevel(parentLogger, process.env['INSTANA_LOG_LEVEL'].toLowerCase());
   }
 
-  if (isReInit) {
-    Object.keys(registry).forEach(loggerName => {
-      const reInitFn = registry[loggerName];
-      reInitFn(exports.getLogger(loggerName));
-    });
-    // cascade re-init to @instana/core
-    logger.init(config);
-  }
-};
-
-/**
- * @param {string} loggerName
- * @param {(logger: import('@instana/core/src/core').GenericLogger) => *} [reInitFn]
- * @param {string|null} [level] - Optional log level
- * @returns {import('@instana/core/src/core').GenericLogger}
- */
-exports.getLogger = function getLogger(loggerName, reInitFn, level) {
-  if (!parentLogger) {
-    exports.init({});
-  }
-
-  let _logger;
-
-  if (typeof parentLogger.child === 'function') {
-    // Either bunyan or pino, both support parent-child relationships between loggers.
-    _logger = parentLogger.child({
-      module: loggerName,
-      threadId
-    });
-
-    // CASE: Attach custom instana meta attribute to filter out internal instana logs.
-    //       This will prevent these logs from being traced.
-    // TODO: Will be removed in the refactoring PR for getLogger
-    _logger.__instana = true;
+  if (!instanaLogger) {
+    instanaLogger = new InstanaLogger(parentLogger);
   } else {
-    // Unknown logger type (neither bunyan nor pino), we simply return the user provided custom logger as-is.
-    _logger = parentLogger;
+    instanaLogger.setLogger(parentLogger);
   }
 
-  if (reInitFn) {
-    if (registry[loggerName]) {
-      throw new Error(`Duplicate logger name: ${loggerName}.`);
-    }
-    registry[loggerName] = reInitFn;
-  }
-
-  if (level) {
-    setLoggerLevel(_logger, level);
-  }
-
-  return /** @type {import('@instana/core/src/core').GenericLogger} */ (_logger);
+  return instanaLogger;
 };
+
+exports.getLogger = () => instanaLogger;
 
 /**
  * @param {import('@instana/core/src/core').GenericLogger | *} _logger

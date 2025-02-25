@@ -10,9 +10,6 @@ const { transform } = require('./backend_mappers');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('tracing/spanBuffer', newLogger => {
-  logger = newLogger;
-});
 
 /** @type {Array.<string>} */
 const batchableSpanNames = [];
@@ -94,6 +91,8 @@ const batchingBuckets = new Map();
  * @param {import('..').DownstreamConnection} _downstreamConnection
  */
 exports.init = function init(config, _downstreamConnection) {
+  logger = config.logger;
+
   downstreamConnection = _downstreamConnection;
   maxBufferedSpans = config.tracing.maxBufferedSpans;
   forceTransmissionStartingAt = config.tracing.forceTransmissionStartingAt;

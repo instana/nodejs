@@ -13,9 +13,6 @@ const serializeError = require('serialize-error');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('util/uncaughtExceptionHandler', newLogger => {
-  logger = newLogger;
-});
 
 /** @type {import('../agentConnection')} */
 let downstreamConnection = null;
@@ -45,6 +42,7 @@ for (let i = 0; i < process.execArgv.length; i++) {
  * @param {import('../pidStore')} _processIdentityProvider
  */
 exports.init = function (_config, _downstreamConnection, _processIdentityProvider) {
+  logger = _config.logger;
   config = _config;
   downstreamConnection = _downstreamConnection;
   processIdentityProvider = _processIdentityProvider;

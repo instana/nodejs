@@ -5,14 +5,12 @@
 
 'use strict';
 
+const source = require('../actions/source');
+const agentConnection = require('../agentConnection');
+const getModuleAnalysis = require('../actions/getModuleAnalysis');
+
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-
-logger = require('../logger').getLogger('agent/requestHandler', newLogger => {
-  logger = newLogger;
-});
-
-const agentConnection = require('../agentConnection');
 
 /**
  * @typedef {Object} AnnounceRequest
@@ -27,8 +25,16 @@ const agentConnection = require('../agentConnection');
 
 /** @type {Object.<string, AgentAction>} */
 const actionMapping = {
-  'node.source': require('../actions/source').getSourceFile,
-  'node.getModuleAnalysis': require('../actions/getModuleAnalysis').getModuleAnalysis
+  'node.source': source.getSourceFile,
+  'node.getModuleAnalysis': getModuleAnalysis.getModuleAnalysis
+};
+
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+  source.init(config);
 };
 
 /**

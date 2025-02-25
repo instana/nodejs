@@ -18,7 +18,7 @@ const express = require('express');
 const morgan = require('morgan');
 const port = require('../../test_util/app-port')();
 
-const { getLogger } = require('../../../../core/test/test_util');
+const { getTestAppLogger: getLogger } = require('../../../../core/test/test_util');
 
 const app = express();
 const logPrefix = `Worker Thread App (${process.pid}):\t`;

@@ -16,9 +16,7 @@ const {
 const { ENTRY, EXIT, sqsAttributeNames } = require('../../../../constants');
 const tracingUtil = require('../../../../tracingUtil');
 const { InstanaAWSProduct } = require('./instana_aws_product');
-let logger = require('../../../../../logger').getLogger('tracing/sqs/v3', newLogger => {
-  logger = newLogger;
-});
+let logger;
 
 const operationsInfo = {
   SendMessageBatchCommand: {
@@ -38,7 +36,8 @@ const operations = Object.keys(operationsInfo);
 const SPAN_NAME = 'sqs';
 
 class InstanaAWSSQS extends InstanaAWSProduct {
-  constructor() {
+  constructor(config) {
+    logger = config.logger;
     super(SPAN_NAME, operations);
   }
 

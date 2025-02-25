@@ -9,7 +9,7 @@ const { expect } = require('chai');
 
 const constants = require('../../../src/tracing/constants');
 
-const parse = require('../../../src/tracing/w3c_trace_context/parse');
+const parse = require('../../../src/tracing/w3c_trace_context/parse').execute;
 
 const version00 = '00';
 const traceParentTraceId = '0af7651916cd43dd8448eb211c80319c';

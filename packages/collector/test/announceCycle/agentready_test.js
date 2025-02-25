@@ -13,7 +13,7 @@ const expect = chai.expect;
 chai.use(sinonChai);
 
 const { tracing } = require('@instana/core');
-
+const testUitls = require('@instana/core/test/test_util');
 const agentConnection = require('../../src/agentConnection');
 const initializedTooLate = require('../../src/util/initializedTooLate');
 const metrics = require('../../src/metrics');
@@ -62,6 +62,8 @@ describe('agent ready state', () => {
         '../uncaught': uncaughtStub,
         '../util/eol': eolStub
       });
+
+      agentreadyState.init({ logger: testUitls.createFakeLogger() });
     });
 
     afterEach(() => {

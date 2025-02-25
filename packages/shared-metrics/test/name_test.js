@@ -13,6 +13,10 @@ const name = require('../src/name');
 const { applicationUnderMonitoring } = require('@instana/core').util;
 
 describe('metrics.name', () => {
+  before(() => {
+    name.init({ logger: testUtils.createFakeLogger() });
+  });
+
   afterEach(() => {
     name.reset();
     applicationUnderMonitoring.reset();
@@ -36,7 +40,7 @@ describe('metrics.name', () => {
 
   describe('when the package.json cannot be found', function () {
     before(() => {
-      sinon.stub(applicationUnderMonitoring, 'getMainPackageJsonStartingAtMainModule').callsFake((config, cb) => {
+      sinon.stub(applicationUnderMonitoring, 'getMainPackageJsonStartingAtMainModule').callsFake(cb => {
         cb(null, null);
       });
     });
@@ -60,7 +64,12 @@ describe('metrics.name', () => {
     it('[absolute] it should use the provided package json', async () => {
       name.MAX_ATTEMPTS = 5;
       name.DELAY = 50;
-      name.activate({ packageJsonPath: path.join(__dirname, './esm-require-in-preload/module/package.json') });
+
+      applicationUnderMonitoring.init({
+        packageJsonPath: path.join(__dirname, './esm-require-in-preload/module/package.json')
+      });
+
+      name.activate();
 
       return testUtils.retry(() => {
         expect(name.currentPayload).to.contain('esm-require-in-preload');
@@ -71,8 +80,12 @@ describe('metrics.name', () => {
       name.MAX_ATTEMPTS = 5;
       name.DELAY = 50;
 
-      // NOTE: relative to process.cwd()
-      name.activate({ packageJsonPath: 'test/esm-require-in-preload/module/package.json' });
+      applicationUnderMonitoring.init({
+        // NOTE: relative to process.cwd()
+        packageJsonPath: 'test/esm-require-in-preload/module/package.json'
+      });
+
+      name.activate();
 
       return testUtils.retry(() => {
         expect(name.currentPayload).to.contain('esm-require-in-preload');
@@ -83,7 +96,9 @@ describe('metrics.name', () => {
       name.MAX_ATTEMPTS = 5;
       name.DELAY = 50;
 
-      name.activate({ packageJsonPath: null });
+      applicationUnderMonitoring.init({ packageJsonPath: null });
+
+      name.activate();
 
       return testUtils.retry(() => {
         expect(name.currentPayload).to.contain('mocha');

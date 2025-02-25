@@ -11,9 +11,6 @@ const isESMApp = require('./esm').isESMApp;
 
 /** @type {import('../core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('util/applicationUnderMonitoring', newLogger => {
-  logger = newLogger;
-});
 
 // Cache determined main package json as these will be referenced often
 // and identification of these values is expensive.
@@ -25,6 +22,18 @@ let mainPackageJsonPath;
 let nodeModulesPath;
 let appInstalledIntoNodeModules = false;
 
+/** @type {string} */
+let packageJsonPath;
+
+/**
+ * @param {import('../util/normalizeConfig').InstanaConfig} config
+ */
+function init(config) {
+  logger = config.logger;
+
+  packageJsonPath = config.packageJsonPath;
+}
+
 function isAppInstalledIntoNodeModules() {
   return appInstalledIntoNodeModules;
 }
@@ -35,19 +44,18 @@ function isAppInstalledIntoNodeModules() {
  *
  * In case the search is successful, the result will be cached for consecutive invocations.
  *
- * @param {import('./normalizeConfig').InstanaConfig} config
  * @param {(err: Error, parsedMainPackageJson: Object.<string, *>) => void } cb - the callback will be called with an
  * error or the parsed package.json file as a JS object.
  */
-function getMainPackageJsonStartingAtMainModule(config, cb) {
+function getMainPackageJsonStartingAtMainModule(cb) {
   // NOTE: we already cached the package.json
   if (parsedMainPackageJson !== undefined) {
     return cb(null, parsedMainPackageJson);
   }
 
   // CASE: customer provided custom package.json path, let's try loading it
-  if (config && config.packageJsonPath) {
-    return readFile(config.packageJsonPath, cb);
+  if (packageJsonPath) {
+    return readFile(packageJsonPath, cb);
   }
 
   return getMainPackageJsonStartingAtDirectory(null, cb);
@@ -70,27 +78,27 @@ function getMainPackageJsonStartingAtDirectory(startDirectory, cb) {
     return cb(null, parsedMainPackageJson);
   }
 
-  getMainPackageJsonPathStartingAtDirectory(startDirectory, (err, packageJsonPath) => {
+  getMainPackageJsonPathStartingAtDirectory(startDirectory, (err, foundPackageJsonPath) => {
     if (err) {
       // fs.readFile would have called cb asynchronously later, so we use process.nextTick here to make all paths async.
       return process.nextTick(cb, err, null);
     }
-    if (packageJsonPath == null) {
+    if (foundPackageJsonPath == null) {
       // fs.readFile would have called cb asynchronously later, so we use process.nextTick here to make all paths async.
       return process.nextTick(cb);
     }
 
-    readFile(packageJsonPath, cb);
+    readFile(foundPackageJsonPath, cb);
   });
 }
 
 /**
  *
- * @param {string} packageJsonPath
+ * @param {string} filePath
  * @param {function} cb
  */
-function readFile(packageJsonPath, cb) {
-  fs.readFile(packageJsonPath, { encoding: 'utf8' }, (readFileErr, contents) => {
+function readFile(filePath, cb) {
+  fs.readFile(filePath, { encoding: 'utf8' }, (readFileErr, contents) => {
     if (readFileErr) {
       return cb(readFileErr, null);
     }
@@ -101,6 +109,7 @@ function readFile(packageJsonPath, cb) {
       logger.warn(`Package.json file ${packageJsonPath} cannot be parsed: ${e?.message} ${e?.stack}`);
       return cb(e, null);
     }
+
     return cb(null, parsedMainPackageJson);
   });
 }
@@ -326,6 +335,7 @@ const reset = () => {
 };
 
 module.exports = {
+  init,
   isAppInstalledIntoNodeModules,
   getMainPackageJsonStartingAtMainModule,
   getMainPackageJsonStartingAtDirectory,

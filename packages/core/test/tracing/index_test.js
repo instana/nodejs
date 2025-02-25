@@ -9,6 +9,7 @@ const proxyquire = require('proxyquire');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 
+const testUtils = require('@instana/core/test/test_util');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const normalizeConfig = require('../../src/util/normalizeConfig');
 const kafkaJs = require('../../src/tracing/instrumentation/messaging/kafkaJs');
@@ -151,8 +152,9 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
   });
 
   function initAndActivate(initConfig, extraConfigForActivate) {
-    normalizeConfig(initConfig);
-    tracing.init(initConfig);
+    const logger = testUtils.createFakeLogger();
+    const config = normalizeConfig(initConfig, logger);
+    tracing.init(config);
     tracing.activate(extraConfigForActivate);
   }
 });

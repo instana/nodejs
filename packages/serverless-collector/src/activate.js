@@ -5,18 +5,15 @@
 'use strict';
 
 const instanaCore = require('@instana/core');
-const { backendConnector, consoleLogger } = require('@instana/serverless');
+const { backendConnector, consoleLogger: log } = require('@instana/serverless');
 const identityProvider = require('./identity_provider');
 
 const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
 const customMetrics = require('./metrics');
 
-let logger = consoleLogger;
-logger.init();
-
-const config = normalizeConfig({});
-config.logger = logger;
+const logger = log.init();
+const config = normalizeConfig({}, logger);
 
 async function init() {
   // NOTE: This package does not support autotracing.
@@ -26,15 +23,15 @@ async function init() {
     // NOTE: We have to call pre-init because we are running an async call to get the service name.
     //       The goal is to register our instrumentations as early as possible.
     //       Otherwise we can easily run into errors e.g. from `hasThePackageBeenInitializedTooLate`.
-    instanaCore.preInit();
+    instanaCore.preInit(config);
 
-    const serviceName = await customMetrics.name(config, logger);
+    const serviceName = await customMetrics.name(config);
     if (serviceName) {
       config.serviceName = serviceName;
     }
 
     identityProvider.init();
-    backendConnector.init(identityProvider, logger, false, true, 950);
+    backendConnector.init(config, identityProvider, false, true, 950);
     instanaCore.init(config, backendConnector, identityProvider);
     tracing.activate();
 
@@ -59,10 +56,9 @@ exports.currentSpan = function getHandleForCurrentSpan() {
 
 exports.sdk = tracing.sdk;
 
+// NOTE: this is the external interface for the customer. They can set a custom logger.
 exports.setLogger = function setLogger(_logger) {
-  logger = _logger;
-  config.logger = logger;
-  instanaCore.logger.init(config);
+  log.init(_logger);
 };
 
 exports.opentracing = tracing.opentracing;

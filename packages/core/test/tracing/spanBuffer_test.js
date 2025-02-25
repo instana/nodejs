@@ -9,6 +9,7 @@ const { expect } = require('chai');
 const sinon = require('sinon');
 const spanBuffer = require('../../src/tracing/spanBuffer');
 const delay = require('../test_util/delay');
+const testUtils = require('../test_util');
 const { generateRandomSpanId, generateRandomTraceId } = require('../../src/tracing/tracingUtil');
 
 describe('tracing/spanBuffer', () => {
@@ -30,6 +31,7 @@ describe('tracing/spanBuffer', () => {
 
       spanBuffer.init(
         {
+          logger: testUtils.createFakeLogger(),
           tracing: {
             maxBufferedSpans: 1000,
             forceTransmissionStartingAt: 500,
@@ -107,6 +109,7 @@ describe('tracing/spanBuffer', () => {
 
       spanBuffer.init(
         {
+          logger: testUtils.createFakeLogger(),
           tracing: {
             maxBufferedSpans: 1000,
             forceTransmissionStartingAt: 2,
@@ -197,6 +200,7 @@ describe('tracing/spanBuffer', () => {
       before(() => {
         spanBuffer.init(
           {
+            logger: testUtils.createFakeLogger(),
             tracing: {
               maxBufferedSpans: 1000,
               forceTransmissionStartingAt: 500,
@@ -566,6 +570,7 @@ describe('tracing/spanBuffer', () => {
         verifyNoBatching(span1, span2);
       });
     });
+
     describe('when applying span transformations', () => {
       beforeEach(() => spanBuffer.activate());
 

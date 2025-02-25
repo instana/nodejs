@@ -8,9 +8,9 @@
 // eslint-disable-next-line import/order
 const environmentUtil = require('./environment');
 const uninstrumented = require('./uninstrumentedHttp');
-
 const constants = require('./constants');
-let logger = require('./console_logger');
+
+let logger;
 
 const layerExtensionHostname = 'localhost';
 const layerExtensionPort = process.env.INSTANA_LAYER_EXTENSION_PORT
@@ -36,32 +36,35 @@ let warningsHaveBeenLogged = false;
 const disableCaCheckEnvVar = 'INSTANA_DISABLE_CA_CHECK';
 const disableCaCheck = process.env[disableCaCheckEnvVar] === 'true';
 
-if (process.env[proxyEnvVar] && !environmentUtil.sendUnencrypted) {
-  const proxyUrl = process.env[proxyEnvVar];
-  logger.info(
-    `The environment variable ${proxyEnvVar} is set. Requests to the Instana back end will be routed via a proxy ` +
-      `server: ${proxyUrl}.`
-  );
-
-  const { HttpsProxyAgent } = require('https-proxy-agent');
-  proxyAgent = new HttpsProxyAgent(proxyUrl);
-} else if (process.env[proxyEnvVar] && environmentUtil.sendUnencrypted) {
-  logger.warn(
-    `Both ${proxyEnvVar} and ${environmentUtil.sendUnencryptedEnvVar} are set, but this combination is not supported.` +
-      ' Requests to the Instana back end will not be routed via a proxy server.'
-  );
-}
-
 let hostHeader;
 
 exports.init = function init(
+  config,
   identityProvider,
-  _logger,
   _stopSendingOnFailure,
   _propagateErrorsUpstream,
   _defaultTimeout,
   _useLambdaExtension
 ) {
+  logger = config.logger;
+
+  if (process.env[proxyEnvVar] && !environmentUtil.sendUnencrypted) {
+    const proxyUrl = process.env[proxyEnvVar];
+    logger.info(
+      `The environment variable ${proxyEnvVar} is set. Requests to the Instana back end will be routed via a proxy ` +
+        `server: ${proxyUrl}.`
+    );
+
+    const { HttpsProxyAgent } = require('https-proxy-agent');
+    proxyAgent = new HttpsProxyAgent(proxyUrl);
+  } else if (process.env[proxyEnvVar] && environmentUtil.sendUnencrypted) {
+    logger.warn(
+      `Both ${proxyEnvVar} and ${environmentUtil.sendUnencryptedEnvVar} are set, ` +
+        'but this combination is not supported.' +
+        ' Requests to the Instana back end will not be routed via a proxy server.'
+    );
+  }
+
   stopSendingOnFailure = _stopSendingOnFailure == null ? true : _stopSendingOnFailure;
   propagateErrorsUpstream = _propagateErrorsUpstream == null ? false : _propagateErrorsUpstream;
   defaultTimeout = _defaultTimeout == null ? defaultTimeout : _defaultTimeout;
@@ -86,10 +89,6 @@ exports.init = function init(
     }
   } else {
     hostHeader = 'nodejs-serverless';
-  }
-
-  if (_logger) {
-    logger = _logger;
   }
 
   requestHasFailed = false;

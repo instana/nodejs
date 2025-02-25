@@ -9,9 +9,6 @@ const constants = require('./constants');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('tracing/spanHandle', newLogger => {
-  logger = newLogger;
-});
 
 /**
  * Provides very limited access from client code to the current active span.
@@ -440,6 +437,13 @@ NoopSpanHandle.prototype.end = function end() {
 
 NoopSpanHandle.prototype.cancel = function cancel() {
   // provide dummy operation when automatic tracing is not enabled
+};
+
+/**
+ * @param {import('../util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
 };
 
 /**

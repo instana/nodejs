@@ -5,10 +5,16 @@
 
 'use strict';
 
-const { createEmptyUnsampled, fromInstanaIds } = require('./create');
+const create = require('./create');
+const parse = require('./parse');
 
-module.exports = {
-  create: fromInstanaIds,
-  createEmptyUnsampled: createEmptyUnsampled,
-  parse: require('./parse')
+/**
+ * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  parse.init(config);
 };
+
+exports.parse = parse.execute;
+exports.create = create.fromInstanaIds;
+exports.createEmptyUnsampled = create.createEmptyUnsampled;

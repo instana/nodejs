@@ -6,9 +6,13 @@
 
 /** @type {import('../core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('util/getPreloadFlags', newLogger => {
-  logger = newLogger;
-});
+
+/**
+ * @param {import('../util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+};
 
 exports.get = () => {
   const flags = ['--require', '--import', '--experimental-loader'];

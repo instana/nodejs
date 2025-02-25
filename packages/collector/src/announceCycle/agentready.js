@@ -13,12 +13,10 @@ try {
 }
 
 const { tracing } = require('@instana/core');
-
 const agentConnection = require('../agentConnection');
 const agentOpts = require('../agent/opts');
 const initializedTooLate = require('../util/initializedTooLate');
 const metrics = require('../metrics');
-const pidStore = require('../pidStore');
 const requestHandler = require('../agent/requestHandler');
 const transmissionCycle = require('../metrics/transmissionCycle');
 const uncaught = require('../uncaught');
@@ -39,9 +37,6 @@ let profiler;
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('announceCycle/agentready', newLogger => {
-  logger = newLogger;
-});
 
 if (agentOpts.autoProfile) {
   try {
@@ -77,10 +72,19 @@ if (typeof process.env.INSTANA_TRACER_METRICS_INTERVAL === 'string') {
 /** @type {NodeJS.Timeout} */
 let tracingMetricsTimeout = null;
 
-module.exports = exports = {
-  enter,
-  leave
-};
+/** @type {{ pid: number, getEntityId: Function }} */
+let pidStore;
+
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {any} _pidStore
+ */
+function init(config, _pidStore) {
+  logger = config.logger;
+  pidStore = _pidStore;
+
+  initializedTooLate.init(config);
+}
 
 /**
  * @param {import('./').AnnounceCycleContext} _ctx
@@ -166,6 +170,7 @@ function leave() {
 
 function sendTracingMetrics() {
   const payload = tracing._getAndResetTracingMetrics();
+
   agentConnection.sendTracingMetricsToAgent(payload, error => {
     if (error) {
       logger.info(
@@ -248,3 +253,9 @@ function detectEOLNodeVersion() {
     }, 2000);
   }
 }
+
+module.exports = exports = {
+  init,
+  enter,
+  leave
+};

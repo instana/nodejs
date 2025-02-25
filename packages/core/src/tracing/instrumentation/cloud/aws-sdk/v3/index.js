@@ -27,9 +27,9 @@ const sqsConsumer = require('./sqs-consumer');
 const operationMap = {};
 let isActive = false;
 
-exports.init = function init() {
+exports.init = function init(config) {
   awsProducts.forEach(AwsProductClass => {
-    const awsProductInstance = new AwsProductClass();
+    const awsProductInstance = new AwsProductClass(config);
     awsProductInstances.push(awsProductInstance);
 
     Object.assign(operationMap, awsProductInstance.getOperations());

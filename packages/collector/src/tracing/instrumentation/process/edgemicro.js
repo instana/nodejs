@@ -12,11 +12,13 @@ const selfPath = require('./selfPath');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('../../../logger').getLogger('tracing/edgemicro', newLogger => {
-  logger = newLogger;
-});
 
-exports.init = function () {
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function (config) {
+  logger = config.logger;
+
   hook.onFileLoad(/\/edgemicro\/cli\/lib\/reload-cluster.js/, instrumentReloadCluster);
 };
 

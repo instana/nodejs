@@ -7,7 +7,7 @@
 
 const proxyquire = require('proxyquire');
 const expect = require('chai').expect;
-
+const testUtils = require('../test_util');
 const constants = require('../../src/tracing/constants');
 
 describe('tracing/cls', () => {
@@ -15,11 +15,8 @@ describe('tracing/cls', () => {
 
   beforeEach(() => {
     // reload to clear vars
-    cls = proxyquire('../../src/tracing/cls', {
-      // We need to proxyquire logger, too, to work around the duplicate module logger name check.
-      '../logger': proxyquire('../../src/logger', {})
-    });
-    cls.init({});
+    cls = proxyquire('../../src/tracing/cls', {});
+    cls.init({ logger: testUtils.createFakeLogger() });
   });
 
   it('must not have an active context initially', () => {
@@ -49,7 +46,7 @@ describe('tracing/cls', () => {
   });
 
   it('can create spans without config, identity provider, name and direction in a pinch', () => {
-    cls.init();
+    cls.init({ logger: testUtils.createFakeLogger() });
     cls.ns.run(() => {
       const span = cls.startSpan();
       expect(span).to.be.an('object');
@@ -79,7 +76,7 @@ describe('tracing/cls', () => {
   });
 
   it('must not set span.f if process identity provider does not support getFrom', () => {
-    cls.init({}, {});
+    cls.init({ logger: testUtils.createFakeLogger() }, {});
     cls.ns.run(() => {
       const newSpan = cls.startSpan({
         spanName: 'cls-test-run',
@@ -92,7 +89,7 @@ describe('tracing/cls', () => {
 
   it('must use process identity provider', () => {
     cls.init(
-      {},
+      { logger: testUtils.createFakeLogger() },
       {
         getFrom: function () {
           return {
@@ -262,7 +259,7 @@ describe('tracing/cls', () => {
   });
 
   it('new spans need to have an empty data object', () => {
-    cls.init({}, {});
+    cls.init({ logger: testUtils.createFakeLogger() }, {});
     cls.ns.run(() => {
       const span = cls.startSpan({
         spanName: 'something.something',
@@ -275,7 +272,7 @@ describe('tracing/cls', () => {
   });
 
   it('must use the configured service name', () => {
-    cls.init({ serviceName: 'Forsvarets Efterretningstjeneste' }, {});
+    cls.init({ serviceName: 'Forsvarets Efterretningstjeneste', logger: testUtils.createFakeLogger() }, {});
     cls.ns.run(() => {
       const span = cls.startSpan({
         spanName: 'something.something',

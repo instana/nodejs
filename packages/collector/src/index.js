@@ -44,23 +44,22 @@ try {
 const path = require('path');
 const instanaNodeJsCore = require('@instana/core');
 const instanaSharedMetrics = require('@instana/shared-metrics');
-
 require('./tracing'); // load additional instrumentations
 const log = require('./logger');
-
-const normalizeConfig = require('./util/normalizeConfig');
+const normalizeCollectorConfig = require('./util/normalizeConfig');
 const experimental = require('./experimental');
 
+// NOTE: Default collector logger && config for cases like `preinit`.
+const logger = log.init();
+/** @type {import('./types/collector').CollectorConfig} */
+let config = instanaNodeJsCore.util.normalizeConfig({}, logger);
 /** @type {import('./agentConnection')} */
 let agentConnection;
-
-/** @type {import('./types/collector').CollectorConfig} */
-let config;
 
 /**
  * @param {import('./types/collector').CollectorConfig} [_config]
  */
-function init(_config) {
+function init(_config = {}) {
   // @ts-ignore: Property '__INSTANA_INITIALIZED' does not exist on type global
   if (global.__INSTANA_INITIALIZED) {
     // Prevent initializing @instana/collector multiple times for the same process: @instana/collector has already been
@@ -94,32 +93,37 @@ function init(_config) {
   }
   // @ts-ignore: Property '__INSTANA_INITIALIZED' does not exist on type global
   global.__INSTANA_INITIALIZED = true;
-  config = normalizeConfig(_config);
+
+  // CASE: reinit logger if custom logger or log level is provided.
+  if (_config.logger || _config.level) {
+    log.init(_config);
+  }
+
+  // TODO: The idea of having a config per parent module probably makes, sense
+  //       but as far as I can see, the code in the collector config module is a duplicate.
+  config = normalizeCollectorConfig(_config);
+  config = instanaNodeJsCore.util.normalizeConfig(config, logger);
 
   agentConnection = require('./agentConnection');
   const agentOpts = require('./agent/opts');
   const pidStore = require('./pidStore');
   const uncaught = require('./uncaught');
+  const announceCycle = require('./announceCycle');
+  const metrics = require('./metrics');
 
-  let logger;
-  logger = log.getLogger('index', newLogger => {
-    logger = newLogger;
-  });
-
-  // NOTE: By default we set our instana internal logger
-  config.logger = logger;
-
+  pidStore.init(config);
+  announceCycle.init(config, pidStore);
   agentOpts.init(config);
+  agentConnection.init(config, pidStore);
   instanaNodeJsCore.init(config, agentConnection, pidStore);
-  instanaSharedMetrics.setLogger(logger);
 
   if (isMainThread) {
     uncaught.init(config, agentConnection, pidStore);
-    require('./metrics').init(config);
+    metrics.init(config, pidStore);
   }
 
   logger.info(`@instana/collector module version: ${require(path.join(__dirname, '..', 'package.json')).version}`);
-  require('./announceCycle').start();
+  announceCycle.start();
 
   return init;
 }
@@ -137,12 +141,11 @@ init.isConnected = function isConnected() {
 };
 
 /**
- * @param {import('@instana/core/src/core').GenericLogger} logger
+ * @param {import('@instana/core/src/core').GenericLogger} _logger
  */
-init.setLogger = function setLogger(logger) {
+init.setLogger = function setLogger(_logger) {
   // NOTE: Override our default logger with customer's logger
-  config.logger = logger;
-  log.init(config, true);
+  log.init({ logger: _logger });
 };
 
 init.core = instanaNodeJsCore;
@@ -157,7 +160,7 @@ if (process.env.INSTANA_IMMEDIATE_INIT != null && process.env.INSTANA_IMMEDIATE_
   process.env.INSTANA_EARLY_INSTRUMENTATION != null &&
   process.env.INSTANA_EARLY_INSTRUMENTATION.toLowerCase() === 'true'
 ) {
-  instanaNodeJsCore.preInit();
+  instanaNodeJsCore.preInit(config);
 }
 
 module.exports = init;

@@ -16,21 +16,23 @@
  * @property {(ctx?: AnnounceCycleContext) => void} leave
  */
 
+const agentHostLookup = require('./agentHostLookup');
+const unannounced = require('./unannounced');
+const announced = require('./announced');
+const agentready = require('./agentready');
+
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('announceCycle', newLogger => {
-  logger = newLogger;
-});
 
 /** @type {string} */
 let currentState = null;
 
 /** @type {Object.<string, AgentState>} */
 const states = {
-  agentHostLookup: require('./agentHostLookup'),
-  unannounced: require('./unannounced'),
-  announced: require('./announced'),
-  agentready: require('./agentready')
+  agentHostLookup,
+  unannounced,
+  announced,
+  agentready
 };
 
 /** @type {AnnounceCycleContext} */
@@ -47,6 +49,19 @@ const ctx = {
     currentState = newStateName;
     states[newStateName].enter(ctx);
   }
+};
+
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {any} pidStore
+ */
+exports.init = function init(config, pidStore) {
+  logger = config.logger;
+
+  agentHostLookup.init(config);
+  announced.init(config);
+  agentready.init(config, pidStore);
+  unannounced.init(config, pidStore);
 };
 
 exports.start = function start() {

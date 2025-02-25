@@ -6,7 +6,7 @@
 'use strict';
 
 const instanaCore = require('@instana/core');
-const { backendConnector, consoleLogger, environment } = require('@instana/serverless');
+const { backendConnector, consoleLogger: log, environment } = require('@instana/serverless');
 const arnParser = require('./arn');
 const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
@@ -15,16 +15,18 @@ const { enrichSpanWithTriggerData, readTraceCorrelationData } = require('./trigg
 const processResult = require('./process_result');
 const captureHeaders = require('./capture_headers');
 
-const { tracing } = instanaCore;
+const { tracing, util: coreUtil } = instanaCore;
+const { normalizeConfig } = coreUtil;
 const { tracingHeaders, constants, spanBuffer } = tracing;
-let logger;
-let config;
+
+const logger = log.init();
+let config = normalizeConfig({}, logger);
 
 let coldStart = true;
 
 // Initialize instrumentations early to allow for require statements after our package has been required but before the
 // actual instana.wrap(...) call.
-instanaCore.preInit();
+instanaCore.preInit(config);
 
 /**
  * Wraps an AWS Lambda handler so that metrics and traces are reported to Instana. This function will figure out if the
@@ -234,18 +236,18 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
 function init(event, arnInfo, _config) {
   config = _config || {};
 
-  if (config.logger) {
-    logger = config.logger;
-  } else {
-    logger = consoleLogger;
-    logger.init(config);
-
-    config.logger = logger;
+  // CASE: customer provides a custom logger or custom level
+  if (config.logger || config.level) {
+    log.init(config);
   }
 
-  ssm.init({ logger });
+  // NOTE: We SHOULD renormalize because of:
+  //         - in-code _config object
+  //         - late env variables (less likely)
+  //         - custom logger
+  //         - we always renormalize unconditionally to ensure safety.
+  config = normalizeConfig(config, logger);
 
-  identityProvider.init(arnInfo);
   const useLambdaExtension = shouldUseLambdaExtension();
   if (useLambdaExtension) {
     logger.info('@instana/aws-lambda will use the Instana Lambda extension to send data to the Instana back end.');
@@ -256,10 +258,16 @@ function init(event, arnInfo, _config) {
     );
   }
 
-  backendConnector.init(identityProvider, logger, true, false, 500, useLambdaExtension);
+  identityProvider.init(arnInfo);
+  backendConnector.init(config, identityProvider, true, false, 500, useLambdaExtension);
 
   // instanaCore.init also normalizes the config as a side effect
   instanaCore.init(config, backendConnector, identityProvider);
+
+  // After core init, because ssm requires require('@aws-sdk/client-ssm'), which triggers
+  // the requireHook + shimmer. Any module which requires another external module has to be
+  // initialized after the core.
+  ssm.init(config);
 
   spanBuffer.setIsFaaS(true);
   captureHeaders.init(config);
@@ -515,10 +523,7 @@ exports.currentSpan = function getHandleForCurrentSpan() {
 exports.sdk = tracing.sdk;
 
 exports.setLogger = function setLogger(_logger) {
-  logger = _logger;
-  config.logger = logger;
-  instanaCore.logger.init(config);
-  backendConnector.setLogger(logger);
+  log.init({ logger: _logger });
 };
 
 exports.opentracing = tracing.opentracing;
