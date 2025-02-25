@@ -56,8 +56,6 @@ mochaSuiteFn('tracing/instana-logger', function () {
         instanaLoggingMode: 'instana-receives-log4js-logger'
       });
 
-      // TODO: This test is failing. We can check for `this.__instana` in log4js instrumentation
-      //       in https://github.com/instana/nodejs/pull/1562
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
 
@@ -149,6 +147,10 @@ mochaSuiteFn('tracing/instana-logger', function () {
           // verify that nothing logged by Instana has been traced with winston
           const allWinstonSpans = testUtils.getSpansByName(spans, 'log.winston');
           expect(allWinstonSpans).to.be.empty;
+
+          // verify that nothing logged by Instana has been traced with log4js
+          const allLog4jsSpans = testUtils.getSpansByName(spans, 'log.log4js');
+          expect(allLog4jsSpans).to.be.empty;
         })
       );
     });

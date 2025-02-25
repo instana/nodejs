@@ -34,6 +34,7 @@ function instrumentLog4jsLogger(loggerModule) {
 
 function shimLog(originalLog) {
   return function (level) {
+    // The __instana attribute identifies the Instana logger, so prevent these logs from being traced.
     if (this.__instana || cls.skipExitTracing({ isActive, skipAllowRootExitSpanPresence: true })) {
       return originalLog.apply(this, arguments);
     }
