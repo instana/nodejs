@@ -23,7 +23,8 @@ const agentControls = globalAgent.instance;
 let publisherControls;
 let consumerControls;
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+// Note: Skipping ESM tests since we don't have any, but this interferes with the Bull ESM test
+const mochaSuiteFn = supportedVersion(process.versions.node) && !process.env.RUN_ESM ? describe : describe.skip;
 
 ['latest', 'v0'].forEach(version => {
   mochaSuiteFn(`tracing/amqp: ${version}`, function () {
