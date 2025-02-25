@@ -53,7 +53,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
           await controls.start(null, null, true);
         });
 
-        after(async () => {
+        beforeEach(async () => {
           await agentControls.clearReceivedTraceData();
         });
 

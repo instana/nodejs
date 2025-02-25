@@ -45,40 +45,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  describe('allowRootExitSpan', function () {
-    let controls;
-
-    before(async () => {
-      controls = new ProcessControls({
-        useGlobalAgent: true,
-        appPath: path.join(__dirname, 'allowRootExitSpanApp'),
-        env: {
-          REDIS_SERVER: `redis://${process.env.REDIS}`,
-          BULL_QUEUE_NAME: queueName,
-          BULL_JOB_NAME: 'steve'
-        }
-      });
-
-      await controls.start(null, null, true);
-    });
-
-    afterEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
-    it('must trace', async function () {
-      await retry(async () => {
-        await delay(500);
-        const spans = await agentControls.getSpans();
-
-        expect(spans.length).to.be.eql(2);
-
-        expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('bull'), span => expect(span.k).to.equal(2)]);
-        expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('redis'), span => expect(span.k).to.equal(2)]);
-      });
-    });
-  });
-
   describe('tracing enabled, no suppression', function () {
     let senderControls;
 
@@ -843,6 +809,40 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               fail(`Unexpected spans (Bull suppressed: ${stringifyItems(spans)}`);
             }
           });
+      });
+    });
+  });
+
+  describe('allowRootExitSpan', function () {
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        useGlobalAgent: true,
+        appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+        env: {
+          REDIS_SERVER: `redis://${process.env.REDIS}`,
+          BULL_QUEUE_NAME: queueName,
+          BULL_JOB_NAME: 'steve'
+        }
+      });
+
+      await controls.start(null, null, true);
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    it('must trace', async function () {
+      await retry(async () => {
+        await delay(500);
+        const spans = await agentControls.getSpans();
+
+        expect(spans.length).to.be.eql(2);
+
+        expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('bull'), span => expect(span.k).to.equal(2)]);
+        expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('redis'), span => expect(span.k).to.equal(2)]);
       });
     });
   });
