@@ -21,17 +21,20 @@ logger = require('../../../logger').getLogger('tracing/child_process', newLogger
   logger = newLogger;
 });
 
+exports.init = function () {
+  shimmer.wrap(coreChildProcess, 'spawn', shimSpawn);
+  shimmer.wrap(coreChildProcess, 'fork', shimFork);
+};
+
 // This instruments the code that is used when edgemicro is started with the forever monitor, that is, via
 // `edgemicro forever -a start`. It adds --require /path/to/@instana/collecor/src/immediate to the arguments,
 // effectively adding Instana instrumentation to the processes started via forever-monitor.
 //
 // There is also ./edgemicro.js, which is responsible for instrumenting the code that is used to spawn the individual
 // edgemicro workers.
-exports.init = function () {
-  shimmer.wrap(coreChildProcess, 'spawn', shimSpawn);
-  shimmer.wrap(coreChildProcess, 'fork', shimFork);
-};
-
+//
+// TODO: We have not yet explored whether ESM support needs to be added for EdgeMicro.
+//       https://jsw.ibm.com/browse/INSTA-27880
 function shimSpawn(original) {
   return function (command, args) {
     if (
@@ -66,6 +69,10 @@ function shimSpawn(original) {
 
 const bullMasterProcessMatch = /bull\/lib\/process\/master\.js/;
 
+// Bull is not using ESM internally yet. They fork a childProcess for "master.js" (CJS) internally here
+// https://github.com/OptimalBits/bull/blob/489c6ab8466c1db122f92af3ddef12eacc54179e/lib/process/child-pool.js#L52
+// Currently, we only support childProcess.fork for Bull.
+// If Bull migrates from CJS to ESM, we have to change the fork implementation.
 function shimFork(original) {
   return function () {
     // args: modulePath, args, options
