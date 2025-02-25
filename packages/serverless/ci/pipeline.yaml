@@ -540,7 +540,7 @@ jobs:
               channel: '#team-node'
               icon_emoji: ':check-failed:'
               text: |
-                    :x: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has failed while publishing to the China regions (arm64 architecture).
+                    :x: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has failed while publishing to the cn regions (arm64 architecture).
               attachments: *slack-alert-attachements-failure
           on_error: *slack-notify-failure-lambda
 
