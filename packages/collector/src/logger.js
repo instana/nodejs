@@ -44,9 +44,16 @@ exports.init = function init(config, isReInit) {
     parentLogger = config.logger.child({
       module: 'instana-nodejs-logger-parent'
     });
+
+    // CASE: Attach custom instana meta attribute to filter out internal instana logs.
+    //       This will prevent these logs from being traced.
+    parentLogger.__instana = true;
   } else if (config.logger && hasLoggingFunctions(config.logger)) {
-    // A custom non-bunyan/non-pino logger has been provided via config. We use it as is.
-    parentLogger = config.logger;
+    // CASE: Built-in console logger or log4js. We use it as is.
+    // The __instana attribute identifies the Instana logger, distinguishing it from the client application logger,
+    // and also prevents these logs from being traced
+    // Extends config.logger with __instana while preserving its prototype and methods.
+    parentLogger = Object.setPrototypeOf({ ...config.logger, __instana: 1 }, Object.getPrototypeOf(config.logger));
   } else {
     // No custom logger has been provided via config, we create a new pino logger as the parent logger for all loggers
     // we create later on.
@@ -133,6 +140,11 @@ exports.getLogger = function getLogger(loggerName, reInitFn, level) {
       module: loggerName,
       threadId
     });
+
+    // CASE: Attach custom instana meta attribute to filter out internal instana logs.
+    //       This will prevent these logs from being traced.
+    // TODO: Will be removed in the refactoring PR for getLogger
+    _logger.__instana = true;
   } else {
     // Unknown logger type (neither bunyan nor pino), we simply return the user provided custom logger as-is.
     _logger = parentLogger;

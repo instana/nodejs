@@ -43,7 +43,7 @@ mochaSuiteFn('tracing/instana-logger', function () {
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
 
-    describe('Instana receives a non-pino logger', () => {
+    describe('Instana receives a custom dummy logger', () => {
       appControls.registerTestHooks({
         instanaLoggingMode: 'instana-receives-custom-dummy-logger'
       });
@@ -56,9 +56,7 @@ mochaSuiteFn('tracing/instana-logger', function () {
         instanaLoggingMode: 'instana-receives-log4js-logger'
       });
 
-      // TODO: This test is failing. We can check for `this.__instana` in log4js instrumentation
-      //       in https://github.com/instana/nodejs/pull/1562
-      it.skip('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
+      it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
 
     describe('Instana receives a bunyan logger', () => {
@@ -125,7 +123,7 @@ mochaSuiteFn('tracing/instana-logger', function () {
 
   function verifyInstanaLoggingIsNotTraced() {
     return appControls.trigger('trigger').then(async () => {
-      await testUtils.delay(250);
+      await testUtils.delay(500);
 
       return testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
@@ -149,6 +147,10 @@ mochaSuiteFn('tracing/instana-logger', function () {
           // verify that nothing logged by Instana has been traced with winston
           const allWinstonSpans = testUtils.getSpansByName(spans, 'log.winston');
           expect(allWinstonSpans).to.be.empty;
+
+          // verify that nothing logged by Instana has been traced with log4js
+          const allLog4jsSpans = testUtils.getSpansByName(spans, 'log.log4js');
+          expect(allLog4jsSpans).to.be.empty;
         })
       );
     });

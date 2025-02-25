@@ -68,6 +68,13 @@ function shimLevelMethod(derivedLogger, key, markAsError) {
 
 function instrumentedLevelMethod(originalMethod, markAsError) {
   return function (message) {
+    // CASE: Customer is using a custom winston logger (instana.setLogger(winstonLogger)).
+    //       We create a winston child logger for all instana internal logs.
+    //       We should NOT trace these child logger logs. See collector/src/logger.js
+    if (this.__instana) {
+      return originalMethod.apply(this, arguments);
+    }
+
     if (cls.skipExitTracing({ isActive, skipAllowRootExitSpanPresence: true })) {
       return originalMethod.apply(this, arguments);
     }

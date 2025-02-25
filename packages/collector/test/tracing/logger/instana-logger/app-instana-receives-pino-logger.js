@@ -13,7 +13,6 @@ process.on('SIGTERM', () => {
 });
 
 const agentPort = process.env.AGENT_PORT;
-const pino = require('pino');
 const instana = require('../../../..')({
   agentPort,
   level: 'warn',
@@ -22,6 +21,7 @@ const instana = require('../../../..')({
     forceTransmissionStartingAt: 1
   }
 });
+const pino = require('pino');
 instana.setLogger(pino({ name: 'app-logger' }));
 
 let instanaLogger;
