@@ -19,7 +19,7 @@ const app = express();
 import portFactory from '../../../test_util/app-port.js';
 const port = portFactory();
 
-import { ProcessTypes, buildReceiver } from './util.mjs';
+import { ProcessTypes, buildReceiver } from './util.js';
 
 const redisServer = process.env.REDIS_SERVER || 'redis://127.0.0.1:6379';
 const queueName = process.env.BULL_QUEUE_NAME || 'nodejs-team';

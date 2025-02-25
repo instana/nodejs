@@ -23,8 +23,7 @@ const agentControls = globalAgent.instance;
 let publisherControls;
 let consumerControls;
 
-// Note: Skipping ESM tests since we don't have any, but this interferes with the Bull ESM test
-const mochaSuiteFn = supportedVersion(process.versions.node) && !process.env.RUN_ESM ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 ['latest', 'v0'].forEach(version => {
   mochaSuiteFn(`tracing/amqp: ${version}`, function () {
@@ -54,7 +53,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) && !process.env.RUN
           await controls.start(null, null, true);
         });
 
-        beforeEach(async () => {
+        after(async () => {
           await agentControls.clearReceivedTraceData();
         });
 

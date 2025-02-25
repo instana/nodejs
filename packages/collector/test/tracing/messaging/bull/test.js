@@ -39,7 +39,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 
 const retryTime = 1000;
 
-mochaSuiteFn('tracing/messaging/bull', async function () {
+mochaSuiteFn('tracing/messaging/bull', function () {
   this.timeout(config.getTestTimeout() * 3);
 
   globalAgent.setUpCleanUpHooks();
@@ -62,7 +62,7 @@ mochaSuiteFn('tracing/messaging/bull', async function () {
       await controls.start(null, null, true);
     });
 
-    beforeEach(async () => {
+    afterEach(async () => {
       await agentControls.clearReceivedTraceData();
     });
 
@@ -79,7 +79,7 @@ mochaSuiteFn('tracing/messaging/bull', async function () {
     });
   });
 
-  describe('tracing enabled, no suppression', async function () {
+  describe('tracing enabled, no suppression', function () {
     let senderControls;
 
     before(async () => {
@@ -112,7 +112,7 @@ mochaSuiteFn('tracing/messaging/bull', async function () {
     //       See: https://github.com/OptimalBits/bull/blob/489c6ab8466c1db122f92af3ddef12eacc54179e/lib/queue.js#L712
     //       Related issue: https://github.com/OptimalBits/bull/issues/924
     if (!process.env.RUN_ESM) {
-      describe('receiving via "Process" API', async () => {
+      describe('receiving via "Process" API', () => {
         let receiverControls;
         const receiveMethod = 'Process';
 
@@ -318,7 +318,7 @@ mochaSuiteFn('tracing/messaging/bull', async function () {
       });
     }
 
-    describe('receiving via "Promise" API', async () => {
+    describe('receiving via "Promise" API', () => {
       let receiverControls;
       const receiveMethod = 'Promise';
 
