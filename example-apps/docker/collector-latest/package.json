@@ -6,7 +6,7 @@
     "start": "INSTANA_DEBUG=true node app.js",
     "docker-network-create": "docker network create instana-net || true",
     "app-build": "docker build --no-cache . -t docker-collector-latest",
-    "instana-run": "[ -z \"$INSTANA_AGENT_KEY\" ] || [ -z \"$INSTANA_AGENT_ENDPOINT\" ] || [ -z \"$INSTANA_AGENT_ENDPOINT_PORT\" ] && { echo 'Error: Missing required environment variables'; exit 1; } || docker rm -f instana-agent || true && docker run -d --privileged --pid=host --network=instana-net --restart=always -e INSTANA_AGENT_ENDPOINT_PORT=$INSTANA_AGENT_ENDPOINT_PORT -e INSTANA_AGENT_KEY=$INSTANA_AGENT_KEY -e INSTANA_AGENT_ENDPOINT=$INSTANA_AGENT_ENDPOINT -v /var/run/docker.sock:/var/run/docker.sock -v /:/rootfs:ro -v /sys:/sys:ro --name instana-agent containers.instana.io/instana/release/agent/dynamic:latest",
+    "agent-run": "[ -z \"$INSTANA_AGENT_KEY\" ] || [ -z \"$INSTANA_AGENT_ENDPOINT\" ] || [ -z \"$INSTANA_AGENT_ENDPOINT_PORT\" ] && { echo 'Error: Missing required environment variables'; exit 1; } || docker rm -f instana-agent || true && docker run -d --privileged --pid=host --network=instana-net --restart=always -e INSTANA_AGENT_ENDPOINT_PORT=$INSTANA_AGENT_ENDPOINT_PORT -e INSTANA_AGENT_KEY=$INSTANA_AGENT_KEY -e INSTANA_AGENT_ENDPOINT=$INSTANA_AGENT_ENDPOINT -v /var/run/docker.sock:/var/run/docker.sock -v /:/rootfs:ro -v /sys:/sys:ro --name instana-agent containers.instana.io/instana/release/agent/dynamic:latest",
     "app-run": "docker rm -f docker-collector-latest-app || true && docker run --network=instana-net -p 3022:3022 --name docker-collector-latest-app docker-collector-latest"
   },
   "author": "",
