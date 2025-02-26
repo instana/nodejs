@@ -16,37 +16,38 @@ const layerExtensionHostname = 'localhost';
 const layerExtensionPort = process.env.INSTANA_LAYER_EXTENSION_PORT
   ? Number(process.env.INSTANA_LAYER_EXTENSION_PORT)
   : 7365;
-let useLambdaExtension = false;
 
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
-let defaultTimeout = 500;
 const layerExtensionTimeout = process.env.INSTANA_LAMBDA_EXTENSION_TIMEOUT_IN_MS
   ? Number(process.env.INSTANA_LAMBDA_EXTENSION_TIMEOUT_IN_MS)
   : 500;
-let backendTimeout = defaultTimeout;
 
 const proxyEnvVar = 'INSTANA_ENDPOINT_PROXY';
 let proxyAgent;
 
-let stopSendingOnFailure = true;
-let propagateErrorsUpstream = false;
-let requestHasFailed = false;
-let warningsHaveBeenLogged = false;
-
 const disableCaCheckEnvVar = 'INSTANA_DISABLE_CA_CHECK';
 const disableCaCheck = process.env[disableCaCheckEnvVar] === 'true';
 
+let requestHasFailed = false;
+let warningsHaveBeenLogged = false;
+
+const defaults = {
+  config: {},
+  identityProvider: null,
+  stopSendingOnFailure: true,
+  propagateErrorsUpstream: false,
+  defaultTimeout: 500,
+  backendTimeout: 500,
+  useLambdaExtension: false
+};
+
+let options;
 let hostHeader;
 
-exports.init = function init(
-  config,
-  identityProvider,
-  _stopSendingOnFailure,
-  _propagateErrorsUpstream,
-  _defaultTimeout,
-  _useLambdaExtension
-) {
-  logger = config.logger;
+exports.init = function init(opts) {
+  options = Object.assign(defaults, opts);
+
+  logger = options.config.logger;
 
   if (process.env[proxyEnvVar] && !environmentUtil.sendUnencrypted) {
     const proxyUrl = process.env[proxyEnvVar];
@@ -65,25 +66,21 @@ exports.init = function init(
     );
   }
 
-  stopSendingOnFailure = _stopSendingOnFailure == null ? true : _stopSendingOnFailure;
-  propagateErrorsUpstream = _propagateErrorsUpstream == null ? false : _propagateErrorsUpstream;
-  defaultTimeout = _defaultTimeout == null ? defaultTimeout : _defaultTimeout;
-  useLambdaExtension = _useLambdaExtension;
-  backendTimeout = defaultTimeout;
-
   if (process.env[timeoutEnvVar]) {
-    backendTimeout = parseInt(process.env[timeoutEnvVar], 10);
-    if (isNaN(backendTimeout) || backendTimeout < 0) {
+    options.backendTimeout = parseInt(process.env[timeoutEnvVar], 10);
+
+    if (isNaN(options.backendTimeout) || options.backendTimeout < 0) {
       logger.warn(
         `The value of ${timeoutEnvVar} (${process.env[timeoutEnvVar]}) cannot be parsed to a valid numerical value. ` +
-          `Will fall back to the default timeout (${defaultTimeout} ms).`
+          `Will fall back to the default timeout (${options.defaultTimeout} ms).`
       );
-      backendTimeout = defaultTimeout;
+
+      options.backendTimeout = 500;
     }
   }
 
-  if (identityProvider) {
-    hostHeader = identityProvider.getHostHeader();
+  if (options.identityProvider) {
+    hostHeader = options.identityProvider.getHostHeader();
     if (hostHeader == null) {
       hostHeader = 'nodejs-serverless';
     }
@@ -91,13 +88,11 @@ exports.init = function init(
     hostHeader = 'nodejs-serverless';
   }
 
-  requestHasFailed = false;
-
   // Heartbeat is only for the AWS Lambda extension
   // IMPORTANT: the @instana/aws-lambda package will not
   //            send data once. It can happen all the time till the Lambda handler dies!
   //            SpanBuffer sends data asap and when the handler is finished the rest is sent.
-  if (useLambdaExtension) {
+  if (options.useLambdaExtension) {
     scheduleLambdaExtensionHeartbeatRequest();
   }
 };
@@ -178,7 +173,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
 
     function handleHeartbeatError(e) {
       // Make sure we do not try to talk to the Lambda extension again.
-      useLambdaExtension = false;
+      options.useLambdaExtension = false;
       clearInterval(heartbeatInterval);
 
       logger.debug(
@@ -231,7 +226,7 @@ function getTransport(localUseLambdaExtension) {
 }
 
 function getBackendTimeout(localUseLambdaExtension) {
-  return localUseLambdaExtension ? layerExtensionTimeout : backendTimeout;
+  return localUseLambdaExtension ? layerExtensionTimeout : options.backendTimeout;
 }
 
 function send(resourcePath, payload, finalLambdaRequest, callback) {
@@ -245,9 +240,9 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
   // We need a local copy of the global useLambdaExtension variable, otherwise it might be changed concurrently by
   // scheduleLambdaExtensionHeartbeatRequest. But we need to remember the value at the time we _started_ the request to
   // decide whether to fall back to sending to the back end directly or give up sending data completely.
-  let localUseLambdaExtension = useLambdaExtension;
+  let localUseLambdaExtension = options.useLambdaExtension;
 
-  if (requestHasFailed && stopSendingOnFailure) {
+  if (requestHasFailed && options.stopSendingOnFailure) {
     logger.info(
       `Not attempting to send data to ${resourcePath} as a previous request has already timed out or failed.`
     );
@@ -286,7 +281,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
   // serialize the payload object
   const serializedPayload = JSON.stringify(payload);
 
-  const options = {
+  const reqOptions = {
     hostname: localUseLambdaExtension ? layerExtensionHostname : environmentUtil.getBackendHost(),
     port: localUseLambdaExtension ? layerExtensionPort : environmentUtil.getBackendPort(),
     path: requestPath,
@@ -300,10 +295,10 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
     rejectUnauthorized: !disableCaCheck
   };
 
-  options.timeout = getBackendTimeout(localUseLambdaExtension);
+  reqOptions.timeout = getBackendTimeout(localUseLambdaExtension);
 
   if (proxyAgent && !localUseLambdaExtension) {
-    options.agent = proxyAgent;
+    reqOptions.agent = proxyAgent;
   }
 
   let req;
@@ -319,7 +314,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
     // report metrics and traces quite a bit. The (acceptable) downside is that we do not get to examine the response
     // for HTTP status codes.
 
-    req = transport.request(options);
+    req = transport.request(reqOptions);
   } else {
     // If (a) our Lambda extension is available, or if (b) a user-provided proxy is in use, we do *not* apply the
     // optimization outlined above. Instead, we opt for the more traditional workflow of waiting until the HTTP response
@@ -329,7 +324,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
     //
     // See the req.end(serializedPayload) call below, too. In the no-extension/no-proxy case, that call has the callback
     // to end the processing. Otherwise, the callback is provided here to http.request().
-    req = transport.request(options, () => {
+    req = transport.request(reqOptions, () => {
       // When the Node.js process is frozen while the request is pending, and then thawed later,
       // this can trigger a stale, bogus timeout event (because from the perspective of the freshly thawed Node.js
       // runtime, the request has been pending and inactive since a long time). To avoid that, we remove all listeners
@@ -383,7 +378,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
       );
 
       // Make sure we do not try to talk to the Lambda extension again.
-      useLambdaExtension = localUseLambdaExtension = false;
+      options.useLambdaExtension = localUseLambdaExtension = false;
       clearInterval(heartbeatInterval);
 
       // Retry the request immediately, this time sending it to serverless-acceptor directly.
@@ -394,7 +389,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
       // (or a user-provided proxy).
       requestHasFailed = true;
 
-      if (!propagateErrorsUpstream) {
+      if (!options.propagateErrorsUpstream) {
         if (proxyAgent) {
           logger.warn(
             'Could not send traces and metrics to Instana. Could not connect to the configured proxy ' +
@@ -409,14 +404,14 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
         }
       }
 
-      handleCallback(propagateErrorsUpstream ? e : undefined);
+      handleCallback(options.propagateErrorsUpstream ? e : undefined);
     }
   });
 
   req.on('finish', () => {
     logger.debug(`Sent data to Instana (${requestPath}).`);
 
-    if (useLambdaExtension && finalLambdaRequest) {
+    if (options.useLambdaExtension && finalLambdaRequest) {
       clearInterval(heartbeatInterval);
     }
   });
@@ -465,7 +460,7 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
     );
 
     // Make sure we do not try to talk to the Lambda extension again.
-    useLambdaExtension = localUseLambdaExtension = false;
+    options.useLambdaExtension = localUseLambdaExtension = false;
     clearInterval(heartbeatInterval);
 
     if (req && !req.destroyed) {
@@ -498,14 +493,16 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
     }
 
     const message =
-      'Could not send traces and metrics to Instana. The Instana back end did not respond in the configured timeout ' +
-      `of ${backendTimeout} ms. The timeout can be configured by setting the environment variable ${timeoutEnvVar}.`;
+      'Could not send traces and metrics to Instana. The Instana back end did not respond ' +
+      'in the configured timeout ' +
+      `of ${options.backendTimeout} ms. The timeout can be configured by ` +
+      `setting the environment variable ${timeoutEnvVar}.`;
 
-    if (!propagateErrorsUpstream) {
+    if (!options.propagateErrorsUpstream) {
       logger.warn(message);
     }
 
-    handleCallback(propagateErrorsUpstream ? new Error(message) : undefined);
+    handleCallback(options.propagateErrorsUpstream ? new Error(message) : undefined);
   }
 }
 

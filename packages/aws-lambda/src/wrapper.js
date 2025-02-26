@@ -14,6 +14,7 @@ const ssm = require('./ssm');
 const { enrichSpanWithTriggerData, readTraceCorrelationData } = require('./triggers');
 const processResult = require('./process_result');
 const captureHeaders = require('./capture_headers');
+const { truncate } = require('node:fs/promises');
 
 const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
@@ -259,7 +260,15 @@ function init(event, arnInfo, _config) {
   }
 
   identityProvider.init(arnInfo);
-  backendConnector.init(config, identityProvider, true, false, 500, useLambdaExtension);
+
+  backendConnector.init({
+    config,
+    identityProvider,
+    stopSendingOnFailure: true,
+    propagateErrorsUpstream: false,
+    defaultTimeout: 500,
+    useLambdaExtension
+  });
 
   // instanaCore.init also normalizes the config as a side effect
   instanaCore.init(config, backendConnector, identityProvider);
