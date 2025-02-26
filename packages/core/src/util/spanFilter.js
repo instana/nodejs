@@ -5,7 +5,7 @@
 'use strict';
 
 // List of span types to allowed to ignore
-// 'kafka_placeholder' used as a temporary span type for Kafka until the support is implemented.
+// 'kafka_placeholder' used as a temporary span type for testing, until the Kafka support is implemented.
 const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka_placeholder'];
 
 /**
