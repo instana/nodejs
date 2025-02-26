@@ -9,34 +9,13 @@ const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka'];
 
 /**
  * @param {import("../core").InstanaBaseSpan} span
- * @param {string | string []} config
- * @returns {boolean}
- */
-function matchOperation(span, config) {
-  const spanOperation = span.data[span.n]?.operation?.toLowerCase();
-  if (!spanOperation) {
-    return false;
-  }
-
-  if (typeof config === 'string') {
-    return config.toLowerCase() === spanOperation;
-  }
-
-  if (Array.isArray(config)) {
-    return config.some(op => typeof op === 'string' && op?.toLowerCase() === spanOperation);
-  }
-
-  return false;
-}
-
-/**
- * @param {import("../core").InstanaBaseSpan} span
  * @param {import('../tracing').IgnoreEndpointConfig} config
  * @returns {boolean}
  */
 function matchEndpoints(span, config) {
-  const rawEndpoints = span.data[span.n]?.endpoints;
-  const spanEndpoints = Array.isArray(rawEndpoints) ? rawEndpoints : [rawEndpoints].filter(Boolean);
+  const spanEndpoints = Array.isArray(span.data[span.n]?.endpoints)
+    ? span.data[span.n].endpoints
+    : [span.data[span.n]?.endpoints].filter(Boolean);
 
   if (!spanEndpoints.length) {
     return false;
@@ -49,7 +28,7 @@ function matchEndpoints(span, config) {
     return true;
   }
 
-  return spanEndpoints.some(endpoint =>
+  return spanEndpoints.some((/** @type {string} */ endpoint) =>
     configuredEndpoints.some((/** @type {string} */ e) => e?.toLowerCase() === endpoint?.toLowerCase())
   );
 }
@@ -88,18 +67,20 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
   if (!ignoreConfigs) {
     return false;
   }
+  const spanOperation = span.data[span.n]?.operation?.toLowerCase();
   // For basic filtering: when the configuration is provided as a simple string
   // (e.g., "redis.get" or "dynamodb.query"), directly compare it to the span's operation.
   if (typeof ignoreConfigs === 'string') {
-    return matchOperation(span, ignoreConfigs);
+    return ignoreConfigs.toLowerCase() === spanOperation;
   }
 
   return ignoreConfigs.some(config => {
     // For basic filtering: when the configuration is provided as a simple string array
     // (e.g., "redis:['get,'set']"
     if (typeof config === 'string') {
-      return matchOperation(span, config);
+      return config.toLowerCase() === spanOperation;
     }
+
     // For advanced filtering: the configuration is provided as an object.
     // For instance, for a Kafka span, the configuration like { methods: ['consume'], endpoints: ['t1'] }.
     if (typeof config === 'object') {

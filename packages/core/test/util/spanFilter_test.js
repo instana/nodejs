@@ -106,19 +106,19 @@ describe('util.spanFilter', () => {
       expect(applyFilter({ span: span, ignoreEndpoints })).to.equal(null);
     });
 
-     it('should return null for a Kafka span using wildcard endpoint filtering', () => {
-       ignoreEndpoints = {
-         kafka: [{ methods: ['consume'], endpoints: ['*'] }]
-       };
-       span.n = 'kafka';
-       span.data = {
-         kafka: {
-           operation: 'consume',
-           endpoints: 'topic1'
-         }
-       };
-       expect(applyFilter({ span: span, ignoreEndpoints })).to.equal(null);
-     });
+    it('should return null for a Kafka span using wildcard endpoint filtering', () => {
+      ignoreEndpoints = {
+        kafka: [{ methods: ['consume'], endpoints: ['*'] }]
+      };
+      span.n = 'kafka';
+      span.data = {
+        kafka: {
+          operation: 'consume',
+          endpoints: 'topic1'
+        }
+      };
+      expect(applyFilter({ span: span, ignoreEndpoints })).to.equal(null);
+    });
 
     it('should return null for a Kafka span matching a string rule in a mixed configuration', () => {
       ignoreEndpoints = {
