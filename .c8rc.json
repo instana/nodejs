@@ -1,0 +1,3 @@
+{
+  "exclude": ["node_modules", "example-apps", "bin", ".tekton", "misc", "**/test"]
+}
