@@ -60,14 +60,11 @@ describe('util.spanFilter', () => {
   });
 
   describe('advanced filtering with mixed config', () => {
-    beforeEach(() => {
+    it('returns null when a Redis span matching an advanced ignore config having other services', () => {
       ignoreEndpoints = {
         redis: ['type', 'get'],
         kafka_placeholder: ['consume', 'send', { methods: ['*'], endpoints: ['topic1', 'topic2'] }]
       };
-    });
-
-    it('returns null when a Redis span matching an advanced ignore config having other services', () => {
       span.n = 'redis';
       span.data = {
         redis: {
