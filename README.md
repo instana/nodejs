@@ -53,4 +53,4 @@ Here are a few more quick links:
 
 * [Installation](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation)
 * [Native Addons: Profiling, Garbage Collection and Event Loop Information](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#native-add-ons)
-* [API](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-instana-api).
+* [API](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-instana-api)
