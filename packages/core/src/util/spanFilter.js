@@ -8,7 +8,6 @@
 const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka'];
 
 /**
- *
  * @param {import('../core').InstanaBaseSpan} span
  * @param {import('../tracing').IgnoreEndpoints} ignoreEndpointsConfig
  * @returns {boolean}
@@ -22,36 +21,34 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
   const ignoreConfigs = ignoreEndpointsConfig[span.n];
   if (!ignoreConfigs) return false;
 
-  const operation = span.data[span.n]?.operation;
-
-  const endpoints = Array.isArray(span.data[span.n]?.endpoints)
+  const spanOperation = span.data[span.n]?.operation?.toLowerCase();
+  const spanEndpoints = Array.isArray(span.data[span.n]?.endpoints)
     ? span.data[span.n].endpoints
     : [span.data[span.n]?.endpoints].filter(Boolean);
 
-  if (!operation && !endpoints.legth) {
+  if (!spanOperation && !spanEndpoints.legth) {
     return false;
   }
 
   // We support string, array, object formats for the config, but the string format is not shared publicly.
   // If the ignoreConfigs is a simple string, compare it with the operation.
   if (typeof ignoreConfigs === 'string') {
-    return ignoreConfigs?.toLowerCase() === operation?.toLowerCase();
+    return ignoreConfigs?.toLowerCase() === spanOperation;
   }
 
   return ignoreConfigs.some(config => {
     if (typeof config === 'string') {
-      return config?.toLowerCase() === operation?.toLowerCase();
+      return config?.toLowerCase() === spanOperation;
     }
 
     // If the config is an object, proceed with methods and endpoints checks.
-    if (typeof config === 'object' && config) {
+    if (typeof config === 'object') {
       let methodMatches = false;
       if (config.methods) {
         if (Array.isArray(config.methods)) {
-          methodMatches =
-            config.methods.includes('*') || config.methods.some(m => m?.toLowerCase() === operation?.toLowerCase());
+          methodMatches = config.methods.includes('*') || config.methods.some(m => m?.toLowerCase() === spanOperation);
         } else if (typeof config.methods === 'string') {
-          methodMatches = config.methods === '*' || config.methods?.toLowerCase() === operation?.toLowerCase();
+          methodMatches = config.methods === '*' || config.methods?.toLowerCase() === spanOperation;
         }
       }
 
@@ -64,7 +61,9 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
       if (configuredEndpoints.includes('*')) {
         return true;
       }
-      return endpoints.some((/** @type {string} */ endpoint) => configuredEndpoints.includes(endpoint));
+      return spanEndpoints.some((/** @type {string} */ endpoint) =>
+        configuredEndpoints.some(e => e?.toLowerCase() === endpoint?.toLowerCase())
+      );
     }
 
     return false;
