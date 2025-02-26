@@ -68,7 +68,11 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   const lambdaCallback = originalArgs[2];
 
   const arnInfo = arnParser(context);
-  init(event, arnInfo, _config);
+  const tracingEnabled = init(event, arnInfo, _config);
+
+  if (!tracingEnabled) {
+    return originalHandler.apply(originalThis, originalArgs);
+  }
 
   // The AWS lambda runtime does not seem to inspect the number of arguments the handler function expects. Instead, it
   // always call the handler with three arguments (event, context, callback), no matter if the handler will use the
@@ -248,6 +252,10 @@ function init(event, arnInfo, _config) {
   //         - we always renormalize unconditionally to ensure safety.
   config = normalizeConfig(config, logger);
 
+  if (!config.tracing.enabled) {
+    return false;
+  }
+
   const useLambdaExtension = shouldUseLambdaExtension();
   if (useLambdaExtension) {
     logger.info('@instana/aws-lambda will use the Instana Lambda extension to send data to the Instana back end.');
@@ -282,6 +290,8 @@ function init(event, arnInfo, _config) {
   metrics.init(config);
   metrics.activate();
   tracing.activate();
+
+  return true;
 }
 
 function registerTimeoutDetection(context, entrySpan) {
