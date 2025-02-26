@@ -66,8 +66,8 @@ describe('util.spanFilter', () => {
         kafka: [
           'consume',
           'publish',
-          { method: ['*'], endpoints: ['topic1', 'topic2'] },
-          { method: ['publish', 'consume'], endpoints: ['topic3'] }
+          { methods: ['*'], endpoints: ['topic1', 'topic2'] },
+          { methods: ['publish', 'consume'], endpoints: ['topic3'] }
         ]
       };
       span.data = {
@@ -80,7 +80,7 @@ describe('util.spanFilter', () => {
 
     it('should return null for Kafka span with matching operation and endpoint', () => {
       ignoreEndpoints = {
-        kafka: [{ method: ['publish', 'consume'], endpoints: ['topic3'] }]
+        kafka: [{ methods: ['publish', 'consume'], endpoints: ['topic3'] }]
       };
       span.n = 'kafka';
       span.data = {
@@ -92,9 +92,9 @@ describe('util.spanFilter', () => {
       expect(applyFilter({ span: span, ignoreEndpoints })).to.equal(null);
     });
 
-    it('should return null for a Kafka span using wildcard method filtering', () => {
+    it('should return null for a Kafka span using wildcard methods filtering', () => {
       ignoreEndpoints = {
-        kafka: [{ method: ['*'], endpoints: ['topic1', 'topic2'] }]
+        kafka: [{ methods: ['*'], endpoints: ['topic1', 'topic2'] }]
       };
       span.n = 'kafka';
       span.data = {
@@ -106,9 +106,9 @@ describe('util.spanFilter', () => {
       expect(applyFilter({ span: span, ignoreEndpoints })).to.equal(null);
     });
 
-     it.skip('should return null for a Kafka span using wildcard endpoint filtering', () => {
+     it('should return null for a Kafka span using wildcard endpoint filtering', () => {
        ignoreEndpoints = {
-         kafka: [{ method: ['consume'], endpoints: ['*'] }]
+         kafka: [{ methods: ['consume'], endpoints: ['*'] }]
        };
        span.n = 'kafka';
        span.data = {

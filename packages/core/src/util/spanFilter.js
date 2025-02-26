@@ -8,28 +8,32 @@
 const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka'];
 
 /**
- * Determines whether a span should be ignored based on configured filters.
- * Filtering is done based on both `operation` and `endpoints` fields.
  *
  * @param {import('../core').InstanaBaseSpan} span
- * @param {import('../tracing').IgnoreEndpoints} ignoreEndpoints
+ * @param {import('../tracing').IgnoreEndpoints} ignoreEndpointsConfig
  * @returns {boolean}
  */
-function shouldIgnore(span, ignoreEndpoints) {
+function shouldIgnore(span, ignoreEndpointsConfig) {
   // Skip if the span type is not in the ignored list
-  if (!IGNORABLE_SPAN_TYPES.includes(span.n)) return false;
-  const ignoreConfigs = ignoreEndpoints[span.n];
+  if (!IGNORABLE_SPAN_TYPES.includes(span.n)) {
+    return false;
+  }
+
+  const ignoreConfigs = ignoreEndpointsConfig[span.n];
   if (!ignoreConfigs) return false;
 
   const operation = span.data[span.n]?.operation;
-  if (!operation) return false;
 
-  const spanEndpoints = Array.isArray(span.data[span.n]?.endpoints)
+  const endpoints = Array.isArray(span.data[span.n]?.endpoints)
     ? span.data[span.n].endpoints
     : [span.data[span.n]?.endpoints].filter(Boolean);
 
-  // We support string, array, object formats for endpoints, but the string format is not shared publicly.
-  // If the ignoreConfigs is a simple string, compare it with the operation (case-insensitively).
+  if (!operation && !endpoints.legth) {
+    return false;
+  }
+
+  // We support string, array, object formats for the config, but the string format is not shared publicly.
+  // If the ignoreConfigs is a simple string, compare it with the operation.
   if (typeof ignoreConfigs === 'string') {
     return ignoreConfigs?.toLowerCase() === operation?.toLowerCase();
   }
@@ -39,30 +43,28 @@ function shouldIgnore(span, ignoreEndpoints) {
       return config?.toLowerCase() === operation?.toLowerCase();
     }
 
+    // If the config is an object, proceed with methods and endpoints checks.
     if (typeof config === 'object' && config) {
       let methodMatches = false;
-      if (config.method) {
-        // If method is an array, check if any entry (or a '*' wildcard) matches the operation.
-        if (Array.isArray(config.method)) {
-          if (config.method.includes('*')) {
-            methodMatches = true;
-          } else {
-            methodMatches = config.method.some(
-              (/** @type {string} */ m) => m?.toLowerCase() === operation?.toLowerCase()
-            );
-          }
-        } else if (typeof config.method === 'string') {
-          methodMatches = config.method === '*' || config?.method?.toLowerCase() === operation?.toLowerCase();
+      if (config.methods) {
+        if (Array.isArray(config.methods)) {
+          methodMatches =
+            config.methods.includes('*') || config.methods.some(m => m?.toLowerCase() === operation?.toLowerCase());
+        } else if (typeof config.methods === 'string') {
+          methodMatches = config.methods === '*' || config.methods?.toLowerCase() === operation?.toLowerCase();
         }
       }
 
       if (!methodMatches) return false;
 
-      if (!spanEndpoints.length) return false;
-      let ruleEndpoints = config.endpoints;
-      ruleEndpoints = Array.isArray(ruleEndpoints) ? ruleEndpoints : [ruleEndpoints];
+      const configuredEndpoints = Array.isArray(config.endpoints) ? config.endpoints : [config.endpoints];
 
-      return spanEndpoints.some((/** @type {string} */ ep) => ruleEndpoints.includes(ep));
+      // If the config endpoints include the '*', then ignore endpoint matching completely.
+      // This means, for example, if the method is "consume", all endpoints(topics) with that operation will be ignored.
+      if (configuredEndpoints.includes('*')) {
+        return true;
+      }
+      return endpoints.some((/** @type {string} */ endpoint) => configuredEndpoints.includes(endpoint));
     }
 
     return false;
