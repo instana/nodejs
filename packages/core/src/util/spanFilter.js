@@ -83,8 +83,8 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
       return config.toLowerCase() === spanOperation;
     }
 
-    // For advanced filtering: the config is provided as an object.
-    // For instance, for a Kafka, the config like { methods: ['consume'], endpoints: ['t1'] }.
+    // For advanced filtering:
+    // For e.g., for a Kafka, the config like { methods: ['consume'], endpoints: ['t1'] }.
     if (typeof config === 'object') {
       // Case where config does not specify any filtering criteria.
       if (!config.methods && !config.endpoints) {
