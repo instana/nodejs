@@ -96,7 +96,7 @@ class InstanaExporter {
     instanaEnvironment.validate();
 
     if (instanaEnvironment.isValid()) {
-      instanaBackendConnector.init({ logger, stopSendingOnFailure: false, propagateErrorsUpstream: true });
+      instanaBackendConnector.init({ config: { logger }, stopSendingOnFailure: false, propagateErrorsUpstream: true });
       this._isShutdown = false;
     }
   }

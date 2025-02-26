@@ -89,7 +89,7 @@ describe('[UNIT] backend connector', () => {
     it('when lambda extension is used & heartbeat is working, but timeout when talking to extension', async () => {
       expect(global.clearInterval.called).to.be.false;
 
-      backendConnector.init({ config, useLambdaExtension: true });
+      backendConnector.init({ config, stopSendingOnFailure: false, useLambdaExtension: true });
 
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(1);
