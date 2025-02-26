@@ -12,7 +12,6 @@ const testConfig = require('../../core/test/config');
 const delay = require('../../core/test/test_util/delay');
 const retry = require('../../core/test/test_util/retry');
 const { createFakeLogger } = require('../../core/test/test_util');
-const { use } = require('chai');
 
 const sendBundle = async () => {
   return new Promise(resolve => {
