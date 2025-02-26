@@ -36,7 +36,7 @@ function init() {
     backendConnector.init({
       config,
       identityProvider,
-      stopSendingOnFailure: false,
+      // TODO: false or true?
       propagateErrorsUpstream: true,
       defaultTimeout: 950
     });

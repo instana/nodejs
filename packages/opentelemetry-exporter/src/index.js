@@ -97,7 +97,11 @@ class InstanaExporter {
     instanaEnvironment.validate();
 
     if (instanaEnvironment.isValid()) {
+<<<<<<< HEAD
       instanaBackendConnector.init({ config: { logger }, stopSendingOnFailure: false, propagateErrorsUpstream: true });
+=======
+      instanaBackendConnector.init({ logger }, null, true);
+>>>>>>> bb612d3e (chore: cleanup)
       this._isShutdown = false;
     }
   }
