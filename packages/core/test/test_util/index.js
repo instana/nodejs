@@ -22,7 +22,8 @@ module.exports = {
       debug: () => {},
       info: () => {},
       warn: () => {},
-      error: () => {}
+      error: () => {},
+      trace: () => {}
     };
   },
   isCI: require('./is_ci'),

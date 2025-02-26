@@ -175,7 +175,7 @@ class DependencyDistanceCalculator {
       mainModulePath = require.resolve(dependency);
     } catch (requireResolveErr) {
       // ignore
-      logger.debug(
+      logger.trace(
         `Ignoring failure to resolve the path to dependency ${dependency} for dependency distance calculation.`
       );
     }
@@ -184,7 +184,7 @@ class DependencyDistanceCalculator {
       // Could not find the package.json for this dependency so we cannot analyze it further, which means we are done
       // with it.
       localCountDownLatchForThisNode.countDown();
-      logger.debug(`No main module path for dependency ${dependency}.`);
+      logger.trace(`Ignoring ${dependency} for dependency distance calculation, could not find main module path.`);
       return;
     }
 
