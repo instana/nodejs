@@ -5,7 +5,8 @@
 'use strict';
 
 // List of span types to allowed to ignore
-const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka'];
+// 'kafka_placeholder' used as a temporary span type for Kafka until the support is implemented.
+const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka_placeholder'];
 
 /**
  * @param {import("../core").InstanaBaseSpan} span
@@ -81,16 +82,21 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
       return config.toLowerCase() === spanOperation;
     }
 
-    // For advanced filtering: the configuration is provided as an object.
-    // For instance, for a Kafka span, the configuration like { methods: ['consume'], endpoints: ['t1'] }.
+    // For advanced filtering: the config is provided as an object.
+    // For instance, for a Kafka, the config like { methods: ['consume'], endpoints: ['t1'] }.
     if (typeof config === 'object') {
+      // Case where config does not specify any filtering criteria.
+      if (!config.methods && !config.endpoints) {
+        return false;
+      }
+
       if (config.methods && !matchMethods(span, config)) {
         return false;
       }
       if (config.endpoints && !matchEndpoints(span, config)) {
         return false;
       }
-      // extend the cases in future
+      // extend more filtering cases in future
       return true;
     }
     return false;
