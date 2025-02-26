@@ -14,7 +14,6 @@ const ssm = require('./ssm');
 const { enrichSpanWithTriggerData, readTraceCorrelationData } = require('./triggers');
 const processResult = require('./process_result');
 const captureHeaders = require('./capture_headers');
-const { truncate } = require('node:fs/promises');
 
 const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
