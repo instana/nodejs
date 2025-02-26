@@ -9,7 +9,7 @@
 const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka_placeholder'];
 
 /**
- * @param {import("../core").InstanaBaseSpan} span
+ * @param {import('../core').InstanaBaseSpan} span
  * @param {import('../tracing').IgnoreEndpointConfig} config
  * @returns {boolean}
  */
@@ -60,6 +60,7 @@ function matchMethods(span, config) {
  * @returns {boolean}
  */
 function shouldIgnore(span, ignoreEndpointsConfig) {
+  // Skip if the span type is not in the ignored list
   if (!IGNORABLE_SPAN_TYPES.includes(span.n)) {
     return false;
   }
