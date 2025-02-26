@@ -93,3 +93,6 @@ exports.gatherData = function gatherData() {
 
   return payload;
 };
+
+// TODO: Remove in next major release
+exports.setLogger = () => {};
