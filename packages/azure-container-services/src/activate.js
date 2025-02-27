@@ -13,7 +13,7 @@ const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
 
 const logger = log.init();
-const config = normalizeConfig({}, logger);
+const config = normalizeConfig({ config: {}, _logger: logger });
 
 function init() {
   // For more details about environment variables in azure, please see

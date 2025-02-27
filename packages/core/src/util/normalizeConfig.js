@@ -66,6 +66,7 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
  * @property {InstanaTracingOption} [tracing]
  * @property {InstanaSecretsOption} [secrets]
  * @property {number} [timeBetweenHealthcheckCalls]
+ * @property {AgentConfig} [agentConfig]
  */
 
 /**
@@ -128,7 +129,8 @@ const defaults = {
   secrets: {
     matcherMode: 'contains-ignore-case',
     keywords: ['key', 'pass', 'secret']
-  }
+  },
+  agentConfig: {}
 };
 
 const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
@@ -138,11 +140,13 @@ const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-igno
  */
 
 /**
- * @param {InstanaConfig} [config]
- * @param {import('../core').GenericLogger} [_logger]
+ * @param {Object} options
+ * @param {InstanaConfig} [options.config]
+ * @param {import('../core').GenericLogger} [options._logger]
+ * @param {AgentConfig}[options.agentConfig]
  * @returns {InstanaConfig}
  */
-module.exports = function normalizeConfig(config, _logger) {
+module.exports = function normalizeConfig({ config, _logger, agentConfig }) {
   if (_logger) {
     logger = _logger;
   } else {
@@ -159,6 +163,10 @@ module.exports = function normalizeConfig(config, _logger) {
 
   if (config == null) {
     config = {};
+  }
+
+  if (agentConfig) {
+    config.agentConfig = agentConfig;
   }
 
   config.logger = logger;
@@ -761,6 +769,18 @@ function normalizeIgnoreEndpoints(config) {
         `Failed to parse INSTANA_IGNORE_ENDPOINTS: ${process.env.INSTANA_IGNORE_ENDPOINTS}. Error: ${error?.message}`
       );
     }
+  } else if (config?.agentConfig?.tracing?.ignoreEndpoints) {
+    const endpointTracingConfigFromAgent = config.agentConfig.tracing.ignoreEndpoints;
+    const endpointTracingConfig = Object.fromEntries(
+      Object.entries(endpointTracingConfigFromAgent).map(([service, endpoints]) => {
+        let normalizedEndpoints = null;
+        if (Array.isArray(endpoints)) {
+          normalizedEndpoints = endpoints.map(endpoint => endpoint?.toLowerCase());
+        }
+        return [service.toLowerCase(), normalizedEndpoints];
+      })
+    );
+    config.tracing.ignoreEndpoints = endpointTracingConfig;
   } else {
     return;
   }

@@ -62,9 +62,7 @@ function init(config, _processIdentityProvider) {
  * @param {import('../util/normalizeConfig').AgentConfig} extraConfig
  */
 function activate(extraConfig) {
-  if (extraConfig?.tracing?.ignoreEndpoints) {
-    ignoreEndpoints = extraConfig.tracing.ignoreEndpoints;
-  }
+  ignoreEndpoints = extraConfig?.tracing?.ignoreEndpoints;
 }
 
 class InstanaSpan {
@@ -700,6 +698,7 @@ function skipExitTracing(options) {
  * @param {InstanaSpan | import("../core").InstanaBaseSpan} span
  */
 function applySpanFilter(span) {
+  console.log('------------------------333---------------------------------------', ignoreEndpoints);
   if (ignoreEndpoints) {
     return applyFilter({ span, ignoreEndpoints });
   }

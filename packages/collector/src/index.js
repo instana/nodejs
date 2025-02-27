@@ -52,7 +52,7 @@ const experimental = require('./experimental');
 // NOTE: Default collector logger && config for cases like `preinit`.
 const logger = log.init();
 /** @type {import('./types/collector').CollectorConfig} */
-let config = instanaNodeJsCore.util.normalizeConfig({}, logger);
+let config = instanaNodeJsCore.util.normalizeConfig({ config: {}, _logger: logger });
 /** @type {import('./agentConnection')} */
 let agentConnection;
 
@@ -102,7 +102,7 @@ function init(_config = {}) {
   // TODO: The idea of having a config per parent module probably makes, sense
   //       but as far as I can see, the code in the collector config module is a duplicate.
   config = normalizeCollectorConfig(_config);
-  config = instanaNodeJsCore.util.normalizeConfig(config, logger);
+  config = instanaNodeJsCore.util.normalizeConfig({ config, _logger: logger });
 
   agentConnection = require('./agentConnection');
   const agentOpts = require('./agent/opts');

@@ -20,7 +20,7 @@ const { normalizeConfig } = coreUtil;
 const { tracingHeaders, constants, spanBuffer } = tracing;
 
 const logger = log.init();
-let config = normalizeConfig({}, logger);
+let config = normalizeConfig({ config: {}, _logger: logger });
 
 let coldStart = true;
 
@@ -246,7 +246,7 @@ function init(event, arnInfo, _config) {
   //         - late env variables (less likely)
   //         - custom logger
   //         - we always renormalize unconditionally to ensure safety.
-  config = normalizeConfig(config, logger);
+  config = normalizeConfig({ config, logger });
 
   const useLambdaExtension = shouldUseLambdaExtension();
   if (useLambdaExtension) {

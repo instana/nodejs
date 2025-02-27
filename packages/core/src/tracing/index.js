@@ -265,8 +265,10 @@ function initInstrumenations(_config) {
 
 exports.activate = function activate(extraConfig = {}) {
   if (tracingEnabled && !tracingActivated) {
+    // re normalize the config
+    config = coreUtil.normalizeConfig({ config, agentConfig: extraConfig });
     tracingActivated = true;
-    cls.activate(extraConfig);
+    cls.activate(config);
     spanBuffer.activate(extraConfig);
     opentracing.activate();
     sdk.activate();

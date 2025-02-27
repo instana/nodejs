@@ -13,7 +13,7 @@ const { normalizeConfig } = coreUtil;
 const customMetrics = require('./metrics');
 
 const logger = log.init();
-const config = normalizeConfig({}, logger);
+const config = normalizeConfig({ config: {}, _logger: logger });
 
 async function init() {
   // NOTE: This package does not support autotracing.

@@ -16,7 +16,7 @@ const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
 
 const logger = log.init();
-const config = normalizeConfig({}, logger);
+const config = normalizeConfig({ config: {}, _logger: logger });
 
 function init() {
   instanaCore.preInit(config);

@@ -223,21 +223,8 @@ function applySpanBatchingConfiguration(agentResponse) {
  */
 function applyIgnoreEndpointsConfiguration(agentResponse) {
   if (agentResponse?.tracing?.['ignore-endpoints']) {
-    const endpointTracingConfigFromAgent = agentResponse.tracing['ignore-endpoints'];
-
-    const endpointTracingConfig = Object.fromEntries(
-      Object.entries(endpointTracingConfigFromAgent).map(([service, endpoints]) => {
-        let normalizedEndpoints = null;
-        if (Array.isArray(endpoints)) {
-          normalizedEndpoints = endpoints.map(endpoint => endpoint?.toLowerCase());
-        }
-
-        return [service.toLowerCase(), normalizedEndpoints];
-      })
-    );
-
     ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
-    agentOpts.config.tracing.ignoreEndpoints = endpointTracingConfig;
+    agentOpts.config.tracing.ignoreEndpoints = agentResponse.tracing['ignore-endpoints'];
   }
 }
 
