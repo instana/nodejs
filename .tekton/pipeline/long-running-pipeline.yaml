@@ -198,7 +198,7 @@ spec:
         - name: revision
           value: $(params.commit-id)
         - name: context
-          value: $(params.context)
+          value: "long-running"
         - name: description
           value: "test"
         - name: state-var
