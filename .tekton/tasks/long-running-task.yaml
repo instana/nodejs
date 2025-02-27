@@ -84,10 +84,8 @@ spec:
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
         echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
-
         export CI=true
-        export CI_LONG_RUNNING=true
-        
+        export CI_LONG_RUNNING=true    
         export GCP_PROJECT="k8s-brewery"
         export AZURE_SQL_USERNAME="admin@instana@nodejs-team-db-server"
         export AZURE_SQL_SERVER="nodejs-team-db-server.database.windows.net"
@@ -97,7 +95,6 @@ spec:
 
         retry=1
         while [ $retry -le 3 ]; do
-
           npm run "test:ci:long-running"
 
           if [ $? -eq 0 ]; then
