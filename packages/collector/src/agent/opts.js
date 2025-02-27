@@ -27,6 +27,8 @@ exports.init = function init(config) {
   exports.host = config.agentHost;
   // @ts-ignore - Cannot redeclare exported variable
   exports.port = config.agentPort;
+
+  // TODO: Why is autoProfile part of agentOpts? O_o
   // @ts-ignore - Cannot redeclare exported variable
   exports.autoProfile = config.autoProfile;
 };

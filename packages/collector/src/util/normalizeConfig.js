@@ -24,8 +24,8 @@ const defaults = {
 module.exports = function normalizeConfig(config = {}) {
   config.agentHost = config.agentHost || process.env.INSTANA_AGENT_HOST || defaults.agentHost;
   config.agentPort = config.agentPort || parseToPositiveInteger(process.env.INSTANA_AGENT_PORT, defaults.agentPort);
-  config.autoProfile = config.autoProfile || process.env.INSTANA_AUTO_PROFILE || defaults.autoProfile;
 
+  config.autoProfile = config.autoProfile || process.env.INSTANA_AUTO_PROFILE || defaults.autoProfile;
   config.tracing = config.tracing || {};
 
   if (config.tracing.stackTraceLength == null) {

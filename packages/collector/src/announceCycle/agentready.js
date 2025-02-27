@@ -38,26 +38,6 @@ let profiler;
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 
-if (agentOpts.autoProfile) {
-  try {
-    // @ts-ignore - TS cannot find @instana/profile. TODO: @instana/autoprofile is not linted or typed
-    // eslint-disable-next-line import/no-extraneous-dependencies
-    autoprofile = require('@instana/autoprofile');
-  } catch (e) {
-    logger.info(
-      'Could not load @instana/autoprofile. You will not get profiling information for this Node.js app in Instana, ' +
-        'although autoprofiling has been enabled. This typically occurs when native addons could not be built ' +
-        'during module installation (npm install/yarn) or when npm install --no-optional or yarn --ignore-optional ' +
-        'have been used to install dependencies. See the instructions to learn more about the requirements of the ' +
-        'collector: ' +
-        'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#native-add-ons'
-    );
-
-    fireMonitoringEvent();
-    setInterval(fireMonitoringEvent, FIRE_MONITORING_EVENT_DURATION_IN_MS).unref();
-  }
-}
-
 /** @type {import('./').AnnounceCycleContext} */
 let ctx;
 
@@ -82,8 +62,29 @@ let pidStore;
 function init(config, _pidStore) {
   logger = config.logger;
   pidStore = _pidStore;
-
   initializedTooLate.init(config);
+
+  // TODO: Why is autoProfile part of agentOpts? O_o Please refactor this away in next major release.
+  if (agentOpts.autoProfile) {
+    try {
+      // @ts-ignore - TS cannot find @instana/profile.
+      // TODO: @instana/autoprofile is not linted or typed
+      // eslint-disable-next-line import/no-extraneous-dependencies
+      autoprofile = require('@instana/autoprofile');
+    } catch (e) {
+      logger.info(
+        'Could not load @instana/autoprofile. You will not get profiling information for this Node.js app in Instana,' +
+          'although autoprofiling has been enabled. This typically occurs when native addons could not be built ' +
+          'during module installation (npm install/yarn) or when npm install --no-optional or yarn --ignore-optional ' +
+          'have been used to install dependencies. See the instructions to learn more about the requirements of the ' +
+          'collector: ' +
+          'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#native-add-ons'
+      );
+
+      fireMonitoringEvent();
+      setInterval(fireMonitoringEvent, FIRE_MONITORING_EVENT_DURATION_IN_MS).unref();
+    }
+  }
 }
 
 /**

@@ -21,7 +21,7 @@ if (isCI() && !isCILongRunning()) {
 mochaSuiteFn('profiling', function () {
   // profiles are send every two minutes. We wait a bit more than twice that time.
   const testTimeout = 6 * 60 * 1000;
-  const retryTimeout = 5 * 60 * 1000;
+  const retryTimeout = 60 * 1000;
 
   this.timeout(testTimeout);
 
@@ -61,21 +61,25 @@ mochaSuiteFn('profiling', function () {
       // eslint-disable-next-line no-console
       console.log('Waiting for profiles...');
 
-      return retry(() => {
-        // eslint-disable-next-line no-console
-        console.log('...still waiting for profiles...');
-        return (
-          agentControls
-            .getProfiles()
-            .then(profiles => {
-              expect(profiles.length).to.be.at.least(1);
-              keepTriggeringHttpRequests = false;
-              return agentControls.getSpans();
-            })
-            // check that the app produces spans continuously
-            .then(spans => expect(spans.length).to.be.at.least(100))
-        );
-      }, retryTimeout);
+      return retry(
+        () => {
+          // eslint-disable-next-line no-console
+          console.log('...still waiting for profiles...');
+          return (
+            agentControls
+              .getProfiles()
+              .then(profiles => {
+                expect(profiles.length).to.be.at.least(1);
+                keepTriggeringHttpRequests = false;
+                return agentControls.getSpans();
+              })
+              // check that the app produces spans continuously
+              .then(spans => expect(spans.length).to.be.at.least(100))
+          );
+        },
+        retryTimeout,
+        Date.now() + testTimeout
+      );
     });
   });
 
