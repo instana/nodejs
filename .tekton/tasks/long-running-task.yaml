@@ -82,11 +82,11 @@ spec:
           npm run "test:ci:long-running"
 
           if [ $? -eq 0 ]; then
-            touch "test:ci:long-running".succeeded"
+            touch "test:ci:long-running.succeeded"
             break
           else
             if [ $retry -eq 3 ]; then
-              touch "test:ci:long-running".failed"
+              touch "test:ci:long-running.failed"
               exit 1
             fi
             retry=$((retry + 1))
