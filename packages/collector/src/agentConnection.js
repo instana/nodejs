@@ -151,12 +151,14 @@ exports.announceNodeCollector = function announceNodeCollector(cb) {
   );
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
-    cb(new Error('Announce request to agent failed due to timeout'));
+    // even though the cb here should point to the callee of the current fn, ie, `function tryToAnnounce`
+    // it gets pointed to the atmostOnce fucntion (wrapped call), but why the wrapped call executes the log inside ?
+    logger.error('Announce request to agent failed due to timeout');
     req.abort();
   });
 
   req.on('error', err => {
-    cb(new Error(`Announce request to agent failed due to: ${err.message}`));
+    logger.error(`Announce request to agent failed due to: ${err.message}`);
   });
 
   req.on('socket', socket => {
