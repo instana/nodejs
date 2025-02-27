@@ -68,6 +68,7 @@
     "test:ci:serverless": "lerna run test:ci --stream --scope=@instana/serverless",
     "test:ci:serverless-collector": "lerna run test:ci --stream --scope=@instana/serverless-collector",
     "test:ci:shared-metrics": "lerna run test:ci --stream --scope=@instana/shared-metrics",
+    "test:ci:long-running": "lerna run test:ci:long-running --stream",
     "typecheck": "tsc",
     "verify": "lerna run verify --stream",
     "depcheck": "lerna exec 'npx depcheck --skip-missing --ignores nan,agent-base,@types/*' --stream"

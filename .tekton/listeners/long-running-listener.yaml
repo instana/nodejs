@@ -1,0 +1,42 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: long-running-binding
+spec:
+  envFrom:
+    - configMapRef:
+        name: environment-properties
+  params:
+    - name: branch
+      value: $(params.target-branch)
+    - name: target-branch
+      value: $(params.target-branch)
+    - name: type
+      value: "long-running"
+    - name: repository
+      value: $(params.repository-url)
+    - name: commit-id
+      value: ""
+    - name: node-version
+      value: $(params.node-version)
+      default: ""
+    - name: npm-version
+      value: $(params.npm-version)
+      default: ""
+    - name: pl-name
+      value: "long-running"
+    - name: pipeline-ref
+      value: "long-running-pipeline"
+      
+---
+
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: long-running-listener
+spec:
+  triggers:
+    - bindings:
+        - name: long-running-binding
+      template:
+        name: custom-template

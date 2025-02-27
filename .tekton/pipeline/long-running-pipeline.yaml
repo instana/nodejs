@@ -1,0 +1,207 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: long-running-pipeline
+spec:
+  params:
+    - name: repository
+      description: the git repo
+    - name: branch
+      description: branch
+    - name: revision
+      description: the git revision/commit for the git repo
+      default: ""
+    - name: pipeline-debug
+      description: toggles debug mode for the pipeline
+    - name: ibmcloud-api
+      description: the ibmcloud api
+      default: https://cloud.ibm.com
+    - name: pr-branch
+      value: $(params.pr-branch)
+    - name: pr-repository
+      value: $(params.pr-repository)
+    - name: commit-id
+      value: $(params.commit-id)
+    - name: pr-number
+      value: $(params.pr-number)
+    - name: node-version
+      value: $(params.node-version)
+    - name: npm-version
+      value: $(params.npm-version)
+    - name: target-branch
+      value: $(params.target-branch)
+    - name: type
+      value: $(params.type)
+    - name: context
+      value: $(params.context)
+    - name: skip-cache
+      value: $(params.skip-cache)
+  workspaces:
+    - name: artifacts
+  tasks:
+    - name: extract-repository-url
+      taskRef:
+        name: toolchain-extract-value
+      params:
+        - name: expression
+          # if a params.repository is given, it takes precedence
+          value: '. as $toolchain | ["$(params.repository)"] | if .[0]=="" then $toolchain | .services[] | select(.toolchain_binding.name=="repo") | .dashboard_url else .[0] end'
+        - name: pipeline-debug
+          value: $(params.pipeline-debug)
+    - name: git-fetch-repo
+      taskRef:
+        name: git-clone-repo
+      params:
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: repository
+          value: $(tasks.extract-repository-url.results.extracted-value)
+        - name: branch
+          value: $(params.branch)
+        - name: revision
+          value: $(params.revision)
+        - name: pr-number
+          value: $(params.pr-number)          
+        - name: pipeline-debug
+          value: $(params.pipeline-debug)
+        - name: ibmcloud-api
+          value: $(params.ibmcloud-api)
+        - name: pr-repository
+          value: $(params.pr-repository)
+        - name: pr-branch
+          value: $(params.pr-branch)
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: echo-env
+      runAfter:
+        - git-fetch-repo
+      taskRef:
+        name: echo-env
+      workspaces:
+        - name: output
+          workspace: artifacts        
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)
+        - name: prerelease
+          value: false
+    - name: set-tests-running-start
+      runAfter:
+        - git-fetch-repo
+      taskRef:
+        name: git-set-commit-status
+      workspaces:
+        - name: output
+          workspace: artifacts        
+      params:
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: context
+          value: $(params.context)
+        - name: description
+          value: "test"
+        - name: state
+          value: "pending"
+        - name: pipeline-debug
+          value: $(params.pipeline-debug)               
+    - name: install-npm-dependencies
+      runAfter:
+        - git-fetch-repo
+      taskRef:
+        name: install-npm-dependencies
+      params:
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)
+        - name: skip-cache
+          value: $(params.skip-cache)
+        - name: prerelease
+          value: false          
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: save-cache
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: save-cache
+      params:
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
+        - name: node-version
+          value: $(params.node-version)
+        - name: prerelease
+          value: false
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: test-ci-long-running
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: long-running-task
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+      workspaces:
+        - name: output
+          workspace: artifacts
+  finally: 
+    - name: tasks-results
+      taskRef:
+        name: tasks-results
+      workspaces:
+        - name: output
+          workspace: artifacts
+      params:
+        - name: node-version
+          value: $(params.node-version)  
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: coverage
+          value: false     
+    - name: set-tests-running-final
+      taskRef:
+        name: git-set-commit-status
+      workspaces:
+        - name: output
+          workspace: artifacts
+      params:
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: context
+          value: $(params.context)
+        - name: description
+          value: "test"
+        - name: state-var
+          value: "PIPELINE_RESULT"
+        - name: pipeline-debug
+          value: $(params.pipeline-debug)

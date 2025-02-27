@@ -8,13 +8,15 @@
 const { expect } = require('chai');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const { delay, isCI, retry } = require('../../../core/test/test_util');
+const { delay, isCI, isCILongRunning, retry } = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 const { AgentStubControls } = require('../apps/agentStubControls');
 
-// This suite is ignored on CI as the profiler (by design) is not entirely deterministc in behavior.
-// TODO: Fix me. We need to add a separate weekly CI job.
-const mochaSuiteFn = !supportedVersion(process.versions.node) || isCI() ? describe.skip : describe;
+let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+
+if (isCI() && !isCILongRunning()) {
+  mochaSuiteFn = describe.skip;
+}
 
 mochaSuiteFn('profiling', function () {
   // profiles are send every two minutes. We wait a bit more than twice that time.

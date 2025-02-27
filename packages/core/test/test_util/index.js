@@ -8,6 +8,7 @@
 'use strict';
 
 const commonVerifications = require('./common_verifications');
+const isCI = require('./is_ci');
 
 module.exports = {
   getCircularList: require('./circular_list').getCircularList,
@@ -26,7 +27,10 @@ module.exports = {
       trace: () => {}
     };
   },
-  isCI: require('./is_ci'),
+  isCILongRunning: () => {
+    return process.env.CI_LONG_RUNNING;
+  },
+  isCI,
   retry: require('./retry'),
   retryUntilSpansMatch: require('./retryUntilSpansMatch'),
   runCommandSync: require('./runCommand').runCommandSync,
