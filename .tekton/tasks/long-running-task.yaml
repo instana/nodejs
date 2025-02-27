@@ -3,10 +3,9 @@ kind: Task
 metadata:
   name: long-running-task
 spec:
-  sidecars:
   envFrom:
     - configMapRef:
-        name: environment-properties  
+        name: environment-properties
   params:
     - name: node-version
       value: $(params.node-version)
@@ -62,7 +61,6 @@ spec:
       image: node:$(params.node-version)
       script: |
         #!/bin/bash
-
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
