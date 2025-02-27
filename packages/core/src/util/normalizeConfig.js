@@ -710,6 +710,7 @@ function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) 
  * @param {InstanaConfig} config
  */
 function normalizeIgnoreEndpoints(config) {
+  // Refactor this function
   if (!config.tracing.ignoreEndpoints) {
     config.tracing.ignoreEndpoints = {};
   }
