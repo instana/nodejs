@@ -14,16 +14,41 @@ const { isNodeVersionEOL } = require('../src/util/eol');
 let expressControls;
 let agentControls;
 
-let mochaSuiteFn = describe.skip;
+// CASE: This test suite runs ONLY on CI LONG_RUNNING by default and not locally.
+let mochaSuiteFn1 = describe.skip;
 if (isCI() && isCILongRunning()) {
-  mochaSuiteFn = describe;
+  mochaSuiteFn1 = describe;
 }
 
-mochaSuiteFn('agentCommunication: lots of retries with exponential backoff', function () {
+mochaSuiteFn1('agentCommunication: lots of retries with exponential backoff', function () {
+  this.timeout(config.getTestTimeout());
+
+  globalAgent.setUpCleanUpHooks();
+  agentControls = globalAgent.instance;
+  expressControls = require('./apps/expressControls');
+
+  before(async () => {
+    await expressControls.start({ useGlobalAgent: true });
+  });
+
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
+  after(async () => {
+    await expressControls.stop();
+  });
+
   runRetryTest.bind(this)(300000, 45 * 1000, 7);
 });
 
-describe('agentCommunication', function () {
+// CASE: This test suite runs on CI by default and locally.
+let mochaSuiteFn2 = describe;
+if (isCI() && isCILongRunning()) {
+  mochaSuiteFn2 = describe.skip;
+}
+
+mochaSuiteFn2('agentCommunication: default', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
