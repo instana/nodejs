@@ -65,25 +65,11 @@ spec:
 
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
-        BASE_REVISION=$(git rev-parse origin/main)
-        CIRCLE_COMPARE_URL=""
-        MODIFIED_FILES=""
-        GIT_COMMIT_DESC=""
 
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi
 
-        if [ -n "$(params.revision)" ]; then
-          CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
-          MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
-          GIT_COMMIT_DESC=$(git log --format=%B -n 1 $(params.revision))
-        fi
-
-        echo "BASE_REVISION: $BASE_REVISION"
-        echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
-        echo "MODIFIED_FILES: $MODIFIED_FILES"
-        echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
         export CI=true
         export CI_LONG_RUNNING=true    
         export GCP_PROJECT="k8s-brewery"
