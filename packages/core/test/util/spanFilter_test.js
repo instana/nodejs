@@ -22,8 +22,8 @@ const span = {
 
 describe('util.spanFilter', () => {
   let ignoreEndpoints = {
-    redis: ['GET', 'TYPE'],
-    dynamodb: ['QUERY']
+    redis: [{ methods: ['GET', 'TYPE'] }],
+    dynamodb: [{ methods: ['QUERY'] }]
   };
   it('should return null when the span should be ignored', () => {
     span.data.redis.operation = 'GET';
@@ -61,7 +61,7 @@ describe('util.spanFilter', () => {
   describe('util.spanFilter: advanced filtering', () => {
     it('returns null when an advanced config for multiple services is applied and the Redis config matches', () => {
       ignoreEndpoints = {
-        redis: ['type', 'get'],
+        redis: [{ methods: ['type', 'get'] }],
         kafka_placeholder: [{ methods: ['*'], endpoints: ['topic1', 'topic2'] }]
       };
       span.n = 'redis';
