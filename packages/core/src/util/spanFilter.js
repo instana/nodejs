@@ -22,15 +22,13 @@ function matchEndpoints(span, config) {
     return false;
   }
 
-  const configuredEndpoints = Array.isArray(config.endpoints) ? config.endpoints : [config.endpoints];
-
   // If * is present, any endpoint will match.
-  if (configuredEndpoints.includes('*')) {
+  if (config.endpoints.includes('*')) {
     return true;
   }
 
   return spanEndpoints.some((/** @type {string} */ endpoint) =>
-    configuredEndpoints.some((/** @type {string} */ e) => e?.toLowerCase() === endpoint?.toLowerCase())
+    config.endpoints.some((/** @type {string} */ e) => e?.toLowerCase() === endpoint?.toLowerCase())
   );
 }
 
@@ -46,8 +44,6 @@ function matchMethods(span, config) {
   if (config.methods) {
     if (Array.isArray(config.methods)) {
       methodMatches = config.methods.includes('*') || config.methods.some(m => m?.toLowerCase() === spanOperation);
-    } else if (typeof config.methods === 'string') {
-      methodMatches = config.methods === '*' || config.methods.toLowerCase() === spanOperation;
     }
   }
 

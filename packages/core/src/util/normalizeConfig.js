@@ -710,7 +710,7 @@ function normalizeIgnoreEndpoints(config) {
       const normalizedService = service.toLowerCase();
 
       if (Array.isArray(endpoints)) {
-        // temprory type fix, will be removed in https://github.com/instana/nodejs/pull/1585.
+        // temporary type fix, will be removed in https://github.com/instana/nodejs/pull/1585.
         // @ts-ignore
         config.tracing.ignoreEndpoints[normalizedService] = endpoints.map(endpoint =>
           typeof endpoint === 'string' ? endpoint.toLowerCase() : endpoint

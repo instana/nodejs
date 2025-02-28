@@ -123,8 +123,8 @@ if (customInstrumentations.length > 0) {
 
 /**
  * @typedef {Object} IgnoreEndpointConfig
- * @property {string | string[]} [methods]
- * @property {string | string[]} [endpoints]
+ * @property {string[]} [methods]
+ * @property {string[]} [endpoints]
  */
 /** @type {Array.<InstanaInstrumentedModule>} */
 let additionalInstrumentationModules = [];
