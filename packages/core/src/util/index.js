@@ -20,6 +20,7 @@ const iitmHook = require('./iitmHook');
 const hook = require('./hook');
 const esm = require('./esm');
 const preloadFlags = require('./getPreloadFlags');
+const normalizeIgnoreEndpointsConfig = require('./normalizeIgnoreEndpointsConfig');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -78,3 +79,4 @@ exports.stackTrace = stackTrace;
 exports.iitmHook = iitmHook;
 exports.hook = hook;
 exports.esm = esm;
+exports.normalizeIgnoreEndpointsConfig = normalizeIgnoreEndpointsConfig;
