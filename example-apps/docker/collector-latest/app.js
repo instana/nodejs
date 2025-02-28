@@ -7,7 +7,7 @@
 'use strict';
 
 require('@instana/collector')({
-  agentHost: '172.22.0.2',
+  agentHost: 'host.docker.internal',
   agentPort: 42699
 });
 
