@@ -83,6 +83,11 @@ function init(config, downstreamConnection, processIdentityProvider) {
 }
 
 module.exports = {
+  // TODO: Remove this in the next major release.
+  logger: {
+    init: () => {},
+    getLogger: () => {}
+  },
   metrics,
   secrets,
   tracing,
