@@ -238,7 +238,7 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
   try {
     if (agentResponse?.tracing?.['ignore-endpoints']) {
       ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
-      agentOpts.config.tracing.ignoreEndpoints = normalizeConfig.normalizeIgnoreEndpointsConfigFromYaml(
+      agentOpts.config.tracing.ignoreEndpoints = normalizeConfig.normalizeIgnoreEndpointsConfig(
         agentResponse?.tracing?.['ignore-endpoints']
       );
     }

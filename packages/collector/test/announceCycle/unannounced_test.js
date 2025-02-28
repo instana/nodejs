@@ -227,7 +227,7 @@ describe('unannounced state', () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
-                redis: ['get']
+                redis: [{ methods: ['get'] }]
               }
             }
           });
@@ -249,7 +249,7 @@ describe('unannounced state', () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
-                redis: ['set', 'get']
+                redis: [{ methods: ['set', 'get'] }]
               }
             }
           });
@@ -272,8 +272,16 @@ describe('unannounced state', () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
-                redis: ['get', 'set'],
-                dynamodb: ['query']
+                redis: [
+                  {
+                    methods: ['get', 'set']
+                  }
+                ],
+                dynamodb: [
+                  {
+                    methods: ['query']
+                  }
+                ]
               }
             }
           });
@@ -296,8 +304,8 @@ describe('unannounced state', () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
-                redis: null,
-                dynamodb: null
+                redis: [],
+                dynamodb: []
               }
             }
           });
@@ -331,8 +339,7 @@ describe('unannounced state', () => {
             tracing: {
               ignoreEndpoints: {
                 kafka: [
-                  'consume',
-                  'publish',
+                  { methods: ['consume', 'publish'] },
                   {
                     endpoints: ['topic1', 'topic2'],
                     methods: ['*']
@@ -342,7 +349,7 @@ describe('unannounced state', () => {
                     methods: ['publish']
                   }
                 ],
-                redis: ['type', 'get']
+                redis: [{ methods: ['type', 'get'] }]
               }
             }
           });
@@ -547,7 +554,7 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should correctly parse ignoreEndpoints when new fields are added', done => {
+    it('should not accept when new fields are added', done => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
@@ -579,7 +586,7 @@ describe('unannounced state', () => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
-            kafka: [123, true, null, undefined, {}]
+            kafka: [123, true, null, undefined]
           }
         }
       });
@@ -588,7 +595,7 @@ describe('unannounced state', () => {
         transitionTo: () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
-              ignoreEndpoints: {}
+              ignoreEndpoints: { kafka: [] }
             }
           });
           done();

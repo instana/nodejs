@@ -78,7 +78,7 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
  * @property {AgentTracingHttpConfig} [http]
  * @property {AgentTracingKafkaConfig} [kafka]
  * @property {boolean|string} [spanBatchingEnabled]
- * @property {import('../tracing').IgnoreEndpoints|{}} [ignoreEndpoints]
+ * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
  */
 
 /**
@@ -719,28 +719,7 @@ function normalizeIgnoreEndpoints(config) {
   }
 
   if (Object.keys(ignoreEndpoints).length) {
-    Object.entries(ignoreEndpoints).forEach(([service, endpoints]) => {
-      const normalizedService = service.toLowerCase();
-
-      if (Array.isArray(endpoints)) {
-        // temporary type fix, will be removed in https://github.com/instana/nodejs/pull/1585.
-        // @ts-ignore
-        config.tracing.ignoreEndpoints[normalizedService] = endpoints.map(endpoint =>
-          // @ts-ignore
-          typeof endpoint === 'string' ? endpoint.toLowerCase() : endpoint
-        );
-      } else if (typeof endpoints === 'string') {
-        // @ts-ignore
-        config.tracing.ignoreEndpoints[normalizedService] = [endpoints?.toLowerCase()];
-      } else {
-        logger.warn(
-          `Invalid configuration for ${normalizedService}: tracing.ignoreEndpoints.${normalizedService} is neither a string nor an array. Value will be ignored: ${JSON.stringify(
-            endpoints
-          )}`
-        );
-        config.tracing.ignoreEndpoints[normalizedService] = null;
-      }
-    });
+    config.tracing.ignoreEndpoints = normalizeIgnoreEndpointsConfig(ignoreEndpoints);
   } else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
     try {
       const ignoreEndpoints = Object.fromEntries(
@@ -772,31 +751,58 @@ function normalizeIgnoreEndpoints(config) {
   logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
 }
 /**
- * @param {{ [s: string]: any; } | ArrayLike<any>} ignoreEndpointConfig
+ * Normalizes the ignore endpoints configuration to ensure consistent formatting.
+ * This function processes a configuration object where services and their endpoints
+ * are specified, ensuring all strings are trimmed and lowercase, and organizing
+ * the data into a structured format.
+ *
+ * @param {{ [s: string]: any; } | ArrayLike<any>} ignoreEndpointConfig - The input configuration.
+ * @returns {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
+ * Returns a normalized configuration object where:
+ * - Values are arrays of objects containing normalized `methods` and `endpoints`.
  */
-function normalizeIgnoreEndpointsConfigFromYaml(ignoreEndpointConfig) {
+function normalizeIgnoreEndpointsConfig(ignoreEndpointConfig) {
   return Object.fromEntries(
     Object.entries(ignoreEndpointConfig).map(([service, endpointsConfig]) => {
       if (!Array.isArray(endpointsConfig)) {
-        return [service.trim().toLowerCase(), null];
+        return [service.trim().toLowerCase(), []];
       }
 
-      const normalizedEndpoints = endpointsConfig.map(entry => {
-        if (typeof entry === 'object' && entry !== null) {
-          return Object.fromEntries(
-            Object.entries(entry).map(([key, value]) => [
-              key.trim()?.toLowerCase(),
-              Array.isArray(value) ? value.map(v => v.trim()?.toLowerCase()) : [value?.trim()?.toLowerCase()]
-            ])
+      /** @type {string[]} */
+      const methods = [];
+
+      /** @type {import('../tracing').IgnoreEndpointConfig[]} } */
+      const otherConfigs = [];
+
+      endpointsConfig.forEach(entry => {
+        if (typeof entry === 'string') {
+          // If the entry is a string, treat it as a methods
+          methods.push(entry.trim().toLowerCase());
+        } else if (typeof entry === 'object' && entry !== null) {
+          const normalizedEntry = Object.fromEntries(
+            Object.entries(entry).map(([key, value]) => [key.trim().toLowerCase(), value])
           );
+
+          /** @type {Record<string, any>} */
+          const formattedEntry = {};
+
+          for (const [key, value] of Object.entries(normalizedEntry)) {
+            formattedEntry[key] = Array.isArray(value) ? value.map(item => item.trim().toLowerCase()) : [value];
+          }
+
+          otherConfigs.push(formattedEntry);
         }
-        return entry?.trim()?.toLowerCase();
       });
 
-      return [service?.trim()?.toLowerCase(), normalizedEndpoints];
+      const normalizedEndpoints = [];
+      if (methods.length > 0) {
+        normalizedEndpoints.push({ methods });
+      }
+      normalizedEndpoints.push(...otherConfigs);
+
+      return [service.trim().toLowerCase(), normalizedEndpoints];
     })
   );
 }
-
 // Agent also uses the same method to parse the endpoint as both receives the same format
-module.exports.normalizeIgnoreEndpointsConfigFromYaml = normalizeIgnoreEndpointsConfigFromYaml;
+module.exports.normalizeIgnoreEndpointsConfig = normalizeIgnoreEndpointsConfig;

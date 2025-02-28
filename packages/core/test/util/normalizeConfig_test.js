@@ -503,15 +503,15 @@ describe('util.normalizeConfig', () => {
         ignoreEndpoints: { redis: ['get'] }
       }
     });
-    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get'] });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: [{ methods: ['get'] }] });
   });
   it('should apply multiple ignore endpoints via config', () => {
     const config = normalizeConfig({
       tracing: {
-        ignoreEndpoints: { redis: ['GET', 'TYPE'] }
+        ignoreEndpoints: { redis: ['get', 'type'] }
       }
     });
-    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get', 'type'] });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: [{ methods: ['get', 'type'] }] });
   });
   it('should apply ignore endpoints via config for multiple packages', () => {
     const config = normalizeConfig({
@@ -519,7 +519,38 @@ describe('util.normalizeConfig', () => {
         ignoreEndpoints: { redis: ['get'], dynamodb: ['querey'] }
       }
     });
-    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get'], dynamodb: ['querey'] });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({
+      redis: [{ methods: ['get'] }],
+      dynamodb: [{ methods: ['querey'] }]
+    });
+  });
+
+  it('should normalize case and trim spaces in method names and endpoint paths', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: {
+          redis: ['  GET ', 'TyPe'],
+          kafka: [{ methods: ['  PUBLISH  '], endpoints: [' Topic1 ', 'TOPIC2 '] }]
+        }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({
+      redis: [{ methods: ['get', 'type'] }],
+      kafka: [{ methods: ['publish'], endpoints: ['topic1', 'topic2'] }]
+    });
+  });
+
+  it('should return an empty list if all configurations are invalid', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: { redis: 123, kafka: true, mysql: null }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({
+      redis: [],
+      kafka: [],
+      mysql: []
+    });
   });
 
   function checkDefaults(config) {
