@@ -53,8 +53,8 @@ const maxRetryDelay = 60 * 1000; // one minute
 
 /**
  * @typedef {Object} IgnoreEndpointConfig
- * @property {string | string[]} method - A method or list of methods to ignore.
- * @property {string[]=} [endpoints] - A list of endpoints to ignore (optional).
+ * @property {string[]} method - A method or list of methods to ignore.
+ * @property {string[]} [endpoints] - A list of endpoints to ignore (optional).
  */
 
 /**

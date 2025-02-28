@@ -786,7 +786,7 @@ function normalizeIgnoreEndpointsConfigFromYaml(ignoreEndpointConfig) {
           return Object.fromEntries(
             Object.entries(entry).map(([key, value]) => [
               key.trim()?.toLowerCase(),
-              Array.isArray(value) ? value.map(v => v.trim()?.toLowerCase()) : value?.trim()?.toLowerCase()
+              Array.isArray(value) ? value.map(v => v.trim()?.toLowerCase()) : [value?.trim()?.toLowerCase()]
             ])
           );
         }

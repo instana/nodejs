@@ -314,11 +314,11 @@ describe('unannounced state', () => {
               'publish',
               {
                 endpoints: ['topic1', 'topic2'],
-                method: ['*']
+                methods: ['*']
               },
               {
                 endpoints: ['topic3'],
-                method: ['publish']
+                methods: ['publish']
               }
             ],
             redis: ['type', 'get']
@@ -335,11 +335,11 @@ describe('unannounced state', () => {
                   'publish',
                   {
                     endpoints: ['topic1', 'topic2'],
-                    method: ['*']
+                    methods: ['*']
                   },
                   {
                     endpoints: ['topic3'],
-                    method: ['publish']
+                    methods: ['publish']
                   }
                 ],
                 redis: ['type', 'get']
@@ -357,11 +357,11 @@ describe('unannounced state', () => {
           'ignore-endpoints': {
             'KAFKA  ': [
               {
-                'Method  ': ['*'],
+                'Methods  ': ['*'],
                 Endpoints: ['TOPIC1  ', 'topic2   ']
               },
               {
-                METHOD: ['  PUBLISH'],
+                METHODS: ['  PUBLISH'],
                 '    endpoints': ['Topic3  ']
               }
             ]
@@ -374,8 +374,8 @@ describe('unannounced state', () => {
             tracing: {
               ignoreEndpoints: {
                 kafka: [
-                  { method: ['*'], endpoints: ['topic1', 'topic2'] },
-                  { method: ['publish'], endpoints: ['topic3'] }
+                  { methods: ['*'], endpoints: ['topic1', 'topic2'] },
+                  { methods: ['publish'], endpoints: ['topic3'] }
                 ]
               }
             }
@@ -391,11 +391,11 @@ describe('unannounced state', () => {
           'ignore-endpoints': {
             kafka: [
               {
-                method: ['*'],
+                methods: ['*'],
                 endpoints: ['topic1', 'topic2']
               },
               {
-                method: ['publish'],
+                methods: ['publish'],
                 endpoints: ['topic3']
               }
             ]
@@ -408,8 +408,8 @@ describe('unannounced state', () => {
             tracing: {
               ignoreEndpoints: {
                 kafka: [
-                  { method: ['*'], endpoints: ['topic1', 'topic2'] },
-                  { method: ['publish'], endpoints: ['topic3'] }
+                  { methods: ['*'], endpoints: ['topic1', 'topic2'] },
+                  { methods: ['publish'], endpoints: ['topic3'] }
                 ]
               }
             }
@@ -419,7 +419,7 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should correctly handle ignoreEndpoints when only endpoints are provided without method', done => {
+    it('should correctly handle ignoreEndpoints when only endpoints are provided without methods', done => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
@@ -451,7 +451,7 @@ describe('unannounced state', () => {
           'ignore-endpoints': {
             kafka: [
               {
-                method: ['publish']
+                methods: ['publish']
               }
             ]
           }
@@ -462,7 +462,60 @@ describe('unannounced state', () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
-                kafka: [{ method: ['publish'] }]
+                kafka: [{ methods: ['publish'] }]
+              }
+            }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should correctly parse ignoreEndpoints when methods are provided in string format without endpoints', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          'ignore-endpoints': {
+            kafka: [
+              {
+                methods: 'publish'
+              }
+            ]
+          }
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              ignoreEndpoints: {
+                kafka: [{ methods: ['publish'] }]
+              }
+            }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should correctly parse ignoreEndpoints when methods are provided in string format without endpoints', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          'ignore-endpoints': {
+            kafka: [
+              {
+                methods: 'publish',
+                endpoints: 'topic1'
+              }
+            ]
+          }
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              ignoreEndpoints: {
+                kafka: [{ methods: ['publish'], endpoints: ['topic1'] }]
               }
             }
           });
@@ -486,6 +539,34 @@ describe('unannounced state', () => {
             tracing: {
               ignoreEndpoints: {
                 kafka: []
+              }
+            }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should correctly parse ignoreEndpoints when new fields are added', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          'ignore-endpoints': {
+            kafka: [
+              {
+                methods: ['publish'],
+                endpoints: ['topic1'],
+                groups: ['group1']
+              }
+            ]
+          }
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              ignoreEndpoints: {
+                kafka: [{ methods: ['publish'], endpoints: ['topic1'], groups: ['group1'] }]
               }
             }
           });
@@ -522,7 +603,7 @@ describe('unannounced state', () => {
             kafka: [
               {
                 endpoints: [{ topic: 'nestedTopic' }],
-                method: ['*']
+                methods: ['*']
               }
             ]
           }
