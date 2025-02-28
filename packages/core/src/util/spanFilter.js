@@ -10,10 +10,14 @@ const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka_placeholder'];
 
 /**
  * @param {import('../core').InstanaBaseSpan} span
- * @param {import('../tracing').IgnoreEndpointConfig} ignoreconfig
+ * @param {import('../tracing').IgnoreEndpointsFields} ignoreconfig
  * @returns {boolean}
  */
 function matchEndpoints(span, ignoreconfig) {
+  // TODO:
+  // Normalizing the endpoints will be addressed in future PRs.
+  // For Kafka span data, the endpoints correspond to the service field,
+  // which may contain multiple values.
   const spanEndpoints = Array.isArray(span.data[span.n]?.endpoints)
     ? span.data[span.n].endpoints
     : [span.data[span.n]?.endpoints].filter(Boolean);
@@ -28,13 +32,13 @@ function matchEndpoints(span, ignoreconfig) {
   }
 
   return spanEndpoints.some((/** @type {string} */ endpoint) =>
-    ignoreconfig.endpoints.some((/** @type {string} */ e) => e?.toLowerCase() === endpoint?.toLowerCase())
+    ignoreconfig.endpoints.some(e => e?.toLowerCase() === endpoint?.toLowerCase())
   );
 }
 
 /**
  * @param {import("../core").InstanaBaseSpan} span
- * @param {import('../tracing').IgnoreEndpointConfig} ignoreconfig
+ * @param {import('../tracing').IgnoreEndpointsFields} ignoreconfig
  * @returns {boolean}
  */
 function matchMethods(span, ignoreconfig) {
@@ -69,14 +73,18 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
   const spanOperation = span.data[span.n]?.operation?.toLowerCase();
   // For basic filtering: when the configuration is provided as a simple string
   // (e.g., "redis.get" or "dynamodb.query"), directly compare it to the span's operation.
+  // TODO: will be removed
   if (typeof ignoreConfigs === 'string') {
+    // @ts-ignore
     return ignoreConfigs.toLowerCase() === spanOperation;
   }
 
   return ignoreConfigs.some(ignoreconfig => {
     // For basic filtering: when the configuration is provided as a simple string array
     // (e.g., "redis:['get,'set']"
+    // TODO: will be removed
     if (typeof ignoreconfig === 'string') {
+      // @ts-ignore
       return ignoreconfig.toLowerCase() === spanOperation;
     }
 

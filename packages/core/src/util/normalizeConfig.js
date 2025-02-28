@@ -713,9 +713,11 @@ function normalizeIgnoreEndpoints(config) {
         // temporary type fix, will be removed in https://github.com/instana/nodejs/pull/1585.
         // @ts-ignore
         config.tracing.ignoreEndpoints[normalizedService] = endpoints.map(endpoint =>
+          // @ts-ignore
           typeof endpoint === 'string' ? endpoint.toLowerCase() : endpoint
         );
       } else if (typeof endpoints === 'string') {
+        // @ts-ignore
         config.tracing.ignoreEndpoints[normalizedService] = [endpoints?.toLowerCase()];
       } else {
         logger.warn(
