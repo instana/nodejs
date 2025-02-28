@@ -544,7 +544,7 @@ describe('util.normalizeConfig', () => {
   it('should return an empty list if all configurations are invalid', () => {
     const config = normalizeConfig({
       tracing: {
-        ignoreEndpoints: { redis: 123, kafka: true, mysql: null }
+        ignoreEndpoints: { redis: {}, kafka: true, mysql: null }
       }
     });
     expect(config.tracing.ignoreEndpoints).to.deep.equal({
@@ -552,6 +552,58 @@ describe('util.normalizeConfig', () => {
       kafka: [],
       mysql: []
     });
+  });
+
+  it('should normalize objects when unsupported additional fields applied', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: {
+          redis: [{ extra: 'data' }],
+          kafka: [{ methods: ['publish'], extra: 'info' }]
+        }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({
+      redis: [],
+      kafka: [{ methods: ['publish'] }]
+    });
+  });
+
+  it('should normalize objects with only methods and no endpoints', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: {
+          kafka: [{ methods: ['PUBLISH'] }]
+        }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({
+      kafka: [{ methods: ['publish'] }]
+    });
+  });
+
+  it('should normalize objects with only endpoints and no methods', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: {
+          kafka: [{ endpoints: ['Topic1'] }]
+        }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({
+      kafka: [{ endpoints: ['topic1'] }]
+    });
+  });
+
+  it('should normalize objects where methods or endpoints are invalid types', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: {
+          kafka: [{ methods: 123, endpoints: 'invalid' }]
+        }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({});
   });
 
   function checkDefaults(config) {
