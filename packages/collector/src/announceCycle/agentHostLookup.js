@@ -47,6 +47,7 @@ const requestTimeout = 5000;
 const retryTimeoutMillis = process.env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS
   ? Number(process.env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS)
   : 60 * 1000;
+let callbackWasCalled = false;
 
 /**
  * @param {import('./').AnnounceCycleContext} ctx
@@ -149,18 +150,22 @@ function checkHost(host, cb) {
   }
 
   req.on('timeout', function onTimeout() {
-    cb(new Error(`The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has timed out`));
+    handleCallback(
+      new Error(`The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has timed out`),
+      cb
+    );
   });
 
   // additional idle timeout (that is, not getting a response after establishing a connection)
   req.setTimeout(requestTimeout);
 
   req.on('error', err => {
-    cb(
+    handleCallback(
       new Error(
         `The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has failed with the following ` +
           `error: ${err.message}`
-      )
+      ),
+      cb
     );
   });
 
@@ -233,6 +238,18 @@ function safelyExtractErrorMessage(error) {
 function setAgentHost(host) {
   logger.info(`Found an agent on ${host}:${agentOpts.port}, proceeding to announce request.`);
   agentOpts.host = host;
+}
+
+/**
+ * @param {Object} err
+ * @param {(...args: *) => *} cb The callback to execute at most once.
+ */
+function handleCallback(err, cb) {
+  logger.warn(err);
+  if (!callbackWasCalled) {
+    callbackWasCalled = true;
+    cb();
+  }
 }
 
 module.exports = {

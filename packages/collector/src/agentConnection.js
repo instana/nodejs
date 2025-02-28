@@ -28,6 +28,8 @@ let maxContentErrorHasBeenLogged = false;
 const http = uninstrumentedHttp.http;
 let isConnected = false;
 
+let callbackWasCalled = false;
+
 /** @type {string | null} */
 let cpuSetFileContent = null;
 
@@ -135,7 +137,7 @@ exports.announceNodeCollector = function announceNodeCollector(cb) {
     },
     res => {
       if (res.statusCode < 200 || res.statusCode >= 300) {
-        cb(new Error(`Announce to agent failed with status code ${res.statusCode}`));
+        handleCallback(new Error(`Announce to agent failed with status code ${res.statusCode}`), cb);
         return;
       }
 
@@ -151,14 +153,12 @@ exports.announceNodeCollector = function announceNodeCollector(cb) {
   );
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
-    // even though the cb here should point to the callee of the current fn, ie, `function tryToAnnounce`
-    // it gets pointed to the atmostOnce fucntion (wrapped call), but why the wrapped call executes the log inside ?
-    logger.error('Announce request to agent failed due to timeout');
+    handleCallback(new Error('Announce request to agent failed due to timeout'), cb);
     req.abort();
   });
 
   req.on('error', err => {
-    logger.error(`Announce request to agent failed due to: ${err.message}`);
+    handleCallback(new Error(`Announce request to agent failed due to: ${err.message}`), cb);
   });
 
   req.on('socket', socket => {
@@ -541,4 +541,16 @@ function getSpanLengthInfo(spans) {
   const countBySpanType = spans.reduce(reducer, {});
 
   return countBySpanType;
+}
+
+/**
+ * @param {Object} err
+ * @param {(...args: *) => *} cb The callback to execute at most once.
+ */
+function handleCallback(err, cb) {
+  logger.warn(err);
+  if (!callbackWasCalled) {
+    callbackWasCalled = true;
+    cb();
+  }
 }
