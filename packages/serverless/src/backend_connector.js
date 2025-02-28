@@ -80,10 +80,7 @@ exports.init = function init(opts) {
   }
 
   if (options.identityProvider) {
-    hostHeader = options.identityProvider.getHostHeader();
-    if (hostHeader == null) {
-      hostHeader = 'nodejs-serverless';
-    }
+    hostHeader = options.identityProvider.getHostHeader() || 'nodejs-serverless';
   } else {
     hostHeader = 'nodejs-serverless';
   }
