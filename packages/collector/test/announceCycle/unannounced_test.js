@@ -573,7 +573,7 @@ describe('unannounced state', () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
-                kafka: [{ methods: ['publish'], endpoints: ['topic1'], groups: ['group1'] }]
+                kafka: [{ methods: ['publish'], endpoints: ['topic1'] }]
               }
             }
           });

@@ -497,7 +497,7 @@ function normalizeDisabledTracers(config) {
   ) {
     config.tracing.disabledTracers = process.env['INSTANA_DISABLED_TRACERS']
       .split(',')
-      .map(key => key.trim().toLowerCase())
+      .map(key => normalizeString(key))
       .filter(key => key.length >= 0);
   }
 
@@ -631,7 +631,7 @@ function normalizeSecrets(config) {
  * @returns {MatchingOption}
  */
 function parseMatcherMode(matcherMode) {
-  const trimmed = matcherMode.trim().toLowerCase();
+  const trimmed = normalizeString(matcherMode);
   const isSecretMatcher = allowedSecretMatchers.includes(trimmed);
 
   if (isSecretMatcher) {
@@ -717,36 +717,12 @@ function normalizeIgnoreEndpoints(config) {
     config.tracing.ignoreEndpoints = {};
     return;
   }
-
+  // Case 1: If `ignoreEndpoints` is already configured, normalize it
   if (Object.keys(ignoreEndpoints).length) {
     config.tracing.ignoreEndpoints = normalizeIgnoreEndpointsConfig(ignoreEndpoints);
-  } else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
-    try {
-      const ignoreEndpoints = Object.fromEntries(
-        process.env.INSTANA_IGNORE_ENDPOINTS.split(';')
-          .map(serviceEntry => {
-            const [serviceName, endpointList] = (serviceEntry || '').split(':').map(part => part.trim());
-
-            if (!serviceName || !endpointList) {
-              logger.warn(
-                `Invalid entry in INSTANA_IGNORE_ENDPOINTS ${process.env.INSTANA_IGNORE_ENDPOINTS}: "${serviceEntry}". Expected format is e.g. "service:endpoint1,endpoint2".`
-              );
-              return null;
-            }
-
-            return [
-              serviceName.toLowerCase(),
-              { methods: endpointList.split(',').map(endpoint => endpoint.trim().toLowerCase()) }
-            ];
-          })
-          .filter(Boolean)
-      );
-      config.tracing.ignoreEndpoints = ignoreEndpoints;
-    } catch (error) {
-      logger.warn(
-        `Failed to parse INSTANA_IGNORE_ENDPOINTS: ${process.env.INSTANA_IGNORE_ENDPOINTS}. Error: ${error?.message}`
-      );
-    }
+  } // Case 2: If `INSTANA_IGNORE_ENDPOINTS` environment variable is set, parse it
+  else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
+    config.tracing.ignoreEndpoints = parseAndSetIgnoreEndpointsFromEnv();
   } else {
     return;
   }
@@ -755,45 +731,55 @@ function normalizeIgnoreEndpoints(config) {
 }
 /**
  * Normalizes the ignore endpoints configuration to ensure consistent formatting.
- * This function processes a configuration object where services and their endpoints
- * are specified, ensuring all strings are trimmed and lowercase, and organizing
- * the data into a structured format.
+ * Use case:
+ * - Supports specifying methods as strings or detailed configurations with methods and endpoints.
+ * - Ensures configurations are properly formatted to avoid mismatches due to casing or whitespace.
  *
  * @param {{ [s: string]: any; } | ArrayLike<any>} ignoreEndpointConfig - The input configuration.
  * @returns {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
- * Returns a normalized configuration object where:
- * - Values are arrays of objects containing normalized `methods` and `endpoints`.
  */
 function normalizeIgnoreEndpointsConfig(ignoreEndpointConfig) {
   return Object.fromEntries(
     Object.entries(ignoreEndpointConfig).map(([service, endpointsConfig]) => {
       if (!Array.isArray(endpointsConfig)) {
-        return [service.trim().toLowerCase(), []];
+        return [normalizeString(service), []];
       }
 
       /** @type {string[]} */
       const methods = [];
 
-      /** @type {import('../tracing').IgnoreEndpointConfig[]} } */
+      /** @type {import('../tracing').IgnoreEndpointConfig[]} */
       const otherConfigs = [];
 
       endpointsConfig.forEach(entry => {
         if (typeof entry === 'string') {
-          // If the entry is a string, treat it as a methods
-          methods.push(entry.trim().toLowerCase());
+          // If the entry is a string, consider it as methods
+          methods.push(normalizeString(entry));
         } else if (typeof entry === 'object' && entry !== null) {
           const normalizedEntry = Object.fromEntries(
-            Object.entries(entry).map(([key, value]) => [key.trim().toLowerCase(), value])
+            Object.entries(entry).map(([key, value]) => [normalizeString(key), value])
           );
 
-          /** @type {Record<string, any>} */
+          /** @type {import('../tracing').IgnoreEndpointConfig} */
           const formattedEntry = {};
-
-          for (const [key, value] of Object.entries(normalizedEntry)) {
-            formattedEntry[key] = Array.isArray(value) ? value.map(item => item.trim().toLowerCase()) : [value];
+          // Only process allowed fields: "methods" and "endpoints".
+          // These are the only supported configurations for ignoring endpoints.
+          if (normalizedEntry.methods) {
+            formattedEntry.methods = Array.isArray(normalizedEntry.methods)
+              ? normalizedEntry.methods.map(item => item?.trim()?.toLowerCase())
+              : [normalizeString(normalizedEntry.methods)];
           }
 
-          otherConfigs.push(formattedEntry);
+          if (normalizedEntry.endpoints) {
+            formattedEntry.endpoints = Array.isArray(normalizedEntry.endpoints)
+              ? normalizedEntry.endpoints.map(item => normalizeString(item))
+              : [normalizeString(normalizedEntry.endpoints)];
+          }
+
+          // Store the formatted entry if it contains valid keys
+          if (Object.keys(formattedEntry).length > 0) {
+            otherConfigs.push(formattedEntry);
+          }
         }
       });
 
@@ -803,9 +789,48 @@ function normalizeIgnoreEndpointsConfig(ignoreEndpointConfig) {
       }
       normalizedEndpoints.push(...otherConfigs);
 
-      return [service.trim().toLowerCase(), normalizedEndpoints];
+      return [normalizeString(service), normalizedEndpoints];
     })
   );
 }
-// Agent also uses the same method to parse the endpoint as both receives the same format
+
+/**
+ * Parses the `INSTANA_IGNORE_ENDPOINTS` environment variable and sets the `ignoreEndpoints` configuration.
+ * Expected format: - "service:endpoint1,endpoint2"
+ */
+function parseAndSetIgnoreEndpointsFromEnv() {
+  try {
+    return Object.fromEntries(
+      process.env.INSTANA_IGNORE_ENDPOINTS.split(';')
+        .map(serviceEntry => {
+          const [serviceName, endpointList] = (serviceEntry || '').split(':').map(part => part.trim());
+
+          if (!serviceName || !endpointList) {
+            logger.warn(
+              `Invalid entry in INSTANA_IGNORE_ENDPOINTS ${process.env.INSTANA_IGNORE_ENDPOINTS}: "${serviceEntry}". Expected format is e.g. "service:endpoint1,endpoint2".`
+            );
+            return null;
+          }
+          return [
+            serviceName.toLowerCase(),
+            { methods: endpointList.split(',').map(endpoint => normalizeString(endpoint)) }
+          ];
+        })
+        .filter(Boolean)
+    );
+  } catch (error) {
+    logger.warn(
+      `Failed to parse INSTANA_IGNORE_ENDPOINTS: ${process.env.INSTANA_IGNORE_ENDPOINTS}. Error: ${error?.message}`
+    );
+  }
+}
+
+/**
+ * Formats a string by trimming whitespace and converting it to lowercase.
+ * @param {string} str - The string to format.
+ */
+function normalizeString(str) {
+  return str?.trim()?.toLowerCase();
+}
+// Agent also uses the same methods to parse the endpoint as both receives the same format
 module.exports.normalizeIgnoreEndpointsConfig = normalizeIgnoreEndpointsConfig;
