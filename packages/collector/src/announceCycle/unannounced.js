@@ -222,18 +222,16 @@ function applySpanBatchingConfiguration(agentResponse) {
  * - Keys represent service names (e.g., 'kafka', 'redis').
  * - Values can be:
  *   - An array of strings specifying methods to ignore (e.g., ["type", "get"]).
- *   - An array of `IgnoreEndpointsFilterConfig` objects, each defining a method and endpoints.
+ *   - An array of `IgnoreEndpointsFields` objects, each defining a method and endpoints.
  *
  * @param {AgentAnnounceResponse} agentResponse
  */
 function applyIgnoreEndpointsConfiguration(agentResponse) {
-  if (agentResponse?.tracing?.['ignore-endpoints']) {
-    ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
-    agentOpts.config.tracing.ignoreEndpoints = normalizeConfig.normalizeIgnoreEndpointsConfig(
-      agentResponse?.tracing['ignore-endpoints'],
-      logger
-    );
-  }
+  const ignoreEndpoints = agentResponse?.tracing?.['ignore-endpoints'];
+  if (!ignoreEndpoints) return;
+
+  ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
+  agentOpts.config.tracing.ignoreEndpoints = normalizeConfig.normalizeIgnoreEndpointsConfig(ignoreEndpoints, logger);
 }
 
 module.exports = {

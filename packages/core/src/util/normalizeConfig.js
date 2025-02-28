@@ -720,7 +720,7 @@ function normalizeIgnoreEndpoints(config) {
   // Case 1: If `ignoreEndpoints` is configured via in-code
   if (Object.keys(ignoreEndpoints).length) {
     config.tracing.ignoreEndpoints = normalizeIgnoreEndpointsConfig(ignoreEndpoints);
-  } // Case 2: If `INSTANA_IGNORE_ENDPOINTS` environment variable is set, parse it
+  } // Case 2: If `INSTANA_IGNORE_ENDPOINTS` environment variable is set.
   else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
     config.tracing.ignoreEndpoints = parseIgnoreEndpointsFromEnv();
   } else {
@@ -752,7 +752,7 @@ function normalizeIgnoreEndpointsConfig(ignoreEndpointConfig, _logger = logger) 
         /** @type {string[]} */
         const methods = [];
 
-        /** @type {import('../tracing').IgnoreEndpointsFilterConfig[]} */
+        /** @type {import('../tracing').IgnoreEndpointsFields[]} */
         const advancedConfigs = [];
 
         endpointConfigs.forEach(config => {
@@ -765,7 +765,7 @@ function normalizeIgnoreEndpointsConfig(ignoreEndpointConfig, _logger = logger) 
               Object.entries(config).map(([key, value]) => [normalizeString(key), value])
             );
 
-            /** @type {import('../tracing').IgnoreEndpointsFilterConfig} */
+            /** @type {import('../tracing').IgnoreEndpointsFields} */
             const validConfig = {};
 
             // Only process allowed fields: "methods" and "endpoints".
