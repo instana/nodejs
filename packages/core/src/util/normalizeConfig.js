@@ -737,6 +737,18 @@ function normalizeIgnoreEndpoints(config) {
         config.tracing.ignoreEndpoints[normalizedService] = null;
       }
     });
+  } else if (process.env.INSTANA_IGNORE_ENDPOINTS_PATH) {
+    const { readFromYaml } = require('./readFromYaml');
+    const yamlFilePath = process.env.INSTANA_IGNORE_ENDPOINTS_PATH;
+
+    try {
+      const endpointsConfig = readFromYaml(yamlFilePath);
+      config.tracing.ignoreEndpoints = normalizeIgnoreEndpointsConfigFromYaml(endpointsConfig);
+    } catch (error) {
+      logger.warn(
+        `Failed to parse INSTANA_IGNORE_ENDPOINTS_PATH: ${yamlFilePath}. Error: ${error.message || 'Unknown error'}`
+      );
+    }
   } else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
     try {
       const ignoreEndpoints = Object.fromEntries(
