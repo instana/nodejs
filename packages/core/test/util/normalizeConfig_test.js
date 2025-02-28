@@ -479,15 +479,16 @@ describe('util.normalizeConfig', () => {
   it('should apply ignore endpoints if the INSTANA_IGNORE_ENDPOINTS is set and valid', () => {
     process.env.INSTANA_IGNORE_ENDPOINTS = 'redis:get,set;';
     const config = normalizeConfig();
-    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get', 'set'] });
+
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: { methods: ['get', 'set'] } });
   });
 
   it('should correctly parse INSTANA_IGNORE_ENDPOINTS containing multiple services and endpoints', () => {
     process.env.INSTANA_IGNORE_ENDPOINTS = 'redis:get,set; dynamodb:query';
     const config = normalizeConfig();
     expect(config.tracing.ignoreEndpoints).to.deep.equal({
-      redis: ['get', 'set'],
-      dynamodb: ['query']
+      redis: { methods: ['get', 'set'] },
+      dynamodb: { methods: ['query'] }
     });
   });
 
@@ -508,7 +509,7 @@ describe('util.normalizeConfig', () => {
   it('should apply multiple ignore endpoints via config', () => {
     const config = normalizeConfig({
       tracing: {
-        ignoreEndpoints: { redis: ['get', 'type'] }
+        ignoreEndpoints: { redis: ['GET', 'TYPE'] }
       }
     });
     expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: [{ methods: ['get', 'type'] }] });

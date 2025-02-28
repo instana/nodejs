@@ -734,7 +734,10 @@ function normalizeIgnoreEndpoints(config) {
               return null;
             }
 
-            return [serviceName.toLowerCase(), endpointList.split(',').map(endpoint => endpoint.trim().toLowerCase())];
+            return [
+              serviceName.toLowerCase(),
+              { methods: endpointList.split(',').map(endpoint => endpoint.trim().toLowerCase()) }
+            ];
           })
           .filter(Boolean)
       );
