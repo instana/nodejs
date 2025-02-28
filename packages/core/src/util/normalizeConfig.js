@@ -771,3 +771,32 @@ function normalizeIgnoreEndpoints(config) {
 
   logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
 }
+/**
+ * @param {{ [s: string]: any; } | ArrayLike<any>} ignoreEndpointConfig
+ */
+function normalizeIgnoreEndpointsConfigFromYaml(ignoreEndpointConfig) {
+  return Object.fromEntries(
+    Object.entries(ignoreEndpointConfig).map(([service, endpointsConfig]) => {
+      if (!Array.isArray(endpointsConfig)) {
+        return [service.trim().toLowerCase(), null];
+      }
+
+      const normalizedEndpoints = endpointsConfig.map(entry => {
+        if (typeof entry === 'object' && entry !== null) {
+          return Object.fromEntries(
+            Object.entries(entry).map(([key, value]) => [
+              key.trim()?.toLowerCase(),
+              Array.isArray(value) ? value.map(v => v.trim()?.toLowerCase()) : value?.trim()?.toLowerCase()
+            ])
+          );
+        }
+        return entry?.trim()?.toLowerCase();
+      });
+
+      return [service?.trim()?.toLowerCase(), normalizedEndpoints];
+    })
+  );
+}
+
+// Agent also uses the same method to parse the endpoint as both receives the same format
+module.exports.normalizeIgnoreEndpointsConfigFromYaml = normalizeIgnoreEndpointsConfigFromYaml;

@@ -8,7 +8,7 @@
 const {
   secrets,
   tracing,
-  util: { ensureNestedObjectExists }
+  util: { ensureNestedObjectExists, normalizeConfig }
 } = require('@instana/core');
 const { constants: tracingConstants } = tracing;
 
@@ -42,13 +42,19 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @typedef {Object} TracingConfig
  * @property {Array.<string>} [extra-http-headers]
  * @property {KafkaTracingConfig} [kafka]
- * @property {Object.<string, (string | string[])>} [ignore-endpoints]
+ * @property {Object.<string, (string | string[])| IgnoreEndpointConfig[]>} [ignore-endpoints]
  * @property {boolean} [span-batching-enabled]
  */
 
 /**
  * @typedef {Object} KafkaTracingConfig
  * @property {boolean} [trace-correlation]
+ */
+
+/**
+ * @typedef {Object} IgnoreEndpointConfig
+ * @property {string | string[]} method - A method or list of methods to ignore.
+ * @property {string[]=} [endpoints] - A list of endpoints to ignore (optional).
  */
 
 /**
@@ -215,29 +221,34 @@ function applySpanBatchingConfiguration(agentResponse) {
 }
 
 /**
- * The agent configuration returns the `string[]` format.
+ * The agent configuration can include an array of strings or objects with additional filtering criteria.
  * For more information, see the related design discussion:
  * https://github.ibm.com/instana/requests-for-discussion/pull/84
+ *
+ * The 'ignore-endpoints' configuration follows this structure:
+ *
+ * - Keys represent service names (e.g., 'kafka', 'redis').
+ * - Values can be:
+ *   - An array of strings specifying methods to ignore (e.g., ["type", "get"]).
+ *   - An array of `IgnoreEndpointConfig` objects, each defining a method and endpoints.
  *
  * @param {AgentAnnounceResponse} agentResponse
  */
 function applyIgnoreEndpointsConfiguration(agentResponse) {
-  if (agentResponse?.tracing?.['ignore-endpoints']) {
-    const endpointTracingConfigFromAgent = agentResponse.tracing['ignore-endpoints'];
-
-    const endpointTracingConfig = Object.fromEntries(
-      Object.entries(endpointTracingConfigFromAgent).map(([service, endpoints]) => {
-        let normalizedEndpoints = null;
-        if (Array.isArray(endpoints)) {
-          normalizedEndpoints = endpoints.map(endpoint => endpoint?.toLowerCase());
-        }
-
-        return [service.toLowerCase(), normalizedEndpoints];
-      })
+  try {
+    if (agentResponse?.tracing?.['ignore-endpoints']) {
+      ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
+      agentOpts.config.tracing.ignoreEndpoints = normalizeConfig.normalizeIgnoreEndpointsConfigFromYaml(
+        agentResponse?.tracing?.['ignore-endpoints']
+      );
+    }
+  } catch (error) {
+    logger.warn(
+      `Error processing ignore-endpoints configuration:${agentResponse.tracing['ignore-endpoints']}`,
+      error?.message
     );
-
     ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
-    agentOpts.config.tracing.ignoreEndpoints = endpointTracingConfig;
+    agentOpts.config.tracing.ignoreEndpoints = {};
   }
 }
 
