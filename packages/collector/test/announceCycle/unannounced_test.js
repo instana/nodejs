@@ -392,7 +392,7 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should correctly handle only object-based ignoreEndpoints', done => {
+    it('should correctly handle when only object-based ignoreEndpoints are applied', done => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
@@ -504,7 +504,7 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should correctly parse ignoreEndpoints when methods are provided in string format without endpoints', done => {
+    it('should correctly parse ignoreEndpoints when methods  and endpoints are provided in string format', done => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {
@@ -603,7 +603,7 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should handle deeply nested invalid structures', done => {
+    it('should ignore gracefully when deeply nested invalid structures', done => {
       prepareAnnounceResponse({
         tracing: {
           'ignore-endpoints': {

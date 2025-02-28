@@ -717,7 +717,7 @@ function normalizeIgnoreEndpoints(config) {
     config.tracing.ignoreEndpoints = {};
     return;
   }
-  // Case 1: If `ignoreEndpoints` is already configured, normalize it
+  // Case 1: If `ignoreEndpoints` is configured via in-code
   if (Object.keys(ignoreEndpoints).length) {
     config.tracing.ignoreEndpoints = normalizeIgnoreEndpointsConfig(ignoreEndpoints);
   } // Case 2: If `INSTANA_IGNORE_ENDPOINTS` environment variable is set, parse it
@@ -737,65 +737,71 @@ function normalizeIgnoreEndpoints(config) {
  * - Adavnced configurations can include both methods and endpoints.
  * - Input is normalized to prevent mismatches due to casing or whitespace.
  *
- * @param {{ [service: string]: any; } | ArrayLike<any>} ignoreEndpointConfig
+ * @param {import('../tracing').IgnoreEndpoints} ignoreEndpointConfig
+ * @property {import('../core').GenericLogger} [_logger]
  * @returns {import('../tracing').IgnoreEndpoints} The normalized ignore endpoints configuration.
  */
-function normalizeIgnoreEndpointsConfig(ignoreEndpointConfig) {
-  return Object.fromEntries(
-    Object.entries(ignoreEndpointConfig).map(([serviceName, endpointConfigs]) => {
-      if (!Array.isArray(endpointConfigs)) {
-        return [normalizeString(serviceName), []];
-      }
-
-      /** @type {string[]} */
-      const methods = [];
-
-      /** @type {import('../tracing').IgnoreEndpointConfig[]} */
-      const advancedConfigs = [];
-
-      endpointConfigs.forEach(config => {
-        if (typeof config === 'string') {
-          // If the config is a string, treat it as method to be ignored.
-          methods.push(normalizeString(config));
-        } else if (typeof config === 'object' && config !== null) {
-          // We need to normalize the keys as well. 
-          const normalizedConfig = Object.fromEntries(
-            Object.entries(config).map(([key, value]) => [normalizeString(key), value])
-          );
-
-          /** @type {import('../tracing').IgnoreEndpointConfig} */
-          const validConfig = {};
-
-          // Only process allowed fields: "methods" and "endpoints".
-          // These are the only supported configurations for ignoring endpoints atm.
-
-          if (normalizedConfig?.methods) {
-            validConfig.methods = Array.isArray(normalizedConfig.methods)
-              ? normalizedConfig.methods.map(method => normalizeString(method))
-              : [normalizeString(normalizedConfig.methods)];
-          }
-
-          if (normalizedConfig?.endpoints) {
-            validConfig.endpoints = Array.isArray(normalizedConfig.endpoints)
-              ? normalizedConfig.endpoints.map(endpoint => normalizeString(endpoint))
-              : [normalizeString(normalizedConfig.endpoints)];
-          }
-
-          if (Object.keys(validConfig).length > 0) {
-            advancedConfigs.push(validConfig);
-          }
+function normalizeIgnoreEndpointsConfig(ignoreEndpointConfig, _logger = logger) {
+  try {
+    return Object.fromEntries(
+      Object.entries(ignoreEndpointConfig).map(([serviceName, endpointConfigs]) => {
+        if (!Array.isArray(endpointConfigs)) {
+          return [normalizeString(serviceName), []];
         }
-      });
 
-      const normalizedEntries = [];
-      if (methods.length > 0) {
-        normalizedEntries.push({ methods: methods });
-      }
-      normalizedEntries.push(...advancedConfigs);
+        /** @type {string[]} */
+        const methods = [];
 
-      return [normalizeString(serviceName), normalizedEntries];
-    })
-  );
+        /** @type {import('../tracing').IgnoreEndpointsFilterConfig[]} */
+        const advancedConfigs = [];
+
+        endpointConfigs.forEach(config => {
+          if (typeof config === 'string') {
+            // If the config is a string, treat it as method to be ignored.
+            methods.push(normalizeString(config));
+          } else if (typeof config === 'object' && config !== null) {
+            // We need to normalize the keys as well.
+            const normalizedConfig = Object.fromEntries(
+              Object.entries(config).map(([key, value]) => [normalizeString(key), value])
+            );
+
+            /** @type {import('../tracing').IgnoreEndpointsFilterConfig} */
+            const validConfig = {};
+
+            // Only process allowed fields: "methods" and "endpoints".
+            // These are the only supported configurations for ignoring endpoints atm.
+
+            if (normalizedConfig?.methods) {
+              validConfig.methods = Array.isArray(normalizedConfig.methods)
+                ? normalizedConfig.methods.map(method => normalizeString(method))
+                : [normalizeString(normalizedConfig.methods)];
+            }
+
+            if (normalizedConfig?.endpoints) {
+              validConfig.endpoints = Array.isArray(normalizedConfig.endpoints)
+                ? normalizedConfig.endpoints.map(endpoint => normalizeString(endpoint))
+                : [normalizeString(normalizedConfig.endpoints)];
+            }
+
+            if (Object.keys(validConfig).length > 0) {
+              advancedConfigs.push(validConfig);
+            }
+          }
+        });
+
+        const normalizedEntries = [];
+        if (methods.length > 0) {
+          normalizedEntries.push({ methods: methods });
+        }
+        normalizedEntries.push(...advancedConfigs);
+
+        return [normalizeString(serviceName), normalizedEntries];
+      })
+    );
+  } catch (error) {
+    _logger.warn(`Error processing ignore-endpoints configuration`, error?.message);
+    return {}; // for extra safety
+  }
 }
 
 /**

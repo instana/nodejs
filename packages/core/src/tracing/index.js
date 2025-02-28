@@ -119,11 +119,11 @@ if (customInstrumentations.length > 0) {
  */
 
 /**
- * @typedef {Object.<string,IgnoreEndpointConfig[]>}  IgnoreEndpoints
+ * @typedef {Object.<string,IgnoreEndpointsFilterConfig[]>}  IgnoreEndpoints
  */
 
 /**
- * @typedef {Object} IgnoreEndpointConfig
+ * @typedef {Object} IgnoreEndpointsFilterConfig
  * @property {string[]} [methods]
  * @property {string[]} [endpoints]
  */
