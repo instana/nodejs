@@ -10,10 +10,10 @@ const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka_placeholder'];
 
 /**
  * @param {import('../core').InstanaBaseSpan} span
- * @param {import('../tracing').IgnoreEndpointConfig} config
+ * @param {import('../tracing').IgnoreEndpointConfig} ignoreconfig
  * @returns {boolean}
  */
-function matchEndpoints(span, config) {
+function matchEndpoints(span, ignoreconfig) {
   const spanEndpoints = Array.isArray(span.data[span.n]?.endpoints)
     ? span.data[span.n].endpoints
     : [span.data[span.n]?.endpoints].filter(Boolean);
@@ -23,27 +23,28 @@ function matchEndpoints(span, config) {
   }
 
   // If * is present, any endpoint will match.
-  if (config.endpoints.includes('*')) {
+  if (ignoreconfig.endpoints.includes('*')) {
     return true;
   }
 
   return spanEndpoints.some((/** @type {string} */ endpoint) =>
-    config.endpoints.some((/** @type {string} */ e) => e?.toLowerCase() === endpoint?.toLowerCase())
+    ignoreconfig.endpoints.some((/** @type {string} */ e) => e?.toLowerCase() === endpoint?.toLowerCase())
   );
 }
 
 /**
  * @param {import("../core").InstanaBaseSpan} span
- * @param {import('../tracing').IgnoreEndpointConfig} config
+ * @param {import('../tracing').IgnoreEndpointConfig} ignoreconfig
  * @returns {boolean}
  */
-function matchMethods(span, config) {
+function matchMethods(span, ignoreconfig) {
   const spanOperation = span.data[span.n]?.operation?.toLowerCase();
   let methodMatches = false;
 
-  if (config.methods) {
-    if (Array.isArray(config.methods)) {
-      methodMatches = config.methods.includes('*') || config.methods.some(m => m?.toLowerCase() === spanOperation);
+  if (ignoreconfig.methods) {
+    if (Array.isArray(ignoreconfig.methods)) {
+      methodMatches =
+        ignoreconfig.methods.includes('*') || ignoreconfig.methods.some(m => m?.toLowerCase() === spanOperation);
     }
   }
 
@@ -72,25 +73,25 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
     return ignoreConfigs.toLowerCase() === spanOperation;
   }
 
-  return ignoreConfigs.some(config => {
+  return ignoreConfigs.some(ignoreconfig => {
     // For basic filtering: when the configuration is provided as a simple string array
     // (e.g., "redis:['get,'set']"
-    if (typeof config === 'string') {
-      return config.toLowerCase() === spanOperation;
+    if (typeof ignoreconfig === 'string') {
+      return ignoreconfig.toLowerCase() === spanOperation;
     }
 
     // For advanced filtering:
-    // For e.g., for a Kafka, the config like { methods: ['consume'], endpoints: ['t1'] }.
-    if (typeof config === 'object') {
-      // Case where config does not specify any filtering criteria.
-      if (!config.methods && !config.endpoints) {
+    // For e.g., for a Kafka, the ignoreconfig like { methods: ['consume'], endpoints: ['t1'] }.
+    if (typeof ignoreconfig === 'object') {
+      // Case where ignoreconfig does not specify any filtering criteria.
+      if (!ignoreconfig.methods && !ignoreconfig.endpoints) {
         return false;
       }
 
-      if (config.methods && !matchMethods(span, config)) {
+      if (ignoreconfig.methods && !matchMethods(span, ignoreconfig)) {
         return false;
       }
-      if (config.endpoints && !matchEndpoints(span, config)) {
+      if (ignoreconfig.endpoints && !matchEndpoints(span, ignoreconfig)) {
         return false;
       }
       // extend more filtering cases in future
