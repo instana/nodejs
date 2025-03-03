@@ -22,6 +22,7 @@ const esm = require('./esm');
 const preloadFlags = require('./getPreloadFlags');
 const configNormalizers = require('./configNormalizers');
 const spanFilter = require('./spanFilter');
+const yamlReader = require('./yamlReader');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -38,6 +39,7 @@ exports.init = function init(config) {
   iitmHook.init(config);
   configNormalizers.init(config);
   spanFilter.init(config);
+  yamlReader.init(config);
 };
 
 exports.applicationUnderMonitoring = applicationUnderMonitoring;
@@ -88,3 +90,4 @@ exports.hook = hook;
 exports.esm = esm;
 exports.configNormalizers = configNormalizers;
 exports.spanFilter = spanFilter;
+exports.yamlReader = yamlReader;

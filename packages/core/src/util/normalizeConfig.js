@@ -9,7 +9,7 @@
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
 const configNormalizers = require('./configNormalizers');
-const { readFromYaml } = require('./readFromYaml');
+const { read } = require('./yamlReader');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -728,7 +728,7 @@ function normalizeIgnoreEndpoints(config) {
   // also support base filtering, and reading the config from the yaml file.
   else if (process.env.INSTANA_IGNORE_ENDPOINTS_PATH) {
     const yamlFilePath = process.env.INSTANA_IGNORE_ENDPOINTS_PATH;
-    const endpointsConfig = readFromYaml(yamlFilePath);
+    const endpointsConfig = read(yamlFilePath);
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(endpointsConfig);
   }
   // Case 3: If `INSTANA_IGNORE_ENDPOINTS` environment variable is set.
