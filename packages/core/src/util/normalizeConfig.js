@@ -9,6 +9,7 @@
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
 const configNormalizers = require('./configNormalizers');
+const { readFromYaml } = require('./readFromYaml');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -722,7 +723,15 @@ function normalizeIgnoreEndpoints(config) {
   if (Object.keys(ignoreEndpointsConfig).length) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
   }
-  // Case 2: If `INSTANA_IGNORE_ENDPOINTS` environment variable is set.
+  // Case 2: If `INSTANA_IGNORE_ENDPOINTS_PATH` environment variable is set.
+  // This was introduced in Phase 2 for advanced filtering based on methods and endpoints.
+  // also support base filtering, and reading the config from the yaml file.
+  else if (process.env.INSTANA_IGNORE_ENDPOINTS_PATH) {
+    const yamlFilePath = process.env.INSTANA_IGNORE_ENDPOINTS_PATH;
+    const endpointsConfig = readFromYaml(yamlFilePath);
+    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(endpointsConfig);
+  }
+  // Case 3: If `INSTANA_IGNORE_ENDPOINTS` environment variable is set.
   // This was introduced in Phase 1 for basic filtering based on operations only (without advanced filtering).
   // Use this to filter spans by operation or method, e.g., `redis.get`, `kafka.consume`, etc.
   else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
