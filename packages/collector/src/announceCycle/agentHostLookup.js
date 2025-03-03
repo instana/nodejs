@@ -110,6 +110,14 @@ function enter(ctx) {
 function checkHost(host, cb) {
   cb = atMostOnce(`callback for checkHost: ${host}`, cb);
 
+  let wasCalled = false;
+  const handleCallback = function () {
+    if (!wasCalled) {
+      wasCalled = true;
+      cb.apply(null, arguments);
+    }
+  };
+
   let req;
   try {
     req = http.request(
@@ -129,7 +137,7 @@ function checkHost(host, cb) {
           // We are not interested in the body of a non-2xx HTTP response, but since we have added a response handler,
           // we must consume the response body, see https://nodejs.org/api/http.html#class-httpclientrequest.
           res.resume();
-          cb(
+          handleCallback(
             new Error(
               `The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has failed with an ` +
                 `unexpected status code. Expected HTTP 200 but received: ${res.statusCode}`
@@ -139,7 +147,7 @@ function checkHost(host, cb) {
       }
     );
   } catch (e) {
-    cb(
+    handleCallback(
       new Error(
         `The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has failed with the following ` +
           `error: ${e.message}`
@@ -149,14 +157,16 @@ function checkHost(host, cb) {
   }
 
   req.on('timeout', function onTimeout() {
-    cb(new Error(`The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has timed out`));
+    handleCallback(
+      new Error(`The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has timed out`)
+    );
   });
 
   // additional idle timeout (that is, not getting a response after establishing a connection)
   req.setTimeout(requestTimeout);
 
   req.on('error', err => {
-    cb(
+    handleCallback(
       new Error(
         `The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has failed with the following ` +
           `error: ${err.message}`
