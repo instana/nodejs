@@ -479,15 +479,16 @@ describe('util.normalizeConfig', () => {
   it('should apply ignore endpoints if the INSTANA_IGNORE_ENDPOINTS is set and valid', () => {
     process.env.INSTANA_IGNORE_ENDPOINTS = 'redis:get,set;';
     const config = normalizeConfig();
-    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get', 'set'] });
+
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: [{ methods: ['get', 'set'] }] });
   });
 
   it('should correctly parse INSTANA_IGNORE_ENDPOINTS containing multiple services and endpoints', () => {
     process.env.INSTANA_IGNORE_ENDPOINTS = 'redis:get,set; dynamodb:query';
     const config = normalizeConfig();
     expect(config.tracing.ignoreEndpoints).to.deep.equal({
-      redis: ['get', 'set'],
-      dynamodb: ['query']
+      redis: [{ methods: ['get', 'set'] }],
+      dynamodb: [{ methods: ['query'] }]
     });
   });
 
@@ -503,7 +504,7 @@ describe('util.normalizeConfig', () => {
         ignoreEndpoints: { redis: ['get'] }
       }
     });
-    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get'] });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: [{ methods: ['get'] }] });
   });
   it('should apply multiple ignore endpoints via config', () => {
     const config = normalizeConfig({
@@ -511,7 +512,7 @@ describe('util.normalizeConfig', () => {
         ignoreEndpoints: { redis: ['GET', 'TYPE'] }
       }
     });
-    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get', 'type'] });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: [{ methods: ['get', 'type'] }] });
   });
   it('should apply ignore endpoints via config for multiple packages', () => {
     const config = normalizeConfig({
@@ -519,7 +520,90 @@ describe('util.normalizeConfig', () => {
         ignoreEndpoints: { redis: ['get'], dynamodb: ['querey'] }
       }
     });
-    expect(config.tracing.ignoreEndpoints).to.deep.equal({ redis: ['get'], dynamodb: ['querey'] });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({
+      redis: [{ methods: ['get'] }],
+      dynamodb: [{ methods: ['querey'] }]
+    });
+  });
+
+  it('should normalize case and trim spaces in method names and endpoint paths', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: {
+          redis: ['  GET ', 'TyPe'],
+          kafka: [{ methods: ['  PUBLISH  '], endpoints: [' Topic1 ', 'TOPIC2 '] }]
+        }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({
+      redis: [{ methods: ['get', 'type'] }],
+      kafka: [{ methods: ['publish'], endpoints: ['topic1', 'topic2'] }]
+    });
+  });
+
+  it('should return an empty list if all configurations are invalid', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: { redis: {}, kafka: true, mysql: null }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({
+      redis: [],
+      kafka: [],
+      mysql: []
+    });
+  });
+
+  it('should normalize objects when unsupported additional fields applied', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: {
+          redis: [{ extra: 'data' }],
+          kafka: [{ methods: ['publish'], extra: 'info' }]
+        }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({
+      redis: [],
+      kafka: [{ methods: ['publish'] }]
+    });
+  });
+
+  it('should normalize objects with only methods and no endpoints', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: {
+          kafka: [{ methods: ['PUBLISH'] }]
+        }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({
+      kafka: [{ methods: ['publish'] }]
+    });
+  });
+
+  it('should normalize objects with only endpoints and no methods', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: {
+          kafka: [{ endpoints: ['Topic1'] }]
+        }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({
+      kafka: [{ endpoints: ['topic1'] }]
+    });
+  });
+
+  it('should normalize objects where methods or endpoints are invalid types', () => {
+    const config = normalizeConfig({
+      tracing: {
+        ignoreEndpoints: {
+          kafka: [{ methods: 123, endpoints: 'invalid' }]
+        }
+      }
+    });
+    expect(config.tracing.ignoreEndpoints).to.deep.equal({});
   });
 
   function checkDefaults(config) {
