@@ -60,7 +60,11 @@ exports.atMostOnce = function atMostOnce(name, cb) {
       args: Array.prototype.slice.call(arguments)
     };
 
-    logger.debug(`Function ${name} was called ${callCount} times. This time with the following arguments: ${argObj}`);
+    logger.debug(
+      `Function ${name} was called ${callCount} times. This time with the following arguments: ${JSON.stringify(
+        argObj
+      )}`
+    );
   };
 };
 
