@@ -18,7 +18,12 @@ if (isNodeJsTooOld()) {
 }
 
 const { util: coreUtil } = require('@instana/core');
-const { environment: environmentUtil } = require('@instana/serverless');
+const { environment: environmentUtil, consoleLogger: log } = require('@instana/serverless');
+
+// TODO: we currently call "log.init()" twice. Once here
+//       and once in the activate.js. Please merge.
+const logger = log.init();
+environmentUtil.init({ logger });
 
 const isExcludedFromInstrumentation = coreUtil.excludedFromInstrumentation && coreUtil.excludedFromInstrumentation();
 

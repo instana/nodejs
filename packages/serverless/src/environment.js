@@ -9,16 +9,7 @@ const instanaEndpointUrlEnvVar = 'INSTANA_ENDPOINT_URL';
 const instanaAgentKeyEnvVar = 'INSTANA_AGENT_KEY';
 const instanaZoneEnvVar = 'INSTANA_ZONE';
 
-/**
- * TODO:
- *
- * This module is called BEFORE the serverless packages is required - see preactivate.js.
- * At this stage, we don't have any logger initialized yet.
- * For now, we just assign the Node.js inbuild `console` instance.
- *
- * We have to move the validation into the initialization of the serverless packages.
- */
-const logger = console;
+let logger;
 let valid = false;
 let backendHost = null;
 let backendPort = null;
@@ -32,6 +23,10 @@ exports.sendUnencryptedEnvVar = 'INSTANA_DEV_SEND_UNENCRYPTED';
 exports.sendUnencrypted = process.env[exports.sendUnencryptedEnvVar] === 'true';
 
 const customZone = process.env[instanaZoneEnvVar] ? process.env[instanaZoneEnvVar] : undefined;
+
+exports.init = config => {
+  logger = config.logger;
+};
 
 exports.validate = function validate({ validateInstanaAgentKey } = {}) {
   _validate(process.env[instanaEndpointUrlEnvVar], process.env[instanaAgentKeyEnvVar], validateInstanaAgentKey);

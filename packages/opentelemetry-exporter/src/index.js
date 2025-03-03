@@ -93,6 +93,7 @@ class InstanaExporter {
       process.env[instanaAgentKeyEnvVar] = agentKey;
     }
 
+    instanaEnvironment.init({ logger });
     instanaEnvironment.validate();
 
     if (instanaEnvironment.isValid()) {

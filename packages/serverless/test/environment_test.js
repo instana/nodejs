@@ -6,8 +6,8 @@
 'use strict';
 
 const expect = require('chai').expect;
-
 const environmentUtil = require('../src/environment');
+const testUtil = require('@instana/core/test/test_util');
 
 describe('environment util', () => {
   const valuesBeforeTest = {};
@@ -20,6 +20,7 @@ describe('environment util', () => {
   ];
 
   before(() => {
+    environmentUtil.init({ logger: testUtil.createFakeLogger() });
     keys.forEach(key => {
       valuesBeforeTest[key] = process.env[key];
     });
