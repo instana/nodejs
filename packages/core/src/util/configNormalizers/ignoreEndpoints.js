@@ -69,7 +69,7 @@ exports.normalizeConfig = function normalizeConfig(ignoreEndpointConfig) {
       })
     );
   } catch (error) {
-    logger.warn('Error when parsing ignore-endpoints configuration', error?.message);
+    logger?.warn('Error when parsing ignore-endpoints configuration', error?.message);
     return {};
   }
 };
@@ -92,7 +92,7 @@ exports.parseIgnoreEndpointsFromEnv = function parseIgnoreEndpointsFromEnv(ignor
           const [serviceName, endpointList] = (serviceEntry || '').split(':').map(part => part.trim());
 
           if (!serviceName || !endpointList) {
-            logger.warn(
+            logger?.warn(
               // eslint-disable-next-line max-len
               `Invalid entry in INSTANA_IGNORE_ENDPOINTS ${ignoreEndpointsEnv}: "${serviceEntry}". Expected format is e.g. "service:endpoint1,endpoint2".`
             );
@@ -106,7 +106,7 @@ exports.parseIgnoreEndpointsFromEnv = function parseIgnoreEndpointsFromEnv(ignor
         .filter(Boolean)
     );
   } catch (error) {
-    logger.warn(`Failed to parse INSTANA_IGNORE_ENDPOINTS: ${ignoreEndpointsEnv}. Error: ${error?.message}`);
+    logger?.warn(`Failed to parse INSTANA_IGNORE_ENDPOINTS: ${ignoreEndpointsEnv}. Error: ${error?.message}`);
     return {};
   }
 };
