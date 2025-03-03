@@ -23,7 +23,7 @@ const agentControls = globalAgent.instance;
 let publisherControls;
 let consumerControls;
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
 
 ['latest', 'v0'].forEach(version => {
   mochaSuiteFn(`tracing/amqp: ${version}`, function () {

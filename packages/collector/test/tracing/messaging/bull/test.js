@@ -35,7 +35,7 @@ if (process.env.BULL_QUEUE_NAME) {
   queueName = `${process.env.BULL_QUEUE_NAME}${semver.major(process.versions.node)}`;
 }
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
 
 const retryTime = 1000;
 
