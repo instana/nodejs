@@ -122,6 +122,20 @@ exports.getLogger = () => {
   return instanaServerlessLogger;
 };
 
+// TODO: Legacy. Remove in next major release.
+['info', 'warn', 'error', 'debug'].forEach(level => {
+  exports[level] = function () {
+    if (!instanaServerlessLogger) {
+      exports.init();
+    }
+
+    return instanaServerlessLogger[level].apply(instanaServerlessLogger, arguments);
+  };
+});
+
+// TODO: Legacy. Remove in next major release.
+exports.setLevel = setLoggerLevel;
+
 /**
  * @param {import('@instana/core/src/core').GenericLogger | *} _logger
  * @returns {boolean}
