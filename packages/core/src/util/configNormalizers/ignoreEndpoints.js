@@ -80,31 +80,30 @@ exports.normalizeConfig = function normalizeConfig(ignoreEndpointConfig) {
  * Expected format: - "service:endpoint1,endpoint2"
  * @param {string} ignoreEndpointsEnv
  */
-exports.parseIgnoreEndpointsFromEnv = function parseIgnoreEndpointsFromEnv(ignoreEndpointsEnv) {
+exports.fromEnv = function fromEnv(ignoreEndpointsEnv) {
   try {
     if (!ignoreEndpointsEnv) {
       return {};
     }
-    return Object.fromEntries(
-      ignoreEndpointsEnv
-        .split(';')
-        .map(serviceEntry => {
-          const [serviceName, endpointList] = (serviceEntry || '').split(':').map(part => part.trim());
 
-          if (!serviceName || !endpointList) {
-            logger?.warn(
-              // eslint-disable-next-line max-len
-              `Invalid entry in INSTANA_IGNORE_ENDPOINTS ${ignoreEndpointsEnv}: "${serviceEntry}". Expected format is e.g. "service:endpoint1,endpoint2".`
-            );
-            return null;
-          }
-          return [
-            serviceName.toLowerCase(),
-            [{ methods: endpointList.split(',').map(endpoint => normalizeString(endpoint)) }]
-          ];
-        })
-        .filter(Boolean)
-    );
+    const parsedConfig = ignoreEndpointsEnv
+      .split(';')
+      .map(serviceEntry => {
+        const [serviceName, endpointList] = (serviceEntry || '').split(':').map(part => part.trim());
+
+        if (!serviceName || !endpointList) {
+          logger?.warn(
+            // eslint-disable-next-line max-len
+            `Invalid entry in INSTANA_IGNORE_ENDPOINTS ${ignoreEndpointsEnv}: "${serviceEntry}". Expected format is e.g. "service:endpoint1,endpoint2".`
+          );
+          return null;
+        }
+
+        return { [serviceName]: endpointList.split(',') };
+      })
+      .filter(Boolean);
+
+    return exports.normalizeConfig(Object.assign({}, ...parsedConfig));
   } catch (error) {
     logger?.warn(`Failed to parse INSTANA_IGNORE_ENDPOINTS: ${ignoreEndpointsEnv}. Error: ${error?.message}`);
     return {};

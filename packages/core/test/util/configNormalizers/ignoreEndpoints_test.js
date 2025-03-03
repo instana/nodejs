@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { normalizeConfig, parseIgnoreEndpointsFromEnv } = require('../../../src/util/configNormalizers/ignoreEndpoints');
+const { normalizeConfig, fromEnv } = require('../../../src/util/configNormalizers/ignoreEndpoints');
 const { expect } = require('chai');
 
 describe('util.ignoreEndpoints', function () {
@@ -113,19 +113,19 @@ describe('util.ignoreEndpoints', function () {
     });
   });
 
-  describe('parseIgnoreEndpointsFromEnv', function () {
+  describe('fromEnv', function () {
     it('should correctly parse a valid environment variable', function () {
       const input = 'redis:get,type; kafka:consume,publish';
       const expected = {
         redis: [{ methods: ['get', 'type'] }],
         kafka: [{ methods: ['consume', 'publish'] }]
       };
-      expect(parseIgnoreEndpointsFromEnv(input)).to.deep.equal(expected);
+      expect(fromEnv(input)).to.deep.equal(expected);
     });
 
     it('should return an empty object for null or empty input', function () {
-      expect(parseIgnoreEndpointsFromEnv(null)).to.deep.equal({});
-      expect(parseIgnoreEndpointsFromEnv('')).to.deep.equal({});
+      expect(fromEnv(null)).to.deep.equal({});
+      expect(fromEnv('')).to.deep.equal({});
     });
 
     it('should ignore entries with missing service name or endpoint list', function () {
@@ -133,7 +133,7 @@ describe('util.ignoreEndpoints', function () {
       const expected = {
         redis: [{ methods: ['get', 'type'] }]
       };
-      expect(parseIgnoreEndpointsFromEnv(input)).to.deep.equal(expected);
+      expect(fromEnv(input)).to.deep.equal(expected);
     });
 
     it('should handle spaces and trim correctly', function () {
@@ -142,12 +142,12 @@ describe('util.ignoreEndpoints', function () {
         redis: [{ methods: ['get', 'type'] }],
         kafka: [{ methods: ['consume', 'publish'] }]
       };
-      expect(parseIgnoreEndpointsFromEnv(input)).to.deep.equal(expected);
+      expect(fromEnv(input)).to.deep.equal(expected);
     });
 
     it('should return an empty object if parsing fails', function () {
       const input = { notAString: true };
-      expect(parseIgnoreEndpointsFromEnv(input)).to.deep.equal({});
+      expect(fromEnv(input)).to.deep.equal({});
     });
   });
 });

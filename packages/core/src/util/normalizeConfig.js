@@ -726,9 +726,7 @@ function normalizeIgnoreEndpoints(config) {
   // This was introduced in Phase 1 for basic filtering based on operations only (without advanced filtering).
   // Use this to filter spans by operation or method, e.g., `redis.get`, `kafka.consume`, etc.
   else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
-    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.parseIgnoreEndpointsFromEnv(
-      process.env.INSTANA_IGNORE_ENDPOINTS
-    );
+    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
   } else {
     return;
   }
