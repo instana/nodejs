@@ -8,11 +8,14 @@
 let logger;
 
 /**
- * Normalizes the ignore endpoints configuration to ensure consistent internal formatting.
+ * Standardizes the ignore endpoints configuration to ensure consistent internal formatting.
  *
- * Supported input formats:
- * - Strings: Represent methods to be ignored.
- * - Objects: Contain `methods` and/or `endpoints` fields for more granular control.
+ * Acceptable input formats:
+ * - Strings or arrays of strings: These are interpreted as methods to ignore.
+ * - Objects: Should include `methods` and/or `endpoints` properties.
+ *
+ * Normalized internal structure:
+ * - { [serviceName: string]: [{ methods: string[], endpoints: string[] }] }
  *
  * @param {import('../tracing').IgnoreEndpoints} ignoreEndpointConfig
  * @param {import('../core').GenericLogger} _logger
@@ -24,40 +27,43 @@ module.exports = function normalizeIgnoreEndpointsConfig(ignoreEndpointConfig, _
   }
   try {
     return Object.fromEntries(
-      Object.entries(ignoreEndpointConfig).map(([serviceName, endpointConfigs]) => {
-        if (!Array.isArray(endpointConfigs)) return [normalizeString(serviceName), []];
+      Object.entries(ignoreEndpointConfig).map(([service, endpointConfigs]) => {
+        if (!Array.isArray(endpointConfigs)) {
+          return [normalizeString(service), []];
+        }
 
-        // Normalize method names from string-based configurations
+        // Normalize string-based configurations by treating each string as a method name.
         const methodNames = /** @type {string[]} */ (endpointConfigs.filter(config => typeof config === 'string')).map(
           normalizeString
         );
 
-        // Normalize object-based configurations
+        // Normalize object-based configurations that may include 'methods' and/or 'endpoints'.
         const advancedConfigs = endpointConfigs
           .filter(config => typeof config === 'object' && config !== null)
           .map(config => {
-            // Normalize the keys of the configuration object
-            const normalizedConfig = Object.fromEntries(
+            // Normalize configuration keys to support case-insensitivity.
+            const normalizedCfg = Object.fromEntries(
               Object.entries(config).map(([key, value]) => [normalizeString(key), value])
             );
             const validConfig = {};
-            if (normalizedConfig.methods) {
-              validConfig.methods = [].concat(normalizedConfig.methods).map(normalizeString);
+            if (normalizedCfg.methods) {
+              validConfig.methods = [].concat(normalizedCfg.methods).map(normalizeString);
             }
-            if (normalizedConfig.endpoints) {
-              validConfig.endpoints = [].concat(normalizedConfig.endpoints).map(normalizeString);
+            if (normalizedCfg.endpoints) {
+              validConfig.endpoints = [].concat(normalizedCfg.endpoints).map(normalizeString);
             }
+            // extend the config with more fields here
             return Object.keys(validConfig).length ? validConfig : null;
           })
           .filter(Boolean);
 
-        // Combine string-based and object-based configurations.
+        // Combine both string-based and object-based configurations.
         const normalizedConfigs = methodNames.length ? [{ methods: methodNames }, ...advancedConfigs] : advancedConfigs;
-        return [normalizeString(serviceName), normalizedConfigs];
+        return [normalizeString(service), normalizedConfigs];
       })
     );
   } catch (error) {
-    _logger?.warn?.('Error processing ignore-endpoints configuration', error?.message);
+    _logger?.warn?.('Error when parsing ignore-endpoints configuration', error?.message);
     return {};
   }
 };

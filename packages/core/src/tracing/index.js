@@ -127,6 +127,7 @@ if (customInstrumentations.length > 0) {
  * @property {string[]} [methods]
  * @property {string[]} [endpoints]
  */
+
 /** @type {Array.<InstanaInstrumentedModule>} */
 let additionalInstrumentationModules = [];
 /** @type {Object.<string, InstanaInstrumentedModule>} */

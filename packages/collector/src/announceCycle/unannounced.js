@@ -215,15 +215,11 @@ function applySpanBatchingConfiguration(agentResponse) {
 }
 
 /**
- * The agent configuration can include an array of strings or objects with additional filtering criteria.
+ * The incoming agent configuration may include strings or an array of strings or objects that
+ * advanced filtering criteria.
  *
- * The 'ignore-endpoints' configuration follows this structure:
- *
- * - Keys represent service names (e.g., 'kafka', 'redis').
- * - Values can be:
- *   - An array of strings specifying methods to ignore (e.g., ["type", "get"]).
- *   - An array of `IgnoreEndpointsFields` objects, each defining a method and endpoints.
- *
+ * The normalized internal format is:
+ *   { [serviceName: string]: [{ methods: string[], endpoints: string[] }] }
  * @param {AgentAnnounceResponse} agentResponse
  */
 function applyIgnoreEndpointsConfiguration(agentResponse) {
