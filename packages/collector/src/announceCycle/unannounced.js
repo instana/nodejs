@@ -8,7 +8,7 @@
 const {
   secrets,
   tracing,
-  util: { ensureNestedObjectExists, ignoreEndpoints }
+  util: { ensureNestedObjectExists, configNormalizers }
 } = require('@instana/core');
 const { constants: tracingConstants } = tracing;
 
@@ -234,7 +234,7 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
   if (!ignoreEndpointsConfig) return;
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
-  agentOpts.config.tracing.ignoreEndpoints = ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
+  agentOpts.config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
 }
 
 module.exports = {

@@ -8,7 +8,7 @@
 'use strict';
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
-const ignoreEndpoints = require('./configNormalizers/ignoreEndpoints');
+const configNormalizers = require('./configNormalizers');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -720,13 +720,15 @@ function normalizeIgnoreEndpoints(config) {
   }
   // Case 1: If `ignoreEndpoints` is configured via in-code configuration
   if (Object.keys(ignoreEndpointsConfig).length) {
-    config.tracing.ignoreEndpoints = ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
+    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
   }
   // Case 2: If `INSTANA_IGNORE_ENDPOINTS` environment variable is set.
   // This was introduced in Phase 1 for basic filtering based on operations only (without advanced filtering).
   // Use this to filter spans by operation or method, e.g., `redis.get`, `kafka.consume`, etc.
   else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
-    config.tracing.ignoreEndpoints = ignoreEndpoints.parseIgnoreEndpointsFromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
+    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.parseIgnoreEndpointsFromEnv(
+      process.env.INSTANA_IGNORE_ENDPOINTS
+    );
   } else {
     return;
   }

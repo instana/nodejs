@@ -20,7 +20,7 @@ const iitmHook = require('./iitmHook');
 const hook = require('./hook');
 const esm = require('./esm');
 const preloadFlags = require('./getPreloadFlags');
-const ignoreEndpoints = require('./configNormalizers/ignoreEndpoints');
+const configNormalizers = require('./configNormalizers');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -35,7 +35,7 @@ exports.init = function init(config) {
   requireHook.init(config);
   preloadFlags.init(config);
   iitmHook.init(config);
-  ignoreEndpoints.init(config);
+  configNormalizers.init(config);
 };
 
 exports.applicationUnderMonitoring = applicationUnderMonitoring;
@@ -80,4 +80,4 @@ exports.stackTrace = stackTrace;
 exports.iitmHook = iitmHook;
 exports.hook = hook;
 exports.esm = esm;
-exports.ignoreEndpoints = ignoreEndpoints;
+exports.configNormalizers = configNormalizers;
