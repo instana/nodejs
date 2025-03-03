@@ -751,7 +751,7 @@ function parseIgnoreEndpointsFromEnv() {
           }
           return [
             serviceName.toLowerCase(),
-            { methods: endpointList.split(',').map(endpoint => normalizeString(endpoint)) }
+            [{ methods: endpointList.split(',').map(endpoint => normalizeString(endpoint)) }]
           ];
         })
         .filter(Boolean)
@@ -764,8 +764,7 @@ function parseIgnoreEndpointsFromEnv() {
 }
 
 /**
- * Formats a string by trimming whitespace and converting it to lowercase.
- * @param {string} str - The string to format.
+ * @param {string} str
  */
 function normalizeString(str) {
   return str?.trim()?.toLowerCase();

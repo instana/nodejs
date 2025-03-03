@@ -6,15 +6,17 @@
 
 /** @type {import('../core').GenericLogger} */
 let logger;
+
 /**
  * Normalizes the ignore endpoints configuration to ensure consistent formatting.
  *
- * Supported Configurations:
+ * Supported input configurations:
  * - Methods can be specified as simple strings or arrays.
- * - Adavnced configurations can include both methods and endpoints.
+ * - Advanced configurations can include both methods and endpoints.
  * - Input is normalized to prevent mismatches due to casing or whitespace.
+ *
  * @param {import('../tracing').IgnoreEndpoints} ignoreEndpointConfig
- * @property {import('../core').GenericLogger} _logger
+ * @param {import('../core').GenericLogger} _logger
  * @returns {import('../tracing').IgnoreEndpoints} The normalized ignore endpoints configuration.
  */
 module.exports = function normalizeIgnoreEndpointsConfig(ignoreEndpointConfig, _logger = logger) {
@@ -33,7 +35,7 @@ module.exports = function normalizeIgnoreEndpointsConfig(ignoreEndpointConfig, _
 
         endpointConfigs.forEach(config => {
           if (typeof config === 'string') {
-            // If the config is a string, treat it as method to be ignored.
+            // If the config is a string, treat it as a method to be ignored.
             methods.push(normalizeString(config));
           } else if (typeof config === 'object' && config !== null) {
             // We need to normalize the keys as well.
@@ -53,7 +55,7 @@ module.exports = function normalizeIgnoreEndpointsConfig(ignoreEndpointConfig, _
                 : [normalizeString(normalizedConfig.methods)];
             }
 
-            if (normalizedConfig?.endpoints) {
+            if (normalizedConfig.endpoints) {
               validConfig.endpoints = Array.isArray(normalizedConfig.endpoints)
                 ? normalizedConfig.endpoints.map(endpoint => normalizeString(endpoint))
                 : [normalizeString(normalizedConfig.endpoints)];
@@ -67,22 +69,22 @@ module.exports = function normalizeIgnoreEndpointsConfig(ignoreEndpointConfig, _
 
         const normalizedEntries = [];
         if (methods.length > 0) {
-          normalizedEntries.push({ methods: methods });
+          normalizedEntries.push({ methods });
         }
         normalizedEntries.push(...advancedConfigs);
 
-        return [normalizeString(serviceName), normalizedEntries];
+        return [normalizeString(serviceName), normalizedEntries.length > 0 ? normalizedEntries : []];
       })
     );
   } catch (error) {
-    _logger.warn('Error processing ignore-endpoints configuration', error?.message);
-    return {}; // for extra safety
+    _logger?.warn?.('Error processing ignore-endpoints configuration', error?.message);
+    return {}; // Extra safety in case of failure
   }
 };
 
 /**
- * Formats a string by trimming whitespace and converting it to lowercase.
- * @param {string} str - The string to format.
+ * @param {string} str
+ * @returns {string} The formatted string.
  */
 function normalizeString(str) {
   return str?.trim()?.toLowerCase();
