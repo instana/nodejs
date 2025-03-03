@@ -21,7 +21,6 @@ exports.init = function init(config) {
 /**
  * Loads and parses a YAML file from the given path.
  * @param {string} filePath - The relative or absolute path to the YAML file.
- * @returns {Object} The parsed YAML content.
  */
 exports.read = function read(filePath) {
   try {
