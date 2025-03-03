@@ -23,7 +23,7 @@ const agentControls = globalAgent.instance;
 let publisherControls;
 let consumerControls;
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 ['latest', 'v0'].forEach(version => {
   mochaSuiteFn(`tracing/amqp: ${version}`, function () {
@@ -47,7 +47,10 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : d
         before(async () => {
           controls = new ProcessControls({
             useGlobalAgent: true,
-            appPath: path.join(__dirname, 'allowRootExitSpanApp')
+            appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+            env: {
+              INSTANA_ALLOW_ROOT_EXIT_SPAN: 1
+            }
           });
 
           await controls.start(null, null, true);
