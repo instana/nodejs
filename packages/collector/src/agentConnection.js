@@ -84,10 +84,10 @@ exports.AgentEventSeverity = {
  */
 
 /**
- * @param {(err: Error, rawResponse?: string) => void} cb
+ * @param {(err: Error, rawResponse?: string) => void} callback
  */
-exports.announceNodeCollector = function announceNodeCollector(cb) {
-  cb = util.atMostOnce('callback for announceNodeCollector', cb);
+exports.announceNodeCollector = function announceNodeCollector(callback) {
+  const cb = util.atMostOnce('callback for announceNodeCollector', callback);
 
   /** @type {AgentConnectionPayload} */
   const payload = {
@@ -120,6 +120,14 @@ exports.announceNodeCollector = function announceNodeCollector(cb) {
   let payloadStr = JSON.stringify(payload);
   const contentLength = Buffer.from(payloadStr, 'utf8').length + paddingForInodeAndFileDescriptor;
 
+  let wasCalled = false;
+  const handleCallback = function () {
+    if (!wasCalled) {
+      wasCalled = true;
+      cb.apply(null, arguments);
+    }
+  };
+
   const req = http.request(
     {
       host: agentOpts.host,
@@ -135,7 +143,7 @@ exports.announceNodeCollector = function announceNodeCollector(cb) {
     },
     res => {
       if (res.statusCode < 200 || res.statusCode >= 300) {
-        cb(new Error(`Announce to agent failed with status code ${res.statusCode}`));
+        handleCallback(new Error(`Announce to agent failed with status code ${res.statusCode}`));
         return;
       }
 
@@ -145,18 +153,18 @@ exports.announceNodeCollector = function announceNodeCollector(cb) {
         responseBody += chunk;
       });
       res.on('end', () => {
-        cb(null, responseBody);
+        handleCallback(null, responseBody);
       });
     }
   );
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
-    cb(new Error('Announce request to agent failed due to timeout'));
+    handleCallback(new Error('Announce request to agent failed due to timeout'));
     req.abort();
   });
 
   req.on('error', err => {
-    cb(new Error(`Announce request to agent failed due to: ${err.message}`));
+    handleCallback(new Error(`Announce request to agent failed due to: ${err.message}`));
   });
 
   req.on('socket', socket => {
