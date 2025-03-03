@@ -8,7 +8,7 @@
 const {
   secrets,
   tracing,
-  util: { ensureNestedObjectExists }
+  util: { ensureNestedObjectExists, configNormalizers }
 } = require('@instana/core');
 const { constants: tracingConstants } = tracing;
 
@@ -42,7 +42,7 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @typedef {Object} TracingConfig
  * @property {Array.<string>} [extra-http-headers]
  * @property {KafkaTracingConfig} [kafka]
- * @property {Object.<string, (string | string[])>} [ignore-endpoints]
+ * @property {import('@instana/core/src/tracing').IgnoreEndpoints} [ignore-endpoints]
  * @property {boolean} [span-batching-enabled]
  */
 
@@ -215,30 +215,26 @@ function applySpanBatchingConfiguration(agentResponse) {
 }
 
 /**
- * The agent configuration returns the `string[]` format.
- * For more information, see the related design discussion:
- * https://github.ibm.com/instana/requests-for-discussion/pull/84
+ * The incoming agent configuration may include strings, an array of strings, or objects
+ * that define filtering criteria.
+ *
+ * - Phase 1: Introduced simple filtering based on operations (e.g. redis.get).
+ *    For more information see: https://github.ibm.com/instana/requests-for-discussion/pull/84
+ *
+ * - Phase 2: Added advanced filtering with 'methods' and 'endpoints'.
+ *    For more inormation see: https://github.ibm.com/instana/technical-documentation/pull/333
+ *
+ * The normalized internal format is:
+ *   { [serviceName: string]: [{ methods: string[], endpoints: string[] }] }
  *
  * @param {AgentAnnounceResponse} agentResponse
  */
 function applyIgnoreEndpointsConfiguration(agentResponse) {
-  if (agentResponse?.tracing?.['ignore-endpoints']) {
-    const endpointTracingConfigFromAgent = agentResponse.tracing['ignore-endpoints'];
+  const ignoreEndpointsConfig = agentResponse?.tracing?.['ignore-endpoints'];
+  if (!ignoreEndpointsConfig) return;
 
-    const endpointTracingConfig = Object.fromEntries(
-      Object.entries(endpointTracingConfigFromAgent).map(([service, endpoints]) => {
-        let normalizedEndpoints = null;
-        if (Array.isArray(endpoints)) {
-          normalizedEndpoints = endpoints.map(endpoint => endpoint?.toLowerCase());
-        }
-
-        return [service.toLowerCase(), normalizedEndpoints];
-      })
-    );
-
-    ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
-    agentOpts.config.tracing.ignoreEndpoints = endpointTracingConfig;
-  }
+  ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
+  agentOpts.config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
 }
 
 module.exports = {

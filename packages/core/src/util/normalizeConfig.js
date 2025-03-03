@@ -8,6 +8,7 @@
 'use strict';
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
+const configNormalizers = require('./configNormalizers');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -78,7 +79,7 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
  * @property {AgentTracingHttpConfig} [http]
  * @property {AgentTracingKafkaConfig} [kafka]
  * @property {boolean|string} [spanBatchingEnabled]
- * @property {import('../tracing').IgnoreEndpoints|{}} [ignoreEndpoints]
+ * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
  */
 
 /**
@@ -706,65 +707,26 @@ function normalizeIgnoreEndpoints(config) {
     config.tracing.ignoreEndpoints = {};
   }
 
-  const ignoreEndpoints = config.tracing.ignoreEndpoints;
+  const ignoreEndpointsConfig = config.tracing.ignoreEndpoints;
 
-  if (typeof ignoreEndpoints !== 'object' || Array.isArray(ignoreEndpoints)) {
+  if (typeof ignoreEndpointsConfig !== 'object' || Array.isArray(ignoreEndpointsConfig)) {
     logger.warn(
       `Invalid tracing.ignoreEndpoints configuration. Expected an object, but received: ${JSON.stringify(
-        ignoreEndpoints
+        ignoreEndpointsConfig
       )}`
     );
     config.tracing.ignoreEndpoints = {};
     return;
   }
-
-  if (Object.keys(ignoreEndpoints).length) {
-    Object.entries(ignoreEndpoints).forEach(([service, endpoints]) => {
-      const normalizedService = service.toLowerCase();
-
-      if (Array.isArray(endpoints)) {
-        // temporary type fix, will be removed in https://github.com/instana/nodejs/pull/1585.
-        // @ts-ignore
-        config.tracing.ignoreEndpoints[normalizedService] = endpoints.map(endpoint =>
-          // @ts-ignore
-          typeof endpoint === 'string' ? endpoint.toLowerCase() : endpoint
-        );
-      } else if (typeof endpoints === 'string') {
-        // @ts-ignore
-        config.tracing.ignoreEndpoints[normalizedService] = [endpoints?.toLowerCase()];
-      } else {
-        logger.warn(
-          `Invalid configuration for ${normalizedService}: tracing.ignoreEndpoints.${normalizedService} is neither a string nor an array. Value will be ignored: ${JSON.stringify(
-            endpoints
-          )}`
-        );
-        config.tracing.ignoreEndpoints[normalizedService] = null;
-      }
-    });
-  } else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
-    try {
-      const ignoreEndpoints = Object.fromEntries(
-        process.env.INSTANA_IGNORE_ENDPOINTS.split(';')
-          .map(serviceEntry => {
-            const [serviceName, endpointList] = (serviceEntry || '').split(':').map(part => part.trim());
-
-            if (!serviceName || !endpointList) {
-              logger.warn(
-                `Invalid entry in INSTANA_IGNORE_ENDPOINTS ${process.env.INSTANA_IGNORE_ENDPOINTS}: "${serviceEntry}". Expected format is e.g. "service:endpoint1,endpoint2".`
-              );
-              return null;
-            }
-
-            return [serviceName.toLowerCase(), endpointList.split(',').map(endpoint => endpoint.trim().toLowerCase())];
-          })
-          .filter(Boolean)
-      );
-      config.tracing.ignoreEndpoints = ignoreEndpoints;
-    } catch (error) {
-      logger.warn(
-        `Failed to parse INSTANA_IGNORE_ENDPOINTS: ${process.env.INSTANA_IGNORE_ENDPOINTS}. Error: ${error?.message}`
-      );
-    }
+  // Case 1: If `ignoreEndpoints` is configured via in-code configuration
+  if (Object.keys(ignoreEndpointsConfig).length) {
+    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
+  }
+  // Case 2: If `INSTANA_IGNORE_ENDPOINTS` environment variable is set.
+  // This was introduced in Phase 1 for basic filtering based on operations only (without advanced filtering).
+  // Use this to filter spans by operation or method, e.g., `redis.get`, `kafka.consume`, etc.
+  else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
+    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
   } else {
     return;
   }

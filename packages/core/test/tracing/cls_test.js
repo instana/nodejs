@@ -400,7 +400,7 @@ describe('tracing/cls', () => {
       cls.init({
         tracing: {
           ignoreEndpoints: {
-            redis: ['get']
+            redis: [{ methods: ['get'] }]
           }
         }
       });

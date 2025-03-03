@@ -70,25 +70,9 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
   if (!ignoreConfigs) {
     return false;
   }
-  const spanOperation = span.data[span.n]?.operation?.toLowerCase();
-  // For basic filtering: when the configuration is provided as a simple string
-  // (e.g., "redis.get" or "dynamodb.query"), directly compare it to the span's operation.
-  // TODO: will be removed
-  if (typeof ignoreConfigs === 'string') {
-    // @ts-ignore
-    return ignoreConfigs.toLowerCase() === spanOperation;
-  }
 
   return ignoreConfigs.some(ignoreconfig => {
-    // For basic filtering: when the configuration is provided as a simple string array
-    // (e.g., "redis:['get,'set']"
-    // TODO: will be removed
-    if (typeof ignoreconfig === 'string') {
-      // @ts-ignore
-      return ignoreconfig.toLowerCase() === spanOperation;
-    }
-
-    // For advanced filtering:
+    // Advanced filtering:
     // For e.g., for a Kafka, the ignoreconfig like { methods: ['consume'], endpoints: ['t1'] }.
     if (typeof ignoreconfig === 'object') {
       // Case where ignoreconfig does not specify any filtering criteria.
