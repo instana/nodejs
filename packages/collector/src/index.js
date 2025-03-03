@@ -141,6 +141,18 @@ init.isConnected = function isConnected() {
 };
 
 /**
+ * Keep in mind:
+ * Instana logs might appear in the internal log level for a very short time
+ * if you set a custom logger with a different log level. That is because "setLogger"
+ * is called after the initialization of the collector.
+ *
+ * const instana = require('@instana/collector')();
+ * const pino = require('pino')
+ * instana.setLogger(pinoLogger)
+ *
+ * Setting the **same** log level in the custom logger and the collector logger
+ * will prevent this behavior.
+ *
  * @param {import('@instana/core/src/core').GenericLogger} _logger
  */
 init.setLogger = function setLogger(_logger) {
