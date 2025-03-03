@@ -9,31 +9,33 @@ const { expect } = require('chai');
 
 describe('normalizeIgnoreEndpointsConfig', function () {
   const mockLogger = { warn: () => {} };
-  it('should return an empty object when input is not an object', function () {
+
+  it('should return an empty object for invalid inputs', function () {
     expect(normalizeIgnoreEndpointsConfig(null, mockLogger)).to.deep.equal({});
     expect(normalizeIgnoreEndpointsConfig(undefined, mockLogger)).to.deep.equal({});
-    expect(normalizeIgnoreEndpointsConfig(42, mockLogger)).to.deep.equal({});
+    expect(normalizeIgnoreEndpointsConfig({}, mockLogger)).to.deep.equal({});
+    expect(normalizeIgnoreEndpointsConfig([], mockLogger)).to.deep.equal({});
   });
 
-  it('should normalize service names and configs', function () {
+  it('should normalize service names and method names', function () {
     const input = { REDIS: ['GET '] };
     const expected = { redis: [{ methods: ['get'] }] };
     expect(normalizeIgnoreEndpointsConfig(input)).to.deep.equal(expected);
   });
 
-  it('should handle empty array configurations gracefully', function () {
+  it('should return an empty array for services with empty configurations', function () {
     const input = { Redis: [] };
     const expected = { redis: [] };
     expect(normalizeIgnoreEndpointsConfig(input)).to.deep.equal(expected);
   });
 
-  it('should normalize when only method names applied', function () {
+  it('should normalize configurations with only method names', function () {
     const input = { Redis: ['GET', 'POST'] };
     const expected = { redis: [{ methods: ['get', 'post'] }] };
     expect(normalizeIgnoreEndpointsConfig(input)).to.deep.equal(expected);
   });
 
-  it('should normalize object configurations correctly', function () {
+  it('should normalize configurations containing both methods and endpoints', function () {
     const input = {
       Kafka: [{ methods: ['consume', 'poll'], endpoints: ['topic1', 'topic2'] }]
     };
@@ -48,7 +50,7 @@ describe('normalizeIgnoreEndpointsConfig', function () {
     expect(normalizeIgnoreEndpointsConfig(input)).to.deep.equal(expected);
   });
 
-  it('should handle mixed configurations (strings and objects)', function () {
+  it('should correctly normalize mixed configurations (methods and objects)', function () {
     const input = {
       kafka: ['consume', { methods: ['send'], endpoints: ['topic'] }]
     };
@@ -58,7 +60,7 @@ describe('normalizeIgnoreEndpointsConfig', function () {
     expect(normalizeIgnoreEndpointsConfig(input)).to.deep.equal(expected);
   });
 
-  it('should ignore invalid object properties', function () {
+  it('should ignore unsupported object properties in configurations', function () {
     const input = {
       http: [{ methods: ['GET'], endpoints: ['/users'], invalidKey: 'value' }]
     };
@@ -68,13 +70,13 @@ describe('normalizeIgnoreEndpointsConfig', function () {
     expect(normalizeIgnoreEndpointsConfig(input)).to.deep.equal(expected);
   });
 
-  it('should return an empty array for empty endpoint configurations', function () {
+  it('should return an empty array for services with empty string configurations', function () {
     const input = { Redis: '' };
     const expected = { redis: [] };
     expect(normalizeIgnoreEndpointsConfig(input)).to.deep.equal(expected);
   });
 
-  it('should normalize methods when defined as a single string in object configuration', function () {
+  it('should normalize single-string method definitions inside object configurations', function () {
     const input = {
       HTTP: [{ methods: 'GET', endpoints: ['/users'] }]
     };
@@ -84,12 +86,33 @@ describe('normalizeIgnoreEndpointsConfig', function () {
     expect(normalizeIgnoreEndpointsConfig(input)).to.deep.equal(expected);
   });
 
-  it('should normalize endpoints when defined as a single string in object configuration', function () {
+  it('should normalize single-string endpoint definitions inside object configurations', function () {
     const input = {
       kafka: [{ methods: ['send'], endpoints: 'topic1' }]
     };
     const expected = {
       kafka: [{ methods: ['send'], endpoints: ['topic1'] }]
+    };
+    expect(normalizeIgnoreEndpointsConfig(input)).to.deep.equal(expected);
+  });
+  it('should correctly normalize when advanced endpoint configurations with spaces and different casing', function () {
+    const input = {
+      'KAFKA  ': [
+        {
+          'Methods  ': ['*'],
+          Endpoints: ['TOPIC1  ', 'topic2   ']
+        },
+        {
+          METHODS: ['  PUBLISH'],
+          '    endpoints': ['Topic3  ']
+        }
+      ]
+    };
+    const expected = {
+      kafka: [
+        { methods: ['*'], endpoints: ['topic1', 'topic2'] },
+        { methods: ['publish'], endpoints: ['topic3'] }
+      ]
     };
     expect(normalizeIgnoreEndpointsConfig(input)).to.deep.equal(expected);
   });
