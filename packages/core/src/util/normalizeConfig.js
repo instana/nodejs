@@ -8,6 +8,7 @@
 'use strict';
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
+const ignoreEndpoints = require('./configNormalizers/ignoreEndpoints');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -497,7 +498,7 @@ function normalizeDisabledTracers(config) {
   ) {
     config.tracing.disabledTracers = process.env['INSTANA_DISABLED_TRACERS']
       .split(',')
-      .map(key => normalizeString(key))
+      .map(key => key.trim().toLowerCase())
       .filter(key => key.length >= 0);
   }
 
@@ -631,7 +632,7 @@ function normalizeSecrets(config) {
  * @returns {MatchingOption}
  */
 function parseMatcherMode(matcherMode) {
-  const trimmed = normalizeString(matcherMode);
+  const trimmed = matcherMode.trim().toLowerCase();
   const isSecretMatcher = allowedSecretMatchers.includes(trimmed);
 
   if (isSecretMatcher) {
@@ -706,66 +707,29 @@ function normalizeIgnoreEndpoints(config) {
     config.tracing.ignoreEndpoints = {};
   }
 
-  const ignoreEndpoints = config.tracing.ignoreEndpoints;
+  const ignoreEndpointsConfig = config.tracing.ignoreEndpoints;
 
-  if (typeof ignoreEndpoints !== 'object' || Array.isArray(ignoreEndpoints)) {
+  if (typeof ignoreEndpointsConfig !== 'object' || Array.isArray(ignoreEndpointsConfig)) {
     logger.warn(
       `Invalid tracing.ignoreEndpoints configuration. Expected an object, but received: ${JSON.stringify(
-        ignoreEndpoints
+        ignoreEndpointsConfig
       )}`
     );
     config.tracing.ignoreEndpoints = {};
     return;
   }
-  // Case 1: If `ignoreEndpoints` is configured via in-code
-  if (Object.keys(ignoreEndpoints).length) {
-    const normalizeIgnoreEndpointsConfig = require('./normalizeIgnoreEndpointsConfig');
-    config.tracing.ignoreEndpoints = normalizeIgnoreEndpointsConfig(ignoreEndpoints, logger);
-  } // Case 2: If `INSTANA_IGNORE_ENDPOINTS` environment variable is set.
+  // Case 1: If `ignoreEndpoints` is configured via in-code configuration
+  if (Object.keys(ignoreEndpointsConfig).length) {
+    config.tracing.ignoreEndpoints = ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
+  }
+  // Case 2: If `INSTANA_IGNORE_ENDPOINTS` environment variable is set.
+  // This was introduced in Phase 1 for basic filtering based on operations only (without advanced filtering).
+  // Use this to filter spans by operation or method, e.g., `redis.get`, `kafka.consume`, etc.
   else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
-    config.tracing.ignoreEndpoints = parseIgnoreEndpointsFromEnv();
+    config.tracing.ignoreEndpoints = ignoreEndpoints.parseIgnoreEndpointsFromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
   } else {
     return;
   }
 
   logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
-}
-
-/**
- * Parses the `INSTANA_IGNORE_ENDPOINTS` environment variable.
- * Only basic filtering supported by this env variable.
- * Expected format: - "service:endpoint1,endpoint2"
- */
-function parseIgnoreEndpointsFromEnv() {
-  try {
-    return Object.fromEntries(
-      process.env.INSTANA_IGNORE_ENDPOINTS.split(';')
-        .map(serviceEntry => {
-          const [serviceName, endpointList] = (serviceEntry || '').split(':').map(part => part.trim());
-
-          if (!serviceName || !endpointList) {
-            logger.warn(
-              `Invalid entry in INSTANA_IGNORE_ENDPOINTS ${process.env.INSTANA_IGNORE_ENDPOINTS}: "${serviceEntry}". Expected format is e.g. "service:endpoint1,endpoint2".`
-            );
-            return null;
-          }
-          return [
-            serviceName.toLowerCase(),
-            [{ methods: endpointList.split(',').map(endpoint => normalizeString(endpoint)) }]
-          ];
-        })
-        .filter(Boolean)
-    );
-  } catch (error) {
-    logger.warn(
-      `Failed to parse INSTANA_IGNORE_ENDPOINTS: ${process.env.INSTANA_IGNORE_ENDPOINTS}. Error: ${error?.message}`
-    );
-  }
-}
-
-/**
- * @param {string} str
- */
-function normalizeString(str) {
-  return str?.trim()?.toLowerCase();
 }

@@ -8,7 +8,7 @@
 const {
   secrets,
   tracing,
-  util: { ensureNestedObjectExists, normalizeIgnoreEndpointsConfig }
+  util: { ensureNestedObjectExists, ignoreEndpoints }
 } = require('@instana/core');
 const { constants: tracingConstants } = tracing;
 
@@ -215,19 +215,26 @@ function applySpanBatchingConfiguration(agentResponse) {
 }
 
 /**
- * The incoming agent configuration may include strings or an array of strings or objects that
- * advanced filtering criteria.
+ * The incoming agent configuration may include strings, an array of strings, or objects
+ * that define filtering criteria.
+ *
+ * - Phase 1: Introduced simple filtering based on operations (e.g. redis.get).
+ *    For more information see: https://github.ibm.com/instana/requests-for-discussion/pull/84
+ *
+ * - Phase 2: Added advanced filtering with 'methods' and 'endpoints'.
+ *    For more inormation see: https://github.ibm.com/instana/technical-documentation/pull/333
  *
  * The normalized internal format is:
  *   { [serviceName: string]: [{ methods: string[], endpoints: string[] }] }
+ *
  * @param {AgentAnnounceResponse} agentResponse
  */
 function applyIgnoreEndpointsConfiguration(agentResponse) {
-  const ignoreEndpoints = agentResponse?.tracing?.['ignore-endpoints'];
-  if (!ignoreEndpoints) return;
+  const ignoreEndpointsConfig = agentResponse?.tracing?.['ignore-endpoints'];
+  if (!ignoreEndpointsConfig) return;
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
-  agentOpts.config.tracing.ignoreEndpoints = normalizeIgnoreEndpointsConfig(ignoreEndpoints, logger);
+  agentOpts.config.tracing.ignoreEndpoints = ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
 }
 
 module.exports = {

@@ -4,8 +4,14 @@
 
 'use strict';
 
-/** @type {import('../core').GenericLogger} */
+/** @type {import('../../core').GenericLogger} */
 let logger;
+/**
+ * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function init(config) {
+  logger = config.logger;
+};
 
 /**
  * Standardizes the ignore endpoints configuration to ensure consistent internal formatting.
@@ -17,11 +23,11 @@ let logger;
  * Normalized internal structure:
  * - { [serviceName: string]: [{ methods: string[], endpoints: string[] }] }
  *
- * @param {import('../tracing').IgnoreEndpoints} ignoreEndpointConfig
- * @param {import('../core').GenericLogger} _logger
- * @returns {import('../tracing').IgnoreEndpoints}
+ * @param {import('../../tracing').IgnoreEndpoints} ignoreEndpointConfig
+ * @returns {import('../../tracing').IgnoreEndpoints}
  */
-module.exports = function normalizeIgnoreEndpointsConfig(ignoreEndpointConfig, _logger = logger) {
+
+exports.normalizeConfig = function normalizeConfig(ignoreEndpointConfig) {
   if (!ignoreEndpointConfig || typeof ignoreEndpointConfig !== 'object') {
     return {};
   }
@@ -63,7 +69,44 @@ module.exports = function normalizeIgnoreEndpointsConfig(ignoreEndpointConfig, _
       })
     );
   } catch (error) {
-    _logger?.warn?.('Error when parsing ignore-endpoints configuration', error?.message);
+    logger.warn('Error when parsing ignore-endpoints configuration', error?.message);
+    return {};
+  }
+};
+
+/**
+ * Parses the `INSTANA_IGNORE_ENDPOINTS` environment variable.
+ * Only basic filtering supported by this env variable.
+ * Expected format: - "service:endpoint1,endpoint2"
+ * @param {string} ignoreEndpointsEnv
+ */
+exports.parseIgnoreEndpointsFromEnv = function parseIgnoreEndpointsFromEnv(ignoreEndpointsEnv) {
+  try {
+    if (!ignoreEndpointsEnv) {
+      return {};
+    }
+    return Object.fromEntries(
+      ignoreEndpointsEnv
+        .split(';')
+        .map(serviceEntry => {
+          const [serviceName, endpointList] = (serviceEntry || '').split(':').map(part => part.trim());
+
+          if (!serviceName || !endpointList) {
+            logger.warn(
+              // eslint-disable-next-line max-len
+              `Invalid entry in INSTANA_IGNORE_ENDPOINTS ${ignoreEndpointsEnv}: "${serviceEntry}". Expected format is e.g. "service:endpoint1,endpoint2".`
+            );
+            return null;
+          }
+          return [
+            serviceName.toLowerCase(),
+            [{ methods: endpointList.split(',').map(endpoint => normalizeString(endpoint)) }]
+          ];
+        })
+        .filter(Boolean)
+    );
+  } catch (error) {
+    logger.warn(`Failed to parse INSTANA_IGNORE_ENDPOINTS: ${ignoreEndpointsEnv}. Error: ${error?.message}`);
     return {};
   }
 };
