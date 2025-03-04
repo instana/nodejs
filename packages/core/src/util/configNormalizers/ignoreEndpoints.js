@@ -138,7 +138,8 @@ exports.fromYaml = function fromYaml(yamlFilePath) {
       // eslint-disable-next-line max-len
       `Detected the root key "com.instana.tracing" in the YAML file at "${yamlFilePath}". This format is accepted, but please migrate to using "tracing" as the root key.`
     );
-    return exports.normalizeConfig(endpointsConfig['com.instana.tracing']['ignore-endpoints'] || {});
+    endpointsConfig.tracing = endpointsConfig['com.instana.tracing'];
+    delete endpointsConfig['com.instana.tracing'];
   }
   return exports.normalizeConfig(endpointsConfig.tracing['ignore-endpoints']) || {};
 };
