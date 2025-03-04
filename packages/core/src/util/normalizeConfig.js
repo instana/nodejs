@@ -718,18 +718,30 @@ function normalizeIgnoreEndpoints(config) {
     config.tracing.ignoreEndpoints = {};
     return;
   }
-  // Case 1: If `ignoreEndpoints` is configured via in-code configuration
+  // Case 1: Use in-code configuration if available
   if (Object.keys(ignoreEndpointsConfig).length) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
-  }
-  // Case 2: If `INSTANA_IGNORE_ENDPOINTS` environment variable is set.
-  // This was introduced in Phase 1 for basic filtering based on operations only (without advanced filtering).
-  // Use this to filter spans by operation or method, e.g., `redis.get`, `kafka.consume`, etc.
-  else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
-    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
-  } else {
+    logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
     return;
   }
 
-  logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
+  // Case 2: Load from a YAML file if `INSTANA_IGNORE_ENDPOINTS_PATH` is set
+  // Introduced in Phase 2 for advanced filtering based on both methods and endpoints.
+  // Also supports basic filtering for endpoints.
+  if (process.env.INSTANA_IGNORE_ENDPOINTS_PATH) {
+    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromYaml(
+      process.env.INSTANA_IGNORE_ENDPOINTS_PATH
+    );
+    logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
+    return;
+  }
+
+  // Case 3: Load from the `INSTANA_IGNORE_ENDPOINTS` environment variable
+  // Introduced in Phase 1 for basic filtering based only on operations (e.g., `redis.get`, `kafka.consume`).
+  // Provides a simple way to configure ignored operations via environment variables.
+  if (process.env.INSTANA_IGNORE_ENDPOINTS) {
+    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
+    logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
+    return;
+  }
 }

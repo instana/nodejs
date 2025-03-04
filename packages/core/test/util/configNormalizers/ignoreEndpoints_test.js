@@ -4,8 +4,10 @@
 
 'use strict';
 
-const { normalizeConfig, fromEnv } = require('../../../src/util/configNormalizers/ignoreEndpoints');
+const fs = require('fs');
+const path = require('path');
 const { expect } = require('chai');
+const { normalizeConfig, fromEnv, fromYaml } = require('../../../src/util/configNormalizers/ignoreEndpoints');
 
 describe('util.ignoreEndpoints', function () {
   describe('normalizeConfig', function () {
@@ -148,6 +150,130 @@ describe('util.ignoreEndpoints', function () {
     it('should return an empty object if parsing fails', function () {
       const input = { notAString: true };
       expect(fromEnv(input)).to.deep.equal({});
+    });
+  });
+  describe('fromYaml', function () {
+    const tracingYamlPath = path.resolve(__dirname, 'tracing.yaml');
+    const comInstanaTracingYamlPath = path.resolve(__dirname, 'comInstanaTracing.yaml');
+    const invalidTracingYamlPath = path.resolve(__dirname, 'invalidTracing.yaml');
+    const invalidYamlPath = path.resolve(__dirname, 'invalid.yaml');
+    const withoutIgnoreEndpointsYamlPath = path.resolve(__dirname, 'withoutIgnoreEndpoints.yaml');
+    const withBasicFilteringYamlPath = path.resolve(__dirname, 'withBasicFiltering.yaml');
+
+    before(() => {
+      [
+        tracingYamlPath,
+        comInstanaTracingYamlPath,
+        invalidTracingYamlPath,
+        invalidYamlPath,
+        withoutIgnoreEndpointsYamlPath,
+        withBasicFilteringYamlPath
+      ].forEach(filePath => {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      });
+
+      fs.writeFileSync(
+        tracingYamlPath,
+        `tracing:
+          ignore-endpoints:
+            kafka: 
+              - methods: ["consume","publish"]
+                endpoints: ["topic1","topic2"]`
+      );
+
+      fs.writeFileSync(
+        comInstanaTracingYamlPath,
+        `com.instana.tracing:
+        ignore-endpoints:
+          kafka: 
+            - methods: ["consume","publish"]
+              endpoints: ["topic1","topic2"]`
+      );
+
+      fs.writeFileSync(
+        invalidTracingYamlPath,
+        `instana-tracing:
+          ignore-endpoints:
+            kafka: 
+              - methods: ["consume","publish"]
+                endpoints: ["topic1","topic2"]`
+      );
+
+      fs.writeFileSync(
+        withoutIgnoreEndpointsYamlPath,
+        `tracing:
+          sampling:
+            kafka: 
+              - methods: ["consume","publish"]
+                endpoints: ["topic1","topic2"]`
+      );
+
+      fs.writeFileSync(
+        withBasicFilteringYamlPath,
+        `tracing:
+          ignore-endpoints:
+            redis: 
+              - type
+              - get
+            kafka: 
+              - methods: ["consume","publish"]
+                endpoints: ["topic1","topic2"]`
+      );
+      fs.writeFileSync(invalidYamlPath, 'test.json');
+    });
+
+    after(() => {
+      [
+        tracingYamlPath,
+        comInstanaTracingYamlPath,
+        invalidTracingYamlPath,
+        invalidYamlPath,
+        withoutIgnoreEndpointsYamlPath,
+        withBasicFilteringYamlPath
+      ].forEach(filePath => {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      });
+    });
+
+    it('should normalize YAML with "tracing" key', () => {
+      const result = fromYaml(tracingYamlPath);
+      expect(result).to.deep.equal({
+        kafka: [{ methods: ['consume', 'publish'], endpoints: ['topic1', 'topic2'] }]
+      });
+    });
+
+    it('should normalize YAML with "com.instana.tracing" key', () => {
+      const result = fromYaml(comInstanaTracingYamlPath);
+      expect(result).to.deep.equal({
+        kafka: [{ methods: ['consume', 'publish'], endpoints: ['topic1', 'topic2'] }]
+      });
+    });
+
+    it('should return an empty object  for invalid key "instana-tracing"', () => {
+      const result = fromYaml(invalidTracingYamlPath);
+      expect(result).to.deep.equal({});
+    });
+
+    it('should return an empty object for invalid YAML content', () => {
+      const result = fromYaml(invalidYamlPath);
+      expect(result).to.deep.equal({});
+    });
+
+    it('should return an empty object when ignore-endpoints not configured', () => {
+      const result = fromYaml(withoutIgnoreEndpointsYamlPath);
+      expect(result).to.deep.equal({});
+    });
+
+    it('should normalize YAML including basic filtering', () => {
+      const result = fromYaml(withBasicFilteringYamlPath);
+      expect(result).to.deep.equal({
+        kafka: [{ methods: ['consume', 'publish'], endpoints: ['topic1', 'topic2'] }],
+        redis: [{ methods: ['type', 'get'] }]
+      });
     });
   });
 });
