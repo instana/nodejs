@@ -121,6 +121,7 @@ exports.fromEnv = function fromEnv(ignoreEndpointsEnv) {
  * @param {string} yamlFilePath
  */
 exports.fromYaml = function fromYaml(yamlFilePath) {
+  /** @type {Record<string, any>} */
   const endpointsConfig = read(yamlFilePath);
   if (!endpointsConfig || typeof endpointsConfig !== 'object') {
     logger?.debug(`Invalid YAML content. Expected an object, but got: ${typeof endpointsConfig}`);
