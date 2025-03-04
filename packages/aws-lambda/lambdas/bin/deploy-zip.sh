@@ -1,3 +1,12 @@
+#!/usr/bin/env bash
+
+#######################################
+# (c) Copyright IBM Corp. 2021
+# (c) Copyright Instana Inc. and contributors 2019
+#######################################
+
+set -exEo pipefail
+
 command -v aws >/dev/null 2>&1 || {
   cat <<EOF >&2
 The AWS command line tool needs to be installed but it isn't. See https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html or https://docs.aws.amazon.com/cli/latest/userguide/install-macos.html etc. for instructions.

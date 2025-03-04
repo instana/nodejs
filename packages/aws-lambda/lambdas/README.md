@@ -6,7 +6,8 @@ Contains a few trivial example lambdas, mainly used to set up quick experiments.
 Manually creating the empty Lambda function
 -------------------------------------------
 
-Manually create the lambda function in the target region. The name needs to match.
+First, you need to manually create the lambda function in the target region. 
+The name of the new function and the name of the folder needs to match.
 
 
 Building The Lambda Zip Files
