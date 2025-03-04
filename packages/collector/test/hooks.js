@@ -13,7 +13,7 @@
 const path = require('path');
 const isCI = require('@instana/core/test/test_util/is_ci');
 const config = require('@instana/core/test/config');
-const checkESMApp = require('./test_util/check-esm-app');
+const checkESMApp = require('@instana/core/test/test_util/check_esm_app');
 
 exports.mochaHooks = {
   async beforeAll() {
