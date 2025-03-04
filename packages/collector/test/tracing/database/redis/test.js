@@ -1005,6 +1005,88 @@ const globalAgent = require('../../../globalAgent');
                   });
               });
             });
+
+            describe('Ignore Endpoints loaded from env variable INSTANA_IGNORE_ENDPOINTS_PATH', async () => {
+              globalAgent.setUpCleanUpHooks();
+              let controls;
+
+              before(async () => {
+                controls = new ProcessControls({
+                  useGlobalAgent: true,
+                  appPath:
+                    redisVersion === 'latest' ? path.join(__dirname, 'app.js') : path.join(__dirname, 'legacyApp.js'),
+                  env: {
+                    REDIS_VERSION: redisVersion,
+                    REDIS_PKG: redisPkg,
+                    INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml')
+                  }
+                });
+                await controls.start();
+              });
+
+              beforeEach(async () => {
+                await agentControls.clearReceivedTraceData();
+              });
+
+              before(async () => {
+                await controls.sendRequest({
+                  method: 'POST',
+                  path: '/clearkeys'
+                });
+              });
+
+              after(async () => {
+                await controls.stop();
+              });
+
+              afterEach(async () => {
+                await controls.clearIpcMessages();
+              });
+              it('should ignore spans for configured ignore endpoints(get,set)', async function () {
+                await controls
+                  .sendRequest({
+                    method: 'POST',
+                    path: '/values',
+                    qs: {
+                      key: 'price',
+                      value: 42
+                    }
+                  })
+                  .then(() =>
+                    controls.sendRequest({
+                      method: 'GET',
+                      path: '/values',
+                      qs: {
+                        key: 'price'
+                      }
+                    })
+                  )
+                  .then(async response => {
+                    expect(String(response)).to.equal('42');
+
+                    return retry(async () => {
+                      const spans = await agentControls.getSpans();
+                      // 2 x http entry span
+                      // 2 x http client span
+                      expect(spans.length).to.equal(4);
+
+                      spans.forEach(span => {
+                        expect(span.n).not.to.equal('redis');
+                      });
+
+                      expectAtLeastOneMatching(spans, [
+                        span => expect(span.n).to.equal('node.http.server'),
+                        span => expect(span.data.http.method).to.equal('POST')
+                      ]);
+
+                      expectAtLeastOneMatching(spans, [
+                        span => expect(span.n).to.equal('node.http.server'),
+                        span => expect(span.data.http.method).to.equal('GET')
+                      ]);
+                    });
+                  });
+              });
+            });
           });
         });
 

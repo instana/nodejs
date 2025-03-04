@@ -6,6 +6,8 @@
 'use strict';
 
 const expect = require('chai').expect;
+const fs = require('fs');
+const path = require('path');
 
 const normalizeConfig = require('../../src/util/normalizeConfig');
 
@@ -606,6 +608,46 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.ignoreEndpoints).to.deep.equal({});
   });
 
+  describe('when testing ignore endpoints reading from INSTANA_IGNORE_ENDPOINTS_PATH env variable', () => {
+    let filePaths;
+
+    before(() => {
+      filePaths = setupTestYamlFiles(__dirname);
+    });
+
+    after(() => {
+      cleanupTestYamlFiles(filePaths);
+    });
+
+    it('should normalize YAML with "tracing" key', () => {
+      process.env.INSTANA_IGNORE_ENDPOINTS_PATH = filePaths.tracingYamlPath;
+      const config = normalizeConfig();
+      expect(config.tracing.ignoreEndpoints).to.deep.equal({
+        kafka: [{ methods: ['consume', 'publish'], endpoints: ['topic1', 'topic2'] }]
+      });
+    });
+
+    it('should normalize YAML with "com.instana.tracing" key', () => {
+      process.env.INSTANA_IGNORE_ENDPOINTS_PATH = filePaths.comInstanaTracingYamlPath;
+      const config = normalizeConfig();
+      expect(config.tracing.ignoreEndpoints).to.deep.equal({
+        kafka: [{ methods: ['consume', 'publish'], endpoints: ['topic1', 'topic2'] }]
+      });
+    });
+
+    it('should return an empty object for invalid YAML content', () => {
+      process.env.INSTANA_IGNORE_ENDPOINTS_PATH = filePaths.invalidYamlPath;
+      const config = normalizeConfig();
+      expect(config.tracing.ignoreEndpoints).to.deep.equal({});
+    });
+
+    it('should return an empty object for YAML with missing root keys', () => {
+      process.env.INSTANA_IGNORE_ENDPOINTS_PATH = filePaths.missingRootKeyYamlPath;
+      const config = normalizeConfig();
+      expect(config.tracing.ignoreEndpoints).to.deep.equal({});
+    });
+  });
+
   function checkDefaults(config) {
     expect(config).to.be.an('object');
 
@@ -639,5 +681,54 @@ describe('util.normalizeConfig', () => {
     expect(config.secrets).to.be.an('object');
     expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
     expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);
+  }
+
+  function setupTestYamlFiles(dirname) {
+    const tracingYamlPath = path.resolve(dirname, 'tracing.yaml');
+    const comInstanaTracingYamlPath = path.resolve(dirname, 'comInstanaTracing.yaml');
+    const invalidYamlPath = path.resolve(dirname, 'invalid.yaml');
+    const missingRootKeyYamlPath = path.resolve(dirname, 'missingRootKey.yaml');
+
+    [tracingYamlPath, comInstanaTracingYamlPath, invalidYamlPath, missingRootKeyYamlPath].forEach(filePath => {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    });
+
+    fs.writeFileSync(
+      tracingYamlPath,
+      `tracing:
+      ignore-endpoints:
+        kafka: 
+          - methods: ["consume","publish"]
+            endpoints: ["topic1","topic2"]`
+    );
+
+    fs.writeFileSync(
+      comInstanaTracingYamlPath,
+      `com.instana.tracing:
+      ignore-endpoints:
+        kafka: 
+          - methods: ["consume","publish"]
+            endpoints: ["topic1","topic2"]`
+    );
+
+    fs.writeFileSync(invalidYamlPath, 'mytest.json');
+    fs.writeFileSync(missingRootKeyYamlPath, 'instana: test');
+
+    return {
+      tracingYamlPath,
+      comInstanaTracingYamlPath,
+      invalidYamlPath,
+      missingRootKeyYamlPath
+    };
+  }
+
+  function cleanupTestYamlFiles(filePaths) {
+    Object.values(filePaths).forEach(filePath => {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    });
   }
 });
