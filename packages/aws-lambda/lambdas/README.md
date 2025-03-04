@@ -7,7 +7,7 @@ Manually creating the empty Lambda function
 -------------------------------------------
 
 First, you need to manually create the lambda function in the target region. 
-The name of the new function and the name of the folder needs to match.
+The name of the new function and the name of the zip file needs to match.
 
 
 Building The Lambda Zip Files
@@ -15,6 +15,7 @@ Building The Lambda Zip Files
 
 Add `.dont-add-npm-instana` file to the target folder to avoid adding the Instana npm packages and to use the layer instead.
 
+Go to `cd packages/aws-lambda`.
 Run `bin/create-zip.sh <lambda-folder-name>` to create deployment zip files for one of Lambda functions in this folder. The resulting zip files can be found in the `zip` subfolder. They can be uploaded to AWS as Lambda functions. There is also a script to deploy the resulting zip file via the `aws` command line tool.
 
 The environment variable `BUILD_LAMBDAS_WITH` controls how the Lambda zip files are being built:

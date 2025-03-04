@@ -1,6 +1,6 @@
 function createZip {
   name=${PWD##*/}
-  echo "create-zip-util: $name.zip"
+  echo "create-zip-util: $name.zip with build option '$BUILD_LAMBDAS_WITH'"
   rm -f $name.zip
   mkdir -p ../zip
   rm -f ../zip/$name.zip
@@ -16,7 +16,12 @@ function createZip {
       cp package-lock.json package-lock.json.backup
     fi
 
-    if [[ "${BUILD_LAMBDAS_WITH-}" == "layer" ]]; then
+    # if package-lock.json.backup exists, the script crashed. Bring it back
+    if [[ -f package-lock.json.backup ]]; then
+      cp package-lock.json.backup package-lock.json
+    fi
+
+    if [[ "${BUILD_LAMBDAS_WITH}" == "layer" ]]; then
       # We want to use the lambda layer and not the locally build npm package tar file.
       # If the lambda's package.json currently contains a dependency to the local tar files, like:
       # "dependencies": {
@@ -30,7 +35,7 @@ function createZip {
       npm uninstall --production -S @instana/serverless
       npm uninstall --production -S instana-aws-lambda-auto-wrap
 
-    elif [[ "${BUILD_LAMBDAS_WITH-}" == "local" ]]; then
+    elif [[ "${BUILD_LAMBDAS_WITH}" == "local" ]]; then
       # The lambda's package.json might or might not already have a dependency to the local tar files:
       # "dependencies": {
       #   "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz",
@@ -44,12 +49,14 @@ function createZip {
       # We have to remove the lock file otherwise the integrity will fail.
       rm package-lock.json
 
+      echo "Installing local instana packages in folder $PWD"
+
       npm --loglevel=warn --production install -S "../../instana-core.tgz"
       npm --loglevel=warn --production install -S "../../instana-aws-lambda-auto-wrap.tgz"
       npm --loglevel=warn --production install -S "../../instana-aws-lambda.tgz"
       npm --loglevel=warn --production install -S "../../instana-serverless.tgz"
 
-    elif [[ "${BUILD_LAMBDAS_WITH-npm}" == "npm" ]]; then
+    elif [[ "${BUILD_LAMBDAS_WITH}" == "npm" ]]; then
       # The lambda's package.json might or might not already have a dependency to the local tar files:
       # "dependencies": {
       #   "@instana/serverless": "file:../../instana-serverless.tgz",

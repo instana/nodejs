@@ -5,7 +5,7 @@
 # (c) Copyright Instana Inc. and contributors 2019
 #######################################
 
-set -exEo pipefail
+set -eEo pipefail
 
 command -v aws >/dev/null 2>&1 || {
   cat <<EOF >&2
@@ -80,7 +80,7 @@ if [[ -z $LAYER_ARN ]]; then
 fi
 
 if [[ ! -e $lambda_zip_file ]]; then
-  echo "Zip file $lambda_zip_file does not exist, terminating. Usage: ./deploy-zip.sh <zip-file>"
+  echo "Zip file "$lambda_zip_file" does not exist, terminating. Usage: ./deploy-zip.sh <zip-file>"
   exit 1
 fi
 
