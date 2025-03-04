@@ -317,7 +317,7 @@ function startSpan(spanAttributes = {}) {
     span.addCleanup(ns.set(w3cTraceContextKey, w3cTraceContext));
   }
 
-  const filteredSpan = applySpanFilter(span);
+  const filteredSpan = applyFilter(span);
 
   // If the span was filtered out, we do not process it further.
   // Instead, we return an 'InstanaIgnoredSpan' instance to explicitly indicate that it was excluded from tracing.
@@ -682,12 +682,6 @@ function skipExitTracing(options) {
   }
 
   return skip;
-}
-/**
- * @param {InstanaSpan | import("../core").InstanaBaseSpan} span
- */
-function applySpanFilter(span) {
-  return applyFilter(span);
 }
 
 module.exports = {
