@@ -13,7 +13,7 @@
 const path = require('path');
 const isCI = require('@instana/core/test/test_util/is_ci');
 const config = require('@instana/core/test/config');
-const fs = require('fs');
+const checkESMApp = require('./test_util/check-esm-app');
 
 exports.mochaHooks = {
   async beforeAll() {
@@ -35,8 +35,7 @@ exports.mochaHooks = {
     const testFile = this.currentTest.file;
 
     if (process.env.RUN_ESM) {
-      const files = fs.readdirSync(testFile.split('/').slice(0, -1).join('/'));
-      const esmApp = files.find(f => f.indexOf('.mjs') !== -1);
+      const esmApp = checkESMApp(testFile);
 
       if (!esmApp) {
         this.skip();
