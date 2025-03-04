@@ -4,6 +4,7 @@
 
 'use strict';
 
+const path = require('path');
 const { read } = require('../yamlReader');
 /** @type {import('../../core').GenericLogger} */
 let logger;
@@ -121,6 +122,13 @@ exports.fromEnv = function fromEnv(ignoreEndpointsEnv) {
  * @param {string} yamlFilePath
  */
 exports.fromYaml = function fromYaml(yamlFilePath) {
+  if (!path.isAbsolute(yamlFilePath)) {
+    logger?.warn(
+      // eslint-disable-next-line max-len
+      `Invalid YAML path. The INSTANA_IGNORE_ENDPOINTS_PATH file path ${yamlFilePath} is not absolute.`
+    );
+    return {};
+  }
   /** @type {Record<string, any>} */
   const endpointsConfig = read(yamlFilePath);
   if (!endpointsConfig || typeof endpointsConfig !== 'object') {
