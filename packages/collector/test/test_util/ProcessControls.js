@@ -21,7 +21,6 @@ const portFinder = require('./portfinder');
 const sslDir = path.join(__dirname, '..', 'apps', 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
 const isLatestEsmSupportedVersion = require('@instana/core').util.esm.isLatestEsmSupportedVersion;
-const checkESMApp = require('@instana/core/test/test_util/check_esm_app');
 
 class ProcessControls {
   /**
@@ -70,12 +69,14 @@ class ProcessControls {
             ? opts.appPath.replace(/\.js$/, '.mjs')
             : `${opts.appPath}.mjs`;
 
-          if (fs.existsSync(updatedPath)) {
+          const esmApp = testUtils.checkESMApp({ appPath: updatedPath });
+
+          if (esmApp) {
             opts.execArgv = resolveEsmLoader();
             opts.appPath = updatedPath;
           }
         } else if (opts?.dirname) {
-          const esmApp = checkESMApp(opts.dirname);
+          const esmApp = testUtils.checkESMApp({ dirPath: opts.dirname });
           if (esmApp) {
             opts.execArgv = resolveEsmLoader();
             opts.appPath = path.join(opts.dirname, 'app.mjs');
