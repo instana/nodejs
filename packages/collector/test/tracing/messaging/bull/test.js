@@ -823,7 +823,8 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         env: {
           REDIS_SERVER: `redis://${process.env.REDIS}`,
           BULL_QUEUE_NAME: queueName,
-          BULL_JOB_NAME: 'steve'
+          BULL_JOB_NAME: 'steve',
+          INSTANA_ALLOW_ROOT_EXIT_SPAN: 1
         }
       });
 
