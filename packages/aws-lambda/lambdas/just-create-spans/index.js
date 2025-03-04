@@ -7,6 +7,7 @@
 
 'use strict';
 
+// eslint-disable-next-line import/no-extraneous-dependencies
 const instana = require('@instana/aws-lambda');
 
 function timeout(ms) {
