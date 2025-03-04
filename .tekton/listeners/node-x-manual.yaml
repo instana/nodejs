@@ -32,8 +32,10 @@ spec:
       value: $(params.esm)
     - name: skip-cache
       value: $(params.skip-cache)
+    - name: esm-suffix
+      value: "$(params.esm == 'true' ? '-esm' : '')"
     - name: context
-      value: "node-$(params.node-version)-$(params.esm)"       
+      value: "node-$(params.node-version)$(params.esm-suffix)"       
 
 ---
 
