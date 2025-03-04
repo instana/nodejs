@@ -1018,7 +1018,7 @@ const globalAgent = require('../../../globalAgent');
                   env: {
                     REDIS_VERSION: redisVersion,
                     REDIS_PKG: redisPkg,
-                    INSTANA_IGNORE_ENDPOINTS_PATH: path.resolve(__dirname, './files/tracing.yaml')
+                    INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml')
                   }
                 });
                 await controls.start();
