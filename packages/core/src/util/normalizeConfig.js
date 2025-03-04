@@ -719,15 +719,14 @@ function normalizeIgnoreEndpoints(config) {
     return;
   }
   // Case 1: Use in-code configuration if available
-  // This takes the highest priority, allowing direct control from the code.
   if (Object.keys(ignoreEndpointsConfig).length) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
     return;
   }
 
   // Case 2: Load from a YAML file if `INSTANA_IGNORE_ENDPOINTS_PATH` is set
-  // Introduced in Phase 2 for advanced filtering based on both Kafka methods and endpoints.
-  // This enables external configuration updates without modifying the code.
+  // Introduced in Phase 2 for advanced filtering based on both methods and endpoints.
+  // Also supports basic filtering for endpoints.
   if (process.env.INSTANA_IGNORE_ENDPOINTS_PATH) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromYaml(
       process.env.INSTANA_IGNORE_ENDPOINTS_PATH

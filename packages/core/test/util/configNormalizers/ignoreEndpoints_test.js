@@ -157,9 +157,18 @@ describe('util.ignoreEndpoints', function () {
     const comInstanaTracingYamlPath = path.resolve(__dirname, 'comInstanaTracing.yaml');
     const invalidTracingYamlPath = path.resolve(__dirname, 'invalidTracing.yaml');
     const invalidYamlPath = path.resolve(__dirname, 'invalid.yaml');
+    const withoutIgnoreEndpointsYamlPath = path.resolve(__dirname, 'withoutIgnoreEndpoints.yaml');
+    const withBasicFilteringYamlPath = path.resolve(__dirname, 'withBasicFiltering.yaml');
 
     before(() => {
-      [tracingYamlPath, comInstanaTracingYamlPath, invalidTracingYamlPath, invalidYamlPath].forEach(filePath => {
+      [
+        tracingYamlPath,
+        comInstanaTracingYamlPath,
+        invalidTracingYamlPath,
+        invalidYamlPath,
+        withoutIgnoreEndpointsYamlPath,
+        withBasicFilteringYamlPath
+      ].forEach(filePath => {
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
         }
@@ -192,25 +201,52 @@ describe('util.ignoreEndpoints', function () {
                 endpoints: ["topic1","topic2"]`
       );
 
+      fs.writeFileSync(
+        withoutIgnoreEndpointsYamlPath,
+        `tracing:
+          sampling:
+            kafka: 
+              - methods: ["consume","publish"]
+                endpoints: ["topic1","topic2"]`
+      );
+
+      fs.writeFileSync(
+        withBasicFilteringYamlPath,
+        `tracing:
+          ignore-endpoints:
+            redis: 
+              - type
+              - get
+            kafka: 
+              - methods: ["consume","publish"]
+                endpoints: ["topic1","topic2"]`
+      );
       fs.writeFileSync(invalidYamlPath, 'test.json');
     });
 
     after(() => {
-      [tracingYamlPath, comInstanaTracingYamlPath, invalidTracingYamlPath, invalidYamlPath].forEach(filePath => {
+      [
+        tracingYamlPath,
+        comInstanaTracingYamlPath,
+        invalidTracingYamlPath,
+        invalidYamlPath,
+        withoutIgnoreEndpointsYamlPath,
+        withBasicFilteringYamlPath
+      ].forEach(filePath => {
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
         }
       });
     });
 
-    it('should read and normalize YAML with "tracing" key', () => {
+    it('should normalize YAML with "tracing" key', () => {
       const result = fromYaml(tracingYamlPath);
       expect(result).to.deep.equal({
         kafka: [{ methods: ['consume', 'publish'], endpoints: ['topic1', 'topic2'] }]
       });
     });
 
-    it('should read and normalize YAML with "com.instana.tracing" key', () => {
+    it('should normalize YAML with "com.instana.tracing" key', () => {
       const result = fromYaml(comInstanaTracingYamlPath);
       expect(result).to.deep.equal({
         kafka: [{ methods: ['consume', 'publish'], endpoints: ['topic1', 'topic2'] }]
@@ -222,9 +258,22 @@ describe('util.ignoreEndpoints', function () {
       expect(result).to.deep.equal({});
     });
 
-    it('should return an empty object for invalid YAML content (not an object)', () => {
+    it('should return an empty object for invalid YAML content', () => {
       const result = fromYaml(invalidYamlPath);
       expect(result).to.deep.equal({});
+    });
+
+    it('should return an empty object when ignore-endpoints not configured', () => {
+      const result = fromYaml(withoutIgnoreEndpointsYamlPath);
+      expect(result).to.deep.equal({});
+    });
+
+    it('should normalize YAML including basic filtering', () => {
+      const result = fromYaml(withBasicFilteringYamlPath);
+      expect(result).to.deep.equal({
+        kafka: [{ methods: ['consume', 'publish'], endpoints: ['topic1', 'topic2'] }],
+        redis: [{ methods: ['type', 'get'] }]
+      });
     });
   });
 });
