@@ -41,16 +41,16 @@ const retryTime = 1000;
 
 mochaSuiteFn('tracing/messaging/bull', function () {
   this.timeout(config.getTestTimeout() * 3);
-
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
   describe('tracing enabled, no suppression', function () {
     let senderControls;
 
-    before(async () => {
+    before(async function () {
       senderControls = new ProcessControls({
         appPath: path.join(__dirname, 'sender'),
+        mocha: this,
         useGlobalAgent: true,
         env: {
           REDIS_SERVER: 'redis://127.0.0.1:6379',
@@ -82,9 +82,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         let receiverControls;
         const receiveMethod = 'Process';
 
-        before(async () => {
+        before(async function () {
           receiverControls = new ProcessControls({
             appPath: path.join(__dirname, 'receiver'),
+            mocha: this,
             useGlobalAgent: true,
             env: {
               REDIS_SERVER: 'redis://127.0.0.1:6379',
@@ -288,9 +289,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       let receiverControls;
       const receiveMethod = 'Promise';
 
-      before(async () => {
+      before(async function () {
         receiverControls = new ProcessControls({
           appPath: path.join(__dirname, 'receiver'),
+          mocha: this,
           useGlobalAgent: true,
           env: {
             REDIS_SERVER: 'redis://127.0.0.1:6379',
@@ -631,9 +633,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
     let senderControls;
 
-    before(async () => {
+    before(async function () {
       senderControls = new ProcessControls({
         appPath: path.join(__dirname, 'sender'),
+        mocha: this,
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
@@ -662,9 +665,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       let receiverControls;
       const receiveMethod = 'Process';
 
-      before(async () => {
+      before(async function () {
         receiverControls = new ProcessControls({
           appPath: path.join(__dirname, 'receiver'),
+          mocha: this,
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
@@ -724,9 +728,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
   describe('tracing enabled but suppressed', () => {
     let senderControls;
 
-    before(async () => {
+    before(async function () {
       senderControls = new ProcessControls({
         appPath: path.join(__dirname, 'sender'),
+        mocha: this,
         useGlobalAgent: true,
         env: {
           REDIS_SERVER: 'redis://127.0.0.1:6379',
@@ -754,9 +759,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       let receiverControls;
       const receiveMethod = 'Promise';
 
-      before(async () => {
+      before(async function () {
         receiverControls = new ProcessControls({
           appPath: path.join(__dirname, 'receiver'),
+          mocha: this,
           useGlobalAgent: true,
           env: {
             REDIS_SERVER: 'redis://127.0.0.1:6379',
@@ -816,9 +822,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
   describe('allowRootExitSpan', function () {
     let controls;
 
-    before(async () => {
+    before(async function () {
       controls = new ProcessControls({
         useGlobalAgent: true,
+        mocha: this,
         appPath: path.join(__dirname, 'allowRootExitSpanApp'),
         env: {
           REDIS_SERVER: `redis://${process.env.REDIS}`,

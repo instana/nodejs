@@ -17,6 +17,7 @@ module.exports = function checkESMApp(obj = {}) {
       }
 
       // checking inside esm/ subfolder relative to appPath
+      // NOTE: 'esm/'is not implemented or used yet.
       const esmAppPath = path.join(path.dirname(appPath), 'esm', path.basename(appPath));
       if (fs.existsSync(esmAppPath)) {
         return esmAppPath;
@@ -35,6 +36,7 @@ module.exports = function checkESMApp(obj = {}) {
       };
 
       // check 'esm/' directory first, then fallback to the main directory
+      // NOTE: 'esm/'is not implemented or used yet.
       return findESMFile(esmDir) || findESMFile(dirPath);
     }
   } catch (error) {

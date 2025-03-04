@@ -56,6 +56,9 @@ class ProcessControls {
       opts.appPath = path.join(opts.dirname, 'app.js');
     }
 
+    this.mocha = opts.mocha;
+    this.shouldSkip = false;
+
     if (process.env.RUN_ESM && !opts.execArgv) {
       const resolveEsmLoader = () =>
         isLatestEsmSupportedVersion(process.versions.node)
@@ -74,15 +77,26 @@ class ProcessControls {
           if (esmApp) {
             opts.execArgv = resolveEsmLoader();
             opts.appPath = updatedPath;
+          } else {
+            this.shouldSkip = true;
+            this.mocha.skip();
           }
         } else if (opts?.dirname) {
           const esmApp = testUtils.checkESMApp({ dirPath: opts.dirname });
           if (esmApp) {
             opts.execArgv = resolveEsmLoader();
             opts.appPath = path.join(opts.dirname, 'app.mjs');
+          } else {
+            this.shouldSkip = true;
+            this.mocha.skip();
           }
         }
       } catch (err) {
+        // CASE: mocha throws an error if we call `this.mocha.skip()`
+        //       This prevents the test to continue.
+        if (err.message.indexOf('sync skip') !== -1) {
+          return;
+        }
         // eslint-disable-next-line no-console
         console.log('Unable to load the target app.mjs', err);
       }
@@ -159,6 +173,11 @@ class ProcessControls {
 
   async start(retryTime, until, skipWaitUntilServerIsUp = false) {
     const that = this;
+
+    if (this.shouldSkip) {
+      return;
+    }
+
     this.receivedIpcMessages = [];
 
     const stdio = this.env.WITH_FULL_STDIO ? ['pipe', 'pipe', 'pipe', 'ipc'] : config.getAppStdio();
@@ -193,6 +212,10 @@ class ProcessControls {
   }
 
   async stop() {
+    if (this.shouldSkip) {
+      return;
+    }
+
     await this.kill();
   }
 

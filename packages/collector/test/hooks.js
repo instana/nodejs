@@ -34,6 +34,9 @@ exports.mochaHooks = {
   beforeEach() {
     const testFile = this.currentTest.file;
 
+    // NOTE: This is a general check if the target test file
+    //       supports ESM. We do not care which .mjs files are used for
+    //       the individual describes.
     if (process.env.RUN_ESM) {
       const folderPath = path.dirname(testFile);
       const esmApp = checkESMApp({ dirPath: folderPath });
