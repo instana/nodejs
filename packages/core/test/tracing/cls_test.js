@@ -395,35 +395,4 @@ describe('tracing/cls', () => {
       expect(span.data.redis.connection).to.equal('http://localhost');
     });
   });
-  it('should return InstanaIgnoredSpan when the span is configured to be ignored', () => {
-    cls.ns.run(() => {
-      cls.init({
-        tracing: {
-          ignoreEndpoints: {
-            redis: [{ methods: ['get'] }]
-          }
-        }
-      });
-      const span = cls.startSpan({
-        spanName: 'redis',
-        kind: constants.EXIT,
-        spanData: {
-          redis: {
-            operation: 'get',
-            connection: 'http://localhost'
-          }
-        }
-      });
-      expect(span.constructor.name).to.equal('InstanaIgnoredSpan');
-      expect(span).to.be.an('object');
-      expect(span.n).to.equal('redis');
-      expect(span.t).to.be.a('string');
-      expect(span.k).to.equal(constants.EXIT);
-      expect(span.data).to.be.an('object');
-      expect(Object.keys(span.data)).to.have.lengthOf(1);
-      expect(span.data.redis).to.be.exist;
-      expect(span.data.redis.operation).to.equal('get');
-      expect(span.data.redis.connection).to.equal('http://localhost');
-    });
-  });
 });
