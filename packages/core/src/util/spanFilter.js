@@ -13,7 +13,9 @@ let ignoreEndpoints;
  * @param {import('../util/normalizeConfig').InstanaConfig} config
  */
 function init(config) {
-  ignoreEndpoints = config?.tracing?.ignoreEndpoints;
+  if (config?.tracing?.ignoreEndpoints) {
+    ignoreEndpoints = config.tracing.ignoreEndpoints;
+  }
 }
 
 /**
