@@ -76,7 +76,7 @@ class ProcessControls {
             opts.appPath = updatedPath;
           }
         } else if (opts?.dirname) {
-          const esmApp = testUtils.checkESMApp({ dirPath: opts.dirname });
+          const esmApp = testUtils.checkESMApp({ appPath: path.join(opts.dirname, 'app.mjs') });
           if (esmApp) {
             opts.execArgv = resolveEsmLoader();
             opts.appPath = path.join(opts.dirname, 'app.mjs');

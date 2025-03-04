@@ -37,6 +37,8 @@ module.exports = function checkESMApp(obj = {}) {
       // check 'esm/' directory first, then fallback to the main directory
       return findESMFile(esmDir) || findESMFile(dirPath);
     }
+
+    return false;
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error checking ESM file:', error.message);
