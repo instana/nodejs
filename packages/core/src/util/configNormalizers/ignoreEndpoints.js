@@ -4,6 +4,8 @@
 
 'use strict';
 
+const path = require('path');
+const { read } = require('../yamlReader');
 /** @type {import('../../core').GenericLogger} */
 let logger;
 /**
@@ -94,7 +96,7 @@ exports.fromEnv = function fromEnv(ignoreEndpointsEnv) {
         if (!serviceName || !endpointList) {
           logger?.warn(
             // eslint-disable-next-line max-len
-            `Invalid entry in INSTANA_IGNORE_ENDPOINTS ${ignoreEndpointsEnv}: "${serviceEntry}". Expected format is e.g. "service:endpoint1,endpoint2".`
+            `Invalid configuration: entry in INSTANA_IGNORE_ENDPOINTS ${ignoreEndpointsEnv}: "${serviceEntry}". Expected format is e.g. "service:endpoint1,endpoint2".`
           );
           return null;
         }
@@ -108,6 +110,49 @@ exports.fromEnv = function fromEnv(ignoreEndpointsEnv) {
     logger?.warn(`Failed to parse INSTANA_IGNORE_ENDPOINTS: ${ignoreEndpointsEnv}. Error: ${error?.message}`);
     return {};
   }
+};
+
+/**
+ * Reads and normalizes the `INSTANA_IGNORE_ENDPOINTS_PATH` configuration from a YAML file.
+ *
+ * - The YAML file must have a root key of either `tracing` or `com.instana.tracing`.
+ * - If `com.instana.tracing` is detected, it will be logged and automatically mapped to `tracing`.
+ * - Returns an empty object if the file is missing, malformed, or improperly structured.
+ *
+ * @param {string} yamlFilePath
+ */
+exports.fromYaml = function fromYaml(yamlFilePath) {
+  if (!path.isAbsolute(yamlFilePath)) {
+    logger?.warn(
+      // eslint-disable-next-line max-len
+      `Invalid configuration: INSTANA_IGNORE_ENDPOINTS_PATH file path ${yamlFilePath} is not absolute.`
+    );
+    return {};
+  }
+  /** @type {Record<string, any>} */
+  const endpointsConfig = read(yamlFilePath);
+  if (!endpointsConfig || typeof endpointsConfig !== 'object') {
+    logger?.debug(
+      // eslint-disable-next-line max-len
+      `Invalid configuration: INSTANA_IGNORE_ENDPOINTS_PATH value is not valid, got: ${typeof endpointsConfig}. Provide valid YAML file`
+    );
+    return {};
+  }
+
+  if (!endpointsConfig.tracing && !endpointsConfig['com.instana.tracing']) {
+    logger?.debug('Invalid configuration: INSTANA_IGNORE_ENDPOINTS_PATH root key must be "tracing".');
+    return {};
+  }
+
+  if (endpointsConfig['com.instana.tracing']) {
+    logger?.info(
+      // eslint-disable-next-line max-len
+      `Detected the root key "com.instana.tracing" in the YAML file at "${yamlFilePath}". This format is accepted, but please migrate to using "tracing" as the root key.`
+    );
+    endpointsConfig.tracing = endpointsConfig['com.instana.tracing'];
+    delete endpointsConfig['com.instana.tracing'];
+  }
+  return exports.normalizeConfig(endpointsConfig.tracing['ignore-endpoints']) || {};
 };
 
 /**
