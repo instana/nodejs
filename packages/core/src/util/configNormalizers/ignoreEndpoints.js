@@ -129,12 +129,15 @@ exports.fromYaml = function fromYaml(yamlFilePath) {
   }
 
   if (!endpointsConfig.tracing && !endpointsConfig['com.instana.tracing']) {
-    logger?.debug('Invalid YAML structure. The root key must be either "tracing" or "com.instana.tracing".');
+    logger?.debug('Invalid YAML structure. The root key must be "tracing".');
     return {};
   }
 
   if (endpointsConfig['com.instana.tracing']) {
-    logger?.info('Detected "com.instana.tracing" in the YAML file. Using "tracing" as the accepted format.');
+    logger?.info(
+      // eslint-disable-next-line max-len
+      `Detected the root key "com.instana.tracing" in the YAML file at "${yamlFilePath}". This format is accepted, but please migrate to using "tracing" as the root key.`
+    );
     return exports.normalizeConfig(endpointsConfig['com.instana.tracing']['ignore-endpoints'] || {});
   }
   return exports.normalizeConfig(endpointsConfig.tracing['ignore-endpoints']) || {};
