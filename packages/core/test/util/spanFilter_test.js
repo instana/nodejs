@@ -5,7 +5,7 @@
 'use strict';
 
 const expect = require('chai').expect;
-const { applyFilter } = require('../../src/util/spanFilter');
+const { shouldIgnore } = require('../../src/util/spanFilter');
 
 const span = {
   t: '1234567803',
@@ -25,41 +25,41 @@ describe('util.spanFilter', () => {
     redis: [{ methods: ['GET', 'TYPE'] }],
     dynamodb: [{ methods: ['QUERY'] }]
   };
-  it('should return null when the span should be ignored', () => {
+  it('should return true when the span should be ignored', () => {
     span.data.redis.operation = 'GET';
-    expect(applyFilter({ span, ignoreEndpoints })).equal(null);
+    expect(shouldIgnore(span, ignoreEndpoints)).equal(true);
   });
 
-  it('should return the span when command is not in the ignore list', () => {
+  it('should return false when command is not in the ignore list', () => {
     span.data.redis.operation = 'HGET';
-    expect(applyFilter({ span, ignoreEndpoints })).equal(span);
+    expect(shouldIgnore(span, ignoreEndpoints)).equal(false);
   });
 
-  it('should return the span when span.n does not match any endpoint in config', () => {
+  it('should return false when span.n does not match any endpoint in config', () => {
     span.n = 'node.http.client';
-    expect(applyFilter({ span, ignoreEndpoints })).equal(span);
+    expect(shouldIgnore(span, ignoreEndpoints)).equal(false);
   });
-  it('should return span when no ignoreconfiguration', () => {
+  it('should return false when no ignoreconfiguration', () => {
     span.data.redis.operation = 'GET';
-    expect(applyFilter({ span, ignoreEndpoints: {} })).equal(span);
+    expect(shouldIgnore({ span, ignoreEndpoints: {} })).equal(false);
   });
-  it('should return null when the dynamodb span operation is in the ignore list', () => {
+  it('should return true when the dynamodb span operation is in the ignore list', () => {
     span.n = 'dynamodb';
     span.data = {
       dynamodb: {
         operation: 'Query'
       }
     };
-    expect(applyFilter({ span, ignoreEndpoints })).equal(null);
+    expect(shouldIgnore(span, ignoreEndpoints)).equal(true);
   });
 
-  it('should return the dynamodb span when the operation is not in the ignore list', () => {
+  it('should return false when the operation is not in the ignore list', () => {
     span.data.dynamodb.operation = 'PutItem';
-    expect(applyFilter({ span, ignoreEndpoints })).equal(span);
+    expect(shouldIgnore(span, ignoreEndpoints)).equal(false);
   });
 
   describe('util.spanFilter: advanced filtering', () => {
-    it('returns null when an advanced config for multiple services is applied and the Redis config matches', () => {
+    it('return truewhen an advanced config for multiple services is applied and the Redis config matches', () => {
       ignoreEndpoints = {
         redis: [{ methods: ['type', 'get'] }],
         kafka_placeholder: [{ methods: ['*'], endpoints: ['topic1', 'topic2'] }]
@@ -70,10 +70,10 @@ describe('util.spanFilter', () => {
           operation: 'type'
         }
       };
-      expect(applyFilter({ span, ignoreEndpoints })).to.equal(null);
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
     });
 
-    it('returns null when both method and endpoint criteria match', () => {
+    it('return true when both method and endpoint criteria match', () => {
       ignoreEndpoints = {
         kafka_placeholder: [{ methods: ['send', 'consume'], endpoints: ['topic3'] }]
       };
@@ -84,10 +84,10 @@ describe('util.spanFilter', () => {
           endpoints: ['topic3']
         }
       };
-      expect(applyFilter({ span, ignoreEndpoints })).to.equal(null);
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
     });
 
-    it('returns null when "*" is specified for methods config', () => {
+    it('return true when "*" is specified for methods config', () => {
       ignoreEndpoints = {
         kafka_placeholder: [{ methods: ['*'], endpoints: ['topic1', 'topic2'] }]
       };
@@ -98,10 +98,10 @@ describe('util.spanFilter', () => {
           endpoints: 'topic1'
         }
       };
-      expect(applyFilter({ span, ignoreEndpoints })).to.equal(null);
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
     });
 
-    it('returns null when  "*" is specified for endpoints config', () => {
+    it('return true when  "*" is specified for endpoints config', () => {
       ignoreEndpoints = {
         kafka_placeholder: [{ methods: ['consume'], endpoints: ['*'] }]
       };
@@ -112,10 +112,10 @@ describe('util.spanFilter', () => {
           endpoints: 'topic1'
         }
       };
-      expect(applyFilter({ span, ignoreEndpoints })).to.equal(null);
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
     });
 
-    it('returns null when "*" are used for both methods and endpoints config', () => {
+    it('return true when "*" are used for both methods and endpoints config', () => {
       ignoreEndpoints = {
         kafka_placeholder: [{ methods: ['*'], endpoints: ['*'] }]
       };
@@ -126,10 +126,10 @@ describe('util.spanFilter', () => {
           endpoints: 'topic1'
         }
       };
-      expect(applyFilter({ span, ignoreEndpoints })).to.equal(null);
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
     });
 
-    it('returns null when advanced config with endpoints as an array matches one of the span endpoints', () => {
+    it('return true when advanced config with endpoints as an array matches one of the span endpoints', () => {
       ignoreEndpoints = {
         kafka_placeholder: [{ methods: ['consume'], endpoints: ['topic1', 'topic2'] }]
       };
@@ -140,10 +140,10 @@ describe('util.spanFilter', () => {
           endpoints: ['topic1', 'topic3']
         }
       };
-      expect(applyFilter({ span, ignoreEndpoints })).to.equal(null);
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
     });
 
-    it('returns null when advanced config with endpoints as an array matches all of the span endpoints', () => {
+    it('return true when advanced config with endpoints as an array matches all of the span endpoints', () => {
       ignoreEndpoints = {
         kafka_placeholder: [{ methods: ['consume'], endpoints: ['topic1', 'topic2'] }]
       };
@@ -154,10 +154,10 @@ describe('util.spanFilter', () => {
           endpoints: ['topic1', 'topic2']
         }
       };
-      expect(applyFilter({ span, ignoreEndpoints })).to.equal(null);
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
     });
 
-    it('returns the original span when endpoints as an array does not match any of the span endpoints', () => {
+    it('returns false when endpoints as an array does not match any of the span endpoints', () => {
       ignoreEndpoints = {
         kafka_placeholder: [{ methods: ['consume'], endpoints: ['topic1', 'topic2'] }]
       };
@@ -168,10 +168,10 @@ describe('util.spanFilter', () => {
           endpoints: ['topic3', 'topic4']
         }
       };
-      expect(applyFilter({ span, ignoreEndpoints })).to.equal(span);
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
     });
 
-    it('returns the original span when the method config does not match', () => {
+    it('returns false when the method config does not match', () => {
       ignoreEndpoints = {
         kafka_placeholder: [{ methods: ['send'], endpoints: ['topic3'] }]
       };
@@ -182,10 +182,10 @@ describe('util.spanFilter', () => {
           endpoints: 'topic3'
         }
       };
-      expect(applyFilter({ span, ignoreEndpoints })).to.equal(span);
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
     });
 
-    it('returns the original span when the endpoint config does not match', () => {
+    it('returns false when the endpoint config does not match', () => {
       ignoreEndpoints = {
         kafka_placeholder: [{ methods: ['consume'], endpoints: ['topic1'] }]
       };
@@ -196,10 +196,10 @@ describe('util.spanFilter', () => {
           endpoints: 'topic2'
         }
       };
-      expect(applyFilter({ span, ignoreEndpoints })).to.equal(span);
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
     });
 
-    it('returns the original span when empty configuration arrays are provided', () => {
+    it('returns false when empty configuration arrays are provided', () => {
       ignoreEndpoints = {
         kafka_placeholder: [{ methods: [], endpoints: [] }]
       };
@@ -210,10 +210,10 @@ describe('util.spanFilter', () => {
           endpoints: 'topic2'
         }
       };
-      expect(applyFilter({ span, ignoreEndpoints })).to.equal(span);
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
     });
 
-    it('returns the original span when the configurations does not specify any filtering criteria', () => {
+    it('returns false when the configurations does not specify any filtering criteria', () => {
       ignoreEndpoints = {
         kafka_placeholder: [{}]
       };
@@ -224,10 +224,10 @@ describe('util.spanFilter', () => {
           endpoints: 'topic2'
         }
       };
-      expect(applyFilter({ span, ignoreEndpoints })).to.equal(span);
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
     });
 
-    it('returns the original span when the configurations specify unsupported filtering criteria', () => {
+    it('returns false when the configurations specify unsupported filtering criteria', () => {
       ignoreEndpoints = {
         kafka_placeholder: [{ operation: ['consume'], topics: ['topic2'] }]
       };
@@ -238,10 +238,10 @@ describe('util.spanFilter', () => {
           endpoints: 'topic2'
         }
       };
-      expect(applyFilter({ span, ignoreEndpoints })).to.equal(span);
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
     });
 
-    it('returns the original span when the configurations specify unsupported service', () => {
+    it('returns false when the configurations specify unsupported service', () => {
       ignoreEndpoints = {
         amqp: [{ methods: ['consume'], endpoints: ['topic2'] }]
       };
@@ -252,10 +252,10 @@ describe('util.spanFilter', () => {
           endpoints: 'topic2'
         }
       };
-      expect(applyFilter({ span, ignoreEndpoints })).to.equal(span);
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
     });
 
-    it('returns the original span when the config having endpoints and span havig empty endpoints array', () => {
+    it('returns false when the config having endpoints and span havig empty endpoints array', () => {
       ignoreEndpoints = {
         kafka_placeholder: [{ methods: ['consume'], endpoints: ['topic2'] }]
       };
@@ -266,7 +266,7 @@ describe('util.spanFilter', () => {
           endpoints: []
         }
       };
-      expect(applyFilter({ span, ignoreEndpoints })).to.equal(span);
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
     });
   });
 });

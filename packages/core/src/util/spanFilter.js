@@ -125,4 +125,4 @@ function applyFilter(span) {
   return span;
 }
 
-module.exports = { applyFilter, activate, init };
+module.exports = { applyFilter, activate, init, shouldIgnore };
