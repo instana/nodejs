@@ -5,8 +5,7 @@
 'use strict';
 
 // eslint-disable-next-line instana/no-unsafe-require, import/no-extraneous-dependencies
-const yaml = require('yaml');
-const fs = require('../uninstrumentedFs');
+const readYamlFile = require('read-yaml-file');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -23,8 +22,7 @@ exports.init = function init(config) {
  */
 exports.read = function read(filePath) {
   try {
-    const fileContent = fs.readFileSync(filePath, 'utf8');
-    return yaml.parse(fileContent);
+    return readYamlFile.sync(filePath);
   } catch (error) {
     logger?.warn(`Error reading YAML file from ${filePath}: ${error?.message}`);
     return {};
