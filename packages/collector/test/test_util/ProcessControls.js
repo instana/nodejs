@@ -71,19 +71,21 @@ class ProcessControls {
           if (fs.existsSync(updatedPath)) {
             opts.execArgv = resolveEsmLoader();
             opts.appPath = updatedPath;
-          } else {
-            this.skip();
-            return;
           }
+          //  else {
+          //   this.skip();
+          //   return;
+          // }
         } else if (opts?.dirname) {
           const esmApp = fs.readdirSync(opts.dirname).find(f => f.endsWith('.mjs'));
           if (esmApp) {
             opts.execArgv = resolveEsmLoader();
             opts.appPath = path.join(opts.dirname, 'app.mjs');
-          } else {
-            this.skip();
-            return;
           }
+          //  else {
+          //   this.skip();
+          //   return;
+          // }
         }
       } catch (err) {
         // eslint-disable-next-line no-console
