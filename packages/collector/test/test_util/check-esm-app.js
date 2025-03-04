@@ -10,10 +10,18 @@ const path = require('path');
 module.exports = function checkESMApp(fullPath) {
   try {
     const dirPath = path.dirname(fullPath);
-    const fileName = path.basename(fullPath);
+    const esmDir = path.join(dirPath, 'esm');
 
-    const files = fs.readdirSync(dirPath);
-    return files.includes(fileName) && fileName.endsWith('.mjs');
+    const findESMFile = directory => {
+      if (!fs.existsSync(directory) || !fs.statSync(directory).isDirectory()) {
+        return null;
+      }
+      const files = fs.readdirSync(directory);
+      return files.find(f => f.endsWith('.mjs')) || null;
+    };
+
+    // check 'esm/' directory first, then fallback to the main directory
+    return findESMFile(esmDir) || findESMFile(dirPath);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error(`Error checking ESM file in ${fullPath}:`, error.message);
