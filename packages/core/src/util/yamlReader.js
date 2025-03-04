@@ -7,7 +7,6 @@
 // eslint-disable-next-line instana/no-unsafe-require, import/no-extraneous-dependencies
 const yaml = require('yaml');
 const fs = require('../uninstrumentedFs');
-const path = require('path');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -20,12 +19,11 @@ exports.init = function init(config) {
 
 /**
  * Loads and parses a YAML file from the given path.
- * @param {string} filePath - The relative or absolute path to the YAML file.
+ * @param {string} filePath - The absolute path to the YAML file.
  */
 exports.read = function read(filePath) {
   try {
-    const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(__dirname, filePath);
-    const fileContent = fs.readFileSync(absolutePath, 'utf8');
+    const fileContent = fs.readFileSync(filePath, 'utf8');
     return yaml.parse(fileContent);
   } catch (error) {
     logger?.warn(`Error reading YAML file from ${filePath}: ${error?.message}`);
