@@ -6,13 +6,11 @@
 
 const fs = require('fs');
 const path = require('path');
-const sinon = require('sinon');
 const { expect } = require('chai');
 const { read, init } = require('../../src/util/yamlReader');
+const testUtils = require('../test_util');
 
 describe('yamlReader.read', () => {
-  let mockLogger;
-
   const tracingYamlPath = path.resolve(__dirname, 'tracing.yaml');
   const emptyTracingYamlPath = path.resolve(__dirname, 'emptyTracing.yaml');
   const noIgnoreEndpointsYamlPath = path.resolve(__dirname, 'noIgnoreEndpoints.yaml');
@@ -67,8 +65,7 @@ describe('yamlReader.read', () => {
   });
 
   beforeEach(() => {
-    mockLogger = { warn: sinon.spy() };
-    init({ logger: mockLogger });
+    init({ logger: testUtils.createFakeLogger() });
   });
 
   after(() => {

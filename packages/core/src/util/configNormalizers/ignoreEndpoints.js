@@ -4,6 +4,7 @@
 
 'use strict';
 
+const { read } = require('../yamlReader');
 /** @type {import('../../core').GenericLogger} */
 let logger;
 /**
@@ -108,6 +109,34 @@ exports.fromEnv = function fromEnv(ignoreEndpointsEnv) {
     logger?.warn(`Failed to parse INSTANA_IGNORE_ENDPOINTS: ${ignoreEndpointsEnv}. Error: ${error?.message}`);
     return {};
   }
+};
+
+/**
+ * Reads and normalizes the `INSTANA_IGNORE_ENDPOINTS_PATH` configuration from a YAML file.
+ *
+ * - The YAML file must have a root key of either `tracing` or `com.instana.tracing`.
+ * - If `com.instana.tracing` is detected, it will be logged and automatically mapped to `tracing`.
+ * - Returns an empty object if the file is missing, malformed, or improperly structured.
+ *
+ * @param {string} yamlFilePath
+ */
+exports.fromYaml = function fromYaml(yamlFilePath) {
+  const endpointsConfig = read(yamlFilePath);
+  if (!endpointsConfig || typeof endpointsConfig !== 'object') {
+    logger?.debug(`Invalid YAML content. Expected an object, but got: ${typeof endpointsConfig}`);
+    return {};
+  }
+
+  if (!endpointsConfig.tracing && !endpointsConfig['com.instana.tracing']) {
+    logger?.debug('Invalid YAML structure. The root key must be either "tracing" or "com.instana.tracing".');
+    return {};
+  }
+
+  if (endpointsConfig['com.instana.tracing']) {
+    logger?.info('Detected "com.instana.tracing" in the YAML file. Using "tracing" as the accepted format.');
+    return exports.normalizeConfig(endpointsConfig['com.instana.tracing']['ignore-endpoints'] || {});
+  }
+  return exports.normalizeConfig(endpointsConfig.tracing['ignore-endpoints']) || {};
 };
 
 /**

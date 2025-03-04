@@ -9,7 +9,6 @@
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
 const configNormalizers = require('./configNormalizers');
-const { read } = require('./yamlReader');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -719,26 +718,34 @@ function normalizeIgnoreEndpoints(config) {
     config.tracing.ignoreEndpoints = {};
     return;
   }
-  // Case 1: If `ignoreEndpoints` is configured via in-code configuration
+  // Case 1: Use in-code configuration if available
+  // This takes the highest priority, allowing direct control from the code.
   if (Object.keys(ignoreEndpointsConfig).length) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
-  }
-  // Case 2: If `INSTANA_IGNORE_ENDPOINTS_PATH` environment variable is set.
-  // This was introduced in Phase 2 for advanced filtering based on methods and endpoints.
-  // also support base filtering, and reading the config from the yaml file.
-  else if (process.env.INSTANA_IGNORE_ENDPOINTS_PATH) {
-    const yamlFilePath = process.env.INSTANA_IGNORE_ENDPOINTS_PATH;
-    const endpointsConfig = read(yamlFilePath);
-    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(endpointsConfig);
-  }
-  // Case 3: If `INSTANA_IGNORE_ENDPOINTS` environment variable is set.
-  // This was introduced in Phase 1 for basic filtering based on operations only (without advanced filtering).
-  // Use this to filter spans by operation or method, e.g., `redis.get`, `kafka.consume`, etc.
-  else if (process.env.INSTANA_IGNORE_ENDPOINTS) {
-    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
-  } else {
     return;
   }
+
+  // Case 2: Load from a YAML file if `INSTANA_IGNORE_ENDPOINTS_PATH` is set
+  // Introduced in Phase 2 for advanced filtering based on both Kafka methods and endpoints.
+  // This enables external configuration updates without modifying the code.
+  if (process.env.INSTANA_IGNORE_ENDPOINTS_PATH) {
+    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromYaml(
+      process.env.INSTANA_IGNORE_ENDPOINTS_PATH
+    );
+    return;
+  }
+
+  // Case 3: Load from the `INSTANA_IGNORE_ENDPOINTS` environment variable
+  // Introduced in Phase 1 for basic filtering based only on operations (e.g., `redis.get`, `kafka.consume`).
+  // Provides a simple way to configure ignored operations via environment variables.
+  if (process.env.INSTANA_IGNORE_ENDPOINTS) {
+    config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
+    return;
+  }
+
+  // Default Case: No ignore endpoints configured
+  // If none of the above conditions are met, tracing will capture all operations by default.
+  config.tracing.ignoreEndpoints = {};
 
   logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
 }
