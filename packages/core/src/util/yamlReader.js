@@ -24,11 +24,11 @@ exports.init = function init(config) {
  */
 exports.read = function read(filePath) {
   try {
-    const absolutePath = path.resolve(__dirname, filePath);
+    const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(__dirname, filePath);
     const fileContent = fs.readFileSync(absolutePath, 'utf8');
     return yaml.parse(fileContent);
   } catch (error) {
-    logger?.warn('Error loading YAML file', error?.message);
+    logger?.warn(`Error reading YAML file from ${filePath}: ${error?.message}`);
     return {};
   }
 };

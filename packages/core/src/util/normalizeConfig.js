@@ -721,6 +721,7 @@ function normalizeIgnoreEndpoints(config) {
   // Case 1: Use in-code configuration if available
   if (Object.keys(ignoreEndpointsConfig).length) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
+    logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
     return;
   }
 
@@ -731,6 +732,7 @@ function normalizeIgnoreEndpoints(config) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromYaml(
       process.env.INSTANA_IGNORE_ENDPOINTS_PATH
     );
+    logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
     return;
   }
 
@@ -739,12 +741,7 @@ function normalizeIgnoreEndpoints(config) {
   // Provides a simple way to configure ignored operations via environment variables.
   if (process.env.INSTANA_IGNORE_ENDPOINTS) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromEnv(process.env.INSTANA_IGNORE_ENDPOINTS);
+    logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
     return;
   }
-
-  // Default Case: No ignore endpoints configured
-  // If none of the above conditions are met, tracing will capture all operations by default.
-  config.tracing.ignoreEndpoints = {};
-
-  logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
 }
