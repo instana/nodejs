@@ -4,6 +4,27 @@
 
 'use strict';
 
+/**
+ * @type {import('../tracing').IgnoreEndpoints}
+ */
+let ignoreEndpoints;
+
+/**
+ * @param {import('../util/normalizeConfig').InstanaConfig} config
+ */
+function init(config) {
+  ignoreEndpoints = config?.tracing?.ignoreEndpoints;
+}
+
+/**
+ * @param {import('../util/normalizeConfig').AgentConfig} extraConfig
+ */
+function activate(extraConfig) {
+  if (extraConfig?.tracing?.ignoreEndpoints) {
+    ignoreEndpoints = extraConfig.tracing.ignoreEndpoints;
+  }
+}
+
 // List of span types to allowed to ignore
 // 'kafka_placeholder' used as a temporary span type for testing, until the Kafka support is implemented.
 const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka_placeholder'];
@@ -94,14 +115,14 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
 }
 
 /**
- * @param {{ span: import('../core').InstanaBaseSpan, ignoreEndpoints: import('../tracing').IgnoreEndpoints}} params
+ * @param {import('../core').InstanaBaseSpan} span
  * @returns {import('../core').InstanaBaseSpan | null}
  */
-function applyFilter({ span, ignoreEndpoints }) {
+function applyFilter(span) {
   if (ignoreEndpoints && shouldIgnore(span, ignoreEndpoints)) {
     return null;
   }
   return span;
 }
 
-module.exports = { applyFilter };
+module.exports = { applyFilter, activate, init };

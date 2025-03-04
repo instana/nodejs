@@ -29,10 +29,6 @@ let serviceName;
 let processIdentityProvider = null;
 /** @type {Boolean} */
 let allowRootExitSpan;
-/**
- * @type {import('../tracing').IgnoreEndpoints}
- */
-let ignoreEndpoints;
 
 /*
  * Access the Instana namespace in continuation local storage.
@@ -56,15 +52,6 @@ function init(config, _processIdentityProvider) {
   }
   processIdentityProvider = _processIdentityProvider;
   allowRootExitSpan = config?.tracing?.allowRootExitSpan;
-  ignoreEndpoints = config?.tracing?.ignoreEndpoints;
-}
-/**
- * @param {import('../util/normalizeConfig').AgentConfig} extraConfig
- */
-function activate(extraConfig) {
-  if (extraConfig?.tracing?.ignoreEndpoints) {
-    ignoreEndpoints = extraConfig.tracing.ignoreEndpoints;
-  }
 }
 
 class InstanaSpan {
@@ -700,10 +687,7 @@ function skipExitTracing(options) {
  * @param {InstanaSpan | import("../core").InstanaBaseSpan} span
  */
 function applySpanFilter(span) {
-  if (ignoreEndpoints) {
-    return applyFilter({ span, ignoreEndpoints });
-  }
-  return span;
+  return applyFilter(span);
 }
 
 module.exports = {
@@ -731,6 +715,5 @@ module.exports = {
   enterAsyncContext,
   leaveAsyncContext,
   runInAsyncContext,
-  runPromiseInAsyncContext,
-  activate
+  runPromiseInAsyncContext
 };
