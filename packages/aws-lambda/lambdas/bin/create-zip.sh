@@ -27,16 +27,13 @@ rm -rf instana-aws-lambda*.tgz
 # - BUILD_LAMBDAS_WITH=layer
 # See ../README.md for details.
 
-# Note: ${BUILD_LAMBDAS_WITH-xyz} -> default expansion with default xyz, to avoid bash error "unbound variable"
-# when set -u is active.
-
 echo
 echo NOTE: When switching between BUILD_LAMBDAS_WITH=layer on one hand and BUILD_LAMBDAS_WITH=npm or BUILD_LAMBDAS_WITH=local on the other hand, you might need to add \(or remove\) instana.wrap\(\) to \(from\) the individual Lambda handler functions!
 echo
 
 echo Building all local tar.gz files.
 
-if [[ -z "${BUILD_LAMBDAS_WITH-}" ]]; then
+if [[ -z "${BUILD_LAMBDAS_WITH}" ]]; then
   echo "Environment variable BUILD_LAMBDAS_WITH has not been provided, assuming \"local\"."
   BUILD_LAMBDAS_WITH=local
 fi
