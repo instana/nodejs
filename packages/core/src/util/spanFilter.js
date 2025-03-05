@@ -22,7 +22,22 @@ function init(config) {
  * @param {import('../util/normalizeConfig').AgentConfig} extraConfig
  */
 function activate(extraConfig) {
-  if (extraConfig?.tracing?.ignoreEndpoints) {
+  /**
+   * Configuration priority order:
+   * 1. In-code configuration
+   * 2. Environment variables:
+   *    - `INSTANA_IGNORE_ENDPOINTS_PATH`
+   *    - `INSTANA_IGNORE_ENDPOINTS`
+   * 3. Agent configuration (loaded later)
+   *
+   * Since the agent configuration is loaded later, we first check
+   * that `ignoreEndpoints` MUST be empty. If yes, we
+   * are allowed to fall back to the agent's configuration (`extraConfig.tracing.ignoreEndpoints`).
+   *
+   * TODO: Perform a major refactoring of configuration priority ordering in INSTA-817.
+   */
+  const isIgnoreEndpointsEmpty = !ignoreEndpoints || Object.keys(ignoreEndpoints).length === 0;
+  if (isIgnoreEndpointsEmpty && extraConfig?.tracing?.ignoreEndpoints) {
     ignoreEndpoints = extraConfig.tracing.ignoreEndpoints;
   }
 }
