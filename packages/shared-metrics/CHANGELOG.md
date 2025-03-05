@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.6.3](https://github.com/instana/nodejs/compare/v4.6.2...v4.6.3) (2025-03-05)
+
+### Bug Fixes
+
+- reduced noise for dependency calculation debug logs ([#1589](https://github.com/instana/nodejs/issues/1589)) ([1aeaa94](https://github.com/instana/nodejs/commit/1aeaa94ad1431b5f7807d0e3d93384b585c97d5d))
+
 ## [4.6.2](https://github.com/instana/nodejs/compare/v4.6.1...v4.6.2) (2025-02-24)
 
 ### Bug Fixes

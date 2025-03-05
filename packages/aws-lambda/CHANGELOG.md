@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.6.3](https://github.com/instana/nodejs/compare/v4.6.2...v4.6.3) (2025-03-05)
+
+### Bug Fixes
+
+- **aws-lambda:** ensured tracer is properly disabled when configured ([#1593](https://github.com/instana/nodejs/issues/1593)) ([a1db8b4](https://github.com/instana/nodejs/commit/a1db8b4b79cddbe2be871cdbd81290b9879937f2)), closes [#1315](https://github.com/instana/nodejs/issues/1315)
+
 ## [4.6.2](https://github.com/instana/nodejs/compare/v4.6.1...v4.6.2) (2025-02-24)
 
 **Note:** Version bump only for package @instana/aws-lambda

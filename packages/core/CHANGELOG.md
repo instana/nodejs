@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.6.3](https://github.com/instana/nodejs/compare/v4.6.2...v4.6.3) (2025-03-05)
+
+### Bug Fixes
+
+- reduced noise for dependency calculation debug logs ([#1589](https://github.com/instana/nodejs/issues/1589)) ([1aeaa94](https://github.com/instana/nodejs/commit/1aeaa94ad1431b5f7807d0e3d93384b585c97d5d))
+- resolved calling callback twice in agent connection ([#1600](https://github.com/instana/nodejs/issues/1600)) ([dfeab1c](https://github.com/instana/nodejs/commit/dfeab1c82c580812c3f06c6eff085ef73b69ef6a))
+- resolved Instana log calls being traced with custom logger setup ([#1562](https://github.com/instana/nodejs/issues/1562)) ([63aa2a7](https://github.com/instana/nodejs/commit/63aa2a737f461fa027b51bc6d4e7b510dd923e63))
+
 ## [4.6.2](https://github.com/instana/nodejs/compare/v4.6.1...v4.6.2) (2025-02-24)
 
 **Note:** Version bump only for package @instana/core

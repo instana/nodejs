@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.6.3](https://github.com/instana/nodejs/compare/v4.6.2...v4.6.3) (2025-03-05)
+
+### Bug Fixes
+
+- resolved calling callback twice in agent connection ([#1600](https://github.com/instana/nodejs/issues/1600)) ([dfeab1c](https://github.com/instana/nodejs/commit/dfeab1c82c580812c3f06c6eff085ef73b69ef6a))
+- resolved calling callback twice in agent lookup ([e74c150](https://github.com/instana/nodejs/commit/e74c1500aace5bc05240ae9ff0b4b4f01aec1da9))
+- resolved Instana log calls being traced with custom logger setup ([#1562](https://github.com/instana/nodejs/issues/1562)) ([63aa2a7](https://github.com/instana/nodejs/commit/63aa2a737f461fa027b51bc6d4e7b510dd923e63))
+
 ## [4.6.2](https://github.com/instana/nodejs/compare/v4.6.1...v4.6.2) (2025-02-24)
 
 ### Bug Fixes
