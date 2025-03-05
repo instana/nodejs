@@ -528,6 +528,68 @@ mochaSuiteFn('tracing/kafkajs', function () {
       });
     });
   });
+  describe('when ignore-endpoints is enabled via agent configuration for Kafka', () => {
+    const customAgentControls = new AgentStubControls();
+    let producerControls;
+    let consumerControls;
+
+    before(async () => {
+      await customAgentControls.startAgent({
+        ignoreEndpoints: { kafka: ['consume'] }
+      });
+
+      consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        agentControls: customAgentControls,
+        useGlobalAgent: true
+      });
+
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        agentControls: customAgentControls,
+        useGlobalAgent: true
+      });
+
+      await consumerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await customAgentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await producerControls.stop();
+      await consumerControls.stop();
+      await customAgentControls.stopAgent();
+    });
+
+    it('should ignore Kafka spans for ignored endpoints (consume)', async () => {
+      await producerControls.sendRequest({
+        method: 'POST',
+        path: '/send-messages',
+        body: JSON.stringify({
+          key: 'someKey',
+          value: 'someMessage',
+          useSendBatch: false
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      await retry(async () => {
+        const spans = await customAgentControls.getSpans();
+        // 1 x kafka send
+        // 1 x http server
+        // 3  x http client in producer and consumer
+        expect(spans.length).to.equal(5);
+        spans.forEach(span => {
+          expect(span.data.access).not.to.equal('consume');
+        });
+      });
+    });
+  });
 
   function resetMessages(consumer) {
     return consumer.sendRequest({
