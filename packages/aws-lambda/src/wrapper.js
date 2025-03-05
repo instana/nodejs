@@ -28,8 +28,8 @@ let config = normalizeConfig(lambdaConfig, logger);
 
 let coldStart = true;
 
-// Initialize instrumentations early to allow for require statements after our package has been required but before the
-// actual instana.wrap(...) call.
+// Initialize instrumentations early to allow for require statements after our
+// package has been required but before the actual instana.wrap(...) call.
 instanaCore.preInit(config);
 
 /**

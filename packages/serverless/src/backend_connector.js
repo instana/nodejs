@@ -18,11 +18,21 @@ const layerExtensionPort = process.env.INSTANA_LAYER_EXTENSION_PORT
   : 7365;
 
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
+
+// NOTE: The heartbeat is usually really, really fast (<30ms).
 const heartbeatTimeout = 200;
+
+// NOTE: The initial heartbeat can be very slow when the Lambda is in cold start.
+const initialHeartbeatTimeout = 2000;
+
+// NOTE: When lambda is in cold start, the communication between the handler
+//       and the extension can take a while. We need to have a bigger timeout
+//       for the initially.
+const initialLayerExtensionTimeout = 2000;
 
 const layerExtensionTimeout = process.env.INSTANA_LAMBDA_EXTENSION_TIMEOUT_IN_MS
   ? Number(process.env.INSTANA_LAMBDA_EXTENSION_TIMEOUT_IN_MS)
-  : 2000;
+  : 500;
 
 const proxyEnvVar = 'INSTANA_ENDPOINT_PROXY';
 const disableCaCheckEnvVar = 'INSTANA_DISABLE_CA_CHECK';
@@ -31,6 +41,7 @@ const disableCaCheck = process.env[disableCaCheckEnvVar] === 'true';
 const getRequestId = () => crypto.randomBytes(16).toString('hex');
 const requests = {};
 
+let firstRequestToExtension = true;
 let proxyAgent;
 let warningsHaveBeenLogged = false;
 let options;
@@ -133,14 +144,7 @@ exports.sendSpans = function sendSpans(spans, callback) {
 };
 
 let heartbeatInterval;
-function scheduleLambdaExtensionHeartbeatRequest() {
-  /**
-   * Ignore any timeout. We just send the beat every 500ms.
-   * The heartbeat is for the extension only:
-   *   We have discovered that a single request between tracer & extension is not enough,
-   *   because the communication problems such as sockets, emfile etc can occur during the Lambda
-   *   runtime at anytime.
-   */
+function scheduleLambdaExtensionHeartbeatRequest(heartbeatOpts = {}) {
   const executeHeartbeat = () => {
     const startTime = Date.now();
     const requestId = getRequestId();
@@ -153,9 +157,10 @@ function scheduleLambdaExtensionHeartbeatRequest() {
         port: layerExtensionPort,
         path: '/heartbeat',
         method: 'POST',
-        // This sets a timeout for establishing the socket connection, see setTimeout below for a timeout for an
+        // This sets a timeout for establishing the socket connection,
+        // see setTimeout below for a timeout for an
         // idle connection after the socket has been opened.
-        timeout: heartbeatTimeout,
+        timeout: heartbeatOpts.heartbeatTimeout,
         headers: {
           Connection: 'keep-alive'
         }
@@ -185,7 +190,8 @@ function scheduleLambdaExtensionHeartbeatRequest() {
     );
 
     req.once('error', e => {
-      // req.destroyed indicates that we have run into a timeout and have already handled the timeout error.
+      // req.destroyed indicates that we have run into a timeout and have
+      // already handled the timeout error.
       if (req.destroyed) {
         return;
       }
@@ -227,9 +233,12 @@ function scheduleLambdaExtensionHeartbeatRequest() {
 
   // call immediately
   // timeout is bigger because of possible coldstart
-  executeHeartbeat();
+  executeHeartbeat({ heartbeatTimeout: initialHeartbeatTimeout });
 
-  heartbeatInterval = setInterval(executeHeartbeat, 300);
+  heartbeatInterval = setInterval(() => {
+    executeHeartbeat({ heartbeatTimeout: heartbeatTimeout });
+  }, 300);
+
   heartbeatInterval.unref();
 }
 
@@ -243,7 +252,16 @@ function getTransport(localUseLambdaExtension) {
 }
 
 function getBackendTimeout(localUseLambdaExtension) {
-  return localUseLambdaExtension ? layerExtensionTimeout : options.backendTimeout;
+  if (localUseLambdaExtension) {
+    if (firstRequestToExtension) {
+      firstRequestToExtension = false;
+      return initialLayerExtensionTimeout;
+    } else {
+      return layerExtensionTimeout;
+    }
+  }
+
+  return options.backendTimeout;
 }
 
 function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requestId }) {
