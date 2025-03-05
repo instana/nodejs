@@ -31,13 +31,13 @@ function activate(extraConfig) {
    * 3. Agent configuration (loaded later)
    *
    * Since the agent configuration is loaded later, we first check
-   * that `ignoreEndpoints` MUST be empty. If not, we
-   * fall back to the agent's configuration (`extraConfig.tracing.ignoreEndpoints`).
+   * that `ignoreEndpoints` MUST be empty. If yes, we
+   * are allowed to fall back to the agent's configuration (`extraConfig.tracing.ignoreEndpoints`).
    *
    * TODO: Perform a major refactoring of configuration priority ordering in INSTA-817.
    */
-
-  if ((!ignoreEndpoints || Object.keys(ignoreEndpoints).length === 0) && extraConfig?.tracing?.ignoreEndpoints) {
+  const isIgnoreEndpointsEmpty = !ignoreEndpoints || Object.keys(ignoreEndpoints).length === 0;
+  if (isIgnoreEndpointsEmpty && extraConfig?.tracing?.ignoreEndpoints) {
     ignoreEndpoints = extraConfig.tracing.ignoreEndpoints;
   }
 }
