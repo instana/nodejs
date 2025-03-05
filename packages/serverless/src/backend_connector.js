@@ -329,13 +329,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
       // reused for a different, unrelated invocation), it is safe to assume that  we are no longer interested in any
       // events emitted by the request or the underlying socket.
       if (finalLambdaRequest) {
-        req.removeAllListeners();
-        req.on('error', () => {});
-
-        // Finally, abort the request because from our end we are no longer interested in the response and we also do
-        // not want to let pending IO actions linger in the event loop. This will also call request.destoy and
-        // req.socket.destroy() internally.
-        destroyRequest(req);
+        cleanupRequest(req);
       }
 
       handleCallback();
@@ -416,22 +410,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
   if (skipWaitingForHttpResponse) {
     req.end(serializedPayload, () => {
       if (finalLambdaRequest) {
-        // When the Node.js process is frozen while the request is pending, and then thawed later,
-        // this can trigger a stale, bogus timeout event (because from the perspective of the freshly thawed Node.js
-        // runtime, the request has been pending and inactive since a long time). To avoid that, we remove all listeners
-        // (including the timeout listener) on the request. Since the Lambda runtime will be frozen afterwards (or
-        // reused for a different, unrelated invocation), it is safe to assume that  we are no longer interested in any
-        // events emitted by the request or the underlying socket.
-        req.removeAllListeners();
-
-        // We need to have a listener for errors that ignores everything, otherwise aborting the request/socket will
-        // produce an "Unhandled 'error' event"
-        req.on('error', () => {});
-
-        // Finally, abort the request because from our end we are no longer interested in the response and we also do
-        // not want to let pending IO actions linger in the event loop. This will also call request.destoy and
-        // req.socket.destroy() internally.
-        destroyRequest(req);
+        cleanupRequest(req);
       }
 
       // We finish as soon as the request has been flushed, without waiting for the response.
@@ -489,6 +468,27 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
 
     handleCallback(options.propagateErrorsUpstream ? new Error(message) : undefined);
   }
+}
+
+function cleanupRequest(req) {
+  // When the Node.js process is frozen while the request is pending, and then thawed later,
+  // this can trigger a stale, bogus timeout event (because from the perspective of the freshly thawed Node.js
+  // runtime, the request has been pending and inactive since a long time).
+  // To avoid that, we remove all listeners
+  // (including the timeout listener) on the request. Since the Lambda runtime will be frozen afterwards (or
+  // reused for a different, unrelated invocation), it is safe to assume that
+  // we are no longer interested in any
+  // events emitted by the request or the underlying socket.
+  req.removeAllListeners();
+
+  // We need to have a listener for errors that ignores everything, otherwise aborting the request/socket will
+  // produce an "Unhandled 'error' event"
+  req.once('error', () => {});
+
+  // Finally, abort the request because from our end we are no longer interested in the response and we also do
+  // not want to let pending IO actions linger in the event loop. This will also call request.destoy and
+  // req.socket.destroy() internally.
+  destroyRequest(req);
 }
 
 function destroyRequest(req) {
