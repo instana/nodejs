@@ -138,17 +138,20 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
     typeof ctx._cb_configs.event.delivery_cb === 'function';
 
   return cls.ns.runAndReturn(() => {
+    const topic = originalArgs[0];
+    const spanData = {
+      kafka: {
+        endpoints: topic,
+        operation: 'send'
+      }
+    };
     const span = cls.startSpan({
       spanName: 'kafka',
-      kind: constants.EXIT
+      kind: constants.EXIT,
+      spanData
     });
-    const topic = originalArgs[0];
 
     span.stack = tracingUtil.getStackTrace(instrumentedProduce, 1);
-    span.data.kafka = {
-      service: topic,
-      access: 'send'
-    };
 
     const headers = addTraceContextHeader(originalArgs[6], span);
     originalArgs[6] = headers;
@@ -272,22 +275,25 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
         return originalEmit.apply(ctx, originalArgs);
       }
 
+      const spanData = {
+        kafka: {
+          endpoints: messageData.topic || 'empty',
+          operation: 'consume'
+        }
+      };
+
       const span = cls.startSpan({
         spanName: 'kafka',
         kind: constants.ENTRY,
         traceId: traceId,
-        parentSpanId: parentSpanId
+        parentSpanId: parentSpanId,
+        spanData
       });
 
       if (longTraceId) {
         span.lt = longTraceId;
       }
       span.stack = tracingUtil.getStackTrace(instrumentedConsumerEmit, 1);
-
-      span.data.kafka = {
-        access: 'consume',
-        service: messageData.topic || 'empty'
-      };
 
       // CASE: stream consumer receives error e.g. cannot connect to kafka
       if (event === 'error') {
