@@ -31,7 +31,7 @@ function activate(extraConfig) {
    * 3. Agent configuration (loaded later)
    *
    * Since the agent configuration is loaded later, we first check
-   * if `ignoreEndpoints` already has a value (set via env or code). If not, we
+   * that `ignoreEndpoints` MUST be empty. If not, we
    * fall back to the agent's configuration (`extraConfig.tracing.ignoreEndpoints`).
    *
    * TODO: Perform a major refactoring of configuration priority ordering in INSTA-817.
