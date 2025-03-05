@@ -43,8 +43,7 @@ function activate(extraConfig) {
 }
 
 // List of span types to allowed to ignore
-// 'kafka_placeholder' used as a temporary span type for testing, until the Kafka support is implemented.
-const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka_placeholder'];
+const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka'];
 
 /**
  * @param {import('../core').InstanaBaseSpan} span

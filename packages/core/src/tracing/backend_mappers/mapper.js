@@ -27,6 +27,10 @@ const fieldMappings = {
   },
   redis: {
     operation: 'command'
+  },
+  kafka: {
+    operation: 'access',
+    endpoints: 'service'
   }
 };
 
