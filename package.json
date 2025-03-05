@@ -99,7 +99,7 @@
     "@grpc/grpc-js": "^1.12.6",
     "@grpc/grpc-js-v1": "npm:@grpc/grpc-js@1.9.4",
     "@grpc/proto-loader": "^0.7.13",
-    "@hapi/hapi": "^21.3.12",
+    "@hapi/hapi": "^21.4.0",
     "@ibm/tekton-lint": "^1.1.0",
     "@opentelemetry/auto-instrumentations-node": "^0.43.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.49.1",
