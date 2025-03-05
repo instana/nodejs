@@ -99,8 +99,6 @@ function init(_config = {}) {
     log.init(_config);
   }
 
-  // TODO: The idea of having a config per parent module probably makes, sense
-  //       but as far as I can see, the code in the collector config module is a duplicate.
   config = normalizeCollectorConfig(_config);
   config = instanaNodeJsCore.util.normalizeConfig(config, logger);
 
