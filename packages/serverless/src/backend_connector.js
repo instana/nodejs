@@ -49,6 +49,8 @@ exports.init = function init(opts) {
 
   logger = options.config.logger;
 
+  // TODO: refactor environment.js into serverless normalize config
+  //       and move the following code into the new unit
   if (process.env[proxyEnvVar] && !environmentUtil.sendUnencrypted) {
     const proxyUrl = process.env[proxyEnvVar];
     logger.info(
@@ -66,6 +68,8 @@ exports.init = function init(opts) {
     );
   }
 
+  // TODO: refactor environment.js into serverless normalize config
+  //       and move the following code into the new unit
   if (process.env[timeoutEnvVar]) {
     options.backendTimeout = parseInt(process.env[timeoutEnvVar], 10);
 
