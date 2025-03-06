@@ -199,14 +199,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
     req.setTimeout(layerExtensionTimeout, () => {
       handleHeartbeatError(new Error('The Lambda extension Heartbeat request timed out.'));
 
-      // Destroy timed out request manually as mandated in https://nodejs.org/api/http.html#event-timeout.
-      if (req && !req.destroyed) {
-        try {
-          destroyRequest(req);
-        } catch (e) {
-          // ignore
-        }
-      }
+      destroyRequest(req);
     });
 
     req.end();
@@ -466,14 +459,7 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
     // Make sure we do not try to talk to the Lambda extension again.
     options.useLambdaExtension = localUseLambdaExtension = false;
     clearInterval(heartbeatInterval);
-
-    if (req && !req.destroyed) {
-      try {
-        destroyRequest(req);
-      } catch (e) {
-        // ignore
-      }
-    }
+    destroyRequest(req);
 
     // Retry the request immediately, this time sending it to serverless-acceptor directly.
     send(resourcePath, payload, finalLambdaRequest, handleCallback);
@@ -483,18 +469,13 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
     // (or a user-provided proxy).
     requestHasFailed = true;
 
-    // We need to destroy the request manually, otherwise it keeps the runtime running (and timing out) when
+    // We need to destroy the request manually, otherwise it keeps the runtime running
+    // (and timing out) when:
     // (a) the wrapped Lambda handler uses the callback API, and
     // (b) context.callbackWaitsForEmptyEventLoop = false is not set.
     // Also, the Node.js documentation mandates to destroy the request manually in case of a timeout. See
     // https://nodejs.org/api/http.html#http_event_timeout.
-    if (req && !req.destroyed) {
-      try {
-        destroyRequest(req);
-      } catch (e) {
-        // ignore
-      }
-    }
+    destroyRequest(req);
 
     const message =
       'Could not send traces and metrics to Instana. The Instana back end did not respond ' +
@@ -511,5 +492,13 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
 }
 
 function destroyRequest(req) {
-  req.destroy();
+  // Destroy timed out request manually as mandated in
+  // https://nodejs.org/api/http.html#event-timeout.
+  if (req && !req.destroyed) {
+    try {
+      req.destroy();
+    } catch (e) {
+      // ignore
+    }
+  }
 }
