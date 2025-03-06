@@ -115,17 +115,16 @@ exports.setLogger = function setLogger(_logger) {
  */
 exports.sendBundle = function sendBundle(bundle, finalLambdaRequest, callback) {
   logger.debug(`Sending bundle to Instana (no. of spans: ${bundle?.spans?.length ?? 'unknown'})`);
-
-  send('/bundle', bundle, finalLambdaRequest, callback);
+  send({ resourcePath: '/bundle', bundle, finalLambdaRequest, callback });
 };
 
 exports.sendMetrics = function sendMetrics(metrics, callback) {
-  send('/metrics', metrics, false, callback);
+  send({ resourcePath: '/metrics', metrics, finalLambdaRequest: false, callback });
 };
 
 exports.sendSpans = function sendSpans(spans, callback) {
   logger.debug(`Sending spans to Instana (no. of spans: ${spans.length})`);
-  send('/traces', spans, false, callback);
+  send({ resourcePath: '/traces', spans, finalLambdaRequest: false, callback });
 };
 
 let heartbeatInterval;
@@ -225,7 +224,7 @@ function getBackendTimeout(localUseLambdaExtension) {
   return localUseLambdaExtension ? layerExtensionTimeout : options.backendTimeout;
 }
 
-function send(resourcePath, payload, finalLambdaRequest, callback) {
+function send({ resourcePath, payload, finalLambdaRequest, callback }) {
   let callbackWasCalled = false;
   const handleCallback = args => {
     if (callbackWasCalled) return;
@@ -372,7 +371,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
       clearInterval(heartbeatInterval);
 
       // Retry the request immediately, this time sending it to serverless-acceptor directly.
-      send(resourcePath, payload, finalLambdaRequest, callback);
+      send({ resourcePath, payload, finalLambdaRequest, callback });
     } else {
       // We are not using the Lambda extension, because we are either not in an AWS Lambda, or a previous request to the
       // extension has already failed. Thus, this is a failure from talking directly to serverless-acceptor
@@ -440,7 +439,7 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
     destroyRequest(req);
 
     // Retry the request immediately, this time sending it to serverless-acceptor directly.
-    send(resourcePath, payload, finalLambdaRequest, handleCallback);
+    send({ resourcePath, payload, finalLambdaRequest, handleCallback });
   } else {
     // We are not using the Lambda extension, because we are either not in an AWS Lambda, or a previous request to the
     // extension has already failed. Thus, this is a timeout from talking directly to serverless-acceptor
