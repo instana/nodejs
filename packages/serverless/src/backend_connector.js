@@ -5,6 +5,7 @@
 
 'use strict';
 
+const crypto = require('crypto');
 // eslint-disable-next-line import/order
 const environmentUtil = require('./environment');
 const uninstrumented = require('./uninstrumentedHttp');
@@ -27,6 +28,8 @@ let proxyAgent;
 
 const disableCaCheckEnvVar = 'INSTANA_DISABLE_CA_CHECK';
 const disableCaCheck = process.env[disableCaCheckEnvVar] === 'true';
+
+const getRequestId = () => crypto.randomBytes(16).toString('hex');
 
 let requestHasFailed = false;
 let warningsHaveBeenLogged = false;
@@ -114,24 +117,30 @@ exports.setLogger = function setLogger(_logger) {
  * the variable is always true.
  */
 exports.sendBundle = function sendBundle(bundle, finalLambdaRequest, callback) {
-  logger.debug(`Sending bundle to Instana (no. of spans: ${bundle?.spans?.length ?? 'unknown'})`);
-  send({ resourcePath: '/bundle', payload: bundle, finalLambdaRequest, callback });
+  const requestId = getRequestId();
+  logger.debug(`${requestId} Sending bundle to Instana (no. of spans: ${bundle?.spans?.length ?? 'unknown'})`);
+  send({ resourcePath: '/bundle', payload: bundle, finalLambdaRequest, callback, requestId });
 };
 
 exports.sendMetrics = function sendMetrics(metrics, callback) {
-  send({ resourcePath: '/metrics', payload: metrics, finalLambdaRequest: false, callback });
+  const requestId = getRequestId();
+  logger.debug(`${requestId} Sending metrics to Instana (no. of metrics: ${metrics?.length})`);
+  send({ resourcePath: '/metrics', payload: metrics, finalLambdaRequest: false, callback, requestId });
 };
 
 exports.sendSpans = function sendSpans(spans, callback) {
-  logger.debug(`Sending spans to Instana (no. of spans: ${spans.length})`);
-  send({ resourcePath: '/traces', payload: spans, finalLambdaRequest: false, callback });
+  const requestId = getRequestId();
+  logger.debug(`${requestId} Sending spans to Instana (no. of spans: ${spans?.length})`);
+  send({ resourcePath: '/traces', payload: spans, finalLambdaRequest: false, callback, requestId });
 };
 
 let heartbeatInterval;
 function scheduleLambdaExtensionHeartbeatRequest() {
   const executeHeartbeat = () => {
-    logger.debug('Executing Heartbeat request to Lambda extension.');
+    const requestId = getRequestId();
     const startTime = Date.now();
+
+    logger.debug(`${requestId} Executing Heartbeat request to Lambda extension.`);
 
     const req = uninstrumented.http.request(
       {
@@ -146,11 +155,12 @@ function scheduleLambdaExtensionHeartbeatRequest() {
       },
       res => {
         if (res.statusCode === 200) {
-          logger.debug('The Instana Lambda extension Heartbeat request has succeeded.');
+          logger.debug(`${requestId} The Instana Lambda extension Heartbeat request has succeeded.`);
         } else {
           handleHeartbeatError(
             new Error(
-              `The Instana Lambda extension Heartbeat request has returned an unexpected status code: ${res.statusCode}`
+              `${requestId} The Instana Lambda extension Heartbeat request has ` +
+                `returned an unexpected status code: ${res.statusCode}.`
             )
           );
         }
@@ -162,7 +172,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
         res.once('end', () => {
           const endTime = Date.now();
           const duration = endTime - startTime;
-          logger.debug(`Took ${duration}ms to receive response from extension`);
+          logger.debug(`${requestId} Took ${duration}ms to receive response from extension`);
         });
       }
     );
@@ -170,7 +180,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
     req.once('finish', () => {
       const endTime = Date.now();
       const duration = endTime - startTime;
-      logger.debug(`Took ${duration}ms to send data to extension`);
+      logger.debug(`${requestId} Took ${duration}ms to send data to extension`);
     });
 
     function handleHeartbeatError(e) {
@@ -179,7 +189,8 @@ function scheduleLambdaExtensionHeartbeatRequest() {
       clearInterval(heartbeatInterval);
 
       logger.debug(
-        'The Instana Lambda extension Heartbeat request did not succeed. Falling back to talking to the Instana back ' +
+        `${requestId} The Instana Lambda extension Heartbeat request did not succeed. ` +
+          'Falling back to talking to the Instana back ' +
           `end directly. ${e?.message} ${e?.stack}`
       );
     }
@@ -195,7 +206,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
 
     // Handle timeouts that occur after connecting to the socket (no response from the extension).
     req.setTimeout(layerExtensionTimeout, () => {
-      handleHeartbeatError(new Error('The Lambda extension Heartbeat request timed out.'));
+      handleHeartbeatError(new Error(`${requestId} The Lambda extension Heartbeat request timed out.`));
 
       destroyRequest(req);
     });
@@ -224,7 +235,7 @@ function getBackendTimeout(localUseLambdaExtension) {
   return localUseLambdaExtension ? layerExtensionTimeout : options.backendTimeout;
 }
 
-function send({ resourcePath, payload, finalLambdaRequest, callback }) {
+function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }) {
   let callbackWasCalled = false;
   const handleCallback = args => {
     if (callbackWasCalled) return;
@@ -239,7 +250,8 @@ function send({ resourcePath, payload, finalLambdaRequest, callback }) {
 
   if (requestHasFailed && options.stopSendingOnFailure) {
     logger.info(
-      `Not attempting to send data to ${resourcePath} as a previous request has already timed out or failed.`
+      `${requestId} Not attempting to send data to ${resourcePath} as a previous request ` +
+        'has already timed out or failed.'
     );
 
     handleCallback();
@@ -250,14 +262,16 @@ function send({ resourcePath, payload, finalLambdaRequest, callback }) {
     warningsHaveBeenLogged = true;
     if (environmentUtil.sendUnencrypted) {
       logger.error(
-        `${environmentUtil.sendUnencryptedEnvVar} is set, which means that all traffic to Instana is send ` +
+        `${requestId} ${environmentUtil.sendUnencryptedEnvVar} is set, which means that all traffic ` +
+          'to Instana is send ' +
           'unencrypted via plain HTTP, not via HTTPS. This will effectively make that traffic public. This setting ' +
           'should never be used in production.'
       );
     }
     if (disableCaCheck) {
       logger.warn(
-        `${disableCaCheckEnvVar} is set, which means that the server certificate will not be verified against ` +
+        `${requestId}  ${disableCaCheckEnvVar} is set, which means that the server certificate will ` +
+          'not be verified against ' +
           'the list of known CAs. This makes your service vulnerable to MITM attacks when connecting to Instana. ' +
           'This setting should never be used in production, unless you use our on-premises product and are unable to ' +
           'operate the Instana back end with a certificate with a known root CA.'
@@ -271,7 +285,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback }) {
       ? resourcePath
       : environmentUtil.getBackendPath() + resourcePath;
 
-  logger.debug(`Sending data to Instana (${requestPath}).`);
+  logger.debug(`${requestId} Sending data to Instana (${requestPath}).`);
 
   // serialize the payload object
   const serializedPayload = JSON.stringify(payload);
@@ -341,7 +355,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback }) {
   // > Once a socket is assigned to this request **and is connected**
   // > socket.setTimeout() will be called.
   req.on('timeout', () =>
-    onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLambdaRequest, handleCallback)
+    onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLambdaRequest, handleCallback, requestId)
   );
 
   req.on('error', e => {
@@ -362,8 +376,8 @@ function send({ resourcePath, payload, finalLambdaRequest, callback }) {
       // talking to serverless-acceptor directly. We also immediately retry the current request with that new downstream
       // target in place.
       logger.debug(
-        `Could not connect to the Instana Lambda extension. Falling back to talking to the Instana back end directly. 
-        ${e?.message} ${e?.stack}`
+        `${requestId} Could not connect to the Instana Lambda extension. ` +
+          `Falling back to talking to the Instana back end directly: ${e?.message} ${e?.stack}`
       );
 
       // Make sure we do not try to talk to the Lambda extension again.
@@ -371,7 +385,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback }) {
       clearInterval(heartbeatInterval);
 
       // Retry the request immediately, this time sending it to serverless-acceptor directly.
-      send({ resourcePath, payload, finalLambdaRequest, callback });
+      send({ resourcePath, payload, finalLambdaRequest, callback, requestId });
     } else {
       // We are not using the Lambda extension, because we are either not in an AWS Lambda, or a previous request to the
       // extension has already failed. Thus, this is a failure from talking directly to serverless-acceptor
@@ -381,14 +395,14 @@ function send({ resourcePath, payload, finalLambdaRequest, callback }) {
       if (!options.propagateErrorsUpstream) {
         if (proxyAgent) {
           logger.warn(
-            'Could not send traces and metrics to Instana. Could not connect to the configured proxy ' +
+            `${requestId} Could not send traces and metrics to Instana. Could not connect to the configured proxy ` +
               `${process.env[proxyEnvVar]}.` +
               `${e?.message} ${e?.stack}`
           );
         } else {
           logger.warn(
-            `Could not send traces and metrics to Instana. The Instana back end seems to be unavailable. 
-            ${e?.message} , ${e?.stack}`
+            `${requestId} Could not send traces and metrics to Instana. ` +
+              `The Instana back end seems to be unavailable. ${e?.message} , ${e?.stack}`
           );
         }
       }
@@ -398,7 +412,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback }) {
   });
 
   req.on('finish', () => {
-    logger.debug(`Sent data to Instana (${requestPath}).`);
+    logger.debug(`${requestId} Sent data to Instana (${requestPath}).`);
 
     if (options.useLambdaExtension && finalLambdaRequest) {
       clearInterval(heartbeatInterval);
@@ -421,7 +435,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback }) {
   }
 }
 
-function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLambdaRequest, handleCallback) {
+function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLambdaRequest, handleCallback, requestId) {
   if (localUseLambdaExtension) {
     // This is a timeout from talking to the Lambda extension on localhost. Most probably it is simply not available
     // because @instana/aws-lambda has been installed as a normal npm dependency instead of using Instana's
@@ -429,8 +443,8 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
     // talking to serverless-acceptor directly. We also immediately retry the current request with that new downstream
     // target in place.
     logger.debug(
-      'Request timed out while trying to talk to Instana Lambda extension. Falling back to talking to the Instana ' +
-        'back end directly.'
+      `${requestId} Request timed out while trying to talk to Instana Lambda extension. ` +
+        'Falling back to talking to the Instana back end directly.'
     );
 
     // Make sure we do not try to talk to the Lambda extension again.
@@ -439,7 +453,7 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
     destroyRequest(req);
 
     // Retry the request immediately, this time sending it to serverless-acceptor directly.
-    send({ resourcePath, payload, finalLambdaRequest, callback: handleCallback });
+    send({ resourcePath, payload, finalLambdaRequest, callback: handleCallback, requestId });
   } else {
     // We are not using the Lambda extension, because we are either not in an AWS Lambda, or a previous request to the
     // extension has already failed. Thus, this is a timeout from talking directly to serverless-acceptor
@@ -455,13 +469,13 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
     destroyRequest(req);
 
     const message =
-      'Could not send traces and metrics to Instana. The Instana back end did not respond ' +
+      `${requestId} Could not send traces and metrics to Instana. The Instana back end did not respond ` +
       'in the configured timeout ' +
       `of ${options.backendTimeout} ms. The timeout can be configured by ` +
       `setting the environment variable ${timeoutEnvVar}.`;
 
     if (!options.propagateErrorsUpstream) {
-      logger.warn(message);
+      logger.warn(`${requestId} ${message}`);
     }
 
     handleCallback(options.propagateErrorsUpstream ? new Error(message) : undefined);
