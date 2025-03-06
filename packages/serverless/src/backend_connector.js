@@ -36,7 +36,6 @@ const defaults = {
   identityProvider: null,
   stopSendingOnFailure: true,
   propagateErrorsUpstream: false,
-  defaultTimeout: 500,
   backendTimeout: 500,
   useLambdaExtension: false
 };
@@ -76,10 +75,10 @@ exports.init = function init(opts) {
     if (isNaN(options.backendTimeout) || options.backendTimeout < 0) {
       logger.warn(
         `The value of ${timeoutEnvVar} (${process.env[timeoutEnvVar]}) cannot be parsed to a valid numerical value. ` +
-          `Will fall back to the default timeout (${options.defaultTimeout} ms).`
+          `Will fall back to the default timeout (${defaults.backendTimeout} ms).`
       );
 
-      options.backendTimeout = 500;
+      options.backendTimeout = defaults.backendTimeout;
     }
   }
 
