@@ -115,16 +115,16 @@ exports.setLogger = function setLogger(_logger) {
  */
 exports.sendBundle = function sendBundle(bundle, finalLambdaRequest, callback) {
   logger.debug(`Sending bundle to Instana (no. of spans: ${bundle?.spans?.length ?? 'unknown'})`);
-  send({ resourcePath: '/bundle', bundle, finalLambdaRequest, callback });
+  send({ resourcePath: '/bundle', payload: bundle, finalLambdaRequest, callback });
 };
 
 exports.sendMetrics = function sendMetrics(metrics, callback) {
-  send({ resourcePath: '/metrics', metrics, finalLambdaRequest: false, callback });
+  send({ resourcePath: '/metrics', payload: metrics, finalLambdaRequest: false, callback });
 };
 
 exports.sendSpans = function sendSpans(spans, callback) {
   logger.debug(`Sending spans to Instana (no. of spans: ${spans.length})`);
-  send({ resourcePath: '/traces', spans, finalLambdaRequest: false, callback });
+  send({ resourcePath: '/traces', payload: spans, finalLambdaRequest: false, callback });
 };
 
 let heartbeatInterval;
