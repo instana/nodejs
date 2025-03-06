@@ -217,15 +217,7 @@ function scheduleLambdaExtensionHeartbeatRequest(heartbeatOpts = {}) {
       // Make sure we do not try to talk to the Lambda extension again.
       options.useLambdaExtension = false;
       clearInterval(heartbeatInterval);
-
-      // Destroy timed out request manually as mandated in https://nodejs.org/api/http.html#event-timeout.
-      if (req && !req.destroyed) {
-        try {
-          destroyRequest(req);
-        } catch (e) {
-          // ignore
-        }
-      }
+      destroyRequest(req);
     });
 
     req.end();
