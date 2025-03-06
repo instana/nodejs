@@ -20,17 +20,17 @@ const layerExtensionPort = process.env.INSTANA_LAYER_EXTENSION_PORT
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
 
 // NOTE: The heartbeat is usually really, really fast (<30ms).
-const heartbeatTimeout = 200;
+const layerExtensionHeartbeatTimeout = 200;
 
 // NOTE: The initial heartbeat can be very slow when the Lambda is in cold start.
-const initialHeartbeatTimeout = 2000;
+const initialLayerExtensionHeartbeatTimeout = 2000;
 
 // NOTE: When lambda is in cold start, the communication between the handler
 //       and the extension can take a while. We need to have a bigger timeout
 //       for the initially.
-const initialLayerExtensionTimeout = 2000;
+const initialLayerExtensionRequestTimeout = 2000;
 
-const layerExtensionTimeout = process.env.INSTANA_LAMBDA_EXTENSION_TIMEOUT_IN_MS
+const layerExtensionRequestTimeout = process.env.INSTANA_LAMBDA_EXTENSION_TIMEOUT_IN_MS
   ? Number(process.env.INSTANA_LAMBDA_EXTENSION_TIMEOUT_IN_MS)
   : 500;
 
@@ -208,7 +208,7 @@ function scheduleLambdaExtensionHeartbeatRequest(heartbeatOpts = {}) {
     });
 
     // CASE: socket is open but no data is sent (should not happen from we know but we need to handle it)
-    req.setTimeout(heartbeatTimeout, () => {
+    req.setTimeout(layerExtensionHeartbeatTimeout, () => {
       // req.destroyed indicates that we have run into a timeout and have already handled the timeout error.
       if (req.destroyed) {
         return;
@@ -225,10 +225,10 @@ function scheduleLambdaExtensionHeartbeatRequest(heartbeatOpts = {}) {
 
   // call immediately
   // timeout is bigger because of possible coldstart
-  executeHeartbeat({ heartbeatTimeout: initialHeartbeatTimeout });
+  executeHeartbeat({ heartbeatTimeout: initialLayerExtensionHeartbeatTimeout });
 
   heartbeatInterval = setInterval(() => {
-    executeHeartbeat({ heartbeatTimeout: heartbeatTimeout });
+    executeHeartbeat({ heartbeatTimeout: layerExtensionHeartbeatTimeout });
   }, 300);
 
   heartbeatInterval.unref();
@@ -247,9 +247,9 @@ function getBackendTimeout(localUseLambdaExtension) {
   if (localUseLambdaExtension) {
     if (firstRequestToExtension) {
       firstRequestToExtension = false;
-      return initialLayerExtensionTimeout;
+      return initialLayerExtensionRequestTimeout;
     } else {
-      return layerExtensionTimeout;
+      return layerExtensionRequestTimeout;
     }
   }
 
