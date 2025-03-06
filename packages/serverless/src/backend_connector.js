@@ -486,7 +486,7 @@ function cleanupRequest(req) {
   req.once('error', () => {});
 
   // Finally, abort the request because from our end we are no longer interested in the response and we also do
-  // not want to let pending IO actions linger in the event loop. This will also call request.destoy and
+  // not want to let pending IO actions linger in the event loop. This will also call request.destroy and
   // req.socket.destroy() internally.
   destroyRequest(req);
 }
