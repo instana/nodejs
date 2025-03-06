@@ -439,7 +439,7 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
     destroyRequest(req);
 
     // Retry the request immediately, this time sending it to serverless-acceptor directly.
-    send({ resourcePath, payload, finalLambdaRequest, handleCallback });
+    send({ resourcePath, payload, finalLambdaRequest, callback: handleCallback });
   } else {
     // We are not using the Lambda extension, because we are either not in an AWS Lambda, or a previous request to the
     // extension has already failed. Thus, this is a timeout from talking directly to serverless-acceptor
