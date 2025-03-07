@@ -22,7 +22,6 @@ const {
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const { AgentStubControls } = require('../../../apps/agentStubControls');
-const { createTopics } = require('../kafkaUtil');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
@@ -31,11 +30,6 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
-  before(async () => {
-    const requiredTopics = ['test-topic', 'test-topic-1', 'test-batch-topic-1'];
-
-    await createTopics(requiredTopics);
-  });
 
   describe('tracing enabled ', function () {
     const nextUseEachBatch = getCircularList([false, true]);
