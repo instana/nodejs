@@ -71,15 +71,26 @@ For example, run `bin/convert-test-app-to-es6.sh packages/collector/test/tracing
 
 After regenerating an existing `.mjs` file you should check the diff for it and potentially revert any changes that are artifacts of the conversion process, not related to your original changes in `.js` file.
 
-If your changes introduce ESM files other than `app.mjs`, the ESM execution logic requires you to create `.mjs` files for all applications within the same package.
+If your changes introduce multiple ESM files, the ESM execution logic requires `.mjs` versions for all existing applications within the same directory.
 
-For example, if a directory contains the following files (all these are different applications with with different usecases):
+Example: Consider a directory containing the following files, each representing a different application with a unique use case:
 
  - sender.js
  - app.js
  - rootExitSpanApp.js
+ 
+If you add a test for `sender.mjs`, you must also ensure that `.mjs` versions exist for `app.js` and `rootExitSpanApp.js`. Failing to do so may cause issues when running ESM tests.
 
-and you add a test for `sender.mjs`, you must also ensure that `.mjs` versions exist for `app.js` and `rootExitSpanApp.js`. Failing to do so may cause issues when running ESM tests.
+There are two ways to specify which file to run as the server:
+
+ - Explicit appPath – Provide the exact file name (appPath)
+ - Using a dirname – Specify a directory instead (dirname)
+
+If an appPath is provided, the ESM logic expects a file with the same name but with an `.mjs` extension.
+Example: If appPath: `testApp1.js` is specified, then `testApp1.mjs` must be present in the same directory.
+
+If a dirname is provided, the default app name is assumed to be `app.js`.
+In this case, the ESM logic expects `app.mjs` to exist in the same directory.
 
 Setting `RUN_ESM=true` locally will run use the ESM app instead of the CJS app when executing the tests.
 
