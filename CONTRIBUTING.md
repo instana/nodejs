@@ -63,11 +63,23 @@ If you want to see the Node.js collector's debug output while running the tests,
 We have added a CI build to test our instrumentations against ES module apps.
 See https://github.com/instana/nodejs/pull/672
 
-Not all of the current test apps have an `app.mjs` variant, because the effort is high. If you are adding a new test, please consider to also generate an `app.mjs` file for it. If you are modifying an existing application under test, and it has an accompanying `.mjs` file, you need to update that as well (by regenerating it).
+Not all of the current test apps have an `.mjs` variant, because the effort is high. If you are adding a new test, please consider to also generate an `.mjs` file for it. If you are modifying an existing application under test, and it has an accompanying `.mjs` file, you need to update that as well (by regenerating it).
 
-You can use the script `bin/convert-test-app-to-es6.sh` for both purposes, it generates an equivalent `app.mjs` file from a given `app.js` file. For example, run `bin/convert-test-app-to-es6.sh packages/collector/test/tracing/database/ioredis/app.js` to regenerate the ES6 variant of the `ioredis` test application, when you have made changes to `packages/collector/test/tracing/database/ioredis/app.js`.
+You can use the script `bin/convert-test-app-to-es6.sh` for both purposes, it generates an equivalent `.mjs` file from a given `.js` file. 
 
-After regenerating an existing `app.mjs` file you should check the diff for it and potentially revert any changes that are artifacts of the conversion process, not related to your original changes in `app.js`.
+For example, run `bin/convert-test-app-to-es6.sh packages/collector/test/tracing/database/ioredis/app.js` to regenerate the ES6 variant of the `ioredis` test application, when you have made changes to `packages/collector/test/tracing/database/ioredis/app.js`.
+
+After regenerating an existing `.mjs` file you should check the diff for it and potentially revert any changes that are artifacts of the conversion process, not related to your original changes in `.js` file.
+
+If your changes introduce ESM files other than `app.mjs`, the ESM execution logic requires you to create `.mjs` files for all applications within the same package.
+
+For example, if a directory contains the following files (all these are different applications with with different usecases):
+
+ - sender.js
+ - app.js
+ - rootExitSpanApp.js
+
+and you add a test for `sender.mjs`, you must also ensure that `.mjs` versions exist for `app.js` and `rootExitSpanApp.js`. Failing to do so may cause issues when running ESM tests.
 
 Setting `RUN_ESM=true` locally will run use the ESM app instead of the CJS app when executing the tests.
 
