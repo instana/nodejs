@@ -36,9 +36,7 @@ const groups = {
   },
   'test:ci:collector:tracing:messaging': {
     sidecars: [
-      'zookeeper',
       'kafka',
-      'schema-registry',
       'redis',
       'nats',
       'nats-streaming',

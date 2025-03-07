@@ -31,6 +31,7 @@ const { expectExactlyOneMatching, retry, delay, stringifyItems } = require('../.
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
+const { createTopics } = require('../../../test_util/kafkaUtil');
 
 /**
  * See https://github.com/waldophotos/kafka-avro/issues/113
@@ -49,6 +50,10 @@ describe.skip('tracing/messaging/kafka-avro', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
+
+  before(async () => {
+    await createTopics([topic]);
+  });
 
   describe('tracing enabled, no suppression', function () {
     let producerControls;
