@@ -123,7 +123,7 @@ exports.sendBundle = function sendBundle(bundle, finalLambdaRequest, callback) {
 
 exports.sendMetrics = function sendMetrics(metrics, callback) {
   const requestId = getRequestId();
-  logger.debug(`[${requestId}] Sending metrics to Instana (no. of metrics: ${metrics?.length})`);
+  logger.debug(`[${requestId}] Sending metrics to Instana (no. of metrics: ${metrics?.plugins?.length})`);
   send({ resourcePath: '/metrics', payload: metrics, finalLambdaRequest: false, callback, requestId });
 };
 
