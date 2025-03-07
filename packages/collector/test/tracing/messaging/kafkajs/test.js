@@ -22,6 +22,7 @@ const {
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const { AgentStubControls } = require('../../../apps/agentStubControls');
+const { createTopics } = require('../kafkaUtil');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
@@ -30,6 +31,11 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
+  before(async () => {
+    const requiredTopics = ['test-topic', 'test-topic-1', 'test-batch-topic-1'];
+
+    await createTopics(requiredTopics);
+  });
 
   describe('tracing enabled ', function () {
     const nextUseEachBatch = getCircularList([false, true]);
@@ -535,7 +541,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
     before(async () => {
       await customAgentControls.startAgent({
-        ignoreEndpoints: { kafka: ['consume'] }
+        ignoreEndpoints: { kafka: ['send'] }
       });
 
       consumerControls = new ProcessControls({
@@ -580,10 +586,10 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
       await retry(async () => {
         const spans = await customAgentControls.getSpans();
-        // 1 x kafka send
+
         // 1 x http server
-        // 3  x http client in producer and consumer
-        expect(spans.length).to.equal(5);
+        // 1  x http client
+        expect(spans.length).to.equal(2);
         spans.forEach(span => {
           expect(span.data.access).not.to.equal('consume');
         });

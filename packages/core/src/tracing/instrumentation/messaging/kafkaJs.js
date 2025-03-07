@@ -92,7 +92,13 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
     });
     if (Array.isArray(messages)) {
       span.b = { s: messages.length };
-      addTraceContextHeaderToAllMessages(messages, span);
+      // If the span is ignored, set suppression headers to propagate downstream suppression.
+      // Only supression header set, no need to set instana headers
+      if (span.constructor.name === 'InstanaIgnoredSpan') {
+        addTraceLevelSuppressionToAllMessages(messages);
+      } else {
+        addTraceContextHeaderToAllMessages(messages, span);
+      }
     }
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
 
