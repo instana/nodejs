@@ -170,7 +170,11 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
     });
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
     topicMessages.forEach(topicMessage => {
-      addTraceContextHeaderToAllMessages(topicMessage.messages, span);
+      if (span.constructor.name === 'InstanaIgnoredSpan') {
+        addTraceLevelSuppressionToAllMessages(topicMessage.messages);
+      } else {
+        addTraceContextHeaderToAllMessages(topicMessage.messages, span);
+      }
     });
 
     if (messageCount > 0) {
