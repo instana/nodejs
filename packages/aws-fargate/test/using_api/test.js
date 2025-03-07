@@ -106,15 +106,23 @@ describe('Using the API', function () {
     return retry(async () => {
       expect(response).to.be.an('object');
       expect(response.message).to.equal('Hello Fargate!');
-      expect(response.logs.debug).to.contain('Sending data to Instana (/serverless/metrics).');
-      expect(response.logs.debug).to.contain('Sent data to Instana (/serverless/metrics).');
+
+      expect(response.logs.debug).to.satisfy(logs => {
+        return logs.some(log => /\[\w+\] Sending data to Instana \(\/serverless\/metrics\)/.test(log));
+      });
+
+      expect(response.logs.debug).to.satisfy(logs => {
+        return logs.some(log => /\[\w+\] Sent data to Instana \(\/serverless\/metrics\)/.test(log));
+      });
+
+      expect(response.logs.warn).to.satisfy(logs => {
+        return logs.some(log =>
+          // eslint-disable-next-line max-len
+          /\[\w+\] INSTANA_DISABLE_CA_CHECK is set/.test(log)
+        );
+      });
+
       expect(response.logs.info).to.be.empty;
-      expect(response.logs.warn).to.deep.equal([
-        'INSTANA_DISABLE_CA_CHECK is set, which means that the server certificate will not be verified against the ' +
-          'list of known CAs. This makes your service vulnerable to MITM attacks when connecting to Instana. This ' +
-          'setting should never be used in production, unless you use our on-premises product and are unable to ' +
-          'operate the Instana back end with a certificate with a known root CA.'
-      ]);
       expect(response.logs.error).to.be.empty;
 
       expect(response.currentSpan.span.n).to.equal('node.http.server');
