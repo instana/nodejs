@@ -322,6 +322,9 @@ function startSpan(spanAttributes = {}) {
   // If the span was filtered out, we do not process it further.
   // Instead, we return an 'InstanaIgnoredSpan' instance to explicitly indicate that it was excluded from tracing.
   if (!filteredSpan) {
+    // we will supress the tracing if the span was filtered out
+    setTracingLevel('0');
+
     return setIgnoredSpan({
       spanName: span.n,
       kind: span.k,
