@@ -72,51 +72,20 @@ services:
       discovery.type: single-node
       ES_JAVA_OPTS: "-Xms500m -Xmx500m"
       xpack.security.enabled: 'false'
-
-  zookeeper:
-    image: zookeeper:3.9.2
-    platform: linux/amd64
-    ports:
-      - 2181:2181
-
   kafka:
-    image: wurstmeister/kafka:2.13-2.8.1
-    platform: linux/amd64
+    image: bitnami/kafka:3.9.0
     ports:
       - 9092:9092
-      - 29092:29092
-    depends_on:
-      - "zookeeper"
-    hostname: kafka0
     environment:
-
-      KAFKA_LISTENERS: EXTERNAL://:9092,PLAINTEXT://:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka0:29092,EXTERNAL://localhost:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      # Leave the internal listener mapped as PLAINTEXT to avoid issues in schema-registry:
-      # https://github.com/confluentinc/schema-registry/issues/648#issuecomment-398032429
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-
-      KAFKA_CREATE_TOPICS: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./bin:/nodejs-collector-bin
-    command: ["/nodejs-collector-bin/wait-for-it.sh", "-s", "-t", "120", "zookeeper:2181", "--", "start-kafka.sh"]
-
-  schema-registry:
-    image: confluentinc/cp-schema-registry:4.1.0
-    platform: linux/amd64
-    hostname: schema-registry
-    depends_on:
-      - "kafka"
-    ports:
-      - "8081:8081"
-    environment:
-      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: "zookeeper:2181"
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://kafka0:29092"
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - ALLOW_PLAINTEXT_LISTENER=yes
 
   mysql:
     image: mysql:8.0.26
