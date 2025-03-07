@@ -5,7 +5,6 @@
 
 'use strict';
 
-const crypto = require('crypto');
 // eslint-disable-next-line import/order
 const environmentUtil = require('./environment');
 const uninstrumented = require('./uninstrumentedHttp');
@@ -29,7 +28,7 @@ let proxyAgent;
 const disableCaCheckEnvVar = 'INSTANA_DISABLE_CA_CHECK';
 const disableCaCheck = process.env[disableCaCheckEnvVar] === 'true';
 
-const getRequestId = () => crypto.randomBytes(16).toString('hex');
+const getRequestId = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 
 let requestHasFailed = false;
 let warningsHaveBeenLogged = false;
@@ -118,19 +117,19 @@ exports.setLogger = function setLogger(_logger) {
  */
 exports.sendBundle = function sendBundle(bundle, finalLambdaRequest, callback) {
   const requestId = getRequestId();
-  logger.debug(`${requestId} Sending bundle to Instana (no. of spans: ${bundle?.spans?.length ?? 'unknown'})`);
+  logger.debug(`[${requestId}] Sending bundle to Instana (no. of spans: ${bundle?.spans?.length ?? 'unknown'})`);
   send({ resourcePath: '/bundle', payload: bundle, finalLambdaRequest, callback, requestId });
 };
 
 exports.sendMetrics = function sendMetrics(metrics, callback) {
   const requestId = getRequestId();
-  logger.debug(`${requestId} Sending metrics to Instana (no. of metrics: ${metrics?.length})`);
+  logger.debug(`[${requestId}] Sending metrics to Instana (no. of metrics: ${metrics?.length})`);
   send({ resourcePath: '/metrics', payload: metrics, finalLambdaRequest: false, callback, requestId });
 };
 
 exports.sendSpans = function sendSpans(spans, callback) {
   const requestId = getRequestId();
-  logger.debug(`${requestId} Sending spans to Instana (no. of spans: ${spans?.length})`);
+  logger.debug(`[${requestId}] Sending spans to Instana (no. of spans: ${spans?.length})`);
   send({ resourcePath: '/traces', payload: spans, finalLambdaRequest: false, callback, requestId });
 };
 
@@ -140,7 +139,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
     const requestId = getRequestId();
     const startTime = Date.now();
 
-    logger.debug(`${requestId} Executing Heartbeat request to Lambda extension.`);
+    logger.debug(`[${requestId}] Executing Heartbeat request to Lambda extension.`);
 
     const req = uninstrumented.http.request(
       {
@@ -155,11 +154,11 @@ function scheduleLambdaExtensionHeartbeatRequest() {
       },
       res => {
         if (res.statusCode === 200) {
-          logger.debug(`${requestId} The Instana Lambda extension Heartbeat request has succeeded.`);
+          logger.debug(`[${requestId}] The Instana Lambda extension Heartbeat request has succeeded.`);
         } else {
           handleHeartbeatError(
             new Error(
-              `${requestId} The Instana Lambda extension Heartbeat request has ` +
+              `[${requestId}] The Instana Lambda extension Heartbeat request has ` +
                 `returned an unexpected status code: ${res.statusCode}.`
             )
           );
@@ -172,7 +171,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
         res.once('end', () => {
           const endTime = Date.now();
           const duration = endTime - startTime;
-          logger.debug(`${requestId} Took ${duration}ms to receive response from extension`);
+          logger.debug(`[${requestId}] Took ${duration}ms to receive response from extension`);
         });
       }
     );
@@ -180,7 +179,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
     req.once('finish', () => {
       const endTime = Date.now();
       const duration = endTime - startTime;
-      logger.debug(`${requestId} Took ${duration}ms to send data to extension`);
+      logger.debug(`[${requestId}] Took ${duration}ms to send data to extension`);
     });
 
     function handleHeartbeatError(e) {
@@ -189,7 +188,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
       clearInterval(heartbeatInterval);
 
       logger.debug(
-        `${requestId} The Instana Lambda extension Heartbeat request did not succeed. ` +
+        `[${requestId}] The Instana Lambda extension Heartbeat request did not succeed. ` +
           'Falling back to talking to the Instana back ' +
           `end directly. ${e?.message} ${e?.stack}`
       );
@@ -206,7 +205,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
 
     // Handle timeouts that occur after connecting to the socket (no response from the extension).
     req.setTimeout(layerExtensionTimeout, () => {
-      handleHeartbeatError(new Error(`${requestId} The Lambda extension Heartbeat request timed out.`));
+      handleHeartbeatError(new Error(`[${requestId}] The Lambda extension Heartbeat request timed out.`));
 
       destroyRequest(req);
     });
@@ -250,7 +249,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
 
   if (requestHasFailed && options.stopSendingOnFailure) {
     logger.info(
-      `${requestId} Not attempting to send data to ${resourcePath} as a previous request ` +
+      `[${requestId}] Not attempting to send data to ${resourcePath} as a previous request ` +
         'has already timed out or failed.'
     );
 
@@ -262,7 +261,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
     warningsHaveBeenLogged = true;
     if (environmentUtil.sendUnencrypted) {
       logger.error(
-        `${requestId} ${environmentUtil.sendUnencryptedEnvVar} is set, which means that all traffic ` +
+        `[${requestId}] ${environmentUtil.sendUnencryptedEnvVar} is set, which means that all traffic ` +
           'to Instana is send ' +
           'unencrypted via plain HTTP, not via HTTPS. This will effectively make that traffic public. This setting ' +
           'should never be used in production.'
@@ -270,7 +269,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
     }
     if (disableCaCheck) {
       logger.warn(
-        `${requestId}  ${disableCaCheckEnvVar} is set, which means that the server certificate will ` +
+        `[${requestId}] ${disableCaCheckEnvVar} is set, which means that the server certificate will ` +
           'not be verified against ' +
           'the list of known CAs. This makes your service vulnerable to MITM attacks when connecting to Instana. ' +
           'This setting should never be used in production, unless you use our on-premises product and are unable to ' +
@@ -285,7 +284,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
       ? resourcePath
       : environmentUtil.getBackendPath() + resourcePath;
 
-  logger.debug(`${requestId} Sending data to Instana (${requestPath}).`);
+  logger.debug(`[${requestId}] Sending data to Instana (${requestPath}).`);
 
   // serialize the payload object
   const serializedPayload = JSON.stringify(payload);
@@ -376,7 +375,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
       // talking to serverless-acceptor directly. We also immediately retry the current request with that new downstream
       // target in place.
       logger.debug(
-        `${requestId} Could not connect to the Instana Lambda extension. ` +
+        `[${requestId}] Could not connect to the Instana Lambda extension. ` +
           `Falling back to talking to the Instana back end directly: ${e?.message} ${e?.stack}`
       );
 
@@ -395,13 +394,13 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
       if (!options.propagateErrorsUpstream) {
         if (proxyAgent) {
           logger.warn(
-            `${requestId} Could not send traces and metrics to Instana. Could not connect to the configured proxy ` +
+            `[${requestId}] Could not send traces and metrics to Instana. Could not connect to the configured proxy ` +
               `${process.env[proxyEnvVar]}.` +
               `${e?.message} ${e?.stack}`
           );
         } else {
           logger.warn(
-            `${requestId} Could not send traces and metrics to Instana. ` +
+            `[${requestId}] Could not send traces and metrics to Instana. ` +
               `The Instana back end seems to be unavailable. ${e?.message} , ${e?.stack}`
           );
         }
@@ -412,7 +411,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
   });
 
   req.on('finish', () => {
-    logger.debug(`${requestId} Sent data to Instana (${requestPath}).`);
+    logger.debug(`[${requestId}] Sent data to Instana (${requestPath}).`);
 
     if (options.useLambdaExtension && finalLambdaRequest) {
       clearInterval(heartbeatInterval);
@@ -443,7 +442,7 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
     // talking to serverless-acceptor directly. We also immediately retry the current request with that new downstream
     // target in place.
     logger.debug(
-      `${requestId} Request timed out while trying to talk to Instana Lambda extension. ` +
+      `[${requestId}] Request timed out while trying to talk to Instana Lambda extension. ` +
         'Falling back to talking to the Instana back end directly.'
     );
 
@@ -469,13 +468,13 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
     destroyRequest(req);
 
     const message =
-      `${requestId} Could not send traces and metrics to Instana. The Instana back end did not respond ` +
+      `[${requestId}] Could not send traces and metrics to Instana. The Instana back end did not respond ` +
       'in the configured timeout ' +
       `of ${options.backendTimeout} ms. The timeout can be configured by ` +
       `setting the environment variable ${timeoutEnvVar}.`;
 
     if (!options.propagateErrorsUpstream) {
-      logger.warn(`${requestId} ${message}`);
+      logger.warn(`[${requestId}] ${message}`);
     }
 
     handleCallback(options.propagateErrorsUpstream ? new Error(message) : undefined);
