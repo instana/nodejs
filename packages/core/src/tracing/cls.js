@@ -142,6 +142,12 @@ class InstanaSpan {
       writable: true,
       enumerable: false
     });
+    // This property is true ignored spans.
+    Object.defineProperty(this, 'isIgnored', {
+      value: false,
+      writable: true,
+      enumerable: false
+    });
   }
 
   /**
@@ -228,6 +234,15 @@ class InstanaPseudoSpan extends InstanaSpan {
  */
 // eslint-disable-next-line no-unused-vars
 class InstanaIgnoredSpan extends InstanaSpan {
+  /**
+   * @param {string} name
+   * @param {object} data
+   */
+  constructor(name, data) {
+    super(name, data);
+    this.isIgnored = true;
+  }
+
   transmit() {
     if (!this.transmitted && !this.manualEndMode) {
       this.cleanup();
@@ -417,17 +432,6 @@ function setIgnoredSpan({ spanName, kind, traceId, parentId, data = {} }) {
   // This parentId is propagated downstream.
   // The spanId does not need to be retained.
   span.s = parentId;
-
-  // This property exists only in ignored spans.
-  // For exit spans, which define outgoing requests, we must ensure that:
-  // 1. Trace context headers are not propagated when tracing is suppressed.
-  // 2. Suppression headers are added to supress downstream tracing.
-  // Setting `enumerable: false` keeps this as an internal property, preventing accidental exposure in any case.
-  Object.defineProperty(span, 'isIgnored', {
-    value: true,
-    writable: false,
-    enumerable: false
-  });
 
   if (span.k === ENTRY) {
     // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at
