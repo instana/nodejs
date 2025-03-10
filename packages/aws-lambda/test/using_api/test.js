@@ -40,6 +40,8 @@ function prelude(opts) {
   // NOTE: locally we run "npm run test:debug" (INSTANA_DEBUG is on by default!)
   if (opts.disableInstanaDebug) {
     env.INSTANA_DEBUG = undefined;
+  } else {
+    env.INSTANA_DEBUG = 'true';
   }
 
   return env;
