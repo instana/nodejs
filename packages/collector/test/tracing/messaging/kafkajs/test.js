@@ -532,6 +532,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
     let customAgentControls;
     let producerControls;
     let consumerControls;
+
     describe('via agent configuration', () => {
       async function setupTest(ignoreEndpoints) {
         customAgentControls = new AgentStubControls();
@@ -549,24 +550,18 @@ mochaSuiteFn('tracing/kafkajs', function () {
           useGlobalAgent: true
         });
 
-        await Promise.all([
-          consumerControls.startAndWaitForAgentConnection(),
-          producerControls.startAndWaitForAgentConnection()
-        ]);
+        await consumerControls.startAndWaitForAgentConnection();
+        await producerControls.startAndWaitForAgentConnection();
       }
 
       beforeEach(async () => {
         await customAgentControls?.clearReceivedTraceData();
-        await resetMessages(consumerControls);
       });
 
       afterEach(async () => {
-        await resetMessages(consumerControls);
-        await customAgentControls?.clearReceivedTraceData();
-      });
-
-      after(async () => {
-        await Promise.all([producerControls?.stop(), consumerControls?.stop(), customAgentControls?.stopAgent()]);
+        await producerControls.stop();
+        await consumerControls.stop();
+        await customAgentControls.stopAgent();
       });
 
       describe('when ignoring Kafka produce (send) is set', () => {
@@ -603,7 +598,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
           await setupTest({ kafka: [{ methods: ['consume'] }] });
         });
 
-        it('should ignore Kafka consume and downstrean calls but capture kafka send', async () => {
+        it('should ignore Kafka consume and downstream calls but capture kafka send', async () => {
           await producerControls.sendRequest({
             method: 'POST',
             path: '/send-messages',
@@ -701,6 +696,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
         await retry(async () => {
           const spans = await agentControls.getSpans();
           expect(spans.length).to.equal(2);
+
           // Scenario:
           // The configuration is set to ignore all operations (*) for test-topic-2.
           // The Kafka batch send operation includes multiple topics: test-topic-1 and test-topic-2.
@@ -708,7 +704,6 @@ mochaSuiteFn('tracing/kafkajs', function () {
           // test-topic-2). However, since test-topic-2 is ignored and the batch operation includes multiple topics,
           // we ignore the entire span and attach the suppression header to the produced message.
           // As a result, all downstream calls, including the consume span for test-topic-1, are also ignored.
-
           const spanNames = spans.map(span => span.n);
           expect(spanNames).to.include('node.http.server');
           expect(spanNames).to.include('node.http.client');
