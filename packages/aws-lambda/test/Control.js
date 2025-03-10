@@ -28,6 +28,7 @@ function Control(opts) {
   this.downstreamDummyPort = this.opts.downstreamDummyPort || portfinder();
   this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
 
+  this.disableInstanaDebug = this.opts.disableInstanaDebug === true;
   this.longHandlerRun = this.opts.longHandlerRun || false;
   this.proxyPort = this.opts.proxyPort;
 }

@@ -10,8 +10,6 @@ const environmentUtil = require('./environment');
 const uninstrumented = require('./uninstrumentedHttp');
 const constants = require('./constants');
 
-let logger;
-
 const layerExtensionHostname = 'localhost';
 const layerExtensionPort = process.env.INSTANA_LAYER_EXTENSION_PORT
   ? Number(process.env.INSTANA_LAYER_EXTENSION_PORT)
@@ -28,8 +26,6 @@ let proxyAgent;
 const disableCaCheckEnvVar = 'INSTANA_DISABLE_CA_CHECK';
 const disableCaCheck = process.env[disableCaCheckEnvVar] === 'true';
 
-const getRequestId = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
-
 let requestHasFailed = false;
 let warningsHaveBeenLogged = false;
 
@@ -42,12 +38,31 @@ const defaults = {
   useLambdaExtension: false
 };
 
+let logger;
 let options;
 let hostHeader;
 
+/**
+ * Most of the logs are debug logs in the backend connector, because
+ * on serverless we do not want to log too much.
+ * If the debug mode is enabled, we want to add a request id to the instana
+ * logs because the AWS runtime freezes requests and they are waking up
+ * as soon as the next request is coming in. With the request id we can
+ * identify the logs of a single request.
+ *
+ * Due to performance reasons, we do not want to generate a request id
+ * in the non debug mode.
+ */
+const getRequestId = () => {
+  if (logger && logger.isInDebugMode && logger.isInDebugMode()) {
+    return `instana_${Date.now().toString(36) + Math.random().toString(36).slice(2)}`;
+  }
+
+  return 'instana';
+};
+
 exports.init = function init(opts) {
   options = Object.assign(defaults, opts);
-
   logger = options.config.logger;
 
   // TODO: refactor environment.js into serverless normalize config

@@ -104,17 +104,17 @@ describe('Using the API', function () {
     expect(response.message).to.equal('Hello Cloud Run!');
 
     expect(response.logs.debug).to.satisfy(logs => {
-      return logs.some(log => /\[\w+\] Sending data to Instana \(\/serverless\/metrics\)/.test(log));
+      return logs.some(log => /\[instana_\w+\] Sending data to Instana \(\/serverless\/metrics\)/.test(log));
     });
 
     expect(response.logs.debug).to.satisfy(logs => {
-      return logs.some(log => /\[\w+\] Sent data to Instana \(\/serverless\/metrics\)/.test(log));
+      return logs.some(log => /\[instana_\w+\] Sent data to Instana \(\/serverless\/metrics\)/.test(log));
     });
 
     expect(response.logs.warn).to.satisfy(logs => {
       return logs.some(log =>
         // eslint-disable-next-line max-len
-        /\[\w+\] INSTANA_DISABLE_CA_CHECK is set/.test(log)
+        /\[instana_\w+\] INSTANA_DISABLE_CA_CHECK is set/.test(log)
       );
     });
 

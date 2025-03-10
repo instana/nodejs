@@ -10,6 +10,8 @@
 // 30 = info
 let minLevel = 30;
 
+const DEBUG_LEVEL = 20;
+
 const consoleLogger = {
   debug: createLogFn(20, console.debug || console.log),
   info: createLogFn(30, console.log),
@@ -40,6 +42,24 @@ class InstanaServerlessLogger {
    */
   setLogger(_logger) {
     this.logger = _logger;
+  }
+
+  isInDebugMode() {
+    if (!instanaServerlessLogger.logger) return false;
+
+    if (typeof instanaServerlessLogger.logger.level === 'function') {
+      return instanaServerlessLogger.logger.level() === DEBUG_LEVEL;
+    }
+
+    if (typeof instanaServerlessLogger.logger.level === 'number') {
+      return instanaServerlessLogger.logger.level === DEBUG_LEVEL;
+    }
+
+    if (typeof instanaServerlessLogger.logger.getLevel === 'function') {
+      return instanaServerlessLogger.logger.getLevel() === DEBUG_LEVEL;
+    }
+
+    return minLevel === DEBUG_LEVEL;
   }
 
   info() {

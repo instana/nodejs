@@ -37,6 +37,11 @@ function prelude(opts) {
     env.WITH_CONFIG = 'true';
   }
 
+  // NOTE: locally we run "npm run test:debug" (INSTANA_DEBUG is on by default!)
+  if (opts.disableInstanaDebug) {
+    env.INSTANA_DEBUG = undefined;
+  }
+
   return env;
 }
 
@@ -155,6 +160,45 @@ describe('Using the API', function () {
 
     it('must capture metrics and spans', () => {
       return verify(control, false, true);
+    });
+  });
+
+  describe('with INSTANA_DEBUG false', function () {
+    // - INSTANA_ENDPOINT_URL is configured
+    // - back end is reachable
+    // - client provides a config object
+    // - lambda function ends with success
+    const env = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaAgentKey,
+      disableInstanaDebug: true
+    });
+
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+
+        env
+      });
+
+      await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must capture metrics and spans', () => {
+      return verify(control, false, true, false);
     });
   });
 
@@ -308,9 +352,9 @@ describe('Using the API', function () {
     });
   });
 
-  function verify(control, error, expectSpansAndMetrics) {
+  function verify(control, error, expectSpansAndMetrics, isDebug = true) {
     return control.runHandler().then(() => {
-      verifyResponse(control, error, expectSpansAndMetrics);
+      verifyResponse(control, error, expectSpansAndMetrics, isDebug);
 
       if (expectSpansAndMetrics) {
         return retry(() => getAndVerifySpans(control, error).then(() => getAndVerifyMetrics(control)));
@@ -322,7 +366,7 @@ describe('Using the API', function () {
     });
   }
 
-  function verifyResponse(control, error, expectSpansAndMetrics) {
+  function verifyResponse(control, error, expectSpansAndMetrics, isDebug) {
     /* eslint-disable no-console */
     if (error) {
       expect(control.getLambdaErrors().length).to.equal(1);
@@ -350,20 +394,38 @@ describe('Using the API', function () {
         // eslint-disable-next-line
         console.log('comparing expected debug logs to:', body.logs.debug);
 
-        expect(body.logs.debug).to.satisfy(logs => {
-          return logs.some(log => /\[\w+\] Sending data to Instana \(\/serverless\/metrics\)/.test(log));
-        });
+        if (isDebug) {
+          expect(body.logs.debug).to.satisfy(logs => {
+            return logs.some(log => /\[instana_\w+\] Sending data to Instana \(\/serverless\/bundle\)/.test(log));
+          });
 
-        expect(body.logs.debug).to.satisfy(logs => {
-          return logs.some(log => /\[\w+\] Sent data to Instana \(\/serverless\/metrics\)/.test(log));
-        });
+          expect(body.logs.debug).to.satisfy(logs => {
+            return logs.some(log => /\[instana_\w+\] Sent data to Instana \(\/serverless\/bundle\)/.test(log));
+          });
 
-        expect(body.logs.warn).to.satisfy(logs => {
-          return logs.some(log =>
-            // eslint-disable-next-line max-len
-            /\[\w+\] INSTANA_DISABLE_CA_CHECK is set/.test(log)
-          );
-        });
+          expect(body.logs.warn).to.satisfy(logs => {
+            return logs.some(log =>
+              // eslint-disable-next-line max-len
+              /\[instana_\w+\] INSTANA_DISABLE_CA_CHECK is set/.test(log)
+            );
+          });
+        } else {
+          expect(body.logs.debug).to.satisfy(logs => {
+            return logs.some(log => /\[instana] Sending data to Instana \(\/serverless\/bundle\)/.test(log));
+          });
+
+          expect(body.logs.debug).to.satisfy(logs => {
+            return logs.some(log => /\[instana] Sent data to Instana \(\/serverless\/bundle\)/.test(log));
+          });
+
+          expect(body.logs.warn).to.satisfy(logs => {
+            return logs.some(log =>
+              // eslint-disable-next-line max-len
+              /\[instana] INSTANA_DISABLE_CA_CHECK is set/.test(log)
+            );
+          });
+        }
+
         expect(body.logs.error).to.be.empty;
         expect(body.currentSpanConstructor).to.equal('SpanHandle');
         expect(body.currentSpan).to.exist;
