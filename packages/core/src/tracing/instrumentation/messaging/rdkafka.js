@@ -153,8 +153,13 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
 
     span.stack = tracingUtil.getStackTrace(instrumentedProduce, 1);
 
-    const headers = addTraceContextHeader(originalArgs[6], span);
-    originalArgs[6] = headers;
+    if (span?.isIgnored) {
+      // If the span is marked as ignored, suppress trace propagation.
+      originalArgs[6] = addTraceLevelSuppression(originalArgs[6]);
+    } else {
+      // Otherwise, inject the trace context into the headers for propagation.
+      originalArgs[6] = addTraceContextHeader(originalArgs[6], span);
+    }
 
     if (deliveryCb) {
       ctx.once('delivery-report', function instanaDeliveryReportListener(err) {

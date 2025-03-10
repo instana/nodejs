@@ -274,7 +274,6 @@ function instrumentedEachMessage(originalEachMessage) {
 
     return cls.ns.runAndReturn(() => {
       if (isSuppressed(level)) {
-        // Case 1: publisher supresses messages, cls already set
         cls.setTracingLevel('0');
         return originalEachMessage.apply(ctx, originalArgs);
       }

@@ -315,7 +315,7 @@ describe('util.spanFilter', () => {
         expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
       });
 
-      it('returns false when the config having endpoints and span havig empty endpoints array', () => {
+      it('returns false when the config having endpoints and span having empty endpoints array', () => {
         ignoreEndpoints = {
           kafka: [{ methods: ['consume'], endpoints: ['topic2'] }]
         };
