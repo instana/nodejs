@@ -292,6 +292,9 @@ function instrumentedEachMessage(originalEachMessage) {
         span.lt = longTraceId;
       }
       span.stack = [];
+      if (span.constructor.name === 'InstanaIgnoredSpan') {
+        cls.setTracingLevel('0');
+      }
 
       try {
         return originalEachMessage.apply(ctx, originalArgs);
@@ -386,7 +389,9 @@ function instrumentedEachBatch(originalEachBatch) {
       if (batch && batch.messages) {
         span.b = { s: batch.messages.length };
       }
-
+      if (span.constructor.name === 'InstanaIgnoredSpan') {
+        cls.setTracingLevel('0');
+      }
       try {
         return originalEachBatch.apply(ctx, originalArgs);
       } finally {
