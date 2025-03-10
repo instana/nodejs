@@ -258,12 +258,13 @@ class InstanaIgnoredSpan extends InstanaSpan {
  * @param {string} [spanAttributes.traceId]
  * @param {string} [spanAttributes.parentSpanId]
  * @param {import('./w3c_trace_context/W3cTraceContext')} [spanAttributes.w3cTraceContext]
+ * @param {Function} [spanAttributes.onIgnored] - Callback function executed if the span is ignored.
  * @param {Object} [spanAttributes.spanData]
  * @returns {InstanaSpan}
  */
 
 function startSpan(spanAttributes = {}) {
-  let { spanName, kind, traceId, parentSpanId, w3cTraceContext, spanData } = spanAttributes;
+  let { spanName, kind, traceId, parentSpanId, w3cTraceContext, spanData, onIgnored } = spanAttributes;
 
   tracingMetrics.incrementOpened();
   if (!kind || (kind !== ENTRY && kind !== EXIT && kind !== INTERMEDIATE)) {
@@ -322,6 +323,12 @@ function startSpan(spanAttributes = {}) {
   // If the span was filtered out, we do not process it further.
   // Instead, we return an 'InstanaIgnoredSpan' instance to explicitly indicate that it was excluded from tracing.
   if (!filteredSpan) {
+    // case where we are ignoring the span, we need to supress the downstream calls
+    setTracingLevel('0');
+    // Call onIgnored hook if span is filtered out
+    if (typeof onIgnored === 'function') {
+      onIgnored();
+    }
     return setIgnoredSpan({
       spanName: span.n,
       kind: span.k,

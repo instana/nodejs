@@ -15,6 +15,7 @@ const cls = require('../../cls');
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
 let logger;
 let isActive = false;
+let isSpanIgnored = false;
 
 exports.init = function init(config) {
   logger = config.logger;
@@ -88,15 +89,18 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
     const span = cls.startSpan({
       spanName: 'kafka',
       kind: constants.EXIT,
-      spanData
+      spanData,
+      onIgnored: () => {
+        isSpanIgnored = true;
+        // Add suppression headers to indicate that tracing has been suppressed
+        addTraceLevelSuppressionToAllMessages(messages);
+      }
     });
     if (Array.isArray(messages)) {
       span.b = { s: messages.length };
-      // If the span is ignored, set suppression headers to propagate downstream suppression.
-      // Only supression header set, no need to set instana headers
-      if (span.constructor.name === 'InstanaIgnoredSpan') {
-        addTraceLevelSuppressionToAllMessages(messages);
-      } else {
+      // If the span was ignored, we only propagate suppression headers
+      // Otherwise, we add other Instana trace context headers
+      if (!isSpanIgnored) {
         addTraceContextHeaderToAllMessages(messages, span);
       }
     }
@@ -166,11 +170,15 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
     const span = cls.startSpan({
       spanName: 'kafka',
       kind: constants.EXIT,
-      spanData
+      spanData,
+      onIgnored: () => {
+        isSpanIgnored = true;
+      }
     });
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
     topicMessages.forEach(topicMessage => {
-      if (span.constructor.name === 'InstanaIgnoredSpan') {
+      // Add suppression headers to indicate that tracing has been suppressed
+      if (isSpanIgnored) {
         addTraceLevelSuppressionToAllMessages(topicMessage.messages);
       } else {
         addTraceContextHeaderToAllMessages(topicMessage.messages, span);
@@ -272,6 +280,7 @@ function instrumentedEachMessage(originalEachMessage) {
 
     return cls.ns.runAndReturn(() => {
       if (isSuppressed(level)) {
+        // Case 1: publisher supresses messages, cls already set
         cls.setTracingLevel('0');
         return originalEachMessage.apply(ctx, originalArgs);
       }
@@ -292,9 +301,6 @@ function instrumentedEachMessage(originalEachMessage) {
         span.lt = longTraceId;
       }
       span.stack = [];
-      if (span.constructor.name === 'InstanaIgnoredSpan') {
-        cls.setTracingLevel('0');
-      }
 
       try {
         return originalEachMessage.apply(ctx, originalArgs);
@@ -389,9 +395,7 @@ function instrumentedEachBatch(originalEachBatch) {
       if (batch && batch.messages) {
         span.b = { s: batch.messages.length };
       }
-      if (span.constructor.name === 'InstanaIgnoredSpan') {
-        cls.setTracingLevel('0');
-      }
+
       try {
         return originalEachBatch.apply(ctx, originalArgs);
       } finally {
