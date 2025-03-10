@@ -258,13 +258,12 @@ class InstanaIgnoredSpan extends InstanaSpan {
  * @param {string} [spanAttributes.traceId]
  * @param {string} [spanAttributes.parentSpanId]
  * @param {import('./w3c_trace_context/W3cTraceContext')} [spanAttributes.w3cTraceContext]
- * @param {Function} [spanAttributes.onIgnored] - Callback function executed if the span is ignored.
  * @param {Object} [spanAttributes.spanData]
  * @returns {InstanaSpan}
  */
 
 function startSpan(spanAttributes = {}) {
-  let { spanName, kind, traceId, parentSpanId, w3cTraceContext, spanData, onIgnored } = spanAttributes;
+  let { spanName, kind, traceId, parentSpanId, w3cTraceContext, spanData } = spanAttributes;
 
   tracingMetrics.incrementOpened();
   if (!kind || (kind !== ENTRY && kind !== EXIT && kind !== INTERMEDIATE)) {
@@ -323,12 +322,9 @@ function startSpan(spanAttributes = {}) {
   // If the span was filtered out, we do not process it further.
   // Instead, we return an 'InstanaIgnoredSpan' instance to explicitly indicate that it was excluded from tracing.
   if (!filteredSpan) {
-    // case where we are ignoring the span, we need to supress the downstream calls
+    // For entry spans, we need to retain suppression information to ensure that
+    // tracing is suppressed for all subsequent outgoing (exit) calls.
     setTracingLevel('0');
-    // Call onIgnored hook if span is filtered out
-    if (typeof onIgnored === 'function') {
-      onIgnored();
-    }
     return setIgnoredSpan({
       spanName: span.n,
       kind: span.k,
@@ -421,6 +417,17 @@ function setIgnoredSpan({ spanName, kind, traceId, parentId, data = {} }) {
   // This parentId is propagated downstream.
   // The spanId does not need to be retained.
   span.s = parentId;
+
+  // This property exists only in ignored spans.
+  // For exit spans, which define outgoing requests, we must ensure that:
+  // 1. Trace context headers are not propagated when tracing is suppressed.
+  // 2. Suppression headers are added to supress downstream tracing.
+  // Setting `enumerable: false` keeps this as an internal property, preventing accidental exposure in any case.
+  Object.defineProperty(span, 'isIgnored', {
+    value: true,
+    writable: false,
+    enumerable: false
+  });
 
   if (span.k === ENTRY) {
     // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at

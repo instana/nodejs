@@ -15,7 +15,6 @@ const cls = require('../../cls');
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
 let logger;
 let isActive = false;
-let isSpanIgnored = false;
 
 exports.init = function init(config) {
   logger = config.logger;
@@ -89,18 +88,15 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
     const span = cls.startSpan({
       spanName: 'kafka',
       kind: constants.EXIT,
-      spanData,
-      onIgnored: () => {
-        isSpanIgnored = true;
-        // Add suppression headers to indicate that tracing has been suppressed
-        addTraceLevelSuppressionToAllMessages(messages);
-      }
+      spanData
     });
     if (Array.isArray(messages)) {
       span.b = { s: messages.length };
       // If the span was ignored, we only propagate suppression headers
       // Otherwise, we add other Instana trace context headers
-      if (!isSpanIgnored) {
+      if (span?.isIgnored) {
+        addTraceLevelSuppressionToAllMessages(messages);
+      } else {
         addTraceContextHeaderToAllMessages(messages, span);
       }
     }
@@ -170,15 +166,13 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
     const span = cls.startSpan({
       spanName: 'kafka',
       kind: constants.EXIT,
-      spanData,
-      onIgnored: () => {
-        isSpanIgnored = true;
-      }
+      spanData
     });
+
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
     topicMessages.forEach(topicMessage => {
       // Add suppression headers to indicate that tracing has been suppressed
-      if (isSpanIgnored) {
+      if (span?.isIgnored) {
         addTraceLevelSuppressionToAllMessages(topicMessage.messages);
       } else {
         addTraceContextHeaderToAllMessages(topicMessage.messages, span);
