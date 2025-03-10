@@ -1,0 +1,5 @@
+tracing:
+  ignore-endpoints:
+    kafka:  
+    - methods: ["*"]  
+      endpoints: ["test-topic-2 "]  
