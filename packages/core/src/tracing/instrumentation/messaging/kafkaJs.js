@@ -92,13 +92,7 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
     });
     if (Array.isArray(messages)) {
       span.b = { s: messages.length };
-      // If the span was ignored, we only propagate suppression headers
-      // Otherwise, we add other Instana trace context headers
-      if (span?.isIgnored) {
-        addTraceLevelSuppressionToAllMessages(messages);
-      } else {
-        addTraceContextHeaderToAllMessages(messages, span);
-      }
+      addTraceHeaders({ messages, span, ignored: span.isIgnored });
     }
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
 
@@ -171,12 +165,7 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
 
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
     topicMessages.forEach(topicMessage => {
-      // Add suppression headers to indicate that tracing has been suppressed
-      if (span?.isIgnored) {
-        addTraceLevelSuppressionToAllMessages(topicMessage.messages);
-      } else {
-        addTraceContextHeaderToAllMessages(topicMessage.messages, span);
-      }
+      addTraceHeaders({ messages: topicMessage.messages, span, ignored: span.isIgnored });
     });
 
     if (messageCount > 0) {
@@ -461,5 +450,15 @@ function removeInstanaHeadersFromMessage(message) {
       // If the header is not present, deleting it is a no-op.
       delete message.headers[name];
     });
+  }
+}
+
+function addTraceHeaders({ messages, span, ignored }) {
+  // If the span was ignored, we only propagate suppression headers
+  // Otherwise, we add other Instana trace context headers
+  if (ignored) {
+    addTraceLevelSuppressionToAllMessages(messages);
+  } else {
+    addTraceContextHeaderToAllMessages(messages, span);
   }
 }
