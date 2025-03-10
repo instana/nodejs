@@ -337,9 +337,6 @@ function startSpan(spanAttributes = {}) {
   // If the span was filtered out, we do not process it further.
   // Instead, we return an 'InstanaIgnoredSpan' instance to explicitly indicate that it was excluded from tracing.
   if (!filteredSpan) {
-    // For entry spans, we need to retain suppression information to ensure that
-    // tracing is suppressed for all subsequent outgoing (exit) calls.
-    setTracingLevel('0');
     return setIgnoredSpan({
       spanName: span.n,
       kind: span.k,
@@ -438,6 +435,10 @@ function setIgnoredSpan({ spanName, kind, traceId, parentId, data = {} }) {
     // any given moment). This is used by the instrumentations of web frameworks like Express.js to add path templates
     // and error messages to the entry span.
     span.addCleanup(ns.set(currentEntrySpanKey, span));
+
+    // For entry spans, we need to retain suppression information to ensure that
+    // tracing is suppressed for all subsequent outgoing (exit) calls.
+    setTracingLevel('0');
   }
 
   // Set the span object as the currently active span in the active CLS context and also add a cleanup hook for when
