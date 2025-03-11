@@ -71,7 +71,7 @@ For example, run `bin/convert-test-app-to-es6.sh packages/collector/test/tracing
 
 After regenerating an existing `.mjs` file you should check the diff for it and potentially revert any changes that are artifacts of the conversion process, not related to your original changes in `.js` file.
 
-If you add an ESM app to an existing directory, the ESM execution logic requires `.mjs` versions of all existing applications within that directory.
+If you add ESM support to a test directory, you have to transform **all** existing CJS apps to ESM apps.
 
 Example: Consider a directory containing the following files, each representing a different application with a unique use case:
 
