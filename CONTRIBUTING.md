@@ -79,7 +79,9 @@ Example: Consider a directory containing the following files, each representing 
  - app.js
  - rootExitSpanApp.js
  
-If you add an ES module application for `sender.js`, you must also ensure that equivalent `.mjs` ESM applications exist for `app.js` and `rootExitSpanApp.js`. Otherwise, it may lead to issues when running ESM tests.
+If you add an ESM application for `sender.js`, you must also ensure that equivalent `.mjs` ESM applications exist for `app.js` and `rootExitSpanApp.js`.
+
+Suppose in this case, if `rootExitSpanApp.mjs` is not added, the ESM test execution will default to running `rootExitSpanApp.js` alongside ESM unless the test is disabled for ESM. This can lead to timing issues due to differences in module loading between `.js` and `.mjs` files, potentially causing unintended span data.
 
 There are two ways to specify which file to run as the server:
 
