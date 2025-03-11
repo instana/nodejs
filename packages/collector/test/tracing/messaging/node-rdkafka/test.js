@@ -671,6 +671,138 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       });
     });
   });
+
+  describe('kafka ignore endpoints configuration via agent configuration', () => {
+    describe('via agent configuration', () => {
+      describe('when ignoring Kafka all methods', () => {
+        this.timeout(config.getTestTimeout() * 2);
+
+        const customAgentControls = new AgentStubControls();
+        let producerControls;
+        let consumerControls;
+
+        before(async () => {
+          await customAgentControls.startAgent({
+            ignoreEndpoints: { kafka: ['*'] }
+          });
+
+          producerControls = new ProcessControls({
+            appPath: path.join(__dirname, 'producer'),
+            agentControls: customAgentControls
+          });
+          consumerControls = new ProcessControls({
+            appPath: path.join(__dirname, 'consumer'),
+            agentControls: customAgentControls
+          });
+
+          await producerControls.startAndWaitForAgentConnection();
+          await consumerControls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
+        after(async () => {
+          await customAgentControls.stopAgent();
+          await producerControls.stop();
+          await consumerControls.stop();
+        });
+
+        afterEach(async () => {
+          await producerControls.clearIpcMessages();
+          await consumerControls.clearIpcMessages();
+        });
+
+        it('should ignore all Kafka spans and downstream calls', async () => {
+          const apiPath = '/produce/standard';
+          const response = await producerControls.sendRequest({
+            method: 'GET',
+            path: apiPath
+          });
+
+          await retry(async () => {
+            await verifyResponseAndMessage(response, consumerControls);
+            const spans = await customAgentControls.getSpans();
+            // 1 x http server
+            // 1  x http client
+            expect(spans.length).to.equal(2);
+
+            const spanNames = spans.map(span => span.n);
+            expect(spanNames).to.include('node.http.server');
+            expect(spanNames).to.include('node.http.client');
+            // Flow: HTTP → Kafka Produce → Kafka Consume → HTTP
+            // Since Kafka produce is ignored, both the produce operation and all downstream calls are also ignored.
+            expect(spanNames).to.not.include('kafka');
+          });
+        });
+      });
+    });
+    describe('when ignoring Kafka consume (entry span) is set', () => {
+      this.timeout(config.getTestTimeout() * 2);
+
+      const customAgentControls = new AgentStubControls();
+      let producerControls;
+      let consumerControls;
+
+      before(async () => {
+        await customAgentControls.startAgent({ ignoreEndpoints: { kafka: ['consume'] } });
+
+        producerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'producer'),
+          agentControls: customAgentControls
+        });
+        consumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          agentControls: customAgentControls
+        });
+
+        await producerControls.startAndWaitForAgentConnection();
+        await consumerControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await customAgentControls.stopAgent();
+        await producerControls.stop();
+        await consumerControls.stop();
+      });
+
+      afterEach(async () => {
+        await producerControls.clearIpcMessages();
+        await consumerControls.clearIpcMessages();
+      });
+
+      it('should ignore Kafka exit spans and downstream calls', async () => {
+        const apiPath = '/produce/standard';
+        const response = await producerControls.sendRequest({
+          method: 'GET',
+          path: apiPath
+        });
+
+        await retry(async () => {
+          await verifyResponseAndMessage(response, consumerControls);
+          const spans = await customAgentControls.getSpans();
+          expect(spans.length).to.equal(3);
+
+          // Flow: HTTP → Kafka Produce (send) → Kafka Consume → HTTP
+          // Kafka send will still be present, but since Kafka consume is ignored, the consume operation
+          // and all subsequent downstream calls will also be ignored.
+          const spanNames = spans.map(span => span.n);
+          expect(spanNames).to.include('node.http.server');
+          expect(spanNames).to.include('node.http.client');
+          expect(spanNames).to.include('kafka');
+
+          // Ensure Kafka send exists but consume is ignored
+          expect(spans.some(span => span.n === 'kafka' && span.data.kafka?.access === 'send')).to.be.true;
+          expect(spans.some(span => span.n === 'kafka' && span.data.kafka?.access === 'consume')).to.be.false;
+        });
+      });
+    });
+  });
 });
 
 function verifyResponseAndMessage(response, consumerControls, withError, objectMode, producerMethod) {
