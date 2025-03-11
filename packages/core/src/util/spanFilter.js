@@ -77,7 +77,7 @@ function matchEndpoints(span, ignoreconfig) {
    */
   return spanEndpoints.every((/** @type {string} */ endpoint) =>
     ignoreconfig.endpoints.some(
-      e => e?.toLowerCase() === endpoint?.toLowerCase() // Case-insensitive match for endpoint names
+      e => e?.toLowerCase() === endpoint?.toLowerCase()
     )
   );
 }
@@ -153,7 +153,8 @@ function applyFilter(span) {
 /**
  * Parses the endpoints field in span data.
  *
- * In Kafka batch produce scenarios, the `endpoints` field is a comma-separated string
+ * Use Case: In Kafka, when sendBatch is executed, the endpoints field contains a comma-separated string of topic names.
+ * We filtering we treat the endpoints as an array.
  * (e.g., `"test-topic-1,test-topic-2"`).
  *
  * @param {string} endpoints
