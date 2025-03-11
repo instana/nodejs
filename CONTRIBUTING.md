@@ -79,7 +79,7 @@ Example: Consider a directory containing the following files, each representing 
  - app.js
  - rootExitSpanApp.js
  
-If you add a test for `sender.mjs`, you must also ensure that `.mjs` versions exist for `app.js` and `rootExitSpanApp.js`. Failing to do so may cause issues when running ESM tests.
+If you add an ES module application for `sender.js`, you must also ensure that equivalent `.mjs` ESM applications exist for `app.js` and `rootExitSpanApp.js`. Otherwise, it may lead to issues when running ESM tests.
 
 There are two ways to specify which file to run as the server:
 
