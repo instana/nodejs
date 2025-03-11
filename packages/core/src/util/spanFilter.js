@@ -63,16 +63,17 @@ function matchEndpoints(span, ignoreconfig) {
     return true;
   }
   /**
-   * Batch Handling Logic: Determines whether a span should be ignored based on its endpoints.
+   * Batch Handling Logic:
    * General Rules:
    * 1. If every endpoint in the span is present in the `ignoreconfig.endpoints`, the span is ignored.
    * 2. If at least one endpoint is not in the ignored list, the span is traced.
-   * 3. This ensures that partial matches do not cause unintended ignores in batch operations.
+   * This ensures that partial matches do not cause unintended ignores in batch operations.
    *
-   * Case 1 - Batch Processing in kafka (sendBatch scenarios):
-   * - Consider a case where a Kafka `sendBatch` operation sends messages to multiple topics in one request.
-   * - If all topics in the batch are in the ignore list, the span is ignored.
-   * - If even one topic is not ignored, the span remains traced, ensuring visibility where needed.
+   * Case: - Batch Processing in kafka (sendBatch):
+   * - In Kafka, the `sendBatch` operation allows sending messages to multiple topics in a single request.
+   * - We generate a single span for the batch operation and attach all topic names as a comma-separated list.
+   * - If all topics*in the batch appear in `ignoreconfig.endpoints`, the span is ignored.
+   * - If at least one topic is not ignored, the span remains traced, ensuring visibility where needed.
    */
   return spanEndpoints.every((/** @type {string} */ endpoint) =>
     ignoreconfig.endpoints.some(
@@ -150,7 +151,7 @@ function applyFilter(span) {
 }
 
 /**
- * Parses the `endpoints` field in span data.
+ * Parses the endpoints field in span data.
  *
  * In Kafka batch produce scenarios, the `endpoints` field is a comma-separated string
  * (e.g., `"test-topic-1,test-topic-2"`).
