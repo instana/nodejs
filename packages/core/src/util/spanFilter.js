@@ -64,7 +64,6 @@ function matchEndpoints(span, ignoreconfig) {
   }
   /**
    * Batch Handling Logic:
-   * General Rules:
    * 1. If every endpoint in the span is present in the `ignoreconfig.endpoints`, the span is ignored.
    * 2. If at least one endpoint is not in the ignored list, the span is traced.
    * This ensures that partial matches do not cause unintended ignores in batch operations.
@@ -76,9 +75,7 @@ function matchEndpoints(span, ignoreconfig) {
    * - If at least one topic is not ignored, the span remains traced, ensuring visibility where needed.
    */
   return spanEndpoints.every((/** @type {string} */ endpoint) =>
-    ignoreconfig.endpoints.some(
-      e => e?.toLowerCase() === endpoint?.toLowerCase()
-    )
+    ignoreconfig.endpoints.some(e => e?.toLowerCase() === endpoint?.toLowerCase())
   );
 }
 
@@ -153,19 +150,24 @@ function applyFilter(span) {
 /**
  * Parses the endpoints field in span data.
  *
- * Use Case: In Kafka, when sendBatch is executed, the endpoints field contains a comma-separated string of topic names.
- * For filtering we treat the endpoints as an array.
- * (e.g., `"test-topic-1,test-topic-2"`).
+ * Case 1: In general, endpoints is a string representing a single endpoint in span.data.
+ *         We convert it into an array.
+ * Case 2: In some cases (e.g., Kafka batch produce), endpoints is a comma-separated string
+ *         (e.g., `"test-topic-1,test-topic-2"`). We split it into an array.
+ * Case 3: If endpoints is an array(future cases). In this case, we return it as-is
+ *         since filtering logic expects an array internally.
+ *
+ * For filtering endpoints is always treated as an array,
  *
  * @param {string} endpoints
  */
 function parseSpanEndpoints(endpoints) {
-  if (Array.isArray(endpoints)) {
-    return endpoints;
-  }
-
   if (typeof endpoints === 'string') {
     return endpoints.split(',').map(endpoint => endpoint.trim());
+  }
+
+  if (Array.isArray(endpoints)) {
+    return endpoints;
   }
 
   return [];
