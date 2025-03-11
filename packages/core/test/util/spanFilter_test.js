@@ -188,7 +188,8 @@ describe('util.spanFilter', () => {
         expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
       });
 
-      it('return true when advanced config with endpoints as an array matches one of the span endpoints', () => {
+      // eslint-disable-next-line max-len
+      it('return false when config with multiple endpoints and it does not matches all endpoints(array format) in span', () => {
         ignoreEndpoints = {
           kafka_placeholder: [{ methods: ['consume'], endpoints: ['topic1', 'topic2'] }]
         };
@@ -199,10 +200,10 @@ describe('util.spanFilter', () => {
             endpoints: ['topic1', 'topic3']
           }
         };
-        expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
+        expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
       });
 
-      it('return true when advanced config with endpoints as an array matches all of the span endpoints', () => {
+      it('return true when config with multiple endpoints and matches all endpoints(array) in span', () => {
         ignoreEndpoints = {
           kafka_placeholder: [{ methods: ['consume'], endpoints: ['topic1', 'topic2'] }]
         };
@@ -323,6 +324,62 @@ describe('util.spanFilter', () => {
           kafka_placeholder: {
             operation: 'consume',
             endpoints: []
+          }
+        };
+        expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
+      });
+
+      it('returns false when kafka span has mutiple endpoints and not all endpoints configured to be ignored', () => {
+        ignoreEndpoints = {
+          kafka_placeholder: [{ methods: ['consume'], endpoints: ['topic2'] }]
+        };
+        span.n = 'kafka_placeholder';
+        span.data = {
+          kafka_placeholder: {
+            operation: 'consume',
+            endpoints: 'topic1,topic2'
+          }
+        };
+        expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
+      });
+
+      it('returns true when kafka span has mutiple endpoints and all endpoints configured to be ignored', () => {
+        ignoreEndpoints = {
+          kafka_placeholder: [{ methods: ['consume'], endpoints: ['topic1', 'topic2', 'topic3'] }]
+        };
+        span.n = 'kafka_placeholder';
+        span.data = {
+          kafka_placeholder: {
+            operation: 'consume',
+            endpoints: 'topic1,topic2'
+          }
+        };
+        expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
+      });
+
+      it('returns false when span endpoints do not contain any ignored topics', () => {
+        ignoreEndpoints = {
+          kafka_placeholder: [{ methods: ['consume'], endpoints: ['ignore_consume_1'] }]
+        };
+        span.n = 'kafka_placeholder';
+        span.data = {
+          kafka_placeholder: {
+            operation: 'consume',
+            endpoints: 'do_not_ignore_consume_1'
+          }
+        };
+        expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
+      });
+
+      it('returns false when span endpoints contain topics not in the ignored list', () => {
+        ignoreEndpoints = {
+          kafka_placeholder: [{ methods: ['consume'], endpoints: ['do_not_ignore_consume_1'] }]
+        };
+        span.n = 'kafka_placeholder';
+        span.data = {
+          kafka_placeholder: {
+            operation: 'consume',
+            endpoints: 'ignore_consume_1'
           }
         };
         expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);

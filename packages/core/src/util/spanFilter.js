@@ -52,14 +52,8 @@ const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka_placeholder'];
  * @returns {boolean}
  */
 function matchEndpoints(span, ignoreconfig) {
-  // TODO:
-  // Normalizing the endpoints will be addressed in future PRs.
-  // For Kafka span data, the endpoints correspond to the service field,
-  // which may contain multiple values.
-  const spanEndpoints = Array.isArray(span.data[span.n]?.endpoints)
-    ? span.data[span.n].endpoints
-    : [span.data[span.n]?.endpoints].filter(Boolean);
-
+  // Parse the endpoints from the span data.
+  const spanEndpoints = parseSpanEndpoints(span.data[span.n]?.endpoints);
   if (!spanEndpoints.length) {
     return false;
   }
@@ -68,9 +62,22 @@ function matchEndpoints(span, ignoreconfig) {
   if (ignoreconfig.endpoints.includes('*')) {
     return true;
   }
-
-  return spanEndpoints.some((/** @type {string} */ endpoint) =>
-    ignoreconfig.endpoints.some(e => e?.toLowerCase() === endpoint?.toLowerCase())
+  /**
+   * Batch Handling Logic: Determines whether a span should be ignored based on its endpoints.
+   * General Rules:
+   * 1. If every endpoint in the span is present in the `ignoreconfig.endpoints`, the span is ignored.
+   * 2. If at least one endpoint is not in the ignored list, the span is traced.
+   * 3. This ensures that partial matches do not cause unintended ignores in batch operations.
+   *
+   * Case 1 - Batch Processing in kafka (sendBatch scenarios):
+   * - Consider a case where a Kafka `sendBatch` operation sends messages to multiple topics in one request.
+   * - If all topics in the batch are in the ignore list, the span is ignored.
+   * - If even one topic is not ignored, the span remains traced, ensuring visibility where needed.
+   */
+  return spanEndpoints.every((/** @type {string} */ endpoint) =>
+    ignoreconfig.endpoints.some(
+      e => e?.toLowerCase() === endpoint?.toLowerCase() // Case-insensitive match for endpoint names
+    )
   );
 }
 
@@ -140,6 +147,26 @@ function applyFilter(span) {
     return null;
   }
   return span;
+}
+
+/**
+ * Parses the `endpoints` field in span data.
+ *
+ * In Kafka batch produce scenarios, the `endpoints` field is a comma-separated string
+ * (e.g., `"test-topic-1,test-topic-2"`).
+ *
+ * @param {string} endpoints
+ */
+function parseSpanEndpoints(endpoints) {
+  if (Array.isArray(endpoints)) {
+    return endpoints;
+  }
+
+  if (typeof endpoints === 'string') {
+    return endpoints.split(',').map(endpoint => endpoint.trim());
+  }
+
+  return [];
 }
 
 module.exports = { applyFilter, activate, init, shouldIgnore };
