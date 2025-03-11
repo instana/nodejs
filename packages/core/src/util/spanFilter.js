@@ -154,7 +154,7 @@ function applyFilter(span) {
  * Parses the endpoints field in span data.
  *
  * Use Case: In Kafka, when sendBatch is executed, the endpoints field contains a comma-separated string of topic names.
- * We filtering we treat the endpoints as an array.
+ * For filtering we treat the endpoints as an array.
  * (e.g., `"test-topic-1,test-topic-2"`).
  *
  * @param {string} endpoints
