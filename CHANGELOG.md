@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.7.0](https://github.com/instana/nodejs/compare/v4.6.3...v4.7.0) (2025-03-11)
+
+### Features
+
+- added INSTANA_IGNORE_ENDPOINTS_PATH for external YAML config ([#1605](https://github.com/instana/nodejs/issues/1605)) ([58312fa](https://github.com/instana/nodejs/commit/58312fa3b699b09033c79770f71f47f30a948243))
+
 ## [4.6.3](https://github.com/instana/nodejs/compare/v4.6.2...v4.6.3) (2025-03-05)
 
 ### Bug Fixes
