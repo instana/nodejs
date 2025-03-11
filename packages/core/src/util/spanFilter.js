@@ -63,15 +63,20 @@ function matchEndpoints(span, ignoreconfig) {
     return true;
   }
   /**
-   * Batch Handling Logic:
-   * 1. If every endpoint in the span is present in the `ignoreconfig.endpoints`, the span is ignored.
+   * General rules:
+   * 1. If every endpoint in the span is present in `ignoreconfig.endpoints`, the span is ignored.
    * 2. If at least one endpoint is not in the ignored list, the span is traced.
-   * This ensures that partial matches do not cause unintended ignores in batch operations.
+   *    This ensures that partial matches do not cause unintended ignores in batch operations.
    *
-   * Case: - Batch Processing in kafka (sendBatch):
+   * Case 1: Single Endpoint (General Case)
+   * - Normally, a span contains only one endpoint, which is represented as an array with a single value.
+   * - If this endpoint exists in `ignoreconfig.endpoints`, the span is ignored.
+   * - Otherwise, the span is traced as usual.
+   *
+   * Case 2: Batch Processing in Kafka (`sendBatch`)
    * - In Kafka, the `sendBatch` operation allows sending messages to multiple topics in a single request.
-   * - We generate a single span for the batch operation and attach all topic names as a comma-separated list.
-   * - If all topics*in the batch appear in `ignoreconfig.endpoints`, the span is ignored.
+   * - A single span is generated for the batch operation, attaching all topic names as a comma-separated list.
+   * - If all topics in the batch appear in `ignoreconfig.endpoints`, the span is ignored.
    * - If at least one topic is not ignored, the span remains traced, ensuring visibility where needed.
    */
   return spanEndpoints.every((/** @type {string} */ endpoint) =>
@@ -157,7 +162,7 @@ function applyFilter(span) {
  * Case 3: If endpoints is an array(future cases). In this case, we return it as-is
  *         since filtering logic expects an array internally.
  *
- * For filtering endpoints is always treated as an array,
+ * For filtering, endpoints in span always treated as an array,
  *
  * @param {string} endpoints
  */
