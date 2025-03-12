@@ -49,7 +49,11 @@ app.use(bodyParser.json());
 })();
 
 app.get('/', (_req, res) => {
-  res.send(connected ? 'OK' : 'Service Unavailable');
+  if (connected) {
+    res.send('OK');
+  } else {
+    res.sendStatus(503);
+  }
 });
 
 app.post('/send-messages', async (req, res) => {

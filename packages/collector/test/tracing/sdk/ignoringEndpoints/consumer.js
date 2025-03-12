@@ -16,10 +16,7 @@ const express = require('express');
 const { Kafka } = require('kafkajs');
 const { v4: uuid } = require('uuid');
 
-const delay = require('../../../../../core/test/test_util/delay');
-
 const appPort = process.env.APP_PORT;
-const agentPort = process.env.INSTANA_AGENT_PORT;
 
 const kafka = new Kafka({
   clientId: 'test-producer',
@@ -56,18 +53,7 @@ let currentSpan;
         message.key && message.key.toString(),
         message.value && message.value.toString()
       );
-
-      try {
-        if (message.value.toString() === 'Boom!') {
-          throw new Error('Boom!');
-        }
-        await delay(100);
-        await fetch(`http://127.0.0.1:${agentPort}`);
-        currentSpan.end();
-      } catch (error) {
-        log(error);
-        currentSpan.end(1);
-      }
+      currentSpan.end();
     }
   });
   connected = true;
