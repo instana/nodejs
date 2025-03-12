@@ -73,7 +73,7 @@ app.post('/send-messages', async (req, res) => {
 });
 
 app.listen(appPort, () => {
-  log(`Producer listening on port: ${appPort}`);
+  log(`Listening on port: ${appPort}`);
 });
 function log() {
   const args = Array.prototype.slice.call(arguments);
