@@ -9,7 +9,7 @@ const { expect } = require('chai');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('@instana/core/test/config');
-const { delay, retry } = require('@instana/core/test/test_util');
+const { retry } = require('@instana/core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
@@ -67,16 +67,15 @@ mochaSuiteFn('tracing/sdk/ignoringEndpoints', function () {
         }
       });
 
-      await delay(500);
-
-      // Fetch the current span from the consumer
-      const currentSpan = await consumerControls.sendRequest({
-        method: 'GET',
-        path: '/current-span',
-        simple: true
-      });
-
       await retry(async () => {
+        // Fetch the current span from the consumer
+        const currentSpan = await consumerControls.sendRequest({
+          method: 'GET',
+          path: '/current-span',
+          simple: true,
+          suppressTracing: true // no need to trace this call
+        });
+
         // The currentSpan contains an InstanaIgnoredSpan, which represents a span that has been ignored
         // due to the configured `INSTANA_IGNORE_ENDPOINTS` setting (`kafka:consume` in this case).
         // Even though the consumer processes the message, its span is not recorded in the agent’s collected spans.
@@ -96,17 +95,13 @@ mochaSuiteFn('tracing/sdk/ignoringEndpoints', function () {
 
         // 1 x HTTP entry span for /send-messages (producer)
         // 1 x Kafka send span (producer)
-        // 1 x HTTP entry span for /current-span (consumer fetching ignored span)
-        expect(spans).to.have.lengthOf(3);
+        expect(spans).to.have.lengthOf(2);
 
-        const kafkaSpan = spans.find(span => span.n === 'kafka' && span.k === 2);
+        const kafkaProducerSpan = spans.find(span => span.n === 'kafka' && span.k === 2);
         const producerHttpSpan = spans.find(span => span.n === 'node.http.server' && span.k === 1);
-        const consumerHttpSpan = spans.find(
-          span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/current-span'
-        );
 
-        expect(kafkaSpan).to.exist;
-        expect(kafkaSpan.data.kafka).to.include({
+        expect(kafkaProducerSpan).to.exist;
+        expect(kafkaProducerSpan.data.kafka).to.include({
           service: 'test-topic-1',
           access: 'send'
         });
@@ -117,8 +112,6 @@ mochaSuiteFn('tracing/sdk/ignoringEndpoints', function () {
           url: '/send-messages',
           status: 200
         });
-
-        expect(consumerHttpSpan).to.exist;
       });
     });
   });
