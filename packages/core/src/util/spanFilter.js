@@ -52,14 +52,8 @@ const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka_placeholder'];
  * @returns {boolean}
  */
 function matchEndpoints(span, ignoreconfig) {
-  // TODO:
-  // Normalizing the endpoints will be addressed in future PRs.
-  // For Kafka span data, the endpoints correspond to the service field,
-  // which may contain multiple values.
-  const spanEndpoints = Array.isArray(span.data[span.n]?.endpoints)
-    ? span.data[span.n].endpoints
-    : [span.data[span.n]?.endpoints].filter(Boolean);
-
+  // Parse the endpoints from the span data.
+  const spanEndpoints = parseSpanEndpoints(span.data[span.n]?.endpoints);
   if (!spanEndpoints.length) {
     return false;
   }
@@ -68,8 +62,24 @@ function matchEndpoints(span, ignoreconfig) {
   if (ignoreconfig.endpoints.includes('*')) {
     return true;
   }
-
-  return spanEndpoints.some((/** @type {string} */ endpoint) =>
+  /**
+   * General rules:
+   * 1. If every endpoint in the span is present in `ignoreconfig.endpoints`, the span is ignored.
+   * 2. If at least one endpoint is not in the ignored list, the span is traced.
+   *    This ensures that partial matches do not cause unintended ignores in batch operations.
+   *
+   * Case 1: Single Endpoint (General Case)
+   * - Normally, a span contains only one endpoint, which is represented as an array with a single value.
+   * - If this endpoint exists in `ignoreconfig.endpoints`, the span is ignored.
+   * - Otherwise, the span is traced as usual.
+   *
+   * Case 2: Batch Processing in Kafka (`sendBatch`)
+   * - In Kafka, the `sendBatch` operation allows sending messages to multiple topics in a single request.
+   * - A single span is generated for the batch operation, attaching all topic names as a comma-separated list.
+   * - If all topics in the batch appear in `ignoreconfig.endpoints`, the span is ignored.
+   * - If at least one topic is not ignored, the span remains traced, ensuring visibility where needed.
+   */
+  return spanEndpoints.every((/** @type {string} */ endpoint) =>
     ignoreconfig.endpoints.some(e => e?.toLowerCase() === endpoint?.toLowerCase())
   );
 }
@@ -140,6 +150,32 @@ function applyFilter(span) {
     return null;
   }
   return span;
+}
+
+/**
+ * Parses the endpoints field in span data.
+ *
+ * Case 1: In general, endpoints is a string representing a single endpoint in span.data.
+ *         We convert it into an array.
+ * Case 2: In some cases (e.g., Kafka batch produce), endpoints is a comma-separated string
+ *         (e.g., `"test-topic-1,test-topic-2"`). We split it into an array.
+ * Case 3: If endpoints is an array(future cases). In this case, we return it as-is
+ *         since filtering logic expects an array internally.
+ *
+ * For filtering, endpoints in span always treated as an array,
+ *
+ * @param {string} endpoints
+ */
+function parseSpanEndpoints(endpoints) {
+  if (typeof endpoints === 'string') {
+    return endpoints.split(',').map(endpoint => endpoint.trim());
+  }
+
+  if (Array.isArray(endpoints)) {
+    return endpoints;
+  }
+
+  return [];
 }
 
 module.exports = { applyFilter, activate, init, shouldIgnore };
