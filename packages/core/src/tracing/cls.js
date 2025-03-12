@@ -228,7 +228,7 @@ class InstanaPseudoSpan extends InstanaSpan {
   }
 }
 /**
- * This class represents an ignored span. We need this representation for the endpoint filtering feature because
+ * This class represents an ignored span. We need this representation for the ignoring endpoints feature because
  * when a customer accesses the current span via `instana.currentSpan()`, we do not want to return a "NoopSpan".
  * Instead, we return this ignored span instance so the trace ID remains accessible.
  * It overrides the `transmit` and `cancel` methods to to ensure that the span is never sent, only cleaned up.
@@ -333,11 +333,11 @@ function startSpan(spanAttributes = {}) {
     span.addCleanup(ns.set(w3cTraceContextKey, w3cTraceContext));
   }
 
-  const filteredSpan = applyFilter(span);
+  const spanIsIgnored = applyFilter(span);
 
   // If the span was filtered out, we do not process it further.
   // Instead, we return an 'InstanaIgnoredSpan' instance to explicitly indicate that it was excluded from tracing.
-  if (!filteredSpan) {
+  if (!spanIsIgnored) {
     return setIgnoredSpan({
       spanName: span.n,
       kind: span.k,
