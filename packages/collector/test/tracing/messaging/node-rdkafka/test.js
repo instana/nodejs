@@ -672,7 +672,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     });
   });
 
-  describe('kafka ignore endpoints configuration via agent configuration', () => {
+  describe('ignore endpoints configuration', () => {
     describe('via agent configuration', () => {
       describe('when ignoring Kafka all methods', () => {
         this.timeout(config.getTestTimeout() * 2);
