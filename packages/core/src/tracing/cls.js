@@ -142,7 +142,8 @@ class InstanaSpan {
       writable: true,
       enumerable: false
     });
-    // This property is true ignored spans.
+    // Indicates whether the span is ignored.
+    // If true, the span will be excluded from tracing and not propagated.
     Object.defineProperty(this, 'isIgnored', {
       value: false,
       writable: true,

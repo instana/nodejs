@@ -153,13 +153,7 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
 
     span.stack = tracingUtil.getStackTrace(instrumentedProduce, 1);
 
-    if (span?.isIgnored) {
-      // If the span is marked as ignored, suppress trace propagation.
-      originalArgs[6] = addTraceLevelSuppression(originalArgs[6]);
-    } else {
-      // Otherwise, inject the trace context into the headers for propagation.
-      originalArgs[6] = addTraceContextHeader(originalArgs[6], span);
-    }
+    originalArgs[6] = setTraceHeaders(originalArgs[6], span);
 
     if (deliveryCb) {
       ctx.once('delivery-report', function instanaDeliveryReportListener(err) {
@@ -389,4 +383,13 @@ function logDeprecationKafkaAvroMessage() {
     // eslint-disable-next-line max-len
     '[Deprecation Warning] The support for kafka-avro library is deprecated and might be removed in the next major release. See https://github.com/waldophotos/kafka-avro/issues/120'
   );
+}
+function setTraceHeaders(headers, span) {
+  if (span.isIgnored) {
+    // If the span is ignored, suppress trace propagation to downstream services.
+    return addTraceLevelSuppression(headers);
+  } else {
+    // Otherwise, inject the trace context into the headers for propagation.
+    return addTraceContextHeader(headers, span);
+  }
 }
