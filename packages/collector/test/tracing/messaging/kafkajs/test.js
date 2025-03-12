@@ -528,7 +528,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
       });
     });
   });
-  describe('kafka ignore endpoints configuration', () => {
+  describe('ignore endpoints configuration', () => {
     let customAgentControls;
     let producerControls;
     let consumerControls;
@@ -580,13 +580,14 @@ mochaSuiteFn('tracing/kafkajs', function () {
           await retry(async () => {
             const spans = await customAgentControls.getSpans();
             // 1 x http server
-            // 1  x http client
+            // 1 x http client
             expect(spans.length).to.equal(2);
 
             const spanNames = spans.map(span => span.n);
             expect(spanNames).to.include('node.http.server');
-            expect(spanNames).to.include('node.http.client');
-            // Flow: HTTP → Kafka Produce → Kafka Consume → HTTP
+            // Flow: HTTP → Kafka Produce(ignored)
+            //                 ├── Kafka Consume → HTTP (ignored)
+            //                 └── HTTP exit (traced)
             // Since Kafka produce is ignored, both the produce operation and all downstream calls are also ignored.
             expect(spanNames).to.not.include('kafka');
           });
@@ -609,10 +610,11 @@ mochaSuiteFn('tracing/kafkajs', function () {
           await retry(async () => {
             const spans = await customAgentControls.getSpans();
             expect(spans.length).to.equal(3);
-
-            // Flow: HTTP → Kafka Produce (send) → Kafka Consume → HTTP
-            // Kafka send will still be present, but since Kafka consume is ignored, the consume operation
-            // and all subsequent downstream calls will also be ignored.
+            // Flow: HTTP → Kafka Produce(traced)
+            //                 ├── Kafka Consume → HTTP (ignored)
+            //                 └── HTTP exit (traced)
+            // Kafka send will still be present, but since Kafka consume is ignored,
+            // the consume operation and all subsequent downstream calls will also be ignored.
             const spanNames = spans.map(span => span.n);
             expect(spanNames).to.include('node.http.server');
             expect(spanNames).to.include('node.http.client');
@@ -646,6 +648,90 @@ mochaSuiteFn('tracing/kafkajs', function () {
             expect(spanNames).to.include('node.http.server');
             expect(spanNames).to.include('node.http.client');
             expect(spanNames).to.not.include('kafka');
+          });
+        });
+      });
+
+      describe('Kafka sendBatch tracing behavior based on topic configuration', () => {
+        describe('Kafka sendBatch should be traced when not all topics are listed in config', () => {
+          before(async () => {
+            await setupTest({ kafka: [{ methods: ['send'], endpoints: ['test-topic-2'] }] });
+          });
+
+          it('should capture traces correctly when sending to multiple topics', async () => {
+            await producerControls.sendRequest({
+              method: 'POST',
+              path: '/send-messages',
+              body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: true }),
+              headers: { 'Content-Type': 'application/json' }
+            });
+
+            await retry(async () => {
+              const spans = await customAgentControls.getSpans();
+
+              // 1 x Kafka sendBatch (kafka:send)
+              // 1 x HTTP server request (/send-messages)
+              // 4 x HTTP client requests (3 from consumers, 1 from producer)
+              // 3 x Kafka consumes (test-topic-1: 2 messages, test-topic-2: 1 message)
+              expect(spans.length).to.equal(9);
+
+              // Flow:
+              // HTTP → Kafka Produce (sendBatch)
+              //              ├── 3 x Kafka Consume → 3 x HTTP (from consumers)
+              //              └── HTTP exit (producer)
+              const spanNames = spans.map(span => span.n);
+              expect(spanNames).to.include('node.http.server');
+              expect(spanNames).to.include('node.http.client');
+              expect(spanNames).to.include('kafka');
+
+              const kafkaSpans = spans.filter(span => span.n === 'kafka');
+              expect(kafkaSpans).to.have.lengthOf(4); // 1 send, 3 consume
+
+              const kafkaSendSpan = kafkaSpans.find(span => span.data.kafka.access === 'send');
+              expect(kafkaSendSpan).to.exist;
+              expect(kafkaSendSpan.data.kafka.service).to.include('test-topic-1');
+              expect(kafkaSendSpan.data.kafka.service).to.include('test-topic-2');
+
+              const kafkaConsumeSpans = kafkaSpans.filter(span => span.data.kafka.access === 'consume');
+              expect(kafkaConsumeSpans).to.have.lengthOf(3);
+
+              const consumedTopics = kafkaConsumeSpans.map(span => span.data.kafka.service);
+              expect(consumedTopics).to.include('test-topic-1');
+              expect(consumedTopics).to.include('test-topic-2');
+            });
+          });
+        });
+
+        describe('Kafka sendBatch should be ignored when all topics are listed in config', () => {
+          before(async () => {
+            await setupTest({ kafka: [{ methods: ['send'], endpoints: ['test-topic-1', 'test-topic-2'] }] });
+          });
+
+          it('should ignore traces when sending to multiple topics', async () => {
+            await producerControls.sendRequest({
+              method: 'POST',
+              path: '/send-messages',
+              body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: true }),
+              headers: { 'Content-Type': 'application/json' }
+            });
+
+            await retry(async () => {
+              const spans = await customAgentControls.getSpans();
+
+              // 1 x HTTP server request (/send-messages)
+              // 1 x HTTP client request (from producer)
+              // Kafka sendBatch and all consumer traces should be ignored.
+              expect(spans.length).to.equal(2);
+
+              // Flow:
+              // HTTP(traced) → Kafka Produce (sendBatch) (ignored)
+              //                     ├── 3 x Kafka Consume → 3 x HTTP (ignored)
+              //                     └── HTTP exit (traced)
+              const spanNames = spans.map(span => span.n);
+              expect(spanNames).to.include('node.http.server');
+              expect(spanNames).to.include('node.http.client');
+              expect(spanNames).to.not.include('kafka');
+            });
           });
         });
       });
@@ -685,7 +771,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
         await Promise.all([producerControls.stop(), consumerControls.stop()]);
       });
 
-      it('should ignore all traces based on configuration file', async () => {
+      it('should ignore traces based on configuration file', async () => {
         await producerControls.sendRequest({
           method: 'POST',
           path: '/send-messages',
@@ -697,13 +783,6 @@ mochaSuiteFn('tracing/kafkajs', function () {
           const spans = await agentControls.getSpans();
           expect(spans.length).to.equal(2);
 
-          // Scenario:
-          // The configuration is set to ignore all operations (*) for test-topic-2.
-          // The Kafka batch send operation includes multiple topics: test-topic-1 and test-topic-2.
-          // Normally, there would be a consume span for each topic in the batch (one for test-topic-1 and one for
-          // test-topic-2). However, since test-topic-2 is ignored and the batch operation includes multiple topics,
-          // we ignore the entire span and attach the suppression header to the produced message.
-          // As a result, all downstream calls, including the consume span for test-topic-1, are also ignored.
           const spanNames = spans.map(span => span.n);
           expect(spanNames).to.include('node.http.server');
           expect(spanNames).to.include('node.http.client');
