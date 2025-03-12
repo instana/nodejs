@@ -583,9 +583,9 @@ mochaSuiteFn('tracing/kafkajs', function () {
             // 1 x http client
             expect(spans.length).to.equal(2);
 
-            // Flow: HTTP
+            // Flow: HTTP(traced)
             //       ├── Kafka Produce (ignored)
-            //       │      └── Kafka Consume → HTTP (ignored)
+            //       │      └── Kafka Consume(ignored) → HTTP (ignored)
             //       └── HTTP exit (traced)
             // Since Kafka produce is ignored, both the produce operation and all downstream calls are also ignored.
             const spanNames = spans.map(span => span.n);
@@ -739,9 +739,9 @@ mochaSuiteFn('tracing/kafkajs', function () {
               // Flow:
               // Flow:
               // HTTP request(traced)
-              //         ├── Kafka Produce (sendBatch) (ignored)
-              //         │       └── 3 x Kafka Consume → 3 x HTTP (from consumers) (ignored all these downstream calls)
-              //         └── HTTP exit(traced)
+              //        ├── Kafka Produce (sendBatch) (ignored)
+              //        │       └── 3 x Kafka Consume(ignored) → 3 x HTTP (ignored, from consumers)
+              //        └── HTTP exit(traced)
               const spanNames = spans.map(span => span.n);
               expect(spanNames).to.include('node.http.server');
               expect(spanNames).to.include('node.http.client');
