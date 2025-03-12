@@ -751,7 +751,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
       });
     });
 
-    describe('when ignoring endpoints via INSTANA_IGNORE_ENDPOINTS_PATH', () => {
+    describe('via INSTANA_IGNORE_ENDPOINTS_PATH', () => {
       before(async () => {
         consumerControls = new ProcessControls({
           appPath: path.join(__dirname, 'consumer'),
