@@ -331,11 +331,11 @@ describe('util.spanFilter', () => {
 
       it('returns false when kafka span has mutiple endpoints and not all endpoints configured to be ignored', () => {
         ignoreEndpoints = {
-          kafka_placeholder: [{ methods: ['consume'], endpoints: ['topic2'] }]
+          kafka: [{ methods: ['consume'], endpoints: ['topic2'] }]
         };
-        span.n = 'kafka_placeholder';
+        span.n = 'kafka';
         span.data = {
-          kafka_placeholder: {
+          kafka: {
             operation: 'consume',
             endpoints: 'topic1,topic2'
           }
@@ -345,11 +345,11 @@ describe('util.spanFilter', () => {
 
       it('returns true when kafka span has mutiple endpoints and all endpoints configured to be ignored', () => {
         ignoreEndpoints = {
-          kafka_placeholder: [{ methods: ['consume'], endpoints: ['topic1', 'topic2', 'topic3'] }]
+          kafka: [{ methods: ['consume'], endpoints: ['topic1', 'topic2', 'topic3'] }]
         };
-        span.n = 'kafka_placeholder';
+        span.n = 'kafka';
         span.data = {
-          kafka_placeholder: {
+          kafka: {
             operation: 'consume',
             endpoints: 'topic1,topic2'
           }
@@ -359,11 +359,11 @@ describe('util.spanFilter', () => {
 
       it('returns false when span endpoints do not contain any ignored topics', () => {
         ignoreEndpoints = {
-          kafka_placeholder: [{ methods: ['consume'], endpoints: ['ignore_consume_1'] }]
+          kafka: [{ methods: ['consume'], endpoints: ['ignore_consume_1'] }]
         };
-        span.n = 'kafka_placeholder';
+        span.n = 'kafka';
         span.data = {
-          kafka_placeholder: {
+          kafka: {
             operation: 'consume',
             endpoints: 'do_not_ignore_consume_1'
           }
@@ -373,11 +373,11 @@ describe('util.spanFilter', () => {
 
       it('returns false when span endpoints contain topics not in the ignored list', () => {
         ignoreEndpoints = {
-          kafka_placeholder: [{ methods: ['consume'], endpoints: ['do_not_ignore_consume_1'] }]
+          kafka: [{ methods: ['consume'], endpoints: ['do_not_ignore_consume_1'] }]
         };
-        span.n = 'kafka_placeholder';
+        span.n = 'kafka';
         span.data = {
-          kafka_placeholder: {
+          kafka: {
             operation: 'consume',
             endpoints: 'ignore_consume_1'
           }
