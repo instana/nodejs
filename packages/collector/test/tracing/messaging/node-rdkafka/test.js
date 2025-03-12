@@ -725,13 +725,17 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
             await verifyResponseAndMessage(response, consumerControls);
             const spans = await customAgentControls.getSpans();
             // 1 x http server
-            // 1  x http client
+            // 1 x http client
             expect(spans.length).to.equal(2);
 
             const spanNames = spans.map(span => span.n);
+            // Flow: HTTP
+            //       ├── Kafka Produce (ignored)
+            //       │      └── Kafka Consume → HTTP (ignored)
+            //       └── HTTP exit (traced)
             expect(spanNames).to.include('node.http.server');
             expect(spanNames).to.include('node.http.client');
-            // Flow: HTTP → Kafka Produce → Kafka Consume → HTTP
+
             // Since Kafka produce is ignored, both the produce operation and all downstream calls are also ignored.
             expect(spanNames).to.not.include('kafka');
           });
@@ -788,7 +792,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           const spans = await customAgentControls.getSpans();
           expect(spans.length).to.equal(3);
 
-          // Flow: HTTP → Kafka Produce (send) → Kafka Consume → HTTP
+          // Flow: HTTP
+          //       ├── Kafka Produce (traced)
+          //       │      └── Kafka Consume → HTTP (ignored)
+          //       └── HTTP exit (traced)
           // Kafka send will still be present, but since Kafka consume is ignored, the consume operation
           // and all subsequent downstream calls will also be ignored.
           const spanNames = spans.map(span => span.n);
