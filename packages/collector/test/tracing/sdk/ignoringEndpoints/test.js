@@ -7,13 +7,13 @@
 const path = require('path');
 const { expect } = require('chai');
 
-const { tracing } = require('@instana/core');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('@instana/core/test/config');
 const { delay, retry } = require('@instana/core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn = tracing.supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/sdk/ignoringEndpoints', function () {
   this.timeout(config.getTestTimeout() * 2);

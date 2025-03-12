@@ -37,7 +37,6 @@ let currentSpan;
 (async function connect() {
   await messageConsumer.connect();
   await messageConsumer.subscribe({ topic: 'test-topic-1', fromBeginning: false });
-  await messageConsumer.subscribe({ topic: 'test-topic-2', fromBeginning: false });
 
   await messageConsumer.run({
     eachMessage: async ({ topic, message }) => {
@@ -46,6 +45,8 @@ let currentSpan;
       // If a span is ignored, it will return an `InstanaIgnoredSpan`.
       // Otherwise, it returns the actual trace span.
       currentSpan = instana.currentSpan();
+
+      currentSpan.disableAutoEnd();
       log(
         'incoming message',
         topic,
@@ -77,7 +78,7 @@ app.get('/', (req, res) => {
 });
 
 app.listen(appPort, () => {
-  log(`Consumer listening on port: ${appPort}`);
+  log(`Listening on port: ${appPort}`);
 });
 
 function log() {
