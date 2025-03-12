@@ -626,7 +626,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
             expect(spanNames).to.include('node.http.client');
             expect(spanNames).to.include('kafka');
 
-            // Ensure Kafka send exists but consume is ignored
+            // Kafka send exists but consume is ignored
             expect(spans.some(span => span.n === 'kafka' && span.data.kafka?.access === 'send')).to.be.true;
             expect(spans.some(span => span.n === 'kafka' && span.data.kafka?.access === 'consume')).to.be.false;
           });
@@ -736,7 +736,6 @@ mochaSuiteFn('tracing/kafkajs', function () {
               // Kafka sendBatch and all consumer traces should be ignored.
               expect(spans.length).to.equal(2);
 
-              // Flow:
               // Flow:
               // HTTP request(traced)
               //        ├── Kafka Produce (sendBatch) (ignored)
