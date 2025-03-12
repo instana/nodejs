@@ -438,7 +438,7 @@ function setIgnoredSpan({ spanName, kind, traceId, parentId, data = {} }) {
     span.addCleanup(ns.set(currentEntrySpanKey, span));
 
     // For entry spans, we need to retain suppression information to ensure that
-    // tracing is suppressed for all subsequent outgoing (exit) calls.
+    // tracing is suppressed for all internal (!) subsequent outgoing (exit) calls.
     setTracingLevel('0');
   }
 
