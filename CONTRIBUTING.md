@@ -63,11 +63,38 @@ If you want to see the Node.js collector's debug output while running the tests,
 We have added a CI build to test our instrumentations against ES module apps.
 See https://github.com/instana/nodejs/pull/672
 
-Not all of the current test apps have an `app.mjs` variant, because the effort is high. If you are adding a new test, please consider to also generate an `app.mjs` file for it. If you are modifying an existing application under test, and it has an accompanying `.mjs` file, you need to update that as well (by regenerating it).
+Not all of the current test apps have an `.mjs` variant, because the effort is high. If you are adding a new test, please consider to also generate an `.mjs` file for it. If you are modifying an existing application under test, and it has an accompanying `.mjs` file, you need to update that as well (by regenerating it).
 
-You can use the script `bin/convert-test-app-to-es6.sh` for both purposes, it generates an equivalent `app.mjs` file from a given `app.js` file. For example, run `bin/convert-test-app-to-es6.sh packages/collector/test/tracing/database/ioredis/app.js` to regenerate the ES6 variant of the `ioredis` test application, when you have made changes to `packages/collector/test/tracing/database/ioredis/app.js`.
+You can use the script `bin/convert-test-app-to-es6.sh` for both purposes, it generates an equivalent `.mjs` file from a given `.js` file. 
 
-After regenerating an existing `app.mjs` file you should check the diff for it and potentially revert any changes that are artifacts of the conversion process, not related to your original changes in `app.js`.
+For example, run `bin/convert-test-app-to-es6.sh packages/collector/test/tracing/database/ioredis/app.js` to regenerate the ES6 variant of the `ioredis` test application, when you have made changes to `packages/collector/test/tracing/database/ioredis/app.js`.
+
+After regenerating an existing `.mjs` file you should check the diff for it and potentially revert any changes that are artifacts of the conversion process, not related to your original changes in `.js` file.
+
+If you add ESM support to a test directory, you have to transform **all** existing CJS apps to ESM apps.
+
+Example: Consider a directory containing the following files, each representing a different application with a unique use case:
+
+ - sender.js
+ - app.js
+ - rootExitSpanApp.js
+ 
+If you add an ESM application for `sender.js`, you must also ensure that equivalent `.mjs` ESM applications exist for `app.js` and `rootExitSpanApp.js`.
+See https://github.com/instana/nodejs/pull/1561.
+
+Suppose in this case, if `rootExitSpanApp.mjs` is not added, the ESM test execution will default to running `rootExitSpanApp.js` alongside ESM unless the test is disabled for ESM. This can lead to timing issues due to differences in module loading between `.js` and `.mjs` files, potentially causing unintended span data.
+See: https://github.com/instana/nodejs/pull/1602
+
+There are two ways to specify which file to run as the server:
+
+ - Explicit appPath – Provide the exact file name (appPath)
+ - Using a dirname – Specify a directory instead (dirname)
+
+If an appPath is provided, the ESM logic expects a file with the same name but with an `.mjs` extension.
+Example: If appPath: `testApp1.js` is specified, then `testApp1.mjs` must be present in the same directory.
+
+If a dirname is provided, the default app name is assumed to be `app.js`.
+In this case, the ESM logic expects `app.mjs` to exist in the same directory.
 
 Setting `RUN_ESM=true` locally will run use the ESM app instead of the CJS app when executing the tests.
 
