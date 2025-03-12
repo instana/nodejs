@@ -2,4 +2,4 @@ tracing:
   ignore-endpoints:
     kafka:  
     - methods: ["*"]  
-      endpoints: ["test-topic-2 "]  
+      endpoints: ["test-topic-2","test-topic-1"]  
