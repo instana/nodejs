@@ -54,16 +54,11 @@ spec:
         if [ "$(params.skip-cache)" == "true" ]; then
           echo "Skipping npm cache..."
 
-          echo "Cache clean..."
-          npm cache clean --force
-
-          echo "Removing node_modules..."
-          rm -rf ./node_modules
-
-          export npm_config_jobs=1
-
           echo "Installing node_modules..."
-          npm ci --loglevel verbose
+          npm ci --ignore-scripts
+
+          echo "Rebuilding node_modules..."
+          npm rebuild
         else
           echo "Restoring node_modules cache..."
           curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
