@@ -56,7 +56,8 @@ spec:
 
           echo "Installing npm dependencies..."
 
-          npm ci --loglevel verbose
+          npm ci --loglevel verbose --ignore-scripts
+          npm rebuild
         else
           echo "Restoring node_modules cache..."
           curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
