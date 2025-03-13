@@ -57,7 +57,7 @@ spec:
           echo "Installing node_modules..."
           npm ci --ignore-scripts
 
-          npm install node-gyp@8 --save
+          npm install node-gyp@7 --save
 
           echo "Rebuilding node_modules..."
           npm rebuild
