@@ -52,7 +52,7 @@ const groups = {
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/protocols"'
   },
   'test:ci:collector:tracing:general': {
-    sidecars: ['postgres', 'zookeeper', 'kafka', 'schema-registry'],
+    sidecars: ['postgres'],
     condition: ' && true'
   },
   'test:ci:collector:tracing:misc': {
