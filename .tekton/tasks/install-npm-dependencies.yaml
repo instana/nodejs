@@ -54,10 +54,17 @@ spec:
         if [ "$(params.skip-cache)" == "true" ]; then
           echo "Skipping npm cache..."
 
-          echo "Installing npm dependencies..."
+          echo "Skipping npm cache..."
 
+          echo "Cache clean..."
           npm cache clean --force
+
+          echo "Removing node_modules..."
           rm -rf ./node_modules
+
+          export npm_config_jobs=max
+
+          echo "Installing node_modules..."
           npm ci --loglevel verbose
         else
           echo "Restoring node_modules cache..."
