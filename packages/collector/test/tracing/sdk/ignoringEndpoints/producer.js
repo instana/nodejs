@@ -15,7 +15,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { Kafka } = require('kafkajs');
 
-const appPort = process.env.APP_PORT || 3000;
+const appPort = process.env.APP_PORT;
 const kafka = new Kafka({
   clientId: 'test-producer',
   brokers: [process.env.KAFKA],
