@@ -384,6 +384,26 @@ describe('util.spanFilter', () => {
         };
         expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
       });
+
+      // eslint-disable-next-line max-len
+      it('returns true when multiple configurations are specified, the method matches, and the endpoint is set to *', () => {
+        ignoreEndpoints = {
+          kafka: [
+            { methods: ['consume'], endpoints: ['do_not_ignore_consume_1'] },
+            { methods: ['send'], endpoints: ['ignore_consume_1'] },
+            { methods: ['*'], endpoints: ['do_not_ignore_consume_1'] },
+            { methods: ['consume'], endpoints: ['*'] }
+          ]
+        };
+        span.n = 'kafka';
+        span.data = {
+          kafka: {
+            operation: 'consume',
+            endpoints: 'ignore_consume_1'
+          }
+        };
+        expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
+      });
     });
   });
 });
