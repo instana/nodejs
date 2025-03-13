@@ -587,9 +587,10 @@ mochaSuiteFn('tracing/kafkajs', function () {
             //       ├── Kafka Produce (ignored)
             //       │      └── Kafka Consume(ignored) → HTTP (ignored)
             //       └── HTTP exit (traced)
-            // Since Kafka produce is ignored, both the produce operation and all downstream calls are also ignored.
+            // Since Kafka produce is ignored, the produce call and all subsequent downstream calls are ignored.
             const spanNames = spans.map(span => span.n);
             expect(spanNames).to.include('node.http.server');
+            expect(spanNames).to.include('node.http.client');
             expect(spanNames).to.not.include('kafka');
           });
         });
@@ -615,12 +616,12 @@ mochaSuiteFn('tracing/kafkajs', function () {
             // 1 x kafka send
             expect(spans.length).to.equal(3);
 
-            // Flow: HTTP
+            // Flow: HTTP entry
             //       ├── Kafka Produce (traced)
             //       │      └── Kafka Consume → HTTP (ignored)
             //       └── HTTP exit (traced)
-            // Kafka send will still be captured, but since Kafka consume is ignored,
-            // the consume operation and all its subsequent downstream calls will also be ignored.
+            // Kafka send will be captured, since Kafka consume is ignored,
+            // the consume call and all its subsequent downstream calls will also be ignored.
             const spanNames = spans.map(span => span.n);
             expect(spanNames).to.include('node.http.server');
             expect(spanNames).to.include('node.http.client');
@@ -689,9 +690,9 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
               // Flow:
               // HTTP request
-              //         ├── Kafka Produce (sendBatch)
-              //         │       └── 3 x Kafka Consume → 3 x HTTP (from consumers)
-              //         └── HTTP exit
+              //         ├── Kafka Produce (sendBatch) (traced)
+              //         │       └── 3 x Kafka Consume  (traced) → 3 x HTTP (from consumers)  (traced)
+              //         └── HTTP exit  (traced)
               const spanNames = spans.map(span => span.n);
               expect(spanNames).to.include('node.http.server');
               expect(spanNames).to.include('node.http.client');

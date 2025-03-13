@@ -26,6 +26,7 @@ const kafka = new Kafka({
     retries: 5
   }
 });
+
 const messageConsumer = kafka.consumer({
   groupId: uuid()
 });

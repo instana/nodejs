@@ -10,7 +10,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-// we don't use Instana SDK for producer in the tests
 require('../../../..')();
 const express = require('express');
 const bodyParser = require('body-parser');

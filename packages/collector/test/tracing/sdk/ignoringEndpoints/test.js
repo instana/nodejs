@@ -52,7 +52,7 @@ mochaSuiteFn('tracing/sdk/ignoringEndpoints', function () {
       await consumerControls.stop();
     });
 
-    it('should ignore consumer span (kafka:consume)', async () => {
+    it('should ignore consumer call and its downstream calls', async () => {
       const message = {
         key: 'someKey',
         value: 'someMessage'
