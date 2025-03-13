@@ -57,8 +57,12 @@ spec:
           echo "Installing node_modules..."
           npm ci --ignore-scripts
 
+          # sudo apt update && sudo apt install -y build-essential python3 python3-pip python3-dev libpq-dev pkg-config
+
+          # npm install nan@2.16.0 --save
+
           echo "Rebuilding node_modules..."
-          npm rebuild
+          npm rebuild --unsafe-perm
         else
           echo "Restoring node_modules cache..."
           curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
