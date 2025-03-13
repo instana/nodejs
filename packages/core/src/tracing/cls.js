@@ -333,11 +333,11 @@ function startSpan(spanAttributes = {}) {
     span.addCleanup(ns.set(w3cTraceContextKey, w3cTraceContext));
   }
 
-  const spanIsIgnored = applyFilter(span);
+  const validSpan = applyFilter(span);
 
   // If the span was filtered out, we do not process it further.
   // Instead, we return an 'InstanaIgnoredSpan' instance to explicitly indicate that it was excluded from tracing.
-  if (!spanIsIgnored) {
+  if (!validSpan) {
     return setIgnoredSpan({
       spanName: span.n,
       kind: span.k,
