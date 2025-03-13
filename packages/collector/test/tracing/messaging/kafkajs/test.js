@@ -805,6 +805,104 @@ mochaSuiteFn('tracing/kafkajs', function () {
         });
       });
     });
+
+    // Special test case for SDK, we need to test the presence of ignored span in consume call.
+    describe('SDK: ignore entry spans(consume)', function () {
+      before(async () => {
+        consumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          useGlobalAgent: true,
+          env: {
+            // basic ignoring config for consume
+            INSTANA_IGNORE_ENDPOINTS: 'kafka:consume'
+          }
+        });
+
+        producerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'producer'),
+          useGlobalAgent: true
+        });
+
+        await consumerControls.startAndWaitForAgentConnection();
+        await producerControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await producerControls.stop();
+        await consumerControls.stop();
+      });
+
+      it('should ignore consumer call and expose ignored span via instana.currentSpan()', async () => {
+        const message = {
+          key: 'someKey',
+          value: 'someMessage'
+        };
+        await producerControls.sendRequest({
+          method: 'POST',
+          path: '/send-messages',
+          simple: true,
+          body: JSON.stringify(message),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        await retry(async () => {
+          // Fetch the current span from the consumer
+          const currentSpans = await consumerControls.sendRequest({
+            method: 'GET',
+            path: '/current-span',
+            simple: true,
+            suppressTracing: true // no need to trace this call
+          });
+
+          expect(currentSpans).to.be.an('array').that.is.not.empty;
+          currentSpans.forEach(currentSpan => {
+            // The currentSpan contains an InstanaIgnoredSpan, which represents a span that has been ignored
+            // due to the configured `INSTANA_IGNORE_ENDPOINTS` setting (`kafka:consume` in this case).
+            // Even though the consumer processes the message, its span is not recorded in the agent’s collected spans.
+            // However, it can still be accessed via `instana.currentSpan()`, which returns an `InstanaIgnoredSpan`.
+            expect(currentSpan).to.have.property('spanConstructorName', 'InstanaIgnoredSpan');
+            expect(currentSpan.span).to.exist;
+            expect(currentSpan.span).to.include({
+              n: 'kafka',
+              k: 1
+            });
+            expect(currentSpan.span.data.kafka).to.include({
+              endpoints: 'test-topic-1',
+              operation: 'consume'
+            });
+          });
+
+          const spans = await agentControls.getSpans();
+
+          // 1 x HTTP server
+          // 1 x HTTP client
+          // 1 x Kafka send span (producer)
+          expect(spans).to.have.lengthOf(3);
+
+          // Flow: HTTP entry
+          //       ├── Kafka Produce (traced)
+          //       │      └── Kafka Consume → HTTP (ignored)
+          //       └── HTTP exit (traced)
+          const kafkaProducerSpan = spans.find(span => span.n === 'kafka' && span.k === 2);
+          const producerHttpSpan = spans.find(span => span.n === 'node.http.server' && span.k === 1);
+          const producerHttpExitSpan = spans.find(span => span.n === 'node.http.client' && span.k === 2);
+
+          expect(kafkaProducerSpan).to.exist;
+          expect(kafkaProducerSpan.data.kafka).to.include({
+            service: 'test-topic-1',
+            access: 'send'
+          });
+          expect(producerHttpSpan).to.exist;
+          expect(producerHttpExitSpan).to.exist;
+        });
+      });
+    });
   });
 
   function resetMessages(consumer) {
