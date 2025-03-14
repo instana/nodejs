@@ -56,7 +56,9 @@ exports.init = function init() {
   nativeModuleLoader.once('loaded', gcStats_ => {
     gcStats = gcStats_;
     exports.currentPayload.statsSupported = true;
-    if (activateHasBeenCalled) {
+    // CASE: If the environment does not support native addons, `gc-stats` may fail to initialize properly,
+    //       and `on` could be undefined.
+    if (activateHasBeenCalled && gcStats && typeof gcStats.on === 'function') {
       actuallyActivate();
     }
   });
@@ -68,7 +70,9 @@ exports.init = function init() {
 
 exports.activate = function activate() {
   activateHasBeenCalled = true;
-  if (gcStats) {
+  // CASE: If the environment does not support native addons, `gc-stats` may fail to initialize properly,
+  //       and `on` could be undefined.
+  if (gcStats && typeof gcStats.on === 'function') {
     actuallyActivate();
   }
 };
