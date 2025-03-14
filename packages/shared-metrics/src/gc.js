@@ -56,7 +56,7 @@ exports.init = function init() {
   nativeModuleLoader.once('loaded', gcStats_ => {
     gcStats = gcStats_;
     exports.currentPayload.statsSupported = true;
-    if (activateHasBeenCalled) {
+    if (activateHasBeenCalled && gcStats && typeof gcStats.on === 'function') {
       actuallyActivate();
     }
   });
