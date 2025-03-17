@@ -903,6 +903,91 @@ mochaSuiteFn('tracing/kafkajs', function () {
         });
       });
     });
+
+    describe('when consumer having an aditional HTTP entry call', function () {
+      before(async () => {
+        consumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          useGlobalAgent: true,
+          env: {
+            // basic ignoring config for consume
+            INSTANA_IGNORE_ENDPOINTS: 'kafka:consume'
+          }
+        });
+
+        producerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'producer'),
+          useGlobalAgent: true
+        });
+
+        await consumerControls.startAndWaitForAgentConnection();
+        await producerControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await producerControls.stop();
+        await consumerControls.stop();
+      });
+
+      it('should not ignore the HTTP entry in consumer while ignoring Kafka consume calls', async () => {
+        const message = {
+          key: 'someKey',
+          value: 'someMessage'
+        };
+        await producerControls.sendRequest({
+          method: 'POST',
+          path: '/send-messages',
+          simple: true,
+          body: JSON.stringify(message),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        await consumerControls.sendRequest({
+          method: 'GET',
+          path: '/health',
+          simple: true
+        });
+
+        await delay(200);
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          // 2 x HTTP server (1 x consumer, 1 x producer)
+          // 1 x HTTP client (producer)
+          // 1 x Kafka send span (producer)
+          expect(spans).to.have.lengthOf(4);
+
+          // Flow: HTTP entry (producer) (traced)
+          //       ├── Kafka Produce (traced)
+          //       │      └── Kafka Consume → HTTP (ignored)
+          //       └── HTTP exit (traced)
+          //
+          //      HTTP entry (consumer) (traced)
+          const kafkaProducerSpan = spans.find(span => span.n === 'kafka' && span.k === 2);
+          const producerHttpSpan = spans.find(
+            span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/send-messages'
+          );
+          const producerHttpExitSpan = spans.find(span => span.n === 'node.http.client' && span.k === 2);
+          const consumerHttpSpan = spans.find(
+            span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/health'
+          );
+
+          expect(kafkaProducerSpan).to.exist;
+          expect(kafkaProducerSpan.data.kafka).to.include({
+            service: 'test-topic-1',
+            access: 'send'
+          });
+          expect(producerHttpSpan).to.exist;
+          expect(producerHttpExitSpan).to.exist;
+          expect(consumerHttpSpan).to.exist;
+        });
+      });
+    });
   });
 
   function resetMessages(consumer) {
