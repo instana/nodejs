@@ -43,7 +43,7 @@ exports.currentPayload = {
 
 exports.activate = function activate() {
   activateHasBeenCalled = true;
-  if (gcStats) {
+  if (gcStats && typeof gcStats.on === 'function') {
     actuallyActivate();
   }
 };
@@ -65,7 +65,7 @@ let senseIntervalHandle;
 nativeModuleLoader.once('loaded', gcStats_ => {
   gcStats = gcStats_;
   exports.currentPayload.statsSupported = true;
-  if (activateHasBeenCalled) {
+  if (activateHasBeenCalled && gcStats && typeof gcStats.on === 'function') {
     actuallyActivate();
   }
 });
