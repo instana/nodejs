@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.36.2](https://github.com/instana/nodejs/compare/v2.36.1...v2.36.2) (2025-03-17)
+
+
+### Bug Fixes
+
+* resolved logging issue for the  dependency distance calculator ([dcbe478](https://github.com/instana/nodejs/commit/dcbe4784c5485f38146e4e03d91c7090ea481449)), closes [#1019](https://github.com/instana/nodejs/issues/1019)
+* resolved TypeError "eventLoopStats.sense is not a function" ([#1575](https://github.com/instana/nodejs/issues/1575)) ([5696b83](https://github.com/instana/nodejs/commit/5696b8379764ac3ad26ede4d0670062af2086d30))
+* resolved TypeError gcStats.on is not a function ([6c1b6a4](https://github.com/instana/nodejs/commit/6c1b6a4a38821e794ae8e25e516f3c00ad18a2a0))
+
+
+
+
+
 ## [2.36.2-beta.1](https://github.com/instana/nodejs/compare/v2.36.2-beta.0...v2.36.2-beta.1) (2025-02-20)
 
 **Note:** Version bump only for package @instana/root
