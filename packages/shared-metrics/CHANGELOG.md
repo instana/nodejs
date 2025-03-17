@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.21.1](https://github.com/instana/nodejs/compare/v3.21.0...v3.21.1) (2025-03-17)
+
+### Bug Fixes
+
+- resolved TypeError "eventLoopStats.sense is not a function" ([#1575](https://github.com/instana/nodejs/issues/1575)) ([2e475d3](https://github.com/instana/nodejs/commit/2e475d39b20f5753c58ed119c363844ec346ce69))
+- resolved TypeError gcStats.on is not a function ([12b2134](https://github.com/instana/nodejs/commit/12b2134a4983ba345f8e323a63bd489e0e9074d5))
+
 # [3.21.0](https://github.com/instana/nodejs/compare/v3.20.2...v3.21.0) (2024-10-17)
 
 ### Features
