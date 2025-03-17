@@ -10,28 +10,21 @@ const localUtils = require('./utils');
 
 let wrappedHandler;
 
-if (!wrappedHandler) {
-  try {
-    const targetHandler = loadTargetHandlerFunction();
-    wrappedHandler = instana.wrap(targetHandler);
-  } catch (err) {
-    // we can throw error from here, but even then there is the delay that we are trying to solve
-    // throw new localUtils.errors.lambda.ImportModuleError(err);
-    console.error('Not traced', err);
+function getWrappedHandler() {
+  if (!wrappedHandler) {
+    try {
+      const targetHandler = loadTargetHandlerFunction();
+      wrappedHandler = instana.wrap(targetHandler);
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 }
 
 exports.handler = function instanaAutowrapHandler(event, context, callback) {
   if (!wrappedHandler) {
-    // we can ignore this callback execution, but then the Lambda fn will work only on proper configuration
-    // also this need to called because otherwise the Lambda execution result is shown as Succeeded
-
-    //    Status: Succeeded
-    //    Test Event Name: test
-    //    Response:
-    //    null
-
-    return callback.apply(this, arguments);
+    getWrappedHandler();
+    return wrappedHandler(event, context, callback);
   } else {
     return wrappedHandler(event, context, callback);
   }
