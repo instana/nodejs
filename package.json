@@ -199,7 +199,7 @@
     "mysql2": "^3.13.0",
     "mysql2-v3114": "npm:mysql2@3.11.4",
     "nan": "^2.22.0",
-    "nats": "^2.29.2",
+    "nats": "^2.29.3",
     "nats-v1": "npm:nats@^1.4.12",
     "node-fetch": "^3.3.2",
     "node-fetch-v2": "npm:node-fetch@^2.7.0",
