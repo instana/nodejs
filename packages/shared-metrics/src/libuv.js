@@ -20,9 +20,9 @@ exports.init = function init() {
     moduleRoot: path.join(__dirname, '..'),
     message:
       'Could not load event-loop-stats. You will only see limited event loop information in Instana for this ' +
-      'application. This typically occurs when native addons could not be built during module installation ' +
-      '(npm install/yarn) or when npm install --no-optional or yarn --ignore-optional have been used to install ' +
-      'dependencies. See the instructions to learn more about the requirements of the collector: ' +
+      'application. This typically occurs when native add-ons could not be built during module installation ' +
+      '(npm install/yarn) or when npm install --no-optional, yarn --ignore-optional, or the AutoTrace webhook was ' +
+      'used to install dependencies. See the instructions to learn more about the collector requirements: ' +
       'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#native-add-ons'
   });
 

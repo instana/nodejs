@@ -224,13 +224,12 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
             // version from the instrumentation image, which is currently compiled only for Node.js v21.
             // If the application runs a different Node.js version and the filesystem is read-only, extraction may fail,
             // preventing collection of certain telemetry data (garbage collection and event loop stats).
-            // TODO: Known issue tracked under INSTA-6673.
+            // TODO: Fix the issue tracked under INSTA-6673. Ensure prebuilt binaries are available for the
+            // corresponding Node.js version.
             logger.debug(
-              `Failed to load precompiled build for ${opts.nativeModuleName} ${label}: ${error?.message}. ` +
-                // eslint-disable-next-line max-len
-                'Precompiled binary extraction was blocked due to restricted filesystem access or an unavailable compatible build. ' +
-                'Certain telemetry data, such as garbage collection and event loop statistics, may not be available. ' +
-                `Stack Trace: ${error?.stack}`
+              `Failed to load precompiled build for ${opts.nativeModuleName} ${label}. ` +
+                'Precompiled binary extraction was blocked due to a read-only filesystem and an unavailable ' +
+                `compatible prebuilt binary for the Node.js ${process.version}. ${error?.message} ${error?.stack}`
             );
             callback(false);
           });
