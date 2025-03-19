@@ -46,7 +46,7 @@ exports.init = function init() {
     nativeModuleName: 'gcstats.js',
     moduleRoot: path.join(__dirname, '..'),
     message:
-      'Could not load gcstats.js. Garbage collection information will not be available in Instana for this ' +
+      'Could not load gcstats.js. Garbage collection information will not be available for this ' +
       'application. This typically occurs when native add-ons fail to build during module installation. ' +
       'However, general tracing functionality is unaffected. Enable debug logging for more details. ' +
       'For more information on native add-on, visit: ' +
