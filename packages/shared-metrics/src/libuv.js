@@ -20,7 +20,7 @@ exports.init = function init() {
     moduleRoot: path.join(__dirname, '..'),
     message:
       'Could not load event-loop-stats. Event loop information will not be available for this ' +
-      'application. This typically occurs when native add-ons fail to build during module installation. ' +
+      'application. ' +
       'However, general tracing functionality remains unaffected. Enable debug logging for more details. ' +
       'For more information on native add-ons, visit: ' +
       'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#native-add-ons'
