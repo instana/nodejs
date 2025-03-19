@@ -142,6 +142,13 @@ class InstanaSpan {
       writable: true,
       enumerable: false
     });
+    // Indicates whether the span is ignored.
+    // If true, the span will be excluded from tracing and not propagated.
+    Object.defineProperty(this, 'isIgnored', {
+      value: false,
+      writable: true,
+      enumerable: false
+    });
   }
 
   /**
@@ -221,13 +228,22 @@ class InstanaPseudoSpan extends InstanaSpan {
   }
 }
 /**
- * This class represents an ignored span. We need this representation for the endpoint filtering feature because
+ * This class represents an ignored span. We need this representation for the ignoring endpoints feature because
  * when a customer accesses the current span via `instana.currentSpan()`, we do not want to return a "NoopSpan".
  * Instead, we return this ignored span instance so the trace ID remains accessible.
  * It overrides the `transmit` and `cancel` methods to to ensure that the span is never sent, only cleaned up.
  */
 // eslint-disable-next-line no-unused-vars
 class InstanaIgnoredSpan extends InstanaSpan {
+  /**
+   * @param {string} name
+   * @param {object} data
+   */
+  constructor(name, data) {
+    super(name, data);
+    this.isIgnored = true;
+  }
+
   transmit() {
     if (!this.transmitted && !this.manualEndMode) {
       this.cleanup();
@@ -317,11 +333,11 @@ function startSpan(spanAttributes = {}) {
     span.addCleanup(ns.set(w3cTraceContextKey, w3cTraceContext));
   }
 
-  const filteredSpan = applyFilter(span);
+  const spanIsTraced = applyFilter(span);
 
   // If the span was filtered out, we do not process it further.
   // Instead, we return an 'InstanaIgnoredSpan' instance to explicitly indicate that it was excluded from tracing.
-  if (!filteredSpan) {
+  if (!spanIsTraced) {
     return setIgnoredSpan({
       spanName: span.n,
       kind: span.k,
@@ -420,6 +436,10 @@ function setIgnoredSpan({ spanName, kind, traceId, parentId, data = {} }) {
     // any given moment). This is used by the instrumentations of web frameworks like Express.js to add path templates
     // and error messages to the entry span.
     span.addCleanup(ns.set(currentEntrySpanKey, span));
+
+    // For entry spans, we need to retain suppression information to ensure that
+    // tracing is suppressed for all internal (!) subsequent outgoing (exit) calls.
+    setTracingLevel('0');
   }
 
   // Set the span object as the currently active span in the active CLS context and also add a cleanup hook for when

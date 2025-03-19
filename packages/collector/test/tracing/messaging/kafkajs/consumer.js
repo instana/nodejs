@@ -42,7 +42,7 @@ const batchConsumer = kafka.consumer({ groupId: uuid() });
 let connected = false;
 
 const app = express();
-
+const currentSpans = [];
 let receivedMessages = [];
 
 (async function connect() {
@@ -53,6 +53,7 @@ let receivedMessages = [];
   await messageConsumer.run({
     eachMessage: async ({ topic, message }) => {
       const span = instana.currentSpan();
+      currentSpans.push(span);
       span.disableAutoEnd();
 
       log(
@@ -106,6 +107,7 @@ let receivedMessages = [];
   await batchConsumer.run({
     eachBatch: async ({ batch, resolveOffset, heartbeat }) => {
       const span = instana.currentSpan();
+      currentSpans.push(span);
       span.disableAutoEnd();
 
       log('incoming batch', batch.topic, batch.messages.length);
@@ -173,6 +175,10 @@ app.get('/', (req, res) => {
   }
 });
 
+app.get('/health', (req, res) => {
+  res.send('OK');
+});
+
 app.get('/messages', (req, res) => {
   res.send(receivedMessages);
 });
@@ -180,6 +186,19 @@ app.get('/messages', (req, res) => {
 app.delete('/messages', (req, res) => {
   receivedMessages = [];
   res.sendStatus(209);
+});
+
+app.get('/current-span', (req, res) => {
+  if (currentSpans.length) {
+    const spans = currentSpans.map(currentSpan => ({
+      spanConstructorName: currentSpan.span?.constructor?.name,
+      span: currentSpan.span
+    }));
+
+    res.json(spans);
+  } else {
+    res.status(503).send('No span recorded yet');
+  }
 });
 
 app.listen(appPort, () => {

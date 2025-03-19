@@ -78,20 +78,23 @@ function shimmedSend(originalSend) {
 }
 
 function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
+  const spanData = {
+    kafka: {
+      endpoints: topic,
+      operation: 'send'
+    }
+  };
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan({
       spanName: 'kafka',
-      kind: constants.EXIT
+      kind: constants.EXIT,
+      spanData
     });
     if (Array.isArray(messages)) {
       span.b = { s: messages.length };
-      addTraceContextHeaderToAllMessages(messages, span);
+      setTraceHeaders({ messages, span, ignored: span.isIgnored });
     }
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
-    span.data.kafka = {
-      service: topic,
-      access: 'send'
-    };
 
     return originalSend
       .apply(ctx, originalArgs)
@@ -148,19 +151,23 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
   });
 
   return cls.ns.runAndReturn(() => {
+    const spanData = {
+      kafka: {
+        endpoints: topics.join(','),
+        operation: 'send'
+      }
+    };
     const span = cls.startSpan({
       spanName: 'kafka',
-      kind: constants.EXIT
-    });
-    span.stack = tracingUtil.getStackTrace(instrumentedSend);
-    topicMessages.forEach(topicMessage => {
-      addTraceContextHeaderToAllMessages(topicMessage.messages, span);
+      kind: constants.EXIT,
+      spanData
     });
 
-    span.data.kafka = {
-      service: topics.join(','),
-      access: 'send'
-    };
+    span.stack = tracingUtil.getStackTrace(instrumentedSend);
+    topicMessages.forEach(topicMessage => {
+      setTraceHeaders({ messages: topicMessage.messages, span, ignored: span.isIgnored });
+    });
+
     if (messageCount > 0) {
       span.b = { s: messageCount };
     }
@@ -259,21 +266,23 @@ function instrumentedEachMessage(originalEachMessage) {
         cls.setTracingLevel('0');
         return originalEachMessage.apply(ctx, originalArgs);
       }
-
+      const spanData = {
+        kafka: {
+          operation: 'consume',
+          endpoints: topic
+        }
+      };
       const span = cls.startSpan({
         spanName: 'kafka',
         kind: constants.ENTRY,
         traceId: traceId,
-        parentSpanId: parentSpanId
+        parentSpanId: parentSpanId,
+        spanData
       });
       if (longTraceId) {
         span.lt = longTraceId;
       }
       span.stack = [];
-      span.data.kafka = {
-        access: 'consume',
-        service: topic
-      };
 
       try {
         return originalEachMessage.apply(ctx, originalArgs);
@@ -347,21 +356,23 @@ function instrumentedEachBatch(originalEachBatch) {
         cls.setTracingLevel('0');
         return originalEachBatch.apply(ctx, originalArgs);
       }
-
+      const spanData = {
+        kafka: {
+          operation: 'consume',
+          endpoints: batch ? batch.topic : undefined
+        }
+      };
       const span = cls.startSpan({
         spanName: 'kafka',
         kind: constants.ENTRY,
         traceId: traceId,
-        parentSpanId: parentSpanId
+        parentSpanId: parentSpanId,
+        spanData
       });
       if (longTraceId) {
         span.lt = longTraceId;
       }
       span.stack = [];
-      span.data.kafka = {
-        access: 'consume',
-        service: batch ? batch.topic : undefined
-      };
 
       if (batch && batch.messages) {
         span.b = { s: batch.messages.length };
@@ -439,5 +450,15 @@ function removeInstanaHeadersFromMessage(message) {
       // If the header is not present, deleting it is a no-op.
       delete message.headers[name];
     });
+  }
+}
+
+function setTraceHeaders({ messages, span, ignored }) {
+  if (ignored) {
+    // If the span is ignored, suppress trace propagation to downstream services.
+    addTraceLevelSuppressionToAllMessages(messages);
+  } else {
+    // Otherwise, inject the trace context into the headers for propagation.
+    addTraceContextHeaderToAllMessages(messages, span);
   }
 }

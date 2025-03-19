@@ -528,6 +528,467 @@ mochaSuiteFn('tracing/kafkajs', function () {
       });
     });
   });
+  describe('ignore endpoints configuration', () => {
+    let customAgentControls;
+    let producerControls;
+    let consumerControls;
+
+    describe('via agent configuration', () => {
+      async function setupTest(ignoreEndpoints) {
+        customAgentControls = new AgentStubControls();
+        await customAgentControls.startAgent({ ignoreEndpoints });
+
+        consumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          agentControls: customAgentControls,
+          useGlobalAgent: true
+        });
+
+        producerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'producer'),
+          agentControls: customAgentControls,
+          useGlobalAgent: true
+        });
+
+        await consumerControls.startAndWaitForAgentConnection();
+        await producerControls.startAndWaitForAgentConnection();
+      }
+
+      beforeEach(async () => {
+        await customAgentControls?.clearReceivedTraceData();
+      });
+
+      afterEach(async () => {
+        await producerControls.stop();
+        await consumerControls.stop();
+        await customAgentControls.stopAgent();
+      });
+
+      describe('when Kafka produce (send) is ignored', () => {
+        before(async () => {
+          await setupTest({ kafka: ['send'] });
+        });
+
+        it('should ignore Kafka exit spans and downstream calls', async () => {
+          await producerControls.sendRequest({
+            method: 'POST',
+            path: '/send-messages',
+            body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: false }),
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          await retry(async () => {
+            const spans = await customAgentControls.getSpans();
+            // 1 x http server
+            // 1 x http client
+            expect(spans.length).to.equal(2);
+
+            // Flow: HTTP(traced)
+            //       ├── Kafka Produce (ignored)
+            //       │      └── Kafka Consume(ignored) → HTTP (ignored)
+            //       └── HTTP exit (traced)
+            // Since Kafka produce is ignored, the produce call and all subsequent downstream calls are ignored.
+            const spanNames = spans.map(span => span.n);
+            expect(spanNames).to.include('node.http.server');
+            expect(spanNames).to.include('node.http.client');
+            expect(spanNames).to.not.include('kafka');
+          });
+        });
+      });
+
+      describe('when Kafka consume is ignored', () => {
+        before(async () => {
+          await setupTest({ kafka: [{ methods: ['consume'] }] });
+        });
+
+        it('should ignore Kafka consume and downstream spans but capture kafka send', async () => {
+          await producerControls.sendRequest({
+            method: 'POST',
+            path: '/send-messages',
+            body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: false }),
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          await retry(async () => {
+            const spans = await customAgentControls.getSpans();
+            // 1 x http server
+            // 1 x http client
+            // 1 x kafka send
+            expect(spans.length).to.equal(3);
+
+            // Flow: HTTP entry
+            //       ├── Kafka Produce (traced)
+            //       │      └── Kafka Consume → HTTP (ignored)
+            //       └── HTTP exit (traced)
+            // Kafka send will be captured, since Kafka consume is ignored,
+            // the consume call and all its subsequent downstream calls will also be ignored.
+            const spanNames = spans.map(span => span.n);
+            expect(spanNames).to.include('node.http.server');
+            expect(spanNames).to.include('node.http.client');
+            expect(spanNames).to.include('kafka');
+
+            // Kafka send exists but consume is ignored
+            expect(spans.some(span => span.n === 'kafka' && span.data.kafka?.access === 'send')).to.be.true;
+            expect(spans.some(span => span.n === 'kafka' && span.data.kafka?.access === 'consume')).to.be.false;
+          });
+        });
+      });
+
+      describe('when all Kafka topics are ignored', () => {
+        before(async () => {
+          await setupTest({ kafka: [{ endpoints: ['*'] }] });
+        });
+
+        it('should ignore all Kafka traces and downstream calls', async () => {
+          await producerControls.sendRequest({
+            method: 'POST',
+            path: '/send-messages',
+            body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: true }),
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          await retry(async () => {
+            const spans = await customAgentControls.getSpans();
+            // 1 x http server
+            // 1 x http client
+            expect(spans.length).to.equal(2);
+
+            // Flow: HTTP
+            //       ├── Kafka Produce (ignored)
+            //       │      └── Kafka Consume → HTTP (ignored)
+            //       └── HTTP exit (traced)
+            const spanNames = spans.map(span => span.n);
+            expect(spanNames).to.include('node.http.server');
+            expect(spanNames).to.include('node.http.client');
+            expect(spanNames).to.not.include('kafka');
+          });
+        });
+      });
+
+      describe('when kafka messages produced via sendBatch (batching)', () => {
+        describe('when not all topics in sendBatch are listed in the ignore config', () => {
+          before(async () => {
+            await setupTest({ kafka: [{ methods: ['send'], endpoints: ['test-topic-2'] }] });
+          });
+
+          it('should not ignore the sendBatch call and its downstream calls', async () => {
+            await producerControls.sendRequest({
+              method: 'POST',
+              path: '/send-messages',
+              body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: true }),
+              headers: { 'Content-Type': 'application/json' }
+            });
+
+            await retry(async () => {
+              const spans = await customAgentControls.getSpans();
+
+              // 1 x Kafka sendBatch (kafka:send)
+              // 1 x HTTP server request (/send-messages)
+              // 4 x HTTP client requests (3 from consumers, 1 from producer)
+              // 3 x Kafka consumes (test-topic-1: 2 messages, test-topic-2: 1 message)
+              expect(spans.length).to.equal(9);
+
+              // Flow:
+              // HTTP request
+              //         ├── Kafka Produce (sendBatch) (traced)
+              //         │       └── 3 x Kafka Consume  (traced) → 3 x HTTP (from consumers)  (traced)
+              //         └── HTTP exit  (traced)
+              const spanNames = spans.map(span => span.n);
+              expect(spanNames).to.include('node.http.server');
+              expect(spanNames).to.include('node.http.client');
+              expect(spanNames).to.include('kafka');
+
+              const kafkaSpans = spans.filter(span => span.n === 'kafka');
+              expect(kafkaSpans).to.have.lengthOf(4); // 1 send, 3 consume
+
+              const kafkaSendSpan = kafkaSpans.find(span => span.data.kafka.access === 'send');
+              expect(kafkaSendSpan).to.exist;
+              expect(kafkaSendSpan.data.kafka.service).to.include('test-topic-1');
+              expect(kafkaSendSpan.data.kafka.service).to.include('test-topic-2');
+
+              const kafkaConsumeSpans = kafkaSpans.filter(span => span.data.kafka.access === 'consume');
+              expect(kafkaConsumeSpans).to.have.lengthOf(3);
+
+              const consumedTopics = kafkaConsumeSpans.map(span => span.data.kafka.service);
+              expect(consumedTopics).to.include('test-topic-1');
+              expect(consumedTopics).to.include('test-topic-2');
+            });
+          });
+        });
+
+        describe('when all topics in sendBatch are listed in the ignore config', () => {
+          before(async () => {
+            await setupTest({ kafka: [{ methods: ['send'], endpoints: ['test-topic-1', 'test-topic-2'] }] });
+          });
+
+          it('should ignore the sendBatch call and its downstream calls', async () => {
+            await producerControls.sendRequest({
+              method: 'POST',
+              path: '/send-messages',
+              body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: true }),
+              headers: { 'Content-Type': 'application/json' }
+            });
+
+            await retry(async () => {
+              const spans = await customAgentControls.getSpans();
+
+              // 1 x HTTP server request (/send-messages)
+              // 1 x HTTP client request (from producer)
+              // Kafka sendBatch and all consumer traces should be ignored.
+              expect(spans.length).to.equal(2);
+
+              // Flow:
+              // HTTP request(traced)
+              //        ├── Kafka Produce (sendBatch) (ignored)
+              //        │       └── 3 x Kafka Consume(ignored) → 3 x HTTP (ignored, from consumers)
+              //        └── HTTP exit(traced)
+              const spanNames = spans.map(span => span.n);
+              expect(spanNames).to.include('node.http.server');
+              expect(spanNames).to.include('node.http.client');
+              expect(spanNames).to.not.include('kafka');
+            });
+          });
+        });
+      });
+    });
+
+    describe('via INSTANA_IGNORE_ENDPOINTS_PATH', () => {
+      before(async () => {
+        consumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          useGlobalAgent: true,
+          env: { INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml') }
+        });
+
+        producerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'producer'),
+          useGlobalAgent: true,
+          env: { INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml') }
+        });
+
+        await Promise.all([
+          consumerControls.startAndWaitForAgentConnection(),
+          producerControls.startAndWaitForAgentConnection()
+        ]);
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+        await resetMessages(consumerControls);
+      });
+
+      afterEach(async () => {
+        await resetMessages(consumerControls);
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await Promise.all([producerControls.stop(), consumerControls.stop()]);
+      });
+
+      it('should ignore traces based on configuration file', async () => {
+        await producerControls.sendRequest({
+          method: 'POST',
+          path: '/send-messages',
+          body: JSON.stringify({ key: 'someKey', value: 'someMessage', useSendBatch: true }),
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          expect(spans.length).to.equal(2);
+
+          const spanNames = spans.map(span => span.n);
+          expect(spanNames).to.include('node.http.server');
+          expect(spanNames).to.include('node.http.client');
+          expect(spanNames).to.not.include('kafka');
+        });
+      });
+    });
+
+    // Special test case for SDK, we need to test the presence of ignored span in consume call.
+    describe('SDK: ignore entry spans(consume)', function () {
+      before(async () => {
+        consumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          useGlobalAgent: true,
+          env: {
+            // basic ignoring config for consume
+            INSTANA_IGNORE_ENDPOINTS: 'kafka:consume'
+          }
+        });
+
+        producerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'producer'),
+          useGlobalAgent: true
+        });
+
+        await consumerControls.startAndWaitForAgentConnection();
+        await producerControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await producerControls.stop();
+        await consumerControls.stop();
+      });
+
+      it('should ignore consumer call and expose ignored span via instana.currentSpan()', async () => {
+        const message = {
+          key: 'someKey',
+          value: 'someMessage'
+        };
+        await producerControls.sendRequest({
+          method: 'POST',
+          path: '/send-messages',
+          simple: true,
+          body: JSON.stringify(message),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        await retry(async () => {
+          // Fetch the current span from the consumer
+          const currentSpans = await consumerControls.sendRequest({
+            method: 'GET',
+            path: '/current-span',
+            simple: true,
+            suppressTracing: true // no need to trace this call
+          });
+
+          expect(currentSpans).to.be.an('array').that.is.not.empty;
+          currentSpans.forEach(currentSpan => {
+            // The currentSpan contains an InstanaIgnoredSpan, which represents a span that has been ignored
+            // due to the configured `INSTANA_IGNORE_ENDPOINTS` setting (`kafka:consume` in this case).
+            // Even though the consumer processes the message, its span is not recorded in the agent’s collected spans.
+            // However, it can still be accessed via `instana.currentSpan()`, which returns an `InstanaIgnoredSpan`.
+            expect(currentSpan).to.have.property('spanConstructorName', 'InstanaIgnoredSpan');
+            expect(currentSpan.span).to.exist;
+            expect(currentSpan.span).to.include({
+              n: 'kafka',
+              k: 1
+            });
+            expect(currentSpan.span.data.kafka).to.include({
+              endpoints: 'test-topic-1',
+              operation: 'consume'
+            });
+          });
+
+          const spans = await agentControls.getSpans();
+
+          // 1 x HTTP server
+          // 1 x HTTP client
+          // 1 x Kafka send span (producer)
+          expect(spans).to.have.lengthOf(3);
+
+          // Flow: HTTP entry
+          //       ├── Kafka Produce (traced)
+          //       │      └── Kafka Consume → HTTP (ignored)
+          //       └── HTTP exit (traced)
+          const kafkaProducerSpan = spans.find(span => span.n === 'kafka' && span.k === 2);
+          const producerHttpSpan = spans.find(span => span.n === 'node.http.server' && span.k === 1);
+          const producerHttpExitSpan = spans.find(span => span.n === 'node.http.client' && span.k === 2);
+
+          expect(kafkaProducerSpan).to.exist;
+          expect(kafkaProducerSpan.data.kafka).to.include({
+            service: 'test-topic-1',
+            access: 'send'
+          });
+          expect(producerHttpSpan).to.exist;
+          expect(producerHttpExitSpan).to.exist;
+        });
+      });
+    });
+
+    describe('when consumer having an aditional HTTP entry call', function () {
+      before(async () => {
+        consumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'consumer'),
+          useGlobalAgent: true,
+          env: {
+            // basic ignoring config for consume
+            INSTANA_IGNORE_ENDPOINTS: 'kafka:consume'
+          }
+        });
+
+        producerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'producer'),
+          useGlobalAgent: true
+        });
+
+        await consumerControls.startAndWaitForAgentConnection();
+        await producerControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await producerControls.stop();
+        await consumerControls.stop();
+      });
+
+      it('should not ignore the HTTP entry in consumer while ignoring Kafka consume calls', async () => {
+        const message = {
+          key: 'someKey',
+          value: 'someMessage'
+        };
+        await producerControls.sendRequest({
+          method: 'POST',
+          path: '/send-messages',
+          simple: true,
+          body: JSON.stringify(message),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        await consumerControls.sendRequest({
+          method: 'GET',
+          path: '/health',
+          simple: true
+        });
+
+        await delay(200);
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          // 2 x HTTP server (1 x consumer, 1 x producer)
+          // 1 x HTTP client (producer)
+          // 1 x Kafka send span (producer)
+          expect(spans).to.have.lengthOf(4);
+
+          // Flow: HTTP entry (producer) (traced)
+          //       ├── Kafka Produce (traced)
+          //       │      └── Kafka Consume → HTTP (ignored)
+          //       └── HTTP exit (traced)
+          //
+          //      HTTP entry (consumer) (traced)
+          const kafkaProducerSpan = spans.find(span => span.n === 'kafka' && span.k === 2);
+          const producerHttpSpan = spans.find(
+            span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/send-messages'
+          );
+          const producerHttpExitSpan = spans.find(span => span.n === 'node.http.client' && span.k === 2);
+          const consumerHttpSpan = spans.find(
+            span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/health'
+          );
+
+          expect(kafkaProducerSpan).to.exist;
+          expect(kafkaProducerSpan.data.kafka).to.include({
+            service: 'test-topic-1',
+            access: 'send'
+          });
+          expect(producerHttpSpan).to.exist;
+          expect(producerHttpExitSpan).to.exist;
+          expect(consumerHttpSpan).to.exist;
+        });
+      });
+    });
+  });
 
   function resetMessages(consumer) {
     return consumer.sendRequest({

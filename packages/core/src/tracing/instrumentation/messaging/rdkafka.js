@@ -138,20 +138,22 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
     typeof ctx._cb_configs.event.delivery_cb === 'function';
 
   return cls.ns.runAndReturn(() => {
+    const topic = originalArgs[0];
+    const spanData = {
+      kafka: {
+        endpoints: topic,
+        operation: 'send'
+      }
+    };
     const span = cls.startSpan({
       spanName: 'kafka',
-      kind: constants.EXIT
+      kind: constants.EXIT,
+      spanData
     });
-    const topic = originalArgs[0];
 
     span.stack = tracingUtil.getStackTrace(instrumentedProduce, 1);
-    span.data.kafka = {
-      service: topic,
-      access: 'send'
-    };
 
-    const headers = addTraceContextHeader(originalArgs[6], span);
-    originalArgs[6] = headers;
+    originalArgs[6] = setTraceHeaders({ headers: originalArgs[6], span, ignored: span.isIgnored });
 
     if (deliveryCb) {
       ctx.once('delivery-report', function instanaDeliveryReportListener(err) {
@@ -272,22 +274,25 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
         return originalEmit.apply(ctx, originalArgs);
       }
 
+      const spanData = {
+        kafka: {
+          endpoints: messageData.topic || 'empty',
+          operation: 'consume'
+        }
+      };
+
       const span = cls.startSpan({
         spanName: 'kafka',
         kind: constants.ENTRY,
         traceId: traceId,
-        parentSpanId: parentSpanId
+        parentSpanId: parentSpanId,
+        spanData
       });
 
       if (longTraceId) {
         span.lt = longTraceId;
       }
       span.stack = tracingUtil.getStackTrace(instrumentedConsumerEmit, 1);
-
-      span.data.kafka = {
-        access: 'consume',
-        service: messageData.topic || 'empty'
-      };
 
       // CASE: stream consumer receives error e.g. cannot connect to kafka
       if (event === 'error') {
@@ -378,4 +383,13 @@ function logDeprecationKafkaAvroMessage() {
     // eslint-disable-next-line max-len
     '[Deprecation Warning] The support for kafka-avro library is deprecated and might be removed in the next major release. See https://github.com/waldophotos/kafka-avro/issues/120'
   );
+}
+function setTraceHeaders({ headers, span, ignored }) {
+  if (ignored) {
+    // If the span is ignored, suppress trace propagation to downstream services.
+    return addTraceLevelSuppression(headers);
+  } else {
+    // Otherwise, inject the trace context into the headers for propagation.
+    return addTraceContextHeader(headers, span);
+  }
 }
