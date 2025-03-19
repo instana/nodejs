@@ -219,9 +219,18 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
             callback(true);
           })
           .catch(error => {
-            logger.warn(
-              `Copying the precompiled build for ${opts.nativeModuleName} ${label} failed. 
-              ${error?.message} ${error?.stack}`
+            // The log triggered when the Instana Node.js collector fails to load a precompiled native module.
+            // The collector first attempts to load the module directly; if that fails, it extracts a precompiled
+            // version from the instrumentation image, which is currently compiled only for Node.js v21.
+            // If the application runs a different Node.js version and the filesystem is read-only, extraction may fail,
+            // preventing collection of certain telemetry data (garbage collection and event loop stats).
+            // TODO: Known issue tracked under INSTA-6673.
+            logger.debug(
+              `Failed to load precompiled build for ${opts.nativeModuleName} ${label}: ${error?.message}. ` +
+                // eslint-disable-next-line max-len
+                'Precompiled binary extraction was blocked due to restricted filesystem access or an unavailable compatible build. ' +
+                'Certain telemetry data, such as garbage collection and event loop statistics, may not be available. ' +
+                `Stack Trace: ${error?.stack}`
             );
             callback(false);
           });
