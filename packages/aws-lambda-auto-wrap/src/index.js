@@ -9,13 +9,20 @@ const instana = require('@instana/aws-lambda');
 const localUtils = require('./utils');
 
 let wrappedHandler;
+let capturedError;
 
 if (!wrappedHandler) {
-  const targetHandler = loadTargetHandlerFunction();
-  wrappedHandler = instana.wrap(targetHandler);
+  try {
+    const targetHandler = loadTargetHandlerFunction();
+    wrappedHandler = instana.wrap(targetHandler);
+  } catch (e) {
+    capturedError = e;
+  }
 }
 
 exports.handler = function instanaAutowrapHandler(event, context, callback) {
+  if (!wrappedHandler) return callback(capturedError);
+
   return wrappedHandler(event, context, callback);
 };
 
@@ -48,7 +55,7 @@ function requireTargetHandlerModule(lambdaTaskRoot, targetHandlerModuleFolder, t
       e.message.indexOf('Cannot use import statement outside a module') !== -1
     ) {
       throw new localUtils.errors.lambda.ImportModuleError(
-        'Your Lambda function is using an ES module. ' +
+        'Your Lambda function is an ECMAScript module (ESM). ' +
           "Please use the 'instana-aws-lambda-auto-wrap-esm.handler' as runtime handler."
       );
     } else if (e instanceof SyntaxError) {
