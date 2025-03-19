@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.8.0](https://github.com/instana/nodejs/compare/v4.7.0...v4.8.0) (2025-03-19)
+
+### Bug Fixes
+
+- resolved TypeError gcStats.on is not a function ([#1633](https://github.com/instana/nodejs/issues/1633)) ([2bfcd92](https://github.com/instana/nodejs/commit/2bfcd92f4bc57b7fb163283d6f2792c06816389b))
+
 # [4.7.0](https://github.com/instana/nodejs/compare/v4.6.3...v4.7.0) (2025-03-11)
 
 **Note:** Version bump only for package @instana/shared-metrics

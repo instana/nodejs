@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.8.0](https://github.com/instana/nodejs/compare/v4.7.0...v4.8.0) (2025-03-19)
+
+### Features
+
+- **serverless:** added request id to instana debug logs ([#1623](https://github.com/instana/nodejs/issues/1623)) ([c5a1b69](https://github.com/instana/nodejs/commit/c5a1b691ed9f01363bbc76bc262f985a4901744e))
+
 # [4.7.0](https://github.com/instana/nodejs/compare/v4.6.3...v4.7.0) (2025-03-11)
 
 **Note:** Version bump only for package @instana/aws-fargate

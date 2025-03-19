@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.8.0](https://github.com/instana/nodejs/compare/v4.7.0...v4.8.0) (2025-03-19)
+
+### Bug Fixes
+
+- **aws-lambda:** resolved large delay when using wrong handler ([#1641](https://github.com/instana/nodejs/issues/1641)) ([1587e89](https://github.com/instana/nodejs/commit/1587e89d5b9cbc4782c54b1c93fd27fc4eea68c7))
+
 # [4.7.0](https://github.com/instana/nodejs/compare/v4.6.3...v4.7.0) (2025-03-11)
 
 **Note:** Version bump only for package instana-aws-lambda-auto-wrap
