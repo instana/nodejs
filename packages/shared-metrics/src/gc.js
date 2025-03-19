@@ -46,10 +46,10 @@ exports.init = function init() {
     nativeModuleName: 'gcstats.js',
     moduleRoot: path.join(__dirname, '..'),
     message:
-      'Could not load gcstats.js. You will not be able to see GC information in Instana for this application. ' +
-      'This typically occurs when native add-ons could not be built during module installation (npm install/yarn) or ' +
-      'when npm install --no-optional, yarn --ignore-optional, or the AutoTrace webhook was used to install ' +
-      'dependencies. See the instructions to learn more about the requirements of the collector: ' +
+      'Could not load gcstats.js. Garbage collection information will not be available in Instana for this ' +
+      'application. This typically occurs when native add-ons fail to build during module installation. ' +
+      'However, general tracing functionality is unaffected. Enable debug logging for more details. ' +
+      'For more information on native add-on, visit: ' +
       'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#native-add-ons'
   });
 
