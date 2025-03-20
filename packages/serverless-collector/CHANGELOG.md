@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.9.0](https://github.com/instana/nodejs/compare/v4.8.0...v4.9.0) (2025-03-20)
+
+**Note:** Version bump only for package @instana/serverless-collector
+
 # [4.8.0](https://github.com/instana/nodejs/compare/v4.7.0...v4.8.0) (2025-03-19)
 
 **Note:** Version bump only for package @instana/serverless-collector

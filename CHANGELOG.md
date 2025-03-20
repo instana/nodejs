@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.9.0](https://github.com/instana/nodejs/compare/v4.8.0...v4.9.0) (2025-03-20)
+
+### Bug Fixes
+
+- improved log for precompiled binary loading failure ([#1642](https://github.com/instana/nodejs/issues/1642)) ([f0c38d5](https://github.com/instana/nodejs/commit/f0c38d539be65c3e90fb2ecd05d5f46d982a5337))
+
+### Features
+
+- **kafka:** added support for ignore endpoints ([#1616](https://github.com/instana/nodejs/issues/1616)) ([c8d8e47](https://github.com/instana/nodejs/commit/c8d8e47e1454844a4ea081c49678c374036fab5b))
+
 # [4.8.0](https://github.com/instana/nodejs/compare/v4.7.0...v4.8.0) (2025-03-19)
 
 ### Bug Fixes
