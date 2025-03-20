@@ -529,44 +529,42 @@ mochaSuiteFn('tracing/kafkajs', function () {
     });
   });
   describe('ignore endpoints configuration', () => {
-    let customAgentControls;
     let producerControls;
     let consumerControls;
 
     describe('via agent configuration', () => {
-      async function setupTest(ignoreEndpoints) {
-        customAgentControls = new AgentStubControls();
-        await customAgentControls.startAgent({ ignoreEndpoints });
-
-        consumerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'consumer'),
-          agentControls: customAgentControls,
-          useGlobalAgent: true
-        });
-
-        producerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'producer'),
-          agentControls: customAgentControls,
-          useGlobalAgent: true
-        });
-
-        await consumerControls.startAndWaitForAgentConnection();
-        await producerControls.startAndWaitForAgentConnection();
-      }
-
-      beforeEach(async () => {
-        await customAgentControls?.clearReceivedTraceData();
-      });
-
-      afterEach(async () => {
-        await producerControls.stop();
-        await consumerControls.stop();
-        await customAgentControls.stopAgent();
-      });
-
+      this.timeout(config.getTestTimeout() * 2);
+      const customAgentControls = new AgentStubControls();
       describe('when Kafka produce (send) is ignored', () => {
         before(async () => {
-          await setupTest({ kafka: ['send'] });
+          await customAgentControls.startAgent({ ignoreEndpoints: { kafka: ['send'] } });
+
+          producerControls = new ProcessControls({
+            appPath: path.join(__dirname, 'producer'),
+            agentControls: customAgentControls
+          });
+          consumerControls = new ProcessControls({
+            appPath: path.join(__dirname, 'consumer'),
+            agentControls: customAgentControls
+          });
+
+          await producerControls.startAndWaitForAgentConnection();
+          await consumerControls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
+        after(async () => {
+          await customAgentControls.stopAgent();
+          await producerControls.stop();
+          await consumerControls.stop();
+        });
+
+        afterEach(async () => {
+          await producerControls.clearIpcMessages();
+          await consumerControls.clearIpcMessages();
         });
 
         it('should ignore Kafka exit spans and downstream calls', async () => {
@@ -598,7 +596,34 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
       describe('when Kafka consume is ignored', () => {
         before(async () => {
-          await setupTest({ kafka: [{ methods: ['consume'] }] });
+          await customAgentControls.startAgent({ ignoreEndpoints: { kafka: ['consume'] } });
+
+          producerControls = new ProcessControls({
+            appPath: path.join(__dirname, 'producer'),
+            agentControls: customAgentControls
+          });
+          consumerControls = new ProcessControls({
+            appPath: path.join(__dirname, 'consumer'),
+            agentControls: customAgentControls
+          });
+
+          await producerControls.startAndWaitForAgentConnection();
+          await consumerControls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
+        after(async () => {
+          await customAgentControls.stopAgent();
+          await producerControls.stop();
+          await consumerControls.stop();
+        });
+
+        afterEach(async () => {
+          await producerControls.clearIpcMessages();
+          await consumerControls.clearIpcMessages();
         });
 
         it('should ignore Kafka consume and downstream spans but capture kafka send', async () => {
@@ -636,7 +661,34 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
       describe('when all Kafka topics are ignored', () => {
         before(async () => {
-          await setupTest({ kafka: [{ endpoints: ['*'] }] });
+          await customAgentControls.startAgent({ ignoreEndpoints: { kafka: [{ endpoints: ['*'] }] } });
+
+          producerControls = new ProcessControls({
+            appPath: path.join(__dirname, 'producer'),
+            agentControls: customAgentControls
+          });
+          consumerControls = new ProcessControls({
+            appPath: path.join(__dirname, 'consumer'),
+            agentControls: customAgentControls
+          });
+
+          await producerControls.startAndWaitForAgentConnection();
+          await consumerControls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
+        after(async () => {
+          await customAgentControls.stopAgent();
+          await producerControls.stop();
+          await consumerControls.stop();
+        });
+
+        afterEach(async () => {
+          await producerControls.clearIpcMessages();
+          await consumerControls.clearIpcMessages();
         });
 
         it('should ignore all Kafka traces and downstream calls', async () => {
@@ -668,7 +720,34 @@ mochaSuiteFn('tracing/kafkajs', function () {
       describe('when kafka messages produced via sendBatch (batching)', () => {
         describe('when not all topics in sendBatch are listed in the ignore config', () => {
           before(async () => {
-            await setupTest({ kafka: [{ methods: ['send'], endpoints: ['test-topic-2'] }] });
+            await customAgentControls.startAgent({ kafka: [{ methods: ['send'], endpoints: ['test-topic-2'] }] });
+
+            producerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'producer'),
+              agentControls: customAgentControls
+            });
+            consumerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'consumer'),
+              agentControls: customAgentControls
+            });
+
+            await producerControls.startAndWaitForAgentConnection();
+            await consumerControls.startAndWaitForAgentConnection();
+          });
+
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+
+          after(async () => {
+            await customAgentControls.stopAgent();
+            await producerControls.stop();
+            await consumerControls.stop();
+          });
+
+          afterEach(async () => {
+            await producerControls.clearIpcMessages();
+            await consumerControls.clearIpcMessages();
           });
 
           it('should not ignore the sendBatch call and its downstream calls', async () => {
@@ -718,7 +797,36 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
         describe('when all topics in sendBatch are listed in the ignore config', () => {
           before(async () => {
-            await setupTest({ kafka: [{ methods: ['send'], endpoints: ['test-topic-1', 'test-topic-2'] }] });
+            await customAgentControls.startAgent({
+              kafka: [{ methods: ['send'], endpoints: ['test-topic-1', 'test-topic-2'] }]
+            });
+
+            producerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'producer'),
+              agentControls: customAgentControls
+            });
+            consumerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'consumer'),
+              agentControls: customAgentControls
+            });
+
+            await producerControls.startAndWaitForAgentConnection();
+            await consumerControls.startAndWaitForAgentConnection();
+          });
+
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+
+          after(async () => {
+            await customAgentControls.stopAgent();
+            await producerControls.stop();
+            await consumerControls.stop();
+          });
+
+          afterEach(async () => {
+            await producerControls.clearIpcMessages();
+            await consumerControls.clearIpcMessages();
           });
 
           it('should ignore the sendBatch call and its downstream calls', async () => {
