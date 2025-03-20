@@ -720,7 +720,9 @@ mochaSuiteFn('tracing/kafkajs', function () {
       describe('when kafka messages produced via sendBatch (batching)', () => {
         describe('when not all topics in sendBatch are listed in the ignore config', () => {
           before(async () => {
-            await customAgentControls.startAgent({ kafka: [{ methods: ['send'], endpoints: ['test-topic-2'] }] });
+            await customAgentControls.startAgent({
+              ignoreEndpoints: { kafka: [{ methods: ['send'], endpoints: ['test-topic-2'] }] }
+            });
 
             producerControls = new ProcessControls({
               appPath: path.join(__dirname, 'producer'),
@@ -798,7 +800,9 @@ mochaSuiteFn('tracing/kafkajs', function () {
         describe('when all topics in sendBatch are listed in the ignore config', () => {
           before(async () => {
             await customAgentControls.startAgent({
-              kafka: [{ methods: ['send'], endpoints: ['test-topic-1', 'test-topic-2'] }]
+              ignoreEndpoints: {
+                kafka: [{ methods: ['send'], endpoints: ['test-topic-1', 'test-topic-2'] }]
+              }
             });
 
             producerControls = new ProcessControls({
