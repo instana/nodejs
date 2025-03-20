@@ -228,7 +228,7 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
             // corresponding Node.js version.
             logger.debug(
               `Failed to load precompiled build for ${opts.nativeModuleName} ${label}. ` +
-                'Precompiled binary extraction has failed, possibly due to a read-only filesystem or unknown' +
+                'Precompiled binary extraction has failed, possibly due to a read-only filesystem or an unknown' +
                 `system operation error for the Node.js ${process.version}. ${error?.message} ${error?.stack}`
             );
             callback(false);
