@@ -48,8 +48,8 @@ exports.init = function init() {
     message:
       'Could not load gcstats.js. Garbage collection information will not be available for this ' +
       'application. ' +
-      'However, general tracing functionality is unaffected. Enable debug logging for more details. ' +
-      'For more information on native add-on, visit: ' +
+      "However, general tracing functionality remains unaffected. Enable debug logs with 'INSTANA_DEBUG=true' " +
+      'for more details about the error. For more information on native add-ons, visit: ' +
       'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#native-add-ons'
   });
 
