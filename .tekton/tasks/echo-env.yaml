@@ -31,6 +31,4 @@ spec:
 
         echo "Using node: $(node --version)"
         echo "Using npm: $(npm --version)"
-
-        apt-get update && apt-get install -y coreutils
-        echo "Architecture: $(uname -m)"
+        echo "Architecture: $(arch)"
