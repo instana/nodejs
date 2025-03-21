@@ -31,4 +31,11 @@ spec:
 
         echo "Using node: $(node --version)"
         echo "Using npm: $(npm --version)"
-        echo "Architecture: $(arch)"
+
+        if command -v arch >/dev/null 2>&1; then
+          echo "Architecture: $(arch)"
+        elif command -v uname >/dev/null 2>&1; then
+          echo "Architecture: $(uname -m)"
+        else
+          echo "Architecture information not available"
+        fi
