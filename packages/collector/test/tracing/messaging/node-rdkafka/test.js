@@ -32,6 +32,7 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const { AgentStubControls } = require('../../../apps/agentStubControls');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
+const { createTopics } = require('../../../test_util/kafkaUtil');
 
 const producerEnableDeliveryCbOptions = ['true', 'false'];
 const producerApiMethods = ['standard', 'stream'];
@@ -57,6 +58,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
+
+  before(async () => {
+    await createTopics([topic]);
+  });
 
   producerEnableDeliveryCbOptions.forEach(deliveryCbEnabled => {
     objectModeMethods.forEach(objectMode => {

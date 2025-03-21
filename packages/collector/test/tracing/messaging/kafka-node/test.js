@@ -14,6 +14,7 @@ const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
+const { createTopics } = require('../../../test_util/kafkaUtil');
 
 const agentControls = globalAgent.instance;
 
@@ -28,6 +29,10 @@ mochaSuiteFn('tracing/kafka-node', function () {
   this.timeout(config.getTestTimeout() * 2);
 
   globalAgent.setUpCleanUpHooks();
+
+  before(async () => {
+    await createTopics(['test']);
+  });
 
   ['plain', 'highLevel'].forEach(producerType => {
     describe(`producing via: ${producerType}`, function () {
