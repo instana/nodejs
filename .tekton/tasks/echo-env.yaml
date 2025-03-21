@@ -31,23 +31,3 @@ spec:
 
         echo "Using node: $(node --version)"
         echo "Using npm: $(npm --version)"
-
-        function handle_error {
-          echo "An error occurred!"
-          exit 1
-        }
-
-        trap handle_error ERR
-
-        echo "Trying to run some commands..."
-
-        if command -v arch >/dev/null 2>&1; then
-          echo "Architecture: $(arch)"
-        elif command -v uname >/dev/null 2>&1; then
-          echo "Architecture: $(uname -m)"
-        else
-          echo "Architecture command not found."
-          exit 1  # Simulate an error if no command is found
-        fi
-
-        echo "This will be executed only if the previous commands succeed."
