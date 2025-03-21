@@ -5,6 +5,7 @@
 
 'use strict';
 
+const semver = require('semver');
 const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -19,7 +20,12 @@ const {
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+// Node v18 and Node v21 fail to install pg-native regularly on CI.
+// We skip the tests for these versions for now.
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && !semver.satisfies(process.versions.node, '18.x || 21.x')
+    ? describe
+    : describe.skip;
 
 mochaSuiteFn('tracing/pg-native', function () {
   this.timeout(config.getTestTimeout());
