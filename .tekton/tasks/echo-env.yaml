@@ -31,3 +31,4 @@ spec:
 
         echo "Using node: $(node --version)"
         echo "Using npm: $(npm --version)"
+        echo "Architecture: $(node -p 'process.arch')"
