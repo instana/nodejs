@@ -53,8 +53,9 @@ spec:
 
         if [ "$(params.skip-cache)" == "true" ]; then
           echo "Skipping npm cache..."
-          echo "Installing node_modules..."
-          npm ci --loglevel verbose
+
+          echo "Installing npm dependencies..."
+          npm install --loglevel verbose
         else
           echo "Restoring node_modules cache..."
           curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
