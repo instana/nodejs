@@ -29,6 +29,10 @@ spec:
           npm install npm@$(params.npm-version) -g
         fi
 
-        echo "Using node: $(node --version)"
-        echo "Using npm: $(npm --version)"
-        echo "Architecture: $(node -p 'process.arch')"
+        echo "Using node: $(node --version 2>/dev/null || echo 'Node.js not found')"
+        echo "Using npm: $(npm --version 2>/dev/null || echo 'NPM not found')"
+        echo "Architecture: $(node -p 'process.arch' 2>/dev/null || echo 'Unknown architecture')"
+        echo "Python3 version: $(python3 --version 2>/dev/null | head -n 1 || echo 'Python3 not found')"
+        echo "Make version: $(make --version 2>/dev/null | head -n 1 || echo 'Make not found')"
+        echo "GCC version: $(gcc --version 2>/dev/null | head -n 1 || echo 'GCC not found')"
+        echo "Node-gyp global version: $(node-gyp --version 2>/dev/null || echo 'Node-gyp not found')"
