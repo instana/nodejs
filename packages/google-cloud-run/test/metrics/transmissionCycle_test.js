@@ -15,6 +15,7 @@ const testConfig = require('@instana/core/test/config');
 const core = require('@instana/core');
 let transmissionCycle;
 
+// NOTE: This test does not run directly against GCP Cloud Run; instead, it is locally mocked using metadata-mock
 describe('transmission cycle', function () {
   this.timeout(testConfig.getTestTimeout());
   this.slow(testConfig.getTestTimeout() / 2);

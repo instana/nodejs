@@ -23,6 +23,7 @@ const host = `gcp:cloud-run:revision:${revision}`;
 const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'google-cloud-run-dummy-key';
 
+// NOTE: This test does not run directly against GCP Cloud Run; instead, it is locally mocked using metadata-mock
 describe('Using the API', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);

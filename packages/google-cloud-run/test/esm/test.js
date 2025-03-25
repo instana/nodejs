@@ -44,6 +44,7 @@ function prelude(opts = {}) {
   return env;
 }
 // Run the tests only for supported node versions
+// NOTE: This test does not run directly against GCP Cloud Run; instead, it is locally mocked using metadata-mock
 if (supportedVersion(process.versions.node)) {
   describe('Google Cloud Run esm test', function () {
     this.timeout(config.getTestTimeout());
