@@ -16,10 +16,10 @@ const core = require('@instana/core');
 
 let transmissionCycle;
 
-// NOTE: This test does not run directly against AWS Fargate; instead, it is locally mocked using metadata-mock.
-//       It mimics the Amazon ECS task metadata provider
-//       which normally provides environment details for services running on AWS Fargate.
-//       This allows integration tests to run without connecting to the actual AWS metadata server.
+// NOTE: This test does not run against AWS Fargate. Instead, it is mocked using a metadata mock API.
+//       It mimics the Amazon ECS Task Metadata Endpoint, which provides env details for tasks running on AWS Fargate.
+// API Documentation: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint-v3-fargate.html
+// Local mock path: packages/aws-fargate/test/metadata_mock/index.js
 describe('transmission cycle', function () {
   this.timeout(testConfig.getTestTimeout());
   this.slow(testConfig.getTestTimeout() / 2);
