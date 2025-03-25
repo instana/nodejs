@@ -152,7 +152,7 @@
     "eslint-plugin-mocha": "^10.1.0",
     "eslint-plugin-monorepo-cop": "^1.0.2",
     "express": "^4.21.2",
-    "express-v5-beta": "npm:express@^5.0.0-beta.3",
+    "express-v5": "npm:express@^5.0.1",
     "express-winston": "^4.2.0",
     "fastify": "^5.2.1",
     "fastify-v3": "npm:fastify@^3.21.5",

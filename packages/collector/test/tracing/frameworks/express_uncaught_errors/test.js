@@ -16,7 +16,7 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-['latest', 'v5-beta'].forEach(version => {
+['latest', 'v5'].forEach(version => {
   mochaSuiteFn(`tracing/express@${version} with uncaught errors`, function () {
     this.timeout(config.getTestTimeout());
 

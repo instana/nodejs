@@ -34,13 +34,13 @@ function instrument(express) {
     shimmer.wrap(express.Router, 'handle', shimExpressHandle);
     shimmer.wrap(express.Router, 'use', shimExpress4Use);
   } else if (express.Router && express.Router.prototype) {
-    // express v5 beta
+    // express v5
     shimmer.wrap(express.Router.prototype, 'handle', shimExpressHandle);
     shimmer.wrap(express.Router.prototype, 'use', shimExpress4Use);
   }
 
   if (express.Route && express.Route.prototype) {
-    // express v4, v5 beta
+    // express v4, v5
     // capture the path template
     methods.concat('all').forEach(method => {
       if (typeof express.Route.prototype[method] === 'function') {
