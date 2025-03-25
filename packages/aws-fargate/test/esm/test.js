@@ -52,6 +52,10 @@ function prelude(opts = {}) {
 }
 
 // Run the tests only for supported node versions
+// NOTE: This test does not run directly against AWS Fargate; instead, it is locally mocked using metadata-mock.
+//       It mimics the Amazon ECS task metadata provider
+//       which normally provides environment details for services running on AWS Fargate.
+//       This allows integration tests to run without connecting to the actual AWS metadata server.
 if (supportedVersion(process.versions.node)) {
   describe('AWS fargate esm test', function () {
     this.timeout(config.getTestTimeout());
