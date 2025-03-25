@@ -18,6 +18,7 @@ const containerAppPath = path.join(__dirname, './app.mjs');
 const instanaAgentKey = 'azure-container-service-dummy-key';
 
 // Run the tests only for supported node versions
+// NOTE: This test does not run directly against Azure App Service; instead, it is locally mocked.
 if (supportedVersion(process.versions.node)) {
   describe('Azure Container Service esm test', function () {
     this.timeout(config.getTestTimeout());

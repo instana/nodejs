@@ -27,6 +27,7 @@ function prelude() {
   return env;
 }
 
+// NOTE: This test does not run directly against Azure App Service; instead, it is locally mocked.
 describe('Using the API', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
