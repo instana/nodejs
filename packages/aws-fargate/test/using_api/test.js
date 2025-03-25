@@ -25,6 +25,10 @@ const instanaAgentKey = 'aws-fargate-dummy-key';
 
 function prelude() {}
 
+// NOTE: This test does not run against AWS Fargate. Instead, it is mocked using a metadata mock API.
+//       It mimics the Amazon ECS Task Metadata Endpoint, which provides env details for tasks running on AWS Fargate.
+// API Documentation: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint-v3-fargate.html
+// Local mock path: packages/aws-fargate/test/metadata_mock/index.js
 describe('Using the API', function () {
   this.timeout(config.getTestTimeout());
 

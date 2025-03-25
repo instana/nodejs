@@ -17,6 +17,8 @@ const entityId = '/subscriptions/instana/resourceGroups/East US/providers/Micros
 const containerAppPath = path.join(__dirname, './app.mjs');
 const instanaAgentKey = 'azure-container-service-dummy-key';
 
+// NOTE: This test does not run directly against Azure App Service; instead, it is locally mocked.
+
 // Run the tests only for supported node versions
 if (supportedVersion(process.versions.node)) {
   describe('Azure Container Service esm test', function () {

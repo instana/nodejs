@@ -29,6 +29,10 @@ const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'google-cloud-run-dummy-key';
 const testStartedAt = Date.now();
 
+// NOTE: This test does not run against the Google Cloud Run on GCP. Instead, it is mocked using a metadata mock API.
+//       It mimics the GCP Metadata Service, which provides env details for services running on Google Cloud Run.
+// API documentation:  https://cloud.google.com/appengine/docs/legacy/standard/java/accessing-instance-metadata
+// Local mock path:  packages/google-cloud-run/test/metadata_mock/index.js
 describe('Google Cloud Run integration test', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
