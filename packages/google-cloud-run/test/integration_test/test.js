@@ -30,6 +30,8 @@ const instanaAgentKey = 'google-cloud-run-dummy-key';
 const testStartedAt = Date.now();
 
 // NOTE: This test does not run directly against GCP Cloud Run; instead, it is locally mocked using metadata-mock
+//       It mimics the GCP Metadata Service, which normally provides env details for services running on Google Cloud.
+//       Allows integration tests to run without connecting to the actual GCP metadata server.
 describe('Google Cloud Run integration test', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);

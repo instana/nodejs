@@ -16,6 +16,8 @@ const core = require('@instana/core');
 let transmissionCycle;
 
 // NOTE: This test does not run directly against GCP Cloud Run; instead, it is locally mocked using metadata-mock
+//       It mimics the GCP Metadata Service, which normally provides env details for services running on Google Cloud.
+//       Allows integration tests to run without connecting to the actual GCP metadata server.
 describe('transmission cycle', function () {
   this.timeout(testConfig.getTestTimeout());
   this.slow(testConfig.getTestTimeout() / 2);

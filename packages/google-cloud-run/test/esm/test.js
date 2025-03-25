@@ -45,6 +45,8 @@ function prelude(opts = {}) {
 }
 // Run the tests only for supported node versions
 // NOTE: This test does not run directly against GCP Cloud Run; instead, it is locally mocked using metadata-mock
+//       It mimics the GCP Metadata Service, which normally provides env details for services running on Google Cloud.
+//       Allows integration tests to run without connecting to the actual GCP metadata server.
 if (supportedVersion(process.versions.node)) {
   describe('Google Cloud Run esm test', function () {
     this.timeout(config.getTestTimeout());
