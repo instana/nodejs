@@ -1156,9 +1156,9 @@ mochaSuiteFn('tracing/kafkajs', function () {
         await retry(async () => {
           const spans = await agentControls.getSpans();
           // 2 x HTTP server (1 x consumer, 1 x producer)
-          // 2 x HTTP client (producer)(consumer)
-          // 1 x Kafka consume span (consumer)
-          expect(spans).to.have.lengthOf(5);
+          // 4 x HTTP client (1 producer)(2 consumer)
+          // 2 x Kafka consume span (consumer)
+          expect(spans).to.have.lengthOf(8);
 
           // Flow: HTTP entry (producer) (traced)
           //       ├── Kafka Produce (traced)
