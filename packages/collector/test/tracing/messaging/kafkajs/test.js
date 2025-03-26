@@ -1101,7 +1101,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
       });
     });
 
-    describe('when suppression is disabled via INSTANA_DISABLE_SUPRESSION', function () {
+    describe('when downstream suppression is disabled via INSTANA_DISABLE_SUPRESSION', function () {
       before(async () => {
         consumerControls = new ProcessControls({
           appPath: path.join(__dirname, 'consumer'),
