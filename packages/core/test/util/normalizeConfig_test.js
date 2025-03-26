@@ -646,6 +646,17 @@ describe('util.normalizeConfig', () => {
       const config = normalizeConfig();
       expect(config.tracing.ignoreEndpoints).to.deep.equal({});
     });
+
+    it('should return false when INSTANA_DISABLE_SUPRESSION is not set', () => {
+      const config = normalizeConfig();
+      expect(config.tracing.disableSupression).to.deep.equal(false);
+    });
+
+    it('should return true when INSTANA_DISABLE_SUPRESSION is set', () => {
+      process.env.INSTANA_DISABLE_SUPRESSION = true;
+      const config = normalizeConfig();
+      expect(config.tracing.disableSupression).to.deep.equal(true);
+    });
   });
 
   function checkDefaults(config) {

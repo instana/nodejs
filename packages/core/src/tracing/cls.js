@@ -29,6 +29,8 @@ let serviceName;
 let processIdentityProvider = null;
 /** @type {Boolean} */
 let allowRootExitSpan;
+/** @type {Boolean} */
+let disableSupression = false;
 
 /*
  * Access the Instana namespace in continuation local storage.
@@ -52,6 +54,7 @@ function init(config, _processIdentityProvider) {
   }
   processIdentityProvider = _processIdentityProvider;
   allowRootExitSpan = config?.tracing?.allowRootExitSpan;
+  disableSupression = config?.tracing?.disableSupression;
 }
 
 class InstanaSpan {
@@ -241,7 +244,8 @@ class InstanaIgnoredSpan extends InstanaSpan {
    */
   constructor(name, data) {
     super(name, data);
-    this.isIgnored = true;
+    // If supression is disabled via external config, should respect the config.
+    this.isIgnored = !disableSupression;
   }
 
   transmit() {
@@ -439,7 +443,8 @@ function setIgnoredSpan({ spanName, kind, traceId, parentId, data = {} }) {
 
     // For entry spans, we need to retain suppression information to ensure that
     // tracing is suppressed for all internal (!) subsequent outgoing (exit) calls.
-    setTracingLevel('0');
+    // If supression is disabled via external config, should respect the config.
+    if (!disableSupression) setTracingLevel('0');
   }
 
   // Set the span object as the currently active span in the active CLS context and also add a cleanup hook for when
