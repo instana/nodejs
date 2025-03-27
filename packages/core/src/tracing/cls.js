@@ -29,6 +29,8 @@ let serviceName;
 let processIdentityProvider = null;
 /** @type {Boolean} */
 let allowRootExitSpan;
+/** @type {Boolean} */
+let ignoreEndpointsDownStreamSuppression = true;
 
 /*
  * Access the Instana namespace in continuation local storage.
@@ -52,6 +54,7 @@ function init(config, _processIdentityProvider) {
   }
   processIdentityProvider = _processIdentityProvider;
   allowRootExitSpan = config?.tracing?.allowRootExitSpan;
+  ignoreEndpointsDownStreamSuppression = config?.tracing?.ignoreEndpointsDisableSuppression;
 }
 
 class InstanaSpan {
@@ -149,6 +152,19 @@ class InstanaSpan {
       writable: true,
       enumerable: false
     });
+    // This property was introduced as part of the ignoring endpoint feature
+    // and determines whether suppression should be propagated downstream.
+    // By default, suppression is disabled.
+    // This property currently applicable only for ignoring endpoints.
+    // When a span is ignored, suppression is automatically enabled (`true`),
+    // propagating suppression headers downstream.
+    // However, if required, suppression propagation can be explicitly disabled
+    // by setting this property to `false`.
+    Object.defineProperty(this, 'shouldSuppressDownstream', {
+      value: false,
+      writable: true,
+      enumerable: false
+    });
   }
 
   /**
@@ -241,7 +257,12 @@ class InstanaIgnoredSpan extends InstanaSpan {
    */
   constructor(name, data) {
     super(name, data);
+
     this.isIgnored = true;
+    // By default, downstream suppression for ignoring endpoints is enabled.
+    // If the environment variable `INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION` is set,
+    // should not suppress the downstream calls.
+    this.shouldSuppressDownstream = !ignoreEndpointsDownStreamSuppression;
   }
 
   transmit() {
@@ -439,7 +460,10 @@ function setIgnoredSpan({ spanName, kind, traceId, parentId, data = {} }) {
 
     // For entry spans, we need to retain suppression information to ensure that
     // tracing is suppressed for all internal (!) subsequent outgoing (exit) calls.
-    setTracingLevel('0');
+    // By default, downstream suppression is enabled.
+    // If the environment variable `INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION is set,
+    // should not suppress the downstream calls.
+    if (span.shouldSuppressDownstream) setTracingLevel('0');
   }
 
   // Set the span object as the currently active span in the active CLS context and also add a cleanup hook for when
