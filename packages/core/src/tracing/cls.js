@@ -152,6 +152,14 @@ class InstanaSpan {
       writable: true,
       enumerable: false
     });
+    // Indicates whether downstream suppression should be propagated.
+    // By default, suppression is enabled.
+    // If set to false, downstream suppression will be disabled, and suppression propagation will not occur.
+    Object.defineProperty(this, 'isSuppressed', {
+      value: true,
+      writable: true,
+      enumerable: false
+    });
   }
 
   /**
@@ -245,9 +253,11 @@ class InstanaIgnoredSpan extends InstanaSpan {
   constructor(name, data) {
     super(name, data);
 
+    this.isIgnored = true;
     // By default, downstream suppression for ignoring endpoints is enabled.
-    // If the environment variable `INSTANA_DISABLE_SUPPRESSION` is set, should not suppress the downstream calls.
-    this.isIgnored = !ignoreEndpointsDisableSuppression;
+    // If the environment variable `INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION` is set,
+    // should not suppress the downstream calls.
+    this.isSuppressed = !ignoreEndpointsDisableSuppression;
   }
 
   transmit() {
@@ -446,7 +456,8 @@ function setIgnoredSpan({ spanName, kind, traceId, parentId, data = {} }) {
     // For entry spans, we need to retain suppression information to ensure that
     // tracing is suppressed for all internal (!) subsequent outgoing (exit) calls.
     // By default, downstream suppression is enabled.
-    // If the environment variable `INSTANA_DISABLE_SUPPRESSION` is set, should not suppress the downstream calls.
+    // If the environment variable `INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION is set,
+    // should not suppress the downstream calls.
     if (!ignoreEndpointsDisableSuppression) setTracingLevel('0');
   }
 
