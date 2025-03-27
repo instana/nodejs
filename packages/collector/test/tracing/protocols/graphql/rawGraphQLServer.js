@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 require('../../../..')();
 
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const graphQL = require('graphql');
 const morgan = require('morgan');
 const amqp = require('amqplib');

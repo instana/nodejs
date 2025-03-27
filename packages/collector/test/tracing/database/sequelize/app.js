@@ -16,7 +16,7 @@ process.on('SIGTERM', () => {
 require('../../../..')();
 
 const Sequelize = require('sequelize');
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const port = require('../../../test_util/app-port')();

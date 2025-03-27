@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 });
 
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const pino = require('pino')();
 const http = require('http');

@@ -19,7 +19,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 require('../../../..')();
 
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const fetch = require('node-fetch-v2');
 const { Client } = require('@elastic/elasticsearch');

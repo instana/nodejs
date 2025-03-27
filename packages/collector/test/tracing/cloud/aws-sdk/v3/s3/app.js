@@ -22,7 +22,7 @@ if (process.env.AWS_SDK_CLIENT_S3_REQUIRE !== '@aws-sdk/client-s3') {
 }
 
 require('../../../../../..')();
-const express = require('express');
+const express = require('express-v4');
 const fetch = require('node-fetch-v2');
 const awsSdk3 = require('@aws-sdk/client-s3');
 const logPrefix = `AWS SDK v3 S3 (${process.pid}):\t`;

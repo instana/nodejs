@@ -20,7 +20,7 @@ require('../../../..')();
 const _pg = require('pg');
 const Pool = _pg.Pool;
 const Client = _pg.Client;
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const fetch = require('node-fetch-v2');
 const bodyParser = require('body-parser');

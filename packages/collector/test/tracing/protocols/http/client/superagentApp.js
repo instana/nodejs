@@ -17,7 +17,7 @@ const superagent = require('superagent');
 const instana = require('../../../../..')();
 
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const port = require('../../../../test_util/app-port')();
 const asyncRoute = require('../../../../test_util/asyncExpressRoute');

@@ -27,7 +27,7 @@ instana.setLogger(pino({ name: 'app-logger' }));
 const instanaLogger = require('../../../../src/logger').getLogger();
 
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const port = require('../../../test_util/app-port')();
 const app = express();

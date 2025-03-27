@@ -19,7 +19,7 @@ const instana = require('../../..')();
 
 const fs = require('fs');
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const path = require('path');
 const fetch = require('node-fetch-v2');

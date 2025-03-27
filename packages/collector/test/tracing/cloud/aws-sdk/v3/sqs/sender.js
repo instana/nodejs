@@ -22,7 +22,7 @@ if (process.env.AWS_SDK_CLIENT_SQS_REQUIRE !== '@aws-sdk/client-sqs') {
 }
 
 require('../../../../../..')();
-const express = require('express');
+const express = require('express-v4');
 const delay = require('@instana/core/test/test_util/delay');
 const fetch = require('node-fetch-v2');
 const awsSdk3 = require('@aws-sdk/client-sqs');

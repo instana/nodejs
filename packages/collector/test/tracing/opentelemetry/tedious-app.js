@@ -18,7 +18,7 @@ require('../../..')({
   }
 });
 
-const express = require('express');
+const express = require('express-v4');
 const fs = require('fs');
 const { isCI } = require('@instana/core/test/test_util');
 const port = require('../../test_util/app-port')();

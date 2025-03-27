@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 require('../../../../../../src')();
 
 const AWS = require('aws-sdk');
-const express = require('express');
+const express = require('express-v4');
 const logPrefix = `AWS SDK v2 Lambda (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const lambda = new AWS.Lambda();

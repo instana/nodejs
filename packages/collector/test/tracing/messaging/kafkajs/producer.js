@@ -15,7 +15,7 @@ require('../../../..')();
 
 const fetch = require('node-fetch-v2');
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const { Kafka } = require('kafkajs');
 
 const appPort = process.env.APP_PORT;

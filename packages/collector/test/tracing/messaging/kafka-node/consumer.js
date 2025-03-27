@@ -18,7 +18,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 
 const instana = require('../../../..')();
 
-const express = require('express');
+const express = require('express-v4');
 const kafka = require('kafka-node');
 const fetch = require('node-fetch-v2');
 const { v4: uuid } = require('uuid');

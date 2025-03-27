@@ -17,7 +17,7 @@ require('./mockVersion');
 require('../../../..')();
 
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const redis = require('redis');
 const fetch = require('node-fetch-v2');

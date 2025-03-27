@@ -26,7 +26,7 @@ require('../../../..')({
 
 const MongoClient = require('mongodb').MongoClient;
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const assert = require('assert');
 const fetch = require('node-fetch-v2');

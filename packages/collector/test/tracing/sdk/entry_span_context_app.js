@@ -7,7 +7,7 @@
 
 const instana = require('../../..')();
 
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const { delay, getTestAppLogger } = require('@instana/core/test/test_util');
 const port = require('../../test_util/app-port')();

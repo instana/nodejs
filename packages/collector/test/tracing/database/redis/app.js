@@ -16,7 +16,7 @@ require('../../../..')();
 
 const redis = require(process.env.REDIS_PKG);
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const fetch = require('node-fetch-v2');
 const port = require('../../../test_util/app-port')();

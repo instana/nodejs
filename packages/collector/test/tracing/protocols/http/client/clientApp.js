@@ -15,7 +15,7 @@ require('../../../../..')();
 
 const AWS = require('aws-sdk');
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const fs = require('fs');
 const morgan = require('morgan');
 const path = require('path');

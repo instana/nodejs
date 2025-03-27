@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 
 require('../../../src')();
 
-const express = require('express');
+const express = require('express-v4');
 const fs = require('fs');
 const path = require('path');
 const port = require('../../test_util/app-port')();
