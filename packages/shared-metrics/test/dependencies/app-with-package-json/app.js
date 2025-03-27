@@ -17,7 +17,7 @@ instana();
 
 const { getLogger } = require('@instana/core/test/test_util/log');
 
-const express = require('express-v4');
+const express = require('express');
 const morgan = require('morgan');
 
 const logPrefix = `Dependencies App (${process.pid}):\t`;
