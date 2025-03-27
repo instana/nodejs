@@ -463,7 +463,7 @@ function setIgnoredSpan({ spanName, kind, traceId, parentId, data = {} }) {
     // By default, downstream suppression is enabled.
     // If the environment variable `INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION is set,
     // should not suppress the downstream calls.
-    if (!ignoreEndpointsDownStreamSuppression) setTracingLevel('0');
+    if (span.shouldSuppressDownstream) setTracingLevel('0');
   }
 
   // Set the span object as the currently active span in the active CLS context and also add a cleanup hook for when
