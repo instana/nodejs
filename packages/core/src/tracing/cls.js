@@ -155,7 +155,7 @@ class InstanaSpan {
     // Indicates whether downstream suppression should be propagated.
     // By default, suppression is enabled.
     // If set to false, downstream suppression will be disabled, and suppression propagation will not occur.
-    Object.defineProperty(this, 'isSuppressed', {
+    Object.defineProperty(this, 'shouldSuppressDownstream', {
       value: true,
       writable: true,
       enumerable: false
@@ -257,7 +257,7 @@ class InstanaIgnoredSpan extends InstanaSpan {
     // By default, downstream suppression for ignoring endpoints is enabled.
     // If the environment variable `INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION` is set,
     // should not suppress the downstream calls.
-    this.isSuppressed = !ignoreEndpointsDisableSuppression;
+    this.shouldSuppressDownstream = !ignoreEndpointsDisableSuppression;
   }
 
   transmit() {
