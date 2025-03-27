@@ -15,9 +15,9 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
 
-['latest', 'v5'].forEach(version => {
+['latest', 'v4'].forEach(version => {
   mochaSuiteFn(`tracing/express@${version}`, function () {
     this.timeout(config.getTestTimeout());
 
