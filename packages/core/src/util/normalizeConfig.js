@@ -245,7 +245,7 @@ function normalizeTracingConfig(config) {
   normalizeTracingKafka(config);
   normalizeAllowRootExitSpan(config);
   normalizeIgnoreEndpoints(config);
-  normalizeDisableSupression(config);
+  normalizeIgnoreEndpointsDisableSuppression(config);
 }
 
 /**
@@ -752,7 +752,7 @@ function normalizeIgnoreEndpoints(config) {
 /**
  * @param {InstanaConfig} config
  */
-function normalizeDisableSupression(config) {
+function normalizeIgnoreEndpointsDisableSuppression(config) {
   if (process.env['INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION'] === 'true') {
     logger.info(
       'Disabling supression as it is explicitly disabled via environment variable INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION.'
