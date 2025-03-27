@@ -50,7 +50,11 @@ currencies = currencies.map(currency => {
       installedVersion = installedVersion.replace(/[^0-9.]/g, '');
     }
 
-    latestVersion = utils.getLatestVersion(currency.name, installedVersion);
+    if (currency.name === 'express') {
+      latestVersion = utils.getLatestVersion(currency.name, installedVersion, true);
+    } else {
+      latestVersion = utils.getLatestVersion(currency.name, installedVersion);
+    }
 
     if (!installedVersion) {
       installedVersion = latestVersion;

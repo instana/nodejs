@@ -15,7 +15,11 @@ const fs = require('fs');
 
 exports.getRootDependencyVersion = name => {
   const pkgjson = require(path.join(__dirname, '..', '..', 'package.json'));
-  return pkgjson.devDependencies[name] || pkgjson.optionalDependencies[name];
+  if (name === 'express') {
+    return pkgjson.devDependencies[`${name}-v5`] || pkgjson.devDependencies[name];
+  } else {
+    return pkgjson.devDependencies[name] || pkgjson.optionalDependencies[name];
+  }
 };
 
 exports.getDevDependencyVersion = name => {
@@ -93,7 +97,7 @@ const getHighestMajorVersion = versions => {
   return highestMajorVersion;
 };
 
-exports.getLatestVersion = (pkgName, installedVersion) => {
+exports.getLatestVersion = (pkgName, installedVersion, includePrerelease = false) => {
   let latestVersion = execSync(`npm info ${pkgName} version`).toString().trim();
   const allVersions = getAllVersions(pkgName);
   const highestMajorVersion = getHighestMajorVersion(allVersions);
@@ -107,7 +111,7 @@ exports.getLatestVersion = (pkgName, installedVersion) => {
       `Detected a higher major version: ${highestMajorVersion} and this version is a prerelease: ${!!highestMajorVersionIsPrerelease}`
     );
 
-    if (!highestMajorVersionIsPrerelease) {
+    if (!highestMajorVersionIsPrerelease || includePrerelease) {
       latestVersion = highestMajorVersion;
     }
   }
