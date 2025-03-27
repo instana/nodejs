@@ -17,7 +17,7 @@ require('./mockVersion');
 const instana = require('../../../..')();
 
 const bodyParser = require('body-parser');
-const express = require('express-v4');
+const express = require('express');
 const morgan = require('morgan');
 const port = require('../../../test_util/app-port')();
 
