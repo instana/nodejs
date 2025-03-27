@@ -176,14 +176,15 @@ describe('util/requireHook', () => {
         });
 
         requireHook.init({ logger: testUtils.createFakeLogger() });
-        const pattern = requireHook.buildFileNamePattern(['node_modules', 'express', 'lib', 'router', 'route.js']);
+        // Adapt express v5: it has some changes in the folder structure
+        const pattern = requireHook.buildFileNamePattern(['node_modules', 'express', 'lib', 'express.js']);
         requireHook.onFileLoad(pattern, hook);
 
         expect(require('express')).to.be.a('function');
 
         expect(hook.callCount).to.equal(1);
         expect(hook.getCall(0).args[0]).to.be.a('function');
-        expect(hook.getCall(0).args[0].name).to.equal('Route');
+        expect(hook.getCall(0).args[0].name).to.equal('createApplication');
       });
     });
   });
