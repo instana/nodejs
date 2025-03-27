@@ -11,8 +11,8 @@ const { execSync } = require('child_process');
 const currencies = require(path.join(__dirname, '..', '..', 'currencies.json'));
 const utils = require('./utils');
 const MAJOR_UPDATES_MODE = process.env.MAJOR_UPDATES_MODE ? process.env.MAJOR_UPDATES_MODE === 'true' : false;
-const BRANCH = 'feat-add-express-v5';
-const SKIP_PUSH = 'true';
+const BRANCH = process.env.BRANCH;
+const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
 const cwd = path.join(__dirname, '..', '..');
 
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
