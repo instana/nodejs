@@ -1101,7 +1101,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
       });
     });
 
-    describe('when downstream suppression is disabled via INSTANA_DISABLE_SUPRESSION', function () {
+    describe('when downstream suppression is disabled via INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION', function () {
       before(async () => {
         consumerControls = new ProcessControls({
           appPath: path.join(__dirname, 'consumer'),
@@ -1109,7 +1109,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
           env: {
             // basic ignoring config for send
             INSTANA_IGNORE_ENDPOINTS: 'kafka:send',
-            INSTANA_DISABLE_SUPRESSION: true
+            INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION: true
           }
         });
 
