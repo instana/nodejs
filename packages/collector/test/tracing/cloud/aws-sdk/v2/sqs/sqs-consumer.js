@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 const mock = require('@instana/core/test/test_util/mockRequire');
 mock('sqs-consumer', 'sqs-consumer-v5');
 const instana = require('../../../../../../src')();
-const express = require('express');
+const express = require('express-v4');
 const AWS = require('aws-sdk');
 const { Consumer } = require('sqs-consumer');
 const fetch = require('node-fetch-v2');

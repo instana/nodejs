@@ -16,7 +16,7 @@ require('../../../..')();
 const { sendToParent } = require('@instana/core/test/test_util');
 const logPrefix = `Bull (${process.pid}):\t`;
 const Queue = require('bull');
-const express = require('express');
+const express = require('express-v4');
 const { ProcessTypes, buildReceiver } = require('./util');
 const port = require('../../../test_util/app-port')();
 const redisServer = process.env.REDIS_SERVER || 'redis://127.0.0.1:6379';

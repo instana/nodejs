@@ -17,7 +17,7 @@ const fetch = require('node-fetch-v2');
 const delay = require('../../../../../../../core/test/test_util/delay');
 
 const AWS = require('aws-sdk');
-const express = require('express');
+const express = require('express-v4');
 const logPrefix = `AWS SDK v2 S3 (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const s3 = new AWS.S3();

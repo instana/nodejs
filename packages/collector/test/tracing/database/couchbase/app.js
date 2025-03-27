@@ -16,7 +16,7 @@ require('../../../..')();
 
 const couchbase = require('couchbase');
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const uuid = require('uuid');
 const morgan = require('morgan');
 const port = require('../../../test_util/app-port')();

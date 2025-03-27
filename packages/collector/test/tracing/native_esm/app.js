@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 const mock = require('@instana/core/test/test_util/mockRequire');
 mock('square-calc', 'square-calc-v2');
 require('../../..')();
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const getAppPort = require('../../test_util/app-port');

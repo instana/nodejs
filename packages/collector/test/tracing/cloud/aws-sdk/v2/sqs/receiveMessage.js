@@ -23,7 +23,7 @@ const instana = require('../../../../../..')({
   }
 });
 
-const express = require('express');
+const express = require('express-v4');
 const fetch = require('node-fetch-v2');
 const { sendToParent } = require('../../../../../../../core/test/test_util');
 const delay = require('../../../../../../../core/test/test_util/delay');

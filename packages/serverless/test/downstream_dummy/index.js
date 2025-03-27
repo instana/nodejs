@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const express = require('express');
+const express = require('express-v4');
 const http = require('http');
 const morgan = require('morgan');
 const pino = require('pino')();

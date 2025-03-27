@@ -17,7 +17,7 @@ require('../../../..')();
 
 const fetch = require('node-fetch-v2');
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const log4js = require('log4js');
 const port = require('../../../test_util/app-port')();

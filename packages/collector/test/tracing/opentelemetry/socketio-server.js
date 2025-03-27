@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 
 require('../../../src')();
 
-const express = require('express');
+const express = require('express-v4');
 const port = require('../../test_util/app-port')();
 const app = express();
 const logPrefix = `SocketIO Server App (${process.pid}):\t`;

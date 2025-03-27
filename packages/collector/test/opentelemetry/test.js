@@ -6,7 +6,7 @@
 
 const expect = require('chai').expect;
 const path = require('path');
-const express = require('express');
+const express = require('express-v4');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../core/test/config');

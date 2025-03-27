@@ -24,7 +24,7 @@ instana();
 
 const { getLogger } = require(`${repoRootDir}/packages/core/test/test_util/log`);
 
-const express = require('express');
+const express = require('express-v4');
 
 const logPrefix = `Dependencies App (${process.pid}):\t`;
 const log = getLogger(logPrefix);

@@ -14,7 +14,7 @@ if (!process.env.NODE_OPTIONS || !process.env.NODE_OPTIONS.includes('src/immedia
   require('../../..')();
 }
 
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const port = require('../../test_util/app-port')();
 

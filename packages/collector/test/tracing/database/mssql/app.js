@@ -17,7 +17,7 @@ require('./mockVersion');
 require('../../../..')();
 
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const sql = require('mssql');
 const devNull = require('dev-null');

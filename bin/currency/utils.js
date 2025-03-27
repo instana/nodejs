@@ -107,7 +107,10 @@ exports.getLatestVersion = (pkgName, installedVersion) => {
       `Detected a higher major version: ${highestMajorVersion} and this version is a prerelease: ${!!highestMajorVersionIsPrerelease}`
     );
 
-    if (!highestMajorVersionIsPrerelease) {
+    // The pkg express@v5 is currently tagged as `next`
+    // Inorder to show the updates to v5 in currency report we change the logic here
+    // Revert this change once express officially tagges v5 as `latest`
+    if (!highestMajorVersionIsPrerelease || pkgName === 'express') {
       latestVersion = highestMajorVersion;
     }
   }

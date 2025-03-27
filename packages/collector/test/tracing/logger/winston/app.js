@@ -17,7 +17,7 @@ require('../../../..')();
 
 const fetch = require('node-fetch-v2');
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const semver = require('semver');
 const winston = require('winston');

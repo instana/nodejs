@@ -15,7 +15,7 @@ process.on('SIGTERM', () => {
 require('../../..')();
 
 const socketioclient = require('socket.io-client');
-const express = require('express');
+const express = require('express-v4');
 const port = require('../../test_util/app-port')();
 const app = express();
 const logPrefix = `SocketIO ClientApp (${process.pid}):\t`;

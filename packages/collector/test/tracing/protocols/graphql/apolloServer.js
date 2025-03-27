@@ -15,7 +15,7 @@ require('../../../..')();
 
 const { ApolloServer } = require('apollo-server-express');
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const http = require('http');
 const morgan = require('morgan');
 

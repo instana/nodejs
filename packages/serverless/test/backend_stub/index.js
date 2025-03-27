@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 });
 
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const fs = require('fs');
 const http = require('http');
 const https = require('https');

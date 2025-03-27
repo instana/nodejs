@@ -17,7 +17,7 @@ process.on('SIGTERM', () => {
 
 require('../../../..')();
 
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 

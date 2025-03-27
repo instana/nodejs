@@ -15,7 +15,7 @@ const port = require('../../../test_util/app-port')();
 
 require('../../../..')();
 
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const path = require('path');
 const pinoLogger = require('pino')();

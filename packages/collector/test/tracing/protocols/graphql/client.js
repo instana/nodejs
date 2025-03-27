@@ -15,7 +15,7 @@ require('../../../..')();
 
 const amqp = require('amqplib');
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const fetch = require('node-fetch-v2');
 const { v4: uuid } = require('uuid');

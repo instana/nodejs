@@ -76,7 +76,7 @@ require('express');
 //       4.x throws shimmer problems
 require('mongodb');
 
-const express = require('express');
+const express = require('express-v4');
 const port = require('../test_util/app-port')();
 const app = express();
 

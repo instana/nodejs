@@ -16,7 +16,7 @@ require('../../../..')();
 
 const { promisify } = require('util');
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const fs = require('fs');
 const morgan = require('morgan');
 const ibmdb = require('ibm_db');

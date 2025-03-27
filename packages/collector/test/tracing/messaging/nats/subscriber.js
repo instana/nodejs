@@ -16,7 +16,7 @@ require('./mockVersion');
 
 const instana = require('../../../..')();
 
-const express = require('express');
+const express = require('express-v4');
 const fetch = require('node-fetch-v2');
 const NATS = require('nats');
 

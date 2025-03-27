@@ -42,7 +42,7 @@ const mysql = require(driver);
 
 const fetch = require('node-fetch-v2');
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const port = require('../../../test_util/app-port')();
 

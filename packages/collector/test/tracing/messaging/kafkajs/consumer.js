@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 const instana = require('../../../..')();
 
-const express = require('express');
+const express = require('express-v4');
 const { Kafka } = require('kafkajs');
 const fetch = require('node-fetch-v2');
 const { v4: uuid } = require('uuid');

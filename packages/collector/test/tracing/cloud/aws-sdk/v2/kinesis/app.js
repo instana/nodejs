@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 });
 
 require('../../../../../..')();
-const express = require('express');
+const express = require('express-v4');
 const app = express();
 const port = require('../../../../../test_util/app-port')();
 const streamName = process.env.AWS_KINESIS_STREAM_NAME || 'nodejs-team';

@@ -11,7 +11,7 @@ require('@instana/collector')({
   agentPort: 42699
 });
 
-const express = require('express');
+const express = require('express-v4');
 const app = express();
 const port = 3022;
 

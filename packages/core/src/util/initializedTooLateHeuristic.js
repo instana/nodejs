@@ -32,6 +32,7 @@ let patterns = [
   /\/bull\/index.js/,
   /\/cls-hooked\/index.js/,
   /\/express\/index.js/,
+  /\/express-v4\/index.js/,
   /\/fastify\/fastify/,
   /\/graphql-subscriptions\/dist\//,
   /\/graphql\/execution\//,

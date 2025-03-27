@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 
 const path = require('path');
 const bodyParser = require('body-parser');
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 const { Worker } = require('worker_threads');
 

@@ -11,7 +11,7 @@ const fetch = require('node-fetch-v2');
 const delay = require('@instana/core/test/test_util/delay');
 
 const AWS = require('aws-sdk');
-const express = require('express');
+const express = require('express-v4');
 const logPrefix = `Combined AWS SDK v2 products (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const s3 = new AWS.S3();

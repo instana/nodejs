@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 // This application is deliberately not instrumented manually with require('@instana/collector'), it is meant to be used
 // with NODE_OPTIONS="--require ...".
 
-const express = require('express');
+const express = require('express-v4');
 const morgan = require('morgan');
 
 const app = express();

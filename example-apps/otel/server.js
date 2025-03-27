@@ -78,7 +78,7 @@ tracerProvider.register();
 sdk.start();
 
 const { Kafka } = require('kafkajs');
-const express = require('express');
+const express = require('express-v4');
 const port = process.env.PORT || '6215';
 const app = express();
 
