@@ -27,7 +27,7 @@ const configNormalizers = require('./configNormalizers');
  * @property {KafkaTracingOptions} [kafka]
  * @property {boolean} [allowRootExitSpan]
  * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
- * @property {boolean} [disableSupression]
+ * @property {boolean} [ignoreEndpointsDisableSuppression]
  */
 
 /**
@@ -126,7 +126,7 @@ const defaults = {
       traceCorrelation: true
     },
     ignoreEndpoints: {},
-    disableSupression: false
+    ignoreEndpointsDisableSuppression: false
   },
   secrets: {
     matcherMode: 'contains-ignore-case',
@@ -753,13 +753,13 @@ function normalizeIgnoreEndpoints(config) {
  * @param {InstanaConfig} config
  */
 function normalizeDisableSupression(config) {
-  if (process.env['INSTANA_DISABLE_SUPRESSION'] === 'true') {
+  if (process.env['INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION'] === 'true') {
     logger.info(
-      'Disabling supression as it is explicitly disabled via environment variable INSTANA_DISABLE_SUPRESSION.'
+      'Disabling supression as it is explicitly disabled via environment variable INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION.'
     );
-    config.tracing.disableSupression = true;
+    config.tracing.ignoreEndpointsDisableSuppression = true;
     return;
   }
 
-  config.tracing.disableSupression = defaults.tracing.disableSupression;
+  config.tracing.ignoreEndpointsDisableSuppression = defaults.tracing.ignoreEndpointsDisableSuppression;
 }

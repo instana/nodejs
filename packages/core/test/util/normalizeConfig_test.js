@@ -647,15 +647,15 @@ describe('util.normalizeConfig', () => {
       expect(config.tracing.ignoreEndpoints).to.deep.equal({});
     });
 
-    it('should return false when INSTANA_DISABLE_SUPRESSION is not set', () => {
+    it('should return false when INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION is not set', () => {
       const config = normalizeConfig();
-      expect(config.tracing.disableSupression).to.deep.equal(false);
+      expect(config.tracing.ignoreEndpointsDisableSuppression).to.deep.equal(false);
     });
 
-    it('should return true when INSTANA_DISABLE_SUPRESSION is set', () => {
-      process.env.INSTANA_DISABLE_SUPRESSION = true;
+    it('should return true when INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION is set', () => {
+      process.env.INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION = true;
       const config = normalizeConfig();
-      expect(config.tracing.disableSupression).to.deep.equal(true);
+      expect(config.tracing.ignoreEndpointsDisableSuppression).to.deep.equal(true);
     });
   });
 
