@@ -13,10 +13,10 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')();
-
-const Sequelize = require('sequelize');
 require('@instana/core/test/test_util/mockRequireExpress');
+
+require('../../../..')();
+const Sequelize = require('sequelize');
 const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');

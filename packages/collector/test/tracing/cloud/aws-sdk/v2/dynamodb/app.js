@@ -11,13 +11,14 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 require('../../../../../..')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const fetch = require('node-fetch-v2');
 const delay = require('../../../../../../../core/test/test_util/delay');
 
 const AWS = require('aws-sdk');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const logPrefix = `AWS SDK v2 DynamoDB (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });

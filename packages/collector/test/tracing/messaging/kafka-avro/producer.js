@@ -10,6 +10,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 require('../../../..')({});
 
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -19,7 +21,6 @@ const fetch = require('node-fetch-v2');
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const logPrefix = `Kafka Avro Producer (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const port = require('../../../test_util/app-port')();
 

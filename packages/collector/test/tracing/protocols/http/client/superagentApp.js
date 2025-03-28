@@ -11,13 +11,14 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 // Deliberately requiring superagent before instana to test experimental on-demand instrumentation for it.
 const superagent = require('superagent');
 
 const instana = require('../../../../..')();
 
 const bodyParser = require('body-parser');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const morgan = require('morgan');
 const port = require('../../../../test_util/app-port')();

@@ -20,10 +20,9 @@ const mock = require('@instana/core/test/test_util/mockRequire');
 if (process.env.AWS_SDK_CLIENT_DYNAMODB_REQUIRE !== '@aws-sdk/client-dynamodb') {
   mock('@aws-sdk/client-dynamodb', process.env.AWS_SDK_CLIENT_DYNAMODB_REQUIRE);
 }
+require('@instana/core/test/test_util/mockRequireExpress');
 
 require('../../../../../..')();
-
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const fetch = require('node-fetch-v2');
 const awsRegion = 'us-east-2';

@@ -11,12 +11,13 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 require('../../../..')();
 
 const { sendToParent } = require('@instana/core/test/test_util');
 const logPrefix = `Bull (${process.pid}):\t`;
 const Queue = require('bull');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const { ProcessTypes, buildReceiver } = require('./util');
 const port = require('../../../test_util/app-port')();

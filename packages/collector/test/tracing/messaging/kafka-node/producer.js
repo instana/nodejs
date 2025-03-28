@@ -13,13 +13,14 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 require('../../../..')();
 
 const fetch = require('node-fetch-v2');
 const bodyParser = require('body-parser');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const kafka = require('kafka-node');
 const port = require('../../../test_util/app-port')();

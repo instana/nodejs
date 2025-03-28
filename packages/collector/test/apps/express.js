@@ -10,6 +10,7 @@ process.on('SIGTERM', () => {
   process.disconnect();
   process.exit(0);
 });
+require('@instana/core/test/test_util/mockRequireExpress');
 
 // This is a tiny express app which responds to all methods and has configurable
 // latency and response codes. This can be used a baselines for many tests, e.g.
@@ -25,8 +26,6 @@ const instana = require('../..')({
     stackTraceLength: process.env.STACK_TRACE_LENGTH != null ? parseInt(process.env.STACK_TRACE_LENGTH, 10) : 10
   }
 });
-
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const morgan = require('morgan');
 const path = require('path');

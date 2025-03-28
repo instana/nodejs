@@ -10,12 +10,13 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 require('../../../../../..')();
 
 const { ApolloServer } = require('apollo-server-express');
 const { buildSubgraphSchema } = require('@apollo/subgraph');
 const bodyParser = require('body-parser');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const http = require('http');
 const morgan = require('morgan');

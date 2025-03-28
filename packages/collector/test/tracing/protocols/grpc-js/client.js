@@ -13,11 +13,12 @@ process.on('SIGTERM', () => {
 require('./mockVersion');
 const port = require('../../../test_util/app-port')();
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 require('../../../..')();
 
 const bodyParser = require('body-parser');
 const pinoLogger = require('pino')();
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const morgan = require('morgan');
 const grpc = require('@grpc/grpc-js');

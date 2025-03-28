@@ -10,6 +10,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 /* eslint-disable no-console */
 
 require('../../..')({
@@ -17,8 +19,6 @@ require('../../..')({
     useOpentelemetry: process.env.OTEL_ENABLED
   }
 });
-
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const fs = require('fs');
 const { isCI } = require('@instana/core/test/test_util');

@@ -11,6 +11,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 const repoRootDir = process.env.INSTANA_NODES_REPO;
 if (!repoRootDir) {
   throw new Error('Mandatory environment variable INSTANA_NODES_REPO is not set.');
@@ -23,7 +25,6 @@ dependenciesModule.MAX_ATTEMPTS = 1;
 instana();
 
 const { getLogger } = require(`${repoRootDir}/packages/core/test/test_util/log`);
-
 const express = require('express');
 
 const logPrefix = `Dependencies App (${process.pid}):\t`;

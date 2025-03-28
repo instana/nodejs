@@ -12,11 +12,12 @@ process.on('SIGTERM', () => {
 });
 
 require('./mockVersion');
+require('@instana/core/test/test_util/mockRequireExpress');
+
 require('../../../..')();
 
 const redis = require(process.env.REDIS_PKG);
 const bodyParser = require('body-parser');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const morgan = require('morgan');
 const fetch = require('node-fetch-v2');

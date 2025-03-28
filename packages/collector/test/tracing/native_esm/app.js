@@ -9,10 +9,12 @@ process.on('SIGTERM', () => {
   process.disconnect();
   process.exit(0);
 });
+
+require('@instana/core/test/test_util/mockRequireExpress');
+
 const mock = require('@instana/core/test/test_util/mockRequire');
 mock('square-calc', 'square-calc-v2');
 require('../../..')();
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');

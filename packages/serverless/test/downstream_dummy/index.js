@@ -12,6 +12,7 @@ process.on('SIGTERM', () => {
 });
 
 require('@instana/core/test/test_util/mockRequireExpress');
+
 const express = require('express');
 const http = require('http');
 const morgan = require('morgan');

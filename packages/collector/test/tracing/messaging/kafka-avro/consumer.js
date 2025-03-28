@@ -10,6 +10,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 const instana = require('../../../..')();
 
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -21,7 +23,6 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 const { sendToParent } = require('@instana/core/test/test_util');
 const logPrefix = `Kafka Avro Consumer (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const port = require('../../../test_util/app-port')();
 
