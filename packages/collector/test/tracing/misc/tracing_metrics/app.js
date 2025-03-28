@@ -20,7 +20,8 @@ const instana = require('../../../..')({
   }
 });
 
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const port = require('../../../test_util/app-port')();

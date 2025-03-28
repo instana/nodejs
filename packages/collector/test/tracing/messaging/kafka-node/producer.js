@@ -19,7 +19,8 @@ require('../../../..')();
 
 const fetch = require('node-fetch-v2');
 const bodyParser = require('body-parser');
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const kafka = require('kafka-node');
 const port = require('../../../test_util/app-port')();
 const app = express();

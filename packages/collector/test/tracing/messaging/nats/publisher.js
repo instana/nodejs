@@ -17,7 +17,8 @@ require('./mockVersion');
 require('../../../..')();
 
 const fetch = require('node-fetch-v2');
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const NATS = require('nats');
 
 const log = require('@instana/core/test/test_util/log').getLogger('NATS Publisher');

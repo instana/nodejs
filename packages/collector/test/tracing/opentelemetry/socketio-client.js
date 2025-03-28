@@ -15,7 +15,8 @@ process.on('SIGTERM', () => {
 require('../../..')();
 
 const socketioclient = require('socket.io-client');
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const port = require('../../test_util/app-port')();
 const app = express();
 const logPrefix = `SocketIO ClientApp (${process.pid}):\t`;

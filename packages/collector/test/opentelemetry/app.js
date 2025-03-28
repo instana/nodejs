@@ -76,7 +76,8 @@ require('express');
 //       4.x throws shimmer problems
 require('mongodb');
 
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const port = require('../test_util/app-port')();
 const app = express();
 

@@ -26,7 +26,8 @@ const instana = require('../..')({
   }
 });
 
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const morgan = require('morgan');
 const path = require('path');
 const fs = require('fs');

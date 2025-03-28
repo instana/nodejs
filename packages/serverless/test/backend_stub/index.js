@@ -14,7 +14,8 @@ process.on('SIGTERM', () => {
 });
 
 const bodyParser = require('body-parser');
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const fs = require('fs');
 const http = require('http');
 const https = require('https');

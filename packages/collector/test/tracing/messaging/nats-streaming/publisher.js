@@ -16,7 +16,8 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 require('../../../..')();
 
 const fetch = require('node-fetch-v2');
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const natsStreaming = require('node-nats-streaming');
 
 const app = express();

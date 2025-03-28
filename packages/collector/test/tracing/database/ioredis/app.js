@@ -18,7 +18,8 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 require('../../../..')();
 
 const bodyParser = require('body-parser');
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const morgan = require('morgan');
 const ioredis = require('ioredis');
 const fetch = require('node-fetch-v2');

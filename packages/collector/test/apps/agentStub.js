@@ -13,7 +13,8 @@ process.on('SIGTERM', () => {
 
 const bodyParser = require('body-parser');
 const bunyan = require('bunyan');
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const _ = require('lodash');
 // const morgan = require('morgan');
 const app = express();

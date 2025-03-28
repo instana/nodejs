@@ -33,7 +33,7 @@ if (config.collectorEnabled) {
 }
 
 const downstreamUrl = process.env.DOWNSTREAM_URL;
-const express = require('express-v4');
+const express = require('express');
 const app = express();
 
 app.get('/', (req, res) => {

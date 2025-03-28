@@ -16,7 +16,8 @@ require('../../../..')();
 
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const morgan = require('morgan');
 const { v4: uuid } = require('uuid');
 const port = require('../../../test_util/app-port')();

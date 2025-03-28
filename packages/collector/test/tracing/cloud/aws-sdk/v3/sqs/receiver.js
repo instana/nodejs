@@ -23,7 +23,8 @@ if (process.env.AWS_SDK_CLIENT_SQS_REQUIRE && process.env.AWS_SDK_CLIENT_SQS_REQ
 
 const instana = require('../../../../../..')();
 
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const fetch = require('node-fetch-v2');
 const awsSdk3 = require('@aws-sdk/client-sqs');
 const logPrefix = `AWS SDK v3 SQS Receiver (${process.pid}):\t`;

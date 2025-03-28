@@ -12,7 +12,8 @@ process.on('SIGTERM', () => {
 });
 
 require('../../../../../..')();
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const app = express();
 const port = require('../../../../../test_util/app-port')();
 const streamName = process.env.AWS_KINESIS_STREAM_NAME || 'nodejs-team';

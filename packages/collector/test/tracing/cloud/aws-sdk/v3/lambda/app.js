@@ -19,7 +19,8 @@ const {
   InvokeAsyncCommand,
   GetFunctionCommand
 } = require('@aws-sdk/client-lambda');
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const logPrefix = `AWS SDK v3 Lambda (${process.pid}):\t`;
 const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'nodejs-tracer-lambda';
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);

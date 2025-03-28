@@ -14,7 +14,8 @@ process.on('SIGTERM', () => {
 
 require('../../../src')();
 
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const port = require('../../test_util/app-port')();
