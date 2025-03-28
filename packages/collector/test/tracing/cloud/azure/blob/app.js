@@ -6,7 +6,7 @@
 
 'use strict';
 
-require('@instana/core/test/test_util/loadExpress4');
+require('@instana/core/test/test_util/load_express_v4');
 
 require('../../../../..')();
 

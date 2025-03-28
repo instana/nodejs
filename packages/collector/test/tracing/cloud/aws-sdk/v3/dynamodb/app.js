@@ -20,7 +20,7 @@ const mock = require('@instana/core/test/test_util/mockRequire');
 if (process.env.AWS_SDK_CLIENT_DYNAMODB_REQUIRE !== '@aws-sdk/client-dynamodb') {
   mock('@aws-sdk/client-dynamodb', process.env.AWS_SDK_CLIENT_DYNAMODB_REQUIRE);
 }
-require('@instana/core/test/test_util/loadExpress4');
+require('@instana/core/test/test_util/load_express_v4');
 
 require('../../../../../..')();
 const express = require('express');

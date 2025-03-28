@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 const mock = require('@instana/core/test/test_util/mockRequire');
 mock('sqs-consumer', 'sqs-consumer-v5');
-require('@instana/core/test/test_util/loadExpress4');
+require('@instana/core/test/test_util/load_express_v4');
 
 const instana = require('../../../../../../src')();
 const express = require('express');

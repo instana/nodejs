@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 });
 
 require('./mockVersion');
-require('@instana/core/test/test_util/loadExpress4');
+require('@instana/core/test/test_util/load_express_v4');
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
