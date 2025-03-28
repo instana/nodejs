@@ -134,6 +134,11 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
         'GET'
       ];
       expect(spanNames).to.eql(resp.spans.map(s => s.name));
+      // TODO: middleware spans are not collected when migrating to express v5 beta
+      // middleware initialization was removed in:
+      //    https://github.com/expressjs/express/commit/78e50547f16e2adb5763a953586d05308d8aba4c.
+      // middleware query functionality was removed in:
+      //     https://github.com/expressjs/express/commit/dcc4eaabe86a4309437db2a853c5ef788a854699
       expect(resp.spans.length).to.be.gte(4);
     });
   });
