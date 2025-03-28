@@ -25,7 +25,6 @@ exports.deactivate = function deactivate() {
 
 exports.init = function init() {
   hook.onModuleLoad('express', instrument);
-  hook.onModuleLoad('express-v4', instrument);
 };
 
 function instrument(express) {
