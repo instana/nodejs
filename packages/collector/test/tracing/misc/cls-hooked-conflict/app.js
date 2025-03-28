@@ -14,7 +14,8 @@ process.on('SIGTERM', () => {
 const instana = require('../../../..')();
 const clsHooked = require('cls-hooked');
 
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const morgan = require('morgan');
 const pino = require('pino')();
 

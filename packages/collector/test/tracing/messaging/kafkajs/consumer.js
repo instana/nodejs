@@ -13,7 +13,8 @@ process.on('SIGTERM', () => {
 
 const instana = require('../../../..')();
 
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const { Kafka } = require('kafkajs');
 const fetch = require('node-fetch-v2');
 const { v4: uuid } = require('uuid');

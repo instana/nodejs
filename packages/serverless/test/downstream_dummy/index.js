@@ -11,7 +11,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const http = require('http');
 const morgan = require('morgan');
 const pino = require('pino')();

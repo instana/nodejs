@@ -17,7 +17,8 @@ require('../../../..')();
 
 const fetch = require('node-fetch-v2');
 const bodyParser = require('body-parser');
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const morgan = require('morgan');
 const log4js = require('log4js');
 const port = require('../../../test_util/app-port')();

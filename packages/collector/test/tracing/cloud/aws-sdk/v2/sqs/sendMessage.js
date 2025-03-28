@@ -14,7 +14,8 @@ process.on('SIGTERM', () => {
 require('../../../../../..')();
 
 const bodyParser = require('body-parser');
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const { sqs } = require('./sqsUtil');
 const queueURL = process.env.AWS_SQS_QUEUE_URL;
 const port = require('../../../../../test_util/app-port')();

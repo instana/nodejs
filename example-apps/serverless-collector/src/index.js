@@ -19,7 +19,7 @@ require(packageToRequire);
 
 const cors = require('cors');
 
-const express = require('express-v4');
+const express = require('express');
 const app = express();
 
 app.use(cors());

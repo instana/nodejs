@@ -25,7 +25,8 @@ instana({
 });
 const port = require('../../test_util/app-port')();
 const opentracing = require('opentracing');
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const app = express();
 
 opentracing.initGlobalTracer(instana.opentracing.createTracer());

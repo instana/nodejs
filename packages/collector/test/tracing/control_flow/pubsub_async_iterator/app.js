@@ -16,7 +16,8 @@ require('../../../..')();
 
 const cls = require('../../../../../core/src/tracing/cls');
 
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const morgan = require('morgan');
 const graphqlSubscriptions = require('graphql-subscriptions');
 const port = require('../../../test_util/app-port')();

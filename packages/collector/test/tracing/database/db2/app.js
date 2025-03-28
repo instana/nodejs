@@ -16,7 +16,8 @@ require('../../../..')();
 
 const { promisify } = require('util');
 const bodyParser = require('body-parser');
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const fs = require('fs');
 const morgan = require('morgan');
 const ibmdb = require('ibm_db');

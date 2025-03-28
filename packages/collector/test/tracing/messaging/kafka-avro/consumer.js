@@ -21,7 +21,8 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 const { sendToParent } = require('@instana/core/test/test_util');
 const logPrefix = `Kafka Avro Consumer (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const port = require('../../../test_util/app-port')();
 
 const kafkaAvro = new KafkaAvro({

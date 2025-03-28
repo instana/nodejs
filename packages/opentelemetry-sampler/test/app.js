@@ -27,7 +27,8 @@ if (otelEndpoint) {
 
 require('./tracing');
 
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const fetch = require('node-fetch-v2');
 const logPrefix = `OpenTelemetry test app (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);

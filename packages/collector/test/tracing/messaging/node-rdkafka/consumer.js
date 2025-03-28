@@ -19,7 +19,8 @@ const Kafka = require('node-rdkafka');
 const { v4: uuid } = require('uuid');
 const logPrefix = `Node rdkafka Consumer (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const port = require('../../../test_util/app-port')();
 const isStream = process.env.RDKAFKA_CONSUMER_AS_STREAM === 'true';
 

@@ -17,7 +17,8 @@ const fetch = require('node-fetch-v2');
 const delay = require('../../../../../../../core/test/test_util/delay');
 
 const AWS = require('aws-sdk');
-const express = require('express-v4');
+require('@instana/core/test/test_util/mockRequireExpress');
+const express = require('express');
 const logPrefix = `AWS SDK v2 DynamoDB (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const dynamoDB = new AWS.DynamoDB();
