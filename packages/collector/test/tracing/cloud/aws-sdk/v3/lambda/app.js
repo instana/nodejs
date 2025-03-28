@@ -10,6 +10,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 require('../../../../../../src')();
 
 const {
@@ -19,7 +21,6 @@ const {
   InvokeAsyncCommand,
   GetFunctionCommand
 } = require('@aws-sdk/client-lambda');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const logPrefix = `AWS SDK v3 Lambda (${process.pid}):\t`;
 const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'nodejs-tracer-lambda';

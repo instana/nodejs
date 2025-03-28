@@ -12,9 +12,9 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../src')();
-
 require('@instana/core/test/test_util/mockRequireExpress');
+
+require('../../../src')();
 const express = require('express');
 const port = require('../../test_util/app-port')();
 const app = express();

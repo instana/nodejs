@@ -10,6 +10,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 const instana = require('../../../..')();
 const fetch = require('node-fetch-v2');
 const delay = require('../../../../../core/test/test_util/delay');
@@ -19,7 +21,6 @@ const Kafka = require('node-rdkafka');
 const { v4: uuid } = require('uuid');
 const logPrefix = `Node rdkafka Consumer (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const port = require('../../../test_util/app-port')();
 const isStream = process.env.RDKAFKA_CONSUMER_AS_STREAM === 'true';

@@ -13,9 +13,9 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const instana = require('../../..')();
-
 require('@instana/core/test/test_util/mockRequireExpress');
+
+const instana = require('../../..')();
 const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');

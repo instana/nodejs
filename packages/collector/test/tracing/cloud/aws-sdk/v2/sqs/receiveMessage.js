@@ -11,6 +11,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 const instana = require('../../../../../..')({
   tracing: {
     // We need to disable Otel here because on CI the AWS sdk loads the config file more often than locally
@@ -22,8 +24,6 @@ const instana = require('../../../../../..')({
     useOpentelemetry: false
   }
 });
-
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const fetch = require('node-fetch-v2');
 const { sendToParent } = require('../../../../../../../core/test/test_util');

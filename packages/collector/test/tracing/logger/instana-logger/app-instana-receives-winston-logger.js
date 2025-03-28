@@ -12,6 +12,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 const agentPort = process.env.AGENT_PORT;
 const instana = require('../../../..')({
   agentPort,
@@ -33,7 +35,6 @@ instana.setLogger(
 const instanaLogger = require('../../../../src/logger').getLogger();
 
 const bodyParser = require('body-parser');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const morgan = require('morgan');
 const port = require('../../../test_util/app-port')();

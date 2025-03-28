@@ -10,6 +10,7 @@ process.on('SIGTERM', () => {
   process.disconnect();
   process.exit(0);
 });
+require('@instana/core/test/test_util/mockRequireExpress');
 
 const instana = require('../../..');
 
@@ -25,7 +26,6 @@ instana({
 });
 const port = require('../../test_util/app-port')();
 const opentracing = require('opentracing');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const app = express();
 

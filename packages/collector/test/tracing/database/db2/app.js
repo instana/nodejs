@@ -12,11 +12,12 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 require('../../../..')();
 
 const { promisify } = require('util');
 const bodyParser = require('body-parser');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const fs = require('fs');
 const morgan = require('morgan');

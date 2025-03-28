@@ -11,12 +11,12 @@ process.on('SIGTERM', () => {
 });
 
 require('./mockVersion');
+require('@instana/core/test/test_util/mockRequireExpress');
 
 require('../../../..')();
 
 const couchbase = require('couchbase');
 const bodyParser = require('body-parser');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const uuid = require('uuid');
 const morgan = require('morgan');

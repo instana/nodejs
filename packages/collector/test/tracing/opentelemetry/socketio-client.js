@@ -12,10 +12,11 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 require('../../..')();
 
 const socketioclient = require('socket.io-client');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const port = require('../../test_util/app-port')();
 const app = express();

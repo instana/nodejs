@@ -11,6 +11,7 @@ process.on('SIGTERM', () => {
 });
 
 require('@instana/core/test/test_util/mockRequireExpress');
+
 const express = require('express');
 
 const getAppPort = require('@instana/collector/test/test_util/app-port');

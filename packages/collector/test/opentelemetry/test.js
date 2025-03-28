@@ -4,9 +4,10 @@
 
 'use strict';
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 const expect = require('chai').expect;
 const path = require('path');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;

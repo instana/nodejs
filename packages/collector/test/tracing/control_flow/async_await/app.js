@@ -11,6 +11,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 const fetch = require('node-fetch-v2');
 
 require('../../../..')({
@@ -20,8 +22,6 @@ require('../../../..')({
     forceTransmissionStartingAt: 1
   }
 });
-
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const port = require('../../../test_util/app-port')();
 

@@ -11,10 +11,11 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 require('../../../../../../src')();
 
 const AWS = require('aws-sdk');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const logPrefix = `AWS SDK v2 Lambda (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });

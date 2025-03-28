@@ -10,12 +10,12 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 require('./mockVersion');
 const port = require('../../../test_util/app-port')();
 
 require('../../../..')();
-
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const morgan = require('morgan');
 const path = require('path');

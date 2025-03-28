@@ -15,11 +15,12 @@ process.on('SIGTERM', () => {
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
+require('@instana/core/test/test_util/mockRequireExpress');
+
 require('../../../..')();
 
 const fetch = require('node-fetch-v2');
 const bodyParser = require('body-parser');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const morgan = require('morgan');
 const port = require('../../../test_util/app-port')();
