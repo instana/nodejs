@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-require('@instana/core/test/test_util/mockRequireExpress');
+require('@instana/core/test/test_util/loadExpress4');
 
 require('../../../..')();
 

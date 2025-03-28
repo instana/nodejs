@@ -10,7 +10,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('@instana/core/test/test_util/mockRequireExpress');
+require('@instana/core/test/test_util/loadExpress4');
 
 if (!process.env.NODE_OPTIONS || !process.env.NODE_OPTIONS.includes('src/immediate')) {
   require('../../..')();

@@ -10,7 +10,8 @@ process.on('SIGTERM', () => {
   process.disconnect();
   process.exit(0);
 });
-require('@instana/core/test/test_util/mockRequireExpress');
+
+require('@instana/core/test/test_util/loadExpress4');
 
 // This is a tiny express app which responds to all methods and has configurable
 // latency and response codes. This can be used a baselines for many tests, e.g.
