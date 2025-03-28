@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 });
 
 require('./mockVersion');
-require('@instana/core/test/test_util/mockRequireExpress');
+require('@instana/core/test/test_util/loadExpress4');
 
 const isLegacy = process.env.MONGODB_VERSION === 'v4';
 

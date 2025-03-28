@@ -4,7 +4,7 @@
 
 'use strict';
 
-require('@instana/core/test/test_util/mockRequireExpress');
+require('@instana/core/test/test_util/loadExpress4');
 
 const expect = require('chai').expect;
 const path = require('path');

@@ -11,9 +11,10 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/loadExpress4');
+
 const bodyParser = require('body-parser');
 const bunyan = require('bunyan');
-require('@instana/core/test/test_util/mockRequireExpress');
 const express = require('express');
 const _ = require('lodash');
 // const morgan = require('morgan');

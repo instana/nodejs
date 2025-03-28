@@ -18,7 +18,7 @@ if (process.env.MYSQL2_VERSION) {
   require('./mockVersion');
 }
 
-require('@instana/core/test/test_util/mockRequireExpress');
+require('@instana/core/test/test_util/loadExpress4');
 
 const instana = require('../../../..')();
 
