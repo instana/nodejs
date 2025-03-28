@@ -30,7 +30,7 @@ currencies = currencies.map(currency => {
   console.log('\n###############################################');
   console.log(`Checking ${currency.name}...`);
 
-  let installedVersion = utils.getRootDependencyVersion(currency.name);
+  let installedVersion = currency.lastSupportedVersion || utils.getRootDependencyVersion(currency.name);
   let latestVersion;
   let upToDate;
   let latestVersionPublishedAt = 'N/A';
@@ -50,7 +50,7 @@ currencies = currencies.map(currency => {
       installedVersion = installedVersion.replace(/[^0-9.]/g, '');
     }
 
-    latestVersion = utils.getLatestVersion(currency.name, installedVersion);
+    latestVersion = currency.latestVersion || utils.getLatestVersion(currency.name, installedVersion);
 
     if (!installedVersion) {
       installedVersion = latestVersion;

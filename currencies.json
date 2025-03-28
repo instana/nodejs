@@ -233,10 +233,10 @@
   {
     "name": "express",
     "policy": "45-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
+    "lastSupportedVersion": "5.0.1",
+    "latestVersion": "5.0.1",
     "cloudNative": false,
-    "isBeta": false,
+    "isBeta": true,
     "ignoreUpdates": false,
     "note": "",
     "core": false
