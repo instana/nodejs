@@ -210,7 +210,11 @@ function verifySpans(spans, appControls) {
   // EXIT www.example.com
   // 2 x express middleware, 1 x request handler
   // 1 x tlc connect, 1 x tls connect
-  // TODO: middleware spans are not collected when migrating to express v5 beta.
+  // TODO: middleware spans are not collected when migrating to express v5 beta
+  // middleware initialization was removed in:
+  //    https://github.com/expressjs/express/commit/78e50547f16e2adb5763a953586d05308d8aba4c.
+  // middleware query functionality was removed in:
+  //     https://github.com/expressjs/express/commit/dcc4eaabe86a4309437db2a853c5ef788a854699
   expectExactlyNMatching(spans, 3, [
     span => expect(span.ec).to.eq(0),
     span => expect(span.f.e).to.eq(appControls.getTestAppPid()),
