@@ -236,7 +236,7 @@
     "lastSupportedVersion": "",
     "latestVersion": "",
     "cloudNative": false,
-    "isBeta": false,
+    "isBeta": true,
     "ignoreUpdates": false,
     "note": "",
     "core": false
