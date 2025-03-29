@@ -4,6 +4,8 @@
 
 'use strict';
 
+require('@instana/core/test/test_util/load_express_v4');
+
 const expect = require('chai').expect;
 const path = require('path');
 const express = require('express');

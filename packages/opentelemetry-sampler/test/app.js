@@ -10,6 +10,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/load_express_v4');
+
 const nock = require('nock');
 const otelEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
 let otelSpans = [];
@@ -26,7 +28,6 @@ if (otelEndpoint) {
 }
 
 require('./tracing');
-
 const express = require('express');
 const fetch = require('node-fetch-v2');
 const logPrefix = `OpenTelemetry test app (${process.pid}):\t`;

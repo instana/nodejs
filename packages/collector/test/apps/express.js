@@ -11,6 +11,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/load_express_v4');
+
 // This is a tiny express app which responds to all methods and has configurable
 // latency and response codes. This can be used a baselines for many tests, e.g.
 // to test distributed tracing.
@@ -25,7 +27,6 @@ const instana = require('../..')({
     stackTraceLength: process.env.STACK_TRACE_LENGTH != null ? parseInt(process.env.STACK_TRACE_LENGTH, 10) : 10
   }
 });
-
 const express = require('express');
 const morgan = require('morgan');
 const path = require('path');

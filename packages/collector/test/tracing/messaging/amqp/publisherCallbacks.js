@@ -13,6 +13,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/load_express_v4');
+
 const agentPort = process.env.AGENT_PORT;
 require('./mockVersion');
 

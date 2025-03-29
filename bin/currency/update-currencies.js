@@ -72,7 +72,11 @@ currencies.forEach(currency => {
   }
 
   installedVersion = installedVersion.replace(/[^0-9.]/g, '');
-  const latestVersion = utils.getLatestVersion(currency.name, installedVersion);
+  const latestVersion = utils.getLatestVersion({
+    pkgName: currency.name,
+    installedVersion: installedVersion,
+    isBeta: currency.isBeta
+  });
 
   if (latestVersion === installedVersion) {
     console.log(

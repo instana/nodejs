@@ -9,6 +9,9 @@ process.on('SIGTERM', () => {
   process.disconnect();
   process.exit(0);
 });
+
+require('@instana/core/test/test_util/load_express_v4');
+
 const mock = require('@instana/core/test/test_util/mockRequire');
 mock('square-calc', 'square-calc-v2');
 require('../../..')();

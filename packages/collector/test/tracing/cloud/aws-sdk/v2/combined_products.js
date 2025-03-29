@@ -5,6 +5,8 @@
 
 'use strict';
 
+require('@instana/core/test/test_util/load_express_v4');
+
 require('../../../../../src')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const fetch = require('node-fetch-v2');
