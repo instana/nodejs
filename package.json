@@ -124,7 +124,7 @@
     "adm-zip": "^0.5.10",
     "admin": "^1.4.1",
     "admin-plugin-healthcheck": "^1.1.0",
-    "amqplib": "^0.10.5",
+    "amqplib": "^0.10.7",
     "amqplib-v0": "npm:amqplib@^0.8.0",
     "apollo-server-express": "^3.13.0",
     "async": "^3.2.6",
