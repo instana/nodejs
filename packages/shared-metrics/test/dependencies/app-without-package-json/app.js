@@ -11,8 +11,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('@instana/core/test/test_util/load_express_v4');
-
 const repoRootDir = process.env.INSTANA_NODES_REPO;
 if (!repoRootDir) {
   throw new Error('Mandatory environment variable INSTANA_NODES_REPO is not set.');

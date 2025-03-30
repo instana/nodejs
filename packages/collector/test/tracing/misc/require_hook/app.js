@@ -13,8 +13,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('@instana/core/test/test_util/load_express_v4');
-
 require('../../../..')();
 
 const bodyParser = require('body-parser');

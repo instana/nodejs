@@ -11,8 +11,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('@instana/core/test/test_util/load_express_v4');
-
 const instana = require('../../../../collector');
 require('../../../src/dependencies').MAX_DEPENDENCIES = 75;
 instana();
