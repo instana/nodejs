@@ -131,7 +131,7 @@ if (
 
       function verify(response, apiPath, withError) {
         if (withError === 'publisher') {
-          expect(response).to.equal('Data must be in the form of a Buffer.');
+          expect(response).to.contain('Data must be in the form of a Buffer');
           return retry(
             () => agentControls.getSpans().then(spans => verifySpans(spans, apiPath, null, withError)),
             retryTime
@@ -184,7 +184,7 @@ if (
           expect(span.data.gcps.projid).to.equal(projectId);
           expect(span.data.gcps.top).to.equal(topicName);
           if (withError === 'publisher') {
-            expect(span.data.gcps.error).to.equal('Data must be in the form of a Buffer.');
+            expect(span.data.gcps.error).to.contain('Data must be in the form of a Buffer');
           } else {
             expect(span.data.gcps.messageId).to.equal(messageId);
           }
