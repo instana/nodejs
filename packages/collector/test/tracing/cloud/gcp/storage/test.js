@@ -39,7 +39,7 @@ if (
   !process.env.GCP_PROJECT ||
   !(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT)
 ) {
-  describe('tracing/cloud/gcp/pubsub', function () {
+  describe('tracing/cloud/gcp/storage', function () {
     it('configuration for Google Cloud Platform is missing', () => {
       fail(
         'Please set GCP_PROJECT and GOOGLE_APPLICATION_CREDENTIALS (or GOOGLE_APPLICATION_CREDENTIALS_CONTENT)' +
