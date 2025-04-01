@@ -156,7 +156,6 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
     originalArgs[6] = setTraceHeaders({
       headers: originalArgs[6],
       span,
-      ignored: span.isIgnored,
       suppressDownstream: span.shouldSuppressDownstream
     });
 
@@ -389,9 +388,9 @@ function logDeprecationKafkaAvroMessage() {
     '[Deprecation Warning] The support for kafka-avro library is deprecated and might be removed in the next major release. See https://github.com/waldophotos/kafka-avro/issues/120'
   );
 }
-function setTraceHeaders({ headers, span, ignored, suppressDownstream }) {
-  if (ignored && suppressDownstream) {
-    // If the span is ignored, suppress trace propagation to downstream services.
+function setTraceHeaders({ headers, span, suppressDownstream }) {
+  if (suppressDownstream) {
+    // Suppress trace propagation to downstream services.
     return addTraceLevelSuppression(headers);
   } else {
     // Otherwise, inject the trace context into the headers for propagation.

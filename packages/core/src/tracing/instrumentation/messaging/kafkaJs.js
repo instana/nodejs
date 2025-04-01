@@ -92,7 +92,7 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
     });
     if (Array.isArray(messages)) {
       span.b = { s: messages.length };
-      setTraceHeaders({ messages, span, ignored: span.isIgnored, suppressDownstream: span.shouldSuppressDownstream });
+      setTraceHeaders({ messages, span, suppressDownstream: span.shouldSuppressDownstream });
     }
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
 
@@ -168,7 +168,6 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
       setTraceHeaders({
         messages: topicMessage.messages,
         span,
-        ignored: span.isIgnored,
         suppressDownstream: span.shouldSuppressDownstream
       });
     });
@@ -458,9 +457,9 @@ function removeInstanaHeadersFromMessage(message) {
   }
 }
 
-function setTraceHeaders({ messages, span, ignored, suppressDownstream }) {
-  if (ignored && suppressDownstream) {
-    // If the span is ignored, suppress trace propagation to downstream services.
+function setTraceHeaders({ messages, span, suppressDownstream }) {
+  if (suppressDownstream) {
+    // Suppress trace propagation to downstream services.
     addTraceLevelSuppressionToAllMessages(messages);
   } else {
     // Otherwise, inject the trace context into the headers for propagation.
