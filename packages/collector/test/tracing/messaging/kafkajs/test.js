@@ -1105,17 +1105,17 @@ mochaSuiteFn('tracing/kafkajs', function () {
       before(async () => {
         consumerControls = new ProcessControls({
           appPath: path.join(__dirname, 'consumer'),
+          useGlobalAgent: true
+        });
+
+        producerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'producer'),
           useGlobalAgent: true,
           env: {
             // basic ignoring config for send
             INSTANA_IGNORE_ENDPOINTS: 'kafka:send',
             INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION: true
           }
-        });
-
-        producerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'producer'),
-          useGlobalAgent: true
         });
 
         await consumerControls.startAndWaitForAgentConnection();
@@ -1155,18 +1155,19 @@ mochaSuiteFn('tracing/kafkajs', function () {
         await delay(200);
         await retry(async () => {
           const spans = await agentControls.getSpans();
+
           // 2 x HTTP server (1 x consumer, 1 x producer)
-          // 4 x HTTP client (1 producer)(2 consumer)
+          // 3 x HTTP client (1 x producer)(2 x consumer)
           // 2 x Kafka consume span (consumer)
-          expect(spans).to.have.lengthOf(8);
+          expect(spans).to.have.lengthOf(7);
 
           // Flow: HTTP entry (producer) (traced)
-          //       ├── Kafka Produce (traced)
-          //       │      └── Kafka Consume → HTTP (ignored)
+          //       ├── Kafka Produce (ignored)
+          //       │      └── Kafka Consume  (traced) → HTTP (traced)
           //       └── HTTP exit (traced)
           //
           //      HTTP entry (consumer) (traced)
-          const kafkaProducerSpan = spans.find(span => span.n === 'kafka' && span.k === 2);
+          const kafkaConsumerSpan = spans.find(span => span.n === 'kafka' && span.k === 1);
           const producerHttpSpan = spans.find(
             span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/send-messages'
           );
@@ -1175,10 +1176,10 @@ mochaSuiteFn('tracing/kafkajs', function () {
             span => span.n === 'node.http.server' && span.k === 1 && span.data.http.url === '/health'
           );
 
-          expect(kafkaProducerSpan).to.exist;
-          expect(kafkaProducerSpan.data.kafka).to.include({
+          expect(kafkaConsumerSpan).to.exist;
+          expect(kafkaConsumerSpan.data.kafka).to.include({
             service: 'test-topic-1',
-            access: 'send'
+            access: 'consume'
           });
           expect(producerHttpSpan).to.exist;
           expect(producerHttpExitSpan).to.exist;
