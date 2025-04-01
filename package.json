@@ -257,7 +257,7 @@
   "overrides": {
     "stream-shift": "1.0.2",
     "apollo-server-express": {
-      "express": "^5.0.1"
+      "express": "^5.1.0"
     }
   },
   "config": {
