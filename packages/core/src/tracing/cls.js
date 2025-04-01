@@ -30,7 +30,7 @@ let processIdentityProvider = null;
 /** @type {Boolean} */
 let allowRootExitSpan;
 /** @type {Boolean} */
-let ignoreEndpointsDownStreamSuppression = true;
+let ignoreEndpointsDisableDownStreamSuppression;
 
 /*
  * Access the Instana namespace in continuation local storage.
@@ -54,7 +54,7 @@ function init(config, _processIdentityProvider) {
   }
   processIdentityProvider = _processIdentityProvider;
   allowRootExitSpan = config?.tracing?.allowRootExitSpan;
-  ignoreEndpointsDownStreamSuppression = config?.tracing?.ignoreEndpointsDisableSuppression;
+  ignoreEndpointsDisableDownStreamSuppression = config?.tracing?.ignoreEndpointsDisableSuppression;
 }
 
 class InstanaSpan {
@@ -152,9 +152,6 @@ class InstanaSpan {
       writable: true,
       enumerable: false
     });
-    // This property was introduced as part of the ignoring endpoint feature
-    // and determines whether suppression should be propagated downstream.
-    // By default, downstream suppression triggered by a span is disabled.
     // This property "shouldSuppressDownstream" currently applicable only for ignoring endpoints.
     // When a span is ignored, downstream suppression is automatically enabled.
     // However, if required, downstream suppression propagation can be explicitly disabled
@@ -261,7 +258,7 @@ class InstanaIgnoredSpan extends InstanaSpan {
     // By default, downstream suppression for ignoring endpoints is enabled.
     // If the environment variable `INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION` is set,
     // should not suppress the downstream calls.
-    this.shouldSuppressDownstream = !ignoreEndpointsDownStreamSuppression;
+    this.shouldSuppressDownstream = !ignoreEndpointsDisableDownStreamSuppression;
   }
 
   transmit() {
