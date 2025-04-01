@@ -10,6 +10,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/loadExpressV4');
+
 const instana = require('../../../..')();
 const fetch = require('node-fetch-v2');
 const delay = require('../../../../../core/test/test_util/delay');

@@ -13,6 +13,8 @@ process.on('SIGTERM', () => {
 require('./mockVersion');
 const port = require('../../../test_util/app-port')();
 
+require('@instana/core/test/test_util/loadExpressV4');
+
 require('../../../..')();
 
 const bodyParser = require('body-parser');

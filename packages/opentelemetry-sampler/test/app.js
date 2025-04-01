@@ -26,7 +26,6 @@ if (otelEndpoint) {
 }
 
 require('./tracing');
-
 const express = require('express');
 const fetch = require('node-fetch-v2');
 const logPrefix = `OpenTelemetry test app (${process.pid}):\t`;

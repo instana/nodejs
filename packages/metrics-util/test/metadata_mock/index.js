@@ -13,6 +13,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/loadExpressV4');
+
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');

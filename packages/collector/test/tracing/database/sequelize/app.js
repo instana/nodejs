@@ -13,8 +13,9 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')();
+require('@instana/core/test/test_util/loadExpressV4');
 
+require('../../../..')();
 const Sequelize = require('sequelize');
 const express = require('express');
 const morgan = require('morgan');

@@ -11,11 +11,12 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/loadExpressV4');
+
 const agentPort = process.env.INSTANA_AGENT_PORT;
 require('./mockVersion');
 
 const instana = require('../../../..')();
-
 const express = require('express');
 const fetch = require('node-fetch-v2');
 const NATS = require('nats');

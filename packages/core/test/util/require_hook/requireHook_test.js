@@ -176,14 +176,17 @@ describe('util/requireHook', () => {
         });
 
         requireHook.init({ logger: testUtils.createFakeLogger() });
-        const pattern = requireHook.buildFileNamePattern(['node_modules', 'express', 'lib', 'router', 'route.js']);
+        // NOTE: Adapt to v5: file structure is different in v4 and v5
+        //       v5 - https://github.com/expressjs/express/tree/master/lib
+        //       v4 - https://github.com/expressjs/express/tree/4.x/lib
+        const pattern = requireHook.buildFileNamePattern(['node_modules', 'express', 'lib', 'express.js']);
         requireHook.onFileLoad(pattern, hook);
 
         expect(require('express')).to.be.a('function');
 
         expect(hook.callCount).to.equal(1);
         expect(hook.getCall(0).args[0]).to.be.a('function');
-        expect(hook.getCall(0).args[0].name).to.equal('Route');
+        expect(hook.getCall(0).args[0].name).to.equal('createApplication');
       });
     });
   });

@@ -11,9 +11,10 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/loadExpressV4');
+
 const instana = require('../../../..')();
 const clsHooked = require('cls-hooked');
-
 const express = require('express');
 const morgan = require('morgan');
 const pino = require('pino')();

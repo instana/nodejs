@@ -12,6 +12,8 @@ process.on('SIGTERM', () => {
 });
 
 require('./mockVersion');
+require('@instana/core/test/test_util/loadExpressV4');
+
 const isLegacy = process.env.MONGODB_VERSION === 'v4';
 
 const agentPort = process.env.INSTANA_AGENT_PORT;

@@ -11,6 +11,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('./mockVersion');
+
 // This is a tiny express app which responds to all methods and has configurable
 // latency and response codes. This can be used a baselines for many tests, e.g.
 // to test distributed tracing.
@@ -24,7 +26,6 @@ require('../../../../..')({
     stackTraceLength: process.env.STACK_TRACE_LENGTH != null ? process.env.STACK_TRACE_LENGTH : 10
   }
 });
-
 const express = require('express');
 const fetch = require('node-fetch-v2');
 const port = require('../../../../test_util/app-port')();

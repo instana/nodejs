@@ -14,6 +14,8 @@ process.on('SIGTERM', () => {
 });
 
 require('./mockVersion');
+require('@instana/core/test/test_util/loadExpressV4');
+
 require('../../../..')();
 
 const bodyParser = require('body-parser');

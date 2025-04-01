@@ -151,8 +151,8 @@
     "eslint-plugin-instana": "file:./misc/eslint-plugin",
     "eslint-plugin-mocha": "^10.1.0",
     "eslint-plugin-monorepo-cop": "^1.0.2",
-    "express": "^4.21.2",
-    "express-v5": "npm:express@^5.0.1",
+    "express": "^5.1.0",
+    "express-v4": "npm:express@^4.21.2",
     "express-winston": "^4.2.0",
     "fastify": "^5.2.2",
     "fastify-v3": "npm:fastify@^3.21.5",
@@ -255,7 +255,10 @@
     "prisma": "^6.5.0"
   },
   "overrides": {
-    "stream-shift": "1.0.2"
+    "stream-shift": "1.0.2",
+    "apollo-server-express": {
+      "express": "^5.1.0"
+    }
   },
   "config": {
     "commitizen": {

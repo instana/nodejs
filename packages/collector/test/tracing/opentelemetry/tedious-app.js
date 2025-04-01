@@ -10,6 +10,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/loadExpressV4');
+
 /* eslint-disable no-console */
 
 require('../../..')({
@@ -17,7 +19,6 @@ require('../../..')({
     useOpentelemetry: process.env.OTEL_ENABLED
   }
 });
-
 const express = require('express');
 const fs = require('fs');
 const { isCI } = require('@instana/core/test/test_util');

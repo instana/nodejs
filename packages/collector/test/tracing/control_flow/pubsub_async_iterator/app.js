@@ -12,10 +12,11 @@ process.on('SIGTERM', () => {
 });
 
 require('./mockVersion');
+require('@instana/core/test/test_util/loadExpressV4');
+
 require('../../../..')();
 
 const cls = require('../../../../../core/src/tracing/cls');
-
 const express = require('express');
 const morgan = require('morgan');
 const graphqlSubscriptions = require('graphql-subscriptions');

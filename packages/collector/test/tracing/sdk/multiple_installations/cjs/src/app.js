@@ -10,6 +10,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('@instana/core/test/test_util/loadExpressV4');
+
 // NOTE: Works because this is already the same collector instance. Node.js will automatically
 //       return the cached instance.
 // const instana = require(process.env.INSTANA_COLLECTOR_PATH);
@@ -22,7 +24,6 @@ const instana = require('../../../../../../src')({ agentPort: process.env.INSTAN
 // NOTE: Does not work, because this is a new instance in the require cache and this code
 //       was never initialized.
 // const instana = require('../../../../../src');
-
 const express = require('express');
 const testUtils = require('@instana/core/test/test_util');
 const getAppPort = require('@instana/collector/test/test_util/app-port');

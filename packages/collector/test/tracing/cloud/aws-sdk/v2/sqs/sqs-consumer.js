@@ -13,6 +13,8 @@ process.on('SIGTERM', () => {
 
 const mock = require('@instana/core/test/test_util/mockRequire');
 mock('sqs-consumer', 'sqs-consumer-v5');
+require('@instana/core/test/test_util/loadExpressV4');
+
 const instana = require('../../../../../../src')();
 const express = require('express');
 const AWS = require('aws-sdk');

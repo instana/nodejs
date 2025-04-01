@@ -12,8 +12,9 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../src')();
+require('@instana/core/test/test_util/loadExpressV4');
 
+require('../../../src')();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');

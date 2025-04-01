@@ -6,10 +6,11 @@
 
 'use strict';
 
+require('@instana/core/test/test_util/loadExpressV4');
+
 require('../../../../..')();
 
 const { BlobServiceClient, BlobBatchClient, BlobClient, StorageSharedKeyCredential } = require('@azure/storage-blob');
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const port = require('../../../../test_util/app-port')();
