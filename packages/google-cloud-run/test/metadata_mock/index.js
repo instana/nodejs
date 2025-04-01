@@ -8,7 +8,7 @@
 
 'use strict';
 
-require('@instana/core/test/test_util/load_express_v4');
+require('@instana/core/test/test_util/loadExpressV4');
 
 const bodyParser = require('body-parser');
 const express = require('express');

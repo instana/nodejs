@@ -25,6 +25,7 @@ const instana = require('../..')({
     stackTraceLength: process.env.STACK_TRACE_LENGTH != null ? parseInt(process.env.STACK_TRACE_LENGTH, 10) : 10
   }
 });
+
 const express = require('express');
 const morgan = require('morgan');
 const path = require('path');

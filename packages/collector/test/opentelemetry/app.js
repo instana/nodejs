@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('@instana/core/test/test_util/load_express_v4');
+require('@instana/core/test/test_util/loadExpressV4');
 
 let initialized = false;
 
@@ -77,6 +77,7 @@ require('express');
 // NOTE: this is 3.x
 //       4.x throws shimmer problems
 require('mongodb');
+
 const express = require('express');
 const port = require('../test_util/app-port')();
 const app = express();

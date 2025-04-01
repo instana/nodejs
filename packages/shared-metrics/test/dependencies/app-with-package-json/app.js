@@ -16,6 +16,7 @@ require('../../../src/dependencies').MAX_DEPENDENCIES = 75;
 instana();
 
 const { getLogger } = require('@instana/core/test/test_util/log');
+
 const express = require('express');
 const morgan = require('morgan');
 

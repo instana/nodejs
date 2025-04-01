@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('@instana/core/test/test_util/load_express_v4');
+require('@instana/core/test/test_util/loadExpressV4');
 
 const instana = require('../../../../../..')({
   tracing: {
@@ -24,6 +24,7 @@ const instana = require('../../../../../..')({
     useOpentelemetry: false
   }
 });
+
 const express = require('express');
 const fetch = require('node-fetch-v2');
 const { sendToParent } = require('../../../../../../../core/test/test_util');

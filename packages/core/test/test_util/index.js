@@ -37,7 +37,7 @@ module.exports = {
   sendToParent: require('./sendToParent'),
   stringifyItems: require('./stringifyItems'),
   mockRequire: require('./mockRequire'),
-  load_express_v4: require('./load_express_v4'),
+  loadExpressV4: require('./loadExpressV4'),
   checkESMApp: require('./check_esm_app'),
   ...commonVerifications
 };

@@ -23,6 +23,7 @@ dependenciesModule.MAX_ATTEMPTS = 1;
 instana();
 
 const { getLogger } = require(`${repoRootDir}/packages/core/test/test_util/log`);
+
 const express = require('express');
 
 const logPrefix = `Dependencies App (${process.pid}):\t`;
