@@ -63,17 +63,12 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
 
       await retry(async () => {
         const spans = await appControls.getSpans();
-        const spanNames = [
-          // TODO: investigate why this spans are missing in express v5 beta.
-          // 'middleware - query',
-          // 'middleware - expressInit',
-          // 'request handler - /otel-test',
-          'tcp.connect',
-          'tls.connect',
-          // 'GET /otel-test',
-          'GET',
-          'GET'
-        ];
+        // NOTE: middleware spans are not collected when migrating to express v5 because:
+        //       middleware initialization was removed in
+        //         https://github.com/expressjs/express/commit/78e50547f16e2adb5763a953586d05308d8aba4c.
+        //       middleware query functionality was removed in:
+        //         https://github.com/expressjs/express/commit/dcc4eaabe86a4309437db2a853c5ef788a854699
+        const spanNames = ['tcp.connect', 'tls.connect', 'GET', 'GET'];
         expect(spanNames).to.eql(spans.map(s => s.data.operation));
         expect(spans.length).to.eql(4);
       });
