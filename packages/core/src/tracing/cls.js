@@ -157,7 +157,6 @@ class InstanaSpan {
     // By default, downstream suppression triggered by a span is disabled.
     // This property "shouldSuppressDownstream" currently applicable only for ignoring endpoints.
     // When a span is ignored, downstream suppression is automatically enabled.
-    // propagating suppression headers downstream.
     // However, if required, downstream suppression propagation can be explicitly disabled
     // via the env variable `INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION`.
     Object.defineProperty(this, 'shouldSuppressDownstream', {
