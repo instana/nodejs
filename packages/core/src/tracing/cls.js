@@ -155,7 +155,7 @@ class InstanaSpan {
     // This property was introduced as part of the ignoring endpoint feature
     // and determines whether suppression should be propagated downstream.
     // By default, downstream suppression triggered by a span is disabled.
-    // This property currently applicable only for ignoring endpoints.
+    // This property "shouldSuppressDownstream" currently applicable only for ignoring endpoints.
     // When a span is ignored, suppression is automatically enabled (`true`),
     // propagating suppression headers downstream.
     // However, if required, suppression propagation can be explicitly disabled
