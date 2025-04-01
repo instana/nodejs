@@ -176,7 +176,9 @@ describe('util/requireHook', () => {
         });
 
         requireHook.init({ logger: testUtils.createFakeLogger() });
-        // Adapt express v5: it has some changes in the folder structure
+        // NOTE: Adapt to v5: file structure is different in v4 and v5
+        //       v5 - https://github.com/expressjs/express/tree/master/lib
+        //       v4 - https://github.com/expressjs/express/tree/4.x/lib
         const pattern = requireHook.buildFileNamePattern(['node_modules', 'express', 'lib', 'express.js']);
         requireHook.onFileLoad(pattern, hook);
 
