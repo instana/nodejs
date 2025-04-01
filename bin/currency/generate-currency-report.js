@@ -50,11 +50,7 @@ currencies = currencies.map(currency => {
       installedVersion = installedVersion.replace(/[^0-9.]/g, '');
     }
 
-    latestVersion = utils.getLatestVersion({
-      pkgName: currency.name,
-      installedVersion: installedVersion,
-      isBeta: currency.isBeta
-    });
+    latestVersion = utils.getLatestVersion(currency.name, installedVersion);
 
     if (!installedVersion) {
       installedVersion = latestVersion;
