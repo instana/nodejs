@@ -460,7 +460,7 @@ function setIgnoredSpan({ spanName, kind, traceId, parentId, data = {} }) {
 
     // For entry spans, we need to retain suppression information to ensure that
     // tracing is suppressed for all internal (!) subsequent outgoing (exit) calls.
-    // By default, downstream suppression is enabled.
+    // By default, downstream suppression for ignored spans is enabled.
     // If the environment variable `INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION is set,
     // should not suppress the downstream calls.
     if (span.shouldSuppressDownstream) setTracingLevel('0');
