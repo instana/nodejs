@@ -5,7 +5,7 @@ metadata:
 spec:
   sidecars:
     - name: zookeeper
-      image: zookeeper:3.9.2
+      image: zookeeper:3.9.1
       readinessProbe:
           tcpSocket:
             port: 2181 

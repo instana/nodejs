@@ -74,7 +74,10 @@ services:
       xpack.security.enabled: 'false'
 
   zookeeper:
-    image: zookeeper:3.9.2
+    # The latest Zookeeper image is not functioning properly on ARM64.
+    # For local testing, stick to the fixed version until the issue is resolved.
+    # TODO: INSTA-32550.
+    image: zookeeper:3.9.1
     platform: linux/amd64
     ports:
       - 2181:2181
