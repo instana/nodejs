@@ -1189,7 +1189,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
         });
       });
 
-      describe('when send and consume methods are ignored', function () {
+      describe('when consume method is ignored', function () {
         before(async () => {
           consumerControls = new ProcessControls({
             appPath: path.join(__dirname, 'consumer'),
@@ -1203,12 +1203,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
           producerControls = new ProcessControls({
             appPath: path.join(__dirname, 'producer'),
-            useGlobalAgent: true,
-            env: {
-              // basic ignoring config for send
-              INSTANA_IGNORE_ENDPOINTS: 'kafka:send',
-              INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION: true
-            }
+            useGlobalAgent: true
           });
 
           await consumerControls.startAndWaitForAgentConnection();
@@ -1224,7 +1219,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
           await consumerControls.stop();
         });
 
-        it('should ignore send and consume spans while trace downstream HTTP calls', async () => {
+        it('should ignore consume spans while trace downstream calls', async () => {
           const message = {
             key: 'someKey',
             value: 'someMessage'
@@ -1251,10 +1246,11 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
             // 2 x HTTP server (1 x consumer, 1 x producer)
             // 3 x HTTP client (1 x producer)(2 x consumer)
-            expect(spans).to.have.lengthOf(5);
+            // 1 x Kafka produce
+            expect(spans).to.have.lengthOf(6);
 
             // Flow: HTTP entry (producer) (traced)
-            //       ├── Kafka Produce (ignored)
+            //       ├── Kafka Produce (traced)
             //       │      └── Kafka Consume  (ignored) → HTTP (traced)
             //       └── HTTP exit (traced)
             //
@@ -1270,8 +1266,12 @@ mochaSuiteFn('tracing/kafkajs', function () {
             );
 
             expect(kafkaConsumerSpan).not.exist;
-            expect(kafkaProducerSpan).not.exist;
+            expect(kafkaProducerSpan).to.exist;
 
+            expect(kafkaProducerSpan.data.kafka).to.include({
+              service: 'test-topic-1',
+              access: 'send'
+            });
             expect(producerHttpSpan).to.exist;
             expect(producerHttpExitSpan).to.exist;
             expect(consumerHttpSpan).to.exist;
