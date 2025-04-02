@@ -11,8 +11,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('@instana/core/test/test_util/loadExpressV4');
-
 const instana = require('../../../../../..')({
   tracing: {
     // We need to disable Otel here because on CI the AWS sdk loads the config file more often than locally

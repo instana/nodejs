@@ -10,8 +10,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('@instana/core/test/test_util/loadExpressV4');
-
 require('../../../../../..')();
 const express = require('express');
 const fetch = require('node-fetch-v2');
