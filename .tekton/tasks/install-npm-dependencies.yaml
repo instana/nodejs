@@ -46,9 +46,6 @@ spec:
           echo "Installing dependencies for prerelease..."
 
           source bin/install-prerelease.sh 
-
-          npm install --loglevel verbose          
-          exit 0
         fi
 
         if [ "$(params.skip-cache)" == "true" ]; then
