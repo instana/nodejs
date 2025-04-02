@@ -36,13 +36,15 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        echo "Logging params"
+        echo "Logging npm version: $(params.npm-version)"
+        echo "Logging prerelease param: $(params.prerelease)"
+
         if [ "$(params.prerelease)" == "true" ]; then
           echo "Installing dependencies for prerelease..."
 
           source bin/install-prerelease.sh 
         fi
-
-        echo "Logging npm version: $(params.npm-version)"
 
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
