@@ -11,8 +11,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('@instana/core/test/test_util/loadExpressV4');
-
 const express = require('express');
 const http = require('http');
 const morgan = require('morgan');
