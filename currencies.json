@@ -407,6 +407,17 @@
     "core": false
   },
   {
+    "name": "knex",
+    "policy": "45-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": true,
+    "note": "",
+    "core": false
+  },
+  {
     "name": "koa",
     "policy": "45-days",
     "lastSupportedVersion": "",
