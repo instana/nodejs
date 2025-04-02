@@ -42,7 +42,7 @@ spec:
           source bin/install-prerelease.sh 
         fi
 
-        echo "Found npm version param: $(params.npm-version)"
+        echo "Logging npm version: $(params.npm-version)"
 
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
