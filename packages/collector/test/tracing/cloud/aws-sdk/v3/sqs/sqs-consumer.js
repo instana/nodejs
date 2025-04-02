@@ -16,8 +16,6 @@ if (process.env.AWS_SDK_CLIENT_SQS_REQUIRE !== '@aws-sdk/client-sqs') {
   mock('@aws-sdk/client-sqs', process.env.AWS_SDK_CLIENT_SQS_REQUIRE);
 }
 
-require('@instana/core/test/test_util/loadExpressV4');
-
 const instana = require('../../../../../../src')();
 const express = require('express');
 const awsSdk3 = require('@aws-sdk/client-sqs');
