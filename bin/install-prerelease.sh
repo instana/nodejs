@@ -24,7 +24,7 @@ source "$HOME/.nvm/nvm.sh"
 install_node_version() {
   local PRERELEASE_NODE_VERSION=$1
   echo "Installing Node.js prerelease version $PRERELEASE_NODE_VERSION..."
-  NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/rc"
+  NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/nightly"
   if ! nvm install "$PRERELEASE_NODE_VERSION" &> /dev/null; then
     echo "RC installation failed. Trying Nightly mirror..."
     NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/nightly"
