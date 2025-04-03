@@ -56,7 +56,7 @@ spec:
           echo "Skipping npm cache..."
 
           echo "Installing npm dependencies..."
-          echo "NPM version: $(params.skip-cache)"
+          echo "NPM version: $(npm --version)"
           npm install --loglevel verbose
         else
           echo "Restoring node_modules cache..."
