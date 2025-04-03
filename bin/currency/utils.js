@@ -93,7 +93,7 @@ const getHighestMajorVersion = versions => {
   return highestMajorVersion;
 };
 
-exports.getLatestVersion = (pkgName, installedVersion) => {
+exports.getLatestVersion = ({ pkgName, installedVersion, isBeta }) => {
   let latestVersion = execSync(`npm info ${pkgName} version`).toString().trim();
   const allVersions = getAllVersions(pkgName);
   const highestMajorVersion = getHighestMajorVersion(allVersions);
@@ -107,7 +107,8 @@ exports.getLatestVersion = (pkgName, installedVersion) => {
       `Detected a higher major version: ${highestMajorVersion} and this version is a prerelease: ${!!highestMajorVersionIsPrerelease}`
     );
 
-    if (!highestMajorVersionIsPrerelease) {
+    // If isBeta is true, then we allow prerelease version as latest in currency report
+    if (!highestMajorVersionIsPrerelease || isBeta) {
       latestVersion = highestMajorVersion;
     }
   }
