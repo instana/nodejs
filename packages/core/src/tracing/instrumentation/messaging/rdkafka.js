@@ -155,8 +155,7 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
 
     originalArgs[6] = setTraceHeaders({
       headers: originalArgs[6],
-      span,
-      suppressDownstream: span.shouldSuppressDownstream
+      span
     });
 
     if (deliveryCb) {
@@ -388,8 +387,8 @@ function logDeprecationKafkaAvroMessage() {
     '[Deprecation Warning] The support for kafka-avro library is deprecated and might be removed in the next major release. See https://github.com/waldophotos/kafka-avro/issues/120'
   );
 }
-function setTraceHeaders({ headers, span, suppressDownstream }) {
-  if (suppressDownstream) {
+function setTraceHeaders({ headers, span }) {
+  if (span.shouldSuppressDownstream) {
     // Suppress trace propagation to downstream services.
     return addTraceLevelSuppression(headers);
   } else {
