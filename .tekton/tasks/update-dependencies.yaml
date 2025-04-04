@@ -62,7 +62,7 @@ spec:
           MAJOR_UPDATES_MODE=false BRANCH=currency-bot node bin/currency/update-currencies.js    
         else
           echo "Open PRs exist for branch currency-bot. Skipping patch/minor updates."
-        fi         
+        fi        
 
         echo "Running major updates..."
         MAJOR_UPDATES_MODE=true BRANCH=currency-bot-major node bin/currency/update-currencies.js
