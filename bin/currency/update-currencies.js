@@ -33,6 +33,8 @@ const hasCommits = (branch, cwd) => {
   }
 };
 
+execSync('npm install npm@11', { cwd });
+
 if (!MAJOR_UPDATES_MODE) {
   console.log('Preparing patch/minor updates...');
   execSync('git checkout main', { cwd });
