@@ -144,6 +144,8 @@ spec:
           value: "secure-properties"
         - name: node-version
           value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)
         - name: type
           value: $(params.type)
       workspaces:

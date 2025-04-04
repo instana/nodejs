@@ -10,6 +10,8 @@ spec:
       value: $(params.type)
     - name: node-version
       value: $(params.node-version)
+    - name: npm-version
+      value: $(params.npm-version)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -27,6 +29,10 @@ spec:
 
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
+
+        if [ -n "$(params.npm-version)" ]; then
+          npm install npm@$(params.npm-version) -g
+        fi  
         
         git config user.name "Instanacd PAT for GitHub Public"
         git config user.email "techuser@instana.com"
