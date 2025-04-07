@@ -130,7 +130,6 @@
     "admin-plugin-healthcheck": "^1.1.0",
     "amqplib": "^0.10.7",
     "amqplib-v0": "npm:amqplib@^0.8.0",
-    "apollo-server-express": "^3.13.0",
     "async": "^3.2.6",
     "aws-sdk": "^2.1692.0",
     "basic-auth-parser": "^0.0.2",

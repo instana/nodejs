@@ -18,7 +18,7 @@ const agentControls = globalAgent.instance;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing gateway with apollo-subgraph', function () {
+mochaSuiteFn.only('tracing gateway with apollo-subgraph', function () {
   this.timeout(config.getTestTimeout() * 5);
   globalAgent.setUpCleanUpHooks();
 

@@ -14,12 +14,14 @@ require('@instana/core/test/test_util/loadExpressV4');
 
 require('../../../..')();
 
-const { ApolloServer } = require('apollo-server-express');
+const { ApolloServer } = require('@apollo/server');
 const { ApolloGateway, IntrospectAndCompose } = require('@apollo/gateway');
+const { expressMiddleware } = require('@apollo/server/express4');
 const bodyParser = require('body-parser');
 const express = require('express');
 const http = require('http');
 const morgan = require('morgan');
+const cors = require('cors');
 
 const accountsPort = process.env.SERVICE_PORT_ACCOUNTS;
 const inventoryPort = process.env.SERVICE_PORT_INVENTORY;
@@ -47,15 +49,21 @@ const gateway = new ApolloGateway({
     ]
   })
 });
+
 app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
 (async () => {
-  const { schema, executor } = await gateway.load();
-  const server = new ApolloServer({ schema, executor });
+  // Removed the manual gateway.load() call and schema/executor extraction - Apollo Server v4 handles this internally
+  const server = new ApolloServer({
+    gateway
+  });
+
   await server.start();
-  server.applyMiddleware({ app });
+
+  app.use('/graphql', cors(), expressMiddleware(server));
+
   const httpServer = http.createServer(app);
   httpServer.listen({ port }, () => {
     log(`Listening at ${port}`);
