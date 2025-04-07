@@ -95,6 +95,6 @@
   },
   "devDependencies": {
     "opentracing": "^0.14.5",
-    "typeorm": "^0.3.21"
+    "typeorm": "^0.3.22"
   }
 }
