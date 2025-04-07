@@ -44,7 +44,7 @@ spec:
           echo "Installing dependencies for prerelease..."
 
           apt update
-          apt install build-essential python3 g++ make
+          apt install -y build-essential python3 g++ make
 
           source bin/install-prerelease.sh 
         fi
