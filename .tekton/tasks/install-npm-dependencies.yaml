@@ -43,6 +43,9 @@ spec:
         if [ "$(params.prerelease)" == "true" ]; then
           echo "Installing dependencies for prerelease..."
 
+          apt update
+          apt install build-essential python3 g++ make
+
           source bin/install-prerelease.sh 
         fi
 
