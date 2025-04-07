@@ -36,15 +36,15 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
-        echo "Logging params"
-        echo "Logging npm version: $(params.npm-version)"
-        echo "Logging prerelease param: $(params.prerelease)"
-
         if [ "$(params.prerelease)" == "true" ]; then
           echo "Installing dependencies for prerelease..."
 
-          apt update
-          apt install -y build-essential python3 g++ make
+          echo "Logging params"
+          echo "Logging npm version: $(params.npm-version)"
+          echo "Logging prerelease param: $(params.prerelease)"
+
+          apt-get update
+          apt-get install -y build-essential python3 g++ make
 
           source bin/install-prerelease.sh 
         fi
@@ -60,7 +60,7 @@ spec:
 
           echo "Installing npm dependencies..."
           echo "NPM version: $(npm --version)"
-          npm install --loglevel verbose
+          rm -rf node_modules package-lock.json && npm install --loglevel verbose
         else
           echo "Restoring node_modules cache..."
           curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
