@@ -66,9 +66,7 @@
     "tar": "^6.2.1"
   },
   "devDependencies": {
-    "@types/tar": "^6.1.6",
-    "event-loop-stats": "1.4.1",
-    "gcstats.js": "1.0.0"
+    "@types/tar": "^6.1.6"
   },
   "optionalDependencies": {
     "event-loop-stats": "1.4.1",
