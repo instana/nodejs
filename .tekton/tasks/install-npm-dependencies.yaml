@@ -60,7 +60,7 @@ spec:
 
           echo "Installing npm dependencies..."
           echo "NPM version: $(npm --version)"
-          rm -rf node_modules package-lock.json && npm install --loglevel verbose
+          rm -rf node_modules && npm install --loglevel verbose
         else
           echo "Restoring node_modules cache..."
           curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
