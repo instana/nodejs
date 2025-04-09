@@ -39,13 +39,6 @@ spec:
         if [ "$(params.prerelease)" == "true" ]; then
           echo "Installing dependencies for prerelease..."
 
-          echo "Logging params"
-          echo "Logging npm version: $(params.npm-version)"
-          echo "Logging prerelease param: $(params.prerelease)"
-
-          apt-get update
-          apt-get install -y build-essential python3 g++ make
-
           source bin/install-prerelease.sh 
         fi
 
@@ -59,8 +52,7 @@ spec:
           echo "Skipping npm cache..."
 
           echo "Installing npm dependencies..."
-          echo "NPM version: $(npm --version)"
-          npm ci --loglevel verbose
+          npm install --loglevel verbose
         else
           echo "Restoring node_modules cache..."
           curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
