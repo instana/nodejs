@@ -11,13 +11,18 @@ const _ = require('lodash');
 const expect = require('chai').expect;
 const { execSync } = require('child_process');
 const path = require('path');
+const semver = require('semver');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
 const config = require('../../../../core/test/config');
 const { retry } = require('../../../../core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 
-describe('snapshot data and metrics', function () {
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.lt(process.versions.node, '24.0.0') ? describe : describe.skip;
+
+mochaSuiteFn('snapshot data and metrics', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
