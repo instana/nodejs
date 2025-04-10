@@ -19,6 +19,7 @@
 const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
+const semver = require('semver');
 const {
   tracing: { constants }
 } = require('@instana/core');
@@ -50,7 +51,10 @@ const SINGLE_TEST_PROPS = {
 const retryTime = 1000;
 const topic = 'rdkafka-topic';
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.lt(semver.coerce(process.versions.node), '24.0.0')
+    ? describe
+    : describe.skip;
 
 mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   this.timeout(config.getTestTimeout() * 4);
