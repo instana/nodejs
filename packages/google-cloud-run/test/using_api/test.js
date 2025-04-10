@@ -25,13 +25,13 @@ const instanaAgentKey = 'google-cloud-run-dummy-key';
 
 const semver = require('semver');
 
-const mochaSuiteFn = semver.lt(semver.coerce(process.versions.node), '24.0.0') ? describe : describe.skip;
+const isNodeV24 = semver.gte(semver.coerce(process.versions.node), '24.0.0');
 
 // NOTE: This test does not run against the Google Cloud Run on GCP. Instead, it is mocked using a metadata mock API.
 //       It mimics the GCP Metadata Service, which provides env details for services running on Google Cloud Run.
 // API documentation:  https://cloud.google.com/appengine/docs/legacy/standard/java/accessing-instance-metadata
 // Local mock path:  packages/google-cloud-run/test/metadata_mock/index.js
-mochaSuiteFn('Using the API', function () {
+describe('Using the API', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
@@ -126,8 +126,11 @@ mochaSuiteFn('Using the API', function () {
       );
     });
 
-    expect(response.logs.info).to.be.empty;
-    expect(response.logs.error).to.be.empty;
+    // NOTE: skipping for v24 because currently we are getting prebuild incompatibility warning logs
+    if (!isNodeV24) {
+      expect(response.logs.info).to.be.empty;
+      expect(response.logs.error).to.be.empty;
+    }
 
     expect(response.currentSpan.span.n).to.equal('node.http.server');
     expect(response.currentSpan.span.f.hl).to.be.true;
