@@ -55,7 +55,6 @@ app.get('/', (req, res) => {
 });
 
 (async () => {
-  // Removed the manual gateway.load() call and schema/executor extraction - Apollo Server v4 handles this internally
   const server = new ApolloServer({
     gateway
   });
