@@ -27,13 +27,13 @@ const instanaAgentKey = 'aws-fargate-dummy-key';
 
 function prelude() {}
 
-const mochaSuiteFn = semver.lt(semver.coerce(process.versions.node), '24.0.0') ? describe : describe.skip;
+const isNodeV24 = semver.gte(semver.coerce(process.versions.node), '24.0.0');
 
 // NOTE: This test does not run against AWS Fargate. Instead, it is mocked using a metadata mock API.
 //       It mimics the Amazon ECS Task Metadata Endpoint, which provides env details for tasks running on AWS Fargate.
 // API Documentation: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint-v3-fargate.html
 // Local mock path: packages/aws-fargate/test/metadata_mock/index.js
-mochaSuiteFn('Using the API', function () {
+describe('Using the API', function () {
   this.timeout(config.getTestTimeout());
 
   describe('when configured properly', function () {
@@ -130,8 +130,11 @@ mochaSuiteFn('Using the API', function () {
         );
       });
 
-      expect(response.logs.info).to.be.empty;
-      expect(response.logs.error).to.be.empty;
+      // NOTE: skipping for v24 because currently we are getting prebuild incompatibility warning logs
+      if (!isNodeV24) {
+        expect(response.logs.info).to.be.empty;
+        expect(response.logs.error).to.be.empty;
+      }
 
       expect(response.currentSpan.span.n).to.equal('node.http.server');
       expect(response.currentSpan.span.f.hl).to.be.true;
