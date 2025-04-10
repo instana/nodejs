@@ -37,10 +37,8 @@ spec:
         cd $ARTIFACTS_PATH
 
         if [ "$(params.prerelease)" == "true" ]; then
-          echo "Installing dependencies for prerelease..."
-
           source bin/install-prerelease.sh 
-          npm ci --loglevel verbose 
+          npm install --loglevel verbose 
         fi
 
         if [ -n "$(params.npm-version)" ]; then
