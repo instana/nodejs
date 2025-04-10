@@ -20,7 +20,9 @@ const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 
 const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.lt(process.versions.node, '24.0.0') ? describe : describe.skip;
+  supportedVersion(process.versions.node) && semver.lt(semver.coerce(process.versions.node), '24.0.0')
+    ? describe
+    : describe.skip;
 
 mochaSuiteFn('snapshot data and metrics', function () {
   this.timeout(config.getTestTimeout());
