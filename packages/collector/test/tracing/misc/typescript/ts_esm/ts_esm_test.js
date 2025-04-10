@@ -58,7 +58,7 @@ mochaSuiteFn('Typescript TS->ESM', function () {
       await controls.stop();
     });
 
-    it.only('[app_1] should be able to load Instana SDK', async () => {
+    it('[app_1] should be able to load Instana SDK', async () => {
       await controls.sendRequest({
         method: 'GET',
         path: '/request'

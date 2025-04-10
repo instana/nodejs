@@ -13,7 +13,7 @@ const globalAgent = require('../../../../globalAgent');
 const testUtils = require('@instana/core/test/test_util');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('Typescript TS->JS', function () {
   this.timeout(config.getTestTimeout() * 5);
