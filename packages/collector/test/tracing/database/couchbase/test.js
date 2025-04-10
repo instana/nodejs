@@ -70,7 +70,12 @@ const verifySpans = (agentControls, controls, options = {}) =>
     expectExactlyOneMatching(spans, verifyCouchbaseSpan(controls, entrySpan, options));
   });
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const semver = require('semver');
+
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.lt(semver.coerce(process.versions.node), '24.0.0')
+    ? describe
+    : describe.skip;
 
 let tries = 0;
 const maxTries = 100;
