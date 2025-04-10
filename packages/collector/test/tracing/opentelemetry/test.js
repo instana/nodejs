@@ -26,7 +26,9 @@ const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 const DELAY_TIMEOUT_IN_MS = 500;
 const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.lt(process.versions.node, '24.0.0') ? describe : describe.skip;
+  supportedVersion(process.versions.node) && semver.lt(semver.coerce(process.versions.node), '24.0.0')
+    ? describe
+    : describe.skip;
 
 mochaSuiteFn('opentelemetry/instrumentations', function () {
   this.timeout(config.getTestTimeout());
