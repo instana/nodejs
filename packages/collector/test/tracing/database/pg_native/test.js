@@ -19,7 +19,12 @@ const {
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const semver = require('semver');
+
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.lt(semver.coerce(process.versions.node), '24.0.0')
+    ? describe
+    : describe.skip;
 
 mochaSuiteFn('tracing/pg-native', function () {
   this.timeout(config.getTestTimeout());
