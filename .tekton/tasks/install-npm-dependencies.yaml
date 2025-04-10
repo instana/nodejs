@@ -38,7 +38,6 @@ spec:
 
         if [ "$(params.prerelease)" == "true" ]; then
           source bin/install-prerelease.sh 
-          npm install --loglevel verbose 
         fi
 
         if [ -n "$(params.npm-version)" ]; then
