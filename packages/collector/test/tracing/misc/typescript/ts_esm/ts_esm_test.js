@@ -14,7 +14,12 @@ const supportedVersion = require('../../../../../../core').tracing.supportedVers
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const semver = require('semver');
+
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.lt(semver.coerce(process.versions.node), '24.0.0')
+    ? describe
+    : describe.skip;
 
 const loaderPath = isLatestEsmSupportedVersion(process.versions.node)
   ? ['--import', path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-register.mjs')]

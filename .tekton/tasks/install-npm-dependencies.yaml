@@ -36,20 +36,15 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        if [ "$(params.prerelease)" == "true" ]; then
+          source bin/install-prerelease.sh 
+        fi
+
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         else
           npm install npm -g
         fi     
-
-        if [ "$(params.prerelease)" == "true" ]; then
-          echo "Installing dependencies for prerelease..."
-
-          source bin/install-prerelease.sh 
-
-          npm install --loglevel verbose          
-          exit 0
-        fi
 
         if [ "$(params.skip-cache)" == "true" ]; then
           echo "Skipping npm cache..."

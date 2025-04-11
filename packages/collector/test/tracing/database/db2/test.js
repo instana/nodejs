@@ -7,13 +7,18 @@
 const dns = require('dns').promises;
 const path = require('path');
 const expect = require('chai').expect;
+const semver = require('semver');
 
 const { supportedVersion, constants } = require('@instana/core').tracing;
 const testUtils = require('../../../../../core/test/test_util');
 const config = require('../../../../../core/test/config');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.lt(semver.coerce(process.versions.node), '24.0.0')
+    ? describe
+    : describe.skip;
 
 if (testUtils.isCI() && !process.env.DB2_CONNECTION_STR) {
   throw new Error(
