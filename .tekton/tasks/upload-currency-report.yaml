@@ -35,6 +35,7 @@ spec:
           node bin/currency/generate-currency-report.js
           echo "Generated report..."
 
+          # Key Name: Tracer Reports 041425
           git clone https://oauth2:$GH_ENTERPRISE_TOKEN@github.ibm.com/instana/tracer-reports.git tracer-reports
           cd tracer-reports
           
