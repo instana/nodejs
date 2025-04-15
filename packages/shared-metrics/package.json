@@ -25,6 +25,7 @@
     "url": "git+https://github.com/instana/nodejs.git"
   },
   "scripts": {
+    "postinstall": "node scripts/ensure-native-modules.js",
     "audit": "npm audit --omit=dev",
     "test": "mocha $npm_config_watch --config=test/.mocharc.js --require test/hooks.js --sort $(find test -iname '*test.js')",
     "test:ci": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/**/*test.js'",
@@ -66,9 +67,7 @@
     "tar": "^6.2.1"
   },
   "devDependencies": {
-    "@types/tar": "^6.1.6",
-    "event-loop-stats": "1.4.1",
-    "gcstats.js": "1.0.0"
+    "@types/tar": "^6.1.6"
   },
   "optionalDependencies": {
     "event-loop-stats": "1.4.1",
