@@ -107,7 +107,7 @@ spec:
               npm install --loglevel verbose
 
               # Force non optional dependency installation
-              npm install gcstats.js event-loop-stats -w packages/shared-metrics --save-dev
+              npm install gcstats.js event-loop-stats -w packages/shared-metrics --no-save
 
               rm -rf node-modules.tar.zst
               rm -rf node-modules.tar
@@ -156,7 +156,7 @@ spec:
                 npm install --loglevel verbose
 
                 # Force non optional dependency installation
-                npm install gcstats.js event-loop-stats -w packages/shared-metrics --save-dev
+                npm install gcstats.js event-loop-stats -w packages/shared-metrics --no-save
 
               fi
 
@@ -166,7 +166,7 @@ spec:
               npm install --loglevel verbose
               
               # Force non optional dependency installation
-              npm install gcstats.js event-loop-stats -w packages/shared-metrics --save-dev
+              npm install gcstats.js event-loop-stats -w packages/shared-metrics --no-save
               
             fi
           fi
