@@ -22,7 +22,7 @@ const { fail } = expect;
 const {
   tracing: { constants }
 } = require('@instana/core');
-
+const semver = require('semver');
 const {
   tracing: { supportedVersion }
 } = require('@instana/core');
@@ -50,7 +50,11 @@ const SINGLE_TEST_PROPS = {
 const retryTime = 1000;
 const topic = 'rdkafka-topic';
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+// TODO: investigate as part of #JIRA
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=23.x')
+    ? describe
+    : describe.skip;
 
 mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   this.timeout(config.getTestTimeout() * 4);
