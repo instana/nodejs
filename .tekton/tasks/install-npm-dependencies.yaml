@@ -38,6 +38,9 @@ spec:
 
         if [ "$(params.prerelease)" == "true" ]; then
           source bin/install-prerelease.sh 
+
+          # Uninstall native metrics for prerelease
+          npm uninstall gcstats.js event-loop-stats -w packages/shared-metrics
         fi
 
         if [ -n "$(params.npm-version)" ]; then
@@ -51,9 +54,6 @@ spec:
 
           echo "Installing npm dependencies..."
           npm install --loglevel verbose
-
-          # Force non optional dependency installation
-          npm install gcstats.js event-loop-stats -w packages/shared-metrics --no-save
         else
           echo "Restoring node_modules cache..."
           curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
@@ -106,9 +106,6 @@ spec:
             if [ "$npmInstall" == true ]; then
               npm install --loglevel verbose
 
-              # Force non optional dependency installation
-              npm install gcstats.js event-loop-stats -w packages/shared-metrics --no-save
-
               rm -rf node-modules.tar.zst
               rm -rf node-modules.tar
             fi
@@ -154,20 +151,12 @@ spec:
 
               if [ "$npmInstall" == true ]; then
                 npm install --loglevel verbose
-
-                # Force non optional dependency installation
-                npm install gcstats.js event-loop-stats -w packages/shared-metrics --no-save
-
               fi
 
               echo "Restored node_modules cache..."
             else
               echo "Download from main was not successful. Installing node_modules..."
               npm install --loglevel verbose
-              
-              # Force non optional dependency installation
-              npm install gcstats.js event-loop-stats -w packages/shared-metrics --no-save
-              
             fi
           fi
         fi
