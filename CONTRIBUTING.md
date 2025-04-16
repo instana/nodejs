@@ -189,6 +189,8 @@ The following sections describe how to manage dependencies in practice.
 `npm uninstall ${dependency-name} -w packages/collector`: Removes a production dependency from the package `@instana/collector`. This is equivalent to `cd packages/collector; npm uninstall ${dependency-name}`.
 `npm uninstall -D ${dependency-name} -w packages/collector`: Removes a dev dependency from the package `@instana/collector`. This is equivalent to `cd packages/collector; npm uninstall -D ${dependency-name}`.
 
+Note: `npm uninstall -D` command is removed from npm v7. see: https://docs.npmjs.com/cli/v11/commands/npm-uninstall
+
 ### Updating A Single Version In A `package.json` File
 
 `npm install ${dependency-name}@${version}`: Updates a specific production dependency on the root.
