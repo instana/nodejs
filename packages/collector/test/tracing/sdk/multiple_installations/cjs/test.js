@@ -9,6 +9,7 @@ const path = require('path');
 const os = require('os');
 const { mkdtempSync } = require('fs');
 const rimraf = require('rimraf');
+const semver = require('semver');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('@instana/core/test/config');
@@ -16,7 +17,8 @@ const testUtils = require('@instana/core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && !semver.prerelease(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('[CJS] tracing/sdk/multiple_installations', function () {
   this.timeout(config.getTestTimeout() * 2);
