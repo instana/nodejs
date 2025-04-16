@@ -163,6 +163,6 @@ exports.getDaysBehind = (releaseList, installedVersion, today = new Date()) => {
 
   console.log(`From: ${nextVersionDate}`);
   console.log(`To: ${today}`);
-
+// Step 2: Calculate the days
   return calculateDaysDifference(nextVersionDate, today);
 };
