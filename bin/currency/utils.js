@@ -148,7 +148,6 @@ const getNextVersion = (versions, installedVersionIndex, installedVersion) => {
 
 exports.getDaysBehind = (releaseList, installedVersion, today = new Date()) => {
   const stableReleaseList = filterStableReleases(releaseList);
-  console.log(stableReleaseList);
   const versions = Object.keys(stableReleaseList);
   const installedVersionIndex = versions.indexOf(installedVersion);
 
