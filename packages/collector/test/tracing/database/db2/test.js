@@ -16,8 +16,8 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 // Note: ibm_db installation requires compiling using c++ bindings which fails in node v24 rc.
-//       we skip this for now and track in #JIRA and revisit after prebuilds are available
-// TODO: investigate as part of #JIRA
+//       we skip this for now and revisit after prebuilds are available
+// TODO: investigate as part of https://jsw.ibm.com/browse/INSTA-34346
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=23.x')
     ? describe

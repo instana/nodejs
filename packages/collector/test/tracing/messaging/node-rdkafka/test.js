@@ -50,7 +50,7 @@ const SINGLE_TEST_PROPS = {
 const retryTime = 1000;
 const topic = 'rdkafka-topic';
 
-// TODO: investigate as part of #JIRA
+// TODO: investigate as part of https://jsw.ibm.com/browse/INSTA-34346
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=23.x')
     ? describe

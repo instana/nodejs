@@ -27,7 +27,7 @@ const globalAgent = require('../../globalAgent');
 const DELAY_TIMEOUT_IN_MS = 500;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-// TODO: Seems like restify test is broken in v24 rc. Investigate as part of #JIRA
+// TODO: Seems like restify test is broken in v24 rc. Investigate as part of https://jsw.ibm.com/browse/INSTA-34346
 const runRestify =
   supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=23.x')
     ? describe
