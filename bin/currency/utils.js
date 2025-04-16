@@ -135,19 +135,35 @@ function calculateDaysDifference(date1, date2) {
   return timeDiff;
 }
 
+const getNextVersion = (versions, installedVersionIndex, installedVersion) => {
+  const nextVersion = versions[installedVersionIndex + 1];
+
+  // CASE: library releases a lower version by mistake
+  if (semver.major(installedVersion) === semver.major(nextVersion) && semver.lt(nextVersion, installedVersion)) {
+    return getNextVersion(versions, installedVersionIndex + 1, nextVersion);
+  }
+
+  return nextVersion;
+};
+
 exports.getDaysBehind = (releaseList, installedVersion, today = new Date()) => {
   const stableReleaseList = filterStableReleases(releaseList);
+  console.log(stableReleaseList);
   const versions = Object.keys(stableReleaseList);
   const installedVersionIndex = versions.indexOf(installedVersion);
 
+  // CASE: the installed version is the latest release or the installed version is a prerelease
   if (installedVersionIndex === -1 || installedVersionIndex === versions.length - 1) {
     return 0;
   }
 
-  const nextVersion = versions[installedVersionIndex + 1];
+  // Step 1: Get the "next" version release date, because the days behind is the number between
+  //         the next release AFTER our installed version and TODAY
+  const nextVersion = getNextVersion(versions, installedVersionIndex, installedVersion);
   const nextVersionDate = stableReleaseList[nextVersion];
-  console.log(`Next version: ${nextVersion}`);
-  console.log(`Next version date: ${nextVersionDate}`);
-  console.log(`Today: ${today}`);
+
+  console.log(`From: ${nextVersionDate}`);
+  console.log(`To: ${today}`);
+
   return calculateDaysDifference(nextVersionDate, today);
 };

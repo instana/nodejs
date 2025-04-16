@@ -50,6 +50,23 @@ const releaseList3 = {
 
 const installedVersion3 = '2.6.12';
 
+const releaseList4 = {
+  '8.16.2': '2024-11-21T16:40:09.876Z',
+  '9.0.0-alpha.1': '2024-12-05T20:34:00.569Z',
+  '8.16.3': '2024-12-12T17:14:10.556Z',
+  '8.17.0': '2024-12-12T17:48:33.419Z',
+  '9.0.0-alpha.2': '2025-01-28T18:30:34.569Z',
+  '9.0.0-alpha.3': '2025-01-30T17:47:32.411Z',
+  '8.17.1': '2025-02-24T19:39:53.042Z',
+  '8.16.4': '2025-02-24T19:42:26.309Z',
+  '9.0.0-alpha.4': '2025-02-26T19:06:34.011Z',
+  '9.0.0-alpha.5': '2025-04-04T18:20:47.829Z',
+  '9.0.0': '2025-04-15T19:48:35.838Z',
+  '8.18.0': '2025-04-16T16:04:57.590Z'
+};
+
+const installedVersion4 = '8.17.1';
+
 try {
   const daysBehind1 = getDaysBehind(releaseList1, installedVersion1, today);
   assert.strictEqual(daysBehind1, 145);
@@ -61,7 +78,11 @@ try {
 
   const daysBehind3 = getDaysBehind(releaseList3, installedVersion3, today);
   assert.strictEqual(daysBehind3, 363);
-  console.log('Test 2 passed: Installed version is 363 days behind the latest version.');
+  console.log('Test 3 passed: Installed version is 363 days behind the latest version.');
+
+  const daysBehind4 = getDaysBehind(releaseList4, installedVersion4, '2025-04-16T00:00:00.000Z');
+  assert.strictEqual(daysBehind4, 0);
+  console.log('Test 4 passed: Installed version is 0 days behind the latest version.');
 } catch (error) {
   console.error('Test failed:', error);
 }
