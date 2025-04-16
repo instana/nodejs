@@ -8,7 +8,7 @@
     "nodejs",
     "tracing"
   ],
-  "author": "Willian Carvalho <willian.carvalho@instana.com>",
+  "author": "Katharina Irrgang <katharina.irrgang@ibm.com>",
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/opentelemetry-exporter/README.md",
   "license": "MIT",
   "main": "src/index.js",
@@ -43,16 +43,16 @@
   },
   "contributors": [
     {
-      "name": "Willian Carvalho",
-      "email": "willian.carvalho@instana.com"
-    },
-    {
       "name": "Katharina Irrgang",
       "email": "katharina.irrgang@ibm.com"
     },
     {
       "name": "Arya Mohanan",
       "email": "arya.mohanan@ibm.com"
+    },
+    {
+      "name": "Abhilash Sivan",
+      "email": "abhilash.sivan@ibm.com"
     }
   ],
   "dependencies": {
