@@ -29,8 +29,8 @@ spec:
     - name: pipeline-ref
       value: "default-pipeline"
     - name: skip-cache
-      value: $(params.skip-cache)   
-      default: ""
+      value: "true"  
+      default: "true"
     - name: prerelease
       value: "true"
       default: ""
