@@ -38,9 +38,6 @@ spec:
 
         if [ "$(params.prerelease)" == "true" ]; then
           source bin/install-prerelease.sh 
-
-          # Uninstall native metrics for prerelease
-          npm uninstall gcstats.js event-loop-stats -w packages/shared-metrics
         fi
 
         if [ -n "$(params.npm-version)" ]; then
