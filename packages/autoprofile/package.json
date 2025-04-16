@@ -36,16 +36,16 @@
   },
   "contributors": [
     {
-      "name": "Willian Carvalho",
-      "email": "willian.carvalho@instana.com"
-    },
-    {
       "name": "Katharina Irrgang",
       "email": "katharina.irrgang@ibm.com"
     },
     {
       "name": "Arya Mohanan",
       "email": "arya.mohanan@ibm.com"
+    },
+    {
+      "name": "Abhilash Sivan",
+      "email": "abhilash.sivan@ibm.com"
     }
   ],
   "dependencies": {
