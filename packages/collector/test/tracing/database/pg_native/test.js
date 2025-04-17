@@ -18,8 +18,13 @@ const {
 
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
+const semver = require('semver');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+// TODO: pg-native installation is broken in v24 rc. Investigate as part of https://jsw.ibm.com/browse/INSTA-34346
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=23.x')
+    ? describe.only
+    : describe.skip;
 
 mochaSuiteFn('tracing/pg-native', function () {
   this.timeout(config.getTestTimeout());

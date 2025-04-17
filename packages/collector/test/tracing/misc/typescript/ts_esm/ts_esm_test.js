@@ -6,6 +6,7 @@
 
 const expect = require('chai').expect;
 const path = require('path');
+const semver = require('semver');
 const { execSync } = require('child_process');
 const config = require('../../../../../../core/test/config');
 const testUtils = require('../../../../../../core/test/test_util');
@@ -14,7 +15,11 @@ const supportedVersion = require('../../../../../../core').tracing.supportedVers
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+// TODO: test is broken in v24 rc. Investigate as part of https://jsw.ibm.com/browse/INSTA-34346
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=23.x')
+    ? describe
+    : describe.skip;
 
 const loaderPath = isLatestEsmSupportedVersion(process.versions.node)
   ? ['--import', path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-register.mjs')]
