@@ -6,7 +6,6 @@
 
 const expect = require('chai').expect;
 const path = require('path');
-const semver = require('semver');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../core/test/config');
@@ -504,8 +503,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         ));
   });
 
-  const runTedious = semver.gte(process.versions.node, '18.17.0') ? describe : describe.skip;
-  runTedious('tedious', function () {
+  describe('tedious', function () {
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
