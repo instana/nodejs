@@ -11,19 +11,13 @@ const _ = require('lodash');
 const expect = require('chai').expect;
 const { execSync } = require('child_process');
 const path = require('path');
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
 const config = require('../../../../core/test/config');
 const { retry } = require('../../../../core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 
-// Note: we can disable this test for prerelease versions beacause
-//       native modules won't be compiled successfully in prerelease node versions
-const allowPrereleaseTesting = false;
-const mochaSuiteFn = supportedVersion(process.versions.node, allowPrereleaseTesting) ? describe : describe.skip;
-
-mochaSuiteFn('snapshot data and metrics', function () {
+describe('snapshot data and metrics', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
