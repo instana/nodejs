@@ -13,6 +13,7 @@ const testUtils = require('../../../../../core/test/test_util');
 const config = require('../../../../../core/test/config');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
+
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 if (testUtils.isCI() && !process.env.DB2_CONNECTION_STR) {
