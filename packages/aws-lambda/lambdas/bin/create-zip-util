@@ -30,10 +30,10 @@ function createZip {
       #   "instana-aws-lambda-auto-wrap": "file:../../instana-aws-lambda-auto-wrap.tgz"
       # }
       # ...then those need to be removed:
-      npm uninstall --production -S @instana/core
-      npm uninstall --production -S @instana/aws-lambda
-      npm uninstall --production -S @instana/serverless
-      npm uninstall --production -S instana-aws-lambda-auto-wrap
+      npm uninstall -S @instana/core
+      npm uninstall -S @instana/aws-lambda
+      npm uninstall -S @instana/serverless
+      npm uninstall -S instana-aws-lambda-auto-wrap
 
     elif [[ "${BUILD_LAMBDAS_WITH}" == "local" ]]; then
       # The lambda's package.json might or might not already have a dependency to the local tar files:
@@ -63,9 +63,9 @@ function createZip {
       #   "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz"
       # }
       # this needs to be removed and then we install the latest published package from npm
-      npm uninstall --production -S @instana/core
-      npm uninstall --production -S @instana/aws-lambda
-      npm uninstall --production -S @instana/serverless
+      npm uninstall -S @instana/core
+      npm uninstall -S @instana/aws-lambda
+      npm uninstall -S @instana/serverless
       npm install --production -S @instana/core
       npm install --production -S @instana/aws-lambda
       npm install --production -S @instana/serverless
