@@ -36,7 +36,7 @@ const hasCommits = (branch, cwd) => {
 if (!MAJOR_UPDATES_MODE) {
   console.log('Preparing patch/minor updates...');
   execSync('git checkout main', { cwd });
-  execSync('npm i --no-audit', { cwd });
+  execSync('npm ci --no-audit', { cwd });
 
   if (BRANCH !== 'main') {
     execSync(`git checkout -b ${branchName}`, { cwd });
@@ -98,7 +98,7 @@ currencies.forEach(currency => {
 
     console.log(`Major update available for ${currency.name}.`);
     execSync('git checkout main', { cwd });
-    execSync('npm i --no-audit', { cwd });
+    execSync('npm ci --no-audit', { cwd });
 
     branchName = `${BRANCH}-${currency.name.replace(/[^a-zA-Z0-9]/g, '')}`;
 
