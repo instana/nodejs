@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.11.0](https://github.com/instana/nodejs/compare/v4.10.0...v4.11.0) (2025-04-22)
+
+### Features
+
+- **kafka:** added option to disable downstream suppression for ignored endpoints ([#1652](https://github.com/instana/nodejs/issues/1652)) ([2aa720d](https://github.com/instana/nodejs/commit/2aa720defbbb3c2c31754a85ecf3f899061f1597))
+
 # [4.10.0](https://github.com/instana/nodejs/compare/v4.9.0...v4.10.0) (2025-04-01)
 
 ### Features
