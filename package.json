@@ -102,7 +102,7 @@
     "@google-cloud/storage": "^7.16.0",
     "@grpc/grpc-js": "^1.13.3",
     "@grpc/grpc-js-v1": "npm:@grpc/grpc-js@1.9.4",
-    "@grpc/proto-loader": "^0.7.13",
+    "@grpc/proto-loader": "^0.7.15",
     "@hapi/hapi": "^21.4.0",
     "@ibm/tekton-lint": "^1.1.0",
     "@opentelemetry/auto-instrumentations-node": "^0.43.0",
