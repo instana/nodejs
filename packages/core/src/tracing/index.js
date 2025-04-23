@@ -172,6 +172,18 @@ exports.registerAdditionalInstrumentations = function registerAdditionalInstrume
  * @param {import('../util/normalizeConfig').InstanaConfig} preliminaryConfig
  */
 exports.preInit = function preInit(preliminaryConfig) {
+  /**
+   * CASE: On e.g. Fargate the `preInit` function is called as early as possible
+   * and if one of our modules (shimmer, cls, spanHandle etc.) e.g. logs a warning
+   * the logger module needs to be initialized and injected.
+   *
+   * `preInit` has a limited functionality e.g. we do not activate the instrumentations.
+   * `preInit` only monkey patches the libraries as early as possible.
+   */
+  spanHandle.init(preliminaryConfig);
+  shimmer.init(preliminaryConfig);
+  cls.init(preliminaryConfig);
+
   initInstrumenations(preliminaryConfig);
 };
 

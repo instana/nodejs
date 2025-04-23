@@ -81,80 +81,95 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     sinon.restore();
   });
 
-  it('deactivate instrumentation via config', () => {
-    initAndActivate({ tracing: { disabledTracers: ['grpc', 'kafkajs', 'aws-sdk/v2'] } });
+  describe('preInit', function () {
+    it('should trace on preinit', () => {
+      const logger = testUtils.createFakeLogger();
+      const config = normalizeConfig({}, logger);
+      tracing.preInit(config);
 
-    // grpcJs instrumentation has not been disabled, make sure its init and activate are called
-    expect(initStubGrpcJs).to.have.been.called;
-    expect(activateStubGrpcJs).to.have.been.called;
-
-    // kafkajs has been disabled...
-    expect(initStubKafkaJs).to.not.have.been.called;
-    expect(activateStubKafkaJs).to.not.have.been.called;
-
-    // ...but rdkafka has not been disabled
-    expect(initStubRdKafka).to.have.been.called;
-    expect(activateStubRdKafka).to.have.been.called;
-
-    // aws-sdk/v2 has been disabled (via aws-sdk/v2)
-    expect(initAwsSdkv2).not.to.have.been.called;
-    expect(activateAwsSdkv2).not.to.have.been.called;
-
-    // aws-sdk/v3 has not been disabled
-    expect(initAwsSdkv3).to.have.been.called;
-    expect(activateAwsSdkv3).to.have.been.called;
+      // Just proof that the `init` method of one instrumentation has been called yet,
+      // but not the `activate` method. We don't care which one.
+      expect(initStubGrpcJs).to.have.been.called;
+      expect(activateStubGrpcJs).to.not.have.been.called;
+    });
   });
 
-  it('deactivate instrumentation via env', () => {
-    process.env.INSTANA_DISABLED_TRACERS = 'grpc';
-    initAndActivate({});
+  describe('init', function () {
+    it('deactivate instrumentation via config', () => {
+      initAndActivate({ tracing: { disabledTracers: ['grpc', 'kafkajs', 'aws-sdk/v2'] } });
 
-    expect(activateStubGrpcJs).to.have.been.called;
-    expect(activateStubKafkaJs).to.have.been.called;
-    expect(activateStubRdKafka).to.have.been.called;
-    expect(activateAwsSdkv2).to.have.been.called;
-  });
+      // grpcJs instrumentation has not been disabled, make sure its init and activate are called
+      expect(initStubGrpcJs).to.have.been.called;
+      expect(activateStubGrpcJs).to.have.been.called;
 
-  it('update Kafka tracing config', () => {
-    const extraConfigFromAgent = {
-      tracing: {
-        kafka: {
-          traceCorrelation: false
+      // kafkajs has been disabled...
+      expect(initStubKafkaJs).to.not.have.been.called;
+      expect(activateStubKafkaJs).to.not.have.been.called;
+
+      // ...but rdkafka has not been disabled
+      expect(initStubRdKafka).to.have.been.called;
+      expect(activateStubRdKafka).to.have.been.called;
+
+      // aws-sdk/v2 has been disabled (via aws-sdk/v2)
+      expect(initAwsSdkv2).not.to.have.been.called;
+      expect(activateAwsSdkv2).not.to.have.been.called;
+
+      // aws-sdk/v3 has not been disabled
+      expect(initAwsSdkv3).to.have.been.called;
+      expect(activateAwsSdkv3).to.have.been.called;
+    });
+
+    it('deactivate instrumentation via env', () => {
+      process.env.INSTANA_DISABLED_TRACERS = 'grpc';
+      initAndActivate({});
+
+      expect(activateStubGrpcJs).to.have.been.called;
+      expect(activateStubKafkaJs).to.have.been.called;
+      expect(activateStubRdKafka).to.have.been.called;
+      expect(activateAwsSdkv2).to.have.been.called;
+    });
+
+    it('update Kafka tracing config', () => {
+      const extraConfigFromAgent = {
+        tracing: {
+          kafka: {
+            traceCorrelation: false
+          }
         }
-      }
-    };
-    initAndActivate({}, extraConfigFromAgent);
-    expect(activateStubKafkaJs).to.have.been.calledWith(extraConfigFromAgent);
-    expect(activateStubRdKafka).to.have.been.calledWith(extraConfigFromAgent);
+      };
+      initAndActivate({}, extraConfigFromAgent);
+      expect(activateStubKafkaJs).to.have.been.calledWith(extraConfigFromAgent);
+      expect(activateStubRdKafka).to.have.been.calledWith(extraConfigFromAgent);
+    });
+
+    it('disable aws-sdk/v3', () => {
+      initAndActivate({ tracing: { disabledTracers: ['aws-sdk/v3'] } });
+
+      // aws-sdk/v3 has been disabled (via aws-sdk/v3)
+      expect(initAwsSdkv3).not.to.have.been.called;
+      expect(activateAwsSdkv3).not.to.have.been.called;
+
+      // aws-sdk/v2 has not been disabled (via aws-sdk/v2)
+      expect(initAwsSdkv2).to.have.been.called;
+      expect(activateAwsSdkv2).to.have.been.called;
+    });
+    it('disable aws-sdk/v3 and aws-sdk/v2', () => {
+      initAndActivate({ tracing: { disabledTracers: ['aws-sdk/v3', 'aws-sdk/v2'] } });
+
+      // aws-sdk/v2 has been disabled (via aws-sdk/v2)
+      expect(initAwsSdkv2).not.to.have.been.called;
+      expect(activateAwsSdkv2).not.to.have.been.called;
+
+      // aws-sdk/v3 has been disabled (via aws-sdk/v3)
+      expect(initAwsSdkv3).not.to.have.been.called;
+      expect(activateAwsSdkv3).not.to.have.been.called;
+    });
+
+    function initAndActivate(initConfig, extraConfigForActivate) {
+      const logger = testUtils.createFakeLogger();
+      const config = normalizeConfig(initConfig, logger);
+      tracing.init(config);
+      tracing.activate(extraConfigForActivate);
+    }
   });
-
-  it('disable aws-sdk/v3', () => {
-    initAndActivate({ tracing: { disabledTracers: ['aws-sdk/v3'] } });
-
-    // aws-sdk/v3 has been disabled (via aws-sdk/v3)
-    expect(initAwsSdkv3).not.to.have.been.called;
-    expect(activateAwsSdkv3).not.to.have.been.called;
-
-    // aws-sdk/v2 has not been disabled (via aws-sdk/v2)
-    expect(initAwsSdkv2).to.have.been.called;
-    expect(activateAwsSdkv2).to.have.been.called;
-  });
-  it('disable aws-sdk/v3 and aws-sdk/v2', () => {
-    initAndActivate({ tracing: { disabledTracers: ['aws-sdk/v3', 'aws-sdk/v2'] } });
-
-    // aws-sdk/v2 has been disabled (via aws-sdk/v2)
-    expect(initAwsSdkv2).not.to.have.been.called;
-    expect(activateAwsSdkv2).not.to.have.been.called;
-
-    // aws-sdk/v3 has been disabled (via aws-sdk/v3)
-    expect(initAwsSdkv3).not.to.have.been.called;
-    expect(activateAwsSdkv3).not.to.have.been.called;
-  });
-
-  function initAndActivate(initConfig, extraConfigForActivate) {
-    const logger = testUtils.createFakeLogger();
-    const config = normalizeConfig(initConfig, logger);
-    tracing.init(config);
-    tracing.activate(extraConfigForActivate);
-  }
 });
