@@ -22,7 +22,7 @@
     },
     {
       "name": "mongodb",
-      "image": "mongo:4.1.13"
+      "image": "mongo:8.0.8"
     },
     {
       "name": "mssql",
