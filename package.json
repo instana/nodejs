@@ -158,7 +158,7 @@
     "express": "^5.1.0",
     "express-v4": "npm:express@^4.21.2",
     "express-winston": "^4.2.0",
-    "fastify": "^5.3.0",
+    "fastify": "^5.3.2",
     "fastify-v3": "npm:fastify@^3.21.5",
     "fastify-v4": "npm:fastify@^4.28.1",
     "get-caller-file": "^2.0.5",
