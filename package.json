@@ -188,7 +188,7 @@
     "mocha-junit-reporter": "^2.0.2",
     "mocha-multi-reporters": "^1.5.1",
     "moment": "^2.30.1",
-    "mongodb": "^6.15.0",
+    "mongodb": "^6.16.0",
     "mongodb-v4": "npm:mongodb@^4.16.0",
     "mongodb-v5": "npm:mongodb@^5.4.0",
     "mongoose": "^8.13.2",
