@@ -87,10 +87,20 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
       const config = normalizeConfig({}, logger);
       tracing.preInit(config);
 
-      // Just proof that the `init` method of one instrumentation has been called yet,
-      // but not the `activate` method. We don't care which one.
       expect(initStubGrpcJs).to.have.been.called;
       expect(activateStubGrpcJs).to.not.have.been.called;
+
+      expect(initStubKafkaJs).to.have.been.called;
+      expect(activateStubKafkaJs).to.not.have.been.called;
+
+      expect(initStubRdKafka).to.have.been.called;
+      expect(activateStubRdKafka).to.not.have.been.called;
+
+      expect(initAwsSdkv2).to.have.been.called;
+      expect(activateAwsSdkv2).to.not.have.been.called;
+
+      expect(initAwsSdkv3).to.have.been.called;
+      expect(activateAwsSdkv3).to.not.have.been.called;
     });
   });
 

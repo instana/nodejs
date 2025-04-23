@@ -193,7 +193,7 @@ exports.preInit = function preInit(preliminaryConfig) {
   spanHandle.init(preliminaryConfig);
   shimmer.init(preliminaryConfig);
   cls.init(preliminaryConfig);
-  sdk.init(config, cls);
+  sdk.init(preliminaryConfig, cls);
 
   initInstrumenations(preliminaryConfig);
 };
