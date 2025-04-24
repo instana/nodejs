@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.11.1](https://github.com/instana/nodejs/compare/v4.11.0...v4.11.1) (2025-04-24)
+
+### Bug Fixes
+
+- resolved "Cannot read properties of undefined (reading 'debug')" ([#1702](https://github.com/instana/nodejs/issues/1702)) ([8c166b0](https://github.com/instana/nodejs/commit/8c166b05350c3d5df6d1e2f1503db0910a9902a4)), closes [#1701](https://github.com/instana/nodejs/issues/1701)
+
 # [4.11.0](https://github.com/instana/nodejs/compare/v4.10.0...v4.11.0) (2025-04-22)
 
 ### Features
