@@ -44,7 +44,7 @@ const ns = hooked.createNamespace('instana.collector');
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} config
- * @param {import('../../../collector/src/pidStore')} _processIdentityProvider
+ * @param {import('../../../collector/src/pidStore')} [_processIdentityProvider]
  */
 function init(config, _processIdentityProvider) {
   logger = config.logger;

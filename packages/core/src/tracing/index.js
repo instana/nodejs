@@ -172,6 +172,29 @@ exports.registerAdditionalInstrumentations = function registerAdditionalInstrume
  * @param {import('../util/normalizeConfig').InstanaConfig} preliminaryConfig
  */
 exports.preInit = function preInit(preliminaryConfig) {
+  /**
+   * On e.g. Fargate the `preInit` function is called as early as possible
+   * and all our modules (shimmer, cls, sdk etc.) need to be initialized.
+   * Imagine on of these modules logs a warning. The logger module needs to be
+   * injected to be able to log anything.
+   *
+   * `preInit` has a limited functionality e.g. we do not activate the instrumentations.
+   *  That means, any span creation would get skipped.
+   *
+   * `preInit` only monkey patches the libraries as early as possible to be able to start
+   * tracing as soon as the data to `init` the core package is fully available.
+   *
+   * The time between `preInit` and `init` is usually very short, but e.g. on Fargate
+   * it can take a bit of time because we are doing an async request to the meta API.
+   *
+   * Another possible use case is, that its theoretically possible that the customer
+   * can already start using the SDK although we are not fully initialized.
+   */
+  spanHandle.init(preliminaryConfig);
+  shimmer.init(preliminaryConfig);
+  cls.init(preliminaryConfig);
+  sdk.init(preliminaryConfig, cls);
+
   initInstrumenations(preliminaryConfig);
 };
 
