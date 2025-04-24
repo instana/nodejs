@@ -43,7 +43,7 @@ services:
         ipv4_address: 172.30.0.4      
 
   mongo:
-    image: mongo:4.1.13
+    image: mongo:8.0.8
     ports:
       - 27017:27017
 
