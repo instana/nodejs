@@ -2,7 +2,7 @@
   "sidecars": [
     {
       "name": "mysql",
-      "image": "mysql:8.0.1",
+      "image": "mysql:8.0.26",
       "env": [
         { "name": "MYSQL_ROOT_PASSWORD", "value": "nodepw" },
         { "name": "MYSQL_DATABASE", "value": "nodedb" },

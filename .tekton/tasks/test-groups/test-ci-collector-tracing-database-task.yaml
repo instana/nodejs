@@ -31,7 +31,7 @@ spec:
     - name: mysql
       image: mysql:8.0.26
       args:
-        - "--default-authentication-plugin=mysql_native_password"
+          - "--default-authentication-plugin=mysql_native_password"
       env:
           - name: "MYSQL_ROOT_PASSWORD"
             value: "nodepw"
