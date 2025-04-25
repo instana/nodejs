@@ -260,10 +260,7 @@
     "prisma": "^6.6.0"
   },
   "overrides": {
-    "stream-shift": "1.0.2",
-    "apollo-server-express": {
-      "express": "^5.1.0"
-    }
+    "stream-shift": "1.0.2"
   },
   "config": {
     "commitizen": {
