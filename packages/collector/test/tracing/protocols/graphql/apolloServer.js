@@ -22,7 +22,6 @@ const morgan = require('morgan');
 const { WebSocketServer } = require('ws');
 const { useServer } = require('graphql-ws/use/ws');
 const { expressMiddleware } = require('@apollo/server/express4');
-const cors = require('cors');
 
 const { schema, pubsub, pinoLogger } = require('./schema')();
 const data = require('./data');
@@ -70,7 +69,7 @@ const apolloServer = new ApolloServer({
 (async () => {
   await apolloServer.start();
 
-  app.use('/graphql', cors(), expressMiddleware(apolloServer));
+  app.use('/graphql', expressMiddleware(apolloServer));
 
   const httpServer = app.listen({ port }, () => {
     log(

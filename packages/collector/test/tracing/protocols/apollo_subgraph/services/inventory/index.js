@@ -22,7 +22,6 @@ const express = require('express');
 const http = require('http');
 const morgan = require('morgan');
 const { gql } = require('graphql-tag');
-const cors = require('cors');
 
 const port = require('../../../../../test_util/app-port')();
 const app = express();
@@ -84,7 +83,7 @@ app.get('/', (req, res) => {
 (async () => {
   await server.start();
 
-  app.use('/graphql', cors(), expressMiddleware(server));
+  app.use('/graphql', expressMiddleware(server));
 
   const httpServer = http.createServer(app);
   httpServer.listen({ port }, () => {

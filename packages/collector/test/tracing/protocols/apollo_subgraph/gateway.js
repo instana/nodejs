@@ -21,7 +21,6 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const http = require('http');
 const morgan = require('morgan');
-const cors = require('cors');
 
 const accountsPort = process.env.SERVICE_PORT_ACCOUNTS;
 const inventoryPort = process.env.SERVICE_PORT_INVENTORY;
@@ -61,7 +60,7 @@ app.get('/', (req, res) => {
 
   await server.start();
 
-  app.use('/graphql', cors(), expressMiddleware(server));
+  app.use('/graphql', expressMiddleware(server));
 
   const httpServer = http.createServer(app);
   httpServer.listen({ port }, () => {
