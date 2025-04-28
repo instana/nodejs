@@ -209,7 +209,7 @@
     "node-fetch-v2": "npm:node-fetch@^2.7.0",
     "node-gyp": "^9.4.1",
     "node-nats-streaming": "^0.3.2",
-    "pg": "^8.15.5",
+    "pg": "^8.15.6",
     "pino": "^9.6.0",
     "pino-http": "^9.0.0",
     "pino-v8": "npm:pino@^8.21.0",
