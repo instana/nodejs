@@ -9,7 +9,7 @@ spec:
     - name: mongodb
       image: mongo:8.0.8
     - name: elasticsearch
-      image: docker.elastic.co/elasticsearch/elasticsearch:8.6.1
+      image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
       env:
           - name: "discovery.type"
             value: "single-node"
@@ -29,7 +29,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 60
     - name: mysql
-      image: mysql:8.0.26
+      image: mysql:8.0.1
       args:
           - "--default-authentication-plugin=mysql_native_password"
       env:

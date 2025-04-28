@@ -63,9 +63,9 @@ services:
   #    discovery.type: single-node
   #    ES_JAVA_OPTS: "-Xms500m -Xmx500m"
 
-  # Elasticsearch 8 compatible with client v7 & v8
+  # Elasticsearch 9 compatible with client v7 & v9
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
     ports:
       - 9200:9200
     environment:

@@ -3,6 +3,8 @@
  * (c) Copyright Instana Inc. and contributors 2016
  */
 
+/* eslint-disable max-len */
+
 'use strict';
 
 const expect = require('chai').expect;
@@ -31,6 +33,9 @@ mochaSuiteFn('tracing/elasticsearch', function () {
    *
    * The words "transport" and "api" try to describe the different
    * mechanismn we use in core/src/tracing/instrumentation/database/elasticsearch.js
+   *
+   * Breaking changes between 8x and 9x are not big enough to run the tests for both v8 and v9:
+   * https://www.elastic.co/docs/release-notes/elasticsearch/clients/javascript#elasticsearch-javascript-client-9.0.0-release-notes
    */
   [
     {
