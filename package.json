@@ -165,7 +165,7 @@
     "google-protobuf": "^3.21.4",
     "got": "^14.4.7",
     "got-v11": "npm:got@^11.8.6",
-    "graphql": "^16.10.0",
+    "graphql": "^16.11.0",
     "graphql-subscriptions": "^3.0.0",
     "graphql-subscriptions-v2": "npm:graphql-subscriptions@^2.0.0",
     "graphql-tag": "^2.12.6",
