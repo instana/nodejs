@@ -14,8 +14,9 @@ require('@instana/core/test/test_util/loadExpressV4');
 
 require('../../../..')();
 
-const { ApolloServer } = require('apollo-server-express');
+const { ApolloServer } = require('@apollo/server');
 const { ApolloGateway, IntrospectAndCompose } = require('@apollo/gateway');
+const { expressMiddleware } = require('@apollo/server/express4');
 const bodyParser = require('body-parser');
 const express = require('express');
 const http = require('http');
@@ -47,15 +48,20 @@ const gateway = new ApolloGateway({
     ]
   })
 });
+
 app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
 (async () => {
-  const { schema, executor } = await gateway.load();
-  const server = new ApolloServer({ schema, executor });
+  const server = new ApolloServer({
+    gateway
+  });
+
   await server.start();
-  server.applyMiddleware({ app });
+
+  app.use('/graphql', expressMiddleware(server));
+
   const httpServer = http.createServer(app);
   httpServer.listen({ port }, () => {
     log(`Listening at ${port}`);

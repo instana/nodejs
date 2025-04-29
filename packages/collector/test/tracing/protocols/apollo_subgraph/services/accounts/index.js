@@ -14,8 +14,9 @@ require('@instana/core/test/test_util/loadExpressV4');
 
 require('../../../../../..')();
 
-const { ApolloServer } = require('apollo-server-express');
+const { ApolloServer } = require('@apollo/server');
 const { buildSubgraphSchema } = require('@apollo/subgraph');
+const { expressMiddleware } = require('@apollo/server/express4');
 const bodyParser = require('body-parser');
 const express = require('express');
 const http = require('http');
@@ -90,7 +91,9 @@ app.get('/', (req, res) => {
 
 (async () => {
   await server.start();
-  server.applyMiddleware({ app });
+
+  app.use('/graphql', expressMiddleware(server));
+
   const httpServer = http.createServer(app);
   httpServer.listen({ port }, () => {
     log(`Listening at ${port}`);

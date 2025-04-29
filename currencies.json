@@ -11,6 +11,17 @@
     "core": false
   },
   {
+    "name": "@apollo/server",
+    "policy": "45-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "core": false
+  },
+  {
     "name": "@apollo/subgraph",
     "policy": "45-days",
     "lastSupportedVersion": "",

@@ -15,11 +15,13 @@ require('@instana/core/test/test_util/loadExpressV4');
 
 require('../../../..')();
 
-const { ApolloServer } = require('apollo-server-express');
+const { ApolloServer } = require('@apollo/server');
 const bodyParser = require('body-parser');
 const express = require('express');
-const http = require('http');
 const morgan = require('morgan');
+const { WebSocketServer } = require('ws');
+const { useServer } = require('graphql-ws/use/ws');
+const { expressMiddleware } = require('@apollo/server/express4');
 
 const { schema, pubsub, pinoLogger } = require('./schema')();
 const data = require('./data');
@@ -60,31 +62,28 @@ app.post('/publish-update', (req, res) => {
   res.send(character);
 });
 
-let apolloServer = null;
-async function startServer() {
-  apolloServer = new ApolloServer({
-    schema
-  });
-  await apolloServer.start();
-  apolloServer.applyMiddleware({ app });
-}
-startServer();
-
-const httpServer = http.createServer(app);
-
-const { useServer } = require('graphql-ws/use/ws');
-const ws = require('ws');
-
-httpServer.listen({ port }, () => {
-  log(`Listening on ${port} (HTTP & Websocket), GraphQL endpoint: http://localhost:${port}${apolloServer.graphqlPath}`);
-
-  const wsServer = new ws.Server({
-    server: httpServer,
-    path: '/graphql'
-  });
-
-  useServer({ schema }, wsServer);
+const apolloServer = new ApolloServer({
+  schema
 });
+
+(async () => {
+  await apolloServer.start();
+
+  app.use('/graphql', expressMiddleware(apolloServer));
+
+  const httpServer = app.listen({ port }, () => {
+    log(
+      `Listening on ${port} (HTTP & Websocket), GraphQL endpoint: http://localhost:${port}${apolloServer.graphqlPath}`
+    );
+
+    const wsServer = new WebSocketServer({
+      server: httpServer,
+      path: '/graphql'
+    });
+
+    useServer({ schema }, wsServer);
+  });
+})();
 
 function log() {
   /* eslint-disable no-console */
