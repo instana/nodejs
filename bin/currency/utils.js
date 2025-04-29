@@ -122,10 +122,11 @@ exports.getLatestVersion = ({ pkgName, installedVersion, isBeta }) => {
 };
 
 function filterStableReleases(releaseList) {
+  const unstableReleaseKeyWords = ['alpha', 'beta', 'canary', 'dev', 'experimental', 'rc'];
+
   return Object.fromEntries(
     Object.entries(releaseList).filter(
-      ([version]) =>
-        !version.includes('alpha') && !version.includes('beta') && !version.includes('dev') && !version.includes('rc')
+      ([version]) => !unstableReleaseKeyWords.some(keyword => version.includes(keyword))
     )
   );
 }
@@ -136,11 +137,18 @@ function calculateDaysDifference(date1, date2) {
 }
 
 const getNextVersion = (versions, installedVersionIndex, installedVersion) => {
-  const nextVersion = versions[installedVersionIndex + 1];
+  const nextIndex = installedVersionIndex + 1;
+  const nextVersion = versions[nextIndex];
 
-  // CASE: library releases a lower version by mistake
-  if (semver.major(installedVersion) === semver.major(nextVersion) && semver.lt(nextVersion, installedVersion)) {
-    return getNextVersion(versions, installedVersionIndex + 1, nextVersion);
+  // CASE: Check if the next version is invalid based on two conditions:
+  // 1. The next version is from an older major version.
+  // 2. The next version has the same major version but is lower than the installed version.
+  if (
+    nextVersion &&
+    (semver.major(installedVersion) > semver.major(nextVersion) ||
+      (semver.major(installedVersion) === semver.major(nextVersion) && semver.lt(nextVersion, installedVersion)))
+  ) {
+    return getNextVersion(versions, nextIndex, installedVersion);
   }
 
   return nextVersion;

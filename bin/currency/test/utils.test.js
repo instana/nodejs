@@ -64,8 +64,22 @@ const releaseList4 = {
   '9.0.0': '2025-04-15T19:48:35.838Z',
   '8.18.0': '2025-04-16T16:04:57.590Z'
 };
-
 const installedVersion4 = '8.17.1';
+
+const releaseList5 = {
+  '16.9.0': '2024-06-21T14:55:19.936Z',
+  '15.9.0': '2024-06-21T15:08:03.281Z',
+  '16.9.0-canary.pr.4159.0fa29326c53fcd63c6473c7357c28aa13fa0019d': '2024-08-13T05:03:36.558Z',
+  '16.9.0-canary.pr.4192.1813397076f44a55e5798478e7321db9877de97a': '2024-09-14T18:47:50.724Z',
+  '16.10.0': '2024-12-15T10:35:18.376Z',
+  '15.10.0': '2025-01-13T17:48:37.212Z',
+  '15.10.1': '2025-01-14T08:37:16.166Z',
+  '16.10.0-canary.pr.4364.6b142546832c1283b535908fb8c9a171b2f7cc20': '2025-03-27T18:14:06.401Z',
+  '16.10.0-canary.pr.4192.22fb497360b20aa7bf7c12aa87d2420ff394b3a0': '2025-03-27T18:14:50.350Z',
+  '16.10.0-canary.pr.4359.9fe5229b2fc30d3e5b07a6b00693fac42b649fdd': '2025-04-03T13:22:03.303Z',
+  '16.11.0': '2025-04-26T08:02:28.166Z'
+};
+const installedVersion5 = '16.10.0';
 
 try {
   const daysBehind1 = getDaysBehind(releaseList1, installedVersion1, today);
@@ -83,6 +97,10 @@ try {
   const daysBehind4 = getDaysBehind(releaseList4, installedVersion4, '2025-04-16T00:00:00.000Z');
   assert.strictEqual(daysBehind4, 0);
   console.log('Test 4 passed: Installed version is 0 days behind the latest version.');
+
+  const daysBehind5 = getDaysBehind(releaseList5, installedVersion5, '2025-04-26T00:00:00.000Z');
+  assert.strictEqual(daysBehind5, 0);
+  console.log('Test 5 passed: Installed version is 0 days behind the latest version.');
 } catch (error) {
   console.error('Test failed:', error);
 }
