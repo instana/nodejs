@@ -6,8 +6,6 @@
 
 'use strict';
 
-require('@instana/core/test/test_util/loadExpressV4');
-
 require('../../../../..')();
 
 const { BlobServiceClient, BlobBatchClient, BlobClient, StorageSharedKeyCredential } = require('@azure/storage-blob');
