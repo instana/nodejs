@@ -37,45 +37,15 @@ class InstanaLogger {
     this.logger = _logger;
   }
 
-  info() {
-    if (!this.logger.info) {
-      return;
-    }
+  warn = (/** @type {any[]} */ ...args) => this.logger?.warn?.(...args);
 
-    this.logger.info.apply(this.logger, arguments);
-  }
+  error = (/** @type {any[]} */ ...args) => this.logger?.error?.(...args);
 
-  warn() {
-    if (!this.logger.warn) {
-      return;
-    }
+  info = (/** @type {any[]} */ ...args) => this.logger?.info?.(...args);
 
-    this.logger.warn.apply(this.logger, arguments);
-  }
+  debug = (/** @type {any[]} */ ...args) => this.logger?.debug?.(...args);
 
-  error() {
-    if (!this.logger.error) {
-      return;
-    }
-
-    this.logger.error.apply(this.logger, arguments);
-  }
-
-  debug() {
-    if (!this.logger.debug) {
-      return;
-    }
-
-    this.logger.debug.apply(this.logger, arguments);
-  }
-
-  trace() {
-    if (!this.logger.trace) {
-      return;
-    }
-
-    this.logger.trace.apply(this.logger, arguments);
-  }
+  trace = (/** @type {any[]} */ ...args) => this.logger?.trace?.(...args);
 }
 
 /**
