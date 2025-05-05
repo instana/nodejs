@@ -76,12 +76,12 @@ function instrument(redis) {
 
           const wrapAddCommand = addCommandOriginalFn => {
             return function instrumentedAddCommandInstana() {
-              if (isCluster) {
-                selfMadeQueue.push(arguments[1]);
-              } else {
-                selfMadeQueue.push(arguments[0]);
-              }
-
+              // Redis Cluster Mode:
+              // v5: The command arguments are passed as the third argument (index 2)
+              // v4: The command arguments are passed as the second argument (index 1)
+              // Non-cluster mode: only one argument passed (the command)
+              const commandArg = isCluster ? arguments[2] || arguments[1] : arguments[0];
+              selfMadeQueue.push(commandArg);
               return addCommandOriginalFn.apply(this, arguments);
             };
           };
