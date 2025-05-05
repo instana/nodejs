@@ -36,6 +36,7 @@ let connectedToRedis = false;
 let connection;
 let connection2;
 const connect = require('./connect-via');
+const REDIS_VERSION = process.env.REDIS_VERSION || 'latest';
 
 function log() {
   const args = Array.prototype.slice.call(arguments);
