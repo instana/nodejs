@@ -18,9 +18,8 @@ module.exports = {
   },
 
   parserOptions: {
-    // https://node.green/#ES2020
-    // Min version is 14, ES2020 looks appropiate.
-    ecmaVersion: 2020,
+    // https://node.green/#ES2022
+    ecmaVersion: 2022,
     sourceType: 'script'
   },
 
