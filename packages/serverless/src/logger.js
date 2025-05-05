@@ -45,18 +45,18 @@ class InstanaServerlessLogger {
   }
 
   isInDebugMode() {
-    if (!instanaServerlessLogger.logger) return false;
+    if (!this.logger) return false;
 
-    if (typeof instanaServerlessLogger.logger.level === 'function') {
-      return instanaServerlessLogger.logger.level() === DEBUG_LEVEL;
+    if (typeof this.logger.level === 'function') {
+      return this.logger.level() === DEBUG_LEVEL;
     }
 
-    if (typeof instanaServerlessLogger.logger.level === 'number') {
-      return instanaServerlessLogger.logger.level === DEBUG_LEVEL;
+    if (typeof this.logger.level === 'number') {
+      return this.logger.level === DEBUG_LEVEL;
     }
 
-    if (typeof instanaServerlessLogger.logger.getLevel === 'function') {
-      return instanaServerlessLogger.logger.getLevel() === DEBUG_LEVEL;
+    if (typeof this.logger.getLevel === 'function') {
+      return this.logger.getLevel() === DEBUG_LEVEL;
     }
 
     return minLevel === DEBUG_LEVEL;
