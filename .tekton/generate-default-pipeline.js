@@ -5,8 +5,13 @@
 'use strict';
 
 const fs = require('fs');
-let templateContent = fs.readFileSync('./templates/default-pipeline.yaml.template', 'utf-8');
-const taskTemplateContent = fs.readFileSync('./templates/default-pipeline-test-task.yaml.template', 'utf-8');
+const path = require('path');
+
+let templateContent = fs.readFileSync(path.join(__dirname, 'templates/default-pipeline.yaml.template'), 'utf-8');
+const taskTemplateContent = fs.readFileSync(
+  path.join(__dirname, 'templates/default-pipeline-test-task.yaml.template'),
+  'utf-8'
+);
 
 const files = fs.readdirSync('./tasks/test-groups');
 const names = files.map(f => f.replace('-task.yaml', ''));
@@ -20,7 +25,7 @@ names.forEach(name => {
 
 templateContent = templateContent.replace('{{test-tasks}}', content);
 
-const location = './pipeline/default-pipeline.yaml';
+const location = path.join(__dirname, 'pipeline', 'default-pipeline.yaml');
 
 if (fs.existsSync(location)) {
   fs.unlinkSync(location);

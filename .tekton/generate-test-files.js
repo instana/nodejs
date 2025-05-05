@@ -5,6 +5,7 @@
 'use strict';
 
 const fs = require('fs');
+const path = require('path');
 
 const groups = {
   'test:ci:collector:general': {
@@ -116,8 +117,8 @@ const groups = {
 const sidecars = require('./assets/sidecars.json');
 
 for (const [groupName, { sidecars: groupSidecars, condition }] of Object.entries(groups)) {
-  const templateContent = fs.readFileSync('./templates/test-task.yaml.template', 'utf-8');
-  const sidecarTemplate = fs.readFileSync('./templates/sidecar.yaml.template', 'utf-8');
+  const templateContent = fs.readFileSync(path.join(__dirname, 'templates/test-task.yaml.template'), 'utf-8');
+  const sidecarTemplate = fs.readFileSync(path.join(__dirname, 'templates/sidecar.yaml.template'), 'utf-8');
   const sanitizedGroupName = groupName.replace(/:/g, '-');
 
   const groupSidecarDetails = groupSidecars
@@ -227,7 +228,7 @@ for (const [groupName, { sidecars: groupSidecars, condition }] of Object.entries
     .join('\n');
 
   const fileName = `${sanitizedGroupName}-task.yaml`;
-  const location = `./tasks/test-groups/${fileName}`;
+  const location = path.join(__dirname,  'tasks', 'test-groups', fileName);
 
   if (fs.existsSync(location)) {
     fs.unlinkSync(location);
