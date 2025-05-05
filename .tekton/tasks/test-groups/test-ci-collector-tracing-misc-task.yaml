@@ -5,7 +5,7 @@ metadata:
 spec:
   sidecars:
     - name: redis
-      image: redis:5.0.14
+      image: redis:7.4.3
   envFrom:
     - configMapRef:
         name: environment-properties  

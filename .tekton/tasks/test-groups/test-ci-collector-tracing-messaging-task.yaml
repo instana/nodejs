@@ -52,7 +52,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 60
     - name: redis
-      image: redis:5.0.14
+      image: redis:7.4.3
     - name: nats
       image: nats:2.9.14-linux
     - name: nats-streaming
