@@ -30,6 +30,9 @@ function prelude(opts) {
   if (opts.instanaEndpointUrlMissing) {
     env.INSTANA_ENDPOINT_URL = '';
   }
+  if (opts.instanaAgentKeyMissing) {
+    env.INSTANA_AGENT_KEY = '';
+  }
   if (opts.instanaAgentKey) {
     env.INSTANA_AGENT_KEY = opts.instanaAgentKey;
   }
@@ -350,6 +353,41 @@ describe('Using the API', function () {
     });
 
     it('must ignore the missing URL gracefully', () => {
+      return verify(control, false, false);
+    });
+  });
+
+  describe('when INSTANA_AGENT_KEY is missing', function () {
+    // - INSTANA_AGENT_KEY is missing
+    // - INSTANA_ENDPOINT_URL is configured
+    const env = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaAgentKeyMissing: true
+    });
+
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must not expect spans or metrics', () => {
       return verify(control, false, false);
     });
   });

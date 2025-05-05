@@ -62,45 +62,15 @@ class InstanaServerlessLogger {
     return minLevel === DEBUG_LEVEL;
   }
 
-  info() {
-    if (!this.logger.info) {
-      return;
-    }
+  warn = (...args) => this.logger?.warn?.(...args);
 
-    this.logger.info.apply(this.logger, arguments);
-  }
+  error = (...args) => this.logger?.error?.(...args);
 
-  warn() {
-    if (!this.logger.warn) {
-      return;
-    }
+  info = (...args) => this.logger?.info?.(...args);
 
-    this.logger.warn.apply(this.logger, arguments);
-  }
+  debug = (...args) => this.logger?.debug?.(...args);
 
-  error() {
-    if (!this.logger.error) {
-      return;
-    }
-
-    this.logger.error.apply(this.logger, arguments);
-  }
-
-  debug() {
-    if (!this.logger.debug) {
-      return;
-    }
-
-    this.logger.debug.apply(this.logger, arguments);
-  }
-
-  trace() {
-    if (!this.logger.trace) {
-      return;
-    }
-
-    this.logger.trace.apply(this.logger, arguments);
-  }
+  trace = (...args) => this.logger?.trace?.(...args);
 }
 
 exports.init = function init(config = {}) {

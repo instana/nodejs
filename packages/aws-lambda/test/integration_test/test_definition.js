@@ -112,8 +112,12 @@ function prelude(opts) {
   // The option useExtension controls whether the Lambda under test should try to talk to the extension or to the back
   // end directly.
   if (opts.useExtension) {
-    // minimum memory so that the Lambda extension is used
-    env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE = '256';
+    if (opts.lowMemory) {
+      env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE = '128';
+    } else {
+      // minimum memory so that the Lambda extension is used
+      env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE = '256';
+    }
   } else {
     env.INSTANA_DISABLE_LAMBDA_EXTENSION = 'true';
   }
@@ -1127,6 +1131,42 @@ function registerTests(handlerDefinitionPath, reduced) {
         const spansFromExtension = await control.getSpansFromExtension();
         expect(spansFromExtension).to.have.length(2);
       });
+    });
+  });
+
+  describeOrSkipIfReduced(reduced)('when the extension is used and available, but not enough memory', function () {
+    const env = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaAgentKey,
+      useExtension: true,
+      lowMemory: true
+    });
+
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath,
+        startBackend: true,
+        startExtension: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('should still expect spans or metrics', async () => {
+      await verify(control, { error: false, expectMetrics: true, expectSpans: true });
     });
   });
 
