@@ -25,8 +25,9 @@ const port = require('../../../test_util/app-port')();
 
 const cls = require('../../../../../core/src/tracing/cls');
 const app = express();
+const REDIS_VERSION = process.env.REDIS_VERSION;
 const logPrefix =
-  `Redis App (version: ${process.env.REDIS_VERSION}, require: ${process.env.REDIS_PKG}, ` +
+  `Redis App (version: ${REDIS_VERSION}, require: ${process.env.REDIS_PKG}, ` +
   `cluster: ${process.env.REDIS_CLUSTER}, pid: ${process.pid}):\t`;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
@@ -34,7 +35,6 @@ let connectedToRedis = false;
 let connection;
 let connection2;
 const connect = require('./connect-via');
-const REDIS_VERSION = process.env.REDIS_VERSION || 'latest';
 
 function log() {
   const args = Array.prototype.slice.call(arguments);
