@@ -317,7 +317,6 @@ class ProcessControls {
       requestOpts.ca = cert;
 
       let response;
-
       const result = await fetch(requestOpts.url, requestOpts);
       const contentType = result.headers.get('content-type');
 
