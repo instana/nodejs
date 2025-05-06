@@ -116,6 +116,23 @@ function instrument(redis) {
       };
     };
 
+    const creatPoolWrap = originalCreatePool => {
+      console.log('---------------------------------');
+      return function instrumentedCreateRedisPool(poolOptions) {
+        const redisPoolInstance = originalCreatePool.apply(this, arguments);
+        const redisUrl = poolOptions?.url;
+        const redisPoolPrototype = Object.getPrototypeOf(redisPoolInstance);
+
+        shimAllCommands(redisPoolPrototype, redisUrl, false, redisCommandList);
+
+        if (typeof redisPoolPrototype.multi === 'function') {
+          shimmer.wrap(redisPoolPrototype, 'multi', wrapMulti(redisUrl, false));
+        }
+
+        return redisPoolPrototype;
+      };
+    };
+
     const createClientWrap = originalCreatedClientFn => {
       return function instrumentedCreateClientInstana(createClientOpts) {
         const redisClient = originalCreatedClientFn.apply(this, arguments);
@@ -151,6 +168,7 @@ function instrument(redis) {
 
     shimmer.wrap(redis, 'createCluster', createClusterWrap);
     shimmer.wrap(redis, 'createClient', createClientWrap);
+    shimmer.wrap(redis, 'createClientPool', creatPoolWrap);
   } else {
     const redisClientProto = redis.RedisClient.prototype;
 

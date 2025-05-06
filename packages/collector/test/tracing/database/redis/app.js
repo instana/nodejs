@@ -34,6 +34,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 let connectedToRedis = false;
 let connection;
 let connection2;
+let pool;
 const connect = require('./connect-via');
 
 function log() {
@@ -43,11 +44,12 @@ function log() {
 }
 
 (async () => {
-  const { connection1, connection2: _connection2 } = await connect(redis, log);
+  const { connection1, connection2: _connection2, pool1 } = await connect(redis, log);
 
   connection = connection1;
   connection2 = _connection2;
   connectedToRedis = true;
+  pool = pool1;
 })();
 
 if (process.env.WITH_STDOUT) {
@@ -126,14 +128,21 @@ app.get('/hvals', async (req, res) => {
 });
 
 app.get('/blocking', async (req, res) => {
-  const blPopPromise = connection.blPop(redis.commandOptions({ isolated: true }), 'mykey', 0);
-
   try {
-    await connection.lPush('mykey', ['1', '2']);
-    await blPopPromise; // '2'
+    const isV5 = REDIS_VERSION === 'latest';
+    const client = isV5 ? pool : connection;
+
+    const blPopPromise = isV5
+      ? client.blPop('mykey', 0)
+      : client.blPop(redis.commandOptions({ isolated: true }), 'mykey', 0);
+
+    await client.lPush('mykey', ['1', '2']);
+    await blPopPromise;
 
     await fetch(`http://127.0.0.1:${agentPort}`);
-    log('Sent agent request successfully.');
+    log('Agent request sent successfully.');
+
+    client.destroy();
 
     res.sendStatus(200);
   } catch (err) {
