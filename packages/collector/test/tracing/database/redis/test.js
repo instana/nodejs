@@ -798,7 +798,7 @@ const legacyVersion = 'v3';
 
               // See https://redis.js.org/#node-redis-usage-basic-example blocking commands
               // In Redis v5, the "Isolation Pool" was introduced via RedisClientPool.
-              // Since it requires a new type of pool connection, the related tests have been moved to a separate suite starting from v5.
+              // Since it requires a new type of pool connection, a separate test suite  created starting from v5.
               if (redisVersion !== 'latest') {
                 it('blocking', () => testBlockingCommand(controls, setupType));
               }
@@ -1146,7 +1146,7 @@ const legacyVersion = 'v3';
           }
         }
 
-        function testBlockingCommand(controls, setupType) {
+        function testBlockingCommand(controls, setupTypes) {
           return controls.sendRequest({ method: 'GET', path: '/blocking' }).then(() =>
             retry(() =>
               agentControls.getSpans().then(spans => {
@@ -1165,7 +1165,7 @@ const legacyVersion = 'v3';
                   span => expect(span.async).to.not.exist,
                   span => expect(span.error).to.not.exist,
                   span => expect(span.ec).to.equal(0),
-                  span => verifyConnection(setupType, span),
+                  span => verifyConnection(setupTypes, span),
                   span => expect(span.data.redis.command).to.equal('blPop')
                 ]);
 
