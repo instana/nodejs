@@ -33,7 +33,9 @@ const globalAgent = require('../../../globalAgent');
 const { AgentStubControls } = require('../../../apps/agentStubControls');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
 
-// TODO: 3.4.0 broke the delivery callback
+// TODO: 3.4.0 introduces some bugs
+// https://github.com/Blizzard/node-rdkafka/issues/1128
+// https://github.com/Blizzard/node-rdkafka/issues/1123#issuecomment-2855329479
 // const producerEnableDeliveryCbOptions = ['true', 'false'];
 const producerEnableDeliveryCbOptions = ['false'];
 const producerApiMethods = ['standard', 'stream'];
@@ -50,9 +52,9 @@ const SINGLE_TEST_PROPS = {
 };
 
 const retryTime = 1000;
-const retryTimeUntil = Date.now() + 20000;
+const retryTimeUntil = () => Date.now() + 20000;
 const checkStartedEvery = 3000;
-const checkStartedUntil = Date.now() + 60000;
+const checkStartedUntil = () => Date.now() + 60000;
 const topic = 'rdkafka-topic';
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
@@ -104,8 +106,8 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
                       }
                     });
 
-                    await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
-                    await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
+                    await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+                    await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
                   });
 
                   beforeEach(async () => {
@@ -323,8 +325,8 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         useGlobalAgent: true
       });
 
-      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
-      await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
+      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+      await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
     });
 
     beforeEach(async () => {
@@ -383,8 +385,8 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         agentControls: customAgentControls
       });
 
-      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
-      await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
+      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+      await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
     });
 
     beforeEach(async () => {
@@ -444,8 +446,8 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         useGlobalAgent: true
       });
 
-      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
-      await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
+      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+      await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
     });
 
     beforeEach(async () => {
@@ -506,8 +508,8 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         agentControls: customAgentControls
       });
 
-      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
-      await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
+      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+      await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
     });
 
     beforeEach(async () => {
@@ -563,7 +565,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         }
       });
 
-      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
+      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
     });
 
     beforeEach(async () => {
@@ -591,7 +593,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           }
         });
 
-        await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
+        await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
       });
 
       beforeEach(async () => {
@@ -635,7 +637,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           RDKAFKA_PRODUCER_DELIVERY_CB: 'false'
         }
       });
-      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
+      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
     });
 
     beforeEach(async () => {
@@ -662,7 +664,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           }
         });
 
-        await receiverControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
+        await receiverControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
       });
 
       beforeEach(async () => {
@@ -725,8 +727,8 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
             agentControls: customAgentControls
           });
 
-          await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
-          await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
+          await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+          await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
         });
 
         beforeEach(async () => {
@@ -795,8 +797,8 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           agentControls: customAgentControls
         });
 
-        await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
-        await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil);
+        await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+        await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
       });
 
       beforeEach(async () => {
