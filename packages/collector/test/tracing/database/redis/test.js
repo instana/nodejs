@@ -748,7 +748,7 @@ const legacyVersion = 'v3';
 
               // scanIterator not available on cluster.
               if (setupType !== 'cluster') {
-                it.skip('must trace scan iterator usage', () =>
+                it('must trace scan iterator usage', () =>
                   controls
                     .sendRequest({
                       method: 'GET',
