@@ -35,6 +35,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 let connectedToRedis = false;
 let connection;
 let connection2;
+let pool;
 const connect = require('./connect-via');
 
 function log() {
@@ -44,11 +45,12 @@ function log() {
 }
 
 (async () => {
-  const { connection1, connection2: _connection2 } = await connect(redis, log);
+  const { connection1, connection2: _connection2, pool1 } = await connect(redis, log);
 
   connection = connection1;
   connection2 = _connection2;
   connectedToRedis = true;
+  pool = pool1;
 })();
 
 if (process.env.WITH_STDOUT) {
