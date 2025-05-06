@@ -25,16 +25,16 @@ const port = require('../../../test_util/app-port')();
 
 const cls = require('../../../../../core/src/tracing/cls');
 const app = express();
-const REDIS_VERSION = process.env.REDIS_VERSION;
+const redisVersion = process.env.REDIS_VERSION;
+const isPool = process.env.REDIS_POOL === 'true';
 const logPrefix =
-  `Redis App (version: ${REDIS_VERSION}, require: ${process.env.REDIS_PKG}, ` +
+  `Redis App (version: ${redisVersion}, require: ${process.env.REDIS_PKG}, ` +
   `cluster: ${process.env.REDIS_CLUSTER}, pid: ${process.pid}):\t`;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 let connectedToRedis = false;
 let connection;
 let connection2;
-let pool;
 const connect = require('./connect-via');
 
 function log() {
@@ -44,12 +44,11 @@ function log() {
 }
 
 (async () => {
-  const { connection1, connection2: _connection2, pool1 } = await connect(redis, log);
+  const { connection1, connection2: _connection2 } = await connect(redis, log);
 
   connection = connection1;
   connection2 = _connection2;
   connectedToRedis = true;
-  pool = pool1;
 })();
 
 if (process.env.WITH_STDOUT) {
@@ -129,20 +128,17 @@ app.get('/hvals', async (req, res) => {
 
 app.get('/blocking', async (req, res) => {
   try {
-    const isV5 = REDIS_VERSION === 'latest';
-    const client = isV5 ? pool : connection;
+    const blPopPromise = isPool
+      ? connection.blPop('mykey', 0)
+      : connection.blPop(redis.commandOptions({ isolated: true }), 'mykey', 0);
 
-    const blPopPromise = isV5
-      ? client.blPop('mykey', 0)
-      : client.blPop(redis.commandOptions({ isolated: true }), 'mykey', 0);
-
-    await client.lPush('mykey', ['1', '2']);
+    await connection.lPush('mykey', ['1', '2']);
     await blPopPromise;
 
     await fetch(`http://127.0.0.1:${agentPort}`);
     log('Agent request sent successfully.');
 
-    client.destroy();
+    connection.destroy();
 
     res.sendStatus(200);
   } catch (err) {
@@ -152,7 +148,7 @@ app.get('/blocking', async (req, res) => {
 });
 
 app.get('/scan-iterator', async (req, res) => {
-  if (REDIS_VERSION === 'latest') {
+  if (redisVersion === 'latest') {
     // Redis v5: SCAN iterators return batches of keys, enabling multi-key commands like mGet
     // eslint-disable-next-line no-restricted-syntax
     for await (const keys of connection.scanIterator()) {

@@ -87,6 +87,52 @@ const legacyVersion = 'v3';
                 });
               });
             });
+            // In v5, Redis moved “Isolation Pool” into RedisClientPool.
+            // see: //github.com/redis/node-redis/blob/master/docs/pool.md
+            if (redisVersion === 'latest') {
+              mochaSuiteFn('When clientpool is used', function () {
+                globalAgent.setUpCleanUpHooks();
+                let controls;
+
+                before(async () => {
+                  controls = new ProcessControls({
+                    useGlobalAgent: true,
+                    appPath:
+                      redisVersion === legacyVersion
+                        ? path.join(__dirname, 'legacyApp.js')
+                        : path.join(__dirname, 'app.js'),
+                    env: {
+                      REDIS_VERSION: redisVersion,
+                      REDIS_PKG: redisPkg,
+                      REDIS_POOL: true
+                    }
+                  });
+
+                  await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
+                });
+
+                beforeEach(async () => {
+                  await agentControls.clearReceivedTraceData();
+                });
+
+                before(async () => {
+                  await controls.sendRequest({
+                    method: 'POST',
+                    path: '/clearkeys'
+                  });
+                });
+
+                after(async () => {
+                  await controls.stop();
+                });
+
+                afterEach(async () => {
+                  await controls.clearIpcMessages();
+                });
+
+                it('should trace blocking commands', () => testBlockingCommand(controls, setupType));
+              });
+            }
           }
 
           mochaSuiteFn(`redis@${redisVersion}`, function () {
@@ -751,44 +797,10 @@ const legacyVersion = 'v3';
               }
 
               // See https://redis.js.org/#node-redis-usage-basic-example blocking commands
-              // In v5, Redis moved “Isolation Pool” into RedisClientPool with a createClientPool export
-              // but importing createClientPool throws “Not Found,” so the docs don’t match the package.
-              // Opened an issue in redis: redis/node-redis#2936
+              // In Redis v5, the "Isolation Pool" was introduced via RedisClientPool.
+              // Since it requires a new type of pool connection, the related tests have been moved to a separate suite starting from v5.
               if (redisVersion !== 'latest') {
-                it.skip('blocking', () =>
-                  controls
-                    .sendRequest({
-                      method: 'GET',
-                      path: '/blocking'
-                    })
-                    .then(() =>
-                      retry(() =>
-                        agentControls.getSpans().then(spans => {
-                          const entrySpan = expectAtLeastOneMatching(spans, [
-                            span => expect(span.n).to.equal('node.http.server'),
-                            span => expect(span.data.http.method).to.equal('GET')
-                          ]);
-
-                          expectAtLeastOneMatching(spans, [
-                            span => expect(span.t).to.equal(entrySpan.t),
-                            span => expect(span.p).to.equal(entrySpan.s),
-                            span => expect(span.n).to.equal('redis'),
-                            span => expect(span.k).to.equal(constants.EXIT),
-                            span => expect(span.f.e).to.equal(String(controls.getPid())),
-                            span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                            span => expect(span.async).to.not.exist,
-                            span => expect(span.error).to.not.exist,
-                            span => expect(span.ec).to.equal(0),
-                            span => verifyConnection(setupType, span),
-                            span => expect(span.data.redis.command).to.equal('blPop')
-                          ]);
-
-                          verifyHttpExit(controls, spans, entrySpan);
-
-                          expect(spans.length).to.be.eql(4);
-                        })
-                      )
-                    ));
+                it('blocking', () => testBlockingCommand(controls, setupType));
               }
             }
 
@@ -1132,6 +1144,36 @@ const legacyVersion = 'v3';
           } else {
             expect(span.data.redis.connection).to.contain(process.env.REDIS);
           }
+        }
+
+        function testBlockingCommand(controls, setupType) {
+          return controls.sendRequest({ method: 'GET', path: '/blocking' }).then(() =>
+            retry(() =>
+              agentControls.getSpans().then(spans => {
+                const entrySpan = expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.data.http.method).to.equal('GET')
+                ]);
+
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => verifyConnection(setupType, span),
+                  span => expect(span.data.redis.command).to.equal('blPop')
+                ]);
+
+                verifyHttpExit(controls, spans, entrySpan);
+                expect(spans.length).to.equal(4);
+              })
+            )
+          );
         }
       });
     });
