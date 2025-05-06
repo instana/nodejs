@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.12.0](https://github.com/instana/nodejs/compare/v4.11.1...v4.12.0) (2025-05-06)
+
+### Bug Fixes
+
+- **aws-lambda:** resolved TypeError when memory is too low ([#1715](https://github.com/instana/nodejs/issues/1715)) ([03a8eb3](https://github.com/instana/nodejs/commit/03a8eb39f386af44f98c5405d668369b3736bff0))
+
+### Features
+
+- added support for @apollo/server ([#1675](https://github.com/instana/nodejs/issues/1675)) ([e136380](https://github.com/instana/nodejs/commit/e136380030df3d22ce26ea17ef4b0f8506a7a88c))
+- added support for @elastic/elasticsearch v9 ([#1691](https://github.com/instana/nodejs/issues/1691)) ([e4d164e](https://github.com/instana/nodejs/commit/e4d164e05b3a3b3fcb2b927b51d8a9c301b90db5))
+- added support for @google-cloud/pubsub v5 ([#1708](https://github.com/instana/nodejs/issues/1708)) ([4f6c47f](https://github.com/instana/nodejs/commit/4f6c47fba5c85ea4da8c300ab34fb7d446a496f4))
+- added support for koa v3 ([#1706](https://github.com/instana/nodejs/issues/1706)) ([7f221e5](https://github.com/instana/nodejs/commit/7f221e50f028de67ab5ce5ed07ba5f3983557c24))
+
 ## [4.11.1](https://github.com/instana/nodejs/compare/v4.11.0...v4.11.1) (2025-04-24)
 
 ### Bug Fixes

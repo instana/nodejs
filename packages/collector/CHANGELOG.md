@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.12.0](https://github.com/instana/nodejs/compare/v4.11.1...v4.12.0) (2025-05-06)
+
+### Features
+
+- added support for @apollo/server ([#1675](https://github.com/instana/nodejs/issues/1675)) ([e136380](https://github.com/instana/nodejs/commit/e136380030df3d22ce26ea17ef4b0f8506a7a88c))
+- added support for @elastic/elasticsearch v9 ([#1691](https://github.com/instana/nodejs/issues/1691)) ([e4d164e](https://github.com/instana/nodejs/commit/e4d164e05b3a3b3fcb2b927b51d8a9c301b90db5))
+
 ## [4.11.1](https://github.com/instana/nodejs/compare/v4.11.0...v4.11.1) (2025-04-24)
 
 **Note:** Version bump only for package @instana/collector

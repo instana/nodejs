@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.12.0](https://github.com/instana/nodejs/compare/v4.11.1...v4.12.0) (2025-05-06)
+
+### Bug Fixes
+
+- **aws-lambda:** resolved TypeError when memory is too low ([#1715](https://github.com/instana/nodejs/issues/1715)) ([03a8eb3](https://github.com/instana/nodejs/commit/03a8eb39f386af44f98c5405d668369b3736bff0))
+
 ## [4.11.1](https://github.com/instana/nodejs/compare/v4.11.0...v4.11.1) (2025-04-24)
 
 **Note:** Version bump only for package @instana/serverless
