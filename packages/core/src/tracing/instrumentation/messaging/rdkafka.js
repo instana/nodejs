@@ -159,6 +159,9 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
     });
 
     if (deliveryCb) {
+      // TODO: 3.4.0 introduced some bugs
+      // https://github.com/Blizzard/node-rdkafka/issues/1128
+      // https://github.com/Blizzard/node-rdkafka/issues/1123#issuecomment-2855329479
       ctx.once('delivery-report', function instanaDeliveryReportListener(err) {
         span.d = Date.now() - span.ts;
 
