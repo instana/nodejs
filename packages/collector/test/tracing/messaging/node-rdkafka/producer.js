@@ -22,16 +22,17 @@ const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const express = require('express');
 const port = require('../../../test_util/app-port')();
 const enableDeliveryCb = process.env.RDKAFKA_PRODUCER_DELIVERY_CB === 'true';
-
+const isStream = process.env.RDKAFKA_PRODUCER_AS_STREAM === 'true';
 const app = express();
 const topic = 'rdkafka-topic';
 let throwDeliveryErr = false;
-let standardProducerReady = false;
-let streamProducerReady = false;
+let producerIsReady = false;
 
-function getProducer(isStream = false) {
+function getProducer() {
   /** @type {Kafka.Producer | Kafka.ProducerStream} */
   let _producer;
+
+  log(`Delivery callback enabled: ${enableDeliveryCb}`);
 
   const producerOptions = {
     'client.id': 'rdkafka-producer',
@@ -58,7 +59,11 @@ function getProducer(isStream = false) {
 
     _producer.producer.on('ready', () => {
       log('Stream Producer is ready');
-      streamProducerReady = true;
+      producerIsReady = true;
+    });
+
+    _producer.producer.on('event.error', err => {
+      log('Error from stream producer', err);
     });
   } else {
     _producer = new Kafka.Producer(producerOptions, {});
@@ -67,19 +72,19 @@ function getProducer(isStream = false) {
 
     // Any errors we encounter, including connection errors
     _producer.on('event.error', err => {
-      log(`Error from producer (stream: ${isStream})`, err);
+      log('Error from standard producer', err);
     });
 
     _producer.on('ready', () => {
       log('Standard Producer is ready');
-      standardProducerReady = true;
+      producerIsReady = true;
     });
 
     // This requires dr_cb option in order to work. When enabled, it gives us a confirmation that the message was
     // delivered successfully or not. This is handled by the instrumentation, if it's enabled.
     // Be aware that this only works for standard API - not for stream cases.
     _producer.on('delivery-report', () => {
-      log(`Delivery report (stream: ${isStream})`);
+      log('Received delivery report event');
 
       if (throwDeliveryErr) {
         const listenersArr = _producer.listeners('delivery-report');
@@ -99,7 +104,7 @@ function getProducer(isStream = false) {
     // https://github.com/Blizzard/node-rdkafka/issues/1128
     // https://github.com/Blizzard/node-rdkafka/issues/1123#issuecomment-2855329479
     if (enableDeliveryCb) {
-      _producer.setPollInterval(100);
+      _producer.setPollInterval(1000);
     }
   }
 
@@ -107,13 +112,14 @@ function getProducer(isStream = false) {
 }
 
 let messageCounter = 0;
+const producer = getProducer();
 
 /**
- * @param {Kafka.Producer | Kafka.ProducerStream} _producer
  * @param {string} msg
  * @returns {{ wasSent: boolean, topic: string, msg: string, timestamp: number }}
  */
-function doProduce(_producer, isStream, bufferErrorSender = false, msg = 'Node rdkafka is great!') {
+function doProduce(bufferErrorSender = false, method, msg = 'Node rdkafka is great!') {
+  msg = `${method} - ${msg}`;
   let theMessage = Buffer.from(msg);
 
   if (isStream) {
@@ -123,8 +129,8 @@ function doProduce(_producer, isStream, bufferErrorSender = false, msg = 'Node r
     }
 
     return new Promise((resolve, reject) => {
-      _producer.once('error', err => {
-        _producer.close();
+      producer.once('error', err => {
+        producer.close();
         reject(err);
       });
 
@@ -136,7 +142,7 @@ function doProduce(_producer, isStream, bufferErrorSender = false, msg = 'Node r
        * is provided: https://github.com/Blizzard/node-rdkafka/blob/master/lib/producer-stream.js#L59
        */
       try {
-        wasSent = _producer.write({
+        wasSent = producer.write({
           topic: topic,
           headers: [{ message_counter: ++messageCounter }],
           value: theMessage
@@ -146,6 +152,8 @@ function doProduce(_producer, isStream, bufferErrorSender = false, msg = 'Node r
         // Uint8Array. Received an instance of Object
         // NOTE: Somehow this error is not thrown for Node < 14
       }
+
+      log('Sent message as stream');
 
       setTimeout(async () => {
         await fetch(`http://127.0.0.1:${agentPort}`);
@@ -165,13 +173,15 @@ function doProduce(_producer, isStream, bufferErrorSender = false, msg = 'Node r
     }
 
     return new Promise((resolve, reject) => {
-      _producer.on('error', reject);
+      producer.on('error', reject);
 
-      log('Sending message as standard');
+      log('Sending message as standard on topic', topic);
 
-      const wasSent = _producer.produce(topic, null, theMessage, null, null, null, [
+      const wasSent = producer.produce(topic, null, theMessage, null, null, null, [
         { message_counter: ++messageCounter }
       ]);
+
+      log('Sent message as standard', wasSent);
 
       setTimeout(async () => {
         await fetch(`http://127.0.0.1:${agentPort}`);
@@ -188,44 +198,20 @@ function doProduce(_producer, isStream, bufferErrorSender = false, msg = 'Node r
   }
 }
 
-const standardProducer = getProducer(false);
-let streamProducer = getProducer(true);
-
 // method is either standard or stream
 app.get('/produce/:method', async (req, res) => {
   log('GET /produce/:method');
 
-  const method = req.params.method || 'standard';
-  const bufferErrorSender = req.query.bufferErrorSender === 'true';
+  const method = req.params.method;
+  log(`Method: ${method}`);
 
+  const bufferErrorSender = req.query.bufferErrorSender === 'true';
   throwDeliveryErr = req.query.throwDeliveryErr === 'true';
 
   try {
-    const response = await doProduce(
-      method === 'stream' ? streamProducer : standardProducer,
-      method === 'stream',
-      bufferErrorSender
-    );
+    const response = await doProduce(bufferErrorSender, method);
     res.status(200).send(response);
   } catch (err) {
-    /**
-     * According to the Node.js spec, if a writable stream receives the 'error' event, the only valid event by then is
-     * 'close'. So we create a new stream after an error occurs.
-     *
-     * From the Node.js docs (https://nodejs.org/dist/latest-v16.x/docs/api/stream.html#event-error):
-     *
-     * The 'error' event is emitted if an error occurred while writing or piping data. The listener callback is passed a
-     * single Error argument when called.
-     *
-     * The stream is closed when the 'error' event is emitted unless the autoDestroy option was set to false when
-     * creating the stream.
-     *
-     * After 'error', no further events other than 'close' should be emitted (including 'error' events).
-     */
-    if (method === 'stream') {
-      streamProducer = getProducer(true);
-    }
-
     // NOTE: better not return 500 otherwise the test suite does not continue with checking expects
     //       const resp = await sendRequest -> expects success
     res.status(200).send({
@@ -237,8 +223,7 @@ app.get('/produce/:method', async (req, res) => {
 app.get('/', (_req, res) => {
   // If producer is a stream, it doesn't have a "isConnected" method, so we check if the method "writer" is available
   // otherwise. If the producer as stream fails to start, it throws an error before we even reach this piece of code.
-  if (standardProducerReady && streamProducerReady) {
-    log('App is ready. Lets go.');
+  if (producerIsReady) {
     res.send('ok');
   } else {
     res.status(500).send('rdkafka Producer is not ready yet.');
@@ -246,5 +231,5 @@ app.get('/', (_req, res) => {
 });
 
 app.listen(port, () => {
-  log(`rdkafka Producer app listening on port ${port}`);
+  log(`rdkafka Producer app listening on port ${port} as stream: ${isStream}`);
 });

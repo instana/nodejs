@@ -163,6 +163,7 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
       // https://github.com/Blizzard/node-rdkafka/issues/1128
       // https://github.com/Blizzard/node-rdkafka/issues/1123#issuecomment-2855329479
       ctx.once('delivery-report', function instanaDeliveryReportListener(err) {
+        console.log('yeah delivery report');
         span.d = Date.now() - span.ts;
 
         if (err) {

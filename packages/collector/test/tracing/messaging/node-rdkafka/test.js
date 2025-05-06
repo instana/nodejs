@@ -51,16 +51,16 @@ const SINGLE_TEST_PROPS = {
   withError: false
 };
 
-const retryTime = 1000;
-const retryTimeUntil = () => Date.now() + 20000;
-const checkStartedEvery = 3000;
-const checkStartedUntil = () => Date.now() + 60000;
+const retryTime = 5000;
+const retryTimeUntil = () => Date.now() + 1000 * 30;
+const checkStartedEvery = 5000;
+const checkStartedUntil = () => Date.now() + 1000 * 60;
 const topic = 'rdkafka-topic';
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
-  this.timeout(config.getTestTimeout() * 20);
+  this.timeout(config.getTestTimeout() * 10);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
@@ -102,6 +102,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
                       useGlobalAgent: true,
                       env: {
                         RDKAFKA_OBJECT_MODE: objectMode,
+                        RDKAFKA_PRODUCER_AS_STREAM: producerMethod === 'stream' ? 'true' : 'false',
                         RDKAFKA_PRODUCER_DELIVERY_CB: deliveryCbEnabled === 'true'
                       }
                     });
@@ -203,7 +204,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         );
       },
       retryTime,
-      retryTimeUntil
+      retryTimeUntil()
     );
   }
 
@@ -361,7 +362,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
         },
         retryTime,
-        retryTimeUntil
+        retryTimeUntil()
       );
     });
   });
@@ -422,7 +423,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
         },
         retryTime,
-        retryTimeUntil
+        retryTimeUntil()
       );
     });
   });
@@ -482,7 +483,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
         },
         retryTime,
-        retryTimeUntil
+        retryTimeUntil()
       );
     });
   });
@@ -545,7 +546,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
         },
         retryTime,
-        retryTimeUntil
+        retryTimeUntil()
       );
     });
   });
@@ -614,7 +615,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           path: '/produce/standard'
         });
 
-        return retry(() => verifyResponseAndMessage(response, consumerControls), retryTime, retryTimeUntil)
+        return retry(() => verifyResponseAndMessage(response, consumerControls), retryTime, retryTimeUntil())
           .then(() => delay(1000))
           .then(() => agentControls.getSpans())
           .then(spans => {
@@ -691,7 +692,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
             verifyResponseAndMessage(response, receiverControls);
           },
           retryTime,
-          retryTimeUntil
+          retryTimeUntil()
         )
           .then(() => delay(1000))
           .then(() => agentControls.getSpans())
@@ -773,7 +774,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
               expect(spanNames).to.not.include('kafka');
             },
             retryTime,
-            retryTimeUntil
+            retryTimeUntil()
           );
         });
       });
@@ -845,7 +846,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
             expect(spans.some(span => span.n === 'kafka' && span.data.kafka?.access === 'consume')).to.be.false;
           },
           retryTime,
-          retryTimeUntil
+          retryTimeUntil()
         );
       });
     });
@@ -876,7 +877,7 @@ function verifyResponseAndMessage(response, consumerControls, withError, objectM
 
   expect(message).to.exist;
   const messagePayload = Buffer.from(message.value.data, 'utf8').toString();
-  expect(messagePayload).to.equal('Node rdkafka is great!');
+  expect(messagePayload).to.contain('Node rdkafka is great!');
 
   const headerNames = [];
   message.headers.forEach(keyValuePair => {
