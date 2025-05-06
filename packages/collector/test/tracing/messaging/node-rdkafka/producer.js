@@ -24,17 +24,18 @@ const port = require('../../../test_util/app-port')();
 const enableDeliveryCb = process.env.RDKAFKA_PRODUCER_DELIVERY_CB === 'true';
 
 const app = express();
-
 const topic = 'rdkafka-topic';
-
 let throwDeliveryErr = false;
+let standardProducerReady = false;
+let streamProducerReady = false;
 
 function getProducer(isStream = false) {
   /** @type {Kafka.Producer | Kafka.ProducerStream} */
   let _producer;
+
   const producerOptions = {
     'client.id': 'rdkafka-producer',
-    'metadata.broker.list': '127.0.0.1:9092',
+    'metadata.broker.list': process.env.KAFKA,
     // Enable to receive message payload in "delivery reports" event. This is the only way to know when a message
     // was successfully sent. But we cannot rely on it, nor set this option without the customer's knowledge.
     dr_cb: enableDeliveryCb
@@ -54,6 +55,11 @@ function getProducer(isStream = false) {
         objectMode: process.env.RDKAFKA_OBJECT_MODE === 'true'
       }
     );
+
+    _producer.producer.on('ready', () => {
+      log('Stream Producer is ready');
+      streamProducerReady = true;
+    });
   } else {
     _producer = new Kafka.Producer(producerOptions, {});
 
@@ -61,14 +67,19 @@ function getProducer(isStream = false) {
 
     // Any errors we encounter, including connection errors
     _producer.on('event.error', err => {
-      log('Error from producer', err);
+      log(`Error from producer (stream: ${isStream})`, err);
+    });
+
+    _producer.on('ready', () => {
+      log('Standard Producer is ready');
+      standardProducerReady = true;
     });
 
     // This requires dr_cb option in order to work. When enabled, it gives us a confirmation that the message was
     // delivered successfully or not. This is handled by the instrumentation, if it's enabled.
     // Be aware that this only works for standard API - not for stream cases.
     _producer.on('delivery-report', () => {
-      log('Delivery report');
+      log(`Delivery report (stream: ${isStream})`);
 
       if (throwDeliveryErr) {
         const listenersArr = _producer.listeners('delivery-report');
@@ -84,7 +95,10 @@ function getProducer(isStream = false) {
 
     // We must either call .poll() manually after sending messages or set the producer to poll on an interval.
     // Without this, we do not get delivery events and the queue will eventually fill up.
-    _producer.setPollInterval(100);
+    // TODO: 3.4.0 broke the delivery report. We have disabled the test for now.
+    if (enableDeliveryCb) {
+      _producer.setPollInterval(100);
+    }
   }
 
   return _producer;
@@ -221,7 +235,8 @@ app.get('/produce/:method', async (req, res) => {
 app.get('/', (_req, res) => {
   // If producer is a stream, it doesn't have a "isConnected" method, so we check if the method "writer" is available
   // otherwise. If the producer as stream fails to start, it throws an error before we even reach this piece of code.
-  if (streamProducer.write && standardProducer.isConnected()) {
+  if (standardProducerReady && streamProducerReady) {
+    log('App is ready. Lets go.');
     res.send('ok');
   } else {
     res.status(500).send('rdkafka Producer is not ready yet.');

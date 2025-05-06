@@ -34,7 +34,7 @@ function getConsumer() {
   let _consumer;
 
   const consumerOptions = {
-    'metadata.broker.list': '127.0.0.1:9092',
+    'metadata.broker.list': process.env.KAFKA,
     'group.id': uuid()
   };
 
@@ -98,7 +98,7 @@ function getConsumer() {
 
     _consumer
       .on('ready', () => {
-        log('Standard Ready.');
+        log('Consumer Ready.');
 
         _consumer.subscribe([topic]);
 
