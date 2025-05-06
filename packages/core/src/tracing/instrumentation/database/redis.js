@@ -117,7 +117,6 @@ function instrument(redis) {
     };
 
     const creatPoolWrap = originalCreatePool => {
-      console.log('---------------------------------');
       return function instrumentedCreateRedisPool(poolOptions) {
         const redisPoolInstance = originalCreatePool.apply(this, arguments);
         const redisUrl = poolOptions?.url;
@@ -166,9 +165,30 @@ function instrument(redis) {
       };
     };
 
+    const instrumentPool = () => {
+      // In Redis v5, createClientPool was introduced. We check the property descriptor of `createClientPool`
+      // to determine how to instrument it, as it might be defined in different ways:
+      // - As a getter (in redis), which requires special handling.
+      // - As a regular function (@redis/client).
+      const poolDescriptor = Object.getOwnPropertyDescriptor(redis, 'createClientPool');
+      if (poolDescriptor?.configurable) {
+        if (typeof poolDescriptor.get === 'function') {
+          Object.defineProperty(redis, 'createClientPool', {
+            configurable: true,
+            enumerable: true,
+            get() {
+              return creatPoolWrap(poolDescriptor.get.call(this));
+            }
+          });
+        } else if (typeof poolDescriptor.value === 'function') {
+          shimmer.wrap(redis, 'createClientPool', creatPoolWrap);
+        }
+      }
+    };
+
     shimmer.wrap(redis, 'createCluster', createClusterWrap);
     shimmer.wrap(redis, 'createClient', createClientWrap);
-    shimmer.wrap(redis, 'createClientPool', creatPoolWrap);
+    instrumentPool();
   } else {
     const redisClientProto = redis.RedisClient.prototype;
 
