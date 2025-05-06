@@ -147,6 +147,12 @@ module.exports = function findPort(minPort) {
 
     ports[port] = port;
   } catch (err) {
+    // If the test is manually interrupted, exit gracefully.
+    if (err.signal === 'SIGINT') {
+      // eslint-disable-next-line no-console
+      console.log('Test interrupted manually (SIGINT). Skipping port search.');
+      return null;
+    }
     // eslint-disable-next-line no-console
     console.log('Error when looking for port', err);
     return findPort();
