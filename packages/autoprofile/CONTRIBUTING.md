@@ -37,8 +37,10 @@ node scripts/prebuilds.js --node=22.0.0,21.0.0                        [build spe
 ### Adding support for a new Node.js version
 
 ```sh
+nvm use v22.0.0
 node scripts/prebuilds.js --node=22.0.0                               [build specific node version]
 ```
+
 ### Troubleshooting
 
 If you encounter an error like the following:

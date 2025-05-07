@@ -216,7 +216,7 @@
     "pkg-up": "^3.1.0",
     "portfinder": "^1.0.32",
     "prebuildify": "^5.0.1",
-    "prebuildify-cross": "^5.1.0",
+    "prebuildify-cross": "^5.1.1",
     "prettier": "^2.5.1",
     "prisma-v4": "npm:prisma@4.16.2",
     "prisma-v450": "npm:prisma@4.5.0",
@@ -259,6 +259,9 @@
     "prisma": "^6.7.0"
   },
   "overrides": {
+    "prebuildify": {
+      "node-abi": "4.8.0"
+    },
     "stream-shift": "1.0.2"
   },
   "config": {
