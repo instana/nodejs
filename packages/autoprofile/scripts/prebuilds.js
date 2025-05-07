@@ -17,8 +17,10 @@ const { hideBin } = require('yargs/helpers');
 const argv = yargs(hideBin(process.argv)).argv;
 const childProcess = require('child_process');
 
+console.log('version------------', argv.node);
+
 if (!argv.node) {
-  throw new Error('Please specific the node version/s.');
+  throw new Error('Please specify the node version/s.');
 }
 
 const targets = argv.node.split(',').join(' -t ');
