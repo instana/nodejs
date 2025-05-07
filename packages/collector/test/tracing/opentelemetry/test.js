@@ -6,6 +6,7 @@
 
 const expect = require('chai').expect;
 const path = require('path');
+const semver = require('semver');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../core/test/config');
@@ -26,10 +27,17 @@ const globalAgent = require('../../globalAgent');
 const DELAY_TIMEOUT_IN_MS = 500;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+// TODO: Seems like restify test is broken in v24. Investigate as part of https://jsw.ibm.com/browse/INSTA-34346
+//       See Issue: https://github.com/restify/node-restify/issues/1984
+const runRestify =
+  supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=23.x')
+    ? describe
+    : describe.skip;
+
 mochaSuiteFn('opentelemetry/instrumentations', function () {
   this.timeout(config.getTestTimeout());
 
-  describe('restify', function () {
+  runRestify('restify', function () {
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
@@ -598,6 +606,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           .then(() => delay(DELAY_TIMEOUT_IN_MS))
           .then(() => retry(() => agentControls.getSpans().then(spans => expect(spans).to.be.empty))));
     });
+
     describe('opentelemetry is disabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
