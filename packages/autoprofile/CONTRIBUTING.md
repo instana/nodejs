@@ -1,6 +1,6 @@
 ## Prebuilds
 
-### Requirement
+### Requirements
 
 From lando/lando#3533
 
@@ -9,6 +9,14 @@ sudo ln -s ~/.rd/docker.sock /var/run/docker.sock
 ```
 
 On M1 please delete the file and then recreate it to address the connectivity problem with the Docker daemon.
+
+Switch to the Node.js version:
+
+```
+nvm use v22.0.0      [target prebuild Node.js version]
+```
+
+You might need to update `node-gyp` in the package.json!
 
 ### Supported OS / Arch
 
@@ -39,6 +47,7 @@ node scripts/prebuilds.js --node=22.0.0,21.0.0                        [build spe
 ```sh
 node scripts/prebuilds.js --node=22.0.0                               [build specific node version]
 ```
+
 ### Troubleshooting
 
 If you encounter an error like the following:

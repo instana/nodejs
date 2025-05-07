@@ -13,7 +13,13 @@ const testUtils = require('../../../../../core/test/test_util');
 const config = require('../../../../../core/test/config');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const semver = require('semver');
+
+// TODO: ibm_db installation is broken in v24. Investigate as part of https://jsw.ibm.com/browse/INSTA-34346
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=23.x')
+    ? describe
+    : describe.skip;
 
 if (testUtils.isCI() && !process.env.DB2_CONNECTION_STR) {
   throw new Error(
