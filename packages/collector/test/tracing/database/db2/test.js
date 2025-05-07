@@ -18,7 +18,7 @@ const semver = require('semver');
 // TODO: ibm_db installation is broken in v24. Investigate as part of https://jsw.ibm.com/browse/INSTA-34346
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=23.x')
-    ? describe.only
+    ? describe
     : describe.skip;
 
 if (testUtils.isCI() && !process.env.DB2_CONNECTION_STR) {
