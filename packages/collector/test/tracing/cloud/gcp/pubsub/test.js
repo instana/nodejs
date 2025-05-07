@@ -46,7 +46,9 @@ if (
   let mochaSuiteFn;
   const projectId = process.env.GCP_PROJECT;
 
-  if (!supportedVersion(process.versions.node) || !projectId) {
+  // Note: Skipping test for node v24 as the library is broken
+  //       see Issue: https://github.com/googleapis/google-auth-library-nodejs/issues/1964
+  if ((!supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '>=24.x')) || !projectId) {
     mochaSuiteFn = describe.skip;
   } else {
     mochaSuiteFn = describe;
