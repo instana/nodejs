@@ -36,8 +36,7 @@ const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test
 // TODO: 3.4.0 introduces some bugs
 // https://github.com/Blizzard/node-rdkafka/issues/1128
 // https://github.com/Blizzard/node-rdkafka/issues/1123#issuecomment-2855329479
-// const producerEnableDeliveryCbOptions = ['true', 'false'];
-const producerEnableDeliveryCbOptions = ['false'];
+const producerEnableDeliveryCbOptions = ['true', 'false'];
 const producerApiMethods = ['standard', 'stream'];
 const consumerApiMethods = ['standard', 'stream'];
 const objectModeMethods = ['true', 'false'];
