@@ -20,7 +20,7 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const semver = require('semver');
 
-// TODO: pg-native installation is broken in v24 rc. Investigate as part of https://jsw.ibm.com/browse/INSTA-34346
+// TODO: pg-native installation is broken in v24. Investigate as part of https://jsw.ibm.com/browse/INSTA-34346
 // See Issue: https:// github.com/brianc/node-libpq/issues/108
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=23.x')
