@@ -16,6 +16,7 @@ describe('supported versions for Node.js auto tracing', () => {
     expect(supportedTracingVersion('21.2.0')).to.equal(true);
     expect(supportedTracingVersion('22.0.0')).to.equal(true);
     expect(supportedTracingVersion('23.0.0')).to.equal(true);
+    expect(supportedTracingVersion('24.0.0')).to.equal(true);
   });
 
   it('must report various Node.js versions as not supported', () => {
