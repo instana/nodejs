@@ -12,11 +12,16 @@ const config = require('../../../../../core/test/config');
 const { expectAtLeastOneMatching, isCI, retry } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
+const semver = require('semver');
 
 describe('tracing/mssql', function () {
   ['latest', 'v10'].forEach(mssqlVersion => {
-    const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
+    // TODO: mssql is broken in v24 due to EOL of `SlowBuffer`.
+    //       Expected to be resolved with https://github.com/nodejs/node/pull/58211
+    const mochaSuiteFn =
+      supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=23.x')
+        ? describe
+        : describe.skip;
     mochaSuiteFn(`mssql@${mssqlVersion}`, function () {
       this.timeout(isCI() ? 70000 : config.getTestTimeout() * 2);
 

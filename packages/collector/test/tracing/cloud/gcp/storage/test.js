@@ -7,6 +7,7 @@
 
 const { expect } = require('chai');
 const { fail } = expect;
+const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -50,7 +51,13 @@ if (
 } else {
   let mochaSuiteFn;
 
-  if (!supportedVersion(process.versions.node) || !process.env.GCP_PROJECT) {
+  // Note: Skipping test for node v24 as the library is broken
+  //       see Issue: https://github.com/googleapis/google-auth-library-nodejs/issues/1964
+  if (
+    !supportedVersion(process.versions.node) ||
+    semver.satisfies(process.versions.node, '>=24.x') ||
+    !process.env.GCP_PROJECT
+  ) {
     mochaSuiteFn = describe.skip;
   } else {
     mochaSuiteFn = describe;

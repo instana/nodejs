@@ -27,9 +27,9 @@ const globalAgent = require('../../globalAgent');
 const DELAY_TIMEOUT_IN_MS = 500;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-// TODO: Seems like restify test is broken in v24. Investigate as part of https://jsw.ibm.com/browse/INSTA-34346
+// TODO: Restify & tedious test is broken in v24. Investigate as part of https://jsw.ibm.com/browse/INSTA-34346
 //       See Issue: https://github.com/restify/node-restify/issues/1984
-const runRestify =
+const runTests =
   supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=23.x')
     ? describe
     : describe.skip;
@@ -37,7 +37,7 @@ const runRestify =
 mochaSuiteFn('opentelemetry/instrumentations', function () {
   this.timeout(config.getTestTimeout());
 
-  runRestify('restify', function () {
+  runTests('restify', function () {
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
@@ -511,7 +511,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         ));
   });
 
-  describe('tedious', function () {
+  runTests('tedious', function () {
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
