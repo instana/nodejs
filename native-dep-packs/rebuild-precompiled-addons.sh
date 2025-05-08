@@ -8,7 +8,7 @@ set -eo pipefail
 
 cd `dirname $BASH_SOURCE`
 
-declare -a ABI_VERSIONS=( \
+declare -A ABI_VERSIONS=( \
   ["108"]="18.18.2" \
   ["115"]="20.3.0" \
   ["120"]="21.2.0" \
