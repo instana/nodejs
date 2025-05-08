@@ -39,7 +39,7 @@ if (kafka.Client) {
   });
 } else {
   // kafka-node >= 4.0.0, they dropped Zookeeper support, client connects directly to kafka
-  client = new kafka.KafkaClient({ kafkaHost: '127.0.0.1:9092' });
+  client = new kafka.KafkaClient({ kafkaHost: process.env.KAFKA });
   client.on('error', error => {
     receivedErrors.push(error);
     log('Got a client error: %s', error);

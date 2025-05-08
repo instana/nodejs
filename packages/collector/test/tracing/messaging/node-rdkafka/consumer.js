@@ -27,6 +27,7 @@ const app = express();
 
 const topic = 'rdkafka-topic';
 let consumerReady = false;
+let consumerConnected = false;
 
 function setupConsumer() {
   /** @type {Kafka.KafkaConsumer | Kafka.ConsumerStream} */
@@ -56,6 +57,7 @@ function setupConsumer() {
     _consumer.consumer.on('ready', () => {
       log('Consumer stream ready.');
       consumerReady = true;
+      consumerConnected = true;
     });
 
     if (process.env.RDKAFKA_CONSUMER_ERROR && process.env.RDKAFKA_CONSUMER_ERROR === 'streamErrorReceiver') {
@@ -99,7 +101,20 @@ function setupConsumer() {
   } else {
     _consumer = new Kafka.KafkaConsumer(consumerOptions);
 
-    _consumer.connect();
+    const connect = () => {
+      _consumer.connect({}, err => {
+        if (!err) {
+          setTimeout(() => {
+            consumerConnected = true;
+          }, 5000);
+        } else {
+          setTimeout(connect, 5000);
+          consumerConnected = false;
+        }
+      });
+    };
+
+    connect();
 
     _consumer.on('ready', () => {
       function startConsuming() {
@@ -176,7 +191,7 @@ function setupConsumer() {
 setupConsumer();
 
 app.get('/', (_req, res) => {
-  if (consumerReady) {
+  if (consumerReady && consumerConnected) {
     res.send('ok');
   } else {
     res.status(500).send('rdkafka Consumer is not ready yet.');

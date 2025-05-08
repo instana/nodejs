@@ -26,6 +26,7 @@ const app = express();
 const topic = 'rdkafka-topic';
 let throwDeliveryErr = false;
 let producerIsReady = false;
+let producerConnected = false;
 
 function getProducer() {
   /** @type {Kafka.Producer | Kafka.ProducerStream} */
@@ -59,6 +60,7 @@ function getProducer() {
     _producer.producer.on('ready', () => {
       log('Stream Producer is ready');
       producerIsReady = true;
+      producerConnected = true;
     });
 
     _producer.producer.on('event.error', err => {
@@ -67,7 +69,20 @@ function getProducer() {
   } else {
     _producer = new Kafka.Producer(producerOptions, {});
 
-    _producer.connect();
+    const connect = () => {
+      _producer.connect({}, err => {
+        if (!err) {
+          setTimeout(() => {
+            producerConnected = true;
+          }, 5000);
+        } else {
+          producerConnected = false;
+          setTimeout(connect, 5000);
+        }
+      });
+    };
+
+    connect();
 
     // Any errors we encounter, including connection errors
     _producer.on('event.error', err => {
@@ -223,7 +238,7 @@ app.get('/produce/:method', async (req, res) => {
 app.get('/', (_req, res) => {
   // If producer is a stream, it doesn't have a "isConnected" method, so we check if the method "writer" is available
   // otherwise. If the producer as stream fails to start, it throws an error before we even reach this piece of code.
-  if (producerIsReady) {
+  if (producerIsReady && producerConnected) {
     res.send('ok');
   } else {
     res.status(500).send('rdkafka Producer is not ready yet.');

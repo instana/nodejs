@@ -25,8 +25,8 @@ const express = require('express');
 const port = require('../../../test_util/app-port')();
 
 const kafkaAvro = new KafkaAvro({
-  kafkaBroker: 'localhost:9092',
-  schemaRegistry: 'http://localhost:8081'
+  kafkaBroker: process.env.KAFKA,
+  schemaRegistry: process.env.SCHEMA_REGISTRY
 });
 
 let isReady = false;

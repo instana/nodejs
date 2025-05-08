@@ -35,7 +35,8 @@
     },
     {
       "name": "zookeeper",
-      "image": "zookeeper:3.9.1",
+      "image": "confluentinc/cp-zookeeper:7.9.1",
+      "env": [{ "name": "ZOOKEEPER_CLIENT_PORT", "value": "2181" }],
       "readinessProbe": {
         "tcpSocket": {
           "port": 2181
@@ -46,25 +47,58 @@
       }
     },
     {
-      "name": "kafka",
-      "image": "wurstmeister/kafka:2.13-2.8.1",
+      "name": "schema-registry",
+      "image": "confluentinc/cp-schema-registry:7.9.0",
       "env": [
-        { "name": "KAFKA_LISTENERS", "value": "EXTERNAL://:9092,PLAINTEXT://:29092" },
-        { "name": "KAFKA_ADVERTISED_LISTENERS", "value": "PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092" },
-        { "name": "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR", "value": "1" },
-        { "name": "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP", "value": "PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT" },
-        { "name": "KAFKA_INTER_BROKER_LISTENER_NAME", "value": "PLAINTEXT" },
+        { "name": "SCHEMA_REGISTRY_HOST_NAME", "value": "schema-registry" },
+        { "name": "SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL", "value": "localhost:2181" },
+        { "name": "SCHEMA_REGISTRY_LISTENERS", "value": "http://0.0.0.0:8081" },
+        {
+          "name": "SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS",
+          "value": "PLAINTEXT://localhost:29092"
+        },
+        { "name": "SCHEMA_REGISTRY_DEBUG", "value": "true" }
+      ],
+      "readinessProbe": {
+        "httpGet": {
+          "path": "/",
+          "port": 8081
+        },
+        "initialDelaySeconds": 5,
+        "periodSeconds": 2,
+        "timeoutSeconds": 60
+      }
+    },
+    {
+      "name": "kafka",
+      "image": "confluentinc/cp-kafka:7.9.1",
+      "env": [
+        { "name": "KAFKA_BROKER_ID", "value": "1" },
+        { "name": "KAFKA_ZOOKEEPER_CONNECT", "value": "localhost:2181" },
         {
           "name": "KAFKA_CREATE_TOPICS",
           "value": "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
         },
-        { "name": "KAFKA_ZOOKEEPER_CONNECT", "value": "127.0.0.1:2181" }
+        {
+          "name": "KAFKA_ADVERTISED_LISTENERS",
+          "value": "PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092"
+        },
+        {
+          "name": "KAFKA_LISTENERS",
+          "value": "EXTERNAL://:9092,PLAINTEXT://:29092"
+        },
+        { "name": "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR", "value": "1" },
+        { "name": "KAFKA_DEFAULT_REPLICATION_FACTOR", "value": "1" },
+        {
+          "name": "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP",
+          "value": "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT"
+        }
       ],
       "readinessProbe": {
         "tcpSocket": {
           "port": 9092
         },
-        "initialDelaySeconds": 30,
+        "initialDelaySeconds": 90,
         "periodSeconds": 2,
         "timeoutSeconds": 60
       }
@@ -119,24 +153,6 @@
     {
       "name": "localstack",
       "image": "public.ecr.aws/localstack/localstack:4.5"
-    },
-    {
-      "name": "schema-registry",
-      "image": "confluentinc/cp-schema-registry:4.1.0",
-      "env": [
-        { "name": "SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL", "value": "127.0.0.1:2181" },
-        { "name": "SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS", "value": "PLAINTEXT://127.0.0.1:29092" },
-        { "name": "SCHEMA_REGISTRY_HOST_NAME", "value": "schema-registry" }
-      ],
-      "readinessProbe": {
-        "httpGet": {
-          "path": "/",
-          "port": 8081
-        },
-        "initialDelaySeconds": 5,
-        "periodSeconds": 2,
-        "timeoutSeconds": 60
-      }
     },
     {
       "name": "memcached",

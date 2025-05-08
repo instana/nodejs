@@ -73,54 +73,46 @@ services:
       xpack.security.enabled: 'false'
 
   zookeeper:
-    # The latest Zookeeper image is not functioning properly on ARM64.
-    # For local testing, stick to the fixed version until the issue is resolved.
-    # TODO: INSTA-32550.
-    image: zookeeper:3.9.1
-    platform: linux/amd64
-    ports:
-      - 2181:2181
-
-  kafka:
-    image: wurstmeister/kafka:2.13-2.8.1
-    platform: linux/amd64
-    ports:
-      - 9092:9092
-      - 29092:29092
-    depends_on:
-      - "zookeeper"
-    hostname: kafka0
+    image: confluentinc/cp-zookeeper:7.9.0
+    container_name: zookeeper
     environment:
-
-      KAFKA_LISTENERS: EXTERNAL://:9092,PLAINTEXT://:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka0:29092,EXTERNAL://localhost:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      # Leave the internal listener mapped as PLAINTEXT to avoid issues in schema-registry:
-      # https://github.com/confluentinc/schema-registry/issues/648#issuecomment-398032429
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-
-      KAFKA_CREATE_TOPICS: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      # LOG4J_LOGGER_KAFKA: TRACE
-      # LOG4J_LOGGER_ORG_APACHE_KAFKA: TRACE
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./bin:/nodejs-collector-bin
-    command: ["/nodejs-collector-bin/wait-for-it.sh", "-s", "-t", "120", "zookeeper:2181", "--", "start-kafka.sh"]
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:4.1.0
-    platform: linux/amd64
+    image: confluentinc/cp-schema-registry:7.9.0
     hostname: schema-registry
     depends_on:
-      - "kafka"
+      - kafka
     ports:
       - "8081:8081"
     environment:
-      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: "zookeeper:2181"
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://kafka0:29092"
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://kafka:29092"
+      SCHEMA_REGISTRY_DEBUG: 'true'
+
+  kafka:
+    # v7 = Kafka v3.9.x
+    # https://docs.confluent.io/platform/current/installation/versions-interoperability.html
+    image: confluentinc/cp-kafka:7.9.0
+    hostname: kafka
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_CREATE_TOPICS: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENERS: EXTERNAL://:9092,PLAINTEXT://:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
 
   mysql:
     image: mysql:8.0.26
