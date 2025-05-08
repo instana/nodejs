@@ -122,7 +122,7 @@ exports.getLatestVersion = ({ pkgName, installedVersion, isBeta }) => {
 };
 
 function filterStableReleases(releaseList) {
-  const unstableReleaseKeyWords = ['alpha', 'beta', 'canary', 'dev', 'experimental', 'rc'];
+  const unstableReleaseKeyWords = ['alpha', 'beta', 'canary', 'dev', 'experimental', 'next', 'rc'];
 
   return Object.fromEntries(
     Object.entries(releaseList).filter(
