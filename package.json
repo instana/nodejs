@@ -92,7 +92,7 @@
     "@aws-sdk/client-sqs": "^3.804.0",
     "@aws-sdk/client-sqs-v3": "npm:@aws-sdk/client-sqs@3.24.0",
     "@aws-sdk/client-ssm": "^3.679.0",
-    "@aws-sdk/lib-dynamodb": "^3.803.0",
+    "@aws-sdk/lib-dynamodb": "^3.804.0",
     "@azure/storage-blob": "^12.27.0",
     "@commitlint/cli": "^14.1.0",
     "@commitlint/config-conventional": "^14.1.0",
