@@ -22,14 +22,14 @@ spec:
           - name: "KAFKA_CREATE_TOPICS"
             value: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
           - name: "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP"
-            value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT"
+            value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
           - name: "KAFKA_ADVERTISED_LISTENERS"
-            value: "PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092"
+            value: "PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092"
           - name: "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR"
             value: "1"
       readinessProbe:
           tcpSocket:
-            port: 9092 
+            port: 29092 
           initialDelaySeconds: 30
           periodSeconds: 2
           timeoutSeconds: 60
