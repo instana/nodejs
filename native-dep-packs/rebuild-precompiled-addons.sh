@@ -8,9 +8,7 @@ set -eo pipefail
 
 cd `dirname $BASH_SOURCE`
 
-# Maintenance Note:
-# This should be kept in sync with packages/autoprofile/precompile/build-all-addons.js-> ABI_VERSIONS.
-declare -A ABI_VERSIONS=( \
+declare -a ABI_VERSIONS=( \
   ["108"]="18.18.2" \
   ["115"]="20.3.0" \
   ["120"]="21.2.0" \
@@ -30,8 +28,6 @@ LIBC_VARIANTS=( \
 
 if [[ -z "$BUILD_FOR_MACOS" ]]; then
   source ./build-and-copy-node-modules-linux
-
-  rm -rf ../packages/shared-metrics/addons/linux
 
   for ABI_VERSION in ${!ABI_VERSIONS[@]}; do
     NODEJS_VERSION=${ABI_VERSIONS[$ABI_VERSION]}
@@ -61,8 +57,6 @@ if [[ ! -z "$BUILD_FOR_MACOS" ]]; then
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
     source ./build-and-copy-node-modules-darwin
-
-    rm -rf ../packages/shared-metrics/addons/darwin
 
     for ABI_VERSION in ${!ABI_VERSIONS[@]}; do
       NODEJS_VERSION=${ABI_VERSIONS[$ABI_VERSION]}
