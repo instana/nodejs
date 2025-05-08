@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.13.0](https://github.com/instana/nodejs/compare/v4.12.0...v4.13.0) (2025-05-08)
+
+**Note:** Version bump only for package @instana/google-cloud-run
+
 # [4.12.0](https://github.com/instana/nodejs/compare/v4.11.1...v4.12.0) (2025-05-06)
 
 **Note:** Version bump only for package @instana/google-cloud-run

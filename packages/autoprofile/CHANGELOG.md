@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.13.0](https://github.com/instana/nodejs/compare/v4.12.0...v4.13.0) (2025-05-08)
+
+### Features
+
+- added support for node v24 ([#1694](https://github.com/instana/nodejs/issues/1694)) ([5071bac](https://github.com/instana/nodejs/commit/5071bac52152eed0e786cc6bfbd812627032bcb2))
+
 # [4.12.0](https://github.com/instana/nodejs/compare/v4.11.1...v4.12.0) (2025-05-06)
 
 **Note:** Version bump only for package @instana/autoprofile
