@@ -100,7 +100,7 @@ function getProducer() {
 
     // We must either call .poll() manually after sending messages or set the producer to poll on an interval.
     // Without this, we do not get delivery events and the queue will eventually fill up.
-    // TODO: 3.4.0 introduces some bugs
+    // TODO: Critical performance problems since 3.4.0
     // https://github.com/Blizzard/node-rdkafka/issues/1128
     // https://github.com/Blizzard/node-rdkafka/issues/1123#issuecomment-2855329479
     if (enableDeliveryCb) {
