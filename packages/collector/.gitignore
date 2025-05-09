@@ -7,6 +7,7 @@ test/bin/edgemicroResources/cli/edgemicro
 test/tracing/database/prisma/package.json
 test/tracing/database/prisma/package-lock.json
 
-
 test/tracing/misc/typescript/ts_esm/dist
 test/tracing/misc/typescript/ts_cjs/dist
+
+test/tracing/misc/esbuild-external/dist/
