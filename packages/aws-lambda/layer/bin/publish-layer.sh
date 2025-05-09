@@ -380,6 +380,7 @@ if [[ -z $SKIP_DOCKER_IMAGE ]]; then
     docker tag $DOCKER_IMAGE_NAME:$VERSION $DOCKER_IMAGE_NAME:latest
   fi
 
+  # NOTE: We currently publish only x86-based images. Support for ARM-based images is not yet added.(TODO: INSTA-36216)
   if [[ -z $SKIP_DOCKER_IMAGE_PUSH ]]; then
     echo "step 8/9: pushing docker image for container image based Lambda layer"
     echo " - executing docker login:"
