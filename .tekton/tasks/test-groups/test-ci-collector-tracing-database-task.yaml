@@ -18,7 +18,7 @@ spec:
           - name: "xpack.security.enabled"
             value: "false"
     - name: redis
-      image: redis:5.0.14
+      image: redis:7.4.3
     - name: couchbase
       image: couchbase/server:7.1.4
       readinessProbe:
