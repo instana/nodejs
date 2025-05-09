@@ -35,8 +35,8 @@
   },
   "scripts": {
     "audit": "npm audit --omit=dev",
-    "test": "USE_OPENTRACING_DEBUG_IMPL=true mocha $npm_config_watch --config=test/.mocharc.js --require test/hooks.js --sort $(find test -iname '*test.js')",
-    "test:debug": "WITH_STDOUT=true npm run test",
+    "test": "USE_OPENTRACING_DEBUG_IMPL=true mocha --config=test/.mocharc.js --require test/hooks.js --sort $(find test -iname '*test.js')",
+    "test:debug": "WITH_STDOUT=true npm run test --",
     "test:ci:general": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/**/*test.js' --exclude 'test/tracing/**/*test.js'",
     "test:ci:tracing:frameworks": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/tracing/frameworks/**/*test.js'",
     "test:ci:tracing:database": "mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js 'test/tracing/database/**/*test.js'",
