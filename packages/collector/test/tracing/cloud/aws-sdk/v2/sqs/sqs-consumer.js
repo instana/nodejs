@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 const mock = require('@instana/core/test/test_util/mockRequire');
 
-// NOTE: Version 6+ of sqs-consumer requires AWS SDK v3.
+// NOTE: Version sqs-consumer >= v6.0 requires AWS SDK v3.
 // We're explicitly using v5 to to test against AWS SDK v2.
 mock('sqs-consumer', 'sqs-consumer-v5');
 require('@instana/core/test/test_util/loadExpressV4');
