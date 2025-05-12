@@ -37,6 +37,12 @@ const getNextReceiveMethod = require('@instana/core/test/test_util/circular_list
 function start(version) {
   const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+  // v12, the `sqs-consumer` library has dropped support for Node.js versions earlier than v20.
+  // The minimum supported Node.js version is now v20.
+  // Reference: https://github.com/bbc/sqs-consumer/blob/main/package.json#L21
+  const runSqsConsumerAPI =
+    supportedVersion(process.versions.node) && semver.gte(process.versions.node, '20.0.0') ? describe : describe.skip;
+
   mochaSuiteFn(`npm: ${version}`, function () {
     this.timeout(config.getTestTimeout() * 4);
 
@@ -227,7 +233,7 @@ function start(version) {
         });
       });
 
-      describe('sqs-consumer API', () => {
+      runSqsConsumerAPI('sqs-consumer API', () => {
         describe('[handleMessage] message processed with success', () => {
           let sqsConsumerControls;
 

@@ -48,6 +48,12 @@ if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe;
 }
 
+// v12, the `sqs-consumer` library has dropped support for Node.js versions earlier than v20.
+// The minimum supported Node.js version is now v20.
+// Reference: https://github.com/bbc/sqs-consumer/blob/main/package.json#L21
+const runSqsConsumerAPI =
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '20.0.0') ? describe : describe.skip;
+
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
   this.timeout(config.getTestTimeout() * 4);
   before(async () => {
@@ -280,7 +286,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       });
     });
 
-    describe('sqs-consumer API', () => {
+    runSqsConsumerAPI('sqs-consumer API', () => {
       describe('message processed with success', () => {
         let sqsConsumerControls;
 
