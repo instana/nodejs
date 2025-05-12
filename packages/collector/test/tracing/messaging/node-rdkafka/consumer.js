@@ -28,13 +28,14 @@ const isStream = process.env.RDKAFKA_CONSUMER_AS_STREAM === 'true';
 const app = express();
 
 const topic = 'rdkafka-topic';
+let consumerReady = false;
 
-function getConsumer() {
+function setupConsumer() {
   /** @type {Kafka.KafkaConsumer | Kafka.ConsumerStream} */
   let _consumer;
 
   const consumerOptions = {
-    'metadata.broker.list': '127.0.0.1:9092',
+    'metadata.broker.list': process.env.KAFKA,
     'group.id': uuid()
   };
 
@@ -49,8 +50,13 @@ function getConsumer() {
       }
     );
 
-    _consumer.on('error', err => {
+    _consumer.consumer.on('error', err => {
       log('Consumer stream error:', err);
+    });
+
+    _consumer.consumer.on('ready', () => {
+      log('Consumer stream ready.');
+      consumerReady = true;
     });
 
     if (process.env.RDKAFKA_CONSUMER_ERROR && process.env.RDKAFKA_CONSUMER_ERROR === 'streamErrorReceiver') {
@@ -71,7 +77,7 @@ function getConsumer() {
     }
 
     _consumer.on('data', async data => {
-      log('Got stream message');
+      log('Got stream message', data);
 
       const span = instana.currentSpan();
       span.disableAutoEnd();
@@ -93,13 +99,14 @@ function getConsumer() {
     });
   } else {
     _consumer = new Kafka.KafkaConsumer(consumerOptions);
-
     _consumer.connect();
 
     _consumer
       .on('ready', () => {
-        log('Standard Ready.');
+        log('Consumer Standard Ready.');
+        consumerReady = true;
 
+        log('Subscribing to topic', topic);
         _consumer.subscribe([topic]);
 
         // Consume from the rdkafka-topic. This is what determines
@@ -115,7 +122,7 @@ function getConsumer() {
         // }, 100);
       })
       .on('data', async data => {
-        log('Got standard message');
+        log('Got standard message', data);
 
         const span = instana.currentSpan();
         span.disableAutoEnd();
@@ -139,10 +146,10 @@ function getConsumer() {
   return _consumer;
 }
 
-const consumer = getConsumer();
+setupConsumer();
 
 app.get('/', (_req, res) => {
-  if (consumer.read || (consumer.isConnected && consumer.isConnected())) {
+  if (consumerReady) {
     res.send('ok');
   } else {
     res.status(500).send('rdkafka Consumer is not ready yet.');

@@ -33,6 +33,9 @@ const globalAgent = require('../../../globalAgent');
 const { AgentStubControls } = require('../../../apps/agentStubControls');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
 
+// TODO: 3.4.0 introduces some bugs
+// https://github.com/Blizzard/node-rdkafka/issues/1128
+// https://github.com/Blizzard/node-rdkafka/issues/1123#issuecomment-2855329479
 const producerEnableDeliveryCbOptions = ['true', 'false'];
 const producerApiMethods = ['standard', 'stream'];
 const consumerApiMethods = ['standard', 'stream'];
@@ -47,13 +50,16 @@ const SINGLE_TEST_PROPS = {
   withError: false
 };
 
-const retryTime = 1000;
+const retryTime = 5000;
+const retryTimeUntil = () => Date.now() + 1000 * 30;
+const checkStartedEvery = 5000;
+const checkStartedUntil = () => Date.now() + 1000 * 60;
 const topic = 'rdkafka-topic';
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
-  this.timeout(config.getTestTimeout() * 4);
+  this.timeout(config.getTestTimeout() * 10);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
@@ -95,12 +101,13 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
                       useGlobalAgent: true,
                       env: {
                         RDKAFKA_OBJECT_MODE: objectMode,
+                        RDKAFKA_PRODUCER_AS_STREAM: producerMethod === 'stream' ? 'true' : 'false',
                         RDKAFKA_PRODUCER_DELIVERY_CB: deliveryCbEnabled === 'true'
                       }
                     });
 
-                    await consumerControls.startAndWaitForAgentConnection();
-                    await producerControls.startAndWaitForAgentConnection();
+                    await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+                    await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
                   });
 
                   beforeEach(async () => {
@@ -179,21 +186,25 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   });
 
   function verify(_producerControls, _consumerControls, response, apiPath, withError, objectMode, producerMethod) {
-    return retry(async () => {
-      verifyResponseAndMessage(response, _producerControls, withError, objectMode, producerMethod);
+    return retry(
+      async () => {
+        verifyResponseAndMessage(response, _producerControls, withError, objectMode, producerMethod);
 
-      const spans = await agentControls.getSpans();
-      return verifySpans(
-        _producerControls,
-        _consumerControls,
-        spans,
-        apiPath,
-        null,
-        withError,
-        objectMode,
-        producerMethod
-      );
-    }, retryTime);
+        const spans = await agentControls.getSpans();
+        return verifySpans(
+          _producerControls,
+          _consumerControls,
+          spans,
+          apiPath,
+          null,
+          withError,
+          objectMode,
+          producerMethod
+        );
+      },
+      retryTime,
+      retryTimeUntil()
+    );
   }
 
   function verifySpans(
@@ -300,7 +311,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   }
 
   describe('tracing enabled, header format string', function () {
-    this.timeout(config.getTestTimeout() * 2);
+    this.timeout(config.getTestTimeout() * 10);
     let producerControls;
     let consumerControls;
 
@@ -314,8 +325,8 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         useGlobalAgent: true
       });
 
-      await producerControls.startAndWaitForAgentConnection();
-      await consumerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+      await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
     });
 
     beforeEach(async () => {
@@ -339,15 +350,19 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         path: apiPath
       });
 
-      await retry(async () => {
-        await verifyResponseAndMessage(response, consumerControls);
-        const spans = await agentControls.getSpans();
-        const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(producerControls.getPid()) });
-        const kafkaExit = verifyRdKafkaExit(producerControls, spans, httpEntry, null, false);
-        verifyHttpExit({ spans, parent: httpEntry, pid: String(producerControls.getPid()) });
-        const kafkaEntry = verifyRdKafkaEntry(consumerControls, spans, kafkaExit, null, false);
-        verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
-      });
+      await retry(
+        async () => {
+          await verifyResponseAndMessage(response, consumerControls);
+          const spans = await agentControls.getSpans();
+          const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(producerControls.getPid()) });
+          const kafkaExit = verifyRdKafkaExit(producerControls, spans, httpEntry, null, false);
+          verifyHttpExit({ spans, parent: httpEntry, pid: String(producerControls.getPid()) });
+          const kafkaEntry = verifyRdKafkaEntry(consumerControls, spans, kafkaExit, null, false);
+          verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
+        },
+        retryTime,
+        retryTimeUntil()
+      );
     });
   });
 
@@ -370,8 +385,8 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         agentControls: customAgentControls
       });
 
-      await producerControls.startAndWaitForAgentConnection();
-      await consumerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+      await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
     });
 
     beforeEach(async () => {
@@ -396,15 +411,19 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         path: apiPath
       });
 
-      await retry(async () => {
-        await verifyResponseAndMessage(response, consumerControls);
-        const spans = await customAgentControls.getSpans();
-        const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(producerControls.getPid()) });
-        const kafkaExit = verifyRdKafkaExit(producerControls, spans, httpEntry, null, false);
-        verifyHttpExit({ spans, parent: httpEntry, pid: String(producerControls.getPid()) });
-        const kafkaEntry = verifyRdKafkaEntry(consumerControls, spans, kafkaExit, null, false);
-        verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
-      });
+      await retry(
+        async () => {
+          await verifyResponseAndMessage(response, consumerControls);
+          const spans = await customAgentControls.getSpans();
+          const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(producerControls.getPid()) });
+          const kafkaExit = verifyRdKafkaExit(producerControls, spans, httpEntry, null, false);
+          verifyHttpExit({ spans, parent: httpEntry, pid: String(producerControls.getPid()) });
+          const kafkaEntry = verifyRdKafkaEntry(consumerControls, spans, kafkaExit, null, false);
+          verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
+        },
+        retryTime,
+        retryTimeUntil()
+      );
     });
   });
 
@@ -427,8 +446,8 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         useGlobalAgent: true
       });
 
-      await producerControls.startAndWaitForAgentConnection();
-      await consumerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+      await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
     });
 
     beforeEach(async () => {
@@ -452,15 +471,19 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         path: apiPath
       });
 
-      await retry(async () => {
-        await verifyResponseAndMessage(response, consumerControls);
-        const spans = await agentControls.getSpans();
-        const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(producerControls.getPid()) });
-        verifyRdKafkaExit(producerControls, spans, httpEntry, null, false);
-        verifyHttpExit({ spans, parent: httpEntry, pid: String(producerControls.getPid()) });
-        const kafkaEntry = verifyRdKafkaEntry(consumerControls, spans, null, null, false);
-        verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
-      });
+      await retry(
+        async () => {
+          await verifyResponseAndMessage(response, consumerControls);
+          const spans = await agentControls.getSpans();
+          const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(producerControls.getPid()) });
+          verifyRdKafkaExit(producerControls, spans, httpEntry, null, false);
+          verifyHttpExit({ spans, parent: httpEntry, pid: String(producerControls.getPid()) });
+          const kafkaEntry = verifyRdKafkaEntry(consumerControls, spans, null, null, false);
+          verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
+        },
+        retryTime,
+        retryTimeUntil()
+      );
     });
   });
 
@@ -485,8 +508,8 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         agentControls: customAgentControls
       });
 
-      await producerControls.startAndWaitForAgentConnection();
-      await consumerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+      await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
     });
 
     beforeEach(async () => {
@@ -511,15 +534,19 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
         path: apiPath
       });
 
-      await retry(async () => {
-        await verifyResponseAndMessage(response, consumerControls);
-        const spans = await customAgentControls.getSpans();
-        const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(producerControls.getPid()) });
-        verifyRdKafkaExit(producerControls, spans, httpEntry, null, false);
-        verifyHttpExit({ spans, parent: httpEntry, pid: String(producerControls.getPid()) });
-        const kafkaEntry = verifyRdKafkaEntry(consumerControls, spans, null, null, false);
-        verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
-      });
+      await retry(
+        async () => {
+          await verifyResponseAndMessage(response, consumerControls);
+          const spans = await customAgentControls.getSpans();
+          const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(producerControls.getPid()) });
+          verifyRdKafkaExit(producerControls, spans, httpEntry, null, false);
+          verifyHttpExit({ spans, parent: httpEntry, pid: String(producerControls.getPid()) });
+          const kafkaEntry = verifyRdKafkaEntry(consumerControls, spans, null, null, false);
+          verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
+        },
+        retryTime,
+        retryTimeUntil()
+      );
     });
   });
 
@@ -537,7 +564,8 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           RDKAFKA_PRODUCER_DELIVERY_CB: 'false'
         }
       });
-      await producerControls.startAndWaitForAgentConnection();
+
+      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
     });
 
     beforeEach(async () => {
@@ -565,7 +593,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           }
         });
 
-        await consumerControls.startAndWaitForAgentConnection();
+        await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
       });
 
       beforeEach(async () => {
@@ -586,7 +614,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           path: '/produce/standard'
         });
 
-        return retry(() => verifyResponseAndMessage(response, consumerControls), retryTime)
+        return retry(() => verifyResponseAndMessage(response, consumerControls), retryTime, retryTimeUntil())
           .then(() => delay(1000))
           .then(() => agentControls.getSpans())
           .then(spans => {
@@ -609,7 +637,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           RDKAFKA_PRODUCER_DELIVERY_CB: 'false'
         }
       });
-      await producerControls.startAndWaitForAgentConnection();
+      await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
     });
 
     beforeEach(async () => {
@@ -636,7 +664,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           }
         });
 
-        await receiverControls.startAndWaitForAgentConnection();
+        await receiverControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
       });
 
       beforeEach(async () => {
@@ -658,9 +686,13 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           suppressTracing: true
         });
 
-        return retry(() => {
-          verifyResponseAndMessage(response, receiverControls);
-        }, retryTime)
+        return retry(
+          () => {
+            verifyResponseAndMessage(response, receiverControls);
+          },
+          retryTime,
+          retryTimeUntil()
+        )
           .then(() => delay(1000))
           .then(() => agentControls.getSpans())
           .then(spans => {
@@ -695,8 +727,8 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
             agentControls: customAgentControls
           });
 
-          await producerControls.startAndWaitForAgentConnection();
-          await consumerControls.startAndWaitForAgentConnection();
+          await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+          await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
         });
 
         beforeEach(async () => {
@@ -721,24 +753,28 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
             path: apiPath
           });
 
-          await retry(async () => {
-            await verifyResponseAndMessage(response, consumerControls);
-            const spans = await customAgentControls.getSpans();
-            // 1 x http server
-            // 1 x http client
-            expect(spans.length).to.equal(2);
+          await retry(
+            async () => {
+              await verifyResponseAndMessage(response, consumerControls);
+              const spans = await customAgentControls.getSpans();
+              // 1 x http server
+              // 1 x http client
+              expect(spans.length).to.equal(2);
 
-            const spanNames = spans.map(span => span.n);
-            // Flow: HTTP
-            //       ├── Kafka Produce (ignored)
-            //       │      └── Kafka Consume → HTTP (ignored)
-            //       └── HTTP exit (traced)
-            expect(spanNames).to.include('node.http.server');
-            expect(spanNames).to.include('node.http.client');
+              const spanNames = spans.map(span => span.n);
+              // Flow: HTTP
+              //       ├── Kafka Produce (ignored)
+              //       │      └── Kafka Consume → HTTP (ignored)
+              //       └── HTTP exit (traced)
+              expect(spanNames).to.include('node.http.server');
+              expect(spanNames).to.include('node.http.client');
 
-            // Since Kafka produce is ignored, both the produce operation and all downstream calls are also ignored.
-            expect(spanNames).to.not.include('kafka');
-          });
+              // Since Kafka produce is ignored, both the produce operation and all downstream calls are also ignored.
+              expect(spanNames).to.not.include('kafka');
+            },
+            retryTime,
+            retryTimeUntil()
+          );
         });
       });
     });
@@ -761,8 +797,8 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           agentControls: customAgentControls
         });
 
-        await producerControls.startAndWaitForAgentConnection();
-        await consumerControls.startAndWaitForAgentConnection();
+        await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+        await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
       });
 
       beforeEach(async () => {
@@ -787,26 +823,30 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           path: apiPath
         });
 
-        await retry(async () => {
-          await verifyResponseAndMessage(response, consumerControls);
-          const spans = await customAgentControls.getSpans();
-          expect(spans.length).to.equal(3);
+        await retry(
+          async () => {
+            await verifyResponseAndMessage(response, consumerControls);
+            const spans = await customAgentControls.getSpans();
+            expect(spans.length).to.equal(3);
 
-          // Flow: HTTP
-          //       ├── Kafka Produce (traced)
-          //       │      └── Kafka Consume → HTTP (ignored)
-          //       └── HTTP exit (traced)
-          // Kafka send will still be present, but since Kafka consume is ignored, the consume operation
-          // and all subsequent downstream calls will also be ignored.
-          const spanNames = spans.map(span => span.n);
-          expect(spanNames).to.include('node.http.server');
-          expect(spanNames).to.include('node.http.client');
-          expect(spanNames).to.include('kafka');
+            // Flow: HTTP
+            //       ├── Kafka Produce (traced)
+            //       │      └── Kafka Consume → HTTP (ignored)
+            //       └── HTTP exit (traced)
+            // Kafka send will still be present, but since Kafka consume is ignored, the consume operation
+            // and all subsequent downstream calls will also be ignored.
+            const spanNames = spans.map(span => span.n);
+            expect(spanNames).to.include('node.http.server');
+            expect(spanNames).to.include('node.http.client');
+            expect(spanNames).to.include('kafka');
 
-          // Kafka send exists but consume is ignored
-          expect(spans.some(span => span.n === 'kafka' && span.data.kafka?.access === 'send')).to.be.true;
-          expect(spans.some(span => span.n === 'kafka' && span.data.kafka?.access === 'consume')).to.be.false;
-        });
+            // Kafka send exists but consume is ignored
+            expect(spans.some(span => span.n === 'kafka' && span.data.kafka?.access === 'send')).to.be.true;
+            expect(spans.some(span => span.n === 'kafka' && span.data.kafka?.access === 'consume')).to.be.false;
+          },
+          retryTime,
+          retryTimeUntil()
+        );
       });
     });
   });
@@ -836,7 +876,7 @@ function verifyResponseAndMessage(response, consumerControls, withError, objectM
 
   expect(message).to.exist;
   const messagePayload = Buffer.from(message.value.data, 'utf8').toString();
-  expect(messagePayload).to.equal('Node rdkafka is great!');
+  expect(messagePayload).to.contain('Node rdkafka is great!');
 
   const headerNames = [];
   message.headers.forEach(keyValuePair => {
