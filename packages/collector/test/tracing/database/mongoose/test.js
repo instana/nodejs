@@ -7,7 +7,6 @@
 
 const expect = require('chai').expect;
 const { v4: uuid } = require('uuid');
-const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -24,12 +23,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
 // v8 (latest) uses mongodb v6
 
 ['latest', 'v854', 'v7', 'v6', 'v5'].forEach(version => {
-  // TODO: mongoose is broken in v24 due to EOL of `SlowBuffer`.
-  //       Expected to be resolved with https://github.com/nodejs/node/pull/58211
-  const mochaSuiteFn =
-    supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=23.x')
-      ? describe
-      : describe.skip;
+  const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
   const isLatestMajor = version === 'latest' || version === 'v854';
 
