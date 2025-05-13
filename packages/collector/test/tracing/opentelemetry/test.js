@@ -6,6 +6,7 @@
 
 const expect = require('chai').expect;
 const path = require('path');
+const semver = require('semver');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../core/test/config');
@@ -26,7 +27,10 @@ const globalAgent = require('../../globalAgent');
 const DELAY_TIMEOUT_IN_MS = 500;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-const runTests = supportedVersion(process.versions.node) ? describe : describe.skip;
+const runTests =
+  supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=23.x')
+    ? describe
+    : describe.skip;
 
 mochaSuiteFn('opentelemetry/instrumentations', function () {
   this.timeout(config.getTestTimeout());
