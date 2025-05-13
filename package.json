@@ -234,7 +234,7 @@
     "sinon-chai": "^3.7.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
-    "sqs-consumer": "^11.6.0",
+    "sqs-consumer": "^12.0.0",
     "sqs-consumer-v5": "npm:sqs-consumer@^5.7.0",
     "square-calc": "3.2.1",
     "square-calc-v2": "npm:square-calc@2.4.0",
