@@ -77,8 +77,8 @@ function instrument(redis) {
           const wrapAddCommand = addCommandOriginalFn => {
             return function instrumentedAddCommandInstana() {
               // Redis Cluster Mode:
-              // v5: The command arguments are passed as the third argument (index 2)
-              // v4: The command arguments are passed as the second argument (index 1)
+              // v5: The command arguments are passed as the third argument.
+              // v4: The command arguments are passed as the second argument.
               // Non-cluster mode: only one argument passed (the command)
               const commandArg = isCluster ? arguments[2] || arguments[1] : arguments[0];
               selfMadeQueue.push(commandArg);
@@ -166,10 +166,9 @@ function instrument(redis) {
     };
 
     const instrumentPool = () => {
-      // In Redis v5, createClientPool was introduced. We check the property descriptor of `createClientPool`
-      // to determine how to instrument it, as it might be defined in different ways:
-      // - As a getter (in redis), which requires special handling.
-      // - As a regular function (@redis/client).
+      // In Redis v5, createClientPool support was added. The createClientPool defined in different ways:
+      //   1. As a getter (in redis), which requires special handling.
+      //   2. As a regular function (@redis/client).
       const poolDescriptor = Object.getOwnPropertyDescriptor(redis, 'createClientPool');
       if (poolDescriptor?.configurable) {
         if (typeof poolDescriptor.get === 'function') {
