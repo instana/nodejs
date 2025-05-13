@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.14.0](https://github.com/instana/nodejs/compare/v4.13.0...v4.14.0) (2025-05-13)
+
+### Features
+
+- added support for sqs-consumer v12 ([#1731](https://github.com/instana/nodejs/issues/1731)) ([af01af8](https://github.com/instana/nodejs/commit/af01af89568f01fb16b0ab5f08bfc973968837f7))
+
 # [4.13.0](https://github.com/instana/nodejs/compare/v4.12.0...v4.13.0) (2025-05-08)
 
 ### Features
