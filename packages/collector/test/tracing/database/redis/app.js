@@ -149,7 +149,7 @@ app.get('/blocking', async (req, res) => {
 
 app.get('/scan-iterator', async (req, res) => {
   if (redisVersion === 'latest') {
-    // Redis v5: SCAN iterators return batches of keys, enabling multi-key commands like mGet
+    // v5: SCAN iterators return batches of keys, enabling multi-key commands like mGet
     // eslint-disable-next-line no-restricted-syntax
     for await (const keys of connection.scanIterator()) {
       try {
@@ -159,7 +159,7 @@ app.get('/scan-iterator', async (req, res) => {
       }
     }
   } else {
-    // Redis v4: SCAN iterators return individual keys
+    // v4: SCAN iterators return individual keys
     // eslint-disable-next-line no-restricted-syntax
     for await (const key of connection.scanIterator()) {
       try {
