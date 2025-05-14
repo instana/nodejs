@@ -23,12 +23,6 @@ class Utils {
   generateUuid() {
     return crypto.randomBytes(16).toString('hex');
   }
-
-  generateSha1(text) {
-    const h = crypto.createHash('sha1');
-    h.update(text);
-    return h.digest('hex');
-  }
 }
 
 exports.Utils = Utils;

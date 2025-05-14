@@ -33,6 +33,7 @@ const kafka = new Kafka({
     retries: 5
   }
 });
+
 const messageConsumer = kafka.consumer({
   // Joining an existing consumer group sometimes takes a long time in Kafka, see for example
   // https://github.com/tulios/kafkajs/issues/260. Thus we always create a new consumer group ID on the fly.
