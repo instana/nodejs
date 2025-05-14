@@ -29,6 +29,7 @@ const configNormalizers = require('./configNormalizers');
  * @property {boolean} [allowRootExitSpan]
  * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
  * @property {boolean} [ignoreEndpointsDisableSuppression]
+ * @property {Object} [logging]
  */
 
 /**
@@ -82,6 +83,7 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
  * @property {AgentTracingKafkaConfig} [kafka]
  * @property {boolean|string} [spanBatchingEnabled]
  * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
+ * @property {Object} [logging]
  */
 
 /**
@@ -127,7 +129,8 @@ const defaults = {
       traceCorrelation: true
     },
     ignoreEndpoints: {},
-    ignoreEndpointsDisableSuppression: false
+    ignoreEndpointsDisableSuppression: false,
+    logging: {}
   },
   secrets: {
     matcherMode: 'contains-ignore-case',
@@ -247,6 +250,7 @@ function normalizeTracingConfig(config) {
   normalizeAllowRootExitSpan(config);
   normalizeIgnoreEndpoints(config);
   normalizeIgnoreEndpointsDisableSuppression(config);
+  normalizeLogging(config);
 }
 
 /**
@@ -788,4 +792,29 @@ function normalizeIgnoreEndpointsDisableSuppression(config) {
   }
 
   config.tracing.ignoreEndpointsDisableSuppression = defaults.tracing.ignoreEndpointsDisableSuppression;
+}
+
+/**
+ * @param {InstanaConfig} config
+ */
+function normalizeLogging(config) {
+  if (!config.tracing.logging) {
+    config.tracing.logging = {};
+  }
+
+  const loggingConfig = config.tracing.logging;
+
+  if (typeof loggingConfig !== 'object') {
+    logger.warn(
+      `Invalid tracing.logging configuration. Expected an object, but received: ${JSON.stringify(loggingConfig)}`
+    );
+    config.tracing.logging = {};
+    return;
+  }
+  // Case 1: Use in-code configuration if available
+  if (Object.keys(loggingConfig).length) {
+    config.tracing.logging = loggingConfig;
+    logger.debug(`Logging have been configured: ${JSON.stringify(config.tracing.logging)}`);
+    return;
+  }
 }
