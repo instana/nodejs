@@ -55,6 +55,8 @@ let hostHeader;
  */
 const getRequestId = () => {
   if (logger && logger.isInDebugMode && logger.isInDebugMode()) {
+    // Although the usage of "Math.random()"" is not allowed for being FedRamp compliant, but
+    // this use case is a non secure workflow.
     return `instana_${Date.now().toString(36) + Math.random().toString(36).slice(2)}`;
   }
 
