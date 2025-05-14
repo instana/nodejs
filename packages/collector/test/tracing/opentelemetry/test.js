@@ -35,8 +35,7 @@ const runTests =
 mochaSuiteFn('opentelemetry/instrumentations', function () {
   this.timeout(config.getTestTimeout());
 
-  // TODO: Restify test is broken in v24. Investigate as part of https://jsw.ibm.com/browse/INSTA-34346
-  //       See Issue: https://github.com/restify/node-restify/issues/1984
+  // TODO: Restify test is broken in v24. See Issue: https://github.com/restify/node-restify/issues/1984
   runTests('restify', function () {
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
@@ -511,9 +510,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         ));
   });
 
-  // TODO: Tedious test is broken in v24 because of the SlowBuffer class moved to EOL.
-  //       Will revert after https://github.com/nodejs/node/pull/58211 is released
-  runTests('tedious', function () {
+  describe('tedious', function () {
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
