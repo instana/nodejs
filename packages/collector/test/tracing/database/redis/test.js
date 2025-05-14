@@ -90,7 +90,7 @@ const legacyVersion = 'v3';
             // In v5, Redis moved “Isolation Pool” into RedisClientPool.
             // see: //github.com/redis/node-redis/blob/master/docs/pool.md
             if (redisVersion === 'latest') {
-              mochaSuiteFn('When clientpool is used', function () {
+              mochaSuiteFn('When connected via clientpool', function () {
                 globalAgent.setUpCleanUpHooks();
                 let controls;
 
@@ -771,7 +771,7 @@ const legacyVersion = 'v3';
                             span => expect(span.n).to.equal('node.http.server'),
                             span => expect(span.data.http.method).to.equal('GET')
                           ]);
-                          // NOTE: Redis v5 SCAN iterators yield batches of keys, enabling multi-key commands like MGET.
+                          // NOTE: v5 SCAN iterators yield batches of keys, enabling multi-key commands like MGET.
                           // See: https://github.com/redis/node-redis/blob/master/docs/v4-to-v5.md#scan-iterators
                           const expectedSpanCount = redisVersion === 'latest' ? 1 : 4;
                           const expectedRedisCommand = redisVersion === 'latest' ? 'mGet' : 'get';
@@ -797,8 +797,8 @@ const legacyVersion = 'v3';
               }
 
               // See https://redis.js.org/#node-redis-usage-basic-example blocking commands
-              // In Redis v5, the "Isolation Pool" was introduced via RedisClientPool.
-              // Since it requires a new type of pool connection, a separate test suite  created starting from v5.
+              // In v5, the "Isolation Pool" was introduced via RedisClientPool.
+              // Since it requires a new type of pool connection, skipping the test.
               if (redisVersion !== 'latest') {
                 it('blocking', () => testBlockingCommand(controls, setupType));
               }
