@@ -26,8 +26,6 @@ exports.deactivate = function deactivate() {
 };
 
 exports.init = function init() {
-  // In v5, the location of the commands module has changed.
-  hook.onFileLoad(/\/@redis\/client\/dist\/lib\/commands\/index.js/, captureCommands);
   // v4 commands, "redis-commands" is outdated and no longer compatible with it
   hook.onFileLoad(/\/@redis\/client\/dist\/lib\/cluster\/commands.js/, captureCommands);
 
