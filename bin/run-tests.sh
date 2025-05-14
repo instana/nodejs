@@ -25,12 +25,12 @@ for arg in "$@"; do
   esac
 done
 
+args=""
+
 if [ "$WATCH" = true ]; then
-  export npm_config_watch="--watch"
-else
-  export npm_config_watch=""
+  args="-- --watch"
 fi
 
-echo "Running tests with $SCOPE and $npm_config_watch:"
-npx lerna exec --scope="$SCOPE" "npm run test:debug"
+echo "Running tests with $SCOPE and $args:"
+npx lerna exec --scope="$SCOPE" "npm run test:debug $args"
 
