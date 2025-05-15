@@ -11,8 +11,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('@instana/core/test/test_util/loadExpressV4');
-
 // Deliberately requiring superagent before instana to test experimental on-demand instrumentation for it.
 const superagent = require('superagent');
 
