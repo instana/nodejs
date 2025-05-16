@@ -179,7 +179,7 @@ function instrument(redis) {
               return creatPoolWrap(poolDescriptor.get.call(this));
             }
           });
-        } else if (typeof poolDescriptor.value === 'function') {
+        } else {
           shimmer.wrap(redis, 'createClientPool', creatPoolWrap);
         }
       }

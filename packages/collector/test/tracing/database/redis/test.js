@@ -97,10 +97,7 @@ const legacyVersion = 'v3';
                 before(async () => {
                   controls = new ProcessControls({
                     useGlobalAgent: true,
-                    appPath:
-                      redisVersion === legacyVersion
-                        ? path.join(__dirname, 'legacyApp.js')
-                        : path.join(__dirname, 'app.js'),
+                    appPath: path.join(__dirname, 'app.js'),
                     env: {
                       REDIS_VERSION: redisVersion,
                       REDIS_PKG: redisPkg,
@@ -113,13 +110,6 @@ const legacyVersion = 'v3';
 
                 beforeEach(async () => {
                   await agentControls.clearReceivedTraceData();
-                });
-
-                before(async () => {
-                  await controls.sendRequest({
-                    method: 'POST',
-                    path: '/clearkeys'
-                  });
                 });
 
                 after(async () => {
