@@ -7,6 +7,9 @@
     "name": "Bastian Krol",
     "email": "bastian.krol@instana.com"
   },
+  "peerDependencies": {
+  "eslint": "^8.0.0"
+},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/instana/nodejs.git"
