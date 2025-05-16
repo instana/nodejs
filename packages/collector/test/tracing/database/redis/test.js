@@ -34,7 +34,7 @@ const legacyVersion = 'v3';
 //    export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
 //    export AZURE_REDIS_CLUSTER_PWD=
 ['default', 'cluster', 'sentinel'].forEach(setupType => {
-  describe.only(`tracing/redis ${setupType}`, function () {
+  describe(`tracing/redis ${setupType}`, function () {
     ['redis', '@redis/client'].forEach(redisPkg => {
       describe(`require: ${redisPkg}`, function () {
         this.timeout(config.getTestTimeout() * 4);
