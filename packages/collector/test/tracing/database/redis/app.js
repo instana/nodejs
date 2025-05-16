@@ -29,7 +29,7 @@ const redisVersion = process.env.REDIS_VERSION;
 const isPool = process.env.REDIS_POOL === 'true';
 const logPrefix =
   `Redis App (version: ${redisVersion}, require: ${process.env.REDIS_PKG}, ` +
-  `cluster: ${process.env.REDIS_CLUSTER}, pid: ${process.pid}):\t`;
+  `setup type: ${process.env.REDIS_SETUP_TYPE}, pid: ${process.pid}):\t`;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 let connectedToRedis = false;
@@ -68,7 +68,7 @@ app.get('/', (req, res) => {
 app.post('/clearkeys', async (req, res) => {
   cls.isTracing() && cls.setTracingLevel('0');
 
-  if (process.env.REDIS_CLUSTER === 'true') {
+  if (process.env.REDIS_SETUP_TYPE === 'cluster') {
     try {
       await Promise.all(
         connection.masters.map(async master => {
