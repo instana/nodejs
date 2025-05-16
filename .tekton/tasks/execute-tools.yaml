@@ -44,6 +44,10 @@ spec:
       script: |
         #!/bin/bash
 
+        echo "Checking /artifacts directory contents"
+        ls -la /artifacts
+        ls -lR /artifacts
+
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
