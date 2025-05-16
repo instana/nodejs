@@ -32,6 +32,8 @@ class SamplerScheduler {
 
     if (!this.profiler.getOption('disableTimers')) {
       this.spanTimer = this.profiler.setInterval(() => {
+        // Although the usage of "Math.random()"" is not allowed for being FedRamp compliant, but
+        // this use case is a non secure workflow.
         this.randomTimer = this.profiler.setTimeout(() => {
           this.profile(false, true);
         }, Math.round(Math.random() * (this.config.spanInterval - this.config.maxSpanDuration)));

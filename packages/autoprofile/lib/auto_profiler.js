@@ -208,6 +208,8 @@ class AutoProfiler {
     if (schedulers.length === 1) {
       scheduler = schedulers[0];
     } else if (schedulers.length > 1) {
+      // Although the usage of "Math.random()"" is not allowed for being FedRamp compliant, but
+      // this use case is a non secure workflow.
       scheduler = schedulers[Math.floor(Math.random() * schedulers.length)];
     }
 
