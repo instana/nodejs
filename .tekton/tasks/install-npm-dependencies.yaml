@@ -42,8 +42,6 @@ spec:
 
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
-        else
-          npm install npm -g
         fi     
 
         if [ "$(params.skip-cache)" == "true" ]; then
