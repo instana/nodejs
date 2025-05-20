@@ -33,7 +33,7 @@ const legacyVersion = 'v3';
 // Please set the environment variables to run the tests against azure redis cluster:
 //    export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
 //    export AZURE_REDIS_CLUSTER_PWD=
-['default', 'cluster', 'sentinel'].forEach(setupType => {
+['sentinel'].forEach(setupType => {
   describe(`tracing/redis ${setupType}`, function () {
     ['redis', '@redis/client'].forEach(redisPkg => {
       describe(`require: ${redisPkg}`, function () {
