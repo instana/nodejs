@@ -66,7 +66,8 @@ const legacyVersion = 'v3';
                   appPath: path.join(__dirname, 'allowRootExitSpanApp'),
                   env: {
                     REDIS_VERSION: redisVersion,
-                    REDIS_PKG: redisPkg
+                    REDIS_PKG: redisPkg,
+                    REDIS_SETUP_TYPE: setupType
                   }
                 });
 
@@ -105,7 +106,8 @@ const legacyVersion = 'v3';
                     env: {
                       REDIS_VERSION: redisVersion,
                       REDIS_PKG: redisPkg,
-                      REDIS_POOL: true
+                      REDIS_POOL: true,
+                      REDIS_SETUP_TYPE: setupType
                     }
                   });
 
@@ -890,7 +892,8 @@ const legacyVersion = 'v3';
                       : path.join(__dirname, 'app.js'),
                   env: {
                     REDIS_VERSION: redisVersion,
-                    REDIS_PKG: redisPkg
+                    REDIS_PKG: redisPkg,
+                    REDIS_SETUP_TYPE: setupType
                   }
                 });
                 await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
@@ -942,6 +945,7 @@ const legacyVersion = 'v3';
                   env: {
                     REDIS_VERSION: redisVersion,
                     REDIS_PKG: redisPkg,
+                    REDIS_SETUP_TYPE: setupType,
                     INSTANA_IGNORE_ENDPOINTS: 'redis:get,set;'
                   }
                 });
@@ -1044,6 +1048,7 @@ const legacyVersion = 'v3';
                   env: {
                     REDIS_VERSION: redisVersion,
                     REDIS_PKG: redisPkg,
+                    REDIS_SETUP_TYPE: setupType,
                     INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml')
                   }
                 });
