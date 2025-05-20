@@ -88,7 +88,7 @@ const legacyVersion = 'v3';
               });
             });
             // In v5, Redis moved “Isolation Pool” into RedisClientPool.
-            // see: //github.com/redis/node-redis/blob/master/docs/pool.md
+            // see: https://github.com/redis/node-redis/blob/master/docs/pool.md
             if (redisVersion === 'latest') {
               mochaSuiteFn('When connected via clientpool', function () {
                 globalAgent.setUpCleanUpHooks();
@@ -787,8 +787,9 @@ const legacyVersion = 'v3';
               }
 
               // See https://redis.js.org/#node-redis-usage-basic-example blocking commands
-              // In v5, the "Isolation Pool" was introduced via RedisClientPool.
-              // Since it requires a new type of pool connection, skipping the test.
+              // The "Isolation Pool" was introduced via RedisClientPool in v5.
+              // This new pool type requires a different connection mechanism.
+              // As a result, this test is being skipped.
               if (redisVersion !== 'latest') {
                 it('blocking', () => testBlockingCommand(controls, setupType));
               }
