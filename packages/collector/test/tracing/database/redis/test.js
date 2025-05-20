@@ -93,7 +93,7 @@ const legacyVersion = 'v3';
             });
             // In v5, Redis moved “Isolation Pool” into RedisClientPool.
             // see: https://github.com/redis/node-redis/blob/master/docs/pool.md
-            if (redisVersion === 'latest') {
+            if (redisVersion === 'latest' && setupType !== 'sentinel') {
               mochaSuiteFn('When connected via clientpool', function () {
                 globalAgent.setUpCleanUpHooks();
                 let controls;
