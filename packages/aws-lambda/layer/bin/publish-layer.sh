@@ -159,6 +159,14 @@ if [[ -z $NO_PROMPT ]]; then
   done
 fi
 
+# List of supported AWS Lambda Node.js runtimes
+SUPPORTED_RUNTIMES="nodejs18.x nodejs20.x nodejs22.x"
+
+# The Node.js version to use for building the Docker image.
+# This should be aligned with one of the supported runtimes above.
+# We're using a development version.
+NODE_VERSION_TO_BUILD="20"
+
 echo Will build Lambda layer with name \"$LAYER_NAME\".
 
 if [[ -z $SKIP_DOCKER_IMAGE ]]; then
@@ -338,7 +346,7 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
         --license-info $LICENSE \
         --zip-file fileb://$ZIP_NAME \
         --output json \
-        --compatible-runtimes nodejs18.x nodejs20.x nodejs22.x \
+        --compatible-runtimes $SUPPORTED_RUNTIMES \
         | jq '.Version' \
     ) || true  # NOTE: If the upload fails, the bash script should not fail.
 
@@ -372,8 +380,10 @@ else
 fi
 
 if [[ -z $SKIP_DOCKER_IMAGE ]]; then
-  echo "step 7/9: building docker image for container image based Lambda layer"
-  docker build . -t "$DOCKER_IMAGE_NAME:$VERSION"
+  echo "Step 7/9: Building Docker image for Lambda layer targeting Node.js version $NODE_VERSION_TO_BUILD"
+
+# Build the Docker image for the specified Node.js version
+  docker build --build-arg NODEJS_VERSION=$NODE_VERSION_TO_BUILD . -t "$DOCKER_IMAGE_NAME:$VERSION"
 
   # NOTE: serverless/ci/pipeline.yaml passes PACKAGE_VERSION=1 for 1.x branch
   if [[ $PACKAGE_VERSION == latest ]]; then
