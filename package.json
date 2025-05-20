@@ -256,7 +256,7 @@
     "kafka-avro": "^3.2.0",
     "node-rdkafka": "^3.4.0",
     "pg-native": "^3.5.0",
-    "prisma": "^6.7.0"
+    "prisma": "^6.8.2"
   },
   "overrides": {
     "prebuildify": {
