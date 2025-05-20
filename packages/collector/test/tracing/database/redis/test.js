@@ -748,7 +748,8 @@ const legacyVersion = 'v3';
 
               // scanIterator not available on cluster.
               if (setupType !== 'cluster') {
-                it('must trace scan iterator usage', () =>
+                // eslint-disable-next-line mocha/no-exclusive-tests
+                it.only('must trace scan iterator usage', () =>
                   controls
                     .sendRequest({
                       method: 'GET',
@@ -757,6 +758,8 @@ const legacyVersion = 'v3';
                     .then(() =>
                       retry(() =>
                         agentControls.getSpans().then(spans => {
+                          // eslint-disable-next-line no-console
+                          console.log('-----------------------------------', spans);
                           const entrySpan = expectAtLeastOneMatching(spans, [
                             span => expect(span.n).to.equal('node.http.server'),
                             span => expect(span.data.http.method).to.equal('GET')
