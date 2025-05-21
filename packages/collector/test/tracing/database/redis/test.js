@@ -66,8 +66,8 @@ const legacyVersion = 'v3';
                   appPath: path.join(__dirname, 'allowRootExitSpanApp'),
                   env: {
                     REDIS_VERSION: redisVersion,
-                    REDIS_PKG: redisPkg,
-                    REDIS_SETUP_TYPE: setupType
+                    REDIS_PKG: redisPkg
+                    // REDIS_SETUP_TYPE: setupType
                   }
                 });
 
@@ -1142,7 +1142,7 @@ const legacyVersion = 'v3';
           if (type === 'cluster') {
             expect(span.data.redis.connection).to.contain(process.env.AZURE_REDIS_CLUSTER);
           } else if (type === 'sentinel') {
-            expect(span.data.redis.connection).to.contain('localhost');
+            expect(span.data.redis.connection).to.contain(process.env.REDIS_SENTINEL_HOST);
           } else {
             expect(span.data.redis.connection).to.contain(process.env.REDIS);
           }

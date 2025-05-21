@@ -31,7 +31,7 @@ module.exports = async function initializeSentinelConnection(redis, log) {
     await client.connect();
     log(`Connected to Redis Sentinel at ${sentinelHost}.`);
 
-    return { connection: client };
+    return { connection1: client };
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Failed to initialize Redis Sentinel connection:', error);
