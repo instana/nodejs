@@ -191,231 +191,231 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-autoprofile-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-autoprofile
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-aws-fargate-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-aws-fargate
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-aws-lambda-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-aws-lambda
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-azure-container-services-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-azure-container-services
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-collector-general-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-collector-general
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-collector-tracing-cloud-aws-v2-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-collector-tracing-cloud-aws-v2
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-collector-tracing-cloud-aws-v3-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-collector-tracing-cloud-aws-v3
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-collector-tracing-cloud-azure-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-collector-tracing-cloud-azure
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-collector-tracing-cloud-gcp-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-collector-tracing-cloud-gcp
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
+    # - name: test-ci-autoprofile-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-autoprofile
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-aws-fargate-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-aws-fargate
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-aws-lambda-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-aws-lambda
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-azure-container-services-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-azure-container-services
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-collector-general-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-collector-general
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-collector-tracing-cloud-aws-v2-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-collector-tracing-cloud-aws-v2
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-collector-tracing-cloud-aws-v3-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-collector-tracing-cloud-aws-v3
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-collector-tracing-cloud-azure-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-collector-tracing-cloud-azure
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-collector-tracing-cloud-gcp-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-collector-tracing-cloud-gcp
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
     - name: test-ci-collector-tracing-database-task
       runAfter:
         - install-npm-dependencies
@@ -441,356 +441,356 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-frameworks-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-collector-tracing-frameworks
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-collector-tracing-general-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-collector-tracing-general
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-collector-tracing-logger-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-collector-tracing-logger
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-collector-tracing-messaging-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-collector-tracing-messaging
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-collector-tracing-misc-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-collector-tracing-misc
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-collector-tracing-protocols-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-collector-tracing-protocols
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-core-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-core
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-google-cloud-run-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-google-cloud-run
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-metrics-util-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-metrics-util
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-opentelemetry-exporter-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-opentelemetry-exporter
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-opentelemetry-sampler-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-opentelemetry-sampler
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-serverless-collector-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-serverless-collector
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-serverless-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-serverless
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: test-ci-shared-metrics-task
-      runAfter:
-        - install-npm-dependencies
-      taskRef:
-        name: test-ci-shared-metrics
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
+    # - name: test-ci-collector-tracing-frameworks-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-collector-tracing-frameworks
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-collector-tracing-general-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-collector-tracing-general
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-collector-tracing-logger-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-collector-tracing-logger
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-collector-tracing-messaging-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-collector-tracing-messaging
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-collector-tracing-misc-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-collector-tracing-misc
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-collector-tracing-protocols-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-collector-tracing-protocols
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-core-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-core
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-google-cloud-run-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-google-cloud-run
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-metrics-util-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-metrics-util
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-opentelemetry-exporter-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-opentelemetry-exporter
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-opentelemetry-sampler-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-opentelemetry-sampler
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-serverless-collector-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-serverless-collector
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-serverless-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-serverless
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
+    # - name: test-ci-shared-metrics-task
+    #   runAfter:
+    #     - install-npm-dependencies
+    #   taskRef:
+    #     name: test-ci-shared-metrics
+    #   params:
+    #     - name: node-version
+    #       value: $(params.node-version)
+    #     - name: npm-version
+    #       value: $(params.npm-version)          
+    #     - name: repository
+    #       value: $(params.repository)
+    #     - name: revision
+    #       value: $(params.commit-id)
+    #     - name: continuous-delivery-context-secret
+    #       value: "secure-properties"
+    #     - name: esm
+    #       value: $(params.esm)
+    #     - name: coverage
+    #       value: $(params.coverage)
+    #     - name: prerelease
+    #       value: $(params.prerelease)   
+    #   workspaces:
+    #     - name: output
+    #       workspace: artifacts
 
   finally: 
     - name: tasks-results
