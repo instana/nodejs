@@ -33,6 +33,9 @@ const legacyVersion = 'v3';
 // Please set the environment variables to run the tests against azure redis cluster:
 //    export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
 //    export AZURE_REDIS_CLUSTER_PWD=
+
+// eslint-disable-next-line max-len
+// node bin/start-test-containers.js --redis-master --redis-slave-1 --redis-slave-2 --redis-slave-3 --sentinel-1 --sentinel-2 --sentinel-3
 ['sentinel'].forEach(setupType => {
   // eslint-disable-next-line mocha/no-exclusive-tests
   describe.only(`tracing/redis ${setupType}`, function () {
