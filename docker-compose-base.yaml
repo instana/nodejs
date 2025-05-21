@@ -45,7 +45,6 @@ services:
   redis-master:
     image: redis:7.4.3
     network_mode: host
-    command: ['redis-server', '--appendonly', 'yes', '--protected-mode', 'no']
 
   redis-slave-1:
     image: redis:7.4.3
@@ -58,8 +57,6 @@ services:
         '6379',
         '--port',
         '6380',
-        '--protected-mode',
-        'no',
       ]
 
   redis-slave-2:
@@ -72,9 +69,7 @@ services:
         '127.0.0.1',
         '6379',
         '--port',
-        '6381',
-        '--protected-mode',
-        'no',
+        '6381'
       ]
 
   redis-slave-3:
@@ -87,9 +82,7 @@ services:
         '127.0.0.1',
         '6379',
         '--port',
-        '6382',
-        '--protected-mode',
-        'no',
+        '6382'
       ]
 
   sentinel-1:

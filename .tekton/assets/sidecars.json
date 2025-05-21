@@ -105,24 +105,22 @@
     {
       "name": "redis-master",
       "image": "redis:7.4.3",
-      "readinessProbe": {
-        "exec": {
-          "command": ["redis-cli", "ping"]
-        },
-        "initialDelaySeconds": 5,
-        "periodSeconds": 2,
-        "timeoutSeconds": 5
-      }
+      "args": ["redis-server", "--port", "6379"]
     },
     {
       "name": "redis-slave-1",
       "image": "redis:7.4.3",
-      "args": ["--replicaof", "redis-master", "6379", "--port", "6380"]
+      "args": ["redis-server", "--replicaof", "127.0.0.1", "6379", "--port", "6380"]
     },
     {
       "name": "redis-slave-2",
       "image": "redis:7.4.3",
-      "args": ["--replicaof", "redis-master", "6379", "--port", "6381"]
+      "args": ["redis-server", "--replicaof", "127.0.0.1", "6379", "--port", "6381"]
+    },
+    {
+      "name": "redis-slave-3",
+      "image": "redis:7.4.3",
+      "args": ["redis-server", "--replicaof", "127.0.0.1", "6379", "--port", "6382"]
     },
     {
       "name": "sentinel-1",
@@ -130,7 +128,7 @@
       "args": [
         "sh",
         "-c",
-        "echo \"sentinel monitor mymaster redis-master 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames yes\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26379"
+        "echo \"sentinel monitor mymaster 127.0.0.1 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames no\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26379"
       ]
     },
     {
@@ -139,7 +137,7 @@
       "args": [
         "sh",
         "-c",
-        "echo \"sentinel monitor mymaster redis-master 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames yes\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26380"
+        "echo \"sentinel monitor mymaster 127.0.0.1 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames no\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26380"
       ]
     },
     {
@@ -148,7 +146,7 @@
       "args": [
         "sh",
         "-c",
-        "echo \"sentinel monitor mymaster redis-master 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames yes\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26381"
+        "echo \"sentinel monitor mymaster 127.0.0.1 6379 2\" > /etc/sentinel.conf && echo \"sentinel down-after-milliseconds mymaster 1000\" >> /etc/sentinel.conf && echo \"sentinel failover-timeout mymaster 5000\" >> /etc/sentinel.conf && echo \"sentinel parallel-syncs mymaster 1\" >> /etc/sentinel.conf && echo \"sentinel resolve-hostnames no\" >> /etc/sentinel.conf && redis-server /etc/sentinel.conf --sentinel --port 26381"
       ]
     },
     {
