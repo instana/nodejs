@@ -35,6 +35,5 @@ module.exports = async function initializeSentinelConnection(redis, log) {
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Failed to initialize Redis Sentinel connection:', error);
-    throw error;
   }
 };

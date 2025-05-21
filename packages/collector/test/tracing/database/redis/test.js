@@ -33,12 +33,10 @@ const legacyVersion = 'v3';
 // Please set the environment variables to run the tests against azure redis cluster:
 //    export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
 //    export AZURE_REDIS_CLUSTER_PWD=
-
 // eslint-disable-next-line max-len
 // node bin/start-test-containers.js --redis-master --redis-slave-1 --redis-slave-2 --redis-slave-3 --sentinel-1 --sentinel-2 --sentinel-3
-['sentinel'].forEach(setupType => {
-  // eslint-disable-next-line mocha/no-exclusive-tests
-  describe.only(`tracing/redis ${setupType}`, function () {
+['default', 'cluster', 'sentinel'].forEach(setupType => {
+  describe(`tracing/redis ${setupType}`, function () {
     ['redis', '@redis/client'].forEach(redisPkg => {
       describe(`require: ${redisPkg}`, function () {
         this.timeout(config.getTestTimeout() * 4);
@@ -70,8 +68,8 @@ const legacyVersion = 'v3';
                   appPath: path.join(__dirname, 'allowRootExitSpanApp'),
                   env: {
                     REDIS_VERSION: redisVersion,
-                    REDIS_PKG: redisPkg
-                    // REDIS_SETUP_TYPE: setupType
+                    REDIS_PKG: redisPkg,
+                    REDIS_SETUP_TYPE: setupType
                   }
                 });
 
