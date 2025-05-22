@@ -23,10 +23,6 @@ spec:
     - name: redis-sentinel-master
       image: redis:7.4.3
       args: ["redis-server", "--port", "6379"]  
-  
-    - name: redis-slave-1
-      image: redis:7.4.3
-      args: ["redis-server", "--replicaof", "127.0.0.1", "6379", "--port", "6380"]
       
     - name: redis-sentinel-slave
       image: redis:7.4.3
