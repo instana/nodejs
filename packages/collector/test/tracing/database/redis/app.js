@@ -68,7 +68,7 @@ app.get('/', (req, res) => {
 app.post('/clearkeys', async (req, res) => {
   cls.isTracing() && cls.setTracingLevel('0');
 
-  if (process.env.REDIS_SETUP_TYPE === ('cluster' || 'sentinel')) {
+  if (process.env.REDIS_SETUP_TYPE === 'cluster') {
     try {
       await Promise.all(
         connection.masters.map(async master => {
@@ -81,7 +81,7 @@ app.post('/clearkeys', async (req, res) => {
       res.sendStatus(500);
     }
   } else {
-    await connection?.flushAll();
+    await connection.flushAll();
   }
 
   cls.isTracing() && cls.setTracingLevel('1');
