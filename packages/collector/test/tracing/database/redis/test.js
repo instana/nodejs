@@ -69,7 +69,7 @@ const legacyVersion = 'v3';
             mochaSuiteFn = describe.skip;
           }
 
-          if (setupType !== 'cluster' && setupType !== 'sentinel') {
+          if (setupType === 'default') {
             mochaSuiteFn('When allowRootExitSpan: true is set', function () {
               globalAgent.setUpCleanUpHooks();
               let controls;
@@ -147,7 +147,7 @@ const legacyVersion = 'v3';
                 it('should trace blocking commands', () => testBlockingCommand(controls, setupType));
               });
             }
-         }
+          }
 
           mochaSuiteFn(`redis@${redisVersion}`, function () {
             globalAgent.setUpCleanUpHooks();
@@ -771,7 +771,7 @@ const legacyVersion = 'v3';
                   ));
 
               // scanIterator not available on cluster and sentinel
-              if (setupType !== 'cluster' && setupType !== 'sentinel') {
+              if (setupType === 'default') {
                 it('must trace scan iterator usage', () =>
                   controls
                     .sendRequest({
@@ -852,7 +852,7 @@ const legacyVersion = 'v3';
             });
 
             // Does not make sense for cluster and sentinel
-            if (setupType !== 'cluster' && setupType !== 'sentinel') {
+            if (setupType === 'default') {
               it('call two different hosts', async () => {
                 const response = await controls.sendRequest({
                   method: 'POST',
