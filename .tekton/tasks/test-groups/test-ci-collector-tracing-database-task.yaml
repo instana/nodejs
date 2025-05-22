@@ -17,22 +17,18 @@ spec:
             value: "-Xms500m -Xmx500m"
           - name: "xpack.security.enabled"
             value: "false"
-    - name: redis-master
+    - name: redis
+      image: redis:7.4.3
+    - name: redis-sentinel-master
       image: redis:7.4.3
       args: ["redis-server", "--port", "6379"]  
     - name: redis-slave-1
       image: redis:7.4.3
       args: ["redis-server", "--replicaof", "127.0.0.1", "6379", "--port", "6380"]
-      
-    - name: redis-slave-2
+    - name: redis-sentinel-slave
       image: redis:7.4.3
       args: ["redis-server", "--replicaof", "127.0.0.1", "6379", "--port", "6381"]
-      
-    - name: redis-slave-3
-      image: redis:7.4.3
-      args: ["redis-server", "--replicaof", "127.0.0.1", "6379", "--port", "6382"]
-      
-    - name: sentinel-1
+    - name: redis-sentinel
       image: redis:7.4.3
       args:
         - "sh"
@@ -43,34 +39,7 @@ spec:
           echo "sentinel failover-timeout mymaster 5000" >> /etc/sentinel.conf
           echo "sentinel parallel-syncs mymaster 1" >> /etc/sentinel.conf
           echo "sentinel resolve-hostnames no" >> /etc/sentinel.conf
-          redis-server /etc/sentinel.conf --sentinel --port 26379
-          
-    - name: sentinel-2
-      image: redis:7.4.3
-      args:
-        - "sh"
-        - "-c"
-        - |
-          echo "sentinel monitor mymaster 127.0.0.1 6379 2" > /etc/sentinel.conf
-          echo "sentinel down-after-milliseconds mymaster 1000" >> /etc/sentinel.conf
-          echo "sentinel failover-timeout mymaster 5000" >> /etc/sentinel.conf
-          echo "sentinel parallel-syncs mymaster 1" >> /etc/sentinel.conf
-          echo "sentinel resolve-hostnames no" >> /etc/sentinel.conf
-          redis-server /etc/sentinel.conf --sentinel --port 26380
-          
-    - name: sentinel-3
-      image: redis:7.4.3
-      args:
-        - "sh"
-        - "-c"
-        - |
-          echo "sentinel monitor mymaster 127.0.0.1 6379 2" > /etc/sentinel.conf
-          echo "sentinel down-after-milliseconds mymaster 1000" >> /etc/sentinel.conf
-          echo "sentinel failover-timeout mymaster 5000" >> /etc/sentinel.conf
-          echo "sentinel parallel-syncs mymaster 1" >> /etc/sentinel.conf
-          echo "sentinel resolve-hostnames no" >> /etc/sentinel.conf
-          redis-server /etc/sentinel.conf --sentinel --port 26381
-
+          redis-server /etc/sentinel.conf --sentinel --port 26379       
     - name: couchbase
       image: couchbase/server:7.1.4
       readinessProbe:
@@ -131,7 +100,6 @@ spec:
             value: "stanCanHazMsSQL1"
           - name: "MSSQL_PID"
             value: "Express"
-    
   envFrom:
     - configMapRef:
         name: environment-properties  

@@ -22,19 +22,31 @@ const {
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-// v3 is treated as the legacy version. It does not support Redis clustering or the @redis/client package.
-// Clustering support was introduced in v4:
-// https://github.com/redis/node-redis/blob/master/CHANGELOG.md#v400---24-nov-2021
+// v3 is considered the legacy version.
+// - It does not support Redis clustering.
+// - It does not support the newer `@redis/client` package.
+// Clustering support was officially introduced in v4
+// Redis Sentinel support was added in v5.
 const legacyVersion = 'v3';
 
-// Please run this command on the root folder to start the redis instance:
-// node bin/start-test-containers.js --redis
-//
-// Please set the environment variables to run the tests against azure redis cluster:
-//    export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
-//    export AZURE_REDIS_CLUSTER_PWD=
-// eslint-disable-next-line max-len
-// node bin/start-test-containers.js --redis-master --redis-slave-1 --redis-slave-2 --redis-slave-3 --sentinel-1 --sentinel-2 --sentinel-3
+/**
+ * Supported Redis setups for local testing:
+ *
+ * 1. Standalone (Default):
+ *    - Start a standalone Redis container with:
+ *        node bin/start-test-containers.js --redis
+ *
+ * 2. Cluster:
+ *    - To run tests against an Azure Redis Cluster, set the following environment variables:
+ *        export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
+ *        export AZURE_REDIS_CLUSTER_PWD=<your_password_here>
+ *
+ *    - Credentials are available in 1Password. Search for: "Team Node.js: Azure Redis cluster"
+ *
+ * 3. Sentinel:
+ *    - To run tests against Redis Sentinel, start Redis Sentinel setup (1 master, 1 slave, 1 sentinel) with:
+ *        node bin/start-test-containers.js --redis-sentinel-master --redis-sentinel-slave --redis-sentinel
+ */
 ['default', 'cluster', 'sentinel'].forEach(setupType => {
   describe(`tracing/redis ${setupType}`, function () {
     ['redis', '@redis/client'].forEach(redisPkg => {
@@ -46,18 +58,18 @@ const legacyVersion = 'v3';
           let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
           const shouldSkipCluster = setupType === 'cluster' && redisVersion === legacyVersion;
-          // NOTE: sentinel support added in v5.
+          // NOTE: sentinel support added in v5(latest).
           const shouldSkipSentinel = setupType === 'sentinel' && redisVersion !== 'latest';
 
           if (shouldSkipCluster || shouldSkipSentinel) {
             mochaSuiteFn = describe.skip;
           }
-          // NOTE: redis v3 does not support using @redis/client
+
           if (redisVersion === legacyVersion && redisPkg === '@redis/client') {
             mochaSuiteFn = describe.skip;
           }
 
-          if (setupType !== 'cluster') {
+          if (setupType !== 'cluster' && setupType !== 'sentinel') {
             mochaSuiteFn('When allowRootExitSpan: true is set', function () {
               globalAgent.setUpCleanUpHooks();
               let controls;
@@ -80,6 +92,10 @@ const legacyVersion = 'v3';
                 await agentControls.clearReceivedTraceData();
               });
 
+              after(async () => {
+                await controls.stop();
+              });
+
               it('must trace exit span', async function () {
                 return retry(async () => {
                   const spans = await agentControls.getSpans();
@@ -96,7 +112,7 @@ const legacyVersion = 'v3';
             });
             // In v5, Redis moved “Isolation Pool” into RedisClientPool.
             // see: https://github.com/redis/node-redis/blob/master/docs/pool.md
-            if (redisVersion === 'latest' && setupType !== 'sentinel') {
+            if (redisVersion === 'latest') {
               mochaSuiteFn('When connected via clientpool', function () {
                 globalAgent.setUpCleanUpHooks();
                 let controls;
@@ -131,7 +147,7 @@ const legacyVersion = 'v3';
                 it('should trace blocking commands', () => testBlockingCommand(controls, setupType));
               });
             }
-          }
+         }
 
           mochaSuiteFn(`redis@${redisVersion}`, function () {
             globalAgent.setUpCleanUpHooks();
