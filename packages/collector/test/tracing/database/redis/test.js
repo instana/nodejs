@@ -80,8 +80,7 @@ const legacyVersion = 'v3';
                   appPath: path.join(__dirname, 'allowRootExitSpanApp'),
                   env: {
                     REDIS_VERSION: redisVersion,
-                    REDIS_PKG: redisPkg,
-                    REDIS_SETUP_TYPE: setupType
+                    REDIS_PKG: redisPkg
                   }
                 });
 
@@ -90,10 +89,6 @@ const legacyVersion = 'v3';
 
               beforeEach(async () => {
                 await agentControls.clearReceivedTraceData();
-              });
-
-              after(async () => {
-                await controls.stop();
               });
 
               it('must trace exit span', async function () {
