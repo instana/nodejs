@@ -165,7 +165,15 @@ SUPPORTED_RUNTIMES="nodejs18.x nodejs20.x nodejs22.x"
 # The Node.js version to use for building the Docker image.
 # This should be aligned with one of the supported runtimes above.
 # We're using a development version.
-NODE_VERSION_TO_BUILD="20"
+ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "../../..")
+NVMRC_PATH="$ROOT_DIR/.nvmrc"
+if [[ -f "$NVMRC_PATH" ]]; then
+  NODEJS_DEV_VERSION=$(cat "$NVMRC_PATH")
+  echo "Using Node.js version $NODEJS_DEV_VERSION from .nvmrc for Docker build"
+else
+  echo "Warning: .nvmrc file not found at $NVMRC_PATH, falling back to default Node.js version 20"
+  NODEJS_DEV_VERSION=20 
+fi
 
 echo Will build Lambda layer with name \"$LAYER_NAME\".
 
@@ -380,10 +388,10 @@ else
 fi
 
 if [[ -z $SKIP_DOCKER_IMAGE ]]; then
-  echo "Step 7/9: Building Docker image for Lambda layer targeting Node.js version $NODE_VERSION_TO_BUILD"
+  echo "Step 7/9: Building Docker image for Lambda layer targeting Node.js version $NODEJS_DEV_VERSION"
 
 # Build the Docker image for the specified Node.js version
-  docker build --build-arg NODEJS_VERSION=$NODE_VERSION_TO_BUILD . -t "$DOCKER_IMAGE_NAME:$VERSION"
+  docker build --build-arg NODEJS_VERSION=$NODEJS_DEV_VERSION . -t "$DOCKER_IMAGE_NAME:$VERSION"
 
   # NOTE: serverless/ci/pipeline.yaml passes PACKAGE_VERSION=1 for 1.x branch
   if [[ $PACKAGE_VERSION == latest ]]; then
