@@ -26,7 +26,7 @@ const port = require('../../../test_util/app-port')();
 const cls = require('../../../../../core/src/tracing/cls');
 const app = express();
 const redisVersion = process.env.REDIS_VERSION;
-const isPool = process.env.REDIS_POOL === 'true';
+const isConnectedViaPool = process.env.REDIS_SETUP_TYPE === 'pool';
 const logPrefix =
   `Redis App (version: ${redisVersion}, require: ${process.env.REDIS_PKG}, ` +
   `setup type: ${process.env.REDIS_SETUP_TYPE}, pid: ${process.pid}):\t`;
@@ -128,7 +128,7 @@ app.get('/hvals', async (req, res) => {
 
 app.get('/blocking', async (req, res) => {
   try {
-    const blPopPromise = isPool
+    const blPopPromise = isConnectedViaPool
       ? connection.blPop('mykey', 0)
       : connection.blPop(redis.commandOptions({ isolated: true }), 'mykey', 0);
 

@@ -119,8 +119,7 @@ const legacyVersion = 'v3';
                     env: {
                       REDIS_VERSION: redisVersion,
                       REDIS_PKG: redisPkg,
-                      REDIS_POOL: true,
-                      REDIS_SETUP_TYPE: setupType
+                      REDIS_SETUP_TYPE: 'pool'
                     }
                   });
 
