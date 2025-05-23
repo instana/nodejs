@@ -202,7 +202,10 @@ function instrument(redis) {
 
     shimmer.wrap(redis, 'createCluster', createClusterWrap);
     shimmer.wrap(redis, 'createClient', createClientWrap);
-    shimmer.wrap(redis, 'createSentinel', createSentinelWrap);
+    // v5, redis sentinel support was added.
+    if (typeof redis.createSentinel === 'function') {
+      shimmer.wrap(redis, 'createSentinel', createSentinelWrap);
+    }
     instrumentPool();
   } else {
     const redisClientProto = redis.RedisClient.prototype;
