@@ -25,8 +25,10 @@ const port = require('../../../test_util/app-port')();
 
 const cls = require('../../../../../core/src/tracing/cls');
 const app = express();
+const redisVersion = process.env.REDIS_VERSION;
+const isPool = process.env.REDIS_POOL === 'true';
 const logPrefix =
-  `Redis App (version: ${process.env.REDIS_VERSION}, require: ${process.env.REDIS_PKG}, ` +
+  `Redis App (version: ${redisVersion}, require: ${process.env.REDIS_PKG}, ` +
   `cluster: ${process.env.REDIS_CLUSTER}, pid: ${process.pid}):\t`;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
@@ -125,14 +127,18 @@ app.get('/hvals', async (req, res) => {
 });
 
 app.get('/blocking', async (req, res) => {
-  const blPopPromise = connection.blPop(redis.commandOptions({ isolated: true }), 'mykey', 0);
-
   try {
+    const blPopPromise = isPool
+      ? connection.blPop('mykey', 0)
+      : connection.blPop(redis.commandOptions({ isolated: true }), 'mykey', 0);
+
     await connection.lPush('mykey', ['1', '2']);
-    await blPopPromise; // '2'
+    await blPopPromise;
 
     await fetch(`http://127.0.0.1:${agentPort}`);
-    log('Sent agent request successfully.');
+    log('Agent request sent successfully.');
+
+    connection.destroy();
 
     res.sendStatus(200);
   } catch (err) {
@@ -142,12 +148,25 @@ app.get('/blocking', async (req, res) => {
 });
 
 app.get('/scan-iterator', async (req, res) => {
-  // eslint-disable-next-line no-restricted-syntax
-  for await (const key of connection.scanIterator()) {
-    try {
-      await connection.get(key);
-    } catch (getErr) {
-      // ignore for now
+  if (redisVersion === 'latest') {
+    // v5: SCAN iterators return collection of keys, enabling multi-key commands like mGet
+    // eslint-disable-next-line no-restricted-syntax
+    for await (const keys of connection.scanIterator()) {
+      try {
+        await connection.mGet(keys);
+      } catch (getErr) {
+        // ignore for now
+      }
+    }
+  } else {
+    // v4: SCAN iterators return individual keys
+    // eslint-disable-next-line no-restricted-syntax
+    for await (const key of connection.scanIterator()) {
+      try {
+        await connection.get(key);
+      } catch (getErr) {
+        // ignore for now
+      }
     }
   }
 

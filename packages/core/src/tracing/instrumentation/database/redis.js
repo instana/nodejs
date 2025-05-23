@@ -29,6 +29,8 @@ exports.init = function init() {
   // v4 commands, "redis-commands" is outdated and no longer compatible with it
   hook.onFileLoad(/\/@redis\/client\/dist\/lib\/cluster\/commands.js/, captureCommands);
 
+  // In v5, the location of the commands module has changed.
+  hook.onFileLoad(/\/@redis\/client\/dist\/lib\/commands\/index.js/, captureCommands);
   hook.onModuleLoad('redis', instrument);
   hook.onModuleLoad('@redis/client', instrument);
 };
@@ -74,12 +76,12 @@ function instrument(redis) {
 
           const wrapAddCommand = addCommandOriginalFn => {
             return function instrumentedAddCommandInstana() {
-              if (isCluster) {
-                selfMadeQueue.push(arguments[1]);
-              } else {
-                selfMadeQueue.push(arguments[0]);
-              }
-
+              // Redis Cluster Mode:
+              // v5: The command arguments are passed as the third argument.
+              // v4: The command arguments are passed as the second argument.
+              // Non-cluster mode: only one argument passed (the command)
+              const commandArg = isCluster ? arguments[2] || arguments[1] : arguments[0];
+              selfMadeQueue.push(commandArg);
               return addCommandOriginalFn.apply(this, arguments);
             };
           };
@@ -111,6 +113,22 @@ function instrument(redis) {
         }
 
         return redisCluster;
+      };
+    };
+
+    const creatPoolWrap = originalCreatePool => {
+      return function instrumentedCreateRedisPool(poolOptions) {
+        const redisPoolInstance = originalCreatePool.apply(this, arguments);
+        const redisUrl = poolOptions?.url;
+        const redisPoolPrototype = Object.getPrototypeOf(redisPoolInstance);
+
+        shimAllCommands(redisPoolPrototype, redisUrl, false, redisCommandList);
+
+        if (typeof redisPoolPrototype.multi === 'function') {
+          shimmer.wrap(redisPoolPrototype, 'multi', wrapMulti(redisUrl, false));
+        }
+
+        return redisPoolPrototype;
       };
     };
 
@@ -147,8 +165,29 @@ function instrument(redis) {
       };
     };
 
+    const instrumentPool = () => {
+      // In Redis v5, createClientPool support was added. The createClientPool defined in different ways:
+      //   1. As a getter (in redis), which requires special handling.
+      //   2. As a regular function (@redis/client).
+      const poolDescriptor = Object.getOwnPropertyDescriptor(redis, 'createClientPool');
+      if (poolDescriptor?.configurable) {
+        if (typeof poolDescriptor.get === 'function') {
+          Object.defineProperty(redis, 'createClientPool', {
+            configurable: true,
+            enumerable: true,
+            get() {
+              return creatPoolWrap(poolDescriptor.get.call(this));
+            }
+          });
+        } else {
+          shimmer.wrap(redis, 'createClientPool', creatPoolWrap);
+        }
+      }
+    };
+
     shimmer.wrap(redis, 'createCluster', createClusterWrap);
     shimmer.wrap(redis, 'createClient', createClientWrap);
+    instrumentPool();
   } else {
     const redisClientProto = redis.RedisClient.prototype;
 

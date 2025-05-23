@@ -22,6 +22,11 @@ const {
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
+// v3 is treated as the legacy version. It does not support Redis clustering or the @redis/client package.
+// Clustering support was introduced in v4:
+// https://github.com/redis/node-redis/blob/master/CHANGELOG.md#v400---24-nov-2021
+const legacyVersion = 'v3';
+
 // Please run this command on the root folder to start the redis instance:
 // node bin/start-test-containers.js --redis
 //
@@ -35,17 +40,14 @@ const globalAgent = require('../../../globalAgent');
         this.timeout(config.getTestTimeout() * 4);
         const agentControls = globalAgent.instance;
 
-        ['latest', 'v3'].forEach(redisVersion => {
+        ['latest', 'v4', 'v3'].forEach(redisVersion => {
           let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-          // NOTE: clustering was added in v4
-          //       https://github.com/redis/node-redis/blob/master/CHANGELOG.md#v400---24-nov-2021
-          if (redisVersion !== 'latest' && setupType === 'cluster') {
+          if (setupType === 'cluster' && redisVersion === legacyVersion) {
             mochaSuiteFn = describe.skip;
           }
-
           // NOTE: redis v3 does not support using @redis/client
-          if (redisVersion !== 'latest' && redisPkg === '@redis/client') {
+          if (redisVersion === legacyVersion && redisPkg === '@redis/client') {
             mochaSuiteFn = describe.skip;
           }
 
@@ -85,6 +87,42 @@ const globalAgent = require('../../../globalAgent');
                 });
               });
             });
+            // In v5, Redis moved “Isolation Pool” into RedisClientPool.
+            // see: https://github.com/redis/node-redis/blob/master/docs/pool.md
+            if (redisVersion === 'latest') {
+              mochaSuiteFn('When connected via clientpool', function () {
+                globalAgent.setUpCleanUpHooks();
+                let controls;
+
+                before(async () => {
+                  controls = new ProcessControls({
+                    useGlobalAgent: true,
+                    appPath: path.join(__dirname, 'app.js'),
+                    env: {
+                      REDIS_VERSION: redisVersion,
+                      REDIS_PKG: redisPkg,
+                      REDIS_POOL: true
+                    }
+                  });
+
+                  await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
+                });
+
+                beforeEach(async () => {
+                  await agentControls.clearReceivedTraceData();
+                });
+
+                after(async () => {
+                  await controls.stop();
+                });
+
+                afterEach(async () => {
+                  await controls.clearIpcMessages();
+                });
+
+                it('should trace blocking commands', () => testBlockingCommand(controls, setupType));
+              });
+            }
           }
 
           mochaSuiteFn(`redis@${redisVersion}`, function () {
@@ -95,7 +133,9 @@ const globalAgent = require('../../../globalAgent');
               controls = new ProcessControls({
                 useGlobalAgent: true,
                 appPath:
-                  redisVersion === 'latest' ? path.join(__dirname, 'app.js') : path.join(__dirname, 'legacyApp.js'),
+                  redisVersion === legacyVersion
+                    ? path.join(__dirname, 'legacyApp.js')
+                    : path.join(__dirname, 'app.js'),
                 env: {
                   REDIS_VERSION: redisVersion,
                   REDIS_PKG: redisPkg,
@@ -228,9 +268,9 @@ const globalAgent = require('../../../globalAgent');
                         span => expect(span.ec).to.equal(0),
                         span => verifyConnection(setupType, span),
                         span =>
-                          redisVersion === 'latest'
-                            ? expect(span.data.redis.command).to.equal('hSet')
-                            : expect(span.data.redis.command).to.equal('hset')
+                          redisVersion === legacyVersion
+                            ? expect(span.data.redis.command).to.equal('hset')
+                            : expect(span.data.redis.command).to.equal('hSet')
                       ]);
 
                       expectAtLeastOneMatching(spans, [
@@ -245,9 +285,9 @@ const globalAgent = require('../../../globalAgent');
                         span => expect(span.ec).to.equal(0),
                         span => verifyConnection(setupType, span),
                         span =>
-                          redisVersion === 'latest'
-                            ? expect(span.data.redis.command).to.equal('hGetAll')
-                            : expect(span.data.redis.command).to.equal('hget')
+                          redisVersion === legacyVersion
+                            ? expect(span.data.redis.command).to.equal('hget')
+                            : expect(span.data.redis.command).to.equal('hGetAll')
                       ]);
 
                       verifyHttpExit(controls, spans, entrySpan);
@@ -397,9 +437,9 @@ const globalAgent = require('../../../globalAgent');
                         span => verifyConnection(setupType, span),
                         span => expect(span.data.redis.command).to.equal('multi'),
                         span =>
-                          redisVersion === 'latest'
-                            ? expect(span.data.redis.subCommands).to.deep.equal(['SET', 'GET'])
-                            : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                          redisVersion === legacyVersion
+                            ? expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                            : expect(span.data.redis.subCommands).to.deep.equal(['SET', 'GET'])
                       ]);
 
                       verifyHttpExit(controls, spans, writeEntrySpan);
@@ -407,7 +447,7 @@ const globalAgent = require('../../../globalAgent');
                   )
                 ));
 
-            if (redisVersion !== 'latest') {
+            if (redisVersion === legacyVersion) {
               it('must trace multi calls with sub callbacks', () =>
                 controls
                   .sendRequest({
@@ -447,9 +487,9 @@ const globalAgent = require('../../../globalAgent');
                                 ),
                           span => expect(span.data.redis.command).to.equal('multi'),
                           span =>
-                            redisVersion === 'latest'
-                              ? expect(span.data.redis.subCommands).to.deep.equal(['SET', 'GET'])
-                              : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                            redisVersion === legacyVersion
+                              ? expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                              : expect(span.data.redis.subCommands).to.deep.equal(['SET', 'GET'])
                         ]);
 
                         verifyHttpExit(controls, spans, writeEntrySpan);
@@ -493,9 +533,9 @@ const globalAgent = require('../../../globalAgent');
                         span => verifyConnection(setupType, span),
                         span => expect(span.data.redis.command).to.equal('multi'),
                         span =>
-                          redisVersion === 'latest'
-                            ? expect(span.data.redis.subCommands).to.deep.equal(['SET', 'GET'])
-                            : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                          redisVersion === legacyVersion
+                            ? expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                            : expect(span.data.redis.subCommands).to.deep.equal(['SET', 'GET'])
                       ]);
 
                       verifyHttpExit(controls, spans, writeEntrySpan);
@@ -535,9 +575,9 @@ const globalAgent = require('../../../globalAgent');
                         span => verifyConnection(setupType, span),
                         span => expect(span.data.redis.command).to.equal('multi'),
                         span =>
-                          redisVersion === 'latest'
-                            ? expect(span.data.redis.subCommands).to.deep.equal(['SET', 'GET'])
-                            : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                          redisVersion === legacyVersion
+                            ? expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                            : expect(span.data.redis.subCommands).to.deep.equal(['SET', 'GET'])
                       ]);
 
                       verifyHttpExit(controls, spans, writeEntrySpan);
@@ -577,9 +617,9 @@ const globalAgent = require('../../../globalAgent');
                         span => verifyConnection(setupType, span),
                         span => expect(span.data.redis.command).to.equal('pipeline'),
                         span =>
-                          redisVersion === 'latest'
-                            ? expect(span.data.redis.subCommands).to.deep.equal(['GET', 'SET'])
-                            : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                          redisVersion === legacyVersion
+                            ? expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                            : expect(span.data.redis.subCommands).to.deep.equal(['GET', 'SET'])
                       ]);
 
                       verifyHttpExit(controls, spans, writeEntrySpan);
@@ -619,9 +659,9 @@ const globalAgent = require('../../../globalAgent');
                         span => verifyConnection(setupType, span),
                         span => expect(span.data.redis.command).to.equal('pipeline'),
                         span =>
-                          redisVersion === 'latest'
-                            ? expect(span.data.redis.subCommands).to.deep.equal(['GET', 'SET'])
-                            : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                          redisVersion === legacyVersion
+                            ? expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                            : expect(span.data.redis.subCommands).to.deep.equal(['GET', 'SET'])
                       ]);
 
                       verifyHttpExit(controls, spans, writeEntrySpan);
@@ -670,7 +710,7 @@ const globalAgent = require('../../../globalAgent');
                   )
                 ));
 
-            if (redisVersion === 'latest') {
+            if (redisVersion !== legacyVersion) {
               it('must trace hvals', () =>
                 controls
                   .sendRequest({
@@ -721,8 +761,12 @@ const globalAgent = require('../../../globalAgent');
                             span => expect(span.n).to.equal('node.http.server'),
                             span => expect(span.data.http.method).to.equal('GET')
                           ]);
+                          // NOTE: v5 SCAN iterators yield collection of keys, enabling multi-key commands like MGET.
+                          // See: https://github.com/redis/node-redis/blob/master/docs/v4-to-v5.md#scan-iterators
+                          const expectedSpanCount = redisVersion === 'latest' ? 1 : 4;
+                          const expectedRedisCommand = redisVersion === 'latest' ? 'mGet' : 'get';
 
-                          expectExactlyNMatching(spans, 4, [
+                          expectExactlyNMatching(spans, expectedSpanCount, [
                             span => expect(span.t).to.equal(entrySpan.t),
                             span => expect(span.p).to.equal(entrySpan.s),
                             span => expect(span.n).to.equal('redis'),
@@ -733,7 +777,7 @@ const globalAgent = require('../../../globalAgent');
                             span => expect(span.error).to.not.exist,
                             span => expect(span.ec).to.equal(0),
                             span => verifyConnection(setupType, span),
-                            span => expect(span.data.redis.command).to.equal('get')
+                            span => expect(span.data.redis.command).to.equal(expectedRedisCommand)
                           ]);
 
                           verifyHttpExit(controls, spans, entrySpan);
@@ -743,40 +787,12 @@ const globalAgent = require('../../../globalAgent');
               }
 
               // See https://redis.js.org/#node-redis-usage-basic-example blocking commands
-              it('blocking', () =>
-                controls
-                  .sendRequest({
-                    method: 'GET',
-                    path: '/blocking'
-                  })
-                  .then(() =>
-                    retry(() =>
-                      agentControls.getSpans().then(spans => {
-                        const entrySpan = expectAtLeastOneMatching(spans, [
-                          span => expect(span.n).to.equal('node.http.server'),
-                          span => expect(span.data.http.method).to.equal('GET')
-                        ]);
-
-                        expectAtLeastOneMatching(spans, [
-                          span => expect(span.t).to.equal(entrySpan.t),
-                          span => expect(span.p).to.equal(entrySpan.s),
-                          span => expect(span.n).to.equal('redis'),
-                          span => expect(span.k).to.equal(constants.EXIT),
-                          span => expect(span.f.e).to.equal(String(controls.getPid())),
-                          span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                          span => expect(span.async).to.not.exist,
-                          span => expect(span.error).to.not.exist,
-                          span => expect(span.ec).to.equal(0),
-                          span => verifyConnection(setupType, span),
-                          span => expect(span.data.redis.command).to.equal('blPop')
-                        ]);
-
-                        verifyHttpExit(controls, spans, entrySpan);
-
-                        expect(spans.length).to.be.eql(4);
-                      })
-                    )
-                  ));
+              // The "Isolation Pool" was introduced via RedisClientPool in v5.
+              // This new pool type requires a different connection mechanism.
+              // As a result, this test is being skipped.
+              if (redisVersion !== 'latest') {
+                it('blocking', () => testBlockingCommand(controls, setupType));
+              }
             }
 
             it('[suppressed] should not trace', async function () {
@@ -865,7 +881,9 @@ const globalAgent = require('../../../globalAgent');
                 controls = new ProcessControls({
                   agentControls: customAgentControls,
                   appPath:
-                    redisVersion === 'latest' ? path.join(__dirname, 'app.js') : path.join(__dirname, 'legacyApp.js'),
+                    redisVersion === legacyVersion
+                      ? path.join(__dirname, 'legacyApp.js')
+                      : path.join(__dirname, 'app.js'),
                   env: {
                     REDIS_VERSION: redisVersion,
                     REDIS_PKG: redisPkg
@@ -914,7 +932,9 @@ const globalAgent = require('../../../globalAgent');
                 controls = new ProcessControls({
                   useGlobalAgent: true,
                   appPath:
-                    redisVersion === 'latest' ? path.join(__dirname, 'app.js') : path.join(__dirname, 'legacyApp.js'),
+                    redisVersion === legacyVersion
+                      ? path.join(__dirname, 'legacyApp.js')
+                      : path.join(__dirname, 'app.js'),
                   env: {
                     REDIS_VERSION: redisVersion,
                     REDIS_PKG: redisPkg,
@@ -1014,7 +1034,9 @@ const globalAgent = require('../../../globalAgent');
                 controls = new ProcessControls({
                   useGlobalAgent: true,
                   appPath:
-                    redisVersion === 'latest' ? path.join(__dirname, 'app.js') : path.join(__dirname, 'legacyApp.js'),
+                    redisVersion === legacyVersion
+                      ? path.join(__dirname, 'legacyApp.js')
+                      : path.join(__dirname, 'app.js'),
                   env: {
                     REDIS_VERSION: redisVersion,
                     REDIS_PKG: redisPkg,
@@ -1113,6 +1135,36 @@ const globalAgent = require('../../../globalAgent');
           } else {
             expect(span.data.redis.connection).to.contain(process.env.REDIS);
           }
+        }
+
+        function testBlockingCommand(controls, setupTypes) {
+          return controls.sendRequest({ method: 'GET', path: '/blocking' }).then(() =>
+            retry(() =>
+              agentControls.getSpans().then(spans => {
+                const entrySpan = expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.data.http.method).to.equal('GET')
+                ]);
+
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => verifyConnection(setupTypes, span),
+                  span => expect(span.data.redis.command).to.equal('blPop')
+                ]);
+
+                verifyHttpExit(controls, spans, entrySpan);
+                expect(spans.length).to.equal(4);
+              })
+            )
+          );
         }
       });
     });

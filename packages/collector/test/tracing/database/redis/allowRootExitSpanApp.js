@@ -19,7 +19,8 @@ require('../../../..')({
 const redis = require(process.env.REDIS_PKG);
 const { delay } = require('@instana/core/test/test_util');
 
-const logPrefix = `Redis allowRootExitSpan App (version: ${process.env.REDIS_VERSION}, 
+const redisVersion = process.env.REDIS_VERSION;
+const logPrefix = `Redis allowRootExitSpan App (version: ${redisVersion}, 
 require: ${process.env.REDIS_PKG}):\t`;
 
 log(logPrefix);
@@ -41,7 +42,12 @@ let client;
     const result = await client.multi().set('key', 'value').get('key').exec();
     log('value:', result);
 
-    await client.quit();
+    // In v5, the quit is replaced by close
+    if (redisVersion === 'latest') {
+      await client.close();
+    } else {
+      await client.quit();
+    }
   } catch (err) {
     log('Failed to connect to Redis:', err);
   }
