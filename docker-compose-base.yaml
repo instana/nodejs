@@ -42,11 +42,8 @@ services:
       redis-cluster-network:
         ipv4_address: 172.30.0.4      
 
-  redis-sentinel-master:
-    image: redis:7.4.3
-    network_mode: host
 
-  redis-sentinel-slave:
+  redis-slave:
     image: redis:7.4.3
     network_mode: host
     command:
