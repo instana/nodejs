@@ -5,12 +5,16 @@
 'use strict';
 
 module.exports = function (redis, log) {
-  if (process.env.REDIS_CLUSTER === 'true') {
-    return require('./cluster')(redis, log);
-  }
-  if (process.env.REDIS_POOL === 'true') {
-    return require('./pool')(redis, log);
-  }
+  const setupType = process.env.REDIS_SETUP_TYPE;
 
-  return require('./default')(redis, log);
+  switch (setupType) {
+    case 'cluster':
+      return require('./cluster')(redis, log);
+    case 'sentinel':
+      return require('./sentinel')(redis, log);
+    case 'pool':
+      return require('./pool')(redis, log);
+    default:
+      return require('./default')(redis, log);
+  }
 };
