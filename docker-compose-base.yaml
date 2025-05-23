@@ -40,9 +40,9 @@ services:
       - 6382:6379
     networks:
       redis-cluster-network:
-        ipv4_address: 172.30.0.4      
+        ipv4_address: 172.30.0.4
 
-
+ # sentinel test setup       
   redis-slave:
     image: redis:7.4.3
     network_mode: host
