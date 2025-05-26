@@ -116,6 +116,21 @@ function instrument(redis) {
       };
     };
 
+    const createSentinelWrap = originalCreateSentinelFn => {
+      return function instrumentedCreateSentinelInstana(createRedisOpts) {
+        const redisSentinel = originalCreateSentinelFn.apply(this, arguments);
+        const addressUrl = createRedisOpts.sentinelRootNodes.map(node => node?.host).join(', ');
+
+        shimAllCommands(redisSentinel, addressUrl, false, redisCommandList);
+
+        if (redisSentinel.multi) {
+          shimmer.wrap(redisSentinel, 'multi', wrapMulti(addressUrl, true));
+        }
+
+        return redisSentinel;
+      };
+    };
+
     const creatPoolWrap = originalCreatePool => {
       return function instrumentedCreateRedisPool(poolOptions) {
         const redisPoolInstance = originalCreatePool.apply(this, arguments);
@@ -187,6 +202,10 @@ function instrument(redis) {
 
     shimmer.wrap(redis, 'createCluster', createClusterWrap);
     shimmer.wrap(redis, 'createClient', createClientWrap);
+    // v5, redis sentinel support was added.
+    if (typeof redis.createSentinel === 'function') {
+      shimmer.wrap(redis, 'createSentinel', createSentinelWrap);
+    }
     instrumentPool();
   } else {
     const redisClientProto = redis.RedisClient.prototype;

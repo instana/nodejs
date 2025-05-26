@@ -40,7 +40,32 @@ services:
       - 6382:6379
     networks:
       redis-cluster-network:
-        ipv4_address: 172.30.0.4      
+        ipv4_address: 172.30.0.4
+
+ # sentinel test setup       
+  redis-slave:
+    image: redis:7.4.3
+    network_mode: host
+    command:
+      [
+        'redis-server',
+        '--replicaof',
+        '127.0.0.1',
+        '6379',
+        '--port',
+        '6380',
+      ]
+
+  redis-sentinel:
+    image: redis:7.4.3
+    network_mode: host
+    command: >
+      sh -c 'echo "sentinel monitor mymaster 127.0.0.1 6379 1" > /etc/sentinel.conf &&
+            echo "sentinel down-after-milliseconds mymaster 1000" >> /etc/sentinel.conf &&
+            echo "sentinel failover-timeout mymaster 5000" >> /etc/sentinel.conf &&
+            echo "sentinel parallel-syncs mymaster 1" >> /etc/sentinel.conf &&
+            echo "sentinel resolve-hostnames no" >> /etc/sentinel.conf &&
+            redis-server /etc/sentinel.conf --sentinel'
 
   mongo:
     image: mongo:8.0.8

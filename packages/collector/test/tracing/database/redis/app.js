@@ -26,10 +26,10 @@ const port = require('../../../test_util/app-port')();
 const cls = require('../../../../../core/src/tracing/cls');
 const app = express();
 const redisVersion = process.env.REDIS_VERSION;
-const isPool = process.env.REDIS_POOL === 'true';
+const isConnectedViaPool = process.env.REDIS_SETUP_TYPE === 'pool';
 const logPrefix =
   `Redis App (version: ${redisVersion}, require: ${process.env.REDIS_PKG}, ` +
-  `cluster: ${process.env.REDIS_CLUSTER}, pid: ${process.pid}):\t`;
+  `setup type: ${process.env.REDIS_SETUP_TYPE}, pid: ${process.pid}):\t`;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 let connectedToRedis = false;
@@ -68,7 +68,7 @@ app.get('/', (req, res) => {
 app.post('/clearkeys', async (req, res) => {
   cls.isTracing() && cls.setTracingLevel('0');
 
-  if (process.env.REDIS_CLUSTER === 'true') {
+  if (process.env.REDIS_SETUP_TYPE === 'cluster') {
     try {
       await Promise.all(
         connection.masters.map(async master => {
@@ -128,7 +128,7 @@ app.get('/hvals', async (req, res) => {
 
 app.get('/blocking', async (req, res) => {
   try {
-    const blPopPromise = isPool
+    const blPopPromise = isConnectedViaPool
       ? connection.blPop('mykey', 0)
       : connection.blPop(redis.commandOptions({ isolated: true }), 'mykey', 0);
 
@@ -137,8 +137,6 @@ app.get('/blocking', async (req, res) => {
 
     await fetch(`http://127.0.0.1:${agentPort}`);
     log('Agent request sent successfully.');
-
-    connection.destroy();
 
     res.sendStatus(200);
   } catch (err) {

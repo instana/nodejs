@@ -16,7 +16,18 @@ const groups = {
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/frameworks"'
   },
   'test:ci:collector:tracing:database': {
-    sidecars: ['memcached', 'mongodb', 'elasticsearch', 'redis', 'couchbase', 'mysql', 'postgres', 'mssql'],
+    sidecars: [
+      'memcached',
+      'mongodb',
+      'elasticsearch',
+      'redis',
+      'redis-slave',
+      'redis-sentinel',
+      'couchbase',
+      'mysql',
+      'postgres',
+      'mssql'
+    ],
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"'
   },
   'test:ci:collector:tracing:cloud:aws:v2': {
@@ -228,7 +239,7 @@ for (const [groupName, { sidecars: groupSidecars, condition }] of Object.entries
     .join('\n');
 
   const fileName = `${sanitizedGroupName}-task.yaml`;
-  const location = path.join(__dirname,  'tasks', 'test-groups', fileName);
+  const location = path.join(__dirname, 'tasks', 'test-groups', fileName);
 
   if (fs.existsSync(location)) {
     fs.unlinkSync(location);

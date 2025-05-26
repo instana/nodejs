@@ -22,18 +22,37 @@ const {
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-// v3 is treated as the legacy version. It does not support Redis clustering or the @redis/client package.
-// Clustering support was introduced in v4:
-// https://github.com/redis/node-redis/blob/master/CHANGELOG.md#v400---24-nov-2021
+// v3 is considered the legacy version.
+// - It does not support Redis clustering.
+// - It does not support the newer `@redis/client` package.
+// Clustering support was officially introduced in v4
+// Redis Sentinel support was added in v5.
 const legacyVersion = 'v3';
 
-// Please run this command on the root folder to start the redis instance:
-// node bin/start-test-containers.js --redis
-//
-// Please set the environment variables to run the tests against azure redis cluster:
-//    export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
-//    export AZURE_REDIS_CLUSTER_PWD=
-['default', 'cluster'].forEach(setupType => {
+/**
+ * Supported Redis setups for local testing:
+ *
+ * 1. Standalone (Default):
+ *    - Start a standalone Redis container with:
+ *        node bin/start-test-containers.js --redis
+ *
+ * 2. Cluster:
+ *    - To run tests against an Azure Redis Cluster, set the following environment variables:
+ *        export AZURE_REDIS_CLUSTER=team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380
+ *        export AZURE_REDIS_CLUSTER_PWD=<your_password_here>
+ *
+ *    - Credentials are available in 1Password. Search for: "Team Node.js: Azure Redis cluster"
+ *
+ * 3. Sentinel:
+ *    - To run tests against Redis Sentinel, start Redis Sentinel setup (1 master, 1 slave, 1 sentinel) with:
+ *        node bin/start-test-containers.js --redis --redis-slave --redis-sentinel
+ */
+const allSetupTypes = ['default', 'cluster', 'sentinel'];
+// Set to one of the setup types to run a single one, or set to false to run all
+const selectedSetupType = false;
+const setupTypesToRun = allSetupTypes.includes(selectedSetupType) ? [selectedSetupType] : allSetupTypes;
+
+setupTypesToRun.forEach(setupType => {
   describe(`tracing/redis ${setupType}`, function () {
     ['redis', '@redis/client'].forEach(redisPkg => {
       describe(`require: ${redisPkg}`, function () {
@@ -43,15 +62,19 @@ const legacyVersion = 'v3';
         ['latest', 'v4', 'v3'].forEach(redisVersion => {
           let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-          if (setupType === 'cluster' && redisVersion === legacyVersion) {
+          const shouldSkipCluster = setupType === 'cluster' && redisVersion === legacyVersion;
+          // NOTE: sentinel support added in v5(latest).
+          const shouldSkipSentinel = setupType === 'sentinel' && redisVersion !== 'latest';
+
+          if (shouldSkipCluster || shouldSkipSentinel) {
             mochaSuiteFn = describe.skip;
           }
-          // NOTE: redis v3 does not support using @redis/client
+
           if (redisVersion === legacyVersion && redisPkg === '@redis/client') {
             mochaSuiteFn = describe.skip;
           }
 
-          if (setupType !== 'cluster') {
+          if (setupType === 'default') {
             mochaSuiteFn('When allowRootExitSpan: true is set', function () {
               globalAgent.setUpCleanUpHooks();
               let controls;
@@ -101,7 +124,7 @@ const legacyVersion = 'v3';
                     env: {
                       REDIS_VERSION: redisVersion,
                       REDIS_PKG: redisPkg,
-                      REDIS_POOL: true
+                      REDIS_SETUP_TYPE: 'pool'
                     }
                   });
 
@@ -139,7 +162,7 @@ const legacyVersion = 'v3';
                 env: {
                   REDIS_VERSION: redisVersion,
                   REDIS_PKG: redisPkg,
-                  REDIS_CLUSTER: setupType === 'cluster'
+                  REDIS_SETUP_TYPE: setupType
                 }
               });
 
@@ -746,8 +769,8 @@ const legacyVersion = 'v3';
                     )
                   ));
 
-              // scanIterator not available on cluster.
-              if (setupType !== 'cluster') {
+              // scanIterator not available on cluster and sentinel
+              if (setupType === 'default') {
                 it('must trace scan iterator usage', () =>
                   controls
                     .sendRequest({
@@ -827,8 +850,8 @@ const legacyVersion = 'v3';
               }
             });
 
-            // Does not make sense for cluster.
-            if (setupType !== 'cluster') {
+            // Does not make sense for cluster and sentinel
+            if (setupType === 'default') {
               it('call two different hosts', async () => {
                 const response = await controls.sendRequest({
                   method: 'POST',
@@ -886,7 +909,8 @@ const legacyVersion = 'v3';
                       : path.join(__dirname, 'app.js'),
                   env: {
                     REDIS_VERSION: redisVersion,
-                    REDIS_PKG: redisPkg
+                    REDIS_PKG: redisPkg,
+                    REDIS_SETUP_TYPE: setupType
                   }
                 });
                 await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
@@ -938,6 +962,7 @@ const legacyVersion = 'v3';
                   env: {
                     REDIS_VERSION: redisVersion,
                     REDIS_PKG: redisPkg,
+                    REDIS_SETUP_TYPE: setupType,
                     INSTANA_IGNORE_ENDPOINTS: 'redis:get,set;'
                   }
                 });
@@ -1040,6 +1065,7 @@ const legacyVersion = 'v3';
                   env: {
                     REDIS_VERSION: redisVersion,
                     REDIS_PKG: redisPkg,
+                    REDIS_SETUP_TYPE: setupType,
                     INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml')
                   }
                 });
@@ -1132,6 +1158,8 @@ const legacyVersion = 'v3';
         function verifyConnection(type, span) {
           if (type === 'cluster') {
             expect(span.data.redis.connection).to.contain(process.env.AZURE_REDIS_CLUSTER);
+          } else if (type === 'sentinel') {
+            expect(span.data.redis.connection).to.contain(process.env.REDIS_SENTINEL_HOST);
           } else {
             expect(span.data.redis.connection).to.contain(process.env.REDIS);
           }

@@ -19,6 +19,24 @@ spec:
             value: "false"
     - name: redis
       image: redis:7.4.3
+ 
+    - name: redis-slave
+      image: redis:7.4.3
+      args: ["redis-server", "--replicaof", "127.0.0.1", "6379", "--port", "6381"]
+      
+    - name: redis-sentinel
+      image: redis:7.4.3
+      args:
+        - "sh"
+        - "-c"
+        - |
+          echo "sentinel monitor mymaster 127.0.0.1 6379 2" > /etc/sentinel.conf
+          echo "sentinel down-after-milliseconds mymaster 1000" >> /etc/sentinel.conf
+          echo "sentinel failover-timeout mymaster 5000" >> /etc/sentinel.conf
+          echo "sentinel parallel-syncs mymaster 1" >> /etc/sentinel.conf
+          echo "sentinel resolve-hostnames no" >> /etc/sentinel.conf
+          redis-server /etc/sentinel.conf --sentinel --port 26379
+       
     - name: couchbase
       image: couchbase/server:7.1.4
       readinessProbe:
