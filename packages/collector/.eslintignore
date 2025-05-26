@@ -3,3 +3,4 @@ test/metrics/app/node_modules/
 test/metrics/npmInstalledApp/node_modules/
 test/tracing/frameworks/tsoa/build/
 test/tracing/misc/typescript/
+test/tracing/misc/esbuild-external/dist
