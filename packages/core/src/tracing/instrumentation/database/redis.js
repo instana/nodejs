@@ -119,7 +119,7 @@ function instrument(redis) {
     const createSentinelWrap = originalCreateSentinelFn => {
       return function instrumentedCreateSentinelInstana(createRedisOpts) {
         const redisSentinel = originalCreateSentinelFn.apply(this, arguments);
-        const addressUrl = createRedisOpts?.sentinelRootNodes.map(node => node?.host).join(', ');
+        const addressUrl = createRedisOpts.sentinelRootNodes.map(node => node?.host).join(', ');
 
         shimAllCommands(redisSentinel, addressUrl, false, redisCommandList);
 

@@ -47,7 +47,12 @@ const legacyVersion = 'v3';
  *    - To run tests against Redis Sentinel, start Redis Sentinel setup (1 master, 1 slave, 1 sentinel) with:
  *        node bin/start-test-containers.js --redis --redis-slave --redis-sentinel
  */
-['default', 'cluster', 'sentinel'].forEach(setupType => {
+const allSetupTypes = ['default', 'cluster', 'sentinel'];
+// Set to one of the setup types to run a single one, or set to false to run all
+const selectedSetupType = false;
+const setupTypesToRun = allSetupTypes.includes(selectedSetupType) ? [selectedSetupType] : allSetupTypes;
+
+setupTypesToRun.forEach(setupType => {
   describe(`tracing/redis ${setupType}`, function () {
     ['redis', '@redis/client'].forEach(redisPkg => {
       describe(`require: ${redisPkg}`, function () {

@@ -138,8 +138,6 @@ app.get('/blocking', async (req, res) => {
     await fetch(`http://127.0.0.1:${agentPort}`);
     log('Agent request sent successfully.');
 
-    connection.destroy();
-
     res.sendStatus(200);
   } catch (err) {
     log('Unexpected err', err);
