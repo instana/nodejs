@@ -1,5 +1,6 @@
 ARG NODEJS_VERSION
-FROM node:${NODEJS_VERSION} AS instana-aws-fargate-build-nodejs
+
+FROM registry.access.redhat.com/ubi9/nodejs-${NODEJS_VERSION}-minimal:latest AS instana-aws-fargate-build-nodejs
 
 ARG package_version
 WORKDIR /instana

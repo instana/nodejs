@@ -1,5 +1,5 @@
 ARG NODEJS_VERSION
-FROM node:${NODEJS_VERSION} AS instana-azure-container-services-build-nodejs
+FROM registry.access.redhat.com/ubi9/nodejs-${NODEJS_VERSION}-minimal:latest AS instana-azure-container-services-build-nodejs
 
 ARG package_version
 
