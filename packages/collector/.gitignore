@@ -11,4 +11,4 @@ test/tracing/misc/typescript/ts_esm/dist
 test/tracing/misc/typescript/ts_cjs/dist
 
 test/tracing/misc/esbuild-external/dist/
-test/tracing/misc/esbuild/server.out.js
+test/tracing/misc/esbuild-external/.env

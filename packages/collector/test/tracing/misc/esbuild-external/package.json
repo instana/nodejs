@@ -1,19 +1,32 @@
 {
-  "name": "esbuild",
+  "name": "instana-test-esbuild",
   "version": "0.17.19",
+  "main": "extension.js",
+  "activationEvents": [
+    "onCommand:instanaAxiosDemo.run"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "instanaAxiosDemo.run",
+        "title": "Run Instana Axios Demo"
+      }
+    ]
+  },
   "dependencies": {
     "@instana/serverless-collector": "4.11.1",
-    "axios": "1.8.2",
-    "esbuild-plugin-replace": "1.4.0"
+    "axios": "1.8.2"
   },
   "devDependencies": {
-    "esbuild": "0.20.2",
-    "@vscode/vsce": "latest"
+    "@vscode/vsce": "latest",
+    "esbuild": "0.20.2"
   },
   "engines": {
     "vscode": "^1.80.0"
   },
+  "repository": "...",
   "scripts": {
-    "build": "node build.mjs && cp package.json dist/ && npm install --prefix dist/"
+    "build": "rm -rf dist && node --env-file=.env build.mjs && cp package.json dist/ && npm install --production --prefix dist/",
+    "package": "cd dist && vsce package"
   }
 }
