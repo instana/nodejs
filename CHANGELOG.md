@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.15.0](https://github.com/instana/nodejs/compare/v4.14.0...v4.15.0) (2025-05-27)
+
+### Features
+
+- added support for redis sentinel ([#1737](https://github.com/instana/nodejs/issues/1737)) ([2f791c1](https://github.com/instana/nodejs/commit/2f791c103881eb80ae37bb5984710d00c6f6ca5a))
+- added support for redis v5 ([#1710](https://github.com/instana/nodejs/issues/1710)) ([1bd7a14](https://github.com/instana/nodejs/commit/1bd7a149d6f7324bbcb8bf2a5f16ef4c46016f9a))
+
 # [4.14.0](https://github.com/instana/nodejs/compare/v4.13.0...v4.14.0) (2025-05-13)
 
 ### Features
