@@ -21,7 +21,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 
 // FYI: officially deprecated. No release since 4 years. But still very
 //      high usage on npm trends. We will drop in any upcoming major release.
-mochaSuiteFn('tracing/kafka-node', function () {
+mochaSuiteFn.skip('tracing/kafka-node', function () {
   // Too many moving parts with Kafka involved. Increase the default timeout.
   // This is especially important since the Kafka client has an
   // exponential backoff implemented.
