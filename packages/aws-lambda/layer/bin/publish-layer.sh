@@ -168,7 +168,7 @@ SUPPORTED_RUNTIMES="nodejs18.x nodejs20.x nodejs22.x"
 ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "../../..")
 NVMRC_PATH="$ROOT_DIR/.nvmrc"
 if [[ -f "$NVMRC_PATH" ]]; then
-  NODEJS_DEV_VERSION=$(cat "$NVMRC_PATH")
+  NODEJS_DEV_VERSION=$(cut -d '.' -f 1 "$NVMRC_PATH")
   echo "Using Node.js version $NODEJS_DEV_VERSION from .nvmrc for Docker build"
 else
   echo "Warning: .nvmrc file not found at $NVMRC_PATH, falling back to default Node.js version 20"
@@ -387,6 +387,8 @@ else
   echo "step 6/9: publishing AWS Lambda layer $LAYER_NAME (skipping)"
 fi
 
+  # NOTE: We currently build and publish only x86-based images. 
+  # Support for ARM-based images is not yet added.(TODO: INSTA-36216)
 if [[ -z $SKIP_DOCKER_IMAGE ]]; then
   echo "Step 7/9: Building Docker image for Lambda layer targeting Node.js version $NODEJS_DEV_VERSION"
 
@@ -398,7 +400,6 @@ if [[ -z $SKIP_DOCKER_IMAGE ]]; then
     docker tag $DOCKER_IMAGE_NAME:$VERSION $DOCKER_IMAGE_NAME:latest
   fi
 
-  # NOTE: We currently publish only x86-based images. Support for ARM-based images is not yet added.(TODO: INSTA-36216)
   if [[ -z $SKIP_DOCKER_IMAGE_PUSH ]]; then
     echo "step 8/9: pushing docker image for container image based Lambda layer"
     echo " - executing docker login:"

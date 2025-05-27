@@ -435,7 +435,7 @@ jobs:
               - |
                   BUILD_LAYER_WITH=npm \
                   NO_PROMPT=true \
-                  SKIP_DOCKER_IMAGE_PUSH=true \
+                  SKIP_DOCKER_IMAGE=true \
                   LAMBDA_ARCHITECTURE=arm64 \
                   CONTAINER_REGISTRY_USER=iamapikey \
                   CONTAINER_REGISTRY_PASSWORD=((concourse-icr-containers-public.password)) \
@@ -477,7 +477,7 @@ jobs:
               - |
                   BUILD_LAYER_WITH=npm \
                   NO_PROMPT=true \
-                  SKIP_DOCKER_IMAGE_PUSH=true \
+                  SKIP_DOCKER_IMAGE=true \
                   PUBLISH_TO_CHINA_REGIONS=true \
                   CONTAINER_REGISTRY_USER=iamapikey \
                   CONTAINER_REGISTRY_PASSWORD=((concourse-icr-containers-public.password)) \
@@ -519,7 +519,7 @@ jobs:
               - |
                   BUILD_LAYER_WITH=npm \
                   NO_PROMPT=true \
-                  SKIP_DOCKER_IMAGE_PUSH=true \
+                  SKIP_DOCKER_IMAGE=true \
                   LAMBDA_ARCHITECTURE=arm64 \
                   PUBLISH_TO_CHINA_REGIONS=true \
                   CONTAINER_REGISTRY_USER=iamapikey \
