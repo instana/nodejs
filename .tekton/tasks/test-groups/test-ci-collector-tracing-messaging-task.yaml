@@ -43,7 +43,7 @@ spec:
           - name: "SCHEMA_REGISTRY_LISTENERS"
             value: "http://schema-registry:8081"
           - name: "SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS"
-            value: "PLAINTEXT://kafka:9092,PLAINTEXT_INTERNAL://localhost:9092"
+            value: "PLAINTEXT://kafka:9092,PLAINTEXT_INTERNAL://localhost:29092"
           - name: "SCHEMA_REGISTRY_DEBUG"
             value: "true"
       readinessProbe:
