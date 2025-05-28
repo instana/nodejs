@@ -159,11 +159,19 @@ for (const [groupName, { sidecars: groupSidecars, condition }] of Object.entries
       if (sidecar.args) {
         let res = 'args:\n';
 
-        res += sidecar.args
-          .map(a => {
-            return `          - "${a}"\n`;
-          })
-          .join('');
+        sidecar.args.forEach(arg => {
+          if (typeof arg === 'string' && (arg.includes('\n') || arg.includes('&&'))) {
+            res += `          - |\n`;
+            const lines = arg.split('\n').length > 1 ? 
+                         arg.split('\n') : 
+                         arg.split('&&').map(cmd => cmd.trim());
+            lines.forEach(line => {
+              res += `            ${line}\n`;
+            });
+          } else {
+            res += `          - ${JSON.stringify(arg)}\n`;
+          }
+        });
 
         templ = templ.replace('{{args}}', res);
       } else {
