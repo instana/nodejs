@@ -125,16 +125,21 @@ spec:
         echo "🔁 Starting readiness check loop..."
 
         while true; do
-          echo "🔄 Pinging Kafka on 127.0.0.1:29092..."
+          echo "🔄 Pinging Kafka on 127.0.0.1:29092 and 9092..."
           if nc -z 127.0.0.1 29092; then
             echo "✅ Kafka is ready!"
             exit 0
           else
             if nc -z 127.0.0.1 9092; then
               echo "✅ Kafka is ready!"
+              exit 0
             else
-              echo "❌ Kafka not ready. Retrying in 30 seconds..."
-              sleep 30
+              if curl -sf http://127.0.0.1:8081/ > /dev/null; then
+                exit 0
+              else
+                echo "❌ Kafka not ready. Retrying in 30 seconds..."
+                sleep 30
+              fi
             fi
           fi
         done
