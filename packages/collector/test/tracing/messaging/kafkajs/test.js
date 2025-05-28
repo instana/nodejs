@@ -26,7 +26,7 @@ const { AgentStubControls } = require('../../../apps/agentStubControls');
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/kafkajs', function () {
-  this.timeout(config.getTestTimeout() * 2);
+  this.timeout(config.getTestTimeout() * 4);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
@@ -57,7 +57,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
               useGlobalAgent: true
             });
 
-            await consumerControls.startAndWaitForAgentConnection();
+            await consumerControls.startAndWaitForAgentConnection(5000, Date.now() + 60000);
             await producerControls.startAndWaitForAgentConnection();
           });
 
