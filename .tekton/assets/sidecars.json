@@ -78,6 +78,7 @@
           "name": "KAFKA_CREATE_TOPICS",
           "value": "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
         },
+        { "name": "KAFKA_LISTENERS", "value": "PLAINTEXT://:9092,EXTERNAL://:29092" },
         { "name": "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP", "value": "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT" },
         {
           "name": "KAFKA_ADVERTISED_LISTENERS",
