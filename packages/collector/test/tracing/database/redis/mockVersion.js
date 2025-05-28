@@ -4,6 +4,7 @@
 
 'use strict';
 
+const path = require('path');
 const mock = require('@instana/core/test/test_util/mockRequire');
 const hook = require('../../../../../core/src/util/hook');
 
@@ -21,9 +22,12 @@ if (REDIS_PKG === 'redis') {
   mockedModuleName = REDIS_VERSION === 'latest' ? '@redis/client' : `@redis/client-${REDIS_VERSION}`;
 }
 
-if (mockedModuleName !== REDIS_PKG) {
-  mock(REDIS_PKG, mockedModuleName);
-}
+// The 'redis' package is also installed in the collector package due to the typeorm dependency.
+// To ensure we override the default resolution (which would load 'redis' from the collector's node_modules),
+// we explicitly point to the root-level node_modules.
+const nodeModulesPath = path.resolve(__dirname, '../../../../../../node_modules');
+const mockModuleFullPath = path.join(nodeModulesPath, mockedModuleName);
+mock(REDIS_PKG, mockModuleFullPath);
 
 const originalOnFileLoad = hook.onFileLoad;
 

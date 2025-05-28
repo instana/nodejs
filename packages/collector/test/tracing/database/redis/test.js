@@ -73,8 +73,8 @@ setupTypesToRun.forEach(setupType => {
           if (redisVersion === legacyVersion && redisPkg === '@redis/client') {
             mochaSuiteFn = describe.skip;
           }
-
-          if (setupType === 'default') {
+          // The allowRootExitSpanApp is compatable with Redis v4 and v5 (latest).
+          if (redisVersion !== legacyVersion) {
             mochaSuiteFn('When allowRootExitSpan: true is set', function () {
               globalAgent.setUpCleanUpHooks();
               let controls;
@@ -85,7 +85,8 @@ setupTypesToRun.forEach(setupType => {
                   appPath: path.join(__dirname, 'allowRootExitSpanApp'),
                   env: {
                     REDIS_VERSION: redisVersion,
-                    REDIS_PKG: redisPkg
+                    REDIS_PKG: redisPkg,
+                    REDIS_SETUP_TYPE: setupType
                   }
                 });
 
@@ -94,6 +95,14 @@ setupTypesToRun.forEach(setupType => {
 
               beforeEach(async () => {
                 await agentControls.clearReceivedTraceData();
+              });
+
+              after(async () => {
+                await controls.stop();
+              });
+
+              afterEach(async () => {
+                await controls.clearIpcMessages();
               });
 
               it('must trace exit span', async function () {
@@ -112,7 +121,8 @@ setupTypesToRun.forEach(setupType => {
             });
             // In v5, Redis moved “Isolation Pool” into RedisClientPool.
             // see: https://github.com/redis/node-redis/blob/master/docs/pool.md
-            if (redisVersion === 'latest') {
+            // Only for this test the connection is established via the pool.
+            if (redisVersion === 'latest' && setupType === 'default') {
               mochaSuiteFn('When connected via clientpool', function () {
                 globalAgent.setUpCleanUpHooks();
                 let controls;

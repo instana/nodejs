@@ -10,6 +10,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('./mockVersion');
+
 require('../../../..')({
   tracing: {
     allowRootExitSpan: true
@@ -19,35 +21,25 @@ require('../../../..')({
 const redis = require(process.env.REDIS_PKG);
 const { delay } = require('@instana/core/test/test_util');
 
+const connect = require('./connect-via');
 const redisVersion = process.env.REDIS_VERSION;
-const logPrefix = `Redis allowRootExitSpan App (version: ${redisVersion}, 
-require: ${process.env.REDIS_PKG}):\t`;
+const logPrefix =
+  `Redis allowRootExitSpan App (version: ${redisVersion}, require: ${process.env.REDIS_PKG}, ` +
+  `setup type: ${process.env.REDIS_SETUP_TYPE}, pid: ${process.pid}):\t`;
 
 log(logPrefix);
 
 let client;
 
-(async function connectRedis() {
-  await delay(1000);
-
+(async function main() {
   try {
-    client = redis.createClient({ url: `redis://${process.env.REDIS}` });
-    client.on('error', err => {
-      log('Redis client error:', err);
-    });
+    await delay(1000);
 
-    await client.connect();
-    log('Redis connection established');
+    const { connection1 } = await connect(redis, log);
+    client = connection1;
 
     const result = await client.multi().set('key', 'value').get('key').exec();
     log('value:', result);
-
-    // In v5, the quit is replaced by close
-    if (redisVersion === 'latest') {
-      await client.close();
-    } else {
-      await client.quit();
-    }
   } catch (err) {
     log('Failed to connect to Redis:', err);
   }
