@@ -128,6 +128,26 @@ spec:
 
           PORT=29092
 
+          echo "🔍 Überprüfe, welcher Prozess auf Port 29092 lauscht..."
+          
+
+          echo "🔍 Versuche: ss -ltnp | grep 29092"
+          if ss -ltnp 2>/dev/null | grep 29092; then
+            echo "✅ ss hat den Port gefunden."
+          else
+            echo "❌ ss konnte den Port nicht finden oder ist nicht installiert."
+          fi
+
+          echo ""
+          echo "🔍 Versuche: netstat -tulpen | grep 29092"
+          if netstat -tulpen 2>/dev/null | grep 29092; then
+            echo "✅ netstat hat den Port gefunden."
+          else
+            echo "❌ netstat konnte den Port nicht finden oder ist nicht installiert."
+          fi
+
+
+
           if lsof -i :$PORT >/dev/null 2>&1; then
             echo "✅ Port $PORT ist belegt."
             lsof -i :$PORT
