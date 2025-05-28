@@ -139,6 +139,7 @@ spec:
           
 
           lsof -nP -i :$PORT
+          lsof -nP -iTCP:29092 -sTCP:LISTEN
 
 
           echo "🔍 Versuche: ss -ltnp | grep 29092"
