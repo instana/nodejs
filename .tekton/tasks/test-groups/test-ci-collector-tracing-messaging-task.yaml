@@ -18,22 +18,20 @@ spec:
           - name: "KAFKA_BROKER_ID"
             value: "1"
           - name: "KAFKA_ZOOKEEPER_CONNECT"
-            value: "127.0.0.1:2181"
+            value: "localhost:2181"
           - name: "KAFKA_CREATE_TOPICS"
             value: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
           - name: "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP"
             value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
           - name: "KAFKA_ADVERTISED_LISTENERS"
-            value: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-          - name: KAFKA_LISTENERS
-            value: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
-          - name: KAFKA_INTER_BROKER_LISTENER_NAME
-            value: PLAINTEXT
+            value: "PLAINTEXT://localhost:9092"
+          - name: "KAFKA_LISTENERS"
+            value: "PLAINTEXT://0.0.0.0:9092"
           - name: "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR"
             value: "1"
       readinessProbe:
           tcpSocket:
-            port: 29092 
+            port: 9092 
           initialDelaySeconds: 30
           periodSeconds: 2
           timeoutSeconds: 60
@@ -43,11 +41,11 @@ spec:
           - name: "SCHEMA_REGISTRY_HOST_NAME"
             value: "schema-registry"
           - name: "SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL"
-            value: "127.0.0.1:2181"
+            value: "localhost:2181"
           - name: "SCHEMA_REGISTRY_LISTENERS"
-            value: "http://127.0.0.1:8081"
+            value: "http://localhost:8081"
           - name: "SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS"
-            value: "PLAINTEXT://127.0.0.1:9092,PLAINTEXT_INTERNAL://127.0.0.1:29092"
+            value: "PLAINTEXT://localhost:9092"
           - name: "SCHEMA_REGISTRY_DEBUG"
             value: "true"
       readinessProbe:
@@ -121,66 +119,6 @@ spec:
     - name: output
       mountPath: /artifacts
   steps:
-    - name: wait-for-kafka
-      image: curlimages/curl
-      script: |
-        #!/bin/sh
-
-        echo "🔁 Starting readiness check loop..."
-
-        apt update
-        apt install iproute2 net-tools
-
-        while true; do
-
-          PORT=29092
-
-          echo "🔍 Überprüfe, welcher Prozess auf Port 29092 lauscht..."
-          
-
-          lsof -nP -i :$PORT
-          lsof -nP -iTCP:29092 -sTCP:LISTEN
-
-
-          echo "🔍 Versuche: ss -ltnp | grep 29092"
-          if ss -ltnp 2>/dev/null | grep 29092; then
-            echo "✅ ss hat den Port gefunden."
-          else
-            echo "❌ ss konnte den Port nicht finden oder ist nicht installiert."
-          fi
-
-          echo ""
-          echo "🔍 Versuche: netstat -tulpen | grep 29092"
-          if netstat -tulpen 2>/dev/null | grep 29092; then
-            echo "✅ netstat hat den Port gefunden."
-          else
-            echo "❌ netstat konnte den Port nicht finden oder ist nicht installiert."
-          fi
-
-
-
-          if lsof -i :$PORT >/dev/null 2>&1; then
-            echo "✅ Port $PORT ist belegt."
-            lsof -i :$PORT
-          else
-            echo "🟢 Port $PORT ist frei."
-          fi
-
-          echo "🔄 Pinging Kafka on 127.0.0.1:29092 and 9092..."
-          if nc -z 0.0.0.0 29092; then
-            echo "✅ Kafka is ready!"
-            exit 0
-          else
-            if nc -z 0.0.0.0 9092; then
-              echo "✅ Kafka is ready!"
-              exit 0
-            else
-              echo "❌ Kafka not ready. Retrying in 30 seconds..."
-              sleep 30
-            fi
-          fi
-        done
-
     - name: run-test-group
       env:
         - name: AWS_ACCESS_KEY_ID
