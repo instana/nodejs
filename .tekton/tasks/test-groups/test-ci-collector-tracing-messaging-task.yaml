@@ -144,12 +144,8 @@ spec:
               echo "✅ Kafka is ready!"
               exit 0
             else
-              if nc -z 127.0.0.1 5672; then
-                echo "Can ping RABBIT!!!"
-              else
-                echo "❌ Kafka not ready. Retrying in 30 seconds..."
-                sleep 30
-              fi
+              echo "❌ Kafka not ready. Retrying in 30 seconds..."
+              sleep 30
             fi
           fi
         done
