@@ -136,11 +136,11 @@ spec:
           fi
 
           echo "🔄 Pinging Kafka on 127.0.0.1:29092 and 9092..."
-          if nc -z 127.0.0.1 29092; then
+          if nc -z 0.0.0.0 29092; then
             echo "✅ Kafka is ready!"
             exit 0
           else
-            if nc -z 127.0.0.1 9092; then
+            if nc -z 0.0.0.0 9092; then
               echo "✅ Kafka is ready!"
               exit 0
             else
