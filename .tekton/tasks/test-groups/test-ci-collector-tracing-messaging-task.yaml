@@ -21,8 +21,6 @@ spec:
             value: "127.0.0.1:2181"
           - name: "KAFKA_CREATE_TOPICS"
             value: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
-          - name: "KAFKA_LISTENERS"
-            value: "PLAINTEXT://:9092,EXTERNAL://:29092"
           - name: "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP"
             value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
           - name: "KAFKA_ADVERTISED_LISTENERS"
@@ -31,7 +29,7 @@ spec:
             value: "1"
       readinessProbe:
           tcpSocket:
-            port: 8178
+            port: 29092 
           initialDelaySeconds: 30
           periodSeconds: 2
           timeoutSeconds: 60
@@ -119,6 +117,24 @@ spec:
     - name: output
       mountPath: /artifacts
   steps:
+    - name: wait-for-kafka
+      image: curlimages/curl
+      script: |
+        #!/bin/sh
+
+        echo "🔁 Starting readiness check loop..."
+
+        while true; do
+          echo "🔄 Pinging Kafka on 127.0.0.1:29092..."
+          if nc -z 127.0.0.1 29092; then
+            echo "✅ Kafka is ready!"
+            exit 0
+          else
+            echo "❌ Kafka not ready. Retrying in 30 seconds..."
+            sleep 30
+          fi
+        done
+
     - name: run-test-group
       env:
         - name: AWS_ACCESS_KEY_ID
