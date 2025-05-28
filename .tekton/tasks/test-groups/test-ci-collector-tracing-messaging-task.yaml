@@ -25,6 +25,10 @@ spec:
             value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
           - name: "KAFKA_ADVERTISED_LISTENERS"
             value: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+          - name: KAFKA_LISTENERS
+            value: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+          - name: KAFKA_INTER_BROKER_LISTENER_NAME
+            value: PLAINTEXT
           - name: "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR"
             value: "1"
       readinessProbe:
