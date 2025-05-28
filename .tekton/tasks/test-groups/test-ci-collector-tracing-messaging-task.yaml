@@ -124,6 +124,9 @@ spec:
 
         echo "🔁 Starting readiness check loop..."
 
+        apt update
+        apt install iproute2 net-tools
+
         while true; do
 
           PORT=29092
