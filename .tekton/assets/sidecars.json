@@ -54,7 +54,7 @@
         { "name": "SCHEMA_REGISTRY_LISTENERS", "value": "http://localhost:8081" },
         {
           "name": "SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS",
-          "value": "PLAINTEXT://localhost:9092"
+          "value": "PLAINTEXT://kafka:9092"
         },
         { "name": "SCHEMA_REGISTRY_DEBUG", "value": "true" }
       ],
@@ -81,7 +81,7 @@
         { "name": "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP", "value": "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT" },
         {
           "name": "KAFKA_ADVERTISED_LISTENERS",
-          "value": "PLAINTEXT://localhost:9092"
+          "value": "PLAINTEXT://kafka:9092"
         },
         {
           "name": "KAFKA_LISTENERS",
