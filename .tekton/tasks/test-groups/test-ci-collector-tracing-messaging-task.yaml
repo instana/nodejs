@@ -135,6 +135,7 @@ spec:
             else
               echo "❌ Kafka not ready. Retrying in 30 seconds..."
               sleep 30
+            fi
           fi
         done
 
