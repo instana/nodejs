@@ -26,10 +26,14 @@ Module._load = function (request, parent) {
 
   // eslint-disable-next-line no-prototype-builtins
   if (pendingMockExports.hasOwnProperty(fullFilePath)) {
-    toExport =
-      typeof pendingMockExports[fullFilePath] === 'string'
-        ? require(pendingMockExports[fullFilePath])
-        : pendingMockExports[fullFilePath];
+    const mockPath = pendingMockExports[fullFilePath];
+
+    // NOTE: To prevent infinite recursion caused by calling `require()` within the overridden
+    // Module._load, we explicitly use the original unpatched loader to load the mock module.
+    // This is especially important when mocking modules using absolute paths, such as those
+    // from the root-level node_modules. Calling `require()` here would invoke this same function
+    // again, leading to a stack overflow. Using `originalLoader` avoids triggering the hook itself.
+    toExport = typeof mockPath === 'string' ? originalLoader(mockPath, parent) : mockPath;
   }
 
   return toExport || originalLoader.apply(this, arguments);
