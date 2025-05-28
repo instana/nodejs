@@ -125,6 +125,16 @@ spec:
         echo "🔁 Starting readiness check loop..."
 
         while true; do
+
+          PORT=29092
+
+          if lsof -i :$PORT >/dev/null 2>&1; then
+            echo "✅ Port $PORT ist belegt."
+            lsof -i :$PORT
+          else
+            echo "🟢 Port $PORT ist frei."
+          fi
+
           echo "🔄 Pinging Kafka on 127.0.0.1:29092 and 9092..."
           if nc -z 127.0.0.1 29092; then
             echo "✅ Kafka is ready!"
