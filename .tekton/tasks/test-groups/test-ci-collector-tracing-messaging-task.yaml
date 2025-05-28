@@ -138,6 +138,9 @@ spec:
           echo "🔍 Überprüfe, welcher Prozess auf Port 29092 lauscht..."
           
 
+          lsof -nP -i :$PORT
+
+
           echo "🔍 Versuche: ss -ltnp | grep 29092"
           if ss -ltnp 2>/dev/null | grep 29092; then
             echo "✅ ss hat den Port gefunden."
