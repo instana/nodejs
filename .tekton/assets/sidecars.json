@@ -88,7 +88,8 @@
           "name": "KAFKA_LISTENERS",
           "value": "PLAINTEXT://0.0.0.0:9092"
         },
-        { "name": "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR", "value": "1" }
+        { "name": "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR", "value": "1" },
+        { "name": "KAFKA_DEFAULT_REPLICATION_FACTOR", "value": "1" }
       ],
       "readinessProbe": {
         "tcpSocket": {
