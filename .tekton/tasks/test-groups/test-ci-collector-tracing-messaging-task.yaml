@@ -50,14 +50,14 @@ spec:
           - name: "SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL"
             value: "localhost:2181"
           - name: "SCHEMA_REGISTRY_LISTENERS"
-            value: "http://localhost:8081"
+            value: "http://0.0.0.0:8081"
           - name: "SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS"
             value: "PLAINTEXT://localhost:29092"
           - name: "SCHEMA_REGISTRY_DEBUG"
             value: "true"
       readinessProbe:
           httpGet:
-            path: /subjects 
+            path: / 
             port: 8081 
           initialDelaySeconds: 5
           periodSeconds: 2
