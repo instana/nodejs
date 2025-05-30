@@ -89,7 +89,11 @@
           "value": "EXTERNAL://:9092,PLAINTEXT://:29092"
         },
         { "name": "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR", "value": "1" },
-        { "name": "KAFKA_DEFAULT_REPLICATION_FACTOR", "value": "1" }
+        { "name": "KAFKA_DEFAULT_REPLICATION_FACTOR", "value": "1" },
+        {
+          "name": "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP",
+          "value": "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT"
+        }
       ],
       "readinessProbe": {
         "tcpSocket": {
