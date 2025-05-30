@@ -18,6 +18,7 @@ const supportedVersion = require('./supportedVersion');
 const { otelInstrumentations } = require('./opentelemetry-instrumentations');
 const cls = require('./cls');
 const coreUtil = require('../util');
+const { isInstrumentationDisabled } = require('../util/disableInstrumentation');
 
 let tracingEnabled = false;
 let tracingActivated = false;
@@ -143,24 +144,6 @@ exports.supportedVersion = supportedVersion;
 exports.util = tracingUtil;
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} cfg
- * @param {string} instrumentationKey
- */
-const isInstrumentationDisabled = (cfg, instrumentationKey) => {
-  // Extracts the instrumentation name using the pattern '.\/instrumentation\/[^/]*\/(.*)',
-  // capturing the part after '/instrumentation/.../'. If this pattern doesn't match,
-  // it falls back to extracting the last part of the path after the final '/'.
-  // This is primarily implemented to handle customInstrumentation cases.
-  const matchResult = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/);
-  const extractedInstrumentationName = matchResult ? matchResult[1] : instrumentationKey.match(/\/([^/]+)$/)[1];
-  return (
-    cfg.tracing.disable.includes(extractedInstrumentationName.toLowerCase()) ||
-    (instrumentationModules[instrumentationKey].instrumentationName &&
-      cfg.tracing.disable.includes(instrumentationModules[instrumentationKey].instrumentationName))
-  );
-};
-
-/**
  * @param {Array.<InstanaInstrumentedModule>} _additionalInstrumentationModules
  */
 exports.registerAdditionalInstrumentations = function registerAdditionalInstrumentations(
@@ -270,7 +253,7 @@ function initInstrumenations(_config) {
     instrumentations.forEach(instrumentationKey => {
       instrumentationModules[instrumentationKey] = require(instrumentationKey);
 
-      if (!isInstrumentationDisabled(_config, instrumentationKey)) {
+      if (!isInstrumentationDisabled(instrumentationModules, _config, instrumentationKey)) {
         instrumentationModules[instrumentationKey].init(_config);
       }
 
@@ -303,7 +286,7 @@ exports.activate = function activate(extraConfig = {}) {
 
     if (automaticTracingEnabled) {
       instrumentations.forEach(instrumentationKey => {
-        if (!isInstrumentationDisabled(config, instrumentationKey)) {
+        if (!isInstrumentationDisabled(instrumentationModules, config, instrumentationKey)) {
           instrumentationModules[instrumentationKey].activate(extraConfig);
         }
       });
