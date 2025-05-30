@@ -61,7 +61,7 @@
       ],
       "readinessProbe": {
         "httpGet": {
-          "path": "/",
+          "path": "/subjects",
           "port": 8081
         },
         "initialDelaySeconds": 5,
