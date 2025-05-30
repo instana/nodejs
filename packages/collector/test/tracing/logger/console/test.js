@@ -131,6 +131,54 @@ mochaSuiteFn('tracing/logger/console', function () {
       ));
   });
 
+  describe('when disable logging is enabled', () => {
+    globalAgent.setUpCleanUpHooks();
+
+    before(async () => {
+      controls = new ProcessControls({
+        useGlobalAgent: true,
+        dirname: __dirname,
+        env: {
+          INSTANA_TRACING_LOGGING_DISABLED: true
+        }
+      });
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    afterEach(async () => {
+      await controls.clearIpcMessages();
+    });
+    it('must not trace warn', () => {
+      return controls.sendRequest({ path: '/warn' }).then(() =>
+        testUtils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const httpEntrySpan = verifyHttpRootEntry({
+              spans,
+              apiPath: '/warn',
+              pid: String(controls.getPid())
+            });
+
+            verifyHttpExit({
+              spans,
+              parent: httpEntrySpan,
+              pid: String(controls.getPid())
+            });
+            // expect(testUtils.getSpansByName(spans, 'log.console').length).to.equal(1);
+            expect(testUtils.getSpansByName(spans, 'log.console')).to.be.empty;
+          })
+        )
+      );
+    });
+  });
+
   function runAndDoNotTrace(url) {
     return controls.sendRequest({ path: `/${url}` }).then(() =>
       testUtils.retry(() =>
