@@ -82,7 +82,7 @@
         { "name": "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP", "value": "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT" },
         {
           "name": "KAFKA_ADVERTISED_LISTENERS",
-          "value": "PLAINTEXT://kafka:9092"
+          "value": "PLAINTEXT://localhost:9092"
         },
         {
           "name": "KAFKA_LISTENERS",
