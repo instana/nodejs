@@ -41,7 +41,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 60
     - name: schema-registry
-      image: confluentinc/cp-schema-registry:7.9.1
+      image: confluentinc/cp-schema-registry:7.9.0
       env:
           - name: "SCHEMA_REGISTRY_HOST_NAME"
             value: "schema-registry"
