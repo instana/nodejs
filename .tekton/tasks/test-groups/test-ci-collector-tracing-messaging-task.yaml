@@ -34,6 +34,8 @@ spec:
             value: "1"
           - name: "KAFKA_DEFAULT_REPLICATION_FACTOR"
             value: "1"
+          - name: "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP"
+            value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT"
       readinessProbe:
           tcpSocket:
             port: 9092 
