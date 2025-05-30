@@ -5,7 +5,7 @@ metadata:
 spec:
   sidecars:
     - name: zookeeper
-      image: confluentinc/cp-zookeeper:7.9.0
+      image: confluentinc/cp-zookeeper:7.9.1
       env:
           - name: "ZOOKEEPER_CLIENT_PORT"
             value: "2181"
@@ -16,7 +16,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 30
     - name: kafka
-      image: confluentinc/cp-kafka:7.9.0
+      image: confluentinc/cp-kafka:7.9.1
       env:
           - name: "KAFKA_BROKER_ID"
             value: "1"
@@ -41,7 +41,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 60
     - name: schema-registry
-      image: confluentinc/cp-schema-registry:7.9.0
+      image: confluentinc/cp-schema-registry:7.9.1
       env:
           - name: "SCHEMA_REGISTRY_HOST_NAME"
             value: "schema-registry"
