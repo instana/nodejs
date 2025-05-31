@@ -4,6 +4,26 @@
 
 'use strict';
 
+/** @type {import('../util/normalizeConfig').InstanaConfig} */
+let config;
+
+/** @type {import('../util/normalizeConfig').AgentConfig} */
+let extraConfig;
+
+/**
+ * @param {import('../util/normalizeConfig').InstanaConfig} _config
+ */
+function init(_config) {
+  config = _config;
+}
+
+/**
+ * @param {import('../util/normalizeConfig').AgentConfig} _extraConfig
+ */
+function activate(_extraConfig) {
+  extraConfig = _extraConfig;
+}
+
 /**
  * @param {string} instrumentationKey
  */
@@ -27,19 +47,49 @@ function extractCategoryPath(instrumentationKey) {
 }
 
 /**
- * @param {Object.<string, import('../tracing/index').InstanaInstrumentedModule>} instrumentationModules
- * @param {import('../util/normalizeConfig').InstanaConfig} config
- * @param {string} instrumentationKey
+ * @param {*} cfg Configuration object to check
+ * @param {string} category
+ * @param {string} module
+ * @param {string} moduleName
+ */
+function isDisabledInConfig(cfg, category, module, moduleName) {
+  return (
+    cfg.tracing[category]?.enabled === false ||
+    cfg.tracing[category]?.[module]?.enabled === false ||
+    cfg.tracing[moduleName]?.enabled === false
+  );
+}
+
+/**
+ * @param {string} category Instrumentation category
+ * @param {string} module Module name
  * @returns {boolean}
  */
-function isInstrumentationDisabled(instrumentationModules, config, instrumentationKey) {
-  const moduleName = extractModuleName(instrumentationKey);
+function isExplicitlyEnabled(category, module) {
+  // @ts-ignore
+  if (config.tracing?.[category]?.[module]?.enabled === true) {
+    return true;
+  }
+  // @ts-ignore
+  if (extraConfig?.tracing?.[category]?.[module]?.enabled === true) {
+    return true;
+  }
+  return false;
+}
 
+/**
+ * @param {Object} options
+ * @param {Object.<string, import('../tracing/index').InstanaInstrumentedModule>} [options.instrumentationModules]
+ * @param {string} options.instrumentationKey - Key identifying the instrumentation module.
+ * @returns {boolean} True if instrumentation is disabled; otherwise, false.
+ */
+function isInstrumentationDisabled({ instrumentationModules = {}, instrumentationKey }) {
+  const moduleName = extractModuleName(instrumentationKey);
   // Case 1: Disabled via disabledTracers config
   if (
-    config.tracing.disabledTracers.includes(moduleName) ||
+    config.tracing?.disabledTracers?.includes(moduleName) ||
     (instrumentationModules[instrumentationKey]?.instrumentationName &&
-      config.tracing.disabledTracers.includes(instrumentationModules[instrumentationKey].instrumentationName))
+      config.tracing?.disabledTracers?.includes(instrumentationModules[instrumentationKey].instrumentationName))
   ) {
     return true;
   }
@@ -50,13 +100,17 @@ function isInstrumentationDisabled(instrumentationModules, config, instrumentati
   if (categoryPath) {
     const [category, module] = categoryPath;
 
-    // @ts-ignore
-    if (config.tracing[category]?.enabled === false) {
-      return true;
+    // Check if explicitly enabled in either config (enable overrides disable)
+    if (isExplicitlyEnabled(category, module)) {
+      return false;
     }
 
-    // @ts-ignore
-    if (config.tracing[category]?.[module]?.enabled === false || config.tracing[moduleName]?.enabled === false) {
+    // Check if disabled in either config
+    // First prio in in-code or env variable and last prio agent
+    if (
+      isDisabledInConfig(config, category, module, moduleName) ||
+      isDisabledInConfig(extraConfig, category, module, moduleName)
+    ) {
       return true;
     }
   }
@@ -65,5 +119,7 @@ function isInstrumentationDisabled(instrumentationModules, config, instrumentati
 }
 
 module.exports = {
+  init,
+  activate,
   isInstrumentationDisabled
 };

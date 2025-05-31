@@ -226,6 +226,7 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
     tracingHeaders.init(config);
     spanBuffer.init(config, downstreamConnection);
     opentracing.init(config, automaticTracingEnabled, processIdentityProvider);
+    coreUtil.disableInstrumentation.init(config);
 
     if (automaticTracingEnabled) {
       initInstrumenations(config);
@@ -252,8 +253,12 @@ function initInstrumenations(_config) {
   if (!instrumenationsInitialized) {
     instrumentations.forEach(instrumentationKey => {
       instrumentationModules[instrumentationKey] = require(instrumentationKey);
-
-      if (!isInstrumentationDisabled(instrumentationModules, _config, instrumentationKey)) {
+      if (
+        !isInstrumentationDisabled({
+          instrumentationModules,
+          instrumentationKey
+        })
+      ) {
         instrumentationModules[instrumentationKey].init(_config);
       }
 
@@ -286,7 +291,12 @@ exports.activate = function activate(extraConfig = {}) {
 
     if (automaticTracingEnabled) {
       instrumentations.forEach(instrumentationKey => {
-        if (!isInstrumentationDisabled(instrumentationModules, config, instrumentationKey)) {
+        if (
+          !isInstrumentationDisabled({
+            instrumentationModules,
+            instrumentationKey
+          })
+        ) {
           instrumentationModules[instrumentationKey].activate(extraConfig);
         }
       });

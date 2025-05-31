@@ -820,7 +820,7 @@ function normalizeLogging(config) {
   }
   if (process.env['INSTANA_TRACING_LOGGING_DISABLED'] === 'true') {
     logger.info(
-      'Disabling logginggit is explicitly disabled via environment variable "INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION".'
+      'Disabling logging is explicitly disabled via environment variable "INSTANA_TRACING_LOGGING_DISABLED".'
     );
     config.tracing.loggers = { enabled: false };
     return;
