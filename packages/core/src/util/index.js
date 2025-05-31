@@ -23,6 +23,7 @@ const preloadFlags = require('./getPreloadFlags');
 const configNormalizers = require('./configNormalizers');
 const spanFilter = require('./spanFilter');
 const yamlReader = require('./yamlReader');
+const disableInstrumentation = require('./disableInstrumentation');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -41,6 +42,7 @@ exports.init = function init(config) {
   spanFilter.init(config);
   yamlReader.init(config);
   configNormalizers.init(config);
+  disableInstrumentation.init(config);
 };
 
 exports.applicationUnderMonitoring = applicationUnderMonitoring;
@@ -92,3 +94,4 @@ exports.esm = esm;
 exports.configNormalizers = configNormalizers;
 exports.spanFilter = spanFilter;
 exports.yamlReader = yamlReader;
+exports.disableInstrumentation = disableInstrumentation;
