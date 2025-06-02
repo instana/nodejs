@@ -491,11 +491,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-logger-task
+    - name: test-ci-collector-tracing-logging-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-logger
+        name: test-ci-collector-tracing-logging
       params:
         - name: node-version
           value: $(params.node-version)
