@@ -251,7 +251,12 @@ function createContext(callback) {
   return context;
 }
 
-function createEvent(error, trigger, eventOpts = { payloadFormatVersion: '1.0' }) {
+function createEvent(error, trigger, eventOpts) {
+  eventOpts = {
+    payloadFormatVersion: '1.0',
+    ...eventOpts
+  };
+
   /* eslint-disable default-case */
   const event = { version: eventOpts.payloadFormatVersion };
 
@@ -272,8 +277,8 @@ function createEvent(error, trigger, eventOpts = { payloadFormatVersion: '1.0' }
 
       case 'api-gateway-proxy':
         if (event.version === '1.0') {
-          event.resource = '/path/to/{param1}/{param2}';
-          event.path = '/path/to/path-xxx/path-yyy';
+          event.resource = eventOpts.pathParameter ? eventOpts.pathParameter : '/path/to/{param1}/{param2}';
+          event.path = eventOpts.pathParameter ? eventOpts.pathParameter : '/path/to/path-xxx/path-yyy';
           event.httpMethod = 'POST';
           event.headers = {
             'X-Request-Header-1': 'A Header Value',
@@ -299,11 +304,11 @@ function createEvent(error, trigger, eventOpts = { payloadFormatVersion: '1.0' }
           addHttpTracingHeaders(event);
         } else {
           event.rawQueryString = 'parameter1=value1&parameter1=value2&parameter2=value';
-          event.rawPath = '/path/to/{param1}/{param2}';
+          event.rawPath = eventOpts.pathParameter ? eventOpts.pathParameter : '/path/to/{param1}/{param2}';
           event.requestContext = {
             http: {
               method: 'POST',
-              path: '/path/to/path-xxx/path-yyy'
+              path: eventOpts.pathParameter ? eventOpts.pathParameter : '/path/to/path-xxx/path-yyy'
             },
             domainName: 'xxxxxx.execute-api.region.amazonaws.com'
           };
