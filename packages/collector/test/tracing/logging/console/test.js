@@ -171,6 +171,52 @@ mochaSuiteFn('tracing/logging/console', function () {
               parent: httpEntrySpan,
               pid: String(controls.getPid())
             });
+            expect(testUtils.getSpansByName(spans, 'log.console')).to.be.empty;
+          })
+        )
+      );
+    });
+  });
+  describe('when disable logging is enabled via agent configuration', () => {
+    const { AgentStubControls } = require('../../../apps/agentStubControls');
+    const customAgentControls = new AgentStubControls();
+
+    before(async () => {
+      await customAgentControls.startAgent({
+        logging: { enabled: false }
+      });
+
+      controls = new ProcessControls({
+        agentControls: customAgentControls,
+        dirname: __dirname
+      });
+      await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60 * 5);
+    });
+
+    beforeEach(async () => {
+      await customAgentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await customAgentControls.stopAgent();
+      await controls.stop();
+    });
+
+    it('must not trace warn', () => {
+      return controls.sendRequest({ path: '/warn' }).then(() =>
+        testUtils.retry(() =>
+          customAgentControls.getSpans().then(spans => {
+            const httpEntrySpan = verifyHttpRootEntry({
+              spans,
+              apiPath: '/warn',
+              pid: String(controls.getPid())
+            });
+
+            verifyHttpExit({
+              spans,
+              parent: httpEntrySpan,
+              pid: String(controls.getPid())
+            });
             // expect(testUtils.getSpansByName(spans, 'log.console').length).to.equal(1);
             expect(testUtils.getSpansByName(spans, 'log.console')).to.be.empty;
           })
