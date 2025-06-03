@@ -71,9 +71,9 @@ const groups = {
     sidecars: ['redis'],
     condition: ' && true'
   },
-  'test:ci:collector:tracing:logger': {
+  'test:ci:collector:tracing:logging': {
     sidecars: [],
-    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/loggers"'
+    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/logging"'
   },
   'test:ci:autoprofile': {
     sidecars: [],
