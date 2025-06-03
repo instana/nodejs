@@ -19,7 +19,7 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/logger/console', function () {
+mochaSuiteFn('tracing/logging/console', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

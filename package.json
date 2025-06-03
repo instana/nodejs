@@ -59,7 +59,7 @@
     "test:ci:collector:tracing:protocols": "lerna run test:ci:tracing:protocols --stream --scope=@instana/collector",
     "test:ci:collector:tracing:general": "lerna run test:ci:tracing:general --stream --scope=@instana/collector",
     "test:ci:collector:tracing:misc": "lerna run test:ci:tracing:misc --stream --scope=@instana/collector",
-    "test:ci:collector:tracing:logger": "lerna run test:ci:tracing:logger --stream --scope=@instana/collector",
+    "test:ci:collector:tracing:logging": "lerna run test:ci:tracing:logging --stream --scope=@instana/collector",
     "test:ci:autoprofile": "lerna run test:ci --stream --scope=@instana/autoprofile",
     "test:ci:aws-fargate": "lerna run test:ci --stream --scope=@instana/aws-fargate",
     "test:ci:aws-lambda": "lerna run test:ci --stream --scope=@instana/aws-lambda",
