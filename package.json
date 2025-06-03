@@ -253,7 +253,7 @@
     "yargs": "^17.5.1"
   },
   "optionalDependencies": {
-    "couchbase": "^4.4.6",
+    "couchbase": "^4.5.0",
     "couchbase-v443": "npm:couchbase@4.4.3",
     "ibm_db": "^3.3.0",
     "kafka-avro": "^3.2.0",
