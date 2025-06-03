@@ -28,7 +28,7 @@ const configNormalizers = require('./configNormalizers');
  * @property {boolean} [allowRootExitSpan]
  * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
  * @property {boolean} [ignoreEndpointsDisableSuppression]
- * @property {Object} [loggers]
+ * @property {Object} [logging]
  */
 
 /**
@@ -82,7 +82,7 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
  * @property {AgentTracingKafkaConfig} [kafka]
  * @property {boolean|string} [spanBatchingEnabled]
  * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
- * @property {Object} [loggers]
+ * @property {Object} [logging]
  */
 
 /**
@@ -129,7 +129,7 @@ const defaults = {
     },
     ignoreEndpoints: {},
     ignoreEndpointsDisableSuppression: false,
-    loggers: {}
+    logging: {}
   },
   secrets: {
     matcherMode: 'contains-ignore-case',
@@ -772,31 +772,31 @@ function normalizeIgnoreEndpointsDisableSuppression(config) {
  * @param {InstanaConfig} config
  */
 function normalizeLogging(config) {
-  if (!config.tracing.loggers) {
-    config.tracing.loggers = {};
+  if (!config.tracing.logging) {
+    config.tracing.logging = {};
   }
 
-  const loggingConfig = config.tracing.loggers;
+  const loggingConfig = config.tracing.logging;
 
   if (typeof loggingConfig !== 'object') {
     logger.warn(
-      `Invalid tracing.loggers configuration. Expected an object, but received: ${JSON.stringify(loggingConfig)}`
+      `Invalid tracing.logging configuration. Expected an object, but received: ${JSON.stringify(loggingConfig)}`
     );
-    config.tracing.loggers = {};
+    config.tracing.logging = {};
     return;
   }
   // Case 1: Use in-code configuration if available
 
   if (Object.keys(loggingConfig).length) {
-    config.tracing.loggers = loggingConfig;
-    logger.debug(`Logging have been configured: ${JSON.stringify(config.tracing.loggers)}`);
+    config.tracing.logging = loggingConfig;
+    logger.debug(`Logging have been configured: ${JSON.stringify(config.tracing.logging)}`);
     return;
   }
   if (process.env['INSTANA_TRACING_LOGGING_DISABLED'] === 'true') {
     logger.info(
       'Disabling logging is explicitly disabled via environment variable "INSTANA_TRACING_LOGGING_DISABLED".'
     );
-    config.tracing.loggers = { enabled: false };
+    config.tracing.logging = { enabled: false };
     return;
   }
 }
