@@ -63,7 +63,7 @@ function getProducer() {
     });
 
     _producer.producer.on('event.error', err => {
-      log('Error from stream producer', err);
+      // log('Error from stream producer', err);
     });
   } else {
     _producer = new Kafka.Producer(producerOptions, {});
