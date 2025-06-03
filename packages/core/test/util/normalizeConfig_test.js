@@ -656,40 +656,40 @@ describe('util.normalizeConfig', () => {
   it('should normalize a valid logging config with enabled set to false', () => {
     const config = normalizeConfig({
       tracing: {
-        loggers: {
+        logging: {
           enabled: false
         }
       }
     });
-    expect(config.tracing.loggers).to.deep.equal({ enabled: false });
+    expect(config.tracing.logging).to.deep.equal({ enabled: false });
   });
 
   it('should set default logging config when not provided', () => {
     const config = normalizeConfig({
       tracing: {}
     });
-    expect(config.tracing.loggers).to.deep.equal({});
+    expect(config.tracing.logging).to.deep.equal({});
   });
 
   it('should reset to default logging config when an invalid type is provided (string)', () => {
     const config = normalizeConfig({
       tracing: {
-        loggers: 'invalid'
+        logging: 'invalid'
       }
     });
-    expect(config.tracing.loggers).to.deep.equal({});
+    expect(config.tracing.logging).to.deep.equal({});
   });
 
   it('should normalize when extra fields are present in logging config', () => {
     const config = normalizeConfig({
       tracing: {
-        loggers: {
+        logging: {
           enabled: true,
           level: 'verbose'
         }
       }
     });
-    expect(config.tracing.loggers).to.deep.equal({ enabled: true, level: 'verbose' });
+    expect(config.tracing.logging).to.deep.equal({ enabled: true, level: 'verbose' });
   });
 
   it('should handle null logging config gracefully', () => {
@@ -698,7 +698,7 @@ describe('util.normalizeConfig', () => {
         logging: null
       }
     });
-    expect(config.tracing.loggers).to.deep.equal({});
+    expect(config.tracing.logging).to.deep.equal({});
   });
 
   describe('when testing ignore endpoints reading from INSTANA_IGNORE_ENDPOINTS_PATH env variable', () => {

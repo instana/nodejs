@@ -247,7 +247,7 @@ function applyLoggingConfiguration(agentResponse) {
   if (!loggingConfig) return;
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'logging']);
-  agentOpts.config.tracing.loggers = loggingConfig;
+  agentOpts.config.tracing.logging = loggingConfig;
 }
 
 module.exports = {

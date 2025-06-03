@@ -21,13 +21,13 @@ describe('isInstrumentationDisabled()', () => {
       deactivate: () => {},
       instrumentationName: 'koa'
     },
-    './instrumentation/loggers/bunyan': {
+    './instrumentation/logging/bunyan': {
       init: () => {},
       activate: () => {},
       deactivate: () => {},
       instrumentationName: 'bunyan'
     },
-    './instrumentation/loggers/log4js': {
+    './instrumentation/logging/log4js': {
       init: () => {},
       activate: () => {},
       deactivate: () => {},
@@ -92,42 +92,42 @@ describe('isInstrumentationDisabled()', () => {
     it('should disable specific logger when configured', () => {
       disabler.init({
         tracing: {
-          loggers: { log4js: { enabled: false } }
+          logging: { log4js: { enabled: false } }
         }
       });
 
       expect(
         disabler.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/loggers/log4js',
+          instrumentationKey: './instrumentation/logging/log4js',
           instrumentationModules: testModules
         })
       ).to.be.true;
 
       expect(
         disabler.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/loggers/bunyan',
+          instrumentationKey: './instrumentation/logging/bunyan',
           instrumentationModules: testModules
         })
       ).to.be.false;
     });
 
-    it('should disable all loggers when category disabled', () => {
+    it('should disable all logging when category disabled', () => {
       disabler.init({
         tracing: {
-          loggers: { enabled: false }
+          logging: { enabled: false }
         }
       });
 
       expect(
         disabler.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/loggers/bunyan',
+          instrumentationKey: './instrumentation/logging/bunyan',
           instrumentationModules: testModules
         })
       ).to.be.true;
 
       expect(
         disabler.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/loggers/log4js',
+          instrumentationKey: './instrumentation/logging/log4js',
           instrumentationModules: testModules
         })
       ).to.be.true;
@@ -157,7 +157,7 @@ describe('isInstrumentationDisabled()', () => {
       ).to.be.true;
     });
 
-    it('should not affect loggers when frameworks disabled', () => {
+    it('should not affect logging when frameworks disabled', () => {
       disabler.init({
         tracing: {
           frameworks: { enabled: false }
@@ -166,7 +166,7 @@ describe('isInstrumentationDisabled()', () => {
 
       expect(
         disabler.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/loggers/bunyan',
+          instrumentationKey: './instrumentation/logging/bunyan',
           instrumentationModules: testModules
         })
       ).to.be.false;
@@ -178,13 +178,13 @@ describe('isInstrumentationDisabled()', () => {
       disabler.init({ tracing: {} });
       disabler.activate({
         tracing: {
-          loggers: { bunyan: { enabled: false } }
+          logging: { bunyan: { enabled: false } }
         }
       });
 
       expect(
         disabler.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/loggers/bunyan',
+          instrumentationKey: './instrumentation/logging/bunyan',
           instrumentationModules: testModules
         })
       ).to.be.true;
@@ -193,18 +193,18 @@ describe('isInstrumentationDisabled()', () => {
     it('should prefer main config over agent config', () => {
       disabler.init({
         tracing: {
-          loggers: { bunyan: { enabled: true } }
+          logging: { bunyan: { enabled: true } }
         }
       });
       disabler.activate({
         tracing: {
-          loggers: { bunyan: { enabled: false } }
+          logging: { bunyan: { enabled: false } }
         }
       });
 
       expect(
         disabler.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/loggers/bunyan',
+          instrumentationKey: './instrumentation/logging/bunyan',
           instrumentationModules: testModules
         })
       ).to.be.false;
