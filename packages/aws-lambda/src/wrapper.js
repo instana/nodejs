@@ -11,7 +11,7 @@ const arnParser = require('./arn');
 const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
 const ssm = require('./ssm');
-const { enrichSpanWithTriggerData, readTraceCorrelationData } = require('./triggers');
+const triggers = require('./triggers');
 const processResult = require('./process_result');
 const captureHeaders = require('./capture_headers');
 
@@ -83,7 +83,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   // wrap the given callback _and_ return an instrumented promise.
   let handlerHasFinished = false;
   return tracing.getCls().ns.runPromiseOrRunAndReturn(() => {
-    const traceCorrelationData = readTraceCorrelationData(event, context);
+    const traceCorrelationData = triggers.readTraceCorrelationData(event, context);
     const tracingSuppressed = traceCorrelationData.level === '0';
     const w3cTraceContext = traceCorrelationData.w3cTraceContext;
 
@@ -123,7 +123,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
         entrySpan.data.lambda.coldStart = true;
         coldStart = false;
       }
-      enrichSpanWithTriggerData(event, context, entrySpan);
+      triggers.enrichSpanWithTriggerData(event, context, entrySpan);
     }
 
     originalArgs[2] = function wrapper(originalError, originalResult) {
@@ -267,7 +267,7 @@ function init(event, arnInfo, _config) {
   }
 
   identityProvider.init(arnInfo);
-
+  triggers.init(config);
   backendConnector.init({
     config,
     identityProvider,

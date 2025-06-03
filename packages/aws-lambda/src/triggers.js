@@ -20,6 +20,11 @@ const maxDynamoDbRecords = 3;
 const maxS3ObjectKeyLength = 200;
 const maxSQSRecords = 3;
 const awsLambdaFunctionUrlHostRegex = /^.*\.lambda-url\..*\.on\.aws$/i;
+let logger;
+
+module.exports.init = config => {
+  logger = config.logger;
+};
 
 exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, context, span) {
   if (isApiGatewayProxyTrigger(event)) {
@@ -128,7 +133,18 @@ function extractHttpFromApiGatewwayProxyEvent(event, span) {
 //  https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
 //  https://docs.aws.amazon.com/lambda/latest/dg/urls-invocation.html#urls-payloads
 function normalizePath(value) {
-  return typeof value === 'string' ? value : null;
+  if (typeof value === 'string') {
+    return value;
+  }
+  logger.debug(
+    `Received a non-string value for the "path" field in the incoming request event: ${JSON.stringify(value)}. ` +
+      'Expected a string, as per AWS API Gateway event structure. See: ' +
+      // eslint-disable-next-line max-len
+      'https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format. ' +
+      'This likely indicates a misconfiguration on the AWS side and may result in incomplete or broken traces ' +
+      'in the Instana UI.'
+  );
+  return null;
 }
 
 function readHttpQueryParams(event) {
