@@ -61,6 +61,7 @@ function getProducer() {
     _producer.producer.on('ready', () => {
       log('Stream Producer is ready');
       producerIsReady = true;
+      producerConnected = true;
     });
 
     _producer.producer.on('event.error', err => {

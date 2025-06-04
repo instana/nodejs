@@ -58,6 +58,7 @@ function setupConsumer() {
     _consumer.consumer.on('ready', () => {
       log('Consumer stream ready.');
       consumerReady = true;
+      consumerConnected = true;
     });
 
     if (process.env.RDKAFKA_CONSUMER_ERROR && process.env.RDKAFKA_CONSUMER_ERROR === 'streamErrorReceiver') {
