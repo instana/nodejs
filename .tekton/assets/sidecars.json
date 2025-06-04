@@ -98,7 +98,7 @@
         "tcpSocket": {
           "port": 9092
         },
-        "initialDelaySeconds": 30,
+        "initialDelaySeconds": 90,
         "periodSeconds": 2,
         "timeoutSeconds": 60
       }
