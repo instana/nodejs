@@ -135,7 +135,7 @@ class ProcessControls {
       {
         APP_PORT: this.port,
         INSTANA_AGENT_PORT: agentPort,
-        INSTANA_LOG_LEVEL: 'warn',
+        INSTANA_LOG_LEVEL: 'debug',
         INSTANA_DISABLE_TRACING: !this.tracingEnabled,
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: '1',
         INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: opts.minimalDelay != null ? opts.minimalDelay : 0,
