@@ -6,9 +6,9 @@ This folder contains code to build and test the container image that is used by 
 There are three types of container images, each in their own sub folder:
 
 * `inspector`: A simple Node.js application that inspects its surrounding. It will print environment variables and query the Cloud Run metadata server, and print the resulting HTTP responses. When running this in a Google Cloud Run service, it gives valuable insight into what a live Google Cloud Run application has available. This has mostly historic value as `@instana/google-cloud-run` is pretty feature complete. However, it could become useful again if new Google Cloud Run runtime versions behave differently or make metadata available in a different way.
-* `instana-google-cloud-run`: This is the production base image that we provide to customers to monitor Node.js Google Cloud Run services. The production image is published to `icr.io` (the public IBM Container Registry). This happens on our CI system, see `packages/serverless/ci/pipeline.yaml`. The [CI pipeline](https://ci.instana.io/teams/nodejs/pipelines/serverless-in-process-collectors:main/jobs/google-cloud-run-nodejs-container-image-layer) uses the Dockerfile and package.json file in that folder, but not the build scripts `build.sh` or `build-and-push.sh`. These scripts are used to build variants of this image locally and to push them to a Google Cloud container registry, which is very usefull for testing. Available scripts:
+* `instana-google-cloud-run`: This is the production base image that we provide to customers to monitor Node.js Google Cloud Run services. The production image is published to `icr.io` (the public IBM Container Registry). This happens on our CI system, see `packages/serverless/ci/pipeline.yaml`. The [CI pipeline](https://ci.instana.io/teams/nodejs/pipelines/serverless-in-process-collectors:main/jobs/google-cloud-run-nodejs-container-image-layer) uses the Dockerfile and package.json file in that folder, but not the build scripts `build.sh` or `build-and-push.sh`. These scripts are used to build variants of this image locally and to push them to a Google Cloud Artifact registry, which is very usefull for testing. Available scripts:
     * `instana-google-cloud-run/build.sh` builds the Instana Node.js Google Cloud Run base image, either from your local sources or from an already published npm package.
-    * `instana-google-cloud-run/build-and-push.sh` builds the Instana Node.js Google Cloud Run base image and pushes it to a container image registry of your choice (usually our internal Google Cloud container registry).
+    * `instana-google-cloud-run/build-and-push.sh` builds the Instana Node.js Google Cloud Run base image and pushes it to a container image registry of your choice.
     * Both scripts each have documentation, explaining their purpose and the parameters they accept.
 * `test-images`: The scripts in this folder can build various versions of a simple test application that uses the base image from `instana-google-cloud-run`. Such an image basically represents a customer's application/Google Cloud Run service using our Node.js Google Cloud Run monitoring setup. Available scripts:
     * `test-images/build.sh`: Builds the test application image.
@@ -23,9 +23,10 @@ How-To for Common Use Cases
 
 - Copy `instana-google-cloud-run/.env.template` to `instana-google-cloud-run/.env`. Usually, no modification is necessary.
 - Copy `test-images/.env.template` to `test-images/.env`. Just for building and pushing the test images, no modification is necessary. If you want to run the test images locally and report to an Instana environment, you need to configure a few things, which are documented in the `.env.template` file.
-- You need to be authenticated with the Google Cloud platform. Please refer to the [Google Cloud documentation](https://cloud.google.com/container-registry/docs/advanced-authentication) for details.
 
-**NOTE:** For the Google Cloud container registry, you do not need to create repositories ahead of time. When you push a container image with a name that does not exist yet, the repository is created automatically.
+- Depending what you would like to achieve, you need to:
+  - be authenticated against IBM Cloud to push BASE test images for icr.io (preferred)
+  - be authenticated against Google Cloud platform to push images with test applications
 
 ### Test the Current Release
 
@@ -57,17 +58,17 @@ instana-google-cloud-run/build-and-push.sh npm next
 
 Instead of running `instana-google-cloud-run/build-and-push.sh`, you can also only run `instana-google-cloud-run/build.sh` if you are not interested in pushing the image to a registry or if you want to verify it can be built correctly first.
 
-With the default settings (default Google Cloud container registry) you would find the image here: <https://console.cloud.google.com/gcr/images/k8s-brewery/global/cloud-run/nodejs?project=k8s-brewery>
+With the default settings (default Google Cloud Artifact registry) you would find the image here: <https://console.cloud.google/artifacts/docker/k8s-brewery/europe-west10/eu-west-tracers?csesidx=54336053&inv=1&invt=AbzTvg&project=k8s-brewery>
 
 Once the Instana Node.js Google Cloud Run base image with the release candidate has been created, you can create a test application image with it:
 
 ```
 # Remember to provide an .env file in test-images, too.
 
-test-images/build-and-push.sh gcr 18 standard next
+test-images/build-and-push.sh internal-icr 18 standard next
 ```
 
-The first parameter (`gcr`) specifies from where to fetch the Instana Node.js Google Cloud Run base image (in this case, from the Google Cloud container registry instead of icr.io). The second parameter (`18`) specifies the Node.js version. The third parameter determines the Linux distribution to use (`standard` means Debian here). The last parameter, `next` refers to the Docker tag that has been applied to the Instana Node.js Google Cloud Run base image earlier, when building and pushing it. The tag `next` has been applied because that was the npm dist-tag that has been used. If you used a different dist-tag, you need to use that as the Docker tag here as well.
+The first parameter (`gcr`) specifies from where to fetch the Instana Node.js Google Cloud Run base image (in this case, from the Google Cloud Artifact registry instead of icr.io). The second parameter (`18`) specifies the Node.js version. The third parameter determines the Linux distribution to use (`standard` means Debian here). The last parameter, `next` refers to the Docker tag that has been applied to the Instana Node.js Google Cloud Run base image earlier, when building and pushing it. The tag `next` has been applied because that was the npm dist-tag that has been used. If you used a different dist-tag, you need to use that as the Docker tag here as well.
 
 Finally, use the [Google Cloud web UI](https://console.cloud.google.com/run?project=k8s-brewery) to include that image in a Google Cloud Run service and run it (see below).
 

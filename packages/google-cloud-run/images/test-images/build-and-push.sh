@@ -7,7 +7,7 @@
 
 # This script builds and pushes a test image that can be used as a Google Cloud Run service. You can either the Instanan Node.js
 # Google Cloud Run base image from one of various sources (published production image, image from your local Docker registry,
-# image from an GCR registry with pre-release images).
+# base test image from our internal ICR registry).
 
 # ##############
 # # Parameters #
