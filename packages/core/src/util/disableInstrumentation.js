@@ -82,7 +82,7 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
   }
 
   // Case 2: Disabled through category-level or module-specific settings.
-  // Example: `logger.disabled = false` disables all instrumentation under the "logger" category.
+  // Example: `logger.disabled = true` disables all instrumentation under the "logger" category.
   const categoryPath = extractCategoryPath(instrumentationKey);
   if (categoryPath) {
     const [category, module] = categoryPath;
