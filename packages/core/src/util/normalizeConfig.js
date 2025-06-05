@@ -818,11 +818,9 @@ function normalizeLogging(config) {
     logger.debug(`Logging have been configured: ${JSON.stringify(config.tracing.logging)}`);
     return;
   }
-  if (process.env['INSTANA_TRACING_LOGGING_DISABLED'] === 'true') {
-    logger.info(
-      'Disabling logging is explicitly disabled via environment variable "INSTANA_TRACING_LOGGING_DISABLED".'
-    );
-    config.tracing.logging = { enabled: false };
+  if (process.env['INSTANA_DISABLE_TRACERS_LOGGING'] === 'true') {
+    logger.info('Disabling logging is explicitly disabled via environment variable "INSTANA_DISABLE_TRACERS_LOGGING".');
+    config.tracing.logging = { disabled: true };
     return;
   }
 }

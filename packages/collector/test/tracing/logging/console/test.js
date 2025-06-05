@@ -131,7 +131,7 @@ mochaSuiteFn('tracing/logging/console', function () {
       ));
   });
 
-  describe('when disable logging is enabled', () => {
+  describe('when logging is disabled', () => {
     globalAgent.setUpCleanUpHooks();
 
     before(async () => {
@@ -177,13 +177,13 @@ mochaSuiteFn('tracing/logging/console', function () {
       );
     });
   });
-  describe('when disable logging is enabled via agent configuration', () => {
+  describe('when logging is disabled via agent configuration', () => {
     const { AgentStubControls } = require('../../../apps/agentStubControls');
     const customAgentControls = new AgentStubControls();
 
     before(async () => {
       await customAgentControls.startAgent({
-        logging: { enabled: false }
+        logging: { disabled: true }
       });
 
       controls = new ProcessControls({

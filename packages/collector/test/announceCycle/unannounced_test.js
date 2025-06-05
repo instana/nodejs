@@ -629,11 +629,11 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should apply logging configuration from the agent response', done => {
+    it('should apply logging disable configuration from the agent response', done => {
       prepareAnnounceResponse({
         tracing: {
           logging: {
-            enabled: false
+            disabled: true
           }
         }
       });
@@ -642,7 +642,7 @@ describe('unannounced state', () => {
         transitionTo: () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
-              logging: { enabled: false }
+              logging: { disabled: true }
             }
           });
           done();
@@ -661,11 +661,11 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should apply logging config with extra unexpected fields', done => {
+    it('should apply logging disable config with extra unexpected fields', done => {
       prepareAnnounceResponse({
         tracing: {
           logging: {
-            enabled: true,
+            disabled: true,
             level: 'verbose'
           }
         }
@@ -676,7 +676,7 @@ describe('unannounced state', () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
               logging: {
-                enabled: true,
+                disabled: true,
                 level: 'verbose'
               }
             }
