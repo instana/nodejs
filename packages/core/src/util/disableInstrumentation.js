@@ -48,19 +48,6 @@ function extractCategoryPath(instrumentationKey) {
 }
 
 /**
- * @param {string} category
- * @param {string} module
- */
-function isExplicitlyEnabled(category, module) {
-  return (
-    // @ts-ignore
-    config?.tracing?.[category]?.[module]?.enabled === true ||
-    // @ts-ignore
-    extraConfig?.tracing?.[category]?.[module]?.enabled === true
-  );
-}
-
-/**
  * @param {*} cfg
  * @param {string} category
  * @param {string} module
@@ -70,9 +57,9 @@ function isExplicitlyEnabled(category, module) {
 function isDisabledInConfig(cfg, category, module, moduleName) {
   const tracing = cfg?.tracing;
   return (
-    tracing?.[category]?.enabled === false ||
-    tracing?.[category]?.[module]?.enabled === false ||
-    tracing?.[moduleName]?.enabled === false
+    tracing?.[category]?.disabled === true ||
+    tracing?.[category]?.[module]?.disabled === true ||
+    tracing?.[moduleName]?.disabled === true
   );
 }
 
@@ -95,13 +82,10 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
   }
 
   // Case 2: Disabled through category-level or module-specific settings.
-  // Example: `logger.enabled = false` disables all instrumentation under the "logger" category.
+  // Example: `logger.disabled = false` disables all instrumentation under the "logger" category.
   const categoryPath = extractCategoryPath(instrumentationKey);
   if (categoryPath) {
     const [category, module] = categoryPath;
-
-    // Check if explicitly enabled in either config (enable overrides disable)
-    if (isExplicitlyEnabled(category, module)) return false;
 
     // Check if disabled in either config
     // First prio in in-code or env variable and last prio agent
