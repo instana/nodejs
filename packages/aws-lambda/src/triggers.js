@@ -20,6 +20,11 @@ const maxDynamoDbRecords = 3;
 const maxS3ObjectKeyLength = 200;
 const maxSQSRecords = 3;
 const awsLambdaFunctionUrlHostRegex = /^.*\.lambda-url\..*\.on\.aws$/i;
+let logger;
+
+module.exports.init = config => {
+  logger = config.logger;
+};
 
 exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, context, span) {
   if (isApiGatewayProxyTrigger(event)) {
@@ -105,20 +110,41 @@ function extractHttpFromApiGatewwayProxyEvent(event, span) {
 
     span.data.http = {
       method: requestCtxHttp.method,
-      url: requestCtxHttp.path,
-      path_tpl: event.rawPath,
+      url: normalizePath(requestCtxHttp.path),
+      path_tpl: normalizePath(event.rawPath),
       params: readHttpQueryParams(event),
       header: captureHeaders(event)
     };
   } else {
     span.data.http = {
       method: event.httpMethod,
-      url: event.path,
-      path_tpl: event.resource,
+      url: normalizePath(event.path),
+      path_tpl: normalizePath(event.resource),
       params: readHttpQueryParams(event),
       header: captureHeaders(event)
     };
   }
+}
+
+//  Ensures the `path` value is always a string. The backend expects `path` to be a string,
+//  so we convert any non-string (for example, an empty object) to null.
+//  For reference, see AWS documentation on the Lambda event input format for API Gateway and Function URLs:
+//  eslint-disable-next-line max-len
+//  https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
+//  https://docs.aws.amazon.com/lambda/latest/dg/urls-invocation.html#urls-payloads
+function normalizePath(value) {
+  if (typeof value === 'string') {
+    return value;
+  }
+  logger.debug(
+    `Received a non-string value for the "path" field in the incoming request event: ${JSON.stringify(value)}. ` +
+      'Expected a string, as per AWS API Gateway event structure. See: ' +
+      // eslint-disable-next-line max-len
+      'https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format. ' +
+      'This likely indicates a misconfiguration on the AWS side and may result in incomplete or broken traces ' +
+      'in the Instana UI.'
+  );
+  return null;
 }
 
 function readHttpQueryParams(event) {
@@ -415,7 +441,7 @@ function extractFunctionUrlEvent(event, span) {
 
   span.data.http = {
     method: requestCtxHttp.method,
-    url: requestCtxHttp.path,
+    url: normalizePath(requestCtxHttp.path),
     params: readHttpQueryParams(event),
     header: captureHeaders(event)
   };

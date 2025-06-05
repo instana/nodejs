@@ -2138,6 +2138,75 @@ function registerTests(handlerDefinitionPath, reduced) {
     });
   });
 
+  describeOrSkipIfReduced(reduced)('API Gateway – with invalid event path', function () {
+    const invalidPathParams = [{}, 123, { path: '/api' }];
+
+    let control;
+    before(async () => {
+      const env = prelude.bind(this)({
+        handlerDefinitionPath,
+        trigger: 'api-gateway-proxy',
+        instanaAgentKey
+      });
+
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    invalidPathParams.forEach(param => {
+      it(`should gracefully handle and parse invalid event path param: ${JSON.stringify(param)}`, async () => {
+        await verify(
+          control,
+          {
+            error: false,
+            expectMetrics: true,
+            expectSpans: true,
+            trigger: 'aws:api.gateway'
+          },
+          {
+            payloadFormatVersion: '2.0',
+            pathParameter: param
+          }
+        );
+
+        const spans = await control.getSpans();
+
+        expectExactlyOneMatching(spans, [
+          span => expect(span.n).to.equal('aws.lambda.entry'),
+          span => expect(span.k).to.equal(constants.ENTRY),
+          span => expect(span.data.http).to.be.an('object'),
+          span => expect(span.data.http.method).to.equal('POST'),
+          span => expect(span.data.http.url).to.equal(null),
+          span => expect(span.data.http.path_tpl).to.equal(null),
+          span => expect(span.data.http.params).to.equal('parameter1=value1&parameter1=value2&parameter2=value'),
+          span =>
+            expect(span.data.http.header).to.deep.equal({
+              'x-request-header-1': 'A Header Value 1, A Header Value 2',
+              'x-request-header-2': 'a header value single',
+              'x-response-header-1': 'response header value 1, response header value 2',
+              'x-response-header-2': 'response header value 2'
+            }),
+          span => expect(span.data.http.host).to.not.exist
+        ]);
+      });
+    });
+  });
+
   describeOrSkipIfReduced(reduced)('triggered by API Gateway (no Lambda Proxy)', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS API Gateway (without Lambda Proxy)
