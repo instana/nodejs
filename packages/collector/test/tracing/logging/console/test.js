@@ -139,7 +139,7 @@ mochaSuiteFn('tracing/logging/console', function () {
         useGlobalAgent: true,
         dirname: __dirname,
         env: {
-          INSTANA_TRACING_LOGGING_DISABLED: true
+          INSTANA_DISABLE_TRACERS_LOGGING: true
         }
       });
       await controls.startAndWaitForAgentConnection();
