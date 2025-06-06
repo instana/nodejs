@@ -126,6 +126,7 @@ if (customInstrumentations.length > 0) {
  * @typedef {Object} IgnoreEndpointsFields
  * @property {string[]} [methods]
  * @property {string[]} [endpoints]
+ * @property {string[]} [connections]
  */
 
 /** @type {Array.<InstanaInstrumentedModule>} */
