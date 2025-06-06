@@ -760,6 +760,7 @@ function normalizeIgnoreEndpoints(config) {
     config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.fromYaml(
       process.env.INSTANA_IGNORE_ENDPOINTS_PATH
     );
+
     logger.debug(`Ignore endpoints have been configured: ${JSON.stringify(config.tracing.ignoreEndpoints)}`);
     return;
   }

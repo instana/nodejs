@@ -52,6 +52,10 @@ const allSetupTypes = ['default', 'cluster', 'sentinel'];
 const selectedSetupType = false;
 const setupTypesToRun = allSetupTypes.includes(selectedSetupType) ? [selectedSetupType] : allSetupTypes;
 
+const allVersions = ['latest', 'v4', 'v3'];
+const selectedVersion = false;
+const versionsToRun = allVersions.includes(selectedVersion) ? [selectedVersion] : allVersions;
+
 setupTypesToRun.forEach(setupType => {
   describe(`tracing/redis ${setupType}`, function () {
     ['redis', '@redis/client'].forEach(redisPkg => {
@@ -59,7 +63,7 @@ setupTypesToRun.forEach(setupType => {
         this.timeout(config.getTestTimeout() * 4);
         const agentControls = globalAgent.instance;
 
-        ['latest', 'v4', 'v3'].forEach(redisVersion => {
+        versionsToRun.forEach(redisVersion => {
           let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
           const shouldSkipCluster = setupType === 'cluster' && redisVersion === legacyVersion;
@@ -862,7 +866,7 @@ setupTypesToRun.forEach(setupType => {
 
             // Does not make sense for cluster and sentinel
             if (setupType === 'default') {
-              it('call two different hosts', async () => {
+              it('multiple connections', async () => {
                 const response = await controls.sendRequest({
                   method: 'POST',
                   path: '/two-different-target-hosts',
@@ -901,11 +905,13 @@ setupTypesToRun.forEach(setupType => {
               });
             }
           });
+
           mochaSuiteFn('ignore-endpoints:', function () {
             describe('when ignore-endpoints is enabled via agent configuration', () => {
               const { AgentStubControls } = require('../../../apps/agentStubControls');
               const customAgentControls = new AgentStubControls();
               let controls;
+
               before(async () => {
                 await customAgentControls.startAgent({
                   ignoreEndpoints: { redis: ['get', 'set'] }
@@ -958,7 +964,8 @@ setupTypesToRun.forEach(setupType => {
                   });
               });
             });
-            describe('ignore-endpoints enabled via tracing config', async () => {
+
+            describe('when ignore-endpoints is enabled via tracing config', async () => {
               globalAgent.setUpCleanUpHooks();
               let controls;
 
@@ -997,6 +1004,7 @@ setupTypesToRun.forEach(setupType => {
               afterEach(async () => {
                 await controls.clearIpcMessages();
               });
+
               it('should ignore spans for configured ignore endpoints(get,set)', async function () {
                 await controls
                   .sendRequest({
@@ -1041,6 +1049,7 @@ setupTypesToRun.forEach(setupType => {
                     });
                   });
               });
+
               it('should not ignore spans for endpoints that are not in the ignore list', async () => {
                 await controls
                   .sendRequest({
@@ -1061,7 +1070,7 @@ setupTypesToRun.forEach(setupType => {
               });
             });
 
-            describe('Ignore Endpoints loaded from env variable INSTANA_IGNORE_ENDPOINTS_PATH', async () => {
+            describe('(1) when env variable INSTANA_IGNORE_ENDPOINTS_PATH is used', async () => {
               globalAgent.setUpCleanUpHooks();
               let controls;
 
@@ -1100,6 +1109,7 @@ setupTypesToRun.forEach(setupType => {
               afterEach(async () => {
                 await controls.clearIpcMessages();
               });
+
               it('should ignore spans for configured ignore endpoints(get,set)', async function () {
                 await controls
                   .sendRequest({
@@ -1143,6 +1153,73 @@ setupTypesToRun.forEach(setupType => {
                       ]);
                     });
                   });
+              });
+            });
+
+            describe('(2) when env variable INSTANA_IGNORE_ENDPOINTS_PATH is used', async () => {
+              globalAgent.setUpCleanUpHooks();
+              let controls;
+
+              before(async () => {
+                controls = new ProcessControls({
+                  useGlobalAgent: true,
+                  appPath:
+                    redisVersion === legacyVersion
+                      ? path.join(__dirname, 'legacyApp.js')
+                      : path.join(__dirname, 'app.js'),
+                  env: {
+                    REDIS_VERSION: redisVersion,
+                    REDIS_PKG: redisPkg,
+                    REDIS_SETUP_TYPE: setupType,
+                    INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing2.yaml')
+                  }
+                });
+                await controls.start();
+              });
+
+              beforeEach(async () => {
+                await agentControls.clearReceivedTraceData();
+              });
+
+              before(async () => {
+                await controls.sendRequest({
+                  method: 'POST',
+                  path: '/clearkeys'
+                });
+              });
+
+              after(async () => {
+                await controls.stop();
+              });
+
+              afterEach(async () => {
+                await controls.clearIpcMessages();
+              });
+
+              it('should ignore connection', async () => {
+                const response = await controls.sendRequest({
+                  method: 'POST',
+                  path: '/two-different-target-hosts',
+                  qs: {
+                    key: 'key',
+                    value1: 'value1',
+                    value2: 'value2'
+                  }
+                });
+
+                // both connections successfully executed
+                expect(response.response1).to.equal('OK');
+                expect(response.response2).to.equal('OK');
+
+                // wait to avoid false positive
+                await delay(5000);
+
+                return retry(async () => {
+                  const spans = await agentControls.getSpans();
+                  // 1 x http entry span
+                  // 1 x redis set span
+                  expect(spans.length).to.equal(2);
+                });
               });
             });
           });

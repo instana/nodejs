@@ -1,0 +1,7 @@
+tracing:
+  ignore-endpoints:
+    redis:
+      - methods:
+          - set
+        connections:
+          - 127.0.0.1:6379

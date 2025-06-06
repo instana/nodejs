@@ -33,6 +33,7 @@ exports.normalizeConfig = function normalizeConfig(ignoreEndpointConfig) {
   if (!ignoreEndpointConfig || typeof ignoreEndpointConfig !== 'object') {
     return {};
   }
+
   try {
     return Object.fromEntries(
       Object.entries(ignoreEndpointConfig).map(([service, endpointConfigs]) => {
@@ -60,6 +61,11 @@ exports.normalizeConfig = function normalizeConfig(ignoreEndpointConfig) {
             if (normalizedCfg.endpoints) {
               validConfig.endpoints = [].concat(normalizedCfg.endpoints).map(normalizeString);
             }
+
+            if (normalizedCfg.connections) {
+              validConfig.connections = [].concat(normalizedCfg.connections).map(normalizeString);
+            }
+
             // extend the config with more fields here
             return Object.keys(validConfig).length ? validConfig : null;
           })
