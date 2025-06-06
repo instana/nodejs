@@ -8,7 +8,7 @@
 
 # This script builds a test image that can be used as a Google Cloud Run service. You can either use the Instana
 # Node.js Google Cloud Run base image from one of various sources (published production image, image from your local
-# Docker registry, image from a GCR registry with pre-release images). You would usually not call this script
+# Docker registry or test base image from internal ICR registry). You would usually not call this script
 # directly but either use ./build-and-push.sh to directly push the built image to a registry to use it in an actual
 # Cloud Run service or use ./build-and-run.sh to run it locally in a simulated Cloud Run environment.
 
@@ -18,11 +18,8 @@
 #
 # $1: Instana Layer Mode, aka which Docker base image layer to use. One of:
 #     - released      -> use an official production image from the public IBM container registry (icr.io)
-#     - authenticated -> use an official production image from Instana's own registry (containers.instana.io);
-#                        these are the very same images that are available from icr.io, but containers.instana.io
-#                        requires authentication. See https://www.ibm.com/docs/en/obi/current?topic=agents-monitoring-google-cloud-run#getting-the-nodejs-layer-from-containersinstanaio
 #     - local         -> use a local Docker base image
-#     - gcr           -> use an image from the GCR registry with test base images
+#     - internal-icr  -> use a test base image from the internal ICR registry
 # $2: Node.js version. One of:
 #     - 20
 #     - 18
@@ -36,7 +33,7 @@
 #       it to our pre-release Google Cloud container registry with the tag "next" by doing
 #       packages/google-cloud-run/images/instana-google-cloud-run/build.sh npm next
 #       then using that pre-release base image here by specifying "next" for $4 as
-#       well -> packages/google-cloud-run/images/test-images/build.sh gcr 18 standard next
+#       well -> packages/google-cloud-run/images/test-images/build.sh internal-icr 18 standard next
 
 set -eo pipefail
 

@@ -6,8 +6,8 @@
 #######################################
 
 # This script builds and runs a test image locally. You can either the Instanan Node.js Google Cloud Run
-# base image from one of various sources (published production image, image from your local Docker registry,
-# image from an GCR registry with pre-release images). To run test images locally, you will also want to start the
+# base image from one of various sources (published production image, image from your local Docker registry or
+# base test image from our internal ICR registry). To run test images locally, you will also want to start the
 # metadata server emulation via
 #
 #   node packages/google-cloud-run/test/metadata_mock

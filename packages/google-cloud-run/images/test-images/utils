@@ -1,17 +1,17 @@
 function normalizeArgs {
   local instanaLayerMode=$1
+
+  # production base image: icr.io/instana/google-cloud-run-nodejs
+  # test base image: us.icr.io/instana-tracer-nodejs/google-cloud-run-nodejs-test-base-image
   if [[ -z "${instanaLayerMode-}" || $instanaLayerMode = released ]]; then
     instana_layer_without_tag=icr.io/instana/google-cloud-run-nodejs
     INSTANA_LAYER_MODE=released
-  elif [[ $instanaLayerMode = authenticated ]]; then
-    instana_layer_without_tag=containers.instana.io/instana/release/gcp/run/nodejs
-    INSTANA_LAYER_MODE=authenticated
   elif [[ $instanaLayerMode = local ]]; then
     instana_layer_without_tag=instana-google-cloud-run-nodejs-local
     INSTANA_LAYER_MODE=local
-  elif [[ $instanaLayerMode = gcr ]]; then
-    instana_layer_without_tag=gcr.io/k8s-brewery/cloud-run/nodejs/instana-google-cloud-run-nodejs
-    INSTANA_LAYER_MODE=gcr
+  elif [[ $instanaLayerMode = internal-icr ]]; then
+    instana_layer_without_tag=us.icr.io/instana-tracer-nodejs/google-cloud-run-nodejs-test-base-image
+    INSTANA_LAYER_MODE=internal-icr
   else
     echo "Unknown option for Instana layer: $instanaLayerMode"
     exit 1
