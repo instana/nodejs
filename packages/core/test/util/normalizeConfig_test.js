@@ -608,6 +608,54 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.ignoreEndpoints).to.deep.equal({});
   });
 
+  it('should normalize a valid logging config with disabled set to true', () => {
+    const config = normalizeConfig({
+      tracing: {
+        logging: {
+          disabled: true
+        }
+      }
+    });
+    expect(config.tracing.logging).to.deep.equal({ disabled: true });
+  });
+
+  it('should set default logging config when not provided', () => {
+    const config = normalizeConfig({
+      tracing: {}
+    });
+    expect(config.tracing.logging).to.deep.equal({});
+  });
+
+  it('should reset to default logging config when an invalid type is provided (string)', () => {
+    const config = normalizeConfig({
+      tracing: {
+        logging: 'invalid'
+      }
+    });
+    expect(config.tracing.logging).to.deep.equal({});
+  });
+
+  it('should normalize when extra fields are present in logging config', () => {
+    const config = normalizeConfig({
+      tracing: {
+        logging: {
+          disabled: true,
+          level: 'verbose'
+        }
+      }
+    });
+    expect(config.tracing.logging).to.deep.equal({ disabled: true, level: 'verbose' });
+  });
+
+  it('should handle null logging config gracefully', () => {
+    const config = normalizeConfig({
+      tracing: {
+        logging: null
+      }
+    });
+    expect(config.tracing.logging).to.deep.equal({});
+  });
+
   describe('when testing ignore endpoints reading from INSTANA_IGNORE_ENDPOINTS_PATH env variable', () => {
     let filePaths;
 

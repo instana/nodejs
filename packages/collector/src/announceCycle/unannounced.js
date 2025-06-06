@@ -44,6 +44,7 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {KafkaTracingConfig} [kafka]
  * @property {import('@instana/core/src/tracing').IgnoreEndpoints} [ignore-endpoints]
  * @property {boolean} [span-batching-enabled]
+ * @property {Object} [logging]
  */
 
 /**
@@ -119,6 +120,7 @@ function applyAgentConfiguration(agentResponse) {
   applyKafkaTracingConfiguration(agentResponse);
   applySpanBatchingConfiguration(agentResponse);
   applyIgnoreEndpointsConfiguration(agentResponse);
+  applyLoggingConfiguration(agentResponse);
 }
 
 /**
@@ -235,6 +237,17 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
   agentOpts.config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
+}
+
+/**
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyLoggingConfiguration(agentResponse) {
+  const loggingConfig = agentResponse?.tracing?.logging;
+  if (!loggingConfig) return;
+
+  ensureNestedObjectExists(agentOpts.config, ['tracing', 'logging']);
+  agentOpts.config.tracing.logging = loggingConfig;
 }
 
 module.exports = {

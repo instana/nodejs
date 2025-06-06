@@ -41,6 +41,7 @@ const kafkaTraceCorrelation = process.env.KAFKA_TRACE_CORRELATION
   ? process.env.KAFKA_TRACE_CORRELATION === 'true'
   : null;
 const ignoreEndpoints = process.env.IGNORE_ENDPOINTS && JSON.parse(process.env.IGNORE_ENDPOINTS);
+const logging = process.env.LOGGING_DISABLED && JSON.parse(process.env.LOGGING_DISABLED);
 
 let discoveries = {};
 let rejectAnnounceAttempts = 0;
@@ -89,7 +90,7 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     }
   };
 
-  if (kafkaTraceCorrelation != null || extraHeaders.length > 0 || enableSpanBatching || ignoreEndpoints) {
+  if (kafkaTraceCorrelation != null || extraHeaders.length > 0 || enableSpanBatching || ignoreEndpoints || logging) {
     response.tracing = {};
 
     if (extraHeaders.length > 0) {
@@ -108,6 +109,9 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     }
     if (ignoreEndpoints) {
       response.tracing['ignore-endpoints'] = ignoreEndpoints;
+    }
+    if (logging) {
+      response.tracing.logging = logging;
     }
   }
   res.send(response);

@@ -629,6 +629,82 @@ describe('unannounced state', () => {
       });
     });
 
+    it('should apply logging disable configuration from the agent response', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          logging: {
+            disabled: true
+          }
+        }
+      });
+
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              logging: { disabled: true }
+            }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should not apply logging config if tracing is missing', done => {
+      prepareAnnounceResponse({});
+
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({});
+          done();
+        }
+      });
+    });
+
+    it('should apply logging disable config with extra unexpected fields', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          logging: {
+            disabled: true,
+            level: 'verbose'
+          }
+        }
+      });
+
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              logging: {
+                disabled: true,
+                level: 'verbose'
+              }
+            }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should apply empty logging object', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          logging: {}
+        }
+      });
+
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              logging: {}
+            }
+          });
+          done();
+        }
+      });
+    });
+
     function prepareAnnounceResponse(announceResponse) {
       agentConnectionStub.announceNodeCollector.callsArgWithAsync(0, null, JSON.stringify(announceResponse));
     }
