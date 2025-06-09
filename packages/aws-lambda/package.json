@@ -1,6 +1,6 @@
 {
   "name": "@instana/aws-lambda",
-  "version": "4.15.0",
+  "version": "4.15.1",
   "description": "Instana tracing and monitoring for Node.js based AWS Lambdas",
   "author": {
     "name": "Bastian Krol",
@@ -69,7 +69,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "4.15.0",
-    "@instana/serverless": "4.15.0"
+    "@instana/core": "4.15.1",
+    "@instana/serverless": "4.15.1"
   }
 }
