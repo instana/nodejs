@@ -166,6 +166,8 @@ module.exports = function normalizeConfig(config, _logger) {
     config = {};
   }
 
+  config.logger = logger;
+
   normalizeServiceName(config);
   normalizePackageJsonPath(config);
   normalizeMetricsConfig(config);
