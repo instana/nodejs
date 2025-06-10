@@ -129,10 +129,6 @@ exports.init = function init(opts) {
   }
 };
 
-exports.setLogger = function setLogger(_logger) {
-  logger = _logger;
-};
-
 /**
  * "finalLambdaRequest":
  * When using AWS Lambda, we send metrics and spans together
@@ -332,7 +328,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   };
 
   logger.debug(
-    `${requestId} Request options (${options.hostname}, ${options.port}, ${options.path}, 
+    `[${requestId}] Request options (${options.hostname}, ${options.port}, ${options.path}, 
     ${options.headers['Content-Length']}).`
   );
 
@@ -396,8 +392,8 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
       logger.debug(`${requestId} Received response from Instana has been failed (${requestPath}).`);
     }
 
-    logger.debug(`${requestId} Received HTTP status code ${statusCode} from Instana (${requestPath}).`);
-    logger.debug(`${requestId} Sending and receiving data to Instana in ms: ${Date.now() - start} ms.`);
+    logger.debug(`[${requestId}] Received HTTP status code ${statusCode} from Instana (${requestPath}).`);
+    logger.debug(`[${requestId}] Sending and receiving data to Instana in ms: ${Date.now() - start} ms.`);
 
     delete requests[requestId];
   });
@@ -409,7 +405,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   // > Once a socket is assigned to this request **and is connected**
   // > socket.setTimeout() will be called.
   req.on('timeout', () => {
-    logger.debug(`${requestId} Timeout while sending data to Instana (${requestPath}).`);
+    logger.debug(`[${requestId}] Timeout while sending data to Instana (${requestPath}).`);
 
     if (options.isLambdaRequest) {
       delete requests[requestId];
@@ -428,7 +424,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   });
 
   req.on('error', e => {
-    logger.debug(`${requestId} Error while sending data to Instana (${requestPath}).`, e);
+    logger.debug(`[${requestId}] Error while sending data to Instana (${requestPath}).`, e);
 
     if (options.isLambdaRequest) {
       delete requests[requestId];
@@ -460,13 +456,14 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
       if (tries >= 1) {
         // Retry the request immediately, this time sending it to serverless-acceptor directly.
         logger.debug(
-          `${requestId} Giving up with the extension...trying to send data to Instana serverless BE directly.`
+          `[${requestId}] Giving up with the extension...trying to send data to Instana serverless BE directly.`
         );
+
         options.useLambdaExtension = localUseLambdaExtension = false;
         return send({ resourcePath, payload, finalLambdaRequest, callback, tries: 0, requestId });
       }
 
-      logger.debug(`${requestId} Retrying...`);
+      logger.debug(`[${requestId}] Retrying...`);
       send({ resourcePath, payload, finalLambdaRequest, callback, tries: tries + 1, requestId });
     } else {
       if (!options.propagateErrorsUpstream) {
@@ -485,18 +482,18 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
       }
 
       if (tries >= 1) {
-        logger.debug(`${requestId} Giving up...`);
+        logger.debug(`[${requestId}] Giving up...`);
         return handleCallback(options.propagateErrorsUpstream ? e : undefined);
       }
 
-      logger.debug(`${requestId} Retrying...`);
+      logger.debug(`[${requestId}] Retrying...`);
       send({ resourcePath, payload, finalLambdaRequest, callback, tries: tries + 1, requestId });
     }
   });
 
   // This only indicates that the request has been successfully send! Independent of the response!
   req.on('finish', () => {
-    logger.debug(`${requestId} The request data has been successfully send to Instana.`);
+    logger.debug(`[${requestId}] The request data has been successfully send to Instana.`);
     if (options.useLambdaExtension && finalLambdaRequest) {
       clearInterval(heartbeatInterval);
     }
@@ -547,14 +544,14 @@ function onTimeout(
     if (tries >= 1) {
       // Retry the request immediately, this time sending it to serverless-acceptor directly.
       logger.debug(
-        `${requestId} Giving up with the extension...trying to send data to Instana serverless BE directly.`
+        `[${requestId}] Giving up with the extension...trying to send data to Instana serverless BE directly.`
       );
 
       options.useLambdaExtension = localUseLambdaExtension = false;
       return send({ resourcePath, payload, finalLambdaRequest, callback: handleCallback, tries: 0, requestId });
     }
 
-    logger.debug(`${requestId} Retrying...`);
+    logger.debug(`[${requestId}] Retrying...`);
     send({ resourcePath, payload, finalLambdaRequest, callback: handleCallback, tries: tries + 1, requestId });
   } else {
     // We need to destroy the request manually, otherwise it keeps the runtime running
@@ -576,11 +573,11 @@ function onTimeout(
     }
 
     if (tries >= 1) {
-      logger.debug(`${requestId} Giving up...`);
+      logger.debug(`[${requestId}] Giving up...`);
       return handleCallback();
     }
 
-    logger.debug(`${requestId} Retrying...`);
+    logger.debug(`[${requestId}] Retrying...`);
     send({ resourcePath, payload, finalLambdaRequest, callback: handleCallback, tries: tries + 1, requestId });
   }
 }
