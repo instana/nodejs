@@ -94,7 +94,7 @@ describe('multiple data lambda handler', function () {
     });
   });
 
-  describe('[batching disabled] with 100 iterations', function () {
+  describe('with 100 iterations and high transmission config values', function () {
     this.timeout(config.getTestTimeout() * 2);
     let control;
 
@@ -106,7 +106,9 @@ describe('multiple data lambda handler', function () {
         env: {
           INSTANA_AGENT_KEY: instanaAgentKey,
           WITH_CONFIG: 'true',
-          INSTANA_NUMBER_OF_ITERATIONS: 100
+          INSTANA_NUMBER_OF_ITERATIONS: 100,
+          INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
+          INSTANA_TRACING_INITIAL_TRANSMISSION_DELAY: 1000
         }
       });
 
@@ -160,7 +162,9 @@ describe('multiple data lambda handler', function () {
     });
   });
 
-  describe('[batching enabled] with 100 iterations', function () {
+  // TODO: This test does not use any batchable spans.
+  //       We could also extend the test to enable batching.
+  describe('with 100 iterations and default behavior', function () {
     this.timeout(config.getTestTimeout() * 2);
     let control;
 
@@ -172,10 +176,7 @@ describe('multiple data lambda handler', function () {
         env: {
           INSTANA_AGENT_KEY: instanaAgentKey,
           WITH_CONFIG: 'true',
-          INSTANA_NUMBER_OF_ITERATIONS: 100,
-          INSTANA_SPANBATCHING_ENABLED: 'true',
-          INSTANA_FORCE_TRANSMISSION_STARTING_AT: 10,
-          INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: 100
+          INSTANA_NUMBER_OF_ITERATIONS: 100
         }
       });
 

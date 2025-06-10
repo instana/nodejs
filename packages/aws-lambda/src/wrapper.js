@@ -19,13 +19,17 @@ const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
 const { tracingHeaders, constants, spanBuffer } = tracing;
 
+const lambdaConfig = {
+  tracing: { forceTransmissionStartingAt: 10, transmissionDelay: 100, initialTransmissionDelay: 100 }
+};
+
 const logger = log.init();
-let config = normalizeConfig({}, logger);
+let config = normalizeConfig(lambdaConfig, logger);
 
 let coldStart = true;
 
-// Initialize instrumentations early to allow for require statements after our package has been required but before the
-// actual instana.wrap(...) call.
+// Initialize instrumentations early to allow for require statements after our
+// package has been required but before the actual instana.wrap(...) call.
 instanaCore.preInit(config);
 
 /**
@@ -271,13 +275,12 @@ function init(event, arnInfo, _config) {
   backendConnector.init({
     config,
     identityProvider,
-    stopSendingOnFailure: true,
     propagateErrorsUpstream: false,
     defaultTimeout: 500,
-    useLambdaExtension
+    useLambdaExtension,
+    isLambdaRequest: true
   });
 
-  // instanaCore.init also normalizes the config as a side effect
   instanaCore.init(config, backendConnector, identityProvider);
 
   // After core init, because ssm requires require('@aws-sdk/client-ssm'), which triggers

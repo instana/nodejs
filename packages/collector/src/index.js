@@ -45,6 +45,7 @@ const path = require('path');
 const instanaNodeJsCore = require('@instana/core');
 const instanaSharedMetrics = require('@instana/shared-metrics');
 require('./tracing'); // load additional instrumentations
+
 const log = require('./logger');
 const normalizeCollectorConfig = require('./util/normalizeConfig');
 const experimental = require('./experimental');
@@ -91,6 +92,7 @@ function init(_config = {}) {
       return init;
     }
   }
+
   // @ts-ignore: Property '__INSTANA_INITIALIZED' does not exist on type global
   global.__INSTANA_INITIALIZED = true;
 
@@ -110,6 +112,7 @@ function init(_config = {}) {
   const metrics = require('./metrics');
 
   pidStore.init(config);
+  announceCycle.init(config, pidStore);
   agentOpts.init(config);
   announceCycle.init(config, pidStore);
   agentConnection.init(config, pidStore);
