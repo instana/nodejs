@@ -138,8 +138,7 @@ exports.init = function init(opts) {
 exports.sendBundle = function sendBundle(bundle, finalLambdaRequest, callback) {
   const requestId = getRequestId();
   logger.debug(`[${requestId}] Sending bundle to Instana (no. of spans: ${bundle?.spans?.length ?? 'unknown'})`);
-  logger.debug(`First span is ${JSON.stringify(bundle.spans[0])}`);
-  send({ resourcePath: '/bundle', payload: bundle, finalLambdaRequest, tries: 0, callback });
+  send({ resourcePath: '/bundle', payload: bundle, finalLambdaRequest, tries: 0, callback, requestId });
 };
 
 exports.sendMetrics = function sendMetrics(metrics, callback) {
@@ -151,8 +150,7 @@ exports.sendMetrics = function sendMetrics(metrics, callback) {
 exports.sendSpans = function sendSpans(spans, callback) {
   const requestId = getRequestId();
   logger.debug(`[${requestId}] Sending spans to Instana (no. of spans: ${spans.length})`);
-  logger.debug(`First span is ${JSON.stringify(spans[0])}`);
-  send({ resourcePath: '/traces', payload: spans, finalLambdaRequest: false, tries: 0, callback });
+  send({ resourcePath: '/traces', payload: spans, finalLambdaRequest: false, tries: 0, callback, requestId });
 };
 
 let heartbeatInterval;
@@ -221,6 +219,8 @@ function scheduleLambdaExtensionHeartbeatRequest(heartbeatOpts = {}) {
 
     // CASE: socket is open but no data is sent (should not happen from we know but we need to handle it)
     req.setTimeout(layerExtensionHeartbeatTimeout, () => {
+      logger.debug(`[${requestId}] Timeout occured.`);
+
       // req.destroyed indicates that we have run into a timeout and have already handled the timeout error.
       if (req.destroyed) {
         return;
@@ -329,7 +329,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
 
   logger.debug(
     `[${requestId}] Request options (${options.hostname}, ${options.port}, ${options.path}, 
-    ${options.headers['Content-Length']}).`
+    ${options.headers?.['Content-Length']}). Tries: ${tries}`
   );
 
   // This timeout is for **inactivity** - Backend sends no data at all
@@ -447,13 +447,12 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
       // talking to serverless-acceptor directly. We also immediately retry the current request with that new downstream
       // target in place.
       logger.debug(
-        `[${requestId}] Could not connect to the Instana Lambda extension. ` +
-          `Falling back to talking to the Instana back end directly: ${e?.message} ${e?.stack}`
+        `[${requestId}] Could not connect to the Instana Lambda extension (tries: ${tries}). ${e?.message} ${e?.stack}`
       );
 
-      clearInterval(heartbeatInterval);
-
       if (tries >= 1) {
+        clearInterval(heartbeatInterval);
+
         // Retry the request immediately, this time sending it to serverless-acceptor directly.
         logger.debug(
           `[${requestId}] Giving up with the extension...trying to send data to Instana serverless BE directly.`
@@ -493,7 +492,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
 
   // This only indicates that the request has been successfully send! Independent of the response!
   req.on('finish', () => {
-    logger.debug(`[${requestId}] The request data has been successfully send to Instana.`);
+    logger.debug(`[${requestId}] The request data has been successfully sent to Instana.`);
     if (options.useLambdaExtension && finalLambdaRequest) {
       clearInterval(heartbeatInterval);
     }
@@ -538,10 +537,11 @@ function onTimeout(
         'Falling back to talking to the Instana back end directly.'
     );
 
-    clearInterval(heartbeatInterval);
     destroyRequest(req);
 
     if (tries >= 1) {
+      clearInterval(heartbeatInterval);
+
       // Retry the request immediately, this time sending it to serverless-acceptor directly.
       logger.debug(
         `[${requestId}] Giving up with the extension...trying to send data to Instana serverless BE directly.`
