@@ -657,11 +657,11 @@ describe('util.normalizeConfig', () => {
     const config = normalizeConfig({
       tracing: {
         logging: {
-          disabled: true
+          disable: true
         }
       }
     });
-    expect(config.tracing.logging).to.deep.equal({ disabled: true });
+    expect(config.tracing.logging).to.deep.equal({ disable: true });
   });
 
   it('should set default logging config when not provided', () => {
@@ -684,12 +684,12 @@ describe('util.normalizeConfig', () => {
     const config = normalizeConfig({
       tracing: {
         logging: {
-          disabled: true,
+          disable: true,
           level: 'verbose'
         }
       }
     });
-    expect(config.tracing.logging).to.deep.equal({ disabled: true, level: 'verbose' });
+    expect(config.tracing.logging).to.deep.equal({ disable: true, level: 'verbose' });
   });
 
   it('should handle null logging config gracefully', () => {

@@ -60,16 +60,16 @@ function isDisabledInConfig(cfg, category, module) {
 
   // For allowed categories only, check category-level and module-specific disabling
   if (allowedDisablingCategories.has(category)) {
-    if (tracing?.[category]?.disabled === true) {
+    if (tracing?.[category]?.disable === true) {
       return true;
     }
 
-    if (tracing?.[category]?.[module]?.disabled === true) {
+    if (tracing?.[category]?.[module]?.disable === true) {
       return true;
     }
     // check direct module disabling
     // future extenstion
-    // if (tracing?.[moduleName]?.disabled === true) {
+    // if (tracing?.[moduleName]?.disable === true) {
     //   return true;
     // }
   }
@@ -96,12 +96,12 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
   }
 
   // Case 2: Disabled through category-level or module-specific settings.
-  // Example: `logger.disabled = true` disables all instrumentation under the "logger" category.
+  // Example: `logger.disable = true` disables all instrumentation under the "logger" category.
   const categoryPath = extractCategoryPath(instrumentationKey);
   if (categoryPath) {
     const [category, module] = categoryPath;
 
-    // Check if disabled in either config
+    // Check if disable in either config
     // First prio in in-code or env variable and last prio agent
     if (isDisabledInConfig(config, category, module) || isDisabledInConfig(extraConfig, category, module)) {
       return true;

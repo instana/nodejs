@@ -91,7 +91,7 @@ describe('util.disableInstrumentation', () => {
     it('should disable specific logging category when configured', () => {
       disableInstrumentation.init({
         tracing: {
-          logging: { log4js: { disabled: true } }
+          logging: { log4js: { disable: true } }
         }
       });
 
@@ -113,7 +113,7 @@ describe('util.disableInstrumentation', () => {
     it('should disable all logging when category is configured', () => {
       disableInstrumentation.init({
         tracing: {
-          logging: { disabled: true }
+          logging: { disable: true }
         }
       });
 
@@ -135,7 +135,7 @@ describe('util.disableInstrumentation', () => {
     it('should not disable frameworks when category disabled', () => {
       disableInstrumentation.init({
         tracing: {
-          frameworks: { disabled: true }
+          frameworks: { disable: true }
         }
       });
 
@@ -157,7 +157,7 @@ describe('util.disableInstrumentation', () => {
     it('should not affect logging when frameworks disabled', () => {
       disableInstrumentation.init({
         tracing: {
-          frameworks: { disabled: true }
+          frameworks: { disable: true }
         }
       });
 
@@ -173,7 +173,7 @@ describe('util.disableInstrumentation', () => {
       disableInstrumentation.init({ tracing: {} });
       disableInstrumentation.activate({
         tracing: {
-          logging: { bunyan: { disabled: true } }
+          logging: { bunyan: { disable: true } }
         }
       });
 
@@ -188,12 +188,12 @@ describe('util.disableInstrumentation', () => {
     it('should prefer service specific config over agent config', () => {
       disableInstrumentation.init({
         tracing: {
-          logging: { disabled: true }
+          logging: { disable: true }
         }
       });
       disableInstrumentation.activate({
         tracing: {
-          logging: { bunyan: { disabled: true } }
+          logging: { bunyan: { disable: true } }
         }
       });
 
@@ -214,7 +214,7 @@ describe('util.disableInstrumentation', () => {
     it('should use service specific config', () => {
       disableInstrumentation.init({
         tracing: {
-          logging: { bunyan: { disabled: true } }
+          logging: { bunyan: { disable: true } }
         }
       });
       disableInstrumentation.activate({
