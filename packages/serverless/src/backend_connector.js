@@ -154,12 +154,18 @@ exports.sendSpans = function sendSpans(spans, callback) {
 };
 
 let heartbeatInterval;
+let heartbeatIsActive = false;
 function scheduleLambdaExtensionHeartbeatRequest(heartbeatOpts = {}) {
   const executeHeartbeat = () => {
+    if (heartbeatIsActive) {
+      return;
+    }
+
     const startTime = Date.now();
     const requestId = getRequestId();
 
     logger.debug(`[${requestId}] Executing Heartbeat request to Lambda extension.`);
+    heartbeatIsActive = true;
 
     const req = uninstrumented.http.request(
       {
@@ -183,7 +189,11 @@ function scheduleLambdaExtensionHeartbeatRequest(heartbeatOpts = {}) {
         if (res.statusCode === 200) {
           logger.debug(`[${requestId}] The Instana Lambda extension heartbeat request has succeeded.`);
         } else {
-          logger.debug(`[${requestId}] The Instana Lambda extension heartbeat request has failed: ${res.statusCode}`);
+          logger.debug(
+            `[${requestId}] The Instana Lambda extension heartbeat request has failed. Status Code: ${res.statusCode}`
+          );
+
+          handleHeartbeatError();
         }
 
         res.once('data', () => {
@@ -195,42 +205,46 @@ function scheduleLambdaExtensionHeartbeatRequest(heartbeatOpts = {}) {
           const endTime = Date.now();
           const duration = endTime - startTime;
           logger.debug(`[${requestId}] Took ${duration}ms to receive response from extension`);
+
+          heartbeatIsActive = false;
         });
       }
     );
 
     req.once('error', e => {
+      logger.debug(
+        `[${requestId}] The Instana Lambda extension Heartbeat request did not succeed. 
+        Falling back to talking to the Instana back end directly.`,
+        e
+      );
+
       // req.destroyed indicates that we have run into a timeout and have
       // already handled the timeout error.
       if (req.destroyed) {
         return;
       }
 
-      // Make sure we do not try to talk to the Lambda extension again.
-      options.useLambdaExtension = false;
-      clearInterval(heartbeatInterval);
-
-      logger.debug(
-        `[${requestId}] The Instana Lambda extension Heartbeat request did not succeed. 
-        Falling back to talking to the Instana back end directly.`,
-        e
-      );
+      handleHeartbeatError();
     });
 
     // CASE: socket is open but no data is sent (should not happen from we know but we need to handle it)
     req.setTimeout(layerExtensionHeartbeatTimeout, () => {
-      logger.debug(`[${requestId}] Timeout occured.`);
+      logger.debug(`[${requestId}] Heartbeat request timed out.`);
 
       // req.destroyed indicates that we have run into a timeout and have already handled the timeout error.
       if (req.destroyed) {
         return;
       }
 
-      // Make sure we do not try to talk to the Lambda extension again.
+      handleHeartbeatError();
+    });
+
+    function handleHeartbeatError() {
       options.useLambdaExtension = false;
       clearInterval(heartbeatInterval);
       destroyRequest(req);
-    });
+      heartbeatIsActive = false;
+    }
 
     req.end();
   };
@@ -240,6 +254,7 @@ function scheduleLambdaExtensionHeartbeatRequest(heartbeatOpts = {}) {
   executeHeartbeat({ heartbeatTimeout: initialLayerExtensionHeartbeatTimeout });
 
   heartbeatInterval = setInterval(() => {
+    logger.debug('Heartbeat interval is alive.');
     executeHeartbeat({ heartbeatTimeout: layerExtensionHeartbeatTimeout });
   }, 300);
 
@@ -492,7 +507,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
 
   // This only indicates that the request has been successfully send! Independent of the response!
   req.on('finish', () => {
-    logger.debug(`[${requestId}] The request data has been successfully sent to Instana.`);
+    logger.debug(`[${requestId}] The trace request data has been successfully sent to Instana.`);
     if (options.useLambdaExtension && finalLambdaRequest) {
       clearInterval(heartbeatInterval);
     }

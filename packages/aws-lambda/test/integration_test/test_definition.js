@@ -1358,7 +1358,7 @@ function registerTests(handlerDefinitionPath, reduced) {
   );
 
   // eslint-disable-next-line max-len
-  describeOrSkipIfReduced(reduced)(
+  describeOrSkipIfReduced(
     'when the extension is used, the heartbeat request succeeds, but the extension becomes unresponsive later',
     function () {
       const env = prelude.bind(this)({
@@ -1398,7 +1398,13 @@ function registerTests(handlerDefinitionPath, reduced) {
         // Currently we do that, so we expect 2 spans.
         return retry(async () => {
           const spansFromExtension = await control.getSpansFromExtension();
-          expect(spansFromExtension).to.have.length(2);
+
+          // 1 heartbeat to extension (fails) -> 1 req to BE (succeeds)
+          // = 0 spans from extension!
+          expect(spansFromExtension).to.have.length(0);
+
+          const spans = await control.getSpans();
+          expect(spans).to.have.length(2);
         });
       });
     }
