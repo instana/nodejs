@@ -23,6 +23,7 @@ const preloadFlags = require('./getPreloadFlags');
 const configNormalizers = require('./configNormalizers');
 const spanFilter = require('./spanFilter');
 const yamlReader = require('./yamlReader');
+const deepMerge = require('./deepMerge');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -92,3 +93,4 @@ exports.esm = esm;
 exports.configNormalizers = configNormalizers;
 exports.spanFilter = spanFilter;
 exports.yamlReader = yamlReader;
+exports.deepMerge = deepMerge;

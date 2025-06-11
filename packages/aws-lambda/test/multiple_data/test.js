@@ -162,8 +162,7 @@ describe('multiple data lambda handler', function () {
     });
   });
 
-  // TODO: This test does not use any batchable spans.
-  //       We could also extend the test to enable batching.
+  // TODO: Add a test for batchable spans for AWS.
   describe('with 100 iterations and default behavior', function () {
     this.timeout(config.getTestTimeout() * 2);
     let control;
@@ -177,6 +176,12 @@ describe('multiple data lambda handler', function () {
           INSTANA_AGENT_KEY: instanaAgentKey,
           WITH_CONFIG: 'true',
           INSTANA_NUMBER_OF_ITERATIONS: 100
+          // send in batches a 10 spans
+          // TODO: why is 500 default?
+          // INSTANA_FORCE_TRANSMISSION_STARTING_AT: 10,
+          // We wait by default 1s. Lets reduce it for the test.
+          // INSTANA_TRACING_INITIAL_TRANSMISSION_DELAY: 100,
+          // INSTANA_SPANBATCHING_ENABLED: 'true'
         }
       });
 
@@ -214,8 +219,10 @@ describe('multiple data lambda handler', function () {
                 // 1 X bundle requestat the end of the lambda fn
                 expect(rawBundles.length).to.equal(1);
 
-                // This is the delayed request.
+                // This is the entry at the end (-> bundle)
                 expect(rawBundles[0].spans.length).to.equal(1);
+
+                expect(spans.length).to.equal(103);
 
                 // 10 requests from span buffer.
                 expect(rawSpanArrays.length).to.equal(12);
@@ -231,8 +238,6 @@ describe('multiple data lambda handler', function () {
                 expect(rawSpanArrays[9].length).to.equal(10);
                 expect(rawSpanArrays[10].length).to.equal(1);
                 expect(rawSpanArrays[11].length).to.equal(1);
-
-                expect(spans.length).to.equal(103);
               });
             },
             null,

@@ -25,7 +25,6 @@ const lambdaConfig = {
 
 const logger = log.init();
 let config = normalizeConfig(lambdaConfig, logger);
-
 let coldStart = true;
 
 // Initialize instrumentations early to allow for require statements after our
@@ -242,7 +241,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
  * Initialize the wrapper.
  */
 function init(event, arnInfo, _config) {
-  config = _config || {};
+  config = instanaCore.util.deepMerge(lambdaConfig, _config || {});
 
   // CASE: customer provides a custom logger or custom level
   if (config.logger || config.level) {

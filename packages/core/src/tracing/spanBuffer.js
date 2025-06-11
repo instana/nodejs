@@ -147,6 +147,7 @@ exports.activate = function activate(extraConfig) {
   spans = [];
   batchingBuckets.clear();
 
+  // TODO: On AWS Lambda we detect that a number of spans exists and then send them out?
   // NOTE: We do not want to use `setTimeout` in AWS Lambda, because
   //       the AWS runtime might execute the handler in a different lambda execution.
   //       On AWS Lambda we wait till the handler finishes and then transmit all collected spans via

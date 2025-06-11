@@ -162,18 +162,21 @@ module.exports = function normalizeConfig(config, _logger) {
     };
   }
 
-  if (config == null) {
-    config = {};
+  /** @type InstanaConfig */
+  let targetConfig = {};
+
+  if (config !== null) {
+    targetConfig = Object.assign({}, config);
   }
 
-  config.logger = logger;
+  targetConfig.logger = logger;
 
-  normalizeServiceName(config);
-  normalizePackageJsonPath(config);
-  normalizeMetricsConfig(config);
-  normalizeTracingConfig(config);
-  normalizeSecrets(config);
-  return config;
+  normalizeServiceName(targetConfig);
+  normalizePackageJsonPath(targetConfig);
+  normalizeMetricsConfig(targetConfig);
+  normalizeTracingConfig(targetConfig);
+  normalizeSecrets(targetConfig);
+  return targetConfig;
 };
 
 /**
