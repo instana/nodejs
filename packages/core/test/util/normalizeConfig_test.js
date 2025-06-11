@@ -33,6 +33,8 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_KAFKA_TRACE_CORRELATION;
     delete process.env.INSTANA_PACKAGE_JSON_PATH;
     delete process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN;
+    delete process.env.INSTANA_DISABLE_TRACERS_LOGGING;
+    delete process.env.INSTANA_DISABLE_TRACERS;
   }
 
   it('should apply all defaults', () => {
@@ -654,6 +656,57 @@ describe('util.normalizeConfig', () => {
       }
     });
     expect(config.tracing.logging).to.deep.equal({});
+  });
+
+  it('should disable multiple tracers via env var INSTANA_DISABLE_TRACERS', () => {
+    process.env.INSTANA_DISABLE_TRACERS = 'graphQL   , GRPC, http';
+    const config = normalizeConfig();
+    expect(config.tracing.disabledTracers).to.deep.equal(['graphql', 'grpc', 'http']);
+  });
+
+  it('should handle single tracer via INSTANA_DISABLE_TRACERS', () => {
+    process.env.INSTANA_DISABLE_TRACERS = 'console';
+    const config = normalizeConfig();
+    expect(config.tracing.disabledTracers).to.deep.equal(['console']);
+  });
+
+  it('should trim whitespace from tracer names', () => {
+    process.env.INSTANA_DISABLE_TRACERS = '  graphql  ,  grpc  ';
+    const config = normalizeConfig();
+    expect(config.tracing.disabledTracers).to.deep.equal(['graphql', 'grpc']);
+  });
+
+  it('should prefer INSTANA_DISABLE_TRACERS over INSTANA_DISABLED_TRACERS', () => {
+    process.env.INSTANA_DISABLE_TRACERS = 'redis';
+    process.env.INSTANA_DISABLED_TRACERS = 'postgres';
+    const config = normalizeConfig();
+    expect(config.tracing.disabledTracers).to.deep.equal(['redis']);
+  });
+
+  it('should disable logging tracer when INSTANA_DISABLE_TRACERS_LOGGING=true', () => {
+    process.env.INSTANA_DISABLE_TRACERS_LOGGING = 'true';
+    const config = normalizeConfig();
+    expect(config.tracing.logging).to.deep.equal({ disable: true });
+  });
+
+  it('should disable both specific tracers and logging when both vars are set', () => {
+    process.env.INSTANA_DISABLE_TRACERS = 'redis,postgres';
+    process.env.INSTANA_DISABLE_TRACERS_LOGGING = 'true';
+    const config = normalizeConfig();
+    expect(config.tracing.disabledTracers).to.deep.equal(['redis', 'postgres']);
+    expect(config.tracing.logging).to.deep.equal({ disable: true });
+  });
+
+  it('should process INSTANA_DISABLE_TRACERS_LOGGING case-insensitively', () => {
+    process.env.INSTANA_DISABLE_TRACERS_LOGGING = 'TRUE';
+    const config = normalizeConfig();
+    expect(config.tracing.logging).to.deep.equal({ disable: true });
+  });
+
+  it('should ignore whitespace in INSTANA_DISABLE_TRACERS_LOGGING', () => {
+    process.env.INSTANA_DISABLE_TRACERS_LOGGING = '  true  ';
+    const config = normalizeConfig();
+    expect(config.tracing.logging).to.deep.equal({ disable: true });
   });
 
   describe('when testing ignore endpoints reading from INSTANA_IGNORE_ENDPOINTS_PATH env variable', () => {

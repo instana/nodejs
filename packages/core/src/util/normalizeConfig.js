@@ -498,15 +498,27 @@ function normalizeNumericalStackTraceLength(numericalLength) {
  * @param {InstanaConfig} config
  */
 function normalizeDisabledTracers(config) {
-  if (
-    config.tracing.disabledTracers == null &&
-    process.env['INSTANA_DISABLED_TRACERS'] &&
-    process.env['INSTANA_DISABLED_TRACERS'].trim().length >= 0
-  ) {
-    config.tracing.disabledTracers = process.env['INSTANA_DISABLED_TRACERS']
-      .split(',')
-      .map(key => key.trim().toLowerCase())
-      .filter(key => key.length >= 0);
+  if (config.tracing.disabledTracers == null) {
+    let disabledTracersEnvVar;
+
+    if (process.env['INSTANA_DISABLE_TRACERS'] && process.env['INSTANA_DISABLE_TRACERS'].trim().length > 0) {
+      disabledTracersEnvVar = process.env['INSTANA_DISABLE_TRACERS'];
+    }
+    // We deprecated the variable `INSTANA_DISABLED_TRACERS` and will be removed in the next major release(v5).
+    else if (process.env['INSTANA_DISABLED_TRACERS'] && process.env['INSTANA_DISABLED_TRACERS'].trim().length > 0) {
+      disabledTracersEnvVar = process.env['INSTANA_DISABLED_TRACERS'];
+      logger.warn(
+        'The environment variable INSTANA_DISABLED_TRACERS is deprecated and will be removed in the next major release. ' +
+          'Please use INSTANA_DISABLE_TRACERS instead.'
+      );
+    }
+
+    if (disabledTracersEnvVar) {
+      config.tracing.disabledTracers = disabledTracersEnvVar
+        .split(',')
+        .map(key => key.trim().toLowerCase())
+        .filter(key => key.length > 0);
+    }
   }
 
   if (!config.tracing.disabledTracers) {
@@ -792,8 +804,11 @@ function normalizeLogging(config) {
     logger.debug(`Logging have been configured: ${JSON.stringify(config.tracing.logging)}`);
     return;
   }
-  // Case 2: Load from the `INSTANA_IGNORE_ENDPOINTS` environment variable
-  if (process.env['INSTANA_DISABLE_TRACERS_LOGGING'] === 'true') {
+  // Case 2: Load from the `INSTANA_DISABLE_TRACERS_LOGGING` environment variable
+  if (
+    process.env['INSTANA_DISABLE_TRACERS_LOGGING'] &&
+    process.env['INSTANA_DISABLE_TRACERS_LOGGING'].trim()?.toLowerCase() === 'true'
+  ) {
     logger.info('Disabling logging is explicitly disabled via environment variable "INSTANA_DISABLE_TRACERS_LOGGING".');
     config.tracing.logging = { disable: true };
     return;
