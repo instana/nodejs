@@ -55,8 +55,10 @@ function init() {
       backendConnector.init({
         config,
         identityProvider,
-        // TODO: ?
-        propagateErrorsUpstream: false,
+        // CASE: sending metrics or traces fails
+        //       -> the unit who calls backendConnector.send
+        //       -> wants to receive the error
+        propagateErrorsUpstream: true,
         defaultTimeout: 950
       });
 

@@ -182,9 +182,7 @@ function scheduleLambdaExtensionHeartbeatRequest(heartbeatOpts = {}) {
         }
       },
       res => {
-        logger.debug(
-          `${requestId} Sending and receiving data for extension heartbeat in ms: ${Date.now() - startTime} ms.`
-        );
+        logger.debug(`[${requestId}] Took ${Date.now() - startTime} ms to send heartbeat to the extension.`);
 
         if (res.statusCode === 200) {
           logger.debug(`[${requestId}] The Instana Lambda extension heartbeat request has succeeded.`);
@@ -483,13 +481,13 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
       if (!options.propagateErrorsUpstream) {
         if (proxyAgent) {
           logger.warn(
-            `[${requestId}] Could not send traces and metrics to Instana. Could not connect to the configured proxy ` +
+            `[${requestId}] Could not send data to ${resourcePath}. Could not connect to the configured proxy ` +
               `${process.env[proxyEnvVar]}.` +
               `${e?.message} ${e?.stack}`
           );
         } else {
           logger.warn(
-            `[${requestId}] Could not send traces and metrics to Instana. ` +
+            `[${requestId}] Could not send data to ${resourcePath}. ` +
               `The Instana back end seems to be unavailable. ${e?.message} , ${e?.stack}`
           );
         }
@@ -578,7 +576,7 @@ function onTimeout(
     destroyRequest(req);
 
     const message =
-      `[${requestId}] Could not send traces and metrics to Instana. The Instana back end did not respond ` +
+      `[${requestId}] Could not send data to ${resourcePath}. The Instana back end did not respond ` +
       'in the configured timeout ' +
       `of ${options.backendTimeout} ms. The timeout can be configured by ` +
       `setting the environment variable ${timeoutEnvVar}.`;

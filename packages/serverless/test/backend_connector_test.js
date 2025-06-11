@@ -132,9 +132,14 @@ describe('[UNIT] backend connector', () => {
 
       const myinterval = setInterval(() => {
         const onError = onStub.getCalls().find(call => call.firstArg === 'error');
+        const heartbeatOnEnd = uninstrumentedHttp.http.request
+          .getCalls()
+          .find(call => call.firstArg.path === '/heartbeat');
 
         onStub.resetHistory();
         uninstrumentedHttp.http.request.resetHistory();
+
+        heartbeatOnEnd.callback({ once: sinon.stub(), on: sinon.stub() });
 
         if (!onError || !onError.callback) {
           return;
@@ -146,7 +151,7 @@ describe('[UNIT] backend connector', () => {
       backendConnector.sendBundle({}, true, () => {
         clearInterval(myinterval);
         expect(global.clearInterval.called).to.be.true;
-        expect(destroyStub.called).to.be.false;
+        expect(destroyStub.called).to.be.true;
         cb();
       });
     });
@@ -165,8 +170,14 @@ describe('[UNIT] backend connector', () => {
         const onError = onStub.getCalls().find(call => call.firstArg === 'error');
         const onEnd = uninstrumentedHttp.http.request.getCalls().find(call => call.firstArg.path === '/bundle');
         const onFinish = onStub.getCalls().find(call => call.firstArg === 'finish');
+        const heartbeatOnEnd = uninstrumentedHttp.http.request
+          .getCalls()
+          .find(call => call.firstArg.path === '/heartbeat');
+
         onStub.resetHistory();
         uninstrumentedHttp.http.request.resetHistory();
+
+        heartbeatOnEnd.callback({ once: sinon.stub(), on: sinon.stub() });
 
         if (!onError || !onEnd || !onError.callback || !onEnd.callback) {
           return;
@@ -184,7 +195,7 @@ describe('[UNIT] backend connector', () => {
       backendConnector.sendBundle({}, true, () => {
         clearInterval(myinterval);
         expect(global.clearInterval.called).to.be.true;
-        expect(destroyStub.called).to.be.false;
+        expect(destroyStub.called).to.be.true;
         cb();
       });
     });
@@ -192,10 +203,30 @@ describe('[UNIT] backend connector', () => {
     it('when lambda extension is used & heartbeat is working & send once', async () => {
       backendConnector.init({ config, useLambdaExtension: true });
 
+      let heartbeatCallback = uninstrumentedHttp.http.request
+        .getCalls()
+        .find(call => call.firstArg.path === '/heartbeat').callback;
+
+      let heartbeatOnceEndStub = sinon.stub();
+      heartbeatCallback({ once: heartbeatOnceEndStub, on: sinon.stub(), statusCode: 200 });
+      let heartbeatOnEnd = heartbeatOnceEndStub.getCalls().find(call => call.firstArg === 'end').callback;
+      heartbeatOnEnd();
+
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(1);
 
-      await delay(550);
+      // wait for the interval
+      await delay(400);
+
+      heartbeatOnceEndStub = sinon.stub();
+      heartbeatCallback = uninstrumentedHttp.http.request
+        .getCalls()
+        .find(call => call.firstArg.path === '/heartbeat').callback;
+
+      heartbeatCallback({ once: heartbeatOnceEndStub, on: sinon.stub(), statusCode: 200 });
+
+      heartbeatOnEnd = heartbeatOnceEndStub.getCalls().find(call => call.firstArg === 'end').callback;
+      heartbeatOnEnd();
 
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(2);
@@ -214,16 +245,26 @@ describe('[UNIT] backend connector', () => {
 
       await prom;
 
-      // 1 bundle req, 4 heartbeats
-      expect(uninstrumentedHttp.http.request.callCount).to.eql(5);
+      // 1 bundle req, 3 heartbeats
+      expect(uninstrumentedHttp.http.request.callCount).to.eql(4);
 
       // finalLambdaRequest == true, we expect the heartbeat to finish
       expect(global.clearInterval.called).to.be.true;
 
       await delay(250);
 
-      // 1 bundle req, 4 heartbeats
-      expect(uninstrumentedHttp.http.request.callCount).to.eql(5);
+      // 1 bundle req, 4 heartbeats = proof that heartbeat is dead
+      expect(uninstrumentedHttp.http.request.callCount).to.eql(4);
+
+      heartbeatOnceEndStub = sinon.stub();
+      heartbeatCallback = uninstrumentedHttp.http.request
+        .getCalls()
+        .find(call => call.firstArg.path === '/heartbeat').callback;
+
+      heartbeatCallback({ once: heartbeatOnceEndStub, on: sinon.stub(), statusCode: 200 });
+
+      heartbeatOnEnd = heartbeatOnceEndStub.getCalls().find(call => call.firstArg === 'end').callback;
+      heartbeatOnEnd();
 
       // Destroy will only be called manually for timeouts
       expect(destroyStub.called).to.be.false;
@@ -232,10 +273,28 @@ describe('[UNIT] backend connector', () => {
     it('when lambda extension is used & heartbeat is working & more data is incoming', async () => {
       backendConnector.init({ config, useLambdaExtension: true });
 
+      let heartbeatCallback = uninstrumentedHttp.http.request
+        .getCalls()
+        .find(call => call.firstArg.path === '/heartbeat').callback;
+
+      let heartbeatOnceEndStub = sinon.stub();
+      heartbeatCallback({ once: heartbeatOnceEndStub, on: sinon.stub(), statusCode: 200 });
+      let heartbeatOnEnd = heartbeatOnceEndStub.getCalls().find(call => call.firstArg === 'end').callback;
+      heartbeatOnEnd();
+
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(1);
 
       await delay(550);
+
+      heartbeatCallback = uninstrumentedHttp.http.request
+        .getCalls()
+        .find(call => call.firstArg.path === '/heartbeat').callback;
+
+      heartbeatOnceEndStub = sinon.stub();
+      heartbeatCallback({ once: heartbeatOnceEndStub, on: sinon.stub(), statusCode: 200 });
+      heartbeatOnEnd = heartbeatOnceEndStub.getCalls().find(call => call.firstArg === 'end').callback;
+      heartbeatOnEnd();
 
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(2);
@@ -254,15 +313,33 @@ describe('[UNIT] backend connector', () => {
 
       await prom;
 
-      expect(uninstrumentedHttp.http.request.callCount).to.be.greaterThan(4);
+      expect(uninstrumentedHttp.http.request.callCount).to.be.greaterThan(3);
 
       // finalLambdaRequest == false, we expect the heartbeat to NOT finish
       expect(global.clearInterval.called).to.be.false;
 
-      await delay(800);
+      heartbeatCallback = uninstrumentedHttp.http.request
+        .getCalls()
+        .find(call => call.firstArg.path === '/heartbeat').callback;
+
+      heartbeatOnceEndStub = sinon.stub();
+      heartbeatCallback({ once: heartbeatOnceEndStub, on: sinon.stub(), statusCode: 200 });
+      heartbeatOnEnd = heartbeatOnceEndStub.getCalls().find(call => call.firstArg === 'end').callback;
+      heartbeatOnEnd();
+
+      await delay(500);
+
+      heartbeatCallback = uninstrumentedHttp.http.request
+        .getCalls()
+        .find(call => call.firstArg.path === '/heartbeat').callback;
+
+      heartbeatOnceEndStub = sinon.stub();
+      heartbeatCallback({ once: heartbeatOnceEndStub, on: sinon.stub(), statusCode: 200 });
+      heartbeatOnEnd = heartbeatOnceEndStub.getCalls().find(call => call.firstArg === 'end').callback;
+      heartbeatOnEnd();
 
       // more heartbeats
-      expect(uninstrumentedHttp.http.request.callCount).to.be.greaterThan(5);
+      expect(uninstrumentedHttp.http.request.callCount).to.be.greaterThan(4);
 
       onStub.resetHistory();
       uninstrumentedHttp.http.request.resetHistory();
