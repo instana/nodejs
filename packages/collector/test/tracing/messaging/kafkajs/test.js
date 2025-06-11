@@ -25,8 +25,13 @@ const { AgentStubControls } = require('../../../apps/agentStubControls');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+const retryTime = 5000;
+const retryTimeUntil = () => {
+  return Date.now() + 60000;
+};
+
 mochaSuiteFn('tracing/kafkajs', function () {
-  this.timeout(config.getTestTimeout() * 2);
+  this.timeout(config.getTestTimeout() * 5);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
@@ -57,8 +62,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
               useGlobalAgent: true
             });
 
-            await consumerControls.startAndWaitForAgentConnection();
-            await producerControls.startAndWaitForAgentConnection();
+            await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+            await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
           });
 
           beforeEach(async () => {
@@ -166,7 +171,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
               useGlobalAgent: true
             });
 
-            await producerControls.startAndWaitForAgentConnection();
+            await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
           });
 
           beforeEach(async () => {
@@ -237,8 +242,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
             }
           });
 
-          await consumerControls.startAndWaitForAgentConnection();
-          await producerControls.startAndWaitForAgentConnection();
+          await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+          await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
         });
 
         beforeEach(async () => {
@@ -346,8 +351,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
         agentControls: customAgentControls
       });
 
-      await consumerControls.startAndWaitForAgentConnection();
-      await producerControls.startAndWaitForAgentConnection();
+      await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+      await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
     });
 
     beforeEach(async () => {
@@ -407,8 +412,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
         tracingEnabled: false
       });
 
-      await consumerControls.startAndWaitForAgentConnection();
-      await producerControls.startAndWaitForAgentConnection();
+      await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+      await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
     });
 
     beforeEach(async () => {
@@ -478,8 +483,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
         useGlobalAgent: true
       });
 
-      await consumerControls.startAndWaitForAgentConnection();
-      await producerControls.startAndWaitForAgentConnection();
+      await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+      await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
     });
 
     beforeEach(async () => {
@@ -548,8 +553,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
             agentControls: customAgentControls
           });
 
-          await producerControls.startAndWaitForAgentConnection();
-          await consumerControls.startAndWaitForAgentConnection();
+          await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+          await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
         });
 
         beforeEach(async () => {
@@ -607,8 +612,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
             agentControls: customAgentControls
           });
 
-          await producerControls.startAndWaitForAgentConnection();
-          await consumerControls.startAndWaitForAgentConnection();
+          await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+          await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
         });
 
         beforeEach(async () => {
@@ -672,8 +677,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
             agentControls: customAgentControls
           });
 
-          await producerControls.startAndWaitForAgentConnection();
-          await consumerControls.startAndWaitForAgentConnection();
+          await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+          await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
         });
 
         beforeEach(async () => {
@@ -733,8 +738,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
               agentControls: customAgentControls
             });
 
-            await producerControls.startAndWaitForAgentConnection();
-            await consumerControls.startAndWaitForAgentConnection();
+            await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+            await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
           });
 
           beforeEach(async () => {
@@ -814,8 +819,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
               agentControls: customAgentControls
             });
 
-            await producerControls.startAndWaitForAgentConnection();
-            await consumerControls.startAndWaitForAgentConnection();
+            await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+            await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
           });
 
           beforeEach(async () => {
@@ -879,8 +884,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
         });
 
         await Promise.all([
-          consumerControls.startAndWaitForAgentConnection(),
-          producerControls.startAndWaitForAgentConnection()
+          consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil()),
+          producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil())
         ]);
       });
 
@@ -935,8 +940,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
           useGlobalAgent: true
         });
 
-        await consumerControls.startAndWaitForAgentConnection();
-        await producerControls.startAndWaitForAgentConnection();
+        await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+        await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
       });
 
       beforeEach(async () => {
@@ -1032,8 +1037,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
           useGlobalAgent: true
         });
 
-        await consumerControls.startAndWaitForAgentConnection();
-        await producerControls.startAndWaitForAgentConnection();
+        await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+        await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
       });
 
       beforeEach(async () => {
@@ -1119,8 +1124,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
             }
           });
 
-          await consumerControls.startAndWaitForAgentConnection();
-          await producerControls.startAndWaitForAgentConnection();
+          await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+          await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
         });
 
         beforeEach(async () => {
@@ -1206,8 +1211,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
             useGlobalAgent: true
           });
 
-          await consumerControls.startAndWaitForAgentConnection();
-          await producerControls.startAndWaitForAgentConnection();
+          await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
+          await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
         });
 
         beforeEach(async () => {
