@@ -8,10 +8,10 @@
 let config;
 
 /** @type {import('../util/normalizeConfig').AgentConfig} */
-let extraConfig;
+let agentConfig;
 
 // Disabling with category restricted to the following categories.
-const allowedDisablingCategories = new Set(['logging']);
+const supportedCategoriesForDisabling = new Set(['logging']);
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} _config
@@ -21,14 +21,16 @@ function init(_config) {
 }
 
 /**
- * @param {import('../util/normalizeConfig').AgentConfig} _extraConfig
+ * @param {import('../util/normalizeConfig').AgentConfig} _agentConfig
  */
-function activate(_extraConfig) {
-  extraConfig = _extraConfig;
+function activate(_agentConfig) {
+  agentConfig = _agentConfig;
 }
 
 /**
+ * Extracts the module name from the given instrumentation key.
  * @param {string} instrumentationKey
+ * @returns {string}
  */
 function extractModuleName(instrumentationKey) {
   // Extracts the module name from the instrumentation key.
@@ -41,11 +43,10 @@ function extractModuleName(instrumentationKey) {
 }
 
 /**
+ * Extracts the category and module names from an instrumentation key.
  * @param {string} instrumentationKey
  */
-function extractCategoryPath(instrumentationKey) {
-  // Parses the instrumentation key to extract both the category and module names.
-  // It matches the pattern './instrumentation/<category>/<module>' and returns them.
+function extractCategoryAndModule(instrumentationKey) {
   const match = instrumentationKey.match(/\.\/instrumentation\/([^/]+)\/([^/]+)/);
   return match ? [match[1], match[2]] : null;
 }
@@ -55,23 +56,20 @@ function extractCategoryPath(instrumentationKey) {
  * @param {string} category
  * @param {string} module
  */
-function isDisabledInConfig(cfg, category, module) {
-  const tracing = cfg?.tracing;
+function isInstrumentationDisabledInConfig(cfg, category, module) {
+  const tracingCfg = cfg?.tracing;
 
-  // For allowed categories only, check category-level and module-specific disabling
-  if (allowedDisablingCategories.has(category)) {
-    if (tracing?.[category]?.disable === true) {
+  if (supportedCategoriesForDisabling.has(category)) {
+    if (tracingCfg?.[category]?.disable === true) {
       return true;
     }
 
-    if (tracing?.[category]?.[module]?.disable === true) {
+    if (tracingCfg?.[category]?.[module]?.disable === true) {
       return true;
     }
-    // check direct module disabling
-    // future extenstion
-    // if (tracing?.[moduleName]?.disable === true) {
-    //   return true;
-    // }
+
+    // Future scope for direct module disabling:
+    // if (tracingCfg?.[module]?.disable === true) return true;
   }
 
   return false;
@@ -87,23 +85,21 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
   const moduleName = extractModuleName(instrumentationKey);
   const instrumentationName = instrumentationModules[instrumentationKey]?.instrumentationName;
 
-  // Case 1: Explicitly disabled in config.tracing.disabledTracers
-  if (
-    config?.tracing?.disabledTracers?.includes(moduleName.toLowerCase()) ||
-    (instrumentationName && config?.tracing?.disabledTracers?.includes(instrumentationName))
-  ) {
+  // Case 1: Explicitly listed in disabled tracers (library or instrumentation name)
+  const disabledTracers = config?.tracing?.disabledTracers || [];
+  if (disabledTracers.includes(moduleName) || (instrumentationName && disabledTracers.includes(instrumentationName))) {
     return true;
   }
 
-  // Case 2: Disabled through category-level or module-specific settings.
-  // Example: `logger.disable = true` disables all instrumentation under the "logger" category.
-  const categoryPath = extractCategoryPath(instrumentationKey);
-  if (categoryPath) {
-    const [category, module] = categoryPath;
+  // Case 2: Disabled via category/module flags in config or agentConfig
+  const categoryAndModule = extractCategoryAndModule(instrumentationKey);
+  if (categoryAndModule) {
+    const [category, module] = categoryAndModule;
 
-    // Check if disable in either config
-    // First prio in in-code or env variable and last prio agent
-    if (isDisabledInConfig(config, category, module) || isDisabledInConfig(extraConfig, category, module)) {
+    if (
+      isInstrumentationDisabledInConfig(config, category, module) ||
+      isInstrumentationDisabledInConfig(agentConfig, category, module)
+    ) {
       return true;
     }
   }
