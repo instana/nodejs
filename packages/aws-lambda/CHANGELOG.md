@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.15.3](https://github.com/instana/nodejs/compare/v4.15.2...v4.15.3) (2025-06-11)
+
+### Bug Fixes
+
+- **aws-lambda:** resolved x86_64 build ([#1763](https://github.com/instana/nodejs/issues/1763)) ([de7769f](https://github.com/instana/nodejs/commit/de7769ff49562df42ceffa9e689dac1bfa04d1cc))
+
 ## [4.15.2](https://github.com/instana/nodejs/compare/v4.15.1...v4.15.2) (2025-06-11)
 
 ### Bug Fixes
