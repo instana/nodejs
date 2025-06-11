@@ -10,6 +10,9 @@ let config;
 /** @type {import('../util/normalizeConfig').AgentConfig} */
 let extraConfig;
 
+// Disabling with category restricted to the following categories.
+const allowedDisablingCategories = new Set(['logging']);
+
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} _config
  */
@@ -51,22 +54,33 @@ function extractCategoryPath(instrumentationKey) {
  * @param {*} cfg
  * @param {string} category
  * @param {string} module
- * @param {string} moduleName
- * @returns {boolean}
  */
-function isDisabledInConfig(cfg, category, module, moduleName) {
+function isDisabledInConfig(cfg, category, module) {
   const tracing = cfg?.tracing;
-  return (
-    tracing?.[category]?.disabled === true ||
-    tracing?.[category]?.[module]?.disabled === true ||
-    tracing?.[moduleName]?.disabled === true
-  );
+
+  // For allowed categories only, check category-level and module-specific disabling
+  if (allowedDisablingCategories.has(category)) {
+    if (tracing?.[category]?.disabled === true) {
+      return true;
+    }
+
+    if (tracing?.[category]?.[module]?.disabled === true) {
+      return true;
+    }
+    // check direct module disabling
+    // future extenstion
+    // if (tracing?.[moduleName]?.disabled === true) {
+    //   return true;
+    // }
+  }
+
+  return false;
 }
 
 /**
- * @param {Object} options
- * @param {Object.<string, import('../tracing/index').InstanaInstrumentedModule>} [options.instrumentationModules]
- * @param {string} options.instrumentationKey
+ * @param {Object} params
+ * @param {Object.<string, import('../tracing/index').InstanaInstrumentedModule>} [params.instrumentationModules]
+ * @param {string} params.instrumentationKey
  * @returns {boolean}
  */
 function isInstrumentationDisabled({ instrumentationModules = {}, instrumentationKey }) {
@@ -89,10 +103,7 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
 
     // Check if disabled in either config
     // First prio in in-code or env variable and last prio agent
-    if (
-      isDisabledInConfig(config, category, module, moduleName) ||
-      isDisabledInConfig(extraConfig, category, module, moduleName)
-    ) {
+    if (isDisabledInConfig(config, category, module) || isDisabledInConfig(extraConfig, category, module)) {
       return true;
     }
   }
