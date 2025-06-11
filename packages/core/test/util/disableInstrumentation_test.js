@@ -132,7 +132,7 @@ describe('util.disableInstrumentation', () => {
       ).to.be.true;
     });
 
-    it('should disable all frameworks when category disabled', () => {
+    it('should not disable frameworks when category disabled', () => {
       disableInstrumentation.init({
         tracing: {
           frameworks: { disabled: true }
@@ -144,14 +144,14 @@ describe('util.disableInstrumentation', () => {
           instrumentationKey: './instrumentation/frameworks/hapi',
           instrumentationModules: testInstrumentationModules
         })
-      ).to.be.true;
+      ).to.be.false;
 
       expect(
         disableInstrumentation.isInstrumentationDisabled({
           instrumentationKey: './instrumentation/frameworks/koa',
           instrumentationModules: testInstrumentationModules
         })
-      ).to.be.true;
+      ).to.be.false;
     });
 
     it('should not affect logging when frameworks disabled', () => {
