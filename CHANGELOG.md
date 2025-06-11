@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.15.2](https://github.com/instana/nodejs/compare/v4.15.1...v4.15.2) (2025-06-11)
+
+### Bug Fixes
+
+- **aws-lambda:** upgraded go version to 1.24.0 ([#1761](https://github.com/instana/nodejs/issues/1761)) ([87dc123](https://github.com/instana/nodejs/commit/87dc12338f94a657cad883bd78b8a6598d362213))
+
 ## [4.15.1](https://github.com/instana/nodejs/compare/v4.15.0...v4.15.1) (2025-06-09)
 
 ### Bug Fixes
