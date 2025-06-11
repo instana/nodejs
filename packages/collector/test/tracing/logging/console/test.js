@@ -181,7 +181,7 @@ mochaSuiteFn('tracing/logging/console', function () {
       before(async () => {
         customAgentControls = new AgentStubControls();
         await customAgentControls.startAgent({
-          logging: { disabled: true }
+          logging: { disable: true }
         });
 
         agentConfigControls = new ProcessControls({

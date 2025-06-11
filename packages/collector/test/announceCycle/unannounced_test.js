@@ -633,7 +633,7 @@ describe('unannounced state', () => {
       prepareAnnounceResponse({
         tracing: {
           logging: {
-            disabled: true
+            disable: true
           }
         }
       });
@@ -642,7 +642,7 @@ describe('unannounced state', () => {
         transitionTo: () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
-              logging: { disabled: true }
+              logging: { disable: true }
             }
           });
           done();
@@ -665,7 +665,7 @@ describe('unannounced state', () => {
       prepareAnnounceResponse({
         tracing: {
           logging: {
-            disabled: true,
+            disable: true,
             level: 'verbose'
           }
         }
@@ -676,7 +676,7 @@ describe('unannounced state', () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
               logging: {
-                disabled: true,
+                disable: true,
                 level: 'verbose'
               }
             }
