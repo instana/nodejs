@@ -18,7 +18,6 @@ const supportedVersion = require('./supportedVersion');
 const { otelInstrumentations } = require('./opentelemetry-instrumentations');
 const cls = require('./cls');
 const coreUtil = require('../util');
-const { isInstrumentationDisabled } = require('../util/disableInstrumentation');
 
 let tracingEnabled = false;
 let tracingActivated = false;
@@ -226,7 +225,6 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
     tracingHeaders.init(config);
     spanBuffer.init(config, downstreamConnection);
     opentracing.init(config, automaticTracingEnabled, processIdentityProvider);
-    coreUtil.disableInstrumentation.init(config);
 
     if (automaticTracingEnabled) {
       initInstrumenations(config);
@@ -254,7 +252,7 @@ function initInstrumenations(_config) {
     instrumentations.forEach(instrumentationKey => {
       instrumentationModules[instrumentationKey] = require(instrumentationKey);
       if (
-        !isInstrumentationDisabled({
+        !coreUtil.disableInstrumentation.isInstrumentationDisabled({
           instrumentationModules,
           instrumentationKey
         })
@@ -292,7 +290,7 @@ exports.activate = function activate(extraConfig = {}) {
     if (automaticTracingEnabled) {
       instrumentations.forEach(instrumentationKey => {
         if (
-          !isInstrumentationDisabled({
+          !coreUtil.disableInstrumentation.isInstrumentationDisabled({
             instrumentationModules,
             instrumentationKey
           })

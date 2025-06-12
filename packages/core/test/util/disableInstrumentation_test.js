@@ -40,7 +40,7 @@ describe('util.disableInstrumentation', () => {
     disableInstrumentation.activate({ tracing: {} });
   });
 
-  describe('when disabled via disabledTracers config', () => {
+  describe('when disabled via disableTracers config', () => {
     it('should disable by module path match', () => {
       disableInstrumentation.init({
         tracing: {
