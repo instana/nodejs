@@ -1157,8 +1157,8 @@ setupTypesToRun.forEach(setupType => {
               });
             });
 
-            // NOTE: cluster has currently no support for multiple connections
-            if (setupType !== 'cluster') {
+            // NOTE: cluster & sentinel have currently no support for multiple connections
+            if (setupType !== 'cluster' && setupType !== 'sentinel') {
               describe('(2) when env variable INSTANA_IGNORE_ENDPOINTS_PATH is used', async () => {
                 globalAgent.setUpCleanUpHooks();
                 let controls;
