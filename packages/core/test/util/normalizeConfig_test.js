@@ -16,7 +16,6 @@ describe('util.normalizeConfig', () => {
   afterEach(resetEnv);
 
   function resetEnv() {
-    delete process.env.INSTANA_DISABLED_TRACERS;
     delete process.env.INSTANA_DISABLE_AUTO_INSTR;
     delete process.env.INSTANA_DISABLE_TRACING;
     delete process.env.INSTANA_TRACE_IMMEDIATELY;
@@ -33,8 +32,9 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_KAFKA_TRACE_CORRELATION;
     delete process.env.INSTANA_PACKAGE_JSON_PATH;
     delete process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN;
-    delete process.env.INSTANA_DISABLE_TRACERS_LOGGING;
+    delete process.env.INSTANA_DISABLED_TRACERS;
     delete process.env.INSTANA_DISABLE_TRACERS;
+    delete process.env.INSTANA_DISABLE_TRACERS_LOGGING;
   }
 
   it('should apply all defaults', () => {

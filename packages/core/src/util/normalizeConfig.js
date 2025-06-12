@@ -499,23 +499,22 @@ function normalizeNumericalStackTraceLength(numericalLength) {
  */
 function normalizeDisabledTracers(config) {
   if (config.tracing.disabledTracers == null) {
-    let disabledTracersEnvVar;
+    let disableTracersEnvVar;
 
-    if (process.env['INSTANA_DISABLE_TRACERS'] && process.env['INSTANA_DISABLE_TRACERS'].trim().length > 0) {
-      disabledTracersEnvVar = process.env['INSTANA_DISABLE_TRACERS'];
+    if (process.env['INSTANA_DISABLE_TRACERS']) {
+      disableTracersEnvVar = parseHeadersEnvVar(process.env['INSTANA_DISABLE_TRACERS']);
     }
     // We deprecated the variable `INSTANA_DISABLED_TRACERS` and will be removed in the next major release(v5).
-    else if (process.env['INSTANA_DISABLED_TRACERS'] && process.env['INSTANA_DISABLED_TRACERS'].trim().length > 0) {
-      disabledTracersEnvVar = process.env['INSTANA_DISABLED_TRACERS'];
+    else if (process.env['INSTANA_DISABLED_TRACERS']) {
+      disableTracersEnvVar = parseHeadersEnvVar(process.env['INSTANA_DISABLED_TRACERS']);
       logger.warn(
         'The environment variable INSTANA_DISABLED_TRACERS is deprecated and will be removed in the next major release. ' +
           'Please use INSTANA_DISABLE_TRACERS instead.'
       );
     }
 
-    if (disabledTracersEnvVar) {
-      config.tracing.disabledTracers = disabledTracersEnvVar
-        .split(',')
+    if (disableTracersEnvVar) {
+      config.tracing.disabledTracers = disableTracersEnvVar
         .map(key => key.trim().toLowerCase())
         .filter(key => key.length > 0);
     }
