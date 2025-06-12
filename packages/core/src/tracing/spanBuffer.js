@@ -112,6 +112,15 @@ exports.init = function init(config, _downstreamConnection) {
     }, transmissionDelay);
     preActivationCleanupIntervalHandle.unref();
   }
+
+  logger.debug(
+    `Span Buffer configured with maxBufferedSpans=${maxBufferedSpans},` +
+      `forceTransmissionStartingAt=${forceTransmissionStartingAt},` +
+      `transmissionDelay=${transmissionDelay},` +
+      `initialTransmissionDelay=${initialTransmissionDelay},` +
+      `batchingEnabled=${batchingEnabled},` +
+      `batchThreshold=${batchThreshold}`
+  );
 };
 
 /**
@@ -146,8 +155,6 @@ exports.activate = function activate(extraConfig) {
 
   spans = [];
   batchingBuckets.clear();
-
-  // TODO: On AWS Lambda we detect that a number of spans exists and then send them out?
   // NOTE: We do not want to use `setTimeout` in AWS Lambda, because
   //       the AWS runtime might execute the handler in a different lambda execution.
   //       On AWS Lambda we wait till the handler finishes and then transmit all collected spans via
@@ -212,6 +219,8 @@ exports.addSpan = function (span) {
     }
 
     // NOTE: we send out spans directly if the number of spans reaches > X [default] and if the min delay is reached.
+    // CASE: its a "guessed" time to wait til the agent is connected. The regular timeout will kick in
+    //       soon and sends them out. This is not a reliable way, but its good enough for now.
     if (spans.length >= forceTransmissionStartingAt && Date.now() - initialTransmissionDelay > activatedAt) {
       transmitSpans();
     }
@@ -432,6 +441,8 @@ function isBatchable(span) {
 }
 
 function transmitSpans() {
+  logger.debug(`Transmitting spans called. There is ${spans.length} spans to send.`);
+
   clearTimeout(transmissionTimeoutHandle);
 
   if (spans.length === 0) {
