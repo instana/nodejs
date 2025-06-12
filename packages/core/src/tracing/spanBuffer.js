@@ -19,11 +19,8 @@ let downstreamConnection = null;
 let isActive = false;
 /** @type {number} */
 let activatedAt = null;
-
-const minDelayBeforeSendingSpans = 1000;
-
 /** @type {number} */
-let initialDelayBeforeSendingSpans;
+let minDelayBeforeSendingSpans = 1000;
 /** @type {number} */
 let transmissionDelay;
 /** @type {number} */
@@ -92,7 +89,7 @@ exports.init = function init(config, _downstreamConnection) {
   forceTransmissionStartingAt = config.tracing.forceTransmissionStartingAt;
   transmissionDelay = config.tracing.transmissionDelay;
   batchingEnabled = config.tracing.spanBatchingEnabled;
-  initialDelayBeforeSendingSpans = Math.max(transmissionDelay, minDelayBeforeSendingSpans);
+  minDelayBeforeSendingSpans = Math.max(transmissionDelay, minDelayBeforeSendingSpans);
   isFaaS = false;
   transmitImmediate = false;
 
@@ -100,6 +97,7 @@ exports.init = function init(config, _downstreamConnection) {
     preActivationCleanupIntervalHandle = setInterval(() => {
       removeSpansIfNecessary();
     }, transmissionDelay);
+
     preActivationCleanupIntervalHandle.unref();
   }
 };
@@ -145,7 +143,7 @@ exports.activate = function activate(extraConfig) {
   //       Spans are collected during the agent cycle -  we flush them here and assume we
   //       are connected to the agent.
   if (!isFaaS) {
-    transmissionTimeoutHandle = setTimeout(transmitSpans, initialDelayBeforeSendingSpans);
+    transmissionTimeoutHandle = setTimeout(transmitSpans, minDelayBeforeSendingSpans);
     transmissionTimeoutHandle.unref();
   }
 
