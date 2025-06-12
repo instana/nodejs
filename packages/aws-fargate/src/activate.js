@@ -58,7 +58,6 @@ function init() {
       backendConnector.init({
         config,
         identityProvider,
-        // TODO: false or true?
         propagateErrorsUpstream: true,
         defaultTimeout: 950
       });

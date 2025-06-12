@@ -9,6 +9,7 @@
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
 const configNormalizers = require('./configNormalizers');
+const deepMerge = require('./deepMerge');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -98,7 +99,7 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
 let logger;
 
 /** @type {InstanaConfig} */
-const defaults = {
+let defaults = {
   serviceName: null,
   packageJsonPath: null,
 
@@ -145,9 +146,10 @@ const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-igno
 /**
  * @param {InstanaConfig} [config]
  * @param {import('../core').GenericLogger} [_logger]
+ * @param {InstanaConfig} [defaultsOverride]
  * @returns {InstanaConfig}
  */
-module.exports = function normalizeConfig(config, _logger) {
+module.exports = function normalizeConfig(config, _logger, defaultsOverride = {}) {
   if (_logger) {
     logger = _logger;
   } else {
@@ -162,9 +164,14 @@ module.exports = function normalizeConfig(config, _logger) {
     };
   }
 
+  if (defaultsOverride && typeof defaultsOverride === 'object') {
+    defaults = deepMerge(defaults, defaultsOverride);
+  }
+
   /** @type InstanaConfig */
   let targetConfig = {};
 
+  // NOTE: Do not modify the original object
   if (config !== null) {
     targetConfig = Object.assign({}, config);
   }

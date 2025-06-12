@@ -19,12 +19,12 @@ const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
 const { tracingHeaders, constants, spanBuffer } = tracing;
 
-const lambdaConfig = {
+const lambdaConfigDefaults = {
   tracing: { forceTransmissionStartingAt: 10, transmissionDelay: 100, initialTransmissionDelay: 100 }
 };
 
 const logger = log.init();
-let config = normalizeConfig(lambdaConfig, logger);
+let config = normalizeConfig({}, logger, lambdaConfigDefaults);
 let coldStart = true;
 
 // Initialize instrumentations early to allow for require statements after our
@@ -241,11 +241,11 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
  * Initialize the wrapper.
  */
 function init(event, arnInfo, _config) {
-  config = instanaCore.util.deepMerge(lambdaConfig, _config || {});
+  const customConfig = _config || {};
 
   // CASE: customer provides a custom logger or custom level
-  if (config.logger || config.level) {
-    log.init(config);
+  if (customConfig.logger || customConfig.level) {
+    log.init(customConfig);
   }
 
   // NOTE: We SHOULD renormalize because of:
@@ -253,7 +253,7 @@ function init(event, arnInfo, _config) {
   //         - late env variables (less likely)
   //         - custom logger
   //         - we always renormalize unconditionally to ensure safety.
-  config = normalizeConfig(config, logger);
+  config = normalizeConfig(customConfig, logger, lambdaConfigDefaults);
 
   if (!config.tracing.enabled) {
     return false;
