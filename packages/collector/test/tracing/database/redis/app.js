@@ -46,6 +46,7 @@ function log() {
 (async () => {
   const { connection1, connection2: _connection2 } = await connect(redis, log);
 
+  // NOTE: Cluster has no second connection.
   connection = connection1;
   connection2 = _connection2;
   connectedToRedis = true;
