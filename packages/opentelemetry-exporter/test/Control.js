@@ -19,7 +19,7 @@ class Control extends AbstractServerlessControl {
     this.messagesFromTestApp = [];
     this.backendPort = this.opts.backendPort || portfinder();
     this.port = this.opts.port || portfinder();
-    this.useHttps = true;
+    this.useHttps = 'backendHttps' in this.opts ? this.opts.backendHttps : false;
     const protocol = this.useHttps ? 'https' : 'http';
     this.backendBaseUrl = this.opts.backendBaseUrl || `${protocol}://localhost:${this.backendPort}/serverless`;
     this.instanaEndpoint = `${protocol}://localhost:${this.backendPort}/`;
