@@ -281,8 +281,8 @@ function initInstrumenations(_config) {
 exports.activate = function activate(extraConfig = {}) {
   if (tracingEnabled && !tracingActivated) {
     tracingActivated = true;
-    coreUtil.disableInstrumentation.activate(extraConfig);
-    coreUtil.spanFilter.activate(extraConfig);
+    coreUtil.activate(extraConfig);
+    coreUtil.activate(extraConfig);
     spanBuffer.activate(extraConfig);
     opentracing.activate();
     sdk.activate();
