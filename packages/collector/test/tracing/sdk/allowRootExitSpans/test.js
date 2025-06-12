@@ -18,6 +18,8 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 
 // ATTENTION: starting the short living worker will already send out the span!
 //            beforeEach will kick in afterwards and reset the spans! Do not use beforeEach!
+// ATTENTION: the apps are dying directly and any timer in our tracer won't get triggered anymore
+//            because the process is already dead and we are making use of `unref`.
 mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
   this.timeout(config.getTestTimeout());
 
@@ -50,7 +52,7 @@ mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
 
         const entrySpan = expectEntrySpan(appControls, spans);
         expectExitSpan(appControls, entrySpan, spans);
-      });
+      }, 1000);
     });
   });
 
@@ -74,7 +76,7 @@ mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
         const spans = await agentControls.getSpans();
         expect(spans.length).to.equal(1);
         assertSingleExitSpan(spans);
-      });
+      }, 1000);
     });
   });
 
