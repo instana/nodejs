@@ -501,6 +501,10 @@ function normalizeDisableTracers(config) {
   // case 1: use in-code configuration if available
   // Internally use disableTracers instead of disabledTracers
   if (config.tracing.disabledTracers) {
+    logger.warn(
+      'The configuration property "tracing.disabledTracers" is deprecated and will be removed in a future release. ' +
+        'Please use "tracing.disableTracers" instead.'
+    );
     if (Array.isArray(config.tracing.disabledTracers)) {
       config.tracing.disableTracers.push(...config.tracing.disabledTracers);
     } else {
