@@ -113,6 +113,17 @@ describe('util.ignoreEndpoints', function () {
       };
       expect(normalizeConfig(input)).to.deep.equal(expected);
     });
+
+    it('should normalize connections', function () {
+      const input = {
+        kafka: [{ connections: ['127.168.0.1:6222'], methods: ['set'] }]
+      };
+      const expected = {
+        kafka: [{ connections: ['127.168.0.1:6222'], methods: ['set'] }]
+      };
+
+      expect(normalizeConfig(input)).to.deep.equal(expected);
+    });
   });
 
   describe('fromEnv', function () {
@@ -152,6 +163,7 @@ describe('util.ignoreEndpoints', function () {
       expect(fromEnv(input)).to.deep.equal({});
     });
   });
+
   describe('fromYaml', function () {
     const tracingYamlPath = path.resolve(__dirname, 'tracing.yaml');
     const comInstanaTracingYamlPath = path.resolve(__dirname, 'comInstanaTracing.yaml');
