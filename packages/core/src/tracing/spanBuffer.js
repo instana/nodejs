@@ -218,6 +218,7 @@ exports.addSpan = function (span) {
       addToBucket(span);
     }
 
+    // TODO: what if there is only 2 spans -> aws has no setTimeout!!!! they wont be sent out
     // NOTE: we send out spans directly if the number of spans reaches > X [default] and if the min delay is reached.
     // CASE: its a "guessed" time to wait til the agent is connected. The regular timeout will kick in
     //       soon and sends them out. This is not a reliable way, but its good enough for now.
