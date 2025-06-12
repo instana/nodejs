@@ -50,6 +50,7 @@ exports.init = function init(config) {
  */
 exports.activate = function activate(extraConfig) {
   spanFilter.activate(extraConfig);
+  disableInstrumentation.activate(extraConfig);
 };
 
 exports.applicationUnderMonitoring = applicationUnderMonitoring;
