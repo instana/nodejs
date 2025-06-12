@@ -41,7 +41,9 @@ mochaSuiteFn('tracing/common', function () {
           controls = new ProcessControls({
             useGlobalAgent: true,
             dirname: __dirname,
-            minimalDelay: 6000
+            env: {
+              INSTANA_TRACING_TRANSMISSION_DELAY: '6000'
+            }
           });
         } else {
           controls = new ProcessControls({
