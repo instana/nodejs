@@ -921,6 +921,43 @@ function registerTests(handlerDefinitionPath, reduced) {
     });
   });
 
+  describeOrSkipIfReduced(reduced)('when the back end is HTTPS', function () {
+    // - INSTANA_ENDPOINT_URL is configured
+    // - back end is not reachable
+    // - lambda function ends with success
+    const env = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaAgentKey
+    });
+
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath,
+        startBackend: false,
+        backendHttps: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must ignore the failed request gracefully', () => {
+      return verify(control, { error: false, expectMetrics: false, expectSpans: false });
+    });
+  });
+
   describeOrSkipIfReduced(reduced)('when the back end is down and the lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is not reachable

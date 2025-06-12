@@ -21,7 +21,7 @@ function Control(opts) {
   }
 
   this.backendPort = this.opts.backendPort || portfinder();
-  this.useHttps = !this.opts.startExtension;
+  this.useHttps = 'backendHttps' in this.opts ? this.opts.backendHttps : false;
   const protocol = this.useHttps ? 'https' : 'http';
   this.backendBaseUrl = this.opts.backendBaseUrl || `${protocol}://localhost:${this.backendPort}/serverless`;
   this.extensionBaseUrl = `http://localhost:${this.extensionPort}`;
