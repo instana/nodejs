@@ -256,6 +256,8 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 exports.sendMetrics = function sendMetrics(data, cb) {
   cb = util.atMostOnce('callback for sendMetrics', cb);
 
+  logger.debug(`Sending metrics to agent for pid ${pidStore.pid}.`);
+
   sendData(`/com.instana.plugin.nodejs.${pidStore.pid}`, data, (err, body) => {
     if (err) {
       cb(err, null);
