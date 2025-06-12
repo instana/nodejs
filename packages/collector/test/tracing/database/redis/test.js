@@ -77,6 +77,7 @@ setupTypesToRun.forEach(setupType => {
           if (redisVersion === legacyVersion && redisPkg === '@redis/client') {
             mochaSuiteFn = describe.skip;
           }
+
           // The allowRootExitSpanApp is compatable with Redis v4 and v5 (latest).
           if (redisVersion !== legacyVersion) {
             mochaSuiteFn('When allowRootExitSpan: true is set', function () {
@@ -1156,72 +1157,75 @@ setupTypesToRun.forEach(setupType => {
               });
             });
 
-            describe('(2) when env variable INSTANA_IGNORE_ENDPOINTS_PATH is used', async () => {
-              globalAgent.setUpCleanUpHooks();
-              let controls;
+            // NOTE: cluster has currently no support for multiple connections
+            if (setupType !== 'cluster') {
+              describe('(2) when env variable INSTANA_IGNORE_ENDPOINTS_PATH is used', async () => {
+                globalAgent.setUpCleanUpHooks();
+                let controls;
 
-              before(async () => {
-                controls = new ProcessControls({
-                  useGlobalAgent: true,
-                  appPath:
-                    redisVersion === legacyVersion
-                      ? path.join(__dirname, 'legacyApp.js')
-                      : path.join(__dirname, 'app.js'),
-                  env: {
-                    REDIS_VERSION: redisVersion,
-                    REDIS_PKG: redisPkg,
-                    REDIS_SETUP_TYPE: setupType,
-                    INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing2.yaml')
-                  }
-                });
-                await controls.start();
-              });
-
-              beforeEach(async () => {
-                await agentControls.clearReceivedTraceData();
-              });
-
-              before(async () => {
-                await controls.sendRequest({
-                  method: 'POST',
-                  path: '/clearkeys'
-                });
-              });
-
-              after(async () => {
-                await controls.stop();
-              });
-
-              afterEach(async () => {
-                await controls.clearIpcMessages();
-              });
-
-              it('should ignore connection', async () => {
-                const response = await controls.sendRequest({
-                  method: 'POST',
-                  path: '/two-different-target-hosts',
-                  qs: {
-                    key: 'key',
-                    value1: 'value1',
-                    value2: 'value2'
-                  }
+                before(async () => {
+                  controls = new ProcessControls({
+                    useGlobalAgent: true,
+                    appPath:
+                      redisVersion === legacyVersion
+                        ? path.join(__dirname, 'legacyApp.js')
+                        : path.join(__dirname, 'app.js'),
+                    env: {
+                      REDIS_VERSION: redisVersion,
+                      REDIS_PKG: redisPkg,
+                      REDIS_SETUP_TYPE: setupType,
+                      INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing2.yaml')
+                    }
+                  });
+                  await controls.start();
                 });
 
-                // both connections successfully executed
-                expect(response.response1).to.equal('OK');
-                expect(response.response2).to.equal('OK');
+                beforeEach(async () => {
+                  await agentControls.clearReceivedTraceData();
+                });
 
-                // wait to avoid false positive
-                await delay(5000);
+                before(async () => {
+                  await controls.sendRequest({
+                    method: 'POST',
+                    path: '/clearkeys'
+                  });
+                });
 
-                return retry(async () => {
-                  const spans = await agentControls.getSpans();
-                  // 1 x http entry span
-                  // 1 x redis set span
-                  expect(spans.length).to.equal(2);
+                after(async () => {
+                  await controls.stop();
+                });
+
+                afterEach(async () => {
+                  await controls.clearIpcMessages();
+                });
+
+                it('should ignore connection', async () => {
+                  const response = await controls.sendRequest({
+                    method: 'POST',
+                    path: '/two-different-target-hosts',
+                    qs: {
+                      key: 'key',
+                      value1: 'value1',
+                      value2: 'value2'
+                    }
+                  });
+
+                  // both connections successfully executed
+                  expect(response.response1).to.equal('OK');
+                  expect(response.response2).to.equal('OK');
+
+                  // wait to avoid false positive
+                  await delay(5000);
+
+                  return retry(async () => {
+                    const spans = await agentControls.getSpans();
+                    // 1 x http entry span
+                    // 1 x redis set span
+                    expect(spans.length).to.equal(2);
+                  });
                 });
               });
-            });
+            }
           });
         });
 
