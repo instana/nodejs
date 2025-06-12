@@ -936,7 +936,7 @@ function registerTests(handlerDefinitionPath, reduced) {
       control = new Control({
         faasRuntimePath: path.join(__dirname, '../runtime_mock'),
         handlerDefinitionPath,
-        startBackend: false,
+        startBackend: true,
         backendHttps: true,
         env
       });
@@ -954,7 +954,7 @@ function registerTests(handlerDefinitionPath, reduced) {
     });
 
     it('must ignore the failed request gracefully', () => {
-      return verify(control, { error: false, expectMetrics: false, expectSpans: false });
+      return verify(control, { error: false, expectMetrics: true, expectSpans: true });
     });
   });
 
