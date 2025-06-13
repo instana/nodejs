@@ -35,14 +35,17 @@ const groups = {
   },
   'test:ci:collector:tracing:cloud:aws:v2': {
     sidecars: [],
-    subname: 'test:ci:tracing:cloud:aws:v2',
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"',
     split: 3,
-    scope: '@instana/collector'
+    scope: '@instana/collector',
+    subname: 'test:ci:tracing:cloud:aws:v2'
   },
   'test:ci:collector:tracing:cloud:aws:v3': {
     sidecars: ['localstack'],
-    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"'
+    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"',
+    split: 2,
+    scope: '@instana/collector',
+    subname: 'test:ci:tracing:cloud:aws:v3'
   },
   'test:ci:collector:tracing:cloud:gcp': {
     sidecars: [],
@@ -63,11 +66,17 @@ const groups = {
       'nats-streaming-2',
       'rabbitmq'
     ],
-    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/messaging"'
+    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/messaging"',
+    split: 2,
+    scope: '@instana/collector',
+    subname: 'test:ci:tracing:messaging'
   },
   'test:ci:collector:tracing:protocols': {
     sidecars: ['rabbitmq'],
-    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/protocols"'
+    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/protocols"',
+    split: 2,
+    scope: '@instana/collector',
+    subname: 'test:ci:tracing:protocols'
   },
   'test:ci:collector:tracing:general': {
     sidecars: ['postgres'],

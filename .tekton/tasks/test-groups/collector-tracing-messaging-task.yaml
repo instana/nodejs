@@ -202,23 +202,23 @@ spec:
           if [ "$(params.coverage)" == "true" ]; then
             npm run coverage-ci --npm_command="test:ci:collector:tracing:messaging" --report_dir="collector-tracing-messaging"
           else
-            if [[ false =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npx lerna run "false" --stream --scope="false"
+            if [[ 2 =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=2 CI_TEST_SPLIT_CURRENT=1 npx lerna run "test:ci:tracing:messaging" --stream --scope="@instana/collector"
             else
               npm run "test:ci:collector:tracing:messaging"
             fi
           fi          
           if [ $? -eq 0 ]; then
-            if [[ false =~ ^[0-9]+$ ]]; then
-              touch "false.succeeded"
+            if [[ 2 =~ ^[0-9]+$ ]]; then
+              touch "test:ci:tracing:messaging.succeeded"
             else
               touch "test:ci:collector:tracing:messaging.succeeded"
             fi
             break
           else
             if [ $retry -eq 3 ]; then
-              if [[ false =~ ^[0-9]+$ ]]; then
-                touch "false.failed"
+              if [[ 2 =~ ^[0-9]+$ ]]; then
+                touch "test:ci:tracing:messaging.failed"
               else
                 touch "test:ci:collector:tracing:messaging.failed"
               fi

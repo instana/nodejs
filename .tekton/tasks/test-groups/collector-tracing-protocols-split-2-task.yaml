@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: collector-tracing-protocols
+  name: collector-tracing-protocols-split-2
 spec:
   sidecars:
     - name: rabbitmq
@@ -121,10 +121,10 @@ spec:
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            npm run coverage-ci --npm_command="test:ci:collector:tracing:protocols" --report_dir="collector-tracing-protocols"
+            npm run coverage-ci --npm_command="test:ci:collector:tracing:protocols" --report_dir="collector-tracing-protocols-split-2"
           else
             if [[ 2 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=2 CI_TEST_SPLIT_CURRENT=1 npx lerna run "test:ci:tracing:protocols" --stream --scope="@instana/collector"
+              CI_TEST_SPLIT=2 CI_TEST_SPLIT_CURRENT=2 npx lerna run "test:ci:tracing:protocols" --stream --scope="@instana/collector"
             else
               npm run "test:ci:collector:tracing:protocols"
             fi

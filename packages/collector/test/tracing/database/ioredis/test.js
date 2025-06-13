@@ -21,6 +21,7 @@ const {
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const expectExactlyNMatching = require('@instana/core/test/test_util/expectExactlyNMatching');
+const test_util = require('../../../../../core/test/test_util');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
@@ -1281,7 +1282,10 @@ function checkConnection(span, setupType) {
       });
     }
   });
+
   mochaSuiteFn('ignore-endpoints:', function () {
+    this.timeout(config.getTestTimeout());
+
     describe('when ignore-endpoints is enabled via agent configuration', () => {
       const { AgentStubControls } = require('../../../apps/agentStubControls');
       const customAgentControls = new AgentStubControls();
