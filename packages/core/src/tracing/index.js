@@ -153,9 +153,9 @@ const isInstrumentationDisabled = (cfg, instrumentationKey) => {
   const matchResult = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/);
   const extractedInstrumentationName = matchResult ? matchResult[1] : instrumentationKey.match(/\/([^/]+)$/)[1];
   return (
-    cfg.tracing.disabledTracers.includes(extractedInstrumentationName.toLowerCase()) ||
+    cfg.tracing.disableTracers.includes(extractedInstrumentationName.toLowerCase()) ||
     (instrumentationModules[instrumentationKey].instrumentationName &&
-      cfg.tracing.disabledTracers.includes(instrumentationModules[instrumentationKey].instrumentationName))
+      cfg.tracing.disableTracers.includes(instrumentationModules[instrumentationKey].instrumentationName))
   );
 };
 
