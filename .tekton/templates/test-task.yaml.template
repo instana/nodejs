@@ -126,7 +126,7 @@ spec:
             npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
           else
             if [[ {{split}} =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT={{split}} CI_TEST_SPLIT_CURRENT={{splitNumber}} npx lerna run "{{subname}}" --stream
+              CI_TEST_SPLIT={{split}} CI_TEST_SPLIT_CURRENT={{splitNumber}} npx lerna run "{{subname}}" --stream --scope="{{scope}}"
             else
               npm run "{{groupName}}"
             fi

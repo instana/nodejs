@@ -116,7 +116,7 @@ spec:
             npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-2"
           else
             if [[ 4 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=4 CI_TEST_SPLIT_CURRENT=2 npx lerna run "test:ci" --stream
+              CI_TEST_SPLIT=4 CI_TEST_SPLIT_CURRENT=2 npx lerna run "test:ci" --stream --scope="@instana/aws-lambda"
             else
               npm run "test:ci:aws-lambda"
             fi

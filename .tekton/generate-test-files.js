@@ -30,13 +30,15 @@ const groups = {
     ],
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"',
     split: 4,
-    subname: 'test:ci:tracing:database'
+    subname: 'test:ci:tracing:database',
+    scope: '@instana/collector'
   },
   'test:ci:collector:tracing:cloud:aws:v2': {
     sidecars: [],
     subname: 'test:ci:tracing:cloud:aws:v2',
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"',
-    split: 3
+    split: 3,
+    scope: '@instana/collector'
   },
   'test:ci:collector:tracing:cloud:aws:v3': {
     sidecars: ['localstack'],
@@ -91,7 +93,8 @@ const groups = {
     sidecars: [],
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/aws-lambda"',
     split: 4,
-    subname: 'test:ci'
+    subname: 'test:ci',
+    scope: '@instana/aws-lambda'
   },
   'test:ci:azure-container-services': {
     sidecars: [],
@@ -133,7 +136,7 @@ const groups = {
 
 const sidecars = require('./assets/sidecars.json');
 
-for (const [groupName, { sidecars: groupSidecars, condition, split, subname }] of Object.entries(groups)) {
+for (const [groupName, { sidecars: groupSidecars, condition, split, subname, scope }] of Object.entries(groups)) {
   const templateContent = fs.readFileSync(path.join(__dirname, 'templates/test-task.yaml.template'), 'utf-8');
   const sidecarTemplate = fs.readFileSync(path.join(__dirname, 'templates/sidecar.yaml.template'), 'utf-8');
 
@@ -250,7 +253,6 @@ for (const [groupName, { sidecars: groupSidecars, condition, split, subname }] o
       .join('\n');
 
     let filledTemplate = templateContent;
-
     filledTemplate = filledTemplate.replace('{{condition}}', condition || '');
 
     filledTemplate = filledTemplate
@@ -259,7 +261,8 @@ for (const [groupName, { sidecars: groupSidecars, condition, split, subname }] o
       .replace(/{{groupName}}/g, groupName)
       .replace(/{{subname}}/g, subname || 'false')
       .replace(/{{split}}/g, split || 'false')
-      .replace(/{{splitNumber}}/g, number || '1');
+      .replace(/{{splitNumber}}/g, number || '1')
+      .replace(/{{scope}}/g, scope || 'false');
 
     filledTemplate = filledTemplate
       .split('\n')

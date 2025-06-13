@@ -116,7 +116,7 @@ spec:
             npm run coverage-ci --npm_command="test:ci:collector:tracing:cloud:aws:v2" --report_dir="collector-tracing-cloud-aws-v2-split-2"
           else
             if [[ 3 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=3 CI_TEST_SPLIT_CURRENT=2 npx lerna run "test:ci:tracing:cloud:aws:v2" --stream
+              CI_TEST_SPLIT=3 CI_TEST_SPLIT_CURRENT=2 npx lerna run "test:ci:tracing:cloud:aws:v2" --stream --scope="@instana/collector"
             else
               npm run "test:ci:collector:tracing:cloud:aws:v2"
             fi

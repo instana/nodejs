@@ -212,7 +212,7 @@ spec:
             npm run coverage-ci --npm_command="test:ci:collector:tracing:database" --report_dir="collector-tracing-database"
           else
             if [[ 4 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=4 CI_TEST_SPLIT_CURRENT=1 npx lerna run "test:ci:tracing:database" --stream
+              CI_TEST_SPLIT=4 CI_TEST_SPLIT_CURRENT=1 npx lerna run "test:ci:tracing:database" --stream --scope="@instana/collector"
             else
               npm run "test:ci:collector:tracing:database"
             fi

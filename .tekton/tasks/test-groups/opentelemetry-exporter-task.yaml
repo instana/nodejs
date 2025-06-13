@@ -116,7 +116,7 @@ spec:
             npm run coverage-ci --npm_command="test:ci:opentelemetry-exporter" --report_dir="opentelemetry-exporter"
           else
             if [[ false =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npx lerna run "false" --stream
+              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npx lerna run "false" --stream --scope="false"
             else
               npm run "test:ci:opentelemetry-exporter"
             fi

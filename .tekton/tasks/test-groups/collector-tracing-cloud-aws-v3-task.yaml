@@ -118,7 +118,7 @@ spec:
             npm run coverage-ci --npm_command="test:ci:collector:tracing:cloud:aws:v3" --report_dir="collector-tracing-cloud-aws-v3"
           else
             if [[ false =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npx lerna run "false" --stream
+              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npx lerna run "false" --stream --scope="false"
             else
               npm run "test:ci:collector:tracing:cloud:aws:v3"
             fi
