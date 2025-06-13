@@ -105,7 +105,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
   });
 
   describe('init', function () {
-    it('deactivate instrumentation via config', () => {
+    it('should deactivate instrumentation via disabledTracers', () => {
       initAndActivate({ tracing: { disabledTracers: ['grpc', 'kafkajs', 'aws-sdk/v2'] } });
 
       // grpcJs instrumentation has not been disabled, make sure its init and activate are called
@@ -129,7 +129,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
       expect(activateAwsSdkv3).to.have.been.called;
     });
 
-    it('deactivate instrumentation via env', () => {
+    it('should deactivate instrumentation via INSTANA_DISABLED_TRACERS environment variable', () => {
       process.env.INSTANA_DISABLED_TRACERS = 'grpc';
       initAndActivate({});
 
@@ -139,7 +139,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
       expect(activateAwsSdkv2).to.have.been.called;
     });
 
-    it('update Kafka tracing config', () => {
+    it('should update Kafka tracing config', () => {
       const extraConfigFromAgent = {
         tracing: {
           kafka: {
@@ -152,7 +152,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
       expect(activateStubRdKafka).to.have.been.calledWith(extraConfigFromAgent);
     });
 
-    it('disable aws-sdk/v3', () => {
+    it('should disable aws-sdk/v3 via config', () => {
       initAndActivate({ tracing: { disabledTracers: ['aws-sdk/v3'] } });
 
       // aws-sdk/v3 has been disabled (via aws-sdk/v3)
@@ -163,7 +163,8 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
       expect(initAwsSdkv2).to.have.been.called;
       expect(activateAwsSdkv2).to.have.been.called;
     });
-    it('disable aws-sdk/v3 and aws-sdk/v2', () => {
+
+    it('should disable both aws-sdk/v3 and aws-sdk/v2 via config', () => {
       initAndActivate({ tracing: { disabledTracers: ['aws-sdk/v3', 'aws-sdk/v2'] } });
 
       // aws-sdk/v2 has been disabled (via aws-sdk/v2)
@@ -173,6 +174,63 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
       // aws-sdk/v3 has been disabled (via aws-sdk/v3)
       expect(initAwsSdkv3).not.to.have.been.called;
       expect(activateAwsSdkv3).not.to.have.been.called;
+    });
+
+    it('should deactivate instrumentation via disableTracers', () => {
+      initAndActivate({ tracing: { disableTracers: ['grpc', 'kafkajs', 'aws-sdk/v2'] } });
+
+      expect(initStubGrpcJs).to.have.been.called;
+      expect(activateStubGrpcJs).to.have.been.called;
+
+      expect(initStubKafkaJs).to.not.have.been.called;
+      expect(activateStubKafkaJs).to.not.have.been.called;
+
+      expect(initStubRdKafka).to.have.been.called;
+      expect(activateStubRdKafka).to.have.been.called;
+
+      expect(initAwsSdkv2).not.to.have.been.called;
+      expect(activateAwsSdkv2).not.to.have.been.called;
+
+      expect(initAwsSdkv3).to.have.been.called;
+      expect(activateAwsSdkv3).to.have.been.called;
+    });
+
+    it('should deactivate instrumentation via INSTANA_DISABLE_TRACERS environment variable', () => {
+      process.env.INSTANA_DISABLE_TRACERS = 'grpc';
+      initAndActivate({});
+
+      expect(activateStubGrpcJs).to.have.been.called;
+      expect(activateStubKafkaJs).to.have.been.called;
+      expect(activateStubRdKafka).to.have.been.called;
+      expect(activateAwsSdkv2).to.have.been.called;
+    });
+
+    it('should disable both aws-sdk versions via INSTANA_DISABLE_TRACERS environment variable', () => {
+      process.env.INSTANA_DISABLE_TRACERS = 'aws-sdk/v2,aws-sdk/v3';
+      initAndActivate({});
+
+      expect(initAwsSdkv2).not.to.have.been.called;
+      expect(activateAwsSdkv2).not.to.have.been.called;
+
+      expect(initAwsSdkv3).not.to.have.been.called;
+      expect(activateAwsSdkv3).not.to.have.been.called;
+    });
+
+    it('should handle environment variable with multiple tracers', () => {
+      process.env.INSTANA_DISABLE_TRACERS = 'rdkafka,kafkajs';
+      initAndActivate({});
+
+      expect(initStubKafkaJs).to.not.have.been.called;
+      expect(activateStubKafkaJs).to.not.have.been.called;
+
+      expect(initStubRdKafka).to.not.have.been.called;
+      expect(activateStubRdKafka).to.not.have.been.called;
+
+      expect(initAwsSdkv2).to.have.been.called;
+      expect(activateAwsSdkv2).to.have.been.called;
+
+      expect(initAwsSdkv3).to.have.been.called;
+      expect(activateAwsSdkv3).to.have.been.called;
     });
 
     function initAndActivate(initConfig, extraConfigForActivate) {
