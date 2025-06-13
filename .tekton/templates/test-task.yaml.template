@@ -127,7 +127,7 @@ spec:
           else
             if [[ {{split}} =~ ^[0-9]+$ ]]; then
               CI_TEST_SPLIT={{split}} CI_TEST_SPLIT_CURRENT={{splitNumber}} lerna run "{{subname}}" --stream
-              lerna run "{{groupName}}" --stream
+              npx lerna run "{{groupName}}" --stream
             else
               npm run "{{groupName}}"
             fi

@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: test-ci-collector-tracing-cloud-aws-v2-split-2
+  name: metrics-util
 spec:
   sidecars:
   envFrom:
@@ -90,9 +90,9 @@ spec:
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
         echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
-        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"; then
+        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/metrics-util"; then
           echo "Skipping group."
-          touch "test:ci:collector:tracing:cloud:aws:v2.succeeded"
+          touch "test:ci:metrics-util.succeeded"
           exit 0
         fi
         export CI=true
@@ -104,30 +104,30 @@ spec:
         export AZURE_STORAGE_ACCOUNT_NAME="nodejstracerteam"
         if [ "$(params.esm)" == "true" ]; then
           export RUN_ESM=true
-          if ! echo "test:ci:collector:tracing:cloud:aws:v2" | grep -q 'ci:collector'; then
+          if ! echo "test:ci:metrics-util" | grep -q 'ci:collector'; then
             echo "Skipping tests because groupName does not contain 'ci:collector'."
-            touch "test:ci:collector:tracing:cloud:aws:v2.succeeded"
+            touch "test:ci:metrics-util.succeeded"
             exit 0
           fi
         fi
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            npm run coverage-ci --npm_command="test:ci:collector:tracing:cloud:aws:v2" --report_dir="test-ci-collector-tracing-cloud-aws-v2-split-2"
+            npm run coverage-ci --npm_command="test:ci:metrics-util" --report_dir="metrics-util"
           else
-            if [[ 3 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=3 CI_TEST_SPLIT_CURRENT=2 lerna run "test:ci:tracing:cloud:aws:v2" --stream
-              lerna run "test:ci:collector:tracing:cloud:aws:v2" --stream
+            if [[ false =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 lerna run "false" --stream
+              npx lerna run "test:ci:metrics-util" --stream
             else
-              npm run "test:ci:collector:tracing:cloud:aws:v2"
+              npm run "test:ci:metrics-util"
             fi
           fi          
           if [ $? -eq 0 ]; then
-            touch "test:ci:collector:tracing:cloud:aws:v2.succeeded"
+            touch "test:ci:metrics-util.succeeded"
             break
           else
             if [ $retry -eq 3 ]; then
-              touch "test:ci:collector:tracing:cloud:aws:v2.failed"
+              touch "test:ci:metrics-util.failed"
               exit 1
             fi
             retry=$((retry + 1))

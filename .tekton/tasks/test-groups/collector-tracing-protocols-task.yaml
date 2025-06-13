@@ -1,9 +1,17 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: test-ci-serverless-collector
+  name: collector-tracing-protocols
 spec:
   sidecars:
+    - name: rabbitmq
+      image: rabbitmq:3.7.7
+      readinessProbe:
+          tcpSocket:
+            port: 5672 
+          initialDelaySeconds: 7
+          periodSeconds: 2
+          timeoutSeconds: 60
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -90,9 +98,9 @@ spec:
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
         echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
-        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/serverless-collector"; then
+        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/protocols"; then
           echo "Skipping group."
-          touch "test:ci:serverless-collector.succeeded"
+          touch "test:ci:collector:tracing:protocols.succeeded"
           exit 0
         fi
         export CI=true
@@ -104,30 +112,30 @@ spec:
         export AZURE_STORAGE_ACCOUNT_NAME="nodejstracerteam"
         if [ "$(params.esm)" == "true" ]; then
           export RUN_ESM=true
-          if ! echo "test:ci:serverless-collector" | grep -q 'ci:collector'; then
+          if ! echo "test:ci:collector:tracing:protocols" | grep -q 'ci:collector'; then
             echo "Skipping tests because groupName does not contain 'ci:collector'."
-            touch "test:ci:serverless-collector.succeeded"
+            touch "test:ci:collector:tracing:protocols.succeeded"
             exit 0
           fi
         fi
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            npm run coverage-ci --npm_command="test:ci:serverless-collector" --report_dir="test-ci-serverless-collector"
+            npm run coverage-ci --npm_command="test:ci:collector:tracing:protocols" --report_dir="collector-tracing-protocols"
           else
             if [[ false =~ ^[0-9]+$ ]]; then
               CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 lerna run "false" --stream
-              lerna run "test:ci:serverless-collector" --stream
+              npx lerna run "test:ci:collector:tracing:protocols" --stream
             else
-              npm run "test:ci:serverless-collector"
+              npm run "test:ci:collector:tracing:protocols"
             fi
           fi          
           if [ $? -eq 0 ]; then
-            touch "test:ci:serverless-collector.succeeded"
+            touch "test:ci:collector:tracing:protocols.succeeded"
             break
           else
             if [ $retry -eq 3 ]; then
-              touch "test:ci:serverless-collector.failed"
+              touch "test:ci:collector:tracing:protocols.failed"
               exit 1
             fi
             retry=$((retry + 1))

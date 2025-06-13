@@ -191,11 +191,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-autoprofile-task
+    - name: autoprofile-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-autoprofile
+        name: autoprofile
       params:
         - name: node-version
           value: $(params.node-version)
@@ -216,11 +216,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-aws-fargate-task
+    - name: aws-fargate-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-aws-fargate
+        name: aws-fargate
       params:
         - name: node-version
           value: $(params.node-version)
@@ -241,11 +241,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-aws-lambda-task
+    - name: aws-lambda-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-aws-lambda
+        name: aws-lambda
       params:
         - name: node-version
           value: $(params.node-version)
@@ -266,11 +266,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-azure-container-services-task
+    - name: azure-container-services-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-azure-container-services
+        name: azure-container-services
       params:
         - name: node-version
           value: $(params.node-version)
@@ -291,11 +291,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-general-task
+    - name: collector-general-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-general
+        name: collector-general
       params:
         - name: node-version
           value: $(params.node-version)
@@ -316,11 +316,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-cloud-aws-v2-split-2-task
+    - name: collector-tracing-cloud-aws-v2-split-2-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-cloud-aws-v2-split-2
+        name: collector-tracing-cloud-aws-v2-split-2
       params:
         - name: node-version
           value: $(params.node-version)
@@ -341,11 +341,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-cloud-aws-v2-split-3-task
+    - name: collector-tracing-cloud-aws-v2-split-3-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-cloud-aws-v2-split-3
+        name: collector-tracing-cloud-aws-v2-split-3
       params:
         - name: node-version
           value: $(params.node-version)
@@ -366,11 +366,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-cloud-aws-v2-task
+    - name: collector-tracing-cloud-aws-v2-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-cloud-aws-v2
+        name: collector-tracing-cloud-aws-v2
       params:
         - name: node-version
           value: $(params.node-version)
@@ -391,11 +391,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-cloud-aws-v3-task
+    - name: collector-tracing-cloud-aws-v3-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-cloud-aws-v3
+        name: collector-tracing-cloud-aws-v3
       params:
         - name: node-version
           value: $(params.node-version)
@@ -416,11 +416,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-cloud-azure-task
+    - name: collector-tracing-cloud-azure-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-cloud-azure
+        name: collector-tracing-cloud-azure
       params:
         - name: node-version
           value: $(params.node-version)
@@ -441,11 +441,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-cloud-gcp-task
+    - name: collector-tracing-cloud-gcp-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-cloud-gcp
+        name: collector-tracing-cloud-gcp
       params:
         - name: node-version
           value: $(params.node-version)
@@ -466,11 +466,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-database-task
+    - name: collector-tracing-database-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-database
+        name: collector-tracing-database
       params:
         - name: node-version
           value: $(params.node-version)
@@ -491,11 +491,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-frameworks-task
+    - name: collector-tracing-frameworks-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-frameworks
+        name: collector-tracing-frameworks
       params:
         - name: node-version
           value: $(params.node-version)
@@ -516,11 +516,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-general-task
+    - name: collector-tracing-general-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-general
+        name: collector-tracing-general
       params:
         - name: node-version
           value: $(params.node-version)
@@ -541,11 +541,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-logging-task
+    - name: collector-tracing-logging-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-logging
+        name: collector-tracing-logging
       params:
         - name: node-version
           value: $(params.node-version)
@@ -566,11 +566,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-messaging-task
+    - name: collector-tracing-messaging-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-messaging
+        name: collector-tracing-messaging
       params:
         - name: node-version
           value: $(params.node-version)
@@ -591,11 +591,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-misc-task
+    - name: collector-tracing-misc-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-misc
+        name: collector-tracing-misc
       params:
         - name: node-version
           value: $(params.node-version)
@@ -616,11 +616,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-collector-tracing-protocols-task
+    - name: collector-tracing-protocols-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-collector-tracing-protocols
+        name: collector-tracing-protocols
       params:
         - name: node-version
           value: $(params.node-version)
@@ -641,11 +641,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-core-task
+    - name: core-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-core
+        name: core
       params:
         - name: node-version
           value: $(params.node-version)
@@ -666,11 +666,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-google-cloud-run-task
+    - name: google-cloud-run-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-google-cloud-run
+        name: google-cloud-run
       params:
         - name: node-version
           value: $(params.node-version)
@@ -691,11 +691,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-metrics-util-task
+    - name: metrics-util-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-metrics-util
+        name: metrics-util
       params:
         - name: node-version
           value: $(params.node-version)
@@ -716,11 +716,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-opentelemetry-exporter-task
+    - name: opentelemetry-exporter-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-opentelemetry-exporter
+        name: opentelemetry-exporter
       params:
         - name: node-version
           value: $(params.node-version)
@@ -741,11 +741,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-opentelemetry-sampler-task
+    - name: opentelemetry-sampler-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-opentelemetry-sampler
+        name: opentelemetry-sampler
       params:
         - name: node-version
           value: $(params.node-version)
@@ -766,11 +766,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-serverless-collector-task
+    - name: serverless-collector-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-serverless-collector
+        name: serverless-collector
       params:
         - name: node-version
           value: $(params.node-version)
@@ -791,11 +791,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-serverless-task
+    - name: serverless-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-serverless
+        name: serverless
       params:
         - name: node-version
           value: $(params.node-version)
@@ -816,11 +816,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: test-ci-shared-metrics-task
+    - name: shared-metrics-task
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: test-ci-shared-metrics
+        name: shared-metrics
       params:
         - name: node-version
           value: $(params.node-version)

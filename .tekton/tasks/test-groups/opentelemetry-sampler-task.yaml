@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: test-ci-shared-metrics
+  name: opentelemetry-sampler
 spec:
   sidecars:
   envFrom:
@@ -90,9 +90,9 @@ spec:
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
         echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
-        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/shared-metrics"; then
+        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/opentelemetry-sampler"; then
           echo "Skipping group."
-          touch "test:ci:shared-metrics.succeeded"
+          touch "test:ci:opentelemetry-sampler.succeeded"
           exit 0
         fi
         export CI=true
@@ -104,30 +104,30 @@ spec:
         export AZURE_STORAGE_ACCOUNT_NAME="nodejstracerteam"
         if [ "$(params.esm)" == "true" ]; then
           export RUN_ESM=true
-          if ! echo "test:ci:shared-metrics" | grep -q 'ci:collector'; then
+          if ! echo "test:ci:opentelemetry-sampler" | grep -q 'ci:collector'; then
             echo "Skipping tests because groupName does not contain 'ci:collector'."
-            touch "test:ci:shared-metrics.succeeded"
+            touch "test:ci:opentelemetry-sampler.succeeded"
             exit 0
           fi
         fi
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            npm run coverage-ci --npm_command="test:ci:shared-metrics" --report_dir="test-ci-shared-metrics"
+            npm run coverage-ci --npm_command="test:ci:opentelemetry-sampler" --report_dir="opentelemetry-sampler"
           else
             if [[ false =~ ^[0-9]+$ ]]; then
               CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 lerna run "false" --stream
-              lerna run "test:ci:shared-metrics" --stream
+              npx lerna run "test:ci:opentelemetry-sampler" --stream
             else
-              npm run "test:ci:shared-metrics"
+              npm run "test:ci:opentelemetry-sampler"
             fi
           fi          
           if [ $? -eq 0 ]; then
-            touch "test:ci:shared-metrics.succeeded"
+            touch "test:ci:opentelemetry-sampler.succeeded"
             break
           else
             if [ $retry -eq 3 ]; then
-              touch "test:ci:shared-metrics.failed"
+              touch "test:ci:opentelemetry-sampler.failed"
               exit 1
             fi
             retry=$((retry + 1))

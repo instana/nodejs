@@ -138,6 +138,11 @@ for (const [groupName, { sidecars: groupSidecars, condition, split, subname }] o
   runs.forEach(number => {
     let sanitizedGroupName = groupName.replace(/:/g, '-');
 
+    // Replace test- prefix
+    sanitizedGroupName = sanitizedGroupName.replace(/^test-/, '');
+    // Replace ci- prefix
+    sanitizedGroupName = sanitizedGroupName.replace(/^ci-/, '');
+
     if (number > 1) {
       sanitizedGroupName = `${sanitizedGroupName}-split-${number}`;
     }

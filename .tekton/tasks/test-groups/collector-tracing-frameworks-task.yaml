@@ -1,9 +1,27 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: test-ci-google-cloud-run
+  name: collector-tracing-frameworks
 spec:
   sidecars:
+    - name: postgres
+      image: postgres
+      env:
+          - name: "POSTGRES_USER"
+            value: "node"
+          - name: "POSTGRES_PASSWORD"
+            value: "nodepw"
+          - name: "POSTGRES_DB"
+            value: "nodedb"
+      readinessProbe:
+          exec:
+            command:
+            - "sh"
+            - "-c"
+            - "pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb"
+          initialDelaySeconds: 3
+          periodSeconds: 2
+          timeoutSeconds: 10
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -90,9 +108,9 @@ spec:
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
         echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
-        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/google-cloud-run"; then
+        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/frameworks"; then
           echo "Skipping group."
-          touch "test:ci:google-cloud-run.succeeded"
+          touch "test:ci:collector:tracing:frameworks.succeeded"
           exit 0
         fi
         export CI=true
@@ -104,30 +122,30 @@ spec:
         export AZURE_STORAGE_ACCOUNT_NAME="nodejstracerteam"
         if [ "$(params.esm)" == "true" ]; then
           export RUN_ESM=true
-          if ! echo "test:ci:google-cloud-run" | grep -q 'ci:collector'; then
+          if ! echo "test:ci:collector:tracing:frameworks" | grep -q 'ci:collector'; then
             echo "Skipping tests because groupName does not contain 'ci:collector'."
-            touch "test:ci:google-cloud-run.succeeded"
+            touch "test:ci:collector:tracing:frameworks.succeeded"
             exit 0
           fi
         fi
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            npm run coverage-ci --npm_command="test:ci:google-cloud-run" --report_dir="test-ci-google-cloud-run"
+            npm run coverage-ci --npm_command="test:ci:collector:tracing:frameworks" --report_dir="collector-tracing-frameworks"
           else
             if [[ false =~ ^[0-9]+$ ]]; then
               CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 lerna run "false" --stream
-              lerna run "test:ci:google-cloud-run" --stream
+              npx lerna run "test:ci:collector:tracing:frameworks" --stream
             else
-              npm run "test:ci:google-cloud-run"
+              npm run "test:ci:collector:tracing:frameworks"
             fi
           fi          
           if [ $? -eq 0 ]; then
-            touch "test:ci:google-cloud-run.succeeded"
+            touch "test:ci:collector:tracing:frameworks.succeeded"
             break
           else
             if [ $retry -eq 3 ]; then
-              touch "test:ci:google-cloud-run.failed"
+              touch "test:ci:collector:tracing:frameworks.failed"
               exit 1
             fi
             retry=$((retry + 1))

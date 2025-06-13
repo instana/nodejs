@@ -1,33 +1,9 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: test-ci-collector-general
+  name: autoprofile
 spec:
   sidecars:
-    - name: mysql
-      image: mysql:8.0.26
-      args:
-          - "--default-authentication-plugin=mysql_native_password"
-      env:
-          - name: "MYSQL_ROOT_PASSWORD"
-            value: "nodepw"
-          - name: "MYSQL_DATABASE"
-            value: "nodedb"
-          - name: "MYSQL_USER"
-            value: "node"
-          - name: "MYSQL_PASSWORD"
-            value: "nodepw"
-          - name: "MYSQL_ROOT_HOST"
-            value: "0.0.0.0"
-      readinessProbe:
-          exec:
-            command:
-            - "sh"
-            - "-c"
-            - "mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1'"
-          initialDelaySeconds: 3
-          periodSeconds: 2
-          timeoutSeconds: 10
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -114,9 +90,9 @@ spec:
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
         echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
-        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]'; then
+        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/autoprofile"; then
           echo "Skipping group."
-          touch "test:ci:collector:general.succeeded"
+          touch "test:ci:autoprofile.succeeded"
           exit 0
         fi
         export CI=true
@@ -128,30 +104,30 @@ spec:
         export AZURE_STORAGE_ACCOUNT_NAME="nodejstracerteam"
         if [ "$(params.esm)" == "true" ]; then
           export RUN_ESM=true
-          if ! echo "test:ci:collector:general" | grep -q 'ci:collector'; then
+          if ! echo "test:ci:autoprofile" | grep -q 'ci:collector'; then
             echo "Skipping tests because groupName does not contain 'ci:collector'."
-            touch "test:ci:collector:general.succeeded"
+            touch "test:ci:autoprofile.succeeded"
             exit 0
           fi
         fi
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            npm run coverage-ci --npm_command="test:ci:collector:general" --report_dir="test-ci-collector-general"
+            npm run coverage-ci --npm_command="test:ci:autoprofile" --report_dir="autoprofile"
           else
             if [[ false =~ ^[0-9]+$ ]]; then
               CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 lerna run "false" --stream
-              lerna run "test:ci:collector:general" --stream
+              npx lerna run "test:ci:autoprofile" --stream
             else
-              npm run "test:ci:collector:general"
+              npm run "test:ci:autoprofile"
             fi
           fi          
           if [ $? -eq 0 ]; then
-            touch "test:ci:collector:general.succeeded"
+            touch "test:ci:autoprofile.succeeded"
             break
           else
             if [ $retry -eq 3 ]; then
-              touch "test:ci:collector:general.failed"
+              touch "test:ci:autoprofile.failed"
               exit 1
             fi
             retry=$((retry + 1))
