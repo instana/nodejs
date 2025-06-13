@@ -258,7 +258,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.disableTracers).to.deep.equal([]);
   });
 
-  it('should disable individual tracers via config', () => {
+  it('should disable individual tracers via disabledTracers config', () => {
     const config = normalizeConfig({
       tracing: {
         disabledTracers: ['graphQL', 'GRPC']
@@ -275,7 +275,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.disableTracers).to.deep.equal(['graphql', 'grpc']);
   });
 
-  it('config should take precedence over env vars when disabling individual tracers', () => {
+  it('config should take precedence over INSTANA_DISABLED_TRACERS when disabling individual tracers', () => {
     process.env.INSTANA_DISABLED_TRACERS = 'foo, bar';
     const config = normalizeConfig({
       tracing: {
@@ -283,6 +283,25 @@ describe('util.normalizeConfig', () => {
       }
     });
     // values will be normalized to lower case
+    expect(config.tracing.disableTracers).to.deep.equal(['baz', 'fizz']);
+  });
+
+  it('should disable individual tracers via disableTracers config', () => {
+    const config = normalizeConfig({
+      tracing: {
+        disableTracers: ['graphQL', 'GRPC']
+      }
+    });
+    expect(config.tracing.disableTracers).to.deep.equal(['graphql', 'grpc']);
+  });
+
+  it('config should take precedence over INSTANA_DISABLE_TRACERS when disabling individual tracers', () => {
+    process.env.INSTANA_DISABLE_TRACERS = 'foo, bar';
+    const config = normalizeConfig({
+      tracing: {
+        disableTracers: ['baz', 'fizz']
+      }
+    });
     expect(config.tracing.disableTracers).to.deep.equal(['baz', 'fizz']);
   });
 
