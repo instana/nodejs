@@ -122,11 +122,19 @@ spec:
             fi
           fi          
           if [ $? -eq 0 ]; then
-            touch "test:ci:azure-container-services.succeeded"
+            if [[ false =~ ^[0-9]+$ ]]; then
+              touch "false.succeeded"
+            else
+              touch "test:ci:azure-container-services.succeeded"
+            fi
             break
           else
             if [ $retry -eq 3 ]; then
-              touch "test:ci:azure-container-services.failed"
+              if [[ false =~ ^[0-9]+$ ]]; then
+                touch "false.failed"
+              else
+                touch "test:ci:azure-container-services.failed"
+              fi
               exit 1
             fi
             retry=$((retry + 1))

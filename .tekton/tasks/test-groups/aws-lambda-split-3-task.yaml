@@ -122,11 +122,19 @@ spec:
             fi
           fi          
           if [ $? -eq 0 ]; then
-            touch "test:ci:aws-lambda.succeeded"
+            if [[ 4 =~ ^[0-9]+$ ]]; then
+              touch "test:ci.succeeded"
+            else
+              touch "test:ci:aws-lambda.succeeded"
+            fi
             break
           else
             if [ $retry -eq 3 ]; then
-              touch "test:ci:aws-lambda.failed"
+              if [[ 4 =~ ^[0-9]+$ ]]; then
+                touch "test:ci.failed"
+              else
+                touch "test:ci:aws-lambda.failed"
+              fi
               exit 1
             fi
             retry=$((retry + 1))

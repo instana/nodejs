@@ -133,11 +133,21 @@ spec:
           fi          
 
           if [ $? -eq 0 ]; then
-            touch "{{groupName}}.succeeded"
+            if [[ {{split}} =~ ^[0-9]+$ ]]; then
+              touch "{{subname}}.succeeded"
+            else
+              touch "{{groupName}}.succeeded"
+            fi
+
             break
           else
             if [ $retry -eq 3 ]; then
-              touch "{{groupName}}.failed"
+              if [[ {{split}} =~ ^[0-9]+$ ]]; then
+                touch "{{subname}}.failed"
+              else
+                touch "{{groupName}}.failed"
+              fi
+
               exit 1
             fi
 

@@ -218,11 +218,19 @@ spec:
             fi
           fi          
           if [ $? -eq 0 ]; then
-            touch "test:ci:collector:tracing:database.succeeded"
+            if [[ 4 =~ ^[0-9]+$ ]]; then
+              touch "test:ci:tracing:database.succeeded"
+            else
+              touch "test:ci:collector:tracing:database.succeeded"
+            fi
             break
           else
             if [ $retry -eq 3 ]; then
-              touch "test:ci:collector:tracing:database.failed"
+              if [[ 4 =~ ^[0-9]+$ ]]; then
+                touch "test:ci:tracing:database.failed"
+              else
+                touch "test:ci:collector:tracing:database.failed"
+              fi
               exit 1
             fi
             retry=$((retry + 1))

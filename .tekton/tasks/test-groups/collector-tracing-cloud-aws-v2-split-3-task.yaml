@@ -122,11 +122,19 @@ spec:
             fi
           fi          
           if [ $? -eq 0 ]; then
-            touch "test:ci:collector:tracing:cloud:aws:v2.succeeded"
+            if [[ 3 =~ ^[0-9]+$ ]]; then
+              touch "test:ci:tracing:cloud:aws:v2.succeeded"
+            else
+              touch "test:ci:collector:tracing:cloud:aws:v2.succeeded"
+            fi
             break
           else
             if [ $retry -eq 3 ]; then
-              touch "test:ci:collector:tracing:cloud:aws:v2.failed"
+              if [[ 3 =~ ^[0-9]+$ ]]; then
+                touch "test:ci:tracing:cloud:aws:v2.failed"
+              else
+                touch "test:ci:collector:tracing:cloud:aws:v2.failed"
+              fi
               exit 1
             fi
             retry=$((retry + 1))
