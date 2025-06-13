@@ -29,7 +29,7 @@ const groups = {
       'mssql'
     ],
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"',
-    split: 4,
+    split: 6,
     subname: 'test:ci:tracing:database',
     scope: '@instana/collector'
   },
