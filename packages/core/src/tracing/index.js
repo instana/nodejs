@@ -142,24 +142,6 @@ exports.supportedVersion = supportedVersion;
 exports.util = tracingUtil;
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} cfg
- * @param {string} instrumentationKey
- */
-const isInstrumentationDisabled = (cfg, instrumentationKey) => {
-  // Extracts the instrumentation name using the pattern '.\/instrumentation\/[^/]*\/(.*)',
-  // capturing the part after '/instrumentation/.../'. If this pattern doesn't match,
-  // it falls back to extracting the last part of the path after the final '/'.
-  // This is primarily implemented to handle customInstrumentation cases.
-  const matchResult = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/);
-  const extractedInstrumentationName = matchResult ? matchResult[1] : instrumentationKey.match(/\/([^/]+)$/)[1];
-  return (
-    cfg.tracing.disabledTracers.includes(extractedInstrumentationName.toLowerCase()) ||
-    (instrumentationModules[instrumentationKey].instrumentationName &&
-      cfg.tracing.disabledTracers.includes(instrumentationModules[instrumentationKey].instrumentationName))
-  );
-};
-
-/**
  * @param {Array.<InstanaInstrumentedModule>} _additionalInstrumentationModules
  */
 exports.registerAdditionalInstrumentations = function registerAdditionalInstrumentations(
@@ -268,8 +250,12 @@ function initInstrumenations(_config) {
   if (!instrumenationsInitialized) {
     instrumentations.forEach(instrumentationKey => {
       instrumentationModules[instrumentationKey] = require(instrumentationKey);
-
-      if (!isInstrumentationDisabled(_config, instrumentationKey)) {
+      if (
+        !coreUtil.disableInstrumentation.isInstrumentationDisabled({
+          instrumentationModules,
+          instrumentationKey
+        })
+      ) {
         instrumentationModules[instrumentationKey].init(_config);
       }
 
@@ -295,14 +281,20 @@ function initInstrumenations(_config) {
 exports.activate = function activate(extraConfig = {}) {
   if (tracingEnabled && !tracingActivated) {
     tracingActivated = true;
-    coreUtil.spanFilter.activate(extraConfig);
+    coreUtil.activate(extraConfig);
+    coreUtil.activate(extraConfig);
     spanBuffer.activate(extraConfig);
     opentracing.activate();
     sdk.activate();
 
     if (automaticTracingEnabled) {
       instrumentations.forEach(instrumentationKey => {
-        if (!isInstrumentationDisabled(config, instrumentationKey)) {
+        if (
+          !coreUtil.disableInstrumentation.isInstrumentationDisabled({
+            instrumentationModules,
+            instrumentationKey
+          })
+        ) {
           instrumentationModules[instrumentationKey].activate(extraConfig);
         }
       });
