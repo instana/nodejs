@@ -498,13 +498,15 @@ function normalizeDisableTracers(config) {
   if (!config.tracing.disableTracers) {
     config.tracing.disableTracers = [];
   }
-  // case 1: use in-code configuration if available
-  // Internally use disableTracers instead of disabledTracers
+  // Case 1: process in-code configuration
+  // Note: We maintain backward compatibility with the deprecated 'disabledTracers' property
+  // but internally standardize on 'disableTracers'. The old property will be removed in v5.
   if (config.tracing.disabledTracers) {
     logger.warn(
       'The configuration property "tracing.disabledTracers" is deprecated and will be removed in the next major release. ' +
         'Please use "tracing.disableTracers" instead.'
     );
+
     if (Array.isArray(config.tracing.disabledTracers)) {
       config.tracing.disableTracers.push(...config.tracing.disabledTracers);
     } else {
@@ -542,7 +544,9 @@ function getDisableTracersFromEnv() {
 
   if (process.env.INSTANA_DISABLE_TRACERS) {
     disableTracersEnvVar = parseHeadersEnvVar(process.env.INSTANA_DISABLE_TRACERS);
-  } else if (process.env.INSTANA_DISABLED_TRACERS) {
+  }
+  // We deprecated the variable `INSTANA_DISABLED_TRACERS` and will be removed in the next major release(v5).
+  else if (process.env.INSTANA_DISABLED_TRACERS) {
     disableTracersEnvVar = parseHeadersEnvVar(process.env.INSTANA_DISABLED_TRACERS);
     logger.warn(
       'The environment variable INSTANA_DISABLED_TRACERS is deprecated and will be removed in the next major release. ' +
