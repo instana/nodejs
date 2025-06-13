@@ -116,9 +116,7 @@ spec:
             npm run coverage-ci --npm_command="test:ci:serverless-collector" --report_dir="test-ci-serverless-collector"
           else
             if [[ false =~ ^[0-9]+$ ]]; then
-              for ((i=1; i<=false; i++)); do
-                CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=$i lerna run "false" --stream
-              done
+              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 lerna run "false" --stream
               lerna run "test:ci:serverless-collector" --stream
             else
               npm run "test:ci:serverless-collector"

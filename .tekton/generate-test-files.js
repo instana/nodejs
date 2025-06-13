@@ -134,128 +134,137 @@ for (const [groupName, { sidecars: groupSidecars, condition, split, subname }] o
   const sidecarTemplate = fs.readFileSync(path.join(__dirname, 'templates/sidecar.yaml.template'), 'utf-8');
   const sanitizedGroupName = groupName.replace(/:/g, '-');
 
-  const groupSidecarDetails = groupSidecars
-    .map(sidecarName => {
-      const sidecar = sidecars.sidecars.find(s => s.name === sidecarName);
+  const runs = split ? Array.from({ length: split }, (_, i) => i + 1) : [1];
 
-      if (!sidecar) {
-        return '';
-      }
+  runs.forEach(number => {
+    const groupSidecarDetails = groupSidecars
+      .map(sidecarName => {
+        const sidecar = sidecars.sidecars.find(s => s.name === sidecarName);
 
-      let templ = sidecarTemplate.replace('{{name}}', sidecar.name).replace('{{image}}', sidecar.image);
+        if (!sidecar) {
+          return '';
+        }
 
-      if (sidecar.env) {
-        let res = 'env:\n';
+        let templ = sidecarTemplate.replace('{{name}}', sidecar.name).replace('{{image}}', sidecar.image);
 
-        res += sidecar.env
-          .map(e => {
-            return `          - name: "${e.name}"\n            value: "${e.value}"\n`;
-          })
-          .join('');
+        if (sidecar.env) {
+          let res = 'env:\n';
 
-        templ = templ.replace('{{env}}', res);
-      } else {
-        templ = templ.replace('{{env}}', '');
-      }
-
-      if (sidecar.args) {
-        let res = 'args:\n';
-
-        sidecar.args.forEach(arg => {
-          if (typeof arg === 'string' && (arg.includes('\n') || arg.includes('&&'))) {
-            res += `          - |\n`;
-            const lines = arg.split('\n').length > 1 ? arg.split('\n') : arg.split('&&').map(cmd => cmd.trim());
-            lines.forEach(line => {
-              res += `            ${line}\n`;
-            });
-          } else {
-            res += `          - ${JSON.stringify(arg)}\n`;
-          }
-        });
-
-        templ = templ.replace('{{args}}', res);
-      } else {
-        templ = templ.replace('{{args}}', '');
-      }
-
-      if (sidecar.readinessProbe) {
-        let res = 'readinessProbe:\n';
-
-        if (sidecar.readinessProbe.exec) {
-          res += '          exec:\n';
-          res += '            command:\n';
-
-          res += sidecar.readinessProbe.exec.command
-            .map(cmd => {
-              return `            - "${cmd}"\n`;
+          res += sidecar.env
+            .map(e => {
+              return `          - name: "${e.name}"\n            value: "${e.value}"\n`;
             })
             .join('');
+
+          templ = templ.replace('{{env}}', res);
+        } else {
+          templ = templ.replace('{{env}}', '');
         }
 
-        if (sidecar.readinessProbe.httpGet) {
-          res += '          httpGet:\n';
-          res += `            path: ${sidecar.readinessProbe.httpGet.path} \n`;
-          res += `            port: ${sidecar.readinessProbe.httpGet.port} \n`;
+        if (sidecar.args) {
+          let res = 'args:\n';
+
+          sidecar.args.forEach(arg => {
+            if (typeof arg === 'string' && (arg.includes('\n') || arg.includes('&&'))) {
+              res += `          - |\n`;
+              const lines = arg.split('\n').length > 1 ? arg.split('\n') : arg.split('&&').map(cmd => cmd.trim());
+              lines.forEach(line => {
+                res += `            ${line}\n`;
+              });
+            } else {
+              res += `          - ${JSON.stringify(arg)}\n`;
+            }
+          });
+
+          templ = templ.replace('{{args}}', res);
+        } else {
+          templ = templ.replace('{{args}}', '');
         }
 
-        if (sidecar.readinessProbe.tcpSocket) {
-          res += '          tcpSocket:\n';
-          res += `            port: ${sidecar.readinessProbe.tcpSocket.port} \n`;
+        if (sidecar.readinessProbe) {
+          let res = 'readinessProbe:\n';
+
+          if (sidecar.readinessProbe.exec) {
+            res += '          exec:\n';
+            res += '            command:\n';
+
+            res += sidecar.readinessProbe.exec.command
+              .map(cmd => {
+                return `            - "${cmd}"\n`;
+              })
+              .join('');
+          }
+
+          if (sidecar.readinessProbe.httpGet) {
+            res += '          httpGet:\n';
+            res += `            path: ${sidecar.readinessProbe.httpGet.path} \n`;
+            res += `            port: ${sidecar.readinessProbe.httpGet.port} \n`;
+          }
+
+          if (sidecar.readinessProbe.tcpSocket) {
+            res += '          tcpSocket:\n';
+            res += `            port: ${sidecar.readinessProbe.tcpSocket.port} \n`;
+          }
+
+          if (sidecar.readinessProbe.initialDelaySeconds) {
+            res += `          initialDelaySeconds: ${sidecar.readinessProbe.initialDelaySeconds}\n`;
+          }
+
+          if (sidecar.readinessProbe.periodSeconds) {
+            res += `          periodSeconds: ${sidecar.readinessProbe.periodSeconds}\n`;
+          }
+
+          if (sidecar.readinessProbe.timeoutSeconds) {
+            res += `          timeoutSeconds: ${sidecar.readinessProbe.timeoutSeconds}\n`;
+          }
+
+          templ = templ.replace('{{readinessProbe}}', res);
+        } else {
+          templ = templ.replace('{{readinessProbe}}', '');
         }
 
-        if (sidecar.readinessProbe.initialDelaySeconds) {
-          res += `          initialDelaySeconds: ${sidecar.readinessProbe.initialDelaySeconds}\n`;
-        }
-
-        if (sidecar.readinessProbe.periodSeconds) {
-          res += `          periodSeconds: ${sidecar.readinessProbe.periodSeconds}\n`;
-        }
-
-        if (sidecar.readinessProbe.timeoutSeconds) {
-          res += `          timeoutSeconds: ${sidecar.readinessProbe.timeoutSeconds}\n`;
-        }
-
-        templ = templ.replace('{{readinessProbe}}', res);
-      } else {
+        templ = templ.replace('{{command}}', '');
         templ = templ.replace('{{readinessProbe}}', '');
-      }
 
-      templ = templ.replace('{{command}}', '');
-      templ = templ.replace('{{readinessProbe}}', '');
+        templ = templ
+          .split('\n')
+          .filter(line => line.trim() !== '')
+          .join('\n');
 
-      templ = templ
-        .split('\n')
-        .filter(line => line.trim() !== '')
-        .join('\n');
+        return `${templ}`;
+      })
+      .join('\n');
 
-      return `${templ}`;
-    })
-    .join('\n');
+    let filledTemplate = templateContent;
 
-  let filledTemplate = templateContent;
+    filledTemplate = filledTemplate.replace('{{condition}}', condition || '');
 
-  filledTemplate = filledTemplate.replace('{{condition}}', condition || '');
+    filledTemplate = filledTemplate
+      .replace(/{{sanitizedGroupName}}/g, sanitizedGroupName)
+      .replace(/{{sidecars}}/g, `sidecars:\n${groupSidecarDetails}`)
+      .replace(/{{groupName}}/g, groupName)
+      .replace(/{{subname}}/g, subname || 'false')
+      .replace(/{{split}}/g, split || 'false')
+      .replace(/{{splitNumber}}/g, number || '1');
 
-  filledTemplate = filledTemplate
-    .replace(/{{sanitizedGroupName}}/g, sanitizedGroupName)
-    .replace(/{{sidecars}}/g, `sidecars:\n${groupSidecarDetails}`)
-    .replace(/{{groupName}}/g, groupName)
-    .replace(/{{subname}}/g, subname || 'false')
-    .replace(/{{split}}/g, split || 'false');
+    filledTemplate = filledTemplate
+      .split('\n')
+      .filter(line => line.trim() !== '')
+      .join('\n');
 
-  filledTemplate = filledTemplate
-    .split('\n')
-    .filter(line => line.trim() !== '')
-    .join('\n');
+    let fileName = `${sanitizedGroupName}-task.yaml`;
+    if (number > 1) {
+      fileName = `${sanitizedGroupName}-task-${number}-split.yaml`;
+    }
 
-  const fileName = `${sanitizedGroupName}-task.yaml`;
-  const location = path.join(__dirname, 'tasks', 'test-groups', fileName);
+    const location = path.join(__dirname, 'tasks', 'test-groups', fileName);
 
-  if (fs.existsSync(location)) {
-    fs.unlinkSync(location);
-  }
+    if (fs.existsSync(location)) {
+      fs.unlinkSync(location);
+    }
 
-  fs.writeFileSync(location, filledTemplate);
+    fs.writeFileSync(location, filledTemplate);
 
-  console.log(`Generated ${fileName}`);
+    console.log(`Generated ${fileName}`);
+  });
 }
