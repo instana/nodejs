@@ -116,8 +116,7 @@ spec:
             npm run coverage-ci --npm_command="test:ci:metrics-util" --report_dir="metrics-util"
           else
             if [[ false =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 lerna run "false" --stream
-              npx lerna run "test:ci:metrics-util" --stream
+              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npx lerna run "false" --stream
             else
               npm run "test:ci:metrics-util"
             fi
