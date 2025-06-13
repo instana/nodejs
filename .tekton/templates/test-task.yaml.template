@@ -125,7 +125,15 @@ spec:
           if [ "$(params.coverage)" == "true" ]; then
             npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
           else
-            npm run "{{groupName}}"
+            if [[ {{split}} =~ ^[0-9]+$ ]]; then
+              for ((i=1; i<={{split}}; i++)); do
+                CI_TEST_SPLIT={{split}} CI_TEST_SPLIT_CURRENT=$i lerna run "{{subname}}" --stream
+              done
+
+              lerna run "{{groupName}}" --stream
+            else
+              npm run "{{groupName}}"
+            fi
           fi          
 
           if [ $? -eq 0 ]; then

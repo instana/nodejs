@@ -115,7 +115,14 @@ spec:
           if [ "$(params.coverage)" == "true" ]; then
             npm run coverage-ci --npm_command="test:ci:shared-metrics" --report_dir="test-ci-shared-metrics"
           else
-            npm run "test:ci:shared-metrics"
+            if [[ false =~ ^[0-9]+$ ]]; then
+              for ((i=1; i<=false; i++)); do
+                CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=$i lerna run "false" --stream
+              done
+              lerna run "test:ci:shared-metrics" --stream
+            else
+              npm run "test:ci:shared-metrics"
+            fi
           fi          
           if [ $? -eq 0 ]; then
             touch "test:ci:shared-metrics.succeeded"

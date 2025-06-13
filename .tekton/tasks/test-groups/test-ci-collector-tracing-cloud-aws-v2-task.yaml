@@ -115,7 +115,14 @@ spec:
           if [ "$(params.coverage)" == "true" ]; then
             npm run coverage-ci --npm_command="test:ci:collector:tracing:cloud:aws:v2" --report_dir="test-ci-collector-tracing-cloud-aws-v2"
           else
-            npm run "test:ci:collector:tracing:cloud:aws:v2"
+            if [[ 3 =~ ^[0-9]+$ ]]; then
+              for ((i=1; i<=3; i++)); do
+                CI_TEST_SPLIT=3 CI_TEST_SPLIT_CURRENT=$i lerna run "test:ci:tracing:cloud:aws:v2" --stream
+              done
+              lerna run "test:ci:collector:tracing:cloud:aws:v2" --stream
+            else
+              npm run "test:ci:collector:tracing:cloud:aws:v2"
+            fi
           fi          
           if [ $? -eq 0 ]; then
             touch "test:ci:collector:tracing:cloud:aws:v2.succeeded"

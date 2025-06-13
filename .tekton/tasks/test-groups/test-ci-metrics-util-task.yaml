@@ -115,7 +115,14 @@ spec:
           if [ "$(params.coverage)" == "true" ]; then
             npm run coverage-ci --npm_command="test:ci:metrics-util" --report_dir="test-ci-metrics-util"
           else
-            npm run "test:ci:metrics-util"
+            if [[ false =~ ^[0-9]+$ ]]; then
+              for ((i=1; i<=false; i++)); do
+                CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=$i lerna run "false" --stream
+              done
+              lerna run "test:ci:metrics-util" --stream
+            else
+              npm run "test:ci:metrics-util"
+            fi
           fi          
           if [ $? -eq 0 ]; then
             touch "test:ci:metrics-util.succeeded"

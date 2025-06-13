@@ -32,7 +32,9 @@ const groups = {
   },
   'test:ci:collector:tracing:cloud:aws:v2': {
     sidecars: [],
-    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"'
+    subname: 'test:ci:tracing:cloud:aws:v2',
+    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"',
+    split: 3
   },
   'test:ci:collector:tracing:cloud:aws:v3': {
     sidecars: ['localstack'],
@@ -127,7 +129,7 @@ const groups = {
 
 const sidecars = require('./assets/sidecars.json');
 
-for (const [groupName, { sidecars: groupSidecars, condition }] of Object.entries(groups)) {
+for (const [groupName, { sidecars: groupSidecars, condition, split, subname }] of Object.entries(groups)) {
   const templateContent = fs.readFileSync(path.join(__dirname, 'templates/test-task.yaml.template'), 'utf-8');
   const sidecarTemplate = fs.readFileSync(path.join(__dirname, 'templates/sidecar.yaml.template'), 'utf-8');
   const sanitizedGroupName = groupName.replace(/:/g, '-');
@@ -162,9 +164,7 @@ for (const [groupName, { sidecars: groupSidecars, condition }] of Object.entries
         sidecar.args.forEach(arg => {
           if (typeof arg === 'string' && (arg.includes('\n') || arg.includes('&&'))) {
             res += `          - |\n`;
-            const lines = arg.split('\n').length > 1 ? 
-                         arg.split('\n') : 
-                         arg.split('&&').map(cmd => cmd.trim());
+            const lines = arg.split('\n').length > 1 ? arg.split('\n') : arg.split('&&').map(cmd => cmd.trim());
             lines.forEach(line => {
               res += `            ${line}\n`;
             });
@@ -239,7 +239,9 @@ for (const [groupName, { sidecars: groupSidecars, condition }] of Object.entries
   filledTemplate = filledTemplate
     .replace(/{{sanitizedGroupName}}/g, sanitizedGroupName)
     .replace(/{{sidecars}}/g, `sidecars:\n${groupSidecarDetails}`)
-    .replace(/{{groupName}}/g, groupName);
+    .replace(/{{groupName}}/g, groupName)
+    .replace(/{{subname}}/g, subname || 'false')
+    .replace(/{{split}}/g, split || 'false');
 
   filledTemplate = filledTemplate
     .split('\n')
