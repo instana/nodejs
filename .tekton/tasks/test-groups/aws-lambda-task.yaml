@@ -115,8 +115,8 @@ spec:
           if [ "$(params.coverage)" == "true" ]; then
             npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda"
           else
-            if [[ false =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npx lerna run "false" --stream
+            if [[ 4 =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=4 CI_TEST_SPLIT_CURRENT=1 npx lerna run "test:ci" --stream
             else
               npm run "test:ci:aws-lambda"
             fi

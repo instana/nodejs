@@ -28,7 +28,9 @@ const groups = {
       'postgres',
       'mssql'
     ],
-    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"'
+    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"',
+    split: 4,
+    subname: 'test:ci:tracing:database'
   },
   'test:ci:collector:tracing:cloud:aws:v2': {
     sidecars: [],
@@ -87,7 +89,9 @@ const groups = {
   },
   'test:ci:aws-lambda': {
     sidecars: [],
-    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/aws-lambda"'
+    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/aws-lambda"',
+    split: 4,
+    subname: 'test:ci'
   },
   'test:ci:azure-container-services': {
     sidecars: [],
