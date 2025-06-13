@@ -19,11 +19,6 @@ const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:us-east-2:767398002385:function:${functionName}`;
 const version = '$LATEST';
 const qualifiedArn = `${unqualifiedArn}:${version}`;
-
-const backendPort = 8443;
-const backendBaseUrl = `https://localhost:${backendPort}/serverless`;
-const downstreamDummyPort = 3456;
-const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
 describe('timeout heuristic', function () {
@@ -157,7 +152,6 @@ describe('timeout heuristic', function () {
 
       const opts = {
         handlerDefinitionPath,
-        instanaEndpointUrl: backendBaseUrl,
         instanaAgentKey,
         lambdaTimeout,
         env: envs
@@ -170,7 +164,6 @@ describe('timeout heuristic', function () {
       // eslint-disable-next-line prefer-object-spread
       const env = Object.assign(
         {
-          INSTANA_ENDPOINT_URL: opts.instanaEndpointUrl,
           INSTANA_AGENT_KEY: opts.instanaAgentKey,
           LAMBDA_TIMEOUT: opts.lambdaTimeout
         },
@@ -181,9 +174,6 @@ describe('timeout heuristic', function () {
         faasRuntimePath: path.join(__dirname, '../runtime_mock'),
         handlerDefinitionPath: opts.handlerDefinitionPath,
         startBackend: opts.startBackend,
-        backendPort,
-        backendBaseUrl,
-        downstreamDummyUrl,
         env,
         lambdaTimeout: opts.lambdaTimeout
       });
