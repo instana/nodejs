@@ -21,7 +21,7 @@ const version = '$LATEST';
 const qualifiedArn = `${unqualifiedArn}:${version}`;
 
 const backendPort = 8443;
-const backendBaseUrl = `https://localhost:${backendPort}/serverless`;
+const backendBaseUrl = `http://localhost:${backendPort}/serverless`;
 const downstreamDummyPort = 3456;
 const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 const instanaAgentKey = 'aws-lambda-dummy-key';
