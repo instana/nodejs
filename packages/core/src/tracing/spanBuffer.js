@@ -19,17 +19,8 @@ let downstreamConnection = null;
 let isActive = false;
 /** @type {number} */
 let activatedAt = null;
-
-let minDelayBeforeSendingSpans = 1000;
-if (process.env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS != null) {
-  minDelayBeforeSendingSpans = parseInt(process.env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS, 10);
-  if (isNaN(minDelayBeforeSendingSpans)) {
-    minDelayBeforeSendingSpans = 1000;
-  }
-}
-
 /** @type {number} */
-let initialDelayBeforeSendingSpans;
+let minDelayBeforeSendingSpans = 1000;
 /** @type {number} */
 let transmissionDelay;
 /** @type {number} */
@@ -98,7 +89,7 @@ exports.init = function init(config, _downstreamConnection) {
   forceTransmissionStartingAt = config.tracing.forceTransmissionStartingAt;
   transmissionDelay = config.tracing.transmissionDelay;
   batchingEnabled = config.tracing.spanBatchingEnabled;
-  initialDelayBeforeSendingSpans = Math.max(transmissionDelay, minDelayBeforeSendingSpans);
+  minDelayBeforeSendingSpans = Math.max(transmissionDelay, minDelayBeforeSendingSpans);
   isFaaS = false;
   transmitImmediate = false;
 
@@ -106,6 +97,7 @@ exports.init = function init(config, _downstreamConnection) {
     preActivationCleanupIntervalHandle = setInterval(() => {
       removeSpansIfNecessary();
     }, transmissionDelay);
+
     preActivationCleanupIntervalHandle.unref();
   }
 };
@@ -147,13 +139,29 @@ exports.activate = function activate(extraConfig) {
   //       the AWS runtime might execute the handler in a different lambda execution.
   //       On AWS Lambda we wait till the handler finishes and then transmit all collected spans via
   //       `sendBundle`. Any detected span will be sent directly to the BE.
+  // TODO: This is not a good approach, because it assumes that the agent is ready.
+  //       Spans are collected during the agent cycle -  we flush them here and assume we
+  //       are connected to the agent.
   if (!isFaaS) {
-    transmissionTimeoutHandle = setTimeout(transmitSpans, initialDelayBeforeSendingSpans);
+    transmissionTimeoutHandle = setTimeout(transmitSpans, minDelayBeforeSendingSpans);
     transmissionTimeoutHandle.unref();
   }
 
   if (preActivationCleanupIntervalHandle) {
     clearInterval(preActivationCleanupIntervalHandle);
+  }
+
+  if (!isFaaS) {
+    process.once('beforeExit', async () => {
+      transmitSpans();
+
+      return new Promise(resolve => {
+        setTimeout(() => {
+          clearTimeout(transmissionTimeoutHandle);
+          resolve();
+        }, 1000);
+      });
+    });
   }
 };
 

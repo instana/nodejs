@@ -12,7 +12,8 @@ process.on('SIGTERM', () => {
 
 require('../../../../src')({
   tracing: {
-    allowRootExitSpan: true
+    allowRootExitSpan: true,
+    useOpentelemetry: false
   }
 });
 

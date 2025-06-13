@@ -174,8 +174,7 @@ describe('multiple data lambda handler', function () {
           WITH_CONFIG: 'true',
           INSTANA_NUMBER_OF_ITERATIONS: 100,
           INSTANA_SPANBATCHING_ENABLED: 'true',
-          INSTANA_FORCE_TRANSMISSION_STARTING_AT: 10,
-          INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: 100
+          INSTANA_FORCE_TRANSMISSION_STARTING_AT: 10
         }
       });
 
