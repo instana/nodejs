@@ -132,11 +132,16 @@ const sidecars = require('./assets/sidecars.json');
 for (const [groupName, { sidecars: groupSidecars, condition, split, subname }] of Object.entries(groups)) {
   const templateContent = fs.readFileSync(path.join(__dirname, 'templates/test-task.yaml.template'), 'utf-8');
   const sidecarTemplate = fs.readFileSync(path.join(__dirname, 'templates/sidecar.yaml.template'), 'utf-8');
-  const sanitizedGroupName = groupName.replace(/:/g, '-');
 
   const runs = split ? Array.from({ length: split }, (_, i) => i + 1) : [1];
 
   runs.forEach(number => {
+    let sanitizedGroupName = groupName.replace(/:/g, '-');
+
+    if (number > 1) {
+      sanitizedGroupName = `${sanitizedGroupName}-split-${number}`;
+    }
+
     const groupSidecarDetails = groupSidecars
       .map(sidecarName => {
         const sidecar = sidecars.sidecars.find(s => s.name === sidecarName);
@@ -252,11 +257,7 @@ for (const [groupName, { sidecars: groupSidecars, condition, split, subname }] o
       .filter(line => line.trim() !== '')
       .join('\n');
 
-    let fileName = `${sanitizedGroupName}-task.yaml`;
-    if (number > 1) {
-      fileName = `${sanitizedGroupName}-task-${number}-split.yaml`;
-    }
-
+    const fileName = `${sanitizedGroupName}-task.yaml`;
     const location = path.join(__dirname, 'tasks', 'test-groups', fileName);
 
     if (fs.existsSync(location)) {

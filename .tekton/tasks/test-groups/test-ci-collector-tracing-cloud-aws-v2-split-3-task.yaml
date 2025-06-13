@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: test-ci-collector-tracing-cloud-aws-v2
+  name: test-ci-collector-tracing-cloud-aws-v2-split-3
 spec:
   sidecars:
   envFrom:
@@ -113,10 +113,10 @@ spec:
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            npm run coverage-ci --npm_command="test:ci:collector:tracing:cloud:aws:v2" --report_dir="test-ci-collector-tracing-cloud-aws-v2"
+            npm run coverage-ci --npm_command="test:ci:collector:tracing:cloud:aws:v2" --report_dir="test-ci-collector-tracing-cloud-aws-v2-split-3"
           else
             if [[ 3 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=3 CI_TEST_SPLIT_CURRENT=2 lerna run "test:ci:tracing:cloud:aws:v2" --stream
+              CI_TEST_SPLIT=3 CI_TEST_SPLIT_CURRENT=3 lerna run "test:ci:tracing:cloud:aws:v2" --stream
               lerna run "test:ci:collector:tracing:cloud:aws:v2" --stream
             else
               npm run "test:ci:collector:tracing:cloud:aws:v2"
