@@ -1,9 +1,11 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: {{sanitizedGroupName}}
+  name: collector-tracing-misc
 spec:
-  {{sidecars}}
+  sidecars:
+    - name: redis
+      image: redis:7.4.3
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -70,38 +72,31 @@ spec:
         #!/bin/bash
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
-
         BASE_REVISION=$(git rev-parse origin/main)
         CIRCLE_COMPARE_URL=""
         MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
-
         if [ "$(params.prerelease)" == "true" ]; then
           source bin/install-prerelease.sh
           echo "Using node: $(node --version)"
         fi
-
         if [ -n "$(params.npm-version)" ]; then
           npm install npm@$(params.npm-version) -g
         fi
-
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
           MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
           GIT_COMMIT_DESC=$(git log --format=%B -n 1 $(params.revision))
         fi
-
         echo "BASE_REVISION: $BASE_REVISION"
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
         echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
-
-        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]'{{condition}}; then
+        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && true; then
           echo "Skipping group."
-          touch "{{groupName}}.succeeded"
+          touch "test:ci:collector:tracing:misc.succeeded"
           exit 0
         fi
-        
         export CI=true
         export GCP_PROJECT="k8s-brewery"
         export AZURE_SQL_USERNAME="admin@instana@nodejs-team-db-server"
@@ -109,48 +104,41 @@ spec:
         export AZURE_REDIS_CLUSTER="team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380"
         export AZURE_SQL_DATABASE="azure-nodejs-test"
         export AZURE_STORAGE_ACCOUNT_NAME="nodejstracerteam"
-
         if [ "$(params.esm)" == "true" ]; then
           export RUN_ESM=true
-
-          if ! echo "{{groupName}}" | grep -q 'ci:collector'; then
+          if ! echo "test:ci:collector:tracing:misc" | grep -q 'ci:collector'; then
             echo "Skipping tests because groupName does not contain 'ci:collector'."
-            touch "{{groupName}}.succeeded"
+            touch "test:ci:collector:tracing:misc.succeeded"
             exit 0
           fi
         fi
-
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
+            npm run coverage-ci --npm_command="test:ci:collector:tracing:misc" --report_dir="collector-tracing-misc"
           else
-            if [[ {{split}} =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT={{split}} CI_TEST_SPLIT_CURRENT={{splitNumber}} npx lerna run "{{subname}}" --stream --scope="{{scope}}"
+            if [[ false =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npx lerna run "false" --stream --scope="false"
             else
-              npm run "{{groupName}}"
+              npm run "test:ci:collector:tracing:misc"
             fi
           fi          
-
           if [ $? -eq 0 ]; then
-            if [[ {{split}} =~ ^[0-9]+$ ]]; then
-              touch "{{subname}}.succeeded"
+            if [[ false =~ ^[0-9]+$ ]]; then
+              touch "false.succeeded"
             else
-              touch "{{groupName}}.succeeded"
+              touch "test:ci:collector:tracing:misc.succeeded"
             fi
-
             break
           else
             if [ $retry -eq 3 ]; then
-              if [[ {{split}} =~ ^[0-9]+$ ]]; then
-                touch "{{subname}}.failed"
+              if [[ false =~ ^[0-9]+$ ]]; then
+                touch "false.failed"
               else
-                touch "{{groupName}}.failed"
+                touch "test:ci:collector:tracing:misc.failed"
               fi
-
               exit 1
             fi
-
             retry=$((retry + 1))
           fi
         done

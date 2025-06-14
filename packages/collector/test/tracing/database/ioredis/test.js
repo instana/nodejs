@@ -1281,7 +1281,10 @@ function checkConnection(span, setupType) {
       });
     }
   });
+
   mochaSuiteFn('ignore-endpoints:', function () {
+    this.timeout(config.getTestTimeout());
+
     describe('when ignore-endpoints is enabled via agent configuration', () => {
       const { AgentStubControls } = require('../../../apps/agentStubControls');
       const customAgentControls = new AgentStubControls();
