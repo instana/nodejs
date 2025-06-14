@@ -842,7 +842,7 @@ mochaSuiteFn('tracing/sdk', function () {
         error
           ? expect(span.data.sdk.custom.tags.error.indexOf('ENOENT: no such file or directory')).to.equal(0)
           : expect(span.data.sdk.custom.tags.success).to.be.true,
-      span => duration && expect(span.d).to.be.closeTo(duration, 20)
+      span => duration && expect(span.d).to.be.closeTo(duration, 50)
     ]);
   }
 

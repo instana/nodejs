@@ -23,7 +23,10 @@ const app = express();
 const deepMerge = require('../../../core/src/util/deepMerge');
 
 const logger = bunyan.createLogger({ name: 'agent-stub', pid: process.pid });
-// logger.level('debug');
+
+if (process.env.INSTANA_DEBUG === 'true') {
+  logger.level('debug');
+}
 
 // NOTE: we can leave the hardcoded port here as this file is not used in the test env!
 const port = process.env.AGENT_PORT || 42699;
@@ -143,15 +146,19 @@ app.post(
 app.post(
   '/com.instana.plugin.nodejs/traces.:pid',
   checkExistenceOfKnownPid(function handleTraces(req, res) {
+    logger.debug('Got traces for PID %s and dropAllData %s', req.params.pid, dropAllData);
     if (rejectTraces) {
+      logger.debug('Rejecting traces for PID %s', req.params.pid);
       return res.sendStatus(400);
     }
     if (!dropAllData) {
+      logger.debug('Storing traces for PID %s', req.params.pid);
       receivedData.traces.push({
         pid: parseInt(req.params.pid, 10),
         time: Date.now(),
         data: req.body
       });
+      logger.debug(`Received ${receivedData.traces.length} traces so far`);
     }
     if (logTraces) {
       /* eslint-disable no-console */
@@ -236,6 +243,7 @@ function checkExistenceOfKnownPid(fn) {
 }
 
 app.delete('/', (req, res) => {
+  logger.debug('Resetting agent stub completely');
   receivedData = resetReceivedData();
   discoveries = {};
   requests = {};
@@ -243,10 +251,13 @@ app.delete('/', (req, res) => {
 });
 
 app.get('/received/data', (req, res) => {
+  logger.debug('Requested data received. Spans in receivedData: %d', receivedData.traces.length);
+
   res.json(receivedData);
 });
 
 app.delete('/received/data', (req, res) => {
+  logger.debug('Resetting received data');
   receivedData = resetReceivedData();
   res.sendStatus(200);
 });
@@ -256,6 +267,7 @@ app.get('/received/aggregated/metrics/:pid', (req, res) => res.json(receivedData
 app.get('/received/traces', (req, res) => res.json(receivedData.traces));
 
 app.delete('/received/traces', (req, res) => {
+  logger.debug('Resetting received traces');
   receivedData.traces = [];
   res.sendStatus(200);
 });

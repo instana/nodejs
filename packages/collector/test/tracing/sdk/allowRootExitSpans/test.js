@@ -16,13 +16,15 @@ const constants = require('@instana/core').tracing.constants;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+// ATTENTION: starting the short living worker will already send out the span!
+//            beforeEach will kick in afterwards and reset the spans! Do not use beforeEach!
 mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
   this.timeout(config.getTestTimeout());
 
   const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
 
-  beforeEach(async () => {
+  afterEach(async () => {
     await agentControls.clearReceivedTraceData();
   });
 
