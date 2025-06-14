@@ -78,7 +78,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     //       See: https://github.com/OptimalBits/bull/blob/489c6ab8466c1db122f92af3ddef12eacc54179e/lib/queue.js#L712
     //       Related issue: https://github.com/OptimalBits/bull/issues/924
     if (!process.env.RUN_ESM) {
-      describe('receiving via "Process" API', () => {
+      describe('receiving via "Process" API', function () {
         let receiverControls;
         const receiveMethod = 'Process';
 
@@ -111,15 +111,21 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           await receiverControls.clearIpcMessages();
         });
 
-        const testId = uuid();
-
         describe('sendOption: default', function () {
-          const sendOption = 'default';
+          let testId;
+          let sendOption;
+          let apiPath;
+          let withError;
+          let urlWithParams;
 
-          const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
-          describe('without error', () => {
-            const withError = false;
-            const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+          describe('without error', function () {
+            beforeEach(() => {
+              testId = uuid();
+              sendOption = 'default';
+              apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+              withError = false;
+              urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+            });
 
             it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
               const response = await senderControls.sendRequest({
@@ -147,9 +153,14 @@ mochaSuiteFn('tracing/messaging/bull', function () {
             });
           });
 
-          describe('with error', () => {
-            const withError = true;
-            const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+          describe('with error', function () {
+            beforeEach(() => {
+              withError = true;
+              testId = uuid();
+              sendOption = 'default';
+              apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+              urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+            });
 
             it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
               const response = await senderControls.sendRequest({
@@ -173,13 +184,24 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         });
 
         describe('sendOption: bulk=true', function () {
-          const sendOption = 'bulk=true';
+          let testId;
+          let sendOption;
+          let apiPath;
 
-          const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+          beforeEach(() => {
+            testId = uuid();
+            sendOption = 'bulk=true';
+            apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+          });
 
-          describe('without error', () => {
-            const withError = false;
-            const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+          describe('without error', function () {
+            let withError;
+            let urlWithParams;
+
+            beforeEach(() => {
+              withError = false;
+              urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+            });
 
             it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
               const response = await senderControls.sendRequest({
@@ -203,9 +225,14 @@ mochaSuiteFn('tracing/messaging/bull', function () {
             });
           });
 
-          describe('with error', () => {
-            const withError = true;
-            const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+          describe('with error', function () {
+            let withError;
+            let urlWithParams;
+
+            beforeEach(() => {
+              withError = true;
+              urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+            });
 
             it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
               const response = await senderControls.sendRequest({
@@ -229,13 +256,24 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         });
 
         describe('sendOption: repeat=true', function () {
-          const sendOption = 'repeat=true';
+          let testId;
+          let sendOption;
+          let apiPath;
 
-          const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+          beforeEach(() => {
+            testId = uuid();
+            sendOption = 'repeat=true';
+            apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+          });
 
-          describe('without error', () => {
-            const withError = false;
-            const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+          describe('without error', function () {
+            let withError;
+            let urlWithParams;
+
+            beforeEach(() => {
+              withError = false;
+              urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+            });
 
             it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
               const response = await senderControls.sendRequest({
@@ -257,9 +295,14 @@ mochaSuiteFn('tracing/messaging/bull', function () {
             });
           });
 
-          describe('with error', () => {
-            const withError = true;
-            const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+          describe('with error', function () {
+            let withError;
+            let urlWithParams;
+
+            beforeEach(() => {
+              withError = true;
+              urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+            });
 
             it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
               const response = await senderControls.sendRequest({
@@ -284,7 +327,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       });
     }
 
-    describe('receiving via "Promise" API', () => {
+    describe('receiving via "Promise" API', function () {
       let receiverControls;
       const receiveMethod = 'Promise';
 
@@ -317,15 +360,25 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         await receiverControls.clearIpcMessages();
       });
 
-      const testId = uuid();
-
       describe('sendOption: default', function () {
-        const sendOption = 'default';
-        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+        let sendOption;
+        let apiPath;
+        let testId;
 
-        describe('without error', () => {
-          const withError = false;
-          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+        beforeEach(() => {
+          sendOption = 'default';
+          testId = uuid();
+          apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+        });
+
+        describe('without error', function () {
+          let withError;
+          let urlWithParams;
+
+          beforeEach(() => {
+            withError = false;
+            urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+          });
 
           it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
             const response = await senderControls.sendRequest({
@@ -347,9 +400,14 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           });
         });
 
-        describe('with error', () => {
-          const withError = true;
-          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+        describe('with error', function () {
+          let withError;
+          let urlWithParams;
+
+          beforeEach(() => {
+            withError = true;
+            urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+          });
 
           it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
             const response = await senderControls.sendRequest({
@@ -373,12 +431,24 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       });
 
       describe('sendOption: bulk=true', function () {
-        const sendOption = 'bulk=true';
-        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+        let sendOption;
+        let apiPath;
+        let testId;
 
-        describe('without error', () => {
-          const withError = false;
-          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+        beforeEach(() => {
+          sendOption = 'bulk=true';
+          testId = uuid();
+          apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+        });
+
+        describe('without error', function () {
+          let withError;
+          let urlWithParams;
+
+          beforeEach(() => {
+            withError = false;
+            urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+          });
 
           it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
             const response = await senderControls.sendRequest({
@@ -400,9 +470,14 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           });
         });
 
-        describe('with error', () => {
-          const withError = true;
-          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+        describe('with error', function () {
+          let withError;
+          let urlWithParams;
+
+          beforeEach(() => {
+            withError = true;
+            urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+          });
 
           it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
             const response = await senderControls.sendRequest({
@@ -426,12 +501,24 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       });
 
       describe('sendOption: repeat=true', function () {
-        const sendOption = 'repeat=true';
-        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+        let sendOption;
+        let apiPath;
+        let testId;
 
-        describe('without error', () => {
-          const withError = false;
-          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+        beforeEach(() => {
+          sendOption = 'repeat=true';
+          testId = uuid();
+          apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+        });
+
+        describe('without error', function () {
+          let withError;
+          let urlWithParams;
+
+          beforeEach(() => {
+            withError = false;
+            urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+          });
 
           it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
             const response = await senderControls.sendRequest({
@@ -453,9 +540,14 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           });
         });
 
-        describe('with error', () => {
-          const withError = true;
-          const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+        describe('with error', function () {
+          let withError;
+          let urlWithParams;
+
+          beforeEach(() => {
+            withError = true;
+            urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
+          });
 
           it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
             const response = await senderControls.sendRequest({
@@ -626,7 +718,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     }
   });
 
-  describe('tracing disabled', () => {
+  describe('tracing disabled', function () {
     this.timeout(config.getTestTimeout() * 2);
 
     let senderControls;
@@ -658,7 +750,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await senderControls.clearIpcMessages();
     });
 
-    describe('sending and receiving', () => {
+    describe('sending and receiving', function () {
       let receiverControls;
       const receiveMethod = 'Process';
 
@@ -721,7 +813,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     });
   });
 
-  describe('tracing enabled but suppressed', () => {
+  describe('tracing enabled but suppressed', function () {
     let senderControls;
 
     before(async () => {
@@ -750,7 +842,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await senderControls.clearIpcMessages();
     });
 
-    describe('tracing suppressed', () => {
+    describe('tracing suppressed', function () {
       let receiverControls;
       const receiveMethod = 'Promise';
 
