@@ -5,7 +5,7 @@ metadata:
 spec:
   sidecars:
     - name: postgres
-      image: postgres
+      image: postgres:10.5
       env:
           - name: "POSTGRES_USER"
             value: "node"
