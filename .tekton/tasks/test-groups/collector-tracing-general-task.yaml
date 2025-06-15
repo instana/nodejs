@@ -5,7 +5,7 @@ metadata:
 spec:
   sidecars:
     - name: postgres
-      image: postgres:10.5
+      image: public.ecr.aws/docker/library/postgres:10.16
       env:
           - name: "POSTGRES_USER"
             value: "node"

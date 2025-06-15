@@ -2,7 +2,7 @@
   "sidecars": [
     {
       "name": "mysql",
-      "image": "mysql:8.0.26",
+      "image": "public.ecr.aws/docker/library/mysql:8.0.26",
       "env": [
         { "name": "MYSQL_ROOT_PASSWORD", "value": "nodepw" },
         { "name": "MYSQL_DATABASE", "value": "nodedb" },
@@ -22,7 +22,7 @@
     },
     {
       "name": "mongodb",
-      "image": "mongo:8.0.8"
+      "image": "public.ecr.aws/docker/library/mongo:8.0.8"
     },
     {
       "name": "mssql",
@@ -71,7 +71,7 @@
     },
     {
       "name": "postgres",
-      "image": "postgres:10.5",
+      "image": "public.ecr.aws/docker/library/postgres:10.16",
       "env": [
         { "name": "POSTGRES_USER", "value": "node" },
         { "name": "POSTGRES_PASSWORD", "value": "nodepw" },
@@ -88,7 +88,7 @@
     },
     {
       "name": "rabbitmq",
-      "image": "rabbitmq:3.7.7",
+      "image": "public.ecr.aws/docker/library/rabbitmq:3.13.0",
       "readinessProbe": {
         "tcpSocket": {
           "port": 5672
@@ -100,16 +100,16 @@
     },
     {
       "name": "redis",
-      "image": "redis:7.4.3"
+      "image": "public.ecr.aws/docker/library/redis:7.4.3"
     },
     {
       "name": "redis-slave",
-      "image": "redis:7.4.3",
+      "image": "public.ecr.aws/docker/library/redis:7.4.3",
       "args": ["redis-server", "--replicaof", "127.0.0.1", "6379", "--port", "6380"]
     },
     {
       "name": "redis-sentinel",
-      "image": "redis:7.4.3",
+      "image": "public.ecr.aws/docker/library/redis:7.4.3",
       "args": [
         "sh",
         "-c",
@@ -140,7 +140,7 @@
     },
     {
       "name": "memcached",
-      "image": "memcached:1.6.9"
+      "image": "public.ecr.aws/docker/library/memcached:1.6.9"
     },
     {
       "name": "nats",
@@ -176,7 +176,7 @@
     },
     {
       "name": "elasticsearch",
-      "image": "docker.elastic.co/elasticsearch/elasticsearch:9.0.0",
+      "image": "public.ecr.aws/elastic/elasticsearch:9.0.0",
       "env": [
         { "name": "discovery.type", "value": "single-node" },
         { "name": "ES_JAVA_OPTS", "value": "-Xms500m -Xmx500m" },

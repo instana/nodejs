@@ -52,7 +52,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 60
     - name: redis
-      image: redis:7.4.3
+      image: public.ecr.aws/docker/library/redis:7.4.3
     - name: nats
       image: nats:2.9.14-linux
     - name: nats-streaming
@@ -84,7 +84,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 15
     - name: rabbitmq
-      image: rabbitmq:3.7.7
+      image: public.ecr.aws/docker/library/rabbitmq:3.13.0
       readinessProbe:
           tcpSocket:
             port: 5672 

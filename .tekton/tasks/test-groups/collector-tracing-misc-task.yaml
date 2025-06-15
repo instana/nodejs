@@ -5,7 +5,7 @@ metadata:
 spec:
   sidecars:
     - name: redis
-      image: redis:7.4.3
+      image: public.ecr.aws/docker/library/redis:7.4.3
   envFrom:
     - configMapRef:
         name: environment-properties  
