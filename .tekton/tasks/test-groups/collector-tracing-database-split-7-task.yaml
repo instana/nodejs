@@ -1,9 +1,105 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: aws-lambda-split-3
+  name: collector-tracing-database-split-7
 spec:
   sidecars:
+    - name: memcached
+      image: memcached:1.6.9
+    - name: mongodb
+      image: mongo:8.0.8
+    - name: elasticsearch
+      image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+      env:
+          - name: "discovery.type"
+            value: "single-node"
+          - name: "ES_JAVA_OPTS"
+            value: "-Xms500m -Xmx500m"
+          - name: "xpack.security.enabled"
+            value: "false"
+    - name: redis
+      image: redis:7.4.3
+    - name: redis-slave
+      image: redis:7.4.3
+      args:
+          - "redis-server"
+          - "--replicaof"
+          - "127.0.0.1"
+          - "6379"
+          - "--port"
+          - "6380"
+    - name: redis-sentinel
+      image: redis:7.4.3
+      args:
+          - "sh"
+          - "-c"
+          - |
+            echo "sentinel monitor mymaster 127.0.0.1 6379 2" > /etc/sentinel.conf
+            echo "sentinel down-after-milliseconds mymaster 1000" >> /etc/sentinel.conf
+            echo "sentinel failover-timeout mymaster 5000" >> /etc/sentinel.conf
+            echo "sentinel parallel-syncs mymaster 1" >> /etc/sentinel.conf
+            echo "sentinel resolve-hostnames no" >> /etc/sentinel.conf
+            redis-server /etc/sentinel.conf --sentinel --port 26379
+    - name: couchbase
+      image: couchbase/server:7.1.4
+      readinessProbe:
+          httpGet:
+            path: / 
+            port: 8091 
+          initialDelaySeconds: 15
+          periodSeconds: 2
+          timeoutSeconds: 60
+    - name: mysql
+      image: mysql:8.0.26
+      args:
+          - "--default-authentication-plugin=mysql_native_password"
+      env:
+          - name: "MYSQL_ROOT_PASSWORD"
+            value: "nodepw"
+          - name: "MYSQL_DATABASE"
+            value: "nodedb"
+          - name: "MYSQL_USER"
+            value: "node"
+          - name: "MYSQL_PASSWORD"
+            value: "nodepw"
+          - name: "MYSQL_ROOT_HOST"
+            value: "0.0.0.0"
+      readinessProbe:
+          exec:
+            command:
+            - "sh"
+            - "-c"
+            - "mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1'"
+          initialDelaySeconds: 3
+          periodSeconds: 2
+          timeoutSeconds: 10
+    - name: postgres
+      image: postgres:10.5
+      env:
+          - name: "POSTGRES_USER"
+            value: "node"
+          - name: "POSTGRES_PASSWORD"
+            value: "nodepw"
+          - name: "POSTGRES_DB"
+            value: "nodedb"
+      readinessProbe:
+          exec:
+            command:
+            - "sh"
+            - "-c"
+            - "pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb"
+          initialDelaySeconds: 3
+          periodSeconds: 2
+          timeoutSeconds: 10
+    - name: mssql
+      image: mcr.microsoft.com/mssql/server:2022-RC1-ubuntu-20.04
+      env:
+          - name: "ACCEPT_EULA"
+            value: "Y"
+          - name: "SA_PASSWORD"
+            value: "stanCanHazMsSQL1"
+          - name: "MSSQL_PID"
+            value: "Express"
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -90,9 +186,9 @@ spec:
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
         echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
-        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/aws-lambda"; then
+        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"; then
           echo "Skipping group."
-          touch "test:ci:aws-lambda.succeeded"
+          touch "test:ci:collector:tracing:database.succeeded"
           exit 0
         fi
         export CI=true
@@ -104,36 +200,36 @@ spec:
         export AZURE_STORAGE_ACCOUNT_NAME="nodejstracerteam"
         if [ "$(params.esm)" == "true" ]; then
           export RUN_ESM=true
-          if ! echo "test:ci:aws-lambda" | grep -q 'ci:collector'; then
+          if ! echo "test:ci:collector:tracing:database" | grep -q 'ci:collector'; then
             echo "Skipping tests because groupName does not contain 'ci:collector'."
-            touch "test:ci:aws-lambda.succeeded"
+            touch "test:ci:collector:tracing:database.succeeded"
             exit 0
           fi
         fi
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-3"
+            npm run coverage-ci --npm_command="test:ci:collector:tracing:database" --report_dir="collector-tracing-database-split-7"
           else
-            if [[ 5 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=3 npx lerna run "test:ci" --stream --scope="@instana/aws-lambda"
+            if [[ 8 =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=8 CI_TEST_SPLIT_CURRENT=7 npx lerna run "test:ci:tracing:database" --stream --scope="@instana/collector"
             else
-              npm run "test:ci:aws-lambda"
+              npm run "test:ci:collector:tracing:database"
             fi
           fi          
           if [ $? -eq 0 ]; then
-            if [[ 5 =~ ^[0-9]+$ ]]; then
-              touch "test:ci.succeeded"
+            if [[ 8 =~ ^[0-9]+$ ]]; then
+              touch "test:ci:tracing:database.succeeded"
             else
-              touch "test:ci:aws-lambda.succeeded"
+              touch "test:ci:collector:tracing:database.succeeded"
             fi
             break
           else
             if [ $retry -eq 3 ]; then
-              if [[ 5 =~ ^[0-9]+$ ]]; then
-                touch "test:ci.failed"
+              if [[ 8 =~ ^[0-9]+$ ]]; then
+                touch "test:ci:tracing:database.failed"
               else
-                touch "test:ci:aws-lambda.failed"
+                touch "test:ci:collector:tracing:database.failed"
               fi
               exit 1
             fi

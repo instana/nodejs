@@ -29,7 +29,7 @@ const groups = {
       'mssql'
     ],
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"',
-    split: 6,
+    split: 8,
     subname: 'test:ci:tracing:database',
     scope: '@instana/collector'
   },
@@ -43,7 +43,7 @@ const groups = {
   'test:ci:collector:tracing:cloud:aws:v3': {
     sidecars: ['localstack'],
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/cloud/aws"',
-    split: 2,
+    split: 3,
     scope: '@instana/collector',
     subname: 'test:ci:tracing:cloud:aws:v3'
   },
@@ -101,7 +101,7 @@ const groups = {
   'test:ci:aws-lambda': {
     sidecars: [],
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/aws-lambda"',
-    split: 4,
+    split: 5,
     subname: 'test:ci',
     scope: '@instana/aws-lambda'
   },
