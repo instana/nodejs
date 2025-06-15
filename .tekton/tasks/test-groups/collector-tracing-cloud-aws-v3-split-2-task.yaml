@@ -6,6 +6,7 @@ spec:
   sidecars:
     - name: localstack
       image: localstack/localstack:latest
+      imagePullPolicy: IfNotPresent
   envFrom:
     - configMapRef:
         name: environment-properties  

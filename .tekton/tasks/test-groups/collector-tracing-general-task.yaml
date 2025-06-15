@@ -6,6 +6,7 @@ spec:
   sidecars:
     - name: postgres
       image: public.ecr.aws/docker/library/postgres:10.16
+      imagePullPolicy: IfNotPresent
       env:
           - name: "POSTGRES_USER"
             value: "node"

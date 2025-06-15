@@ -6,10 +6,13 @@ spec:
   sidecars:
     - name: memcached
       image: public.ecr.aws/docker/library/memcached:1.6.9
+      imagePullPolicy: IfNotPresent
     - name: mongodb
       image: public.ecr.aws/docker/library/mongo:8.0.8
+      imagePullPolicy: IfNotPresent
     - name: elasticsearch
       image: public.ecr.aws/elastic/elasticsearch:9.0.0
+      imagePullPolicy: IfNotPresent
       env:
           - name: "discovery.type"
             value: "single-node"
@@ -19,8 +22,10 @@ spec:
             value: "false"
     - name: redis
       image: public.ecr.aws/docker/library/redis:7.4.3
+      imagePullPolicy: IfNotPresent
     - name: redis-slave
       image: public.ecr.aws/docker/library/redis:7.4.3
+      imagePullPolicy: IfNotPresent
       args:
           - "redis-server"
           - "--replicaof"
@@ -30,6 +35,7 @@ spec:
           - "6380"
     - name: redis-sentinel
       image: public.ecr.aws/docker/library/redis:7.4.3
+      imagePullPolicy: IfNotPresent
       args:
           - "sh"
           - "-c"
@@ -42,6 +48,7 @@ spec:
             redis-server /etc/sentinel.conf --sentinel --port 26379
     - name: couchbase
       image: couchbase/server:7.1.4
+      imagePullPolicy: IfNotPresent
       readinessProbe:
           httpGet:
             path: / 
@@ -51,6 +58,7 @@ spec:
           timeoutSeconds: 60
     - name: mysql
       image: public.ecr.aws/docker/library/mysql:8.0.26
+      imagePullPolicy: IfNotPresent
       args:
           - "--default-authentication-plugin=mysql_native_password"
       env:
@@ -75,6 +83,7 @@ spec:
           timeoutSeconds: 10
     - name: postgres
       image: public.ecr.aws/docker/library/postgres:10.16
+      imagePullPolicy: IfNotPresent
       env:
           - name: "POSTGRES_USER"
             value: "node"
@@ -93,6 +102,7 @@ spec:
           timeoutSeconds: 10
     - name: mssql
       image: mcr.microsoft.com/mssql/server:2022-RC1-ubuntu-20.04
+      imagePullPolicy: IfNotPresent
       env:
           - name: "ACCEPT_EULA"
             value: "Y"

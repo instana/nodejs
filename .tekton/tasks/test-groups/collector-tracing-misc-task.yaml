@@ -6,6 +6,7 @@ spec:
   sidecars:
     - name: redis
       image: public.ecr.aws/docker/library/redis:7.4.3
+      imagePullPolicy: IfNotPresent
   envFrom:
     - configMapRef:
         name: environment-properties  
