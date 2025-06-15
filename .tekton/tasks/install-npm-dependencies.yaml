@@ -23,7 +23,7 @@ spec:
       mountPath: /artifacts
   steps:
     - name: npm-install
-      image: node:$(params.node-version)
+      image: public.ecr.aws/docker/library/node:$(params.node-version)
       env:
         - name: API_KEY
           valueFrom:
