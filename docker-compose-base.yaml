@@ -171,7 +171,7 @@ services:
       POSTGRES_DB: nodedb
 
   mssql:
-    image: mcr.microsoft.com/mssql/server:2022-RC1-ubuntu-20.04
+    image: mcr.microsoft.com/mssql/server:2022-latest
     platform: linux/amd64
     ports:
       - 1433:1433

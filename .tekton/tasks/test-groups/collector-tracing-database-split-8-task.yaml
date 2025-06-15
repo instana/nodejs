@@ -101,7 +101,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 10
     - name: mssql
-      image: mcr.microsoft.com/mssql/server:2022-RC1-ubuntu-20.04
+      image: mcr.microsoft.com/mssql/server:2022-latest
       imagePullPolicy: IfNotPresent
       env:
           - name: "ACCEPT_EULA"
