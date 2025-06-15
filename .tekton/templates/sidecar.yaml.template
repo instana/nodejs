@@ -1,5 +1,6 @@
     - name: {{name}}
       image: {{image}}
+      imagePullPolicy: IfNotPresent
       {{args}}
       {{env}}      
       {{command}}

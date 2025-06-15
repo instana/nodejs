@@ -154,6 +154,8 @@ spec:
           value: $(params.target-branch)
         - name: node-version
           value: $(params.node-version)
+        - name: prerelease
+          value: $(params.prerelease)
       workspaces:
         - name: output
           workspace: artifacts

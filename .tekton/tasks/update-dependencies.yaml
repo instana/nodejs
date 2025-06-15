@@ -17,7 +17,8 @@ spec:
       mountPath: /artifacts
   steps:
     - name: execute       
-      image: node:$(params.node-version)
+      image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       env:
         - name: GH_TOKEN
           valueFrom:
