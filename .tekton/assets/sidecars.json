@@ -118,7 +118,7 @@
     },
     {
       "name": "localstack",
-      "image": "localstack/localstack:latest"
+      "image": "public.ecr.aws/localstack/localstack:4.5"
     },
     {
       "name": "schema-registry",

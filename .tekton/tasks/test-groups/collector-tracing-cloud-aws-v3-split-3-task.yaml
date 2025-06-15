@@ -5,7 +5,7 @@ metadata:
 spec:
   sidecars:
     - name: localstack
-      image: localstack/localstack:latest
+      image: public.ecr.aws/localstack/localstack:4.5
       imagePullPolicy: IfNotPresent
   envFrom:
     - configMapRef:
