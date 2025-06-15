@@ -16,6 +16,7 @@ spec:
   steps:
     - name: execute
       image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
         ARTIFACTS_PATH="$(workspaces.output.path)"

@@ -20,6 +20,7 @@ spec:
   steps:
     - name: save-cache
       image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       env:
         - name: API_KEY
           valueFrom:

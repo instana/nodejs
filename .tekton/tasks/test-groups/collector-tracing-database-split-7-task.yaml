@@ -172,6 +172,7 @@ spec:
               name: $(params.continuous-delivery-context-secret)
               key: "AZURE_STORAGE_ACCOUNT_KEY"
       image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
         ARTIFACTS_PATH="$(workspaces.output.path)"

@@ -18,6 +18,7 @@ spec:
   steps:
     - name: execute       
       image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       env:
         - name: GH_TOKEN
           valueFrom:

@@ -21,6 +21,7 @@ spec:
   steps:
     - name: audit
       image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
         
@@ -41,6 +42,7 @@ spec:
         fi        
     - name: lint
       image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
 
@@ -61,6 +63,7 @@ spec:
         fi
     - name: commitlint
       image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
 
@@ -81,6 +84,7 @@ spec:
         fi
     - name: depcheck
       image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
 
@@ -112,6 +116,7 @@ spec:
               name: $(params.continuous-delivery-context-secret)
               key: "AWS_SECRET_ACCESS_KEY"
       image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
 

@@ -24,6 +24,7 @@ spec:
   steps:
     - name: npm-install
       image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       env:
         - name: API_KEY
           valueFrom:

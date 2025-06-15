@@ -18,6 +18,7 @@ spec:
   steps:
     - name: print-all-results
       image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       env:
         - name: PROPERTIES_FILE
           value: $(params.properties-file)
