@@ -67,7 +67,7 @@ const groups = {
       'rabbitmq'
     ],
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/messaging"',
-    split: 2,
+    split: 3,
     scope: '@instana/collector',
     subname: 'test:ci:tracing:messaging'
   },
