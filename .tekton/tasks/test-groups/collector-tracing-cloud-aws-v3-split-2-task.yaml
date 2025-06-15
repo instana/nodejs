@@ -117,14 +117,14 @@ spec:
           if [ "$(params.coverage)" == "true" ]; then
             npm run coverage-ci --npm_command="test:ci:collector:tracing:cloud:aws:v3" --report_dir="collector-tracing-cloud-aws-v3-split-2"
           else
-            if [[ 2 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=2 CI_TEST_SPLIT_CURRENT=2 npx lerna run "test:ci:tracing:cloud:aws:v3" --stream --scope="@instana/collector"
+            if [[ 3 =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=3 CI_TEST_SPLIT_CURRENT=2 npx lerna run "test:ci:tracing:cloud:aws:v3" --stream --scope="@instana/collector"
             else
               npm run "test:ci:collector:tracing:cloud:aws:v3"
             fi
           fi          
           if [ $? -eq 0 ]; then
-            if [[ 2 =~ ^[0-9]+$ ]]; then
+            if [[ 3 =~ ^[0-9]+$ ]]; then
               touch "test:ci:tracing:cloud:aws:v3.succeeded"
             else
               touch "test:ci:collector:tracing:cloud:aws:v3.succeeded"
@@ -132,7 +132,7 @@ spec:
             break
           else
             if [ $retry -eq 3 ]; then
-              if [[ 2 =~ ^[0-9]+$ ]]; then
+              if [[ 3 =~ ^[0-9]+$ ]]; then
                 touch "test:ci:tracing:cloud:aws:v3.failed"
               else
                 touch "test:ci:collector:tracing:cloud:aws:v3.failed"

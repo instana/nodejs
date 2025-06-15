@@ -115,14 +115,14 @@ spec:
           if [ "$(params.coverage)" == "true" ]; then
             npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-3"
           else
-            if [[ 4 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=4 CI_TEST_SPLIT_CURRENT=3 npx lerna run "test:ci" --stream --scope="@instana/aws-lambda"
+            if [[ 5 =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=3 npx lerna run "test:ci" --stream --scope="@instana/aws-lambda"
             else
               npm run "test:ci:aws-lambda"
             fi
           fi          
           if [ $? -eq 0 ]; then
-            if [[ 4 =~ ^[0-9]+$ ]]; then
+            if [[ 5 =~ ^[0-9]+$ ]]; then
               touch "test:ci.succeeded"
             else
               touch "test:ci:aws-lambda.succeeded"
@@ -130,7 +130,7 @@ spec:
             break
           else
             if [ $retry -eq 3 ]; then
-              if [[ 4 =~ ^[0-9]+$ ]]; then
+              if [[ 5 =~ ^[0-9]+$ ]]; then
                 touch "test:ci.failed"
               else
                 touch "test:ci:aws-lambda.failed"
