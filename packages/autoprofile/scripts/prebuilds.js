@@ -42,7 +42,7 @@ if (!argv.os || (argv.os && argv.os === 'darwin')) {
 // alpine = x64 musl
 // centos7-devtoolset7 = x64 glibc
 if (!argv.os || (argv.os && argv.os === 'linux')) {
-  let archs = ['alpine', 'linux-arm64', 'centos7-devtoolset7', 'linux-armv6', 'linux-armv7', 'linux-s390x'];
+  let archs = ['linux-s390x'];
   if (argv.arch) {
     archs = argv.arch.split(',');
   }
@@ -50,6 +50,10 @@ if (!argv.os || (argv.os && argv.os === 'linux')) {
   console.log(`\n### Building linux prebuilds for ${targets} ${archs}...\n`);
 
   archs.forEach(image => {
+      if (image === 'linux-s390x') {
+    image = 'prebuild-linux-s390x:local';
+  }
+    console.log(`npx prebuildify-cross --modules ../../node_modules -i ${image} -t ${targets} --strip`);
     childProcess.execSync(`npx prebuildify-cross --modules ../../node_modules -i ${image} -t ${targets} --strip`, {
       stdio: 'inherit'
     });
