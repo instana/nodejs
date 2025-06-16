@@ -113,22 +113,30 @@ function wrapExecute(connection, query, optQueryParams, cb) {
   }
 }
 
-pool.getConnection((err, connection) => {
-  if (err) {
-    log('Failed to get connection for table creation', err);
-    return;
-  }
-  wrapAccess(connection, 'CREATE TABLE random_values (value double);', null, queryError => {
-    connection.release();
-
-    if (queryError && queryError.code !== 'ER_TABLE_EXISTS_ERROR') {
-      log('Failed to execute query for table creation', queryError);
+let connected = false;
+const getConnection = () => {
+  pool.getConnection((err, connection) => {
+    if (err) {
+      log('Failed to get connection for table creation', err);
+      setTimeout(getConnection, 1000);
       return;
     }
 
-    log('Successfully created table');
+    connected = true;
+    wrapAccess(connection, 'CREATE TABLE random_values (value double);', null, queryError => {
+      connection.release();
+
+      if (queryError && queryError.code !== 'ER_TABLE_EXISTS_ERROR') {
+        log('Failed to execute query for table creation', queryError);
+        return;
+      }
+
+      log('Successfully created table');
+    });
   });
-});
+};
+
+getConnection();
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -137,6 +145,9 @@ if (process.env.WITH_STDOUT) {
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
+  if (!connected) {
+    return res.sendStatus(500);
+  }
   res.sendStatus(200);
 });
 

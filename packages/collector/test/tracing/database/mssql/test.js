@@ -17,7 +17,7 @@ describe('tracing/mssql', function () {
   ['latest', 'v10'].forEach(mssqlVersion => {
     const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
     mochaSuiteFn(`mssql@${mssqlVersion}`, function () {
-      this.timeout(config.getTestTimeout() * 5);
+      this.timeout(config.getTestTimeout() * 10);
 
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;

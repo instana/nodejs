@@ -18,7 +18,7 @@ const globalAgent = require('../../../globalAgent');
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/mysql', function () {
-  this.timeout(config.getTestTimeout());
+  this.timeout(config.getTestTimeout() * 10);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
@@ -82,7 +82,7 @@ function registerSuite(agentControls, driverMode, useExecute, mysql2Version) {
         env
       });
 
-      await controls.startAndWaitForAgentConnection();
+      await controls.startAndWaitForAgentConnection(5000, Date.now() * 30 * 1000);
     });
 
     beforeEach(async () => {
@@ -129,7 +129,7 @@ function test(env, agentControls, driverMode) {
       env
     });
 
-    await controls.startAndWaitForAgentConnection();
+    await controls.startAndWaitForAgentConnection(5000, Date.now() * 30 * 1000);
   });
 
   beforeEach(async () => {

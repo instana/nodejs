@@ -127,14 +127,11 @@ if (process.env.WITH_STDOUT) {
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
-  function checkIfReady() {
-    if (ready) {
-      res.sendStatus(200);
-    } else {
-      setTimeout(checkIfReady, 10);
-    }
+  if (!ready) {
+    return res.status(500);
   }
-  setTimeout(checkIfReady, 10);
+
+  res.sendStatus(200);
 });
 
 app.get('/select-getdate', (req, res) => {
