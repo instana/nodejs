@@ -35,43 +35,41 @@ sql.on('error', err => {
   log(err);
 });
 
-const dbHost = process.env.MSSQL_HOST ? process.env.MSSQL_HOST : 'localhost';
-const dbPort = process.env.MSSQL_PORT ? parseInt(process.env.MSSQL_PORT, 10) : 1433;
-const dbUser = process.env.MSSQL_USER ? process.env.MSSQL_USER : 'sa';
-const dbPassword = process.env.MSSQL_PW ? process.env.MSSQL_PW : 'stanCanHazMsSQL1';
+const dbHost = process.env.AZURE_SQL_SERVER;
+const dbUser = process.env.AZURE_SQL_USERNAME;
+const dbPassword = process.env.AZURE_SQL_PWD;
 
 const connectConfigBase = {
   user: dbUser,
   password: dbPassword,
   server: dbHost,
-  port: dbPort,
-  trustServerCertificate: true
+  port: 1433,
+  connectionTimeout: 30000,
+  requestTimeout: 30000,
+  database: process.env.AZURE_SQL_DATABASE,
+  options: {
+    encrypt: true,
+    trustServerCertificate: false
+  }
 };
-
-const initConnectConfig = Object.assign({}, connectConfigBase);
-initConnectConfig.database = 'tempdb';
-
-const dbName = 'nodejscollector';
-const connectConfig = Object.assign({}, connectConfigBase);
-connectConfig.database = dbName;
 
 let preparedStatementGlobal = new sql.PreparedStatement();
 let ready = false;
 
 async function connect() {
-  await sql.connect(initConnectConfig);
-  await new sql.Request().query(
-    `IF EXISTS (SELECT * FROM sys.databases WHERE name = N'${dbName}') DROP DATABASE ${dbName}`
-  );
-  await new sql.Request().query(`CREATE DATABASE ${dbName}`);
-  await sql.close();
+  log(`Connecting to ${connectConfigBase.server}:${connectConfigBase.port} as ${connectConfigBase.user}`);
+  await sql.connect(connectConfigBase);
+  log('Connected to database');
 
-  pool = await sql.connect(connectConfig);
+  await new sql.Request().query('DROP TABLE IF EXISTS UserTable');
+  await new sql.Request().query('DROP PROCEDURE IF EXISTS testProcedure');
+
   await new sql.Request().query(
     'CREATE TABLE UserTable (id INT IDENTITY(1,1), name VARCHAR(40) NOT NULL, email VARCHAR(40) NOT NULL)'
   );
+
   await new sql.Request().batch(
-    'CREATE PROCEDURE testProcedure' +
+    'CREATE PROCEDURE testProcedure ' +
       '    @username nvarchar(40)' +
       'AS' +
       '    SET NOCOUNT ON;' +
@@ -86,7 +84,7 @@ async function connect() {
 }
 
 async function connectWithRetry() {
-  log(`Trying to connect to database ${dbName} on ${dbHost}:${dbPort} as user ${dbUser}.`);
+  log('Trying to connect to database');
 
   try {
     await connect();
@@ -339,7 +337,7 @@ app.get('/select-standard-pool', (req, res) => {
 });
 
 app.get('/select-custom-pool', (req, res) => {
-  const customPool = new sql.ConnectionPool(connectConfig, err1 => {
+  const customPool = new sql.ConnectionPool(connectConfigBase, err1 => {
     if (err1) {
       log('Failed to create a connection pool.', err1);
       return res.status(500).json(err1);

@@ -25,23 +25,6 @@
       "image": "public.ecr.aws/docker/library/mongo:8.0.8"
     },
     {
-      "name": "mssql",
-      "image": "mcr.microsoft.com/mssql/server:2022-latest",
-      "env": [
-        { "name": "ACCEPT_EULA", "value": "Y" },
-        { "name": "SA_PASSWORD", "value": "stanCanHazMsSQL1" },
-        { "name": "MSSQL_PID", "value": "Express" }
-      ],
-      "readinessProbe": {
-        "tcpSocket": {
-          "port": 1433
-        },
-        "initialDelaySeconds": 5,
-        "periodSeconds": 2,
-        "timeoutSeconds": 30
-      }
-    },
-    {
       "name": "zookeeper",
       "image": "zookeeper:3.9.1",
       "readinessProbe": {

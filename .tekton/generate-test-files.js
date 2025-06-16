@@ -25,8 +25,7 @@ const groups = {
       'redis-sentinel',
       'couchbase',
       'mysql',
-      'postgres',
-      'mssql'
+      'postgres'
     ],
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"',
     split: 10,

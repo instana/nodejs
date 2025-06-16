@@ -683,10 +683,10 @@ describe('tracing/mssql', function () {
         expect(span.ec).to.equal(error ? 1 : 0);
         expect(span.data).to.exist;
         expect(span.data.mssql).to.exist;
-        expect(span.data.mssql.host).to.equal('localhost');
+        expect(span.data.mssql.host).to.contain('nodejs-team-db-server.database.window');
         expect(span.data.mssql.port).to.equal(1433);
-        expect(span.data.mssql.user).to.equal('sa');
-        expect(span.data.mssql.db).to.equal('nodejscollector');
+        expect(span.data.mssql.user).to.equal('admin@instana@nodejs-team-db-server');
+        expect(span.data.mssql.db).to.equal('azure-nodejs-test');
       }
     });
   });

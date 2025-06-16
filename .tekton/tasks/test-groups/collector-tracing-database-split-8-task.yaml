@@ -100,22 +100,6 @@ spec:
           initialDelaySeconds: 3
           periodSeconds: 2
           timeoutSeconds: 10
-    - name: mssql
-      image: mcr.microsoft.com/mssql/server:2022-latest
-      imagePullPolicy: IfNotPresent
-      env:
-          - name: "ACCEPT_EULA"
-            value: "Y"
-          - name: "SA_PASSWORD"
-            value: "stanCanHazMsSQL1"
-          - name: "MSSQL_PID"
-            value: "Express"
-      readinessProbe:
-          tcpSocket:
-            port: 1433 
-          initialDelaySeconds: 5
-          periodSeconds: 2
-          timeoutSeconds: 30
   envFrom:
     - configMapRef:
         name: environment-properties  
