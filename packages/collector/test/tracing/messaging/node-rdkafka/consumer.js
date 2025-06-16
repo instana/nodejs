@@ -37,7 +37,7 @@ function setupConsumer() {
   const consumerOptions = {
     'metadata.broker.list': process.env.KAFKA,
     'group.id': uuid(),
-    'enable.auto.commit': true
+    'enable.auto.commit': false
   };
 
   if (isStream) {
@@ -100,7 +100,7 @@ function setupConsumer() {
     });
   } else {
     _consumer = new Kafka.KafkaConsumer(consumerOptions, {
-      // 'auto.offset.reset': 'latest'
+      'auto.offset.reset': 'earliest'
     });
     _consumer.connect();
 
@@ -117,6 +117,7 @@ function setupConsumer() {
           });
 
           if (!foundTopic) {
+            log('Retrying...topic not found', topic);
             startConsuming();
             return;
           }
@@ -129,7 +130,7 @@ function setupConsumer() {
             // Consume from the rdkafka-topic. This is what determines
             // the mode we are running in. By not specifying a callback (or specifying
             // only a callback) we get messages as soon as they are available.
-            _consumer.consume(1);
+            _consumer.consume();
 
             // Even if we use this, messages are received one by one.
             // This basically means: wait until we have 5 messages and consume them
