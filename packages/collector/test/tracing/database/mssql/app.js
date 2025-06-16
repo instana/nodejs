@@ -83,33 +83,18 @@ async function connect() {
   preparedStatementGlobal.input('username', sql.NVarChar(40));
   preparedStatementGlobal.input('email', sql.NVarChar(40));
   await preparedStatementGlobal.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)');
-  ready = true;
 }
 
 async function connectWithRetry() {
-  const maxRetries = 10;
-  let retries = 1;
-
   log(`Trying to connect to database ${dbName} on ${dbHost}:${dbPort} as user ${dbUser}.`);
 
-  for (; retries <= maxRetries; retries++) {
-    try {
-      // eslint-disable-next-line no-await-in-loop
-      await connect();
-      break;
-    } catch (err) {
-      if (retries >= maxRetries) {
-        log(`Failed to create database or table or failed to connect after ${retries} retries.`, err.message);
-        throw err;
-      } else {
-        log(
-          `Failed to create database or table or failed to connect in retry ${retries}, will retry in a bit.`,
-          err.message
-        );
-        // eslint-disable-next-line no-await-in-loop
-        await delay(6000);
-      }
-    }
+  try {
+    await connect();
+    ready = true;
+  } catch (err) {
+    log('Failed to connect. Retrying in a couple of seconds.', err.message);
+    await delay(5000);
+    return connectWithRetry();
   }
 }
 
