@@ -25,32 +25,53 @@ function buildAndCopyModulesLinux {
   dockerfile="Dockerfile.${distro}"
   dockertag="${label}-native-packs"
 
+  echo "🔧 Checking buildx builder..."
+  BUILDER_NAME=multiarch-builder
+
+  if ! docker buildx inspect $BUILDER_NAME >/dev/null 2>&1; then
+    echo "Creating buildx builder: $BUILDER_NAME"
+    docker buildx create --name $BUILDER_NAME --use
+  fi
+
+  docker buildx inspect --bootstrap
+
+  echo "Registering QEMU multi-arch emulation..."
+
+  host_platform=$(uname -m | sed 's/aarch64/arm64/; s/x86_64/amd64/')
+
+  echo "Detected host platform: $host_platform"
+
+  docker run --rm --privileged tonistiigi/binfmt --install all
+
   docker stop $dockertag > /dev/null || true
   docker rm -f $dockertag > /dev/null || true
-  echo "Building $dockerfile -> $dockertag"
-  docker build \
-    --platform linux/$arch \
-    --build-arg BASE_IMAGE=$baseimage \
-    -f $dockerfile \
-    -t $dockertag \
-    .
-  echo "docker build exit status: $?"
-  echo "Running $dockertag"
-  docker run -t -d --name $dockertag $dockertag
-  echo "Waiting 5 seconds for the container to come up"
-  sleep 5
-  echo "Copying node_modules from container $dockertag to node_modules_$label"
-  docker cp $dockertag:/instana/node_modules node_modules_$label
-  mkdir -p ../packages/shared-metrics/addons/linux/$arch/$libcflavour/$abi/
-  echo "Creating native addon tar.gz files"
-  pushd node_modules_$label > /dev/null
-  tar -czf ../../packages/shared-metrics/addons/linux/$arch/$libcflavour/$abi/event-loop-stats.tar.gz event-loop-stats
-  tar -czf ../../packages/shared-metrics/addons/linux/$arch/$libcflavour/$abi/gcstats.js.tar.gz gcstats.js
-  popd > /dev/null
-  rm -rf node_modules_$label
-  echo "Stopping $dockertag"
-  docker stop $dockertag > /dev/null
-  echo "Deleting $dockertag"
-  docker rm -f $dockertag > /dev/null
+
+  if docker manifest inspect $baseimage >/dev/null 2>&1; then
+    echo "Building $dockerfile -> $dockertag"
+    docker buildx build \
+      --platform linux/$arch \
+      --build-arg BASE_IMAGE=$baseimage \
+      -f $dockerfile \
+      -t $dockertag \
+      .
+    echo "docker build exit status: $?"
+    echo "Running $dockertag"
+    docker run -t -d --name $dockertag $dockertag
+    echo "Waiting 5 seconds for the container to come up"
+    sleep 5
+    echo "Copying node_modules from container $dockertag to node_modules_$label"
+    docker cp $dockertag:/instana/node_modules node_modules_$label
+    mkdir -p ../packages/shared-metrics/addons/linux/$arch/$libcflavour/$abi/
+    echo "Creating native addon tar.gz files"
+    pushd node_modules_$label > /dev/null
+    tar -czf ../../packages/shared-metrics/addons/linux/$arch/$libcflavour/$abi/event-loop-stats.tar.gz event-loop-stats
+    tar -czf ../../packages/shared-metrics/addons/linux/$arch/$libcflavour/$abi/gcstats.js.tar.gz gcstats.js
+    popd > /dev/null
+    rm -rf node_modules_$label
+    echo "Stopping $dockertag"
+    docker stop $dockertag > /dev/null
+    echo "Deleting $dockertag"
+    docker rm -f $dockertag > /dev/null
+  fi
 }
 
