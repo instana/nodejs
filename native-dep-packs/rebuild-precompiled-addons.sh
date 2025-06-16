@@ -22,6 +22,11 @@ LIBC_VARIANTS=( \
   "musl"
 )
 
+ARCHS=( \
+  "x64" \
+  "s390x"
+)
+
 #########
 # Linux #
 #########
@@ -29,10 +34,12 @@ LIBC_VARIANTS=( \
 if [[ -z "$BUILD_FOR_MACOS" ]]; then
   source ./build-and-copy-node-modules-linux
 
-  for ABI_VERSION in ${!ABI_VERSIONS[@]}; do
-    NODEJS_VERSION=${ABI_VERSIONS[$ABI_VERSION]}
-    for LIBC in ${LIBC_VARIANTS[@]}; do
-      buildAndCopyModulesLinux $ABI_VERSION $NODEJS_VERSION $LIBC
+  for ARCH in ${ARCHS[@]}; do
+    for ABI_VERSION in ${!ABI_VERSIONS[@]}; do
+      NODEJS_VERSION=${ABI_VERSIONS[$ABI_VERSION]}
+      for LIBC in ${LIBC_VARIANTS[@]}; do
+        buildAndCopyModulesLinux $ABI_VERSION $NODEJS_VERSION $LIBC $ARCH
+      done
     done
   done
 fi
