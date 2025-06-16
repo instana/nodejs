@@ -29,15 +29,18 @@ data:
         requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
               matchExpressions:
-                - key: app
+                - key: app.kubernetes.io/component
                   operator: In
                   values:
                     - affinity-assistant
             topologyKey: "kubernetes.io/hostname"
-    resources:
-      requests:
-        cpu: "25"
-        memory: "100Gi"
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: "kubernetes.io/hostname"
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/component: affinity-assistant
 ```        
 
 ```sh
