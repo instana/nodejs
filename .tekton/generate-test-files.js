@@ -29,7 +29,7 @@ const groups = {
       'mssql'
     ],
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"',
-    split: 8,
+    split: 10,
     subname: 'test:ci:tracing:database',
     scope: '@instana/collector'
   },
@@ -67,7 +67,7 @@ const groups = {
       'rabbitmq'
     ],
     condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/messaging"',
-    split: 3,
+    split: 4,
     scope: '@instana/collector',
     subname: 'test:ci:tracing:messaging'
   },

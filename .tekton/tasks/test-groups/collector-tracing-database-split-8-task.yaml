@@ -228,14 +228,14 @@ spec:
           if [ "$(params.coverage)" == "true" ]; then
             npm run coverage-ci --npm_command="test:ci:collector:tracing:database" --report_dir="collector-tracing-database-split-8"
           else
-            if [[ 8 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=8 CI_TEST_SPLIT_CURRENT=8 npx lerna run "test:ci:tracing:database" --stream --scope="@instana/collector"
+            if [[ 10 =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=10 CI_TEST_SPLIT_CURRENT=8 npx lerna run "test:ci:tracing:database" --stream --scope="@instana/collector"
             else
               npm run "test:ci:collector:tracing:database"
             fi
           fi          
           if [ $? -eq 0 ]; then
-            if [[ 8 =~ ^[0-9]+$ ]]; then
+            if [[ 10 =~ ^[0-9]+$ ]]; then
               touch "test:ci:tracing:database.succeeded"
             else
               touch "test:ci:collector:tracing:database.succeeded"
@@ -243,7 +243,7 @@ spec:
             break
           else
             if [ $retry -eq 3 ]; then
-              if [[ 8 =~ ^[0-9]+$ ]]; then
+              if [[ 10 =~ ^[0-9]+$ ]]; then
                 touch "test:ci:tracing:database.failed"
               else
                 touch "test:ci:collector:tracing:database.failed"
