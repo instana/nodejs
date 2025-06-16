@@ -58,7 +58,7 @@ mochaSuiteFn('[CJS] tracing/sdk/multiple_installations', function () {
 
     // NOTE: Override the shared-metrics npm dependency with the local code base to be able to debug.
     const sharedMetricsPath = path.join(__dirname, '..', '..', '..', '..', '..', '..', 'shared-metrics');
-    testUtils.runCommandSync('npm pack', copath);
+    testUtils.runCommandSync('npm pack', sharedMetricsPath);
 
     const smVersion = require(`${sharedMetricsPath}/package.json`).version;
     testUtils.runCommandSync(
