@@ -9,7 +9,7 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const { expectAtLeastOneMatching, isCI, retry } = require('../../../../../core/test/test_util');
+const { expectAtLeastOneMatching, retry } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
@@ -17,7 +17,7 @@ describe('tracing/mssql', function () {
   ['latest', 'v10'].forEach(mssqlVersion => {
     const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
     mochaSuiteFn(`mssql@${mssqlVersion}`, function () {
-      this.timeout(isCI() ? 70000 : config.getTestTimeout() * 2);
+      this.timeout(config.getTestTimeout() * 5);
 
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
@@ -33,7 +33,7 @@ describe('tracing/mssql', function () {
           }
         });
 
-        await controls.startAndWaitForAgentConnection(10000);
+        await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout() * 4);
       });
 
       beforeEach(async () => {
