@@ -14,7 +14,15 @@ const taskTemplateContent = fs.readFileSync(
 );
 
 const files = fs.readdirSync('./tasks/test-groups');
-const names = files.map(f => f.replace('-task.yaml', ''));
+
+const names = [];
+files.forEach((file, index) => {
+  if (file.endsWith('task.yaml')) {
+    names.push(file.replace('-task.yaml', ''));
+  } else {
+    names.push(file.replace(/-task-(\d+)-split.yaml/, '-split-$1'));
+  }
+});
 
 let content = '';
 

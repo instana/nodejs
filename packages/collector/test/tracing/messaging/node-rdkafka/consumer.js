@@ -36,7 +36,8 @@ function setupConsumer() {
 
   const consumerOptions = {
     'metadata.broker.list': process.env.KAFKA,
-    'group.id': uuid()
+    'group.id': uuid(),
+    'enable.auto.commit': false
   };
 
   if (isStream) {
@@ -98,45 +99,74 @@ function setupConsumer() {
       span.end();
     });
   } else {
-    _consumer = new Kafka.KafkaConsumer(consumerOptions);
+    _consumer = new Kafka.KafkaConsumer(consumerOptions, {
+      'auto.offset.reset': 'earliest'
+    });
     _consumer.connect();
 
-    _consumer
-      .on('ready', () => {
-        log('Consumer Standard Ready.');
-        consumerReady = true;
+    _consumer.on('ready', () => {
+      function startConsuming() {
+        _consumer.getMetadata(null, (err, metadata) => {
+          let foundTopic = false;
+          metadata.topics.forEach(topicMetadata => {
+            if (topicMetadata.name === topic) {
+              log(`Topic exist ${topic}:`, topicMetadata);
+              log('Consumer Standard Ready.');
+              foundTopic = true;
+            }
+          });
 
-        log('Subscribing to topic', topic);
-        _consumer.subscribe([topic]);
+          if (!foundTopic) {
+            log('Retrying...topic not found', topic);
+            startConsuming();
+            return;
+          }
 
-        // Consume from the rdkafka-topic. This is what determines
-        // the mode we are running in. By not specifying a callback (or specifying
-        // only a callback) we get messages as soon as they are available.
-        _consumer.consume();
+          setTimeout(() => {
+            consumerReady = true;
+            log('Subscribing to topic', topic);
+            _consumer.subscribe([topic]);
 
-        // Even if we use this, messages are received one by one.
-        // This basically means: wait until we have 5 messages and consume them
-        // So we can assure that the consumer as standard api (not as stream) will always spit 1 message at a time.
-        // setInterval(function () {
-        //   _consumer.consume(5);
-        // }, 100);
-      })
-      .on('data', async data => {
-        log('Got standard message', data);
+            // Consume from the rdkafka-topic. This is what determines
+            // the mode we are running in. By not specifying a callback (or specifying
+            // only a callback) we get messages as soon as they are available.
+            _consumer.consume();
 
-        const span = instana.currentSpan();
-        span.disableAutoEnd();
+            // Even if we use this, messages are received one by one.
+            // This basically means: wait until we have 5 messages and consume them
+            // So we can assure that the consumer as standard api (not as stream)
+            // will always spit 1 message at a time.
+            // setInterval(function () {
+            //  _consumer.consume(5);
+            // }, 100);
 
-        // "headers" may or may not be present in data.
-        // it is an array of objects {key: value}.
-        // the producer can set a value either as string or Buffer, but the response received by the consumer is always
-        // a Uint8Array
-        sendToParent(data);
+            _consumer.once('disconnected', () => {
+              log('Consumer got disconnected');
+            });
 
-        await delay(200);
-        await fetch(`http://127.0.0.1:${agentPort}`);
-        span.end();
-      });
+            _consumer.on('data', async data => {
+              log('Got standard message', data);
+
+              const span = instana.currentSpan();
+              span.disableAutoEnd();
+
+              // "headers" may or may not be present in data.
+              // it is an array of objects {key: value}.
+              // the producer can set a value either as string or
+              // Buffer, but the response received by the consumer is always
+              // a Uint8Array
+              sendToParent(data);
+
+              await delay(200);
+              await fetch(`http://127.0.0.1:${agentPort}`);
+              span.end();
+            });
+          }, 2 * 1000);
+        });
+      }
+
+      startConsuming();
+    });
 
     _consumer.on('error', err => {
       log('Consumer Standard error:', err);

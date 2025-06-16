@@ -65,7 +65,8 @@ spec:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
               key: "AZURE_STORAGE_ACCOUNT_KEY"
-      image: node:$(params.node-version)
+      image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
         ARTIFACTS_PATH="$(workspaces.output.path)"
@@ -125,15 +126,29 @@ spec:
           if [ "$(params.coverage)" == "true" ]; then
             npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
           else
-            npm run "{{groupName}}"
+            if [[ {{split}} =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT={{split}} CI_TEST_SPLIT_CURRENT={{splitNumber}} npx lerna run "{{subname}}" --stream --scope="{{scope}}"
+            else
+              npm run "{{groupName}}"
+            fi
           fi          
 
           if [ $? -eq 0 ]; then
-            touch "{{groupName}}.succeeded"
+            if [[ {{split}} =~ ^[0-9]+$ ]]; then
+              touch "{{subname}}.succeeded"
+            else
+              touch "{{groupName}}.succeeded"
+            fi
+
             break
           else
             if [ $retry -eq 3 ]; then
-              touch "{{groupName}}.failed"
+              if [[ {{split}} =~ ^[0-9]+$ ]]; then
+                touch "{{subname}}.failed"
+              else
+                touch "{{groupName}}.failed"
+              fi
+
               exit 1
             fi
 

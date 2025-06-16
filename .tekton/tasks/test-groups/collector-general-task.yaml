@@ -1,0 +1,168 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: collector-general
+spec:
+  sidecars:
+    - name: mysql
+      image: public.ecr.aws/docker/library/mysql:8.0.26
+      imagePullPolicy: IfNotPresent
+      args:
+          - "--default-authentication-plugin=mysql_native_password"
+      env:
+          - name: "MYSQL_ROOT_PASSWORD"
+            value: "nodepw"
+          - name: "MYSQL_DATABASE"
+            value: "nodedb"
+          - name: "MYSQL_USER"
+            value: "node"
+          - name: "MYSQL_PASSWORD"
+            value: "nodepw"
+          - name: "MYSQL_ROOT_HOST"
+            value: "0.0.0.0"
+      readinessProbe:
+          exec:
+            command:
+            - "sh"
+            - "-c"
+            - "mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1'"
+          initialDelaySeconds: 3
+          periodSeconds: 2
+          timeoutSeconds: 10
+  envFrom:
+    - configMapRef:
+        name: environment-properties  
+  params:
+    - name: node-version
+      value: $(params.node-version)
+    - name: npm-version
+      value: $(params.npm-version)
+    - name: repository
+      value: $(params.repository)
+    - name: revision
+      value: $(params.revision)
+    - name: continuous-delivery-context-secret
+      value: $(params.continuous-delivery-context-secret)
+    - name: esm
+      value: $(params.esm)
+    - name: coverage
+      value: $(params.coverage)
+    - name: prerelease
+      value: $(params.prerelease) 
+  workspaces:
+    - name: output
+      mountPath: /artifacts
+  steps:
+    - name: run-test-group
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AWS_ACCESS_KEY_ID"
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AWS_SECRET_ACCESS_KEY"
+        - name: AZURE_REDIS_CLUSTER_PWD
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AZURE_REDIS_CLUSTER_PWD"              
+        - name: DB2_CONNECTION_STR
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "DB2_CONNECTION_STR"
+        - name: GOOGLE_APPLICATION_CREDENTIALS_CONTENT
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "GOOGLE_APPLICATION_CREDENTIALS_CONTENT"
+        - name: AZURE_SQL_PWD
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AZURE_SQL_PWD"
+        - name: AZURE_STORAGE_ACCOUNT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AZURE_STORAGE_ACCOUNT_KEY"
+      image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
+      script: |
+        #!/bin/bash
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+        BASE_REVISION=$(git rev-parse origin/main)
+        CIRCLE_COMPARE_URL=""
+        MODIFIED_FILES=""
+        GIT_COMMIT_DESC=""
+        if [ "$(params.prerelease)" == "true" ]; then
+          source bin/install-prerelease.sh
+          echo "Using node: $(node --version)"
+        fi
+        if [ -n "$(params.npm-version)" ]; then
+          npm install npm@$(params.npm-version) -g
+        fi
+        if [ -n "$(params.revision)" ]; then
+          CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
+          MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+          GIT_COMMIT_DESC=$(git log --format=%B -n 1 $(params.revision))
+        fi
+        echo "BASE_REVISION: $BASE_REVISION"
+        echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
+        echo "MODIFIED_FILES: $MODIFIED_FILES"
+        echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
+        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]'; then
+          echo "Skipping group."
+          touch "test:ci:collector:general.succeeded"
+          exit 0
+        fi
+        export CI=true
+        export GCP_PROJECT="k8s-brewery"
+        export AZURE_SQL_USERNAME="admin@instana@nodejs-team-db-server"
+        export AZURE_SQL_SERVER="nodejs-team-db-server.database.windows.net"
+        export AZURE_REDIS_CLUSTER="team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380"
+        export AZURE_SQL_DATABASE="azure-nodejs-test"
+        export AZURE_STORAGE_ACCOUNT_NAME="nodejstracerteam"
+        if [ "$(params.esm)" == "true" ]; then
+          export RUN_ESM=true
+          if ! echo "test:ci:collector:general" | grep -q 'ci:collector'; then
+            echo "Skipping tests because groupName does not contain 'ci:collector'."
+            touch "test:ci:collector:general.succeeded"
+            exit 0
+          fi
+        fi
+        retry=1
+        while [ $retry -le 3 ]; do
+          if [ "$(params.coverage)" == "true" ]; then
+            npm run coverage-ci --npm_command="test:ci:collector:general" --report_dir="collector-general"
+          else
+            if [[ false =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npx lerna run "false" --stream --scope="false"
+            else
+              npm run "test:ci:collector:general"
+            fi
+          fi          
+          if [ $? -eq 0 ]; then
+            if [[ false =~ ^[0-9]+$ ]]; then
+              touch "false.succeeded"
+            else
+              touch "test:ci:collector:general.succeeded"
+            fi
+            break
+          else
+            if [ $retry -eq 3 ]; then
+              if [[ false =~ ^[0-9]+$ ]]; then
+                touch "false.failed"
+              else
+                touch "test:ci:collector:general.failed"
+              fi
+              exit 1
+            fi
+            retry=$((retry + 1))
+          fi
+        done

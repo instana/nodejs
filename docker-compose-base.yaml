@@ -128,6 +128,8 @@ services:
 
       KAFKA_CREATE_TOPICS: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # LOG4J_LOGGER_KAFKA: TRACE
+      # LOG4J_LOGGER_ORG_APACHE_KAFKA: TRACE
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./bin:/nodejs-collector-bin
@@ -171,7 +173,7 @@ services:
       POSTGRES_DB: nodedb
 
   mssql:
-    image: mcr.microsoft.com/mssql/server:2022-RC1-ubuntu-20.04
+    image: mcr.microsoft.com/mssql/server:2022-latest
     platform: linux/amd64
     ports:
       - 1433:1433

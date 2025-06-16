@@ -80,6 +80,7 @@ spec:
   steps:
     - name: fetch-git-information
       image: $(params.fetch-git-information-step-image)
+      imagePullPolicy: IfNotPresent
       env:
         - name: REPOSITORY
           value: $(params.repository)
@@ -220,6 +221,7 @@ spec:
           name: steps-volume
     - name: set-status
       image: $(params.set-status-step-image)
+      imagePullPolicy: IfNotPresent
       env:
         - name: PIPELINE_ID
           valueFrom:

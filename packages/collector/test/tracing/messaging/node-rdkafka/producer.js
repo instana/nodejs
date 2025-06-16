@@ -83,8 +83,8 @@ function getProducer() {
     // This requires dr_cb option in order to work. When enabled, it gives us a confirmation that the message was
     // delivered successfully or not. This is handled by the instrumentation, if it's enabled.
     // Be aware that this only works for standard API - not for stream cases.
-    _producer.on('delivery-report', () => {
-      log('Received delivery report event');
+    _producer.on('delivery-report', err => {
+      log('Received delivery report event', err);
 
       if (throwDeliveryErr) {
         const listenersArr = _producer.listeners('delivery-report');
@@ -177,23 +177,25 @@ function doProduce(bufferErrorSender = false, method, msg = 'Node rdkafka is gre
 
       log('Sending message as standard on topic', topic);
 
-      const wasSent = producer.produce(topic, null, theMessage, null, null, null, [
-        { message_counter: ++messageCounter }
-      ]);
+      setTimeout(() => {
+        const wasSent = producer.produce(topic, null, theMessage, null, null, null, [
+          { message_counter: ++messageCounter }
+        ]);
 
-      log('Sent message as standard', wasSent);
+        log('Sent message as standard', wasSent);
 
-      setTimeout(async () => {
-        await fetch(`http://127.0.0.1:${agentPort}`);
+        setTimeout(async () => {
+          await fetch(`http://127.0.0.1:${agentPort}`);
 
-        resolve({
-          timestamp: Date.now(),
-          wasSent,
-          topic,
-          msg: theMessage,
-          messageCounter
-        });
-      }, 100);
+          resolve({
+            timestamp: Date.now(),
+            wasSent,
+            topic,
+            msg: theMessage,
+            messageCounter
+          });
+        }, 100);
+      }, 2 * 1000);
     });
   }
 }

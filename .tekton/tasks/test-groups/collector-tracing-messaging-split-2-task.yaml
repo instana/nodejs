@@ -1,0 +1,238 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: collector-tracing-messaging-split-2
+spec:
+  sidecars:
+    - name: zookeeper
+      image: zookeeper:3.9.1
+      imagePullPolicy: IfNotPresent
+      readinessProbe:
+          tcpSocket:
+            port: 2181 
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 30
+    - name: kafka
+      image: wurstmeister/kafka:2.13-2.8.1
+      imagePullPolicy: IfNotPresent
+      env:
+          - name: "KAFKA_LISTENERS"
+            value: "EXTERNAL://:9092,PLAINTEXT://:29092"
+          - name: "KAFKA_ADVERTISED_LISTENERS"
+            value: "PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092"
+          - name: "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR"
+            value: "1"
+          - name: "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP"
+            value: "PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT"
+          - name: "KAFKA_INTER_BROKER_LISTENER_NAME"
+            value: "PLAINTEXT"
+          - name: "KAFKA_CREATE_TOPICS"
+            value: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
+          - name: "KAFKA_ZOOKEEPER_CONNECT"
+            value: "127.0.0.1:2181"
+      readinessProbe:
+          tcpSocket:
+            port: 9092 
+          initialDelaySeconds: 30
+          periodSeconds: 2
+          timeoutSeconds: 60
+    - name: schema-registry
+      image: confluentinc/cp-schema-registry:4.1.0
+      imagePullPolicy: IfNotPresent
+      env:
+          - name: "SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL"
+            value: "127.0.0.1:2181"
+          - name: "SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS"
+            value: "PLAINTEXT://127.0.0.1:29092"
+          - name: "SCHEMA_REGISTRY_HOST_NAME"
+            value: "schema-registry"
+      readinessProbe:
+          httpGet:
+            path: / 
+            port: 8081 
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 60
+    - name: redis
+      image: public.ecr.aws/docker/library/redis:7.4.3
+      imagePullPolicy: IfNotPresent
+    - name: nats
+      image: nats:2.9.14-linux
+      imagePullPolicy: IfNotPresent
+    - name: nats-streaming
+      image: nats-streaming:0.25.3-linux
+      imagePullPolicy: IfNotPresent
+      args:
+          - "-p"
+          - "4223"
+          - "-m"
+          - "8223"
+      readinessProbe:
+          httpGet:
+            path: /healthz 
+            port: 8223 
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 15
+    - name: nats-streaming-2
+      image: nats-streaming:0.25.3-linux
+      imagePullPolicy: IfNotPresent
+      args:
+          - "-p"
+          - "4224"
+          - "-m"
+          - "8224"
+      readinessProbe:
+          httpGet:
+            path: /healthz 
+            port: 8224 
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 15
+    - name: rabbitmq
+      image: public.ecr.aws/docker/library/rabbitmq:3.13.0
+      imagePullPolicy: IfNotPresent
+      readinessProbe:
+          tcpSocket:
+            port: 5672 
+          initialDelaySeconds: 7
+          periodSeconds: 2
+          timeoutSeconds: 60
+  envFrom:
+    - configMapRef:
+        name: environment-properties  
+  params:
+    - name: node-version
+      value: $(params.node-version)
+    - name: npm-version
+      value: $(params.npm-version)
+    - name: repository
+      value: $(params.repository)
+    - name: revision
+      value: $(params.revision)
+    - name: continuous-delivery-context-secret
+      value: $(params.continuous-delivery-context-secret)
+    - name: esm
+      value: $(params.esm)
+    - name: coverage
+      value: $(params.coverage)
+    - name: prerelease
+      value: $(params.prerelease) 
+  workspaces:
+    - name: output
+      mountPath: /artifacts
+  steps:
+    - name: run-test-group
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AWS_ACCESS_KEY_ID"
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AWS_SECRET_ACCESS_KEY"
+        - name: AZURE_REDIS_CLUSTER_PWD
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AZURE_REDIS_CLUSTER_PWD"              
+        - name: DB2_CONNECTION_STR
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "DB2_CONNECTION_STR"
+        - name: GOOGLE_APPLICATION_CREDENTIALS_CONTENT
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "GOOGLE_APPLICATION_CREDENTIALS_CONTENT"
+        - name: AZURE_SQL_PWD
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AZURE_SQL_PWD"
+        - name: AZURE_STORAGE_ACCOUNT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "AZURE_STORAGE_ACCOUNT_KEY"
+      image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
+      script: |
+        #!/bin/bash
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+        BASE_REVISION=$(git rev-parse origin/main)
+        CIRCLE_COMPARE_URL=""
+        MODIFIED_FILES=""
+        GIT_COMMIT_DESC=""
+        if [ "$(params.prerelease)" == "true" ]; then
+          source bin/install-prerelease.sh
+          echo "Using node: $(node --version)"
+        fi
+        if [ -n "$(params.npm-version)" ]; then
+          npm install npm@$(params.npm-version) -g
+        fi
+        if [ -n "$(params.revision)" ]; then
+          CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
+          MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+          GIT_COMMIT_DESC=$(git log --format=%B -n 1 $(params.revision))
+        fi
+        echo "BASE_REVISION: $BASE_REVISION"
+        echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
+        echo "MODIFIED_FILES: $MODIFIED_FILES"
+        echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
+        if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/messaging"; then
+          echo "Skipping group."
+          touch "test:ci:collector:tracing:messaging.succeeded"
+          exit 0
+        fi
+        export CI=true
+        export GCP_PROJECT="k8s-brewery"
+        export AZURE_SQL_USERNAME="admin@instana@nodejs-team-db-server"
+        export AZURE_SQL_SERVER="nodejs-team-db-server.database.windows.net"
+        export AZURE_REDIS_CLUSTER="team-nodejs-redis-cluster-tekton.redis.cache.windows.net:6380"
+        export AZURE_SQL_DATABASE="azure-nodejs-test"
+        export AZURE_STORAGE_ACCOUNT_NAME="nodejstracerteam"
+        if [ "$(params.esm)" == "true" ]; then
+          export RUN_ESM=true
+          if ! echo "test:ci:collector:tracing:messaging" | grep -q 'ci:collector'; then
+            echo "Skipping tests because groupName does not contain 'ci:collector'."
+            touch "test:ci:collector:tracing:messaging.succeeded"
+            exit 0
+          fi
+        fi
+        retry=1
+        while [ $retry -le 3 ]; do
+          if [ "$(params.coverage)" == "true" ]; then
+            npm run coverage-ci --npm_command="test:ci:collector:tracing:messaging" --report_dir="collector-tracing-messaging-split-2"
+          else
+            if [[ 4 =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=4 CI_TEST_SPLIT_CURRENT=2 npx lerna run "test:ci:tracing:messaging" --stream --scope="@instana/collector"
+            else
+              npm run "test:ci:collector:tracing:messaging"
+            fi
+          fi          
+          if [ $? -eq 0 ]; then
+            if [[ 4 =~ ^[0-9]+$ ]]; then
+              touch "test:ci:tracing:messaging.succeeded"
+            else
+              touch "test:ci:collector:tracing:messaging.succeeded"
+            fi
+            break
+          else
+            if [ $retry -eq 3 ]; then
+              if [[ 4 =~ ^[0-9]+$ ]]; then
+                touch "test:ci:tracing:messaging.failed"
+              else
+                touch "test:ci:collector:tracing:messaging.failed"
+              fi
+              exit 1
+            fi
+            retry=$((retry + 1))
+          fi
+        done

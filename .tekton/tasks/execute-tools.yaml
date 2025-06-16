@@ -20,7 +20,8 @@ spec:
       mountPath: /artifacts
   steps:
     - name: audit
-      image: node:$(params.node-version)
+      image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
         
@@ -40,7 +41,8 @@ spec:
           exit 1
         fi        
     - name: lint
-      image: node:$(params.node-version)
+      image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
 
@@ -60,7 +62,8 @@ spec:
           exit 1
         fi
     - name: commitlint
-      image: node:$(params.node-version)
+      image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
 
@@ -80,7 +83,8 @@ spec:
           exit 1
         fi
     - name: depcheck
-      image: node:$(params.node-version)
+      image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
 
@@ -111,7 +115,8 @@ spec:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
               key: "AWS_SECRET_ACCESS_KEY"
-      image: node:$(params.node-version)
+      image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
 
