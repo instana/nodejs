@@ -5,6 +5,7 @@
 
 'use strict';
 
+const uuid = require('uuid').v4;
 const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -12,6 +13,9 @@ const config = require('../../../../../core/test/config');
 const { expectAtLeastOneMatching, retry } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
+
+const userTable = `UserTable_${uuid()}`.replace(/-/g, '_');
+const procedureName = `testProcedure_${uuid()}`.replace(/-/g, '_');
 
 describe('tracing/mssql', function () {
   ['latest', 'v10'].forEach(mssqlVersion => {
@@ -29,7 +33,9 @@ describe('tracing/mssql', function () {
           dirname: __dirname,
           useGlobalAgent: true,
           env: {
-            MSSQL_VERSION: mssqlVersion
+            MSSQL_VERSION: mssqlVersion,
+            AZURE_USER_TABLE: userTable,
+            AZURE_PROCEDURE_NAME: procedureName
           }
         });
 
@@ -41,6 +47,11 @@ describe('tracing/mssql', function () {
       });
 
       after(async () => {
+        await controls.sendRequest({
+          method: 'DELETE',
+          path: '/delete'
+        });
+
         await controls.stop();
       });
 
@@ -65,7 +76,7 @@ describe('tracing/mssql', function () {
 
                 expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntrySpan);
-                  expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable');
+                  expect(span.data.mssql.stmt).to.equal(`SELECT name, email FROM ${userTable}`);
                 });
               })
             )
@@ -291,18 +302,18 @@ describe('tracing/mssql', function () {
                 expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, firstWriteEntry);
                   expect(span.data.mssql.stmt).to.equal(
-                    "INSERT INTO UserTable (name, email) VALUES (N'gaius', N'gaius@julius.com')"
+                    `INSERT INTO ${userTable} (name, email) VALUES (N'gaius', N'gaius@julius.com')`
                   );
                 });
                 expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, secondWriteEntry);
                   expect(span.data.mssql.stmt).to.equal(
-                    'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
+                    `INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`
                   );
                 });
                 expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, readEntry);
-                  expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable');
+                  expect(span.data.mssql.stmt).to.equal(`SELECT name, email FROM ${userTable}`);
                 });
               })
             );
@@ -338,12 +349,12 @@ describe('tracing/mssql', function () {
                 expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, writeEntry);
                   expect(span.data.mssql.stmt).to.equal(
-                    'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
+                    `INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`
                   );
                 });
                 expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, readEntry);
-                  expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable WHERE name=@username');
+                  expect(span.data.mssql.stmt).to.equal(`SELECT name, email FROM ${userTable} WHERE name=@username`);
                 });
               })
             );
@@ -379,12 +390,12 @@ describe('tracing/mssql', function () {
                 expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, writeEntry);
                   expect(span.data.mssql.stmt).to.equal(
-                    'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
+                    `INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`
                   );
                 });
                 expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, readEntry);
-                  expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable WHERE name=@username');
+                  expect(span.data.mssql.stmt).to.equal(`SELECT name, email FROM ${userTable} WHERE name=@username`);
                 });
               })
             );
@@ -414,7 +425,7 @@ describe('tracing/mssql', function () {
                       'incorrect. Parameter 3 ("@email"): Data type 0xE7 has an invalid data length or metadata length.'
                   );
                   expect(span.data.mssql.stmt).to.equal(
-                    'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
+                    `INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`
                   );
                 });
               })
@@ -445,7 +456,7 @@ describe('tracing/mssql', function () {
                       'incorrect. Parameter 3 ("@email"): Data type 0xE7 has an invalid data length or metadata length.'
                   );
                   expect(span.data.mssql.stmt).to.equal(
-                    'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
+                    `INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`
                   );
                 });
               })
@@ -470,12 +481,12 @@ describe('tracing/mssql', function () {
                 expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntry);
                   expect(span.data.mssql.stmt).to.equal(
-                    'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
+                    `INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`
                   );
                 });
                 expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntry);
-                  expect(span.data.mssql.stmt).to.equal("SELECT name, email FROM UserTable WHERE name=N'vespasian'");
+                  expect(span.data.mssql.stmt).to.equal(`SELECT name, email FROM ${userTable} WHERE name=N'vespasian'`);
                 });
               })
             );
@@ -499,12 +510,12 @@ describe('tracing/mssql', function () {
                 expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntry);
                   expect(span.data.mssql.stmt).to.equal(
-                    'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
+                    `INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`
                   );
                 });
                 expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntry);
-                  expect(span.data.mssql.stmt).to.equal("SELECT name, email FROM UserTable WHERE name=N'titus'");
+                  expect(span.data.mssql.stmt).to.equal(`SELECT name, email FROM ${userTable} WHERE name=N'titus'`);
                 });
               })
             );
@@ -529,7 +540,7 @@ describe('tracing/mssql', function () {
 
                 expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntrySpan);
-                  expect(span.data.mssql.stmt).to.equal('testProcedure');
+                  expect(span.data.mssql.stmt).to.equal(procedureName);
                 });
               })
             );
@@ -555,7 +566,7 @@ describe('tracing/mssql', function () {
 
                 expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntrySpan);
-                  expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable');
+                  expect(span.data.mssql.stmt).to.equal(`SELECT name, email FROM ${userTable}`);
                 });
               })
             );

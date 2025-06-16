@@ -38,14 +38,14 @@ sql.on('error', err => {
 const dbHost = process.env.AZURE_SQL_SERVER;
 const dbUser = process.env.AZURE_SQL_USERNAME;
 const dbPassword = process.env.AZURE_SQL_PWD;
+const userTable = process.env.AZURE_USER_TABLE;
+const procedureName = process.env.AZURE_PROCEDURE_NAME;
 
 const connectConfigBase = {
   user: dbUser,
   password: dbPassword,
   server: dbHost,
   port: 1433,
-  connectionTimeout: 30000,
-  requestTimeout: 30000,
   database: process.env.AZURE_SQL_DATABASE,
   options: {
     encrypt: true,
@@ -58,29 +58,37 @@ let ready = false;
 
 async function connect() {
   log(`Connecting to ${connectConfigBase.server}:${connectConfigBase.port} as ${connectConfigBase.user}`);
-  await sql.connect(connectConfigBase);
+  log(`Table: ${userTable}`);
+  log(`Procedure: ${procedureName}`);
+
+  pool = await sql.connect(connectConfigBase);
   log('Connected to database');
 
-  await new sql.Request().query('DROP TABLE IF EXISTS UserTable');
-  await new sql.Request().query('DROP PROCEDURE IF EXISTS testProcedure');
+  await new sql.Request().query(`DROP TABLE IF EXISTS ${userTable}`);
+  await new sql.Request().query(`DROP PROCEDURE IF EXISTS ${procedureName}`);
+  log('Dropped existing table and procedure');
 
+  log('Creating table and procedure');
   await new sql.Request().query(
-    'CREATE TABLE UserTable (id INT IDENTITY(1,1), name VARCHAR(40) NOT NULL, email VARCHAR(40) NOT NULL)'
+    `CREATE TABLE ${userTable} (id INT IDENTITY(1,1), name VARCHAR(40) NOT NULL, email VARCHAR(40) NOT NULL)`
   );
+  log('Created table');
 
+  log('Creating stored procedure');
   await new sql.Request().batch(
-    'CREATE PROCEDURE testProcedure ' +
-      '    @username nvarchar(40)' +
+    `CREATE PROCEDURE ${procedureName}` +
+      '    @username nvarchar(40) ' +
       'AS' +
       '    SET NOCOUNT ON;' +
       '    SELECT name, email' +
-      '    FROM UserTable' +
+      `    FROM ${userTable}` +
       '    WHERE name = @username;'
   );
+  log('Created stored procedure');
   preparedStatementGlobal = new sql.PreparedStatement();
   preparedStatementGlobal.input('username', sql.NVarChar(40));
   preparedStatementGlobal.input('email', sql.NVarChar(40));
-  await preparedStatementGlobal.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)');
+  await preparedStatementGlobal.prepare(`INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`);
 }
 
 async function connectWithRetry() {
@@ -167,7 +175,7 @@ app.get('/error-promise', (req, res) => {
 });
 
 app.post('/insert', (req, res) => {
-  const insert = "INSERT INTO UserTable (name, email) VALUES (N'gaius', N'gaius@julius.com')";
+  const insert = `INSERT INTO ${userTable} (name, email) VALUES (N'gaius', N'gaius@julius.com')`;
   new sql.Request().query(insert, (err, results) => {
     if (err) {
       log('Failed to execute insert.', err);
@@ -178,7 +186,7 @@ app.post('/insert', (req, res) => {
 });
 
 app.post('/insert-params', (req, res) => {
-  const insert = 'INSERT INTO UserTable (name, email) VALUES (@username, @email)';
+  const insert = `INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`;
   new sql.Request()
     .input('username', sql.NVarChar(40), 'augustus')
     .input('email', sql.NVarChar(40), 'augustus@julius.com')
@@ -192,7 +200,7 @@ app.post('/insert-params', (req, res) => {
 });
 
 app.get('/select', (req, res) => {
-  new sql.Request().query('SELECT name, email FROM UserTable', (err, results) => {
+  new sql.Request().query(`SELECT name, email FROM ${userTable}`, (err, results) => {
     if (err) {
       log('Failed to execute select.', err);
       return res.status(500).json(err);
@@ -205,7 +213,7 @@ app.post('/insert-prepared-callback', (req, res) => {
   const ps = new sql.PreparedStatement();
   ps.input('username', sql.NVarChar(40));
   ps.input('email', sql.NVarChar(40));
-  ps.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)', err1 => {
+  ps.prepare(`INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`, err1 => {
     if (err1) {
       log('Failed to prepare statement.', err1);
       return res.status(500).json(err1);
@@ -251,7 +259,7 @@ app.post('/insert-prepared-error-callback', (req, res) => {
   const ps = new sql.PreparedStatement();
   ps.input('username', sql.NVarChar(40));
   ps.input('email', sql.NVarChar(40));
-  ps.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)', err1 => {
+  ps.prepare(`INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`, err1 => {
     if (err1) {
       log('Failed to prepare statement.', err1);
       return res.status(500).json(err1);
@@ -285,7 +293,7 @@ app.post('/insert-prepared-error-promise', (req, res) => {
   ps.input('email', sql.NVarChar(40));
   let results;
   return ps
-    .prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)')
+    .prepare(`INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`)
     .then(() =>
       ps.execute({
         username: 'nero',
@@ -311,7 +319,7 @@ app.get('/select-by-name/:username', (req, res) => {
   ps.input('username', sql.NVarChar(40));
   let results;
   return ps
-    .prepare('SELECT name, email FROM UserTable WHERE name=@username')
+    .prepare(`SELECT name, email FROM ${userTable} WHERE name=@username`)
     .then(() => ps.execute({ username: req.params.username }))
     .then(_results => {
       results = _results;
@@ -362,13 +370,13 @@ app.post('/transaction-callback', (req, res) => {
     new sql.Request(transaction)
       .input('username', sql.NVarChar(40), 'vespasian')
       .input('email', sql.NVarChar(40), 'vespasian@flavius.com')
-      .query('INSERT INTO UserTable (name, email) VALUES (@username, @email)', err2 => {
+      .query(`INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`, err2 => {
         if (err2) {
           log('Failed to execute insert.', err2);
           return res.status(500).json(err2);
         }
         new sql.Request(transaction).query(
-          "SELECT name, email FROM UserTable WHERE name=N'vespasian'",
+          `SELECT name, email FROM ${userTable} WHERE name=N'vespasian'`,
           (err3, results) => {
             if (err3) {
               log('Failed to execute insert.', err3);
@@ -396,9 +404,9 @@ app.post('/transaction-promise', (req, res) => {
       new sql.Request(transaction)
         .input('username', sql.NVarChar(40), 'titus')
         .input('email', sql.NVarChar(40), 'titus@flavius.com')
-        .query('INSERT INTO UserTable (name, email) VALUES (@username, @email)')
+        .query(`INSERT INTO ${userTable} (name, email) VALUES (@username, @email)`)
     )
-    .then(() => new sql.Request(transaction).query("SELECT name, email FROM UserTable WHERE name=N'titus'"))
+    .then(() => new sql.Request(transaction).query(`SELECT name, email FROM ${userTable} WHERE name=N'titus'`))
     .then(_results => {
       results = _results;
     })
@@ -412,7 +420,7 @@ app.post('/transaction-promise', (req, res) => {
 });
 
 app.get('/stored-procedure-callback', (req, res) => {
-  new sql.Request().input('username', sql.NVarChar(40), 'augustus').execute('testProcedure', (err, results) => {
+  new sql.Request().input('username', sql.NVarChar(40), 'augustus').execute(procedureName, (err, results) => {
     if (err) {
       log('Failed to execute stored procedure.', err);
       return res.status(500).json(err);
@@ -426,7 +434,7 @@ app.get('/streaming', (req, res) => {
   const rows = [];
   const errors = [];
   request.stream = true;
-  request.query('SELECT name, email FROM UserTable');
+  request.query(`SELECT name, email FROM ${userTable}`);
 
   request.on('row', row => {
     rows.push(row);
@@ -448,7 +456,7 @@ app.get('/pipe', (req, res) => {
   const request = new sql.Request();
   const stream = devNull();
   request.pipe(stream);
-  request.query('SELECT name, email FROM UserTable');
+  request.query(`SELECT name, email FROM ${userTable}`);
 
   stream.on('error', err => {
     console.log('PIPE ERR', err);
@@ -495,6 +503,14 @@ app.get('/bulk', (req, res) => {
     }
     res.json(results);
   });
+});
+
+app.delete('/delete', async (req, res) => {
+  log('Deleting UserTable and stored procedure');
+  await new sql.Request().query(`DROP TABLE IF EXISTS ${userTable}`);
+  await new sql.Request().query(`DROP PROCEDURE IF EXISTS ${procedureName}`);
+  log('Deleted UserTable and stored procedure');
+  res.sendStatus(200);
 });
 
 app.get('/cancel', (req, res) => {
