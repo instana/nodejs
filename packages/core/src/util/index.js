@@ -43,6 +43,13 @@ exports.init = function init(config) {
   configNormalizers.init(config);
 };
 
+/**
+ * @param {import('./normalizeConfig').AgentConfig} extraConfig
+ */
+exports.activate = function activate(extraConfig) {
+  spanFilter.activate(extraConfig);
+};
+
 exports.applicationUnderMonitoring = applicationUnderMonitoring;
 
 /**
