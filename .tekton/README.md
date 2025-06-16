@@ -3,8 +3,7 @@
 ## Private Workers
 
 - Single Zone
-- Strong hardware: >= 20 Cores, >= 60 Gig Mem
-- > 6 workers (= 6 pipelines in parallel)
+- Strong hardware
 
 ## Restrictions
 
