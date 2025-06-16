@@ -495,9 +495,6 @@ function normalizeNumericalStackTraceLength(numericalLength) {
  * @param {InstanaConfig} config
  */
 function normalizeDisableTracers(config) {
-  if (!config.tracing.disableTracers) {
-    config.tracing.disableTracers = [];
-  }
   // Case 1: process in-code configuration
   // Note: We maintain backward compatibility with the deprecated 'disabledTracers' property
   // but internally standardize on 'disableTracers'. The old property will be removed in v5.
@@ -507,24 +504,17 @@ function normalizeDisableTracers(config) {
         'Please use "tracing.disableTracers" instead.'
     );
 
-    if (Array.isArray(config.tracing.disabledTracers)) {
-      config.tracing.disableTracers.push(...config.tracing.disabledTracers);
-    } else {
-      logger.warn(
-        `Invalid configuration: config.tracing.disabledTracers is not an array, the value will be ignored: ${JSON.stringify(
-          config.tracing.disabledTracers
-        )}`
-      );
+    // Only use disabledTracers if disableTracers isn't already set
+    if (!config.tracing.disableTracers) {
+      config.tracing.disableTracers = config.tracing.disabledTracers;
     }
     delete config.tracing.disabledTracers;
   }
 
   // case 2: Check environment variables if available
-  if (config.tracing.disableTracers.length === 0) {
-    const disableTracersEnvVar = getDisableTracersFromEnv();
-    if (disableTracersEnvVar) {
-      config.tracing.disableTracers = disableTracersEnvVar;
-    }
+  if (!config.tracing.disableTracers) {
+    // Check environment variables first, fall back to defaults
+    config.tracing.disableTracers = getDisableTracersFromEnv() || defaults.tracing.disableTracers;
   }
 
   if (!Array.isArray(config.tracing.disableTracers)) {
