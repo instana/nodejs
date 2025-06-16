@@ -115,7 +115,29 @@ function wrapExecute(connection, query, optQueryParams, cb) {
 
 let connected = false;
 const getConnection = () => {
+  log('Trying to get connection for table creation');
+
+  if (driver === 'mysql2/promise') {
+    pool
+      .getConnection()
+      .then(connection => {
+        connected = true;
+        wrapAccess(connection, 'CREATE TABLE random_values (value double);', null, () => {
+          connection.release();
+          log('Successfully created table');
+        });
+      })
+      .catch(err => {
+        log('Failed to get connection', err);
+        setTimeout(getConnection, 1000);
+      });
+
+    return;
+  }
+
   pool.getConnection((err, connection) => {
+    log('Got connection for table creation', err, connection);
+
     if (err) {
       log('Failed to get connection for table creation', err);
       setTimeout(getConnection, 1000);

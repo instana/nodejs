@@ -87,33 +87,28 @@ async function connect() {
 }
 
 async function connectWithRetry() {
-  if (isCI()) {
-    const maxRetries = 10;
-    let retries = 1;
-    for (; retries <= maxRetries; retries++) {
-      try {
-        // eslint-disable-next-line no-await-in-loop
-        await connect();
-        break;
-      } catch (err) {
-        if (retries >= maxRetries) {
-          log(`Failed to create database or table or failed to connect after ${retries} retries.`, err.message);
-          throw err;
-        } else {
-          log(
-            `Failed to create database or table or failed to connect in retry ${retries}, will retry in a bit.`,
-            err.message
-          );
-          // eslint-disable-next-line no-await-in-loop
-          await delay(6000);
-        }
-      }
-    }
-  } else {
+  const maxRetries = 10;
+  let retries = 1;
+
+  log(`Trying to connect to database ${dbName} on ${dbHost}:${dbPort} as user ${dbUser}.`);
+
+  for (; retries <= maxRetries; retries++) {
     try {
+      // eslint-disable-next-line no-await-in-loop
       await connect();
+      break;
     } catch (err) {
-      log('Failed to create database or table or failed to connect.', err);
+      if (retries >= maxRetries) {
+        log(`Failed to create database or table or failed to connect after ${retries} retries.`, err.message);
+        throw err;
+      } else {
+        log(
+          `Failed to create database or table or failed to connect in retry ${retries}, will retry in a bit.`,
+          err.message
+        );
+        // eslint-disable-next-line no-await-in-loop
+        await delay(6000);
+      }
     }
   }
 }
