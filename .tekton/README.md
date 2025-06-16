@@ -74,3 +74,12 @@ node generate-test-files.js
   - `main .tekton/tasks`
   - `main .tekton/pipeline`
   - `main .tekton/tasks/test-groups`
+
+## Troubleshooting
+
+> QPS Limit exceeded
+
+`registryPullQPS` is default 5 in the IBMCloud and you cannot configure it.
+We are using `imagePullPolicy: IfNotPresent` to not pull the image
+if it already exists. You jsut to rerun the build to not run into the problem.
+As soon as the Node worker has enough images cached, the error disappears.
