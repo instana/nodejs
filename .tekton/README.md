@@ -1,8 +1,51 @@
 # Tekton
 
+## Private Workers
+
+- Single Zone
+- Strong hardware
+- > 6 workers (= 6 pipelines in parallel)
+
 ## Restrictions
 
 - Slashes in branch names is not allowed.
+
+## Affinity Assistant Configuration
+
+You have to manually apply this to our cluster to force Tekton
+to choose a worker based on these conditions. The goal should be
+that one pipeline runs on one worker at a time. The pipelines are really heavy.
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-artifact-pvc
+  namespace: tekton-pipelines
+data:
+  affinityAssistant.podTemplate: |
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - affinity-assistant
+            topologyKey: "kubernetes.io/hostname"
+    resources:
+      requests:
+        cpu: "25"
+        memory: "100Gi"
+```        
+
+```sh
+..login...
+ibmcloud ks cluster config --cluster mycluster-eu-de-1-bx2.2x8
+kubectl get namespaces
+kubectl apply -f affinity.yaml
+```
 
 ## Linting
 
