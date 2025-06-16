@@ -42,7 +42,7 @@ if (!argv.os || (argv.os && argv.os === 'darwin')) {
 // alpine = x64 musl
 // centos7-devtoolset7 = x64 glibc
 if (!argv.os || (argv.os && argv.os === 'linux')) {
-  let archs = ['alpine', 'linux-arm64', 'centos7-devtoolset7', 'linux-armv6', 'linux-armv7'];
+  let archs = ['alpine', 'linux-arm64', 'centos7-devtoolset7', 'linux-armv6', 'linux-armv7', 'linux-s390x'];
   if (argv.arch) {
     archs = argv.arch.split(',');
   }
