@@ -250,7 +250,9 @@
     "uuid": "^9.0.1",
     "winston": "^3.17.0",
     "ws": "^8.16.0",
-    "yargs": "^17.5.1"
+    "yargs": "^17.5.1",
+    "event-loop-stats": "1.4.1",
+    "gcstats.js": "1.0.0"
   },
   "optionalDependencies": {
     "couchbase": "^4.5.0",
@@ -265,7 +267,13 @@
     "prebuildify": {
       "node-abi": "4.8.0"
     },
-    "stream-shift": "1.0.2"
+    "stream-shift": "1.0.2",
+    "event-loop-stats": {
+      "nan": "^2.22.2"
+    },
+    "gcstats.js": {
+      "nan": "^2.22.2"
+    }
   },
   "config": {
     "commitizen": {
