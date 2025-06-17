@@ -277,7 +277,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
   if (!warningsHaveBeenLogged) {
     warningsHaveBeenLogged = true;
     if (environmentUtil.sendUnencrypted) {
-      logger.error(
+      logger.warn(
         `[${requestId}] ${environmentUtil.sendUnencryptedEnvVar} is set, which means that all traffic ` +
           'to Instana is send ' +
           'unencrypted via plain HTTP, not via HTTPS. This will effectively make that traffic public. This setting ' +
