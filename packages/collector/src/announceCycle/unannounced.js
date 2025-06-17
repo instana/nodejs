@@ -240,6 +240,11 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
 }
 
 /**
+ * The incoming agent configuration include  `disable` object that specifies
+ * which instrumentation/categories should be disabled. For example: { logging: true, console: false }
+ * This will be normalized into an array of strings, such as: ['logging', '!console']
+ * For more details on the design, refer to:https://github.ibm.com/instana/technical-documentation/pull/344
+ *
  * @param {AgentAnnounceResponse} agentResponse
  */
 function applyDisableConfiguration(agentResponse) {

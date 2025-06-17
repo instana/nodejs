@@ -131,49 +131,90 @@ mochaSuiteFn('tracing/logging/console', function () {
       ));
   });
 
-  describe('when logging is disabled', () => {
-    describe('via env variable', () => {
+  describe('when logging instrumentation is disabled', () => {
+    describe('through environment variables', () => {
       let envVarControls;
 
-      before(async () => {
-        envVarControls = new ProcessControls({
-          useGlobalAgent: true,
-          dirname: __dirname,
-          env: {
-            INSTANA_TRACING_DISABLE_LOGGING: 'true'
-          }
+      describe('using INSTANA_TRACING_DISABLE_LOGGING', () => {
+        before(async () => {
+          envVarControls = new ProcessControls({
+            useGlobalAgent: true,
+            dirname: __dirname,
+            env: {
+              INSTANA_TRACING_DISABLE_LOGGING: 'true'
+            }
+          });
+          await envVarControls.startAndWaitForAgentConnection();
         });
-        await envVarControls.startAndWaitForAgentConnection();
+
+        after(async () => {
+          await envVarControls.stop();
+        });
+
+        it('should not trace console.warn calls', async () => {
+          await envVarControls.sendRequest({ path: '/warn' });
+
+          await testUtils.retry(async () => {
+            const spans = await agentControls.getSpans();
+            const httpEntrySpan = verifyHttpRootEntry({
+              spans,
+              apiPath: '/warn',
+              pid: String(envVarControls.getPid())
+            });
+
+            verifyHttpExit({
+              spans,
+              parent: httpEntrySpan,
+              pid: String(envVarControls.getPid())
+            });
+
+            const consoleLogSpans = testUtils.getSpansByName(spans, 'log.console');
+            expect(consoleLogSpans).to.be.empty;
+          });
+        });
       });
 
-      after(async () => {
-        await envVarControls.stop();
-      });
-
-      it('must not trace warn calls', async () => {
-        await envVarControls.sendRequest({ path: '/warn' });
-
-        await testUtils.retry(async () => {
-          const spans = await agentControls.getSpans();
-          const httpEntrySpan = verifyHttpRootEntry({
-            spans,
-            apiPath: '/warn',
-            pid: String(envVarControls.getPid())
+      describe('using INSTANA_TRACING_DISABLE with value "logging"', () => {
+        before(async () => {
+          envVarControls = new ProcessControls({
+            useGlobalAgent: true,
+            dirname: __dirname,
+            env: {
+              INSTANA_TRACING_DISABLE: 'logging'
+            }
           });
+          await envVarControls.startAndWaitForAgentConnection();
+        });
 
-          verifyHttpExit({
-            spans,
-            parent: httpEntrySpan,
-            pid: String(envVarControls.getPid())
+        after(async () => {
+          await envVarControls.stop();
+        });
+
+        it('should not trace console.warn calls', async () => {
+          await envVarControls.sendRequest({ path: '/warn' });
+
+          await testUtils.retry(async () => {
+            const spans = await agentControls.getSpans();
+            const httpEntrySpan = verifyHttpRootEntry({
+              spans,
+              apiPath: '/warn',
+              pid: String(envVarControls.getPid())
+            });
+
+            verifyHttpExit({
+              spans,
+              parent: httpEntrySpan,
+              pid: String(envVarControls.getPid())
+            });
+
+            const consoleLogSpans = testUtils.getSpansByName(spans, 'log.console');
+            expect(consoleLogSpans).to.be.empty;
           });
-
-          const consoleLogSpans = testUtils.getSpansByName(spans, 'log.console');
-          expect(consoleLogSpans).to.be.empty;
         });
       });
     });
 
-    describe('via agent configuration', () => {
+    describe('through agent configuration', () => {
       describe('when logging category is disabled', () => {
         const { AgentStubControls } = require('../../../apps/agentStubControls');
         let customAgentControls;
@@ -197,7 +238,7 @@ mochaSuiteFn('tracing/logging/console', function () {
           await customAgentControls.stopAgent();
         });
 
-        it('must not trace warn calls', async () => {
+        it('should not trace console.warn calls', async () => {
           await agentConfigControls.sendRequest({ path: '/warn' });
 
           await testUtils.retry(async () => {
@@ -220,7 +261,7 @@ mochaSuiteFn('tracing/logging/console', function () {
         });
       });
 
-      describe('when logging category is disabled but console is enabled', () => {
+      describe('when logging is disabled but console is explicitly enabled', () => {
         const { AgentStubControls } = require('../../../apps/agentStubControls');
         let customAgentControls;
         let agentConfigControls;
@@ -243,7 +284,7 @@ mochaSuiteFn('tracing/logging/console', function () {
           await customAgentControls.stopAgent();
         });
 
-        it('must not trace warn calls', async () => {
+        it('should trace console.warn calls', async () => {
           await agentConfigControls.sendRequest({ path: '/warn' });
 
           await testUtils.retry(async () => {
@@ -261,7 +302,6 @@ mochaSuiteFn('tracing/logging/console', function () {
             });
 
             const consoleLogSpans = testUtils.getSpansByName(spans, 'log.console');
-
             expect(consoleLogSpans.length).to.equal(1);
           });
         });

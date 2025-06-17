@@ -629,7 +629,7 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should apply disable configuration from the agent response', done => {
+    it('should apply disable config from the agent response', done => {
       prepareAnnounceResponse({
         tracing: {
           disable: {
@@ -661,7 +661,7 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should apply disable config with multiple enabled technologies', done => {
+    it('should apply disable config with multiple technologies', done => {
       prepareAnnounceResponse({
         tracing: {
           disable: {
@@ -699,7 +699,7 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should apply disable config while ignoring false values', done => {
+    it('should apply disable config correctly while it contains false values', done => {
       prepareAnnounceResponse({
         tracing: {
           disable: {
@@ -736,7 +736,7 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should apply disable config with mixed true/false values', done => {
+    it('should normalize disable config with mixed true/false values', done => {
       prepareAnnounceResponse({
         tracing: {
           disable: {
