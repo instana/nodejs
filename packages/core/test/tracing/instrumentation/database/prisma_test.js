@@ -6,7 +6,7 @@
 
 const { expect } = require('chai');
 
-const prisma = require('../../../../src/tracing/instrumentation/database/prisma');
+const prisma = require('../../../../src/tracing/instrumentation/databases/prisma');
 
 describe('tracing/prisma should redact the password from the connection URL', () => {
   [

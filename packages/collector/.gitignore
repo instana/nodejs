@@ -4,8 +4,8 @@
 !test/metrics/npmInstalledApp/node_modules/**
 
 test/bin/edgemicroResources/cli/edgemicro
-test/tracing/database/prisma/package.json
-test/tracing/database/prisma/package-lock.json
+test/tracing/databases/prisma/package.json
+test/tracing/databases/prisma/package-lock.json
 
 test/tracing/misc/typescript/ts_esm/dist
 test/tracing/misc/typescript/ts_cjs/dist

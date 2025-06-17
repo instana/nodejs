@@ -32,7 +32,7 @@ mochaSuiteFn('tracing/elasticsearch', function () {
    * api: instrumentation < 7.9.1
    *
    * The words "transport" and "api" try to describe the different
-   * mechanismn we use in core/src/tracing/instrumentation/database/elasticsearch.js
+   * mechanismn we use in core/src/tracing/instrumentation/databases/elasticsearch.js
    *
    * Breaking changes between 8x and 9x are not big enough to run the tests for both v8 and v9:
    * https://www.elastic.co/docs/release-notes/elasticsearch/clients/javascript#elasticsearch-javascript-client-9.0.0-release-notes

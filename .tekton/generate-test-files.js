@@ -27,7 +27,7 @@ const groups = {
       'mysql',
       'postgres'
     ],
-    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/database"',
+    condition: ' && ! echo "$MODIFIED_FILES" | grep -q "packages/core/src/tracing/instrumentation/databases"',
     split: 10,
     subname: 'test:ci:tracing:database',
     scope: '@instana/collector'

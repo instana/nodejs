@@ -7,10 +7,10 @@
 
 const { expect } = require('chai');
 
-const pgNative = require('../../../../src/tracing/instrumentation/database/pgNative');
+const pgNative = require('../../../../src/tracing/instrumentation/databases/pgNative');
 
 // This test only tests the various methods to parse the connection parameters. The actual tracing integration test for
-// pg-native is in packages/collector/test/tracing/database/pg-native.
+// pg-native is in packages/collector/test/tracing/databases/pg-native.
 
 describe('tracing/pg-native should parse connection parameters', () => {
   describe('key value connection string', () => {
