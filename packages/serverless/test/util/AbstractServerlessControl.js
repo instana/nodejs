@@ -124,8 +124,7 @@ AbstractServerlessControl.prototype.startBackendAndWaitForIt = async function st
     stdio: config.getAppStdio(),
     env: Object.assign(
       {
-        USE_HTTPS: this.useHttps == null || this.useHttps,
-        NODE_TLS_REJECT_UNAUTHORIZED: this.useHttps ? '0' : '1',
+        BACKEND_USES_HTTPS: this.backendUsesHttps == null || this.backendUsesHttps,
         BACKEND_PORT: this.backendPort,
         BACKEND_UNRESPONSIVE: this.opts.startBackend === 'unresponsive'
       },
@@ -145,7 +144,7 @@ AbstractServerlessControl.prototype.startExtensionAndWaitForIt = function startE
     stdio: config.getAppStdio(),
     env: Object.assign(
       {
-        BACKEND_HTTPS: this.useHttps == null || this.useHttps,
+        BACKEND_USES_HTTPS: this.backendUsesHttps == null || this.backendUsesHttps,
         BACKEND_PORT: this.backendPort,
         INSTANA_LAYER_EXTENSION_PORT: this.extensionPort,
         EXTENSION_UNRESPONSIVE: this.opts.startExtension === 'unresponsive',

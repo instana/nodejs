@@ -19,10 +19,15 @@ class Control extends AbstractServerlessControl {
     this.messagesFromTestApp = [];
     this.backendPort = this.opts.backendPort || portfinder();
     this.port = this.opts.port || portfinder();
-    this.useHttps = 'backendHttps' in this.opts ? this.opts.backendHttps : false;
-    const protocol = this.useHttps ? 'https' : 'http';
-    this.backendBaseUrl = this.opts.backendBaseUrl || `${protocol}://localhost:${this.backendPort}/serverless`;
-    this.instanaEndpoint = `${protocol}://localhost:${this.backendPort}/`;
+    this.backendUsesHttps = 'backendUsesHttps' in this.opts ? this.opts.backendUsesHttps : false;
+
+    if (this.backendUsesHttps) {
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+    }
+
+    const backendProtocol = this.backendUsesHttps ? 'https' : 'http';
+    this.backendBaseUrl = this.opts.backendBaseUrl || `${backendProtocol}://localhost:${this.backendPort}/serverless`;
+    this.instanaEndpoint = `${backendProtocol}://localhost:${this.backendPort}/`;
   }
 
   startMonitoredProcess() {

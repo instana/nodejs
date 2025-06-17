@@ -62,7 +62,7 @@ mochaSuiteFn('tracing/http(s) server', function () {
   });
 });
 
-function registerTests(agentControls, useHttps, useHttp2CompatApi) {
+function registerTests(agentControls, appUsesHttps, useHttp2CompatApi) {
   let controls;
 
   before(async () => {
@@ -71,7 +71,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
       http2: useHttp2CompatApi,
       agentControls,
       env: {
-        APP_USES_HTTPS: useHttps,
+        APP_USES_HTTPS: appUsesHttps,
         APP_USES_HTTP2: useHttp2CompatApi
       }
     });
@@ -90,7 +90,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
     await controls.clearIpcMessages();
   });
 
-  it(`must capture incoming calls and start a new trace (HTTPS: ${useHttps})`, () =>
+  it(`must capture incoming calls and start a new trace (HTTPS: ${appUsesHttps})`, () =>
     controls
       .sendRequest({
         method: 'POST',
@@ -110,7 +110,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         )
       ));
 
-  it(`must continue incoming trace (HTTPS: ${useHttps})`, () =>
+  it(`must continue incoming trace (HTTPS: ${appUsesHttps})`, () =>
     controls
       .sendRequest({
         method: 'POST',
@@ -135,7 +135,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         )
       ));
 
-  it(`must continue incoming trace with 128bit traceIds (HTTPS: ${useHttps})`, () =>
+  it(`must continue incoming trace with 128bit traceIds (HTTPS: ${appUsesHttps})`, () =>
     controls
       .sendRequest({
         method: 'POST',
@@ -159,7 +159,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         )
       ));
 
-  it(`must suppress (HTTPS: ${useHttps})`, () =>
+  it(`must suppress (HTTPS: ${appUsesHttps})`, () =>
     controls
       .sendRequest({
         method: 'POST',
@@ -178,7 +178,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         })
       ));
 
-  it(`must suppress when X-INSTANA-L has trailing content (HTTPS: ${useHttps})`, () =>
+  it(`must suppress when X-INSTANA-L has trailing content (HTTPS: ${appUsesHttps})`, () =>
     controls
       .sendRequest({
         method: 'POST',
@@ -197,7 +197,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         })
       ));
 
-  it(`must start a new trace with correlation ID (HTTPS: ${useHttps})`, () =>
+  it(`must start a new trace with correlation ID (HTTPS: ${appUsesHttps})`, () =>
     controls
       .sendRequest({
         method: 'POST',
@@ -225,7 +225,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         )
       ));
 
-  it(`must mark HTTP entry as erroneous (HTTPS: ${useHttps})`, () =>
+  it(`must mark HTTP entry as erroneous (HTTPS: ${appUsesHttps})`, () =>
     controls
       .sendRequest({
         method: 'POST',
@@ -246,7 +246,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         )
       ));
 
-  it(`must mark HTTP entry as synthetic (HTTPS: ${useHttps})`, () =>
+  it(`must mark HTTP entry as synthetic (HTTPS: ${appUsesHttps})`, () =>
     controls
       .sendRequest({
         method: 'GET',
@@ -262,7 +262,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         })
       ));
 
-  it(`must capture configured request headers when present (HTTPS: ${useHttps})`, () => {
+  it(`must capture configured request headers when present (HTTPS: ${appUsesHttps})`, () => {
     const requestHeaderValue = 'Request Header Value';
     return controls
       .sendRequest({
@@ -295,7 +295,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
       );
   });
 
-  it(`must capture configured response headers when present (HTTPS: ${useHttps})`, () => {
+  it(`must capture configured response headers when present (HTTPS: ${appUsesHttps})`, () => {
     const expectedResponeHeaderValue = 'Response Header Value';
     return controls
       .sendRequest({
@@ -316,7 +316,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
       );
   });
 
-  it(`must capture response headers written directly to the response (HTTPS: ${useHttps})`, () => {
+  it(`must capture response headers written directly to the response (HTTPS: ${appUsesHttps})`, () => {
     const expectedResponeHeaderValue = 'Write Head Response Header Value';
     return controls
       .sendRequest({
@@ -337,7 +337,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
       );
   });
 
-  it(`must capture configured request and response headers when present (HTTPS: ${useHttps})`, () => {
+  it(`must capture configured request and response headers when present (HTTPS: ${appUsesHttps})`, () => {
     const requestHeaderValue = 'Request Header Value';
     const expectedResponeHeaderValue = 'Response Header Value';
     return controls
@@ -376,7 +376,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
   });
 
   it(//
-  `must capture both response headers written directly to the response and other headers (HTTPS: ${useHttps})`, () => {
+  `must capture both response headers for response & other headers (HTTPS: ${appUsesHttps})`, () => {
     const requestHeaderValue = 'Request Header Value';
     const expectedResponeHeaderValue1 = 'Response Header Value';
     const expectedResponeHeaderValue2 = 'Write Head Response Header Value';
@@ -420,7 +420,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
   });
 
   // eslint-disable-next-line max-len
-  it(`must not contain the header field when neither request nor response headers are present (HTTPS: ${useHttps})`, () =>
+  it(`must not contain the header field when neither request nor response headers are present (HTTPS: ${appUsesHttps})`, () =>
     controls
       .sendRequest({
         method: 'GET',
@@ -450,7 +450,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         )
       ));
 
-  it(`must remove secrets from query parameters (HTTPS: ${useHttps})`, () =>
+  it(`must remove secrets from query parameters (HTTPS: ${appUsesHttps})`, () =>
     controls
       .sendRequest({
         method: 'GET',
@@ -467,7 +467,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         )
       ));
 
-  it(`must not collect credentials embedded in URLs (HTTPS: ${useHttps})`, () =>
+  it(`must not collect credentials embedded in URLs (HTTPS: ${appUsesHttps})`, () =>
     controls
       .sendRequest({
         method: 'GET',
@@ -501,7 +501,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
       });
   });
 
-  it(`must capture an HTTP entry when the client closes the connection (HTTPS: ${useHttps})`, () =>
+  it(`must capture an HTTP entry when the client closes the connection (HTTPS: ${appUsesHttps})`, () =>
     controls
       .sendRequest({
         path: '/dont-respond',
@@ -535,7 +535,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         }
       }));
 
-  it(`must capture an HTTP entry when the server destroys the socket (HTTPS: ${useHttps})`, () =>
+  it(`must capture an HTTP entry when the server destroys the socket (HTTPS: ${appUsesHttps})`, () =>
     controls
       .sendRequest({
         path: '/destroy-socket',
