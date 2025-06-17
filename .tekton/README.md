@@ -10,22 +10,22 @@
 - Limit 1 pipeline per node (not reliable, but its running okay):
 
 ```sh
-$ kubectl -n tekton-pipelines create cm default-pod-template \
-  --from-literal=pod-template='{
-    "topologySpreadConstraints":[
-      {
-        "maxSkew": 1,
-        "topologyKey":"kubernetes.io/hostname",
-        "whenUnsatisfiable":"DoNotSchedule",
-        "labelSelector":{
-          "matchExpressions":[
-            { "key":"tekton.dev/pipelineRun", "operator":"Exists" }
-          ]
-        }
-      }
-    ]
-  }' \
-  --dry-run=client -o yaml | kubectl apply -f -
+cat <<'EOF' | kubectl -n tekton-pipelines apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-artifact-pvc
+  namespace: tekton-pipelines
+data:
+  affinityAssistant.podTemplate: |
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: affinity-assistant
+          topologyKey: kubernetes.io/hostname
+EOF
 
 $ kubectl -n tekton-pipelines rollout restart deploy tekton-pipelines-controller
 $ kubectl -n tekton-pipelines rollout restart deploy tekton-pipelines-webhook
