@@ -21,7 +21,7 @@ const configNormalizers = require('./configNormalizers');
  * @property {number} [transmissionDelay]
  * @property {number} [stackTraceLength]
  * @property {HTTPTracingOptions} [http]
- * @property {Array<string>} [disableTracers]
+ * @property {Array<string>} [disable]
  * @property {Array<string>} [disabledTracers]
  * @property {boolean} [spanBatchingEnabled]
  * @property {boolean} [disableW3cTraceCorrelation]
@@ -120,7 +120,7 @@ const defaults = {
       extraHttpHeadersToCapture: []
     },
     stackTraceLength: 10,
-    disableTracers: [],
+    disable: [],
     spanBatchingEnabled: false,
     disableW3cTraceCorrelation: false,
     kafka: {
@@ -497,50 +497,50 @@ function normalizeNumericalStackTraceLength(numericalLength) {
 function normalizeDisableTracers(config) {
   // Case 1: process in-code configuration
   // Note: We maintain backward compatibility with the deprecated 'disabledTracers' property
-  // but internally standardize on 'disableTracers'. The old property will be removed in v5.
+  // but internally standardize on 'disable'. The old property will be removed in v5.
   if (config.tracing.disabledTracers) {
     logger.warn(
       'The configuration property "tracing.disabledTracers" is deprecated and will be removed in the next major release. ' +
-        'Please use "tracing.disableTracers" instead.'
+        'Please use "tracing.disable" instead.'
     );
 
-    // Only use disabledTracers if disableTracers isn't already set
-    if (!config.tracing.disableTracers) {
-      config.tracing.disableTracers = config.tracing.disabledTracers;
+    // Only use disabledTracers if disable isn't already set
+    if (!config.tracing.disable) {
+      config.tracing.disable = config.tracing.disabledTracers;
     }
     delete config.tracing.disabledTracers;
   }
 
   // case 2: Check environment variables if available
-  if (!config.tracing.disableTracers) {
+  if (!config.tracing.disable) {
     // Check environment variables first, fall back to defaults
-    config.tracing.disableTracers = getDisableTracersFromEnv() || defaults.tracing.disableTracers;
+    config.tracing.disable = getDisableTracersFromEnv() || defaults.tracing.disable;
   }
 
-  if (!Array.isArray(config.tracing.disableTracers)) {
+  if (!Array.isArray(config.tracing.disable)) {
     logger.warn(
-      `Invalid configuration: config.tracing.disableTracers is not an array, the value will be ignored: ${JSON.stringify(
-        config.tracing.disableTracers
+      `Invalid configuration: config.tracing.disable is not an array, the value will be ignored: ${JSON.stringify(
+        config.tracing.disable
       )}`
     );
-    config.tracing.disableTracers = defaults.tracing.disableTracers;
+    config.tracing.disable = defaults.tracing.disable;
   }
 
-  config.tracing.disableTracers = config.tracing.disableTracers.map(s => s.toLowerCase()).filter(s => s.length > 0);
+  config.tracing.disable = config.tracing.disable.map(s => s.toLowerCase()).filter(s => s.length > 0);
 }
 
 function getDisableTracersFromEnv() {
   let disableTracersEnvVar;
 
-  if (process.env.INSTANA_DISABLE_TRACERS) {
-    disableTracersEnvVar = parseHeadersEnvVar(process.env.INSTANA_DISABLE_TRACERS);
+  if (process.env.INSTANA_TRACING_DISABLE) {
+    disableTracersEnvVar = parseHeadersEnvVar(process.env.INSTANA_TRACING_DISABLE);
   }
   // We deprecated the variable `INSTANA_DISABLED_TRACERS` and will be removed in the next major release(v5).
   else if (process.env.INSTANA_DISABLED_TRACERS) {
     disableTracersEnvVar = parseHeadersEnvVar(process.env.INSTANA_DISABLED_TRACERS);
     logger.warn(
       'The environment variable INSTANA_DISABLED_TRACERS is deprecated and will be removed in the next major release. ' +
-        'Please use INSTANA_DISABLE_TRACERS instead.'
+        'Please use INSTANA_TRACING_DISABLE instead.'
     );
   }
 
