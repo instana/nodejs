@@ -44,7 +44,7 @@ describe('util.disableInstrumentation', () => {
     it('should disable by module path match', () => {
       disableInstrumentation.init({
         tracing: {
-          disabledTracers: ['hapi']
+          disableTracers: ['hapi']
         }
       });
 
@@ -59,7 +59,7 @@ describe('util.disableInstrumentation', () => {
     it('should disable by package name', () => {
       disableInstrumentation.init({
         tracing: {
-          disabledTracers: ['koa']
+          disableTracers: ['koa']
         }
       });
 

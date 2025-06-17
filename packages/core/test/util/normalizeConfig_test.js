@@ -705,26 +705,26 @@ describe('util.normalizeConfig', () => {
   it('should disable multiple tracers via env var INSTANA_DISABLE_TRACERS', () => {
     process.env.INSTANA_DISABLE_TRACERS = 'graphQL   , GRPC, http';
     const config = normalizeConfig();
-    expect(config.tracing.disabledTracers).to.deep.equal(['graphql', 'grpc', 'http']);
+    expect(config.tracing.disableTracers).to.deep.equal(['graphql', 'grpc', 'http']);
   });
 
   it('should handle single tracer via INSTANA_DISABLE_TRACERS', () => {
     process.env.INSTANA_DISABLE_TRACERS = 'console';
     const config = normalizeConfig();
-    expect(config.tracing.disabledTracers).to.deep.equal(['console']);
+    expect(config.tracing.disableTracers).to.deep.equal(['console']);
   });
 
   it('should trim whitespace from tracer names', () => {
     process.env.INSTANA_DISABLE_TRACERS = '  graphql  ,  grpc  ';
     const config = normalizeConfig();
-    expect(config.tracing.disabledTracers).to.deep.equal(['graphql', 'grpc']);
+    expect(config.tracing.disableTracers).to.deep.equal(['graphql', 'grpc']);
   });
 
   it('should prefer INSTANA_DISABLE_TRACERS over INSTANA_DISABLED_TRACERS', () => {
     process.env.INSTANA_DISABLE_TRACERS = 'redis';
     process.env.INSTANA_DISABLED_TRACERS = 'postgres';
     const config = normalizeConfig();
-    expect(config.tracing.disabledTracers).to.deep.equal(['redis']);
+    expect(config.tracing.disableTracers).to.deep.equal(['redis']);
   });
 
   it('should disable logging tracer when INSTANA_DISABLE_TRACERS_LOGGING=true', () => {
@@ -737,7 +737,7 @@ describe('util.normalizeConfig', () => {
     process.env.INSTANA_DISABLE_TRACERS = 'redis,postgres';
     process.env.INSTANA_DISABLE_TRACERS_LOGGING = 'true';
     const config = normalizeConfig();
-    expect(config.tracing.disabledTracers).to.deep.equal(['redis', 'postgres']);
+    expect(config.tracing.disableTracers).to.deep.equal(['redis', 'postgres']);
     expect(config.tracing.logging).to.deep.equal({ disable: true });
   });
 

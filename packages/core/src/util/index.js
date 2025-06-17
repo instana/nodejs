@@ -49,8 +49,8 @@ exports.init = function init(config) {
  * @param {import('./normalizeConfig').AgentConfig} extraConfig
  */
 exports.activate = function activate(extraConfig) {
-  spanFilter.activate(extraConfig);
   disableInstrumentation.activate(extraConfig);
+  spanFilter.activate(extraConfig);
 };
 
 exports.applicationUnderMonitoring = applicationUnderMonitoring;
