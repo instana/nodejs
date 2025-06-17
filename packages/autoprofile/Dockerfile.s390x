@@ -7,6 +7,7 @@ RUN groupadd --gid 1000 node && useradd --uid 1000 --gid node --shell /bin/bash 
 # Install system dependencies
 RUN apt-get -y update && \
   apt-get -y --no-install-recommends install \
+  binutils-s390x-linux-gnu \
     git curl gnupg apt-transport-https build-essential python3 python3-pip && \
   rm -rf /var/lib/apt/lists/*
 
