@@ -44,7 +44,7 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {KafkaTracingConfig} [kafka]
  * @property {import('@instana/core/src/tracing').IgnoreEndpoints} [ignore-endpoints]
  * @property {boolean} [span-batching-enabled]
- * @property {Object} [logging]
+ * @property {Object} [disable]
  */
 
 /**
@@ -243,11 +243,19 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
  * @param {AgentAnnounceResponse} agentResponse
  */
 function applyLoggingConfiguration(agentResponse) {
-  const loggingConfig = agentResponse?.tracing?.logging;
-  if (!loggingConfig) return;
+  const disablingConfig = agentResponse?.tracing?.disable;
+  if (!disablingConfig) return;
 
-  ensureNestedObjectExists(agentOpts.config, ['tracing', 'logging']);
-  agentOpts.config.tracing.logging = loggingConfig;
+  const convertedDisableConfig =
+    disablingConfig !== null && typeof disablingConfig === 'object' && !Array.isArray(disablingConfig)
+      ? Object.entries(disablingConfig)
+          // eslint-disable-next-line no-unused-vars
+          .filter(([_, value]) => value === true)
+          .map(([key]) => key)
+      : disablingConfig;
+
+  ensureNestedObjectExists(agentOpts.config, ['tracing', 'disable']);
+  agentOpts.config.tracing.disable = convertedDisableConfig;
 }
 
 module.exports = {

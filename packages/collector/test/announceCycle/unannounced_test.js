@@ -629,11 +629,11 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should apply logging disable configuration from the agent response', done => {
+    it('should apply disable configuration from the agent response', done => {
       prepareAnnounceResponse({
         tracing: {
-          logging: {
-            disable: true
+          disable: {
+            logging: true
           }
         }
       });
@@ -642,7 +642,7 @@ describe('unannounced state', () => {
         transitionTo: () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
-              logging: { disable: true }
+              disable: ['logging']
             }
           });
           done();
@@ -650,7 +650,7 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should not apply logging config if tracing is missing', done => {
+    it('should not apply disable config if tracing is missing', done => {
       prepareAnnounceResponse({});
 
       unannouncedState.enter({
@@ -661,12 +661,12 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should apply logging disable config with extra unexpected fields', done => {
+    it('should apply disable config with multiple enabled technologies', done => {
       prepareAnnounceResponse({
         tracing: {
-          logging: {
-            disable: true,
-            level: 'verbose'
+          disable: {
+            logging: true,
+            redis: true
           }
         }
       });
@@ -675,11 +675,81 @@ describe('unannounced state', () => {
         transitionTo: () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
-              logging: {
-                disable: true,
-                level: 'verbose'
-              }
+              disable: ['logging', 'redis']
             }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should apply empty disable config when invalid format provided', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          disable: { logging: 'invalid' }
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: { disable: [] }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should apply disable config while ignoring false values', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          disable: {
+            logging: true,
+            redis: false
+          }
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: { disable: ['logging'] }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should apply disable config when provided as array', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          disable: ['logging', 'redis']
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              disable: ['logging', 'redis']
+            }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should apply disable config with mixed true/false values', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          disable: {
+            http: true,
+            databses: false,
+            logging: true
+          }
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: { disable: ['http', 'logging'] }
           });
           done();
         }
@@ -689,7 +759,7 @@ describe('unannounced state', () => {
     it('should apply empty logging object', done => {
       prepareAnnounceResponse({
         tracing: {
-          logging: {}
+          disable: {}
         }
       });
 
@@ -697,7 +767,7 @@ describe('unannounced state', () => {
         transitionTo: () => {
           expect(agentOptsStub.config).to.deep.equal({
             tracing: {
-              logging: {}
+              disable: []
             }
           });
           done();
