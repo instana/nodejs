@@ -5,17 +5,16 @@
 - Strong hardware
 - We cannot use scheduing technique "isolated-pipeline" (1 pipeline per node),
   because we use PVC, ReadOnce and Workspaces.
-- Forcing one pipeline to run a single node is not reliably possible with this setup.
 - Its better to have very strong hardware (120 CPU, 360 MEM), which
   can handle multiple pipelines on a single node.
-- Limit pipelines per node:
+- Limit 1 pipeline per node (not reliable, but its running okay):
 
 ```sh
 $ kubectl -n tekton-pipelines create cm default-pod-template \
   --from-literal=pod-template='{
     "topologySpreadConstraints":[
       {
-        "maxSkew":2,
+        "maxSkew": 1,
         "topologyKey":"kubernetes.io/hostname",
         "whenUnsatisfiable":"DoNotSchedule",
         "labelSelector":{
