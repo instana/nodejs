@@ -100,7 +100,7 @@ spec:
             echo "npm install: $npmInstall"
 
             if [ "$npmInstall" == true ]; then
-              npm install --loglevel verbose
+              npm install --loglevel verbose --foreground-scripts
 
               rm -rf node-modules.tar.zst
               rm -rf node-modules.tar
@@ -146,13 +146,13 @@ spec:
               rm -rf node-modules.tar
 
               if [ "$npmInstall" == true ]; then
-                npm install --loglevel verbose
+                npm install --loglevel verbose --foreground-scripts
               fi
 
               echo "Restored node_modules cache..."
             else
               echo "Download from main was not successful. Installing node_modules..."
-              npm install --loglevel verbose
+              npm install --loglevel verbose --foreground-scripts
             fi
           fi
         fi
