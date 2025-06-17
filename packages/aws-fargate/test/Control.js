@@ -19,10 +19,11 @@ let execArg;
 function Control(opts) {
   AbstractServerlessControl.call(this, opts);
   this.port = opts.port || portfinder();
+  this.useHttps = false;
   this.fargateUninitialized = opts.fargateUninitialized;
   this.baseUrl = `http://127.0.0.1:${this.port}`;
   this.backendPort = this.opts.backendPort || portfinder();
-  this.backendBaseUrl = this.opts.backendBaseUrl || `https://localhost:${this.backendPort}/serverless`;
+  this.backendBaseUrl = this.opts.backendBaseUrl || `http://localhost:${this.backendPort}/serverless`;
   this.downstreamDummyPort = this.opts.downstreamDummyPort || portfinder();
   this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
   this.metadataMockPort = this.opts.metadataMockPort || portfinder();
@@ -70,6 +71,8 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
     {
       ECS_CONTAINER_METADATA_URI: this.metadataMockUrl,
       TASK_HTTP_PORT: this.port,
+      // We do not want to start https by default.
+      INSTANA_DEV_SEND_UNENCRYPTED: 'true',
       DOWNSTREAM_DUMMY_URL: this.downstreamDummyUrl,
       INSTANA_DISABLE_CA_CHECK: true,
       INSTANA_TRACING_TRANSMISSION_DELAY: 500,
