@@ -104,6 +104,26 @@ function matchMethods(span, ignoreconfig) {
 
 /**
  * @param {import("../core").InstanaBaseSpan} span
+ * @param {import('../tracing').IgnoreEndpointsFields} ignoreconfig
+ * @returns {boolean}
+ */
+function matchConnections(span, ignoreconfig) {
+  const spanOperation = span.data[span.n]?.connection?.toLowerCase();
+  let connectionMatches = false;
+
+  if (ignoreconfig.connections) {
+    if (Array.isArray(ignoreconfig.connections)) {
+      connectionMatches =
+        ignoreconfig.connections.includes('*') ||
+        ignoreconfig.connections.some(c => spanOperation.indexOf(c?.toLowerCase()) !== -1);
+    }
+  }
+
+  return connectionMatches;
+}
+
+/**
+ * @param {import("../core").InstanaBaseSpan} span
  * @param {import('../tracing').IgnoreEndpoints} ignoreEndpointsConfig
  * @returns {boolean}
  */
@@ -133,6 +153,10 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
       if (ignoreconfig.endpoints && !matchEndpoints(span, ignoreconfig)) {
         return false;
       }
+      if (ignoreconfig.connections && !matchConnections(span, ignoreconfig)) {
+        return false;
+      }
+
       // extend more filtering cases in future
       return true;
     }
