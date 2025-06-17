@@ -2,52 +2,39 @@
 
 ## Private Workers
 
-- Single Zone
 - Strong hardware
+- We cannot use scheduing technique "isolated-pipeline" (1 pipeline per node),
+  because we use PVC, ReadOnce and Workspaces.
+- Forcing one pipeline to run a single node is not reliably possible with this setup.
+- Its better to have very strong hardware (120 CPU, 360 MEM), which
+  can handle multiple pipelines on a single node.
+- Limit pipelines per node:
+
+```sh
+$ kubectl -n tekton-pipelines create cm default-pod-template \
+  --from-literal=pod-template='{
+    "topologySpreadConstraints":[
+      {
+        "maxSkew":2,
+        "topologyKey":"kubernetes.io/hostname",
+        "whenUnsatisfiable":"DoNotSchedule",
+        "labelSelector":{
+          "matchExpressions":[
+            { "key":"tekton.dev/pipelineRun", "operator":"Exists" }
+          ]
+        }
+      }
+    ]
+  }' \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+$ kubectl -n tekton-pipelines rollout restart deploy tekton-pipelines-controller
+$ kubectl -n tekton-pipelines rollout restart deploy tekton-pipelines-webhook
+```
 
 ## Restrictions
 
 - Slashes in branch names is not allowed.
-
-## Affinity Assistant Configuration
-
-You have to manually apply this to our cluster to force Tekton
-to choose a worker based on these conditions. The goal should be
-that one pipeline runs on one worker at a time. The pipelines are really heavy.
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: config-artifact-pvc
-  namespace: tekton-pipelines
-data:
-  affinityAssistant.podTemplate: |
-    affinity:
-      podAntiAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-                - key: app.kubernetes.io/component
-                  operator: In
-                  values:
-                    - affinity-assistant
-            topologyKey: "kubernetes.io/hostname"
-    topologySpreadConstraints:
-      - maxSkew: 1
-        topologyKey: "kubernetes.io/hostname"
-        whenUnsatisfiable: DoNotSchedule
-        labelSelector:
-          matchLabels:
-            app.kubernetes.io/component: affinity-assistant
-```        
-
-```sh
-..login...
-ibmcloud ks cluster config --cluster mycluster-eu-de-1-bx2.2x8
-kubectl get namespaces
-kubectl apply -f affinity.yaml
-```
 
 ## Linting
 
