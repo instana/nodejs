@@ -50,12 +50,21 @@ if (!argv.os || (argv.os && argv.os === 'linux')) {
   console.log(`\n### Building linux prebuilds for ${targets} ${archs}...\n`);
 
   archs.forEach(image => {
-      if (image === 'linux-s390x') {
-    image = 'prebuild-linux-s390x:local';
-  }
-    console.log(`npx prebuildify-cross --modules ../../node_modules -i ${image} -t ${targets} --strip`);
-    childProcess.execSync(`npx prebuildify-cross --modules ../../node_modules -i ${image} -t ${targets} --strip`, {
-      stdio: 'inherit'
-    });
+    if (image === 'linux-s390x') {
+      // Currently there is no official image in prebuilidy-cross for s390x,
+      // we use the locally build image for now and will move away once this is added
+      image = 'abhilashsivan/prebuild-linux-s390x:strip';
+
+      childProcess.execSync(
+        `STRIP=s390x-linux-gnu-strip npx prebuildify-cross --modules ../../node_modules -i ${image} -t ${targets}`,
+        {
+          stdio: 'inherit'
+        }
+      );
+    } else {
+      childProcess.execSync(`npx prebuildify-cross --modules ../../node_modules -i ${image} -t ${targets} --strip`, {
+        stdio: 'inherit'
+      });
+    }
   });
 }
