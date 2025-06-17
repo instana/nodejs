@@ -89,7 +89,7 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
   const instrumentationName = instrumentationModules[instrumentationKey]?.instrumentationName;
   const categoryModule = getCategoryAndModule(instrumentationKey);
 
-  // Check service config first (higher precedence)
+  // Check service config first
   if (
     config &&
     shouldDisable(config, {
@@ -99,6 +99,7 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
     })
   ) {
     return true;
+    // Check agent config if service config does not disable
   } else if (
     agentConfig &&
     shouldDisable(agentConfig, {

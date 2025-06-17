@@ -174,47 +174,96 @@ mochaSuiteFn('tracing/logging/console', function () {
     });
 
     describe('via agent configuration', () => {
-      const { AgentStubControls } = require('../../../apps/agentStubControls');
-      let customAgentControls;
-      let agentConfigControls;
+      describe('when logging category is disabled', () => {
+        const { AgentStubControls } = require('../../../apps/agentStubControls');
+        let customAgentControls;
+        let agentConfigControls;
 
-      before(async () => {
-        customAgentControls = new AgentStubControls();
-        await customAgentControls.startAgent({
-          disable: { logging: true }
-        });
-
-        agentConfigControls = new ProcessControls({
-          agentControls: customAgentControls,
-          dirname: __dirname
-        });
-        await agentConfigControls.startAndWaitForAgentConnection();
-      });
-
-      after(async () => {
-        await agentConfigControls.stop();
-        await customAgentControls.stopAgent();
-      });
-
-      it('must not trace warn calls', async () => {
-        await agentConfigControls.sendRequest({ path: '/warn' });
-
-        await testUtils.retry(async () => {
-          const spans = await customAgentControls.getSpans();
-          const httpEntrySpan = verifyHttpRootEntry({
-            spans,
-            apiPath: '/warn',
-            pid: String(agentConfigControls.getPid())
+        before(async () => {
+          customAgentControls = new AgentStubControls();
+          await customAgentControls.startAgent({
+            disable: { logging: true }
           });
 
-          verifyHttpExit({
-            spans,
-            parent: httpEntrySpan,
-            pid: String(agentConfigControls.getPid())
+          agentConfigControls = new ProcessControls({
+            agentControls: customAgentControls,
+            dirname: __dirname
+          });
+          await agentConfigControls.startAndWaitForAgentConnection();
+        });
+
+        after(async () => {
+          await agentConfigControls.stop();
+          await customAgentControls.stopAgent();
+        });
+
+        it('must not trace warn calls', async () => {
+          await agentConfigControls.sendRequest({ path: '/warn' });
+
+          await testUtils.retry(async () => {
+            const spans = await customAgentControls.getSpans();
+            const httpEntrySpan = verifyHttpRootEntry({
+              spans,
+              apiPath: '/warn',
+              pid: String(agentConfigControls.getPid())
+            });
+
+            verifyHttpExit({
+              spans,
+              parent: httpEntrySpan,
+              pid: String(agentConfigControls.getPid())
+            });
+
+            const consoleLogSpans = testUtils.getSpansByName(spans, 'log.console');
+            expect(consoleLogSpans).to.be.empty;
+          });
+        });
+      });
+
+      describe('when logging category is disabled but console is enabled', () => {
+        const { AgentStubControls } = require('../../../apps/agentStubControls');
+        let customAgentControls;
+        let agentConfigControls;
+
+        before(async () => {
+          customAgentControls = new AgentStubControls();
+          await customAgentControls.startAgent({
+            disable: { logging: true, console: false }
           });
 
-          const consoleLogSpans = testUtils.getSpansByName(spans, 'log.console');
-          expect(consoleLogSpans).to.be.empty;
+          agentConfigControls = new ProcessControls({
+            agentControls: customAgentControls,
+            dirname: __dirname
+          });
+          await agentConfigControls.startAndWaitForAgentConnection();
+        });
+
+        after(async () => {
+          await agentConfigControls.stop();
+          await customAgentControls.stopAgent();
+        });
+
+        it('must not trace warn calls', async () => {
+          await agentConfigControls.sendRequest({ path: '/warn' });
+
+          await testUtils.retry(async () => {
+            const spans = await customAgentControls.getSpans();
+            const httpEntrySpan = verifyHttpRootEntry({
+              spans,
+              apiPath: '/warn',
+              pid: String(agentConfigControls.getPid())
+            });
+
+            verifyHttpExit({
+              spans,
+              parent: httpEntrySpan,
+              pid: String(agentConfigControls.getPid())
+            });
+
+            const consoleLogSpans = testUtils.getSpansByName(spans, 'log.console');
+
+            expect(consoleLogSpans.length).to.equal(1);
+          });
         });
       });
     });

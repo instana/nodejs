@@ -246,25 +246,8 @@ function applyDisableConfiguration(agentResponse) {
   const disablingConfig = agentResponse?.tracing?.disable;
   if (!disablingConfig) return;
 
-  /**
-   * @type {any[]}
-   */
-  let convertedDisableConfig;
-
-  if (disablingConfig !== null && typeof disablingConfig === 'object' && !Array.isArray(disablingConfig)) {
-    convertedDisableConfig = Object.entries(disablingConfig).flatMap(([key, value]) => {
-      if (value === true) return [key];
-      if (value === false) return [`!${key}`];
-      return [];
-    });
-  } else if (Array.isArray(disablingConfig)) {
-    convertedDisableConfig = [...disablingConfig];
-  } else {
-    convertedDisableConfig = [];
-  }
-
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'disable']);
-  agentOpts.config.tracing.disable = convertedDisableConfig;
+  agentOpts.config.tracing.disable = configNormalizers.disableInstrumentation.normalizeConfig(disablingConfig);
 }
 
 module.exports = {

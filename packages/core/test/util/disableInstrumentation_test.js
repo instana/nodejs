@@ -33,7 +33,7 @@ describe('util.disableInstrumentation', () => {
     './instrumentation/databases/mongodb': {
       instrumentationName: 'mongodb'
     },
-    './instrumentation/cloud/aws/v3': {
+    './instrumentation/cloud/aws/v3/s3': {
       init: () => {},
       activate: () => {},
       deactivate: () => {},
@@ -64,7 +64,7 @@ describe('util.disableInstrumentation', () => {
       expect(result).to.be.true;
     });
 
-    it.skip('should disable instrumentation when instrumentationName matches disable list entry', () => {
+    it('should disable instrumentation when instrumentationName matches disable list', () => {
       disableInstrumentation.init({
         tracing: {
           disable: ['aws/v3']

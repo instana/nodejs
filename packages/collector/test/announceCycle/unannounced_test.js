@@ -711,7 +711,7 @@ describe('unannounced state', () => {
       unannouncedState.enter({
         transitionTo: () => {
           expect(agentOptsStub.config).to.deep.equal({
-            tracing: { disable: ['logging'] }
+            tracing: { disable: ['logging', '!redis'] }
           });
           done();
         }
@@ -741,7 +741,7 @@ describe('unannounced state', () => {
         tracing: {
           disable: {
             http: true,
-            databses: false,
+            databases: false,
             logging: true
           }
         }
@@ -749,7 +749,7 @@ describe('unannounced state', () => {
       unannouncedState.enter({
         transitionTo: () => {
           expect(agentOptsStub.config).to.deep.equal({
-            tracing: { disable: ['http', 'logging'] }
+            tracing: { disable: ['http', '!databases', 'logging'] }
           });
           done();
         }
