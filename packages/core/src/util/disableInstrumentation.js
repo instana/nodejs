@@ -10,8 +10,8 @@ let config;
 /** @type {import('../util/normalizeConfig').AgentConfig} */
 let agentConfig;
 
-// Disabling with category restricted to the following categories.
-const DISABLED_CATEGORIES = new Set(['logging', 'databases', 'protocols', 'messaging']);
+// Categories that support category-level disabling
+const DISABLABLE_CATEGORIES = new Set(['logging', 'databases', 'protocols', 'messaging']);
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} _config
@@ -28,78 +28,85 @@ function activate(_agentConfig) {
 }
 
 /**
- * Extracts the module name from the given instrumentation key.
- * @param {string} instrumentationKey
- * @returns {string}
+ * @param {string} instrumentationPath
  */
-function extractModuleName(instrumentationKey) {
-  // Extracts the module name from the instrumentation key.
+function getModuleName(instrumentationPath) {
+  // Extracts the module name from the instrumentationPath.
   // Tries to match the pattern './instrumentation/<category>/<module>' and extract the <module> part.
   // If that pattern doesn't match (e.g., in custom instrumentation cases),
-  // it falls back to extracting the last segment of the path after the final '/'.
-  const matchResult = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/);
-  const moduleName = matchResult ? matchResult[1] : instrumentationKey.match(/\/([^/]+)$/)[1];
+  // it falls back to extracting the last segment of the instrumentationPath after the final '/'.
+  const matchResult = instrumentationPath.match(/.\/instrumentation\/[^/]*\/(.*)/);
+  const moduleName = matchResult ? matchResult[1] : instrumentationPath.match(/\/([^/]+)$/)[1];
   return moduleName.toLowerCase();
 }
 
 /**
- * Extracts the category and module names from an instrumentation key.
- * @param {string} instrumentationKey
+ * Extracts category and module from an instrumentation instrumentationPath
+ * @param {string} instrumentationPath
+ * @returns {{category: string, module: string}|null}
  */
-function extractCategoryAndModule(instrumentationKey) {
-  const match = instrumentationKey.match(/\.\/instrumentation\/([^/]+)\/([^/]+)/);
-  return match ? [match[1], match[2]] : null;
+function getCategoryAndModule(instrumentationPath) {
+  const match = instrumentationPath.match(/\.\/instrumentation\/([^/]+)\/([^/]+)/);
+  return match ? { category: match[1], module: match[2] } : null;
 }
 
 /**
  * @param {*} cfg
- * @param {string} category
- * @param {string} module
+ * @param {object} options
+ * @param {string} [options.moduleName]
+ * @param {string} [options.instrumentationName]
+ * @param {string} [options.category]
  */
-function isInstrumentationDisabledInConfig(cfg, category, module) {
-  if (!DISABLED_CATEGORIES.has(category)) {
-    return false;
-  }
-
+function shouldDisable(cfg, { moduleName, instrumentationName, category } = {}) {
   const disabledItems = cfg?.tracing?.disable;
-  if (!disabledItems) {
-    return false;
+
+  if (!disabledItems?.length) return false;
+
+  // Handle module exclusion (patterns starting with '!')
+  if (moduleName) {
+    const isExcluded = disabledItems.some(
+      (/** @type {string} */ item) => typeof item === 'string' && item.startsWith('!') && item.slice(1) === moduleName
+    );
+    if (isExcluded) return false;
   }
 
-  if (disabledItems.length) {
-    return disabledItems.includes(category) || disabledItems.includes(module);
-  }
+  // Check for direct module matches
+  if (moduleName && disabledItems.includes(moduleName)) return true;
+  if (instrumentationName && disabledItems.includes(instrumentationName)) return true;
 
-  return false;
+  // Check for category disable
+  return Boolean(category && DISABLABLE_CATEGORIES.has(category) && disabledItems.includes(category));
 }
 
 /**
- * @param {Object} params
+ * @param {object} params
  * @param {Object.<string, import('../tracing/index').InstanaInstrumentedModule>} [params.instrumentationModules]
  * @param {string} params.instrumentationKey
  * @returns {boolean}
  */
 function isInstrumentationDisabled({ instrumentationModules = {}, instrumentationKey }) {
-  const moduleName = extractModuleName(instrumentationKey);
+  const moduleName = getModuleName(instrumentationKey);
   const instrumentationName = instrumentationModules[instrumentationKey]?.instrumentationName;
+  const categoryModule = getCategoryAndModule(instrumentationKey);
 
-  // Case 1: Explicitly listed in disabled tracers (library or instrumentation name)
-  const disable = config?.tracing?.disable || [];
-  if (disable.includes(moduleName) || (instrumentationName && disable.includes(instrumentationName))) {
+  // Check service config first (higher precedence)
+  if (
+    config &&
+    shouldDisable(config, {
+      moduleName,
+      instrumentationName,
+      category: categoryModule?.category
+    })
+  ) {
     return true;
-  }
-
-  // Case 2: Disabled via category/module flags in config or agentConfig
-  const categoryAndModule = extractCategoryAndModule(instrumentationKey);
-  if (categoryAndModule) {
-    const [category, module] = categoryAndModule;
-
-    if (
-      isInstrumentationDisabledInConfig(config, category, module) ||
-      isInstrumentationDisabledInConfig(agentConfig, category, module)
-    ) {
-      return true;
-    }
+  } else if (
+    agentConfig &&
+    shouldDisable(agentConfig, {
+      moduleName,
+      category: categoryModule?.category
+    })
+  ) {
+    return true;
   }
 
   return false;

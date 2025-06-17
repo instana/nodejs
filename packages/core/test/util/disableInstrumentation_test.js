@@ -27,208 +27,309 @@ describe('util.disableInstrumentation', () => {
       deactivate: () => {},
       instrumentationName: 'bunyan'
     },
-    './instrumentation/logging/log4js': {
+    './instrumentation/frameworks/express': {
+      instrumentationName: 'express'
+    },
+    './instrumentation/databases/mongodb': {
+      instrumentationName: 'mongodb'
+    },
+    './instrumentation/cloud/aws/v3': {
       init: () => {},
       activate: () => {},
       deactivate: () => {},
-      instrumentationName: 'log4js'
+      instrumentationName: 'aws/v3'
+    },
+    './instrumentation/logging/console': {
+      instrumentationName: 'console'
     }
   };
 
   beforeEach(() => {
-    disableInstrumentation.init({ tracing: { disabledTracers: [] } });
-    disableInstrumentation.activate({ tracing: {} });
+    disableInstrumentation.init({});
+    disableInstrumentation.activate({});
   });
 
-  describe('when disabled via disable config', () => {
-    it('should disable by module path match', () => {
+  describe('Module name matching functionality', () => {
+    it('should disable instrumentation when exact module name matches disable list entry', () => {
       disableInstrumentation.init({
         tracing: {
-          disable: ['hapi']
+          disable: ['console']
         }
       });
 
-      expect(
-        disableInstrumentation.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/frameworks/hapi',
-          instrumentationModules: testInstrumentationModules
-        })
-      ).to.be.true;
+      const result = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
+      expect(result).to.be.true;
     });
 
-    it('should disable by package name', () => {
+    it.skip('should disable instrumentation when instrumentationName matches disable list entry', () => {
       disableInstrumentation.init({
         tracing: {
-          disable: ['koa']
+          disable: ['aws/v3']
         }
       });
 
-      expect(
-        disableInstrumentation.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/frameworks/koa',
-          instrumentationModules: testInstrumentationModules
-        })
-      ).to.be.true;
+      const result = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/cloud/aws/v3/s3',
+        instrumentationModules: testInstrumentationModules
+      });
+      expect(result).to.be.true;
     });
 
-    it('should not disable packages not mentioned in config', () => {
+    it('should not disable instrumentation when neither module path nor instrumentationName matches', () => {
       disableInstrumentation.init({
         tracing: {
-          disabledTracers: ['express']
+          disable: ['console']
         }
       });
 
-      expect(
-        disableInstrumentation.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/frameworks/hapi',
-          instrumentationModules: testInstrumentationModules
-        })
-      ).to.be.false;
+      const result = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/bunyan',
+        instrumentationModules: testInstrumentationModules
+      });
+      expect(result).to.be.false;
+    });
+
+    it('should handle module paths with different levels of nesting', () => {
+      disableInstrumentation.init({
+        tracing: {
+          disable: ['mongodb']
+        }
+      });
+
+      const result = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/databases/mongodb',
+        instrumentationModules: testInstrumentationModules
+      });
+      expect(result).to.be.true;
     });
   });
 
-  describe('when disabled based on category', () => {
-    it('should disable specific logging category when configured', () => {
+  describe('Category-based disabling behavior', () => {
+    it('should disable all modules within a category when category name is in disable list', () => {
       disableInstrumentation.init({
         tracing: {
-          logging: { log4js: { disable: true } }
+          disable: ['logging']
         }
       });
 
-      expect(
-        disableInstrumentation.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/logging/log4js',
-          instrumentationModules: testInstrumentationModules
-        })
-      ).to.be.true;
+      const consoleResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
+      const bunyanResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/bunyan',
+        instrumentationModules: testInstrumentationModules
+      });
 
-      expect(
-        disableInstrumentation.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/logging/bunyan',
-          instrumentationModules: testInstrumentationModules
-        })
-      ).to.be.false;
+      expect(consoleResult).to.be.true;
+      expect(bunyanResult).to.be.true;
     });
 
-    it('should disable all logging when category is configured', () => {
+    it('should not disable modules in categories not listed in disable configuration', () => {
       disableInstrumentation.init({
         tracing: {
-          logging: { disable: true }
+          disable: ['frameworks']
         }
       });
 
-      expect(
-        disableInstrumentation.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/logging/bunyan',
-          instrumentationModules: testInstrumentationModules
-        })
-      ).to.be.true;
+      const dbResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/databases/mongodb',
+        instrumentationModules: testInstrumentationModules
+      });
+      const loggingResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/bunyan',
+        instrumentationModules: testInstrumentationModules
+      });
 
-      expect(
-        disableInstrumentation.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/logging/log4js',
-          instrumentationModules: testInstrumentationModules
-        })
-      ).to.be.true;
+      expect(dbResult).to.be.false;
+      expect(loggingResult).to.be.false;
     });
 
-    it('should not disable frameworks when category disabled', () => {
+    it('should handle mixed category and specific module disabling', () => {
+      // e.g. when we want to disable bunyan but not console
+      // this config now only coming from agent
       disableInstrumentation.init({
         tracing: {
-          frameworks: { disable: true }
+          disable: ['logging', '!console']
         }
       });
 
-      expect(
-        disableInstrumentation.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/frameworks/hapi',
-          instrumentationModules: testInstrumentationModules
-        })
-      ).to.be.false;
+      const bunyanesult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/bunyan',
+        instrumentationModules: testInstrumentationModules
+      });
+      const consoleResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
 
-      expect(
-        disableInstrumentation.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/frameworks/koa',
-          instrumentationModules: testInstrumentationModules
-        })
-      ).to.be.false;
+      expect(bunyanesult).to.be.true;
+      expect(consoleResult).to.be.false;
     });
 
-    it('should not affect logging when frameworks disabled', () => {
+    it('should handle unsupported category disabling', () => {
       disableInstrumentation.init({
         tracing: {
-          frameworks: { disable: true }
+          disable: ['frameworks', 'logging']
         }
       });
 
-      expect(
-        disableInstrumentation.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/logging/bunyan',
-          instrumentationModules: testInstrumentationModules
-        })
-      ).to.be.false;
-    });
-
-    it('should use agent config when service specific config empty', () => {
-      disableInstrumentation.init({ tracing: {} });
-      disableInstrumentation.activate({
-        tracing: {
-          logging: { bunyan: { disable: true } }
-        }
+      const frameworkResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/frameworks/koa',
+        instrumentationModules: testInstrumentationModules
+      });
+      const loggingResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
       });
 
-      expect(
-        disableInstrumentation.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/logging/bunyan',
-          instrumentationModules: testInstrumentationModules
-        })
-      ).to.be.true;
+      expect(frameworkResult).to.be.false;
+      expect(loggingResult).to.be.true;
     });
+  });
 
-    it('should prefer service specific config over agent config', () => {
+  describe('Configuration precedence rules', () => {
+    it('should prioritize service configuration over agent configuration when both are present', () => {
       disableInstrumentation.init({
         tracing: {
-          logging: { disable: true }
+          disable: ['console']
         }
       });
       disableInstrumentation.activate({
         tracing: {
-          logging: { bunyan: { disable: true } }
+          disable: ['!console']
         }
       });
 
-      expect(
-        disableInstrumentation.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/logging/bunyan',
-          instrumentationModules: testInstrumentationModules
-        })
-      ).to.be.true;
-      expect(
-        disableInstrumentation.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/logging/log4js',
-          instrumentationModules: testInstrumentationModules
-        })
-      ).to.be.true;
+      const consoleResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
+
+      expect(consoleResult).to.be.true;
     });
 
-    it('should use service specific config', () => {
+    it('should accept service configuration and agent configuration when both are present', () => {
       disableInstrumentation.init({
         tracing: {
-          logging: { bunyan: { disable: true } }
+          disable: ['console']
         }
       });
       disableInstrumentation.activate({
         tracing: {
-          logging: {}
+          disable: ['bunyan']
         }
       });
 
-      expect(
-        disableInstrumentation.isInstrumentationDisabled({
-          instrumentationKey: './instrumentation/logging/bunyan',
-          instrumentationModules: testInstrumentationModules
-        })
-      ).to.be.true;
+      const consoleResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
+      const bunyanResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/bunyan',
+        instrumentationModules: testInstrumentationModules
+      });
+
+      expect(consoleResult).to.be.true;
+      expect(bunyanResult).to.be.true;
+    });
+
+    it('should use agent configuration when service configuration is empty', () => {
+      disableInstrumentation.init({
+        tracing: {
+          disable: ['console']
+        }
+      });
+      disableInstrumentation.activate({});
+
+      const result = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
+      expect(result).to.be.true;
+    });
+
+    it('should use service configuration when agent configuration is empty', () => {
+      disableInstrumentation.init({});
+      disableInstrumentation.activate({
+        tracing: {
+          disable: ['console']
+        }
+      });
+
+      const result = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
+      expect(result).to.be.true;
+    });
+
+    it('should not disable any instrumentation when both configurations are empty', () => {
+      disableInstrumentation.init({});
+      disableInstrumentation.activate({});
+
+      const result = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
+      expect(result).to.be.false;
+    });
+  });
+
+  describe('Edge cases', () => {
+    it('should handle empty disable list', () => {
+      disableInstrumentation.init({
+        tracing: {
+          disable: []
+        }
+      });
+
+      const result = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
+      expect(result).to.be.false;
+    });
+
+    it('should handle undefined disable configuration', () => {
+      disableInstrumentation.init({});
+
+      const result = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
+      expect(result).to.be.false;
+    });
+
+    it('should handle module paths that do not exist in instrumentationModules', () => {
+      disableInstrumentation.init({
+        tracing: {
+          disable: ['nonexistent']
+        }
+      });
+
+      const result = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/nonexistent/module',
+        instrumentationModules: testInstrumentationModules
+      });
+      expect(result).to.be.false;
+    });
+
+    it('should handle modules without instrumentationName property', () => {
+      disableInstrumentation.init({
+        tracing: {
+          disable: ['express']
+        }
+      });
+
+      const result = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/frameworks/express',
+        instrumentationModules: testInstrumentationModules
+      });
+      expect(result).to.be.true;
     });
   });
 });

@@ -246,13 +246,22 @@ function applyDisableConfiguration(agentResponse) {
   const disablingConfig = agentResponse?.tracing?.disable;
   if (!disablingConfig) return;
 
-  const convertedDisableConfig =
-    disablingConfig !== null && typeof disablingConfig === 'object' && !Array.isArray(disablingConfig)
-      ? Object.entries(disablingConfig)
-          // eslint-disable-next-line no-unused-vars
-          .filter(([_, value]) => value === true)
-          .map(([key]) => key)
-      : disablingConfig;
+  /**
+   * @type {any[]}
+   */
+  let convertedDisableConfig;
+
+  if (disablingConfig !== null && typeof disablingConfig === 'object' && !Array.isArray(disablingConfig)) {
+    convertedDisableConfig = Object.entries(disablingConfig).flatMap(([key, value]) => {
+      if (value === true) return [key];
+      if (value === false) return [`!${key}`];
+      return [];
+    });
+  } else if (Array.isArray(disablingConfig)) {
+    convertedDisableConfig = [...disablingConfig];
+  } else {
+    convertedDisableConfig = [];
+  }
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'disable']);
   agentOpts.config.tracing.disable = convertedDisableConfig;
