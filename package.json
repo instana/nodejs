@@ -157,12 +157,14 @@
     "eslint-plugin-instana": "file:./misc/eslint-plugin",
     "eslint-plugin-mocha": "^10.1.0",
     "eslint-plugin-monorepo-cop": "^1.0.2",
+    "event-loop-stats": "1.4.1",
     "express": "^5.1.0",
     "express-v4": "npm:express@^4.21.2",
     "express-winston": "^4.2.0",
     "fastify": "^5.4.0",
     "fastify-v3": "npm:fastify@^3.21.5",
     "fastify-v4": "npm:fastify@^4.28.1",
+    "gcstats.js": "1.0.0",
     "get-caller-file": "^2.0.5",
     "google-protobuf": "^3.21.4",
     "got": "^14.4.7",
@@ -250,18 +252,16 @@
     "uuid": "^9.0.1",
     "winston": "^3.17.0",
     "ws": "^8.16.0",
-    "yargs": "^17.5.1",
-    "event-loop-stats": "1.4.1",
-    "gcstats.js": "1.0.0"
+    "yargs": "^17.5.1"
   },
   "optionalDependencies": {
     "couchbase": "^4.5.0",
     "couchbase-v443": "npm:couchbase@4.4.3",
     "ibm_db": "^3.3.1",
     "kafka-avro": "^3.2.0",
+    "node-rdkafka": "^3.4.1",
     "pg-native": "^3.5.0",
-    "prisma": "^6.9.0",
-    "node-rdkafka": "^3.4.1"
+    "prisma": "^6.9.0"
   },
   "overrides": {
     "prebuildify": {
