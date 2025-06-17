@@ -42,7 +42,7 @@ if (!argv.os || (argv.os && argv.os === 'darwin')) {
 // alpine = x64 musl
 // centos7-devtoolset7 = x64 glibc
 if (!argv.os || (argv.os && argv.os === 'linux')) {
-  let archs = ['linux-s390x'];
+  let archs = ['alpine', 'linux-arm64', 'centos7-devtoolset7', 'linux-armv6', 'linux-armv7', 'linux-s390x'];
   if (argv.arch) {
     archs = argv.arch.split(',');
   }
@@ -52,7 +52,7 @@ if (!argv.os || (argv.os && argv.os === 'linux')) {
   archs.forEach(image => {
     if (image === 'linux-s390x') {
       // Currently there is no official image in prebuilidy-cross for s390x,
-      // we use the locally build image for now and will move away once this is added
+      // we use the locally build image for now and will move away once this is officially added
       image = 'abhilashsivan/prebuild-linux-s390x:strip';
 
       childProcess.execSync(

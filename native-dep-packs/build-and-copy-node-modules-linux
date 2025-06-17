@@ -2,88 +2,44 @@ function buildAndCopyModulesLinux {
   abi=$1
   nodejsversion=$2
   libcflavour=$3
-  arch=$4
-  if [[ $libcflavour == "glibc" ]]; then
-    distro="standard"
-    suffix=""
-  elif [[ $libcflavour == "musl" ]]; then
-    distro="alpine"
-    suffix="-alpine"
+  if [[ $libcflavour = "glibc" ]]; then
+    baseimage=node:$nodejsversion
+    distro=standard
+  elif [[ $libcflavour = "musl" ]]; then
+    baseimage=node:$nodejsversion-alpine
+    distro=alpine
   else
     echo "Unknown libc flavour parameter: $libcflavour"
     exit 1
   fi
-
-  if [[ $arch == "s390x" ]]; then
-    baseimage="s390x/node:${nodejsversion}${suffix}"
-    label="${distro}-${arch}-${nodejsversion}"
-  else
-    baseimage="node:${nodejsversion}${suffix}"
-    label="${distro}-${arch}-${nodejsversion}"
-  fi
-
-  dockerfile="Dockerfile.${distro}"
-  dockertag="${label}-native-packs"
-
-  echo "🔧 Checking buildx builder..."
-  BUILDER_NAME=multiarch-builder
-
-  if ! docker buildx inspect $BUILDER_NAME >/dev/null 2>&1; then
-    echo "Creating buildx builder: $BUILDER_NAME"
-    docker buildx create --name $BUILDER_NAME --use
-  fi
-
-  docker buildx inspect --bootstrap
-
-  # setting up QEMU for multi arch build support
-  echo "Registering QEMU multi-arch emulation (safe to rerun)..."
-
-  docker run --rm --privileged tonistiigi/binfmt --install all
-
+  label=$distro-$nodejsversion
+  dockerfile=Dockerfile.$distro
+  dockertag=$label-native-packs
   docker stop $dockertag > /dev/null || true
-  docker rm -f $dockertag > /dev/null || true 
-  
-  if docker manifest inspect $baseimage >/dev/null 2>&1; then
-    echo "Building $dockerfile -> $dockertag"
-    # docker buildx build \
-    #   --platform linux/$arch \
-    #   --build-arg BASE_IMAGE=$baseimage \
-    #   -f $dockerfile \
-    #   -t $dockertag \
-    #   .
-
-    build_command=(
-      docker buildx build
-      -f "$dockerfile"
-      -t "$dockertag"
-      --build-arg BASE_IMAGE="$baseimage"
-      .
-    )
-
-    if [[ "$arch" == "s390x" ]]; then
-      build_command+=(--platform "linux/$arch")
-    fi
-
-    "${build_command[@]}"
-
-    echo "docker build exit status: $?"
-    echo "Running $dockertag"
-    docker run -t -d --name $dockertag $dockertag
-    echo "Waiting 5 seconds for the container to come up"
-    sleep 5
-    echo "Copying node_modules from container $dockertag to node_modules_$label"
-    docker cp $dockertag:/instana/node_modules node_modules_$label
-    mkdir -p ../packages/shared-metrics/addons/linux/$arch/$libcflavour/$abi/
-    echo "Creating native addon tar.gz files"
-    pushd node_modules_$label > /dev/null
-    tar -czf ../../packages/shared-metrics/addons/linux/$arch/$libcflavour/$abi/event-loop-stats.tar.gz event-loop-stats
-    tar -czf ../../packages/shared-metrics/addons/linux/$arch/$libcflavour/$abi/gcstats.js.tar.gz gcstats.js
-    popd > /dev/null
-    rm -rf node_modules_$label
-    echo "Stopping $dockertag"
-    docker stop $dockertag > /dev/null
-    echo "Deleting $dockertag"
-    docker rm -f $dockertag > /dev/null
-  fi
+  docker rm -f $dockertag > /dev/null || true
+  echo "Building $dockerfile -> $dockertag"
+  docker build \
+    --build-arg BASE_IMAGE=$baseimage \
+    -f $dockerfile \
+    -t $dockertag \
+    .
+  echo "docker build exit status: $?"
+  echo "Running $dockertag"
+  docker run -t -d --name $dockertag $dockertag
+  echo "Waiting 5 seconds for the container to come up"
+  sleep 5
+  echo "Copying node_modules from container $dockertag to node_modules_$label"
+  docker cp $dockertag:/instana/node_modules node_modules_$label
+  mkdir -p ../packages/shared-metrics/addons/linux/x64/$libcflavour/$abi/
+  echo "Creating native addon tar.gz files"
+  pushd node_modules_$label > /dev/null
+  tar -czf ../../packages/shared-metrics/addons/linux/x64/$libcflavour/$abi/event-loop-stats.tar.gz event-loop-stats
+  tar -czf ../../packages/shared-metrics/addons/linux/x64/$libcflavour/$abi/gcstats.js.tar.gz gcstats.js
+  popd > /dev/null
+  rm -rf node_modules_$label
+  echo "Stopping $dockertag"
+  docker stop $dockertag > /dev/null
+  echo "Deleting $dockertag"
+  docker rm -f $dockertag > /dev/null
 }
 
