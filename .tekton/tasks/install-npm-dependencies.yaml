@@ -49,6 +49,7 @@ spec:
           echo "Skipping npm cache..."
 
           echo "Installing npm dependencies..."
+          npm cache clean --force
           npm install --loglevel verbose
         else
           echo "Restoring node_modules cache..."
@@ -100,6 +101,7 @@ spec:
             echo "npm install: $npmInstall"
 
             if [ "$npmInstall" == true ]; then
+              npm cache clean --force
               npm install --loglevel verbose
 
               rm -rf node-modules.tar.zst
@@ -146,6 +148,7 @@ spec:
               rm -rf node-modules.tar
 
               if [ "$npmInstall" == true ]; then
+                npm cache clean --force
                 npm install --loglevel verbose
               fi
 
