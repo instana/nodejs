@@ -125,6 +125,7 @@ AbstractServerlessControl.prototype.startBackendAndWaitForIt = async function st
     env: Object.assign(
       {
         USE_HTTPS: this.useHttps == null || this.useHttps,
+        NODE_TLS_REJECT_UNAUTHORIZED: this.useHttps ? '0' : '1',
         BACKEND_PORT: this.backendPort,
         BACKEND_UNRESPONSIVE: this.opts.startBackend === 'unresponsive'
       },

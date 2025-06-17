@@ -352,6 +352,7 @@ describe('AWS fargate integration test', function () {
         containerAppPath,
         instanaAgentKey,
         startBackend: true,
+        backendHttps: true,
         startProxy: true,
         proxyPort,
         proxyRequiresAuthorization: true
