@@ -45,12 +45,27 @@ function buildAndCopyModulesLinux {
   
   if docker manifest inspect $baseimage >/dev/null 2>&1; then
     echo "Building $dockerfile -> $dockertag"
-    docker buildx build \
-      --platform linux/$arch \
-      --build-arg BASE_IMAGE=$baseimage \
-      -f $dockerfile \
-      -t $dockertag \
+    # docker buildx build \
+    #   --platform linux/$arch \
+    #   --build-arg BASE_IMAGE=$baseimage \
+    #   -f $dockerfile \
+    #   -t $dockertag \
+    #   .
+
+    build_command=(
+      docker buildx build
+      -f "$dockerfile"
+      -t "$dockertag"
+      --build-arg BASE_IMAGE="$baseimage"
       .
+    )
+
+    if [[ "$arch" == "s390x" ]]; then
+      build_command+=(--platform "linux/$arch")
+    fi
+
+    "${build_command[@]}"
+
     echo "docker build exit status: $?"
     echo "Running $dockertag"
     docker run -t -d --name $dockertag $dockertag
