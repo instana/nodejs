@@ -11,7 +11,7 @@ let config;
 let agentConfig;
 
 // Disabling with category restricted to the following categories.
-const supportedCategoriesForDisabling = new Set(['logging']);
+const DISABLED_CATEGORIES = new Set(['logging', 'databases', 'protocols', 'messaging']);
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} _config
@@ -57,19 +57,17 @@ function extractCategoryAndModule(instrumentationKey) {
  * @param {string} module
  */
 function isInstrumentationDisabledInConfig(cfg, category, module) {
-  const tracingCfg = cfg?.tracing;
+  if (!DISABLED_CATEGORIES.has(category)) {
+    return false;
+  }
 
-  if (supportedCategoriesForDisabling.has(category)) {
-    if (tracingCfg?.[category]?.disable === true) {
-      return true;
-    }
+  const disabledItems = cfg?.tracing?.disable;
+  if (!disabledItems) {
+    return false;
+  }
 
-    if (tracingCfg?.[category]?.[module]?.disable === true) {
-      return true;
-    }
-
-    // Future scope for direct module disabling:
-    // if (tracingCfg?.[module]?.disable === true) return true;
+  if (disabledItems.length) {
+    return disabledItems.includes(category) || disabledItems.includes(module);
   }
 
   return false;

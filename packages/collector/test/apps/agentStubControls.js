@@ -48,8 +48,8 @@ class AgentStubControls {
     if (opts.ignoreEndpoints) {
       env.IGNORE_ENDPOINTS = JSON.stringify(opts.ignoreEndpoints);
     }
-    if (opts.logging) {
-      env.LOGGING_DISABLE = JSON.stringify(opts.logging);
+    if (opts.disable) {
+      env.DISABLE_TRACING = JSON.stringify(opts.disable);
     }
 
     this.agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {
