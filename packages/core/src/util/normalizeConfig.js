@@ -532,15 +532,15 @@ function normalizeDisableTracers(config) {
 function getDisableTracersFromEnv() {
   let disableTracersEnvVar;
 
-  if (process.env.INSTANA_DISABLE_TRACERS) {
-    disableTracersEnvVar = parseHeadersEnvVar(process.env.INSTANA_DISABLE_TRACERS);
+  if (process.env.INSTANA_TRACING_DISABLE) {
+    disableTracersEnvVar = parseHeadersEnvVar(process.env.INSTANA_TRACING_DISABLE);
   }
   // We deprecated the variable `INSTANA_DISABLED_TRACERS` and will be removed in the next major release(v5).
   else if (process.env.INSTANA_DISABLED_TRACERS) {
     disableTracersEnvVar = parseHeadersEnvVar(process.env.INSTANA_DISABLED_TRACERS);
     logger.warn(
       'The environment variable INSTANA_DISABLED_TRACERS is deprecated and will be removed in the next major release. ' +
-        'Please use INSTANA_DISABLE_TRACERS instead.'
+        'Please use INSTANA_TRACING_DISABLE instead.'
     );
   }
 

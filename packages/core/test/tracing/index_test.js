@@ -74,7 +74,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     initAwsSdkv2.reset();
     initAwsSdkv3.reset();
 
-    delete process.env.INSTANA_DISABLE_TRACERS;
+    delete process.env.INSTANA_TRACING_DISABLE;
     delete process.env.INSTANA_DISABLED_TRACERS;
   });
 
@@ -132,8 +132,8 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
           expect(activateAwsSdkv3).to.have.been.called;
         });
 
-        it('should disable multiple tracers in INSTANA_DISABLE_TRACERS env var', () => {
-          process.env.INSTANA_DISABLE_TRACERS = 'rdkafka,kafkajs,aws-sdk/v3';
+        it('should disable multiple tracers in INSTANA_TRACING_DISABLE env var', () => {
+          process.env.INSTANA_TRACING_DISABLE = 'rdkafka,kafkajs,aws-sdk/v3';
           initAndActivate({});
 
           expect(initStubKafkaJs).to.not.have.been.called;
@@ -186,7 +186,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
         });
 
         it('should prefer config.tracing.disable over env vars', () => {
-          process.env.INSTANA_DISABLE_TRACERS = 'grpc,kafkajs';
+          process.env.INSTANA_TRACING_DISABLE = 'grpc,kafkajs';
           initAndActivate({ tracing: { disable: ['aws-sdk/v2'] } });
 
           expect(initAwsSdkv2).not.to.have.been.called;
@@ -270,8 +270,8 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
           expect(activateStubKafkaJs).to.have.been.called;
         });
 
-        it('should prefer INSTANA_DISABLE_TRACERS over INSTANA_DISABLED_TRACERS', () => {
-          process.env.INSTANA_DISABLE_TRACERS = 'aws-sdk/v2';
+        it('should prefer INSTANA_TRACING_DISABLE over INSTANA_DISABLED_TRACERS', () => {
+          process.env.INSTANA_TRACING_DISABLE = 'aws-sdk/v2';
           process.env.INSTANA_DISABLED_TRACERS = 'kafkajs';
           initAndActivate({});
 
