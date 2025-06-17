@@ -49,7 +49,8 @@ spec:
           echo "Skipping npm cache..."
 
           echo "Installing npm dependencies..."
-          npm cache clean --force
+          rm -rf node_modules
+          npm cache clean
           npm install --loglevel verbose
         else
           echo "Restoring node_modules cache..."
