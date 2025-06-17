@@ -161,7 +161,7 @@ services:
       MYSQL_PASSWORD: nodepw
       MYSQL_ROOT_HOST: 0.0.0.0
     volumes:
-      - ./packages/collector/test/tracing/database/mysql/conf.d:/etc/mysql/conf.d
+      - ./packages/collector/test/tracing/databases/mysql/conf.d:/etc/mysql/conf.d
 
   postgres:
     image: postgres:10.5

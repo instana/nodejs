@@ -67,7 +67,7 @@ Not all of the current test apps have an `.mjs` variant, because the effort is h
 
 You can use the script `bin/convert-test-app-to-es6.sh` for both purposes, it generates an equivalent `.mjs` file from a given `.js` file. 
 
-For example, run `bin/convert-test-app-to-es6.sh packages/collector/test/tracing/database/ioredis/app.js` to regenerate the ES6 variant of the `ioredis` test application, when you have made changes to `packages/collector/test/tracing/database/ioredis/app.js`.
+For example, run `bin/convert-test-app-to-es6.sh packages/collector/test/tracing/databases/ioredis/app.js` to regenerate the ES6 variant of the `ioredis` test application, when you have made changes to `packages/collector/test/tracing/databases/ioredis/app.js`.
 
 After regenerating an existing `.mjs` file you should check the diff for it and potentially revert any changes that are artifacts of the conversion process, not related to your original changes in `.js` file.
 
