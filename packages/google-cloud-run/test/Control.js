@@ -20,8 +20,15 @@ function Control(opts) {
   this.port = opts.port || portfinder();
   this.googleCloudRunUninitialized = opts.googleCloudRunUninitialized;
   this.baseUrl = `http://127.0.0.1:${this.port}`;
+
+  this.backendUsesHttps = 'backendUsesHttps' in opts ? opts.backendUsesHttps : false;
+  if (this.backendUsesHttps) {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  }
   this.backendPort = this.opts.backendPort || portfinder();
-  this.backendBaseUrl = this.opts.backendBaseUrl || `https://localhost:${this.backendPort}/serverless`;
+
+  const backendProtocol = this.backendUsesHttps ? 'https' : 'http';
+  this.backendBaseUrl = this.opts.backendBaseUrl || `${backendProtocol}://localhost:${this.backendPort}/serverless`;
   this.downstreamDummyPort = this.opts.downstreamDummyPort || portfinder();
   this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
   this.metadataMockPort = this.opts.metadataMockPort || portfinder();
@@ -71,6 +78,7 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
       DOWNSTREAM_DUMMY_URL: this.downstreamDummyUrl,
       INSTANA_DISABLE_CA_CHECK: true,
       INSTANA_TRACING_TRANSMISSION_DELAY: 500,
+      INSTANA_DEV_SEND_UNENCRYPTED: !this.backendUsesHttps,
       INSTANA_LOG_LEVEL: 'debug'
     },
     process.env,

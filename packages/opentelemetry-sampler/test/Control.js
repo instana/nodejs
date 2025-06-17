@@ -39,6 +39,7 @@ class Control extends AbstractServerlessControl {
       env: Object.assign(
         {
           INSTANA_ENDPOINT_URL: this.instanaEndpoint,
+          INSTANA_DEV_SEND_UNENCRYPTED: !this.backendUsesHttps,
           APP_PORT: this.port
         },
         this.opts.env
