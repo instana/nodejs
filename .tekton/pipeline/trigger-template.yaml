@@ -75,6 +75,9 @@ spec:
             type: pull-request
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
+      podTemplate:
+        securityContext:
+          fsGroup: 65532
       metadata:
         name: pl-$(params.target-branch)-$(params.pl-name)
         namespace: concurrency
@@ -83,25 +86,6 @@ spec:
         annotations:
           tekton.dev/node-version: "node-$(params.node-version)"
       spec:
-        podTemplate:
-          affinity:
-            podAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-              - labelSelector:
-                  matchLabels:
-                    tekton.dev/pipelineRun: $(context.pipelineRun.name)
-                topologyKey: kubernetes.io/hostname
-            podAntiAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-              - labelSelector:
-                  matchExpressions:
-                  - key: tekton.dev/pipelineRun
-                    operator: NotIn
-                    values:
-                    - $(context.pipelineRun.name)
-                topologyKey: kubernetes.io/hostname
-          securityContext:
-            fsGroup: 65532
         pipelineRef:
           name: $(params.pipeline-ref)
         workspaces:
