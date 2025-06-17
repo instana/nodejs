@@ -189,6 +189,45 @@ describe('AWS fargate integration test', function () {
     });
   });
 
+  describe('when the back end is HTTPS', function () {
+    const env = prelude.bind(this)({});
+    let control;
+
+    before(async () => {
+      control = new Control({
+        env,
+        platformVersion: '1.3.0',
+        containerAppPath,
+        instanaAgentKey,
+        startBackend: true,
+        backendUsesHttps: true
+      });
+
+      await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('should trace', () => {
+      return control
+        .sendRequest({
+          method: 'GET',
+          path: '/',
+          headers: requestHeaders
+        })
+        .then(response => {
+          return verify(control, response, true);
+        });
+    });
+  });
+
   describe('when the back end becomes available after being down initially', function () {
     const env = prelude.bind(this)({});
 
