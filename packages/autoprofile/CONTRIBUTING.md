@@ -30,7 +30,7 @@ Supported arch:
     - linux/arm64
     - linux/armv6
     - linux/armv7
-    - linux/s390x ?
+    - linux/s390x
 
 
 ### Rebuilding existing Node.js versions
