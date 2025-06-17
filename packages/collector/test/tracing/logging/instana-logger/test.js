@@ -101,23 +101,21 @@ mochaSuiteFn('tracing/instana-logger', function () {
     });
 
     it('Expect correct thread ids', async () => {
-      return testUtils
-        .retry(() => testUtils.delay(5 * 1000))
-        .then(() => agentControls.getSpans())
-        .then(spans => {
-          expect(spans.length).to.equal(2);
+      return testUtils.retry(async () => {
+        const spans = await agentControls.getSpans();
+        expect(spans.length).to.equal(2);
 
-          let minimumOneAssert = false;
-          controls.getProcessLogs().forEach(msg => {
-            if (msg.indexOf('level') !== -1) {
-              // threadId 0 is always the main thread.
-              expect(msg).to.contain('"threadId":1');
-              minimumOneAssert = true;
-            }
-          });
-
-          expect(minimumOneAssert).to.be.true;
+        let minimumOneAssert = false;
+        controls.getProcessLogs().forEach(msg => {
+          if (msg.indexOf('level') !== -1) {
+            // threadId 0 is always the main thread.
+            expect(msg).to.contain('"threadId":1');
+            minimumOneAssert = true;
+          }
         });
+
+        expect(minimumOneAssert).to.be.true;
+      }, 1000);
     });
   });
 
