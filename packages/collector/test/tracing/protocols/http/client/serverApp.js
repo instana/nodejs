@@ -23,7 +23,7 @@ const fs = require('fs');
 const morgan = require('morgan');
 const path = require('path');
 const port = require('../../../../test_util/app-port')();
-const protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
+const protocol = process.env.APP_USES_HTTPS === 'true' ? 'https' : 'http';
 const logPrefix = `Express/${protocol} Server (${process.pid}):\t`;
 
 const app = express();
@@ -69,7 +69,7 @@ app.put('/continue', (req, res) => {
   res.json({ response: 'yada yada yada' });
 });
 
-if (process.env.USE_HTTPS === 'true') {
+if (process.env.APP_USES_HTTPS === 'true') {
   const sslDir = path.join(__dirname, '..', '..', '..', '..', 'apps', 'ssl');
   require('https')
     .createServer(

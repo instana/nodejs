@@ -159,7 +159,7 @@ function registerTests(useHttps) {
       appPath: path.join(__dirname, 'serverApp'),
       useGlobalAgent: true,
       env: {
-        USE_HTTPS: useHttps
+        backendHttps: useHttps
       }
     });
     clientControls = new ProcessControls({
@@ -167,7 +167,7 @@ function registerTests(useHttps) {
       useGlobalAgent: true,
       env: {
         SERVER_PORT: serverControls.getPort(),
-        USE_HTTPS: useHttps
+        backendHttps: useHttps
       }
     });
 
@@ -669,7 +669,7 @@ function registerConnectionRefusalTest(useHttps) {
         appPath: path.join(__dirname, 'serverApp'),
         useGlobalAgent: true,
         env: {
-          USE_HTTPS: useHttps
+          APP_USES_HTTPS: useHttps
         }
       });
       clientControls = new ProcessControls({
@@ -677,7 +677,7 @@ function registerConnectionRefusalTest(useHttps) {
         useGlobalAgent: true,
         env: {
           SERVER_PORT: serverControls.getPort(),
-          USE_HTTPS: useHttps
+          APP_USES_HTTPS: useHttps
         }
       });
 

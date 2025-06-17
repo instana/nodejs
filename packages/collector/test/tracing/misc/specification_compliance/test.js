@@ -72,7 +72,7 @@ describe('spec compliance', function () {
           useGlobalAgent: true,
           http2,
           env: {
-            USE_HTTP2: http2
+            APP_USES_HTTP2: http2
           },
           collectorUninitialized: true
         });
@@ -80,7 +80,7 @@ describe('spec compliance', function () {
         await downstreamTarget.start();
 
         const env = {
-          USE_HTTP2: http2,
+          APP_USES_HTTP2: http2,
           USE_NATIVE_FETCH: nativeFetch,
           DOWNSTREAM_PORT: downstreamTarget.getPort()
         };

@@ -28,7 +28,7 @@ const streamSymbol = 'Symbol(stream)';
 
 const logPrefix = `HTTP: Server (${process.pid}):\t`;
 
-if (process.env.USE_HTTP2 === 'true' && process.env.USE_HTTPS === 'false') {
+if (process.env.APP_USES_HTTP2 === 'true' && process.env.APP_USES_HTTPS === 'false') {
   throw new Error('Using the HTTP2 compat API without HTTPS is not supported by this test app.');
 }
 
@@ -36,14 +36,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 let server;
-if (process.env.USE_HTTPS === 'true') {
+if (process.env.APP_USES_HTTPS === 'true') {
   const sslDir = path.join(__dirname, '..', '..', '..', '..', 'apps', 'ssl');
-  const createServer = process.env.USE_HTTP2 === 'true' ? http2.createSecureServer : https.createServer;
+  const createServer = process.env.APP_USES_HTTP2 === 'true' ? http2.createSecureServer : https.createServer;
   server = createServer({
     key: fs.readFileSync(path.join(sslDir, 'key')),
     cert: fs.readFileSync(path.join(sslDir, 'cert'))
   }).listen(port, () => {
-    log(`Listening on port ${port} (TLS: true, HTTP2: ${process.env.USE_HTTP2}).`);
+    log(`Listening on port ${port} (TLS: true, HTTP2: ${process.env.APP_USES_HTTP2}).`);
   });
 } else {
   server = http.createServer().listen(port, () => {

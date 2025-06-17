@@ -105,8 +105,7 @@ class ProcessControls {
     // server http2
     this.http2 = opts.http2;
     // whether or not to use TLS
-    this.useHttps = opts.env && !!opts.env.USE_HTTPS;
-
+    this.useHttps = 'backendHttps' in opts ? opts.backendHttps : false;
     // http/https/http2 port
     this.port = opts.port || process.env.APP_PORT || portFinder();
 

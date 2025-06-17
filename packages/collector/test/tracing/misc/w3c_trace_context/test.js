@@ -50,7 +50,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
           env: {
             APM_VENDOR: 'instana',
             DOWNSTREAM_PORT: otherVendorAppPort,
-            USE_HTTP2: http2
+            APP_USES_HTTP2: http2
           }
         });
         otherVendorAppControls = new ProcessControls({
@@ -61,7 +61,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
           env: {
             APM_VENDOR: 'other-spec-compliant',
             DOWNSTREAM_PORT: instanaAppControls.getPort(),
-            USE_HTTP2: http2
+            APP_USES_HTTP2: http2
           },
           collectorUninitialized: true
         });

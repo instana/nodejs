@@ -29,10 +29,17 @@ exports.start = function start(opts = {}, retryTime = null) {
 
   env.TRACING_ENABLED = opts.enableTracing !== false;
   env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
-  env.USE_HTTPS = opts.useHttps === true;
+  env.APP_USES_HTTPS = opts.useHttps === true;
+
+  if (env.APP_USES_HTTPS) {
+    // CASE: target app uses HTTPS (self cert)
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  }
+
   env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS = 0;
   env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;
   env.INSTANA_LOG_LEVEL = 'warn';
+
   if (opts.env && opts.env.INSTANA_LOG_LEVEL) {
     env.INSTANA_LOG_LEVEL = opts.env.INSTANA_LOG_LEVEL;
   }

@@ -132,7 +132,7 @@ app.use((req, res) => {
   }, delay);
 });
 
-if (process.env.USE_HTTPS === 'true') {
+if (process.env.APP_USES_HTTPS === 'true') {
   require('https')
     .createServer(
       {

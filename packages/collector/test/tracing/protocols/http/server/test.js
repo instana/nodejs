@@ -71,8 +71,8 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
       http2: useHttp2CompatApi,
       agentControls,
       env: {
-        USE_HTTPS: useHttps,
-        USE_HTTP2: useHttp2CompatApi
+        APP_USES_HTTPS: useHttps,
+        APP_USES_HTTP2: useHttp2CompatApi
       }
     });
     await controls.startAndWaitForAgentConnection();

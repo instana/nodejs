@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const useHttp2 = process.env.USE_HTTP2 ? process.env.USE_HTTP2 === 'true' : false;
+const useHttp2 = process.env.APP_USES_HTTP2 ? process.env.APP_USES_HTTP2 === 'true' : false;
 const useNativeFetch = process.env.USE_NATIVE_FETCH ? process.env.USE_NATIVE_FETCH === 'true' : false;
 
 require('../../../..')();
