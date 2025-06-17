@@ -140,7 +140,7 @@ mochaSuiteFn('tracing/logging/console', function () {
           useGlobalAgent: true,
           dirname: __dirname,
           env: {
-            INSTANA_DISABLE_TRACERS_LOGGING: 'true'
+            INSTANA_TRACING_DISABLE_LOGGING: 'true'
           }
         });
         await envVarControls.startAndWaitForAgentConnection();
@@ -181,7 +181,7 @@ mochaSuiteFn('tracing/logging/console', function () {
       before(async () => {
         customAgentControls = new AgentStubControls();
         await customAgentControls.startAgent({
-          logging: { disable: true }
+          disable: { logging: true }
         });
 
         agentConfigControls = new ProcessControls({

@@ -129,8 +129,7 @@ const defaults = {
       traceCorrelation: true
     },
     ignoreEndpoints: {},
-    ignoreEndpointsDisableSuppression: false,
-    disable: {}
+    ignoreEndpointsDisableSuppression: false
   },
   secrets: {
     matcherMode: 'contains-ignore-case',
@@ -250,7 +249,6 @@ function normalizeTracingConfig(config) {
   normalizeAllowRootExitSpan(config);
   normalizeIgnoreEndpoints(config);
   normalizeIgnoreEndpointsDisableSuppression(config);
-  normalizeLogging(config);
 }
 
 /**
@@ -534,22 +532,29 @@ function normalizeDisableTracers(config) {
 }
 
 function getDisableTracersFromEnv() {
-  let disableTracersEnvVar;
+  /** @type {string[]} */
+  let disableTracers = [];
 
   if (process.env.INSTANA_TRACING_DISABLE) {
-    disableTracersEnvVar = parseHeadersEnvVar(process.env.INSTANA_TRACING_DISABLE);
+    disableTracers = parseHeadersEnvVar(process.env.INSTANA_TRACING_DISABLE);
   }
   // We deprecated the variable `INSTANA_DISABLED_TRACERS` and will be removed in the next major release(v5).
   else if (process.env.INSTANA_DISABLED_TRACERS) {
-    disableTracersEnvVar = parseHeadersEnvVar(process.env.INSTANA_DISABLED_TRACERS);
+    disableTracers = parseHeadersEnvVar(process.env.INSTANA_DISABLED_TRACERS);
     logger.warn(
       'The environment variable INSTANA_DISABLED_TRACERS is deprecated and will be removed in the next major release. ' +
         'Please use INSTANA_TRACING_DISABLE instead.'
     );
   }
 
-  if (disableTracersEnvVar) {
-    return disableTracersEnvVar.map(key => key.toLowerCase()).filter(key => key.length > 0);
+  if (process.env.INSTANA_TRACING_DISABLE_LOGGING?.trim().toLowerCase() === 'true') {
+    if (!disableTracers.includes('logging')) {
+      disableTracers.push('logging');
+    }
+  }
+
+  if (disableTracers.length > 0) {
+    return disableTracers.map(key => key.trim().toLowerCase()).filter(key => key.length > 0);
   }
 
   return null;
@@ -792,39 +797,4 @@ function normalizeIgnoreEndpointsDisableSuppression(config) {
   }
 
   config.tracing.ignoreEndpointsDisableSuppression = defaults.tracing.ignoreEndpointsDisableSuppression;
-}
-
-/**
- * @param {InstanaConfig} config
- */
-function normalizeLogging(config) {
-  if (!config.tracing.disable) {
-    config.tracing.disable = {};
-  }
-
-  const loggingConfig = config.tracing.disable;
-
-  if (typeof loggingConfig !== 'object') {
-    logger.warn(
-      `Invalid tracing.disable configuration. Expected an object, but received: ${JSON.stringify(loggingConfig)}`
-    );
-    config.tracing.disable = {};
-    return;
-  }
-
-  // Case 1: Use in-code configuration if available
-  if (Object.keys(loggingConfig).length) {
-    config.tracing.disable = loggingConfig;
-    logger.debug(`Logging have been configured: ${JSON.stringify(config.tracing.disable)}`);
-    return;
-  }
-  // Case 2: Load from the `INSTANA_DISABLE_TRACERS_LOGGING` environment variable
-  if (
-    process.env['INSTANA_DISABLE_TRACERS_LOGGING'] &&
-    process.env['INSTANA_DISABLE_TRACERS_LOGGING'].trim()?.toLowerCase() === 'true'
-  ) {
-    logger.info('Disabling logging is explicitly disabled via environment variable "INSTANA_DISABLE_TRACERS_LOGGING".');
-    config.tracing.disable = { disable: true };
-    return;
-  }
 }

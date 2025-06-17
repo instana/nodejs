@@ -120,7 +120,7 @@ function applyAgentConfiguration(agentResponse) {
   applyKafkaTracingConfiguration(agentResponse);
   applySpanBatchingConfiguration(agentResponse);
   applyIgnoreEndpointsConfiguration(agentResponse);
-  applyLoggingConfiguration(agentResponse);
+  applyDisableConfiguration(agentResponse);
 }
 
 /**
@@ -242,7 +242,7 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
 /**
  * @param {AgentAnnounceResponse} agentResponse
  */
-function applyLoggingConfiguration(agentResponse) {
+function applyDisableConfiguration(agentResponse) {
   const disablingConfig = agentResponse?.tracing?.disable;
   if (!disablingConfig) return;
 

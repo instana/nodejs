@@ -86,8 +86,8 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
   const instrumentationName = instrumentationModules[instrumentationKey]?.instrumentationName;
 
   // Case 1: Explicitly listed in disabled tracers (library or instrumentation name)
-  const disableTracers = config?.tracing?.disableTracers || [];
-  if (disableTracers.includes(moduleName) || (instrumentationName && disableTracers.includes(instrumentationName))) {
+  const disable = config?.tracing?.disable || [];
+  if (disable.includes(moduleName) || (instrumentationName && disable.includes(instrumentationName))) {
     return true;
   }
 
