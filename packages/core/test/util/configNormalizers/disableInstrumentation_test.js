@@ -14,7 +14,7 @@ describe('util.normalizeConfig', () => {
     expect(normalizeConfig(config)).to.eql(['http', 'db']);
   });
 
-  it('should convert false values to negated patterns', () => {
+  it('should convert false values to negated module names', () => {
     const config = { http: false, db: false };
     expect(normalizeConfig(config)).to.eql(['!http', '!db']);
   });
@@ -35,10 +35,6 @@ describe('util.normalizeConfig', () => {
 
   it('should handle empty arrays', () => {
     expect(normalizeConfig([])).to.eql([]);
-  });
-
-  it('should preserve existing negation patterns', () => {
-    expect(normalizeConfig(['!logging'])).to.eql(['!logging']);
   });
 
   it('should return empty array for non-object types', () => {

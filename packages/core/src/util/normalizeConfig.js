@@ -29,7 +29,7 @@ const configNormalizers = require('./configNormalizers');
  * @property {boolean} [allowRootExitSpan]
  * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
  * @property {boolean} [ignoreEndpointsDisableSuppression]
- * @property {Object} [disable]
+ * @property {Array<string>} [disable]
  */
 
 /**

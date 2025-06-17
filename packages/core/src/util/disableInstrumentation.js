@@ -58,24 +58,26 @@ function getCategoryAndModule(instrumentationPath) {
  * @param {string} [options.category]
  */
 function shouldDisable(cfg, { moduleName, instrumentationName, category } = {}) {
-  const disabledItems = cfg?.tracing?.disable;
+  const disabledConfigs = cfg?.tracing?.disable;
 
-  if (!disabledItems?.length) return false;
+  if (!disabledConfigs?.length) return false;
 
-  // Handle module exclusion (patterns starting with '!')
+  // case 1: Handle if the instrumentation/package is enabled in the config
   if (moduleName) {
-    const isExcluded = disabledItems.some(
-      (/** @type {string} */ item) => typeof item === 'string' && item.startsWith('!') && item.slice(1) === moduleName
+    const isExcluded = disabledConfigs.some(
+      (/** @type {string} */ module) =>
+        typeof module === 'string' && module.startsWith('!') && module.slice(1) === moduleName
     );
     if (isExcluded) return false;
   }
 
-  // Check for direct module matches
-  if (moduleName && disabledItems.includes(moduleName)) return true;
-  if (instrumentationName && disabledItems.includes(instrumentationName)) return true;
+  // case2: Handle if the instrumentation/package is disabled in the config
+  // Check for instrumentation name ifn module name is not matched
+  if (moduleName && disabledConfigs.includes(moduleName)) return true;
+  if (instrumentationName && disabledConfigs.includes(instrumentationName)) return true;
 
-  // Check for category disable
-  return Boolean(category && DISABLABLE_CATEGORIES.has(category) && disabledItems.includes(category));
+  // case3: handle if the category is disabled
+  return Boolean(category && DISABLABLE_CATEGORIES.has(category) && disabledConfigs.includes(category));
 }
 
 /**
@@ -89,7 +91,7 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
   const instrumentationName = instrumentationModules[instrumentationKey]?.instrumentationName;
   const categoryModule = getCategoryAndModule(instrumentationKey);
 
-  // Check service config first
+  // Check service config if it exists
   if (
     config &&
     shouldDisable(config, {

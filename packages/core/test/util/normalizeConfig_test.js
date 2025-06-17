@@ -336,7 +336,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.disable).to.deep.equal(['logging']);
   });
 
-  it('should ignore disable env vars when explicit disable config is provided', () => {
+  it('should ignore env var INSTANA_TRACING_DISABLE_LOGGING when disable config is provided', () => {
     process.env.INSTANA_TRACING_DISABLE_LOGGING = 'true';
     const config = normalizeConfig({ tracing: { disable: ['redis'] } });
     expect(config.tracing.disable).to.deep.equal(['redis']);
@@ -360,7 +360,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.disable).to.deep.equal(['logging']);
   });
 
-  it('should combine multiple disable configs', () => {
+  it('should combine multiple env vars configs', () => {
     process.env.INSTANA_TRACING_DISABLE = 'redis,postgres';
     process.env.INSTANA_TRACING_DISABLE_LOGGING = 'true';
     const config = normalizeConfig();
