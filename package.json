@@ -254,7 +254,19 @@
     "event-loop-stats": "1.4.1",
     "gcstats.js": "1.0.0"
   },
+  "optionalDependencies": {
+    "couchbase": "^4.5.0",
+    "couchbase-v443": "npm:couchbase@4.4.3",
+    "ibm_db": "^3.3.1",
+    "kafka-avro": "^3.2.0",
+    "pg-native": "^3.5.0",
+    "prisma": "^6.9.0"
+  },
   "overrides": {
+    "prebuildify": {
+      "node-abi": "4.8.0"
+    },
+    "stream-shift": "1.0.2",
     "event-loop-stats": {
       "nan": "^2.22.2"
     },
