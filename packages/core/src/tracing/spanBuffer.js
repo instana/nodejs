@@ -156,7 +156,7 @@ exports.activate = function activate(extraConfig) {
         setTimeout(() => {
           clearTimeout(transmissionTimeoutHandle);
           resolve();
-        }, 1000);
+        }, 500);
       });
     });
   }
