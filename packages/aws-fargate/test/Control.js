@@ -83,7 +83,7 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
       TASK_HTTP_PORT: this.port,
 
       DOWNSTREAM_DUMMY_URL: this.downstreamDummyUrl,
-      INSTANA_DISABLE_CA_CHECK: true,
+      INSTANA_DISABLE_CA_CHECK: this.opts.backendUsesHttps ? 'true' : 'false',
       INSTANA_DEV_SEND_UNENCRYPTED: this.opts.backendUsesHttps ? 'false' : 'true',
       INSTANA_TRACING_TRANSMISSION_DELAY: 500,
       INSTANA_ZONE: 'custom-zone',

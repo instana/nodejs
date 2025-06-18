@@ -284,6 +284,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
           'should never be used in production.'
       );
     }
+
     if (disableCaCheck) {
       logger.warn(
         `[${requestId}] ${disableCaCheckEnvVar} is set, which means that the server certificate will ` +

@@ -46,7 +46,7 @@ class Control extends AbstractServerlessControl {
     const env = {
       APP_PORT: this.port,
       DOWNSTREAM_DUMMY_URL: this.downstreamDummyUrl,
-      INSTANA_DISABLE_CA_CHECK: true,
+      INSTANA_DISABLE_CA_CHECK: this.backendUsesHttps ? 'true' : 'false',
       INSTANA_TRACING_TRANSMISSION_DELAY: 500,
       INSTANA_DEV_SEND_UNENCRYPTED: !this.backendUsesHttps,
       INSTANA_LOG_LEVEL: 'debug',
