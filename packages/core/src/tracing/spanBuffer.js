@@ -148,6 +148,8 @@ exports.activate = function activate(extraConfig) {
     clearInterval(preActivationCleanupIntervalHandle);
   }
 
+  // NOTE: Faas (currently only Lambda) sends a bundle of spans at the end of the handler execution.
+  //       We don't have to worry about not flushing the spans.
   if (!isFaaS) {
     process.once('beforeExit', async () => {
       transmitSpans();
