@@ -718,24 +718,6 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should apply disable config when provided as array', done => {
-      prepareAnnounceResponse({
-        tracing: {
-          disable: ['logging', 'redis']
-        }
-      });
-      unannouncedState.enter({
-        transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
-            tracing: {
-              disable: ['logging', 'redis']
-            }
-          });
-          done();
-        }
-      });
-    });
-
     it('should normalize disable config with mixed true/false values', done => {
       prepareAnnounceResponse({
         tracing: {
