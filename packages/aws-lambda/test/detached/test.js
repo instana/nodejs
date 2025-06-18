@@ -1,5 +1,5 @@
 /*
- * (c) Copyright IBM Corp. 2022
+ * (c) Copyright IBM Corp. 2025
  */
 
 'use strict';
@@ -25,7 +25,7 @@ const qualifiedArn = `${unqualifiedArn}:${version}`;
 
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
-describe('detached requests', function () {
+describe('aws-lambda: detached requests', function () {
   this.timeout(config.getTestTimeout());
   let control;
 
