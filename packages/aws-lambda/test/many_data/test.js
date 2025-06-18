@@ -25,7 +25,7 @@ const qualifiedArn = `${unqualifiedArn}:${version}`;
 
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
-describe('multiple data', function () {
+describe('aws-lambda: many data', function () {
   this.timeout(config.getTestTimeout() * 2);
 
   describe('[batching disabled] with 3 iterations', function () {

@@ -78,10 +78,16 @@ describe('aws-lambda: detached requests', function () {
           ]).then(([spans, rawBundles, rawSpanArrays]) => {
             verifySpans(spans);
             expect(rawSpanArrays).to.be.an('array');
-            expect(rawSpanArrays).to.have.lengthOf(2);
             expect(rawBundles).to.be.an('array');
-            expect(rawBundles).to.have.lengthOf.at.least(1);
-            expect(rawBundles).to.have.lengthOf.at.most(4);
+
+            // 2 additional /traces requests
+            expect(rawSpanArrays).to.have.lengthOf(2);
+            expect(rawSpanArrays[0]).to.have.lengthOf(1);
+            expect(rawSpanArrays[1]).to.have.lengthOf(1);
+
+            // 1 bundle request
+            expect(rawBundles).to.have.lengthOf(1);
+            expect(rawBundles[0].spans).to.have.lengthOf(1);
           });
         }, 500);
       });
