@@ -25,7 +25,7 @@ const qualifiedArn = `${unqualifiedArn}:${version}`;
 
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
-describe.only('multiple data', function () {
+describe('multiple data', function () {
   this.timeout(config.getTestTimeout() * 2);
 
   describe('[batching disabled] with 3 iterations', function () {
@@ -105,10 +105,11 @@ describe.only('multiple data', function () {
           WITH_CONFIG: 'true',
           INSTANA_NUMBER_OF_ITERATIONS: 100,
           INSTANA_SPANBATCHING_ENABLED: 'true',
-          // 10ms is default.
-          // HTTP requests to local dummy is <1s
+          // Batching spans together is duration 10ms by default.
+          // aws-lambda tests do not use any containers,
+          // thats why we just force batching for http requests.
+          // An HTTP request to our local dummy is <1s
           // We don't care about this configuration for this test.
-          // Ensure the test is not flaky
           INSTANA_DEV_BATCH_THRESHOLD: 500
         }
       });
@@ -143,7 +144,7 @@ describe.only('multiple data', function () {
               control.getRawBundles(),
               control.getRawSpanArrays()
             ]).then(([spans, rawBundles, rawSpanArrays]) => {
-              // 1 X bundle request at the end of the lambda fn
+              // 1 x bundle request at the end of the lambda fn (entry span)
               expect(rawBundles.length).to.equal(1);
 
               // 1 x entry and 1 exit (100 batched http requests) span in the bundle.
@@ -151,6 +152,8 @@ describe.only('multiple data', function () {
 
               // No additional /traces requests, only the one bundle request.
               expect(rawSpanArrays.length).to.equal(0);
+
+              expect(spans.length).to.equal(2);
             });
           }, 500);
         });
