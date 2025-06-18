@@ -235,7 +235,8 @@ describe('aws-lambda: many data', function () {
           INSTANA_NUMBER_OF_ITERATIONS: 100,
           // TODO: This is currently off by default.
           INSTANA_FORCE_TRANSMISSION_STARTING_AT: 10,
-          INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: 100
+          // Send out 100ms after initialization.
+          INSTANA_TRACING_TRANSMISSION_DELAY: 100
         }
       });
 

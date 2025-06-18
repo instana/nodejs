@@ -20,8 +20,6 @@ let isActive = false;
 /** @type {number} */
 let activatedAt = null;
 /** @type {number} */
-let minDelayBeforeSendingSpans = 1000;
-/** @type {number} */
 let transmissionDelay;
 /** @type {number} */
 let maxBufferedSpans;
@@ -89,7 +87,6 @@ exports.init = function init(config, _downstreamConnection) {
   forceTransmissionStartingAt = config.tracing.forceTransmissionStartingAt;
   transmissionDelay = config.tracing.transmissionDelay;
   batchingEnabled = config.tracing.spanBatchingEnabled;
-  minDelayBeforeSendingSpans = Math.max(transmissionDelay, minDelayBeforeSendingSpans);
   isFaaS = false;
   transmitImmediate = false;
 
@@ -143,7 +140,7 @@ exports.activate = function activate(extraConfig) {
   //       Spans are collected during the agent cycle -  we flush them here and assume we
   //       are connected to the agent.
   if (!isFaaS) {
-    transmissionTimeoutHandle = setTimeout(transmitSpans, minDelayBeforeSendingSpans);
+    transmissionTimeoutHandle = setTimeout(transmitSpans, transmissionDelay);
     transmissionTimeoutHandle.unref();
   }
 
@@ -214,8 +211,9 @@ exports.addSpan = function (span) {
       addToBucket(span);
     }
 
+    console.log(forceTransmissionStartingAt, transmissionDelay, activatedAt);
     // NOTE: we send out spans directly if the number of spans reaches > 500 [default] and if the min delay is reached.
-    if (spans.length >= forceTransmissionStartingAt && Date.now() - minDelayBeforeSendingSpans > activatedAt) {
+    if (spans.length >= forceTransmissionStartingAt && Date.now() - transmissionDelay > activatedAt) {
       transmitSpans();
     }
   }
