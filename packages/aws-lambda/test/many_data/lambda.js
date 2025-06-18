@@ -5,13 +5,19 @@
 'use strict';
 
 const instana = require('../..');
+const core = require('../../../core');
 
-const https = require('https');
-const url = 'https://www.instana.com';
+const http = require('http');
+const url = process.env.DOWNSTREAM_DUMMY_URL;
+
+// We don't want to setup mysql/psql for aws-lambda tests. Just add http exit as batchable!
+if (process.env.INSTANA_SPANBATCHING_ENABLED === 'true') {
+  core.tracing.spanBuffer.addBatchableSpanName('node.http.client');
+}
 
 const sendReq = async () => {
   return new Promise(function (resolve, reject) {
-    https
+    http
       .get(url, () => {
         resolve();
       })
@@ -30,14 +36,6 @@ exports.handler = instana.wrap(async () => {
   }
 
   await Promise.all(tasks);
-
-  setTimeout(async () => {
-    await sendReq();
-  }, 500);
-
-  setTimeout(async () => {
-    await sendReq();
-  }, 1000);
 
   return {
     statusCode: 200,
