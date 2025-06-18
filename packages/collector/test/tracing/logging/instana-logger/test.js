@@ -21,12 +21,12 @@ mochaSuiteFn('tracing/instana-logger', function () {
   const agentControls = globalAgent.instance;
   const appControls = require('./controls');
 
-  beforeEach(async () => {
-    await agentControls.clearReceivedTraceData();
-  });
-
   // verify that Instana's own pino logging does not get traced
   describe('do not trace Instana log calls', () => {
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
     describe('Instana creates a new default logger', () => {
       appControls.registerTestHooks({
         instanaLoggingMode: 'instana-uses-default-logger'
@@ -80,20 +80,22 @@ mochaSuiteFn('tracing/instana-logger', function () {
     let controls;
 
     before(async () => {
+      // NOTE: it could be that we will loose the worker spans,
+      //       if we execute clearReceivedTraceData in beforeEach!
+      await agentControls.clearReceivedTraceData();
+
       controls = new ProcessControls({
         appPath: path.join(__dirname, 'app-instana-threads.js'),
         useGlobalAgent: true,
+        pipeSubprocessLogs: true,
         env: {
-          INSTANA_LOG_LEVEL: 'debug',
-          WITH_FULL_STDIO: 'true'
+          // NOTE: ProcessControls default log level is 'warn' to not flood the test output.
+          //       Force level info to assert against the threadId.
+          INSTANA_LOG_LEVEL: 'info'
         }
       });
 
       await controls.startAndWaitForAgentConnection();
-    });
-
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {

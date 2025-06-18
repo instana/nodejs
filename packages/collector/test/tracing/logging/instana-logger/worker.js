@@ -17,8 +17,12 @@ const instana = require('../../../..')({
 (async () => {
   // NOTE: wait til the collector is ready
   await new Promise(resolve => setTimeout(resolve, 2000));
+
+  console.log('Worker thread: Creating spans...');
+
   await instana.sdk.async.startEntrySpan();
-  await fetch('https://httpstat.us/200');
+
+  await fetch(`http://localhost:${workerData.agentPort}`);
   instana.sdk.async.completeEntrySpan();
 
   console.log('Worker thread: Done');

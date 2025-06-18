@@ -113,6 +113,8 @@ class ProcessControls {
     this.tracingEnabled = opts.tracingEnabled !== false;
     this.usePreInit = opts.usePreInit === true;
 
+    this.pipeSubprocessLogs = 'pipeSubprocessLogs' in opts ? opts.pipeSubprocessLogs : false;
+
     // Signals that this process intends to connect to the test suite's global agent stub on port 3211. Setting this to
     // true will result in a before/beforeEach call which ensures that the collector is successfully connected to that
     // agent.
@@ -161,7 +163,9 @@ class ProcessControls {
     const that = this;
     this.receivedIpcMessages = [];
 
-    const stdio = this.env.WITH_FULL_STDIO ? ['pipe', 'pipe', 'pipe', 'ipc'] : config.getAppStdio();
+    // Will pipe stdout/stderr to the parent process.
+    // We log & remember them in the event listener (process.stdout.on)
+    const stdio = this.pipeSubprocessLogs ? ['pipe', 'pipe', 'pipe', 'ipc'] : config.getAppStdio();
 
     const forkConfig = {
       stdio,
@@ -185,8 +189,19 @@ class ProcessControls {
       }
     });
 
-    this.process.stdout && this.process.stdout.on('data', data => this.processLogs.push(data.toString()));
-    this.process.stderr && this.process.stderr.on('data', data => this.processLogs.push(data.toString()));
+    this.process.stdout &&
+      this.process.stdout.on('data', data => {
+        // eslint-disable-next-line no-console
+        console.log('Child Stdout:', data.toString());
+        this.processLogs.push(data.toString());
+      });
+
+    this.process.stderr &&
+      this.process.stderr.on('data', data => {
+        // eslint-disable-next-line no-console
+        console.log('Child Stderr:', data.toString());
+        this.processLogs.push(data.toString());
+      });
 
     if (skipWaitUntilServerIsUp) return;
     await this.waitUntilServerIsUp(retryTime, until);

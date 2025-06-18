@@ -28,6 +28,8 @@ if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
+log(`Instana threads app (${process.pid}): Starting on port ${port}`);
+
 app.use(bodyParser.json());
 
 function runWorker() {
@@ -38,6 +40,8 @@ function runWorker() {
   });
 
   worker.on('message', message => {
+    log(`Worker thread: Received message: ${message}`);
+
     if (message === 'instana.collector.initialized') {
       process.send('instana.collector.initialized');
     }
