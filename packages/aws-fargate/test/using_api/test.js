@@ -68,6 +68,43 @@ describe('Using the API', function () {
     });
   });
 
+  describe('when using https', function () {
+    prelude.bind(this)();
+    let control;
+
+    before(async () => {
+      control = new Control({
+        containerAppPath,
+        instanaAgentKey,
+        startDownstreamDummy: false,
+        startBackend: true,
+        backendUsesHttps: true
+      });
+
+      await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpans();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('should collect metrics and trace http requests', () => {
+      return control
+        .sendRequest({
+          method: 'GET',
+          path: '/'
+        })
+        .then(response => {
+          return verify(control, response, true);
+        });
+    });
+  });
+
   describe('when not configured properly', function () {
     prelude.bind(this)({});
     let control;
@@ -106,7 +143,7 @@ describe('Using the API', function () {
     });
   });
 
-  function verify(control, response) {
+  function verify(control, response, backendUsesHttps = false) {
     return retry(async () => {
       expect(response).to.be.an('object');
       expect(response.message).to.equal('Hello Fargate!');
@@ -119,12 +156,21 @@ describe('Using the API', function () {
         return logs.some(log => /\[\w+\] Sent data to Instana \(\/serverless\/metrics\)/.test(log));
       });
 
-      expect(response.logs.warn).to.satisfy(logs => {
-        return logs.some(log =>
-          // eslint-disable-next-line max-len
-          /\[\w+\] INSTANA_DISABLE_CA_CHECK is set/.test(log)
-        );
-      });
+      if (backendUsesHttps) {
+        expect(response.logs.warn).to.satisfy(logs => {
+          return logs.some(log =>
+            // eslint-disable-next-line max-len
+            /\[\w+\] INSTANA_DISABLE_CA_CHECK is set/.test(log)
+          );
+        });
+      } else {
+        expect(response.logs.warn).to.not.satisfy(logs => {
+          return logs.some(log =>
+            // eslint-disable-next-line max-len
+            /\[\w+\] INSTANA_DISABLE_CA_CHECK is set/.test(log)
+          );
+        });
+      }
 
       expect(response.logs.info).to.be.empty;
       expect(response.logs.error).to.be.empty;
