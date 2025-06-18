@@ -92,8 +92,6 @@ function instrumentedLog(ctx, originalLog, originalArgs, options) {
       level: options.level
     };
 
-    console.log('HELLO', span);
-
     if (options.markAsError) {
       span.ec = 1;
     }
