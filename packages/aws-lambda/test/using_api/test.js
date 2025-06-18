@@ -506,12 +506,19 @@ describe('Using the API', function () {
             return logs.some(log => /\[instana] Sent data to Instana \(\/serverless\/bundle\)/.test(log));
           });
 
-          expect(body.logs.warn).to.satisfy(logs => {
-            return logs.some(log =>
-              // eslint-disable-next-line max-len
-              /\[instana] INSTANA_DISABLE_CA_CHECK is set/.test(log)
+          if (backendUsesHttps) {
+            // eslint-disable-next-line max-len
+            expect(body.logs.warn).to.satisfy(logs =>
+              logs.some(log => /\[instana] INSTANA_DISABLE_CA_CHECK is set/.test(log))
             );
-          });
+          } else {
+            expect(body.logs.warn).to.not.satisfy(logs => {
+              return logs.some(log =>
+                // eslint-disable-next-line max-len
+                /\[instana] INSTANA_DISABLE_CA_CHECK is set/.test(log)
+              );
+            });
+          }
         }
 
         expect(body.logs.error).to.be.empty;
