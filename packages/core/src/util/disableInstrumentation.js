@@ -11,7 +11,7 @@ let config;
 let agentConfig;
 
 // Categories that support category-level disabling
-const DISABLABLE_CATEGORIES = new Set(['logging', 'databases', 'protocols', 'messaging']);
+const DISABLABLE_CATEGORIES = new Set(['logging', 'databases', 'messaging']);
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} _config
