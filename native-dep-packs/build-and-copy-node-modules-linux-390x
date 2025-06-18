@@ -12,15 +12,15 @@ function buildAndCopyModulesLinux {
   npm install @instana/collector@latest
   pushd node_modules > /dev/null
   echo "Creating native addon tar.gz files"
-  mkdir -p ../../../packages/shared-metrics/addons/linux/s390x/$ABI_VERSION/
-  mkdir -p ../../../packages/collector/addons/linux/s390x/$ABI_VERSION/
+  mkdir -p ../../../packages/shared-metrics/addons/linux/s390x/glibc/$ABI_VERSION/
+  mkdir -p ../../../packages/collector/addons/linux/s390x/glibc/$ABI_VERSION/
   if [[ -e event-loop-stats ]]; then
-    tar -czf ../../../packages/shared-metrics/addons/linux/s390x/$ABI_VERSION/event-loop-stats.tar.gz event-loop-stats
+    tar -czf ../../../packages/shared-metrics/addons/linux/s390x/glibc/$ABI_VERSION/event-loop-stats.tar.gz event-loop-stats
   else
     echo No event-loop-stats package for ABI version $ABI_VERSION on MacOS.
   fi
   if [[ -e gcstats.js ]]; then
-    tar -czf ../../../packages/shared-metrics/addons/linux/s390x/$ABI_VERSION/gcstats.js.tar.gz gcstats.js
+    tar -czf ../../../packages/shared-metrics/addons/linux/s390x/glibc/$ABI_VERSION/gcstats.js.tar.gz gcstats.js
   else
     echo No gcstats.js package for ABI version $ABI_VERSION on linux s390x.
   fi
@@ -28,4 +28,3 @@ function buildAndCopyModulesLinux {
   popd > /dev/null
   rm -rf tmp
 }
-
