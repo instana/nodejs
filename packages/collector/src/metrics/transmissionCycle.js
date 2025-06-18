@@ -82,10 +82,6 @@ exports.activate = function activate(_metrics, _downstreamConnection, _onSuccess
 
   transmissionsSinceLastFullDataEmit = 0;
   sendMetrics();
-
-  process.once('beforeExit', () => {
-    clearTimeout(transmissionTimeoutHandle);
-  });
 };
 
 function sendMetrics() {
