@@ -89,26 +89,17 @@ function shouldDisable(cfg, { moduleName, instrumentationName, category } = {}) 
 function isInstrumentationDisabled({ instrumentationModules = {}, instrumentationKey }) {
   const moduleName = getModuleName(instrumentationKey);
   const instrumentationName = instrumentationModules[instrumentationKey]?.instrumentationName;
-  const categoryModule = getCategoryAndModule(instrumentationKey);
+  const { category } = getCategoryAndModule(instrumentationKey) || {};
 
-  // Check service config if it exists
-  if (
-    config &&
-    shouldDisable(config, {
-      moduleName,
-      instrumentationName,
-      category: categoryModule?.category
-    })
-  ) {
+  const context = { moduleName, instrumentationName, category };
+
+  // Give priority to service-level config
+  if (config && shouldDisable(config, context)) {
     return true;
-    // Check agent config if service config does not disable
-  } else if (
-    agentConfig &&
-    shouldDisable(agentConfig, {
-      moduleName,
-      category: categoryModule?.category
-    })
-  ) {
+  }
+
+  // Fallback to agent-level config if not disabled above
+  if (agentConfig && shouldDisable(agentConfig, context)) {
     return true;
   }
 

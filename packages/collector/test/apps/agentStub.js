@@ -44,7 +44,7 @@ const kafkaTraceCorrelation = process.env.KAFKA_TRACE_CORRELATION
   ? process.env.KAFKA_TRACE_CORRELATION === 'true'
   : null;
 const ignoreEndpoints = process.env.IGNORE_ENDPOINTS && JSON.parse(process.env.IGNORE_ENDPOINTS);
-const disable = process.env.DISABLE_TRACING && JSON.parse(process.env.DISABLE_TRACING);
+const disable = process.env.AGENT_DISABLE_TRACING && JSON.parse(process.env.AGENT_DISABLE_TRACING);
 
 let discoveries = {};
 let rejectAnnounceAttempts = 0;
