@@ -211,7 +211,6 @@ exports.addSpan = function (span) {
       addToBucket(span);
     }
 
-    console.log(forceTransmissionStartingAt, transmissionDelay, activatedAt);
     // NOTE: we send out spans directly if the number of spans reaches > 500 [default] and if the min delay is reached.
     if (spans.length >= forceTransmissionStartingAt && Date.now() - transmissionDelay > activatedAt) {
       transmitSpans();
