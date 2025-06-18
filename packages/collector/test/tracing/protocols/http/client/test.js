@@ -158,16 +158,14 @@ function registerTests(appUsesHttps) {
     serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'serverApp'),
       useGlobalAgent: true,
-      env: {
-        APP_USES_HTTPS: appUsesHttps
-      }
+      appUsesHttps
     });
     clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'clientApp'),
       useGlobalAgent: true,
+      appUsesHttps,
       env: {
-        SERVER_PORT: serverControls.getPort(),
-        APP_USES_HTTPS: appUsesHttps
+        SERVER_PORT: serverControls.getPort()
       }
     });
 

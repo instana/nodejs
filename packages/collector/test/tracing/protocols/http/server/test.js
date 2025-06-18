@@ -70,8 +70,8 @@ function registerTests(agentControls, appUsesHttps, useHttp2CompatApi) {
       dirname: __dirname,
       http2: useHttp2CompatApi,
       agentControls,
+      appUsesHttps: true,
       env: {
-        APP_USES_HTTPS: appUsesHttps,
         APP_USES_HTTP2: useHttp2CompatApi
       }
     });
