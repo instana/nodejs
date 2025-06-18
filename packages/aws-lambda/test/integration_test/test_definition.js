@@ -1558,7 +1558,7 @@ function registerTests(handlerDefinitionPath, reduced) {
     });
   });
 
-  describe('when proxy authentication fails due to the wrong password', function () {
+  describeOrSkipIfReduced(reduced)('when proxy authentication fails due to the wrong password', function () {
     let control;
 
     before(async () => {
