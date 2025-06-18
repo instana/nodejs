@@ -208,7 +208,7 @@ describe('multiple data', function () {
               // 1 X bundle request at the end of the lambda fn
               expect(rawBundles.length).to.equal(1);
 
-              // All spans are sent at the end of the lambda fn
+              // all spans are sent at the end of the lambda fn
               expect(rawBundles[0].spans.length).to.equal(101);
 
               // 0 requests from span buffer.
@@ -229,13 +229,11 @@ describe('multiple data', function () {
         faasRuntimePath: path.join(__dirname, '../runtime_mock'),
         handlerDefinitionPath: path.join(__dirname, './lambda'),
         startBackend: true,
-        // HTTPS requests + NODE_TLS_REJECT_UNAUTHORIZED creates a log.console span
-        // see .mocharc
-        // backendHttps: false,
         env: {
           INSTANA_AGENT_KEY: instanaAgentKey,
           WITH_CONFIG: 'true',
           INSTANA_NUMBER_OF_ITERATIONS: 100,
+          // TODO: This is currently off by default.
           INSTANA_FORCE_TRANSMISSION_STARTING_AT: 10,
           INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: 100
         }
@@ -272,12 +270,13 @@ describe('multiple data', function () {
               control.getRawSpanArrays()
             ]).then(([spans, rawBundles, rawSpanArrays]) => {
               // 1 X bundle request at the end of the lambda fn
-              // Contains the entry span!
+              // contains the entry span!
               expect(rawBundles.length).to.equal(1);
 
-              // expect(rawBundles[0].spans.length).to.equal(1);
+              // 1 x entry
+              expect(rawBundles[0].spans.length).to.equal(1);
 
-              // x requests from span buffer.
+              // x requests buffered / splitted
               expect(rawSpanArrays.length).to.equal(10);
               expect(rawSpanArrays[0].length).to.equal(10);
               expect(rawSpanArrays[1].length).to.equal(10);
