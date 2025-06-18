@@ -1558,7 +1558,7 @@ function registerTests(handlerDefinitionPath, reduced) {
     });
   });
 
-  describeOrSkipIfReduced(reduced)('when proxy authentication fails due to the wrong password', function () {
+  describe('when proxy authentication fails due to the wrong password', function () {
     let control;
 
     before(async () => {
@@ -1575,6 +1575,8 @@ function registerTests(handlerDefinitionPath, reduced) {
         faasRuntimePath: path.join(__dirname, '../runtime_mock'),
         handlerDefinitionPath,
         startBackend: true,
+        // Proxy only works with HTTPS!
+        backendUsesHttps: true,
         startProxy: true,
         proxyPort,
         proxyRequiresAuthorization: true,
