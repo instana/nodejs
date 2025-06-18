@@ -104,10 +104,9 @@ class ProcessControls {
     this.execArgv = opts.execArgv;
     // server http2
     this.http2 = opts.http2;
-    // whether or not to use TLS
-    this.backendUsesHttps = 'backendUsesHttps' in opts ? opts.backendUsesHttps : false;
+    this.appUsesHttps = 'appUsesHttps' in opts ? opts.appUsesHttps : false;
 
-    if (this.backendUsesHttps) {
+    if (this.appUsesHttps) {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     }
 
@@ -367,7 +366,7 @@ class ProcessControls {
   }
 
   getBaseUrl({ embedCredentialsInUrl }) {
-    return `${this.backendUsesHttps || this.http2 ? 'https' : 'http'}://${
+    return `${this.appUsesHttps || this.http2 ? 'https' : 'http'}://${
       // eslint-disable-next-line no-unneeded-ternary
       embedCredentialsInUrl ? embedCredentialsInUrl : ''
     }localhost:${this.port}`;
