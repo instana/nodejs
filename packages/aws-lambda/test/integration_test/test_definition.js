@@ -1661,6 +1661,7 @@ function registerTests(handlerDefinitionPath, reduced) {
         faasRuntimePath: path.join(__dirname, '../runtime_mock'),
         handlerDefinitionPath,
         startBackend: true,
+        backendUsesHttps: true,
         startProxy: false,
         proxyPort,
         env
