@@ -93,6 +93,44 @@ describe('Using the API', function () {
     });
   });
 
+  describe('when everything is peachy with https', function () {
+    // - INSTANA_ENDPOINT_URL is configured
+    // - INSTANA_AGENT_KEY is configured
+    // - back end is reachable
+    // - lambda function ends with success
+    const env = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaAgentKey
+    });
+
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath: handlerDefinitionPath,
+        startBackend: true,
+        backendUsesHttps: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must capture metrics and spans', () => {
+      return verify(control, false, true, true, true);
+    });
+  });
+
   describe('when lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable
@@ -392,9 +430,9 @@ describe('Using the API', function () {
     });
   });
 
-  function verify(control, error, expectSpansAndMetrics, isDebug = true) {
+  function verify(control, error, expectSpansAndMetrics, isDebug = true, backendUsesHttps = false) {
     return control.runHandler().then(() => {
-      verifyResponse(control, error, expectSpansAndMetrics, isDebug);
+      verifyResponse(control, error, expectSpansAndMetrics, isDebug, backendUsesHttps);
 
       if (expectSpansAndMetrics) {
         return retry(() => getAndVerifySpans(control, error).then(() => getAndVerifyMetrics(control)));
@@ -406,7 +444,7 @@ describe('Using the API', function () {
     });
   }
 
-  function verifyResponse(control, error, expectSpansAndMetrics, isDebug) {
+  function verifyResponse(control, error, expectSpansAndMetrics, isDebug, backendUsesHttps) {
     /* eslint-disable no-console */
     if (error) {
       expect(control.getLambdaErrors().length).to.equal(1);
@@ -443,12 +481,22 @@ describe('Using the API', function () {
             return logs.some(log => /\[instana_\w+\] Sent data to Instana \(\/serverless\/bundle\)/.test(log));
           });
 
-          expect(body.logs.warn).to.satisfy(logs => {
-            return logs.some(log =>
-              // eslint-disable-next-line max-len
-              /\[instana_\w+\] INSTANA_DISABLE_CA_CHECK is set/.test(log)
-            );
-          });
+          // We run http by default in the tests. No need to set INSTANA_DISABLE_CA_CHECK
+          if (backendUsesHttps) {
+            expect(body.logs.warn).to.satisfy(logs => {
+              return logs.some(log =>
+                // eslint-disable-next-line max-len
+                /\[instana_\w+\] INSTANA_DISABLE_CA_CHECK is set/.test(log)
+              );
+            });
+          } else {
+            expect(body.logs.warn).to.not.satisfy(logs => {
+              return logs.some(log =>
+                // eslint-disable-next-line max-len
+                /\[instana_\w+\] INSTANA_DISABLE_CA_CHECK is set/.test(log)
+              );
+            });
+          }
         } else {
           expect(body.logs.debug).to.satisfy(logs => {
             return logs.some(log => /\[instana] Sending data to Instana \(\/serverless\/bundle\)/.test(log));
@@ -458,12 +506,19 @@ describe('Using the API', function () {
             return logs.some(log => /\[instana] Sent data to Instana \(\/serverless\/bundle\)/.test(log));
           });
 
-          expect(body.logs.warn).to.satisfy(logs => {
-            return logs.some(log =>
-              // eslint-disable-next-line max-len
-              /\[instana] INSTANA_DISABLE_CA_CHECK is set/.test(log)
+          if (backendUsesHttps) {
+            // eslint-disable-next-line max-len
+            expect(body.logs.warn).to.satisfy(logs =>
+              logs.some(log => /\[instana] INSTANA_DISABLE_CA_CHECK is set/.test(log))
             );
-          });
+          } else {
+            expect(body.logs.warn).to.not.satisfy(logs => {
+              return logs.some(log =>
+                // eslint-disable-next-line max-len
+                /\[instana] INSTANA_DISABLE_CA_CHECK is set/.test(log)
+              );
+            });
+          }
         }
 
         expect(body.logs.error).to.be.empty;

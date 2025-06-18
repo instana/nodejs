@@ -29,10 +29,17 @@ exports.start = function start(opts = {}, retryTime = null) {
 
   env.TRACING_ENABLED = opts.enableTracing !== false;
   env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
-  env.USE_HTTPS = opts.useHttps === true;
+  env.APP_USES_HTTPS = opts.appUsesHttps === true;
+
+  if (env.APP_USES_HTTPS) {
+    // CASE: target app uses HTTPS (self cert)
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  }
+
   env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS = 0;
   env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;
   env.INSTANA_LOG_LEVEL = 'warn';
+
   if (opts.env && opts.env.INSTANA_LOG_LEVEL) {
     env.INSTANA_LOG_LEVEL = opts.env.INSTANA_LOG_LEVEL;
   }
@@ -54,16 +61,16 @@ exports.start = function start(opts = {}, retryTime = null) {
     }
   });
 
-  return waitUntilServerIsUp(opts.useHttps, retryTime, opts.collectorUninitialized);
+  return waitUntilServerIsUp(opts.appUsesHttps, retryTime, opts.collectorUninitialized);
 };
 
-function waitUntilServerIsUp(useHttps, retryTime, collectorUninitialized) {
+function waitUntilServerIsUp(appUsesHttps, retryTime, collectorUninitialized) {
   try {
     return testUtils
       .retry(async () => {
-        const resp = await fetch(getBaseUrl(useHttps), {
+        const resp = await fetch(getBaseUrl(appUsesHttps), {
           method: 'GET',
-          url: getBaseUrl(useHttps),
+          url: getBaseUrl(appUsesHttps),
           headers: {
             'X-INSTANA-L': '0'
           },
@@ -86,7 +93,7 @@ function waitUntilServerIsUp(useHttps, retryTime, collectorUninitialized) {
       });
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.log(`[ExpressControls] Error waiting until server (${getBaseUrl(useHttps)}) is up: ${err.message}`);
+    console.log(`[ExpressControls] Error waiting until server (${getBaseUrl(appUsesHttps)}) is up: ${err.message}`);
     throw err;
   }
 }
@@ -99,9 +106,9 @@ exports.getPort = () => appPort;
 exports.getPid = () => expressApp.pid;
 
 exports.sendBasicRequest = opts =>
-  fetch(`${getBaseUrl(opts.useHttps)}${opts.path}`, {
+  fetch(`${getBaseUrl(opts.appUsesHttps)}${opts.path}`, {
     method: opts.method,
-    url: getBaseUrl(opts.useHttps) + opts.path,
+    url: getBaseUrl(opts.appUsesHttps) + opts.path,
     resolveWithFullResponse: opts.resolveWithFullResponse
   }).then(response => {
     return response.json();
@@ -111,19 +118,22 @@ exports.sendRequest = opts => {
   opts.responseStatus = opts.responseStatus || 200;
   opts.delay = opts.delay || 0;
   opts.headers = opts.headers || {};
-  return fetch(`${getBaseUrl(opts.useHttps)}${opts.path}?responseStatus=${opts.responseStatus}&delay=${opts.delay}`, {
-    method: opts.method,
-    url: getBaseUrl(opts.useHttps) + opts.path,
-    qs: {
-      responseStatus: opts.responseStatus,
-      delay: opts.delay,
-      cookie: opts.cookie,
-      serverTiming: opts.serverTiming,
-      serverTimingArray: opts.serverTimingArray
-    },
-    headers: opts.headers,
-    resolveWithFullResponse: opts.resolveWithFullResponse
-  })
+  return fetch(
+    `${getBaseUrl(opts.appUsesHttps)}${opts.path}?responseStatus=${opts.responseStatus}&delay=${opts.delay}`,
+    {
+      method: opts.method,
+      url: getBaseUrl(opts.appUsesHttps) + opts.path,
+      qs: {
+        responseStatus: opts.responseStatus,
+        delay: opts.delay,
+        cookie: opts.cookie,
+        serverTiming: opts.serverTiming,
+        serverTimingArray: opts.serverTimingArray
+      },
+      headers: opts.headers,
+      resolveWithFullResponse: opts.resolveWithFullResponse
+    }
+  )
     .then(response => {
       const contentType = response.headers.get('content-type');
       if (contentType && (contentType.includes('text/html') || contentType.includes('text/plain'))) {
@@ -139,30 +149,30 @@ exports.sendRequest = opts => {
     });
 };
 
-exports.setHealthy = useHttps =>
-  fetch(`${getBaseUrl(useHttps)}/admin/set-to-healthy`, {
-    url: `${getBaseUrl(useHttps)}/admin/set-to-healthy`,
+exports.setHealthy = appUsesHttps =>
+  fetch(`${getBaseUrl(appUsesHttps)}/admin/set-to-healthy`, {
+    url: `${getBaseUrl(appUsesHttps)}/admin/set-to-healthy`,
     method: 'POST'
   }).then(response => {
     return response.json();
   });
 
-exports.setUnhealthy = useHttps =>
-  fetch(`${getBaseUrl(useHttps)}/admin/set-to-unhealthy`, {
-    url: `${getBaseUrl(useHttps)}/admin/set-to-unhealthy`,
+exports.setUnhealthy = appUsesHttps =>
+  fetch(`${getBaseUrl(appUsesHttps)}/admin/set-to-unhealthy`, {
+    url: `${getBaseUrl(appUsesHttps)}/admin/set-to-unhealthy`,
     method: 'POST'
   }).then(response => {
     return response.json();
   });
 
-exports.setLogger = (useHttps, logFilePath) =>
-  fetch(`${getBaseUrl(useHttps)}/set-logger?logFilePath=${encodeURIComponent(logFilePath)}`, {
-    url: `${getBaseUrl(useHttps)}/set-logger?logFilePath=${encodeURIComponent(logFilePath)}`,
+exports.setLogger = (appUsesHttps, logFilePath) =>
+  fetch(`${getBaseUrl(appUsesHttps)}/set-logger?logFilePath=${encodeURIComponent(logFilePath)}`, {
+    url: `${getBaseUrl(appUsesHttps)}/set-logger?logFilePath=${encodeURIComponent(logFilePath)}`,
     method: 'POST'
   }).then(response => {
     return response.json();
   });
 
-function getBaseUrl(useHttps) {
-  return `http${useHttps ? 's' : ''}://localhost:${appPort}`;
+function getBaseUrl(appUsesHttps) {
+  return `http${appUsesHttps ? 's' : ''}://localhost:${appPort}`;
 }

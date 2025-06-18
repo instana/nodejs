@@ -22,8 +22,9 @@ const morgan = require('morgan');
 const path = require('path');
 const fetch = require('node-fetch-v2');
 const port = require('../../../../test_util/app-port')();
-const httpModule = process.env.USE_HTTPS === 'true' ? require('https') : require('http');
-const protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
+
+const httpModule = process.env.APP_USES_HTTPS === 'true' ? require('https') : require('http');
+const protocol = process.env.APP_USES_HTTPS === 'true' ? 'https' : 'http';
 const baseUrl = `${protocol}://user:password@localhost:${process.env.SERVER_PORT}`;
 const sslDir = path.join(__dirname, '..', '..', '..', '..', 'apps', 'ssl');
 const key = fs.readFileSync(path.join(sslDir, 'key'));
@@ -254,7 +255,7 @@ app.put('/expect-continue', (req, res) => {
   });
 });
 
-if (process.env.USE_HTTPS === 'true') {
+if (process.env.APP_USES_HTTPS === 'true') {
   require('https')
     .createServer({ key, cert }, app)
     .listen(port, () => {

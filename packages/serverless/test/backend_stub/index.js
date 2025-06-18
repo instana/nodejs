@@ -30,7 +30,7 @@ const deepMerge = require('../../../core/src/util/deepMerge');
 const logPrefix = 'backend-stub';
 const logger = pino.child({ name: logPrefix, pid: process.pid });
 logger.level = process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL || 'info';
-const useHttps = process.env.USE_HTTPS !== 'false';
+const useHttps = process.env.BACKEND_USES_HTTPS !== 'false';
 
 const options = {
   key: fs.readFileSync(path.join(__dirname, 'cert/server.key')),

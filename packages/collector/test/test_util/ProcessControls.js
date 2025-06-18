@@ -104,8 +104,11 @@ class ProcessControls {
     this.execArgv = opts.execArgv;
     // server http2
     this.http2 = opts.http2;
-    // whether or not to use TLS
-    this.useHttps = opts.env && !!opts.env.USE_HTTPS;
+    this.appUsesHttps = 'appUsesHttps' in opts ? opts.appUsesHttps : false;
+
+    if (this.appUsesHttps) {
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+    }
 
     // http/https/http2 port
     this.port = opts.port || process.env.APP_PORT || portFinder();
@@ -143,7 +146,8 @@ class ProcessControls {
         INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: opts.minimalDelay != null ? opts.minimalDelay : 0,
         INSTANA_FULL_METRICS_INTERNAL_IN_S: 1,
         INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS: 500,
-        INSTANA_RETRY_AGENT_CONNECTION_IN_MS: 500
+        INSTANA_RETRY_AGENT_CONNECTION_IN_MS: 500,
+        APP_USES_HTTPS: this.appUsesHttps ? 'true' : 'false'
       },
       opts.env
     );
@@ -363,7 +367,7 @@ class ProcessControls {
   }
 
   getBaseUrl({ embedCredentialsInUrl }) {
-    return `${this.useHttps || this.http2 ? 'https' : 'http'}://${
+    return `${this.appUsesHttps || this.http2 ? 'https' : 'http'}://${
       // eslint-disable-next-line no-unneeded-ternary
       embedCredentialsInUrl ? embedCredentialsInUrl : ''
     }localhost:${this.port}`;

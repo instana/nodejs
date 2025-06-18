@@ -43,7 +43,7 @@ function checkConnection(span, setupType) {
 ['default', 'cluster'].forEach(setupType => {
   // TODO: Add test for cluster mode https://jsw.ibm.com/browse/INSTA-15876
   if (setupType !== 'cluster') {
-    mochaSuiteFn('When allowRootExitSpan: true is set', function () {
+    mochaSuiteFn('tracing/ioredis: when allowRootExitSpan: true is set', function () {
       this.timeout(config.getTestTimeout() * 4);
 
       globalAgent.setUpCleanUpHooks();

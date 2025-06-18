@@ -150,7 +150,7 @@ mochaSuiteFn('tracing/http client', function () {
   });
 });
 
-function registerTests(useHttps) {
+function registerTests(appUsesHttps) {
   let serverControls;
   let clientControls;
 
@@ -158,16 +158,14 @@ function registerTests(useHttps) {
     serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'serverApp'),
       useGlobalAgent: true,
-      env: {
-        USE_HTTPS: useHttps
-      }
+      appUsesHttps
     });
     clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'clientApp'),
       useGlobalAgent: true,
+      appUsesHttps,
       env: {
-        SERVER_PORT: serverControls.getPort(),
-        USE_HTTPS: useHttps
+        SERVER_PORT: serverControls.getPort()
       }
     });
 
@@ -189,7 +187,7 @@ function registerTests(useHttps) {
     await clientControls.clearIpcMessages();
   });
 
-  if (!useHttps) {
+  if (!appUsesHttps) {
     it('must trace request in background', () => {
       return clientControls
         .sendRequest({
@@ -249,7 +247,7 @@ function registerTests(useHttps) {
               globalAgent.instance.getSpans().then(spans =>
                 verifySpans({
                   spans,
-                  useHttps,
+                  appUsesHttps,
                   clientEndpoint: '/request-url-and-options',
                   serverEndpoint: '/request-url-opts',
                   serverControls,
@@ -269,7 +267,7 @@ function registerTests(useHttps) {
 
       // - Can't execute this test with a self signed certificate because without an options object, there is no place
       //   where we can specify the `ca` option.
-      const mochaFn = useHttps || urlObject ? it.skip : it;
+      const mochaFn = appUsesHttps || urlObject ? it.skip : it;
       mochaFn(`must trace request(${urlParam}, cb) with query: ${withQuery}`, () =>
         clientControls
           .sendRequest({
@@ -281,7 +279,7 @@ function registerTests(useHttps) {
               globalAgent.instance.getSpans().then(spans =>
                 verifySpans({
                   spans,
-                  useHttps,
+                  appUsesHttps,
                   clientEndpoint: '/request-url-only',
                   serverEndpoint: '/request-only-url',
                   serverControls,
@@ -308,7 +306,7 @@ function registerTests(useHttps) {
             globalAgent.instance.getSpans().then(spans =>
               verifySpans({
                 spans,
-                useHttps,
+                appUsesHttps,
                 clientEndpoint: '/request-options-only',
                 serverEndpoint: '/request-only-opts',
                 serverControls,
@@ -370,7 +368,7 @@ function registerTests(useHttps) {
             globalAgent.instance.getSpans().then(spans =>
               verifySpans({
                 spans,
-                useHttps,
+                appUsesHttps,
                 clientEndpoint: '/request-options-only-null-headers',
                 serverEndpoint: '/request-only-opts',
                 serverControls,
@@ -397,7 +395,7 @@ function registerTests(useHttps) {
               globalAgent.instance.getSpans().then(spans =>
                 verifySpans({
                   spans,
-                  useHttps,
+                  appUsesHttps,
                   clientEndpoint: '/get-url-and-options',
                   serverEndpoint: '/get-url-opts',
                   serverControls,
@@ -417,7 +415,7 @@ function registerTests(useHttps) {
 
       // - Can't execute this test with a self signed certificate because without an options object, there is no place
       //   where we can specify the `ca` option.
-      const mochaFn = useHttps || urlObject ? it.skip : it;
+      const mochaFn = appUsesHttps || urlObject ? it.skip : it;
       mochaFn(`must trace get(${urlParam}, cb) with query: ${withQuery}`, () =>
         clientControls
           .sendRequest({
@@ -429,7 +427,7 @@ function registerTests(useHttps) {
               globalAgent.instance.getSpans().then(spans =>
                 verifySpans({
                   spans,
-                  useHttps,
+                  appUsesHttps,
                   clientEndpoint: '/get-url-only',
                   serverEndpoint: '/get-only-url',
                   serverControls,
@@ -456,7 +454,7 @@ function registerTests(useHttps) {
             globalAgent.instance.getSpans().then(spans =>
               verifySpans({
                 spans,
-                useHttps,
+                appUsesHttps,
                 clientEndpoint: '/get-options-only',
                 serverEndpoint: '/get-only-opts',
                 serverControls,
@@ -658,7 +656,7 @@ function registerTests(useHttps) {
       ));
 }
 
-function registerConnectionRefusalTest(useHttps) {
+function registerConnectionRefusalTest(appUsesHttps) {
   // This needs to be in a suite of its own because the test terminates the server app.
   describe('connection refusal', function () {
     let serverControls;
@@ -668,16 +666,14 @@ function registerConnectionRefusalTest(useHttps) {
       serverControls = new ProcessControls({
         appPath: path.join(__dirname, 'serverApp'),
         useGlobalAgent: true,
-        env: {
-          USE_HTTPS: useHttps
-        }
+        appUsesHttps
       });
       clientControls = new ProcessControls({
         appPath: path.join(__dirname, 'clientApp'),
         useGlobalAgent: true,
+        appUsesHttps,
         env: {
-          SERVER_PORT: serverControls.getPort(),
-          USE_HTTPS: useHttps
+          SERVER_PORT: serverControls.getPort()
         }
       });
 
@@ -848,7 +844,7 @@ function constructPath(basePath, urlObject, withQuery) {
 
 function verifySpans({
   spans,
-  useHttps,
+  appUsesHttps,
   clientEndpoint,
   serverEndpoint,
   clientControls,
@@ -864,7 +860,7 @@ function verifySpans({
   const exitInClient = verifyHttpExit({
     spans,
     parent: entryInClient,
-    url: serverUrl(useHttps, urlShouldContainRedactedCredentials, serverEndpoint, serverControls)
+    url: serverUrl(appUsesHttps, urlShouldContainRedactedCredentials, serverEndpoint, serverControls)
   });
   checkQuery(exitInClient, withQuery);
   const entryInServer = verifyHttpEntry({
@@ -948,8 +944,8 @@ function verifyHttpExit({ spans, parent, url = '/', method = 'GET', status = 200
   ]);
 }
 
-function serverUrl(useHttps, urlShouldContainRedactedCredentials, path_, serverControls) {
-  return `http${useHttps ? 's' : ''}://${
+function serverUrl(appUsesHttps, urlShouldContainRedactedCredentials, path_, serverControls) {
+  return `http${appUsesHttps ? 's' : ''}://${
     urlShouldContainRedactedCredentials ? '<redacted>:<redacted>@' : ''
   }${`localhost:${serverControls.getPort()}`}${path_}`;
 }

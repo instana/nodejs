@@ -65,6 +65,41 @@ describe('Using the API', function () {
     });
   });
 
+  describe('when using https', function () {
+    let appControls;
+
+    before(async () => {
+      appControls = new Control({
+        containerAppPath,
+        instanaAgentKey,
+        startDownstreamDummy: false,
+        startBackend: true,
+        backendUsesHttps: true
+      });
+
+      await appControls.start();
+    });
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
+    });
+
+    after(async () => {
+      await appControls.stop();
+    });
+
+    it('should collect metrics and trace http requests', () => {
+      return appControls
+        .sendRequest({
+          method: 'GET',
+          path: '/'
+        })
+        .then(response => {
+          return verify(appControls, response, true);
+        });
+    });
+  });
+
   describe('when not configured properly', function () {
     let appControls;
 
@@ -102,7 +137,7 @@ describe('Using the API', function () {
     });
   });
 
-  function verify(control, response) {
+  function verify(control, response, backendUsesHttps = false) {
     expect(response).to.be.an('object');
 
     expect(response.message).to.equal('Hello Cloud Run!');
@@ -115,12 +150,21 @@ describe('Using the API', function () {
       return logs.some(log => /\[instana_\w+\] Sent data to Instana \(\/serverless\/metrics\)/.test(log));
     });
 
-    expect(response.logs.warn).to.satisfy(logs => {
-      return logs.some(log =>
-        // eslint-disable-next-line max-len
-        /\[instana_\w+\] INSTANA_DISABLE_CA_CHECK is set/.test(log)
-      );
-    });
+    if (backendUsesHttps) {
+      expect(response.logs.warn).to.satisfy(logs => {
+        return logs.some(log =>
+          // eslint-disable-next-line max-len
+          /\[instana_\w+\] INSTANA_DISABLE_CA_CHECK is set/.test(log)
+        );
+      });
+    } else {
+      expect(response.logs.warn).to.not.satisfy(logs => {
+        return logs.some(log =>
+          // eslint-disable-next-line max-len
+          /\[instana_\w+\] INSTANA_DISABLE_CA_CHECK is set/.test(log)
+        );
+      });
+    }
 
     expect(response.logs.info).to.be.empty;
     expect(response.logs.error).to.be.empty;

@@ -94,7 +94,7 @@ app.all('*', (req, res) => {
   }
 
   // Forward data to the back end.
-  const transport = process.env.BACKEND_HTTPS === 'true' ? https : http;
+  const transport = process.env.BACKEND_USES_HTTPS === 'true' ? https : http;
   const options = {
     hostname: 'localhost',
     port: process.env.BACKEND_PORT,

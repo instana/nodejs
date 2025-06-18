@@ -277,13 +277,14 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
   if (!warningsHaveBeenLogged) {
     warningsHaveBeenLogged = true;
     if (environmentUtil.sendUnencrypted) {
-      logger.error(
+      logger.warn(
         `[${requestId}] ${environmentUtil.sendUnencryptedEnvVar} is set, which means that all traffic ` +
           'to Instana is send ' +
           'unencrypted via plain HTTP, not via HTTPS. This will effectively make that traffic public. This setting ' +
           'should never be used in production.'
       );
     }
+
     if (disableCaCheck) {
       logger.warn(
         `[${requestId}] ${disableCaCheckEnvVar} is set, which means that the server certificate will ` +

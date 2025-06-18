@@ -22,6 +22,10 @@ module.exports = async function connect(ioredis, log) {
   }
 
   const hostAndPort = process.env.AZURE_REDIS_CLUSTER.split(':');
+
+  // See https://github.com/redis/ioredis/issues/1786
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
   const cluster = new ioredis.Cluster(
     [
       {

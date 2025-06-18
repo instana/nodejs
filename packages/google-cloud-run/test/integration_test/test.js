@@ -71,6 +71,41 @@ describe('Google Cloud Run integration test', function () {
     });
   });
 
+  describe('when the back end is HTTPS', function () {
+    let appControls;
+
+    before(async () => {
+      appControls = new Control({
+        containerAppPath,
+        instanaAgentKey,
+        startDownstreamDummy: true,
+        startBackend: true,
+        backendUsesHttps: true
+      });
+
+      await appControls.start();
+    });
+    beforeEach(async () => {
+      await appControls.reset();
+      await appControls.resetBackendSpans();
+    });
+
+    after(async () => {
+      await appControls.stop();
+    });
+
+    it('should collect metrics and trace', () => {
+      return appControls
+        .sendRequest({
+          method: 'GET',
+          path: '/'
+        })
+        .then(response => {
+          return verify(appControls, response, true);
+        });
+    });
+  });
+
   describe('when the back end is down', function () {
     let appControls;
 

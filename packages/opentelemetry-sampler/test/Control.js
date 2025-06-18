@@ -20,10 +20,15 @@ class Control extends AbstractServerlessControl {
     this.backendPort = this.opts.backendPort || portfinder();
     this.port = this.opts.port || portfinder();
 
-    this.useHttps = true;
-    const protocol = this.useHttps ? 'https' : 'http';
-    this.backendBaseUrl = this.opts.backendBaseUrl || `${protocol}://localhost:${this.backendPort}/serverless`;
-    this.instanaEndpoint = `${protocol}://localhost:${this.backendPort}/serverless`;
+    this.backendUsesHttps = 'backendUsesHttps' in this.opts ? this.opts.backendUsesHttps : false;
+
+    if (this.backendUsesHttps) {
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+    }
+
+    const backendProtocol = this.backendUsesHttps ? 'https' : 'http';
+    this.backendBaseUrl = this.opts.backendBaseUrl || `${backendProtocol}://localhost:${this.backendPort}/serverless`;
+    this.instanaEndpoint = `${backendProtocol}://localhost:${this.backendPort}/serverless`;
   }
 
   startMonitoredProcess() {
@@ -34,6 +39,7 @@ class Control extends AbstractServerlessControl {
       env: Object.assign(
         {
           INSTANA_ENDPOINT_URL: this.instanaEndpoint,
+          INSTANA_DEV_SEND_UNENCRYPTED: !this.backendUsesHttps,
           APP_PORT: this.port
         },
         this.opts.env

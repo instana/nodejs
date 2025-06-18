@@ -20,7 +20,7 @@ process.on('SIGTERM', () => {
  */
 
 const vendor = process.env.APM_VENDOR;
-const useHttp2 = process.env.USE_HTTP2 ? process.env.USE_HTTP2 === 'true' : false;
+const useHttp2 = process.env.APP_USES_HTTP2 ? process.env.APP_USES_HTTP2 === 'true' : false;
 
 let vendorLabel;
 if (!vendor) {
