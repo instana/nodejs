@@ -16,10 +16,11 @@ const constants = require('@instana/core').tracing.constants;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-// ATTENTION: starting the short living worker will already send out the span!
-//            beforeEach will kick in afterwards and reset the spans! Do not use beforeEach!
+// ATTENTION: starting the short living worker will immediately send out the span!
+//            beforeEach will kick in AFTERWARDS and reset the spans! Do not use beforeEach!
 // ATTENTION: the apps are dying directly and any timer in our tracer won't get triggered anymore
-//            because the process is already dead and we are making use of `unref`.
+//            because the process is already dead and we are making use of `unref`. Therefor
+//            spans would not get flushed out without `beforeExit` native event.
 mochaSuiteFn('tracing/sdk/rootExitSpans', function () {
   this.timeout(config.getTestTimeout());
 
