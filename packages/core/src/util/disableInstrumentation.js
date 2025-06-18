@@ -99,6 +99,7 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
   }
 
   // Fallback to agent-level config if not disabled above
+  // NOTE: We currently have no single config object.
   if (agentConfig && shouldDisable(agentConfig, context)) {
     return true;
   }
