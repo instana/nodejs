@@ -51,8 +51,8 @@ if (!argv.os || (argv.os && argv.os === 'linux')) {
 
   archs.forEach(image => {
     if (image === 'linux-s390x') {
-      // Currently there is no official image in prebuilidy-cross for s390x,
-      // we use the locally build image for now and will move away once this is officially added
+      // Since there is no official s390x image available in prebuildify-cross yet,
+      // we're temporarily using a locally built image. We'll switch to the official image once it's supported.
       image = 'abhilashsivan/prebuild-linux-s390x:strip';
 
       childProcess.execSync(

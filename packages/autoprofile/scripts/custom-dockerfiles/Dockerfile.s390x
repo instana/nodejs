@@ -1,3 +1,6 @@
+# Custom Dockerfile for prebuildify Docker images targeting the s390x architecture
+# Based on: https://github.com/prebuild/docker-images/blob/master/linux-arm64/Dockerfile
+
 FROM dockcross/linux-s390x
 
 # Create users: node and travis
