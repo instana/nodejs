@@ -64,6 +64,20 @@ describe('util.disableInstrumentation', () => {
       expect(result).to.be.true;
     });
 
+    it('should disable instrumentation when instrumentationName matches disable list via agent config', () => {
+      disableInstrumentation.activate({
+        tracing: {
+          disable: ['aws/v3']
+        }
+      });
+
+      const result = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/cloud/aws/v3/s3',
+        instrumentationModules: testInstrumentationModules
+      });
+      expect(result).to.be.true;
+    });
+
     it('should disable instrumentation when instrumentationName matches disable list', () => {
       disableInstrumentation.init({
         tracing: {
@@ -108,8 +122,28 @@ describe('util.disableInstrumentation', () => {
   });
 
   describe('Category-based disabling behavior', () => {
-    it('should disable all modules within a category when category name is in disable list', () => {
+    it('should disable all modules within a category when category is disabled via service config', () => {
       disableInstrumentation.init({
+        tracing: {
+          disable: ['logging']
+        }
+      });
+
+      const consoleResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
+      const bunyanResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/bunyan',
+        instrumentationModules: testInstrumentationModules
+      });
+
+      expect(consoleResult).to.be.true;
+      expect(bunyanResult).to.be.true;
+    });
+
+    it('should disable all modules within a category when category is disabled via agent config', () => {
+      disableInstrumentation.activate({
         tracing: {
           disable: ['logging']
         }
@@ -238,12 +272,12 @@ describe('util.disableInstrumentation', () => {
     });
 
     it('should use agent configuration when service configuration is empty', () => {
-      disableInstrumentation.init({
+      disableInstrumentation.init({});
+      disableInstrumentation.activate({
         tracing: {
           disable: ['console']
         }
       });
-      disableInstrumentation.activate({});
 
       const result = disableInstrumentation.isInstrumentationDisabled({
         instrumentationKey: './instrumentation/logging/console',
