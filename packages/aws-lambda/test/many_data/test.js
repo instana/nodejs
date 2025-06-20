@@ -171,7 +171,9 @@ describe('aws-lambda: many data', function () {
         env: {
           INSTANA_AGENT_KEY: instanaAgentKey,
           WITH_CONFIG: 'true',
-          INSTANA_NUMBER_OF_ITERATIONS: 100
+          INSTANA_NUMBER_OF_ITERATIONS: 100,
+          INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
+          INSTANA_TRACING_INITIAL_TRANSMISSION_DELAY: 1000
         }
       });
 

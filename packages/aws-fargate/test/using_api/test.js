@@ -149,11 +149,11 @@ describe('Using the API', function () {
       expect(response.message).to.equal('Hello Fargate!');
 
       expect(response.logs.debug).to.satisfy(logs => {
-        return logs.some(log => /\[\w+\] Sending data to Instana \(\/serverless\/metrics\)/.test(log));
+        return logs.some(log => /\[\w+\] Request options \.*/.test(log));
       });
 
       expect(response.logs.debug).to.satisfy(logs => {
-        return logs.some(log => /\[\w+\] Sent data to Instana \(\/serverless\/metrics\)/.test(log));
+        return logs.some(log => /\[\w+\] The trace request data has been successfully sent to Instana/.test(log));
       });
 
       if (backendUsesHttps) {
