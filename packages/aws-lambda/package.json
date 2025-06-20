@@ -2,7 +2,10 @@
   "name": "@instana/aws-lambda",
   "version": "4.15.3",
   "description": "Instana tracing and monitoring for Node.js based AWS Lambdas",
-  "author": "Bastian Krol <bastian.krol@instana.com>",
+  "author": {
+    "name": "Bastian Krol",
+    "email": "bastian.krol@instana.com"
+  },
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/aws-lambda/README.md",
   "main": "src/index.js",
   "files": [
@@ -13,7 +16,9 @@
     "access": "public"
   },
   "directories": {
-    "test": "test"
+    "lib": "src",
+    "test": "test",
+    "example": "lambdas"
   },
   "repository": {
     "type": "git",
