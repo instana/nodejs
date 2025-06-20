@@ -5,6 +5,7 @@
 'use strict';
 
 const ignoreEndpoints = require('./ignoreEndpoints');
+const disableInstrumentation = require('./disableInstrumentation');
 
 /**
  * @param {import('../../util/normalizeConfig').InstanaConfig} config
@@ -13,3 +14,4 @@ exports.init = function init(config) {
   ignoreEndpoints.init(config);
 };
 exports.ignoreEndpoints = ignoreEndpoints;
+exports.disableInstrumentation = disableInstrumentation;

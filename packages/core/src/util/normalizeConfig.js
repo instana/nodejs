@@ -29,6 +29,7 @@ const configNormalizers = require('./configNormalizers');
  * @property {boolean} [allowRootExitSpan]
  * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
  * @property {boolean} [ignoreEndpointsDisableSuppression]
+ * @property {Array<string>} [disable]
  */
 
 /**
@@ -82,6 +83,7 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
  * @property {AgentTracingKafkaConfig} [kafka]
  * @property {boolean|string} [spanBatchingEnabled]
  * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
+ * @property {Array<string>} [disable]
  */
 
 /**
@@ -548,22 +550,29 @@ function normalizeDisableTracers(config) {
 }
 
 function getDisableTracersFromEnv() {
-  let disableTracersEnvVar;
+  /** @type {string[]} */
+  let disableTracers = [];
 
   if (process.env.INSTANA_TRACING_DISABLE) {
-    disableTracersEnvVar = parseHeadersEnvVar(process.env.INSTANA_TRACING_DISABLE);
+    disableTracers = parseHeadersEnvVar(process.env.INSTANA_TRACING_DISABLE);
   }
   // We deprecated the variable `INSTANA_DISABLED_TRACERS` and will be removed in the next major release(v5).
   else if (process.env.INSTANA_DISABLED_TRACERS) {
-    disableTracersEnvVar = parseHeadersEnvVar(process.env.INSTANA_DISABLED_TRACERS);
+    disableTracers = parseHeadersEnvVar(process.env.INSTANA_DISABLED_TRACERS);
     logger.warn(
       'The environment variable INSTANA_DISABLED_TRACERS is deprecated and will be removed in the next major release. ' +
         'Please use INSTANA_TRACING_DISABLE instead.'
     );
   }
 
-  if (disableTracersEnvVar) {
-    return disableTracersEnvVar.map(key => key.toLowerCase()).filter(key => key.length > 0);
+  if (process.env.INSTANA_TRACING_DISABLE_LOGGING?.trim().toLowerCase() === 'true') {
+    if (!disableTracers.includes('logging')) {
+      disableTracers.push('logging');
+    }
+  }
+
+  if (disableTracers.length > 0) {
+    return disableTracers.map(key => key.trim().toLowerCase()).filter(key => key.length > 0);
   }
 
   return null;

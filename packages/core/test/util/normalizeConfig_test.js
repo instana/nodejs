@@ -34,6 +34,7 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN;
     delete process.env.INSTANA_DISABLED_TRACERS;
     delete process.env.INSTANA_TRACING_DISABLE;
+    delete process.env.INSTANA_TRACING_DISABLE_LOGGING;
   }
 
   it('should apply all defaults', () => {
@@ -328,6 +329,58 @@ describe('util.normalizeConfig', () => {
     process.env.INSTANA_DISABLED_TRACERS = 'postgres';
     const config = normalizeConfig();
     expect(config.tracing.disable).to.deep.equal(['redis']);
+  });
+
+  it('should disable logging when config specifies logging', () => {
+    const config = normalizeConfig({ tracing: { disable: ['logging'] } });
+    expect(config.tracing.disable).to.deep.equal(['logging']);
+  });
+
+  it('should ignore env var INSTANA_TRACING_DISABLE_LOGGING when disable config is provided', () => {
+    process.env.INSTANA_TRACING_DISABLE_LOGGING = 'true';
+    const config = normalizeConfig({ tracing: { disable: ['redis'] } });
+    expect(config.tracing.disable).to.deep.equal(['redis']);
+  });
+
+  it('should disable logging when INSTANA_TRACING_DISABLE_LOGGING=true', () => {
+    process.env.INSTANA_TRACING_DISABLE_LOGGING = 'true';
+    const config = normalizeConfig();
+    expect(config.tracing.disable).to.deep.equal(['logging']);
+  });
+
+  it('should disable logging when INSTANA_TRACING_DISABLE_LOGGING=TRUE (case insensitive)', () => {
+    process.env.INSTANA_TRACING_DISABLE_LOGGING = 'TRUE';
+    const config = normalizeConfig();
+    expect(config.tracing.disable).to.deep.equal(['logging']);
+  });
+
+  it('should disable logging when INSTANA_TRACING_DISABLE_LOGGING has whitespace', () => {
+    process.env.INSTANA_TRACING_DISABLE_LOGGING = '  true  ';
+    const config = normalizeConfig();
+    expect(config.tracing.disable).to.deep.equal(['logging']);
+  });
+
+  it('should combine multiple env vars configs', () => {
+    process.env.INSTANA_TRACING_DISABLE = 'redis,postgres';
+    process.env.INSTANA_TRACING_DISABLE_LOGGING = 'true';
+    const config = normalizeConfig();
+    expect(config.tracing.disable).to.deep.equal(['redis', 'postgres', 'logging']);
+  });
+
+  it('should not disable logging when INSTANA_TRACING_DISABLE_LOGGING=false', () => {
+    process.env.INSTANA_TRACING_DISABLE_LOGGING = 'false';
+    const config = normalizeConfig();
+    expect(config.tracing.disable).not.to.include('logging');
+  });
+
+  it('should return empty array when no config is provided', () => {
+    const config = normalizeConfig();
+    expect(config.tracing.disable).to.be.an('array').that.is.empty;
+  });
+
+  it('should return empty array when empty disable array is provided', () => {
+    const config = normalizeConfig({ tracing: { disable: [] } });
+    expect(config.tracing.disable).to.be.an('array').that.is.empty;
   });
 
   // delete this test when we switch to opt-out
