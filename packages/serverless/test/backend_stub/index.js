@@ -61,7 +61,7 @@ app.post('/serverless/bundle', acceptBundle);
 
 function acceptBundle(req, res) {
   logger.info('POST /serverless/bundle');
-  logger.debug(req.body);
+  logger.debug(`Received ${req.body.spans.length}`);
 
   receivedData.rawBundles.push(req.body);
   if (unresponsive) {

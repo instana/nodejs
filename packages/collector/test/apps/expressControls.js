@@ -36,7 +36,6 @@ exports.start = function start(opts = {}, retryTime = null) {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
   }
 
-  env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS = 0;
   env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;
   env.INSTANA_LOG_LEVEL = 'warn';
 

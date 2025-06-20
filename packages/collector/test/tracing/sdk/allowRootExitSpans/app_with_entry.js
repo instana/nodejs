@@ -12,7 +12,8 @@ process.on('SIGTERM', () => {
 
 const instana = require('../../../../src')({
   tracing: {
-    allowRootExitSpan: true
+    allowRootExitSpan: true,
+    useOpentelemetry: false
   }
 });
 const { delay } = require('../../../../../core/test/test_util');
