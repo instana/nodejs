@@ -9,12 +9,12 @@ set -eo pipefail
 cd `dirname $BASH_SOURCE`
 
 declare -A ABI_VERSIONS=( \
-  ["108"]="18.18.2" \
-  ["115"]="20.3.0" \
-  ["120"]="21.2.0" \
-  ["127"]="22.0.0" \
-  ["131"]="23.0.0" \
-  ["137"]="24.0.0"
+  ["108"]="18" \
+  ["115"]="20" \
+  ["120"]="21" \
+  ["127"]="22" \
+  ["131"]="23" \
+  ["137"]="24"
   )
 
 LIBC_VARIANTS=( \
@@ -22,19 +22,36 @@ LIBC_VARIANTS=( \
   "musl"
 )
 
+ARCHS=( \
+  "x64" \
+  "s390x"
+)
+
 #########
 # Linux #
 #########
 
 if [[ -z "$BUILD_FOR_MACOS" ]]; then
-  source ./build-and-copy-node-modules-linux
 
-  for ABI_VERSION in ${!ABI_VERSIONS[@]}; do
-    NODEJS_VERSION=${ABI_VERSIONS[$ABI_VERSION]}
-    for LIBC in ${LIBC_VARIANTS[@]}; do
-      buildAndCopyModulesLinux $ABI_VERSION $NODEJS_VERSION $LIBC
+  for ARCH in "${ARCHS[@]}"; do
+    if [[ "$ARCH" == "s390x" ]]; then
+        # Make nvm available in this script.
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      
+      source ./build-and-copy-node-modules-linux-390x
+    else
+      source ./build-and-copy-node-modules-linux
+    fi
+
+    for ABI_VERSION in "${!ABI_VERSIONS[@]}"; do
+      NODEJS_VERSION="${ABI_VERSIONS[$ABI_VERSION]}"
+      for LIBC in "${LIBC_VARIANTS[@]}"; do
+        buildAndCopyModulesLinux "$ABI_VERSION" "$NODEJS_VERSION" "$LIBC" "$ARCH"
+      done
     done
   done
+
 fi
 
 #########

@@ -42,7 +42,7 @@ if (!argv.os || (argv.os && argv.os === 'darwin')) {
 // alpine = x64 musl
 // centos7-devtoolset7 = x64 glibc
 if (!argv.os || (argv.os && argv.os === 'linux')) {
-  let archs = ['alpine', 'linux-arm64', 'centos7-devtoolset7', 'linux-armv6', 'linux-armv7'];
+  let archs = ['alpine', 'linux-arm64', 'centos7-devtoolset7', 'linux-armv6', 'linux-armv7', 'linux-s390x'];
   if (argv.arch) {
     archs = argv.arch.split(',');
   }
@@ -50,8 +50,21 @@ if (!argv.os || (argv.os && argv.os === 'linux')) {
   console.log(`\n### Building linux prebuilds for ${targets} ${archs}...\n`);
 
   archs.forEach(image => {
-    childProcess.execSync(`npx prebuildify-cross --modules ../../node_modules -i ${image} -t ${targets} --strip`, {
-      stdio: 'inherit'
-    });
+    if (image === 'linux-s390x') {
+      // Since there is no official s390x image available in prebuildify-cross yet,
+      // we're temporarily using a locally built image. We'll switch to the official image once it's supported.
+      image = 'abhilashsivan/prebuild-linux-s390x:strip';
+
+      childProcess.execSync(
+        `STRIP=s390x-linux-gnu-strip npx prebuildify-cross --modules ../../node_modules -i ${image} -t ${targets}`,
+        {
+          stdio: 'inherit'
+        }
+      );
+    } else {
+      childProcess.execSync(`npx prebuildify-cross --modules ../../node_modules -i ${image} -t ${targets} --strip`, {
+        stdio: 'inherit'
+      });
+    }
   });
 }
