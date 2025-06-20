@@ -48,7 +48,7 @@ app.use(
 );
 
 app.all('/heartbeat', (req, res) => {
-  if (unresponsive) {
+  if (unresponsive || heartbeatResponsiveButUnresponsiveLater) {
     // intentionally not responding for tests that verify proper timeout handling
     return;
   }
@@ -74,11 +74,11 @@ app.delete('/received/spans', (req, res) => {
   return res.sendStatus('204');
 });
 
-// With the exception of /heartbeat, the Lambda extension would forward all requests to the
+// The Lambda extension would forward all requests to the
 // back end (serverless-acceptor). This handler mimicks that behavior.
 app.all('*', (req, res) => {
   const stringifiedBody = JSON.stringify(req.body);
-  logger.debug(`incoming request: ${req.method} ${req.url}: ${stringifiedBody}`);
+  logger.debug(`incoming request: ${req.method} ${req.url}`);
 
   // Store spans so we can later verify that the spans were actually sent to the extension instead of having been
   // sent directly to the back end.
@@ -88,7 +88,7 @@ app.all('*', (req, res) => {
     storeSpans(req.body);
   }
 
-  if (unresponsive || heartbeatResponsiveButUnresponsiveLater) {
+  if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
     return;
   }
