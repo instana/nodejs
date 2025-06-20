@@ -474,11 +474,13 @@ describe('Using the API', function () {
 
         if (isDebug) {
           expect(body.logs.debug).to.satisfy(logs => {
-            return logs.some(log => /\[instana_\w+\] Sending data to Instana \(\/serverless\/bundle\)/.test(log));
+            return logs.some(log => /\[instana_\w+\] Request options \.*/.test(log));
           });
 
           expect(body.logs.debug).to.satisfy(logs => {
-            return logs.some(log => /\[instana_\w+\] Sent data to Instana \(\/serverless\/bundle\)/.test(log));
+            return logs.some(log =>
+              /\[instana_\w+\] The trace request data has been successfully sent to Instana/.test(log)
+            );
           });
 
           // We run http by default in the tests. No need to set INSTANA_DISABLE_CA_CHECK
@@ -499,11 +501,13 @@ describe('Using the API', function () {
           }
         } else {
           expect(body.logs.debug).to.satisfy(logs => {
-            return logs.some(log => /\[instana] Sending data to Instana \(\/serverless\/bundle\)/.test(log));
+            return logs.some(log => /\[instana] Request options \.*/.test(log));
           });
 
           expect(body.logs.debug).to.satisfy(logs => {
-            return logs.some(log => /\[instana] Sent data to Instana \(\/serverless\/bundle\)/.test(log));
+            return logs.some(log =>
+              /\[instana] The trace request data has been successfully sent to Instana/.test(log)
+            );
           });
 
           if (backendUsesHttps) {
