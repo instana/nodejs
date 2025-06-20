@@ -142,15 +142,10 @@ exports.activate = function activate(extraConfig) {
   if (!isFaaS) {
     transmissionTimeoutHandle = setTimeout(transmitSpans, transmissionDelay);
     transmissionTimeoutHandle.unref();
-  }
 
-  if (preActivationCleanupIntervalHandle) {
-    clearInterval(preActivationCleanupIntervalHandle);
-  }
-
-  // NOTE: Faas (currently only Lambda) sends a bundle of spans at the end of the handler execution.
-  //       We don't have to worry about not flushing the spans.
-  if (!isFaaS) {
+    // CASE: Flushing spans before process exits.
+    // NOTE: Faas (currently only Lambda) sends a bundle of spans at the end of the handler execution.
+    //       We don't have to worry about not flushing the spans.
     process.once('beforeExit', async () => {
       transmitSpans();
 
@@ -161,6 +156,10 @@ exports.activate = function activate(extraConfig) {
         }, 500);
       });
     });
+  }
+
+  if (preActivationCleanupIntervalHandle) {
+    clearInterval(preActivationCleanupIntervalHandle);
   }
 };
 

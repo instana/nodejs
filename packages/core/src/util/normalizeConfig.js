@@ -374,12 +374,29 @@ function normalizeActivateImmediately(config) {
 function normalizeTracingTransmission(config) {
   config.tracing.maxBufferedSpans = config.tracing.maxBufferedSpans || defaults.tracing.maxBufferedSpans;
 
-  config.tracing.transmissionDelay = normalizeSingleValue(
-    config.tracing.transmissionDelay,
-    defaults.tracing.transmissionDelay,
-    'config.tracing.transmissionDelay',
-    'INSTANA_TRACING_TRANSMISSION_DELAY'
-  );
+  if (process.env['INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS']) {
+    logger.warn(
+      'The environment variable INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS is deprecated and will be removed in the next major release. ' +
+        'Please use INSTANA_TRACING_TRANSMISSION_DELAY instead.'
+    );
+
+    config.tracing.transmissionDelay = parseInt(process.env['INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS'], 10);
+
+    if (isNaN(config.tracing.transmissionDelay)) {
+      logger.warn(
+        `The value of INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS is not a number. Falling back to the default value ${defaults.tracing.transmissionDelay}.`
+      );
+
+      config.tracing.transmissionDelay = defaults.tracing.transmissionDelay;
+    }
+  } else {
+    config.tracing.transmissionDelay = normalizeSingleValue(
+      config.tracing.transmissionDelay,
+      defaults.tracing.transmissionDelay,
+      'config.tracing.transmissionDelay',
+      'INSTANA_TRACING_TRANSMISSION_DELAY'
+    );
+  }
 
   config.tracing.forceTransmissionStartingAt = normalizeSingleValue(
     config.tracing.forceTransmissionStartingAt,
