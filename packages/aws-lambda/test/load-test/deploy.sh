@@ -88,7 +88,7 @@ if [[ -z $NO_PROMPT ]]; then
   done
 fi  
 
-cd ./lambdas
+cd ../lambdas
 echo "Creating zip file for 'many-spans' lambda..."
 BUILD_LAMBDAS_WITH=local bin/create-zip.sh many-spans
 
