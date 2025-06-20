@@ -13,7 +13,7 @@ Uses the released layer, creates the zip and deploys the fn.
 cd packages/aws-lambda
 awstoken {verifyToken}
 RELEASED=1 INSTANA_ENDPOINT_URL=... INSTANA_AGENT_KEY=... REGION=us-east-1 ./load-test/deploy.sh
-RELEASED=1 node ./load-test/test.js
+RELEASED=1 node ./load-test/run.js
 ./load-test/cleanup.sh
 ```
 
@@ -25,6 +25,6 @@ Publishes the local experimental lambda layer, creates the zip and deploys the f
 cd packages/aws-lambda
 awstoken {verifyToken}
 INSTANA_ENDPOINT_URL=... INSTANA_AGENT_KEY=... REGION=us-east-1 ./load-test/deploy.sh
-REGION=ap-east-1 node ./load-test/test.js
+REGION=ap-east-1 node ./load-test/run.js
 ./load-test/cleanup.sh
 ```
