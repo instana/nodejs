@@ -519,10 +519,10 @@ mochaSuiteFn('tracing/native fetch', function () {
   // When INSTANA_ALLOW_ROOT_EXIT_SPAN is set to TRUE via environment variable
   // it should track the exit spans without parent
   describe('Allow Root Exit Span Case 1', function () {
-    let agentControls;
+    let controls;
 
     before(async () => {
-      agentControls = new ProcessControls({
+      controls = new ProcessControls({
         appPath: path.join(__dirname, 'allowRootExitSpanApp'),
         useGlobalAgent: true,
         env: {
@@ -530,15 +530,15 @@ mochaSuiteFn('tracing/native fetch', function () {
         }
       });
 
-      await agentControls.start(null, null, true);
+      await controls.start(null, null, true);
     });
 
     after(async () => {
-      await agentControls.stop();
+      await controls.stop();
     });
 
     it('should trace exit span without entry span if INSTANA_ALLOW_ROOT_EXIT_SPAN is true', async () => {
-      await delay(2500);
+      await delay(500);
 
       await retry(async () => {
         const spans = await globalAgent.instance.getSpans();
@@ -553,10 +553,10 @@ mochaSuiteFn('tracing/native fetch', function () {
   // When INSTANA_ALLOW_ROOT_EXIT_SPAN is set to FALSE via environment variable
   // it should not track the exit spans without parent
   describe('Allow Root Exit Span Case 2', function () {
-    let agentControls;
+    let controls;
 
     before(async () => {
-      agentControls = new ProcessControls({
+      controls = new ProcessControls({
         appPath: path.join(__dirname, 'allowRootExitSpanApp'),
         useGlobalAgent: true,
         env: {
@@ -564,11 +564,11 @@ mochaSuiteFn('tracing/native fetch', function () {
         }
       });
 
-      await agentControls.start(null, null, true);
+      await controls.start(null, null, true);
     });
 
     after(async () => {
-      await agentControls.stop();
+      await controls.stop();
     });
 
     it('should not trace exit span without entry span if INSTANA_ALLOW_ROOT_EXIT_SPAN is false', async () => {
