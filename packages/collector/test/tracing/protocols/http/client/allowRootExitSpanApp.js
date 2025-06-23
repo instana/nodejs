@@ -12,15 +12,16 @@ process.on('SIGTERM', () => {
 
 require('../../../../..')();
 const { delay } = require('../../../../../../core/test/test_util');
-
 const fetch = require('node-fetch-v2');
+
+// eslint-disable-next-line no-console
+console.log('Starting allowRootExitSpanApp...');
 
 const main = async () => {
   try {
     setTimeout(async () => {
-      await fetch('https://example.com');
-
-      await fetch('https://www.example.com');
+      await fetch('http://localhost');
+      await fetch('http://localhost');
     }, 100);
   } catch (err) {
     /* eslint-disable no-console */
@@ -41,6 +42,9 @@ const app = async () => {
     // eslint-disable-next-line no-await-in-loop
     await delay(500);
   }
+
+  // eslint-disable-next-line no-console
+  console.log('allowRootExitSpanApp finished');
 };
 
 app();

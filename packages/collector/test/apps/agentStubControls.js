@@ -59,6 +59,9 @@ class AgentStubControls {
 
   stopAgent() {
     this.agentStub.kill();
+
+    // eslint-disable-next-line no-console
+    console.log(`[AgentStubControls] Stopped agent stub with pid ${this.agentStub.pid}`);
   }
 
   getPort() {
