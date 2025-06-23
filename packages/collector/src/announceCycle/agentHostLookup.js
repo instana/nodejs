@@ -67,6 +67,8 @@ function enter(ctx) {
     );
 
     readDefaultGateway(function onReadDefaultGateway(getDefaultGatewayErr, defaultGateway) {
+      // eslint-disable-next-line no-console
+      console.log(getDefaultGatewayErr, defaultGateway);
       if (getDefaultGatewayErr) {
         logger.warn(
           `The Instana host agent cannot be reached via ${agentHost}:${agentOpts.port} and the default gateway ` +
