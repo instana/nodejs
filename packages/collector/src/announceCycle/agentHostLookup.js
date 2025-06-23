@@ -68,7 +68,6 @@ function enter(ctx) {
 
     readDefaultGateway(function onReadDefaultGateway(getDefaultGatewayErr, defaultGateway) {
       // eslint-disable-next-line no-console
-      console.log(getDefaultGatewayErr, defaultGateway);
       if (getDefaultGatewayErr) {
         logger.warn(
           `The Instana host agent cannot be reached via ${agentHost}:${agentOpts.port} and the default gateway ` +
@@ -85,7 +84,10 @@ function enter(ctx) {
       }
 
       checkHost(defaultGateway, function onCheckHostDefaultGateway(defaultGatewayCheckErr) {
+        // eslint-disable-next-line no-console
+        console.log(defaultGatewayCheckErr);
         if (!defaultGatewayCheckErr) {
+          console.log('HIER1');
           setAgentHost(defaultGateway);
           ctx.transitionTo('unannounced');
           return;
@@ -99,6 +101,8 @@ function enter(ctx) {
             )}. The Instana host agent might not be ready yet, scheduling another attempt to establish a connection ` +
             `in ${retryTimeoutMillis} ms.`
         );
+
+        console.log('HERE2');
         setTimeout(enter, retryTimeoutMillis, ctx).unref();
       });
     });
