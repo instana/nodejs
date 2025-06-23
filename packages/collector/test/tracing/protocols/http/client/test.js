@@ -53,6 +53,10 @@ mochaSuiteFn('tracing/http client', function () {
       await sdkControls.start(null, null, true);
     });
 
+    after(async () => {
+      await sdkControls.stop();
+    });
+
     it('should not trace example.com exit span without entry span', async () => {
       await delay(2500);
 
@@ -110,6 +114,14 @@ mochaSuiteFn('tracing/http client', function () {
       await agentControls.start(null, null, true);
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await agentControls.stop();
+    });
+
     it('should trace exit span without entry span if INSTANA_ALLOW_ROOT_EXIT_SPAN is true', async () => {
       await delay(2500);
 
@@ -137,6 +149,14 @@ mochaSuiteFn('tracing/http client', function () {
       });
 
       await agentControls.start(null, null, true);
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await agentControls.stop();
     });
 
     it('should not trace exit span without entry span if INSTANA_ALLOW_ROOT_EXIT_SPAN is false', async () => {

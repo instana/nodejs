@@ -533,6 +533,14 @@ mochaSuiteFn('tracing/native fetch', function () {
       await agentControls.start(null, null, true);
     });
 
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await agentControls.stop();
+    });
+
     it('should trace exit span without entry span if INSTANA_ALLOW_ROOT_EXIT_SPAN is true', async () => {
       await delay(2500);
 
@@ -561,6 +569,14 @@ mochaSuiteFn('tracing/native fetch', function () {
       });
 
       await agentControls.start(null, null, true);
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await agentControls.stop();
     });
 
     it('should not trace exit span without entry span if INSTANA_ALLOW_ROOT_EXIT_SPAN is false', async () => {
