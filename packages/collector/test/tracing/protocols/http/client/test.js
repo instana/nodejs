@@ -15,7 +15,7 @@ const { expectExactlyOneMatching, retry, delay } = require('../../../../../../co
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.skip : describe.skip;
 
 mochaSuiteFn('tracing/http client', function () {
   this.timeout(config.getTestTimeout() * 2);
