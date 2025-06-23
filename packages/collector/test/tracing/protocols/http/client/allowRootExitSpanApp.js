@@ -6,6 +6,8 @@
 
 // NOTE: c8 bug https://github.com/bcoe/c8/issues/166
 process.on('SIGTERM', () => {
+  // eslint-disable-next-line no-console
+  console.log('SIGTERM received, disconnecting process...');
   process.disconnect();
   process.exit(0);
 });
@@ -52,6 +54,9 @@ const app = async () => {
 
   // eslint-disable-next-line no-console
   console.log('allowRootExitSpanApp finished');
+
+  console.log(process._getActiveHanldles());
+  console.log(process._getActiveRequests());
 };
 
 app();
