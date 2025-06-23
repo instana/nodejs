@@ -46,8 +46,11 @@ const app = async () => {
   console.log('allowRootExitSpanApp finished');
 
   // TODO: Our tracer does not support exiting without a hard exit (restart, process.exit, kill etc.)
-  //       For workers we have to add e.g. `instana.sdk.shutdown()` because we don't know if
+  //       For workers we would have to add e.g. `instana.sdk.shutdown()` because we don't know if
   //       the worker is about to end or not.
+  //       We need this manual `process.exit(0)` here because the tracer will
+  //       continue with its tasks (e.g. connecting to the agent) and this will block
+  //       the process from exiting.
   process.exit(0);
 };
 
