@@ -67,7 +67,6 @@ function enter(ctx) {
     );
 
     readDefaultGateway(function onReadDefaultGateway(getDefaultGatewayErr, defaultGateway) {
-      // eslint-disable-next-line no-console
       if (getDefaultGatewayErr) {
         logger.warn(
           `The Instana host agent cannot be reached via ${agentHost}:${agentOpts.port} and the default gateway ` +
@@ -166,11 +165,12 @@ function checkHost(host, cb) {
     return;
   }
 
+  // TODO:
   // We have to unref the socket to avoid keeping the Node.js process alive
   // if the customer app exits during the connection attempt.
-  req.on('socket', socket => {
-    socket.unref();
-  });
+  // req.on('socket', socket => {
+  //   socket.unref();
+  // });
 
   req.on('timeout', function onTimeout() {
     handleCallback(
