@@ -162,6 +162,10 @@ function checkHost(host, cb) {
     return;
   }
 
+  req.on('socket', socket => {
+    socket.unref();
+  });
+
   req.on('timeout', function onTimeout() {
     handleCallback(
       new Error(`The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has timed out`)
