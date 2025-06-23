@@ -40,7 +40,6 @@ mochaSuiteFn('tracing/http client', function () {
     registerSuperagentTest.call(this);
   });
 
-  // NOT THIS!
   describe('SDK CASE 1', function () {
     let sdkControls;
 
@@ -64,7 +63,6 @@ mochaSuiteFn('tracing/http client', function () {
     });
   });
 
-  // NOT THIS!
   describe('SDK CASE 2', function () {
     let sdkControls;
 
@@ -97,7 +95,6 @@ mochaSuiteFn('tracing/http client', function () {
 
   // When INSTANA_ALLOW_ROOT_EXIT_SPAN is set to TRUE via environment variable
   // it should track the exit spans without parent
-  // Yes.
   describe('Allow Root Exit Span Case 1', function () {
     let agentControls;
 
@@ -127,7 +124,6 @@ mochaSuiteFn('tracing/http client', function () {
 
   // When INSTANA_ALLOW_ROOT_EXIT_SPAN is set to FALSE via environment variable
   // it should not track the exit spans without parent
-  // Yes.
   describe('Allow Root Exit Span Case 2', function () {
     let agentControls;
 

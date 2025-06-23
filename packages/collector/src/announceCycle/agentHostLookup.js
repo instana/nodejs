@@ -84,10 +84,7 @@ function enter(ctx) {
       }
 
       checkHost(defaultGateway, function onCheckHostDefaultGateway(defaultGatewayCheckErr) {
-        // eslint-disable-next-line no-console
-        console.log(defaultGatewayCheckErr);
         if (!defaultGatewayCheckErr) {
-          console.log('HIER1');
           setAgentHost(defaultGateway);
           ctx.transitionTo('unannounced');
           return;
@@ -102,7 +99,6 @@ function enter(ctx) {
             `in ${retryTimeoutMillis} ms.`
         );
 
-        console.log('HERE2');
         setTimeout(enter, retryTimeoutMillis, ctx).unref();
       });
     });

@@ -18,11 +18,6 @@ const fetch = require('node-fetch-v2');
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-process.on('beforeExit', () => {
-  // eslint-disable-next-line no-console
-  console.log('beforeExit event triggered, exiting...');
-});
-
 // eslint-disable-next-line no-console
 console.log('Starting allowRootExitSpanApp...');
 
