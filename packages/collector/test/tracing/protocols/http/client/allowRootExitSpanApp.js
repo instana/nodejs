@@ -6,8 +6,6 @@
 
 // NOTE: c8 bug https://github.com/bcoe/c8/issues/166
 process.on('SIGTERM', () => {
-  // eslint-disable-next-line no-console
-  console.log('SIGTERM received, disconnecting process...');
   process.disconnect();
   process.exit(0);
 });
@@ -24,9 +22,8 @@ console.log('Starting allowRootExitSpanApp...');
 const main = async () => {
   try {
     await delay(100);
-
-    await fetch(`http://localhost:${agentPort}`);
-    await fetch(`http://localhost:${agentPort}`);
+    await fetch('https://example.com');
+    await fetch('https://www.example.com');
   } catch (err) {
     /* eslint-disable no-console */
     console.log(err);
