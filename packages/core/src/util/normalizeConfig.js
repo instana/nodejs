@@ -261,8 +261,16 @@ function normalizeTracingEnabled(config) {
   if (config.tracing.enabled === true) {
     return;
   }
-  if (process.env['INSTANA_DISABLE_TRACING'] === 'true') {
+  if (process.env['INSTANA_TRACING_DISABLE'] === 'true') {
     logger.info('Not enabling tracing as it is explicitly disabled via environment variable INSTANA_DISABLE_TRACING.');
+    config.tracing.enabled = false;
+    return;
+  } else if (process.env['INSTANA_DISABLE_TRACING'] === 'true') {
+    logger.info('Not enabling tracing as it is explicitly disabled via environment variable INSTANA_DISABLE_TRACING.');
+    logger.warn(
+      'The environment variable INSTANA_DISABLE_TRACING is deprecated and will be removed in the next major release. ' +
+        'Please use INSTANA_TRACING_DISABLE instead.'
+    );
     config.tracing.enabled = false;
     return;
   }
@@ -550,15 +558,15 @@ function normalizeDisableTracers(config) {
 function getDisableTracersFromEnv() {
   let disableTracersEnvVar;
 
-  if (process.env.INSTANA_TRACING_DISABLE) {
-    disableTracersEnvVar = parseHeadersEnvVar(process.env.INSTANA_TRACING_DISABLE);
+  if (process.env.INSTANA_TRACING_DISABLE_ENTITIES) {
+    disableTracersEnvVar = parseHeadersEnvVar(process.env.INSTANA_TRACING_DISABLE_ENTITIES);
   }
   // We deprecated the variable `INSTANA_DISABLED_TRACERS` and will be removed in the next major release(v5).
   else if (process.env.INSTANA_DISABLED_TRACERS) {
     disableTracersEnvVar = parseHeadersEnvVar(process.env.INSTANA_DISABLED_TRACERS);
     logger.warn(
       'The environment variable INSTANA_DISABLED_TRACERS is deprecated and will be removed in the next major release. ' +
-        'Please use INSTANA_TRACING_DISABLE instead.'
+        'Please use INSTANA_TRACING_DISABLE_ENTITIES instead.'
     );
   }
 

@@ -18,6 +18,7 @@ describe('util.normalizeConfig', () => {
   function resetEnv() {
     delete process.env.INSTANA_DISABLE_AUTO_INSTR;
     delete process.env.INSTANA_DISABLE_TRACING;
+    delete process.env.INSTANA_TRACING_DISABLE;
     delete process.env.INSTANA_TRACE_IMMEDIATELY;
     delete process.env.INSTANA_EXTRA_HTTP_HEADERS;
     delete process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT;
@@ -33,7 +34,7 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_PACKAGE_JSON_PATH;
     delete process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN;
     delete process.env.INSTANA_DISABLED_TRACERS;
-    delete process.env.INSTANA_TRACING_DISABLE;
+    delete process.env.INSTANA_TRACING_DISABLE_ENTITIES;
   }
 
   it('should apply all defaults', () => {
@@ -95,8 +96,15 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.automaticTracingEnabled).to.be.false;
   });
 
-  it('should disable tracing via INSTANA_DISABLE_TRACING', () => {
+  it('should disable tracing via depreacted INSTANA_DISABLE_TRACING', () => {
     process.env.INSTANA_DISABLE_TRACING = true;
+    const config = normalizeConfig();
+    expect(config.tracing.enabled).to.be.false;
+    expect(config.tracing.automaticTracingEnabled).to.be.false;
+  });
+
+  it('should disable tracing via INSTANA_TRACING_DISABLE', () => {
+    process.env.INSTANA_TRACING_DISABLE = true;
     const config = normalizeConfig();
     expect(config.tracing.enabled).to.be.false;
     expect(config.tracing.automaticTracingEnabled).to.be.false;
@@ -295,8 +303,8 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.disable).to.deep.equal(['graphql', 'grpc']);
   });
 
-  it('config should take precedence over INSTANA_TRACING_DISABLE when disabling individual tracers', () => {
-    process.env.INSTANA_TRACING_DISABLE = 'foo, bar';
+  it('config should take precedence over INSTANA_TRACING_DISABLE_ENTITIES when disabling individual tracers', () => {
+    process.env.INSTANA_TRACING_DISABLE_ENTITIES = 'foo, bar';
     const config = normalizeConfig({
       tracing: {
         disable: ['baz', 'fizz']
@@ -305,26 +313,26 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.disable).to.deep.equal(['baz', 'fizz']);
   });
 
-  it('should disable multiple tracers via env var INSTANA_TRACING_DISABLE', () => {
-    process.env.INSTANA_TRACING_DISABLE = 'graphQL   , GRPC, http';
+  it('should disable multiple tracers via env var INSTANA_TRACING_DISABLE_ENTITIES', () => {
+    process.env.INSTANA_TRACING_DISABLE_ENTITIES = 'graphQL   , GRPC, http';
     const config = normalizeConfig();
     expect(config.tracing.disable).to.deep.equal(['graphql', 'grpc', 'http']);
   });
 
-  it('should handle single tracer via INSTANA_TRACING_DISABLE', () => {
-    process.env.INSTANA_TRACING_DISABLE = 'console';
+  it('should handle single tracer via INSTANA_TRACING_DISABLE_ENTITIES', () => {
+    process.env.INSTANA_TRACING_DISABLE_ENTITIES = 'console';
     const config = normalizeConfig();
     expect(config.tracing.disable).to.deep.equal(['console']);
   });
 
   it('should trim whitespace from tracer names', () => {
-    process.env.INSTANA_TRACING_DISABLE = '  graphql  ,  grpc  ';
+    process.env.INSTANA_TRACING_DISABLE_ENTITIES = '  graphql  ,  grpc  ';
     const config = normalizeConfig();
     expect(config.tracing.disable).to.deep.equal(['graphql', 'grpc']);
   });
 
-  it('should prefer INSTANA_TRACING_DISABLE over INSTANA_DISABLED_TRACERS', () => {
-    process.env.INSTANA_TRACING_DISABLE = 'redis';
+  it('should prefer INSTANA_TRACING_DISABLE_ENTITIES over INSTANA_DISABLED_TRACERS', () => {
+    process.env.INSTANA_TRACING_DISABLE_ENTITIES = 'redis';
     process.env.INSTANA_DISABLED_TRACERS = 'postgres';
     const config = normalizeConfig();
     expect(config.tracing.disable).to.deep.equal(['redis']);
