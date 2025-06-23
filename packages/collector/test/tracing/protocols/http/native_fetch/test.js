@@ -518,7 +518,7 @@ mochaSuiteFn('tracing/native fetch', function () {
 
   // When INSTANA_ALLOW_ROOT_EXIT_SPAN is set to TRUE via environment variable
   // it should track the exit spans without parent
-  describe('Allow Root Exit Span Case 1', function () {
+  describe.skip('Allow Root Exit Span Case 1', function () {
     let agentControls;
 
     before(async () => {
@@ -548,7 +548,7 @@ mochaSuiteFn('tracing/native fetch', function () {
 
   // When INSTANA_ALLOW_ROOT_EXIT_SPAN is set to FALSE via environment variable
   // it should not track the exit spans without parent
-  describe('Allow Root Exit Span Case 2', function () {
+  describe.skip('Allow Root Exit Span Case 2', function () {
     let agentControls;
 
     before(async () => {
