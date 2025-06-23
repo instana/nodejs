@@ -14,15 +14,17 @@ require('../../../../..')();
 const { delay } = require('../../../../../../core/test/test_util');
 const fetch = require('node-fetch-v2');
 
+const agentPort = process.env.INSTANA_AGENT_PORT;
+
 // eslint-disable-next-line no-console
 console.log('Starting allowRootExitSpanApp...');
 
 const main = async () => {
   try {
-    setTimeout(async () => {
-      await fetch('http://localhost');
-      await fetch('http://localhost');
-    }, 100);
+    await delay(100);
+
+    await fetch(`http://localhost:${agentPort}`);
+    await fetch(`http://localhost:${agentPort}`);
   } catch (err) {
     /* eslint-disable no-console */
     console.log(err);
