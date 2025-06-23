@@ -21,7 +21,7 @@ const configNormalizers = require('./configNormalizers');
  * @property {number} [transmissionDelay]
  * @property {number} [stackTraceLength]
  * @property {HTTPTracingOptions} [http]
- * @property {Array<string>} [disable]
+ * @property {Array<string> | boolean} [disable]
  * @property {Array<string>} [disabledTracers]
  * @property {boolean} [spanBatchingEnabled]
  * @property {boolean} [disableW3cTraceCorrelation]
@@ -521,9 +521,9 @@ function normalizeNumericalStackTraceLength(numericalLength) {
  * @param {InstanaConfig} config
  */
 function normalizeDisableTracers(config) {
-  // Case 1: process in-code configuration
-  // Note: We maintain backward compatibility with the deprecated 'disabledTracers' property
-  // but internally standardize on 'disable'. The old property will be removed in v5.
+  // Case 1: Handle legacy in-code configuration
+  // The 'disabledTracers' property is deprecated and will be removed in v5.
+  // Internally, we now use the 'disable' property.
   if (config.tracing.disabledTracers) {
     logger.warn(
       'The configuration property "tracing.disabledTracers" is deprecated and will be removed in the next major release. ' +
@@ -537,13 +537,22 @@ function normalizeDisableTracers(config) {
     delete config.tracing.disabledTracers;
   }
 
-  // case 2: Check environment variables if available
+  // case 2: Disable all tracing if explicitly set  'disable' to true
+  // internally, we use the 'enabled' property to control if tracing is disabled.
+  if (config.tracing.disable == true) {
+    config.tracing.enabled = false;
+    return;
+  }
+
+  // case 3: Load disable configuration from environment or use defaults
   if (!config.tracing.disable) {
     // Check environment variables first, fall back to defaults
     config.tracing.disable = getDisableTracersFromEnv() || defaults.tracing.disable;
   }
 
-  if (!Array.isArray(config.tracing.disable)) {
+  if (Array.isArray(config.tracing.disable)) {
+    config.tracing.disable = config.tracing.disable.map(s => s.toLowerCase()).filter(s => s.length > 0);
+  } else {
     logger.warn(
       `Invalid configuration: config.tracing.disable is not an array, the value will be ignored: ${JSON.stringify(
         config.tracing.disable
@@ -551,8 +560,6 @@ function normalizeDisableTracers(config) {
     );
     config.tracing.disable = defaults.tracing.disable;
   }
-
-  config.tracing.disable = config.tracing.disable.map(s => s.toLowerCase()).filter(s => s.length > 0);
 }
 
 function getDisableTracersFromEnv() {

@@ -18,7 +18,9 @@ describe('util.normalizeConfig', () => {
   function resetEnv() {
     delete process.env.INSTANA_DISABLE_AUTO_INSTR;
     delete process.env.INSTANA_DISABLE_TRACING;
+    delete process.env.INSTANA_DISABLED_TRACERS;
     delete process.env.INSTANA_TRACING_DISABLE;
+    delete process.env.INSTANA_TRACING_DISABLE_ENTITIES;
     delete process.env.INSTANA_TRACE_IMMEDIATELY;
     delete process.env.INSTANA_EXTRA_HTTP_HEADERS;
     delete process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT;
@@ -33,8 +35,6 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_KAFKA_TRACE_CORRELATION;
     delete process.env.INSTANA_PACKAGE_JSON_PATH;
     delete process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN;
-    delete process.env.INSTANA_DISABLED_TRACERS;
-    delete process.env.INSTANA_TRACING_DISABLE_ENTITIES;
   }
 
   it('should apply all defaults', () => {
@@ -90,7 +90,13 @@ describe('util.normalizeConfig', () => {
     expect(config.metrics.timeBetweenHealthcheckCalls).to.equal(9876);
   });
 
-  it('should disable tracing', () => {
+  it('should disable tracing with enabled: false', () => {
+    const config = normalizeConfig({ tracing: { enabled: false } });
+    expect(config.tracing.enabled).to.be.false;
+    expect(config.tracing.automaticTracingEnabled).to.be.false;
+  });
+
+  it('should disable tracing with disable: true', () => {
     const config = normalizeConfig({ tracing: { enabled: false } });
     expect(config.tracing.enabled).to.be.false;
     expect(config.tracing.automaticTracingEnabled).to.be.false;
