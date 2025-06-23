@@ -25,6 +25,7 @@ if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe;
 }
 
+// NOT THIS!
 mochaSuiteFn('tracing/native fetch', function () {
   this.timeout(config.getTestTimeout() * 2);
 
