@@ -40,7 +40,7 @@ mochaSuiteFn('tracing/http client', function () {
     registerSuperagentTest.call(this);
   });
 
-  describe.skip('SDK CASE 1', function () {
+  describe('SDK CASE 1', function () {
     let sdkControls;
 
     before(async () => {
