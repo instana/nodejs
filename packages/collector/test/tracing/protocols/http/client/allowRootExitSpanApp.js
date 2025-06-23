@@ -55,7 +55,7 @@ const app = async () => {
   // eslint-disable-next-line no-console
   console.log('allowRootExitSpanApp finished');
 
-  console.log(process._getActiveHanldles());
+  console.log(process._getActiveHandles());
   console.log(process._getActiveRequests());
 };
 
