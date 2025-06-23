@@ -126,6 +126,14 @@ function checkHost(host, cb) {
 
   let req;
   try {
+    /**
+     * TODO:
+     * If the customer app ends during the connection attempt and we are currently waiting
+     * for a response, the Node.js process will not exit, because the TCP Connection is
+     * still open and if we are hitting a timeout, the request goes into a loop of
+     * establishing a connection, timing out, and trying to establish a connection again.
+     * Only Ctrl+C or process.kill will stop the process.
+     */
     req = http.request(
       {
         host,
@@ -162,6 +170,8 @@ function checkHost(host, cb) {
     return;
   }
 
+  // We have to unref the socket to avoid keeping the Node.js process alive
+  // if the customer app exits during the connection attempt.
   req.on('socket', socket => {
     socket.unref();
   });

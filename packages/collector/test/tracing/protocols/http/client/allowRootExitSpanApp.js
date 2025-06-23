@@ -55,8 +55,10 @@ const app = async () => {
   // eslint-disable-next-line no-console
   console.log('allowRootExitSpanApp finished');
 
-  console.log(process._getActiveHandles());
-  console.log(process._getActiveRequests());
+  // TODO: Our tracer does not support exiting without a hard exit (restart, process.exit, etc.)
+  //       For workers we have to add e.g. `sdk.shutdown()` because we don't know if
+  //       the worker is about to end or not.
+  process.exit(0);
 };
 
 app();
