@@ -95,7 +95,7 @@ mochaSuiteFn('tracing/http client', function () {
 
   // When INSTANA_ALLOW_ROOT_EXIT_SPAN is set to TRUE via environment variable
   // it should track the exit spans without parent
-  describe.skip('Allow Root Exit Span Case 1', function () {
+  describe('Allow Root Exit Span Case 1', function () {
     let agentControls;
 
     before(async () => {
