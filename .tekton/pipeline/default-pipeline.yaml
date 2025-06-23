@@ -67,7 +67,7 @@ spec:
         - name: branch
           value: $(params.branch)
         - name: revision
-          value: $(params.revision)
+          value: $(params.commit-id)
         - name: pr-number
           value: $(params.pr-number)          
         - name: pipeline-debug
