@@ -45,8 +45,8 @@ const app = async () => {
   // eslint-disable-next-line no-console
   console.log('allowRootExitSpanApp finished');
 
-  // TODO: Our tracer does not support exiting without a hard exit (restart, process.exit, etc.)
-  //       For workers we have to add e.g. `sdk.shutdown()` because we don't know if
+  // TODO: Our tracer does not support exiting without a hard exit (restart, process.exit, kill etc.)
+  //       For workers we have to add e.g. `instana.sdk.shutdown()` because we don't know if
   //       the worker is about to end or not.
   process.exit(0);
 };

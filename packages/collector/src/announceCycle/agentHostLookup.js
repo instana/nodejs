@@ -127,7 +127,14 @@ function checkHost(host, cb) {
      * for a response, the Node.js process will not exit, because the TCP Connection is
      * still open and if we are hitting a timeout, the request goes into a loop of
      * establishing a connection, timing out, and trying to establish a connection again.
-     * Only Ctrl+C or process.kill will stop the process.
+     * Only Ctrl+C or process.kill will stop the process. Therefor we would
+     * have to add a way to "end" the tracer via the SDK, which stops any retries
+     * and/or open sockets/connections. To unref sockets, we could use
+     * `req.on('socket', socket => socket.unref())`, but that would not fully solve
+     * the issue, because the current TCP connection would still block the
+     * process from exiting.
+     *
+     * See packages/collector/test/tracing/protocols/http/client/allowRootExitSpanApp.js
      */
     req = http.request(
       {
@@ -164,13 +171,6 @@ function checkHost(host, cb) {
     );
     return;
   }
-
-  // TODO:
-  // We have to unref the socket to avoid keeping the Node.js process alive
-  // if the customer app exits during the connection attempt.
-  // req.on('socket', socket => {
-  //   socket.unref();
-  // });
 
   req.on('timeout', function onTimeout() {
     handleCallback(
