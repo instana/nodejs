@@ -533,10 +533,6 @@ mochaSuiteFn('tracing/native fetch', function () {
       await agentControls.start(null, null, true);
     });
 
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
     after(async () => {
       await agentControls.stop();
     });
@@ -569,10 +565,6 @@ mochaSuiteFn('tracing/native fetch', function () {
       });
 
       await agentControls.start(null, null, true);
-    });
-
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {

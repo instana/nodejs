@@ -114,10 +114,6 @@ mochaSuiteFn('tracing/http client', function () {
       await agentControls.start(null, null, true);
     });
 
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
     after(async () => {
       await agentControls.stop();
     });
@@ -149,10 +145,6 @@ mochaSuiteFn('tracing/http client', function () {
       });
 
       await agentControls.start(null, null, true);
-    });
-
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
     });
 
     after(async () => {
