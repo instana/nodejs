@@ -15,7 +15,7 @@ const { expectExactlyOneMatching, retry, delay } = require('../../../../../../co
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.skip : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/http client', function () {
   this.timeout(config.getTestTimeout() * 2);
@@ -40,7 +40,7 @@ mochaSuiteFn('tracing/http client', function () {
     registerSuperagentTest.call(this);
   });
 
-  describe('SDK CASE 1', function () {
+  describe.skip('SDK CASE 1', function () {
     let sdkControls;
 
     before(async () => {
@@ -95,7 +95,7 @@ mochaSuiteFn('tracing/http client', function () {
 
   // When INSTANA_ALLOW_ROOT_EXIT_SPAN is set to TRUE via environment variable
   // it should track the exit spans without parent
-  describe('Allow Root Exit Span Case 1', function () {
+  describe.skip('Allow Root Exit Span Case 1', function () {
     let agentControls;
 
     before(async () => {
@@ -124,7 +124,7 @@ mochaSuiteFn('tracing/http client', function () {
 
   // When INSTANA_ALLOW_ROOT_EXIT_SPAN is set to FALSE via environment variable
   // it should not track the exit spans without parent
-  describe('Allow Root Exit Span Case 2', function () {
+  describe.skip('Allow Root Exit Span Case 2', function () {
     let agentControls;
 
     before(async () => {
