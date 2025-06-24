@@ -16,6 +16,7 @@ describe('util.normalizeConfig', () => {
   afterEach(resetEnv);
 
   function resetEnv() {
+    delete process.env.INSTANA_DISABLED_TRACERS;
     delete process.env.INSTANA_DISABLE_AUTO_INSTR;
     delete process.env.INSTANA_DISABLE_TRACING;
     delete process.env.INSTANA_TRACE_IMMEDIATELY;
@@ -32,8 +33,6 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_KAFKA_TRACE_CORRELATION;
     delete process.env.INSTANA_PACKAGE_JSON_PATH;
     delete process.env.INSTANA_ALLOW_ROOT_EXIT_SPAN;
-    delete process.env.INSTANA_DISABLED_TRACERS;
-    delete process.env.INSTANA_DISABLE_TRACERS;
   }
 
   it('should apply all defaults', () => {
@@ -255,27 +254,27 @@ describe('util.normalizeConfig', () => {
 
   it('should not disable individual tracers by default', () => {
     const config = normalizeConfig();
-    expect(config.tracing.disableTracers).to.deep.equal([]);
+    expect(config.tracing.disabledTracers).to.deep.equal([]);
   });
 
-  it('should disable individual tracers via disabledTracers config', () => {
+  it('should disable individual tracers via config', () => {
     const config = normalizeConfig({
       tracing: {
         disabledTracers: ['graphQL', 'GRPC']
       }
     });
     // values will be normalized to lower case
-    expect(config.tracing.disableTracers).to.deep.equal(['graphql', 'grpc']);
+    expect(config.tracing.disabledTracers).to.deep.equal(['graphql', 'grpc']);
   });
 
   it('should disable individual tracers via env var', () => {
     process.env.INSTANA_DISABLED_TRACERS = 'graphQL   , GRPC';
     const config = normalizeConfig();
     // values will be normalized to lower case
-    expect(config.tracing.disableTracers).to.deep.equal(['graphql', 'grpc']);
+    expect(config.tracing.disabledTracers).to.deep.equal(['graphql', 'grpc']);
   });
 
-  it('config should take precedence over INSTANA_DISABLED_TRACERS when disabling individual tracers', () => {
+  it('config should take precedence over env vars when disabling individual tracers', () => {
     process.env.INSTANA_DISABLED_TRACERS = 'foo, bar';
     const config = normalizeConfig({
       tracing: {
@@ -283,51 +282,7 @@ describe('util.normalizeConfig', () => {
       }
     });
     // values will be normalized to lower case
-    expect(config.tracing.disableTracers).to.deep.equal(['baz', 'fizz']);
-  });
-
-  it('should disable individual tracers via disableTracers config', () => {
-    const config = normalizeConfig({
-      tracing: {
-        disableTracers: ['graphQL', 'GRPC']
-      }
-    });
-    expect(config.tracing.disableTracers).to.deep.equal(['graphql', 'grpc']);
-  });
-
-  it('config should take precedence over INSTANA_DISABLE_TRACERS when disabling individual tracers', () => {
-    process.env.INSTANA_DISABLE_TRACERS = 'foo, bar';
-    const config = normalizeConfig({
-      tracing: {
-        disableTracers: ['baz', 'fizz']
-      }
-    });
-    expect(config.tracing.disableTracers).to.deep.equal(['baz', 'fizz']);
-  });
-
-  it('should disable multiple tracers via env var INSTANA_DISABLE_TRACERS', () => {
-    process.env.INSTANA_DISABLE_TRACERS = 'graphQL   , GRPC, http';
-    const config = normalizeConfig();
-    expect(config.tracing.disableTracers).to.deep.equal(['graphql', 'grpc', 'http']);
-  });
-
-  it('should handle single tracer via INSTANA_DISABLE_TRACERS', () => {
-    process.env.INSTANA_DISABLE_TRACERS = 'console';
-    const config = normalizeConfig();
-    expect(config.tracing.disableTracers).to.deep.equal(['console']);
-  });
-
-  it('should trim whitespace from tracer names', () => {
-    process.env.INSTANA_DISABLE_TRACERS = '  graphql  ,  grpc  ';
-    const config = normalizeConfig();
-    expect(config.tracing.disableTracers).to.deep.equal(['graphql', 'grpc']);
-  });
-
-  it('should prefer INSTANA_DISABLE_TRACERS over INSTANA_DISABLED_TRACERS', () => {
-    process.env.INSTANA_DISABLE_TRACERS = 'redis';
-    process.env.INSTANA_DISABLED_TRACERS = 'postgres';
-    const config = normalizeConfig();
-    expect(config.tracing.disableTracers).to.deep.equal(['redis']);
+    expect(config.tracing.disabledTracers).to.deep.equal(['baz', 'fizz']);
   });
 
   // delete this test when we switch to opt-out
@@ -721,7 +676,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.transmissionDelay).to.equal(1000);
     expect(config.tracing.forceTransmissionStartingAt).to.equal(500);
     expect(config.tracing.maxBufferedSpans).to.equal(1000);
-    expect(config.tracing.disableTracers).to.deep.equal([]);
+    expect(config.tracing.disabledTracers).to.deep.equal([]);
     expect(config.tracing.http).to.be.an('object');
     expect(config.tracing.http.extraHttpHeadersToCapture).to.be.empty;
     expect(config.tracing.http.extraHttpHeadersToCapture).to.be.an('array');
