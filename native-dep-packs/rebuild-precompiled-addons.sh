@@ -11,7 +11,7 @@ cd `dirname $BASH_SOURCE`
 declare -A ABI_VERSIONS=( \
   ["108"]="18.18" \
   ["115"]="20.19" \
-  ["120"]="21.0" \
+  ["120"]="21.2" \
   ["127"]="22.0" \
   ["131"]="23.0" \
   ["137"]="24.0"
@@ -23,7 +23,7 @@ LIBC_VARIANTS=( \
 )
 
 ARCHS=( \
-  "x64" \
+  "amd64" \
   "s390x"
 )
 
@@ -34,15 +34,7 @@ ARCHS=( \
 if [[ -z "$BUILD_FOR_MACOS" ]]; then
 
   for ARCH in "${ARCHS[@]}"; do
-    if [[ "$ARCH" == "s390x" ]]; then
-        # Make nvm available in this script.
-      export NVM_DIR="$HOME/.nvm"
-      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-      
-      source ./build-and-copy-node-modules-linux-390x
-    else
-      source ./build-and-copy-node-modules-linux
-    fi
+    source ./build-and-copy-node-modules-linux
 
     for ABI_VERSION in "${!ABI_VERSIONS[@]}"; do
       NODEJS_VERSION="${ABI_VERSIONS[$ABI_VERSION]}"
