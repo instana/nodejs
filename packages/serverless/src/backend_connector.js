@@ -302,7 +302,10 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
       ? resourcePath
       : environmentUtil.getBackendPath() + resourcePath;
 
-  logger.debug(`[${requestId}] Sending data to Instana (${requestPath}).`);
+  logger.debug(
+    `[${requestId}] Sending trace data to Instana (${options.hostname}, ${options.port}, ${options.path}, 
+    ${options.headers?.['Content-Length']}).`
+  );
 
   // serialize the payload object
   const serializedPayload = JSON.stringify(payload);
@@ -429,7 +432,10 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
   });
 
   req.on('finish', () => {
-    logger.debug(`[${requestId}] Sent data to Instana (${requestPath}).`);
+    logger.debug(
+      // eslint-disable-next-line max-len
+      `[${requestId}] The trace data have been successfully sent to Instana.`
+    );
 
     if (options.useLambdaExtension && finalLambdaRequest) {
       clearInterval(heartbeatInterval);
