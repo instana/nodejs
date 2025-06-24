@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.16.0](https://github.com/instana/nodejs/compare/v4.15.3...v4.16.0) (2025-06-24)
+
+
+### Bug Fixes
+
+* **collector:** optimized flushing spans before application dies ([#1765](https://github.com/instana/nodejs/issues/1765)) ([3507599](https://github.com/instana/nodejs/commit/35075996e879734a7bb9437c1ce375b9d979fe3a)), closes [#1315](https://github.com/instana/nodejs/issues/1315)
+
+
+### Features
+
+* added ability to filter spans by connection ([#1758](https://github.com/instana/nodejs/issues/1758)) ([3ff8d29](https://github.com/instana/nodejs/commit/3ff8d2965da1acdee21f6037d4911980d1eddf06))
+
+
+### Reverts
+
+* Revert "fix: renamed disabledTracers to disableTracers config (#1766)" ([52ce6d0](https://github.com/instana/nodejs/commit/52ce6d082c2f93f0fb9373982f60e577b5db7ac9)), closes [#1766](https://github.com/instana/nodejs/issues/1766)
+* Revert "ci: added affinity rules to tekton template" ([8cfd37e](https://github.com/instana/nodejs/commit/8cfd37ed3ec7ce9fc3906ab528a4607e800fd6cd))
+
+
+
+
+
 ## [4.15.3](https://github.com/instana/nodejs/compare/v4.15.2...v4.15.3) (2025-06-11)
 
 ### Bug Fixes

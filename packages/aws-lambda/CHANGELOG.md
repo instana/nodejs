@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.16.0](https://github.com/instana/nodejs/compare/v4.15.3...v4.16.0) (2025-06-24)
+
+
+### Bug Fixes
+
+* **collector:** optimized flushing spans before application dies ([#1765](https://github.com/instana/nodejs/issues/1765)) ([3507599](https://github.com/instana/nodejs/commit/35075996e879734a7bb9437c1ce375b9d979fe3a)), closes [#1315](https://github.com/instana/nodejs/issues/1315)
+
+
+
+
+
 ## [4.15.3](https://github.com/instana/nodejs/compare/v4.15.2...v4.15.3) (2025-06-11)
 
 ### Bug Fixes
