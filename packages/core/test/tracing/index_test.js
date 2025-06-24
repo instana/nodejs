@@ -74,7 +74,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     initAwsSdkv2.reset();
     initAwsSdkv3.reset();
 
-    delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
+    delete process.env.INSTANA_TRACING_DISABLE_LIBRARIES;
     // @deprecated
     delete process.env.INSTANA_DISABLED_TRACERS;
   });
