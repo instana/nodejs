@@ -23,6 +23,7 @@ LIBC_VARIANTS=( \
 )
 
 ARCHS=( \
+  "x64" \
   "s390x"
 )
 
