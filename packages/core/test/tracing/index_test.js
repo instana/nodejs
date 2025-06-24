@@ -137,8 +137,8 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
           initAndActivate({});
 
           expect(activateStubGrpcJs).to.have.been.called;
-          expect(activateStubKafkaJs).to.have.been.called;
-          expect(activateStubRdKafka).to.have.been.called;
+          expect(activateStubKafkaJs).not.to.have.been.called;
+          expect(activateStubRdKafka).not.to.have.been.called;
           expect(activateAwsSdkv2).to.have.been.called;
         });
 
