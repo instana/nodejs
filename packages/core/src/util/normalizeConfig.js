@@ -245,7 +245,7 @@ function normalizeTracingConfig(config) {
   normalizeTracingTransmission(config);
   normalizeTracingHttp(config);
   normalizeTracingStackTraceLength(config);
-  normalizeDisableTracers(config);
+  normalizeDisableTracing(config);
   normalizeSpanBatchingEnabled(config);
   normalizeDisableW3cTraceCorrelation(config);
   normalizeTracingKafka(config);
@@ -517,10 +517,10 @@ function normalizeNumericalStackTraceLength(numericalLength) {
 /**
  * @param {InstanaConfig} config
  */
-function normalizeDisableTracers(config) {
+function normalizeDisableTracing(config) {
   const disableConfig = configNormalizers.disable.normalize(config);
-  if (disableConfig.libraries && disableConfig.libraries.length > 0) {
-    config.tracing.disable = configNormalizers.disable.normalize(config);
+  if (disableConfig?.libraries?.length > 0) {
+    config.tracing.disable = disableConfig;
     return;
   }
   config.tracing.disable = defaults.tracing.disable;

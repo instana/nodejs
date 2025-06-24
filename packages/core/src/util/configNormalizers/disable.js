@@ -25,7 +25,7 @@ exports.normalize = function normalize(config) {
   if (config.tracing.disabledTracers) {
     logger?.warn(
       'The configuration property "tracing.disabledTracers" is deprecated and will be removed in the next ' +
-        'major release. Please use "tracing.disable" with "libraries" instead.'
+        'major release. Please use "tracing.disable.libraries" instead.'
     );
 
     if (!config.tracing.disable) {
