@@ -17,6 +17,7 @@ declare -A ABI_VERSIONS=( \
   ["137"]="24.0"
   )
 
+
 LIBC_VARIANTS=( \
   "glibc" \
   "musl"
@@ -30,7 +31,6 @@ ARCHS=( \
 #########
 # Linux #
 #########
-
 if [[ -z "$BUILD_FOR_MACOS" ]]; then
 
   for ARCH in "${ARCHS[@]}"; do
@@ -38,13 +38,22 @@ if [[ -z "$BUILD_FOR_MACOS" ]]; then
 
     for ABI_VERSION in "${!ABI_VERSIONS[@]}"; do
       NODEJS_VERSION="${ABI_VERSIONS[$ABI_VERSION]}"
+
       for LIBC in "${LIBC_VARIANTS[@]}"; do
+        # Skip musl for s390x as it is not building correctly
+        if [[ "$ARCH" == "s390x" && "$LIBC" == "musl" ]]; then
+          continue
+        fi
+
         buildAndCopyModulesLinux "$ABI_VERSION" "$NODEJS_VERSION" "$LIBC" "$ARCH"
       done
+
     done
+
   done
 
 fi
+
 
 #########
 # MacOS #
