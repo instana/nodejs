@@ -53,7 +53,7 @@ describe('util.disableInstrumentation', () => {
     it('should disable instrumentation when exact module name matches disable list entry', () => {
       disableInstrumentation.init({
         tracing: {
-          disable: { libraries: ['console'] }
+          disable: { instrumentations: ['console'] }
         }
       });
 
@@ -67,7 +67,7 @@ describe('util.disableInstrumentation', () => {
     it('should disable instrumentation when instrumentationName matches disable list via agent config', () => {
       disableInstrumentation.activate({
         tracing: {
-          disable: { libraries: ['aws/v3'] }
+          disable: { instrumentations: ['aws/v3'] }
         }
       });
 
@@ -81,7 +81,7 @@ describe('util.disableInstrumentation', () => {
     it('should disable instrumentation when instrumentationName matches disable list', () => {
       disableInstrumentation.init({
         tracing: {
-          disable: { libraries: ['aws/v3'] }
+          disable: { instrumentations: ['aws/v3'] }
         }
       });
 
@@ -95,7 +95,7 @@ describe('util.disableInstrumentation', () => {
     it('should not disable instrumentation when neither module path nor instrumentationName matches', () => {
       disableInstrumentation.init({
         tracing: {
-          disable: { libraries: ['console'] }
+          disable: { instrumentations: ['console'] }
         }
       });
 
@@ -109,7 +109,7 @@ describe('util.disableInstrumentation', () => {
     it('should handle module paths with different levels of nesting', () => {
       disableInstrumentation.init({
         tracing: {
-          disable: { libraries: ['mongodb'] }
+          disable: { instrumentations: ['mongodb'] }
         }
       });
 
@@ -125,7 +125,7 @@ describe('util.disableInstrumentation', () => {
     it('should disable all modules within a category when category is disabled via service config', () => {
       disableInstrumentation.init({
         tracing: {
-          disable: { categories: ['logging'] }
+          disable: { groups: ['logging'] }
         }
       });
 
@@ -145,7 +145,7 @@ describe('util.disableInstrumentation', () => {
     it('should disable all modules within a category when category is disabled via agent config', () => {
       disableInstrumentation.activate({
         tracing: {
-          disable: { categories: ['logging'] }
+          disable: { groups: ['logging'] }
         }
       });
 
@@ -162,10 +162,10 @@ describe('util.disableInstrumentation', () => {
       expect(bunyanResult).to.be.true;
     });
 
-    it('should not disable modules in categories not listed in disable configuration', () => {
+    it('should not disable modules in groups not listed in disable configuration', () => {
       disableInstrumentation.init({
         tracing: {
-          disable: { categories: ['frameworks'] }
+          disable: { groups: ['frameworks'] }
         }
       });
 
@@ -187,7 +187,7 @@ describe('util.disableInstrumentation', () => {
       // this config now only coming from agent
       disableInstrumentation.init({
         tracing: {
-          disable: { categories: ['logging'], libraries: ['console'] }
+          disable: { groups: ['logging'], instrumentations: ['console'] }
         }
       });
 
@@ -207,7 +207,7 @@ describe('util.disableInstrumentation', () => {
     it('should handle unsupported category disabling', () => {
       disableInstrumentation.init({
         tracing: {
-          disable: { categories: ['frameworks', 'logging'] }
+          disable: { groups: ['frameworks', 'logging'] }
         }
       });
 
@@ -229,12 +229,12 @@ describe('util.disableInstrumentation', () => {
     it('should prioritize service configuration over agent configuration when both are present', () => {
       disableInstrumentation.init({
         tracing: {
-          disable: { libraries: ['console'] }
+          disable: { instrumentations: ['console'] }
         }
       });
       disableInstrumentation.activate({
         tracing: {
-          disable: { libraries: ['!console'] }
+          disable: { instrumentations: ['!console'] }
         }
       });
 
@@ -249,12 +249,12 @@ describe('util.disableInstrumentation', () => {
     it('should accept service configuration and agent configuration when both are present', () => {
       disableInstrumentation.init({
         tracing: {
-          disable: { libraries: ['console'] }
+          disable: { instrumentations: ['console'] }
         }
       });
       disableInstrumentation.activate({
         tracing: {
-          disable: { libraries: ['bunyan'] }
+          disable: { instrumentations: ['bunyan'] }
         }
       });
 
@@ -275,7 +275,7 @@ describe('util.disableInstrumentation', () => {
       disableInstrumentation.init({});
       disableInstrumentation.activate({
         tracing: {
-          disable: { libraries: ['console'] }
+          disable: { instrumentations: ['console'] }
         }
       });
 
@@ -290,7 +290,7 @@ describe('util.disableInstrumentation', () => {
       disableInstrumentation.init({});
       disableInstrumentation.activate({
         tracing: {
-          disable: { libraries: ['console'] }
+          disable: { instrumentations: ['console'] }
         }
       });
 
@@ -341,7 +341,7 @@ describe('util.disableInstrumentation', () => {
     it('should handle module paths that do not exist in instrumentationModules', () => {
       disableInstrumentation.init({
         tracing: {
-          disable: { libraries: ['nonexistent'] }
+          disable: { instrumentations: ['nonexistent'] }
         }
       });
 
@@ -355,7 +355,7 @@ describe('util.disableInstrumentation', () => {
     it('should handle modules without instrumentationName property', () => {
       disableInstrumentation.init({
         tracing: {
-          disable: { libraries: ['express'] }
+          disable: { instrumentations: ['express'] }
         }
       });
 

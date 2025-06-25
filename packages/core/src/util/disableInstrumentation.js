@@ -60,22 +60,22 @@ function getCategoryAndModule(instrumentationPath) {
 function shouldDisable(cfg, { moduleName, instrumentationName, category } = {}) {
   const disableConfig = cfg.tracing?.disable;
 
-  // If neither libraries nor categories are configured for disabling, tracing is enabled
-  if (!disableConfig?.libraries && !disableConfig?.categories) {
+  // If neither instrumentations nor groups are configured for disabling, tracing is enabled
+  if (!disableConfig?.instrumentations && !disableConfig?.groups) {
     return false;
   }
 
   // Case 2: Check if module or instrumentation is explicitly disabled
   if (
-    (moduleName && disableConfig.libraries?.includes(moduleName)) ||
-    (instrumentationName && disableConfig.libraries?.includes(instrumentationName))
+    (moduleName && disableConfig.instrumentations?.includes(moduleName)) ||
+    (instrumentationName && disableConfig.instrumentations?.includes(instrumentationName))
   ) {
     return true;
   }
 
   // Case 3: Check if the category is marked as disabled
   const isCategoryDisabled =
-    category && DISABLABLE_CATEGORIES.has(category) && disableConfig.categories?.includes(category);
+    category && DISABLABLE_CATEGORIES.has(category) && disableConfig.groups?.includes(category);
 
   return Boolean(isCategoryDisabled);
 }

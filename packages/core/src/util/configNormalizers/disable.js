@@ -49,6 +49,10 @@ exports.normalize = function normalize(config) {
   if (disableConfig?.instrumentations) {
     disableConfig.instrumentations = normalizeArray(disableConfig.instrumentations);
   }
+  // Normalize groups
+  if (disableConfig?.groups) {
+    disableConfig.groups = normalizeArray(disableConfig.groups);
+  }
 
   return disableConfig || {};
 };
@@ -73,6 +77,11 @@ function getDisableFromEnv() {
   // Handle INSTANA_TRACING_DISABLE_INSTRUMENTATIONS
   if (process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS) {
     disable.instrumentations = parseEnvVar(process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS);
+  }
+
+  // Handle INSTANA_TRACING_DISABLE_GROUPS
+  if (process.env.INSTANA_TRACING_DISABLE_GROUPS) {
+    disable.groups = parseEnvVar(process.env.INSTANA_TRACING_DISABLE_GROUPS);
   }
 
   // TODO: add support for groups as well in another PR
