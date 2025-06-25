@@ -132,6 +132,9 @@ function getDisableFromEnv() {
  * @returns {string[]}
  */
 function parseEnvVar(envVarValue) {
+  if (typeof envVarValue !== 'string') {
+    return [];
+  }
   return envVarValue
     .split(/[;,]/)
     .map(item => item.trim().toLowerCase())
