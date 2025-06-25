@@ -155,14 +155,14 @@ const isInstrumentationDisabled = (cfg, instrumentationKey) => {
   const extractedInstrumentationName = matchResult ? matchResult[1] : instrumentationKey.match(/\/([^/]+)$/)[1];
 
   const disable = cfg.tracing?.disable;
-  if (!disable?.libraries) {
+  if (!disable?.instrumentations) {
     return false;
   }
 
   return (
-    disable.libraries.includes(extractedInstrumentationName.toLowerCase()) ||
+    disable.instrumentations.includes(extractedInstrumentationName.toLowerCase()) ||
     (instrumentationModules[instrumentationKey].instrumentationName &&
-      disable.libraries.includes(instrumentationModules[instrumentationKey].instrumentationName))
+      disable.instrumentations.includes(instrumentationModules[instrumentationKey].instrumentationName))
   );
 };
 
