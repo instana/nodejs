@@ -489,7 +489,10 @@ function postHandler(entrySpan, error, result, callback) {
     spans,
     metricsPayload,
     finalLambdaRequest: true,
-    callback
+    cacllback: () => {
+      // We don't process or care if there is an error returned from the backend connector right now.
+      callback();
+    }
   });
 }
 
