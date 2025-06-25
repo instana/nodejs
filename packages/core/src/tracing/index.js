@@ -143,30 +143,6 @@ exports.supportedVersion = supportedVersion;
 exports.util = tracingUtil;
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} cfg
- * @param {string} instrumentationKey
- */
-const isInstrumentationDisabled = (cfg, instrumentationKey) => {
-  // Extracts the instrumentation name using the pattern '.\/instrumentation\/[^/]*\/(.*)',
-  // capturing the part after '/instrumentation/.../'. If this pattern doesn't match,
-  // it falls back to extracting the last part of the path after the final '/'.
-  // This is primarily implemented to handle customInstrumentation cases.
-  const matchResult = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/);
-  const extractedInstrumentationName = matchResult ? matchResult[1] : instrumentationKey.match(/\/([^/]+)$/)[1];
-
-  const disable = cfg.tracing?.disable;
-  if (!disable?.instrumentations) {
-    return false;
-  }
-
-  return (
-    disable.instrumentations.includes(extractedInstrumentationName.toLowerCase()) ||
-    (instrumentationModules[instrumentationKey].instrumentationName &&
-      disable.instrumentations.includes(instrumentationModules[instrumentationKey].instrumentationName))
-  );
-};
-
-/**
  * @param {Array.<InstanaInstrumentedModule>} _additionalInstrumentationModules
  */
 exports.registerAdditionalInstrumentations = function registerAdditionalInstrumentations(
@@ -276,7 +252,12 @@ function initInstrumenations(_config) {
     instrumentations.forEach(instrumentationKey => {
       instrumentationModules[instrumentationKey] = require(instrumentationKey);
 
-      if (!isInstrumentationDisabled(_config, instrumentationKey)) {
+      if (
+        !coreUtil.disableInstrumentation.isInstrumentationDisabled({
+          instrumentationModules,
+          instrumentationKey
+        })
+      ) {
         instrumentationModules[instrumentationKey].init(_config);
       }
 
@@ -309,7 +290,20 @@ exports.activate = function activate(extraConfig = {}) {
 
     if (automaticTracingEnabled) {
       instrumentations.forEach(instrumentationKey => {
-        if (!isInstrumentationDisabled(config, instrumentationKey)) {
+        // If instrumentation is disabled via agent config, we skip tracing using the `isActive` flag
+        // within the instrumentation logic.
+        // However, modules already shimmered (e.g., logging) remain wrapped — we don't currently unwrap them.
+        // This may lead to minor performance overhead or partial interception. Proper unwrapping via
+        // `shimmer.unwrap(...)` would need broader changes. Given the very low performance and functional
+        // impact at present, we are accepting this behavior for now.
+        //
+        // We will revisit this in the future, especially if we encounter issues with disabled instrumentations.
+        if (
+          !coreUtil.disableInstrumentation.isInstrumentationDisabled({
+            instrumentationModules,
+            instrumentationKey
+          })
+        ) {
           instrumentationModules[instrumentationKey].activate(extraConfig);
         }
       });

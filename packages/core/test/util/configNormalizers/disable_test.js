@@ -98,6 +98,45 @@ describe('util.configNormalizers.disable', () => {
       const result = normalize(config);
       expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
     });
+
+    it('should support category names', () => {
+      const config = {
+        tracing: {
+          disable: {
+            categories: ['logging', 'databases']
+          }
+        }
+      };
+
+      const result = normalize(config);
+      expect(result.categories).to.deep.equal(['logging', 'databases']);
+    });
+
+    it('should normalize category names to lowercase and trim whitespace', () => {
+      const config = {
+        tracing: {
+          disable: {
+            categories: ['LOGGING', '  DATABASES  ', '', ' MESSAGING ']
+          }
+        }
+      };
+
+      const result = normalize(config);
+      expect(result.categories).to.deep.equal(['logging', 'databases', 'messaging']);
+    });
+
+    it('should handle non-array "categories" input gracefully', () => {
+      const config = {
+        tracing: {
+          disable: {
+            categories: 'logging'
+          }
+        }
+      };
+
+      const result = normalize(config);
+      expect(result.categories).to.deep.equal([]);
+    });
   });
 
   describe('Environment Variable Handling', () => {
@@ -119,7 +158,16 @@ describe('util.configNormalizers.disable', () => {
       expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
     });
 
-    it('should fallback to "INSTANA_DISABLED_TRACERS" and issue a deprecation warning', () => {
+    it('should parse "INSTANA_TRACING_DISABLE_CATEGORIES" correctly', () => {
+      process.env.INSTANA_TRACING_DISABLE_CATEGORIES = 'logging, databases';
+
+      const config = {};
+      const result = normalize(config);
+
+      expect(result.categories).to.deep.equal(['logging', 'databases']);
+    });
+
+    it('should fallback to "INSTANA_DISABLED_TRACERS"', () => {
       process.env.INSTANA_DISABLED_TRACERS = 'redis, mysql';
 
       const config = {};
@@ -154,6 +202,14 @@ describe('util.configNormalizers.disable', () => {
       const result = normalize(config);
 
       expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+    });
+    it('should ignore empty or whitespace-only entries in environment variable', () => {
+      process.env.INSTANA_TRACING_DISABLE_CATEGORIES = 'logging,,databases, ,messaging';
+
+      const config = {};
+      const result = normalize(config);
+
+      expect(result.categories).to.deep.equal(['logging', 'databases', 'messaging']);
     });
   });
 });
