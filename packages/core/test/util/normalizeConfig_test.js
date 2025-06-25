@@ -19,7 +19,6 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_DISABLED_TRACERS;
     delete process.env.INSTANA_DISABLE_AUTO_INSTR;
     delete process.env.INSTANA_DISABLE_TRACING;
-    delete process.env.INSTANA_DISABLED_TRACERS;
     delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
     delete process.env.INSTANA_TRACING_DISABLE_GROUPS;
     delete process.env.INSTANA_TRACE_IMMEDIATELY;
@@ -276,14 +275,14 @@ describe('util.normalizeConfig', () => {
       }
     });
     // values will be normalized to lower case
-    expect(config.tracing.disable.libraries).to.deep.equal(['graphql', 'grpc']);
+    expect(config.tracing.disable.instrumentations).to.deep.equal(['graphql', 'grpc']);
   });
 
   it('should disable individual instrumentations via env var', () => {
     process.env.INSTANA_DISABLED_TRACERS = 'graphQL   , GRPC';
     const config = normalizeConfig();
     // values will be normalized to lower case
-    expect(config.tracing.disable.libraries).to.deep.equal(['graphql', 'grpc']);
+    expect(config.tracing.disable.instrumentations).to.deep.equal(['graphql', 'grpc']);
   });
 
   it('config should take precedence over env vars when disabling individual tracers', () => {
@@ -294,51 +293,60 @@ describe('util.normalizeConfig', () => {
       }
     });
     // values will be normalized to lower case
-    expect(config.tracing.disable.libraries).to.deep.equal(['baz', 'fizz']);
+    expect(config.tracing.disable.instrumentations).to.deep.equal(['baz', 'fizz']);
   });
 
-  it('should disable individual tracers via disable config', () => {
+  it('should disable individual instrumentations via disable config', () => {
     const config = normalizeConfig({
       tracing: {
-        disable: { libraries: ['graphQL', 'GRPC'] }
+        disable: ['graphQL', 'GRPC']
       }
     });
-    expect(config.tracing.disable.libraries).to.deep.equal(['graphql', 'grpc']);
+    expect(config.tracing.disable.instrumentations).to.deep.equal(['graphql', 'grpc']);
   });
 
-  it('config should take precedence over INSTANA_TRACING_DISABLE_LIBRARIES when disabling individual tracers', () => {
-    process.env.INSTANA_TRACING_DISABLE_LIBRARIES = 'foo, bar';
+  it('should disable individual instrumentations via disable.instrumentations config', () => {
     const config = normalizeConfig({
       tracing: {
-        disable: { libraries: ['baz', 'fizz'] }
+        disable: { instrumentations: ['graphQL', 'GRPC'] }
       }
     });
-    expect(config.tracing.disable.libraries).to.deep.equal(['baz', 'fizz']);
+    expect(config.tracing.disable.instrumentations).to.deep.equal(['graphql', 'grpc']);
   });
 
-  it('should disable multiple tracers via env var INSTANA_TRACING_DISABLE_LIBRARIES', () => {
-    process.env.INSTANA_TRACING_DISABLE_LIBRARIES = 'graphQL   , GRPC, http';
-    const config = normalizeConfig();
-    expect(config.tracing.disable.libraries).to.deep.equal(['graphql', 'grpc', 'http']);
+  it('config should take precedence over INSTANA_TRACING_DISABLE_INSTRUMENTATIONS  for config', () => {
+    process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'foo, bar';
+    const config = normalizeConfig({
+      tracing: {
+        disable: { instrumentations: ['baz', 'fizz'] }
+      }
+    });
+    expect(config.tracing.disable.instrumentations).to.deep.equal(['baz', 'fizz']);
   });
 
-  it('should handle single tracer via INSTANA_TRACING_DISABLE_LIBRARIES', () => {
-    process.env.INSTANA_TRACING_DISABLE_LIBRARIES = 'console';
+  it('should disable multiple instrumentations via env var INSTANA_TRACING_DISABLE_INSTRUMENTATIONS', () => {
+    process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'graphQL   , GRPC, http';
     const config = normalizeConfig();
-    expect(config.tracing.disable.libraries).to.deep.equal(['console']);
+    expect(config.tracing.disable.instrumentations).to.deep.equal(['graphql', 'grpc', 'http']);
+  });
+
+  it('should handle single instrumentations via INSTANA_TRACING_DISABLE_INSTRUMENTATIONS', () => {
+    process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'console';
+    const config = normalizeConfig();
+    expect(config.tracing.disable.instrumentations).to.deep.equal(['console']);
   });
 
   it('should trim whitespace from tracer names', () => {
-    process.env.INSTANA_TRACING_DISABLE_LIBRARIES = '  graphql  ,  grpc  ';
+    process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = '  graphql  ,  grpc  ';
     const config = normalizeConfig();
-    expect(config.tracing.disable.libraries).to.deep.equal(['graphql', 'grpc']);
+    expect(config.tracing.disable.instrumentations).to.deep.equal(['graphql', 'grpc']);
   });
 
-  it('should prefer INSTANA_TRACING_DISABLE_LIBRARIES over INSTANA_DISABLED_TRACERS', () => {
-    process.env.INSTANA_TRACING_DISABLE_LIBRARIES = 'redis';
+  it('should prefer INSTANA_TRACING_DISABLE_INSTRUMENTATIONS over INSTANA_DISABLED_TRACERS', () => {
+    process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'redis';
     process.env.INSTANA_DISABLED_TRACERS = 'postgres';
     const config = normalizeConfig();
-    expect(config.tracing.disable.libraries).to.deep.equal(['redis']);
+    expect(config.tracing.disable.instrumentations).to.deep.equal(['redis']);
   });
 
   it('should disable individual groups via disable config', () => {

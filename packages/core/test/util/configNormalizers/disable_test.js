@@ -10,9 +10,9 @@ const { expect } = require('chai');
 const { normalize } = require('../../../src/util/configNormalizers/disable');
 
 function resetEnv() {
-  delete process.env.INSTANA_TRACING_DISABLE_LIBRARIES;
+  delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
   delete process.env.INSTANA_DISABLED_TRACERS;
-  delete process.env.INSTANA_TRACING_DISABLE_CATEGORIES;
+  delete process.env.INSTANA_TRACING_DISABLE;
 }
 
 describe('util.configNormalizers.disable', () => {
@@ -29,11 +29,11 @@ describe('util.configNormalizers.disable', () => {
       const config = {};
       const result = normalize(config);
 
-      expect(result).to.deep.equal({ libraries: [] });
+      expect(result).to.deep.equal({});
       expect(config.tracing).to.exist;
     });
 
-    it('should handle deprecated "disabledTracers" to "disable.libraries"', () => {
+    it('should handle deprecated "disabledTracers" to "disable.instrumentations"', () => {
       const config = {
         tracing: {
           disabledTracers: ['AWS-SDK', 'mongodb']
@@ -43,7 +43,7 @@ describe('util.configNormalizers.disable', () => {
       const result = normalize(config);
 
       expect(result).to.deep.equal({
-        libraries: ['aws-sdk', 'mongodb']
+        instrumentations: ['aws-sdk', 'mongodb']
       });
       expect(config.tracing.disabledTracers).to.be.undefined;
     });
@@ -53,39 +53,50 @@ describe('util.configNormalizers.disable', () => {
         tracing: {
           disabledTracers: ['AWS-SDK'],
           disable: {
-            libraries: ['redis']
+            instrumentations: ['redis']
           }
         }
       };
 
       const result = normalize(config);
-      expect(result.libraries).to.deep.equal(['redis']);
+      expect(result.instrumentations).to.deep.equal(['redis']);
     });
 
     it('should normalize library names to lowercase and trim whitespace', () => {
       const config = {
         tracing: {
           disable: {
-            libraries: ['AWS-SDK', '  MongoDB  ', '', 'Postgres']
+            instrumentations: ['AWS-SDK', '  MongoDB  ', '', 'Postgres']
           }
         }
       };
 
       const result = normalize(config);
-      expect(result.libraries).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
     });
 
-    it('should handle non-array "libraries" input gracefully', () => {
+    it('should handle non-array "instrumentations" input gracefully', () => {
       const config = {
         tracing: {
           disable: {
-            libraries: 'aws-sdk'
+            instrumentations: 'aws-sdk'
           }
         }
       };
 
       const result = normalize(config);
-      expect(result.libraries).to.deep.equal([]);
+      expect(result.instrumentations).to.deep.equal([]);
+    });
+
+    it('should handle flat disable config', () => {
+      const config = {
+        tracing: {
+          disable: ['AWS-SDK', '  MongoDB  ', '', 'Postgres']
+        }
+      };
+
+      const result = normalize(config);
+      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
     });
 
     it('should support group names', () => {
@@ -198,13 +209,22 @@ describe('util.configNormalizers.disable', () => {
   });
 
   describe('Environment Variable Handling', () => {
-    it('should parse "INSTANA_TRACING_DISABLE_LIBRARIES" correctly', () => {
-      process.env.INSTANA_TRACING_DISABLE_LIBRARIES = 'aws-sdk, mongodb, postgres';
+    it('should parse "INSTANA_TRACING_DISABLE_INSTRUMENTATIONS" correctly', () => {
+      process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'aws-sdk, mongodb, postgres';
 
       const config = {};
       const result = normalize(config);
 
-      expect(result.libraries).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+    });
+
+    it('should parse "INSTANA_TRACING_DISABLE" correctly', () => {
+      process.env.INSTANA_TRACING_DISABLE = 'aws-sdk, mongodb, postgres';
+
+      const config = {};
+      const result = normalize(config);
+
+      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
     });
 
     it('should parse "INSTANA_TRACING_DISABLE_GROUPS" correctly', () => {
@@ -222,35 +242,35 @@ describe('util.configNormalizers.disable', () => {
       const config = {};
       const result = normalize(config);
 
-      expect(result.libraries).to.deep.equal(['redis', 'mysql']);
+      expect(result.instrumentations).to.deep.equal(['redis', 'mysql']);
     });
 
-    it('should prioritize "INSTANA_TRACING_DISABLE_LIBRARIES" over deprecated variable', () => {
-      process.env.INSTANA_TRACING_DISABLE_LIBRARIES = 'aws-sdk';
+    it('should prioritize "INSTANA_TRACING_DISABLE_INSTRUMENTATIONS" over deprecated variable', () => {
+      process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'aws-sdk';
       process.env.INSTANA_DISABLED_TRACERS = 'redis';
 
       const config = {};
       const result = normalize(config);
 
-      expect(result.libraries).to.deep.equal(['aws-sdk']);
+      expect(result.instrumentations).to.deep.equal(['aws-sdk']);
     });
 
     it('should support semicolon-separated values in environment variable', () => {
-      process.env.INSTANA_TRACING_DISABLE_LIBRARIES = 'aws-sdk;mongodb;postgres';
+      process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'aws-sdk;mongodb;postgres';
 
       const config = {};
       const result = normalize(config);
 
-      expect(result.libraries).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
     });
 
     it('should ignore empty or whitespace-only entries in environment variable', () => {
-      process.env.INSTANA_TRACING_DISABLE_LIBRARIES = 'aws-sdk,,mongodb, ,postgres';
+      process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'aws-sdk,,mongodb, ,postgres';
 
       const config = {};
       const result = normalize(config);
 
-      expect(result.libraries).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
+      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
     });
     it('should ignore empty or whitespace-only entries in environment variable', () => {
       process.env.INSTANA_TRACING_DISABLE_GROUPS = 'logging,,databases, ,messaging';
