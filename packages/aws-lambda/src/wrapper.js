@@ -437,7 +437,7 @@ function sendToBackend({ spans, metricsPayload, finalLambdaRequest, callback }) 
  * letting the Lambda finish (that is, before letting the AWS Lambda runtime process the next invocation or freeze the
  * current process).
  */
-function postHandler(entrySpan, error, result, callback) {
+function postHandler(entrySpan, error, result, postHandlerDone) {
   // entrySpan is null when tracing is suppressed due to X-Instana-L
   if (entrySpan) {
     if (entrySpan.transmitted) {
@@ -445,7 +445,7 @@ function postHandler(entrySpan, error, result, callback) {
       // kicked in and finished the entry span prematurely. If that happened, we also have already triggered sending
       // spans to the back end. We do not need to keep the Lambda waiting for another transmission, so we immediately
       // let it finish.
-      callback();
+      postHandlerDone();
       return;
     }
 
@@ -489,9 +489,9 @@ function postHandler(entrySpan, error, result, callback) {
     spans,
     metricsPayload,
     finalLambdaRequest: true,
-    cacllback: () => {
+    callback: () => {
       // We don't process or care if there is an error returned from the backend connector right now.
-      callback();
+      postHandlerDone();
     }
   });
 }
