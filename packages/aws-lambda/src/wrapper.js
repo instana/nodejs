@@ -272,7 +272,6 @@ function init(event, arnInfo, _config) {
     config,
     identityProvider,
     stopSendingOnFailure: true,
-    propagateErrorsUpstream: false,
     defaultTimeout: 500,
     useLambdaExtension
   });

@@ -33,7 +33,6 @@ const defaults = {
   config: {},
   identityProvider: null,
   stopSendingOnFailure: true,
-  propagateErrorsUpstream: false,
   backendTimeout: 500,
   useLambdaExtension: false
 };
@@ -412,22 +411,20 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
       // (or a user-provided proxy).
       requestHasFailed = true;
 
-      if (!options.propagateErrorsUpstream) {
-        if (proxyAgent) {
-          logger.warn(
-            `[${requestId}] Could not send traces and metrics to Instana. Could not connect to the configured proxy ` +
-              `${process.env[proxyEnvVar]}.` +
-              `${e?.message} ${e?.stack}`
-          );
-        } else {
-          logger.warn(
-            `[${requestId}] Could not send traces and metrics to Instana. ` +
-              `The Instana back end seems to be unavailable. ${e?.message} , ${e?.stack}`
-          );
-        }
+      if (proxyAgent) {
+        logger.warn(
+          `[${requestId}] Could not send traces and metrics to Instana. Could not connect to the configured proxy ` +
+            `${process.env[proxyEnvVar]}.` +
+            `${e?.message} ${e?.stack}`
+        );
+      } else {
+        logger.warn(
+          `[${requestId}] Could not send traces and metrics to Instana. ` +
+            `The Instana back end seems to be unavailable. ${e?.message} , ${e?.stack}`
+        );
       }
 
-      handleCallback(options.propagateErrorsUpstream ? e : undefined);
+      handleCallback(e);
     }
   });
 
@@ -497,11 +494,8 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
       `of ${options.backendTimeout} ms. The timeout can be configured by ` +
       `setting the environment variable ${timeoutEnvVar}.`;
 
-    if (!options.propagateErrorsUpstream) {
-      logger.warn(`[${requestId}] ${message}`);
-    }
-
-    handleCallback(options.propagateErrorsUpstream ? new Error(message) : undefined);
+    logger.warn(`[${requestId}] ${message}`);
+    handleCallback(new Error(message));
   }
 }
 

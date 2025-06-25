@@ -37,7 +37,6 @@ function init() {
       config,
       identityProvider,
       stopSendingOnFailure: false,
-      propagateErrorsUpstream: true,
       defaultTimeout: 950
     });
 
