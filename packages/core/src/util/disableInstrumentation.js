@@ -65,14 +65,6 @@ function shouldDisable(cfg, { moduleName, instrumentationName, category } = {}) 
     return false;
   }
 
-  //   // Case 1: Explicitly enabled modules (prefixed with '!') take precedence
-  //   if (moduleName) {
-  //     const isExplicitlyEnabled = disableConfig.libraries?.some(
-  //       (/** @type {string} */ lib) => typeof lib === 'string' && lib.startsWith('!') && lib.slice(1) === moduleName
-  //     );
-  //     if (isExplicitlyEnabled) return false;
-  //   }
-
   // Case 2: Check if module or instrumentation is explicitly disabled
   if (
     (moduleName && disableConfig.libraries?.includes(moduleName)) ||
