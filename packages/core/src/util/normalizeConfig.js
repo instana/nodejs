@@ -33,7 +33,7 @@ const configNormalizers = require('./configNormalizers');
 
 /**
  * @typedef {Object} TracingDisableOptions
- * @property {string[]} [libraries]
+ * @property {string[]} [instrumentations]
  */
 
 /**
@@ -519,7 +519,7 @@ function normalizeNumericalStackTraceLength(numericalLength) {
  */
 function normalizeDisableTracing(config) {
   const disableConfig = configNormalizers.disable.normalize(config);
-  if (disableConfig?.libraries?.length > 0) {
+  if (disableConfig?.instrumentations?.length > 0) {
     config.tracing.disable = disableConfig;
     return;
   }

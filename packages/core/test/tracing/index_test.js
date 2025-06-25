@@ -74,7 +74,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     initAwsSdkv2.reset();
     initAwsSdkv3.reset();
 
-    delete process.env.INSTANA_TRACING_DISABLE_LIBRARIES;
+    delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
     // @deprecated
     delete process.env.INSTANA_DISABLED_TRACERS;
   });
@@ -110,7 +110,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     describe('tracer deactivation', () => {
       describe('via disable config', () => {
         it('should deactivate specified tracers', () => {
-          initAndActivate({ tracing: { disable: { libraries: ['grpc', 'kafkajs', 'aws-sdk/v2'] } } });
+          initAndActivate({ tracing: { disable: { instrumentations: ['grpc', 'kafkajs', 'aws-sdk/v2'] } } });
 
           // grpcJs instrumentation has not been disabled, make sure its init and activate are called
           expect(initStubGrpcJs).to.have.been.called;
@@ -133,8 +133,8 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
           expect(activateAwsSdkv3).to.have.been.called;
         });
 
-        it('should disable multiple tracers in INSTANA_TRACING_DISABLE_LIBRARIES env var', () => {
-          process.env.INSTANA_TRACING_DISABLE_LIBRARIES = 'rdkafka,kafkajs,aws-sdk/v3';
+        it('should disable multiple tracers in INSTANA_TRACING_DISABLE_INSTRUMENTATIONS env var', () => {
+          process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'rdkafka,kafkajs,aws-sdk/v3';
           initAndActivate({});
 
           expect(activateStubGrpcJs).to.have.been.called;
@@ -164,7 +164,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
           expect(activateAwsSdkv3).not.to.have.been.called;
 
           it('should disable aws-sdk/v3 via config', () => {
-            initAndActivate({ tracing: { disable: { libraries: ['aws-sdk/v3'] } } });
+            initAndActivate({ tracing: { disable: { instrumentations: ['aws-sdk/v3'] } } });
 
             // aws-sdk/v2 has been disabled (via aws-sdk/v2)
             expect(initAwsSdkv2).not.to.have.been.called;
@@ -175,7 +175,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
           });
 
           it('should disable both aws-sdk versions via config', () => {
-            initAndActivate({ tracing: { disable: { libraries: ['aws-sdk/v3', 'aws-sdk/v2'] } } });
+            initAndActivate({ tracing: { disable: { instrumentations: ['aws-sdk/v3', 'aws-sdk/v2'] } } });
 
             expect(initAwsSdkv2).not.to.have.been.called;
             expect(activateAwsSdkv2).not.to.have.been.called;
@@ -198,8 +198,8 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
           });
 
           it('should prefer config.tracing.disable over env vars', () => {
-            process.env.INSTANA_TRACING_DISABLE_LIBRARIES = 'grpc,kafkajs';
-            initAndActivate({ tracing: { disable: { libraries: ['aws-sdk/v2'] } } });
+            process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'grpc,kafkajs';
+            initAndActivate({ tracing: { disable: { instrumentations: ['aws-sdk/v2'] } } });
 
             expect(initAwsSdkv2).not.to.have.been.called;
             expect(activateAwsSdkv2).not.to.have.been.called;
@@ -268,7 +268,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
             initAndActivate({
               tracing: {
                 disabledTracers: ['grpc', 'kafkajs'],
-                disable: { libraries: ['aws-sdk/v2'] }
+                disable: { instrumentations: ['aws-sdk/v2'] }
               }
             });
 
@@ -282,8 +282,8 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
             expect(activateStubKafkaJs).to.have.been.called;
           });
 
-          it('should prefer INSTANA_TRACING_DISABLE_LIBRARIES over INSTANA_DISABLED_TRACERS', () => {
-            process.env.INSTANA_TRACING_DISABLE_LIBRARIES = 'aws-sdk/v2';
+          it('should prefer INSTANA_TRACING_DISABLE_INSTRUMENTATIONS over INSTANA_DISABLED_TRACERS', () => {
+            process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'aws-sdk/v2';
             process.env.INSTANA_DISABLED_TRACERS = 'kafkajs';
             initAndActivate({});
 

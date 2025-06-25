@@ -15,7 +15,6 @@ exports.init = function init(_config) {
 };
 
 /**
- *
  * @param {import('../../util/normalizeConfig').InstanaConfig} config
  */
 exports.normalize = function normalize(config) {
@@ -25,26 +24,33 @@ exports.normalize = function normalize(config) {
   if (config.tracing.disabledTracers) {
     logger?.warn(
       'The configuration property "tracing.disabledTracers" is deprecated and will be removed in the next ' +
-        'major release. Please use "tracing.disable.libraries" instead.'
+        'major release. Please use "tracing.disable" instead.'
     );
-
     if (!config.tracing.disable) {
-      config.tracing.disable = { libraries: config.tracing.disabledTracers };
+      config.tracing.disable = { instrumentations: config.tracing.disabledTracers };
     }
-
     delete config.tracing.disabledTracers;
   }
 
-  // Populate `tracing.disable` if not already set, using environment variables
-  if (!config.tracing.disable) {
-    config.tracing.disable = getDisableFromEnv();
+  let disableConfig = config.tracing.disable;
+
+  // If disable is an array, treat it as instrumentations
+  // TODO: add support for groups as well in another PR
+  if (Array.isArray(disableConfig)) {
+    disableConfig = { instrumentations: disableConfig };
   }
 
-  // Normalize the disable configuration
-  const disableConfig = config.tracing.disable || {};
-  disableConfig.libraries = normalizeArray(disableConfig.libraries);
-  // categories are not yet supported, but can be added in the future
-  return disableConfig;
+  // If disable is not set, get from environment variables
+  if (!disableConfig) {
+    disableConfig = getDisableFromEnv();
+  }
+
+  // Normalize instrumentations
+  if (disableConfig?.instrumentations) {
+    disableConfig.instrumentations = normalizeArray(disableConfig.instrumentations);
+  }
+
+  return disableConfig || {};
 };
 
 function getDisableFromEnv() {
@@ -54,16 +60,22 @@ function getDisableFromEnv() {
   if (process.env.INSTANA_DISABLED_TRACERS) {
     logger?.warn(
       'The environment variable "INSTANA_DISABLED_TRACERS" is deprecated and will be removed in the next ' +
-        'major release. Use "INSTANA_TRACING_DISABLE_LIBRARIES" instead.'
+        'major release. Use "INSTANA_TRACING_DISABLE" instead.'
     );
-    disable.libraries = normalizeArray(parseHeadersEnvVar(process.env.INSTANA_DISABLED_TRACERS));
+    disable.instrumentations = parseEnvVar(process.env.INSTANA_DISABLED_TRACERS);
   }
-  if (process.env.INSTANA_TRACING_DISABLE_LIBRARIES) {
-    disable.libraries = normalizeArray(parseHeadersEnvVar(process.env.INSTANA_TRACING_DISABLE_LIBRARIES));
+  // Handle INSTANA_TRACING_DISABLE
+  // TODO: add support for groups as well in another PR
+  if (process.env.INSTANA_TRACING_DISABLE) {
+    disable.instrumentations = parseEnvVar(process.env.INSTANA_TRACING_DISABLE);
   }
 
-  // Future support: parse disable categories from env if available
+  // Handle INSTANA_TRACING_DISABLE_INSTRUMENTATIONS
+  if (process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS) {
+    disable.instrumentations = parseEnvVar(process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS);
+  }
 
+  // TODO: add support for groups as well in another PR
   return Object.keys(disable).length > 0 ? disable : null;
 }
 
@@ -71,11 +83,11 @@ function getDisableFromEnv() {
  * @param {string} envVarValue
  * @returns {string[]}
  */
-function parseHeadersEnvVar(envVarValue) {
+function parseEnvVar(envVarValue) {
   return envVarValue
     .split(/[;,]/)
-    .map(header => header.trim())
-    .filter(header => header !== '');
+    .map(item => item.trim().toLowerCase())
+    .filter(item => item !== '');
 }
 
 /**
