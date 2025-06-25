@@ -8,13 +8,11 @@
 const { backendConnector } = require('@instana/serverless');
 const processorRegistry = require('./processorRegistry');
 
-let logger;
 let transmissionDelay = 1000;
 let transmissionTimeoutHandle;
 let isActive = false;
 
 exports.init = function init(config, metadataBaseUrl, onReady) {
-  logger = config.logger;
   transmissionDelay = config.metrics.transmissionDelay;
   processorRegistry.init(config, metadataBaseUrl, onReady);
 };
@@ -68,7 +66,6 @@ function onMetricsHaveBeenSent(transmittedPayloadPerProcessor, error) {
   transmissionTimeoutHandle.unref();
 
   if (error) {
-    logger.error(`Error received while trying to send snapshot data and metrics: ${error?.message}`);
     return;
   }
 
