@@ -489,7 +489,7 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
     destroyRequest(req);
 
     const message =
-      `[${requestId}] Could not send traces and metrics to Instana. The Instana back end did not respond ` +
+      `[${requestId}] Could not send data to ${resourcePath}. The Instana back end did not respond ` +
       'in the configured timeout ' +
       `of ${options.backendTimeout} ms. The timeout can be configured by ` +
       `setting the environment variable ${timeoutEnvVar}.`;

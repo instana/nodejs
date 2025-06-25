@@ -68,7 +68,6 @@ function onMetricsHaveBeenSent(transmittedPayloadPerProcessor, error) {
   transmissionTimeoutHandle.unref();
 
   if (error) {
-    logger.error(`Error received while trying to send snapshot data and metrics: ${error?.message}`);
     return;
   }
 
