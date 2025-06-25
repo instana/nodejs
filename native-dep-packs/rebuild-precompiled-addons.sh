@@ -9,33 +9,51 @@ set -eo pipefail
 cd `dirname $BASH_SOURCE`
 
 declare -A ABI_VERSIONS=( \
-  ["108"]="18.18.2" \
-  ["115"]="20.3.0" \
-  ["120"]="21.2.0" \
-  ["127"]="22.0.0" \
-  ["131"]="23.0.0" \
-  ["137"]="24.0.0"
+  ["108"]="18.18" \
+  ["115"]="20.19" \
+  ["120"]="21.2" \
+  ["127"]="22.0" \
+  ["131"]="23.0" \
+  ["137"]="24.0"
   )
+
 
 LIBC_VARIANTS=( \
   "glibc" \
   "musl"
 )
 
+ARCHS=( \
+  "amd64" \
+  "s390x"
+)
+
 #########
 # Linux #
 #########
-
 if [[ -z "$BUILD_FOR_MACOS" ]]; then
-  source ./build-and-copy-node-modules-linux
 
-  for ABI_VERSION in ${!ABI_VERSIONS[@]}; do
-    NODEJS_VERSION=${ABI_VERSIONS[$ABI_VERSION]}
-    for LIBC in ${LIBC_VARIANTS[@]}; do
-      buildAndCopyModulesLinux $ABI_VERSION $NODEJS_VERSION $LIBC
+  for ARCH in "${ARCHS[@]}"; do
+    source ./build-and-copy-node-modules-linux
+
+    for ABI_VERSION in "${!ABI_VERSIONS[@]}"; do
+      NODEJS_VERSION="${ABI_VERSIONS[$ABI_VERSION]}"
+
+      for LIBC in "${LIBC_VARIANTS[@]}"; do
+        # Skip musl for s390x as it is not building correctly
+        if [[ "$ARCH" == "s390x" && "$LIBC" == "musl" ]]; then
+          continue
+        fi
+
+        buildAndCopyModulesLinux "$ABI_VERSION" "$NODEJS_VERSION" "$LIBC" "$ARCH"
+      done
+
     done
+
   done
+
 fi
+
 
 #########
 # MacOS #

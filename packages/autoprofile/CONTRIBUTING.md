@@ -30,6 +30,7 @@ Supported arch:
     - linux/arm64
     - linux/armv6
     - linux/armv7
+    - linux/s390x
 
 
 ### Rebuilding existing Node.js versions
@@ -47,6 +48,24 @@ node scripts/prebuilds.js --node=22.0.0,21.0.0                        [build spe
 ```sh
 node scripts/prebuilds.js --node=22.0.0                               [build specific node version]
 ```
+
+### Adding support for linux/s390x
+
+For the `linux/s390x` architecture, there is currently no official Docker image available in the [prebuild/docker-images](https://github.com/prebuild/docker-images) repository, which is used internally by `prebuildify-cross`.
+
+To work around this:
+
+1. Build a custom Docker image locally using the Dockerfile at:
+```sh
+scripts/custom-dockerfiles/Dockerfile.s390x
+```
+
+2. Push the image to a container registry of your choice, such as:
+- `icr.io`
+- `docker.io`
+- (or any other registry you prefer)
+
+3. Use the pushed image in your `prebuildify-cross` workflow to build prebuilds for the `s390x` architecture.
 
 ### Troubleshooting
 
