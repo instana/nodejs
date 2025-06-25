@@ -4,6 +4,7 @@
 
 'use strict';
 
+const { DISABLABLE_INSTRUMENTATION_GROUPS } = require('../../tracing/constants');
 /** @type {import('../../core').GenericLogger} */
 let logger;
 
@@ -15,6 +16,15 @@ exports.init = function init(_config) {
 };
 
 /**
+ * Normalizes the tracing `disable` configuration.
+ * Handles deprecated properties, environment variables, and array inputs.
+ *
+ * Precedence order (highest to lowest):
+ * 1. `tracing.disable.instrumentations` and `tracing.disable.groups`
+ * 2. `tracing.disable` flat
+ * 3. `tracing.disabledTracers` (deprecated, fallback only if disable not set)
+ * 4. Environment variables (`INSTANA_TRACING_DISABLE*`)
+ *
  * @param {import('../../util/normalizeConfig').InstanaConfig} config
  */
 exports.normalize = function normalize(config) {
@@ -34,33 +44,35 @@ exports.normalize = function normalize(config) {
 
   let disableConfig = config.tracing.disable;
 
-  // If disable is an array, treat it as instrumentations
-  // TODO: add support for groups as well in another PR
-  if (Array.isArray(disableConfig)) {
-    disableConfig = { instrumentations: disableConfig };
-  }
-
-  // If disable is not set, get from environment variables
+  // Fallback to environment variables if `disable` is not configured
   if (!disableConfig) {
     disableConfig = getDisableFromEnv();
   }
 
-  // Normalize instrumentations
+  // Normalize instrumentations and groups
   if (disableConfig?.instrumentations) {
     disableConfig.instrumentations = normalizeArray(disableConfig.instrumentations);
   }
-  // Normalize groups
+
   if (disableConfig?.groups) {
     disableConfig.groups = normalizeArray(disableConfig.groups);
+  }
+
+  // Handle if tracing.disable is an array
+  if (Array.isArray(disableConfig)) {
+    return categorizeDisableEntries(disableConfig);
   }
 
   return disableConfig || {};
 };
 
+// Environment variable precedence  (highest to lowest)
+// 1. INSTANA_TRACING_DISABLE_INSTRUMENTATIONS and INSTANA_TRACING_DISABLE_GROUPS
+// 2. INSTANA_TRACING_DISABLE – supports both instrumentations and groups
+// 3. INSTANA_DISABLED_TRACERS – deprecated
 function getDisableFromEnv() {
   const disable = {};
 
-  // Fallback to deprecated variable if defined
   if (process.env.INSTANA_DISABLED_TRACERS) {
     logger?.warn(
       'The environment variable "INSTANA_DISABLED_TRACERS" is deprecated and will be removed in the next ' +
@@ -68,13 +80,17 @@ function getDisableFromEnv() {
     );
     disable.instrumentations = parseEnvVar(process.env.INSTANA_DISABLED_TRACERS);
   }
-  // Handle INSTANA_TRACING_DISABLE
-  // TODO: add support for groups as well in another PR
+
   if (process.env.INSTANA_TRACING_DISABLE) {
-    disable.instrumentations = parseEnvVar(process.env.INSTANA_TRACING_DISABLE);
+    const categorized = categorizeDisableEntries(parseEnvVar(process.env.INSTANA_TRACING_DISABLE));
+    if (categorized?.instrumentations?.length) {
+      disable.instrumentations = categorized.instrumentations;
+    }
+    if (categorized?.groups?.length) {
+      disable.groups = categorized.groups;
+    }
   }
 
-  // Handle INSTANA_TRACING_DISABLE_INSTRUMENTATIONS
   if (process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS) {
     disable.instrumentations = parseEnvVar(process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS);
   }
@@ -84,7 +100,6 @@ function getDisableFromEnv() {
     disable.groups = parseEnvVar(process.env.INSTANA_TRACING_DISABLE_GROUPS);
   }
 
-  // TODO: add support for groups as well in another PR
   return Object.keys(disable).length > 0 ? disable : null;
 }
 
@@ -93,6 +108,9 @@ function getDisableFromEnv() {
  * @returns {string[]}
  */
 function parseEnvVar(envVarValue) {
+  if (typeof envVarValue !== 'string') {
+    return [];
+  }
   return envVarValue
     .split(/[;,]/)
     .map(item => item.trim().toLowerCase())
@@ -105,5 +123,47 @@ function parseEnvVar(envVarValue) {
  */
 function normalizeArray(arr) {
   if (!Array.isArray(arr)) return [];
-  return arr.map(s => s.toLowerCase()?.trim()).filter(Boolean);
+  return arr
+    .map(s => {
+      if (typeof s !== 'string') {
+        return null;
+      }
+      return s.toLowerCase()?.trim();
+    })
+    .filter(Boolean);
+}
+
+/**
+ * @param {string[]} rawEntries
+ * @returns {{ instrumentations?: string[], groups?: string[] }}
+ */
+function categorizeDisableEntries(rawEntries) {
+  /**
+   * @type {string[]}
+   */
+  const instrumentations = [];
+  /**
+   * @type {string[]}
+   */
+  const groups = [];
+
+  rawEntries.forEach(entry => {
+    if (typeof entry !== 'string') {
+      return;
+    }
+    const name = entry?.toLowerCase()?.trim();
+    if (!name) return;
+
+    if (DISABLABLE_INSTRUMENTATION_GROUPS.has(name)) {
+      groups.push(name);
+    } else {
+      instrumentations.push(name);
+    }
+  });
+
+  const categorized = {};
+  if (instrumentations.length > 0) categorized.instrumentations = instrumentations;
+  if (groups.length > 0) categorized.groups = groups;
+
+  return categorized;
 }

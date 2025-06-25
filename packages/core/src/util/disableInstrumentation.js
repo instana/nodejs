@@ -4,14 +4,13 @@
 
 'use strict';
 
+const { DISABLABLE_INSTRUMENTATION_GROUPS } = require('../tracing/constants');
+
 /** @type {import('../util/normalizeConfig').InstanaConfig} */
 let config;
 
 /** @type {import('../util/normalizeConfig').AgentConfig} */
 let agentConfig;
-
-// Categories that support category-level disabling
-const DISABLABLE_CATEGORIES = new Set(['logging', 'databases', 'messaging']);
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} _config
@@ -75,7 +74,7 @@ function shouldDisable(cfg, { moduleName, instrumentationName, category } = {}) 
 
   // Case 3: Check if the category is marked as disabled
   const isCategoryDisabled =
-    category && DISABLABLE_CATEGORIES.has(category) && disableConfig.groups?.includes(category);
+    category && DISABLABLE_INSTRUMENTATION_GROUPS.has(category) && disableConfig.groups?.includes(category);
 
   return Boolean(isCategoryDisabled);
 }

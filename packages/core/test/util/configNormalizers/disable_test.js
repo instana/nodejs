@@ -137,6 +137,53 @@ describe('util.configNormalizers.disable', () => {
       const result = normalize(config);
       expect(result.groups).to.deep.equal([]);
     });
+
+    it('should handle mixed array of instrumentations and groups', () => {
+      const config = {
+        tracing: {
+          disable: ['aws-sdk', 'logging', 'mongodb', 'databases']
+        }
+      };
+
+      const result = normalize(config);
+      expect(result).to.deep.equal({
+        instrumentations: ['aws-sdk', 'mongodb'],
+        groups: ['logging', 'databases']
+      });
+    });
+
+    it('should handle empty disable config object', () => {
+      const config = {
+        tracing: {
+          disable: {}
+        }
+      };
+
+      const result = normalize(config);
+      expect(result).to.deep.equal({});
+    });
+
+    it('should handle null disable config', () => {
+      const config = {
+        tracing: {
+          disable: null
+        }
+      };
+
+      const result = normalize(config);
+      expect(result).to.deep.equal({});
+    });
+
+    it('should handle undefined disable config', () => {
+      const config = {
+        tracing: {
+          disable: undefined
+        }
+      };
+
+      const result = normalize(config);
+      expect(result).to.deep.equal({});
+    });
   });
 
   describe('Environment Variable Handling', () => {
@@ -210,6 +257,52 @@ describe('util.configNormalizers.disable', () => {
       const result = normalize(config);
 
       expect(result.groups).to.deep.equal(['logging', 'databases', 'messaging']);
+    });
+
+    it('should handle mixed environment variables', () => {
+      process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'aws-sdk,mongodb';
+      process.env.INSTANA_TRACING_DISABLE_GROUPS = 'logging,databases';
+
+      const config = {};
+      const result = normalize(config);
+
+      expect(result).to.deep.equal({
+        instrumentations: ['aws-sdk', 'mongodb'],
+        groups: ['logging', 'databases']
+      });
+    });
+
+    it('should handle INSTANA_TRACING_DISABLE with mixed groups and instrumentations', () => {
+      process.env.INSTANA_TRACING_DISABLE = 'aws-sdk,logging,mongodb,databases';
+
+      const config = {};
+      const result = normalize(config);
+
+      expect(result).to.deep.equal({
+        instrumentations: ['aws-sdk', 'mongodb'],
+        groups: ['logging', 'databases']
+      });
+    });
+
+    it('should handle empty string in environment variables', () => {
+      process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = '';
+      process.env.INSTANA_TRACING_DISABLE_GROUPS = '';
+
+      const config = {};
+      const result = normalize(config);
+
+      expect(result).to.deep.equal({});
+    });
+
+    it('should handle non-string values in array config', () => {
+      const config = {
+        tracing: {
+          disable: ['aws-sdk', 123, null, undefined, {}, 'mongodb']
+        }
+      };
+
+      const result = normalize(config);
+      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb']);
     });
   });
 });
