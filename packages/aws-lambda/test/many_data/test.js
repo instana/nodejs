@@ -171,7 +171,10 @@ describe('aws-lambda: many data', function () {
         env: {
           INSTANA_AGENT_KEY: instanaAgentKey,
           WITH_CONFIG: 'true',
-          INSTANA_NUMBER_OF_ITERATIONS: 100
+          INSTANA_NUMBER_OF_ITERATIONS: 100,
+          // increase transmission number
+          INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
+          INSTANA_TRACING_INITIAL_TRANSMISSION_DELAY: 1000
         }
       });
 
@@ -221,7 +224,7 @@ describe('aws-lambda: many data', function () {
     });
   });
 
-  describe('[batching disabled] with 100 iterations, 10 exits per request', function () {
+  describe('[batching disabled] with 100 iterations, default behavior', function () {
     let control;
 
     before(async () => {
@@ -232,11 +235,7 @@ describe('aws-lambda: many data', function () {
         env: {
           INSTANA_AGENT_KEY: instanaAgentKey,
           WITH_CONFIG: 'true',
-          INSTANA_NUMBER_OF_ITERATIONS: 100,
-          // TODO: This is currently off by default.
-          INSTANA_FORCE_TRANSMISSION_STARTING_AT: 10,
-          // Send out 100ms after initialization.
-          INSTANA_TRACING_TRANSMISSION_DELAY: 100
+          INSTANA_NUMBER_OF_ITERATIONS: 100
         }
       });
 
@@ -278,16 +277,11 @@ describe('aws-lambda: many data', function () {
               expect(rawBundles[0].spans.length).to.equal(1);
 
               // x requests buffered / splitted
-              expect(rawSpanArrays.length).to.equal(10);
-              expect(rawSpanArrays[0].length).to.equal(10);
-              expect(rawSpanArrays[1].length).to.equal(10);
-              expect(rawSpanArrays[2].length).to.equal(10);
-              expect(rawSpanArrays[3].length).to.equal(10);
-              expect(rawSpanArrays[4].length).to.equal(10);
-              expect(rawSpanArrays[5].length).to.equal(10);
-              expect(rawSpanArrays[6].length).to.equal(10);
-              expect(rawSpanArrays[7].length).to.equal(10);
-              expect(rawSpanArrays[8].length).to.equal(10);
+              expect(rawSpanArrays.length).to.equal(4);
+              expect(rawSpanArrays[0].length).to.equal(25);
+              expect(rawSpanArrays[1].length).to.equal(25);
+              expect(rawSpanArrays[2].length).to.equal(25);
+              expect(rawSpanArrays[3].length).to.equal(25);
 
               expect(spans.length).to.equal(101);
             });

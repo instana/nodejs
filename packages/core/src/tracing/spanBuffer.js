@@ -22,6 +22,8 @@ let activatedAt = null;
 /** @type {number} */
 let transmissionDelay;
 /** @type {number} */
+let initialTransmissionDelay;
+/** @type {number} */
 let maxBufferedSpans;
 /** @type {number} */
 let forceTransmissionStartingAt;
@@ -86,6 +88,7 @@ exports.init = function init(config, _downstreamConnection) {
   maxBufferedSpans = config.tracing.maxBufferedSpans;
   forceTransmissionStartingAt = config.tracing.forceTransmissionStartingAt;
   transmissionDelay = config.tracing.transmissionDelay;
+  initialTransmissionDelay = config.tracing.initialTransmissionDelay;
   batchingEnabled = config.tracing.spanBatchingEnabled;
   isFaaS = false;
   transmitImmediate = false;
@@ -97,6 +100,14 @@ exports.init = function init(config, _downstreamConnection) {
 
     preActivationCleanupIntervalHandle.unref();
   }
+
+  logger.debug(
+    `Span Buffer configured with maxBufferedSpans=${maxBufferedSpans},` +
+      `forceTransmissionStartingAt=${forceTransmissionStartingAt},` +
+      `transmissionDelay=${transmissionDelay},` +
+      `batchingEnabled=${batchingEnabled},` +
+      `batchThreshold=${batchThreshold}`
+  );
 };
 
 /**
@@ -131,7 +142,6 @@ exports.activate = function activate(extraConfig) {
 
   spans = [];
   batchingBuckets.clear();
-
   // NOTE: We do not want to use `setTimeout` in AWS Lambda, because
   //       the AWS runtime might execute the handler in a different lambda execution.
   //       On AWS Lambda we wait till the handler finishes and then transmit all collected spans via
@@ -140,7 +150,7 @@ exports.activate = function activate(extraConfig) {
   //       Spans are collected during the agent cycle -  we flush them here and assume we
   //       are connected to the agent.
   if (!isFaaS) {
-    transmissionTimeoutHandle = setTimeout(transmitSpans, transmissionDelay);
+    transmissionTimeoutHandle = setTimeout(transmitSpans, initialTransmissionDelay);
     transmissionTimeoutHandle.unref();
 
     // CASE: Flushing spans before process exits.
@@ -213,6 +223,10 @@ exports.addSpan = function (span) {
     }
 
     // NOTE: we send out spans directly if the number of spans reaches > 500 [default] and if the min delay is reached.
+    // TODO: what if there is only 2 spans -> aws has no setTimeout!!!! they wont be sent out
+    // NOTE: we send out spans directly if the number of spans reaches > X [default] and if the min delay is reached.
+    // CASE: its a "guessed" time to wait til the agent is connected. The regular timeout will kick in
+    //       soon and sends them out. This is not a reliable way, but its good enough for now.
     if (spans.length >= forceTransmissionStartingAt && Date.now() - transmissionDelay > activatedAt) {
       transmitSpans();
     }
@@ -413,6 +427,11 @@ function batchingBucketKey(span) {
 }
 
 /**
+ * IMPORTANT: Only some instrumentations are enabled to be batchable.
+ *            e.g. mysql, pg, redis, elasticsearch, etc.
+ *            Batching spans means to collect multiple spans of the same type
+ *            and merge them into one span.
+ *
  * @param {import('../core').InstanaBaseSpan} span
  * @returns {boolean}
  */
@@ -428,6 +447,8 @@ function isBatchable(span) {
 }
 
 function transmitSpans() {
+  logger.debug(`Transmitting spans called. There is ${spans.length} spans to send.`);
+
   clearTimeout(transmissionTimeoutHandle);
 
   if (spans.length === 0) {
@@ -442,8 +463,6 @@ function transmitSpans() {
   const spansToSend = spans;
   spans = [];
   batchingBuckets.clear();
-
-  logger.debug(`Sending spans via span buffer (no. of spans: ${spansToSend.length})`);
 
   // We restore the content of the spans array if sending them downstream was not successful. We do not restore
   // batchingBuckets, though. This is deliberate. In the worst case, we might miss some batching opportunities, but

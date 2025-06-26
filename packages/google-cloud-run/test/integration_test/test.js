@@ -185,7 +185,12 @@ describe('Google Cloud Run integration test', function () {
           return appControls.startBackendAndWaitForIt();
         })
         .then(() => {
-          // 4. cloud run collector should send uncompressed snapshot data and the spans as soon as the
+          // 4. wait a bit because if initially the metrics fail to be send, we have to wait
+          //    til they are resend
+          return delay(1100);
+        })
+        .then(() => {
+          // 5. cloud run collector should send uncompressed snapshot data and the spans as soon as the
           // back end comes up
           return verify(appControls, response, true);
         });
@@ -412,6 +417,7 @@ describe('Google Cloud Run integration test', function () {
     const googleCloudRunServiceRevisionInstancePayload = allEntities.find(
       pluginPayload => pluginPayload.name === 'com.instana.plugin.gcp.run.revision.instance'
     );
+
     expect(googleCloudRunServiceRevisionInstancePayload).to.exist;
     expect(googleCloudRunServiceRevisionInstancePayload.entityId).to.equal(instanceId);
     expect(Object.keys(googleCloudRunServiceRevisionInstancePayload)).to.have.lengthOf(3);
