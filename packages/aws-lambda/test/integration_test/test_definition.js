@@ -201,7 +201,7 @@ function registerTests(handlerDefinitionPath, reduced) {
     });
   });
 
-  describeOrSkipIfReduced(reduced)('when called with alias', function () {
+  describeOrSkipIfReduced(reduced)('when called with alias, no extension', function () {
     // - function is called with alias
     // - INSTANA_ENDPOINT_URL is configured
     // - INSTANA_AGENT_KEY is configured
@@ -3143,7 +3143,9 @@ function registerTests(handlerDefinitionPath, reduced) {
   function verifySpans(spans, expectations, control) {
     const { error, spanLength } = expectations;
 
-    expect(spans.length).to.equal(spanLength);
+    if (spanLength !== undefined) {
+      expect(spans.length).to.equal(spanLength);
+    }
 
     const entry = verifyLambdaEntry(spans, expectations);
     if (error !== 'lambda-synchronous') {

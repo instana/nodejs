@@ -207,7 +207,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
     );
 
     req.once('error', e => {
-      logger.debug(`[${requestId}] The Instana Lambda extension Heartbeat request did not succeed.`, e);
+      logger.debug(`[${requestId}] The Heartbeat request did not succeed.`, e);
 
       // req.destroyed indicates that we have run into a timeout and have
       // already handled the timeout error.
@@ -230,7 +230,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
     });
 
     function handleHeartbeatError() {
-      logger.debug(`[${requestId}] Falling back to talking to the Instana back end directly.`);
+      logger.debug(`[${requestId}] Giving up on Heartbeat request. Falling back to the serverless acceptor directly.`);
 
       options.useLambdaExtension = false;
       clearInterval(heartbeatInterval);
@@ -253,8 +253,8 @@ function scheduleLambdaExtensionHeartbeatRequest() {
   heartbeatInterval.unref();
 }
 
-function getTransport(localUseLambdaExtension) {
-  if (localUseLambdaExtension) {
+function getTransport() {
+  if (options.useLambdaExtension) {
     // The Lambda extension is always HTTP without TLS on localhost.
     return uninstrumented.http;
   } else {
@@ -262,8 +262,8 @@ function getTransport(localUseLambdaExtension) {
   }
 }
 
-function getBackendTimeout(localUseLambdaExtension) {
-  if (localUseLambdaExtension) {
+function getBackendTimeout() {
+  if (options.useLambdaExtension) {
     if (firstRequestToExtension) {
       firstRequestToExtension = false;
       return initialLayerExtensionRequestTimeout;
@@ -286,11 +286,6 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   if (tries === undefined) {
     tries = 0;
   }
-
-  // We need a local copy of the global useLambdaExtension variable, otherwise it might be changed concurrently by
-  // scheduleLambdaExtensionHeartbeatRequest. But we need to remember the value at the time we _started_ the request to
-  // decide whether to fall back to sending to the back end directly or give up sending data completely.
-  let localUseLambdaExtension = options.useLambdaExtension;
 
   if (!warningsHaveBeenLogged) {
     warningsHaveBeenLogged = true;
@@ -316,7 +311,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
 
   // prepend backend's path if the configured URL has a path component
   const requestPath =
-    localUseLambdaExtension || environmentUtil.getBackendPath() === '/'
+    options.useLambdaExtension || environmentUtil.getBackendPath() === '/'
       ? resourcePath
       : environmentUtil.getBackendPath() + resourcePath;
 
@@ -324,8 +319,8 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   const serializedPayload = JSON.stringify(payload);
 
   const reqOptions = {
-    hostname: localUseLambdaExtension ? layerExtensionHostname : environmentUtil.getBackendHost(),
-    port: localUseLambdaExtension ? layerExtensionPort : environmentUtil.getBackendPort(),
+    hostname: options.useLambdaExtension ? layerExtensionHostname : environmentUtil.getBackendHost(),
+    port: options.useLambdaExtension ? layerExtensionPort : environmentUtil.getBackendPort(),
     path: requestPath,
     method: 'POST',
     headers: {
@@ -345,15 +340,15 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
 
   // This timeout is for **inactivity** - Backend sends no data at all
   // So if the timeout is set to 500ms, it does not mean that the request will be aborted after 500ms
-  reqOptions.timeout = getBackendTimeout(localUseLambdaExtension);
+  reqOptions.timeout = getBackendTimeout(options.useLambdaExtension);
 
-  if (proxyAgent && !localUseLambdaExtension) {
+  if (proxyAgent && !options.useLambdaExtension) {
     reqOptions.agent = proxyAgent;
   }
 
   let req;
-  const skipWaitingForHttpResponse = !proxyAgent && !localUseLambdaExtension;
-  const transport = getTransport(localUseLambdaExtension);
+  const skipWaitingForHttpResponse = !proxyAgent && !options.useLambdaExtension;
+  const transport = getTransport(options.useLambdaExtension);
   const start = Date.now();
 
   if (skipWaitingForHttpResponse) {
@@ -422,16 +417,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
       delete requests[requestId];
     }
 
-    onTimeout(
-      localUseLambdaExtension,
-      req,
-      resourcePath,
-      payload,
-      finalLambdaRequest,
-      handleCallback,
-      tries,
-      requestId
-    );
+    onTimeout(req, resourcePath, payload, finalLambdaRequest, handleCallback, tries, requestId);
   });
 
   req.on('error', e => {
@@ -451,7 +437,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
       return;
     }
 
-    if (localUseLambdaExtension) {
+    if (options.useLambdaExtension) {
       // This is a failure from talking to the Lambda extension on localhost. Most probably it is simply not available
       // because @instana/aws-lambda has been installed as a normal npm dependency instead of using Instana's
       // Lambda layer. We use this failure as a signal to not try to the extension again and instead fall back to
@@ -466,10 +452,10 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
 
         // Retry the request immediately, this time sending it to serverless-acceptor directly.
         logger.debug(
-          `[${requestId}] Giving up with the extension...trying to send data to Instana serverless BE directly.`
+          `[${requestId}] Giving up with the extension...trying to send data to the serverless acceptor directly.`
         );
 
-        options.useLambdaExtension = localUseLambdaExtension = false;
+        options.useLambdaExtension = false;
         return send({ resourcePath, payload, finalLambdaRequest, callback, tries: 0, requestId });
       }
 
@@ -529,38 +515,27 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   }
 }
 
-function onTimeout(
-  localUseLambdaExtension,
-  req,
-  resourcePath,
-  payload,
-  finalLambdaRequest,
-  handleCallback,
-  tries,
-  requestId
-) {
-  if (localUseLambdaExtension) {
+function onTimeout(req, resourcePath, payload, finalLambdaRequest, handleCallback, tries, requestId) {
+  if (options.useLambdaExtension) {
     // This is a timeout from talking to the Lambda extension on localhost. Most probably it is simply not available
     // because @instana/aws-lambda has been installed as a normal npm dependency instead of using Instana's
     // Lambda layer. We use this failure as a signal to not try to the extension again and instead fall back to
-    // talking to serverless-acceptor directly. We also immediately retry the current request with that new downstream
+    // talking to serverless acceptor directly. We also immediately retry the current request with that new downstream
     // target in place.
-    logger.debug(
-      `[${requestId}] Request timed out while trying to talk to Instana Lambda extension. ` +
-        'Falling back to talking to the Instana back end directly.'
-    );
+    logger.debug(`[${requestId}] Request timed out while trying to talk to Instana Lambda extension.`);
 
     cleanupRequest(req);
 
+    // CASE: It could be that a parallel request or the heartbeat already set useLambdaExtension to false.
     if (options.retries === false || tries >= 1) {
       clearInterval(heartbeatInterval);
 
-      // Retry the request immediately, this time sending it to serverless-acceptor directly.
+      // Retry the request immediately, this time sending it to serverless acceptor directly.
       logger.debug(
-        `[${requestId}] Giving up with the extension...trying to send data to Instana serverless BE directly.`
+        `[${requestId}] Giving up with the extension...trying to send data to Instana serverless acceptor directly.`
       );
 
-      options.useLambdaExtension = localUseLambdaExtension = false;
+      options.useLambdaExtension = false;
       return send({ resourcePath, payload, finalLambdaRequest, callback: handleCallback, tries: 0, requestId });
     }
 

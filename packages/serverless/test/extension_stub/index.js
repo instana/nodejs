@@ -80,17 +80,17 @@ app.all('*', (req, res) => {
   const stringifiedBody = JSON.stringify(req.body);
   logger.debug(`incoming request: ${req.method} ${req.url}`);
 
+  if (unresponsive) {
+    // intentionally not responding for tests that verify proper timeout handling
+    return;
+  }
+
   // Store spans so we can later verify that the spans were actually sent to the extension instead of having been
   // sent directly to the back end.
   if (req.url === '/bundle' && req.body.spans) {
     storeSpans(req.body.spans);
   } else if (req.url === '/traces' && Array.isArray(req.body)) {
     storeSpans(req.body);
-  }
-
-  if (unresponsive) {
-    // intentionally not responding for tests that verify proper timeout handling
-    return;
   }
 
   // Forward data to the back end.
