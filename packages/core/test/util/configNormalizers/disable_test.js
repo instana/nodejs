@@ -355,7 +355,19 @@ describe('util.configNormalizers.disable', () => {
 
       expect(result).to.deep.equal({});
     });
+
+    it('should prioritize INSTANA_TRACING_DISABLE over other env', () => {
+      process.env.INSTANA_TRACING_DISABLE = 'true';
+      process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'aws-sdk,mongodb';
+      process.env.INSTANA_TRACING_DISABLE_GROUPS = 'logging,databases';
+
+      const config = {};
+      const result = normalize(config);
+
+      expect(result).to.deep.equal(true);
+    });
   });
+
   describe('config from agent', () => {
     it('should handle config with true values', () => {
       const config = {

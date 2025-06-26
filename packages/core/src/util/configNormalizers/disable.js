@@ -115,9 +115,10 @@ exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
 
 /**
  * Priority (highest to lowest):
- * 1. INSTANA_TRACING_DISABLE_INSTRUMENTATIONS / INSTANA_TRACING_DISABLE_GROUPS
- * 2. INSTANA_TRACING_DISABLE=list
- * 3. INSTANA_DISABLED_TRACERS (deprecated)
+ * 1. INSTANA_TRACING_DISABLE=true/false
+ * 2. INSTANA_TRACING_DISABLE_INSTRUMENTATIONS / INSTANA_TRACING_DISABLE_GROUPS
+ * 3. INSTANA_TRACING_DISABLE=list
+ * 4. INSTANA_DISABLED_TRACERS (deprecated)
  *
  * @returns  {import('../../tracing').Disable}
  */

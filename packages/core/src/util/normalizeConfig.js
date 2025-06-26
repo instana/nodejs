@@ -268,7 +268,7 @@ function normalizeTracingEnabled(config) {
     logger.info('Not enabling tracing as it is explicitly disabled via environment variable INSTANA_DISABLE_TRACING.');
     logger.warn(
       'The environment variable INSTANA_DISABLE_TRACING is deprecated and will be removed in the next major release. ' +
-        'Please use INSTANA_TRACING_DISABLE instead.'
+        'Please use INSTANA_TRACING_DISABLE=true instead.'
     );
     config.tracing.enabled = false;
     return;
@@ -521,15 +521,15 @@ function normalizeNumericalStackTraceLength(numericalLength) {
  */
 function normalizeDisableTracing(config) {
   const disableConfig = configNormalizers.disable.normalize(config);
-  console.log('-------------', disableConfig);
+
+  // If tracing is globally disabled (via `disable: true` or INSTANA_TRACING_DISABLE=true ),
+  // mark `tracing.enabled` as false and clear any specific disable rules.
   if (disableConfig === true) {
-    console.log('-------aa-----gggg');
     config.tracing.enabled = false;
     config.tracing.disable = {};
-    // console.log('------------gggg', config.tracing);
     return;
   }
-  console.log('------------gggg');
+
   if (typeof disableConfig === 'object' && (disableConfig.instrumentations?.length || disableConfig.groups?.length)) {
     config.tracing.disable = disableConfig;
     return;
