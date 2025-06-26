@@ -447,7 +447,7 @@ function isBatchable(span) {
 }
 
 function transmitSpans() {
-  logger.debug(`Transmitting spans called. There is ${spans.length} spans to send.`);
+  logger.debug(`[spanBuffer] Transmitting spans called. There is ${spans.length} spans to send.`);
 
   clearTimeout(transmissionTimeoutHandle);
 
