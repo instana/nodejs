@@ -104,6 +104,7 @@ exports.init = function init(config, _downstreamConnection) {
   logger.debug(
     `Span Buffer configured with maxBufferedSpans=${maxBufferedSpans},` +
       `forceTransmissionStartingAt=${forceTransmissionStartingAt},` +
+      `initialTransmissionDelay=${initialTransmissionDelay},` +
       `transmissionDelay=${transmissionDelay},` +
       `batchingEnabled=${batchingEnabled},` +
       `batchThreshold=${batchThreshold}`
