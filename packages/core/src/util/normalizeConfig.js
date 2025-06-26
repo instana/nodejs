@@ -268,7 +268,7 @@ function normalizeTracingEnabled(config) {
     logger.info('Not enabling tracing as it is explicitly disabled via environment variable INSTANA_DISABLE_TRACING.');
     logger.warn(
       'The environment variable INSTANA_DISABLE_TRACING is deprecated and will be removed in the next major release. ' +
-        'Please use INSTANA_TRACING_DISABLE=true instead.'
+        'Please use INSTANA_TRACING_DISABLE="true" instead.'
     );
     config.tracing.enabled = false;
     return;
