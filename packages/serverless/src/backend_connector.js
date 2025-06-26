@@ -17,7 +17,7 @@ const layerExtensionPort = process.env.INSTANA_LAYER_EXTENSION_PORT
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
 
 // NOTE: The heartbeat is usually really, really fast (<30ms).
-const layerExtensionHeartbeatTimeout = 200;
+const layerExtensionHeartbeatTimeout = 100;
 
 // NOTE: The initial heartbeat can be very slow when the Lambda is in cold start.
 const initialLayerExtensionHeartbeatTimeout = 2000;
@@ -43,7 +43,8 @@ const defaults = {
   identityProvider: null,
   isLambdaRequest: false,
   backendTimeout: 500,
-  useLambdaExtension: false
+  useLambdaExtension: false,
+  retries: false
 };
 
 let logger;
@@ -149,7 +150,7 @@ exports.sendMetrics = function sendMetrics(metrics, callback) {
 
 exports.sendSpans = function sendSpans(spans, callback) {
   const requestId = getRequestId();
-  logger.debug(`[${requestId}] Sending spans to Instana (no. of spans: ${spans.length})`);
+  logger.debug(`[${requestId}] Sending spans to Instana (no. of spans: ${spans?.length})`);
   send({ resourcePath: '/traces', payload: spans, finalLambdaRequest: false, callback, requestId });
 };
 
@@ -330,7 +331,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
     headers: {
       'Content-Type': 'application/json',
       'Content-Length': Buffer.byteLength(serializedPayload),
-      Connection: 'close',
+      Connection: 'keep-alive',
       [constants.xInstanaHost]: hostHeader,
       [constants.xInstanaKey]: environmentUtil.getInstanaAgentKey()
     },
@@ -460,7 +461,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
         `[${requestId}] Could not connect to the Instana Lambda extension (tries: ${tries}). ${e?.message} ${e?.stack}`
       );
 
-      if (tries >= 1) {
+      if (options.retries === false || tries >= 1) {
         clearInterval(heartbeatInterval);
 
         // Retry the request immediately, this time sending it to serverless-acceptor directly.
@@ -477,18 +478,18 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
     } else {
       if (proxyAgent) {
         logger.warn(
-          `[${requestId}] Could not send data to ${resourcePath}. Could not connect to the configured proxy ` +
+          `[${requestId}] Could not send trace data to ${resourcePath}. Could not connect to the configured proxy ` +
             `${process.env[proxyEnvVar]}.` +
             `${e?.message} ${e?.stack}`
         );
       } else {
         logger.warn(
-          `[${requestId}] Could not send data to ${resourcePath}. ` +
+          `[${requestId}] Could not send trace data to ${resourcePath}. ` +
             `The Instana back end seems to be unavailable. ${e?.message} , ${e?.stack}`
         );
       }
 
-      if (tries >= 1) {
+      if (options.retries === false || tries >= 1) {
         logger.debug(`[${requestId}] Giving up...`);
         return handleCallback(e);
       }
@@ -551,7 +552,7 @@ function onTimeout(
 
     destroyRequest(req);
 
-    if (tries >= 1) {
+    if (options.retries === false || tries >= 1) {
       clearInterval(heartbeatInterval);
 
       // Retry the request immediately, this time sending it to serverless-acceptor directly.
@@ -582,7 +583,7 @@ function onTimeout(
 
     logger.warn(`[${requestId}] ${message}`);
 
-    if (tries >= 1) {
+    if (options.retries === false || tries >= 1) {
       logger.debug(`[${requestId}] Giving up...`);
       return handleCallback();
     }
