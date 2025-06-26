@@ -83,9 +83,6 @@ exports.isIntermediateSpan = function isIntermediateSpan(span) {
   return span && span.k === exports.INTERMEDIATE;
 };
 
-// ==============================================
-// Instrumentation groups that can be disabled
-// ==============================================
 /**
  * Set of all instrumentation groups that can be disabled.
  * @type {Set<string>}

@@ -385,7 +385,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.disable.instrumentations).to.deep.equal(['redis', 'kafka']);
   });
 
-  it('should disable instrumentations and groups when both configured env variables provided', () => {
+  it('should disable instrumentations and groups when both env variables provided', () => {
     process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'redis';
     process.env.INSTANA_TRACING_DISABLE_GROUPS = 'logging';
     const config = normalizeConfig();

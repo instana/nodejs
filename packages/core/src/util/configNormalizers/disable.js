@@ -143,7 +143,7 @@ function categorizeDisableEntries(rawEntries) {
 
   rawEntries.forEach(entry => {
     if (typeof entry !== 'string') return;
-    const normalizedEntry = entry?.toLowerCase()?.trim();
+    const normalizedEntry = entry?.toLowerCase().trim();
     if (!normalizedEntry) return;
 
     // The supported groups are predefined in DISABLABLE_INSTRUMENTATION_GROUPS.
