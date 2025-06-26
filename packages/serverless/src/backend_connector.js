@@ -421,7 +421,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   });
 
   req.on('error', e => {
-    logger.debug(`[${requestId}] Error while sending data to Instana (${requestPath}).`, e);
+    logger.debug(`[${requestId}] Error while sending data to Instana (${requestPath}): ${e?.message} ${e?.stack}`);
 
     if (options.isLambdaRequest) {
       delete requests[requestId];
@@ -443,9 +443,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
       // Lambda layer. We use this failure as a signal to not try to the extension again and instead fall back to
       // talking to serverless-acceptor directly. We also immediately retry the current request with that new downstream
       // target in place.
-      logger.debug(
-        `[${requestId}] Could not connect to the Instana Lambda extension (tries: ${tries}). ${e?.message} ${e?.stack}`
-      );
+      logger.debug(`[${requestId}] Could not connect to the Instana Lambda extension (tries: ${tries}).`);
 
       if (options.retries === false || tries >= 1) {
         clearInterval(heartbeatInterval);

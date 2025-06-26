@@ -65,7 +65,8 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
     INSTANA_AWS_SSM_TIMEOUT_IN_MS: 1000 * 10
   };
 
-  if (!this.opts.startExtension) {
+  // If the test does not make use of `startExtension`, we assume its not using the extension.
+  if (!('startExtension' in this.opts)) {
     envs.INSTANA_DISABLE_LAMBDA_EXTENSION = true;
   }
 

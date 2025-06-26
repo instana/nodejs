@@ -109,6 +109,7 @@ function prelude(opts) {
   if (opts.serverTiming) {
     env.SERVER_TIMING_HEADER = opts.serverTiming;
   }
+
   // The option useExtension controls whether the Lambda under test should try to talk to the extension or to the back
   // end directly.
   if (opts.useExtension) {
@@ -1402,7 +1403,7 @@ function registerTests(handlerDefinitionPath, reduced) {
 
   // eslint-disable-next-line max-len
   describeOrSkipIfReduced(reduced)(
-    'when the extension is used, but the extension is not available yet and initial heartbeat timeout gets triggered',
+    'when the extension is used, but the initial heartbeat response is delayed',
     function () {
       const env = prelude.bind(this)({
         handlerDefinitionPath,
@@ -1417,7 +1418,7 @@ function registerTests(handlerDefinitionPath, reduced) {
           faasRuntimePath: path.join(__dirname, '../runtime_mock'),
           handlerDefinitionPath,
           startBackend: true,
-          startExtension: 'unresponsive-later',
+          startExtension: 'heartbeat-responsive-later',
           env
         });
 
@@ -1452,6 +1453,207 @@ function registerTests(handlerDefinitionPath, reduced) {
       });
     }
   );
+
+  // eslint-disable-next-line max-len
+  describeOrSkipIfReduced(reduced)(
+    'when the extension is used, but the initial heartbeat response times out',
+    function () {
+      const env = prelude.bind(this)({
+        handlerDefinitionPath,
+        useExtension: true,
+        instanaAgentKey
+      });
+
+      let control;
+
+      before(async () => {
+        control = new Control({
+          faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+          handlerDefinitionPath,
+          startBackend: true,
+          startExtension: 'heartbeat-unresponsive',
+          env
+        });
+
+        await control.start();
+      });
+
+      beforeEach(async () => {
+        await control.reset();
+        await control.resetBackendSpansAndMetrics();
+      });
+
+      after(async () => {
+        await control.stop();
+      });
+
+      it('must deliver metrics and spans directly to the back end', async () => {
+        await verify(control, { error: false, expectMetrics: true, expectSpans: true });
+
+        // With the heartbeat request succeeding but the extension becoming unresponsive later, the outcome basically
+        // depends on whether we store the spans in the extenion stub when it is simulating unresponsiveness or not.
+        // Currently we do that, so we expect 2 spans.
+        return retry(async () => {
+          const spansFromExtension = await control.getSpansFromExtension();
+
+          // 1 heartbeat to extension -> runs into initial heartbeat timeout (currently 2s)
+          // Meanwhile spans are coming in and the extension is alive -> 2 spans from extension!
+          expect(spansFromExtension).to.have.length(2);
+
+          const spans = await control.getSpans();
+          expect(spans).to.have.length(2);
+        });
+      });
+    }
+  );
+
+  // eslint-disable-next-line max-len
+  describeOrSkipIfReduced(reduced)('when the extension is used, but the trace request times out', function () {
+    const env = prelude.bind(this)({
+      handlerDefinitionPath,
+      useExtension: true,
+      instanaAgentKey
+    });
+
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath,
+        startBackend: true,
+        startExtension: 'trace-responsive-later',
+        env
+      });
+
+      await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must deliver metrics and spans directly to the back end', async () => {
+      await verify(control, { error: false, expectMetrics: true, expectSpans: true });
+
+      // With the heartbeat request succeeding but the extension becoming unresponsive later, the outcome basically
+      // depends on whether we store the spans in the extenion stub when it is simulating unresponsiveness or not.
+      // Currently we do that, so we expect 2 spans.
+      return retry(async () => {
+        const spansFromExtension = await control.getSpansFromExtension();
+
+        // 1 heartbeat to extension -> runs into initial heartbeat timeout (currently 2s)
+        // Meanwhile spans are coming in and the extension is alive -> 2 spans from extension!
+        expect(spansFromExtension).to.have.length(2);
+
+        const spans = await control.getSpans();
+        expect(spans).to.have.length(2);
+      });
+    });
+  });
+
+  // eslint-disable-next-line max-len
+  describeOrSkipIfReduced(reduced)('when the extension is used, but the trace request times out forever', function () {
+    const env = prelude.bind(this)({
+      handlerDefinitionPath,
+      useExtension: true,
+      instanaAgentKey
+    });
+
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath,
+        startBackend: true,
+        startExtension: 'trace-responsive-later-forever',
+        env
+      });
+
+      await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must deliver metrics and spans directly to the back end', async () => {
+      await verify(control, { error: false, expectMetrics: true, expectSpans: true });
+
+      // With the heartbeat request succeeding but the extension becoming unresponsive later, the outcome basically
+      // depends on whether we store the spans in the extenion stub when it is simulating unresponsiveness or not.
+      // Currently we do that, so we expect 2 spans.
+      return retry(async () => {
+        const spansFromExtension = await control.getSpansFromExtension();
+
+        // Times out twice to extenstion -> direct backend transmit
+        expect(spansFromExtension).to.have.length(0);
+
+        const spans = await control.getSpans();
+        expect(spans).to.have.length(2);
+      });
+    });
+  });
+
+  // eslint-disable-next-line max-len
+  describeOrSkipIfReduced(reduced)('when the extension is used, but the trace request errors', function () {
+    const env = prelude.bind(this)({
+      handlerDefinitionPath,
+      useExtension: true,
+      instanaAgentKey
+    });
+
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath,
+        startBackend: true,
+        startExtension: 'trace-throws-error',
+        env
+      });
+
+      await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('must deliver metrics and spans directly to the back end', async () => {
+      await verify(control, { error: false, expectMetrics: true, expectSpans: true });
+
+      // With the heartbeat request succeeding but the extension becoming unresponsive later, the outcome basically
+      // depends on whether we store the spans in the extenion stub when it is simulating unresponsiveness or not.
+      // Currently we do that, so we expect 2 spans.
+      return retry(async () => {
+        const spansFromExtension = await control.getSpansFromExtension();
+
+        // it falls back to direct transmit
+        expect(spansFromExtension).to.have.length(0);
+
+        const spans = await control.getSpans();
+        expect(spans).to.have.length(2);
+      });
+    });
+  });
 
   describeOrSkipIfReduced(reduced)(
     'when the extension is used, but is unresponsive and BE throws ECONNREFUSED',

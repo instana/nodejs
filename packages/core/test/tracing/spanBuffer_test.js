@@ -12,7 +12,7 @@ const delay = require('../test_util/delay');
 const testUtils = require('../test_util');
 const { generateRandomSpanId, generateRandomTraceId } = require('../../src/tracing/tracingUtil');
 
-describe('tracing/spanBuffer', () => {
+describe.only('tracing/spanBuffer', () => {
   const start = 18000; // arbitrary reference timestamp
 
   const traceId1 = generateRandomTraceId();
@@ -546,6 +546,7 @@ describe('tracing/spanBuffer', () => {
       before(() => {
         spanBuffer.init(
           {
+            logger: testUtils.createFakeLogger(),
             tracing: {
               maxBufferedSpans: 1000,
               forceTransmissionStartingAt: 500,
