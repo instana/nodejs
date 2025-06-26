@@ -31,7 +31,7 @@ function activate(_agentConfig) {
  */
 function getModuleName(instrumentationPath) {
   // Extracts the module name from the instrumentationPath.
-  // Tries to match the pattern './instrumentation/<category>/<module>' and extract the <module> part.
+  // Tries to match the pattern './instrumentation/<group>/<module>' and extract the <module> part.
   // If that pattern doesn't match (e.g., in custom instrumentation cases),
   // it falls back to extracting the last segment of the instrumentationPath after the final '/'.
   const matchResult = instrumentationPath.match(/.\/instrumentation\/[^/]*\/(.*)/);
@@ -40,13 +40,13 @@ function getModuleName(instrumentationPath) {
 }
 
 /**
- * Extracts category and module from an instrumentation instrumentationPath
+ * Extracts group and module from an instrumentation instrumentationPath
  * @param {string} instrumentationPath
- * @returns {{category: string, module: string}|null}
+ * @returns {{group: string, module: string}|null}
  */
 function getCategoryAndModule(instrumentationPath) {
   const match = instrumentationPath.match(/\.\/instrumentation\/([^/]+)\/([^/]+)/);
-  return match ? { category: match[1], module: match[2] } : null;
+  return match ? { group: match[1], module: match[2] } : null;
 }
 
 /**
@@ -54,9 +54,9 @@ function getCategoryAndModule(instrumentationPath) {
  * @param {object} options
  * @param {string} [options.moduleName]
  * @param {string} [options.instrumentationName]
- * @param {string} [options.category]
+ * @param {string} [options.group]
  */
-function shouldDisable(cfg, { moduleName, instrumentationName, category } = {}) {
+function shouldDisable(cfg, { moduleName, instrumentationName, group } = {}) {
   const disableConfig = cfg.tracing?.disable;
 
   // If neither instrumentations nor groups are configured for disabling, tracing is enabled
@@ -64,7 +64,7 @@ function shouldDisable(cfg, { moduleName, instrumentationName, category } = {}) 
     return false;
   }
 
-  // Case 2: Check if module or instrumentation is explicitly disabled
+  // Case 1: Check if module or instrumentation is explicitly disabled
   if (
     (moduleName && disableConfig.instrumentations?.includes(moduleName)) ||
     (instrumentationName && disableConfig.instrumentations?.includes(instrumentationName))
@@ -72,9 +72,9 @@ function shouldDisable(cfg, { moduleName, instrumentationName, category } = {}) 
     return true;
   }
 
-  // Case 3: Check if the category is marked as disabled
+  // Case 2: Check if the group is marked as disabled
   const isCategoryDisabled =
-    category && DISABLABLE_INSTRUMENTATION_GROUPS.has(category) && disableConfig.groups?.includes(category);
+    group && DISABLABLE_INSTRUMENTATION_GROUPS.has(group) && disableConfig.groups?.includes(group);
 
   return Boolean(isCategoryDisabled);
 }
@@ -88,9 +88,9 @@ function shouldDisable(cfg, { moduleName, instrumentationName, category } = {}) 
 function isInstrumentationDisabled({ instrumentationModules = {}, instrumentationKey }) {
   const moduleName = getModuleName(instrumentationKey);
   const instrumentationName = instrumentationModules[instrumentationKey]?.instrumentationName;
-  const { category } = getCategoryAndModule(instrumentationKey) || {};
+  const { group } = getCategoryAndModule(instrumentationKey) || {};
 
-  const context = { moduleName, instrumentationName, category };
+  const context = { moduleName, instrumentationName, group };
 
   // Give priority to service-level config
   if (config && shouldDisable(config, context)) {

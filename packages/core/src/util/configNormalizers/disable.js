@@ -21,7 +21,7 @@ exports.init = function init(_config) {
  * Precedence order (highest to lowest):
  * 1. `tracing.disable`
  * 2. `tracing.disabledTracers` (deprecated)
- * 2. Environment variables (`INSTANA_TRACING_DISABLE*`)
+ * 3. Environment variables (`INSTANA_TRACING_DISABLE*`)
  *
  * @param {import('../../util/normalizeConfig').InstanaConfig} config
  */
