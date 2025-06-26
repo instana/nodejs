@@ -21,7 +21,7 @@ const configNormalizers = require('./configNormalizers');
  * @property {number} [transmissionDelay]
  * @property {number} [stackTraceLength]
  * @property {HTTPTracingOptions} [http]
- * @property {TracingDisableOptions} [disable]
+ * @property {import('../tracing').Disable} [disable]
  * @property {Array<string>} [disabledTracers]
  * @property {boolean} [spanBatchingEnabled]
  * @property {boolean} [disableW3cTraceCorrelation]
@@ -29,12 +29,6 @@ const configNormalizers = require('./configNormalizers');
  * @property {boolean} [allowRootExitSpan]
  * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
  * @property {boolean} [ignoreEndpointsDisableSuppression]
- */
-
-/**
- * @typedef {Object} TracingDisableOptions
- * @property {string[]} [instrumentations]
- * @property {string[]} [groups]
  */
 
 /**
@@ -88,7 +82,7 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
  * @property {AgentTracingKafkaConfig} [kafka]
  * @property {boolean|string} [spanBatchingEnabled]
  * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
- * @property {TracingDisableOptions} [disable]
+ * @property {import('../tracing').Disable} [disable]
  */
 
 /**

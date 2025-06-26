@@ -129,6 +129,16 @@ if (customInstrumentations.length > 0) {
  * @property {string[]} [connections]
  */
 
+/**
+ * @typedef {TracingDisableOptions} Disable
+ */
+
+/**
+ * @typedef {Object} TracingDisableOptions
+ * @property {string[]} [instrumentations]
+ * @property {string[]} [groups]
+ */
+
 /** @type {Array.<InstanaInstrumentedModule>} */
 let additionalInstrumentationModules = [];
 /** @type {Object.<string, InstanaInstrumentedModule>} */

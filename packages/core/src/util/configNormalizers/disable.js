@@ -63,6 +63,7 @@ exports.normalize = function normalize(config) {
     return disableConfig || {};
   } catch (error) {
     // Fallback to an empty disable config on error
+    logger?.warn('Error while normalizing tracing.disable config.', error);
     return {};
   }
 };
@@ -72,22 +73,26 @@ exports.normalize = function normalize(config) {
  * @param {import('../../util/normalizeConfig').InstanaConfig} config
  */
 exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
-  if (!config?.tracing?.disable) return {};
   try {
     if (typeof config.tracing.disable === 'object') {
-      const disableEntries = flattenDisableConfigs(config.tracing.disable);
-      return categorizeDisableEntries(disableEntries);
+      const flattenedEntries = flattenDisableConfigs(config.tracing.disable);
+      return categorizeDisableEntries(flattenedEntries);
     }
-  } catch (error) {
-    // Fallback to an empty disable config on error
-    return {};
+  } catch (err) {
+    logger?.warn('Error while normalizing external tracing.disable config.', err);
   }
+
+  return {};
 };
 
-// Environment variable precedence  (highest to lowest)
-// 1. INSTANA_TRACING_DISABLE_INSTRUMENTATIONS and INSTANA_TRACING_DISABLE_GROUPS
-// 2. INSTANA_TRACING_DISABLE – supports both instrumentations and groups
-// 3. INSTANA_DISABLED_TRACERS – deprecated
+/**
+ * Priority (highest to lowest):
+ * 1. INSTANA_TRACING_DISABLE_INSTRUMENTATIONS / INSTANA_TRACING_DISABLE_GROUPS
+ * 2. INSTANA_TRACING_DISABLE=list
+ * 3. INSTANA_DISABLED_TRACERS (deprecated)
+ *
+ * @returns  {import('../../tracing').Disable}
+ */
 function getDisableFromEnv() {
   const disable = {};
 
