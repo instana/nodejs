@@ -37,6 +37,7 @@ const disableCaCheck = process.env[disableCaCheckEnvVar] === 'true';
 let proxyAgent;
 let warningsHaveBeenLogged = false;
 let firstRequestToExtension = true;
+
 const defaults = {
   config: {},
   identityProvider: null,
@@ -137,19 +138,19 @@ exports.init = function init(opts) {
 exports.sendBundle = function sendBundle(bundle, finalLambdaRequest, callback) {
   const requestId = getRequestId();
   logger.debug(`[${requestId}] Sending bundle to Instana (no. of spans: ${bundle?.spans?.length ?? 'unknown'})`);
-  send({ resourcePath: '/bundle', payload: bundle, finalLambdaRequest, tries: 0, callback, requestId });
+  send({ resourcePath: '/bundle', payload: bundle, finalLambdaRequest, callback, requestId });
 };
 
 exports.sendMetrics = function sendMetrics(metrics, callback) {
   const requestId = getRequestId();
   logger.debug(`[${requestId}] Sending metrics to Instana (no. of metrics: ${metrics?.plugins?.length})`);
-  send({ resourcePath: '/metrics', payload: metrics, finalLambdaRequest: false, tries: 0, callback, requestId });
+  send({ resourcePath: '/metrics', payload: metrics, finalLambdaRequest: false, callback, requestId });
 };
 
 exports.sendSpans = function sendSpans(spans, callback) {
   const requestId = getRequestId();
   logger.debug(`[${requestId}] Sending spans to Instana (no. of spans: ${spans.length})`);
-  send({ resourcePath: '/traces', payload: spans, finalLambdaRequest: false, tries: 0, callback, requestId });
+  send({ resourcePath: '/traces', payload: spans, finalLambdaRequest: false, callback, requestId });
 };
 
 let heartbeatInterval;
@@ -280,6 +281,10 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
     callbackWasCalled = true;
     callback(args);
   };
+
+  if (tries === undefined) {
+    tries = 0;
+  }
 
   // We need a local copy of the global useLambdaExtension variable, otherwise it might be changed concurrently by
   // scheduleLambdaExtensionHeartbeatRequest. But we need to remember the value at the time we _started_ the request to
