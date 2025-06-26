@@ -18,6 +18,7 @@ describe('util.normalizeConfig', () => {
   function resetEnv() {
     delete process.env.INSTANA_DISABLED_TRACERS;
     delete process.env.INSTANA_DISABLE_AUTO_INSTR;
+    // deprecated
     delete process.env.INSTANA_DISABLE_TRACING;
     delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
     delete process.env.INSTANA_TRACING_DISABLE_GROUPS;
