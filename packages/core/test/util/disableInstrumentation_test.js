@@ -344,7 +344,7 @@ describe('util.disableInstrumentation', () => {
       expect(bunyanResult).to.be.false;
     });
 
-    it('should precedence enable over disable for groups', () => {
+    it('should priotize enable config over disable config in case of groups', () => {
       disableInstrumentation.init({
         tracing: {
           disable: { groups: ['logging', '!logging'] }
