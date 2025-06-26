@@ -399,8 +399,9 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
     }
 
     logger.debug(`[${requestId}] Received HTTP status code ${statusCode} from Instana (${requestPath}).`);
-    logger.debug(`[${requestId}] Sending and receiving data to Instana in ms: ${Date.now() - start} ms.`);
+    logger.debug(`[${requestId}] Sending and receiving data to Instana took: ${Date.now() - start} ms.`);
 
+    cleanupRequest(req);
     delete requests[requestId];
   });
 
