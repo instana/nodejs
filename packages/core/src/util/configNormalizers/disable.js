@@ -60,6 +60,12 @@ exports.normalize = function normalize(config) {
       return categorizeDisableEntries(disableConfig);
     }
 
+    // Case: config coming from the agent
+    if (typeof disableConfig === 'object' && !('instrumentations' in disableConfig) && !('groups' in disableConfig)) {
+      const disableEntries = flattenDisableConfigs(disableConfig);
+      return categorizeDisableEntries(disableEntries);
+    }
+
     return disableConfig || {};
   } catch (error) {
     // Fallback to an empty disable config on error
