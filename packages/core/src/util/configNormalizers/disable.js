@@ -63,7 +63,7 @@ exports.normalize = function normalize(config) {
     return disableConfig || {};
   } catch (error) {
     // Fallback to an empty disable config on error
-    logger?.warn(`Error while normalizing tracing.disable config: ${error?.message} ${error?.stack}`);
+    logger?.debug(`Error while normalizing tracing.disable config: ${error?.message} ${error?.stack}`);
     return {};
   }
 };
@@ -79,7 +79,7 @@ exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
       return categorizeDisableEntries(flattenedEntries);
     }
   } catch (error) {
-    logger?.warn(`Error while normalizing external tracing.disable config: ${error?.message} ${error?.stack}`);
+    logger?.debug(`Error while normalizing external tracing.disable config: ${error?.message} ${error?.stack}`);
   }
 
   return {};
