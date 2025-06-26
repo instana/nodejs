@@ -16,7 +16,7 @@ exports.init = function init(_config) {
 };
 
 /**
- * Handles deprecated properties, environment variables, array and object inputs .
+ * Handles deprecated properties, environment variables, and array inputs.
  *
  * Precedence order (highest to lowest):
  * 1. `tracing.disable`
@@ -60,13 +60,24 @@ exports.normalize = function normalize(config) {
       return categorizeDisableEntries(disableConfig);
     }
 
-    // Case: config coming from the agent
-    if (typeof disableConfig === 'object' && !('instrumentations' in disableConfig) && !('groups' in disableConfig)) {
-      const disableEntries = flattenDisableConfigs(disableConfig);
+    return disableConfig || {};
+  } catch (error) {
+    // Fallback to an empty disable config on error
+    return {};
+  }
+};
+
+/**
+ * Handles config from agent.
+ * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ */
+exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
+  if (!config?.tracing?.disable) return {};
+  try {
+    if (typeof config.tracing.disable === 'object') {
+      const disableEntries = flattenDisableConfigs(config.tracing.disable);
       return categorizeDisableEntries(disableEntries);
     }
-
-    return disableConfig || {};
   } catch (error) {
     // Fallback to an empty disable config on error
     logger?.debug(`Error while normalizing tracing.disable config: ${error?.message} ${error?.stack}`);
