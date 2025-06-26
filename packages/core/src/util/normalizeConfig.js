@@ -21,6 +21,7 @@ const configNormalizers = require('./configNormalizers');
  * @property {number} [transmissionDelay]
  * @property {number} [stackTraceLength]
  * @property {HTTPTracingOptions} [http]
+ * @property {TracingDisableOptions} [disable]
  * @property {Array<string>} [disabledTracers]
  * @property {boolean} [spanBatchingEnabled]
  * @property {boolean} [disableW3cTraceCorrelation]
@@ -28,6 +29,11 @@ const configNormalizers = require('./configNormalizers');
  * @property {boolean} [allowRootExitSpan]
  * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
  * @property {boolean} [ignoreEndpointsDisableSuppression]
+ */
+
+/**
+ * @typedef {Object} TracingDisableOptions
+ * @property {string[]} [instrumentations]
  */
 
 /**
@@ -119,7 +125,7 @@ const defaults = {
       extraHttpHeadersToCapture: []
     },
     stackTraceLength: 10,
-    disabledTracers: [],
+    disable: {},
     spanBatchingEnabled: false,
     disableW3cTraceCorrelation: false,
     kafka: {
@@ -239,7 +245,7 @@ function normalizeTracingConfig(config) {
   normalizeTracingTransmission(config);
   normalizeTracingHttp(config);
   normalizeTracingStackTraceLength(config);
-  normalizeDisabledTracers(config);
+  normalizeDisableTracing(config);
   normalizeSpanBatchingEnabled(config);
   normalizeDisableW3cTraceCorrelation(config);
   normalizeTracingKafka(config);
@@ -511,37 +517,13 @@ function normalizeNumericalStackTraceLength(numericalLength) {
 /**
  * @param {InstanaConfig} config
  */
-function normalizeDisabledTracers(config) {
-  if (
-    config.tracing.disabledTracers == null &&
-    process.env['INSTANA_DISABLED_TRACERS'] &&
-    process.env['INSTANA_DISABLED_TRACERS'].trim().length >= 0
-  ) {
-    config.tracing.disabledTracers = process.env['INSTANA_DISABLED_TRACERS']
-      .split(',')
-      .map(key => key.trim().toLowerCase())
-      .filter(key => key.length >= 0);
-  }
-
-  if (!config.tracing.disabledTracers) {
-    config.tracing.disabledTracers = defaults.tracing.disabledTracers;
-  }
-
-  if (!Array.isArray(config.tracing.disabledTracers)) {
-    logger.warn(
-      `Invalid configuration: config.tracing.disabledTracers is not an array, the value will be ignored: ${JSON.stringify(
-        config.tracing.disabledTracers
-      )}`
-    );
-    config.tracing.disabledTracers = defaults.tracing.disabledTracers;
+function normalizeDisableTracing(config) {
+  const disableConfig = configNormalizers.disable.normalize(config);
+  if (disableConfig?.instrumentations?.length > 0) {
+    config.tracing.disable = disableConfig;
     return;
   }
-
-  config.tracing.disabledTracers = config.tracing.disabledTracers.map(
-    (
-      s // We'll check for matches in an case-insensitive fashion
-    ) => s.toLowerCase()
-  );
+  config.tracing.disable = defaults.tracing.disable;
 }
 
 /**
