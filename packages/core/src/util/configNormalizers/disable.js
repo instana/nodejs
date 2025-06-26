@@ -43,15 +43,16 @@ exports.normalize = function normalize(config) {
     let disableConfig = config.tracing.disable;
 
     // Fallback to environment variables if `disable` is not configured
+    const disableConfig = config.tracing?.disable || getDisableFromEnv();
     if (!disableConfig) {
-      disableConfig = getDisableFromEnv();
+      // No need to check further cases if disableConfig is still empty
+      return {};
     }
 
     // Normalize instrumentations and groups
     if (disableConfig?.instrumentations) {
       disableConfig.instrumentations = normalizeArray(disableConfig.instrumentations);
     }
-
     if (disableConfig?.groups) {
       disableConfig.groups = normalizeArray(disableConfig.groups);
     }
@@ -59,6 +60,12 @@ exports.normalize = function normalize(config) {
     // Handle if tracing.disable is an array
     if (Array.isArray(disableConfig)) {
       return categorizeDisableEntries(disableConfig);
+    }
+
+    // Case: config coming from the agent
+    if (typeof disableConfig === 'object' && !('instrumentations' in disableConfig) && !('groups' in disableConfig)) {
+      const disableEntries = flattenDisableConfigs(disableConfig);
+      return categorizeDisableEntries(disableEntries);
     }
 
     return disableConfig || {};
@@ -174,24 +181,18 @@ function categorizeDisableEntries(rawEntries) {
 }
 
 /**
- * Converts a boolean-based disable object into a flat list of string patterns.
- * For example: { logging: true, console: false } → ['logging', '!console']
- * @param {*} disableMap
+ * @param {*} disableConfig
  * @returns {string[]}
  */
-function convertDisableFlagsToEntries(disableMap) {
-  return Object.entries(disableMap).flatMap(([name, shouldDisable]) => {
-    if (shouldDisable === true) return [name];
-    if (shouldDisable === false) return [`!${name}`];
+function flattenDisableConfigs(disableConfig) {
+  // Converts a config with boolean values into a flat list of strings.
+  // Each key is a instrumentation or group.
+  // - true - disable
+  // - false - enable, we internally formated by adding ! in prefix
+  // Example: { logging: true, console: false } => ['logging', '!console']
+  return Object.entries(disableConfig).flatMap(([entryName, shouldDisable]) => {
+    if (shouldDisable === true) return [entryName];
+    if (shouldDisable === false) return [`!${entryName}`];
     return [];
   });
-}
-
-/**
- * Checks if value is a plain object (not an array).
- * @param {any} value
- * @returns {value is Record<string, any>}
- */
-function isPlainObject(value) {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }

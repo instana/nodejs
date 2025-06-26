@@ -72,7 +72,7 @@ function shouldDisable(cfg, { moduleName, instrumentationName, group } = {}) {
     if (isExplicitlyEnabled) return false;
   }
 
-  // Case 2: Check if module or instrumentation is explicitly disabled
+  // Case 2: Check if module or instrumentation is disabled
   if (
     (moduleName && disableConfig.instrumentations?.includes(moduleName)) ||
     (instrumentationName && disableConfig.instrumentations?.includes(instrumentationName))
@@ -80,9 +80,10 @@ function shouldDisable(cfg, { moduleName, instrumentationName, group } = {}) {
     return true;
   }
 
-  // Case 3: Disable the group if it's explicitly enabled,
-  // (e.g., logging: false overrides logging: true at group level)
+  // Case 3: Group disabling
   if (group && DISABLABLE_INSTRUMENTATION_GROUPS.has(group)) {
+    // Check if group is explicitly enabled (rare case)
+    // (e.g., logging: false overrides logging: true at group level)
     const isGroupExplicitlyEnabled = disableConfig.groups?.some(
       (/** @type {string} */ grp) => typeof grp === 'string' && grp.startsWith('!') && grp.slice(1) === group
     );

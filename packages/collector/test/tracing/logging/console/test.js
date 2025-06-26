@@ -131,7 +131,7 @@ mochaSuiteFn('tracing/logging/console', function () {
       ));
   });
 
-  describe('when logging instrumentation is disabled', () => {
+  describe('when logging is disabled', () => {
     describe('through environment variables', () => {
       let envVarControls;
 
@@ -254,7 +254,7 @@ mochaSuiteFn('tracing/logging/console', function () {
     });
 
     describe('through agent configuration', () => {
-      describe('when logging category is disabled', () => {
+      describe('when logging group is disabled', () => {
         const { AgentStubControls } = require('../../../apps/agentStubControls');
         let customAgentControls;
         let agentConfigControls;
