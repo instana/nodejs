@@ -27,41 +27,45 @@ exports.init = function init(_config) {
  */
 exports.normalize = function normalize(config) {
   if (!config?.tracing) config.tracing = {};
-
-  // Handle deprecated `disabledTracers` config
-  if (config.tracing.disabledTracers) {
-    logger?.warn(
-      'The configuration property "tracing.disabledTracers" is deprecated and will be removed in the next ' +
-        'major release. Please use "tracing.disable" instead.'
-    );
-    if (!config.tracing.disable) {
-      config.tracing.disable = { instrumentations: config.tracing.disabledTracers };
+  try {
+    // Handle deprecated `disabledTracers` config
+    if (config.tracing.disabledTracers) {
+      logger?.warn(
+        'The configuration property "tracing.disabledTracers" is deprecated and will be removed in the next ' +
+          'major release. Please use "tracing.disable" instead.'
+      );
+      if (!config.tracing.disable) {
+        config.tracing.disable = { instrumentations: config.tracing.disabledTracers };
+      }
+      delete config.tracing.disabledTracers;
     }
-    delete config.tracing.disabledTracers;
+
+    let disableConfig = config.tracing.disable;
+
+    // Fallback to environment variables if `disable` is not configured
+    if (!disableConfig) {
+      disableConfig = getDisableFromEnv();
+    }
+
+    // Normalize instrumentations and groups
+    if (disableConfig?.instrumentations) {
+      disableConfig.instrumentations = normalizeArray(disableConfig.instrumentations);
+    }
+
+    if (disableConfig?.groups) {
+      disableConfig.groups = normalizeArray(disableConfig.groups);
+    }
+
+    // Handle if tracing.disable is an array
+    if (Array.isArray(disableConfig)) {
+      return categorizeDisableEntries(disableConfig);
+    }
+
+    return disableConfig || {};
+  } catch (error) {
+    // Fallback to an empty disable config on error
+    return {};
   }
-
-  let disableConfig = config.tracing.disable;
-
-  // Fallback to environment variables if `disable` is not configured
-  if (!disableConfig) {
-    disableConfig = getDisableFromEnv();
-  }
-
-  // Normalize instrumentations and groups
-  if (disableConfig?.instrumentations) {
-    disableConfig.instrumentations = normalizeArray(disableConfig.instrumentations);
-  }
-
-  if (disableConfig?.groups) {
-    disableConfig.groups = normalizeArray(disableConfig.groups);
-  }
-
-  // Handle if tracing.disable is an array
-  if (Array.isArray(disableConfig)) {
-    return categorizeDisableEntries(disableConfig);
-  }
-
-  return disableConfig || {};
 };
 
 // Environment variable precedence  (highest to lowest)

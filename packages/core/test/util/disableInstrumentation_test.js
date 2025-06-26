@@ -272,7 +272,7 @@ describe('util.disableInstrumentation', () => {
       });
       disableInstrumentation.activate({
         tracing: {
-          disable: { instrumentations: ['!console'] }
+          disable: { instrumentations: ['console'] }
         }
       });
 
