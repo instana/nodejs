@@ -16,21 +16,19 @@ exports.init = function init(_config) {
 };
 
 /**
- * Normalizes the tracing `disable` configuration.
  * Handles deprecated properties, environment variables, and array inputs.
  *
  * Precedence order (highest to lowest):
- * 1. `tracing.disable.instrumentations` and `tracing.disable.groups`
- * 2. `tracing.disable` flat
- * 3. `tracing.disabledTracers` (deprecated, fallback only if disable not set)
- * 4. Environment variables (`INSTANA_TRACING_DISABLE*`)
+ * 1. `tracing.disable`
+ * 2. `tracing.disabledTracers` (deprecated)
+ * 2. Environment variables (`INSTANA_TRACING_DISABLE*`)
  *
  * @param {import('../../util/normalizeConfig').InstanaConfig} config
  */
 exports.normalize = function normalize(config) {
   if (!config?.tracing) config.tracing = {};
 
-  // Handle deprecated `disabledTracers` property
+  // Handle deprecated `disabledTracers` config
   if (config.tracing.disabledTracers) {
     logger?.warn(
       'The configuration property "tracing.disabledTracers" is deprecated and will be removed in the next ' +
@@ -73,6 +71,7 @@ exports.normalize = function normalize(config) {
 function getDisableFromEnv() {
   const disable = {};
 
+  // @deprecated
   if (process.env.INSTANA_DISABLED_TRACERS) {
     logger?.warn(
       'The environment variable "INSTANA_DISABLED_TRACERS" is deprecated and will be removed in the next ' +
@@ -81,6 +80,7 @@ function getDisableFromEnv() {
     disable.instrumentations = parseEnvVar(process.env.INSTANA_DISABLED_TRACERS);
   }
 
+  // This env var may contains both groups and instrumentations
   if (process.env.INSTANA_TRACING_DISABLE) {
     const categorized = categorizeDisableEntries(parseEnvVar(process.env.INSTANA_TRACING_DISABLE));
     if (categorized?.instrumentations?.length) {
@@ -95,7 +95,6 @@ function getDisableFromEnv() {
     disable.instrumentations = parseEnvVar(process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS);
   }
 
-  // Handle INSTANA_TRACING_DISABLE_GROUPS
   if (process.env.INSTANA_TRACING_DISABLE_GROUPS) {
     disable.groups = parseEnvVar(process.env.INSTANA_TRACING_DISABLE_GROUPS);
   }
@@ -108,9 +107,6 @@ function getDisableFromEnv() {
  * @returns {string[]}
  */
 function parseEnvVar(envVarValue) {
-  if (typeof envVarValue !== 'string') {
-    return [];
-  }
   return envVarValue
     .split(/[;,]/)
     .map(item => item.trim().toLowerCase())
@@ -134,33 +130,32 @@ function normalizeArray(arr) {
 }
 
 /**
+ * Handle a flat array of strings which may include both individual
+ * instrumentation names and known instrumentation groups.
  * @param {string[]} rawEntries
  * @returns {{ instrumentations?: string[], groups?: string[] }}
  */
 function categorizeDisableEntries(rawEntries) {
-  /**
-   * @type {string[]}
-   */
+  /** @type {string[]} */
   const instrumentations = [];
-  /**
-   * @type {string[]}
-   */
+  /** @type {string[]} */
   const groups = [];
 
   rawEntries.forEach(entry => {
-    if (typeof entry !== 'string') {
-      return;
-    }
-    const name = entry?.toLowerCase()?.trim();
-    if (!name) return;
+    if (typeof entry !== 'string') return;
+    const normalizedEntry = entry?.toLowerCase()?.trim();
+    if (!normalizedEntry) return;
 
-    if (DISABLABLE_INSTRUMENTATION_GROUPS.has(name)) {
-      groups.push(name);
+    // The supported groups are predefined in DISABLABLE_INSTRUMENTATION_GROUPS.
+    // If the entry matches one of these, we classify it as a group, otherwise, considered as an instrumentation.
+    if (DISABLABLE_INSTRUMENTATION_GROUPS.has(normalizedEntry)) {
+      groups.push(normalizedEntry);
     } else {
-      instrumentations.push(name);
+      instrumentations.push(normalizedEntry);
     }
   });
 
+  /** @type {{ instrumentations?: string[], groups?: string[] }} */
   const categorized = {};
   if (instrumentations.length > 0) categorized.instrumentations = instrumentations;
   if (groups.length > 0) categorized.groups = groups;

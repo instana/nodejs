@@ -99,7 +99,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
     });
 
-    it('should support category names', () => {
+    it('should support group names', () => {
       const config = {
         tracing: {
           disable: {
@@ -112,7 +112,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result.groups).to.deep.equal(['logging', 'databases']);
     });
 
-    it('should normalize category names to lowercase and trim whitespace', () => {
+    it('should normalize group names to lowercase and trim whitespace', () => {
       const config = {
         tracing: {
           disable: {
@@ -183,6 +183,28 @@ describe('util.configNormalizers.disable', () => {
 
       const result = normalize(config);
       expect(result).to.deep.equal({});
+    });
+
+    it('should handle non-string values in disable array config', () => {
+      const config = {
+        tracing: {
+          disable: ['aws-sdk', 123, null, undefined, {}, 'mongodb']
+        }
+      };
+
+      const result = normalize(config);
+      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb']);
+    });
+
+    it('should handle non-string values in config', () => {
+      const config = {
+        tracing: {
+          disable: { instrumentations: ['aws-sdk', 123, null, undefined, {}, 'mongodb'] }
+        }
+      };
+
+      const result = normalize(config);
+      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb']);
     });
   });
 
@@ -292,17 +314,6 @@ describe('util.configNormalizers.disable', () => {
       const result = normalize(config);
 
       expect(result).to.deep.equal({});
-    });
-
-    it('should handle non-string values in array config', () => {
-      const config = {
-        tracing: {
-          disable: ['aws-sdk', 123, null, undefined, {}, 'mongodb']
-        }
-      };
-
-      const result = normalize(config);
-      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb']);
     });
   });
 });
