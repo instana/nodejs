@@ -144,7 +144,7 @@ function getDisableFromEnv() {
     }
 
     if (envVarValue === 'false' || envVarValue.trim() === '') {
-      return {};
+      return null;
     }
 
     const categorized = categorizeDisableEntries(parseEnvVar(envVarValue));
