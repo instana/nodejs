@@ -141,7 +141,7 @@ class ProcessControls {
         APP_PORT: this.port,
         INSTANA_AGENT_PORT: agentPort,
         INSTANA_LOG_LEVEL: 'warn',
-        INSTANA_DISABLE_TRACING: !this.tracingEnabled,
+        INSTANA_TRACING_DISABLE: !this.tracingEnabled,
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: '1',
         INSTANA_FULL_METRICS_INTERNAL_IN_S: 1,
         INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS: 500,

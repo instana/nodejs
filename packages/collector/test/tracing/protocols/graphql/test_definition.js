@@ -637,7 +637,7 @@ function start(graphqlVersion) {
           appPath: path.join(__dirname, 'rawGraphQLServer'),
           useGlobalAgent: true,
           env: {
-            INSTANA_DISABLED_TRACERS: 'graphQL',
+            INSTANA_TRACING_DISABLE: 'graphQL',
             GRAPHQL_VERSION: graphqlVersion
           }
         });

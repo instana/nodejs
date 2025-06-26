@@ -236,12 +236,12 @@ function normalizeTracingConfig(config) {
   }
   normalizeTracingEnabled(config);
   normalizeUseOpentelemetry(config);
+  normalizeDisableTracing(config);
   normalizeAutomaticTracingEnabled(config);
   normalizeActivateImmediately(config);
   normalizeTracingTransmission(config);
   normalizeTracingHttp(config);
   normalizeTracingStackTraceLength(config);
-  normalizeDisableTracing(config);
   normalizeSpanBatchingEnabled(config);
   normalizeDisableW3cTraceCorrelation(config);
   normalizeTracingKafka(config);
@@ -262,8 +262,14 @@ function normalizeTracingEnabled(config) {
   if (config.tracing.enabled === true) {
     return;
   }
+
+  // @deprecated
   if (process.env['INSTANA_DISABLE_TRACING'] === 'true') {
     logger.info('Not enabling tracing as it is explicitly disabled via environment variable INSTANA_DISABLE_TRACING.');
+    logger.warn(
+      'The environment variable INSTANA_DISABLE_TRACING is deprecated and will be removed in the next major release. ' +
+        'Please use INSTANA_TRACING_DISABLE instead.'
+    );
     config.tracing.enabled = false;
     return;
   }
@@ -515,7 +521,16 @@ function normalizeNumericalStackTraceLength(numericalLength) {
  */
 function normalizeDisableTracing(config) {
   const disableConfig = configNormalizers.disable.normalize(config);
-  if (disableConfig?.instrumentations?.length || disableConfig?.groups?.length) {
+  console.log('-------------', disableConfig);
+  if (disableConfig === true) {
+    console.log('-------aa-----gggg');
+    config.tracing.enabled = false;
+    config.tracing.disable = {};
+    // console.log('------------gggg', config.tracing);
+    return;
+  }
+  console.log('------------gggg');
+  if (typeof disableConfig === 'object' && (disableConfig.instrumentations?.length || disableConfig.groups?.length)) {
     config.tracing.disable = disableConfig;
     return;
   }

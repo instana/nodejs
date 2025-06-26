@@ -182,7 +182,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
           appPath: path.join(__dirname, 'server'),
           useGlobalAgent: true,
           env: {
-            INSTANA_DISABLED_TRACERS: 'grpcjs',
+            INSTANA_TRACING_DISABLE: 'grpcjs',
             INSTANA_GRPC_VERSION: version
           }
         });
@@ -191,7 +191,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
           appPath: path.join(__dirname, 'client'),
           useGlobalAgent: true,
           env: {
-            INSTANA_DISABLED_TRACERS: 'grpcjs',
+            INSTANA_TRACING_DISABLE: 'grpcjs',
             INSTANA_GRPC_VERSION: version
           }
         });

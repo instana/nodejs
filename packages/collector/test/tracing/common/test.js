@@ -270,7 +270,7 @@ mochaSuiteFn('tracing/common', function () {
           useGlobalAgent: true,
           dirname: __dirname,
           env: {
-            INSTANA_DISABLED_TRACERS: 'pino'
+            INSTANA_TRACING_DISABLE: 'pino'
           }
         });
 

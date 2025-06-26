@@ -28,6 +28,11 @@ exports.init = function init(_config) {
 exports.normalize = function normalize(config) {
   if (!config?.tracing) config.tracing = {};
   try {
+    // Disable all tracing if explicitly set  'disable' to true
+    if (config.tracing.disable === true) {
+      return true;
+    }
+
     // Handle deprecated `disabledTracers` config
     if (config.tracing.disabledTracers) {
       logger?.warn(
@@ -42,9 +47,13 @@ exports.normalize = function normalize(config) {
 
     // Fallback to environment variables if `disable` is not configured
     const disableConfig = config.tracing?.disable || getDisableFromEnv();
+
     if (!disableConfig) {
-      // No need to check further cases if disableConfig is still empty
       return {};
+    }
+
+    if (disableConfig === true) {
+      return true;
     }
 
     // Normalize instrumentations and groups
@@ -124,9 +133,20 @@ function getDisableFromEnv() {
     disable.instrumentations = parseEnvVar(process.env.INSTANA_DISABLED_TRACERS);
   }
 
-  // This env var may contains both groups and instrumentations
+  // This env var may contains true/false and also both groups and instrumentations
   if (process.env.INSTANA_TRACING_DISABLE) {
-    const categorized = categorizeDisableEntries(parseEnvVar(process.env.INSTANA_TRACING_DISABLE));
+    const envVarValue = process.env.INSTANA_TRACING_DISABLE;
+
+    if (envVarValue === 'true') {
+      logger?.info('Tracing disabled via "INSTANA_TRACING_DISABLE" environment variable.');
+      return true;
+    }
+
+    if (envVarValue === 'false' || envVarValue.trim() === '') {
+      return {};
+    }
+
+    const categorized = categorizeDisableEntries(parseEnvVar(envVarValue));
     if (categorized?.instrumentations?.length) {
       disable.instrumentations = categorized.instrumentations;
     }

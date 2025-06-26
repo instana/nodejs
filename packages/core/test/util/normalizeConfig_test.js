@@ -105,7 +105,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.automaticTracingEnabled).to.be.false;
   });
 
-  it('should disable tracing via INSTANA_DISABLE_TRACING', () => {
+  it('should disable tracing via deprecated INSTANA_DISABLE_TRACING', () => {
     process.env.INSTANA_DISABLE_TRACING = true;
     const config = normalizeConfig();
     expect(config.tracing.enabled).to.be.false;
@@ -390,6 +390,25 @@ describe('util.normalizeConfig', () => {
     const config = normalizeConfig();
     expect(config.tracing.disable.instrumentations).to.deep.equal(['redis']);
     expect(config.tracing.disable.groups).to.deep.equal(['logging']);
+  });
+
+  it('should disable all tracing via INSTANA_TRACING_DISABLE', () => {
+    process.env.INSTANA_TRACING_DISABLE = true;
+    const config = normalizeConfig();
+    expect(config.tracing.enabled).to.be.false;
+    expect(config.tracing.disable).to.deep.equal({});
+    expect(config.tracing.automaticTracingEnabled).to.be.false;
+  });
+
+  it('should disable all tracing via config tracing.disable', () => {
+    const config = normalizeConfig({
+      tracing: {
+        disable: true
+      }
+    });
+    expect(config.tracing.enabled).to.be.false;
+    expect(config.tracing.disable).to.deep.equal({});
+    expect(config.tracing.automaticTracingEnabled).to.be.false;
   });
 
   // delete this test when we switch to opt-out

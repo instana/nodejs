@@ -8,6 +8,7 @@ const { describe, it, beforeEach, afterEach } = require('mocha');
 const { expect } = require('chai');
 
 const { normalize, normalizeExternalConfig } = require('../../../src/util/configNormalizers/disable');
+const { truncate } = require('lodash');
 
 function resetEnv() {
   delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
@@ -206,6 +207,28 @@ describe('util.configNormalizers.disable', () => {
       const result = normalize(config);
       expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb']);
     });
+
+    it('should return true when tracing is globally disabled via config (disable = true)', () => {
+      const config = {
+        tracing: {
+          disable: true
+        }
+      };
+
+      const result = normalize(config);
+      expect(result).to.deep.equal(true);
+    });
+
+    it('should return an empty object when global tracing disable is set to false', () => {
+      const config = {
+        tracing: {
+          disable: false
+        }
+      };
+
+      const result = normalize(config);
+      expect(result).to.deep.equal({});
+    });
   });
 
   describe('Environment Variable Handling', () => {
@@ -309,6 +332,24 @@ describe('util.configNormalizers.disable', () => {
     it('should handle empty string in environment variables', () => {
       process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = '';
       process.env.INSTANA_TRACING_DISABLE_GROUPS = '';
+
+      const config = {};
+      const result = normalize(config);
+
+      expect(result).to.deep.equal({});
+    });
+
+    it('should return true when INSTANA_TRACING_DISABLE is set to "true"', () => {
+      process.env.INSTANA_TRACING_DISABLE = 'true';
+
+      const config = {};
+      const result = normalize(config);
+
+      expect(result).to.deep.equal(true);
+    });
+
+    it('should return an empty object when INSTANA_TRACING_DISABLE is set to "false"', () => {
+      process.env.INSTANA_TRACING_DISABLE = 'false';
 
       const config = {};
       const result = normalize(config);
