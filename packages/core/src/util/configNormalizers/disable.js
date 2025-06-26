@@ -16,7 +16,7 @@ exports.init = function init(_config) {
 };
 
 /**
- * Handles deprecated properties, environment variables, and array inputs.
+ * Handles deprecated properties, environment variables, array and object inputs .
  *
  * Precedence order (highest to lowest):
  * 1. `tracing.disable`
@@ -187,7 +187,6 @@ function categorizeDisableEntries(rawEntries) {
     }
   });
 
-  /** @type {{ instrumentations?: string[], groups?: string[] }} */
   const categorized = {};
   if (instrumentations.length > 0) categorized.instrumentations = instrumentations;
   if (groups.length > 0) categorized.groups = groups;
