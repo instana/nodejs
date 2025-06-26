@@ -12,7 +12,7 @@ const delay = require('../test_util/delay');
 const testUtils = require('../test_util');
 const { generateRandomSpanId, generateRandomTraceId } = require('../../src/tracing/tracingUtil');
 
-describe.only('tracing/spanBuffer', () => {
+describe('tracing/spanBuffer', () => {
   const start = 18000; // arbitrary reference timestamp
 
   const traceId1 = generateRandomTraceId();
