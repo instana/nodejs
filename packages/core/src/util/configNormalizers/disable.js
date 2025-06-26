@@ -63,6 +63,7 @@ exports.normalize = function normalize(config) {
     return disableConfig || {};
   } catch (error) {
     // Fallback to an empty disable config on error
+    logger?.warn('Error while normalizing tracing.disable config.', error);
     return {};
   }
 };
@@ -72,17 +73,18 @@ exports.normalize = function normalize(config) {
  * @param {import('../../util/normalizeConfig').InstanaConfig} config
  */
 exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
-  if (!config?.tracing?.disable) return {};
   try {
     if (typeof config.tracing.disable === 'object') {
-      const disableEntries = flattenDisableConfigs(config.tracing.disable);
-      return categorizeDisableEntries(disableEntries);
+      const flattenedEntries = flattenDisableConfigs(config.tracing.disable);
+      return categorizeDisableEntries(flattenedEntries);
     }
   } catch (error) {
     // Fallback to an empty disable config on error
     logger?.debug(`Error while normalizing tracing.disable config: ${error?.message} ${error?.stack}`);
     return {};
   }
+
+  return {};
 };
 
 /**
