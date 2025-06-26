@@ -290,6 +290,14 @@ exports.activate = function activate(extraConfig = {}) {
 
     if (automaticTracingEnabled) {
       instrumentations.forEach(instrumentationKey => {
+        // If instrumentation is disabled via agent config, we skip tracing using the `isActive` flag
+        // within the instrumentation logic.
+        // However, modules already shimmered (e.g., logging) remain wrapped — we don't currently unwrap them.
+        // This may lead to minor performance overhead or partial interception. Proper unwrapping via
+        // `shimmer.unwrap(...)` would need broader changes. Given the very low performance and functional
+        // impact at present, we are accepting this behavior for now.
+        //
+        // We will revisit this in the future, especially if we encounter issues with disabled instrumentations.
         if (
           !coreUtil.disableInstrumentation.isInstrumentationDisabled({
             instrumentationModules,
