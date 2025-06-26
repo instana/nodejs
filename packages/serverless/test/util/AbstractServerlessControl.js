@@ -148,7 +148,11 @@ AbstractServerlessControl.prototype.startExtensionAndWaitForIt = function startE
         BACKEND_PORT: this.backendPort,
         INSTANA_LAYER_EXTENSION_PORT: this.extensionPort,
         EXTENSION_UNRESPONSIVE: this.opts.startExtension === 'unresponsive',
-        EXTENSION_PREFFLIGHT_RESPONSIVE_BUT_UNRESPONSIVE_LATER: this.opts.startExtension === 'unresponsive-later',
+        EXTENSION_TRACE_THROWS_ERROR: this.opts.startExtension === 'trace-throws-error',
+        EXTENSION_TRACE_RESPONSIVE_BUT_LATER: this.opts.startExtension === 'trace-responsive-later',
+        EXTENSION_TRACE_RESPONSIVE_BUT_LATER_FOREVER: this.opts.startExtension === 'trace-responsive-later-forever',
+        EXTENSION_HEARTBEAT_RESPONSIVE_BUT_LATER: this.opts.startExtension === 'heartbeat-responsive-later',
+        EXTENSION_HEARTBEAT_UNRESPONSIVE: this.opts.startExtension === 'heartbeat-unresponsive',
         HEARTBEAT_REQUEST_RESPONDS_WITH_UNEXPECTED_STATUS_CODE:
           this.opts.startExtension === 'unexpected-heartbeat-response'
       },
