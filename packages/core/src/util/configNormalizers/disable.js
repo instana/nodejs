@@ -63,7 +63,7 @@ exports.normalize = function normalize(config) {
     return disableConfig || {};
   } catch (error) {
     // Fallback to an empty disable config on error
-    logger?.warn('Error while normalizing tracing.disable config.', error);
+    logger?.warn(`Error while normalizing tracing.disable config: ${error?.message} ${error?.stack}`);
     return {};
   }
 };
