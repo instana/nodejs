@@ -156,10 +156,12 @@ function registerTests(handlerDefinitionPath, reduced) {
 
       await control.start();
     });
+
     beforeEach(async () => {
       await control.reset();
       await control.resetBackendSpansAndMetrics();
     });
+
     after(async () => {
       await control.stop();
     });
@@ -172,7 +174,9 @@ function registerTests(handlerDefinitionPath, reduced) {
             error: false,
             expectMetrics: true,
             expectSpans: true,
-            expectColdStart: true
+            expectColdStart: true,
+            // 1 x aws entry 1 x http exit
+            spanLength: 2
           });
         })
         .then(() => {
@@ -189,7 +193,9 @@ function registerTests(handlerDefinitionPath, reduced) {
             error: false,
             expectMetrics: true,
             expectSpans: true,
-            expectColdStart: false
+            expectColdStart: false,
+            // 1 x aws entry 1 x http exit
+            spanLength: 2
           });
         });
     });
@@ -3135,7 +3141,10 @@ function registerTests(handlerDefinitionPath, reduced) {
   }
 
   function verifySpans(spans, expectations, control) {
-    const { error } = expectations;
+    const { error, spanLength } = expectations;
+
+    expect(spans.length).to.equal(spanLength);
+
     const entry = verifyLambdaEntry(spans, expectations);
     if (error !== 'lambda-synchronous') {
       verifyHttpExit(spans, entry, control);

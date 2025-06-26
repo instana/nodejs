@@ -225,6 +225,8 @@ exports.addSpan = function (span) {
     // NOTE: we send out spans directly if the number of spans reaches > X [default] and if the min delay is reached.
     // CASE: "transmissionDelay" a "guessed" time to wait til the agent is connected. The regular timeout will kick in
     //       soon and sends them out. This is not a reliable way, but its good enough for now.
+    // CASE: For AWS Lambda we have a lower transmission delay, but if the total number of spans is lower than the
+    //       "forceTransmissionStartingAt" they will get send out via the final .sendBundle call.
     if (spans.length >= forceTransmissionStartingAt && Date.now() - transmissionDelay > activatedAt) {
       transmitSpans();
     }
