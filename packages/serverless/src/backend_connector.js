@@ -234,7 +234,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
 
       options.useLambdaExtension = false;
       clearInterval(heartbeatInterval);
-      destroyRequest(req);
+      cleanupRequest(req);
       heartbeatIsActive = false;
     }
 
@@ -550,7 +550,7 @@ function onTimeout(
         'Falling back to talking to the Instana back end directly.'
     );
 
-    destroyRequest(req);
+    cleanupRequest(req);
 
     if (options.retries === false || tries >= 1) {
       clearInterval(heartbeatInterval);
@@ -573,7 +573,7 @@ function onTimeout(
     // (b) context.callbackWaitsForEmptyEventLoop = false is not set.
     // Also, the Node.js documentation mandates to destroy the request manually in case of a timeout. See
     // https://nodejs.org/api/http.html#http_event_timeout.
-    destroyRequest(req);
+    cleanupRequest(req);
 
     const message =
       `[${requestId}] Could not send data to ${resourcePath}. The Instana back end did not respond ` +
