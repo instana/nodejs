@@ -276,7 +276,10 @@ function init(event, arnInfo, _config) {
     identityProvider,
     defaultTimeout: 500,
     useLambdaExtension,
-    isLambdaRequest: true
+    isLambdaRequest: true,
+    // NOTE: We only retry for the extension, because if the extenion is not used, the time to transmit
+    //       the data to the serverless acceptor directly takes too long.
+    retries: !!useLambdaExtension
   });
 
   instanaCore.init(config, backendConnector, identityProvider);
