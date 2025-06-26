@@ -485,7 +485,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
 
       if (tries >= 1) {
         logger.debug(`[${requestId}] Giving up...`);
-        return handleCallback(options.propagateErrorsUpstream ? e : undefined);
+        return handleCallback(e);
       }
 
       logger.debug(`[${requestId}] Retrying...`);
