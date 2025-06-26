@@ -40,8 +40,6 @@ exports.normalize = function normalize(config) {
       delete config.tracing.disabledTracers;
     }
 
-    let disableConfig = config.tracing.disable;
-
     // Fallback to environment variables if `disable` is not configured
     const disableConfig = config.tracing?.disable || getDisableFromEnv();
     if (!disableConfig) {
