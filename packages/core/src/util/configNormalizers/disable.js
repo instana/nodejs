@@ -132,9 +132,6 @@ function getDisableFromEnv() {
  * @returns {string[]}
  */
 function parseEnvVar(envVarValue) {
-  if (typeof envVarValue !== 'string') {
-    return [];
-  }
   return envVarValue
     .split(/[;,]/)
     .map(item => item.trim().toLowerCase())
@@ -190,6 +187,7 @@ function categorizeDisableEntries(rawEntries) {
     }
   });
 
+  /** @type {{ instrumentations?: string[], groups?: string[] }} */
   const categorized = {};
   if (instrumentations.length > 0) categorized.instrumentations = instrumentations;
   if (groups.length > 0) categorized.groups = groups;
