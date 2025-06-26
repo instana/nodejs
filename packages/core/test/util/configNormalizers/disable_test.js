@@ -7,7 +7,7 @@
 const { describe, it, beforeEach, afterEach } = require('mocha');
 const { expect } = require('chai');
 
-const { normalize } = require('../../../src/util/configNormalizers/disable');
+const { normalize, normalizeExternalConfig } = require('../../../src/util/configNormalizers/disable');
 
 function resetEnv() {
   delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
@@ -327,7 +327,7 @@ describe('util.configNormalizers.disable', () => {
         }
       };
 
-      const result = normalize(config);
+      const result = normalizeExternalConfig(config);
       expect(result.instrumentations).to.deep.equal(['redis', 'console']);
     });
 
@@ -341,25 +341,26 @@ describe('util.configNormalizers.disable', () => {
         }
       };
 
-      const result = normalize(config);
+      const result = normalizeExternalConfig(config);
       expect(result.groups).to.include('messaging');
       expect(result.instrumentations).to.include('kafka');
     });
 
-    it('should handle config with true values', () => {
+    it('should handle config with true/false values', () => {
       const config = {
         tracing: {
           disable: {
             logging: true,
             redis: true,
-            console: false
+            console: false,
+            databases: false
           }
         }
       };
 
-      const result = normalize(config);
+      const result = normalizeExternalConfig(config);
       expect(result.instrumentations).to.deep.equal(['redis', '!console']);
-      expect(result.groups).to.include('logging');
+      expect(result.groups).to.include('logging', '!databases');
     });
 
     it('should handle if all entries set to false', () => {
@@ -372,7 +373,7 @@ describe('util.configNormalizers.disable', () => {
         }
       };
 
-      const result = normalize(config);
+      const result = normalizeExternalConfig(config);
       expect(result.instrumentations).to.deep.equal(['!redis', '!pg']);
     });
 
@@ -387,7 +388,7 @@ describe('util.configNormalizers.disable', () => {
         }
       };
 
-      const result = normalize(config);
+      const result = normalizeExternalConfig(config);
       expect(result.instrumentations).to.deep.equal(['redis']);
     });
   });

@@ -16,7 +16,7 @@ exports.init = function init(_config) {
 };
 
 /**
- * Handles deprecated properties, environment variables, array and object inputs .
+ * Handles deprecated properties, environment variables, and array inputs.
  *
  * Precedence order (highest to lowest):
  * 1. `tracing.disable`
@@ -60,13 +60,24 @@ exports.normalize = function normalize(config) {
       return categorizeDisableEntries(disableConfig);
     }
 
-    // Case: config coming from the agent
-    if (typeof disableConfig === 'object' && !('instrumentations' in disableConfig) && !('groups' in disableConfig)) {
-      const disableEntries = flattenDisableConfigs(disableConfig);
+    return disableConfig || {};
+  } catch (error) {
+    // Fallback to an empty disable config on error
+    return {};
+  }
+};
+
+/**
+ * Handles config from agent.
+ * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ */
+exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
+  if (!config?.tracing?.disable) return {};
+  try {
+    if (typeof config.tracing.disable === 'object') {
+      const disableEntries = flattenDisableConfigs(config.tracing.disable);
       return categorizeDisableEntries(disableEntries);
     }
-
-    return disableConfig || {};
   } catch (error) {
     // Fallback to an empty disable config on error
     return {};
@@ -159,13 +170,13 @@ function categorizeDisableEntries(rawEntries) {
     // This allows configurations like { console: false } to be interpreted as '!console',
     // which means "do not disable console" — useful when overriding group disables.
     const isNegated = normalizedEntry.startsWith('!');
-    const baseEntry = isNegated ? entry.slice(1) : normalizedEntry;
-    const normalized = isNegated ? `!${baseEntry}` : baseEntry;
+    const actualValue = isNegated ? normalizedEntry.slice(1) : normalizedEntry;
+    const normalized = isNegated ? `!${actualValue}` : actualValue;
 
     // The supported groups are predefined in DISABLABLE_INSTRUMENTATION_GROUPS.
     // If the entry matches one of these, we classify it as a group, otherwise, considered as an instrumentation.
-    if (DISABLABLE_INSTRUMENTATION_GROUPS.has(baseEntry)) {
-      groups.push(baseEntry);
+    if (DISABLABLE_INSTRUMENTATION_GROUPS.has(actualValue)) {
+      groups.push(normalized);
     } else {
       instrumentations.push(normalized);
     }
