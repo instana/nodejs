@@ -16,7 +16,7 @@ exports.init = function init(_config) {
 };
 
 /**
- * Handles deprecated properties, environment variables, and array inputs.
+ * Handles deprecated properties, environment variables, array and object inputs .
  *
  * Precedence order (highest to lowest):
  * 1. `tracing.disable`
@@ -136,6 +136,7 @@ function normalizeArray(arr) {
 /**
  * Handle a flat array of strings which may include both individual
  * instrumentation names and known instrumentation groups.
+ * Handles negation patterns like '!console'.
  * @param {string[]} rawEntries
  * @returns {{ instrumentations?: string[], groups?: string[] }}
  */
@@ -150,19 +151,47 @@ function categorizeDisableEntries(rawEntries) {
     const normalizedEntry = entry?.toLowerCase().trim();
     if (!normalizedEntry) return;
 
+    // This allows configurations like { console: false } to be interpreted as '!console',
+    // which means "do not disable console" — useful when overriding group disables.
+    const isNegated = normalizedEntry.startsWith('!');
+    const baseEntry = isNegated ? entry.slice(1) : normalizedEntry;
+    const normalized = isNegated ? `!${baseEntry}` : baseEntry;
+
     // The supported groups are predefined in DISABLABLE_INSTRUMENTATION_GROUPS.
     // If the entry matches one of these, we classify it as a group, otherwise, considered as an instrumentation.
-    if (DISABLABLE_INSTRUMENTATION_GROUPS.has(normalizedEntry)) {
-      groups.push(normalizedEntry);
+    if (DISABLABLE_INSTRUMENTATION_GROUPS.has(baseEntry)) {
+      groups.push(baseEntry);
     } else {
-      instrumentations.push(normalizedEntry);
+      instrumentations.push(normalized);
     }
   });
 
-  /** @type {{ instrumentations?: string[], groups?: string[] }} */
   const categorized = {};
   if (instrumentations.length > 0) categorized.instrumentations = instrumentations;
   if (groups.length > 0) categorized.groups = groups;
 
   return categorized;
+}
+
+/**
+ * Converts a boolean-based disable object into a flat list of string patterns.
+ * For example: { logging: true, console: false } → ['logging', '!console']
+ * @param {*} disableMap
+ * @returns {string[]}
+ */
+function convertDisableFlagsToEntries(disableMap) {
+  return Object.entries(disableMap).flatMap(([name, shouldDisable]) => {
+    if (shouldDisable === true) return [name];
+    if (shouldDisable === false) return [`!${name}`];
+    return [];
+  });
+}
+
+/**
+ * Checks if value is a plain object (not an array).
+ * @param {any} value
+ * @returns {value is Record<string, any>}
+ */
+function isPlainObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }

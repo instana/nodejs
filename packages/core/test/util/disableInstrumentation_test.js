@@ -263,6 +263,109 @@ describe('util.disableInstrumentation', () => {
     });
   });
 
+  // case where config coming from agent
+  describe('When the config contain both enable and disable', () => {
+    it('should handle when category is disabled and specific module enabled', () => {
+      disableInstrumentation.init({});
+      disableInstrumentation.activate({
+        tracing: {
+          disable: { groups: ['logging'], instrumentations: ['!console'] }
+        }
+      });
+
+      const bunyanesult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/bunyan',
+        instrumentationModules: testInstrumentationModules
+      });
+      const consoleResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
+
+      expect(bunyanesult).to.be.true;
+      expect(consoleResult).to.be.false;
+    });
+
+    it('should prioritize enabling over disabling for instrumentations', () => {
+      disableInstrumentation.init({});
+      disableInstrumentation.activate({
+        tracing: {
+          disable: { instrumentations: ['!console', 'console'] }
+        }
+      });
+
+      const consoleResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
+
+      expect(consoleResult).to.be.false;
+    });
+
+    it('should disable specific instrumentation even if group is enabled', () => {
+      disableInstrumentation.init({
+        tracing: {
+          disable: { groups: ['!logging'], instrumentations: ['console'] }
+        }
+      });
+
+      const consoleResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
+
+      const bunyanResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/bunyan',
+        instrumentationModules: testInstrumentationModules
+      });
+
+      expect(consoleResult).to.be.true;
+      expect(bunyanResult).to.be.false;
+    });
+
+    it('should enable group if group is explicitly enabled', () => {
+      disableInstrumentation.init({
+        tracing: {
+          disable: { groups: ['!logging'] }
+        }
+      });
+
+      const consoleResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
+
+      const bunyanResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/bunyan',
+        instrumentationModules: testInstrumentationModules
+      });
+
+      expect(consoleResult).to.be.false;
+      expect(bunyanResult).to.be.false;
+    });
+
+    it('should precedence enable over disable for groups', () => {
+      disableInstrumentation.init({
+        tracing: {
+          disable: { groups: ['logging', '!logging'] }
+        }
+      });
+
+      const consoleResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/console',
+        instrumentationModules: testInstrumentationModules
+      });
+
+      const bunyanResult = disableInstrumentation.isInstrumentationDisabled({
+        instrumentationKey: './instrumentation/logging/bunyan',
+        instrumentationModules: testInstrumentationModules
+      });
+
+      expect(consoleResult).to.be.false;
+      expect(bunyanResult).to.be.false;
+    });
+  });
+
   describe('configuration precedence', () => {
     it('should prioritize service configuration over agent configuration when both are present', () => {
       disableInstrumentation.init({

@@ -629,6 +629,134 @@ describe('unannounced state', () => {
       });
     });
 
+    it('should apply disable config from the agent response', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          disable: {
+            logging: true
+          }
+        }
+      });
+
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              disable: { groups: ['logging'] }
+            }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should not apply disable config if tracing is missing', done => {
+      prepareAnnounceResponse({});
+
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({});
+          done();
+        }
+      });
+    });
+
+    it('should apply disable config with multiple technologies', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          disable: {
+            logging: true,
+            redis: true
+          }
+        }
+      });
+
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              disable: { groups: ['logging'], instrumentations: ['redis'] }
+            }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should apply empty disable config when invalid format provided', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          disable: { logging: 'invalid' }
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: { disable: {} }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should apply disable config correctly while it contains false values', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          disable: {
+            logging: true,
+            redis: false
+          }
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: { disable: { groups: ['logging'], instrumentations: ['!redis'] } }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should normalize disable config with mixed true/false values', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          disable: {
+            http: true,
+            databases: false,
+            logging: true
+          }
+        }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: { disable: { groups: ['!databases', 'logging'], instrumentations: ['http'] } }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should apply empty logging object', done => {
+      prepareAnnounceResponse({
+        tracing: {
+          disable: {}
+        }
+      });
+
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              disable: {}
+            }
+          });
+          done();
+        }
+      });
+    });
+
     function prepareAnnounceResponse(announceResponse) {
       agentConnectionStub.announceNodeCollector.callsArgWithAsync(0, null, JSON.stringify(announceResponse));
     }

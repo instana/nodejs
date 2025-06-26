@@ -316,4 +316,79 @@ describe('util.configNormalizers.disable', () => {
       expect(result).to.deep.equal({});
     });
   });
+  describe('config from agent', () => {
+    it('should handle config with true values', () => {
+      const config = {
+        tracing: {
+          disable: {
+            redis: true,
+            console: true
+          }
+        }
+      };
+
+      const result = normalize(config);
+      expect(result.instrumentations).to.deep.equal(['redis', 'console']);
+    });
+
+    it('should categorize known groups from object entries', () => {
+      const config = {
+        tracing: {
+          disable: {
+            messaging: true,
+            kafka: true
+          }
+        }
+      };
+
+      const result = normalize(config);
+      expect(result.groups).to.include('messaging');
+      expect(result.instrumentations).to.include('kafka');
+    });
+
+    it('should handle config with true values', () => {
+      const config = {
+        tracing: {
+          disable: {
+            logging: true,
+            redis: true,
+            console: false
+          }
+        }
+      };
+
+      const result = normalize(config);
+      expect(result.instrumentations).to.deep.equal(['redis', '!console']);
+      expect(result.groups).to.include('logging');
+    });
+
+    it('should handle if all entries set to false', () => {
+      const config = {
+        tracing: {
+          disable: {
+            redis: false,
+            pg: false
+          }
+        }
+      };
+
+      const result = normalize(config);
+      expect(result.instrumentations).to.deep.equal(['!redis', '!pg']);
+    });
+
+    it('should ignore non-boolean values in object config', () => {
+      const config = {
+        tracing: {
+          disable: {
+            redis: true,
+            pg: 'nope',
+            mysql: null
+          }
+        }
+      };
+
+      const result = normalize(config);
+      expect(result.instrumentations).to.deep.equal(['redis']);
+    });
+  });
 });
