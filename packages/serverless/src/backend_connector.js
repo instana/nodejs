@@ -301,11 +301,6 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
       ? resourcePath
       : environmentUtil.getBackendPath() + resourcePath;
 
-  logger.debug(
-    `[${requestId}] Sending trace data to Instana (${options.hostname}, ${options.port}, ${options.path}, 
-    ${options.headers?.['Content-Length']}).`
-  );
-
   // serialize the payload object
   const serializedPayload = JSON.stringify(payload);
 
@@ -322,6 +317,11 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, requestId }
     },
     rejectUnauthorized: !disableCaCheck
   };
+
+  logger.debug(
+    `[${requestId}] Sending trace data to Instana (${reqOptions.hostname}, ${reqOptions.port}, ${reqOptions.path},
+    ${reqOptions.headers?.['Content-Length']}).`
+  );
 
   reqOptions.timeout = getBackendTimeout(localUseLambdaExtension);
 
