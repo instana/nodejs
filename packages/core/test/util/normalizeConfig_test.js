@@ -21,6 +21,7 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_DISABLE_TRACING;
     delete process.env.INSTANA_DISABLED_TRACERS;
     delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
+    delete process.env.INSTANA_TRACING_DISABLE_GROUPS;
     delete process.env.INSTANA_TRACE_IMMEDIATELY;
     delete process.env.INSTANA_EXTRA_HTTP_HEADERS;
     delete process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT;
@@ -347,6 +348,49 @@ describe('util.normalizeConfig', () => {
     process.env.INSTANA_DISABLED_TRACERS = 'postgres';
     const config = normalizeConfig();
     expect(config.tracing.disable.instrumentations).to.deep.equal(['redis']);
+  });
+
+  it('should disable individual groups via disable config', () => {
+    const config = normalizeConfig({
+      tracing: {
+        disable: { groups: ['logging'] }
+      }
+    });
+    expect(config.tracing.disable.groups).to.deep.equal(['logging']);
+  });
+
+  it('config should disable when env var INSTANA_TRACING_DISABLE_GROUPS is set', () => {
+    process.env.INSTANA_TRACING_DISABLE_GROUPS = 'frameworks, databases';
+    const config = normalizeConfig({});
+    expect(config.tracing.disable.groups).to.deep.equal(['frameworks', 'databases']);
+  });
+
+  it('config should take precedence over INSTANA_TRACING_DISABLE_GROUPS when disabling groups', () => {
+    process.env.INSTANA_TRACING_DISABLE_GROUPS = 'frameworks, databases';
+    const config = normalizeConfig({
+      tracing: {
+        disable: { groups: ['LOGGING'] }
+      }
+    });
+    expect(config.tracing.disable.groups).to.deep.equal(['logging']);
+  });
+
+  it('should disable instrumentations and groups when both configured', () => {
+    const config = normalizeConfig({
+      tracing: {
+        disable: { groups: ['LOGGING'], instrumentations: ['redis', 'kafka'] }
+      }
+    });
+    expect(config.tracing.disable.groups).to.deep.equal(['logging']);
+    expect(config.tracing.disable.instrumentations).to.deep.equal(['redis', 'kafka']);
+  });
+
+  it('should disable instrumentations and groups when both env variables provided', () => {
+    process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'redis';
+    process.env.INSTANA_TRACING_DISABLE_GROUPS = 'logging';
+    const config = normalizeConfig();
+    expect(config.tracing.disable.instrumentations).to.deep.equal(['redis']);
+    expect(config.tracing.disable.groups).to.deep.equal(['logging']);
   });
 
   // delete this test when we switch to opt-out

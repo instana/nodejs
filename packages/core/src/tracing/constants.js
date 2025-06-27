@@ -82,3 +82,9 @@ exports.isExitSpan = function isExitSpan(span) {
 exports.isIntermediateSpan = function isIntermediateSpan(span) {
   return span && span.k === exports.INTERMEDIATE;
 };
+
+/**
+ * Set of all instrumentation groups that can be disabled.
+ * @type {Set<string>}
+ */
+exports.DISABLABLE_INSTRUMENTATION_GROUPS = new Set(['logging', 'messaging', 'databases']);

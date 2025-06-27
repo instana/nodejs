@@ -28,6 +28,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
   this.timeout(testConfig.getTestTimeout());
 
   let tracing;
+  let util;
 
   let activateStubGrpcJs;
   let activateStubKafkaJs;
@@ -59,6 +60,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     // requiring tracing/index via proxyquire gives us a module in pristine state everytime, in particular with the
     // tracingActivated flag reset.
     tracing = proxyquire('../../src/tracing', {});
+    util = proxyquire('../../src/util', {});
   });
 
   afterEach(() => {
@@ -299,6 +301,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
       function initAndActivate(initConfig, extraConfigForActivate) {
         const logger = testUtils.createFakeLogger();
         const config = normalizeConfig(initConfig, logger);
+        util.init(config);
         tracing.init(config);
         tracing.activate(extraConfigForActivate);
       }
