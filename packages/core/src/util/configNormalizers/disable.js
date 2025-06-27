@@ -143,16 +143,16 @@ function getDisableFromEnv() {
       return true;
     }
 
-    if (envVarValue === 'false' || envVarValue.trim() === '') {
-      return null;
-    }
-
-    const categorized = categorizeDisableEntries(parseEnvVar(envVarValue));
-    if (categorized?.instrumentations?.length) {
-      disable.instrumentations = categorized.instrumentations;
-    }
-    if (categorized?.groups?.length) {
-      disable.groups = categorized.groups;
+    if (envVarValue === 'false' || envVarValue === '') {
+      // Skip rest of the logic for this var
+    } else {
+      const categorized = categorizeDisableEntries(parseEnvVar(envVarValue));
+      if (categorized?.instrumentations?.length) {
+        disable.instrumentations = categorized.instrumentations;
+      }
+      if (categorized?.groups?.length) {
+        disable.groups = categorized.groups;
+      }
     }
   }
 
