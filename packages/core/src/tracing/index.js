@@ -130,7 +130,7 @@ if (customInstrumentations.length > 0) {
  */
 
 /**
- * @typedef {TracingDisableOptions} Disable
+ * @typedef {TracingDisableOptions|boolean} Disable
  */
 
 /**

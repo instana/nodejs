@@ -15,7 +15,7 @@ const isLegacy = process.env.MONGODB_VERSION === 'v4';
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 process.env.INSTANA_LOG_LEVEL = 'warn';
-process.env.INSTANA_DISABLE_TRACING = process.env.TRACING_ENABLED !== 'false';
+process.env.INSTANA_TRACING_DISABLE = process.env.TRACING_ENABLED !== 'false';
 process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT = 1;
 
 import MongoClient from 'mongodb';

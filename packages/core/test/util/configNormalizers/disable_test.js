@@ -206,6 +206,28 @@ describe('util.configNormalizers.disable', () => {
       const result = normalize(config);
       expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb']);
     });
+
+    it('should return true when tracing is globally disabled via config (disable = true)', () => {
+      const config = {
+        tracing: {
+          disable: true
+        }
+      };
+
+      const result = normalize(config);
+      expect(result).to.deep.equal(true);
+    });
+
+    it('should return an empty object when global tracing disable is set to false', () => {
+      const config = {
+        tracing: {
+          disable: false
+        }
+      };
+
+      const result = normalize(config);
+      expect(result).to.deep.equal({});
+    });
   });
 
   describe('Environment Variable Handling', () => {
@@ -315,7 +337,37 @@ describe('util.configNormalizers.disable', () => {
 
       expect(result).to.deep.equal({});
     });
+
+    it('should return true when INSTANA_TRACING_DISABLE is set to "true"', () => {
+      process.env.INSTANA_TRACING_DISABLE = 'true';
+
+      const config = {};
+      const result = normalize(config);
+
+      expect(result).to.deep.equal(true);
+    });
+
+    it('should return an empty object when INSTANA_TRACING_DISABLE is set to "false"', () => {
+      process.env.INSTANA_TRACING_DISABLE = 'false';
+
+      const config = {};
+      const result = normalize(config);
+
+      expect(result).to.deep.equal({});
+    });
+
+    it('should prioritize INSTANA_TRACING_DISABLE over other env', () => {
+      process.env.INSTANA_TRACING_DISABLE = 'true';
+      process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'aws-sdk,mongodb';
+      process.env.INSTANA_TRACING_DISABLE_GROUPS = 'logging,databases';
+
+      const config = {};
+      const result = normalize(config);
+
+      expect(result).to.deep.equal(true);
+    });
   });
+
   describe('config from agent', () => {
     it('should handle config with true values', () => {
       const config = {

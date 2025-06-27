@@ -58,7 +58,7 @@ function prelude(opts) {
     env.INSTANA_ENDPOINT_URL = '';
   }
   if (opts.instanaTracingDisabled) {
-    env.INSTANA_DISABLE_TRACING = 'true';
+    env.INSTANA_TRACING_DISABLE = 'true';
   }
   if (opts.instanaAgentKey) {
     env.INSTANA_AGENT_KEY = opts.instanaAgentKey;
@@ -1032,7 +1032,43 @@ function registerTests(handlerDefinitionPath, reduced) {
     });
   });
 
-  describeOrSkipIfReduced()('when INSTANA_DISABLE_TRACING is set', function () {
+  describeOrSkipIfReduced()('when deprecated INSTANA_DISABLE_TRACING is set', function () {
+    // - INSTANA_ENDPOINT_URL is missing
+    // - lambda function ends with success
+    const env = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaAgentKey,
+      instanaTracingDisabled: true
+    });
+
+    let control;
+
+    before(async () => {
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    it('expect no tracing data', () => {
+      return verify(control, { error: false, expectMetrics: false, expectSpans: false });
+    });
+  });
+
+  describeOrSkipIfReduced()('when INSTANA_TRACING_DISABLE is set', function () {
     // - INSTANA_ENDPOINT_URL is missing
     // - lambda function ends with success
     const env = prelude.bind(this)({
