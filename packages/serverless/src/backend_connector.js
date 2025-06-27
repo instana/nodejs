@@ -230,7 +230,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
     });
 
     function handleHeartbeatError() {
-      logger.debug(`[${requestId}] Giving up on Heartbeat request. Falling back to the serverless acceptor directly.`);
+      logger.warn(`[${requestId}] Heartbeat request failed. Falling back to the serverless acceptor instead.`);
 
       options.useLambdaExtension = false;
       clearInterval(heartbeatInterval);
@@ -450,8 +450,9 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
         clearInterval(heartbeatInterval);
 
         // Retry the request immediately, this time sending it to serverless-acceptor directly.
-        logger.debug(
-          `[${requestId}] Giving up with the extension...trying to send data to the serverless acceptor directly.`
+        logger.warn(
+          // eslint-disable-next-line max-len
+          `[${requestId}] Trying to send data to Instana serverless acceptor instead because the Lambda extension cannot be reached in time.`
         );
 
         options.useLambdaExtension = false;
@@ -530,8 +531,9 @@ function onTimeout(req, resourcePath, payload, finalLambdaRequest, handleCallbac
       clearInterval(heartbeatInterval);
 
       // Retry the request immediately, this time sending it to serverless acceptor directly.
-      logger.debug(
-        `[${requestId}] Giving up with the extension...trying to send data to Instana serverless acceptor directly.`
+      logger.warn(
+        `[${requestId}] Trying to send data to Instana serverless acceptor instead because the Lambda extension ` +
+          'cannot be reached in time.'
       );
 
       options.useLambdaExtension = false;
