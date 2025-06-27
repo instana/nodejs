@@ -82,7 +82,8 @@ describe('aws-lambda: many data', function () {
                   control.getRawBundles(),
                   control.getRawSpanArrays()
                 ]).then(([spans, rawBundles, rawSpanArrays]) => {
-                  verifySpans(spans);
+                  verifySpans(spans, { noOfExits: 3 });
+
                   expect(rawSpanArrays).to.be.an('array');
                   // We only send one bundle request with 1 entry and 3 exits.
                   expect(rawSpanArrays.length).to.equal(0);
@@ -148,6 +149,8 @@ describe('aws-lambda: many data', function () {
                   control.getRawBundles(),
                   control.getRawSpanArrays()
                 ]).then(([spans, rawBundles, rawSpanArrays]) => {
+                  verifySpans(spans, { noOfExits: 1 });
+
                   // 1 x bundle request at the end of the lambda fn (entry span)
                   expect(rawBundles.length).to.equal(1);
 
@@ -213,6 +216,8 @@ describe('aws-lambda: many data', function () {
                   control.getRawBundles(),
                   control.getRawSpanArrays()
                 ]).then(([spans, rawBundles, rawSpanArrays]) => {
+                  verifySpans(spans, { noOfExits: 100 });
+
                   // 1 X bundle request at the end of the lambda fn
                   expect(rawBundles.length).to.equal(1);
 
@@ -275,6 +280,8 @@ describe('aws-lambda: many data', function () {
                   control.getRawBundles(),
                   control.getRawSpanArrays()
                 ]).then(([spans, rawBundles, rawSpanArrays]) => {
+                  verifySpans(spans, { noOfExits: 100 });
+
                   // 1 X bundle request at the end of the lambda fn
                   // contains the entry span!
                   expect(rawBundles.length).to.equal(1);
@@ -313,13 +320,13 @@ describe('aws-lambda: many data', function () {
         }
       }
 
-      function verifySpans(spans) {
-        verifyLambdaEntries(spans);
-        verifyHttpExit(spans);
+      function verifySpans(spans, expectations) {
+        verifyLambdaEntry(spans);
+        verifyHttpExit(spans, expectations);
       }
 
-      function verifyHttpExit(spans) {
-        return expectExactlyNMatching(spans, 3, span => {
+      function verifyHttpExit(spans, expectations) {
+        return expectExactlyNMatching(spans, expectations.noOfExits, span => {
           expect(span.s).to.exist;
           expect(span.n).to.equal('node.http.client');
           expect(span.k).to.equal(constants.EXIT);
@@ -333,7 +340,7 @@ describe('aws-lambda: many data', function () {
         });
       }
 
-      function verifyLambdaEntries(spans) {
+      function verifyLambdaEntry(spans) {
         return expectExactlyOneMatching(spans, span => {
           expect(span.t).to.exist;
           expect(span.p).to.not.exist;
