@@ -19,7 +19,6 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_DISABLED_TRACERS;
     delete process.env.INSTANA_DISABLE_AUTO_INSTR;
     delete process.env.INSTANA_DISABLE_TRACING;
-    delete process.env.INSTANA_DISABLED_TRACERS;
     delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
     delete process.env.INSTANA_TRACING_DISABLE_GROUPS;
     delete process.env.INSTANA_TRACE_IMMEDIATELY;

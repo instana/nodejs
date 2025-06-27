@@ -40,18 +40,17 @@ exports.normalize = function normalize(config) {
       delete config.tracing.disabledTracers;
     }
 
-    let disableConfig = config.tracing.disable;
-
     // Fallback to environment variables if `disable` is not configured
+    const disableConfig = config.tracing?.disable || getDisableFromEnv();
     if (!disableConfig) {
-      disableConfig = getDisableFromEnv();
+      // No need to check further cases if disableConfig is still empty
+      return {};
     }
 
     // Normalize instrumentations and groups
     if (disableConfig?.instrumentations) {
       disableConfig.instrumentations = normalizeArray(disableConfig.instrumentations);
     }
-
     if (disableConfig?.groups) {
       disableConfig.groups = normalizeArray(disableConfig.groups);
     }
@@ -64,14 +63,36 @@ exports.normalize = function normalize(config) {
     return disableConfig || {};
   } catch (error) {
     // Fallback to an empty disable config on error
+    logger?.debug(`Error while normalizing tracing.disable config: ${error?.message} ${error?.stack}`);
     return {};
   }
 };
 
-// Environment variable precedence  (highest to lowest)
-// 1. INSTANA_TRACING_DISABLE_INSTRUMENTATIONS and INSTANA_TRACING_DISABLE_GROUPS
-// 2. INSTANA_TRACING_DISABLE – supports both instrumentations and groups
-// 3. INSTANA_DISABLED_TRACERS – deprecated
+/**
+ * Handles config from agent.
+ * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ */
+exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
+  try {
+    if (typeof config.tracing.disable === 'object') {
+      const flattenedEntries = flattenDisableConfigs(config.tracing.disable);
+      return categorizeDisableEntries(flattenedEntries);
+    }
+  } catch (error) {
+    logger?.debug(`Error while normalizing external tracing.disable config: ${error?.message} ${error?.stack}`);
+  }
+
+  return {};
+};
+
+/**
+ * Priority (highest to lowest):
+ * 1. INSTANA_TRACING_DISABLE_INSTRUMENTATIONS / INSTANA_TRACING_DISABLE_GROUPS
+ * 2. INSTANA_TRACING_DISABLE=list
+ * 3. INSTANA_DISABLED_TRACERS (deprecated)
+ *
+ * @returns  {import('../../tracing').Disable}
+ */
 function getDisableFromEnv() {
   const disable = {};
 
@@ -136,6 +157,7 @@ function normalizeArray(arr) {
 /**
  * Handle a flat array of strings which may include both individual
  * instrumentation names and known instrumentation groups.
+ * Handles negation patterns like '!console'.
  * @param {string[]} rawEntries
  * @returns {{ instrumentations?: string[], groups?: string[] }}
  */
@@ -150,19 +172,41 @@ function categorizeDisableEntries(rawEntries) {
     const normalizedEntry = entry?.toLowerCase().trim();
     if (!normalizedEntry) return;
 
+    // This allows configurations like { console: false } to be interpreted as '!console',
+    // which means "do not disable console" — useful when overriding group disables.
+    const isNegated = normalizedEntry.startsWith('!');
+    const actualValue = isNegated ? normalizedEntry.slice(1) : normalizedEntry;
+    const normalized = isNegated ? `!${actualValue}` : actualValue;
+
     // The supported groups are predefined in DISABLABLE_INSTRUMENTATION_GROUPS.
     // If the entry matches one of these, we classify it as a group, otherwise, considered as an instrumentation.
-    if (DISABLABLE_INSTRUMENTATION_GROUPS.has(normalizedEntry)) {
-      groups.push(normalizedEntry);
+    if (DISABLABLE_INSTRUMENTATION_GROUPS.has(actualValue)) {
+      groups.push(normalized);
     } else {
-      instrumentations.push(normalizedEntry);
+      instrumentations.push(normalized);
     }
   });
 
-  /** @type {{ instrumentations?: string[], groups?: string[] }} */
   const categorized = {};
   if (instrumentations.length > 0) categorized.instrumentations = instrumentations;
   if (groups.length > 0) categorized.groups = groups;
 
   return categorized;
+}
+
+/**
+ * @param {*} disableConfig
+ * @returns {string[]}
+ */
+function flattenDisableConfigs(disableConfig) {
+  // Converts a config with boolean values into a flat list of strings.
+  // Each key is a instrumentation or group.
+  // - true - disable
+  // - false - enable, we internally formated by adding ! in prefix
+  // Example: { logging: true, console: false } => ['logging', '!console']
+  return Object.entries(disableConfig).flatMap(([entryName, shouldDisable]) => {
+    if (shouldDisable === true) return [entryName];
+    if (shouldDisable === false) return [`!${entryName}`];
+    return [];
+  });
 }
