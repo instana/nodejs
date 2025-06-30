@@ -10,9 +10,10 @@ const { expect } = require('chai');
 const { normalize, normalizeExternalConfig } = require('../../../src/util/configNormalizers/disable');
 
 function resetEnv() {
-  delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
   delete process.env.INSTANA_DISABLED_TRACERS;
   delete process.env.INSTANA_TRACING_DISABLE;
+  delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
+  delete process.env.INSTANA_TRACING_DISABLE_GROUPS;
 }
 
 describe('util.configNormalizers.disable', () => {
@@ -25,7 +26,7 @@ describe('util.configNormalizers.disable', () => {
   });
 
   describe('normalize()', () => {
-    it('should handle empty config', () => {
+    it('should handle an empty config object', () => {
       const config = {};
       const result = normalize(config);
 
@@ -48,7 +49,7 @@ describe('util.configNormalizers.disable', () => {
       expect(config.tracing.disabledTracers).to.be.undefined;
     });
 
-    it('should prioritize "disable" when both "disabledTracers" and "disable" properties are defined', () => {
+    it('should prioritize "disable" when both "disabledTracers" and "disable" are defined', () => {
       const config = {
         tracing: {
           disabledTracers: ['AWS-SDK'],
@@ -62,7 +63,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result.instrumentations).to.deep.equal(['redis']);
     });
 
-    it('should normalize library names to lowercase and trim whitespace', () => {
+    it('should normalize instrumentation names: lowercase and trim whitespace', () => {
       const config = {
         tracing: {
           disable: {
@@ -99,7 +100,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
     });
 
-    it('should support group names', () => {
+    it('should support disabling by group names', () => {
       const config = {
         tracing: {
           disable: {
@@ -112,7 +113,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result.groups).to.deep.equal(['logging', 'databases']);
     });
 
-    it('should normalize group names to lowercase and trim whitespace', () => {
+    it('should normalize group names: lowercase and trim whitespace', () => {
       const config = {
         tracing: {
           disable: {
@@ -152,7 +153,7 @@ describe('util.configNormalizers.disable', () => {
       });
     });
 
-    it('should handle empty disable config object', () => {
+    it('should return an empty object when disable config is an empty object', () => {
       const config = {
         tracing: {
           disable: {}
@@ -163,29 +164,15 @@ describe('util.configNormalizers.disable', () => {
       expect(result).to.deep.equal({});
     });
 
-    it('should handle null disable config', () => {
-      const config = {
-        tracing: {
-          disable: null
-        }
-      };
+    it('should return an empty object if disable is null or undefined', () => {
+      const config1 = { tracing: { disable: null } };
+      const config2 = { tracing: { disable: undefined } };
 
-      const result = normalize(config);
-      expect(result).to.deep.equal({});
+      expect(normalize(config1)).to.deep.equal({});
+      expect(normalize(config2)).to.deep.equal({});
     });
 
-    it('should handle undefined disable config', () => {
-      const config = {
-        tracing: {
-          disable: undefined
-        }
-      };
-
-      const result = normalize(config);
-      expect(result).to.deep.equal({});
-    });
-
-    it('should handle non-string values in disable array config', () => {
+    it('should ignore non-string values in disable array', () => {
       const config = {
         tracing: {
           disable: ['aws-sdk', 123, null, undefined, {}, 'mongodb']
@@ -196,7 +183,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb']);
     });
 
-    it('should handle non-string values in config', () => {
+    it('should ignore non-string values inside disable.instrumentations', () => {
       const config = {
         tracing: {
           disable: { instrumentations: ['aws-sdk', 123, null, undefined, {}, 'mongodb'] }
@@ -207,7 +194,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb']);
     });
 
-    it('should return true when tracing is globally disabled via config (disable = true)', () => {
+    it('should return true if tracing is globally disabled (disable = true)', () => {
       const config = {
         tracing: {
           disable: true
@@ -215,10 +202,10 @@ describe('util.configNormalizers.disable', () => {
       };
 
       const result = normalize(config);
-      expect(result).to.deep.equal(true);
+      expect(result).to.equal(true);
     });
 
-    it('should return an empty object when global tracing disable is set to false', () => {
+    it('should return an empty object if tracing disable is set to false', () => {
       const config = {
         tracing: {
           disable: false
@@ -240,7 +227,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
     });
 
-    it('should parse "INSTANA_TRACING_DISABLE" correctly', () => {
+    it('should parse "INSTANA_TRACING_DISABLE" as instrumentations', () => {
       process.env.INSTANA_TRACING_DISABLE = 'aws-sdk, mongodb, postgres';
 
       const config = {};
@@ -249,7 +236,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
     });
 
-    it('should parse "INSTANA_TRACING_DISABLE_GROUPS" correctly', () => {
+    it('should parse "INSTANA_TRACING_DISABLE_GROUPS"', () => {
       process.env.INSTANA_TRACING_DISABLE_GROUPS = 'logging, databases';
 
       const config = {};
@@ -258,7 +245,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result.groups).to.deep.equal(['logging', 'databases']);
     });
 
-    it('should fallback to "INSTANA_DISABLED_TRACERS"', () => {
+    it('should fallback to deprected "INSTANA_DISABLED_TRACERS"', () => {
       process.env.INSTANA_DISABLED_TRACERS = 'redis, mysql';
 
       const config = {};
@@ -267,7 +254,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result.instrumentations).to.deep.equal(['redis', 'mysql']);
     });
 
-    it('should prioritize "INSTANA_TRACING_DISABLE_INSTRUMENTATIONS" over deprecated variable', () => {
+    it('should prioritize "INSTANA_TRACING_DISABLE_INSTRUMENTATIONS" over "INSTANA_DISABLED_TRACERS"', () => {
       process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'aws-sdk';
       process.env.INSTANA_DISABLED_TRACERS = 'redis';
 
@@ -288,22 +275,16 @@ describe('util.configNormalizers.disable', () => {
 
     it('should ignore empty or whitespace-only entries in environment variable', () => {
       process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'aws-sdk,,mongodb, ,postgres';
-
-      const config = {};
-      const result = normalize(config);
-
-      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
-    });
-    it('should ignore empty or whitespace-only entries in environment variable', () => {
       process.env.INSTANA_TRACING_DISABLE_GROUPS = 'logging,,databases, ,messaging';
 
       const config = {};
       const result = normalize(config);
 
+      expect(result.instrumentations).to.deep.equal(['aws-sdk', 'mongodb', 'postgres']);
       expect(result.groups).to.deep.equal(['logging', 'databases', 'messaging']);
     });
 
-    it('should handle mixed environment variables', () => {
+    it('should combine env instrumentation and group variables', () => {
       process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'aws-sdk,mongodb';
       process.env.INSTANA_TRACING_DISABLE_GROUPS = 'logging,databases';
 
@@ -316,7 +297,7 @@ describe('util.configNormalizers.disable', () => {
       });
     });
 
-    it('should handle INSTANA_TRACING_DISABLE with mixed groups and instrumentations', () => {
+    it('should parse mixed disable values from INSTANA_TRACING_DISABLE', () => {
       process.env.INSTANA_TRACING_DISABLE = 'aws-sdk,logging,mongodb,databases';
 
       const config = {};
@@ -328,7 +309,7 @@ describe('util.configNormalizers.disable', () => {
       });
     });
 
-    it('should handle empty string in environment variables', () => {
+    it('should return empty object for empty env variables', () => {
       process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = '';
       process.env.INSTANA_TRACING_DISABLE_GROUPS = '';
 
@@ -338,16 +319,16 @@ describe('util.configNormalizers.disable', () => {
       expect(result).to.deep.equal({});
     });
 
-    it('should return true when INSTANA_TRACING_DISABLE is set to "true"', () => {
+    it('should return true if INSTANA_TRACING_DISABLE is "true"', () => {
       process.env.INSTANA_TRACING_DISABLE = 'true';
 
       const config = {};
       const result = normalize(config);
 
-      expect(result).to.deep.equal(true);
+      expect(result).to.equal(true);
     });
 
-    it('should return an empty object when INSTANA_TRACING_DISABLE is set to "false"', () => {
+    it('should return empty object if INSTANA_TRACING_DISABLE is "false"', () => {
       process.env.INSTANA_TRACING_DISABLE = 'false';
 
       const config = {};
@@ -356,7 +337,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result).to.deep.equal({});
     });
 
-    it('should prioritize INSTANA_TRACING_DISABLE over other env', () => {
+    it('should give precedence to INSTANA_TRACING_DISABLE=true over other env vars', () => {
       process.env.INSTANA_TRACING_DISABLE = 'true';
       process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'aws-sdk,mongodb';
       process.env.INSTANA_TRACING_DISABLE_GROUPS = 'logging,databases';
@@ -364,7 +345,7 @@ describe('util.configNormalizers.disable', () => {
       const config = {};
       const result = normalize(config);
 
-      expect(result).to.deep.equal(true);
+      expect(result).to.equal(true);
     });
   });
 
@@ -383,7 +364,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result.instrumentations).to.deep.equal(['redis', 'console']);
     });
 
-    it('should categorize known groups from object entries', () => {
+    it('should correctly categorize known group names', () => {
       const config = {
         tracing: {
           disable: {
@@ -398,7 +379,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result.instrumentations).to.include('kafka');
     });
 
-    it('should handle config with true/false values', () => {
+    it('should represent false values with negated names', () => {
       const config = {
         tracing: {
           disable: {
@@ -415,7 +396,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result.groups).to.include('logging', '!databases');
     });
 
-    it('should handle if all entries set to false', () => {
+    it('should return negated names if all values are false', () => {
       const config = {
         tracing: {
           disable: {
@@ -429,7 +410,7 @@ describe('util.configNormalizers.disable', () => {
       expect(result.instrumentations).to.deep.equal(['!redis', '!pg']);
     });
 
-    it('should ignore non-boolean values in object config', () => {
+    it('should ignore non-boolean entries in config object', () => {
       const config = {
         tracing: {
           disable: {

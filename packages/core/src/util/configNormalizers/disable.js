@@ -30,31 +30,34 @@ exports.normalize = function normalize(config) {
   try {
     // Disable all tracing if explicitly set  'disable' to true
     if (config.tracing.disable === true) {
+      logger?.info('Tracing has been disabled via "tracing.disable: true" configuration.');
       return true;
     }
+    const hasDisableConfig = isDisableConfigNonEmpty(config);
 
+    if (hasDisableConfig) {
+      logger?.info(
+        `Tracing selectively disabled as per "tracing.disable" configuration: ${JSON.stringify(config.tracing.disable)}`
+      );
+    }
     // Handle deprecated `disabledTracers` config
     if (config.tracing.disabledTracers) {
       logger?.warn(
         'The configuration property "tracing.disabledTracers" is deprecated and will be removed in the next ' +
           'major release. Please use "tracing.disable" instead.'
       );
-      if (!config.tracing.disable) {
+      if (!hasDisableConfig) {
         config.tracing.disable = { instrumentations: config.tracing.disabledTracers };
       }
       delete config.tracing.disabledTracers;
     }
 
-    // Fallback to environment variables if `disable` is not configured
-    const disableConfig = config.tracing?.disable || getDisableFromEnv();
+    // Fallback to environment variables if `disable` is not explicitly configured
+    const disableConfig = isDisableConfigNonEmpty(config) ? config.tracing.disable : getDisableFromEnv();
 
-    if (!disableConfig) {
-      return {};
-    }
+    if (!disableConfig) return {};
 
-    if (disableConfig === true) {
-      return true;
-    }
+    if (disableConfig === true) return true;
 
     // Normalize instrumentations and groups
     if (disableConfig?.instrumentations) {
@@ -83,26 +86,7 @@ exports.normalize = function normalize(config) {
  */
 exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
   try {
-    if (typeof config.tracing.disable === 'object') {
-      const flattenedEntries = flattenDisableConfigs(config.tracing.disable);
-      return categorizeDisableEntries(flattenedEntries);
-    }
-  } catch (error) {
-    // Fallback to an empty disable config on error
-    logger?.debug(`Error while normalizing tracing.disable config: ${error?.message} ${error?.stack}`);
-    return {};
-  }
-
-  return {};
-};
-
-/**
- * Handles config from agent.
- * @param {import('../../util/normalizeConfig').InstanaConfig} config
- */
-exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
-  try {
-    if (typeof config.tracing.disable === 'object') {
+    if (isNonEmptyObject(config.tracing.disable)) {
       const flattenedEntries = flattenDisableConfigs(config.tracing.disable);
       return categorizeDisableEntries(flattenedEntries);
     }
@@ -114,13 +98,13 @@ exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
 };
 
 /**
- * Priority (highest to lowest):
+ * Precedence (highest to lowest):
  * 1. INSTANA_TRACING_DISABLE=true/false
  * 2. INSTANA_TRACING_DISABLE_INSTRUMENTATIONS / INSTANA_TRACING_DISABLE_GROUPS
  * 3. INSTANA_TRACING_DISABLE=list
  * 4. INSTANA_DISABLED_TRACERS (deprecated)
  *
- * @returns  {import('../../tracing').Disable}
+ * @returns {import('../../tracing').Disable}
  */
 function getDisableFromEnv() {
   const disable = {};
@@ -139,13 +123,11 @@ function getDisableFromEnv() {
     const envVarValue = process.env.INSTANA_TRACING_DISABLE;
 
     if (envVarValue === 'true') {
-      logger?.info('Tracing disabled via "INSTANA_TRACING_DISABLE" environment variable.');
+      logger?.info('Tracing has been disabled via environment variable "INSTANA_TRACING_DISABLE=true".');
       return true;
     }
 
-    if (envVarValue === 'false' || envVarValue === '') {
-      // Skip rest of the logic for this var
-    } else {
+    if (envVarValue !== 'false' && envVarValue !== '') {
       const categorized = categorizeDisableEntries(parseEnvVar(envVarValue));
       if (categorized?.instrumentations?.length) {
         disable.instrumentations = categorized.instrumentations;
@@ -153,15 +135,25 @@ function getDisableFromEnv() {
       if (categorized?.groups?.length) {
         disable.groups = categorized.groups;
       }
+
+      logger?.info(`Tracing has been disabled via "INSTANA_TRACING_DISABLE=${envVarValue}"`);
     }
   }
 
   if (process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS) {
     disable.instrumentations = parseEnvVar(process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS);
+    logger?.info(
+      `Tracing instrumentations disabled via "INSTANA_TRACING_DISABLE_INSTRUMENTATIONS": ${JSON.stringify(
+        disable.instrumentations
+      )}`
+    );
   }
 
   if (process.env.INSTANA_TRACING_DISABLE_GROUPS) {
     disable.groups = parseEnvVar(process.env.INSTANA_TRACING_DISABLE_GROUPS);
+    logger?.info(
+      `Tracing instrumentation groups disabled via "INSTANA_TRACING_DISABLE_GROUPS": ${JSON.stringify(disable.groups)}`
+    );
   }
 
   return Object.keys(disable).length > 0 ? disable : null;
@@ -184,20 +176,13 @@ function parseEnvVar(envVarValue) {
  */
 function normalizeArray(arr) {
   if (!Array.isArray(arr)) return [];
-  return arr
-    .map(s => {
-      if (typeof s !== 'string') {
-        return null;
-      }
-      return s.toLowerCase()?.trim();
-    })
-    .filter(Boolean);
+  return arr.map(s => (typeof s === 'string' ? s.toLowerCase().trim() : null)).filter(Boolean);
 }
 
 /**
- * Handle a flat array of strings which may include both individual
- * instrumentation names and known instrumentation groups.
- * Handles negation patterns like '!console'.
+ * Categorizes a flat array of strings into instrumentations and groups.
+ * Supports negated entries (e.g., '!console').
+ *
  * @param {string[]} rawEntries
  * @returns {{ instrumentations?: string[], groups?: string[] }}
  */
@@ -249,4 +234,20 @@ function flattenDisableConfigs(disableConfig) {
     if (shouldDisable === false) return [`!${entryName}`];
     return [];
   });
+}
+
+/**
+ * @param {{}} obj
+ */
+function isNonEmptyObject(obj) {
+  return obj && typeof obj === 'object' && !Array.isArray(obj) && Object.keys(obj).length > 0;
+}
+
+/**
+ * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ */
+function isDisableConfigNonEmpty(config) {
+  const disableConfig = config.tracing?.disable;
+
+  return isNonEmptyObject(disableConfig) || (Array.isArray(disableConfig) && disableConfig.length > 0);
 }
