@@ -16,12 +16,13 @@ describe('util.normalizeConfig', () => {
   afterEach(resetEnv);
 
   function resetEnv() {
-    delete process.env.INSTANA_DISABLED_TRACERS;
-    delete process.env.INSTANA_DISABLE_AUTO_INSTR;
     // deprecated
+    delete process.env.INSTANA_DISABLED_TRACERS;
     delete process.env.INSTANA_DISABLE_TRACING;
+
     delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
     delete process.env.INSTANA_TRACING_DISABLE_GROUPS;
+    delete process.env.INSTANA_DISABLE_AUTO_INSTR;
     delete process.env.INSTANA_TRACE_IMMEDIATELY;
     delete process.env.INSTANA_EXTRA_HTTP_HEADERS;
     delete process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT;
