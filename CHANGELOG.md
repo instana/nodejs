@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.17.0](https://github.com/instana/nodejs/compare/v4.16.0...v4.17.0) (2025-06-30)
+
+
+### Bug Fixes
+
+* depreacted INSTANA_DISABLE_TRACING env variable ([#1796](https://github.com/instana/nodejs/issues/1796)) ([4559cb8](https://github.com/instana/nodejs/commit/4559cb82ae955d77d10e991f544bdf2c1d17fe62))
+* deprecate disabled tracer config ([#1788](https://github.com/instana/nodejs/issues/1788)) ([d4dd286](https://github.com/instana/nodejs/commit/d4dd2862240b5f6ed750a43b39cde2876586b164))
+
+
+### Features
+
+*  added support for disabling instrumentations and groups via agent config ([#1795](https://github.com/instana/nodejs/issues/1795)) ([2ea28eb](https://github.com/instana/nodejs/commit/2ea28eb91560f570bef066bc6b7f5827e7f4a173))
+* added support for disable tracing by groups ([#1755](https://github.com/instana/nodejs/issues/1755)) ([64b6e4a](https://github.com/instana/nodejs/commit/64b6e4ad93c7046a84bee26c87b9057bcfe3cf2a))
+* added support for linux s390x ([#1773](https://github.com/instana/nodejs/issues/1773)) ([e1e203b](https://github.com/instana/nodejs/commit/e1e203bca12d5a2752899a4acaca33d80c92c13c))
+
+
+
+
+
 # [4.16.0](https://github.com/instana/nodejs/compare/v4.15.3...v4.16.0) (2025-06-24)
 
 

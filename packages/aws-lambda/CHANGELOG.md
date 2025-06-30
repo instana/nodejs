@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.17.0](https://github.com/instana/nodejs/compare/v4.16.0...v4.17.0) (2025-06-30)
+
+
+### Bug Fixes
+
+* depreacted INSTANA_DISABLE_TRACING env variable ([#1796](https://github.com/instana/nodejs/issues/1796)) ([4559cb8](https://github.com/instana/nodejs/commit/4559cb82ae955d77d10e991f544bdf2c1d17fe62))
+
+
+
+
+
 # [4.16.0](https://github.com/instana/nodejs/compare/v4.15.3...v4.16.0) (2025-06-24)
 
 
