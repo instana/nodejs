@@ -151,7 +151,9 @@ function getDisableFromEnv() {
 
   if (process.env.INSTANA_TRACING_DISABLE_GROUPS) {
     disable.groups = parseEnvVar(process.env.INSTANA_TRACING_DISABLE_GROUPS);
-    logger?.info(`Tracing groups disabled via "INSTANA_TRACING_DISABLE_GROUPS": ${JSON.stringify(disable.groups)}`);
+    logger?.info(
+      `Tracing instrumentation groups disabled via "INSTANA_TRACING_DISABLE_GROUPS": ${JSON.stringify(disable.groups)}`
+    );
   }
 
   return Object.keys(disable).length > 0 ? disable : null;

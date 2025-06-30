@@ -164,7 +164,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
         it('should disable aws-sdk/v3 via config', () => {
           initAndActivate({ tracing: { disable: { instrumentations: ['aws-sdk/v3'] } } });
 
-          // aws-sdk/v2 has been disabled (via aws-sdk/v2)
+          // aws-sdk/v3 has been disabled (via aws-sdk/v3)
           expect(initAwsSdkv3).not.to.have.been.called;
           expect(activateAwsSdkv3).not.to.have.been.called;
 
