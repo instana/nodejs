@@ -114,7 +114,7 @@ spec:
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-5"
+            CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=5 npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-5"
           else
             if [[ 5 =~ ^[0-9]+$ ]]; then
               CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=5 npx lerna run "test:ci" --stream --scope="@instana/aws-lambda"
