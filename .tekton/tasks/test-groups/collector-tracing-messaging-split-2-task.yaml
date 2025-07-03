@@ -34,7 +34,7 @@ spec:
       readinessProbe:
           tcpSocket:
             port: 9092 
-          initialDelaySeconds: 60
+          initialDelaySeconds: 30
           periodSeconds: 2
           timeoutSeconds: 60
     - name: schema-registry
