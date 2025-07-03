@@ -10,7 +10,7 @@ const awsSdk3 = require('@aws-sdk/client-sqs');
 const sns = require('@aws-sdk/client-sns');
 const { StandardRetryStrategy } = require('@aws-sdk/util-retry');
 
-const maxAttempts = 10;
+const maxAttempts = 5;
 const retryStrategy = new StandardRetryStrategy(async () => maxAttempts);
 
 const sqs = new awsSdk3.SQS({ region: 'us-east-2', endpoint: process.env.LOCALSTACK_AWS, retryStrategy });
@@ -20,7 +20,7 @@ const clientOpts = {
     accessKeyId: 'test',
     secretAccessKey: 'test'
   },
-  endpoint: process.env.LOCALSTACK_AWS || 'http://localhost:4566',
+  endpoint: process.env.LOCALSTACK_AWS,
   region: 'us-east-2',
   retryStrategy
 };
