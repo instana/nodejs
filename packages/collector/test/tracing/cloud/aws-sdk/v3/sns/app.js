@@ -18,9 +18,14 @@ const fetch = require('node-fetch-v2');
 const app = express();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const port = require('../../../../../test_util/app-port')();
+const sns = require('@aws-sdk/client-sns');
+const { StandardRetryStrategy } = require('@aws-sdk/util-retry');
 
 const logPrefix = `AWS SDK v3 SNS (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+
+const maxAttempts = 5;
+const retryStrategy = new StandardRetryStrategy(async () => maxAttempts);
 
 const clientOpts = {
   credentials: {
@@ -28,10 +33,10 @@ const clientOpts = {
     secretAccessKey: 'test'
   },
   endpoint: process.env.LOCALSTACK_AWS,
-  region: 'us-east-2'
+  region: 'us-east-2',
+  retryStrategy
 };
 
-const sns = require('@aws-sdk/client-sns');
 const client = new sns.SNSClient(clientOpts);
 const clientV2 = new sns.SNS(clientOpts);
 

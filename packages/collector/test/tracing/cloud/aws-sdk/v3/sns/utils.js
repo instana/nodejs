@@ -7,7 +7,13 @@
 const uuid = require('uuid');
 const semver = require('semver');
 const awsSdk3 = require('@aws-sdk/client-sqs');
-const sqs = new awsSdk3.SQS({ region: 'us-east-2', endpoint: process.env.LOCALSTACK_AWS });
+const sns = require('@aws-sdk/client-sns');
+const { StandardRetryStrategy } = require('@aws-sdk/util-retry');
+
+const maxAttempts = 5;
+const retryStrategy = new StandardRetryStrategy(async () => maxAttempts);
+
+const sqs = new awsSdk3.SQS({ region: 'us-east-2', endpoint: process.env.LOCALSTACK_AWS, retryStrategy });
 
 const clientOpts = {
   credentials: {
@@ -15,9 +21,10 @@ const clientOpts = {
     secretAccessKey: 'test'
   },
   endpoint: process.env.LOCALSTACK_AWS,
-  region: 'us-east-2'
+  region: 'us-east-2',
+  retryStrategy
 };
-const sns = require('@aws-sdk/client-sns');
+
 const snsClient = new sns.SNSClient(clientOpts);
 
 exports.createQueue = async name => {
