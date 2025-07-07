@@ -23,9 +23,15 @@ LIBC_VARIANTS=( \
   "musl"
 )
 
-ARCHS=( \
+LINUX_ARCHS=( \
   "amd64" \
+  "arm64" \
   "s390x"
+)
+
+MAC_ARCHS=( \
+  "amd64" \
+  "arm64"
 )
 
 #########
@@ -33,7 +39,7 @@ ARCHS=( \
 #########
 if [[ -z "$BUILD_FOR_MACOS" ]]; then
 
-  for ARCH in "${ARCHS[@]}"; do
+  for ARCH in "${LINUX_ARCHS[@]}"; do
     source ./build-and-copy-node-modules-linux
 
     for ABI_VERSION in "${!ABI_VERSIONS[@]}"; do
@@ -74,11 +80,13 @@ if [[ ! -z "$BUILD_FOR_MACOS" ]]; then
     export NVM_DIR="$HOME/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-    source ./build-and-copy-node-modules-darwin
+    for ARCH in "${MAC_ARCHS[@]}"; do
+      source ./build-and-copy-node-modules-darwin
 
-    for ABI_VERSION in ${!ABI_VERSIONS[@]}; do
-      NODEJS_VERSION=${ABI_VERSIONS[$ABI_VERSION]}
-      buildAndCopyModulesDarwin $ABI_VERSION $NODEJS_VERSION
+      for ABI_VERSION in ${!ABI_VERSIONS[@]}; do
+        NODEJS_VERSION=${ABI_VERSIONS[$ABI_VERSION]}
+        buildAndCopyModulesDarwin $ABI_VERSION $NODEJS_VERSION
+      done
     done
   else
     echo Native addons for MacOS can only be built on MacOS.
