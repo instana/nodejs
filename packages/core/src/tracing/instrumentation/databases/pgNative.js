@@ -18,7 +18,7 @@ let isActive = false;
 const preparedStatements = new LRUCache({ max: 100000 });
 
 // See https://www.postgresql.org/docs/9.3/libpq-connect.html#AEN39692
-// Pattern: postgresql://<user>[:<password>]@<netloc>[:<port>]/<dbname>[?params]
+// Pattern: postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]
 // eslint-disable-next-line max-len
 const connectionUriRegex =
   /^\s*postgres(?:ql)?:\/\/(?:([^:@]+)?(?::.+)?@)?([^:/?#]+)?(?::(\d+))?(?:\/([^?]+))?(?:\?.*)?$/;
