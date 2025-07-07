@@ -81,11 +81,24 @@ if [[ ! -z "$BUILD_FOR_MACOS" ]]; then
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
     for ARCH in "${MAC_ARCHS[@]}"; do
+      CURRENT_ARCH=$(uname -m)
+
+      if [[ "$CURRENT_ARCH" == "x86_64" ]]; then
+        CURRENT_ARCH="amd64"
+      elif [[ "$CURRENT_ARCH" == "arm64" ]]; then
+        CURRENT_ARCH="arm64"
+      fi
+
+      if [[ "$ARCH" != "$CURRENT_ARCH" ]]; then
+        echo "Skipping architecture $ARCH (current arch is $CURRENT_ARCH)"
+        continue
+      fi
+      
       source ./build-and-copy-node-modules-darwin
 
       for ABI_VERSION in ${!ABI_VERSIONS[@]}; do
         NODEJS_VERSION=${ABI_VERSIONS[$ABI_VERSION]}
-        buildAndCopyModulesDarwin $ABI_VERSION $NODEJS_VERSION
+        buildAndCopyModulesDarwin $ABI_VERSION $NODEJS_VERSION $ARCH
       done
     done
   else
