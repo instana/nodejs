@@ -29,6 +29,14 @@ function buildAndCopyModulesLinux {
       -f "$dockerfile" \
       --load -t "$dockertag" \
       .
+  elif [ "$arch" = "arm64" ]; then
+    path_arch="$arch"
+    docker buildx build \
+      --platform=linux/$arch \
+      --build-arg BASE_IMAGE=$baseimage \
+      -f "$dockerfile" \
+      --load -t "$dockertag" \
+      .
   else
     path_arch="x64"
     docker build \
