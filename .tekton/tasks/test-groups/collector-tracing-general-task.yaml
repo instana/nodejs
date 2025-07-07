@@ -133,7 +133,7 @@ spec:
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            npm run coverage-ci --npm_command="test:ci:collector:tracing:general" --report_dir="collector-tracing-general"
+            CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npm run coverage-ci --npm_command="test:ci:collector:tracing:general" --report_dir="collector-tracing-general"
           else
             if [[ false =~ ^[0-9]+$ ]]; then
               CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npx lerna run "false" --stream --scope="false"
