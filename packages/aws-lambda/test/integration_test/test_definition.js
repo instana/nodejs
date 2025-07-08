@@ -1526,9 +1526,6 @@ function registerTests(handlerDefinitionPath, reduced) {
       it('must deliver metrics and spans directly to the back end', async () => {
         await verify(control, { error: false, expectMetrics: true, expectSpans: true });
 
-        // With the heartbeat request succeeding but the extension becoming unresponsive later, the outcome basically
-        // depends on whether we store the spans in the extenion stub when it is simulating unresponsiveness or not.
-        // Currently we do that, so we expect 2 spans.
         return retry(async () => {
           const spansFromExtension = await control.getSpansFromExtension();
 
@@ -1577,9 +1574,6 @@ function registerTests(handlerDefinitionPath, reduced) {
     it('must deliver metrics and spans directly to the back end', async () => {
       await verify(control, { error: false, expectMetrics: true, expectSpans: true });
 
-      // With the heartbeat request succeeding but the extension becoming unresponsive later, the outcome basically
-      // depends on whether we store the spans in the extenion stub when it is simulating unresponsiveness or not.
-      // Currently we do that, so we expect 2 spans.
       return retry(async () => {
         const spansFromExtension = await control.getSpansFromExtension();
 
@@ -1627,9 +1621,6 @@ function registerTests(handlerDefinitionPath, reduced) {
     it('must deliver metrics and spans directly to the back end', async () => {
       await verify(control, { error: false, expectMetrics: true, expectSpans: true });
 
-      // With the heartbeat request succeeding but the extension becoming unresponsive later, the outcome basically
-      // depends on whether we store the spans in the extenion stub when it is simulating unresponsiveness or not.
-      // Currently we do that, so we expect 2 spans.
       return retry(async () => {
         const spansFromExtension = await control.getSpansFromExtension();
 
@@ -1676,9 +1667,6 @@ function registerTests(handlerDefinitionPath, reduced) {
     it('must deliver metrics and spans directly to the back end', async () => {
       await verify(control, { error: false, expectMetrics: true, expectSpans: true });
 
-      // With the heartbeat request succeeding but the extension becoming unresponsive later, the outcome basically
-      // depends on whether we store the spans in the extenion stub when it is simulating unresponsiveness or not.
-      // Currently we do that, so we expect 2 spans.
       return retry(async () => {
         const spansFromExtension = await control.getSpansFromExtension();
 
