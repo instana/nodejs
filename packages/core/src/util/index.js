@@ -24,7 +24,6 @@ const configNormalizers = require('./configNormalizers');
 const spanFilter = require('./spanFilter');
 const yamlReader = require('./yamlReader');
 const disableInstrumentation = require('./disableInstrumentation');
-const deepMerge = require('./deepMerge');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -104,4 +103,3 @@ exports.configNormalizers = configNormalizers;
 exports.spanFilter = spanFilter;
 exports.yamlReader = yamlReader;
 exports.disableInstrumentation = disableInstrumentation;
-exports.deepMerge = deepMerge;
