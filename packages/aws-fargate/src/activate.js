@@ -58,7 +58,6 @@ function init() {
       backendConnector.init({
         config,
         identityProvider,
-        stopSendingOnFailure: false,
         defaultTimeout: 950
       });
 
