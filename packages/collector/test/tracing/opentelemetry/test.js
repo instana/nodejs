@@ -701,7 +701,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         await controls.stop();
       });
 
-      it.only('should trace', async () => {
+      it('should trace', async () => {
         await controls.sendRequest({
           method: 'GET',
           path: '/trace'
