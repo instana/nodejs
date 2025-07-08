@@ -1432,7 +1432,7 @@ function registerTests(handlerDefinitionPath, reduced) {
 
   // eslint-disable-next-line max-len
   describeOrSkipIfReduced(reduced)(
-    'when the extension is used, the heartbeat request succeeds, but the extension becomes unresponsive later',
+    'when the extension is used, but the extension is not available yet and initial heartbeat timeout gets triggered',
     function () {
       const env = prelude.bind(this)({
         handlerDefinitionPath,
@@ -1471,7 +1471,13 @@ function registerTests(handlerDefinitionPath, reduced) {
         // Currently we do that, so we expect 2 spans.
         return retry(async () => {
           const spansFromExtension = await control.getSpansFromExtension();
+
+          // 1 heartbeat to extension -> runs into initial heartbeat timeout (currently 2s)
+          // Meanwhile spans are coming in and the extension is alive -> 2 spans from extension!
           expect(spansFromExtension).to.have.length(2);
+
+          const spans = await control.getSpans();
+          expect(spans).to.have.length(2);
         });
       });
     }
