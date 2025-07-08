@@ -2,7 +2,7 @@
 
 const mochaOptions = {
   file: ['test/initEnv.js'],
-  ignore: ['node_modules/**/*', 'test/**/node_modules/**/*', 'test/tracing/opentelemetry/node_modules'],
+  ignore: ['node_modules/**/*', 'test/**/node_modules/**/*'],
   watchFiles: ['test/**/*.js', '../*/src/**/*.js', 'test/**/*.mjs', '../*/src/**/*.mjs']
 };
 
