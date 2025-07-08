@@ -100,15 +100,6 @@ exports.init = function init(config, _downstreamConnection) {
 
     preActivationCleanupIntervalHandle.unref();
   }
-
-  logger.debug(
-    `Span Buffer configured with maxBufferedSpans=${maxBufferedSpans},` +
-      `forceTransmissionStartingAt=${forceTransmissionStartingAt},` +
-      `initialTransmissionDelay=${initialTransmissionDelay},` +
-      `transmissionDelay=${transmissionDelay},` +
-      `batchingEnabled=${batchingEnabled},` +
-      `batchThreshold=${batchThreshold}`
-  );
 };
 
 /**
@@ -448,8 +439,6 @@ function isBatchable(span) {
 }
 
 function transmitSpans() {
-  logger.debug(`[spanBuffer] Transmitting spans called. There is ${spans.length} spans to send.`);
-
   clearTimeout(transmissionTimeoutHandle);
 
   if (spans.length === 0) {
@@ -460,6 +449,8 @@ function transmitSpans() {
 
     return;
   }
+
+  logger.debug(`[spanBuffer] Transmitting spans called. There is ${spans.length} spans to send.`);
 
   const spansToSend = spans;
   spans = [];
