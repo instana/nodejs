@@ -114,7 +114,11 @@ spec:
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npm run coverage-ci --npm_command="test:ci:opentelemetry-exporter" --report_dir="opentelemetry-exporter"
+            if [[ false =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npm run coverage-ci --npm_command="test:ci:opentelemetry-exporter" --report_dir="opentelemetry-exporter"
+            else
+               npm run coverage-ci --npm_command="test:ci:opentelemetry-exporter" --report_dir="opentelemetry-exporter"
+            fi
           else
             if [[ false =~ ^[0-9]+$ ]]; then
               CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npx lerna run "false" --stream --scope="false"

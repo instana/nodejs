@@ -117,7 +117,11 @@ spec:
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            CI_TEST_SPLIT=3 CI_TEST_SPLIT_CURRENT=1 npm run coverage-ci --npm_command="test:ci:collector:tracing:cloud:aws:v3" --report_dir="collector-tracing-cloud-aws-v3"
+            if [[ 3 =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=3 CI_TEST_SPLIT_CURRENT=1 npm run coverage-ci --npm_command="test:ci:collector:tracing:cloud:aws:v3" --report_dir="collector-tracing-cloud-aws-v3"
+            else
+               npm run coverage-ci --npm_command="test:ci:collector:tracing:cloud:aws:v3" --report_dir="collector-tracing-cloud-aws-v3"
+            fi
           else
             if [[ 3 =~ ^[0-9]+$ ]]; then
               CI_TEST_SPLIT=3 CI_TEST_SPLIT_CURRENT=1 npx lerna run "test:ci:tracing:cloud:aws:v3" --stream --scope="@instana/collector"

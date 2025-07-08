@@ -114,7 +114,11 @@ spec:
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npm run coverage-ci --npm_command="test:ci:serverless-collector" --report_dir="serverless-collector"
+            if [[ false =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npm run coverage-ci --npm_command="test:ci:serverless-collector" --report_dir="serverless-collector"
+            else
+               npm run coverage-ci --npm_command="test:ci:serverless-collector" --report_dir="serverless-collector"
+            fi
           else
             if [[ false =~ ^[0-9]+$ ]]; then
               CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npx lerna run "false" --stream --scope="false"

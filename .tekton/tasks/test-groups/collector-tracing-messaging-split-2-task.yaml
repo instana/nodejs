@@ -209,7 +209,11 @@ spec:
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            CI_TEST_SPLIT=4 CI_TEST_SPLIT_CURRENT=2 npm run coverage-ci --npm_command="test:ci:collector:tracing:messaging" --report_dir="collector-tracing-messaging-split-2"
+            if [[ 4 =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=4 CI_TEST_SPLIT_CURRENT=2 npm run coverage-ci --npm_command="test:ci:collector:tracing:messaging" --report_dir="collector-tracing-messaging-split-2"
+            else
+               npm run coverage-ci --npm_command="test:ci:collector:tracing:messaging" --report_dir="collector-tracing-messaging-split-2"
+            fi
           else
             if [[ 4 =~ ^[0-9]+$ ]]; then
               CI_TEST_SPLIT=4 CI_TEST_SPLIT_CURRENT=2 npx lerna run "test:ci:tracing:messaging" --stream --scope="@instana/collector"
