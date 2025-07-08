@@ -112,7 +112,6 @@ function init(_config = {}) {
   const metrics = require('./metrics');
 
   pidStore.init(config);
-  announceCycle.init(config, pidStore);
   agentOpts.init(config);
   announceCycle.init(config, pidStore);
   agentConnection.init(config, pidStore);
