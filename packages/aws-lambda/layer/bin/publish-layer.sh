@@ -167,13 +167,8 @@ SUPPORTED_RUNTIMES="nodejs18.x nodejs20.x nodejs22.x"
 # We're using a development version.
 ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "../../..")
 NVMRC_PATH="$ROOT_DIR/.nvmrc"
-if [[ -f "$NVMRC_PATH" ]]; then
-  NODEJS_DEV_VERSION=$(cut -d '.' -f 1 "$NVMRC_PATH")
-  echo "Using Node.js version $NODEJS_DEV_VERSION from .nvmrc for Docker build"
-else
-  echo "Warning: .nvmrc file not found at $NVMRC_PATH, falling back to default Node.js version 20"
-  NODEJS_DEV_VERSION=22 
-fi
+NODEJS_DEV_VERSION=$(cut -d '.' -f 1 "$NVMRC_PATH")
+echo "Using Node.js version $NODEJS_DEV_VERSION from .nvmrc for Docker build"
 
 echo Will build Lambda layer with name \"$LAYER_NAME\".
 
