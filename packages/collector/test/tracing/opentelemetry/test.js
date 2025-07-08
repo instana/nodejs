@@ -674,7 +674,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     });
   });
 
-  describe.only('OracleDB', function () {
+  describe('OracleDB', function () {
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
