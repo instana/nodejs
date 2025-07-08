@@ -172,7 +172,7 @@ if [[ -f "$NVMRC_PATH" ]]; then
   echo "Using Node.js version $NODEJS_DEV_VERSION from .nvmrc for Docker build"
 else
   echo "Warning: .nvmrc file not found at $NVMRC_PATH, falling back to default Node.js version 20"
-  NODEJS_DEV_VERSION=20 
+  NODEJS_DEV_VERSION=22 
 fi
 
 echo Will build Lambda layer with name \"$LAYER_NAME\".

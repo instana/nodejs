@@ -23,7 +23,11 @@ docker rm -f $containername || true
 echo "Removing image $imagetag"
 docker rmi -f $imagetag
 
-echo "Building $dockerfile -> $imagetag"
-docker build -f $dockerfile -t $imagetag -t $gcr_repository/$imagetag .
+ROOT_DIR=$(git rev-parse --show-toplevel)
+NVMRC_PATH="$ROOT_DIR/.nvmrc"
+NODEJS_VERSION=$(cat "$NVMRC_PATH")
+echo "Building $dockerfile -> $imagetag with Node version $NODEJS_VERSION"
+
+docker build --build-arg NODEJS_VERSION=$NODEJS_VERSION -f $dockerfile -t $imagetag -t $ecr_repository/$imagetag .
 echo "docker build exit status: $?"
 
