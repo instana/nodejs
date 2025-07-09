@@ -121,7 +121,9 @@ function enter(_ctx) {
       }
     );
     scheduleTracingMetrics();
-    detectEOLNodeVersion();
+    if (!disableEOLEvents) {
+      detectEOLNodeVersion();
+    }
   }
 
   tracing.activate(agentOpts.config);
@@ -253,7 +255,7 @@ function sendEOLEvent() {
  * support for events.)
  */
 function detectEOLNodeVersion() {
-  if (isNodeVersionEOL() && !disableEOLEvents) {
+  if (isNodeVersionEOL()) {
     setTimeout(() => {
       sendEOLEvent();
       setInterval(sendEOLEvent, EOL_EVENT_REFRESH_INTERVAL).unref();
