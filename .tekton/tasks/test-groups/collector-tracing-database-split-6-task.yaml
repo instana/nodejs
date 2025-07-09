@@ -210,7 +210,11 @@ spec:
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            npm run coverage-ci --npm_command="test:ci:collector:tracing:database" --report_dir="collector-tracing-database-split-6"
+            if [[ 10 =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=10 CI_TEST_SPLIT_CURRENT=6 npm run coverage-ci --npm_command="test:ci:collector:tracing:database" --report_dir="collector-tracing-database-split-6"
+            else
+               npm run coverage-ci --npm_command="test:ci:collector:tracing:database" --report_dir="collector-tracing-database-split-6"
+            fi
           else
             if [[ 10 =~ ^[0-9]+$ ]]; then
               CI_TEST_SPLIT=10 CI_TEST_SPLIT_CURRENT=6 npx lerna run "test:ci:tracing:database" --stream --scope="@instana/collector"
