@@ -22,6 +22,7 @@ describe('util.normalizeConfig', () => {
 
     delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
     delete process.env.INSTANA_TRACING_DISABLE_GROUPS;
+    delete process.env.INSTANA_TRACING_DISABLE_EOL_EVENTS;
     delete process.env.INSTANA_DISABLE_AUTO_INSTR;
     delete process.env.INSTANA_TRACE_IMMEDIATELY;
     delete process.env.INSTANA_EXTRA_HTTP_HEADERS;
@@ -777,13 +778,36 @@ describe('util.normalizeConfig', () => {
 
     it('should return false when INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION is not set', () => {
       const config = normalizeConfig();
-      expect(config.tracing.ignoreEndpointsDisableSuppression).to.deep.equal(false);
+      expect(config.tracing.ignoreEndpointsDisableSuppression).to.equal(false);
     });
 
     it('should return true when INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION is set', () => {
       process.env.INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION = true;
       const config = normalizeConfig();
-      expect(config.tracing.ignoreEndpointsDisableSuppression).to.deep.equal(true);
+      expect(config.tracing.ignoreEndpointsDisableSuppression).to.equal(true);
+    });
+
+    it('should return false when INSTANA_TRACING_DISABLE_EOL_EVENTS is not set', () => {
+      const config = normalizeConfig();
+      expect(config.tracing.disableEOLEvents).to.equal(false);
+    });
+
+    it('should return true when INSTANA_TRACING_DISABLE_EOL_EVENTS is set to true', () => {
+      process.env.INSTANA_TRACING_DISABLE_EOL_EVENTS = 'true';
+      const config = normalizeConfig();
+      expect(config.tracing.disableEOLEvents).to.equal(true);
+    });
+
+    it('should return false when INSTANA_TRACING_DISABLE_EOL_EVENTS is set to false', () => {
+      process.env.INSTANA_TRACING_DISABLE_EOL_EVENTS = 'false';
+      const config = normalizeConfig();
+      expect(config.tracing.disableEOLEvents).to.equal(false);
+    });
+
+    it('should return false when INSTANA_TRACING_DISABLE_EOL_EVENTS is set to any other value', () => {
+      process.env.INSTANA_TRACING_DISABLE_EOL_EVENTS = 'test';
+      const config = normalizeConfig();
+      expect(config.tracing.disableEOLEvents).to.equal(false);
     });
   });
 
