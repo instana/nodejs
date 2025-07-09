@@ -35,6 +35,7 @@ describe('util/eol', () => {
   runEolTest('14.13.3');
   runEolTest('15.16.17');
   runEolTest('17.0.0');
+  runEolTest('21.0.3');
 
   function runEolTest(version) {
     it(`EOL should be detected when the Node.js version is EOL (${version})`, () => {

@@ -14,5 +14,5 @@ const { satisfies } = require('semver');
  * @returns {boolean}
  */
 exports.isNodeVersionEOL = function () {
-  return satisfies(process.versions.node, '<18 || 19');
+  return satisfies(process.versions.node, '<20 || 21 || 23');
 };
