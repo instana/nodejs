@@ -12,9 +12,9 @@ spec:
     - name: node-version
       value: $(params.node-version)
     - name: continuous-delivery-context-secret
-      value: $(params.continuous-delivery-context-secret)      
+      value: $(params.continuous-delivery-context-secret)
     - name: coverage
-      value: $(params.coverage)      
+      value: $(params.coverage)
   steps:
     - name: print-all-results
       image: public.ecr.aws/docker/library/node:$(params.node-version)
@@ -26,10 +26,10 @@ spec:
           valueFrom:
             secretKeyRef:
               name: $(params.continuous-delivery-context-secret)
-              key: "SONAR_TOKEN"          
+              key: "SONAR_TOKEN"
       script: |
         #!/bin/bash
-        
+
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
@@ -38,16 +38,17 @@ spec:
           echo "PIPELINE_RESULT=Failed" >> $ARTIFACTS_PATH/$PROPERTIES_FILE
         else
           echo "PIPELINE_RESULT=Succeeded"
-          echo "PIPELINE_RESULT=Succeeded" >> $ARTIFACTS_PATH/$PROPERTIES_FILE          
+          echo "PIPELINE_RESULT=Succeeded" >> $ARTIFACTS_PATH/$PROPERTIES_FILE
         fi
-        
+
         if [ "$(params.coverage)" == "true" ]; then
-          echo "Run eslint report..."
-          npx eslint packages/ -f json > eslint-report.json || true
+          echo "Running ESLint..."
+          npx eslint packages/ -f json -o eslint-report.json || true
 
-          echo "Install sonarcube scanner..."
-          npm install -g sonarqube-scanner@3.5
+          echo "Installing SonarCloud scanner..."
+          npm install -g sonarqube-scanner
 
-          echo "Run sonarqube..."
-          sonar-scanner
+          echo "Running SonarCloud analysis..."
+          sonar-scanner \
+            -Dsonar.token=$SONAR_TOKEN
         fi
