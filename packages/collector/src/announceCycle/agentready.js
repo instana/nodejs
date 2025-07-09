@@ -56,12 +56,18 @@ let tracingMetricsTimeout = null;
 let pidStore;
 
 /**
+ * @type {boolean}
+ */
+let disableEOLEvents;
+
+/**
  * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
  * @param {any} _pidStore
  */
 function init(config, _pidStore) {
   logger = config.logger;
   pidStore = _pidStore;
+  disableEOLEvents = config.tracing?.disableEOLEvents;
   initializedTooLate.init(config);
 
   // TODO: Why is autoProfile part of agentOpts? O_o Please refactor this away in next major release.
@@ -247,7 +253,7 @@ function sendEOLEvent() {
  * support for events.)
  */
 function detectEOLNodeVersion() {
-  if (isNodeVersionEOL()) {
+  if (isNodeVersionEOL() && !disableEOLEvents) {
     setTimeout(() => {
       sendEOLEvent();
       setInterval(sendEOLEvent, EOL_EVENT_REFRESH_INTERVAL).unref();

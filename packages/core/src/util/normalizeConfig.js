@@ -29,6 +29,7 @@ const configNormalizers = require('./configNormalizers');
  * @property {boolean} [allowRootExitSpan]
  * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
  * @property {boolean} [ignoreEndpointsDisableSuppression]
+ * @property {boolean} [disableEOLEvents]
  */
 
 /**
@@ -128,7 +129,8 @@ const defaults = {
       traceCorrelation: true
     },
     ignoreEndpoints: {},
-    ignoreEndpointsDisableSuppression: false
+    ignoreEndpointsDisableSuppression: false,
+    disableEOLEvents: false
   },
   secrets: {
     matcherMode: 'contains-ignore-case',
@@ -248,6 +250,7 @@ function normalizeTracingConfig(config) {
   normalizeAllowRootExitSpan(config);
   normalizeIgnoreEndpoints(config);
   normalizeIgnoreEndpointsDisableSuppression(config);
+  normalizeDisableEOLEvents(config);
 }
 
 /**
@@ -774,4 +777,21 @@ function normalizeIgnoreEndpointsDisableSuppression(config) {
   }
 
   config.tracing.ignoreEndpointsDisableSuppression = defaults.tracing.ignoreEndpointsDisableSuppression;
+}
+
+/**
+ * @param {InstanaConfig} config
+ */
+function normalizeDisableEOLEvents(config) {
+  config.tracing = config.tracing || {};
+
+  if (process.env['INSTANA_TRACING_DISABLE_EOL_EVENTS'] === 'true') {
+    logger.info(
+      'Disabling EOL events as it is explicitly disabled via environment variable "INSTANA_TRACING_DISABLE_EOL_EVENTS".'
+    );
+    config.tracing.disableEOLEvents = true;
+    return;
+  }
+
+  config.tracing.disableEOLEvents = defaults.tracing.disableEOLEvents;
 }
