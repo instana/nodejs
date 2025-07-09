@@ -1,0 +1,101 @@
+name: update-node-version
+
+on:
+  schedule:
+    # Every week on Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: "Dry Run"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  update-node:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Configure git name/email
+        run: |
+          git config user.name "IBM/Instana/Team Node.js"
+          git config user.email github-actions@github.com
+
+      - name: Authenticate GitHub CLI
+        run: |
+          gh auth login --with-token <<< "${{ secrets.GH_PAT }}"
+
+      - name: Detect newer Node.js version for .nvmrc
+        id: detect
+        env:
+          DRY_RUN: ${{ github.event.inputs.dryRun }}
+        run: |
+          set -euo pipefail
+
+          CURRENT_VERSION_RAW=$(cat .nvmrc | tr -d '[:space:]')
+          CURRENT_VERSION=${CURRENT_VERSION_RAW#v}
+
+          echo "Current version in .nvmrc: $CURRENT_VERSION"
+
+          MAJOR=$(echo "$CURRENT_VERSION" | cut -d. -f1)
+          TARGET_PREFIX="v${MAJOR}."
+
+          LATEST=$(curl -s https://nodejs.org/dist/index.json \
+            | jq -r --arg prefix "$TARGET_PREFIX" \
+                '[.[] | select(.version | startswith($prefix))][0].version' \
+            | sed 's/^v//')
+
+          if [[ -z "$LATEST" || "$LATEST" == "null" ]]; then
+            echo "Failed to determine latest Node.js ${MAJOR}.x version"
+            exit 1
+          fi
+
+          echo "Latest available version for ${MAJOR}.x: $LATEST"
+
+          if [[ "$LATEST" == "$CURRENT_VERSION"* ]]; then
+            echo "No update necessary — already on the latest ${MAJOR}.x."
+            echo "update_needed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Update needed: $CURRENT_VERSION → $LATEST"
+            echo "update_needed=true"  >> "$GITHUB_OUTPUT"
+            echo "new_version=$LATEST" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create pull request
+        if: steps.detect.outputs.update_needed == 'true'
+        env:
+          NEW_VERSION: ${{ steps.detect.outputs.new_version }}
+          DRY_RUN: ${{ github.event.inputs.dryRun }}
+        run: |
+          set -euo pipefail
+
+          BRANCH="chore-update-node-${NEW_VERSION}"
+          COMMIT_MESSAGE="chore: updated version in .nvmrc to ${NEW_VERSION}"
+          PR_TITLE="chore: updated version in .nvmrc to ${NEW_VERSION}"
+          PR_BODY="Automatic weekly update to the latest **Node.js ${NEW_VERSION}** release."
+
+          if [[ "$DRY_RUN" == "true" ]]; then
+            echo "Dry run enabled — would:"
+            echo "  • create branch $BRANCH"
+            echo "  • write $NEW_VERSION to .nvmrc"
+            echo "  • commit & push"
+            echo "  • open PR with title: $PR_TITLE"
+            exit 0
+          fi
+
+          git checkout -b "$BRANCH"
+          echo "$NEW_VERSION" > .nvmrc
+          git add .nvmrc
+          git commit -m "$COMMIT_MESSAGE"
+          git push -u origin "$BRANCH"
+
+          gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base main
