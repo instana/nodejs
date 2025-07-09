@@ -1,10 +1,15 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directory: "/" 
+    directory: "/"
+    target-branch: main
     schedule:
-      interval: "monthly"
+      interval: "weekly"
     allow:
       - dependency-type: "production"
-    open-pull-requests-limit: 30
     rebase-strategy: "disabled"
+    commit-message:
+      prefix: "build:"
+    pull-request-branch-name:
+      separator: "-"
+    open-pull-requests-limit: 5
