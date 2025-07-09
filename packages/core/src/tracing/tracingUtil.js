@@ -90,7 +90,7 @@ exports.readTraceContextFromBuffer = function readTraceContextFromBuffer(buffer)
  * @returns {string}
  */
 function readHexFromBuffer(buffer, offset, length) {
-  return hexDecoder.write(buffer.slice(offset, offset + length));
+  return hexDecoder.write(buffer.subarray(offset, offset + length));
 }
 
 /**

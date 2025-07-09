@@ -160,7 +160,7 @@ exports.announceNodeCollector = function announceNodeCollector(callback) {
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
     handleCallback(new Error('Announce request to agent failed due to timeout'));
-    req.abort();
+    req.destroy();
   });
 
   req.on('error', err => {
@@ -238,7 +238,7 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
     isConnected = false;
     cb(isConnected);
-    req.abort();
+    req.destroy();
   });
 
   req.on('error', () => {
@@ -439,7 +439,7 @@ function sendData(path, data, cb, ignore404 = false) {
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
     cb(new Error(`Failed to send data to agent via POST ${path}. Ran into a timeout.`));
-    req.abort();
+    req.destroy();
   });
 
   req.on('error', err => {
