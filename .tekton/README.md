@@ -41,6 +41,10 @@ $ kubectl -n tekton-pipelines rollout restart deploy tekton-pipelines-webhook
 npm run tekton:lint
 ```
 
+## Listeners
+
+- Github PR listener: trigger on main branch
+
 ## Local Testing
 
 Follow the instructions provided in the [Tekton Dashboard tutorial](https://github.com/tektoncd/dashboard/blob/97700646be7728e36f01120131da8620ee69122f/docs/tutorial.md#prerequisites).
