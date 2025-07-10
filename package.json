@@ -269,6 +269,9 @@
     "kafka-avro": {
       "axios": "v0.21.1"
     },
+    "kafka-node": {
+      "uuid": "7.0.3"
+    },
     "prebuildify": {
       "node-abi": "4.8.0"
     },
