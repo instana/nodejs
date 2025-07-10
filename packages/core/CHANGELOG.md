@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.18.0](https://github.com/instana/nodejs/compare/v4.17.0...v4.18.0) (2025-07-10)
+
+
+### Features
+
+* added environment variable to disable EOL events ([#1829](https://github.com/instana/nodejs/issues/1829)) ([ff7e138](https://github.com/instana/nodejs/commit/ff7e1389fc9cc55359e4460ed6f15c72af6a0c7c))
+
+
+
+
+
 # [4.17.0](https://github.com/instana/nodejs/compare/v4.16.0...v4.17.0) (2025-06-30)
 
 
