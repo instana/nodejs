@@ -266,6 +266,9 @@
     "prisma": "^6.11.1"
   },
   "overrides": {
+    "kafka-avro": {
+      "axios": "v0.21.1"
+    },
     "prebuildify": {
       "node-abi": "4.8.0"
     },
