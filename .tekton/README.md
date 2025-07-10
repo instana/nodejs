@@ -43,7 +43,8 @@ npm run tekton:lint
 
 ## Listeners
 
-- Github PR listener: trigger on main branch
+- Github PR listener
+  - trigger on -> branch -> main branch
 
 ## Local Testing
 
