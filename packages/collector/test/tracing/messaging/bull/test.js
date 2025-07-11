@@ -26,7 +26,7 @@ const globalAgent = require('../../../globalAgent');
 
 /**
  * !!! In order to test Bull, Redis must be running.
- * Run `docker-compose up redis` from the project root
+ * Run `node bin/start-test-containers.js --redis`
  */
 
 let queueName = 'nodejs-team';
@@ -752,7 +752,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
     describe('sending and receiving', function () {
       let receiverControls;
-      const receiveMethod = 'Process';
+      const receiveMethod = 'Promise';
 
       before(async () => {
         receiverControls = new ProcessControls({
@@ -800,7 +800,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
             path: urlWithParams
           });
 
-          return retry(() => verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk }), retryTime)
+          return retry(
+            async () => verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk }),
+            retryTime
+          )
             .then(() => delay(1000))
             .then(() => agentControls.getSpans())
             .then(spans => {

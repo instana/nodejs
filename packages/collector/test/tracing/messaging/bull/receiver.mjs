@@ -2,8 +2,6 @@
  * (c) Copyright IBM Corp. 2025
  */
 
-'use strict';
-
 // NOTE: c8 bug https://github.com/bcoe/c8/issues/166
 process.on('SIGTERM', () => {
   process.disconnect();
@@ -18,6 +16,7 @@ import Queue from 'bull';
 const app = express();
 import portFactory from '../../../test_util/app-port.js';
 const port = portFactory();
+const { sendToParent } = (await import('@instana/core/test/test_util/index.js')).default;
 
 import { ProcessTypes, buildReceiver } from './util.js';
 
