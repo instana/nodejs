@@ -84,7 +84,7 @@ spec:
         securityContext:
           fsGroup: 65532
       metadata:
-        name: pl-$(params.target-branch)-$(params.pl-name)
+        name: pl-$(params.sanitized-target-branch)-$(params.pl-name)
         namespace: concurrency
         labels:
           type: pull-request
