@@ -26,7 +26,7 @@ const globalAgent = require('../../../globalAgent');
 
 /**
  * !!! In order to test Bull, Redis must be running.
- * Run `docker-compose up redis` from the project root
+ * Run `node bin/start-test-containers.js --redis`
  */
 
 let queueName = 'nodejs-team';
@@ -718,58 +718,28 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     }
   });
 
-  describe('tracing disabled', function () {
-    this.timeout(config.getTestTimeout() * 2);
+  // NOTE: Bull doesn't officially support Process API when using processor with ES module syntax
+  // See: https://github.com/OptimalBits/bull/blob/489c6ab8466c1db122f92af3ddef12eacc54179e/lib/queue.js#L712
+  // Related issue: https://github.com/OptimalBits/bull/issues/924
+  if (!process.env.RUN_ESM) {
+    describe('tracing disabled', function () {
+      this.timeout(config.getTestTimeout() * 2);
 
-    let senderControls;
-
-    before(async () => {
-      senderControls = new ProcessControls({
-        appPath: path.join(__dirname, 'sender'),
-        useGlobalAgent: true,
-        tracingEnabled: false,
-        env: {
-          REDIS_SERVER: 'redis://127.0.0.1:6379',
-          BULL_QUEUE_NAME: queueName,
-          BULL_JOB_NAME: 'steve'
-        }
-      });
-
-      await senderControls.startAndWaitForAgentConnection();
-    });
-
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
-    after(async () => {
-      await senderControls.stop();
-    });
-
-    afterEach(async () => {
-      await senderControls.clearIpcMessages();
-    });
-
-    describe('sending and receiving', function () {
-      let receiverControls;
-      const receiveMethod = 'Process';
+      let senderControls;
 
       before(async () => {
-        receiverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'receiver'),
+        senderControls = new ProcessControls({
+          appPath: path.join(__dirname, 'sender'),
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
             REDIS_SERVER: 'redis://127.0.0.1:6379',
             BULL_QUEUE_NAME: queueName,
-            BULL_RECEIVE_TYPE: receiveMethod,
-            BULL_JOB_NAME: 'steve',
-            BULL_JOB_NAME_ENABLED: 'true',
-            BULL_CONCURRENCY_ENABLED: 'true'
+            BULL_JOB_NAME: 'steve'
           }
         });
 
-        await receiverControls.startAndWaitForAgentConnection();
+        await senderControls.startAndWaitForAgentConnection();
       });
 
       beforeEach(async () => {
@@ -777,41 +747,79 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       });
 
       after(async () => {
-        await receiverControls.stop();
+        await senderControls.stop();
       });
 
       afterEach(async () => {
-        await receiverControls.clearIpcMessages();
+        await senderControls.clearIpcMessages();
       });
 
-      const testId = uuid();
+      describe('sending and receiving', function () {
+        let receiverControls;
+        const receiveMethod = 'Process';
 
-      describe('sendOption: default', function () {
-        const sendOption = 'default';
-        const isRepeatable = sendOption === 'repeat=true';
-        const isBulk = sendOption === 'bulk=true';
-
-        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
-
-        it(`should not trace for sending(${sendOption}) / receiving(${receiveMethod})`, async () => {
-          const urlWithParams = apiPath;
-          const response = await senderControls.sendRequest({
-            method: 'POST',
-            path: urlWithParams
+        before(async () => {
+          receiverControls = new ProcessControls({
+            appPath: path.join(__dirname, 'receiver'),
+            useGlobalAgent: true,
+            tracingEnabled: false,
+            env: {
+              REDIS_SERVER: 'redis://127.0.0.1:6379',
+              BULL_QUEUE_NAME: queueName,
+              BULL_RECEIVE_TYPE: receiveMethod,
+              BULL_JOB_NAME: 'steve',
+              BULL_JOB_NAME_ENABLED: 'true',
+              BULL_CONCURRENCY_ENABLED: 'true'
+            }
           });
 
-          return retry(() => verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk }), retryTime)
-            .then(() => delay(1000))
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (Bull suppressed: ${stringifyItems(spans)}`);
-              }
+          await receiverControls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
+        after(async () => {
+          await receiverControls.stop();
+        });
+
+        afterEach(async () => {
+          await receiverControls.clearIpcMessages();
+        });
+
+        const testId = uuid();
+
+        describe('sendOption: default', function () {
+          const sendOption = 'default';
+          const isRepeatable = sendOption === 'repeat=true';
+          const isBulk = sendOption === 'bulk=true';
+
+          const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+
+          it(`should not trace for sending(${sendOption}) / receiving(${receiveMethod})`, async () => {
+            const urlWithParams = apiPath;
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams
             });
+
+            return retry(
+              async () => verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk }),
+              retryTime
+            )
+              .then(() => delay(1000))
+              .then(() => agentControls.getSpans())
+              .then(spans => {
+                if (spans.length > 0) {
+                  fail(`Unexpected spans (Bull suppressed: ${stringifyItems(spans)}`);
+                }
+              });
+          });
         });
       });
     });
-  });
+  }
 
   describe('tracing enabled but suppressed', function () {
     let senderControls;
