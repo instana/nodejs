@@ -33,6 +33,9 @@ spec:
       value: $(params.npm-version)      
     - name: target-branch
       description: "Either pr branch or any other branch."
+    - name: sanitized-target-branch
+      description: "target-branch with underscores replaced by hyphens"
+      value: $(extensions.sanitized-target-branch)
     - name: pl-name
       value: $(params.pl-name)
     - name: pipeline-ref
@@ -52,11 +55,13 @@ spec:
     - name: prerelease
       value: $(params.prerelease)   
       default: "false"
+  extensions:
+    sanitized-target-branch: 'params["target-branch"].replaceAll("_", "-")'
   resourcetemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
       metadata:
-        name: pvc-$(echo "$(params.target-branch)" | tr '_' '-')-$(uid)-artifacts
+        name: pvc-$(params.sanitized-target-branch)-$(uid)-artifacts
       spec:
         resources:
           requests:
@@ -91,7 +96,7 @@ spec:
         workspaces:
           - name: artifacts
             persistentVolumeClaim:
-              claimName: pvc-$(echo "$(params.target-branch)" | tr '_' '-')-$(uid)-artifacts
+              claimName: pvc-$(params.sanitized-target-branch)-$(uid)-artifacts
         params:
           - name: repository
             value: $(params.repository)
@@ -115,6 +120,8 @@ spec:
             value: $(params.npm-version)
           - name: target-branch
             value: $(params.target-branch)
+          - name: sanitized-target-branch
+            value: $(params.sanitized-target-branch)
           - name: type
             value: $(params.type)
           - name: esm
