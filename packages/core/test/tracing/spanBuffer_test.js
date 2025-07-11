@@ -113,6 +113,7 @@ describe('tracing/spanBuffer', () => {
           tracing: {
             maxBufferedSpans: 1000,
             forceTransmissionStartingAt: 2,
+            initialTransmissionDelay: 200,
             transmissionDelay: 200
           }
         },
@@ -545,6 +546,7 @@ describe('tracing/spanBuffer', () => {
       before(() => {
         spanBuffer.init(
           {
+            logger: testUtils.createFakeLogger(),
             tracing: {
               maxBufferedSpans: 1000,
               forceTransmissionStartingAt: 500,
