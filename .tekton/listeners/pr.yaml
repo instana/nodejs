@@ -11,6 +11,8 @@ spec:
       value: $(event.pull_request.head.ref)
     - name: target-branch
       value: $(event.pull_request.head.ref)
+    - name: sanitized-target-branch
+      value: $(event.pull_request.head.ref)
     - name: type
       value: "pull-request"
     - name: pr-number
