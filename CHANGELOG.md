@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.18.1](https://github.com/instana/nodejs/compare/v4.18.0...v4.18.1) (2025-07-14)
+
+
+### Bug Fixes
+
+* resolved MaxListenersExceededWarning in gcstats module ([#1845](https://github.com/instana/nodejs/issues/1845)) ([624ca13](https://github.com/instana/nodejs/commit/624ca13ed1ab794881f376d4ffa0bc7d02dc7ee4))
+
+
+
+
+
 # [4.18.0](https://github.com/instana/nodejs/compare/v4.17.0...v4.18.0) (2025-07-10)
 
 
