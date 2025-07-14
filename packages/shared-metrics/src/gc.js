@@ -131,5 +131,7 @@ exports.deactivate = function deactivate() {
   activateHasBeenCalled = false;
   hasBeenActivated = false;
 
-  gcStats.removeListener('stats', statsHandler);
+  if (gcStats && typeof gcStats.removeListener === 'function') {
+    gcStats.removeListener('stats', statsHandler);
+  }
 };
