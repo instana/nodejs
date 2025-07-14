@@ -120,8 +120,6 @@ spec:
             value: $(params.npm-version)
           - name: target-branch
             value: $(params.target-branch)
-          - name: sanitized-target-branch
-            value: $(params.sanitized-target-branch)
           - name: type
             value: $(params.type)
           - name: esm
