@@ -50,7 +50,8 @@ metadata:
   name: github-pr-listener
 spec:
   triggers:
-    - bindings:
-        - name: github-pr-binding
+    - name: github-pr-trigger
+      bindings:
+        - ref: github-pr-binding
       template:
-        name: custom-template
+        ref: custom-template
