@@ -21,6 +21,29 @@ let gcStats;
 let activateHasBeenCalled = false;
 let hasBeenActivated = false;
 
+const statsHandler = (/** @type {*} */ stats) => {
+  // gcstats exposes start and end in nanoseconds
+  const pause = (stats.end - stats.start) / 1000000;
+  gcPauseWindow.addPoint(pause);
+  const type = stats.gctype;
+  if (type === 1) {
+    minorGcWindow.addPoint(1);
+  } else if (type === 2) {
+    majorGcWindow.addPoint(1);
+  } else if (type === 4) {
+    incrementalMarkingsWindow.addPoint(1);
+  } else if (type === 8) {
+    processWeakCallbacksWindow.addPoint(1);
+  } else if (type === 15) {
+    minorGcWindow.addPoint(1);
+    majorGcWindow.addPoint(1);
+    incrementalMarkingsWindow.addPoint(1);
+    processWeakCallbacksWindow.addPoint(1);
+  }
+
+  exports.currentPayload.usedHeapSizeAfterGc = stats.after.usedHeapSize;
+};
+
 exports.payloadPrefix = 'gc';
 
 /** @type {{
@@ -85,27 +108,8 @@ function actuallyActivate() {
     return;
   }
   hasBeenActivated = true;
-  gcStats.on('stats', (/** @type {*} */ stats) => {
-    // gcstats exposes start and end in nanoseconds
-    const pause = (stats.end - stats.start) / 1000000;
-    gcPauseWindow.addPoint(pause);
-    const type = stats.gctype;
-    if (type === 1) {
-      minorGcWindow.addPoint(1);
-    } else if (type === 2) {
-      majorGcWindow.addPoint(1);
-    } else if (type === 4) {
-      incrementalMarkingsWindow.addPoint(1);
-    } else if (type === 8) {
-      processWeakCallbacksWindow.addPoint(1);
-    } else if (type === 15) {
-      minorGcWindow.addPoint(1);
-      majorGcWindow.addPoint(1);
-      incrementalMarkingsWindow.addPoint(1);
-      processWeakCallbacksWindow.addPoint(1);
-    }
-    exports.currentPayload.usedHeapSizeAfterGc = stats.after.usedHeapSize;
-  });
+
+  gcStats.on('stats', statsHandler);
   startSensing();
 }
 
@@ -126,4 +130,6 @@ exports.deactivate = function deactivate() {
   }
   activateHasBeenCalled = false;
   hasBeenActivated = false;
+
+  gcStats.removeListener('stats', statsHandler);
 };
