@@ -175,3 +175,34 @@ exports.getDaysBehind = (releaseList, installedVersion, today = new Date()) => {
   // Step 2: Calculate the days
   return calculateDaysDifference(nextVersionDate, today);
 };
+
+exports.hasCommits = (branch, cwd) => {
+  try {
+    const result = execSync(`git log main..${branch} --pretty=format:"%h"`, { cwd }).toString().trim();
+    console.log(`Commits in branch '${branch}' not in 'main':\n${result}`);
+    return result && result.length > 0;
+  } catch (err) {
+    return false;
+  }
+};
+
+exports.getPackageJsonPathsUnderPackagesDir = packagesDir => {
+  const results = [];
+
+  if (!fs.existsSync(packagesDir)) {
+    console.warn(`Directory not found: ${packagesDir}`);
+    return results;
+  }
+
+  const entries = fs.readdirSync(packagesDir, { withFileTypes: true });
+  entries.forEach(entry => {
+    if (entry.isDirectory()) {
+      const pkgJsonPath = path.join(packagesDir, entry.name, 'package.json');
+      if (fs.existsSync(pkgJsonPath)) {
+        results.push(pkgJsonPath);
+      }
+    }
+  });
+
+  return results;
+};
