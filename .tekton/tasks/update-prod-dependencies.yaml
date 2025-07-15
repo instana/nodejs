@@ -1,0 +1,53 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: update-prod-dependencies
+spec:
+  params:
+    - name: continuous-delivery-context-secret
+      default: secure-properties
+    - name: type
+      value: $(params.type)
+    - name: node-version
+      value: $(params.node-version)
+    - name: npm-version
+      value: $(params.npm-version)
+  workspaces:
+    - name: output
+      mountPath: /artifacts
+  steps:
+    - name: execute       
+      image: public.ecr.aws/docker/library/node:$(params.node-version)
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: GH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.continuous-delivery-context-secret)
+              key: "GH_PUBLIC_TOKEN"      
+      script: |
+        #!/bin/bash
+
+        ARTIFACTS_PATH="$(workspaces.output.path)"
+        cd $ARTIFACTS_PATH
+
+        if [ -n "$(params.npm-version)" ]; then
+          npm install npm@$(params.npm-version) -g
+        fi  
+        
+        git config user.name "Instanacd PAT for GitHub Public"
+        git config user.email "instanacd@instana.com"
+
+        mkdir -p -m 755 /etc/apt/keyrings && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+        && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+        && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+        && apt update \
+        && apt install gh -y
+        apt install jq -y
+        
+        gh auth login --with-token
+        
+        echo "Running production dependency updates..."
+        PROD_DEP_UPDATES_MODE=true BRANCH=dependency-bot node bin/currency/update-currencies.js
+
+        
