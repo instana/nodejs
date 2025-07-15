@@ -11,7 +11,6 @@ const { execSync } = require('child_process');
 const currencies = require(path.join(__dirname, '..', '..', 'currencies.json'));
 const utils = require('./utils');
 const MAJOR_UPDATES_MODE = process.env.MAJOR_UPDATES_MODE ? process.env.MAJOR_UPDATES_MODE === 'true' : false;
-const PROD_DEP_UPDATES_MODE = process.env.PROD_DEP_UPDATES_MODE === 'true';
 const BRANCH = process.env.BRANCH;
 const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
 const cwd = path.join(__dirname, '..', '..');
@@ -19,227 +18,143 @@ const cwd = path.join(__dirname, '..', '..');
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
 let branchName = BRANCH;
 
-console.log(`PROD_DEP_UPDATES_MODE: ${PROD_DEP_UPDATES_MODE}`);
 console.log(`MAJOR_UPDATES_MODE: ${MAJOR_UPDATES_MODE}`);
 console.log(`BRANCH: ${BRANCH}`);
 console.log(`SKIP_PUSH: ${SKIP_PUSH}`);
 
-if (!PROD_DEP_UPDATES_MODE) {
-  if (!MAJOR_UPDATES_MODE) {
-    console.log('Preparing patch/minor updates...');
+if (!MAJOR_UPDATES_MODE) {
+  console.log('Preparing patch/minor updates...');
+  execSync('git checkout main', { cwd });
+  execSync('npm i --no-audit', { cwd });
+
+  if (BRANCH !== 'main') {
+    execSync(`git checkout -b ${branchName}`, { cwd });
+  }
+}
+
+currencies.forEach(currency => {
+  console.log(`Checking currency update for ${currency.name}`);
+
+  if (currency.ignoreUpdates) {
+    console.log(`Skipping ${currency.name}. ignoreUpdates is set.`);
+    return;
+  }
+
+  let isDevDependency = true;
+  let isRootDependency = true;
+  let installedVersion = utils.getDevDependencyVersion(currency.name);
+
+  if (!installedVersion) {
+    installedVersion = utils.getOptionalDependencyVersion(currency.name);
+    isDevDependency = false;
+  }
+
+  if (!installedVersion) {
+    installedVersion = utils.getPackageDependencyVersion(currency.name);
+    isRootDependency = false;
+    isDevDependency = true;
+  }
+
+  if (!installedVersion) {
+    console.log(`Skipping ${currency.name}. Seems to be a core dependency.`);
+    return;
+  }
+
+  installedVersion = installedVersion.replace(/[^0-9.]/g, '');
+  const latestVersion = utils.getLatestVersion({
+    pkgName: currency.name,
+    installedVersion: installedVersion,
+    isBeta: currency.isBeta
+  });
+
+  if (latestVersion === installedVersion) {
+    console.log(
+      `Skipping ${currency.name}. Installed version is ${installedVersion}. Latest version is ${latestVersion}`
+    );
+    return;
+  }
+
+  if (!MAJOR_UPDATES_MODE && semver.major(latestVersion) !== semver.major(installedVersion)) {
+    console.log(`Skipping ${currency.name}. Major updates not allowed.`);
+    return;
+  }
+
+  if (MAJOR_UPDATES_MODE) {
+    if (semver.major(latestVersion) === semver.major(installedVersion)) {
+      console.log(`Skipping ${currency.name}. No major update available.`);
+      return;
+    }
+
+    console.log(`Major update available for ${currency.name}.`);
     execSync('git checkout main', { cwd });
     execSync('npm i --no-audit', { cwd });
+
+    branchName = `${BRANCH}-${currency.name.replace(/[^a-zA-Z0-9]/g, '')}`;
+
+    try {
+      execSync(`git ls-remote --exit-code --heads origin ${branchName}`, { cwd });
+      console.log(`Skipping ${currency.name}. Branch exists.`);
+      return;
+    } catch (err) {
+      // ignore err
+      // CASE: branch does not exist, continue
+    }
 
     if (BRANCH !== 'main') {
       execSync(`git checkout -b ${branchName}`, { cwd });
     }
   }
 
-  currencies.forEach(currency => {
-    console.log(`Checking currency update for ${currency.name}`);
-
-    if (currency.ignoreUpdates) {
-      console.log(`Skipping ${currency.name}. ignoreUpdates is set.`);
-      return;
-    }
-
-    let isDevDependency = true;
-    let isRootDependency = true;
-    let installedVersion = utils.getDevDependencyVersion(currency.name);
-
-    if (!installedVersion) {
-      installedVersion = utils.getOptionalDependencyVersion(currency.name);
-      isDevDependency = false;
-    }
-
-    if (!installedVersion) {
-      installedVersion = utils.getPackageDependencyVersion(currency.name);
-      isRootDependency = false;
-      isDevDependency = true;
-    }
-
-    if (!installedVersion) {
-      console.log(`Skipping ${currency.name}. Seems to be a core dependency.`);
-      return;
-    }
-
-    installedVersion = installedVersion.replace(/[^0-9.]/g, '');
-    const latestVersion = utils.getLatestVersion({
-      pkgName: currency.name,
-      installedVersion: installedVersion,
-      isBeta: currency.isBeta
-    });
-
-    if (latestVersion === installedVersion) {
-      console.log(
-        `Skipping ${currency.name}. Installed version is ${installedVersion}. Latest version is ${latestVersion}`
-      );
-      return;
-    }
-
-    if (!MAJOR_UPDATES_MODE && semver.major(latestVersion) !== semver.major(installedVersion)) {
-      console.log(`Skipping ${currency.name}. Major updates not allowed.`);
-      return;
-    }
-
-    if (MAJOR_UPDATES_MODE) {
-      if (semver.major(latestVersion) === semver.major(installedVersion)) {
-        console.log(`Skipping ${currency.name}. No major update available.`);
-        return;
-      }
-
-      console.log(`Major update available for ${currency.name}.`);
-      execSync('git checkout main', { cwd });
-      execSync('npm i --no-audit', { cwd });
-
-      branchName = `${BRANCH}-${currency.name.replace(/[^a-zA-Z0-9]/g, '')}`;
-
-      try {
-        execSync(`git ls-remote --exit-code --heads origin ${branchName}`, { cwd });
-        console.log(`Skipping ${currency.name}. Branch exists.`);
-        return;
-      } catch (err) {
-        // ignore err
-        // CASE: branch does not exist, continue
-      }
-
-      if (BRANCH !== 'main') {
-        execSync(`git checkout -b ${branchName}`, { cwd });
-      }
-    }
-
-    if (isRootDependency) {
-      if (isDevDependency) {
-        console.log(`npm i --save-dev ${currency.name}@${latestVersion} --no-audit`);
-        execSync(`npm i --save-dev ${currency.name}@${latestVersion} --no-audit`, { stdio: 'inherit', cwd });
-      } else {
-        console.log(`npm i --save-optional ${currency.name}@${latestVersion} --no-audit`);
-        execSync(`npm i --save-optional ${currency.name}@${latestVersion} --no-audit`, { stdio: 'inherit', cwd });
-        // NOTE: run an extra npm install after updating the optional dependencies because of
-        //       a bug in npm: https://github.com/npm/cli/issues/7530
-        execSync('npm i', { stdio: 'inherit', cwd });
-      }
+  if (isRootDependency) {
+    if (isDevDependency) {
+      console.log(`npm i --save-dev ${currency.name}@${latestVersion} --no-audit`);
+      execSync(`npm i --save-dev ${currency.name}@${latestVersion} --no-audit`, { stdio: 'inherit', cwd });
     } else {
-      const subpkg = utils.getPackageName(currency.name);
-      console.log(`npm i --save-dev ${currency.name}@${latestVersion} -w ${subpkg} --no-audit`);
-      execSync(`npm i --save-dev ${currency.name}@${latestVersion} -w ${subpkg} --no-audit`, { stdio: 'inherit', cwd });
+      console.log(`npm i --save-optional ${currency.name}@${latestVersion} --no-audit`);
+      execSync(`npm i --save-optional ${currency.name}@${latestVersion} --no-audit`, { stdio: 'inherit', cwd });
+      // NOTE: run an extra npm install after updating the optional dependencies because of
+      //       a bug in npm: https://github.com/npm/cli/issues/7530
+      execSync('npm i', { stdio: 'inherit', cwd });
     }
+  } else {
+    const subpkg = utils.getPackageName(currency.name);
+    console.log(`npm i --save-dev ${currency.name}@${latestVersion} -w ${subpkg} --no-audit`);
+    execSync(`npm i --save-dev ${currency.name}@${latestVersion} -w ${subpkg} --no-audit`, { stdio: 'inherit', cwd });
+  }
 
-    if (MAJOR_UPDATES_MODE) {
-      execSync("git add '*package.json' package-lock.json", { cwd });
-      execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
+  if (MAJOR_UPDATES_MODE) {
+    execSync("git add '*package.json' package-lock.json", { cwd });
+    execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
 
-      if (utils.hasCommits(branchName, cwd)) {
-        if (!SKIP_PUSH) {
-          execSync(`git push origin ${branchName} --no-verify`, { cwd });
-          execSync(
-            // eslint-disable-next-line max-len
-            `gh pr create --base main --head ${branchName} --title "[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}" --body "Tada!"`,
-            { cwd }
-          );
-        }
-      } else {
-        console.log(`Branch ${branchName} has no commits.`);
-      }
-    } else {
-      execSync("git add '*package.json' package-lock.json", { cwd });
-      execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
-    }
-  });
-
-  if (!MAJOR_UPDATES_MODE) {
     if (utils.hasCommits(branchName, cwd)) {
       if (!SKIP_PUSH) {
         execSync(`git push origin ${branchName} --no-verify`, { cwd });
         execSync(
           // eslint-disable-next-line max-len
-          `gh pr create --base main --head ${branchName} --title "[Currency Bot] Bumped patch/minor dependencies" --body "Tada!"`,
+          `gh pr create --base main --head ${branchName} --title "[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}" --body "Tada!"`,
           { cwd }
         );
       }
     } else {
       console.log(`Branch ${branchName} has no commits.`);
     }
+  } else {
+    execSync("git add '*package.json' package-lock.json", { cwd });
+    execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
   }
-} else {
-  const updatedProdDeps = [];
+});
 
-  const packagesDir = path.join(__dirname, '..', '..', 'packages');
-  const pkgPaths = utils.getPackageJsonPathsUnderPackagesDir(packagesDir);
-
-  pkgPaths.some(pkgPath => {
-    const pkgJson = require(pkgPath);
-    const dependencies = pkgJson.dependencies || {};
-
-    return Object.entries(dependencies).some(([dep, currentVersionRaw]) => {
-      if (dep.startsWith('@instana')) {
-        return false;
-      }
-
-      if (updatedProdDeps.length >= 5) {
-        console.log('Limit of 5 production dependency PRs reached.');
-        return true;
-      }
-
-      const currentVersion = currentVersionRaw.replace(/[^0-9.]/g, '');
-      const latestVersion = utils.getLatestVersion({
-        pkgName: dep,
-        installedVersion: currentVersion,
-        isBeta: false
-      });
-
-      if (!latestVersion || latestVersion === currentVersion) {
-        return false;
-      }
-
-      const localBranch = `${BRANCH}-${dep.replace(/[^a-zA-Z0-9]/g, '')}`;
-      console.log(`Preparing PR for ${dep} (${currentVersion} → ${latestVersion})`);
-
-      try {
-        execSync('git checkout main', { cwd });
-        execSync('npm i --no-audit', { cwd });
-
-        try {
-          execSync(`git ls-remote --exit-code --heads origin ${localBranch}`, { cwd });
-          console.log(`Skipping ${dep}. Branch already exists.`);
-          return false;
-        } catch (_) {
-          // Branch does not exist, continue
-        }
-
-        execSync(`git checkout -b ${localBranch}`, { cwd });
-
-        const pkgDir = path.dirname(pkgPath);
-        console.log(`npm i ${dep}@${latestVersion} -w ${pkgJson.name || pkgDir}`);
-        execSync(`npm i ${dep}@${latestVersion} -w ${pkgJson.name || pkgDir} --no-audit`, {
-          stdio: 'inherit',
-          cwd
-        });
-
-        execSync("git add '*package.json' package-lock.json", { cwd });
-        execSync(
-          `git commit -m "build: bumped production dependency ${dep} from ${currentVersion} to ${latestVersion}"`,
-          { cwd }
-        );
-
-        if (utils.hasCommits(localBranch, cwd)) {
-          if (!SKIP_PUSH) {
-            execSync(`git push origin ${localBranch} --no-verify`, { cwd });
-            execSync(
-              // eslint-disable-next-line max-len
-              `gh pr create --base main --head ${localBranch} --title "[Dependency Bot] Bumped ${dep} (prod dep) from ${currentVersion} to ${latestVersion}" --body "Tada!"`,
-              { cwd }
-            );
-          }
-          updatedProdDeps.push(dep);
-        } else {
-          console.log(`Branch ${localBranch} has no commits.`);
-        }
-      } catch (err) {
-        console.error(`Failed updating ${dep}: ${err.message}`);
-      }
-
-      return updatedProdDeps.length >= 5;
-    });
-  });
+if (!MAJOR_UPDATES_MODE) {
+  if (utils.hasCommits(branchName, cwd)) {
+    if (!SKIP_PUSH) {
+      execSync(`git push origin ${branchName} --no-verify`, { cwd });
+      execSync(
+        // eslint-disable-next-line max-len
+        `gh pr create --base main --head ${branchName} --title "[Currency Bot] Bumped patch/minor dependencies" --body "Tada!"`,
+        { cwd }
+      );
+    }
+  } else {
+    console.log(`Branch ${branchName} has no commits.`);
+  }
 }
