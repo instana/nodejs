@@ -27,9 +27,13 @@ logger.level = process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEV
 
 const port = process.env.INSTANA_LAYER_EXTENSION_PORT;
 
+// everything unresponsive
 const unresponsive = process.env.EXTENSION_UNRESPONSIVE === 'true';
-const heartbeatResponsiveButUnresponsiveLater =
-  process.env.EXTENSION_PREFFLIGHT_RESPONSIVE_BUT_UNRESPONSIVE_LATER === 'true';
+const traceThrowsError = process.env.EXTENSION_TRACE_THROWS_ERROR === 'true';
+let traceResponsiveButLater = process.env.EXTENSION_TRACE_RESPONSIVE_BUT_LATER === 'true';
+const traceResponsiveButLaterForever = process.env.EXTENSION_TRACE_RESPONSIVE_BUT_LATER_FOREVER === 'true';
+const heartbeatUnresponsive = process.env.EXTENSION_HEARTBEAT_UNRESPONSIVE === 'true';
+let heartbeatResponsiveButLater = process.env.EXTENSION_HEARTBEAT_RESPONSIVE_BUT_LATER === 'true';
 const heartbeatRespondsWithUnexpectedStatusCode =
   process.env.HEARTBEAT_REQUEST_RESPONDS_WITH_UNEXPECTED_STATUS_CODE === 'true';
 
@@ -48,8 +52,25 @@ app.use(
 );
 
 app.all('/heartbeat', (req, res) => {
-  if (unresponsive || heartbeatResponsiveButUnresponsiveLater) {
+  if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
+    return;
+  }
+
+  if (heartbeatUnresponsive) {
+    // Simulate a heartbeat that does not respond.
+    // This is used to test the timeout handling of the Lambda extension.
+    return;
+  }
+
+  if (heartbeatResponsiveButLater) {
+    heartbeatResponsiveButLater = false;
+
+    // Simulate first heartbeat that responds after some time.
+    setTimeout(() => {
+      res.sendStatus(200);
+    }, 2100);
+
     return;
   }
 
@@ -80,17 +101,34 @@ app.all('*', (req, res) => {
   const stringifiedBody = JSON.stringify(req.body);
   logger.debug(`incoming request: ${req.method} ${req.url}`);
 
+  if (unresponsive) {
+    // intentionally not responding for tests that verify proper timeout handling
+    return;
+  }
+
+  if (traceThrowsError) {
+    // Simulate a trace request that throws an error.
+    return res.socket.destroy();
+  }
+
+  if (traceResponsiveButLater || traceResponsiveButLaterForever) {
+    if (!traceResponsiveButLaterForever) {
+      // Simulate first trace request that responds after some time.
+      traceResponsiveButLater = false;
+    }
+
+    setTimeout(() => {
+      res.sendStatus(200);
+    }, 2100);
+    return;
+  }
+
   // Store spans so we can later verify that the spans were actually sent to the extension instead of having been
   // sent directly to the back end.
   if (req.url === '/bundle' && req.body.spans) {
     storeSpans(req.body.spans);
   } else if (req.url === '/traces' && Array.isArray(req.body)) {
     storeSpans(req.body);
-  }
-
-  if (unresponsive) {
-    // intentionally not responding for tests that verify proper timeout handling
-    return;
   }
 
   // Forward data to the back end.

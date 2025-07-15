@@ -129,7 +129,7 @@ app.post('/traces', acceptTraces);
 
 function acceptTraces(req, res) {
   logger.info('POST /traces');
-  logger.debug(req.body);
+  logger.debug(`Received ${req.body.length} spans`);
 
   receivedData.rawSpanArrays.push(req.body);
   if (unresponsive) {
