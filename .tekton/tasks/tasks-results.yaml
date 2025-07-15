@@ -46,9 +46,8 @@ spec:
           npx eslint packages/ -f json -o eslint-report.json || true
 
           echo "Installing SonarCloud scanner..."
-          npm install -g sonarqube-scanner
+          npm install -g @sonar/scan
 
           echo "Running SonarCloud analysis..."
-          sonar-scanner \
-            -Dsonar.token=$SONAR_TOKEN
+          sonar
         fi
