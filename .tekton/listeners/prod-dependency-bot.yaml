@@ -12,7 +12,7 @@ spec:
     - name: target-branch
       value: $(params.target-branch)
     - name: type
-      value: "dependency-bot"
+      value: "prod-dependency-bot"
     - name: repository
       value: $(params.repository-url)
     - name: commit-id
@@ -29,7 +29,7 @@ spec:
     - name: pl-name
       value: "prod-dependency-bot-$(params.node-version)"
     - name: pipeline-ref
-      value: "dependency-bot-pipeline"
+      value: "prod-dependency-bot-pipeline"
 
 ---
 
