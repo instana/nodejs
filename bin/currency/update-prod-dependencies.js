@@ -7,7 +7,6 @@
 const path = require('path');
 const { execSync } = require('child_process');
 const utils = require('./utils');
-const PROD_DEP_UPDATE_MODE = process.env.PROD_DEP_UPDATE_MODE === 'true';
 const BRANCH = process.env.BRANCH;
 const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
 const MAX_PROD_PR_LIMIT = process.env.MAX_PROD_PR_LIMIT || 5;
@@ -15,9 +14,9 @@ const cwd = path.join(__dirname, '..', '..');
 
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
 
-console.log(`PROD_DEP_UPDATE_MODE: ${PROD_DEP_UPDATE_MODE}`);
 console.log(`BRANCH: ${BRANCH}`);
 console.log(`SKIP_PUSH: ${SKIP_PUSH}`);
+console.log(`MAX_PROD_PR_LIMIT: ${MAX_PROD_PR_LIMIT}`);
 
 const updatedProdDeps = [];
 
@@ -29,7 +28,7 @@ pkgPaths.some(pkgPath => {
   const dependencies = pkgJson.dependencies || {};
 
   return Object.entries(dependencies).some(([dep, currentVersionRaw]) => {
-    // No need to include @instana libraries
+    // Exclude internal @instana libraries
     if (dep.startsWith('@instana')) {
       return false;
     }
@@ -50,7 +49,7 @@ pkgPaths.some(pkgPath => {
       return false;
     }
 
-    const localBranch = `${BRANCH}-${dep.replace(/[^a-zA-Z0-9]/g, '')}`;
+    const localBranch = `${BRANCH}-${dep.replace(/[^a-zA-Z0-9]/g, '')}-${latestVersion.replace(/\./g, '')}`;
     console.log(`Preparing PR for ${dep} (${currentVersion} -> ${latestVersion})`);
 
     try {
@@ -75,21 +74,18 @@ pkgPaths.some(pkgPath => {
       });
 
       execSync("git add '*package.json' package-lock.json", { cwd });
-      execSync(
-        `git commit -m "build: bumped production dependency ${dep} from ${currentVersion} to ${latestVersion}"`,
-        { cwd }
-      );
+      execSync(`git commit -m "build: bumped ${dep} from ${currentVersion} to ${latestVersion}"`, { cwd });
 
       if (utils.hasCommits(localBranch, cwd)) {
         if (!SKIP_PUSH) {
           execSync(`git push origin ${localBranch} --no-verify`, { cwd });
           execSync(
             // eslint-disable-next-line max-len
-            `gh pr create --base main --head ${localBranch} --title "[Dependency Bot] Bumped ${dep} (prod dep) from ${currentVersion} to ${latestVersion}" --body "Tada!"`,
+            `gh pr create --base main --head ${localBranch} --title "[Prod Dependency Bot] Bumped ${dep} from ${currentVersion} to ${latestVersion}" --body "Tada!"`,
             { cwd }
           );
+          updatedProdDeps.push(dep);
         }
-        updatedProdDeps.push(dep);
       } else {
         console.log(`Branch ${localBranch} has no commits.`);
       }

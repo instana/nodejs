@@ -50,6 +50,6 @@ spec:
         gh auth login --with-token
         
         echo "Running production dependency updates..."
-        MAX_PROD_PR_LIMIT=$(params.max-prod-pr-limit) PROD_DEP_UPDATE_MODE=true BRANCH=prod-dependency-bot node bin/currency/update-prod-dependencies.js
+        MAX_PROD_PR_LIMIT=$(params.max-prod-pr-limit) BRANCH=prod-dependency-bot node bin/currency/update-prod-dependencies.js
 
         

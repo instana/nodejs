@@ -1,7 +1,7 @@
 apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerBinding
 metadata:
-  name: dependency-bot-binding
+  name: prod-dependency-bot-binding
 spec:
   envFrom:
     - configMapRef:
@@ -36,10 +36,10 @@ spec:
 apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener
 metadata:
-  name: dependency-bot-listener
+  name: prod-dependency-bot-listener
 spec:
   triggers:
     - bindings:
-        - name: dependency-bot-binding
+        - name: prod-dependency-bot-binding
       template:
         name: custom-template
