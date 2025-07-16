@@ -7,14 +7,14 @@
 const path = require('path');
 const { execSync } = require('child_process');
 const utils = require('./utils');
-const PROD_DEP_UPDATES_MODE = process.env.PROD_DEP_UPDATES_MODE === 'true';
+const PROD_DEP_UPDATE_MODE = process.env.PROD_DEP_UPDATE_MODE === 'true';
 const BRANCH = process.env.BRANCH;
 const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
 const cwd = path.join(__dirname, '..', '..');
 
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
 
-console.log(`PROD_DEP_UPDATES_MODE: ${PROD_DEP_UPDATES_MODE}`);
+console.log(`PROD_DEP_UPDATE_MODE: ${PROD_DEP_UPDATE_MODE}`);
 console.log(`BRANCH: ${BRANCH}`);
 console.log(`SKIP_PUSH: ${SKIP_PUSH}`);
 
