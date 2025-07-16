@@ -40,7 +40,7 @@ class CloudRunServiceRevisionInstanceProcessor extends DataProcessor {
       configuration,
       revision: identityProvider.getRevision(),
       port,
-      // ...project provides two attribtues, numericProjectId and projectId.
+      // ...project provides two attributes, numericProjectId and projectId.
       ...project
     };
   }
@@ -51,7 +51,7 @@ function extractRegion(fullyQualified) {
     return undefined;
   } else {
     const idx = fullyQualified.lastIndexOf('/');
-    if (idx < 0 || idx >= fullyQualified.lenth - 1) {
+    if (idx < 0 || idx >= fullyQualified.length - 1) {
       return undefined;
     }
     return fullyQualified.substring(idx + 1);
