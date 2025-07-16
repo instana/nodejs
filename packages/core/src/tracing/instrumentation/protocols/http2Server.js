@@ -124,10 +124,10 @@ function shimEmit(realEmit) {
       }
 
       span.data.http = {
-        method,
-        url: sanitizeUrl(pathParts.shift()),
+        operation: method,
+        endpoints: sanitizeUrl(pathParts.shift()),
         params: pathParts.length > 0 ? pathParts.join('?') : undefined,
-        host: authority,
+        connection: authority,
         header: getExtraHeadersFromNormalizedObjectLiteral(headers, extraHttpHeadersToCapture)
       };
 

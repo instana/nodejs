@@ -229,8 +229,8 @@ function instrument(coreModule, forceHttps) {
 
       const boundCallback = cls.ns.bind(function boundCallback(res) {
         span.data.http = {
-          method: clientRequest.method,
-          url: completeCallUrl,
+          operation: clientRequest.method,
+          endpoints: completeCallUrl,
           status: res.statusCode,
           params
         };
@@ -263,7 +263,7 @@ function instrument(coreModule, forceHttps) {
         // A synchronous exception indicates a failure that is not covered by the listeners. Using a malformed URL for
         // example is a case that triggers a synchronous exception.
         span.data.http = {
-          url: completeCallUrl,
+          endpoints: completeCallUrl,
           error: e ? e.message : ''
         };
         span.d = Date.now() - span.ts;
@@ -310,8 +310,8 @@ function instrument(coreModule, forceHttps) {
           errorMessage = 'Request aborted';
         }
         span.data.http = {
-          method: clientRequest.method,
-          url: completeCallUrl,
+          operation: clientRequest.method,
+          endpoints: completeCallUrl,
           error: errorMessage
         };
         span.d = Date.now() - span.ts;

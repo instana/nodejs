@@ -162,8 +162,8 @@ function instrument() {
       }
 
       span.data.http = {
-        method,
-        url: completeCallUrl,
+        operation: method,
+        endpoints: completeCallUrl,
         params
       };
 
