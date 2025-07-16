@@ -104,10 +104,10 @@ function shimEmit(realEmit) {
         urlParts[1] = filterParams(urlParts[1]);
       }
       span.data.http = {
-        method: req.method,
-        url: sanitizeUrl(urlParts.shift()),
+        operation: req.method,
+        endpoints: sanitizeUrl(urlParts.shift()),
         params: urlParts.length > 0 ? urlParts.join('?') : undefined,
-        host: req.headers.host,
+        connection: req.headers.host,
         header: getExtraHeadersFromMessage(req, extraHttpHeadersToCapture)
       };
 
