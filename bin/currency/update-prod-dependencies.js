@@ -10,6 +10,7 @@ const utils = require('./utils');
 const PROD_DEP_UPDATE_MODE = process.env.PROD_DEP_UPDATE_MODE === 'true';
 const BRANCH = process.env.BRANCH;
 const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
+const MAX_PROD_PR_LIMIT = process.env.MAX_PROD_PR_LIMIT || 5;
 const cwd = path.join(__dirname, '..', '..');
 
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
@@ -33,8 +34,8 @@ pkgPaths.some(pkgPath => {
       return false;
     }
 
-    if (updatedProdDeps.length >= 5) {
-      console.log('Limit of 5 production dependency PRs reached.');
+    if (updatedProdDeps.length >= MAX_PROD_PR_LIMIT) {
+      console.log(`Limit of ${MAX_PROD_PR_LIMIT} production dependency PRs reached.`);
       return true;
     }
 
@@ -96,6 +97,6 @@ pkgPaths.some(pkgPath => {
       console.error(`Failed updating ${dep}: ${err.message}`);
     }
 
-    return updatedProdDeps.length >= 5;
+    return updatedProdDeps.length >= MAX_PROD_PR_LIMIT;
   });
 });
