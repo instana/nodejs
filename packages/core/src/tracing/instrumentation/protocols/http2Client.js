@@ -123,8 +123,8 @@ function instrumentClientHttp2Session(clientHttp2Session) {
       span.stack = tracingUtil.getStackTrace(request);
 
       span.data.http = {
-        method,
-        url: origin + pathWithoutQuery,
+        operation: method,
+        endpoints: origin + pathWithoutQuery,
         params
       };
 
