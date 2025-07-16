@@ -96,7 +96,7 @@ app.get('/trace-id-and-span-id', (req, res) => {
 
 function appendToDummyLogFile(level, logFilePath) {
   return message => {
-    const content = typeof messsage === 'string' ? message : JSON.stringify(message);
+    const content = typeof message === 'string' ? message : JSON.stringify(message);
     fs.appendFile(logFilePath, `[${level}]: ${content}\n`, err => {
       if (err) {
         // eslint-disable-next-line no-console
