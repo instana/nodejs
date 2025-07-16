@@ -48,6 +48,6 @@ spec:
         gh auth login --with-token
         
         echo "Running production dependency updates..."
-        PROD_DEP_UPDATES_MODE=true BRANCH=dependency-bot node bin/currency/update-currencies.js
+        PROD_DEP_UPDATE_MODE=true BRANCH=dependency-bot node bin/currency/update-prod-dependencies.js
 
         
