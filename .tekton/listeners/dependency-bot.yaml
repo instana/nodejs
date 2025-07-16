@@ -24,8 +24,10 @@ spec:
     - name: npm-version
       value: $(params.npm-version)
       default: "" 
+    - name: max-prod-pr-limit
+      value: $(params.max-prod-pr-limit)
     - name: pl-name
-      value: "dependency-bot-$(params.node-version)"
+      value: "prod-dependency-bot-$(params.node-version)"
     - name: pipeline-ref
       value: "dependency-bot-pipeline"
 
