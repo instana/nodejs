@@ -22,17 +22,6 @@ console.log(`MAJOR_UPDATES_MODE: ${MAJOR_UPDATES_MODE}`);
 console.log(`BRANCH: ${BRANCH}`);
 console.log(`SKIP_PUSH: ${SKIP_PUSH}`);
 
-// eslint-disable-next-line no-shadow
-const hasCommits = (branch, cwd) => {
-  try {
-    const result = execSync(`git log main..${branch} --pretty=format:"%h"`, { cwd }).toString().trim();
-    console.log(`Commits in branch '${branch}' not in 'main':\n${result}`);
-    return result && result.length > 0;
-  } catch (err) {
-    return false;
-  }
-};
-
 if (!MAJOR_UPDATES_MODE) {
   console.log('Preparing patch/minor updates...');
   execSync('git checkout main', { cwd });
@@ -137,7 +126,7 @@ currencies.forEach(currency => {
     execSync("git add '*package.json' package-lock.json", { cwd });
     execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
 
-    if (hasCommits(branchName, cwd)) {
+    if (utils.hasCommits(branchName, cwd)) {
       if (!SKIP_PUSH) {
         execSync(`git push origin ${branchName} --no-verify`, { cwd });
         execSync(
@@ -156,7 +145,7 @@ currencies.forEach(currency => {
 });
 
 if (!MAJOR_UPDATES_MODE) {
-  if (hasCommits(branchName, cwd)) {
+  if (utils.hasCommits(branchName, cwd)) {
     if (!SKIP_PUSH) {
       execSync(`git push origin ${branchName} --no-verify`, { cwd });
       execSync(
