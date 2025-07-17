@@ -23,76 +23,82 @@ const updatedProdDeps = [];
 const packagesDir = path.join(__dirname, '..', '..', 'packages');
 const pkgPaths = utils.getPackageJsonPathsUnderPackagesDir(packagesDir);
 
-pkgPaths.some(pkgPath => {
+const dependencyMap = {};
+pkgPaths.forEach(pkgPath => {
   const pkgJson = require(pkgPath);
-  const dependencies = pkgJson.dependencies || {};
+  const deps = pkgJson.dependencies || {};
+  Object.entries(deps).forEach(([dep, version]) => {
+    // Exclude internal libraries
+    if (dep.startsWith('@instana')) return;
+    if (!dependencyMap[dep]) dependencyMap[dep] = [];
+    dependencyMap[dep].push({ pkgPath, version });
+  });
+});
 
-  return Object.entries(dependencies).some(([dep, currentVersionRaw]) => {
-    // Exclude internal @instana libraries
-    if (dep.startsWith('@instana')) {
-      return false;
-    }
+Object.entries(dependencyMap).some(([dep, usageList]) => {
+  if (updatedProdDeps.length >= MAX_PROD_PR_LIMIT) return true;
 
-    if (updatedProdDeps.length >= MAX_PROD_PR_LIMIT) {
-      console.log(`Limit of ${MAX_PROD_PR_LIMIT} production dependency PRs reached.`);
-      return true;
-    }
+  const currentVersion = usageList[0].version.replace(/[^0-9.]/g, '');
+  const latestVersion = utils.getLatestVersion({
+    pkgName: dep,
+    installedVersion: currentVersion,
+    isBeta: false
+  });
 
-    const currentVersion = currentVersionRaw.replace(/[^0-9.]/g, '');
-    const latestVersion = utils.getLatestVersion({
-      pkgName: dep,
-      installedVersion: currentVersion,
-      isBeta: false
-    });
+  if (!latestVersion || latestVersion === currentVersion) return false;
 
-    if (!latestVersion || latestVersion === currentVersion) {
-      return false;
-    }
+  const branchName = `${BRANCH}-${dep.replace(/[^a-zA-Z0-9]/g, '')}-${latestVersion.replace(/\./g, '')}`;
 
-    const localBranch = `${BRANCH}-${dep.replace(/[^a-zA-Z0-9]/g, '')}-${latestVersion.replace(/\./g, '')}`;
-    console.log(`Preparing PR for ${dep} (${currentVersion} -> ${latestVersion})`);
+  console.log(`Preparing PR for ${dep} (${currentVersion} -> ${latestVersion})`);
+
+  try {
+    execSync('git checkout main', { cwd });
+    execSync('npm i --no-audit', { cwd });
 
     try {
-      execSync('git checkout main', { cwd });
-      execSync('npm i --no-audit', { cwd });
+      execSync(`git ls-remote --exit-code --heads origin ${branchName}`, { cwd });
+      console.log(`Skipping ${dep}. Branch already exists.`);
+      return;
+    } catch (_) {
+      // ignore err
+      // CASE: branch does not exist, continue
+    }
 
-      try {
-        execSync(`git ls-remote --exit-code --heads origin ${localBranch}`, { cwd });
-        console.log(`Skipping ${dep}. Branch already exists.`);
-        return false;
-      } catch (_) {
-        // Branch does not exist, continue
-      }
+    if (BRANCH !== 'main') {
+      execSync(`git checkout -b ${branchName}`, { cwd });
+    }
 
-      execSync(`git checkout -b ${localBranch}`, { cwd });
-
+    usageList.forEach(({ pkgPath }) => {
+      const pkgJson = require(pkgPath);
       const pkgDir = path.dirname(pkgPath);
-      console.log(`npm i ${dep}@${latestVersion} -w ${pkgJson.name || pkgDir}`);
-      execSync(`npm i ${dep}@${latestVersion} -w ${pkgJson.name || pkgDir} --no-audit`, {
+      const targetName = pkgJson.name || pkgDir;
+      console.log(`npm i ${dep}@${latestVersion} -w ${targetName}`);
+      execSync(`npm i ${dep}@${latestVersion} -w ${targetName} --no-audit`, {
         stdio: 'inherit',
         cwd
       });
+    });
 
-      execSync("git add '*package.json' package-lock.json", { cwd });
-      execSync(`git commit -m "build: bumped ${dep} from ${currentVersion} to ${latestVersion}"`, { cwd });
+    execSync("git add '*package.json' package-lock.json", { cwd });
+    execSync(`git commit -m "build: bumped ${dep} from ${currentVersion} to ${latestVersion}"`, { cwd });
 
-      if (utils.hasCommits(localBranch, cwd)) {
-        if (!SKIP_PUSH) {
-          execSync(`git push origin ${localBranch} --no-verify`, { cwd });
-          execSync(
-            // eslint-disable-next-line max-len
-            `gh pr create --base main --head ${localBranch} --title "[Prod Dependency Bot] Bumped ${dep} from ${currentVersion} to ${latestVersion}" --body "Tada!"`,
-            { cwd }
-          );
-          updatedProdDeps.push(dep);
-        }
-      } else {
-        console.log(`Branch ${localBranch} has no commits.`);
+    if (utils.hasCommits(branchName, cwd)) {
+      if (!SKIP_PUSH) {
+        execSync(`git push origin ${branchName} --no-verify`, { cwd });
+        execSync(
+          // eslint-disable-next-line max-len
+          `gh pr create --base main --head ${branchName} --title "[Prod Dependency Bot] Bumped ${dep} from ${currentVersion} to ${latestVersion}" --body "Tada!"`,
+          { cwd }
+        );
+
+        updatedProdDeps.push(dep);
       }
-    } catch (err) {
-      console.error(`Failed updating ${dep}: ${err.message}`);
+    } else {
+      console.log(`Branch ${branchName} has no commits.`);
     }
+  } catch (err) {
+    console.error(`Failed updating ${dep}: ${err.message}`);
+  }
 
-    return updatedProdDeps.length >= MAX_PROD_PR_LIMIT;
-  });
+  return updatedProdDeps.length >= MAX_PROD_PR_LIMIT;
 });
