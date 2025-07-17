@@ -79,7 +79,7 @@
   },
   "devDependencies": {
     "@apollo/gateway": "^2.11.2",
-    "@apollo/server": "^4.12.2",
+    "@apollo/server": "^5.0.0",
     "@apollo/subgraph": "^2.11.2",
     "@aws-sdk/client-cloudwatch-logs": "^3.696.0",
     "@aws-sdk/client-dynamodb": "^3.846.0",
