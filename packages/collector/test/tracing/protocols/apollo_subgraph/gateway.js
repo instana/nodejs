@@ -16,11 +16,21 @@ require('../../../..')();
 
 const { ApolloServer } = require('@apollo/server');
 const { ApolloGateway, IntrospectAndCompose } = require('@apollo/gateway');
-const { expressMiddleware } = require('@apollo/server/express4');
 const bodyParser = require('body-parser');
 const express = require('express');
 const http = require('http');
 const morgan = require('morgan');
+
+// In Apollo Server v5, use @as-integrations/express5; otherwise, fall back to the built-in v4 middleware.
+const apolloServerVersion = process.env.APOLLO_SERVER_VERSION || 'latest';
+
+let expressMiddleware;
+
+if (apolloServerVersion === 'latest') {
+  ({ expressMiddleware } = require('@as-integrations/express5'));
+} else {
+  ({ expressMiddleware } = require('@apollo/server-v4/express4'));
+}
 
 const accountsPort = process.env.SERVICE_PORT_ACCOUNTS;
 const inventoryPort = process.env.SERVICE_PORT_INVENTORY;
