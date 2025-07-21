@@ -96,7 +96,8 @@ app.delete('/received/spans', (req, res) => {
 
 // The Lambda extension would forward all requests to the
 // back end (serverless-acceptor). This handler mimicks that behavior.
-app.all('*', (req, res) => {
+// From express v5, '/*' is deprecated and replaced with '/*anything' or '/{*anything}'
+app.all('/{*a}', (req, res) => {
   const stringifiedBody = JSON.stringify(req.body);
   logger.debug(`incoming request: ${req.method} ${req.url}`);
 
