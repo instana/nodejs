@@ -45,9 +45,6 @@ spec:
           echo "Running ESLint..."
           npx eslint packages/ -f json -o eslint-report.json || true
 
-          echo "Installing SonarCloud scanner..."
-          npm install -g @sonar/scan
-
           echo "Running SonarCloud analysis..."
-          sonar
+          npx @sonar/scan
         fi
