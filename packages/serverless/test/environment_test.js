@@ -157,6 +157,14 @@ describe('environment util', () => {
     });
   });
 
+  it('must parse instanaEndpointUrl with trailing slash', () => {
+    validate('https://example.com:8443/', 'dummy-key');
+    expect(environmentUtil.isValid()).to.be.true;
+    expect(environmentUtil.getBackendHost()).to.equal('example.com');
+    expect(environmentUtil.getBackendPort()).to.equal('8443');
+    expect(environmentUtil.getBackendPath()).to.equal('/');
+  });
+
   function validate(instanaEndpointUrl, instanaAgentKey, validateInstanaAgentKey) {
     if (instanaEndpointUrl) {
       process.env.INSTANA_ENDPOINT_URL = instanaEndpointUrl;
