@@ -21,15 +21,7 @@ function buildAndCopyModulesLinux {
   docker rm -f $dockertag > /dev/null || true
   echo "Building $dockerfile -> $dockertag"
 
-  if [ "$arch" = "s390x" ]; then
-    path_arch="$arch"
-    docker buildx build \
-      --platform=linux/$arch \
-      --build-arg BASE_IMAGE=$arch/$baseimage \
-      -f "$dockerfile" \
-      --load -t "$dockertag" \
-      .
-  elif [ "$arch" = "arm64" ]; then
+  if [[ "$arch" = "s390x" || "$arch" = "arm64" ]]; then
     path_arch="$arch"
     docker buildx build \
       --platform=linux/$arch \
@@ -44,7 +36,7 @@ function buildAndCopyModulesLinux {
       -f "$dockerfile" \
       -t "$dockertag" \
       .
-  fi
+fi
 
   echo "docker build exit status: $?"
   echo "Running $dockertag"
