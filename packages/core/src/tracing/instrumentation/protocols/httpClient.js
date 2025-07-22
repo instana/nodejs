@@ -376,6 +376,12 @@ function tryToAddHeadersToOpts(options, span, w3cTraceContext) {
   // add our headers there. We use request.setHeader on the ClientRequest object only when the headers object is missing
   // (see setHeadersOnRequest).
 
+  if (span.shouldSuppressDownstream) {
+    // Suppress trace propagation to downstream services.
+    tryToAddTraceLevelAddHeaderToOpts(options, '0', w3cTraceContext);
+    return true;
+  }
+
   if (hasHeadersOption(options)) {
     if (!isItSafeToModifiyHeadersInOptions(options)) {
       return true;
