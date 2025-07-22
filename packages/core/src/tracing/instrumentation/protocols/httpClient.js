@@ -198,7 +198,8 @@ function instrument(coreModule, forceHttps) {
     }
     let completeCallUrl;
     let params;
-
+    // Default to 'GET' if no method is explicitly provided
+    const method = (options && options.method) || 'GET';
     if (urlArg && typeof urlArg === 'string') {
       completeCallUrl = sanitizeUrl(urlArg);
       params = splitAndFilter(urlArg);
@@ -213,7 +214,7 @@ function instrument(coreModule, forceHttps) {
 
     const spanData = {
       http: {
-        operation: clientRequest.method,
+        operation: method,
         endpoints: completeCallUrl,
         params
       }
