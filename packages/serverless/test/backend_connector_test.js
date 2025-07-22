@@ -12,6 +12,7 @@ const testConfig = require('../../core/test/config');
 const delay = require('../../core/test/test_util/delay');
 const retry = require('../../core/test/test_util/retry');
 const { createFakeLogger } = require('../../core/test/test_util');
+const environmentUtil = require('../src/environment');
 
 const sendBundle = async () => {
   return new Promise(resolve => {
@@ -249,6 +250,62 @@ describe('[UNIT] backend connector', () => {
 
         expect(destroyStub.called).to.be.true;
       });
+    });
+  });
+
+  describe('Backend URL handling', function () {
+    this.timeout(testConfig.getTestTimeout());
+
+    let requestStub;
+    let fakeRequest;
+    let onStub;
+    let endStub;
+
+    beforeEach(() => {
+      onStub = sinon.stub();
+      endStub = sinon.stub();
+
+      fakeRequest = {
+        on: onStub,
+        end: endStub,
+        setTimeout: sinon.stub(),
+        once: sinon.stub(),
+        removeAllListeners: sinon.stub(),
+        destroy: sinon.stub()
+      };
+
+      requestStub = sinon.stub().returns(fakeRequest);
+      sinon.stub(uninstrumentedHttp, 'https').value({ request: requestStub });
+      sinon.stub(environmentUtil, 'getBackendHost').returns('example.com');
+      backendConnector.init({ config });
+    });
+
+    afterEach(() => {
+      sinon.restore();
+    });
+
+    it('should correctly handle root path with trailing slash (/) for bundle endpoint', async () => {
+      sinon.stub(environmentUtil, 'getBackendPath').returns('/');
+
+      sendBundle();
+
+      await delay(100);
+
+      const reqOptions = requestStub.getCall(0).args[0];
+      expect(reqOptions.path).to.equal('/bundle');
+      expect(reqOptions.path).to.not.include('//');
+    });
+
+    it('should correctly handle root path without trailing slash for traces endpoint', async () => {
+      sinon.stub(environmentUtil, 'getBackendPath').returns('/');
+
+      sendSpans();
+
+      await delay(100);
+
+      const reqOptions = requestStub.getCall(0).args[0];
+      expect(reqOptions.path).to.equal('/traces');
+      expect(reqOptions.path).to.not.include('//');
     });
   });
 });

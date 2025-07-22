@@ -157,6 +157,22 @@ describe('environment util', () => {
     });
   });
 
+  it('should correctly parse instanaEndpointUrl ending with a trailing slash and root path', () => {
+    validate('https://example.com:8443/', 'dummy-key');
+    expect(environmentUtil.isValid()).to.be.true;
+    expect(environmentUtil.getBackendHost()).to.equal('example.com');
+    expect(environmentUtil.getBackendPort()).to.equal('8443');
+    expect(environmentUtil.getBackendPath()).to.equal('/');
+  });
+
+  it('should correctly parse instanaEndpointUrl ending with a trailing slash and subpath', () => {
+    validate('https://example.com:8443/serverless/', 'dummy-key');
+    expect(environmentUtil.isValid()).to.be.true;
+    expect(environmentUtil.getBackendHost()).to.equal('example.com');
+    expect(environmentUtil.getBackendPort()).to.equal('8443');
+    expect(environmentUtil.getBackendPath()).to.equal('/serverless');
+  });
+
   function validate(instanaEndpointUrl, instanaAgentKey, validateInstanaAgentKey) {
     if (instanaEndpointUrl) {
       process.env.INSTANA_ENDPOINT_URL = instanaEndpointUrl;
