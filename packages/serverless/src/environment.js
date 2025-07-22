@@ -86,7 +86,7 @@ function _validate(instanaEndpointUrl, _instanaAgentKey, validateInstanaAgentKey
     backendPort = '443';
   }
 
-  backendPath = parsedUrl.pathname;
+  backendPath = sanitizePath(parsedUrl.pathname);
 
   instanaAgentKey = _instanaAgentKey;
 
@@ -179,4 +179,14 @@ function parseUrl(value) {
     logger.warn(e.message);
     return null;
   }
+}
+
+// Removes trailing slashes from the path (except when it's just '/')
+// Prevents double slashes when building backend URLs.
+// Example: "https://example.instana.io/serverless/" + "/bundle" → "https://example.instana.io/serverless/bundle"
+function sanitizePath(pathName) {
+  if (!pathName || pathName === '/') {
+    return pathName;
+  }
+  return pathName.replace(/\/+$/, '');
 }
