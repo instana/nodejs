@@ -3,7 +3,7 @@ function buildAndCopyModulesDarwin {
   NODEJS_VERSION=$2
   ARCH=$3
   echo ""
-  echo Building MacOS addons for ABI version $ABI_VERSION with Node.js $NODEJS_VERSION:
+  echo Building MacOS addons for ABI version $ABI_VERSION with Node.js $NODEJS_VERSION and $ARCH:
   nvm install --skip-default-packages $NODEJS_VERSION
   nvm use $NODEJS_VERSION
   rm -rf tmp
