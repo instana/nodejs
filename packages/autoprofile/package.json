@@ -62,7 +62,10 @@
   "files": [
     "src",
     "lib",
-    "prebuilds",
+    "prebuilds/linux-arm",
+    "prebuilds/linux-arm64",
+    "prebuilds/linux-x64",
+    "prebuilds/linux-s390x",
     "binding.gyp",
     "CHANGELOG.md"
   ],
