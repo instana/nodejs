@@ -111,7 +111,7 @@ mochaSuiteFn('tracing/http client', function () {
     });
 
     it('should trace exit span without entry span if INSTANA_ALLOW_ROOT_EXIT_SPAN is true', async () => {
-      await delay(2500);
+      await delay(500);
 
       await retry(async () => {
         const spans = await globalAgent.instance.getSpans();
