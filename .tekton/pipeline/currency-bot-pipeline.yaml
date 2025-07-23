@@ -134,11 +134,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: update-dependencies
+    - name: update-currencies
       runAfter:
         - install-npm-dependencies
       taskRef:
-        name: update-dependencies
+        name: update-currencies
       params:
         - name: continuous-delivery-context-secret
           value: "secure-properties"
