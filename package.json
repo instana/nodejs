@@ -245,7 +245,7 @@
     "square-calc": "3.2.1",
     "square-calc-v2": "npm:square-calc@2.4.0",
     "stealthy-require": "1.1.1",
-    "superagent": "^10.2.2",
+    "superagent": "^10.2.3",
     "tedious": "^19.0.0",
     "tsoa": "^6.6.0",
     "typescript": "5.3.3",
