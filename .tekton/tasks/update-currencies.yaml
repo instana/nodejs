@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: update-dependencies
+  name: update-currencies
 spec:
   params:
     - name: continuous-delivery-context-secret
