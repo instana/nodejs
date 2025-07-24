@@ -13,6 +13,7 @@ process.on('SIGTERM', () => {
 require('../../../../..')();
 const { delay } = require('../../../../../../core/test/test_util');
 const fetch = require('node-fetch-v2');
+const agentPort = process.env.INSTANA_AGENT_PORT;
 
 // eslint-disable-next-line no-console
 console.log('Starting allowRootExitSpanApp...');
@@ -20,11 +21,11 @@ console.log('Starting allowRootExitSpanApp...');
 const main = async () => {
   try {
     await delay(100);
-    await fetch('https://example.com');
-    await fetch('https://example.com');
+    await fetch(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}`);
   } catch (err) {
     /* eslint-disable no-console */
-    console.log(err);
+    console.log('----------------', err);
   }
 };
 

@@ -13,12 +13,13 @@ process.on('SIGTERM', () => {
 const instana = require('../../../../..')();
 const { delay } = require('../../../../../../core/test/test_util');
 const nodeFetch = require('node-fetch-v2');
+const agentPort = process.env.INSTANA_AGENT_PORT;
 
 const main = async () => {
   let err1;
 
   try {
-    const req = new nodeFetch.Request('https://example.com');
+    const req = new nodeFetch.Request(`http://127.0.0.1:${agentPort}`);
     await nodeFetch(req);
 
     await instana.sdk.async.startEntrySpan('my-translation-service');

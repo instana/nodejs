@@ -208,14 +208,14 @@ function registerTests(appUsesHttps) {
               verifyHttpExit({
                 spans,
                 parent: entryInClient,
-                url: 'http://example.com/',
+                url: `http://127.0.0.1:${globalAgent.instance.agentPort}/`,
                 params: 'k=1'
               });
 
               verifyHttpExit({
                 spans,
                 parent: entryInClient,
-                url: 'http://example.com/',
+                url: `http://127.0.0.1:${globalAgent.instance.agentPort}/`,
                 params: 'k=2'
               });
             });

@@ -11,6 +11,7 @@ process.on('SIGTERM', () => {
 });
 
 require('@instana/core/test/test_util/loadExpressV4');
+const agentPort = process.env.INSTANA_AGENT_PORT;
 
 require('../../../../..')();
 
@@ -47,10 +48,10 @@ app.get('/', (req, res) => res.sendStatus(200));
 
 app.get('/fetch-deferred', async (req, res) => {
   setTimeout(async () => {
-    await fetch('http://example.com?k=2');
+    await fetch(`http://127.0.0.1:${agentPort}?k=2`);
   }, 500);
 
-  await fetch('http://example.com?k=1');
+  await fetch(`http://127.0.0.1:${agentPort}?k=1`);
   res.sendStatus(200);
 });
 
