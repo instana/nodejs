@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.19.0](https://github.com/instana/nodejs/compare/v4.18.1...v4.19.0) (2025-07-24)
+
+
+### Features
+
+* added support for @apollo/server v5 ([#1861](https://github.com/instana/nodejs/issues/1861)) ([ec4a6c6](https://github.com/instana/nodejs/commit/ec4a6c6a6e6a482cc7ca5367943f0aa1c4ec0ac2))
+
+
+### Reverts
+
+* Revert "test: increased SNS connection retries to avoid tekton split task sta…" ([81cc48d](https://github.com/instana/nodejs/commit/81cc48d20f682155f9fbd7abe6a687d321f3fbb2))
+
+
+
+
+
 ## [4.18.1](https://github.com/instana/nodejs/compare/v4.18.0...v4.18.1) (2025-07-14)
 
 **Note:** Version bump only for package @instana/collector

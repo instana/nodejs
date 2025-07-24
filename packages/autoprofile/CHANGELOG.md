@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.19.0](https://github.com/instana/nodejs/compare/v4.18.1...v4.19.0) (2025-07-24)
+
+
+### Bug Fixes
+
+* **autoprofile:** reduced package size ([940a748](https://github.com/instana/nodejs/commit/940a7481af019c6d3a7c747478536010b0cea7f0))
+
+
+
+
+
 ## [4.18.1](https://github.com/instana/nodejs/compare/v4.18.0...v4.18.1) (2025-07-14)
 
 **Note:** Version bump only for package @instana/autoprofile

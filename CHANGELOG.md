@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.19.0](https://github.com/instana/nodejs/compare/v4.18.1...v4.19.0) (2025-07-24)
+
+
+### Bug Fixes
+
+* **autoprofile:** reduced package size ([940a748](https://github.com/instana/nodejs/commit/940a7481af019c6d3a7c747478536010b0cea7f0))
+* **serverless:** removed trailing slashes from instana endpoint url ([#1862](https://github.com/instana/nodejs/issues/1862)) ([305f2b2](https://github.com/instana/nodejs/commit/305f2b249900d6e5e0ffb7b305b486fd1cf2621a))
+
+
+### Features
+
+* added support for @apollo/server v5 ([#1861](https://github.com/instana/nodejs/issues/1861)) ([ec4a6c6](https://github.com/instana/nodejs/commit/ec4a6c6a6e6a482cc7ca5367943f0aa1c4ec0ac2))
+
+
+### Reverts
+
+* Revert "test: increased SNS connection retries to avoid tekton split task sta…" ([81cc48d](https://github.com/instana/nodejs/commit/81cc48d20f682155f9fbd7abe6a687d321f3fbb2))
+
+
+
+
+
 ## [4.18.1](https://github.com/instana/nodejs/compare/v4.18.0...v4.18.1) (2025-07-14)
 
 
