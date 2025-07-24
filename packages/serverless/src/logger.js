@@ -76,6 +76,11 @@ class InstanaServerlessLogger {
 exports.init = function init(config = {}) {
   let parentLogger;
 
+  // CASE: prevent circular references
+  if (config.logger && config.logger instanceof InstanaServerlessLogger) {
+    config.logger = config.logger.logger;
+  }
+
   // CASE: customer overrides logger in serverless land.
   if (config.logger && typeof config.logger.child === 'function') {
     // A bunyan or pino logger has been provided via config. In either case we create a child logger directly under the
