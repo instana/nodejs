@@ -24,8 +24,7 @@ const main = async () => {
     await fetch(`http://127.0.0.1:${agentPort}`);
     await fetch(`http://127.0.0.1:${agentPort}`);
   } catch (err) {
-    /* eslint-disable no-console */
-    console.log('----------------', err);
+    /* empty */
   }
 };
 
