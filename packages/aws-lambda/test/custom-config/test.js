@@ -25,7 +25,7 @@ const qualifiedArn = `${unqualifiedArn}:${version}`;
 
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
-describe.only('aws-lambda: custom config', function () {
+describe('aws-lambda: custom config', function () {
   this.timeout(config.getTestTimeout());
   let control;
 
