@@ -11,7 +11,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../core/test/config');
 const portfinder = require('../../test_util/portfinder');
-
+const { execSync } = require('child_process');
 const {
   retry,
   verifyHttpRootEntry,
@@ -33,7 +33,25 @@ const runTests =
     : describe.skip;
 
 mochaSuiteFn('opentelemetry/instrumentations', function () {
-  this.timeout(config.getTestTimeout());
+  this.timeout(config.getTestTimeout() * 2);
+
+  before(() => {
+    if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS === 'true') {
+      return;
+    }
+
+    execSync('./preinstall.sh', { cwd: __dirname, stdio: 'inherit' });
+
+    execSync('npm install --no-save --no-package-lock --prefix ./ ./core.tgz', {
+      cwd: __dirname,
+      stdio: 'inherit'
+    });
+
+    execSync('npm install --no-save --no-package-lock --prefix ./ ./collector.tgz', {
+      cwd: __dirname,
+      stdio: 'inherit'
+    });
+  });
 
   // TODO: Restify test is broken in v24. See Issue: https://github.com/restify/node-restify/issues/1984
   runTests('restify', function () {
@@ -46,7 +64,8 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       before(async () => {
         controls = new ProcessControls({
           appPath: path.join(__dirname, './restify-app'),
-          useGlobalAgent: true
+          useGlobalAgent: true,
+          cwd: __dirname
         });
 
         await controls.startAndWaitForAgentConnection();
@@ -187,6 +206,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         controls = new ProcessControls({
           appPath: path.join(__dirname, './restify-app'),
           useGlobalAgent: true,
+          cwd: __dirname,
           env: {
             INSTANA_DISABLE_USE_OPENTELEMETRY: true
           }
@@ -249,7 +269,8 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     before(async () => {
       controls = new ProcessControls({
         appPath: path.join(__dirname, './fs-app'),
-        useGlobalAgent: true
+        useGlobalAgent: true,
+        cwd: __dirname
       });
 
       await controls.startAndWaitForAgentConnection();
@@ -371,6 +392,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       serverControls = new ProcessControls({
         appPath: path.join(__dirname, './socketio-server'),
         useGlobalAgent: true,
+        cwd: __dirname,
         env: {
           SOCKETIOSERVER_PORT: socketIOServerPort
         }
@@ -379,6 +401,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       clientControls = new ProcessControls({
         appPath: path.join(__dirname, './socketio-client'),
         useGlobalAgent: true,
+        cwd: __dirname,
         env: {
           SOCKETIOSERVER_PORT: socketIOServerPort
         }
@@ -524,6 +547,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         controls = new ProcessControls({
           appPath: path.join(__dirname, './tedious-app'),
           useGlobalAgent: true,
+          cwd: __dirname,
           env: {
             OTEL_ENABLED: true
           }
@@ -615,6 +639,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         controls = new ProcessControls({
           appPath: path.join(__dirname, './tedious-app'),
           useGlobalAgent: true,
+          cwd: __dirname,
           env: {
             OTEL_ENABLED: false
           }
@@ -645,6 +670,139 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
             })
           );
       });
+    });
+  });
+
+  describe('OracleDB', function () {
+    this.timeout(1000 * 60);
+
+    describe('opentelemetry is enabled', function () {
+      globalAgent.setUpCleanUpHooks();
+      const agentControls = globalAgent.instance;
+
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          appPath: path.join(__dirname, './oracle-app'),
+          useGlobalAgent: true,
+          // TODO: If you print process.cwd() in the app.js its by default packages/collector.
+          // That is technically not right. We should change that across the whole repo.
+          // TODO: create a separate PR
+          cwd: __dirname
+        });
+
+        await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60);
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      it('should trace', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/trace'
+        });
+
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          expect(spans.length).to.equal(2);
+
+          const httpEntry = verifyHttpRootEntry({
+            spans,
+            apiPath: '/trace',
+            pid: String(controls.getPid())
+          });
+
+          verifyExitSpan({
+            spanName: 'otel',
+            spans,
+            parent: httpEntry,
+            withError: false,
+            pid: String(controls.getPid()),
+            dataProperty: 'tags',
+            extraTests: span => {
+              expect(span.data.tags.name).to.eql('oracledb.Connection.execute');
+              expect(span.data.tags['db.system.name']).to.eql('oracle.db');
+              expect(span.data.tags['server.address']).to.eql('localhost');
+              checkTelemetryResourceAttrs(span);
+            }
+          });
+        });
+      });
+
+      it('[suppressed] should not trace', async () => {
+        return controls
+          .sendRequest({
+            method: 'GET',
+            path: '/trace',
+            suppressTracing: true
+          })
+          .then(() => delay(DELAY_TIMEOUT_IN_MS))
+          .then(() => {
+            return retry(async () => {
+              const spans = await agentControls.getSpans();
+              expect(spans).to.be.empty;
+            });
+          });
+      });
+    });
+
+    describe('opentelemetry is disabled', function () {
+      globalAgent.setUpCleanUpHooks();
+      const agentControls = globalAgent.instance;
+
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          appPath: path.join(__dirname, './oracle-app'),
+          useGlobalAgent: true,
+          cwd: __dirname,
+          env: {
+            INSTANA_DISABLE_USE_OPENTELEMETRY: true
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
+
+      it('should trace instana spans only', () =>
+        controls
+          .sendRequest({
+            method: 'GET',
+            path: '/trace'
+          })
+          .then(() =>
+            retry(() =>
+              agentControls.getSpans().then(spans => {
+                expect(spans.length).to.equal(1);
+
+                verifyHttpRootEntry({
+                  spans,
+                  apiPath: '/trace',
+                  pid: String(controls.getPid())
+                });
+              })
+            )
+          ));
     });
   });
 });
