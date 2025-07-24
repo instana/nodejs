@@ -15,13 +15,23 @@ require('@instana/core/test/test_util/loadExpressV4');
 require('../../../../../..')();
 
 const { ApolloServer } = require('@apollo/server');
-const { expressMiddleware } = require('@apollo/server/express4');
 const { buildSubgraphSchema } = require('@apollo/subgraph');
 const bodyParser = require('body-parser');
 const express = require('express');
 const http = require('http');
 const morgan = require('morgan');
 const { gql } = require('graphql-tag');
+
+// In Apollo Server v5, use @as-integrations/express5; otherwise, fall back to the built-in v4 middleware.
+const apolloServerVersion = process.env.APOLLO_SERVER_VERSION || 'latest';
+
+let expressMiddleware;
+
+if (apolloServerVersion === 'latest') {
+  ({ expressMiddleware } = require('@as-integrations/express5'));
+} else {
+  ({ expressMiddleware } = require('@apollo/server-v4/express4'));
+}
 
 const port = require('../../../../../test_util/app-port')();
 const app = express();
