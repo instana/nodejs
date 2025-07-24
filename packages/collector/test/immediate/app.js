@@ -11,8 +11,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('@instana/core/test/test_util/loadExpressV4');
-
 // This application is deliberately not instrumented manually with require('@instana/collector'), it is meant to be used
 // with NODE_OPTIONS="--require ...".
 
