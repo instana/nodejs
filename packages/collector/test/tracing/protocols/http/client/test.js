@@ -148,6 +148,60 @@ mochaSuiteFn('tracing/http client', function () {
       });
     });
   });
+
+  describe('when endpoints are configured to be ignored', function () {
+    let serverControls;
+    let clientControls;
+
+    before(async () => {
+      serverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'serverApp'),
+        useGlobalAgent: true,
+        appUsesHttps: false
+      });
+      clientControls = new ProcessControls({
+        appPath: path.join(__dirname, 'clientApp'),
+        useGlobalAgent: true,
+        appUsesHttps: false,
+        env: {
+          SERVER_PORT: serverControls.getPort(),
+          INSTANA_IGNORE_ENDPOINTS: 'http:get'
+        }
+      });
+
+      await serverControls.startAndWaitForAgentConnection();
+      await clientControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await globalAgent.instance.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await serverControls.stop();
+      await clientControls.stop();
+    });
+
+    afterEach(async () => {
+      await serverControls.clearIpcMessages();
+      await clientControls.clearIpcMessages();
+    });
+
+    it('should not trace request', () => {
+      return clientControls
+        .sendRequest({
+          method: 'GET',
+          path: '/get-url-only'
+        })
+        .then(() => {
+          return retry(() => {
+            return globalAgent.instance.getSpans().then(spans => {
+              expect(spans.length).to.equal(0);
+            });
+          });
+        });
+    });
+  });
 });
 
 function registerTests(appUsesHttps) {

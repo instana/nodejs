@@ -86,13 +86,37 @@ function instrumentClientHttp2Session(clientHttp2Session) {
     for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
+    let method;
+    let path;
+    let status;
+    const stream = originalRequest.apply(originalThis, originalArgs);
+    const origin = readSymbolProperty(stream, originS);
+    const reqHeaders = readSymbolProperty(stream, sentHeadersS);
+    let capturedHeaders = getExtraHeadersCaseInsensitive(reqHeaders, extraHttpHeadersToCapture);
+    if (reqHeaders) {
+      method = reqHeaders[HTTP2_HEADER_METHOD];
+      path = reqHeaders[HTTP2_HEADER_PATH];
+    }
+    method = method || 'GET';
+    path = path || '/';
 
+    const pathWithoutQuery = sanitizeUrl(path);
+    const params = splitAndFilter(path);
+
+    const spanData = {
+      http: {
+        operation: method,
+        endpoints: origin + pathWithoutQuery,
+        params
+      }
+    };
     return cls.ns.runAndReturn(() => {
       const span = cls.startSpan({
         spanName: 'node.http.client',
         kind: constants.EXIT,
         traceId: parentSpan?.t,
-        parentSpanId: parentSpan?.s
+        parentSpanId: parentSpan?.s,
+        spanData
       });
 
       // startSpan updates the W3C trace context and writes it back to CLS, so we have to refetch the updated context
@@ -101,32 +125,7 @@ function instrumentClientHttp2Session(clientHttp2Session) {
 
       addHeaders(headers, span, w3cTraceContext);
 
-      const stream = originalRequest.apply(originalThis, originalArgs);
-
-      const origin = readSymbolProperty(stream, originS);
-      const reqHeaders = readSymbolProperty(stream, sentHeadersS);
-      let capturedHeaders = getExtraHeadersCaseInsensitive(reqHeaders, extraHttpHeadersToCapture);
-
-      let method;
-      let path;
-      let status;
-      if (reqHeaders) {
-        method = reqHeaders[HTTP2_HEADER_METHOD];
-        path = reqHeaders[HTTP2_HEADER_PATH];
-      }
-      method = method || 'GET';
-      path = path || '/';
-
-      const pathWithoutQuery = sanitizeUrl(path);
-      const params = splitAndFilter(path);
-
       span.stack = tracingUtil.getStackTrace(request);
-
-      span.data.http = {
-        method,
-        url: origin + pathWithoutQuery,
-        params
-      };
 
       stream.on('response', resHeaders => {
         status = resHeaders[HTTP2_HEADER_STATUS];
@@ -162,6 +161,11 @@ function addTraceLevelHeader(headers, level, w3cTraceContext) {
 
 function addHeaders(headers, span, w3cTraceContext) {
   if (!headers) {
+    return;
+  }
+  if (span.shouldSuppressDownstream) {
+    // Suppress trace propagation to downstream services.
+    addTraceLevelHeader(headers, '0', w3cTraceContext);
     return;
   }
   headers[constants.spanIdHeaderName] = span.s;

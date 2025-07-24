@@ -9,6 +9,8 @@
  */
 let ignoreEndpoints;
 
+let spanTypeKey = '';
+
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} config
  */
@@ -43,7 +45,7 @@ function activate(extraConfig) {
 }
 
 // List of span types to allowed to ignore
-const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka'];
+const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka', 'node.http.server', 'node.http.client', 'http'];
 
 /**
  * @param {import('../core').InstanaBaseSpan} span
@@ -52,7 +54,7 @@ const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka'];
  */
 function matchEndpoints(span, ignoreconfig) {
   // Parse the endpoints from the span data.
-  const spanEndpoints = parseSpanEndpoints(span.data[span.n]?.endpoints);
+  const spanEndpoints = parseSpanEndpoints(span.data[spanTypeKey]?.endpoints);
   if (!spanEndpoints.length) {
     return false;
   }
@@ -89,7 +91,7 @@ function matchEndpoints(span, ignoreconfig) {
  * @returns {boolean}
  */
 function matchMethods(span, ignoreconfig) {
-  const spanOperation = span.data[span.n]?.operation?.toLowerCase();
+  const spanOperation = span.data[spanTypeKey]?.operation?.toLowerCase();
   let methodMatches = false;
 
   if (ignoreconfig.methods) {
@@ -108,7 +110,7 @@ function matchMethods(span, ignoreconfig) {
  * @returns {boolean}
  */
 function matchConnections(span, ignoreconfig) {
-  const spanOperation = span.data[span.n]?.connection?.toLowerCase();
+  const spanOperation = span.data[spanTypeKey]?.connection?.toLowerCase();
   let connectionMatches = false;
 
   if (ignoreconfig.connections) {
@@ -133,8 +135,13 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
     return false;
   }
 
-  const ignoreConfigs = ignoreEndpointsConfig[span.n];
-  if (!ignoreConfigs) {
+  spanTypeKey = resolveSpanTypeKey(span.n);
+  if (!spanTypeKey) {
+    return false;
+  }
+
+  const ignoreConfigs = ignoreEndpointsConfig[spanTypeKey];
+  if (!ignoreConfigs || !Array.isArray(ignoreConfigs)) {
     return false;
   }
 
@@ -162,6 +169,20 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
     }
     return false;
   });
+}
+
+/**
+ * Resolves the effective span type key to be used for configuration lookup.
+ * Both 'node.http.server' and 'node.http.client' map to a shared 'http' config.
+ *
+ * @param {string} spanType - The span type (e.g., span.n).
+ * @returns {string} - The resolved span key.
+ */
+function resolveSpanTypeKey(spanType) {
+  if (spanType === 'node.http.server' || spanType === 'node.http.client') {
+    return 'http';
+  }
+  return spanType;
 }
 
 /**
@@ -201,4 +222,4 @@ function parseSpanEndpoints(endpoints) {
   return [];
 }
 
-module.exports = { applyFilter, activate, init, shouldIgnore };
+module.exports = { applyFilter, activate, init, shouldIgnore, resolveSpanTypeKey };
