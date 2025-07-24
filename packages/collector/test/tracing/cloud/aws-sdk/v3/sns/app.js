@@ -19,13 +19,20 @@ const app = express();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const port = require('../../../../../test_util/app-port')();
 const sns = require('@aws-sdk/client-sns');
-const { StandardRetryStrategy } = require('@aws-sdk/util-retry');
+const { StandardRetryStrategy } = require('@aws-sdk/middleware-retry');
 
 const logPrefix = `AWS SDK v3 SNS (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 
-const maxAttempts = 5;
-const retryStrategy = new StandardRetryStrategy(async () => maxAttempts);
+const maxAttempts = 6;
+const customRetryStrategy = new StandardRetryStrategy(async () => maxAttempts, {
+  retryDecider: err => {
+    // eslint-disable-next-line no-console
+    console.log('Not connected to LocalStack, retrying...', err.code);
+    return true;
+  },
+  delayDecider: () => 5000
+});
 
 const clientOpts = {
   credentials: {
@@ -34,7 +41,7 @@ const clientOpts = {
   },
   endpoint: process.env.LOCALSTACK_AWS,
   region: 'us-east-2',
-  retryStrategy
+  retryStrategy: customRetryStrategy
 };
 
 const client = new sns.SNSClient(clientOpts);

@@ -47,12 +47,31 @@ const awsRegion = 'us-east-2';
 let sqs;
 let sqsv2;
 
+// CASE: sns uses this receiver as well and forwards localstack endpoint
 if (process.env.AWS_ENDPOINT) {
-  sqs = new awsSdk3.SQSClient({ region: awsRegion, endpoint: process.env.AWS_ENDPOINT });
-  sqsv2 = new awsSdk3.SQS({ region: awsRegion, endpoint: process.env.AWS_ENDPOINT });
+  sqs = new awsSdk3.SQSClient({
+    region: awsRegion,
+    endpoint: process.env.AWS_ENDPOINT,
+    credentials: {
+      accessKeyId: 'test',
+      secretAccessKey: 'test'
+    }
+  });
+  sqsv2 = new awsSdk3.SQS({
+    region: awsRegion,
+    endpoint: process.env.AWS_ENDPOINT,
+    credentials: {
+      accessKeyId: 'test',
+      secretAccessKey: 'test'
+    }
+  });
 } else {
-  sqs = new awsSdk3.SQSClient({ region: awsRegion });
-  sqsv2 = new awsSdk3.SQS({ region: awsRegion });
+  sqs = new awsSdk3.SQSClient({
+    region: awsRegion
+  });
+  sqsv2 = new awsSdk3.SQS({
+    region: awsRegion
+  });
 }
 // Keep the default value above 5, as tests can fail if not all messages are fetched.
 let sqsPollDelay = 7;
