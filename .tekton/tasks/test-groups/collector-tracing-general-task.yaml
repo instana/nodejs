@@ -27,7 +27,7 @@ spec:
       image: gvenzl/oracle-xe:18.4.0-slim
       imagePullPolicy: IfNotPresent
       env:
-          - name: "ORACLE_PWD"
+          - name: "ORACLE_PASSWORD"
             value: "teamnodejstest"
           - name: "APP_USER"
             value: "teamnodejs"
