@@ -77,7 +77,7 @@ exports.init = function init(config = {}) {
   let parentLogger;
 
   // CASE: prevent circular references
-  if (config.logger && config.logger instanceof InstanaServerlessLogger) {
+  if (config.logger && config.logger instanceof InstanaServerlessLogger && config.logger.logger) {
     config.logger = config.logger.logger;
   }
 
