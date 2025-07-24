@@ -16,12 +16,12 @@ require('../../../../src')({
     useOpentelemetry: false
   }
 });
-
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const fetch = require('node-fetch-v2');
 
 function main() {
   setTimeout(async () => {
-    await fetch('https://example.com');
+    await fetch(`http://127.0.0.1:${agentPort}`);
   }, 100);
 }
 

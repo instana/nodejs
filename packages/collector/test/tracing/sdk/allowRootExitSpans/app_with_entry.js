@@ -16,6 +16,7 @@ const instana = require('../../../../src')({
     useOpentelemetry: false
   }
 });
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const { delay } = require('../../../../../core/test/test_util');
 const fetch = require('node-fetch-v2');
 
@@ -24,7 +25,7 @@ const executeRequest = async () => {
 
   try {
     await instana.sdk.async.startEntrySpan('my-translation-service');
-    await fetch('https://example.com');
+    await fetch(`http://127.0.0.1:${agentPort}`);
   } catch (err) {
     error = err;
   } finally {
