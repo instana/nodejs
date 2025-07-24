@@ -14,7 +14,7 @@ require('@instana/core/test/test_util/loadExpressV4');
 
 /* eslint-disable no-console */
 
-require('../../..')({
+require('./node_modules/@instana/collector')({
   tracing: {
     useOpentelemetry: process.env.OTEL_ENABLED
   }
