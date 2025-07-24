@@ -21,7 +21,7 @@ const main = async () => {
   try {
     await delay(100);
     await fetch('https://example.com');
-    await fetch('https://www.example.com');
+    await fetch('https://example.com');
   } catch (err) {
     /* eslint-disable no-console */
     console.log(err);

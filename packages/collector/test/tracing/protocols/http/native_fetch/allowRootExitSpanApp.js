@@ -13,12 +13,14 @@ process.on('SIGTERM', () => {
 require('../../../../..')();
 const { delay } = require('../../../../../../core/test/test_util');
 
-const main = async () => {
-  setTimeout(async () => {
-    await fetch('https://example.com');
+// eslint-disable-next-line no-console
+console.log('Starting allowRootExitSpanApp...');
 
-    await fetch('https://www.example.com');
-  }, 100);
+const main = async () => {
+  await delay(100);
+  await fetch('https://example.com');
+
+  await fetch('https://example.com');
 };
 
 const app = async () => {
@@ -33,6 +35,15 @@ const app = async () => {
     // eslint-disable-next-line no-await-in-loop
     await delay(500);
   }
+  // eslint-disable-next-line no-console
+  console.log('allowRootExitSpanApp finished');
+  // TODO: Our tracer does not support exiting without a hard exit (restart, process.exit, kill etc.)
+  //       For workers we would have to add e.g. `instana.sdk.shutdown()` because we don't know if
+  //       the worker is about to end or not.
+  //       We need this manual `process.exit(0)` here because the tracer will
+  //       continue with its tasks (e.g. connecting to the agent) and this will block
+  //       the process from exiting.
+  process.exit(0);
 };
 
 app();
