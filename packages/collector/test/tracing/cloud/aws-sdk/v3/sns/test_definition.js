@@ -48,6 +48,7 @@ function start(version) {
   let appControls;
 
   before(async () => {
+    // TODO: move into the app.js file
     const queue = await utils.createQueue(queueName);
     const topic = await utils.createTopic(topicName);
 
@@ -58,6 +59,11 @@ function start(version) {
   });
 
   after(async () => {
+    // CASE: queue was not created in before hook
+    if (!queueUrl) {
+      return;
+    }
+
     await utils.removeQueue(queueUrl);
   });
 
@@ -84,7 +90,7 @@ function start(version) {
         });
 
         await receiverControls.startAndWaitForAgentConnection();
-        await appControls.startAndWaitForAgentConnection();
+        await appControls.startAndWaitForAgentConnection(5000, Date.now() + 10000);
       });
 
       beforeEach(async () => {
