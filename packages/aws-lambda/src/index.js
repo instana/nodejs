@@ -23,7 +23,7 @@ const path = require('path');
 console.log('@instana/aws-lambda module version:', require(path.join(__dirname, '..', 'package.json')).version);
 
 // TODO: we currently call "log.init()" twice. Once here
-//       and once in the activate.js. Please merge.
+//       and once in the wrapper.js. Please merge.
 const logger = log.init();
 environmentUtil.init({ logger });
 
