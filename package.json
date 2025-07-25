@@ -97,7 +97,7 @@
     "@aws-sdk/client-ssm": "^3.679.0",
     "@aws-sdk/lib-dynamodb": "^3.850.0",
     "@aws-sdk/util-retry": "^3.370.0",
-    "@azure/storage-blob": "^12.27.0",
+    "@azure/storage-blob": "^12.28.0",
     "@commitlint/cli": "^14.1.0",
     "@commitlint/config-conventional": "^14.1.0",
     "@elastic/elasticsearch": "^9.0.3",
