@@ -7,7 +7,7 @@ EXCLUDED_TRIGGERS=(
   # "listener_node_21_weekly"
 )
 
-NEXT_TRIGGER_IN_SECONDS=90
+NEXT_TRIGGER_IN_SECONDS=100
 MONITORING_INTERVAL_IN_SECONDS=60
 
 check_login() {
@@ -130,7 +130,12 @@ trigger_all() {
 }
 
 monitor_trigger_runs() {
+  echo "\n\n"
+  echo "############################################"
   echo "🔍 Monitoring pipeline run statuses..."
+  echo "############################################"
+  echo "\n\n"
+
   local TRIGGERS=("$@")
 
   RUNS_RAW=$(ibmcloud dev tekton-pipelineruns "$TEKTON_PROJECT_ID")
