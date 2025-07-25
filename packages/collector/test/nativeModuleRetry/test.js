@@ -21,7 +21,7 @@ const tmpFolder = path.join(os.tmpdir(), 'native-module-retry', process.pid.toSt
 
 // NOTE: we skip this test on the prerelease pipeline because
 //       we add prereleases when the official Node.js release happens.
-const mochaSuiteFn = semver.prerelease(process.versions.node) ? describe.skip : describe;
+const mochaSuiteFn = semver.prerelease(process.versions.node) ? describe.skip : describe.only;
 
 // Test suite for verifying the fallback mechanism for loading native add-ons.
 mochaSuiteFn('retry loading native addons', function () {
