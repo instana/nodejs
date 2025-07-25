@@ -13,8 +13,8 @@ process.on('SIGTERM', () => {
 });
 
 require('@instana/core/test/test_util/loadExpressV4');
+require('./node_modules/@instana/collector')();
 
-require('../../../src')();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');

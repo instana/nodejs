@@ -23,6 +23,16 @@ spec:
           initialDelaySeconds: 3
           periodSeconds: 2
           timeoutSeconds: 10
+    - name: oracledb
+      image: gvenzl/oracle-xe:18.4.0-slim
+      imagePullPolicy: IfNotPresent
+      env:
+          - name: "ORACLE_PASSWORD"
+            value: "teamnodejstest"
+          - name: "APP_USER"
+            value: "teamnodejs"
+          - name: "APP_USER_PASSWORD"
+            value: "teamnodejspassword"
   envFrom:
     - configMapRef:
         name: environment-properties  
