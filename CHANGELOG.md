@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.19.1](https://github.com/instana/nodejs/compare/v4.19.0...v4.19.1) (2025-07-25)
+
+
+### Bug Fixes
+
+* **serverless:** resolved maximum call stack error ([#1877](https://github.com/instana/nodejs/issues/1877)) ([985b3c1](https://github.com/instana/nodejs/commit/985b3c165b0533a068e9e37c1e0b99a1fbfb4da0))
+
+
+### Reverts
+
+* Revert "build: bumped @azure/storage-blob from 12.27.0 to 12.28.0" ([7c29bdd](https://github.com/instana/nodejs/commit/7c29bdd496bbd5b5deaf76f4a846c168db503f21))
+
+
+
+
+
 # [4.19.0](https://github.com/instana/nodejs/compare/v4.18.1...v4.19.0) (2025-07-24)
 
 
