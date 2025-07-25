@@ -1,8 +1,9 @@
 function buildAndCopyModulesDarwin {
   ABI_VERSIONS=$1
   NODEJS_VERSION=$2
+  ARCH=$3
   echo ""
-  echo Building MacOS addons for ABI version $ABI_VERSION with Node.js $NODEJS_VERSION:
+  echo Building MacOS addons for ABI version $ABI_VERSION with Node.js $NODEJS_VERSION and $ARCH:
   nvm install --skip-default-packages $NODEJS_VERSION
   nvm use $NODEJS_VERSION
   rm -rf tmp
@@ -12,15 +13,15 @@ function buildAndCopyModulesDarwin {
   npm install @instana/collector@latest
   pushd node_modules > /dev/null
   echo "Creating native addon tar.gz files"
-  mkdir -p ../../../packages/shared-metrics/addons/darwin/x64/$ABI_VERSION/
-  mkdir -p ../../../packages/collector/addons/darwin/x64/$ABI_VERSION/
+  mkdir -p ../../../packages/shared-metrics/addons/darwin/$ARCH/$ABI_VERSION/
+  mkdir -p ../../../packages/collector/addons/darwin/$ARCH/$ABI_VERSION/
   if [[ -e event-loop-stats ]]; then
-    tar -czf ../../../packages/shared-metrics/addons/darwin/x64/$ABI_VERSION/event-loop-stats.tar.gz event-loop-stats
+    tar -czf ../../../packages/shared-metrics/addons/darwin/$ARCH/$ABI_VERSION/event-loop-stats.tar.gz event-loop-stats
   else
     echo No event-loop-stats package for ABI version $ABI_VERSION on MacOS.
   fi
   if [[ -e gcstats.js ]]; then
-    tar -czf ../../../packages/shared-metrics/addons/darwin/x64/$ABI_VERSION/gcstats.js.tar.gz gcstats.js
+    tar -czf ../../../packages/shared-metrics/addons/darwin/$ARCH/$ABI_VERSION/gcstats.js.tar.gz gcstats.js
   else
     echo No gcstats.js package for ABI version $ABI_VERSION on MacOS.
   fi
