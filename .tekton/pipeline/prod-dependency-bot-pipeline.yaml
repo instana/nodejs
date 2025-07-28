@@ -40,8 +40,8 @@ spec:
       value: $(params.context)
     - name: prerelease
       value: $(params.prerelease)
-    - name: max-prod-pr-limit
-      value: $(params.max-prod-pr-limit)
+    - name: prod-deps-pr-limit
+      value: $(params.prod-deps-pr-limit)
   workspaces:
     - name: artifacts
   tasks:
@@ -150,8 +150,8 @@ spec:
           value: $(params.npm-version)
         - name: type
           value: $(params.type)
-        - name: max-prod-pr-limit
-          value: $(params.max-prod-pr-limit)
+        - name: prod-deps-pr-limit
+          value: $(params.prod-deps-pr-limit)
       workspaces:
         - name: output
           workspace: artifacts

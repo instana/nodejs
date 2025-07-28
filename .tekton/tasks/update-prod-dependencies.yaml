@@ -12,8 +12,8 @@ spec:
       value: $(params.node-version)
     - name: npm-version
       value: $(params.npm-version)
-    - name: max-prod-pr-limit
-      value: $(params.max-prod-pr-limit)
+    - name: prod-deps-pr-limit
+      value: $(params.prod-deps-pr-limit)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -50,6 +50,6 @@ spec:
         gh auth login --with-token
         
         echo "Running production dependency updates..."
-        MAX_PROD_PR_LIMIT=$(params.max-prod-pr-limit) BRANCH=prod-dependency-bot node bin/currency/update-prod-dependencies.js
+        PROD_DEPS_PR_LIMIT=$(params.prod-deps-pr-limit) BRANCH=prod-dependency-bot node bin/currency/update-prod-dependencies.js
 
         

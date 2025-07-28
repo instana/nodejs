@@ -9,14 +9,14 @@ const { execSync } = require('child_process');
 const utils = require('./utils');
 const BRANCH = process.env.BRANCH;
 const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
-const MAX_PROD_PR_LIMIT = process.env.MAX_PROD_PR_LIMIT || 5;
+const PROD_DEPS_PR_LIMIT = process.env.PROD_DEPS_PR_LIMIT || 5;
 const cwd = path.join(__dirname, '..', '..');
 
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
 
 console.log(`BRANCH: ${BRANCH}`);
 console.log(`SKIP_PUSH: ${SKIP_PUSH}`);
-console.log(`MAX_PROD_PR_LIMIT: ${MAX_PROD_PR_LIMIT}`);
+console.log(`PROD_DEPS_PR_LIMIT: ${PROD_DEPS_PR_LIMIT}`);
 
 const updatedProdDeps = [];
 
@@ -36,7 +36,7 @@ pkgPaths.forEach(pkgPath => {
 });
 
 Object.entries(dependencyMap).some(([dep, usageList]) => {
-  if (updatedProdDeps.length >= MAX_PROD_PR_LIMIT) return true;
+  if (updatedProdDeps.length >= PROD_DEPS_PR_LIMIT) return true;
 
   const currentVersion = usageList[0].version.replace(/[^0-9.]/g, '');
   const latestVersion = utils.getLatestVersion({
@@ -100,5 +100,5 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
     console.error(`Failed updating ${dep}: ${err.message}`);
   }
 
-  return updatedProdDeps.length >= MAX_PROD_PR_LIMIT;
+  return updatedProdDeps.length >= PROD_DEPS_PR_LIMIT;
 });
