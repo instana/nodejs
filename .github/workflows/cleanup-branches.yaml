@@ -47,7 +47,7 @@ jobs:
 
           git fetch --prune --all
 
-          for branch in $(git branch -r | grep -E 'origin/(chore-|docs-|fix-|feat-|test-|refactor-|ci-|build-|prod-dependency-bot-)'); do
+          for branch in $(git branch -r | grep -E 'origin/(chore-|docs-|fix-|feat-|test-|refactor-|ci-|build-)'); do
             branch_name=$(echo "$branch" | sed 's|origin/||')
 
             pr_info=$(gh pr list --state merged --base main --head "$branch_name" --json mergedAt)
