@@ -22,7 +22,6 @@ function buildAndCopyModulesLinux {
   echo "Building $dockerfile -> $dockertag"
 
   if [[ "$arch" = "s390x" || "$arch" = "arm64" ]]; then
-    path_arch="$arch"
     docker buildx build \
       --platform=linux/$arch \
       --build-arg BASE_IMAGE=$baseimage \
@@ -30,7 +29,6 @@ function buildAndCopyModulesLinux {
       --load -t "$dockertag" \
       .
   else
-    path_arch="x64"
     docker build \
       --build-arg BASE_IMAGE=$baseimage \
       -f "$dockerfile" \
@@ -49,11 +47,11 @@ fi
   sleep 5
   echo "Copying node_modules from container $dockertag to node_modules_$label"
   docker cp $dockertag:/instana/node_modules node_modules_$label
-  mkdir -p ../packages/shared-metrics/addons/linux/$path_arch/$libcflavour/$abi/
+  mkdir -p ../packages/shared-metrics/addons/linux/$arch/$libcflavour/$abi/
   echo "Creating native addon tar.gz files"
   pushd node_modules_$label > /dev/null
-  tar -czf ../../packages/shared-metrics/addons/linux/$path_arch/$libcflavour/$abi/event-loop-stats.tar.gz event-loop-stats
-  tar -czf ../../packages/shared-metrics/addons/linux/$path_arch/$libcflavour/$abi/gcstats.js.tar.gz gcstats.js
+  tar -czf ../../packages/shared-metrics/addons/linux/$arch/$libcflavour/$abi/event-loop-stats.tar.gz event-loop-stats
+  tar -czf ../../packages/shared-metrics/addons/linux/$arch/$libcflavour/$abi/gcstats.js.tar.gz gcstats.js
   popd > /dev/null
   rm -rf node_modules_$label
   echo "Stopping $dockertag"
