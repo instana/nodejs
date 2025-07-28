@@ -9,7 +9,7 @@ const fs = require('fs');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const semver = require('semver');
 const { execSync } = require('child_process');
-const utils = require('./utils');
+const utils = require('../utils');
 let currencies = require(path.join(__dirname, '..', '..', 'currencies.json'));
 
 currencies = currencies.sort(function (a, b) {

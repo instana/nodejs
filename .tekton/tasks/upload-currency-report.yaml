@@ -33,7 +33,7 @@ spec:
           cd $ARTIFACTS_PATH
 
           echo "Generating report..."
-          node bin/currency/generate-currency-report.js
+          node bin/dependencies/currency/generate-currency-report.js
           echo "Generated report..."
 
           # Key Name: Tracer Reports 041425

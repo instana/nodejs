@@ -9,7 +9,7 @@ const path = require('path');
 const semver = require('semver');
 const { execSync } = require('child_process');
 const currencies = require(path.join(__dirname, '..', '..', 'currencies.json'));
-const utils = require('./utils');
+const utils = require('../utils');
 const MAJOR_UPDATES_MODE = process.env.MAJOR_UPDATES_MODE ? process.env.MAJOR_UPDATES_MODE === 'true' : false;
 const BRANCH = process.env.BRANCH;
 const SKIP_PUSH = process.env.SKIP_PUSH === 'true';

@@ -60,12 +60,12 @@ spec:
 
         if [[ $EXIT_CODE != 0 ]]; then
           echo "Running patch and minor updates..."
-          MAJOR_UPDATES_MODE=false BRANCH=currency-bot node bin/currency/update-currencies.js    
+          MAJOR_UPDATES_MODE=false BRANCH=currency-bot node bin/dependencies/currency/update-currencies.js    
         else
           echo "Open PRs exist for branch currency-bot. Skipping patch/minor updates."
         fi        
 
         echo "Running major updates..."
-        MAJOR_UPDATES_MODE=true BRANCH=currency-bot-major node bin/currency/update-currencies.js
+        MAJOR_UPDATES_MODE=true BRANCH=currency-bot-major node bin/dependencies/currency/update-currencies.js
 
         
