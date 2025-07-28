@@ -24,12 +24,7 @@ console.log(`SKIP_PUSH: ${SKIP_PUSH}`);
 
 if (!MAJOR_UPDATES_MODE) {
   console.log('Preparing patch/minor updates...');
-  execSync('git checkout main', { cwd });
-  execSync('npm i --no-audit', { cwd });
-
-  if (BRANCH !== 'main') {
-    execSync(`git checkout -b ${branchName}`, { cwd });
-  }
+  utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main');
 }
 
 currencies.forEach(currency => {
@@ -60,7 +55,7 @@ currencies.forEach(currency => {
     return;
   }
 
-  installedVersion = installedVersion.replace(/[^0-9.]/g, '');
+  installedVersion = utils.cleanVersionString(installedVersion);
   const latestVersion = utils.getLatestVersion({
     pkgName: currency.name,
     installedVersion: installedVersion,
@@ -86,73 +81,60 @@ currencies.forEach(currency => {
     }
 
     console.log(`Major update available for ${currency.name}.`);
-    execSync('git checkout main', { cwd });
-    execSync('npm i --no-audit', { cwd });
+    branchName = utils.createBranchName(BRANCH, currency.name, latestVersion);
 
-    branchName = `${BRANCH}-${currency.name.replace(/[^a-zA-Z0-9]/g, '')}-${latestVersion.replace(/\./g, '')}`;
-
-    try {
-      execSync(`git ls-remote --exit-code --heads origin ${branchName}`, { cwd });
+    if (utils.branchExists(branchName, cwd)) {
       console.log(`Skipping ${currency.name}. Branch exists.`);
       return;
-    } catch (err) {
-      // ignore err
-      // CASE: branch does not exist, continue
     }
 
-    if (BRANCH !== 'main') {
-      execSync(`git checkout -b ${branchName}`, { cwd });
-    }
+    utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main');
   }
 
   if (isRootDependency) {
-    if (isDevDependency) {
-      console.log(`npm i --save-dev ${currency.name}@${latestVersion} --no-audit`);
-      execSync(`npm i --save-dev ${currency.name}@${latestVersion} --no-audit`, { stdio: 'inherit', cwd });
-    } else {
-      console.log(`npm i --save-optional ${currency.name}@${latestVersion} --no-audit`);
-      execSync(`npm i --save-optional ${currency.name}@${latestVersion} --no-audit`, { stdio: 'inherit', cwd });
-      // NOTE: run an extra npm install after updating the optional dependencies because of
-      //       a bug in npm: https://github.com/npm/cli/issues/7530
-      execSync('npm i', { stdio: 'inherit', cwd });
-    }
+    const saveFlag = isDevDependency ? '--save-dev' : '--save-optional';
+    utils.installPackage({
+      packageName: currency.name,
+      version: latestVersion,
+      cwd,
+      saveFlag
+    });
   } else {
     const subpkg = utils.getPackageName(currency.name);
-    console.log(`npm i --save-dev ${currency.name}@${latestVersion} -w ${subpkg} --no-audit`);
-    execSync(`npm i --save-dev ${currency.name}@${latestVersion} -w ${subpkg} --no-audit`, { stdio: 'inherit', cwd });
+    utils.installPackage({
+      packageName: currency.name,
+      version: latestVersion,
+      cwd,
+      saveFlag: '--save-dev',
+      workspaceFlag: subpkg
+    });
   }
 
   if (MAJOR_UPDATES_MODE) {
-    execSync("git add '*package.json' package-lock.json", { cwd });
-    execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
-
-    if (utils.hasCommits(branchName, cwd)) {
-      if (!SKIP_PUSH) {
-        execSync(`git push origin ${branchName} --no-verify`, { cwd });
-        execSync(
-          // eslint-disable-next-line max-len
-          `gh pr create --base main --head ${branchName} --title "[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}" --body "Tada!"`,
-          { cwd }
-        );
-      }
-    } else {
-      console.log(`Branch ${branchName} has no commits.`);
-    }
+    utils.commitAndCreatePR({
+      packageName: currency.name,
+      currentVersion: installedVersion,
+      newVersion: latestVersion,
+      branchName,
+      cwd,
+      skipPush: SKIP_PUSH,
+      prTitle: `[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}`
+    });
   } else {
+    // For non-major updates, just commit the changes but don't push yet
     execSync("git add '*package.json' package-lock.json", { cwd });
     execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
   }
 });
 
+// For non-major updates, push all changes at once
 if (!MAJOR_UPDATES_MODE) {
   if (utils.hasCommits(branchName, cwd)) {
     if (!SKIP_PUSH) {
       execSync(`git push origin ${branchName} --no-verify`, { cwd });
-      execSync(
-        // eslint-disable-next-line max-len
-        `gh pr create --base main --head ${branchName} --title "[Currency Bot] Bumped patch/minor dependencies" --body "Tada!"`,
-        { cwd }
-      );
+      // eslint-disable-next-line max-len
+      const prTitle = '[Currency Bot] Bumped patch/minor dependencies';
+      execSync(`gh pr create --base main --head ${branchName} --title "${prTitle}" --body "Tada!"`, { cwd });
     }
   } else {
     console.log(`Branch ${branchName} has no commits.`);

@@ -5,7 +5,6 @@
 'use strict';
 
 const path = require('path');
-const { execSync } = require('child_process');
 const utils = require('../utils');
 const BRANCH = process.env.BRANCH;
 const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
@@ -38,7 +37,7 @@ pkgPaths.forEach(pkgPath => {
 Object.entries(dependencyMap).some(([dep, usageList]) => {
   if (updatedProdDeps.length >= PROD_DEPS_PR_LIMIT) return true;
 
-  const currentVersion = usageList[0].version.replace(/[^0-9.]/g, '');
+  const currentVersion = utils.cleanVersionString(usageList[0].version);
   const latestVersion = utils.getLatestVersion({
     pkgName: dep,
     installedVersion: currentVersion,
@@ -47,54 +46,44 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
 
   if (!latestVersion || latestVersion === currentVersion) return false;
 
-  const branchName = `${BRANCH}-${dep.replace(/[^a-zA-Z0-9]/g, '')}-${latestVersion.replace(/\./g, '')}`;
+  const branchName = utils.createBranchName(BRANCH, dep, latestVersion);
 
   console.log(`Preparing PR for ${dep} (${currentVersion} -> ${latestVersion})`);
 
   try {
-    execSync('git checkout main', { cwd });
-    execSync('npm i --no-audit', { cwd });
-
-    try {
-      execSync(`git ls-remote --exit-code --heads origin ${branchName}`, { cwd });
+    if (utils.branchExists(branchName, cwd)) {
       console.log(`Skipping ${dep}. Branch already exists.`);
-      return;
-    } catch (_) {
-      // ignore err
-      // CASE: branch does not exist, continue
+      return false;
     }
 
-    if (BRANCH !== 'main') {
-      execSync(`git checkout -b ${branchName}`, { cwd });
-    }
+    utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main');
 
     usageList.forEach(({ pkgPath }) => {
       const pkgJson = require(pkgPath);
       const pkgDir = path.dirname(pkgPath);
       const targetName = pkgJson.name || pkgDir;
-      console.log(`npm i ${dep}@${latestVersion} -w ${targetName}`);
-      execSync(`npm i ${dep}@${latestVersion} -w ${targetName} --no-audit`, {
-        stdio: 'inherit',
-        cwd
+
+      utils.installPackage({
+        packageName: dep,
+        version: latestVersion,
+        cwd,
+        saveFlag: '',
+        workspaceFlag: targetName
       });
     });
 
-    execSync("git add '*package.json' package-lock.json", { cwd });
-    execSync(`git commit -m "build: bumped ${dep} from ${currentVersion} to ${latestVersion}"`, { cwd });
+    const prCreated = utils.commitAndCreatePR({
+      packageName: dep,
+      currentVersion: currentVersion,
+      newVersion: latestVersion,
+      branchName,
+      cwd,
+      skipPush: SKIP_PUSH,
+      prTitle: `[Prod Dependency Bot] Bumped ${dep} from ${currentVersion} to ${latestVersion}`
+    });
 
-    if (utils.hasCommits(branchName, cwd)) {
-      if (!SKIP_PUSH) {
-        execSync(`git push origin ${branchName} --no-verify`, { cwd });
-        execSync(
-          // eslint-disable-next-line max-len
-          `gh pr create --base main --head ${branchName} --title "[Prod Dependency Bot] Bumped ${dep} from ${currentVersion} to ${latestVersion}" --body "Tada!"`,
-          { cwd }
-        );
-
-        updatedProdDeps.push(dep);
-      }
-    } else {
-      console.log(`Branch ${branchName} has no commits.`);
+    if (prCreated) {
+      updatedProdDeps.push(dep);
     }
   } catch (err) {
     console.error(`Failed updating ${dep}: ${err.message}`);
