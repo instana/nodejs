@@ -10,6 +10,13 @@ EXCLUDED_TRIGGERS=(
 NEXT_TRIGGER_IN_SECONDS=100
 MONITORING_INTERVAL_IN_SECONDS=60
 
+check_if_ibmcloud_installed() {
+  if ! command -v ibmcloud &>/dev/null; then
+    echo "❌ ibmcloud CLI is not installed."
+    exit 1
+  fi
+}
+
 check_login() {
   if ibmcloud target 2>&1 | grep -q "Not logged in"; then
     echo "❌ Not logged in to IBM Cloud."
@@ -184,5 +191,6 @@ monitor_trigger_runs() {
   monitor_trigger_runs "${TRIGGERS[@]}"
 }
 
+check_if_ibmcloud_installed
 check_login
 trigger_all
