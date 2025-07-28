@@ -167,7 +167,7 @@ mochaSuiteFn('retry loading native addons', function () {
         await controls.clearIpcMessages();
       });
 
-      describe(opts.name, () => {
+      describe.only(opts.name, () => {
         it('metrics from native add-ons should become available at some point', async () => {
           await retry(async () => {
             const [aggregatedMetrics, events] = await Promise.all([
