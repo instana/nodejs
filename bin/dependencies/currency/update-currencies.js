@@ -89,7 +89,7 @@ currencies.forEach(currency => {
     execSync('git checkout main', { cwd });
     execSync('npm i --no-audit', { cwd });
 
-    branchName = `${BRANCH}-${currency.name.replace(/[^a-zA-Z0-9]/g, '')}`;
+    branchName = `${BRANCH}-${currency.name.replace(/[^a-zA-Z0-9]/g, '')}-${latestVersion.replace(/\./g, '')}`;
 
     try {
       execSync(`git ls-remote --exit-code --heads origin ${branchName}`, { cwd });
