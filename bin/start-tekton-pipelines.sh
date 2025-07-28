@@ -20,7 +20,7 @@ check_if_ibmcloud_installed() {
 check_login() {
   if ibmcloud target 2>&1 | grep "Not logged in"; then
     echo "❌ Not logged in to IBM Cloud."
-    echo "👉 Please visit https://cloud.ibm.com/devops/pipelines/tekton/$TEKTON_PROJECT_ID"
+    echo "👉 Please visit https://cloud.ibm.com and click login via CLI in the menu."
     exit 1
   else
     echo "✅ IBM Cloud login detected."
