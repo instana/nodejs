@@ -40,7 +40,7 @@ fi
 
   echo "docker build exit status: $?"
   echo "Running $dockertag"
-  if [ "$arch" = "s390x" ]; then
+  if [ "$arch" = "s390x" || "$arch" = "arm64" ]; then
     docker run --platform=linux/$arch -t -d --name "$dockertag" "$dockertag"
   else
     docker run -t -d --name "$dockertag" "$dockertag"
