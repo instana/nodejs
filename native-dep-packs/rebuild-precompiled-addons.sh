@@ -77,7 +77,7 @@ if [[ ! -z "$BUILD_FOR_MACOS" ]]; then
 
     # Finding the native arch of host machine
     case "$(uname -m)" in
-      x86_64) ARCH="x64" ;;
+      x86_64|amd64) ARCH="x64" ;;
       arm64|aarch64) ARCH="arm64" ;;
       *) echo "Not supported arch type: $(uname -m)" >&2; exit 1 ;;
     esac
