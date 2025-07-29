@@ -45,7 +45,7 @@ function activate(extraConfig) {
 }
 
 // List of span types to allowed to ignore
-const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka', 'node.http.server', 'node.http.client', 'http'];
+const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka', 'node.http.server'];
 
 /**
  * @param {import('../core').InstanaBaseSpan} span
@@ -135,7 +135,7 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
     return false;
   }
 
-  spanTypeKey = resolveSpanTypeKey(span.n);
+  spanTypeKey = normalizeSpanTypeKey(span.n);
   if (!spanTypeKey) {
     return false;
   }
@@ -172,13 +172,16 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
 }
 
 /**
- * Resolves the effective span type key to be used for configuration lookup.
- * Both 'node.http.server' and 'node.http.client' map to a shared 'http' config.
+ * Resolves the configuration key for a given span type.
+ * In most cases, the span name (`span.n`) and the configuration key (`span.data[spanTypeKey]`) are the same.
+ * However, for specific cases like HTTP, they differ:
+ * - `span.n`: 'node.http.server' or 'node.http.client'
+ * - `spanTypeKey`: 'http'
  *
- * @param {string} spanType - The span type (e.g., span.n).
- * @returns {string} - The resolved span key.
+ * @param {string} spanType - The span name (e.g., span.n).
+ * @returns {string} - The normalized span type key.
  */
-function resolveSpanTypeKey(spanType) {
+function normalizeSpanTypeKey(spanType) {
   if (spanType === 'node.http.server' || spanType === 'node.http.client') {
     return 'http';
   }
@@ -222,4 +225,4 @@ function parseSpanEndpoints(endpoints) {
   return [];
 }
 
-module.exports = { applyFilter, activate, init, shouldIgnore, resolveSpanTypeKey };
+module.exports = { applyFilter, activate, init, shouldIgnore, resolveSpanTypeKey: normalizeSpanTypeKey };

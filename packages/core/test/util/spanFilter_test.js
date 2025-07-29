@@ -417,7 +417,7 @@ describe('util.spanFilter', () => {
         expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
       });
 
-      it('should return true when span.n is node.http.client and config has http entry with matching method', () => {
+      it('should return false when span.n is node.http.client and config has http entry with matching method', () => {
         ignoreEndpoints = {
           http: [{ methods: ['POST'] }]
         };
@@ -427,7 +427,7 @@ describe('util.spanFilter', () => {
             operation: 'POST'
           }
         };
-        expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
+        expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
       });
 
       it('should return false when span.n is node.http.client and method does not match', () => {
