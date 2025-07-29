@@ -88,26 +88,13 @@ function instrumentClientHttp2Session(clientHttp2Session) {
     }
     let method;
     let path;
-    let status;
-    const stream = originalRequest.apply(originalThis, originalArgs);
-    const origin = readSymbolProperty(stream, originS);
-    const reqHeaders = readSymbolProperty(stream, sentHeadersS);
-    let capturedHeaders = getExtraHeadersCaseInsensitive(reqHeaders, extraHttpHeadersToCapture);
-    if (reqHeaders) {
-      method = reqHeaders[HTTP2_HEADER_METHOD];
-      path = reqHeaders[HTTP2_HEADER_PATH];
-    }
     method = method || 'GET';
     path = path || '/';
-
-    const pathWithoutQuery = sanitizeUrl(path);
-    const params = splitAndFilter(path);
 
     const spanData = {
       http: {
         operation: method,
-        endpoints: origin + pathWithoutQuery,
-        params
+        endpoints: ''
       }
     };
     return cls.ns.runAndReturn(() => {
@@ -125,7 +112,25 @@ function instrumentClientHttp2Session(clientHttp2Session) {
 
       addHeaders(headers, span, w3cTraceContext);
 
+      const stream = originalRequest.apply(originalThis, originalArgs);
+
+      const origin = readSymbolProperty(stream, originS);
+      const reqHeaders = readSymbolProperty(stream, sentHeadersS);
+      let capturedHeaders = getExtraHeadersCaseInsensitive(reqHeaders, extraHttpHeadersToCapture);
+
+      let status;
+      if (reqHeaders) {
+        method = reqHeaders[HTTP2_HEADER_METHOD];
+        path = reqHeaders[HTTP2_HEADER_PATH];
+      }
+
       span.stack = tracingUtil.getStackTrace(request);
+      const pathWithoutQuery = sanitizeUrl(path);
+      const params = splitAndFilter(path);
+
+      span.data.http.operation = method;
+      span.data.http.endpoints = origin + pathWithoutQuery;
+      span.data.http.params = params;
 
       stream.on('response', resHeaders => {
         status = resHeaders[HTTP2_HEADER_STATUS];
