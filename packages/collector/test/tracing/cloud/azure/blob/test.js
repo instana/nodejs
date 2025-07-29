@@ -56,13 +56,14 @@ if (!storageAccount || !accountKey) {
 } else {
   mochaSuiteFn('tracing/cloud/azure/blob', function () {
     ['latest', 'v1227'].forEach(version => {
+      // NOTE: require-mock is not working with esm apps.
+      // TODO: Support for mocking `import` in ESM apps is planned under INSTA-788.
+      if (process.env.RUN_ESM && version !== 'latest') return;
+
       // @azure/storage-blob v12.28.0 supports Node.js v20.0.0 and later.
       if (version === 'latest' && process.versions.node < '20.0.0') {
         mochaSuiteFn = describe.skip;
       }
-
-      // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
-      if (process.env.RUN_ESM && version !== 'latest') return;
 
       this.timeout(config.getTestTimeout());
       globalAgent.setUpCleanUpHooks();
