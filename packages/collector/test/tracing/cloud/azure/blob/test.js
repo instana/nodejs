@@ -61,6 +61,9 @@ if (!storageAccount || !accountKey) {
         mochaSuiteFn = describe.skip;
       }
 
+      // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
+      if (process.env.RUN_ESM && version !== 'latest') return;
+
       this.timeout(config.getTestTimeout());
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
