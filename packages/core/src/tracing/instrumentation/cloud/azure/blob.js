@@ -16,7 +16,9 @@ let isActive = false;
 exports.spanName = 'azstorage';
 
 exports.init = function init() {
-  hook.onModuleLoad('@azure/storage-blob', instrumentBlob);
+  // Fronm v12.28.0 the package is purely esm and to support esm apps we use the iitm hook
+  // reference: https://github.com/Azure/azure-sdk-for-js/pull/33329
+  hook.onModuleLoad('@azure/storage-blob', instrumentBlob, { nativeEsm: true });
 };
 
 function instrumentBlob(blob) {
