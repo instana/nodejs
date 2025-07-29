@@ -5,7 +5,7 @@ nodejs-license-report.csv
 docker-compose.yaml
 coverage
 /db2
-instana-*.tgz
+*.tgz
 .vscode
 currency-report.md
 *.zip
