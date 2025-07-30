@@ -89,7 +89,7 @@
     "@aws-sdk/client-kinesis": "^3.856.0",
     "@aws-sdk/client-kms": "^3.679.0",
     "@aws-sdk/client-lambda": "^3.856.0",
-    "@aws-sdk/client-s3": "^3.850.0",
+    "@aws-sdk/client-s3": "^3.856.0",
     "@aws-sdk/client-s3-v3": "npm:@aws-sdk/client-s3@3.321.1",
     "@aws-sdk/client-sns": "^3.848.0",
     "@aws-sdk/client-sqs": "^3.854.0",
