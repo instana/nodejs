@@ -17,6 +17,7 @@ const path = require('path');
 let packageToRequire = path.join(__dirname, '..', '..', '..', 'packages/collector');
 if (config.mode === 'npm') {
   packageToRequire = '@instana/collector';
+  console.log('Using NPM');
 }
 
 if (config.collectorEnabled) {
@@ -35,6 +36,8 @@ if (config.collectorEnabled) {
 const downstreamUrl = process.env.DOWNSTREAM_URL;
 const express = require('express');
 const app = express();
+
+app.use(require('express-status-monitor')());
 
 app.get('/', (req, res) => {
   if (config.logRequests) {
