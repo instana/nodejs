@@ -4,8 +4,6 @@
 
 /* eslint-disable no-console */
 
-'use strict';
-
 import { BlobServiceClient, BlobBatchClient, BlobClient, StorageSharedKeyCredential } from '@azure/storage-blob';
 import express from 'express';
 import bodyParser from 'body-parser';

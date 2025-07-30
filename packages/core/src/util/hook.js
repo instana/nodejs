@@ -17,7 +17,8 @@ const isESMApp = require('./esm').isESMApp;
  * Import-in-the-middle
  *
  * Offers support for all native ECMAScript Modules within ESM applications.
- * However, it does not provide support for modules loaded from CJS applications.
+ * - Also supports CJS modules within ESM applications.
+ * - However, it does not support for modules loaded from CJS applications.
  *
  * Note: In the next major release, we might transition all CJS modules in ESM applications to be
  * supported with iitmHook. For now, this approach is chosen to minimize risk.
