@@ -5,7 +5,6 @@
 'use strict';
 
 // eslint-disable-next-line instana/no-unsafe-require, import/no-extraneous-dependencies
-const readYamlFile = require('read-yaml-file');
 const path = require('path');
 
 /**
@@ -35,12 +34,18 @@ exports.init = function init(config) {
  * @param {string} filePath - The absolute path to the YAML file.
  */
 exports.read = function read(filePath) {
+  // increases memory by ~4mb
   try {
     if (!path.isAbsolute(filePath)) {
       logger?.warn(`The file path is not absolute. Expected an absolute path, but received: ${filePath}`);
       return {};
     }
-    return readYamlFile.sync(filePath);
+
+    const readYamlFile = require('read-yaml-file');
+    const result = readYamlFile.sync(filePath);
+
+    delete require.cache[require.resolve('read-yaml-file')];
+    return result;
   } catch (error) {
     logger?.warn(`Error reading YAML file from ${filePath}: ${error?.message}`);
     return {};
