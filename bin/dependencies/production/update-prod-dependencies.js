@@ -19,7 +19,7 @@ console.log(`PROD_DEPS_PR_LIMIT: ${PROD_DEPS_PR_LIMIT}`);
 
 const updatedProdDeps = [];
 
-const packagesDir = path.join(__dirname, '..', '..', 'packages');
+const packagesDir = path.join(__dirname, '..', '..', '..', 'packages');
 const pkgPaths = utils.getPackageJsonPathsUnderPackagesDir(packagesDir);
 
 const dependencyMap = {};

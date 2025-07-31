@@ -13,7 +13,7 @@ const utils = require('../utils');
 const MAJOR_UPDATES_MODE = process.env.MAJOR_UPDATES_MODE ? process.env.MAJOR_UPDATES_MODE === 'true' : false;
 const BRANCH = process.env.BRANCH;
 const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
-const cwd = path.join(__dirname, '..', '..');
+const cwd = path.join(__dirname, '..', '..', '..');
 
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
 let branchName = BRANCH;
