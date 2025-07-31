@@ -36,6 +36,7 @@ module.exports = {
     'func-names': 'off',
     'function-paren-newline': 'off',
     'global-require': 'off',
+    'import/extensions': 'off',
     'header/header': [
       'error',
       'block',

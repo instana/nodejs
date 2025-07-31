@@ -1,5 +1,16 @@
 version: '2'
 services:
+  oracle-xe:
+    image: gvenzl/oracle-xe:18.4.0-slim
+    container_name: oracle-xe
+    ports:
+      - "1521:1521"
+      - "8080:8080"
+    environment:
+      ORACLE_PASSWORD: teamnodejstest
+      APP_USER: teamnodejs
+      APP_USER_PASSWORD: teamnodejspassword
+      
   redis:
     image: redis:7.4.3
     ports:
