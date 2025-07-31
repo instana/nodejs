@@ -674,7 +674,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     });
   });
 
-  describe.only('OracleDB', function () {
+  describe('OracleDB', function () {
     this.timeout(1000 * 60);
 
     describe('opentelemetry is enabled', function () {
