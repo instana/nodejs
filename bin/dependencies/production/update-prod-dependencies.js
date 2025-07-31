@@ -9,7 +9,7 @@ const utils = require('../utils');
 const BRANCH = process.env.BRANCH;
 const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
 const PROD_DEPS_PR_LIMIT = process.env.PROD_DEPS_PR_LIMIT || 5;
-const cwd = path.join(__dirname, '..', '..');
+const cwd = path.join(__dirname, '..', '..', '..');
 
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
 
