@@ -49,6 +49,9 @@ function registerSuite(agentControls, driverMode, useExecute, mysql2Version) {
     // Not applicable, mysql does not provide an execute function, only the query function whereas mysql2 provides both.
     return;
   }
+  // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
+  // TODO: Support for mocking `import` in ESM apps is planned under INSTA-788.
+  if (process.env.RUN_ESM && mysql2Version !== 'latest') return;
 
   describe(`driver mode: ${driverMode} version: ${mysql2Version || 'default'}, access function: ${
     useExecute ? 'execute' : 'query'
