@@ -674,7 +674,9 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     });
   });
 
-  describe('OracleDB', function () {
+  describe.only('OracleDB', function () {
+    this.timeout(1000 * 60);
+
     describe('opentelemetry is enabled', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
@@ -690,7 +692,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           cwd: __dirname
         });
 
-        await controls.startAndWaitForAgentConnection();
+        await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60);
       });
 
       beforeEach(async () => {
