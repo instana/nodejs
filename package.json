@@ -101,7 +101,7 @@
     "@azure/storage-blob-v1227": "npm:@azure/storage-blob@12.27.0",
     "@commitlint/cli": "^14.1.0",
     "@commitlint/config-conventional": "^14.1.0",
-    "@elastic/elasticsearch": "^9.0.3",
+    "@elastic/elasticsearch": "^9.1.0",
     "@elastic/elasticsearch-v7.17.0": "npm:@elastic/elasticsearch@^7.17.0",
     "@elastic/elasticsearch-v7.9.0": "npm:@elastic/elasticsearch@7.9.0",
     "@google-cloud/pubsub": "^5.1.0",
