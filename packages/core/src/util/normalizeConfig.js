@@ -9,6 +9,7 @@
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
 const configNormalizers = require('./configNormalizers');
+const deepMerge = require('./deepMerge');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -17,6 +18,7 @@ const configNormalizers = require('./configNormalizers');
  * @property {boolean} [automaticTracingEnabled]
  * @property {boolean} [activateImmediately]
  * @property {number} [forceTransmissionStartingAt]
+ * @property {number} [initialTransmissionDelay]
  * @property {number} [maxBufferedSpans]
  * @property {number} [transmissionDelay]
  * @property {number} [stackTraceLength]
@@ -100,7 +102,7 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
 let logger;
 
 /** @type {InstanaConfig} */
-const defaults = {
+let defaults = {
   serviceName: null,
   packageJsonPath: null,
 
@@ -118,6 +120,7 @@ const defaults = {
     forceTransmissionStartingAt: 500,
     maxBufferedSpans: 1000,
     transmissionDelay: 1000,
+    initialTransmissionDelay: 1000,
     http: {
       extraHttpHeadersToCapture: []
     },
@@ -147,9 +150,10 @@ const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-igno
 /**
  * @param {InstanaConfig} [config]
  * @param {import('../core').GenericLogger} [_logger]
+ * @param {InstanaConfig} [defaultsOverride]
  * @returns {InstanaConfig}
  */
-module.exports = function normalizeConfig(config, _logger) {
+module.exports = function normalizeConfig(config, _logger, defaultsOverride = {}) {
   if (_logger) {
     logger = _logger;
   } else {
@@ -164,18 +168,26 @@ module.exports = function normalizeConfig(config, _logger) {
     };
   }
 
-  if (config == null) {
-    config = {};
+  if (defaultsOverride && typeof defaultsOverride === 'object') {
+    defaults = deepMerge(defaults, defaultsOverride);
   }
 
-  config.logger = logger;
+  /** @type InstanaConfig */
+  let targetConfig = {};
 
-  normalizeServiceName(config);
-  normalizePackageJsonPath(config);
-  normalizeMetricsConfig(config);
-  normalizeTracingConfig(config);
-  normalizeSecrets(config);
-  return config;
+  // NOTE: Do not modify the original object
+  if (config !== null) {
+    targetConfig = Object.assign({}, config);
+  }
+
+  targetConfig.logger = logger;
+
+  normalizeServiceName(targetConfig);
+  normalizePackageJsonPath(targetConfig);
+  normalizeMetricsConfig(targetConfig);
+  normalizeTracingConfig(targetConfig);
+  normalizeSecrets(targetConfig);
+  return targetConfig;
 };
 
 /**
@@ -414,6 +426,13 @@ function normalizeTracingTransmission(config) {
     defaults.tracing.forceTransmissionStartingAt,
     'config.tracing.forceTransmissionStartingAt',
     'INSTANA_FORCE_TRANSMISSION_STARTING_AT'
+  );
+
+  config.tracing.initialTransmissionDelay = normalizeSingleValue(
+    config.tracing.initialTransmissionDelay,
+    defaults.tracing.initialTransmissionDelay,
+    'config.tracing.initialTransmissionDelay',
+    'INSTANA_TRACING_INITIAL_TRANSMISSION_DELAY'
   );
 }
 

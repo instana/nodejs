@@ -20,7 +20,13 @@ const {
 const region = process.env.REGION || 'us-east-1';
 const released = process.env.RELEASED ? Boolean(process.env.RELEASED) : false;
 const filterTimedOuts = process.env.FILTER_TIMED_OUTS ? Boolean(process.env.FILTER_TIMED_OUTS) : false;
-const functionName = released ? 'teamnodejstracer-released-many-spans' : 'teamnodejstracer-many-spans';
+const avoidColdStart = process.env.AVOID_COLD_START ? Boolean(process.env.AVOID_COLD_START) : false;
+let functionName = released ? 'teamnodejstracer-released-many-spans' : 'teamnodejstracer-many-spans';
+
+if (process.env.FUNCTION_NAME) {
+  functionName = process.env.FUNCTION_NAME;
+}
+
 const cloudWatchLogsClient = new CloudWatchLogsClient({ region });
 
 async function getFunctionUrl() {
@@ -115,10 +121,12 @@ async function loadTest() {
   }
 
   console.log(`Executing ${requests}...`);
+  let response;
 
-  // Avoid cold start
-  let response = await fetch(functionUrl);
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  if (avoidColdStart) {
+    response = await fetch(functionUrl);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
 
   for (let i = 1; i <= requests; i++) {
     const start = process.hrtime.bigint();
@@ -137,7 +145,7 @@ async function loadTest() {
   console.log(`Executed ${requests}...`);
 
   console.log('Fetching billed duration...');
-  await new Promise(resolve => setTimeout(resolve, 1000 * 300));
+  await new Promise(resolve => setTimeout(resolve, 1000 * 200));
 
   const billedDurations = [];
   for (const id of Object.keys(requestIds)) {

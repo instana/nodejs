@@ -19,13 +19,16 @@ const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
 const { tracingHeaders, constants, spanBuffer } = tracing;
 
-const logger = log.init();
-let config = normalizeConfig({}, logger);
+const lambdaConfigDefaults = {
+  tracing: { forceTransmissionStartingAt: 25, transmissionDelay: 100, initialTransmissionDelay: 100 }
+};
 
+const logger = log.init();
+let config = normalizeConfig({}, logger, lambdaConfigDefaults);
 let coldStart = true;
 
-// Initialize instrumentations early to allow for require statements after our package has been required but before the
-// actual instana.wrap(...) call.
+// Initialize instrumentations early to allow for require statements after our
+// package has been required but before the actual instana.wrap(...) call.
 instanaCore.preInit(config);
 
 /**
@@ -238,11 +241,11 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
  * Initialize the wrapper.
  */
 function init(event, arnInfo, _config) {
-  config = _config || {};
+  const customConfig = _config || {};
 
   // CASE: customer provides a custom logger or custom level
-  if (config.logger || config.level) {
-    log.init(config);
+  if (customConfig.logger || customConfig.level) {
+    log.init(customConfig);
   }
 
   // NOTE: We SHOULD renormalize because of:
@@ -250,7 +253,7 @@ function init(event, arnInfo, _config) {
   //         - late env variables (less likely)
   //         - custom logger
   //         - we always renormalize unconditionally to ensure safety.
-  config = normalizeConfig(config, logger);
+  config = normalizeConfig(customConfig, logger, lambdaConfigDefaults);
 
   if (!config.tracing.enabled) {
     return false;
@@ -271,9 +274,12 @@ function init(event, arnInfo, _config) {
   backendConnector.init({
     config,
     identityProvider,
-    stopSendingOnFailure: true,
     defaultTimeout: 500,
-    useLambdaExtension
+    useLambdaExtension,
+    isLambdaRequest: true,
+    // NOTE: We only retry for the extension, because if the extenion is not used, the time to transmit
+    //       the data to the serverless acceptor directly takes too long.
+    retries: !!useLambdaExtension
   });
 
   instanaCore.init(config, backendConnector, identityProvider);
