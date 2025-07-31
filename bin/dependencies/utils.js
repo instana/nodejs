@@ -14,27 +14,27 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 
 exports.getRootDependencyVersion = name => {
-  const pkgjson = require(path.join(__dirname, '..', '..', '..', 'package.json'));
+  const pkgjson = require(path.join(__dirname, '..', '..', 'package.json'));
   return pkgjson.devDependencies[name] || pkgjson.optionalDependencies[name];
 };
 
 exports.getDevDependencyVersion = name => {
-  const pkgjson = require(path.join(__dirname, '..', '..', '..', 'package.json'));
+  const pkgjson = require(path.join(__dirname, '..', '..', 'package.json'));
   return pkgjson.devDependencies[name];
 };
 
 exports.getOptionalDependencyVersion = name => {
-  const pkgjson = require(path.join(__dirname, '..', '..', '..', 'package.json'));
+  const pkgjson = require(path.join(__dirname, '..', '..', 'package.json'));
   return pkgjson.optionalDependencies[name];
 };
 
 exports.getPackageName = name => {
-  const dirs = fs.readdirSync(path.join(__dirname, '..', '..', '..', 'packages'));
+  const dirs = fs.readdirSync(path.join(__dirname, '..', '..', 'packages'));
   let targetPkg;
 
   dirs.forEach(dir => {
     try {
-      const subpkgjson = require(path.join(__dirname, '..', '..', '..', 'packages', dir, 'package.json'));
+      const subpkgjson = require(path.join(__dirname, '..', '..', 'packages', dir, 'package.json'));
       if (subpkgjson.devDependencies?.[name] || subpkgjson.optionalDependencies?.[name]) {
         targetPkg = `packages/${dir}`;
       }
@@ -47,12 +47,12 @@ exports.getPackageName = name => {
 };
 
 exports.getPackageDependencyVersion = name => {
-  const dirs = fs.readdirSync(path.join(__dirname, '..', '..', '..', 'packages'));
+  const dirs = fs.readdirSync(path.join(__dirname, '..', '..', 'packages'));
 
   return dirs
     .map(dir => {
       try {
-        const subpkgjson = require(path.join(__dirname, '..', '..', '..', 'packages', dir, 'package.json'));
+        const subpkgjson = require(path.join(__dirname, '..', '..', 'packages', dir, 'package.json'));
         return subpkgjson.devDependencies?.[name] || subpkgjson.optionalDependencies?.[name];
       } catch (error) {
         return undefined;
@@ -270,6 +270,7 @@ exports.commitAndCreatePR = options => {
     if (!skipPush) {
       execSync(`git push origin ${branchName} --no-verify`, { cwd });
       execSync(`gh pr create --base main --head ${branchName} --title "${prTitle}" --body "Tada!"`, { cwd });
+      console.log(`Pushed the branch: ${branchName} and raised PR`);
       return true;
     }
   } else {
