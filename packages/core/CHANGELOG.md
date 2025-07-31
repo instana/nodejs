@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.21.0](https://github.com/instana/nodejs/compare/v4.20.0...v4.21.0) (2025-07-31)
+
+
+### Bug Fixes
+
+* **collector:** reduced memory consumption in yaml reader component ([#1885](https://github.com/instana/nodejs/issues/1885)) ([2da490c](https://github.com/instana/nodejs/commit/2da490c06da7c914fdd1faa06ca24336781e501d))
+
+
+### Features
+
+* **aws-lambda:** improved overhaul performance ([#1315](https://github.com/instana/nodejs/issues/1315)) ([4620113](https://github.com/instana/nodejs/commit/46201132dac6a73e7719d085c4edaa5c5a5ae526))
+
+
+
+
+
 # [4.20.0](https://github.com/instana/nodejs/compare/v4.19.1...v4.20.0) (2025-07-30)
 
 
