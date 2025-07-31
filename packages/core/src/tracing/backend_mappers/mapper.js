@@ -47,7 +47,7 @@ const fieldMappings = {
  * @returns {import('../../core').InstanaBaseSpan} The transformed span.
  */
 module.exports.transform = span => {
-  const spanName = spanFilter.resolveSpanTypeKey(span.n);
+  const spanName = spanFilter.normalizeSpanDataTypeKey(span.n);
   const mappings = fieldMappings[spanName];
   // If no mappings exist for the span name or the span data, return the original span
   if (!mappings || !span.data[spanName]) return span;

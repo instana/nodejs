@@ -135,7 +135,7 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
     return false;
   }
 
-  spanTypeKey = normalizeSpanTypeKey(span.n);
+  spanTypeKey = normalizeSpanDataTypeKey(span.n);
   if (!spanTypeKey) {
     return false;
   }
@@ -173,19 +173,28 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
 
 /**
  * Resolves the configuration key for a given span type.
- * In most cases, the span name (`span.n`) and the configuration key (`span.data[spanTypeKey]`) are the same.
- * However, for specific cases like HTTP, they differ:
- * - `span.n`: 'node.http.server' or 'node.http.client'
- * - `spanTypeKey`: 'http'
+ *
+ * For specific span names like 'node.http.server', 'node.http.client', and 'graphql.server',
+ * the normalized span data key is 'http'. This ensures that they share the same field mapping logic.
+ *
+ * Note:
+ * Although 'graphql.server' contains both GraphQL and HTTP-related data,
+ * we currently map it only to 'http' for field transformation. A separate
+ * 'graphql' field mapping may be added in the future if needed.
+ *
  *
  * @param {string} spanType - The span name (e.g., span.n).
  * @returns {string} - The normalized span type key.
  */
-function normalizeSpanTypeKey(spanType) {
-  if (spanType === 'node.http.server' || spanType === 'node.http.client') {
-    return 'http';
+function normalizeSpanDataTypeKey(spanType) {
+  switch (spanType) {
+    case 'node.http.server':
+    case 'node.http.client':
+    case 'graphql.server':
+      return 'http';
+    default:
+      return spanType;
   }
-  return spanType;
 }
 
 /**
@@ -225,4 +234,4 @@ function parseSpanEndpoints(endpoints) {
   return [];
 }
 
-module.exports = { applyFilter, activate, init, shouldIgnore, resolveSpanTypeKey: normalizeSpanTypeKey };
+module.exports = { applyFilter, activate, init, shouldIgnore, normalizeSpanDataTypeKey: normalizeSpanDataTypeKey };
