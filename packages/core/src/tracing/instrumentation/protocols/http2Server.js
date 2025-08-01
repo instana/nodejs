@@ -104,16 +104,6 @@ function shimEmit(realEmit) {
         // (like httpClient.js).
         return realEmit.apply(originalThis, originalArgs);
       }
-
-      const span = cls.startSpan({
-        spanName: exports.spanName,
-        kind: constants.ENTRY,
-        traceId: processedHeaders.traceId,
-        parentSpanId: processedHeaders.parentId,
-        w3cTraceContext: w3cTraceContext
-      });
-      tracingHeaders.setSpanAttributes(span, processedHeaders);
-
       const authority = headers[HTTP2_HEADER_AUTHORITY];
       const path = headers[HTTP2_HEADER_PATH] || '/';
       const method = headers[HTTP2_HEADER_METHOD] || 'GET';
@@ -122,14 +112,25 @@ function shimEmit(realEmit) {
       if (pathParts.length >= 2) {
         pathParts[1] = filterParams(pathParts[1]);
       }
-
-      span.data.http = {
-        method,
-        url: sanitizeUrl(pathParts.shift()),
-        params: pathParts.length > 0 ? pathParts.join('?') : undefined,
-        host: authority,
-        header: getExtraHeadersFromNormalizedObjectLiteral(headers, extraHttpHeadersToCapture)
+      const spanData = {
+        http: {
+          operation: method,
+          endpoints: sanitizeUrl(pathParts.shift()),
+          params: pathParts.length > 0 ? pathParts.join('?') : undefined,
+          connection: authority,
+          header: getExtraHeadersFromNormalizedObjectLiteral(headers, extraHttpHeadersToCapture)
+        }
       };
+
+      const span = cls.startSpan({
+        spanName: exports.spanName,
+        kind: constants.ENTRY,
+        traceId: processedHeaders.traceId,
+        parentSpanId: processedHeaders.parentId,
+        w3cTraceContext: w3cTraceContext,
+        spanData
+      });
+      tracingHeaders.setSpanAttributes(span, processedHeaders);
 
       if (!headers['x-instana-t']) {
         // In cases where we have started a fresh trace (that is, there is no X-INSTANA-T in the incoming request
