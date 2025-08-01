@@ -86,7 +86,7 @@
     "@aws-sdk/client-cloudwatch-logs": "^3.696.0",
     "@aws-sdk/client-dynamodb": "^3.858.0",
     "@aws-sdk/client-dynamodb-v3": "npm:@aws-sdk/client-dynamodb@3.20.0",
-    "@aws-sdk/client-kinesis": "^3.857.0",
+    "@aws-sdk/client-kinesis": "^3.858.0",
     "@aws-sdk/client-kms": "^3.679.0",
     "@aws-sdk/client-lambda": "^3.857.0",
     "@aws-sdk/client-s3": "^3.857.0",
