@@ -31,6 +31,10 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 
     globalAgent.setUpCleanUpHooks();
 
+    // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
+    // TODO: Support for mocking `import` in ESM apps is planned under INSTA-788.
+    if (process.env.RUN_ESM && version !== 'latest') return;
+
     publisherControls = require('./publisherControls');
     consumerControls = require('./consumerControls');
 
