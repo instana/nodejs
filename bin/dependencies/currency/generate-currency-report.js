@@ -9,8 +9,8 @@ const fs = require('fs');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const semver = require('semver');
 const { execSync } = require('child_process');
-const utils = require('./utils');
-let currencies = require(path.join(__dirname, '..', '..', 'currencies.json'));
+const utils = require('../utils');
+let currencies = require(path.join(__dirname, '..', '..', '..', 'currencies.json'));
 
 currencies = currencies.sort(function (a, b) {
   const nameA = a.name.toUpperCase();
@@ -143,4 +143,4 @@ function jsonToMarkdown(data) {
 }
 
 const markdown = jsonToMarkdown(currencies);
-fs.writeFileSync(path.join(__dirname, '..', '..', 'currency-report.md'), markdown);
+fs.writeFileSync(path.join(__dirname, '..', '..', '..', 'currency-report.md'), markdown);

@@ -1,0 +1,157 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: prod-dependency-bot-pipeline
+spec:
+  params:
+    - name: repository
+      description: the git repo
+    - name: branch
+      description: branch
+    - name: revision
+      description: the git revision/commit for the git repo
+      default: ""
+    - name: pipeline-debug
+      description: toggles debug mode for the pipeline
+    - name: ibmcloud-api
+      description: the ibmcloud api
+      default: https://cloud.ibm.com
+    - name: pr-branch
+      value: $(params.pr-branch)
+    - name: pr-repository
+      value: $(params.pr-repository)
+    - name: commit-id
+      value: $(params.commit-id)
+    - name: pr-number
+      value: $(params.pr-number)
+    - name: node-version
+      value: $(params.node-version)
+    - name: npm-version
+      value: $(params.npm-version)
+    - name: target-branch
+      value: $(params.target-branch)
+    - name: type
+      value: $(params.type)
+    - name: esm
+      value: $(params.esm)
+    - name: coverage
+      value: $(params.coverage)
+    - name: context
+      value: $(params.context)
+    - name: prerelease
+      value: $(params.prerelease)
+    - name: prod-deps-pr-limit
+      value: $(params.prod-deps-pr-limit)
+  workspaces:
+    - name: artifacts
+  tasks:
+    - name: echo-env
+      taskRef:
+        name: echo-env
+      workspaces:
+        - name: output
+          workspace: artifacts
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)
+        - name: prerelease
+          value: $(params.prerelease) 
+    - name: extract-repository-url
+      taskRef:
+        name: toolchain-extract-value
+      params:
+        - name: expression
+          # if a params.repository is given, it takes precedence
+          value: '. as $toolchain | ["$(params.repository)"] | if .[0]=="" then $toolchain | .services[] | select(.toolchain_binding.name=="repo") | .dashboard_url else .[0] end'
+        - name: pipeline-debug
+          value: $(params.pipeline-debug)
+    - name: git-fetch-repo
+      taskRef:
+        name: git-clone-repo
+      params:
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: repository
+          value: $(tasks.extract-repository-url.results.extracted-value)
+        - name: branch
+          value: $(params.branch)
+        - name: revision
+          value: $(params.revision)
+        - name: pr-number
+          value: $(params.pr-number)          
+        - name: pipeline-debug
+          value: $(params.pipeline-debug)
+        - name: ibmcloud-api
+          value: $(params.ibmcloud-api)
+        - name: pr-repository
+          value: $(params.pr-repository)
+        - name: pr-branch
+          value: $(params.pr-branch)
+      workspaces:
+        - name: output
+          workspace: artifacts              
+    - name: install-npm-dependencies
+      runAfter:
+        - git-fetch-repo
+      taskRef:
+        name: install-npm-dependencies
+      params:
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: skip-cache
+          value: "false"
+        - name: prerelease
+          value: $(params.prerelease)
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: save-cache
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: save-cache
+      params:
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: ibmcloud-apikey-secret-key
+          value: "apikey"
+        - name: target-branch
+          value: $(params.target-branch)
+        - name: node-version
+          value: $(params.node-version)
+        - name: prerelease
+          value: $(params.prerelease)
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: update-prod-dependencies
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: update-prod-dependencies
+      params:
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)
+        - name: type
+          value: $(params.type)
+        - name: prod-deps-pr-limit
+          value: $(params.prod-deps-pr-limit)
+      workspaces:
+        - name: output
+          workspace: artifacts

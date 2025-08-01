@@ -52,6 +52,8 @@ spec:
     - name: prerelease
       value: $(params.prerelease)   
       default: "false"
+    - name: prod-deps-pr-limit
+      value: $(params.prod-deps-pr-limit)
   resourcetemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
@@ -127,3 +129,5 @@ spec:
             value: $(params.skip-cache)         
           - name: prerelease
             value: $(params.prerelease)     
+          - name: prod-deps-pr-limit
+            value: $(params.prod-deps-pr-limit)

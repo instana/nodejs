@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: update-currencies
+  name: update-prod-dependencies
 spec:
   params:
     - name: continuous-delivery-context-secret
@@ -12,6 +12,8 @@ spec:
       value: $(params.node-version)
     - name: npm-version
       value: $(params.npm-version)
+    - name: prod-deps-pr-limit
+      value: $(params.prod-deps-pr-limit)
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -47,25 +49,7 @@ spec:
         
         gh auth login --with-token
         
-        OPEN_PRS=$(gh pr list --head currency-bot --base main --state open --json number | jq 'length')
-  
-        git ls-remote --exit-code --heads origin currency-bot >/dev/null 2>&1
-        EXIT_CODE=$?
-
-        if [[ $EXIT_CODE -eq 0 && $OPEN_PRS -eq 0 ]]; then
-          echo "No open PRs found. Deleting branch currency-bot."
-          git push origin --delete currency-bot
-          EXIT_CODE=1
-        fi
-
-        if [[ $EXIT_CODE != 0 ]]; then
-          echo "Running patch and minor updates..."
-          MAJOR_UPDATES_MODE=false BRANCH=currency-bot node bin/dependencies/currency/update-currencies.js    
-        else
-          echo "Open PRs exist for branch currency-bot. Skipping patch/minor updates."
-        fi        
-
-        echo "Running major updates..."
-        MAJOR_UPDATES_MODE=true BRANCH=currency-bot-major node bin/dependencies/currency/update-currencies.js
+        echo "Running production dependency updates..."
+        PROD_DEPS_PR_LIMIT=$(params.prod-deps-pr-limit) BRANCH=build node bin/dependencies/production/update-prod-dependencies.js
 
         

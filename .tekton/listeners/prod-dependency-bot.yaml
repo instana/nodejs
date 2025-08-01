@@ -1,0 +1,45 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: prod-dependency-bot-binding
+spec:
+  envFrom:
+    - configMapRef:
+        name: environment-properties
+  params:
+    - name: branch
+      value: $(params.target-branch)
+    - name: target-branch
+      value: $(params.target-branch)
+    - name: type
+      value: "prod-dependency-bot"
+    - name: repository
+      value: $(params.repository-url)
+    - name: commit-id
+      value: $(param.commit-id)
+      default: ""
+    - name: node-version
+      value: $(params.node-version)
+      default: ""
+    - name: npm-version
+      value: $(params.npm-version)
+      default: "" 
+    - name: prod-deps-pr-limit
+      value: $(params.prod-deps-pr-limit)
+    - name: pl-name
+      value: "prod-dependency-bot-$(params.node-version)"
+    - name: pipeline-ref
+      value: "prod-dependency-bot-pipeline"
+
+---
+
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: prod-dependency-bot-listener
+spec:
+  triggers:
+    - bindings:
+        - name: prod-dependency-bot-binding
+      template:
+        name: custom-template

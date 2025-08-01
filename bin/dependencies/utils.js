@@ -175,3 +175,139 @@ exports.getDaysBehind = (releaseList, installedVersion, today = new Date()) => {
   // Step 2: Calculate the days
   return calculateDaysDifference(nextVersionDate, today);
 };
+
+exports.hasCommits = (branch, cwd) => {
+  try {
+    const result = execSync(`git log main..${branch} --pretty=format:"%h"`, { cwd }).toString().trim();
+    console.log(`Commits in branch '${branch}' not in 'main':\n${result}`);
+    return result && result.length > 0;
+  } catch (err) {
+    return false;
+  }
+};
+
+exports.getPackageJsonPathsUnderPackagesDir = packagesDir => {
+  const results = [];
+
+  if (!fs.existsSync(packagesDir)) {
+    console.warn(`Directory not found: ${packagesDir}`);
+    return results;
+  }
+
+  const entries = fs.readdirSync(packagesDir, { withFileTypes: true });
+  entries.forEach(entry => {
+    if (entry.isDirectory()) {
+      const pkgJsonPath = path.join(packagesDir, entry.name, 'package.json');
+      if (fs.existsSync(pkgJsonPath)) {
+        results.push(pkgJsonPath);
+      }
+    }
+  });
+
+  return results;
+};
+
+/**
+ * Creates a standardized branch name for dependency updates
+ * @param {string} baseBranch - The base branch name
+ * @param {string} packageName - The package name being updated
+ * @param {string} version - The new version to update to
+ * @returns {string} Formatted branch name
+ */
+exports.createBranchName = (baseBranch, packageName, version) => {
+  return `${baseBranch}-${packageName.replace(/[^a-zA-Z0-9]/g, '')}-${version.replace(/\./g, '')}`;
+};
+
+/**
+ * Checks if a branch already exists in the remote repository
+ * @param {string} branchName - The branch name to check
+ * @param {string} cwd - Current working directory
+ * @returns {boolean} True if branch exists, false otherwise
+ */
+exports.branchExists = (branchName, cwd) => {
+  try {
+    execSync(`git ls-remote --exit-code --heads origin ${branchName}`, { cwd });
+    return true;
+  } catch (err) {
+    return false;
+  }
+};
+
+/**
+ * Prepares the git environment for dependency updates
+ * @param {string} branchName - The branch name to checkout or create
+ * @param {string} cwd - Current working directory
+ * @param {boolean} isMainBranch - Whether the current branch is 'main'
+ */
+exports.prepareGitEnvironment = (branchName, cwd, isMainBranch) => {
+  execSync('git checkout main', { cwd });
+  execSync('npm i --no-audit', { cwd });
+
+  if (!isMainBranch) {
+    execSync(`git checkout -b ${branchName}`, { cwd });
+  }
+};
+
+/**
+ * Commits changes and creates a PR for dependency updates
+ * @param {Object} options - Options object
+ * @param {string} options.packageName - package name being updated
+ * @param {string} options.currentVersion - current version
+ * @param {string} options.newVersion - new version to update to
+ * @param {string} options.branchName - branch name
+ * @param {string} options.cwd - current working directory
+ * @param {boolean} options.skipPush - whether to skip pushing to remote
+ * @param {string} options.prTitle - custom PR title
+ * @returns {boolean} True if PR was created, false otherwise
+ */
+exports.commitAndCreatePR = options => {
+  const { packageName, currentVersion, newVersion, branchName, cwd, skipPush, prTitle } = options;
+
+  execSync("git add '*package.json' package-lock.json", { cwd });
+  execSync(`git commit -m "build: bumped ${packageName} from ${currentVersion} to ${newVersion}"`, { cwd });
+
+  if (exports.hasCommits(branchName, cwd)) {
+    if (!skipPush) {
+      execSync(`git push origin ${branchName} --no-verify`, { cwd });
+      execSync(`gh pr create --base main --head ${branchName} --title "${prTitle}" --body "Tada!"`, { cwd });
+      console.log(`Pushed the branch: ${branchName} and raised PR`);
+      return true;
+    }
+  } else {
+    console.log(`Branch ${branchName} has no commits.`);
+  }
+  return false;
+};
+
+/**
+ * Installs a package with the specified version
+ * @param {Object} options - Options object
+ * @param {string} options.packageName - The package name to install
+ * @param {string} options.version - The version to install
+ * @param {string} options.cwd - Current working directory
+ * @param {string} options.saveFlag - The save flag (--save-dev, --save-optional, etc.)
+ * @param {string} options.workspaceFlag - Optional workspace flag (-w packageName)
+ */
+exports.installPackage = options => {
+  const { packageName, version, cwd, saveFlag, workspaceFlag } = options;
+
+  const workspaceOption = workspaceFlag ? `-w ${workspaceFlag}` : '';
+  const command = `npm i ${saveFlag} ${packageName}@${version} ${workspaceOption} --no-audit`;
+
+  console.log(command);
+  execSync(command, { stdio: 'inherit', cwd });
+
+  // For optional dependencies, run an extra npm install due to npm bug
+  if (saveFlag === '--save-optional') {
+    execSync('npm i', { stdio: 'inherit', cwd });
+  }
+};
+
+/**
+ * Cleans a version string by removing non-numeric characters except dots
+ * @param {string} version - The version string to clean
+ * @returns {string} Cleaned version string
+ */
+exports.cleanVersionString = version => {
+  return version.replace(/[^0-9.]/g, '');
+};
