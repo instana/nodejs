@@ -31,6 +31,11 @@ const fieldMappings = {
   kafka: {
     operation: 'access',
     endpoints: 'service'
+  },
+  http: {
+    operation: 'method',
+    endpoints: 'url',
+    connection: 'host'
   }
 };
 

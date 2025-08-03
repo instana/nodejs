@@ -197,43 +197,49 @@ function instrument(coreModule, forceHttps) {
       return clientRequest;
     }
 
+    let completeCallUrl;
+    let params;
+    const method = (options && options.method) || 'GET';
+    if (urlArg && typeof urlArg === 'string') {
+      // just one string....
+      completeCallUrl = sanitizeUrl(urlArg);
+      params = splitAndFilter(urlArg);
+    } else if (urlArg && isUrlObject(urlArg)) {
+      completeCallUrl = sanitizeUrl(url.format(urlArg));
+      params = dropLeadingQuestionMark(filterParams(urlArg.search));
+    } else if (options) {
+      const urlAndQuery = constructFromUrlOpts(options, coreModule, forceHttps);
+      completeCallUrl = urlAndQuery[0];
+      params = urlAndQuery[1];
+    }
+
+    const spanData = {
+      http: {
+        operation: method,
+        endpoints: completeCallUrl,
+        params
+      }
+    };
+
     cls.ns.run(() => {
       // NOTE: Check for parentSpan existence, because of allowRootExitSpan is being enabled
       const span = cls.startSpan({
         spanName: 'node.http.client',
         kind: constants.EXIT,
         traceId: parentSpan?.t,
-        parentSpanId: parentSpan?.s
+        parentSpanId: parentSpan?.s,
+        spanData
       });
 
       // startSpan updates the W3C trace context and writes it back to CLS, so we have to refetch the updated context
       // object from CLS.
       w3cTraceContext = cls.getW3cTraceContext();
 
-      let completeCallUrl;
-      let params;
-      if (urlArg && typeof urlArg === 'string') {
-        // just one string....
-        completeCallUrl = sanitizeUrl(urlArg);
-        params = splitAndFilter(urlArg);
-      } else if (urlArg && isUrlObject(urlArg)) {
-        completeCallUrl = sanitizeUrl(url.format(urlArg));
-        params = dropLeadingQuestionMark(filterParams(urlArg.search));
-      } else if (options) {
-        const urlAndQuery = constructFromUrlOpts(options, coreModule, forceHttps);
-        completeCallUrl = urlAndQuery[0];
-        params = urlAndQuery[1];
-      }
-
       span.stack = tracingUtil.getStackTrace(request);
 
       const boundCallback = cls.ns.bind(function boundCallback(res) {
-        span.data.http = {
-          method: clientRequest.method,
-          url: completeCallUrl,
-          status: res.statusCode,
-          params
-        };
+        span.data.http.operation = clientRequest.method;
+        span.data.http.status = res.statusCode;
 
         const headers = captureRequestHeaders(options, clientRequest, res);
         if (headers) {
@@ -263,7 +269,7 @@ function instrument(coreModule, forceHttps) {
         // A synchronous exception indicates a failure that is not covered by the listeners. Using a malformed URL for
         // example is a case that triggers a synchronous exception.
         span.data.http = {
-          url: completeCallUrl,
+          endpoints: completeCallUrl,
           error: e ? e.message : ''
         };
         span.d = Date.now() - span.ts;
@@ -310,8 +316,8 @@ function instrument(coreModule, forceHttps) {
           errorMessage = 'Request aborted';
         }
         span.data.http = {
-          method: clientRequest.method,
-          url: completeCallUrl,
+          operation: clientRequest.method,
+          endpoints: completeCallUrl,
           error: errorMessage
         };
         span.d = Date.now() - span.ts;

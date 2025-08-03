@@ -80,6 +80,94 @@ describe('tracing/backend_mappers', () => {
     });
   });
 
+  describe('HTTP Mapper', () => {
+    it('should transform span with type node.http.server correctly', () => {
+      span = {
+        n: 'node.http.server',
+        data: {
+          http: {
+            operation: 'GET',
+            endpoints: '/api/users',
+            connection: 'localhost'
+          }
+        }
+      };
+
+      const result = transform(span);
+      expect(result.data.http.method).to.equal('GET');
+      expect(result.data.http.url).to.equal('/api/users');
+      expect(result.data.http.host).to.equal('localhost');
+      expect(result.data.http).to.not.have.property('operation');
+      expect(result.data.http).to.not.have.property('endpoints');
+      expect(result.data.http).to.not.have.property('connection');
+    });
+
+    it('should transform span with type node.http.client correctly', () => {
+      span = {
+        n: 'node.http.client',
+        data: {
+          http: {
+            operation: 'GET',
+            endpoints: '/api/users',
+            connection: 'localhost'
+          }
+        }
+      };
+
+      const result = transform(span);
+      expect(result.data.http.method).to.equal('GET');
+      expect(result.data.http.url).to.equal('/api/users');
+      expect(result.data.http.host).to.equal('localhost');
+      expect(result.data.http).to.not.have.property('operation');
+      expect(result.data.http).to.not.have.property('endpoints');
+      expect(result.data.http).to.not.have.property('connection');
+    });
+
+    it('should transform span with type graphql.server containing http and graphql data', () => {
+      span = {
+        n: 'graphql.server',
+        data: {
+          http: {
+            operation: 'POST',
+            endpoints: '/graphql',
+            connection: '127.0.0.1'
+          },
+          graphql: {
+            operationName: 'query'
+          }
+        }
+      };
+
+      const result = transform(span);
+
+      // HTTP part
+      expect(result.data.http.method).to.equal('POST');
+      expect(result.data.http.url).to.equal('/graphql');
+      expect(result.data.http.host).to.equal('127.0.0.1');
+      expect(result.data.http).to.not.have.property('operation');
+      expect(result.data.http).to.not.have.property('endpoints');
+      expect(result.data.http).to.not.have.property('connection');
+
+      // GraphQL part no changes
+      expect(result.data.graphql.operationName).to.equal('query');
+      expect(result.data.graphql).to.not.have.property('operation');
+    });
+
+    it('should leave span unchanged if no relevant keys are found in graphql.server', () => {
+      span = {
+        n: 'graphql.server',
+        data: {
+          graphql: {
+            message: 'No mapping here'
+          }
+        }
+      };
+
+      const result = transform(span);
+      expect(result).to.deep.equal(span);
+    });
+  });
+
   describe('Kafka Mapper', () => {
     beforeEach(() => {
       span = {

@@ -86,30 +86,32 @@ function shimEmit(realEmit) {
         // (like httpClient.js).
         return realEmit.apply(originalThis, originalArgs);
       }
-
-      const span = cls.startSpan({
-        spanName: exports.spanName,
-        kind: constants.ENTRY,
-        traceId: headers.traceId,
-        parentSpanId: headers.parentId,
-        w3cTraceContext: w3cTraceContext
-      });
-
-      tracingHeaders.setSpanAttributes(span, headers);
-
       // Capture the URL before application code gets access to the incoming message. Libraries like express manipulate
       // req.url when routers are used.
       const urlParts = req.url.split('?');
       if (urlParts.length >= 2) {
         urlParts[1] = filterParams(urlParts[1]);
       }
-      span.data.http = {
-        method: req.method,
-        url: sanitizeUrl(urlParts.shift()),
-        params: urlParts.length > 0 ? urlParts.join('?') : undefined,
-        host: req.headers.host,
-        header: getExtraHeadersFromMessage(req, extraHttpHeadersToCapture)
+      const spanData = {
+        http: {
+          operation: req.method,
+          endpoints: sanitizeUrl(urlParts.shift()),
+          params: urlParts.length > 0 ? urlParts.join('?') : undefined,
+          connection: req.headers.host,
+          header: getExtraHeadersFromMessage(req, extraHttpHeadersToCapture)
+        }
       };
+
+      const span = cls.startSpan({
+        spanName: exports.spanName,
+        kind: constants.ENTRY,
+        traceId: headers.traceId,
+        parentSpanId: headers.parentId,
+        w3cTraceContext: w3cTraceContext,
+        spanData
+      });
+
+      tracingHeaders.setSpanAttributes(span, headers);
 
       if (!req.headers['x-instana-t']) {
         // In cases where we have started a fresh trace (that is, there is no X-INSTANA-T in the incoming request
