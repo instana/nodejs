@@ -230,7 +230,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
     });
 
     function handleHeartbeatError() {
-      logger.warn(`[${requestId}] Heartbeat request failed. Falling back to the serverless acceptor instead.`);
+      logger.debug(`[${requestId}] Heartbeat request failed. Falling back to the serverless acceptor instead.`);
 
       options.useLambdaExtension = false;
       clearInterval(heartbeatInterval);
