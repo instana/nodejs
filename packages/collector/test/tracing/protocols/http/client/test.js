@@ -148,6 +148,92 @@ mochaSuiteFn('tracing/http client', function () {
       });
     });
   });
+
+  describe('ignore-endpoints - test', function () {
+    this.timeout(10000);
+
+    describe('when endpoints are configured to be ignored (normal flow)', function () {
+      let serverControls;
+      let clientControls;
+
+      before(async () => {
+        serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'serverApp'),
+          useGlobalAgent: true,
+          appUsesHttps: false
+        });
+
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'clientApp'),
+          useGlobalAgent: true,
+          appUsesHttps: false,
+          env: {
+            SERVER_PORT: serverControls.getPort(),
+            INSTANA_IGNORE_ENDPOINTS: 'http:get'
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      after(() => Promise.all([serverControls.stop(), clientControls.stop()]));
+
+      beforeEach(() => globalAgent.instance.clearReceivedTraceData());
+
+      afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
+
+      it('should not trace GET request as per ignore config', async () => {
+        await clientControls.sendRequest({ method: 'GET', path: '/get-url-only' });
+
+        await retry(async () => {
+          const spans = await globalAgent.instance.getSpans();
+          expect(spans).to.have.length(0);
+        });
+      });
+
+      it('should not trace downstream calls', async () => {
+        await clientControls.sendRequest({ method: 'GET', path: '/downstream-call' });
+
+        await retry(async () => {
+          const spans = await globalAgent.instance.getSpans();
+          expect(spans).to.have.length(0);
+        });
+      });
+    });
+
+    describe('when root exit spans are allowed', function () {
+      let agentControls;
+
+      before(async () => {
+        agentControls = new ProcessControls({
+          appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+          useGlobalAgent: true,
+          env: {
+            INSTANA_ALLOW_ROOT_EXIT_SPAN: true,
+            INSTANA_IGNORE_ENDPOINTS: 'http:get'
+          }
+        });
+
+        await agentControls.start(null, null, true);
+      });
+
+      beforeEach(() => globalAgent.instance.clearReceivedTraceData());
+
+      afterEach(() => agentControls.clearIpcMessages());
+
+      it('should trace only exit spans when entry spans are ignored', async () => {
+        await delay(2500);
+
+        await retry(async () => {
+          const spans = await globalAgent.instance.getSpans();
+          expect(spans).to.have.length(4);
+          expect(spans.filter(s => s.k === constants.EXIT)).to.have.length(4);
+          expect(spans.filter(s => s.k === constants.ENTRY)).to.have.length(0);
+        });
+      });
+    });
+  });
 });
 
 function registerTests(appUsesHttps) {
