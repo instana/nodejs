@@ -75,7 +75,7 @@
     "test:ci:long-running": "lerna run test:ci:long-running --stream",
     "typecheck": "tsc",
     "verify": "lerna run verify --stream",
-    "depcheck": "lerna exec 'npx depcheck --skip-missing --ignores nan,agent-base,@types/*' --stream"
+    "depcheck": "lerna exec 'npx depcheck --skip-missing --ignores nan,@types/*' --stream"
   },
   "devDependencies": {
     "@apollo/gateway": "^2.11.2",
