@@ -173,6 +173,11 @@ function checkHost(host, cb) {
   }
 
   req.on('timeout', function onTimeout() {
+    if (req.destroyed) {
+      return;
+    }
+
+    req.destroy();
     handleCallback(
       new Error(`The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has timed out`)
     );
@@ -182,6 +187,11 @@ function checkHost(host, cb) {
   req.setTimeout(requestTimeout);
 
   req.on('error', err => {
+    if (req.destroyed) {
+      return;
+    }
+
+    req.destroy();
     handleCallback(
       new Error(
         `The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has failed with the following ` +
