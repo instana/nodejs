@@ -70,8 +70,26 @@ jobs:
             echo "new_version=$LATEST" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Create pull request
+      - name: Check Docker image availability on Docker Hub
+        id: image_check
         if: steps.detect.outputs.update_needed == 'true'
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.detect.outputs.new_version }}"
+
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://hub.docker.com/v2/repositories/library/node/tags/${VERSION}")
+
+          if [[ "$STATUS" == "200" ]]; then
+            echo "Docker image node:${VERSION} is available."
+            echo "image_available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Docker image node:${VERSION} NOT found (HTTP $STATUS)."
+            echo "image_available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create pull request
+        if: steps.detect.outputs.update_needed == 'true' && steps.image_check.outputs.image_available == 'true'
         env:
           NEW_VERSION: ${{ steps.detect.outputs.new_version }}
           DRY_RUN: ${{ github.event.inputs.dryRun }}
