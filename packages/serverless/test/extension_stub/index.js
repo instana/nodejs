@@ -37,6 +37,7 @@ let heartbeatResponsiveButLater = process.env.EXTENSION_HEARTBEAT_RESPONSIVE_BUT
 const heartbeatRespondsWithUnexpectedStatusCode =
   process.env.HEARTBEAT_REQUEST_RESPONDS_WITH_UNEXPECTED_STATUS_CODE === 'true';
 
+const INITIAL_HEARTBEAT_TIMEOUT = 2500;
 let receivedData = resetReceivedData();
 
 const app = express();
@@ -119,7 +120,7 @@ app.all('*', (req, res) => {
 
     setTimeout(() => {
       res.sendStatus(200);
-    }, 2100);
+    }, INITIAL_HEARTBEAT_TIMEOUT);
     return;
   }
 
