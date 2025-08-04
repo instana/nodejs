@@ -70,7 +70,7 @@
     "methods": "^1.1.2",
     "opentracing": "^0.14.5",
     "read-yaml-file": "^2.1.0",
-    "semver": "^7.5.3",
+    "semver": "^7.5.4",
     "shimmer": "^1.2.1"
   }
 }
