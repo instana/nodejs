@@ -476,5 +476,57 @@ describe('util.spanFilter', () => {
         expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
       });
     });
+
+    it('should return true when span.n is node.http.server and config has http entry with matching method', () => {
+      ignoreEndpoints = {
+        http: [{ methods: ['GET'] }]
+      };
+      span.n = 'node.http.server';
+      span.data = {
+        http: {
+          operation: 'GET'
+        }
+      };
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
+    });
+
+    it('should return false when span.n is node.http.client and config has http entry with matching method', () => {
+      ignoreEndpoints = {
+        http: [{ methods: ['POST'] }]
+      };
+      span.n = 'node.http.client';
+      span.data = {
+        http: {
+          operation: 'POST'
+        }
+      };
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
+    });
+
+    it('should return false when span.n is node.http.client and method does not match', () => {
+      ignoreEndpoints = {
+        http: [{ methods: ['DELETE'] }]
+      };
+      span.n = 'node.http.client';
+      span.data = {
+        http: {
+          operation: 'PUT'
+        }
+      };
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
+    });
+
+    it('should return false when span.n is node.http.server and config has no http entry', () => {
+      ignoreEndpoints = {
+        redis: [{ methods: ['GET'] }]
+      };
+      span.n = 'node.http.server';
+      span.data = {
+        http: {
+          operation: 'GET'
+        }
+      };
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
+    });
   });
 });

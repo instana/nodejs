@@ -308,6 +308,35 @@ app.get('/matrix-params/:params', (req, res) => {
   res.sendStatus(200);
 });
 
+app.get('/downstream-call', (req, res) => {
+  const options = {
+    hostname: '127.0.0.1',
+    port: agentPort,
+    path: '/',
+    method: 'GET'
+  };
+
+  log('Initiating downstream call to', `http://127.0.0.1:${agentPort}/`);
+
+  const downstreamReq = httpModule.request(options, downstreamRes => {
+    let data = '';
+    downstreamRes.on('data', chunk => {
+      data += chunk;
+    });
+    downstreamRes.on('end', () => {
+      log('Downstream call completed with response:', data);
+      res.status(200).json({ message: 'Downstream call completed', body: data });
+    });
+  });
+
+  downstreamReq.on('error', err => {
+    log('Error in downstream call:', err.message);
+    res.sendStatus(500);
+  });
+
+  downstreamReq.end();
+});
+
 function createUrl(req, urlPath) {
   const pathWithQuery = req.query.withQuery ? `${urlPath}?q1=some&pass=verysecret&q2=value` : urlPath;
   return req.query.urlObject ? new URL(pathWithQuery, baseUrl) : baseUrl + pathWithQuery;
