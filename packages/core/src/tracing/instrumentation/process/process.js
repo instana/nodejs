@@ -85,6 +85,11 @@ function shimProcessSendForBullChildWorker(originalProcessSend) {
           clearInterval(keepAliveHandle);
         }
       }, 100);
+
+      // Safely clear the keep alive handle after a while, so that we do not leak memory.
+      setTimeout(() => {
+        clearInterval(keepAliveHandle);
+      }, bullKeepAlive + 1000).unref();
     }
     return originalProcessSend.apply(this, arguments);
   };

@@ -119,16 +119,18 @@ exports.announceNodeCollector = function announceNodeCollector(callback) {
 
   let payloadStr = JSON.stringify(payload);
   const contentLength = Buffer.from(payloadStr, 'utf8').length + paddingForInodeAndFileDescriptor;
+  let req;
 
   let wasCalled = false;
   const handleCallback = function () {
     if (!wasCalled) {
       wasCalled = true;
+      req = null; // free memory
       cb.apply(null, arguments);
     }
   };
 
-  const req = http.request(
+  req = http.request(
     {
       host: agentOpts.host,
       port: agentOpts.port,
@@ -148,11 +150,13 @@ exports.announceNodeCollector = function announceNodeCollector(callback) {
       }
 
       res.setEncoding('utf8');
-      let responseBody = '';
+      const chunks = [];
       res.on('data', chunk => {
-        responseBody += chunk;
+        chunks.push(chunk);
       });
       res.on('end', () => {
+        const responseBody = chunks.join('');
+        chunks.length = 0; // free memory
         handleCallback(null, responseBody);
       });
     }
@@ -201,7 +205,10 @@ exports.announceNodeCollector = function announceNodeCollector(callback) {
       }
     }
 
-    req.write(Buffer.from(JSON.stringify(payload), 'utf8'));
+    const finalBuffer = Buffer.from(JSON.stringify(payload), 'utf8');
+    payloadStr = null;
+
+    req.write(finalBuffer, 'utf8');
     req.end();
   });
 };
@@ -387,7 +394,7 @@ exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMe
 function sendData(path, data, cb, ignore404 = false) {
   cb = util.atMostOnce(`callback for sendData: ${path}`, cb);
 
-  const payloadAsString = JSON.stringify(data, circularReferenceRemover());
+  let payloadAsString = JSON.stringify(data, circularReferenceRemover());
   if (typeof logger.trace === 'function') {
     logger.trace(`Sending data to ${path}.`);
   } else {
@@ -396,6 +403,8 @@ function sendData(path, data, cb, ignore404 = false) {
 
   // Convert payload to a buffer to correctly identify content-length ahead of time.
   const payload = Buffer.from(payloadAsString, 'utf8');
+  payloadAsString = null;
+
   if (payload.length > maxContentLength) {
     const error = new PayloadTooLargeError(`Request payload is too large. Will not send data to agent. (POST ${path})`);
     return setImmediate(cb.bind(null, error));
@@ -427,11 +436,13 @@ function sendData(path, data, cb, ignore404 = false) {
       }
 
       res.setEncoding('utf8');
-      let responseBody = '';
+      const chunks = [];
       res.on('data', chunk => {
-        responseBody += chunk;
+        chunks.push(chunk);
       });
       res.on('end', () => {
+        const responseBody = chunks.join('');
+        chunks.length = 0; // free memory
         cb(null, responseBody);
       });
     }

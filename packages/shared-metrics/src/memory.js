@@ -19,6 +19,8 @@ exports.activate = function activate() {
 };
 
 function gatherMemoryUsageStatistics() {
+  exports.currentPayload = null;
+
   // @ts-ignore
   exports.currentPayload = process.memoryUsage();
 }

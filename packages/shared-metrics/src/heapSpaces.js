@@ -31,7 +31,7 @@ exports.activate = function activate() {
 };
 
 function gatherHeapSpaceStatistics() {
-  const rawStats = v8.getHeapSpaceStatistics();
+  let rawStats = v8.getHeapSpaceStatistics();
 
   // We are changing the native format to a format which can be more
   // efficiently compressed and processed in the backend.
@@ -48,6 +48,8 @@ function gatherHeapSpaceStatistics() {
     };
   }
 
+  rawStats = null;
+  exports.currentPayload = null;
   // @ts-ignore
   exports.currentPayload = processedStats;
 }

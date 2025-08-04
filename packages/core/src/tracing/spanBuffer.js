@@ -168,6 +168,12 @@ exports.deactivate = function deactivate() {
   spans = [];
   batchingBuckets.clear();
   clearTimeout(transmissionTimeoutHandle);
+
+  // CASE: If we have a pre-activation cleanup interval, we clear it.
+  if (preActivationCleanupIntervalHandle) {
+    clearInterval(preActivationCleanupIntervalHandle);
+    preActivationCleanupIntervalHandle = null;
+  }
 };
 
 /**
@@ -439,7 +445,7 @@ function transmitSpans() {
     return;
   }
 
-  const spansToSend = spans;
+  let spansToSend = spans;
   spans = [];
   batchingBuckets.clear();
 
@@ -454,6 +460,8 @@ function transmitSpans() {
       spans = spans.concat(spansToSend);
       removeSpansIfNecessary();
     }
+
+    spansToSend = null;
 
     if (!isFaaS) {
       transmissionTimeoutHandle = setTimeout(transmitSpans, transmissionDelay);

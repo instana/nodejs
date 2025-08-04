@@ -90,7 +90,8 @@ function sendMetrics() {
   }
 
   // clone retrieved objects to allow mutations in metric retrievers
-  const newValueToTransmit = core.util.clone(metrics.gatherData());
+  // is there a memory problem with this line?
+  let newValueToTransmit = { ...metrics.gatherData() };
 
   /** @type {Object<string, *>} */
   let payload;
@@ -101,7 +102,10 @@ function sendMetrics() {
     payload = core.util.compression(previousTransmittedValue, newValueToTransmit);
   }
 
-  downstreamConnection.sendMetrics(payload, onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit));
+  downstreamConnection.sendMetrics(payload, (error, responsePayload) => {
+    onMetricsHaveBeenSent(isFullTransmission, payload, error, responsePayload);
+    newValueToTransmit = null;
+  });
 }
 
 /**
@@ -116,9 +120,14 @@ function onMetricsHaveBeenSent(isFullTransmission, transmittedValue, error, resp
       onError();
     }
 
+    transmittedValue = null;
+    responsePayload = null;
     return;
   }
+
+  previousTransmittedValue = null;
   previousTransmittedValue = transmittedValue;
+
   if (isFullTransmission) {
     transmissionsSinceLastFullDataEmit = 0;
   } else {
@@ -127,6 +136,9 @@ function onMetricsHaveBeenSent(isFullTransmission, transmittedValue, error, resp
   if (onSuccess) {
     onSuccess(responsePayload);
   }
+
+  transmittedValue = null;
+
   transmissionTimeoutHandle = setTimeout(sendMetrics, transmissionDelay);
   transmissionTimeoutHandle.unref();
 }

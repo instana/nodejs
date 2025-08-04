@@ -37,8 +37,6 @@ const downstreamUrl = process.env.DOWNSTREAM_URL;
 const express = require('express');
 const app = express();
 
-app.use(require('express-status-monitor')());
-
 app.get('/', (req, res) => {
   if (config.logRequests) {
     console.log(`received request (${new Date()})`);

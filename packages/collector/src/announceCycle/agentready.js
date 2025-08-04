@@ -178,7 +178,7 @@ function leave() {
 }
 
 function sendTracingMetrics() {
-  const payload = tracing._getAndResetTracingMetrics();
+  let payload = tracing._getAndResetTracingMetrics();
 
   agentConnection.sendTracingMetricsToAgent(payload, error => {
     if (error) {
@@ -194,6 +194,8 @@ function sendTracingMetrics() {
         return;
       }
     }
+
+    payload = null;
     scheduleTracingMetrics();
   });
 }
@@ -222,30 +224,31 @@ function fireMonitoringEvent() {
 
 function sendEOLEvent() {
   const pid = pidStore.getEntityId();
-  agentConnection.sendEvent(
-    {
-      title: `Node.js version ${process.versions.node} reached its end of life`,
-      text:
-        'This version no longer receives updates or security fixes and might contain unfixed vulnerabilities.\n\n' +
-        'Please consider upgrading Node.js to an active version.\n\n' +
-        'For a list of active versions visit ' +
-        '[https://nodejs.org/en/about/releases/](https://nodejs.org/en/about/releases/)',
-      plugin: 'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform',
-      id: pid,
-      timestamp: Date.now(),
-      duration: EOL_EVENT_DURATION,
-      severity: agentConnection.AgentEventSeverity.WARNING,
-      path: `${agentOpts.agentUuid}/${pid}/nodejs-eol`
-    },
-    err => {
-      if (err) {
-        logger.debug(
-          `Sending a monitoring event for the Node.js version end-of-life check has failed. 
+  let eventData = {
+    title: `Node.js version ${process.versions.node} reached its end of life`,
+    text:
+      'This version no longer receives updates or security fixes and might contain unfixed vulnerabilities.\n\n' +
+      'Please consider upgrading Node.js to an active version.\n\n' +
+      'For a list of active versions visit ' +
+      '[https://nodejs.org/en/about/releases/](https://nodejs.org/en/about/releases/)',
+    plugin: 'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform',
+    id: pid,
+    timestamp: Date.now(),
+    duration: EOL_EVENT_DURATION,
+    severity: agentConnection.AgentEventSeverity.WARNING,
+    path: `${agentOpts.agentUuid}/${pid}/nodejs-eol`
+  };
+
+  agentConnection.sendEvent(eventData, err => {
+    if (err) {
+      logger.debug(
+        `Sending a monitoring event for the Node.js version end-of-life check has failed.
           ${err?.message} ${err?.stack}`
-        );
-      }
+      );
     }
-  );
+
+    eventData = null;
+  });
 }
 
 /**
@@ -256,6 +259,7 @@ function sendEOLEvent() {
  */
 function detectEOLNodeVersion() {
   if (isNodeVersionEOL()) {
+    // TODO: Does this need a deactivate method?
     setTimeout(() => {
       sendEOLEvent();
       setInterval(sendEOLEvent, EOL_EVENT_REFRESH_INTERVAL).unref();
