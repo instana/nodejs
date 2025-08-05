@@ -27,6 +27,7 @@ const fieldMappings = {
   },
   redis: {
     operation: 'command'
+    // connection: connection # already normalized
   },
   kafka: {
     operation: 'access',
