@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.21.2](https://github.com/instana/nodejs/compare/v4.21.1...v4.21.2) (2025-08-05)
+
+
+### Bug Fixes
+
+* **aws-lambda:** improved heartbeat timeout ([#1912](https://github.com/instana/nodejs/issues/1912)) ([08290bb](https://github.com/instana/nodejs/commit/08290bbe83772c3c49bb4cb4cdab0a745c7b6455))
+
+
+
+
+
 ## [4.21.1](https://github.com/instana/nodejs/compare/v4.21.0...v4.21.1) (2025-08-05)
 
 
