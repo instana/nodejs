@@ -1,4 +1,4 @@
-# Instana Node.js Monorepo
+# Instana Node.js Tracer Monorepo
 
 **[Changelog](CHANGELOG.md)** |
 **[Contributing](CONTRIBUTING.md)** |
