@@ -59,16 +59,14 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
     utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main');
 
     usageList.forEach(({ pkgPath }) => {
-      const pkgJson = require(pkgPath);
       const pkgDir = path.dirname(pkgPath);
-      const targetName = pkgJson.name || pkgDir;
 
       utils.installPackage({
         packageName: dep,
         version: latestVersion,
         cwd,
         saveFlag: '',
-        workspaceFlag: targetName
+        workspaceFlag: pkgDir
       });
     });
 
