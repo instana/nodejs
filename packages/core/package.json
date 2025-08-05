@@ -68,7 +68,7 @@
     "import-in-the-middle": "1.9.0",
     "lru-cache": "^10.1.0",
     "methods": "^1.1.2",
-    "opentracing": "^0.14.5",
+    "opentracing": "^0.14.7",
     "read-yaml-file": "^2.1.0",
     "semver": "^7.5.4",
     "shimmer": "^1.2.1"
