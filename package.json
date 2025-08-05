@@ -122,7 +122,7 @@
     "@types/detect-libc": "1.0.0",
     "@types/event-loop-lag": "1.0.30",
     "@types/hapi__hapi": "20.0.13",
-    "@types/lodash": "4.14.178",
+    "@types/lodash": "4.17.20",
     "@types/mocha": "7.0.2",
     "@types/morgan": "1.9.3",
     "@types/node": "20.5.7",
