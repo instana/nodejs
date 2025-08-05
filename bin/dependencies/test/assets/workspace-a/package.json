@@ -1,0 +1,13 @@
+{
+  "name": "test-package",
+  "version": "1.0.0",
+  "dependencies": {
+    "prod-dep": "1.0.0"
+  },
+  "devDependencies": {
+    "dev-dep": "^1.0.0"
+  },
+  "optionalDependencies": {
+    "optional-dep": "~1.0.0"
+  }
+}
