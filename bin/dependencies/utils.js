@@ -279,6 +279,24 @@ exports.commitAndCreatePR = options => {
   return false;
 };
 
+exports.isExactVersion = ({ workspaceFlag, packageName, cwd, saveFlag }) => {
+  const pkgJsonPath = path.join(cwd, workspaceFlag ? path.join(workspaceFlag, 'package.json') : 'package.json');
+  const pkgJson = require(pkgJsonPath);
+  const isDev = saveFlag === '--save-dev';
+  const isOptional = saveFlag === '--save-optional';
+
+  let pkg;
+  if (isDev) {
+    pkg = pkgJson.devDependencies[packageName];
+  } else if (isOptional) {
+    pkg = pkgJson.optionalDependencies[packageName];
+  } else {
+    pkg = pkgJson.dependencies[packageName];
+  }
+
+  return pkg && !pkg.startsWith('~') && !pkg.startsWith('^');
+};
+
 /**
  * Installs a package with the specified version
  * @param {Object} options - Options object
@@ -287,19 +305,27 @@ exports.commitAndCreatePR = options => {
  * @param {string} options.cwd - Current working directory
  * @param {string} options.saveFlag - The save flag (--save-dev, --save-optional, etc.)
  * @param {string} options.workspaceFlag - Optional workspace flag (-w packageName)
+ * @param {Function} options.execSyncFn - Optional custom execSync function
  */
 exports.installPackage = options => {
-  const { packageName, version, cwd, saveFlag, workspaceFlag } = options;
+  const { packageName, version, cwd, saveFlag, workspaceFlag, execSyncFn } = options;
 
   const workspaceOption = workspaceFlag ? `-w ${workspaceFlag}` : '';
-  const command = `npm i ${saveFlag} ${packageName}@${version} ${workspaceOption} --no-audit`;
+  let command = `npm i ${saveFlag} ${packageName}@${version} ${workspaceOption} --no-audit`;
+
+  const isExactVersion = exports.isExactVersion({ workspaceFlag, packageName, cwd, saveFlag });
+  const execFn = execSyncFn || execSync;
+
+  if (isExactVersion) {
+    command += ' --save-exact';
+  }
 
   console.log(command);
-  execSync(command, { stdio: 'inherit', cwd });
+  execFn(command, { stdio: 'inherit', cwd });
 
   // For optional dependencies, run an extra npm install due to npm bug
   if (saveFlag === '--save-optional') {
-    execSync('npm i', { stdio: 'inherit', cwd });
+    execFn('npm i', { stdio: 'inherit', cwd });
   }
 };
 

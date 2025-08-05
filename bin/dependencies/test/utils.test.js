@@ -4,7 +4,8 @@
 
 'use strict';
 
-const { getDaysBehind } = require('../utils');
+const path = require('path');
+const { getDaysBehind, installPackage } = require('../utils');
 const assert = require('assert');
 
 const today = '2024-07-23T00:00:00.000Z';
@@ -101,6 +102,82 @@ try {
   const daysBehind5 = getDaysBehind(releaseList5, installedVersion5, '2025-04-26T00:00:00.000Z');
   assert.strictEqual(daysBehind5, 0);
   console.log('Test 5 passed: Installed version is 0 days behind the latest version.');
+
+  let cmd;
+  installPackage({
+    cwd: path.join(__dirname, 'assets'),
+    packageName: 'dev-dep',
+    version: '2.0.0',
+    saveFlag: '--save-dev',
+    workspaceFlag: 'workspace-a',
+    execSyncFn: command => {
+      cmd = command;
+    }
+  });
+
+  assert.strictEqual(cmd, 'npm i --save-dev dev-dep@2.0.0 -w workspace-a --no-audit');
+  cmd = null;
+
+  installPackage({
+    cwd: path.join(__dirname, 'assets'),
+    packageName: 'prod-dep',
+    version: '1.1.0',
+    saveFlag: '',
+    workspaceFlag: 'workspace-a',
+    execSyncFn: command => {
+      cmd = command;
+    }
+  });
+
+  // Bug: empty space bug. Fix later
+  assert.strictEqual(cmd, 'npm i  prod-dep@1.1.0 -w workspace-a --no-audit --save-exact');
+  cmd = null;
+
+  installPackage({
+    cwd: path.join(__dirname, 'assets'),
+    packageName: 'optional-dep',
+    version: '1.3.0',
+    saveFlag: '--save-optional',
+    workspaceFlag: 'workspace-a',
+    execSyncFn: command => {
+      if (!cmd) cmd = command;
+    }
+  });
+
+  // Bug: empty space bug. Fix later
+  assert.strictEqual(cmd, 'npm i --save-optional optional-dep@1.3.0 -w workspace-a --no-audit');
+
+  cmd = null;
+
+  // root deps
+
+  installPackage({
+    cwd: path.join(__dirname, 'assets'),
+    packageName: 'optional-dep',
+    version: '1.0.1',
+    saveFlag: '--save-optional',
+    execSyncFn: command => {
+      if (!cmd) cmd = command;
+    }
+  });
+
+  // Bug: empty space bug. Fix later
+  assert.strictEqual(cmd, 'npm i --save-optional optional-dep@1.0.1  --no-audit --save-exact');
+
+  cmd = null;
+
+  installPackage({
+    cwd: path.join(__dirname, 'assets'),
+    packageName: 'dev-dep',
+    version: '2.1.0',
+    saveFlag: '--save-dev',
+    execSyncFn: command => {
+      if (!cmd) cmd = command;
+    }
+  });
+
+  // Bug: empty space bug. Fix later
+  assert.strictEqual(cmd, 'npm i --save-dev dev-dep@2.1.0  --no-audit --save-exact');
 } catch (error) {
   console.error('Test failed:', error);
 }

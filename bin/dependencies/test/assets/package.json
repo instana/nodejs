@@ -1,0 +1,10 @@
+{
+  "name": "test-package-root",
+  "version": "2.1.0",
+  "devDependencies": {
+    "dev-dep": "1.0.0"
+  },
+  "optionalDependencies": {
+    "optional-dep": "1.0.0"
+  }
+}
