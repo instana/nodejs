@@ -69,6 +69,7 @@ function init(config, _pidStore) {
   pidStore = _pidStore;
   disableEOLEvents = config.tracing?.disableEOLEvents;
   initializedTooLate.init(config);
+  requestHandler.init(config);
 
   // TODO: Why is autoProfile part of agentOpts? O_o Please refactor this away in next major release.
   if (agentOpts.autoProfile) {
@@ -240,7 +241,7 @@ function sendEOLEvent() {
     err => {
       if (err) {
         logger.debug(
-          `Sending a monitoring event for the Node.js version end-of-life check has failed. 
+          `Sending a monitoring event for the Node.js version end-of-life check has failed.
           ${err?.message} ${err?.stack}`
         );
       }
