@@ -198,8 +198,12 @@ exports.getPackageJsonPathsUnderPackagesDir = packagesDir => {
   entries.forEach(entry => {
     if (entry.isDirectory()) {
       const pkgJsonPath = path.join(packagesDir, entry.name, 'package.json');
+
       if (fs.existsSync(pkgJsonPath)) {
-        results.push(pkgJsonPath);
+        results.push({
+          pkgRelDir: `packages/${entry.name}`,
+          pkgJsonAbsPath: pkgJsonPath
+        });
       }
     }
   });

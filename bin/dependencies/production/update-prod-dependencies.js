@@ -23,14 +23,14 @@ const packagesDir = path.join(__dirname, '..', '..', '..', 'packages');
 const pkgPaths = utils.getPackageJsonPathsUnderPackagesDir(packagesDir);
 
 const dependencyMap = {};
-pkgPaths.forEach(pkgPath => {
-  const pkgJson = require(pkgPath);
+pkgPaths.forEach(obj => {
+  const pkgJson = require(obj.pkgJsonAbsPath);
   const deps = pkgJson.dependencies || {};
   Object.entries(deps).forEach(([dep, version]) => {
     // Exclude internal libraries
     if (dep.startsWith('@instana')) return;
     if (!dependencyMap[dep]) dependencyMap[dep] = [];
-    dependencyMap[dep].push({ pkgPath, version });
+    dependencyMap[dep].push({ pkgRelDir: obj.pkgRelDir, version });
   });
 });
 
@@ -58,15 +58,13 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
 
     utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main');
 
-    usageList.forEach(({ pkgPath }) => {
-      const pkgDir = path.dirname(pkgPath);
-
+    usageList.forEach(({ pkgRelDir }) => {
       utils.installPackage({
         packageName: dep,
         version: latestVersion,
         cwd,
         saveFlag: '',
-        workspaceFlag: pkgDir
+        workspaceFlag: pkgRelDir
       });
     });
 
