@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.21.1](https://github.com/instana/nodejs/compare/v4.21.0...v4.21.1) (2025-08-05)
+
+**Note:** Version bump only for package @instana/shared-metrics
+
+
+
+
+
 # [4.21.0](https://github.com/instana/nodejs/compare/v4.20.0...v4.21.0) (2025-07-31)
 
 **Note:** Version bump only for package @instana/shared-metrics

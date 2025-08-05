@@ -1,6 +1,6 @@
 {
   "name": "@instana/opentelemetry-sampler",
-  "version": "4.21.0",
+  "version": "4.21.1",
   "description": "OpenTelemetry Instana sampler",
   "keywords": [
     "opentelemetry",
@@ -55,7 +55,7 @@
     "@opentelemetry/api": "1.4.1"
   },
   "devDependencies": {
-    "@instana/core": "4.21.0",
+    "@instana/core": "4.21.1",
     "@opentelemetry/auto-instrumentations-node": "0.40.2",
     "@opentelemetry/exporter-trace-otlp-http": "0.44.0",
     "@opentelemetry/propagator-instana": "0.3.1",

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.21.1](https://github.com/instana/nodejs/compare/v4.21.0...v4.21.1) (2025-08-05)
+
+
+### Bug Fixes
+
+* reduced memory when otel integration is turned off ([#1905](https://github.com/instana/nodejs/issues/1905)) ([9724825](https://github.com/instana/nodejs/commit/972482505d055d84c823e419c8c341dd9a084e09))
+
+
+
+
+
 # [4.21.0](https://github.com/instana/nodejs/compare/v4.20.0...v4.21.0) (2025-07-31)
 
 

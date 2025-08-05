@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.21.1](https://github.com/instana/nodejs/compare/v4.21.0...v4.21.1) (2025-08-05)
+
+
+### Bug Fixes
+
+* **aws-lambda:** increased initial heartbeat timeout ([6b1b1df](https://github.com/instana/nodejs/commit/6b1b1df37cfd04ab051f0472c3ea29ed81d852fa))
+* **aws-lambda:** transformed heartbeat warning into debug log ([a6bf4dd](https://github.com/instana/nodejs/commit/a6bf4dd09ab2ea3a79e2d221eac67412968e7f89))
+
+
+
+
+
 # [4.21.0](https://github.com/instana/nodejs/compare/v4.20.0...v4.21.0) (2025-07-31)
 
 
