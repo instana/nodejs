@@ -36,12 +36,14 @@ describe('actions/source', function () {
 
   it('retrieve fully qualified source file', () => {
     const messageId = 'a';
+    const semverPath = require.resolve('semver');
+
     return agentControls
       .addRequestForPid(expressControls.getPid(), {
         action: 'node.source',
         messageId,
         args: {
-          file: path.join(process.cwd(), 'node_modules', 'semver', 'index.js')
+          file: semverPath
         }
       })
       .then(() =>
