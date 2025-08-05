@@ -17,7 +17,8 @@ const layerExtensionPort = process.env.INSTANA_LAYER_EXTENSION_PORT
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
 
 // NOTE: The heartbeat is usually really, really fast (<30ms).
-const layerExtensionHeartbeatTimeout = 100;
+//      But we have seen in some cases that it can take up to 500ms.
+const layerExtensionHeartbeatTimeout = 500;
 
 // NOTE: The initial heartbeat can be very slow when the Lambda is in cold start.
 const initialLayerExtensionHeartbeatTimeout = 2400;
@@ -199,7 +200,7 @@ function scheduleLambdaExtensionHeartbeatRequest() {
         res.once('end', () => {
           const endTime = Date.now();
           const duration = endTime - startTime;
-          logger.debug(`[${requestId}] Took ${duration}ms to receive response from extension`);
+          logger.debug(`[${requestId}] Took ${duration}ms to receive response from extension for the heartbeat.`);
 
           heartbeatIsActive = false;
         });
