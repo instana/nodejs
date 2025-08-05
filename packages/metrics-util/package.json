@@ -58,6 +58,6 @@
   "dependencies": {
     "@instana/core": "4.21.2",
     "@instana/shared-metrics": "4.21.2",
-    "node-fetch": "^2.6.7"
+    "node-fetch": "^2.7.0"
   }
 }
