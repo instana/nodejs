@@ -199,7 +199,7 @@ function instrument(coreModule, forceHttps) {
 
     let completeCallUrl;
     let params;
-    const method = (options && options.method) || 'GET';
+
     if (urlArg && typeof urlArg === 'string') {
       // just one string....
       completeCallUrl = sanitizeUrl(urlArg);
@@ -213,9 +213,20 @@ function instrument(coreModule, forceHttps) {
       params = urlAndQuery[1];
     }
 
+    /**
+     * Although the HTTP span ignoring feature currently applies only to entry spans (phase 1),
+     * both server and client spans share the same span.data.http structure.
+     *
+     * To maintain consistency and prepare for future support of exit spans (phase 2),
+     * we're applying the transformation logic to both entry and exit spans now.
+     * This ensures structural alignment and avoids duplicating effort later.
+     *
+     * Note: The HTTP method and other related fields are captured later during request processing.
+     * Since span ignoring is limited to entry spans at this stage, setting data for exit spans here is safe.
+     * This logic will be further refined in upcoming iterations.
+     */
     const spanData = {
       http: {
-        operation: method,
         endpoints: completeCallUrl,
         params
       }

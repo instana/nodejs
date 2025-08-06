@@ -92,11 +92,16 @@ function instrumentClientHttp2Session(clientHttp2Session) {
     path = path || '/';
 
     /**
-     * The HTTP method and other fields are captured later during request processing,
-     * but we must initialize the span data early to ensure correct async context propagation.
+     * Although the HTTP span ignoring feature currently applies only to entry spans (phase 1),
+     * both server and client spans share the same span.data.http structure.
      *
-     * NOTE: HTTP span ignoring feature currently applies only to entry spans (phase 1),
-     * so setting exit span data here is safe. This will be refined in future iterations.
+     * To maintain consistency and prepare for future support of exit spans (phase 2),
+     * we're applying the transformation logic to both entry and exit spans now.
+     * This ensures structural alignment and avoids duplicating effort later.
+     *
+     * Note: The HTTP method and other related fields are captured later during request processing.
+     * Since span ignoring is limited to entry spans at this stage, setting data for exit spans here is safe.
+     * This logic will be further refined in upcoming iterations.
      */
     const spanData = {
       http: {

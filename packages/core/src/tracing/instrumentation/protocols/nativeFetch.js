@@ -147,6 +147,16 @@ function instrument() {
         }
       }
     }
+
+    /**
+     * Although the HTTP span ignoring feature currently applies only to entry spans (phase 1),
+     * both server and client spans share the same span.data.http structure.
+     *
+     * To maintain consistency and prepare for future support of exit spans (phase 2),
+     * we're applying the transformation logic to both entry and exit spans now.
+     * This ensures structural alignment and avoids duplicating effort later.
+     *
+     */
     const spanData = {
       http: {
         operation: method,
