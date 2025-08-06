@@ -1,0 +1,115 @@
+name: add-release-card
+
+on:
+  push:
+    tags:
+      - v[0-9]+.*
+  workflow_dispatch:
+
+jobs:
+  create-jira-card:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "IBM/Instana/Team Node.js"
+          git config user.email github-actions@github.com
+
+      - name: Get latest and previous release tags
+        id: tags
+        run: |
+          set -euo pipefail
+          TAGS=($(git tag --sort=-creatordate))
+
+          if [[ ${#TAGS[@]} -lt 2 ]]; then
+            echo "Not enough release tags found."
+            exit 1
+          fi
+
+          echo "LATEST_TAG=${TAGS[0]}" >> "$GITHUB_OUTPUT"
+          echo "PREVIOUS_TAG=${TAGS[1]}" >> "$GITHUB_OUTPUT"
+
+      - name: Get commits between releases
+        id: commits
+        run: |
+          set -euo pipefail
+          LATEST=${{ steps.tags.outputs.LATEST_TAG }}
+          PREVIOUS=${{ steps.tags.outputs.PREVIOUS_TAG }}
+
+          echo "Getting commits from $PREVIOUS to $LATEST"
+          COMMITS=$(git log "$PREVIOUS..$LATEST" --pretty=format:"%s%n%b")
+
+          echo "COMMITS<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$COMMITS" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Extract referenced links
+        id: extract_refs
+        run: |
+          set -euo pipefail
+
+          echo "${{ steps.commits.outputs.COMMITS }}" > commits.txt
+          LINKS=$(grep -oE 'refs https://[^ ]+' commits.txt | sort | uniq)
+
+          if [[ -z "$LINKS" ]]; then
+            echo "No referenced links found."
+            echo "refs_list=No refs found" >> "$GITHUB_OUTPUT"
+          else
+            echo "Found referenced links:"
+            echo "$LINKS"
+            echo "refs_list<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$LINKS" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Jira issue
+        env:
+          JIRA_BASE_URL: https://jsw.ibm.com
+          JIRA_EMAIL: katharina.irrgang@ibm.com
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          REFS_LIST: ${{ steps.extract_refs.outputs.refs_list }}
+        run: |
+          set -euo pipefail
+
+          SUMMARY="Node.js tracer release ${{ steps.tags.outputs.LATEST_TAG }}"
+          DESCRIPTION="${REFS_LIST}"
+
+          PAYLOAD=$(jq -n \
+            --arg summary "$SUMMARY" \
+            --arg description "$DESCRIPTION" \
+            '{
+              fields: {
+                project: { key: "INSTA" },
+                summary: $summary,
+                description: $description,
+                issuetype: { name: "Task" },
+                labels: ["release"],
+                components: [{ name: "Tracers Node.js Team" }, { name: "Jira Admin Team"}]
+              }
+            }')
+
+          HTTP_RESPONSE=$(mktemp)
+
+          STATUS=$(curl --http1.1 -sS -o "$HTTP_RESPONSE" \
+                        -w "%{http_code}" \
+                        -X POST "${JIRA_BASE_URL%/}/rest/api/2/issue" \
+                        -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+                        -H "Content-Type: application/json" \
+                        -d "$PAYLOAD")
+
+          echo "🔁 HTTP status: $STATUS"
+          echo "📩 Response body:"
+          cat "$HTTP_RESPONSE" | jq . 2>/dev/null || cat "$HTTP_RESPONSE"
+
+          if [[ "$STATUS" != "201" ]]; then
+            exit 1
+          fi
+
+
