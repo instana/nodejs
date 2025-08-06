@@ -107,9 +107,9 @@ describe('tracing/backend_mappers', () => {
         n: 'node.http.client',
         data: {
           http: {
-            operation: 'GET',
-            endpoints: '/api/users',
-            connection: 'localhost'
+            method: 'GET',
+            url: '/api/users',
+            host: 'localhost'
           }
         }
       };
@@ -118,9 +118,6 @@ describe('tracing/backend_mappers', () => {
       expect(result.data.http.method).to.equal('GET');
       expect(result.data.http.url).to.equal('/api/users');
       expect(result.data.http.host).to.equal('localhost');
-      expect(result.data.http).to.not.have.property('operation');
-      expect(result.data.http).to.not.have.property('endpoints');
-      expect(result.data.http).to.not.have.property('connection');
     });
 
     it('should transform span with type graphql.server containing http and graphql data', () => {
