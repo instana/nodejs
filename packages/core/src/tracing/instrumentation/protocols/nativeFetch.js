@@ -102,80 +102,70 @@ function instrument() {
 
       return originalFetch.apply(originalThis, originalArgs);
     }
-    // See https://developer.mozilla.org/en-US/docs/Web/API/fetch#parameters -> resource for the possible variants
-    // to provide a URL to fetch.
-    let completeCallUrl;
-    let method = 'GET';
-    const resource = originalArgs[0];
-    let params;
-    let capturedHeaders;
 
-    if (resource != null) {
-      let rawUrl;
-      if (typeof resource === 'string') {
-        rawUrl = resource;
-      } else if (isFetchApiRequest(resource)) {
-        // The first argument is an instance of Request, see https://developer.mozilla.org/en-US/docs/Web/API/Request.
-        rawUrl = resource.url;
-        method = resource.method;
-        capturedHeaders = getExtraHeadersFromFetchHeaders(resource.headers, extraHttpHeadersToCapture);
-      } else if (typeof resource.toString === 'function') {
-        // This also handles the case when the resource is a URL object, as well as any object that has a custom
-        // stringifier.
-        rawUrl = resource.toString();
-      }
-      completeCallUrl = sanitizeUrl(rawUrl);
-      params = splitAndFilter(rawUrl);
-    }
-
-    const options = originalArgs[1];
-    if (options) {
-      if (options.method) {
-        // Both the Request object and the options object can specify the HTTP method. If both are present, the
-        // options object takes precedence.
-        method = options.method;
-      }
-      if (options.headers) {
-        // If the resource argument is a Fetch API Request object, we might have captured headers from that object
-        // already when examining the Request object. We deliberately discard those here. This accurately represents
-        // the behavior of fetch(), if there are headers in both the Request object and the options object, only the
-        // headers from the options object are applied.
-        if (isFetchApiHeaders(options.headers)) {
-          capturedHeaders = getExtraHeadersFromFetchHeaders(options.headers, extraHttpHeadersToCapture);
-        } else {
-          capturedHeaders = getExtraHeadersCaseInsensitive(options.headers, extraHttpHeadersToCapture);
-        }
-      }
-    }
-
-    /**
-     * Although the HTTP span ignoring feature currently applies only to entry spans (phase 1),
-     * both server and client spans share the same span.data.http structure.
-     *
-     * To maintain consistency and prepare for future support of exit spans (phase 2),
-     * we're applying the transformation logic to both entry and exit spans now.
-     * This ensures structural alignment and avoids duplicating effort later.
-     *
-     */
-    const spanData = {
-      http: {
-        operation: method,
-        endpoints: completeCallUrl,
-        params
-      }
-    };
     return cls.ns.runAndReturn(() => {
       // NOTE: Check for parentSpan existence, because of allowRootExitSpan is being enabled
       const span = cls.startSpan({
         spanName: 'node.http.client',
         kind: constants.EXIT,
         traceId: parentSpan?.t,
-        parentSpanId: parentSpan?.s,
-        spanData
+        parentSpanId: parentSpan?.s
       });
 
       // startSpan updates the W3C trace context and writes it back to CLS, so we have to refetch the updated context
       w3cTraceContext = cls.getW3cTraceContext();
+
+      // See https://developer.mozilla.org/en-US/docs/Web/API/fetch#parameters -> resource for the possible variants
+      // to provide a URL to fetch.
+      let completeCallUrl;
+      let method = 'GET';
+      const resource = originalArgs[0];
+      let params;
+      let capturedHeaders;
+
+      if (resource != null) {
+        let rawUrl;
+        if (typeof resource === 'string') {
+          rawUrl = resource;
+        } else if (isFetchApiRequest(resource)) {
+          // The first argument is an instance of Request, see https://developer.mozilla.org/en-US/docs/Web/API/Request.
+          rawUrl = resource.url;
+          method = resource.method;
+          capturedHeaders = getExtraHeadersFromFetchHeaders(resource.headers, extraHttpHeadersToCapture);
+        } else if (typeof resource.toString === 'function') {
+          // This also handles the case when the resource is a URL object, as well as any object that has a custom
+          // stringifier.
+          rawUrl = resource.toString();
+        }
+        completeCallUrl = sanitizeUrl(rawUrl);
+        params = splitAndFilter(rawUrl);
+      }
+
+      const options = originalArgs[1];
+      if (options) {
+        if (options.method) {
+          // Both the Request object and the options object can specify the HTTP method. If both are present, the
+          // options object takes precedence.
+          method = options.method;
+        }
+        if (options.headers) {
+          // If the resource argument is a Fetch API Request object, we might have captured headers from that object
+          // already when examining the Request object. We deliberately discard those here. This accurately represents
+          // the behavior of fetch(), if there are headers in both the Request object and the options object, only the
+          // headers from the options object are applied.
+          if (isFetchApiHeaders(options.headers)) {
+            capturedHeaders = getExtraHeadersFromFetchHeaders(options.headers, extraHttpHeadersToCapture);
+          } else {
+            capturedHeaders = getExtraHeadersCaseInsensitive(options.headers, extraHttpHeadersToCapture);
+          }
+        }
+      }
+
+      span.data.http = {
+        method,
+        url: completeCallUrl,
+        params
+      };
 
       span.stack = tracingUtil.getStackTrace(instanaFetch);
 

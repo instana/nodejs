@@ -86,36 +86,13 @@ function instrumentClientHttp2Session(clientHttp2Session) {
     for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
-    let method;
-    let path;
-    method = method || 'GET';
-    path = path || '/';
 
-    /**
-     * Although the HTTP span ignoring feature currently applies only to entry spans (phase 1),
-     * both server and client spans share the same span.data.http structure.
-     *
-     * To maintain consistency and prepare for future support of exit spans (phase 2),
-     * we're applying the transformation logic to both entry and exit spans now.
-     * This ensures structural alignment and avoids duplicating effort later.
-     *
-     * Note: The HTTP method and other related fields are captured later during request processing.
-     * Since span ignoring is limited to entry spans at this stage, setting data for exit spans here is safe.
-     * This logic will be further refined in upcoming iterations.
-     */
-    const spanData = {
-      http: {
-        operation: method,
-        endpoints: ''
-      }
-    };
     return cls.ns.runAndReturn(() => {
       const span = cls.startSpan({
         spanName: 'node.http.client',
         kind: constants.EXIT,
         traceId: parentSpan?.t,
-        parentSpanId: parentSpan?.s,
-        spanData
+        parentSpanId: parentSpan?.s
       });
 
       // startSpan updates the W3C trace context and writes it back to CLS, so we have to refetch the updated context
@@ -130,19 +107,26 @@ function instrumentClientHttp2Session(clientHttp2Session) {
       const reqHeaders = readSymbolProperty(stream, sentHeadersS);
       let capturedHeaders = getExtraHeadersCaseInsensitive(reqHeaders, extraHttpHeadersToCapture);
 
+      let method;
+      let path;
       let status;
       if (reqHeaders) {
         method = reqHeaders[HTTP2_HEADER_METHOD];
         path = reqHeaders[HTTP2_HEADER_PATH];
       }
+      method = method || 'GET';
+      path = path || '/';
 
-      span.stack = tracingUtil.getStackTrace(request);
       const pathWithoutQuery = sanitizeUrl(path);
       const params = splitAndFilter(path);
 
-      span.data.http.operation = method;
-      span.data.http.endpoints = origin + pathWithoutQuery;
-      span.data.http.params = params;
+      span.stack = tracingUtil.getStackTrace(request);
+
+      span.data.http = {
+        method,
+        url: origin + pathWithoutQuery,
+        params
+      };
 
       stream.on('response', resHeaders => {
         status = resHeaders[HTTP2_HEADER_STATUS];

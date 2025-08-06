@@ -197,60 +197,43 @@ function instrument(coreModule, forceHttps) {
       return clientRequest;
     }
 
-    let completeCallUrl;
-    let params;
-
-    if (urlArg && typeof urlArg === 'string') {
-      // just one string....
-      completeCallUrl = sanitizeUrl(urlArg);
-      params = splitAndFilter(urlArg);
-    } else if (urlArg && isUrlObject(urlArg)) {
-      completeCallUrl = sanitizeUrl(url.format(urlArg));
-      params = dropLeadingQuestionMark(filterParams(urlArg.search));
-    } else if (options) {
-      const urlAndQuery = constructFromUrlOpts(options, coreModule, forceHttps);
-      completeCallUrl = urlAndQuery[0];
-      params = urlAndQuery[1];
-    }
-
-    /**
-     * Although the HTTP span ignoring feature currently applies only to entry spans (phase 1),
-     * both server and client spans share the same span.data.http structure.
-     *
-     * To maintain consistency and prepare for future support of exit spans (phase 2),
-     * we're applying the transformation logic to both entry and exit spans now.
-     * This ensures structural alignment and avoids duplicating effort later.
-     *
-     * Note: The HTTP method and other related fields are captured later during request processing.
-     * Since span ignoring is limited to entry spans at this stage, setting data for exit spans here is safe.
-     * This logic will be further refined in upcoming iterations.
-     */
-    const spanData = {
-      http: {
-        endpoints: completeCallUrl,
-        params
-      }
-    };
-
     cls.ns.run(() => {
       // NOTE: Check for parentSpan existence, because of allowRootExitSpan is being enabled
       const span = cls.startSpan({
         spanName: 'node.http.client',
         kind: constants.EXIT,
         traceId: parentSpan?.t,
-        parentSpanId: parentSpan?.s,
-        spanData
+        parentSpanId: parentSpan?.s
       });
 
       // startSpan updates the W3C trace context and writes it back to CLS, so we have to refetch the updated context
       // object from CLS.
       w3cTraceContext = cls.getW3cTraceContext();
 
+      let completeCallUrl;
+      let params;
+      if (urlArg && typeof urlArg === 'string') {
+        // just one string....
+        completeCallUrl = sanitizeUrl(urlArg);
+        params = splitAndFilter(urlArg);
+      } else if (urlArg && isUrlObject(urlArg)) {
+        completeCallUrl = sanitizeUrl(url.format(urlArg));
+        params = dropLeadingQuestionMark(filterParams(urlArg.search));
+      } else if (options) {
+        const urlAndQuery = constructFromUrlOpts(options, coreModule, forceHttps);
+        completeCallUrl = urlAndQuery[0];
+        params = urlAndQuery[1];
+      }
+
       span.stack = tracingUtil.getStackTrace(request);
 
       const boundCallback = cls.ns.bind(function boundCallback(res) {
-        span.data.http.operation = clientRequest.method;
-        span.data.http.status = res.statusCode;
+        span.data.http = {
+          method: clientRequest.method,
+          url: completeCallUrl,
+          status: res.statusCode,
+          params
+        };
 
         const headers = captureRequestHeaders(options, clientRequest, res);
         if (headers) {
@@ -280,7 +263,7 @@ function instrument(coreModule, forceHttps) {
         // A synchronous exception indicates a failure that is not covered by the listeners. Using a malformed URL for
         // example is a case that triggers a synchronous exception.
         span.data.http = {
-          endpoints: completeCallUrl,
+          url: completeCallUrl,
           error: e ? e.message : ''
         };
         span.d = Date.now() - span.ts;
@@ -327,8 +310,8 @@ function instrument(coreModule, forceHttps) {
           errorMessage = 'Request aborted';
         }
         span.data.http = {
-          operation: clientRequest.method,
-          endpoints: completeCallUrl,
+          method: clientRequest.method,
+          url: completeCallUrl,
           error: errorMessage
         };
         span.d = Date.now() - span.ts;
