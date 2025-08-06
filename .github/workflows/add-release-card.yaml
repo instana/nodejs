@@ -56,16 +56,18 @@ jobs:
           set -euo pipefail
 
           echo "${{ steps.commits.outputs.COMMITS }}" > commits.txt
-          LINKS=$(grep -oE 'refs https://[^ ]+' commits.txt | sort | uniq)
+          REFS=$(printf '%s\n' "${{ steps.commits.outputs.COMMITS }}" \
+                | grep -oE 'refs[[:space:]]+https?://[^[:space:]]+' \
+                | sort -u)
 
-          if [[ -z "$LINKS" ]]; then
+          if [[ -z "$REFS" ]]; then
             echo "No referenced links found."
             echo "refs_list=No refs found" >> "$GITHUB_OUTPUT"
           else
             echo "Found referenced links:"
-            echo "$LINKS"
+            echo "$REFS"
             echo "refs_list<<EOF" >> "$GITHUB_OUTPUT"
-            echo "$LINKS" >> "$GITHUB_OUTPUT"
+            echo "$REFS" >> "$GITHUB_OUTPUT"
             echo "EOF" >> "$GITHUB_OUTPUT"
           fi
 
