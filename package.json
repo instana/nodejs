@@ -186,7 +186,7 @@
     "koa": "3.0.1",
     "koa-bodyparser": "4.4.1",
     "koa-morgan": "1.0.1",
-    "koa-router": "13.1.1",
+    "koa-router": "14.0.0",
     "lerna": "8.1.8",
     "lodash": "4.17.21",
     "log4js": "6.9.1",
