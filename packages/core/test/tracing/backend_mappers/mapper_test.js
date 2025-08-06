@@ -79,4 +79,53 @@ describe('tracing/backend_mappers', () => {
       expect(transform(span)).to.deep.equal(span);
     });
   });
+
+  describe('Kafka Mapper', () => {
+    beforeEach(() => {
+      span = {
+        n: 'kafka',
+        t: '3234567803',
+        s: '3234567892',
+        p: '3234567891',
+        data: {
+          kafka: { operation: 'produce', endpoints: 'topic1' }
+        }
+      };
+    });
+
+    it('should correctly map "operation" to "access" and "endpoints" to "service"', () => {
+      const result = transform(span);
+      expect(result.data.kafka.access).to.equal('produce');
+      expect(result.data.kafka.service).to.equal('topic1');
+      expect(result.data.kafka).to.not.have.property('operation');
+      expect(result.data.kafka).to.not.have.property('endpoints');
+    });
+
+    it('should leave already mapped fields unchanged', () => {
+      span = {
+        data: {
+          kafka: { access: 'consume', service: 'topic1' },
+          otherField: 'value'
+        }
+      };
+
+      const result = transform(span);
+      expect(result.data.kafka.access).to.equal('consume');
+      expect(result.data.kafka.service).to.equal('topic1');
+      expect(result.data.kafka).to.not.have.property('operation');
+      expect(result.data.kafka).to.not.have.property('endpoints');
+      expect(result.data.otherField).to.equal('value');
+    });
+
+    it('should return the span unchanged when no mapper is found for the span type', () => {
+      span.n = 'grpc';
+      const result = transform(span);
+      expect(result).to.equal(span);
+    });
+
+    it('should produce consistent output when called multiple times on the same kafka span', () => {
+      transform(span);
+      expect(transform(span)).to.deep.equal(span);
+    });
+  });
 });
