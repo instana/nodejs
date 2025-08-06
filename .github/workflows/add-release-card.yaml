@@ -85,10 +85,10 @@ jobs:
           DESCRIPTION="
           New release is out! 🧜🏽
 
-          # Changes
+          *Changes*
           $REFS_LIST
 
-          # Checkout
+          *Checkout*
           https://github.com/instana/nodejs/releases
           "
 
