@@ -41,25 +41,37 @@ const fieldMappings = {
  * @returns {import('../../core').InstanaBaseSpan} The transformed span.
  */
 module.exports.transform = span => {
-  const spanName = span.n;
-  const mappings = fieldMappings[spanName];
-  // If no mappings exist for the span name or the span data, return the original span
-  if (!mappings || !span.data[spanName]) return span;
+  //  In most cases, `span.n` matches the key inside `span.data` (e.g., `span.n === 'redis'` → `span.data.redis`).
+  //  However, there are exceptions where `span.n` represents a higher-level concept or protocol,
+  //  while `span.data` contains one or more lower-level components.
+  //  For example:
+  //  For `span.n === 'node.http.server'` or 'node.http.client', the actual data is under `span.data.http`.
+  //  In the case of `span.n === 'graphql.server'`, the span includes both GraphQL-specific and HTTP data,
+  //  so `span.data` may contain both `graphql` and `http` keys simultaneously.
+  Object.keys(span.data).forEach(key => {
+    const mappings = fieldMappings[key];
+    if (!mappings) return;
 
-  Object.keys(span.data[spanName]).forEach(internalField => {
-    // Only proceed if there's a mapping for the internal field in the current span type
-    if (internalField in mappings) {
-      const backendField = mappings[internalField];
-
-      if (backendField) {
-        span.data[spanName][backendField] = span.data[spanName][internalField];
-        delete span.data[spanName][internalField];
-      } else {
-        // If backendField is falsy, remove the internalField from span data
-        delete span.data[spanName][internalField];
-      }
-    }
+    applyMappings(span.data[key], mappings);
   });
 
   return span;
 };
+
+/**
+ * Applies field mappings to a specific data section.
+ *
+ * @param {Record<string, any>} dataSection - The span data object to transform.
+ * @param {FieldMapping} mappings - The field mapping rules to apply.
+ */
+function applyMappings(dataSection, mappings) {
+  Object.keys(dataSection).forEach(internalField => {
+    if (internalField in mappings) {
+      const backendField = mappings[internalField];
+      if (backendField) {
+        dataSection[backendField] = dataSection[internalField];
+      }
+      delete dataSection[internalField];
+    }
+  });
+}
