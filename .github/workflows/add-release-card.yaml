@@ -57,7 +57,7 @@ jobs:
 
           echo "${{ steps.commits.outputs.COMMITS }}" > commits.txt
           REFS=$(printf '%s\n' "${{ steps.commits.outputs.COMMITS }}" \
-                | grep -oE 'refs[[:space:]]+https?://[^[:space:]]+' \
+                | grep -oP 'refs\s+\Khttps?://\S+' \
                 | sort -u)
 
           if [[ -z "$REFS" ]]; then
@@ -83,9 +83,17 @@ jobs:
           SUMMARY="Node.js tracer release ${{ steps.tags.outputs.LATEST_TAG }}"
           DESCRIPTION="${REFS_LIST}"
 
+          KEYS=$(printf '%s\n' "$REFS_LIST" \
+                  | grep -oP '/browse/\K[A-Z]+-[0-9]+' \
+                  | sort -u)
+
+          LINKS_JSON=$(printf '%s\n' $KEYS | jq -R '
+            {add:{type:{name:"Relates"}, outwardIssue:{key:.}}}' | jq -s '.')
+
           PAYLOAD=$(jq -n \
             --arg summary "$SUMMARY" \
             --arg description "$DESCRIPTION" \
+            --argjson links "$LINKS_JSON" \
             '{
               fields: {
                 project: { key: "INSTA" },
@@ -94,7 +102,8 @@ jobs:
                 issuetype: { name: "Task" },
                 labels: ["release"],
                 components: [{ name: "Tracers Node.js Team" }, { name: "Jira Admin Team"}]
-              }
+              },
+              update:{issuelinks:$links}
             }')
 
           HTTP_RESPONSE=$(mktemp)
