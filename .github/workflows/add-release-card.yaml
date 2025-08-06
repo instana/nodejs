@@ -82,15 +82,15 @@ jobs:
 
           SUMMARY="Node.js tracer release ${{ steps.tags.outputs.LATEST_TAG }}"
 
-          # multiline description -> fix
           DESCRIPTION="
           New release is out! 🧜🏽
 
-          Changes:
-          $REFS_LIST"
+          # Changes
+          $REFS_LIST
 
-          Checkout also:
+          # Checkout
           https://github.com/instana/nodejs/releases
+          "
 
           KEYS=$(printf '%s\n' "$REFS_LIST" \
                   | grep -oP '/browse/\K[A-Z]+-[0-9]+' \
