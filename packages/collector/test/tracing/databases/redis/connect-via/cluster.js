@@ -26,7 +26,7 @@ module.exports = async function connect(redis, log, tries = 0) {
 
   const nodes = [
     {
-      url: `redis://${process.env.AZURE_REDIS_CLUSTER}`
+      url: `rediss://${process.env.AZURE_REDIS_CLUSTER}`
     }
   ];
 
