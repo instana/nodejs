@@ -128,4 +128,31 @@ describe('tracing/backend_mappers', () => {
       expect(transform(span)).to.deep.equal(span);
     });
   });
+
+  describe('Transform function with multiple entries in span.data', () => {
+    beforeEach(() => {
+      span = {
+        n: 'kafka',
+        t: '3234567803',
+        s: '3234567892',
+        p: '3234567891',
+        data: {
+          kafka: { operation: 'produce', endpoints: 'topic1' },
+          otherField: { message: 'No mapping here' }
+        }
+      };
+    });
+
+    it('should remap specific kafka fields  while leaving unrelated fields unchanged', () => {
+      const result = transform(span);
+
+      expect(result.data.kafka.access).to.equal('produce');
+      expect(result.data.kafka.service).to.equal('topic1');
+      expect(result.data.kafka).to.not.have.property('operation');
+      expect(result.data.kafka).to.not.have.property('endpoints');
+
+      // Verify that non-kafka fields are preserved without modification
+      expect(result.data.otherField).to.deep.equal({ message: 'No mapping here' });
+    });
+  });
 });
