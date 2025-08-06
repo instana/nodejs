@@ -81,7 +81,16 @@ jobs:
           set -euo pipefail
 
           SUMMARY="Node.js tracer release ${{ steps.tags.outputs.LATEST_TAG }}"
-          DESCRIPTION="New release is out! https://github.com/instana/nodejs/releases"
+
+          # multiline description -> fix
+          DESCRIPTION="
+          New release is out! 🧜🏽
+
+          Changes:
+          $REFS_LIST"
+
+          Checkout also:
+          https://github.com/instana/nodejs/releases
 
           KEYS=$(printf '%s\n' "$REFS_LIST" \
                   | grep -oP '/browse/\K[A-Z]+-[0-9]+' \
