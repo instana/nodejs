@@ -15,6 +15,7 @@ const tracingUtil = require('./tracingUtil');
 const spanBuffer = require('./spanBuffer');
 const shimmer = require('./shimmer');
 const supportedVersion = require('./supportedVersion');
+const { otelInstrumentations } = require('./opentelemetry-instrumentations');
 const cls = require('./cls');
 const coreUtil = require('../util');
 
@@ -239,7 +240,6 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
       initInstrumenations(config);
 
       if (_config.tracing.useOpentelemetry) {
-        const { otelInstrumentations } = require('./opentelemetry-instrumentations');
         otelInstrumentations.init(config, cls);
       }
       if (coreUtil.esm.isESMApp()) {
