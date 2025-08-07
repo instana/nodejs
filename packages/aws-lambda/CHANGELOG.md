@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.21.3](https://github.com/instana/nodejs/compare/v4.21.2...v4.21.3) (2025-08-07)
+
+
+### Bug Fixes
+
+* **aws-lambda:** improved coldstarts ([#1933](https://github.com/instana/nodejs/issues/1933)) ([cfede29](https://github.com/instana/nodejs/commit/cfede297893f4535b6a53602a8737c07cb4c7f5a))
+
+
+
+
+
 ## [4.21.2](https://github.com/instana/nodejs/compare/v4.21.1...v4.21.2) (2025-08-05)
 
 **Note:** Version bump only for package @instana/aws-lambda

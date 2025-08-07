@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.21.3](https://github.com/instana/nodejs/compare/v4.21.2...v4.21.3) (2025-08-07)
+
+**Note:** Version bump only for package @instana/aws-fargate
+
+
+
+
+
 ## [4.21.2](https://github.com/instana/nodejs/compare/v4.21.1...v4.21.2) (2025-08-05)
 
 **Note:** Version bump only for package @instana/aws-fargate

@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.21.3](https://github.com/instana/nodejs/compare/v4.21.2...v4.21.3) (2025-08-07)
+
+
+### Bug Fixes
+
+* **aws-lambda:** improved coldstarts ([#1933](https://github.com/instana/nodejs/issues/1933)) ([cfede29](https://github.com/instana/nodejs/commit/cfede297893f4535b6a53602a8737c07cb4c7f5a))
+* bumped https-proxy-agent from 7.0.2 to 7.0.6 ([#1929](https://github.com/instana/nodejs/issues/1929)) ([e8f1c4d](https://github.com/instana/nodejs/commit/e8f1c4d356d35880fa38876d7502df5c6e15784f))
+* **collector:** resolved logger not being initialised in source.js ([#1914](https://github.com/instana/nodejs/issues/1914)) ([ce8ba32](https://github.com/instana/nodejs/commit/ce8ba32609a0892ec92db84adef28c1a59e0bee5))
+
+
+### Features
+
+* added support for koa-router v14 ([#1898](https://github.com/instana/nodejs/issues/1898)) ([25dae2e](https://github.com/instana/nodejs/commit/25dae2e86aebd5e7dd129d53f06bd553dfa37b37))
+
+
+### Reverts
+
+* Revert "fix: reduced memory when otel integration is turned off (#1905)" ([9bb6f96](https://github.com/instana/nodejs/commit/9bb6f961e031e5d587c6adadc6c3d866af337c80)), closes [#1905](https://github.com/instana/nodejs/issues/1905)
+* Revert "build: bumped @aws-sdk/client-dynamodb from 3.858.0 to 3.859.0" ([f3901c8](https://github.com/instana/nodejs/commit/f3901c8455a80bacb24d217af1883e0234ffeee3))
+* Revert "build: bumped @aws-sdk/client-kinesis from 3.858.0 to 3.859.0" ([b581c43](https://github.com/instana/nodejs/commit/b581c430ed615b339fd2e0f2f0ec11e6e30f539e))
+* Revert "build: bumped @aws-sdk/client-lambda from 3.858.0 to 3.859.0" ([c682cbc](https://github.com/instana/nodejs/commit/c682cbcccb0dadfa59915e36561bdd897373cfe9))
+* Revert "build: bumped @aws-sdk/client-s3 from 3.858.0 to 3.859.0" ([19b9f73](https://github.com/instana/nodejs/commit/19b9f735ae5ddca5a977160d0f3e294f0de2a32d))
+* Revert "build: bumped @aws-sdk/client-sns from 3.858.0 to 3.859.0" ([08bc7d9](https://github.com/instana/nodejs/commit/08bc7d9d1102b5d29943d810b9b585c6b75fbafd))
+* Revert "build: bumped @aws-sdk/client-sqs from 3.858.0 to 3.859.0" ([99ee51d](https://github.com/instana/nodejs/commit/99ee51deeb1a1f9b103f16c6cd22b8381b1afd15))
+* Revert "build: bumped @aws-sdk/lib-dynamodb from 3.858.0 to 3.859.0" ([7eb5b23](https://github.com/instana/nodejs/commit/7eb5b23c2f2aeab99487de6124a46d76e67ecd7f))
+
+
+
+
+
 ## [4.21.2](https://github.com/instana/nodejs/compare/v4.21.1...v4.21.2) (2025-08-05)
 
 
