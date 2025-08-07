@@ -55,10 +55,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "${{ steps.commits.outputs.COMMITS }}" > commits.txt
-          REFS=$(printf '%s\n' "${{ steps.commits.outputs.COMMITS }}" \
-                | grep -oP 'refs\s+\Khttps?://\S+' \
-                | sort -u)
+          printf '%s\n' "${{ steps.commits.outputs.COMMITS }}" > commits.txt
+          REFS=$(grep -oP 'refs\s+\Khttps?://\S+' commits.txt | sort -u)
 
           if [[ -z "$REFS" ]]; then
             echo "No referenced links found."

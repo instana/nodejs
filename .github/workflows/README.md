@@ -1,6 +1,5 @@
 # GH Local testing
 
-
 brew install act
 
 # for Rancher
