@@ -18,3 +18,5 @@ example-apps/eum-serverless-collector/website.txt
 example-apps/eum-serverless-collector/public/instana-sdk.js
 example-apps/eum-serverless-collector/public/instana-eum.js
 example-apps/eum-serverless-collector/.angular
+
+.github/workflows/.secrets
