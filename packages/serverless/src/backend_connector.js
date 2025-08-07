@@ -21,12 +21,12 @@ const timeoutEnvVar = 'INSTANA_TIMEOUT';
 const layerExtensionHeartbeatTimeout = 500;
 
 // NOTE: The initial heartbeat can be very slow when the Lambda is in cold start.
-const initialLayerExtensionHeartbeatTimeout = 2400;
+const initialLayerExtensionHeartbeatTimeout = 3000;
 
 // NOTE: When lambda is in cold start, the communication between the handler
 //       and the extension can take a while. We need to have a bigger timeout
 //       for the initially.
-const initialLayerExtensionRequestTimeout = 2400;
+const initialLayerExtensionRequestTimeout = 3000;
 
 const layerExtensionRequestTimeout = process.env.INSTANA_LAMBDA_EXTENSION_TIMEOUT_IN_MS
   ? Number(process.env.INSTANA_LAMBDA_EXTENSION_TIMEOUT_IN_MS)
