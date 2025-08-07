@@ -55,8 +55,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          printf '%s\n' "${{ steps.commits.outputs.COMMITS }}" > commits.txt
-          REFS=$(grep -oP 'refs\s+\Khttps?://\S+' commits.txt | sort -u)
+          cat > commits.txt <<EOF
+          ${{ steps.commits.outputs.COMMITS }}
+          EOF
+          REFS=$(grep -oiP 'ref(?:s)?\s+\Khttps?://\S+' commits.txt | sort -u)
 
           if [[ -z "$REFS" ]]; then
             echo "No referenced links found."
@@ -90,45 +92,59 @@ jobs:
           https://github.com/instana/nodejs/releases
           "
 
-          KEYS=$(printf '%s\n' "$REFS_LIST" \
-                  | grep -oP '/browse/\K[A-Z]+-[0-9]+' \
-                  | sort -u)
-
-          LINKS_JSON=$(printf '%s\n' $KEYS | jq -R '
-            {add:{type:{name:"Relates"}, outwardIssue:{key:.}}}' | jq -s '.')
-
-          PAYLOAD=$(jq -n \
+          CREATE_PAYLOAD=$(jq -n \
             --arg summary "$SUMMARY" \
             --arg description "$DESCRIPTION" \
-            --argjson links "$LINKS_JSON" \
             '{
-              fields: {
-                project: { key: "INSTA" },
-                summary: $summary,
-                description: $description,
-                issuetype: { name: "Task" },
-                labels: ["release"],
-                components: [{ name: "Tracers Node.js Team" }, { name: "Jira Admin Team"}]
-              },
-              update:{issuelinks:$links}
+              fields:{
+                project:{key:"INSTA"},
+                summary:$summary,
+                description:$description,
+                issuetype:{name:"Task"},
+                labels:["release"],
+                components:[
+                  {name:"Tracers Node.js Team"},
+                  {name:"Jira Admin Team"}
+                ]
+              }
             }')
 
-          HTTP_RESPONSE=$(mktemp)
+          RESP_FILE=$(mktemp)
+          STATUS=$(curl --http1.1 -sS -o "$RESP_FILE" -w "%{http_code}" \
+                    -X POST "${JIRA_BASE_URL%/}/rest/api/2/issue" \
+                    -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+                    -H "Content-Type: application/json" \
+                    -d "$CREATE_PAYLOAD")
 
-          STATUS=$(curl --http1.1 -sS -o "$HTTP_RESPONSE" \
-                        -w "%{http_code}" \
-                        -X POST "${JIRA_BASE_URL%/}/rest/api/2/issue" \
-                        -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-                        -H "Content-Type: application/json" \
-                        -d "$PAYLOAD")
-
-          echo "🔁 HTTP status: $STATUS"
-          echo "📩 Response body:"
-          cat "$HTTP_RESPONSE" | jq . 2>/dev/null || cat "$HTTP_RESPONSE"
+          echo "🔁 create-issue status: $STATUS"
+          cat "$RESP_FILE" | jq . 2>/dev/null || cat "$RESP_FILE"
 
           if [[ "$STATUS" != "201" ]]; then
             exit 1
           fi
 
+          NEW_KEY=$(jq -r '.key' "$RESP_FILE")
+          echo "✅ Created release issue: $NEW_KEY"
 
+          KEYS=$(printf '%s\n' "$REFS_LIST" \
+                   | grep -oP '/browse/\K[A-Z]+-[0-9]+' \
+                   | sort -u)
 
+          for TGT in $KEYS; do
+            [[ "$TGT" == "$NEW_KEY" ]] && continue
+
+            LINK_PAYLOAD=$(jq -n \
+              --arg inward "$NEW_KEY" \
+              --arg outward "$TGT" \
+              '{type:{name:"Relates"},
+                inwardIssue:{key:$inward},
+                outwardIssue:{key:$outward}}')
+
+            LSTATUS=$(curl --http1.1 -sS -o /dev/null -w "%{http_code}" \
+                       -X POST "${JIRA_BASE_URL%/}/rest/api/2/issueLink" \
+                       -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+                       -H "Content-Type: application/json" \
+                       -d "$LINK_PAYLOAD")
+
+            echo "🔗 link $NEW_KEY ↔ $TGT → $LSTATUS"
+          done
