@@ -164,6 +164,11 @@ function addHeaders(headers, span, w3cTraceContext) {
   if (!headers) {
     return;
   }
+  if (span.shouldSuppressDownstream) {
+    // Suppress trace propagation to downstream services.
+    addTraceLevelHeader(headers, '0', w3cTraceContext);
+    return;
+  }
   headers[constants.spanIdHeaderName] = span.s;
   headers[constants.traceIdHeaderName] = span.t;
   headers[constants.traceLevelHeaderName] = '1';

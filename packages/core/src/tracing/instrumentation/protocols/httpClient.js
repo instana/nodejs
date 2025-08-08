@@ -419,6 +419,14 @@ function setHeadersOnRequest(clientRequest, span, w3cTraceContext) {
   if (!isItSafeToModifiyHeadersForRequest(clientRequest)) {
     return;
   }
+
+  if (span.shouldSuppressDownstream) {
+    // Suppress trace propagation to downstream services.
+    clientRequest.setHeader(constants.traceLevelHeaderName, '0');
+    setW3cHeadersOnRequest(clientRequest, w3cTraceContext);
+    return;
+  }
+
   clientRequest.setHeader(constants.spanIdHeaderName, span.s);
   clientRequest.setHeader(constants.traceIdHeaderName, span.t);
   clientRequest.setHeader(constants.traceLevelHeaderName, '1');
