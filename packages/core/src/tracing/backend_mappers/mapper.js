@@ -27,10 +27,16 @@ const fieldMappings = {
   },
   redis: {
     operation: 'command'
+    // connection: connection # already normalized
   },
   kafka: {
     operation: 'access',
     endpoints: 'service'
+  },
+  http: {
+    operation: 'method',
+    endpoints: 'url',
+    connection: 'host'
   }
 };
 
