@@ -104,7 +104,7 @@
     "@elastic/elasticsearch": "9.1.1",
     "@elastic/elasticsearch-v7.17.0": "npm:@elastic/elasticsearch@7.17.0",
     "@elastic/elasticsearch-v7.9.0": "npm:@elastic/elasticsearch@7.9.0",
-    "@google-cloud/pubsub": "5.1.0",
+    "@google-cloud/pubsub": "5.2.0",
     "@google-cloud/storage": "7.16.0",
     "@grpc/grpc-js": "1.13.4",
     "@grpc/grpc-js-v1": "npm:@grpc/grpc-js@1.9.4",
