@@ -363,30 +363,32 @@ mochaSuiteFn('tracing/http2', function () {
       }));
 
   describe('when endpoints are configured to be ignored', function () {
+    let cusomServerControls;
+    let customClientControls;
     before(async () => {
-      serverControls = new ProcessControls({
+      cusomServerControls = new ProcessControls({
         appPath: path.join(__dirname, 'server'),
         http2: true,
-        useGlobalAgent: true
+        agentControls
       });
 
-      clientControls = new ProcessControls({
+      customClientControls = new ProcessControls({
         appPath: path.join(__dirname, 'client'),
         http2: true,
         useGlobalAgent: true,
         forcePortSearching: true,
         env: {
-          SERVER_PORT: serverControls.getPort(),
+          SERVER_PORT: cusomServerControls.getPort(),
           INSTANA_IGNORE_ENDPOINTS: 'http:get'
         }
       });
 
-      await serverControls.startAndWaitForAgentConnection();
-      await clientControls.startAndWaitForAgentConnection();
+      await cusomServerControls.startAndWaitForAgentConnection();
+      await customClientControls.startAndWaitForAgentConnection();
     });
 
     after(async () => {
-      await Promise.all([serverControls.stop(), clientControls.stop(), agentControls.stopAgent()]);
+      await Promise.all([cusomServerControls.stop(), customClientControls.stop(), agentControls.stopAgent()]);
     });
 
     beforeEach(() => agentControls.clearReceivedTraceData());
@@ -394,7 +396,7 @@ mochaSuiteFn('tracing/http2', function () {
     afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
 
     it('should not trace GET request as per ignore config', async () => {
-      await clientControls.sendRequest({ method: 'GET', path: '/' });
+      await customClientControls.sendRequest({ method: 'GET', path: '/' });
 
       await retry(async () => {
         const spans = await agentControls.getSpans();
@@ -403,7 +405,7 @@ mochaSuiteFn('tracing/http2', function () {
     });
 
     it('should not trace downstream calls', async () => {
-      await clientControls.sendRequest({ method: 'GET', path: '/trigger-downstream' });
+      await customClientControls.sendRequest({ method: 'GET', path: '/trigger-downstream' });
 
       await retry(async () => {
         const spans = await agentControls.getSpans();
