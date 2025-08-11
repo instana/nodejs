@@ -95,7 +95,7 @@
     "@aws-sdk/client-sqs": "3.864.0",
     "@aws-sdk/client-sqs-v3": "npm:@aws-sdk/client-sqs@3.24.0",
     "@aws-sdk/client-ssm": "3.679.0",
-    "@aws-sdk/lib-dynamodb": "3.859.0",
+    "@aws-sdk/lib-dynamodb": "3.864.0",
     "@aws-sdk/util-retry": "3.370.0",
     "@azure/storage-blob": "12.28.0",
     "@azure/storage-blob-v1227": "npm:@azure/storage-blob@12.27.0",
