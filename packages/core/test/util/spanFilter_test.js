@@ -490,6 +490,20 @@ describe('util.spanFilter', () => {
       expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
     });
 
+    it('should return true when span.n is node.http.server and config has http entry with matching endpoint', () => {
+      ignoreEndpoints = {
+        http: [{ endpoints: ['/api/test'] }]
+      };
+      span.n = 'node.http.server';
+      span.data = {
+        http: {
+          operation: 'GET',
+          endpoints: '/api/test'
+        }
+      };
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
+    });
+
     it('should return false when span.n is node.http.client and config has http entry with matching method', () => {
       ignoreEndpoints = {
         http: [{ methods: ['POST'] }]

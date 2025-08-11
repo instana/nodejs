@@ -171,10 +171,16 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
 }
 
 /**
- * Resolves the configuration key for a given span type.
+ * Normalizes the configuration key for a given span type.
  *
- * For specific span names like 'node.http.server', 'node.http.client', and 'graphql.server',
- * the normalized span data key is 'http'. This ensures that they share the same field mapping logic.
+ * For the span name 'node.http.server', this function returns 'http'
+ * to ensure consistent field mapping.
+ *
+ * Note: The 'node.http.client' span type is intentionally not normalized here
+ * because client-side HTTP spans are currently excluded from this normalization logic.
+ * This can be updated in the future if HTTP exit filtering is required.
+ *
+ * All other span types are returned unchanged.
  *
  * @param {string} spanType - The span name (e.g., span.n).
  * @returns {string} - The normalized span type key.
@@ -182,7 +188,6 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
 function normalizeSpanDataTypeKey(spanType) {
   switch (spanType) {
     case 'node.http.server':
-    case 'node.http.client':
       return 'http';
     default:
       return spanType;
