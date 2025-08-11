@@ -30,6 +30,8 @@ spec:
       value: "prod-dependency-bot-$(params.node-version)"
     - name: pipeline-ref
       value: "prod-dependency-bot-pipeline"
+    - name: skip-cache
+      value: $(params.skip-cache)
 
 ---
 

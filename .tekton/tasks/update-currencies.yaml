@@ -50,22 +50,19 @@ spec:
         OPEN_PRS=$(gh pr list --head currency-bot --base main --state open --json number | jq 'length')
   
         git ls-remote --exit-code --heads origin currency-bot >/dev/null 2>&1
-        EXIT_CODE=$?
+        BRANCH_EXISTS=$?
 
-        if [[ $EXIT_CODE -eq 0 && $OPEN_PRS -eq 0 ]]; then
-          echo "No open PRs found. Deleting branch currency-bot."
+        if [[ $BRANCH_EXISTS -eq 0 && $OPEN_PRS -eq 0 ]]; then
+          echo "Branch exists without open PRs. Deleting branch currency-bot."
           git push origin --delete currency-bot
-          EXIT_CODE=1
-        fi
-
-        if [[ $EXIT_CODE != 0 ]]; then
+          BRANCH_EXISTS=1
+        fi      
+        if [[ $BRANCH_EXISTS -ne 0 ]]; then
           echo "Running patch and minor updates..."
-          MAJOR_UPDATES_MODE=false BRANCH=currency-bot node bin/dependencies/currency/update-currencies.js    
+          MAJOR_UPDATES_MODE=false BRANCH=currency-bot node bin/dependencies/currency/update-currencies.js
         else
-          echo "Open PRs exist for branch currency-bot. Skipping patch/minor updates."
-        fi        
+          echo "Open PR exists for branch currency-bot. Skipping patch/minor updates."
+        fi
 
         echo "Running major updates..."
         MAJOR_UPDATES_MODE=true BRANCH=currency-bot-major node bin/dependencies/currency/update-currencies.js
-
-        
