@@ -143,7 +143,7 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
     // For e.g., for a Kafka, the ignoreconfig like { methods: ['consume'], endpoints: ['t1'] }.
     if (typeof ignoreconfig === 'object') {
       // Case where ignoreconfig does not specify any filtering criteria.
-      if (!ignoreconfig.methods && !ignoreconfig.endpoints) {
+      if (!ignoreconfig.methods && !ignoreconfig.endpoints && !ignoreconfig.connections) {
         return false;
       }
 
