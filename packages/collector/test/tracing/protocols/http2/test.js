@@ -367,13 +367,13 @@ mochaSuiteFn('tracing/http2', function () {
       serverControls = new ProcessControls({
         appPath: path.join(__dirname, 'server'),
         http2: true,
-        agentControls
+        useGlobalAgent: true
       });
 
       clientControls = new ProcessControls({
         appPath: path.join(__dirname, 'client'),
         http2: true,
-        agentControls,
+        useGlobalAgent: true,
         forcePortSearching: true,
         env: {
           SERVER_PORT: serverControls.getPort(),
@@ -385,7 +385,9 @@ mochaSuiteFn('tracing/http2', function () {
       await clientControls.startAndWaitForAgentConnection();
     });
 
-    after(() => Promise.all([serverControls.stop(), clientControls.stop()]));
+    after(async () => {
+      await Promise.all([serverControls.stop(), clientControls.stop(), agentControls.stopAgent()]);
+    });
 
     beforeEach(() => agentControls.clearReceivedTraceData());
 
