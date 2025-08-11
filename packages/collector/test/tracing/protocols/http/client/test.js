@@ -261,6 +261,7 @@ mochaSuiteFn('tracing/http client', function () {
         });
       });
     });
+
     describe('when downstream suppression is disabled via INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION', function () {
       let serverControls;
       let clientControls;
@@ -293,6 +294,8 @@ mochaSuiteFn('tracing/http client', function () {
 
       afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
 
+      // Flow: HTTP entry (ignored)
+      //       ├── HTTP Exit (traces)
       it('should trace downstream calls', async () => {
         await clientControls.sendRequest({ method: 'GET', path: '/downstream-call' });
 
@@ -312,7 +315,7 @@ mochaSuiteFn('tracing/http client', function () {
       });
     });
 
-    describe('when root exit spans are allowed', function () {
+    describe('when root exit spans are allowed(should not ignore exits calls alone)', function () {
       let agentControls;
 
       before(async () => {
@@ -332,7 +335,7 @@ mochaSuiteFn('tracing/http client', function () {
 
       afterEach(() => agentControls.clearIpcMessages());
 
-      it('should trace only exit spans when entry spans are ignored', async () => {
+      it('should trace exit spans when ignore endpoints are configured', async () => {
         await delay(2500);
 
         await retry(async () => {
