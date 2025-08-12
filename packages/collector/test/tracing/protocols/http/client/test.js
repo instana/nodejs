@@ -379,6 +379,65 @@ mochaSuiteFn('tracing/http client', function () {
         });
       });
     });
+
+    describe('SDK: ignore entry spans', function () {
+      let serverControls;
+      let clientControls;
+
+      before(async () => {
+        serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'serverApp'),
+          useGlobalAgent: true,
+          appUsesHttps: false
+        });
+
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'clientApp'),
+          useGlobalAgent: true,
+          appUsesHttps: false,
+          env: {
+            SERVER_PORT: serverControls.getPort(),
+            INSTANA_IGNORE_ENDPOINTS: 'http:get'
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      after(() => Promise.all([serverControls.stop(), clientControls.stop()]));
+
+      beforeEach(() => globalAgent.instance.clearReceivedTraceData());
+
+      afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
+
+      it('should ignore call and expose ignored span via instana.currentSpan()', async () => {
+        const currentSpan = await clientControls.sendRequest({
+          method: 'GET',
+          path: '/current-span'
+        });
+
+        // The currentSpan contains an InstanaIgnoredSpan, which represents a span that has been ignored
+        // due to the configured `INSTANA_IGNORE_ENDPOINTS` setting (`http:get` in this case).
+        // Its span is not recorded in the agent’s collected spans. However, it can still be accessed via
+        // `instana.currentSpan()`, which returns an `InstanaIgnoredSpan`.
+        expect(currentSpan.spanConstructorName).to.be.eql('InstanaIgnoredSpan');
+        expect(currentSpan.span).to.exist;
+        expect(currentSpan.span).to.include({
+          n: 'node.http.server',
+          k: 1
+        });
+        expect(currentSpan.span.data.http).to.include({
+          endpoints: '/current-span',
+          operation: 'GET'
+        });
+
+        await retry(async () => {
+          const spans = await globalAgent.instance.getSpans();
+          expect(spans).to.have.length(0);
+        });
+      });
+    });
   });
 });
 

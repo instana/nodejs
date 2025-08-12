@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 });
 require('@instana/core/test/test_util/loadExpressV4');
 
-require('../../../../..')();
+const instana = require('../../../../..')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 const AWS = require('aws-sdk');
@@ -306,6 +306,15 @@ app.post('/upload-s3', (req, res) => {
 });
 app.get('/matrix-params/:params', (req, res) => {
   res.sendStatus(200);
+});
+
+app.get('/current-span', (req, res) => {
+  const span = instana.currentSpan();
+  const currentSpan = {
+    spanConstructorName: span.span?.constructor?.name,
+    span: span.span
+  };
+  res.status(200).json(currentSpan);
 });
 
 app.get('/downstream-call', (req, res) => {
