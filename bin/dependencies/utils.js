@@ -265,10 +265,13 @@ exports.prepareGitEnvironment = (branchName, cwd, isMainBranch) => {
  * @returns {boolean} True if PR was created, false otherwise
  */
 exports.commitAndCreatePR = options => {
-  const { packageName, currentVersion, newVersion, branchName, cwd, skipPush, prTitle } = options;
+  const { packageName, currentVersion, newVersion, branchName, cwd, skipPush, prTitle, isCurrency = false } = options;
+
+  const commitType = isCurrency ? 'build' : 'fix';
+  const commitMessage = `${commitType}: bumped ${packageName} from ${currentVersion} to ${newVersion}`;
 
   execSync("git add '*package.json' package-lock.json", { cwd });
-  execSync(`git commit -m "build: bumped ${packageName} from ${currentVersion} to ${newVersion}"`, { cwd });
+  execSync(`git commit -m ${commitMessage}`, { cwd });
 
   if (exports.hasCommits(branchName, cwd)) {
     if (!skipPush) {

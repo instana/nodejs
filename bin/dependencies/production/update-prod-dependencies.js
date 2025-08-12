@@ -75,7 +75,8 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
       branchName,
       cwd,
       skipPush: SKIP_PUSH,
-      prTitle: `[Prod Dependency Bot] Bumped ${dep} from ${currentVersion} to ${latestVersion}`
+      prTitle: `[Prod Dependency] Bumped ${dep} from ${currentVersion} to ${latestVersion}`,
+      isCurrency: false
     });
 
     if (prCreated) {

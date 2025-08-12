@@ -118,7 +118,8 @@ currencies.forEach(currency => {
       branchName,
       cwd,
       skipPush: SKIP_PUSH,
-      prTitle: `[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}`
+      prTitle: `[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}`,
+      isCurrency: true
     });
   } else {
     // For non-major updates, just commit the changes but don't push yet
