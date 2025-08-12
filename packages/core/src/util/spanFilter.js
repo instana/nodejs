@@ -139,28 +139,27 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
   }
 
   return ignoreConfigs.some(ignoreconfig => {
-    // Advanced filtering:
-    // For e.g., for a Kafka, the ignoreconfig like { methods: ['consume'], endpoints: ['t1'] }.
-    if (typeof ignoreconfig === 'object') {
-      // Case where ignoreconfig does not specify any filtering criteria.
-      if (!ignoreconfig.methods && !ignoreconfig.endpoints) {
-        return false;
-      }
+    if (typeof ignoreconfig !== 'object') return false;
 
-      if (ignoreconfig.methods && !matchMethods(span, ignoreconfig)) {
-        return false;
-      }
-      if (ignoreconfig.endpoints && !matchEndpoints(span, ignoreconfig)) {
-        return false;
-      }
-      if (ignoreconfig.connections && !matchConnections(span, ignoreconfig)) {
-        return false;
-      }
+    let matched = false;
 
-      // extend more filtering cases in future
-      return true;
+    if (ignoreconfig.methods) {
+      if (!matchMethods(span, ignoreconfig)) return false;
+      matched = true;
     }
-    return false;
+
+    if (ignoreconfig.endpoints) {
+      if (!matchEndpoints(span, ignoreconfig)) return false;
+      matched = true;
+    }
+
+    if (ignoreconfig.connections) {
+      if (!matchConnections(span, ignoreconfig)) return false;
+      matched = true;
+    }
+
+    // extend more filtering cases in future
+    return matched;
   });
 }
 

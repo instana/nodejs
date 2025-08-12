@@ -404,6 +404,77 @@ describe('util.spanFilter', () => {
         };
         expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
       });
+
+      it('returns true when span connection matches redis ignored connection list', () => {
+        ignoreEndpoints = {
+          redis: [{ connections: ['127.0.0.1:6379'] }]
+        };
+        span.n = 'redis';
+        span.data = {
+          redis: {
+            connection: '127.0.0.1:6379'
+          }
+        };
+
+        expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
+      });
+
+      it('returns false when span connection does not match ignored connection list', () => {
+        ignoreEndpoints = {
+          redis: [{ connections: ['192.168.1.1:6379'] }]
+        };
+        span.n = 'redis';
+        span.data = {
+          redis: {
+            connection: '127.0.0.1:6379'
+          }
+        };
+
+        expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
+      });
+
+      it('returns false when no connections specified in ignore config', () => {
+        ignoreEndpoints = {
+          redis: [{}]
+        };
+        span.n = 'redis';
+        span.data = {
+          redis: {
+            connection: '127.0.0.1:6379'
+          }
+        };
+
+        expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
+      });
+
+      it('returns false when span type not in ignorable list', () => {
+        ignoreEndpoints = {
+          redis: [{ connections: ['127.0.0.1:6379'] }]
+        };
+        span.n = 'http';
+        span.data = {
+          http: {
+            connection: '127.0.0.1:6379'
+          }
+        };
+
+        expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
+      });
+
+      it('returns true when span connection and method configured', () => {
+        ignoreEndpoints = {
+          redis: [{ connections: ['127.0.0.1:6379'], methods: ['GET'] }]
+        };
+        span.n = 'http';
+        span.data = {
+          http: {
+            connection: '127.0.0.1:6379',
+            operation: 'GET'
+          }
+        };
+
+        expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
+      });
     });
   });
 });
