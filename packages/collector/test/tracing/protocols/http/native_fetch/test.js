@@ -573,14 +573,16 @@ mochaSuiteFn('tracing/native fetch', function () {
     });
   });
 
-  describe('ignoring endpoints', () => {
+  describe('when endpoints are configured to be ignored', () => {
     let customServerControls;
     let customClientControls;
+
     before(async () => {
       customServerControls = new ProcessControls({
         appPath: path.join(__dirname, 'serverApp'),
         useGlobalAgent: true
       });
+
       customClientControls = new ProcessControls({
         appPath: path.join(__dirname, 'clientApp'),
         useGlobalAgent: true,
@@ -602,7 +604,7 @@ mochaSuiteFn('tracing/native fetch', function () {
     beforeEach(() => globalAgent.instance.clearReceivedTraceData());
 
     it('should not record spans', async () => {
-      await customClientControls.sendRequest({ method: 'GET', path: '/trigger-downstream' });
+      await customClientControls.sendRequest({ method: 'GET', path: '/' });
 
       await retry(async () => {
         const spans = await globalAgent.instance.getSpans();
@@ -611,7 +613,7 @@ mochaSuiteFn('tracing/native fetch', function () {
     });
 
     it('should not record downstream calls', async () => {
-      await customClientControls.sendRequest({ method: 'GET', path: '/' });
+      await customClientControls.sendRequest({ method: 'GET', path: '/downstream-call' });
 
       await retry(async () => {
         const spans = await globalAgent.instance.getSpans();

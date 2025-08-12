@@ -365,6 +365,7 @@ mochaSuiteFn('tracing/http2', function () {
   describe('when endpoints are configured to be ignored', function () {
     let cusomServerControls;
     let customClientControls;
+
     before(async () => {
       cusomServerControls = new ProcessControls({
         appPath: path.join(__dirname, 'server'),

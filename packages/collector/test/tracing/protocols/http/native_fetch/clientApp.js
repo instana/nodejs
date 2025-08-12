@@ -55,7 +55,7 @@ app.get('/fetch-deferred', async (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/trigger-downstream', async (req, res) => {
+app.get('/downstream-call', async (req, res) => {
   await fetch(`http://127.0.0.1:${agentPort}?k=1`);
   res.sendStatus(200);
 });

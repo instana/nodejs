@@ -295,7 +295,7 @@ mochaSuiteFn('tracing/http client', function () {
       afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
 
       // Flow: HTTP entry (ignored)
-      //       ├── HTTP Exit (traces)
+      //       ├── HTTP Exit (traced)
       it('should trace downstream calls', async () => {
         await clientControls.sendRequest({ method: 'GET', path: '/downstream-call' });
 
@@ -315,34 +315,67 @@ mochaSuiteFn('tracing/http client', function () {
       });
     });
 
-    describe('when root exit spans are allowed(should not ignore exits calls alone)', function () {
-      let agentControls;
+    describe('when downstream call is configured to be ignored', function () {
+      let serverControls;
+      let clientControls;
+
+      const { AgentStubControls } = require('../../../../apps/agentStubControls');
+      const customAgentControls = new AgentStubControls();
 
       before(async () => {
-        agentControls = new ProcessControls({
-          appPath: path.join(__dirname, 'allowRootExitSpanApp'),
-          useGlobalAgent: true,
-          env: {
-            INSTANA_ALLOW_ROOT_EXIT_SPAN: true,
-            INSTANA_IGNORE_ENDPOINTS: 'http:get'
+        await customAgentControls.startAgent({
+          ignoreEndpoints: {
+            http: [
+              {
+                methods: ['get'],
+                endpoints: [`http://127.0.0.1:${customAgentControls.agentPort}/`]
+              }
+            ]
           }
         });
 
-        await agentControls.start(null, null, true);
+        serverControls = new ProcessControls({
+          agentControls: customAgentControls,
+          appPath: path.join(__dirname, 'serverApp'),
+          appUsesHttps: false
+        });
+
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'clientApp'),
+          agentControls: customAgentControls,
+          appUsesHttps: false,
+          env: {
+            SERVER_PORT: serverControls.getPort()
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
       });
 
-      beforeEach(() => globalAgent.instance.clearReceivedTraceData());
+      after(() => Promise.all([serverControls.stop(), clientControls.stop(), customAgentControls.stopAgent()]));
 
-      afterEach(() => agentControls.clearIpcMessages());
+      beforeEach(() => customAgentControls.clearReceivedTraceData());
 
-      it('should trace exit spans when ignore endpoints are configured', async () => {
-        await delay(2500);
+      afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
+
+      it('should trace downstream calls', async () => {
+        await clientControls.sendRequest({ method: 'GET', path: '/downstream-call' });
 
         await retry(async () => {
-          const spans = await globalAgent.instance.getSpans();
-          expect(spans).to.have.length(4);
-          expect(spans.filter(s => s.k === constants.EXIT)).to.have.length(4);
-          expect(spans.filter(s => s.k === constants.ENTRY)).to.have.length(0);
+          await delay(500);
+          const spans = await customAgentControls.getSpans();
+
+          const downstreamHttpSpan = spans.find(
+            span =>
+              span.n === 'node.http.client' &&
+              span.k === 2 &&
+              span.data.http.method === 'GET' &&
+              span.data.http.url === `http://127.0.0.1:${customAgentControls.agentPort}/`
+          );
+
+          expect(spans).to.have.length(2);
+          expect(downstreamHttpSpan).to.exist;
         });
       });
     });
