@@ -361,6 +361,59 @@ mochaSuiteFn('tracing/http2', function () {
           })
         );
       }));
+
+  describe('when endpoints are configured to be ignored', function () {
+    let cusomServerControls;
+    let customClientControls;
+
+    before(async () => {
+      cusomServerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'server'),
+        http2: true,
+        agentControls
+      });
+
+      customClientControls = new ProcessControls({
+        appPath: path.join(__dirname, 'client'),
+        http2: true,
+        useGlobalAgent: true,
+        forcePortSearching: true,
+        env: {
+          SERVER_PORT: cusomServerControls.getPort(),
+          INSTANA_IGNORE_ENDPOINTS: 'http:get'
+        }
+      });
+
+      await cusomServerControls.startAndWaitForAgentConnection();
+      await customClientControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await Promise.all([cusomServerControls.stop(), customClientControls.stop(), agentControls.stopAgent()]);
+    });
+
+    beforeEach(() => agentControls.clearReceivedTraceData());
+
+    afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
+
+    it('should not trace GET request as per ignore config', async () => {
+      await customClientControls.sendRequest({ method: 'GET', path: '/' });
+
+      await retry(async () => {
+        const spans = await agentControls.getSpans();
+        expect(spans).to.have.length(0);
+      });
+    });
+
+    it('should not trace downstream calls', async () => {
+      await customClientControls.sendRequest({ method: 'GET', path: '/trigger-downstream' });
+
+      await retry(async () => {
+        const spans = await agentControls.getSpans();
+        expect(spans).to.have.length(0);
+      });
+    });
+  });
 });
 
 function constructPath(basePath, withQuery) {

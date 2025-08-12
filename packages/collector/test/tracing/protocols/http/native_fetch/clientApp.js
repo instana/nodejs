@@ -55,6 +55,11 @@ app.get('/fetch-deferred', async (req, res) => {
   res.sendStatus(200);
 });
 
+app.get('/downstream-call', async (req, res) => {
+  await fetch(`http://127.0.0.1:${agentPort}?k=1`);
+  res.sendStatus(200);
+});
+
 app.get('/fetch', async (req, res) => {
   const resourceArgument = createResourceArgument(req, '/fetch');
   let response;

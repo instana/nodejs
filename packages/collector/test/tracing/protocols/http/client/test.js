@@ -148,6 +148,297 @@ mochaSuiteFn('tracing/http client', function () {
       });
     });
   });
+
+  describe('ignore-endpoints', function () {
+    describe('when endpoints are configured to be ignored (with agent config)', function () {
+      let serverControls;
+      let clientControls;
+      const { AgentStubControls } = require('../../../../apps/agentStubControls');
+      const customAgentControls = new AgentStubControls();
+
+      before(async () => {
+        await customAgentControls.startAgent({
+          ignoreEndpoints: {
+            http: [
+              {
+                methods: ['get'],
+                endpoints: ['/get-url-only', '/downstream-call']
+              }
+            ]
+          }
+        });
+
+        serverControls = new ProcessControls({
+          agentControls: customAgentControls,
+          appPath: path.join(__dirname, 'serverApp'),
+          appUsesHttps: false
+        });
+
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'clientApp'),
+          agentControls: customAgentControls,
+          appUsesHttps: false,
+          env: {
+            SERVER_PORT: serverControls.getPort()
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      after(() => Promise.all([serverControls.stop(), clientControls.stop(), customAgentControls.stopAgent()]));
+
+      beforeEach(() => customAgentControls.clearReceivedTraceData());
+
+      afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
+
+      it('should not trace HTTP calls as per ignore config', async () => {
+        await clientControls.sendRequest({ method: 'GET', path: '/get-url-only' });
+
+        await retry(async () => {
+          const spans = await customAgentControls.getSpans();
+          expect(spans).to.have.length(0);
+        });
+      });
+
+      it('should not trace downstream calls', async () => {
+        await clientControls.sendRequest({ method: 'GET', path: '/downstream-call' });
+
+        await retry(async () => {
+          const spans = await customAgentControls.getSpans();
+          expect(spans).to.have.length(0);
+        });
+      });
+    });
+
+    describe('when endpoints are configured to be ignored via INSTANA_IGNORE_ENDPOINTS_PATH', function () {
+      let serverControls;
+      let clientControls;
+
+      before(async () => {
+        serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'serverApp'),
+          useGlobalAgent: true,
+          appUsesHttps: false
+        });
+
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'clientApp'),
+          useGlobalAgent: true,
+          appUsesHttps: false,
+          env: {
+            SERVER_PORT: serverControls.getPort(),
+            INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml')
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      after(() => Promise.all([serverControls.stop(), clientControls.stop()]));
+
+      beforeEach(() => globalAgent.instance.clearReceivedTraceData());
+
+      afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
+
+      it('should not trace GET request as per ignore config', async () => {
+        await clientControls.sendRequest({ method: 'GET', path: '/get-url-only' });
+
+        await retry(async () => {
+          const spans = await globalAgent.instance.getSpans();
+          expect(spans).to.have.length(0);
+        });
+      });
+
+      it('should not trace downstream calls', async () => {
+        await clientControls.sendRequest({ method: 'GET', path: '/downstream-call' });
+
+        await retry(async () => {
+          const spans = await globalAgent.instance.getSpans();
+          expect(spans).to.have.length(0);
+        });
+      });
+    });
+
+    describe('when downstream suppression is disabled via INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION', function () {
+      let serverControls;
+      let clientControls;
+
+      before(async () => {
+        serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'serverApp'),
+          useGlobalAgent: true,
+          appUsesHttps: false
+        });
+
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'clientApp'),
+          useGlobalAgent: true,
+          appUsesHttps: false,
+          env: {
+            SERVER_PORT: serverControls.getPort(),
+            INSTANA_IGNORE_ENDPOINTS: 'http:get',
+            INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION: true
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      after(() => Promise.all([serverControls.stop(), clientControls.stop()]));
+
+      beforeEach(() => globalAgent.instance.clearReceivedTraceData());
+
+      afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
+
+      // Flow: HTTP entry (ignored)
+      //       ├── HTTP Exit (traced)
+      it('should trace downstream calls', async () => {
+        await clientControls.sendRequest({ method: 'GET', path: '/downstream-call' });
+
+        await retry(async () => {
+          const spans = await globalAgent.instance.getSpans();
+          const downstreamHttpSpan = spans.find(
+            span =>
+              span.n === 'node.http.client' &&
+              span.k === 2 &&
+              span.data.http.method === 'GET' &&
+              span.data.http.url === `http://127.0.0.1:${globalAgent.instance.agentPort}/`
+          );
+
+          expect(spans).to.have.length(1);
+          expect(downstreamHttpSpan).to.exist;
+        });
+      });
+    });
+
+    describe('when downstream call is configured to be ignored', function () {
+      let serverControls;
+      let clientControls;
+
+      const { AgentStubControls } = require('../../../../apps/agentStubControls');
+      const customAgentControls = new AgentStubControls();
+
+      before(async () => {
+        await customAgentControls.startAgent({
+          ignoreEndpoints: {
+            http: [
+              {
+                methods: ['get'],
+                endpoints: [`http://127.0.0.1:${customAgentControls.agentPort}/`]
+              }
+            ]
+          }
+        });
+
+        serverControls = new ProcessControls({
+          agentControls: customAgentControls,
+          appPath: path.join(__dirname, 'serverApp'),
+          appUsesHttps: false
+        });
+
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'clientApp'),
+          agentControls: customAgentControls,
+          appUsesHttps: false,
+          env: {
+            SERVER_PORT: serverControls.getPort()
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      after(() => Promise.all([serverControls.stop(), clientControls.stop(), customAgentControls.stopAgent()]));
+
+      beforeEach(() => customAgentControls.clearReceivedTraceData());
+
+      afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
+
+      it('should trace downstream calls', async () => {
+        await clientControls.sendRequest({ method: 'GET', path: '/downstream-call' });
+
+        await retry(async () => {
+          await delay(500);
+          const spans = await customAgentControls.getSpans();
+
+          const downstreamHttpSpan = spans.find(
+            span =>
+              span.n === 'node.http.client' &&
+              span.k === 2 &&
+              span.data.http.method === 'GET' &&
+              span.data.http.url === `http://127.0.0.1:${customAgentControls.agentPort}/`
+          );
+
+          expect(spans).to.have.length(2);
+          expect(downstreamHttpSpan).to.exist;
+        });
+      });
+    });
+
+    describe('SDK: ignore entry spans', function () {
+      let serverControls;
+      let clientControls;
+
+      before(async () => {
+        serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'serverApp'),
+          useGlobalAgent: true,
+          appUsesHttps: false
+        });
+
+        clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'clientApp'),
+          useGlobalAgent: true,
+          appUsesHttps: false,
+          env: {
+            SERVER_PORT: serverControls.getPort(),
+            INSTANA_IGNORE_ENDPOINTS: 'http:get'
+          }
+        });
+
+        await serverControls.startAndWaitForAgentConnection();
+        await clientControls.startAndWaitForAgentConnection();
+      });
+
+      after(() => Promise.all([serverControls.stop(), clientControls.stop()]));
+
+      beforeEach(() => globalAgent.instance.clearReceivedTraceData());
+
+      afterEach(() => Promise.all([serverControls.clearIpcMessages(), clientControls.clearIpcMessages()]));
+
+      it('should ignore call and expose ignored span via instana.currentSpan()', async () => {
+        const currentSpan = await clientControls.sendRequest({
+          method: 'GET',
+          path: '/current-span'
+        });
+
+        // The currentSpan contains an InstanaIgnoredSpan, which represents a span that has been ignored
+        // due to the configured `INSTANA_IGNORE_ENDPOINTS` setting (`http:get` in this case).
+        // Its span is not recorded in the agent’s collected spans. However, it can still be accessed via
+        // `instana.currentSpan()`, which returns an `InstanaIgnoredSpan`.
+        expect(currentSpan.spanConstructorName).to.be.eql('InstanaIgnoredSpan');
+        expect(currentSpan.span).to.exist;
+        expect(currentSpan.span).to.include({
+          n: 'node.http.server',
+          k: 1
+        });
+        expect(currentSpan.span.data.http).to.include({
+          endpoints: '/current-span',
+          operation: 'GET'
+        });
+
+        await retry(async () => {
+          const spans = await globalAgent.instance.getSpans();
+          expect(spans).to.have.length(0);
+        });
+      });
+    });
+  });
 });
 
 function registerTests(appUsesHttps) {

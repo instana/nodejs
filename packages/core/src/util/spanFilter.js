@@ -43,16 +43,17 @@ function activate(extraConfig) {
 }
 
 // List of span types to allowed to ignore
-const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka'];
+const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka', 'node.http.server'];
 
 /**
  * @param {import('../core').InstanaBaseSpan} span
+ * @param {string} spanTypeKey
  * @param {import('../tracing').IgnoreEndpointsFields} ignoreconfig
  * @returns {boolean}
  */
-function matchEndpoints(span, ignoreconfig) {
+function matchEndpoints(span, spanTypeKey, ignoreconfig) {
   // Parse the endpoints from the span data.
-  const spanEndpoints = parseSpanEndpoints(span.data[span.n]?.endpoints);
+  const spanEndpoints = parseSpanEndpoints(span.data[spanTypeKey]?.endpoints);
   if (!spanEndpoints.length) {
     return false;
   }
@@ -85,11 +86,12 @@ function matchEndpoints(span, ignoreconfig) {
 
 /**
  * @param {import("../core").InstanaBaseSpan} span
+ * @param {string} spanTypeKey
  * @param {import('../tracing').IgnoreEndpointsFields} ignoreconfig
  * @returns {boolean}
  */
-function matchMethods(span, ignoreconfig) {
-  const spanOperation = span.data[span.n]?.operation?.toLowerCase();
+function matchMethods(span, spanTypeKey, ignoreconfig) {
+  const spanOperation = span.data[spanTypeKey]?.operation?.toLowerCase();
   let methodMatches = false;
 
   if (ignoreconfig.methods) {
@@ -104,11 +106,12 @@ function matchMethods(span, ignoreconfig) {
 
 /**
  * @param {import("../core").InstanaBaseSpan} span
+ * @param {string} spanTypeKey
  * @param {import('../tracing').IgnoreEndpointsFields} ignoreconfig
  * @returns {boolean}
  */
-function matchConnections(span, ignoreconfig) {
-  const spanOperation = span.data[span.n]?.connection?.toLowerCase();
+function matchConnections(span, spanTypeKey, ignoreconfig) {
+  const spanOperation = span.data[spanTypeKey]?.connection?.toLowerCase();
   let connectionMatches = false;
 
   if (ignoreconfig.connections) {
@@ -133,8 +136,13 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
     return false;
   }
 
-  const ignoreConfigs = ignoreEndpointsConfig[span.n];
-  if (!ignoreConfigs) {
+  const spanTypeKey = normalizeSpanDataTypeKey(span.n);
+  if (!spanTypeKey) {
+    return false;
+  }
+
+  const ignoreConfigs = ignoreEndpointsConfig[spanTypeKey];
+  if (!ignoreConfigs || !Array.isArray(ignoreConfigs)) {
     return false;
   }
 
@@ -144,23 +152,47 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
     let matched = false;
 
     if (ignoreconfig.methods) {
-      if (!matchMethods(span, ignoreconfig)) return false;
+      if (!matchMethods(span, spanTypeKey, ignoreconfig)) return false;
       matched = true;
     }
 
     if (ignoreconfig.endpoints) {
-      if (!matchEndpoints(span, ignoreconfig)) return false;
+      if (!matchEndpoints(span, spanTypeKey, ignoreconfig)) return false;
       matched = true;
     }
 
     if (ignoreconfig.connections) {
-      if (!matchConnections(span, ignoreconfig)) return false;
+      if (!matchConnections(span, spanTypeKey, ignoreconfig)) return false;
       matched = true;
     }
 
     // extend more filtering cases in future
     return matched;
   });
+}
+
+/**
+ * Normalizes the configuration key for a given span type.
+ *
+ * For the span name 'node.http.server', this function returns 'http'
+ * to ensure consistent field mapping.
+ *
+ * Note: The 'node.http.client' span type is intentionally not normalized here
+ * because client-side HTTP spans are currently excluded from this normalization logic.
+ * This can be updated in the future if HTTP exit filtering is required.
+ *
+ * All other span types are returned unchanged.
+ *
+ * @param {string} spanType - The span name (e.g., span.n).
+ * @returns {string} - The normalized span type key.
+ */
+function normalizeSpanDataTypeKey(spanType) {
+  switch (spanType) {
+    case 'node.http.server':
+      return 'http';
+    default:
+      return spanType;
+  }
 }
 
 /**

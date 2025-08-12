@@ -200,6 +200,12 @@ function instrument() {
 }
 
 function injectTraceCorrelationHeaders(originalArgs, span, w3cTraceContext) {
+  if (span.shouldSuppressDownstream) {
+    // Suppress trace propagation to downstream services.
+    injectSuppressionHeader(originalArgs, w3cTraceContext);
+    return;
+  }
+
   const headersToAdd = {
     [constants.traceIdHeaderName]: span.t,
     [constants.spanIdHeaderName]: span.s,

@@ -476,5 +476,99 @@ describe('util.spanFilter', () => {
         expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
       });
     });
+
+    it('should return true when span.n is node.http.server and config has http entry with matching method', () => {
+      ignoreEndpoints = {
+        http: [{ methods: ['GET'] }]
+      };
+      span.n = 'node.http.server';
+      span.data = {
+        http: {
+          operation: 'GET'
+        }
+      };
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
+    });
+
+    it('should return true when span.n is node.http.server and config has http entry with matching endpoint', () => {
+      ignoreEndpoints = {
+        http: [{ endpoints: ['/api/test'] }]
+      };
+      span.n = 'node.http.server';
+      span.data = {
+        http: {
+          operation: 'GET',
+          endpoints: '/api/test'
+        }
+      };
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
+    });
+
+    it('should return false when span.n is node.http.client and config has http entry with matching method', () => {
+      ignoreEndpoints = {
+        http: [{ methods: ['POST'] }]
+      };
+      span.n = 'node.http.client';
+      span.data = {
+        http: {
+          operation: 'POST'
+        }
+      };
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
+    });
+
+    it('should return false when span.n is node.http.client and method does not match', () => {
+      ignoreEndpoints = {
+        http: [{ methods: ['DELETE'] }]
+      };
+      span.n = 'node.http.client';
+      span.data = {
+        http: {
+          operation: 'PUT'
+        }
+      };
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
+    });
+
+    it('should return false when span.n is node.http.server and config has no http entry', () => {
+      ignoreEndpoints = {
+        redis: [{ methods: ['GET'] }]
+      };
+      span.n = 'node.http.server';
+      span.data = {
+        http: {
+          operation: 'GET'
+        }
+      };
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(false);
+    });
+
+    // eslint-disable-next-line max-len
+    it('should return true when span.n is node.http.server and the endpoint matches the configured parameterized route', () => {
+      ignoreEndpoints = {
+        http: [{ endpoints: ['/users/:userId/books/:bookId'] }]
+      };
+      span.n = 'node.http.server';
+      span.data = {
+        http: {
+          endpoints: '/users/:userId/books/:bookId'
+        }
+      };
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
+    });
+
+    // eslint-disable-next-line max-len
+    it('should return true when span.n is node.http.server and the endpoint pattern exactly matches the configured optional segment route', () => {
+      ignoreEndpoints = {
+        http: [{ endpoints: ['/ab(cd)'] }]
+      };
+      span.n = 'node.http.server';
+      span.data = {
+        http: {
+          endpoints: '/ab(cd)'
+        }
+      };
+      expect(shouldIgnore(span, ignoreEndpoints)).to.equal(true);
+    });
   });
 });

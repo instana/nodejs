@@ -1,0 +1,5 @@
+tracing:
+  ignore-endpoints:
+    http:  
+    - methods: ["*"]  
+      endpoints: ["/get-url-only", "/downstream-call"]  

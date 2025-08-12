@@ -573,6 +573,55 @@ mochaSuiteFn('tracing/native fetch', function () {
     });
   });
 
+  describe('when endpoints are configured to be ignored', () => {
+    let customServerControls;
+    let customClientControls;
+
+    before(async () => {
+      customServerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'serverApp'),
+        useGlobalAgent: true
+      });
+
+      customClientControls = new ProcessControls({
+        appPath: path.join(__dirname, 'clientApp'),
+        useGlobalAgent: true,
+        env: {
+          SERVER_PORT: customServerControls.port,
+          INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml')
+        }
+      });
+
+      await customServerControls.startAndWaitForAgentConnection();
+      await customClientControls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await customClientControls.stop();
+      await customServerControls.stop();
+    });
+
+    beforeEach(() => globalAgent.instance.clearReceivedTraceData());
+
+    it('should not record spans', async () => {
+      await customClientControls.sendRequest({ method: 'GET', path: '/' });
+
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        expect(spans).to.have.lengthOf(0);
+      });
+    });
+
+    it('should not record downstream calls', async () => {
+      await customClientControls.sendRequest({ method: 'GET', path: '/downstream-call' });
+
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        expect(spans).to.have.lengthOf(0);
+      });
+    });
+  });
+
   it('must suppress tracing ', async () => {
     const response = await clientControls.sendRequest({
       path: constructPath({}),
