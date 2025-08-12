@@ -9,8 +9,6 @@
  */
 let ignoreEndpoints;
 
-let spanTypeKey = '';
-
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} config
  */
@@ -49,10 +47,11 @@ const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka', 'node.http.server'];
 
 /**
  * @param {import('../core').InstanaBaseSpan} span
+ * @param {string} spanTypeKey
  * @param {import('../tracing').IgnoreEndpointsFields} ignoreconfig
  * @returns {boolean}
  */
-function matchEndpoints(span, ignoreconfig) {
+function matchEndpoints(span, spanTypeKey, ignoreconfig) {
   // Parse the endpoints from the span data.
   const spanEndpoints = parseSpanEndpoints(span.data[spanTypeKey]?.endpoints);
   if (!spanEndpoints.length) {
@@ -87,10 +86,11 @@ function matchEndpoints(span, ignoreconfig) {
 
 /**
  * @param {import("../core").InstanaBaseSpan} span
+ * @param {string} spanTypeKey
  * @param {import('../tracing').IgnoreEndpointsFields} ignoreconfig
  * @returns {boolean}
  */
-function matchMethods(span, ignoreconfig) {
+function matchMethods(span, spanTypeKey, ignoreconfig) {
   const spanOperation = span.data[spanTypeKey]?.operation?.toLowerCase();
   let methodMatches = false;
 
@@ -106,10 +106,11 @@ function matchMethods(span, ignoreconfig) {
 
 /**
  * @param {import("../core").InstanaBaseSpan} span
+ * @param {string} spanTypeKey
  * @param {import('../tracing').IgnoreEndpointsFields} ignoreconfig
  * @returns {boolean}
  */
-function matchConnections(span, ignoreconfig) {
+function matchConnections(span, spanTypeKey, ignoreconfig) {
   const spanOperation = span.data[spanTypeKey]?.connection?.toLowerCase();
   let connectionMatches = false;
 
@@ -135,7 +136,7 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
     return false;
   }
 
-  spanTypeKey = normalizeSpanDataTypeKey(span.n);
+  const spanTypeKey = normalizeSpanDataTypeKey(span.n);
   if (!spanTypeKey) {
     return false;
   }
@@ -151,17 +152,17 @@ function shouldIgnore(span, ignoreEndpointsConfig) {
     let matched = false;
 
     if (ignoreconfig.methods) {
-      if (!matchMethods(span, ignoreconfig)) return false;
+      if (!matchMethods(span, spanTypeKey, ignoreconfig)) return false;
       matched = true;
     }
 
     if (ignoreconfig.endpoints) {
-      if (!matchEndpoints(span, ignoreconfig)) return false;
+      if (!matchEndpoints(span, spanTypeKey, ignoreconfig)) return false;
       matched = true;
     }
 
     if (ignoreconfig.connections) {
-      if (!matchConnections(span, ignoreconfig)) return false;
+      if (!matchConnections(span, spanTypeKey, ignoreconfig)) return false;
       matched = true;
     }
 
