@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.22.0](https://github.com/instana/nodejs/compare/v4.21.3...v4.22.0) (2025-08-13)
+
+
+### Bug Fixes
+
+* bumped pino from 9.6.0 to 9.8.0 ([#1936](https://github.com/instana/nodejs/issues/1936)) ([4d72a6a](https://github.com/instana/nodejs/commit/4d72a6ae31bde29c913cfb18af6304f32894a90c))
+* bumped semver from 7.5.4 to 7.7.2 ([#1935](https://github.com/instana/nodejs/issues/1935)) ([b9c64cb](https://github.com/instana/nodejs/commit/b9c64cb5e2fd899420a528c51403713bd78819ce))
+
+
+### Features
+
+* added support for ignoring http entry calls ([#1875](https://github.com/instana/nodejs/issues/1875)) ([42faf03](https://github.com/instana/nodejs/commit/42faf030459d5218165a377855dc6c43ea450d19))
+
+
+
+
+
 ## [4.21.3](https://github.com/instana/nodejs/compare/v4.21.2...v4.21.3) (2025-08-07)
 
 

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.22.0](https://github.com/instana/nodejs/compare/v4.21.3...v4.22.0) (2025-08-13)
+
+
+### Bug Fixes
+
+* bumped semver from 7.5.4 to 7.7.2 ([#1935](https://github.com/instana/nodejs/issues/1935)) ([b9c64cb](https://github.com/instana/nodejs/commit/b9c64cb5e2fd899420a528c51403713bd78819ce))
+
+
+
+
+
 ## [4.21.3](https://github.com/instana/nodejs/compare/v4.21.2...v4.21.3) (2025-08-07)
 
 **Note:** Version bump only for package @instana/shared-metrics
