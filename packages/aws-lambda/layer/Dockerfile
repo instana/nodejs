@@ -4,6 +4,8 @@
 ARG NODEJS_VERSION
 FROM public.ecr.aws/lambda/nodejs:${NODEJS_VERSION}
 
+RUN npm install -g npm@latest
+
 WORKDIR /opt
 COPY tmp/ .
 
