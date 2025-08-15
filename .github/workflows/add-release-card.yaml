@@ -104,7 +104,8 @@ jobs:
                 labels:["release"],
                 components:[
                   {name:"Tracers Node.js Team"},
-                  {name:"Jira Admin Team"}
+                  # For now we don't add the release card to the release list.
+                  # {name:"Jira Admin Team"}
                 ]
               }
             }')
