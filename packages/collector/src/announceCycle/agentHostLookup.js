@@ -119,7 +119,9 @@ function checkHost(host, cb) {
     }
   };
 
+  /** @type {import('http').ClientRequest} */
   let req;
+
   try {
     /**
      * TODO:
