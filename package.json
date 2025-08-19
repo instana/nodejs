@@ -170,7 +170,6 @@
     "fastify-v4": "npm:fastify@4.28.1",
     "gcstats.js": "1.0.0",
     "get-caller-file": "2.0.5",
-    "google-protobuf": "3.21.4",
     "got": "14.4.7",
     "got-v11": "npm:got@11.8.6",
     "graphql": "16.11.0",
