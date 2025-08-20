@@ -341,17 +341,6 @@
     "core": false
   },
   {
-    "name": "google-protobuf",
-    "policy": "45-days",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": "",
-    "core": false
-  },
-  {
     "name": "got",
     "policy": "45-days",
     "lastSupportedVersion": "",
