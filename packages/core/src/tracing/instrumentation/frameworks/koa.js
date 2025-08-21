@@ -11,6 +11,7 @@ const hook = require('../../../util/hook');
 const httpServer = require('../protocols/httpServer');
 const cls = require('../../cls');
 
+let logger;
 let active = false;
 
 exports.activate = function activate() {
@@ -21,11 +22,15 @@ exports.deactivate = function deactivate() {
   active = false;
 };
 
-exports.init = function init() {
+exports.init = function init(config) {
+  logger = config.logger;
+
   // Note: koa-router is deprecated from v9 with @koa/router being the recommended replacement
-  // We maintain instrumentation for both packages since customers may be using either one
-  // This approach requires minimal maintenance while ensuring compatibility with both router implementations
-  hook.onModuleLoad('koa-router', instrumentRouter);
+  // We maintain instrumentation for both packages since customers may be using it
+  hook.onModuleLoad('koa-router', module => {
+    logDeprecatedWarning();
+    instrumentRouter(module);
+  });
 
   hook.onModuleLoad('@koa/router', instrumentRouter);
 };
@@ -126,4 +131,11 @@ function annotateHttpEntrySpanWithPathTemplate(pathTemplate) {
     return;
   }
   span.data.http.path_tpl = pathTemplate;
+}
+
+function logDeprecatedWarning() {
+  logger.warn(
+    // eslint-disable-next-line max-len
+    '[Deprecation Warning] The support for koa-router library is deprecated. Please consider using @koa/router instead.'
+  );
 }
