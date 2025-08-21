@@ -57,7 +57,7 @@ mochaSuiteFn('tracing/koa', function () {
     check('/does-not-exist-so-use-catch-all-regexp', '/.*/');
 
     function check(actualPath, expectedTemplate) {
-      it(`must report koa-router path templates for actual path: ${actualPath}`, () =>
+      it(`must report @koa/router path templates for actual path: ${actualPath}`, () =>
         controls
           .sendRequest({
             method: 'GET',

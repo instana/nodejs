@@ -440,7 +440,7 @@
     "core": false
   },
   {
-    "name": "koa-router",
+    "name": "@koa/router",
     "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",

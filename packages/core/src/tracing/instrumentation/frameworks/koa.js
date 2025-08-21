@@ -22,7 +22,12 @@ exports.deactivate = function deactivate() {
 };
 
 exports.init = function init() {
+  // Note: koa-router is deprecated from v9 with @koa/router being the recommended replacement
+  // We maintain instrumentation for both packages since customers may be using either one
+  // This approach requires minimal maintenance while ensuring compatibility with both router implementations
   hook.onModuleLoad('koa-router', instrumentRouter);
+
+  hook.onModuleLoad('@koa/router', instrumentRouter);
 };
 
 function instrumentRouter(Router) {

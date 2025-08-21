@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 });
 
 import Koa from 'koa';
-import Router from 'koa-router';
+import Router from '@koa/router';
 import bodyParser from 'koa-bodyparser';
 import morgan from 'koa-morgan';
 import getAppPort from '../../../test_util/app-port.js';
