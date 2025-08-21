@@ -136,6 +136,6 @@ function annotateHttpEntrySpanWithPathTemplate(pathTemplate) {
 function logDeprecatedWarning() {
   logger.warn(
     // eslint-disable-next-line max-len
-    '[Deprecation Warning] The support for koa-router library is deprecated. Please consider using @koa/router instead.'
+    '[Deprecation Warning] The support for koa-router library is deprecated and will be removed in the next major release. Please consider using @koa/router instead.'
   );
 }
