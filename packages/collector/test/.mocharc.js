@@ -3,7 +3,8 @@
 const mochaOptions = {
   file: ['test/initEnv.js'],
   ignore: ['node_modules/**/*', 'test/**/node_modules/**/*'],
-  watchFiles: ['test/**/*.js', '../*/src/**/*.js', 'test/**/*.mjs', '../*/src/**/*.mjs']
+  watchFiles: ['test/**/*.{js,mjs}', '../*/src/**/*.{js,mjs}'],
+  'watch-ignore': ['test/**/node_modules']
 };
 
 process.env.NODE_ENV = 'test';
