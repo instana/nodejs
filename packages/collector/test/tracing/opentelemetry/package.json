@@ -1,7 +1,6 @@
 {
   "name": "opentelemetry-instrumentations-test",
   "version": "1.0.0",
-  "main": "fs-app.js",
   "author": "",
   "license": "ISC",
   "description": ""
