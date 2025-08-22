@@ -64,8 +64,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       before(async () => {
         controls = new ProcessControls({
           appPath: path.join(__dirname, './restify-app'),
-          useGlobalAgent: true,
-          cwd: __dirname
+          useGlobalAgent: true
         });
 
         await controls.startAndWaitForAgentConnection();
@@ -206,7 +205,6 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         controls = new ProcessControls({
           appPath: path.join(__dirname, './restify-app'),
           useGlobalAgent: true,
-          cwd: __dirname,
           env: {
             INSTANA_DISABLE_USE_OPENTELEMETRY: true
           }
