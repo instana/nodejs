@@ -12,9 +12,17 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+const expect = require('chai').expect;
+
 require('@instana/core/test/test_util/loadExpressV4');
 
-require('../../../src')();
+/**
+ * We install the latest version of the collector here locally.
+ * This ensures we are using the Opentelemetry production dependencies.
+ */
+expect(require.resolve('@instana/collector')).to.contain('opentelemetry/node_modules/@instana/collector');
+require('@instana/collector')();
+
 const express = require('express');
 const fs = require('fs');
 const path = require('path');

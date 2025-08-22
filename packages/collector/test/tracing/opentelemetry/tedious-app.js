@@ -13,8 +13,7 @@ process.on('SIGTERM', () => {
 require('@instana/core/test/test_util/loadExpressV4');
 
 /* eslint-disable no-console */
-
-require('../../..')({
+require('@instana/collector')({
   tracing: {
     useOpentelemetry: process.env.OTEL_ENABLED
   }
