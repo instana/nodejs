@@ -258,7 +258,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     });
   });
 
-  describe.only('fs', function () {
+  describe('fs', function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
