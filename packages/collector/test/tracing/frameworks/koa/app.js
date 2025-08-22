@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 require('../../../..')();
 
 const Koa = require('koa');
-const Router = require('koa-router');
+const Router = require('@koa/router');
 const bodyParser = require('koa-bodyparser');
 const morgan = require('koa-morgan');
 const port = require('../../../test_util/app-port')();

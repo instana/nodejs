@@ -441,6 +441,17 @@
   },
   {
     "name": "koa-router",
+    "policy": "Deprecated",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": true,
+    "note": "",
+    "core": false
+  },
+  {
+    "name": "@koa/router",
     "policy": "45-days",
     "lastSupportedVersion": "",
     "latestVersion": "",
