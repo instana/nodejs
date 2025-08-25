@@ -67,6 +67,16 @@ function init() {
 
       logger.debug('@instana/aws-fargate initialized.');
 
+      if (process.env.INSTANA_DEBUG_VERBOSE) {
+        try {
+          const metricsData = instanaCore.metrics.gatherData();
+          const appName = metricsData && metricsData.name;
+          logger.debug(`[instana] Instrumented application: ${appName || 'Unknown'}`);
+        } catch (nameErr) {
+          logger.debug('[instana] Could not determine instrumented application name');
+        }
+      }
+
       // eslint-disable-next-line no-unused-expressions
       process.send && process.send('instana.aws-fargate.initialized');
     } catch (e) {
