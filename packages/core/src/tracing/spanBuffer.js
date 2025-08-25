@@ -186,6 +186,9 @@ exports.addBatchableSpanName = function (spanName) {
  */
 exports.addSpan = function (span) {
   if (!isActive) {
+    if (process.env.INSTANA_DEBUG_VERBOSE) {
+      logger.debug(`[spanBuffer] Not adding span of type ${span.n} because tracing is not active`);
+    }
     return;
   }
 
@@ -195,6 +198,13 @@ exports.addSpan = function (span) {
   if (span.t == null) {
     logger.warn(`Span of type ${span.n} has no trace ID. Not transmitting this span`);
     return;
+  }
+
+  if (process.env.INSTANA_DEBUG_VERBOSE) {
+    logger.debug(
+      `[spanBuffer] Adding span: type=${span.n}, traceId=${span.t}, spanId=${span.s}, ` +
+        `parentId=${span.p}, timestamp=${span.ts}, duration=${span.d}`
+    );
   }
 
   // CASE: if we no longer want to buffer spans after we have already send the bundle
