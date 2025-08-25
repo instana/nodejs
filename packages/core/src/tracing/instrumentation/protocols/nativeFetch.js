@@ -16,7 +16,7 @@ const {
 } = require('./captureHttpHeadersUtil');
 const tracingUtil = require('../../tracingUtil');
 const { sanitizeUrl, splitAndFilter } = require('../../../util/url');
-let logger;
+
 const originalFetch = global.fetch;
 
 let extraHttpHeadersToCapture;
@@ -41,7 +41,6 @@ exports.shouldAddHeadersToOptionsUnconditionally = function () {
 const addHeadersToOptionsUnconditionally = exports.shouldAddHeadersToOptionsUnconditionally();
 
 exports.init = function init(config) {
-  logger = config.logger;
   if (originalFetch == null) {
     // Do nothing in Node.js versions that do not support native fetch.
     return;
@@ -97,9 +96,6 @@ function instrument() {
 
     // If allowRootExitSpan is not enabled, then an exit span can't be traced alone
     if (skipTracingResult.skip) {
-      if (process.env.INSTANA_DEBUG_VERBOSE) {
-        logger.debug('[instana] Skipping tracing for outgoing fetch request.');
-      }
       if (skipTracingResult.suppressed) {
         injectSuppressionHeader(originalArgs, w3cTraceContext);
       }
@@ -206,10 +202,6 @@ function instrument() {
 function injectTraceCorrelationHeaders(originalArgs, span, w3cTraceContext) {
   if (span.shouldSuppressDownstream) {
     // Suppress trace propagation to downstream services.
-    logger.debug(
-      // eslint-disable-next-line max-len
-      '[instana] Suppressing trace propagation for outgoing HTTP request because the span has been marked as suppressing downstream.'
-    );
     injectSuppressionHeader(originalArgs, w3cTraceContext);
     return;
   }
