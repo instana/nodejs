@@ -19,7 +19,6 @@ const shimmer = require('../../shimmer');
 const cls = require('../../cls');
 let extraHttpHeadersToCapture;
 let isActive = false;
-let logger;
 
 exports.spanName = 'node.http.server';
 
@@ -27,7 +26,6 @@ exports.init = function init(config) {
   shimmer.wrap(coreHttpModule.Server && coreHttpModule.Server.prototype, 'emit', shimEmit);
   shimmer.wrap(coreHttpsModule.Server && coreHttpsModule.Server.prototype, 'emit', shimEmit);
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
-  logger = config.logger;
 };
 
 exports.updateConfig = function updateConfig(config) {
@@ -112,10 +110,6 @@ function shimEmit(realEmit) {
         w3cTraceContext: w3cTraceContext,
         spanData
       });
-
-      if (process.env.INSTANA_DEBUG_VERBOSE) {
-        logger.debug(`[instana] span created and started: ${JSON.stringify(span)}`);
-      }
 
       tracingHeaders.setSpanAttributes(span, headers);
 

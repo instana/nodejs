@@ -422,12 +422,6 @@ function setHeadersOnRequest(clientRequest, span, w3cTraceContext) {
 
   if (span.shouldSuppressDownstream) {
     // Suppress trace propagation to downstream services.
-    if (process.env.INSTANA_DEBUG_VERBOSE) {
-      logger.debug(
-        // eslint-disable-next-line max-len
-        '[instana] Suppressing trace propagation for outgoing HTTP request because the span has been marked as suppressing downstream.'
-      );
-    }
     clientRequest.setHeader(constants.traceLevelHeaderName, '0');
     setW3cHeadersOnRequest(clientRequest, w3cTraceContext);
     return;
