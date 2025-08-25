@@ -27,8 +27,9 @@ jobs:
         run: |
           set -euo pipefail
           TAGS=($(git tag --sort=-creatordate))
-
-          if [[ ${#TAGS[@]} -lt 2 ]]; then
+          
+          TAG_COUNT=${#TAGS[@]}
+          if [[ $TAG_COUNT -lt 2 ]]; then
             echo "Not enough release tags found."
             exit 1
           fi
