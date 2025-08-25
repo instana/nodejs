@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.23.0](https://github.com/instana/nodejs/compare/v4.22.0...v4.23.0) (2025-08-25)
+
+
+### Bug Fixes
+
+* added detailed debug logs for span collection and transmission ([#1960](https://github.com/instana/nodejs/issues/1960)) ([7d5d35b](https://github.com/instana/nodejs/commit/7d5d35bdab95580b3b63b4a89d867fb465730fc8))
+
+
+### Features
+
+* added support for @koa/router ([#1954](https://github.com/instana/nodejs/issues/1954)) ([3b982ba](https://github.com/instana/nodejs/commit/3b982ba3547112f5849229fb2d2f404644746332))
+
+
+
+
+
 # [4.22.0](https://github.com/instana/nodejs/compare/v4.21.3...v4.22.0) (2025-08-13)
 
 

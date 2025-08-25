@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.23.0](https://github.com/instana/nodejs/compare/v4.22.0...v4.23.0) (2025-08-25)
+
+
+### Bug Fixes
+
+* **aws-lambda:** updated brace-expansion in icr.io/instana/aws-lambda-nodejs image ([#1944](https://github.com/instana/nodejs/issues/1944)) ([4665738](https://github.com/instana/nodejs/commit/46657386b6aef1500d9747cdeaee3ff802510416))
+
+
+
+
+
 # [4.22.0](https://github.com/instana/nodejs/compare/v4.21.3...v4.22.0) (2025-08-13)
 
 **Note:** Version bump only for package @instana/aws-lambda

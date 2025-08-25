@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.23.0](https://github.com/instana/nodejs/compare/v4.22.0...v4.23.0) (2025-08-25)
+
+
+### Bug Fixes
+
+* added detailed debug logs for span collection and transmission ([#1960](https://github.com/instana/nodejs/issues/1960)) ([7d5d35b](https://github.com/instana/nodejs/commit/7d5d35bdab95580b3b63b4a89d867fb465730fc8))
+* **aws-lambda:** updated brace-expansion in icr.io/instana/aws-lambda-nodejs image ([#1944](https://github.com/instana/nodejs/issues/1944)) ([4665738](https://github.com/instana/nodejs/commit/46657386b6aef1500d9747cdeaee3ff802510416))
+* bumped pino from 9.8.0 to 9.9.0 ([#1947](https://github.com/instana/nodejs/issues/1947)) ([40db3ee](https://github.com/instana/nodejs/commit/40db3ee510e155d053c68419a798a005a48fb995))
+
+
+### Features
+
+* added support for @koa/router ([#1954](https://github.com/instana/nodejs/issues/1954)) ([3b982ba](https://github.com/instana/nodejs/commit/3b982ba3547112f5849229fb2d2f404644746332))
+
+
+
+
+
 # [4.22.0](https://github.com/instana/nodejs/compare/v4.21.3...v4.22.0) (2025-08-13)
 
 
