@@ -335,7 +335,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   };
 
   logger.debug(
-    `[${requestId}] Sending trace data to Instana (${reqOptions.hostname}, ${reqOptions.port}, ${reqOptions.path},
+    `[${requestId}] Sending data to Instana (${reqOptions.hostname}, ${reqOptions.port}, ${reqOptions.path},
     ${reqOptions.headers?.['Content-Length']}).`
   );
 
@@ -490,7 +490,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   req.on('finish', () => {
     logger.debug(
       // eslint-disable-next-line max-len
-      `[${requestId}] The trace data have been successfully sent to Instana.`
+      `[${requestId}] The data have been successfully sent to Instana.`
     );
 
     if (options.useLambdaExtension && finalLambdaRequest) {
