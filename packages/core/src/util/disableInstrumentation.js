@@ -114,23 +114,28 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
   const instrumentationName = instrumentationModules[instrumentationKey]?.instrumentationName;
   const { group } = getCategoryAndModule(instrumentationKey) || {};
 
-  if (process.env.INSTANA_DEBUG_VERBOSE) {
-    logger.debug(
-      // eslint-disable-next-line max-len
-      `[disableInstrumentation] Checking if instrumentation ${instrumentationKey} is disabled with module name ${moduleName}`
-    );
-  }
-
   const context = { moduleName, instrumentationName, group };
 
   // Give priority to service-level config
   if (config && shouldDisable(config, context)) {
+    if (process.env.INSTANA_DEBUG_VERBOSE) {
+      logger.debug(
+        // eslint-disable-next-line max-len
+        `[disableInstrumentation - config] Checking if instrumentation ${instrumentationKey} is disabled with module name ${moduleName}`
+      );
+    }
     return true;
   }
 
   // Fallback to agent-level config if not disabled above
   // NOTE: We currently have no single config object.
   if (agentConfig && shouldDisable(agentConfig, context)) {
+    if (process.env.INSTANA_DEBUG_VERBOSE) {
+      logger.debug(
+        // eslint-disable-next-line max-len
+        `[disableInstrumentation - agentConfig] Checking if instrumentation ${instrumentationKey} is disabled with module name ${moduleName}`
+      );
+    }
     return true;
   }
 
