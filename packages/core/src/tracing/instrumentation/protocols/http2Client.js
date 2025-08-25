@@ -74,9 +74,6 @@ function instrumentClientHttp2Session(clientHttp2Session) {
     });
 
     if (skipTracingResult.skip) {
-      if (process.env.INSTANA_DEBUG_VERBOSE) {
-        logger.debug('[instana] Skipping tracing for outgoing HTTP2 request.');
-      }
       if (skipTracingResult.suppressed) {
         addTraceLevelHeader(headers, '0', w3cTraceContext);
       }

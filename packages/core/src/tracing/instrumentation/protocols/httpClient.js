@@ -183,9 +183,6 @@ function instrument(coreModule, forceHttps) {
     const parentSpan = skipTracingResult.parentSpan;
 
     if (skipTracingResult.skip || shouldBeBypassed(skipTracingResult.parentSpan, options)) {
-      if (process.env.INSTANA_DEBUG_VERBOSE) {
-        logger.debug('[instana] Skipping tracing for outgoing HTTP request.');
-      }
       let traceLevelHeaderHasBeenAdded = false;
       if (skipTracingResult.suppressed) {
         traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0', w3cTraceContext);
