@@ -187,7 +187,7 @@ exports.addBatchableSpanName = function (spanName) {
 exports.addSpan = function (span) {
   if (!isActive) {
     if (process.env.INSTANA_DEBUG_VERBOSE) {
-      logger.debug(`[spanBuffer] Not adding span of type ${span.n} because tracing is not active`);
+      logger.debug(`[instana] Not adding span of type ${span.n} because tracing is not active`);
     }
     return;
   }
@@ -202,7 +202,7 @@ exports.addSpan = function (span) {
 
   if (process.env.INSTANA_DEBUG_VERBOSE) {
     logger.debug(
-      `[spanBuffer] Adding span: type=${span.n}, traceId=${span.t}, spanId=${span.s}, ` +
+      `[instana] Adding span: type=${span.n}, traceId=${span.t}, spanId=${span.s}, ` +
         `parentId=${span.p}, timestamp=${span.ts}, duration=${span.d}`
     );
   }

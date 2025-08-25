@@ -241,7 +241,7 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
 
       if (process.env.INSTANA_DEBUG_VERBOSE) {
         config.logger.debug(
-          `[tracing] Initializing tracing with tracingEnabled=${tracingEnabled}, ` +
+          `[instana] Initializing tracing with tracingEnabled=${tracingEnabled}, ` +
             `automaticTracingEnabled=${automaticTracingEnabled}`
         );
       }

@@ -121,7 +121,7 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
     if (process.env.INSTANA_DEBUG_VERBOSE) {
       logger.debug(
         // eslint-disable-next-line max-len
-        `[disableInstrumentation - config] Checking if instrumentation ${instrumentationKey} is disabled with module name ${moduleName}`
+        `[instana] Checking if instrumentation ${instrumentationKey} is disabled with module name ${moduleName}`
       );
     }
     return true;
@@ -133,7 +133,7 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
     if (process.env.INSTANA_DEBUG_VERBOSE) {
       logger.debug(
         // eslint-disable-next-line max-len
-        `[disableInstrumentation - agentConfig] Checking if instrumentation ${instrumentationKey} is disabled with module name ${moduleName}`
+        `[instana] Checking if instrumentation ${instrumentationKey} is disabled with module name ${moduleName}`
       );
     }
     return true;
