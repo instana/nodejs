@@ -13,10 +13,16 @@ let config;
 let agentConfig;
 
 /**
+ * @type {import("../core").GenericLogger}
+ */
+let logger;
+
+/**
  * @param {import('../util/normalizeConfig').InstanaConfig} _config
  */
 function init(_config) {
   config = _config;
+  logger = config.logger;
 }
 
 /**
@@ -112,12 +118,24 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
 
   // Give priority to service-level config
   if (config && shouldDisable(config, context)) {
+    if (process.env.INSTANA_DEBUG_VERBOSE) {
+      logger.debug(
+        // eslint-disable-next-line max-len
+        `[instana] Checking if instrumentation ${instrumentationKey} is disabled with module name ${moduleName}`
+      );
+    }
     return true;
   }
 
   // Fallback to agent-level config if not disabled above
   // NOTE: We currently have no single config object.
   if (agentConfig && shouldDisable(agentConfig, context)) {
+    if (process.env.INSTANA_DEBUG_VERBOSE) {
+      logger.debug(
+        // eslint-disable-next-line max-len
+        `[instana] Checking if instrumentation ${instrumentationKey} is disabled with module name ${moduleName}`
+      );
+    }
     return true;
   }
 

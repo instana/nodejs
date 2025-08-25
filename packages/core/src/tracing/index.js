@@ -239,6 +239,13 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
     if (automaticTracingEnabled) {
       initInstrumenations(config);
 
+      if (process.env.INSTANA_DEBUG_VERBOSE) {
+        config.logger.debug(
+          `[instana] Initializing tracing with tracingEnabled=${tracingEnabled}, ` +
+            `automaticTracingEnabled=${automaticTracingEnabled}`
+        );
+      }
+
       if (_config.tracing.useOpentelemetry) {
         otelInstrumentations.init(config, cls);
       }
