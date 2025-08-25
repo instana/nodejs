@@ -13,10 +13,16 @@ let config;
 let agentConfig;
 
 /**
+ * @type {import("../core").GenericLogger}
+ */
+let logger;
+
+/**
  * @param {import('../util/normalizeConfig').InstanaConfig} _config
  */
 function init(_config) {
   config = _config;
+  logger = config.logger;
 }
 
 /**
@@ -107,6 +113,13 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
   const moduleName = getModuleName(instrumentationKey);
   const instrumentationName = instrumentationModules[instrumentationKey]?.instrumentationName;
   const { group } = getCategoryAndModule(instrumentationKey) || {};
+
+  if (process.env.INSTANA_DEBUG_VERBOSE) {
+    logger.debug(
+      // eslint-disable-next-line max-len
+      `[disableInstrumentation] Checking if instrumentation ${instrumentationKey} is disabled with module name ${moduleName}`
+    );
+  }
 
   const context = { moduleName, instrumentationName, group };
 

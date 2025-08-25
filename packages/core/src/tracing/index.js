@@ -221,13 +221,6 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
   tracingEnabled = config.tracing.enabled;
   automaticTracingEnabled = config.tracing.automaticTracingEnabled;
 
-  if (process.env.INSTANA_DEBUG_VERBOSE) {
-    config.logger.debug(
-      `[tracing] Initializing tracing with tracingEnabled=${tracingEnabled}, ` +
-        `automaticTracingEnabled=${automaticTracingEnabled}`
-    );
-  }
-
   spanHandle.init(config);
   shimmer.init(config);
 
@@ -245,6 +238,13 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
 
     if (automaticTracingEnabled) {
       initInstrumenations(config);
+
+      if (process.env.INSTANA_DEBUG_VERBOSE) {
+        config.logger.debug(
+          `[tracing] Initializing tracing with tracingEnabled=${tracingEnabled}, ` +
+            `automaticTracingEnabled=${automaticTracingEnabled}`
+        );
+      }
 
       if (_config.tracing.useOpentelemetry) {
         otelInstrumentations.init(config, cls);
