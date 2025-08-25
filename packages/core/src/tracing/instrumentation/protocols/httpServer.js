@@ -114,7 +114,7 @@ function shimEmit(realEmit) {
       });
 
       if (process.env.INSTANA_DEBUG_VERBOSE) {
-        logger.debug(`[httServer] span created and started: ${span}`);
+        logger.debug(`[httServer] span created and started: ${JSON.stringify(span)}`);
       }
 
       tracingHeaders.setSpanAttributes(span, headers);
