@@ -355,6 +355,12 @@ function startSpan(spanAttributes = {}) {
   // If the span was filtered out, we do not process it further.
   // Instead, we return an 'InstanaIgnoredSpan' instance to explicitly indicate that it was excluded from tracing.
   if (!spanIsTraced) {
+    if (process.env.INSTANA_DEBUG_VERBOSE) {
+      logger.debug(
+        // eslint-disable-next-line max-len
+        `[instana] Ignoring tracing for request (spanName=${span.n}, traceId=${span.t}) due to ignored endpoint configuration.`
+      );
+    }
     return setIgnoredSpan({
       spanName: span.n,
       kind: span.k,

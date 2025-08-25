@@ -183,6 +183,9 @@ function instrument(coreModule, forceHttps) {
     const parentSpan = skipTracingResult.parentSpan;
 
     if (skipTracingResult.skip || shouldBeBypassed(skipTracingResult.parentSpan, options)) {
+      if (process.env.INSTANA_DEBUG_VERBOSE) {
+        logger.debug('[instana] Skipping tracing for outgoing HTTP request.');
+      }
       let traceLevelHeaderHasBeenAdded = false;
       if (skipTracingResult.suppressed) {
         traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0', w3cTraceContext);
@@ -422,6 +425,12 @@ function setHeadersOnRequest(clientRequest, span, w3cTraceContext) {
 
   if (span.shouldSuppressDownstream) {
     // Suppress trace propagation to downstream services.
+    if (process.env.INSTANA_DEBUG_VERBOSE) {
+      logger.debug(
+        // eslint-disable-next-line max-len
+        '[instana] Suppressing trace propagation for outgoing HTTP request because the span has been marked as suppressing downstream.'
+      );
+    }
     clientRequest.setHeader(constants.traceLevelHeaderName, '0');
     setW3cHeadersOnRequest(clientRequest, w3cTraceContext);
     return;

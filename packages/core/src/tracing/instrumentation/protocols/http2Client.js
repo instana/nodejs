@@ -19,6 +19,7 @@ const { sanitizeUrl, splitAndFilter } = require('../../../util/url');
 
 let extraHttpHeadersToCapture;
 let isActive = false;
+let logger;
 
 const originS = 'Symbol(origin)';
 const sentHeadersS = 'Symbol(sent-headers)';
@@ -27,6 +28,7 @@ const HTTP2_HEADER_PATH = http2.constants.HTTP2_HEADER_PATH;
 const HTTP2_HEADER_STATUS = http2.constants.HTTP2_HEADER_STATUS;
 
 exports.init = function init(config) {
+  logger = config.logger;
   instrument(http2);
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
@@ -72,6 +74,9 @@ function instrumentClientHttp2Session(clientHttp2Session) {
     });
 
     if (skipTracingResult.skip) {
+      if (process.env.INSTANA_DEBUG_VERBOSE) {
+        logger.debug('[instana] Skipping tracing for outgoing HTTP2 request.');
+      }
       if (skipTracingResult.suppressed) {
         addTraceLevelHeader(headers, '0', w3cTraceContext);
       }
@@ -166,6 +171,12 @@ function addHeaders(headers, span, w3cTraceContext) {
   }
   if (span.shouldSuppressDownstream) {
     // Suppress trace propagation to downstream services.
+    if (process.env.INSTANA_DEBUG_VERBOSE) {
+      logger.debug(
+        // eslint-disable-next-line max-len
+        '[instana] Suppressing trace propagation for outgoing HTTP2 request because the span has been marked as suppressing downstream.'
+      );
+    }
     addTraceLevelHeader(headers, '0', w3cTraceContext);
     return;
   }
