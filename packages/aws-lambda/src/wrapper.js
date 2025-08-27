@@ -47,31 +47,31 @@ exports.wrap = function wrap(_config, originalHandler) {
   // accepts. But to be extra safe, we strive to return a function with the same number of arguments anyway.
   switch (originalHandler.length) {
     case 0:
-      return function handler0() {
+      return async function handler0() {
         return shimmedHandler(originalHandler, this, arguments, _config);
       };
     case 1:
-      return function handler1(event) {
+      return async function handler1(event) {
         return shimmedHandler(originalHandler, this, arguments, _config);
       };
     case 2:
-      return function handler2(event, context) {
+      return async function handler2(event, context) {
         return shimmedHandler(originalHandler, this, arguments, _config);
       };
     default:
-      return function handler3(event, context, callback) {
+      return async function handler3(event, context, callback) {
         return shimmedHandler(originalHandler, this, arguments, _config);
       };
   }
 };
 
-function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
+async function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   const event = originalArgs[0];
   const context = originalArgs[1];
   const lambdaCallback = originalArgs[2];
 
   const arnInfo = arnParser(context);
-  const tracingEnabled = init(event, arnInfo, _config);
+  const tracingEnabled = await init(event, arnInfo, _config);
 
   if (!tracingEnabled) {
     return originalHandler.apply(originalThis, originalArgs);
@@ -240,7 +240,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
 /**
  * Initialize the wrapper.
  */
-function init(event, arnInfo, _config) {
+async function init(event, arnInfo, _config) {
   const customConfig = _config || {};
 
   // CASE: customer provides a custom logger or custom level
@@ -287,7 +287,21 @@ function init(event, arnInfo, _config) {
   // After core init, because ssm requires require('@aws-sdk/client-ssm'), which triggers
   // the requireHook + shimmer. Any module which requires another external module has to be
   // initialized after the core.
-  ssm.init(config);
+
+  // Initialize SSM and await the fetch to complete if SSM is used
+  await ssm.init(config);
+
+  // If SSM is used, ensure we wait for the fetch to complete
+  if (ssm.isUsed() && ssm.getSsmFetchPromise()) {
+    try {
+      logger.debug('Waiting for SSM parameter fetch to complete before invoking handler');
+      await ssm.getSsmFetchPromise();
+      logger.debug('SSM parameter fetch completed successfully');
+    } catch (err) {
+      logger.warn(`Failed to fetch SSM parameter: ${err}`);
+      // Continue execution even if SSM fetch fails, as we'll handle this later
+    }
+  }
 
   spanBuffer.setIsFaaS(true);
   captureHeaders.init(config);
@@ -426,15 +440,23 @@ function sendToBackend({ spans, metricsPayload, finalLambdaRequest, callback }) 
     return runBackendConnector();
   }
 
-  return ssm.waitAndGetInstanaKey((err, value) => {
-    if (err) {
-      logger.debug(err);
-      return callback();
-    }
-
-    environment.setInstanaAgentKey(value);
+  // Since we've already awaited the SSM fetch in init(), we can directly use the fetched value
+  // But keep the waitAndGetInstanaKey as a fallback for backward compatibility
+  if (ssm.getValue()) {
+    environment.setInstanaAgentKey(ssm.getValue());
     return runBackendConnector();
-  });
+  } else {
+    // Fallback to the original implementation
+    return ssm.waitAndGetInstanaKey((err, value) => {
+      if (err) {
+        logger.debug(err);
+        return callback();
+      }
+
+      environment.setInstanaAgentKey(value);
+      return runBackendConnector();
+    });
+  }
 }
 
 /**

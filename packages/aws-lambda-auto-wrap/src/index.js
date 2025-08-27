@@ -20,9 +20,10 @@ if (!wrappedHandler) {
   }
 }
 
-exports.handler = function instanaAutowrapHandler(event, context, callback) {
+exports.handler = async function instanaAutowrapHandler(event, context, callback) {
   if (!wrappedHandler) return callback(capturedError);
 
+  // Handle both promise-based and callback-based Lambda handlers
   return wrappedHandler(event, context, callback);
 };
 

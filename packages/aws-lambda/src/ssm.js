@@ -12,15 +12,20 @@ let errorFromAWS = null;
 let initTimeoutInMs = 0;
 let logger;
 
+// Promise to track SSM parameter fetch completion
+let ssmFetchPromise = null;
+
 module.exports.reset = () => {
   fetchedValue = null;
   envValue = null;
   errorFromAWS = null;
   initTimeoutInMs = 0;
+  ssmFetchPromise = null;
 };
 
 module.exports.isUsed = () => !!envValue;
 module.exports.getValue = () => envValue;
+module.exports.getSsmFetchPromise = () => ssmFetchPromise;
 
 module.exports.validate = () => {
   const _envValue = process.env[ENV_NAME];
@@ -38,61 +43,70 @@ module.exports.init = config => {
 
   // CASE: INSTANA_SSM_PARAM_NAME is not set, skip
   if (!exports.isUsed()) {
-    return;
+    return Promise.resolve();
   }
 
   // CASE: We already fetched the SSM value, skip
   if (fetchedValue) {
-    return;
+    return Promise.resolve(fetchedValue);
   }
 
   initTimeoutInMs = Date.now();
 
-  try {
-    /**
-     * As per AWS Lambda Node.js documentation: https://docs.aws.amazon.com/lambda/latest/dg/lambda-nodejs.html
-     * The environment includes the AWS SDK for JavaScript, with credentials from an IAM role that you manage.
-     *
-     * https://aws.amazon.com/blogs/compute/node-js-18-x-runtime-now-available-in-aws-lambda/
-     */
-    // eslint-disable-next-line import/no-extraneous-dependencies, instana/no-unsafe-require, prefer-const
-    const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm');
-
-    const params = {
-      Name: envValue,
+  // Create a promise that resolves when the SSM parameter is fetched
+  ssmFetchPromise = new Promise((resolve, reject) => {
+    try {
       /**
-       * For more details, see:
-       * https://docs.aws.amazon.com/cli/latest/reference/ssm/get-parameter.html#options
-       * The parameter in the store is either a "string" or a "SecureString".
-       * A "SecureString" uses a KMS key for encryption/decryption.
+       * As per AWS Lambda Node.js documentation: https://docs.aws.amazon.com/lambda/latest/dg/lambda-nodejs.html
+       * The environment includes the AWS SDK for JavaScript, with credentials from an IAM role that you manage.
+       *
+       * https://aws.amazon.com/blogs/compute/node-js-18-x-runtime-now-available-in-aws-lambda/
        */
-      WithDecryption: process.env[ENV_DECRYPTION] === 'true'
-    };
+      // eslint-disable-next-line import/no-extraneous-dependencies, instana/no-unsafe-require, prefer-const
+      const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm');
 
-    logger.debug(`INSTANA_SSM_PARAM_NAME is ${process.env.INSTANA_SSM_PARAM_NAME}.`);
-    const client = new SSMClient({ region: process.env.AWS_REGION });
-    const command = new GetParameterCommand(params);
-    client
-      .send(command)
-      .then(response => {
-        // CASE: The parameter is of type SecureString, but decryption wasn't specified
-        if (response.Parameter.Type === 'SecureString' && process.env[ENV_DECRYPTION] !== 'true') {
-          errorFromAWS = 'The SSM parameter is a SecureString. Please set INSTANA_SSM_DECRYPTION=true.';
-        } else {
-          fetchedValue = response.Parameter.Value;
-          errorFromAWS = null;
-          logger.debug(`INSTANA AGENT KEY: ${fetchedValue}`);
-        }
-      })
-      .catch(error => {
-        errorFromAWS = `Could not read returned response from AWS-SDK SSM Parameter Store: ${error.message}`;
-      });
-  } catch (err) {
-    logger.warn('AWS SDK is not available.');
-    errorFromAWS =
-      `Unable to fetch the Instana key from the SSM Parameter Store using "${process.env.INSTANA_SSM_PARAM_NAME}",` +
-      ` as the AWS SDK is unavailable. Reason: ${err?.message}`;
-  }
+      const params = {
+        Name: envValue,
+        /**
+         * For more details, see:
+         * https://docs.aws.amazon.com/cli/latest/reference/ssm/get-parameter.html#options
+         * The parameter in the store is either a "string" or a "SecureString".
+         * A "SecureString" uses a KMS key for encryption/decryption.
+         */
+        WithDecryption: process.env[ENV_DECRYPTION] === 'true'
+      };
+
+      logger.debug(`INSTANA_SSM_PARAM_NAME is ${process.env.INSTANA_SSM_PARAM_NAME}.`);
+      const client = new SSMClient({ region: process.env.AWS_REGION });
+      const command = new GetParameterCommand(params);
+      client
+        .send(command)
+        .then(response => {
+          // CASE: The parameter is of type SecureString, but decryption wasn't specified
+          if (response.Parameter.Type === 'SecureString' && process.env[ENV_DECRYPTION] !== 'true') {
+            errorFromAWS = 'The SSM parameter is a SecureString. Please set INSTANA_SSM_DECRYPTION=true.';
+            reject(errorFromAWS);
+          } else {
+            fetchedValue = response.Parameter.Value;
+            errorFromAWS = null;
+            logger.debug(`INSTANA AGENT KEY: ${fetchedValue}`);
+            resolve(fetchedValue);
+          }
+        })
+        .catch(error => {
+          errorFromAWS = `Could not read returned response from AWS-SDK SSM Parameter Store: ${error.message}`;
+          reject(errorFromAWS);
+        });
+    } catch (err) {
+      logger.warn('AWS SDK is not available.');
+      errorFromAWS =
+        `Unable to fetch the Instana key from the SSM Parameter Store using "${process.env.INSTANA_SSM_PARAM_NAME}",` +
+        ` as the AWS SDK is unavailable. Reason: ${err?.message}`;
+      reject(errorFromAWS);
+    }
+  });
+
+  return ssmFetchPromise;
 };
 
 module.exports.waitAndGetInstanaKey = callback => {
