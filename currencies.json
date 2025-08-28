@@ -121,6 +121,17 @@
     "core": false
   },
   {
+    "name": "@aws-sdk/client-ssm",
+    "policy": "45-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": true,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "core": false
+  },
+  {
     "name": "@aws-sdk/lib-dynamodb",
     "policy": "45-days",
     "lastSupportedVersion": "",
