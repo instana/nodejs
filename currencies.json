@@ -66,6 +66,17 @@
     "core": false
   },
   {
+    "name": "@aws-sdk/client-kms",
+    "policy": "45-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": true,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "core": false
+  },
+  {
     "name": "@aws-sdk/client-lambda",
     "policy": "45-days",
     "lastSupportedVersion": "",
