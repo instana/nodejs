@@ -22,7 +22,13 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
 // v7 uses mongodb v5
 // v8 (latest) uses mongodb v6
 
-['latest', 'v854', 'v7', 'v6', 'v5'].forEach(version => {
+// Skipping v5 tests temporarily due to Snappy issue (see https://github.com/Brooooooklyn/snappy/issues/283).
+// Mongoose v5 depends on MongoDB v3, which uses optional-require to load Snappy.
+// The issue surfaced after MongoDB update from v6.18 to v6.19.
+// Recent Snappy versions (>=7.3.2) restrict access to package.json via the "exports" field,
+// causing to throw ERR_PACKAGE_PATH_NOT_EXPORTED.
+// This only affects Mongoose v5; tests can be re-enabled once the issue is resolved.
+['latest', 'v854', 'v7', 'v6'].forEach(version => {
   const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
   const isLatestMajor = version === 'latest' || version === 'v854';
