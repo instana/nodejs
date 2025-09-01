@@ -6,6 +6,8 @@
 
 'use strict';
 
+require('./mockVersion');
+
 require('../../../../..')();
 
 const { BlobServiceClient, BlobBatchClient, BlobClient, StorageSharedKeyCredential } = require('@azure/storage-blob');

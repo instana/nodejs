@@ -337,7 +337,6 @@ class ProcessControls {
       // NOTE: The opts.body passed in must be serialized.
       // We need to JSON.stringify() the body and set Content-Type manually.
       // The "json: true" (requestOpts.json = true) option is ignored by native fetch.
-
       if (requestOpts.body && typeof requestOpts.body === 'object') {
         requestOpts.body = JSON.stringify(requestOpts.body);
         requestOpts.headers = requestOpts.headers || {};
