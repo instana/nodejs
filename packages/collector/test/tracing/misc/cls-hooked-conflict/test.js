@@ -47,8 +47,7 @@ describe('tracing/no-conflict-with-cls-hooked', function () {
     await controls.clearIpcMessages();
   });
 
-  // eslint-disable-next-line max-len
-  it.skip('must not lose context when the application binds the http request event emitter via cls-hooked', async () => {
+  it('must not lose context when the application binds the http request event emitter via cls-hooked', async () => {
     const response = await controls.sendRequest({
       method: 'POST',
       path: '/api',

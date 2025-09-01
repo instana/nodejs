@@ -334,6 +334,16 @@ class ProcessControls {
       requestOpts.json = true;
       requestOpts.ca = cert;
 
+      // NOTE: The opts.body passed in must be serialized.
+      // We need to JSON.stringify() the body and set Content-Type manually.
+      // The "json: true" (requestOpts.json = true) option is ignored by native fetch.
+
+      if (requestOpts.body && typeof requestOpts.body === 'object') {
+        requestOpts.body = JSON.stringify(requestOpts.body);
+        requestOpts.headers = requestOpts.headers || {};
+        requestOpts.headers['Content-Type'] = 'application/json';
+      }
+
       let response;
       const result = await fetch(requestOpts.url, requestOpts);
       const contentType = result.headers.get('content-type');
