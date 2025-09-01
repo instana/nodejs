@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.23.1](https://github.com/instana/nodejs/compare/v4.23.0...v4.23.1) (2025-09-01)
+
+
+### Reverts
+
+* Revert "fix: added detailed debug logs for span collection and transmission (…" ([9c3af67](https://github.com/instana/nodejs/commit/9c3af67baebe4aa826691a3ac7600f21f340f7f7))
+
+
+
+
+
 # [4.23.0](https://github.com/instana/nodejs/compare/v4.22.0...v4.23.0) (2025-08-25)
 
 
