@@ -5,43 +5,6 @@ services:
     ports:
       - 6379:6379
 
-  redis-node-0:
-    image: docker.io/bitnami/redis-cluster:7.2
-    environment:
-      - 'ALLOW_EMPTY_PASSWORD=yes'
-      - 'REDIS_NODES=172.30.0.2:6379 172.30.0.3:6379 172.30.0.4:6379'
-      - 'REDIS_CLUSTER_CREATOR=yes'
-      - 'REDIS_CLUSTER_REPLICAS=0'
-      - 'BITNAMI_DEBUG=1'
-      - 'REDIS_CLUSTER_SLEEP_BEFORE_DNS_LOOKUP=10'
-    ports:
-      - 6380:6379
-    networks:
-      redis-cluster-network:
-        ipv4_address: 172.30.0.2
-
-  redis-node-1:
-    image: docker.io/bitnami/redis-cluster:7.2
-    environment:
-      - 'ALLOW_EMPTY_PASSWORD=yes'
-      - 'REDIS_NODES=172.30.0.2:6379 172.30.0.3:6379 172.30.0.4:6379'
-    ports:
-      - 6381:6379
-    networks:
-      redis-cluster-network:
-        ipv4_address: 172.30.0.3      
-
-  redis-node-2:
-    image: docker.io/bitnami/redis-cluster:7.2
-    environment:
-      - 'ALLOW_EMPTY_PASSWORD=yes'
-      - 'REDIS_NODES=172.30.0.2:6379 172.30.0.3:6379 172.30.0.4:6379'
-    ports:
-      - 6382:6379
-    networks:
-      redis-cluster-network:
-        ipv4_address: 172.30.0.4
-
  # sentinel test setup       
   redis-slave:
     image: redis:7.4.3
