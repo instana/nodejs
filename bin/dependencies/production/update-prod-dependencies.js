@@ -27,8 +27,8 @@ pkgPaths.forEach(obj => {
   const pkgJson = require(obj.pkgJsonAbsPath);
   const deps = pkgJson.dependencies || {};
   Object.entries(deps).forEach(([dep, version]) => {
-    // Exclude internal libraries
-    if (dep.startsWith('@instana')) return;
+    // Exclude internal libraries and OpenTelemetry packages
+    if (dep.startsWith('@instana') || dep.startsWith('@opentelemetry')) return;
     if (!dependencyMap[dep]) dependencyMap[dep] = [];
     dependencyMap[dep].push({ pkgRelDir: obj.pkgRelDir, version });
   });
