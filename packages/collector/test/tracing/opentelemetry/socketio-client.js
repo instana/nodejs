@@ -12,7 +12,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('@instana/core/test/test_util/loadExpressV4');
 require('@instana/collector')();
 
 const socketioclient = require('socket.io-client');

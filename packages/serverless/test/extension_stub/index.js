@@ -12,8 +12,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('@instana/core/test/test_util/loadExpressV4');
-
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
@@ -98,7 +96,8 @@ app.delete('/received/spans', (req, res) => {
 
 // The Lambda extension would forward all requests to the
 // back end (serverless-acceptor). This handler mimicks that behavior.
-app.all('*', (req, res) => {
+// From express v5, '/*' is deprecated and replaced with '/*anything' or '/{*anything}'
+app.all('/{*a}', (req, res) => {
   const stringifiedBody = JSON.stringify(req.body);
   logger.debug(`incoming request: ${req.method} ${req.url}`);
 

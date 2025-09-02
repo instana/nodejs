@@ -10,8 +10,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('@instana/core/test/test_util/loadExpressV4');
-
 // NOTE: Works because this is already the same collector instance. Node.js will automatically
 //       return the cached instance.
 // const instana = require(process.env.INSTANA_COLLECTOR_PATH);
