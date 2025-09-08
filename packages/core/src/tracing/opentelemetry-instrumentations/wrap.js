@@ -20,7 +20,8 @@ const instrumentations = {
   '@opentelemetry/instrumentation-fs': { name: 'fs' },
   '@opentelemetry/instrumentation-restify': { name: 'restify' },
   '@opentelemetry/instrumentation-socket.io': { name: 'socket.io' },
-  '@opentelemetry/instrumentation-tedious': { name: 'tedious' }
+  '@opentelemetry/instrumentation-tedious': { name: 'tedious' },
+  '@opentelemetry/instrumentation-oracledb': { name: 'oracle' }
 };
 
 // NOTE: using a logger might create a recursive execution
