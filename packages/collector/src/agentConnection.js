@@ -22,6 +22,7 @@ let pidStore;
 // file descriptor fields in the collector announce cycle.
 const paddingForInodeAndFileDescriptor = 200;
 
+// 5mb limit
 const maxContentLength = 1024 * 1024 * 5;
 let maxContentErrorHasBeenLogged = false;
 
