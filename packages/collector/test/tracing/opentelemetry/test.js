@@ -64,8 +64,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       before(async () => {
         controls = new ProcessControls({
           appPath: path.join(__dirname, './restify-app'),
-          useGlobalAgent: true,
-          cwd: __dirname
+          useGlobalAgent: true
         });
 
         await controls.startAndWaitForAgentConnection();
@@ -206,7 +205,6 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         controls = new ProcessControls({
           appPath: path.join(__dirname, './restify-app'),
           useGlobalAgent: true,
-          cwd: __dirname,
           env: {
             INSTANA_DISABLE_USE_OPENTELEMETRY: true
           }
@@ -269,8 +267,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
     before(async () => {
       controls = new ProcessControls({
         appPath: path.join(__dirname, './fs-app'),
-        useGlobalAgent: true,
-        cwd: __dirname
+        useGlobalAgent: true
       });
 
       await controls.startAndWaitForAgentConnection();
@@ -392,7 +389,6 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       serverControls = new ProcessControls({
         appPath: path.join(__dirname, './socketio-server'),
         useGlobalAgent: true,
-        cwd: __dirname,
         env: {
           SOCKETIOSERVER_PORT: socketIOServerPort
         }
@@ -401,7 +397,6 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       clientControls = new ProcessControls({
         appPath: path.join(__dirname, './socketio-client'),
         useGlobalAgent: true,
-        cwd: __dirname,
         env: {
           SOCKETIOSERVER_PORT: socketIOServerPort
         }
@@ -547,7 +542,6 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         controls = new ProcessControls({
           appPath: path.join(__dirname, './tedious-app'),
           useGlobalAgent: true,
-          cwd: __dirname,
           env: {
             OTEL_ENABLED: true
           }
@@ -639,7 +633,6 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         controls = new ProcessControls({
           appPath: path.join(__dirname, './tedious-app'),
           useGlobalAgent: true,
-          cwd: __dirname,
           env: {
             OTEL_ENABLED: false
           }
@@ -685,11 +678,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       before(async () => {
         controls = new ProcessControls({
           appPath: path.join(__dirname, './oracle-app'),
-          useGlobalAgent: true,
-          // TODO: If you print process.cwd() in the app.js its by default packages/collector.
-          // That is technically not right. We should change that across the whole repo.
-          // TODO: create a separate PR
-          cwd: __dirname
+          useGlobalAgent: true
         });
 
         await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60);
@@ -763,7 +752,6 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         controls = new ProcessControls({
           appPath: path.join(__dirname, './oracle-app'),
           useGlobalAgent: true,
-          cwd: __dirname,
           env: {
             INSTANA_DISABLE_USE_OPENTELEMETRY: true
           }
