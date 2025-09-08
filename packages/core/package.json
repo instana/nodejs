@@ -63,7 +63,7 @@
     "@opentelemetry/instrumentation-restify": "0.38.0",
     "@opentelemetry/instrumentation-socket.io": "0.39.0",
     "@opentelemetry/instrumentation-tedious": "0.13.0",
-    "@opentelemetry/instrumentation-oracledb": "0.28.0",
+    "@opentelemetry/instrumentation-oracledb": "0.29.0",
     "@opentelemetry/sdk-trace-base": "1.25.0",
     "cls-bluebird": "^2.1.0",
     "import-in-the-middle": "1.9.0",

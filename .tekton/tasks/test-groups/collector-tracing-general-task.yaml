@@ -24,7 +24,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 10
     - name: oracledb
-      image: gvenzl/oracle-xe:18.4.0-slim
+      image: gvenzl/oracle-free:23-slim
       imagePullPolicy: IfNotPresent
       env:
           - name: "ORACLE_PASSWORD"

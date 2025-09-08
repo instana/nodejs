@@ -22,7 +22,7 @@
     },
     {
       "name": "oracledb",
-      "image": "gvenzl/oracle-xe:18.4.0-slim",
+      "image": "gvenzl/oracle-free:23-slim",
       "env": [
         { "name": "ORACLE_PASSWORD", "value": "teamnodejstest" },
         { "name": "APP_USER", "value": "teamnodejs" },
