@@ -21,6 +21,15 @@
       }
     },
     {
+      "name": "oracledb",
+      "image": "gvenzl/oracle-free:23-slim",
+      "env": [
+        { "name": "ORACLE_PASSWORD", "value": "teamnodejstest" },
+        { "name": "APP_USER", "value": "teamnodejs" },
+        { "name": "APP_USER_PASSWORD", "value": "teamnodejspassword" }
+      ]
+    },
+    {
       "name": "mongodb",
       "image": "public.ecr.aws/docker/library/mongo:8.0.8"
     },

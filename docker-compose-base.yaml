@@ -1,11 +1,22 @@
 version: '2'
 services:
+  oracledb:
+    image: gvenzl/oracle-free:23-slim
+    container_name: oracle-free
+    ports:
+      - "1521:1521"
+      - "8080:8080"
+    environment:
+      ORACLE_PASSWORD: teamnodejstest
+      APP_USER: teamnodejs
+      APP_USER_PASSWORD: teamnodejspassword
+
   redis:
     image: redis:7.4.3
     ports:
       - 6379:6379
 
- # sentinel test setup       
+ # sentinel test setup
   redis-slave:
     image: redis:7.4.3
     network_mode: host
@@ -205,7 +216,7 @@ services:
       - "4510-4559:4510-4559"  # external services port range
     environment:
       - DEBUG=${DEBUG-}
-      - DOCKER_HOST=unix:///var/run/docker.sock 
+      - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
 

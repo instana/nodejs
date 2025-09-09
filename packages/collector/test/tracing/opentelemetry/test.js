@@ -665,6 +665,134 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       });
     });
   });
+
+  describe('OracleDB', function () {
+    this.timeout(1000 * 60);
+
+    describe('opentelemetry is enabled', function () {
+      globalAgent.setUpCleanUpHooks();
+      const agentControls = globalAgent.instance;
+
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          appPath: path.join(__dirname, './oracle-app'),
+          useGlobalAgent: true
+        });
+
+        await controls.startAndWaitForAgentConnection(5000, Date.now() + 1000 * 60);
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      it('should trace', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/trace'
+        });
+
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          expect(spans.length).to.equal(2);
+
+          const httpEntry = verifyHttpRootEntry({
+            spans,
+            apiPath: '/trace',
+            pid: String(controls.getPid())
+          });
+
+          verifyExitSpan({
+            spanName: 'otel',
+            spans,
+            parent: httpEntry,
+            withError: false,
+            pid: String(controls.getPid()),
+            dataProperty: 'tags',
+            extraTests: span => {
+              expect(span.data.tags.name).to.eql('oracledb.Connection.execute');
+              expect(span.data.tags['db.system.name']).to.eql('oracle.db');
+              expect(span.data.tags['server.address']).to.eql('localhost');
+              checkTelemetryResourceAttrs(span);
+            }
+          });
+        });
+      });
+
+      it('[suppressed] should not trace', async () => {
+        return controls
+          .sendRequest({
+            method: 'GET',
+            path: '/trace',
+            suppressTracing: true
+          })
+          .then(() => delay(DELAY_TIMEOUT_IN_MS))
+          .then(() => {
+            return retry(async () => {
+              const spans = await agentControls.getSpans();
+              expect(spans).to.be.empty;
+            });
+          });
+      });
+    });
+
+    describe('opentelemetry is disabled', function () {
+      globalAgent.setUpCleanUpHooks();
+      const agentControls = globalAgent.instance;
+
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          appPath: path.join(__dirname, './oracle-app'),
+          useGlobalAgent: true,
+          env: {
+            INSTANA_DISABLE_USE_OPENTELEMETRY: true
+          }
+        });
+
+        await controls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await controls.stop();
+      });
+
+      afterEach(async () => {
+        await controls.clearIpcMessages();
+      });
+
+      it('should trace instana spans only', () =>
+        controls
+          .sendRequest({
+            method: 'GET',
+            path: '/trace'
+          })
+          .then(() =>
+            retry(() =>
+              agentControls.getSpans().then(spans => {
+                expect(spans.length).to.equal(1);
+
+                verifyHttpRootEntry({
+                  spans,
+                  apiPath: '/trace',
+                  pid: String(controls.getPid())
+                });
+              })
+            )
+          ));
+    });
+  });
 });
 
 function checkTelemetryResourceAttrs(span) {

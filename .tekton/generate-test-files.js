@@ -78,7 +78,7 @@ const groups = {
     subname: 'test:ci:tracing:protocols'
   },
   'test:ci:collector:tracing:general': {
-    sidecars: ['postgres'],
+    sidecars: ['postgres', 'oracledb'],
     condition: ' && true'
   },
   'test:ci:collector:tracing:misc': {
