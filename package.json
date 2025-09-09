@@ -213,7 +213,7 @@
     "node-nats-streaming": "0.3.2",
     "oracledb": "6.9.0",
     "pg": "8.16.3",
-    "pino": "9.9.1",
+    "pino": "9.9.4",
     "pino-http": "9.0.0",
     "pino-v8": "npm:pino@8.21.0",
     "pkg-up": "3.1.0",
