@@ -15,8 +15,6 @@ process.on('SIGTERM', () => {
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-require('@instana/core/test/test_util/loadExpressV4');
-
 require('../../../..')();
 
 const fetch = require('node-fetch-v2');

@@ -14,8 +14,6 @@ process.on('SIGTERM', () => {
 
 const expect = require('chai').expect;
 
-require('@instana/core/test/test_util/loadExpressV4');
-
 /**
  * We install the latest version of the collector here locally.
  * This ensures we are using the Opentelemetry production dependencies.

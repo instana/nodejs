@@ -18,8 +18,6 @@ if (process.env.MYSQL2_VERSION) {
   require('./mockVersion');
 }
 
-require('@instana/core/test/test_util/loadExpressV4');
-
 const instana = require('../../../..')();
 
 const accessFunction = process.env.USE_EXECUTE ? 'execute' : 'query';
