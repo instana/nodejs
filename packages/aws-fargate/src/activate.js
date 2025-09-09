@@ -13,10 +13,14 @@ const metrics = require('./metrics');
 const { fullyQualifiedContainerId } = require('./metrics/container/containerUtil');
 
 const { tracing, util: coreUtil } = instanaCore;
-const { normalizeConfig } = coreUtil;
 
 const logger = log.init();
-const config = normalizeConfig({}, logger);
+
+// NOTE: All packages use the utility early and at any time. We have to ensure the utility is initialized
+//       before we use it.
+coreUtil.init({ logger });
+
+const config = coreUtil.normalizeConfig({}, logger);
 
 function init() {
   instanaCore.preInit(config);
@@ -24,7 +28,7 @@ function init() {
   metrics.init(config, function onReady(err, ecsContainerPayload) {
     if (err) {
       logger.error(
-        `Initializing @instana/aws-fargate failed. This fargate task will not be monitored. 
+        `Initializing @instana/aws-fargate failed. This fargate task will not be monitored.
         ${err?.message} ${err?.stack}`
       );
       metrics.deactivate();

@@ -41,7 +41,6 @@ exports.init = function init(config) {
   configNormalizers.init(config);
   spanFilter.init(config);
   yamlReader.init(config);
-  configNormalizers.init(config);
   disableInstrumentation.init(config);
 };
 

@@ -10,10 +10,14 @@ const { backendConnector, consoleLogger: log } = require('@instana/serverless');
 const identityProvider = require('./identity_provider');
 
 const { tracing, util: coreUtil } = instanaCore;
-const { normalizeConfig } = coreUtil;
 
 const logger = log.init();
-const config = normalizeConfig({}, logger);
+
+// NOTE: All packages use the utility early and at any time. We have to ensure the utility is initialized
+//       before we use it.
+coreUtil.init({ logger });
+
+const config = coreUtil.normalizeConfig({}, logger);
 
 function init() {
   // For more details about environment variables in azure, please see

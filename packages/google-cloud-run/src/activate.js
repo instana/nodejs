@@ -12,10 +12,14 @@ const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
 
 const { tracing, util: coreUtil } = instanaCore;
-const { normalizeConfig } = coreUtil;
 
 const logger = log.init();
-const config = normalizeConfig({}, logger);
+
+// NOTE: All packages use the utility early and at any time. We have to ensure the utility is initialized
+//       before we use it.
+coreUtil.init({ logger });
+
+const config = coreUtil.normalizeConfig({}, logger);
 
 function init() {
   if (!process.env.K_REVISION) {
@@ -31,7 +35,7 @@ function init() {
   metrics.init(config, function onReady(err, serviceRevisionPayload) {
     if (err) {
       logger.error(
-        `Initializing @instana/google-cloud-run failed. This container instance will not be monitored. 
+        `Initializing @instana/google-cloud-run failed. This container instance will not be monitored.
         Error: ${err?.message} ${err?.stack}`
       );
       metrics.deactivate();

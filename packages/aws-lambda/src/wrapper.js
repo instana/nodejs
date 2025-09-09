@@ -16,7 +16,6 @@ const processResult = require('./process_result');
 const captureHeaders = require('./capture_headers');
 
 const { tracing, util: coreUtil } = instanaCore;
-const { normalizeConfig } = coreUtil;
 const { tracingHeaders, constants, spanBuffer } = tracing;
 
 const lambdaConfigDefaults = {
@@ -24,7 +23,12 @@ const lambdaConfigDefaults = {
 };
 
 const logger = log.init();
-let config = normalizeConfig({}, logger, lambdaConfigDefaults);
+
+// NOTE: All packages use the utility early and at any time. We have to ensure the utility is initialized
+//       before we use it.
+coreUtil.init({ logger });
+
+let config = coreUtil.normalizeConfig({}, logger, lambdaConfigDefaults);
 let coldStart = true;
 
 // Initialize instrumentations early to allow for require statements after our
@@ -253,7 +257,7 @@ function init(event, arnInfo, _config) {
   //         - late env variables (less likely)
   //         - custom logger
   //         - we always renormalize unconditionally to ensure safety.
-  config = normalizeConfig(customConfig, logger, lambdaConfigDefaults);
+  config = coreUtil.normalizeConfig(customConfig, logger, lambdaConfigDefaults);
 
   if (!config.tracing.enabled) {
     return false;
