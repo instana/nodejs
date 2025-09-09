@@ -256,7 +256,7 @@
   "optionalDependencies": {
     "couchbase": "4.5.0",
     "couchbase-v443": "npm:couchbase@4.4.3",
-    "ibm_db": "3.3.2",
+    "ibm_db": "3.3.3",
     "kafka-avro": "3.2.0",
     "node-rdkafka": "3.5.0",
     "pg-native": "3.5.2",
