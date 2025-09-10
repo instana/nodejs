@@ -13,7 +13,7 @@ const cls = require('../../cls');
 let logger;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config/normalizeConfig').InstanaConfig} config
  */
 exports.init = function (config) {
   logger = config.logger;

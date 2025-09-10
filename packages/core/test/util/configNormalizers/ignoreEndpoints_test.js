@@ -7,7 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const { expect } = require('chai');
-const { normalizeConfig, fromEnv, fromYaml } = require('../../../src/util/configNormalizers/ignoreEndpoints');
+const { normalizeConfig, fromEnv, fromYaml } = require('../../../src/config/configNormalizers/ignoreEndpoints');
 
 describe('util.ignoreEndpoints', function () {
   describe('normalizeConfig', function () {
@@ -190,7 +190,7 @@ describe('util.ignoreEndpoints', function () {
         tracingYamlPath,
         `tracing:
           ignore-endpoints:
-            kafka: 
+            kafka:
               - methods: ["consume","publish"]
                 endpoints: ["topic1","topic2"]`
       );
@@ -199,7 +199,7 @@ describe('util.ignoreEndpoints', function () {
         comInstanaTracingYamlPath,
         `com.instana.tracing:
         ignore-endpoints:
-          kafka: 
+          kafka:
             - methods: ["consume","publish"]
               endpoints: ["topic1","topic2"]`
       );
@@ -208,7 +208,7 @@ describe('util.ignoreEndpoints', function () {
         invalidTracingYamlPath,
         `instana-tracing:
           ignore-endpoints:
-            kafka: 
+            kafka:
               - methods: ["consume","publish"]
                 endpoints: ["topic1","topic2"]`
       );
@@ -217,7 +217,7 @@ describe('util.ignoreEndpoints', function () {
         withoutIgnoreEndpointsYamlPath,
         `tracing:
           sampling:
-            kafka: 
+            kafka:
               - methods: ["consume","publish"]
                 endpoints: ["topic1","topic2"]`
       );
@@ -226,10 +226,10 @@ describe('util.ignoreEndpoints', function () {
         withBasicFilteringYamlPath,
         `tracing:
           ignore-endpoints:
-            redis: 
+            redis:
               - type
               - get
-            kafka: 
+            kafka:
               - methods: ["consume","publish"]
                 endpoints: ["topic1","topic2"]`
       );

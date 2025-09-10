@@ -9,6 +9,7 @@ const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const coreUtils = require('@instana/core/src/util').coreUtils;
 const testConfig = require('../../core/test/config');
 const testUtils = require('../../core/test/test_util');
 
@@ -80,7 +81,7 @@ mochaSuiteFn('agent connection', function () {
     agentOpts.port = agentControls.getPort();
     agentConnection = require('../src/agentConnection');
     pidStore.init(config);
-    agentConnection.init(config, pidStore);
+    agentConnection.init(config, coreUtils, pidStore);
 
     await agentControls.simulateDiscovery(process.pid);
     await agentControls.clearReceivedData();

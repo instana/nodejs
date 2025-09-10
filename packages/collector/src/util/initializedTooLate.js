@@ -12,13 +12,13 @@ const FIRE_MONITORING_EVENT_DURATION_IN_MS = process.env.INSTANA_FIRE_MONITORING
   ? Number(process.env.INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS)
   : 600000;
 
-const hasThePackageBeenInitializedTooLate = require('@instana/core').util.hasThePackageBeenInitializedTooLate;
+const hasThePackageBeenInitializedTooLate = require('@instana/core').coreUtils.hasThePackageBeenInitializedTooLate;
 const agentConnection = require('../agentConnection');
 
 let warningHasBeenLogged = false;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config/normalizeConfig').InstanaConfig} config
  */
 exports.init = function init(config) {
   logger = config.logger;

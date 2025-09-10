@@ -440,7 +440,7 @@ NoopSpanHandle.prototype.cancel = function cancel() {
 };
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../config/normalizeConfig').InstanaConfig} config
  */
 exports.init = function init(config) {
   logger = config.logger;

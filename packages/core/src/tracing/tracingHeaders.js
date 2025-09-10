@@ -17,7 +17,7 @@ let logger;
 let disableW3cTraceCorrelation = false;
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../config/normalizeConfig').InstanaConfig} config
  */
 exports.init = function (config) {
   logger = config.logger;

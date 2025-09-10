@@ -5,13 +5,13 @@
 
 'use strict';
 
-const { hook } = require('@instana/core').util;
+const { hook } = require('@instana/core').coreUtils;
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config/normalizeConfig').InstanaConfig} config
  */
 exports.init = function init(config) {
   logger = config.logger;
@@ -39,7 +39,7 @@ hook.onModuleLoad(
 );
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config/normalizeConfig').InstanaConfig} config
  */
 exports.activate = function activate(config) {
   timeBetweenHealthcheckCalls = config.metrics.timeBetweenHealthcheckCalls;

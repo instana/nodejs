@@ -5,7 +5,7 @@
 
 'use strict';
 
-const hasThePackageBeenInitializedTooLate = require('@instana/core').util.hasThePackageBeenInitializedTooLate;
+const hasThePackageBeenInitializedTooLate = require('@instana/core').coreUtils.hasThePackageBeenInitializedTooLate;
 
 exports.payloadPrefix = 'initTooLate';
 exports.currentPayload = undefined;

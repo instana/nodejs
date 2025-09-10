@@ -73,35 +73,41 @@ class InstanaServerlessLogger {
   trace = (...args) => this.logger?.trace?.(...args);
 }
 
-exports.init = function init(config = {}) {
+/**
+ * @param {import('@instana/core/src/instanaCtr').InstanaCtrType} [_instanaCtr]
+ */
+// eslint-disable-next-line no-unused-vars
+exports.init = _instanaCtr => {};
+
+exports.create = customConfig => {
   let parentLogger;
 
-  // CASE: prevent circular references
-  if (config.logger && config.logger instanceof InstanaServerlessLogger && config.logger.logger) {
-    config.logger = config.logger.logger;
+  // CASE: prevent circular references. This is our own logger.
+  if (customConfig.logger && customConfig.logger instanceof InstanaServerlessLogger && customConfig.logger.logger) {
+    customConfig.logger = customConfig.logger.logger;
   }
 
   // CASE: customer overrides logger in serverless land.
-  if (config.logger && typeof config.logger.child === 'function') {
+  if (customConfig.logger && typeof customConfig.logger.child === 'function') {
     // A bunyan or pino logger has been provided via config. In either case we create a child logger directly under the
     // given logger which serves as the parent for all loggers we create later on.
 
     // BUG: Winston does not support child logger levels! Neither in `.child` nor with `level()`
     //      Setting INSTANA_DEBUG=true has no affect in the child winston logger.
     //      It takes the parent logger level.
-    parentLogger = config.logger.child({
+    parentLogger = customConfig.logger.child({
       module: 'instana-nodejs-serverless-logger'
     });
-  } else if (config.logger && hasLoggingFunctions(config.logger)) {
+  } else if (customConfig.logger && hasLoggingFunctions(customConfig.logger)) {
     // A custom non-bunyan/non-pino logger has been provided via config. We use it as is.
-    parentLogger = config.logger;
+    parentLogger = customConfig.logger;
   } else {
     parentLogger = consoleLogger;
   }
 
   // NOTE: We accept for `process.env.INSTANA_DEBUG` any string value - does not have to be "true".
-  if (process.env.INSTANA_DEBUG || config.level || process.env.INSTANA_LOG_LEVEL) {
-    setLoggerLevel(process.env.INSTANA_DEBUG ? 'debug' : config.level || process.env.INSTANA_LOG_LEVEL);
+  if (process.env.INSTANA_DEBUG || customConfig.level || process.env.INSTANA_LOG_LEVEL) {
+    setLoggerLevel(process.env.INSTANA_DEBUG ? 'debug' : customConfig.level || process.env.INSTANA_LOG_LEVEL);
   }
 
   if (!instanaServerlessLogger) {

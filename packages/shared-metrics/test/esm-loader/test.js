@@ -10,7 +10,7 @@ const expect = require('chai').expect;
 const { supportedVersion } = require('@instana/core').tracing;
 const testUtils = require('@instana/core/test/test_util');
 const config = require('@instana/core/test/config');
-const isLatestEsmSupportedVersion = require('@instana/core').util.esm.isLatestEsmSupportedVersion;
+const isLatestEsmSupportedVersion = require('@instana/core').coreUtils.esm.isLatestEsmSupportedVersion;
 
 const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
 const loaderPath = isLatestEsmSupportedVersion(process.versions.node)

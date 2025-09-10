@@ -7,14 +7,14 @@
 
 const cluster = require('cluster');
 
-const hook = require('@instana/core').util.hook;
+const hook = require('@instana/core').coreUtils.hook;
 const selfPath = require('./selfPath');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config/normalizeConfig').InstanaConfig} config
  */
 exports.init = function (config) {
   logger = config.logger;

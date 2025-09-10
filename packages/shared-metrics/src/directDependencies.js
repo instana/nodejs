@@ -5,16 +5,21 @@
 
 'use strict';
 
-const { util, uninstrumentedFs: fs } = require('@instana/core');
+const { uninstrumentedFs: fs } = require('@instana/core');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 
+/** @type {import('@instana/core/src/util').CoreUtilsType} */
+let coreUtils;
+
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/util').CoreUtilsType} utils
  */
-exports.init = function init(config) {
+exports.init = function init(config, utils) {
   logger = config.logger;
+  coreUtils = utils;
 };
 
 exports.payloadPrefix = 'directDependencies';
@@ -36,10 +41,10 @@ exports.deactivate = function deactivate() {
 
 exports.activate = function activate() {
   attempts++;
-  util.applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, packageJsonPath) => {
+  coreUtils.applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, packageJsonPath) => {
     if (err) {
       return logger.info(
-        `Failed to determine main package.json for analysis of direct dependencies. 
+        `Failed to determine main package.json for analysis of direct dependencies.
         Reason: ${err?.message} ${err?.stack}`
       );
     } else if (!packageJsonPath && attempts < MAX_ATTEMPTS) {

@@ -4,14 +4,14 @@
 
 'use strict';
 
-/** @type {import('../core').GenericLogger} */
-let logger;
+/** @type {import('../instanaCtr').InstanaCtrType} */
+let instanaCtr;
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../instanaCtr').InstanaCtrType} _instanaCtr
  */
-exports.init = function init(config) {
-  logger = config.logger;
+exports.init = function init(_instanaCtr) {
+  instanaCtr = _instanaCtr;
 };
 
 exports.get = () => {
@@ -48,7 +48,7 @@ exports.get = () => {
     const result = [nodeOptions, execArgs].filter(Boolean).join(', ') || 'noFlags';
     return result;
   } catch (error) {
-    logger.error(`Error occurred while doing preload flag filtering: ${error?.message} ${error?.stack}`);
+    instanaCtr.logger().error(`Error occurred while doing preload flag filtering: ${error?.message} ${error?.stack}`);
     return '';
   }
 };

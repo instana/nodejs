@@ -15,7 +15,7 @@ if (isNodeJsTooOld()) {
   return;
 }
 
-const { util: coreUtil } = require('@instana/core');
+const excludedFromInstrumentation = require('@instana/core/src/util/excludedFromInstrumentation');
 const { environment: environmentUtil, consoleLogger: log } = require('@instana/serverless');
 
 // TODO: we currently call "log.init()" twice. Once here
@@ -23,7 +23,7 @@ const { environment: environmentUtil, consoleLogger: log } = require('@instana/s
 const logger = log.init();
 environmentUtil.init({ logger });
 
-const isExcludedFromInstrumentation = coreUtil.excludedFromInstrumentation && coreUtil.excludedFromInstrumentation();
+const isExcludedFromInstrumentation = excludedFromInstrumentation && excludedFromInstrumentation();
 
 if (!isExcludedFromInstrumentation) {
   environmentUtil.validate();

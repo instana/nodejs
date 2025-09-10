@@ -9,8 +9,8 @@ const fs = require('../uninstrumentedFs');
 const path = require('path');
 const isESMApp = require('./esm').isESMApp;
 
-/** @type {import('../core').GenericLogger} */
-let logger;
+/** @type {import('../instanaCtr').InstanaCtrType} */
+let instanaCtr;
 
 // Cache determined main package json as these will be referenced often
 // and identification of these values is expensive.
@@ -22,16 +22,11 @@ let mainPackageJsonPath;
 let nodeModulesPath;
 let appInstalledIntoNodeModules = false;
 
-/** @type {string} */
-let packageJsonPath;
-
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../instanaCtr').InstanaCtrType} _instanaCtr
  */
-function init(config) {
-  logger = config.logger;
-
-  packageJsonPath = config.packageJsonPath;
+function init(_instanaCtr) {
+  instanaCtr = _instanaCtr;
 }
 
 function isAppInstalledIntoNodeModules() {
@@ -54,8 +49,8 @@ function getMainPackageJsonStartingAtMainModule(cb) {
   }
 
   // CASE: customer provided custom package.json path, let's try loading it
-  if (packageJsonPath) {
-    return readFile(packageJsonPath, cb);
+  if (instanaCtr.config().packageJsonPath) {
+    return readFile(instanaCtr.config().packageJsonPath, cb);
   }
 
   return getMainPackageJsonStartingAtDirectory(null, cb);
@@ -106,7 +101,9 @@ function readFile(filePath, cb) {
     try {
       parsedMainPackageJson = JSON.parse(contents);
     } catch (e) {
-      logger.warn(`Package.json file ${packageJsonPath} cannot be parsed: ${e?.message} ${e?.stack}`);
+      instanaCtr
+        .logger()
+        .warn(`Package.json file ${instanaCtr.config().packageJsonPath} cannot be parsed: ${e?.message} ${e?.stack}`);
       return cb(e, null);
     }
 

@@ -5,16 +5,19 @@
 
 'use strict';
 
-const { applicationUnderMonitoring } = require('@instana/core').util;
-
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 
+/** @type {import('@instana/core/src/util').CoreUtilsType} */
+let coreUtils;
+
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/util').CoreUtilsType} utils
  */
-exports.init = function init(config) {
+exports.init = function init(config, utils) {
   logger = config.logger;
+  coreUtils = utils;
 };
 
 exports.payloadPrefix = 'keywords';
@@ -29,7 +32,7 @@ let attempts = 0;
 exports.activate = function activate() {
   attempts++;
 
-  applicationUnderMonitoring.getMainPackageJsonStartingAtMainModule((err, packageJson) => {
+  coreUtils.applicationUnderMonitoring.getMainPackageJsonStartingAtMainModule((err, packageJson) => {
     if (err) {
       return logger.warn(`Failed to determine main package json. Reason: ${err?.message} ${err?.stack}`);
     } else if (!packageJson && attempts < MAX_ATTEMPTS) {

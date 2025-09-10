@@ -52,16 +52,17 @@ const ctx = {
 };
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/util').CoreUtilsType} utils
  * @param {any} pidStore
  */
-exports.init = function init(config, pidStore) {
+exports.init = function init(config, utils, pidStore) {
   logger = config.logger;
 
   agentHostLookup.init(config);
   announced.init(config);
   agentready.init(config, pidStore);
-  unannounced.init(config, pidStore);
+  unannounced.init(config, utils, pidStore);
 };
 
 exports.start = function start() {

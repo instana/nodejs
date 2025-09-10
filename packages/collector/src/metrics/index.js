@@ -14,12 +14,13 @@ const additionalMetrics = [pid];
 
 /**
  * @param {import('@instana/core/src/metrics').InstanaConfig} config
+ * @param {import('@instana/core/src/util').CoreUtilsType} utils
  * @param {any} pidStore
  */
-exports.init = function init(config, pidStore) {
+exports.init = function init(config, utils, pidStore) {
   coreMetrics.init(config);
   sharedMetrics.init(config);
-  transmissionCycle.init(config);
+  transmissionCycle.init(config, utils);
 
   additionalMetrics.forEach(metric => {
     metric.init(config, pidStore);
