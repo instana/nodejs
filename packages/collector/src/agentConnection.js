@@ -22,8 +22,10 @@ let pidStore;
 // file descriptor fields in the collector announce cycle.
 const paddingForInodeAndFileDescriptor = 200;
 
-// 5mb limit
-const maxContentLength = 1024 * 1024 * 5;
+// NOTE: The agent/sensor has a limit of 49mb.
+//       We had 5mb for a few years, but we were running into PayloadTooLargeError for
+//       profiles. We increase it to 20mb and see if that helps.
+const maxContentLength = 1024 * 1024 * 20;
 let maxContentErrorHasBeenLogged = false;
 
 const http = uninstrumentedHttp.http;
