@@ -155,7 +155,7 @@ module.exports.configNormalizers = configNormalizers;
  * @param {InstanaConfig} [defaultsOverride]
  * @returns {InstanaConfig}
  */
-module.exports.normalize = (config, _logger, defaultsOverride = {}) => {
+module.exports.init = (config, _logger, defaultsOverride = {}) => {
   if (_logger) {
     logger = _logger;
   } else {

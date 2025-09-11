@@ -18,7 +18,7 @@ describe('Process processor', function () {
   let dataProcessor;
 
   before(() => {
-    const config = core.coreConfig.normalize({});
+    const config = core.coreConfig.init({});
     core.secrets.init(config);
   });
 

@@ -252,7 +252,7 @@ function init(event, arnInfo, _config) {
   //         - late env variables (less likely)
   //         - custom logger
   //         - we always renormalize unconditionally to ensure safety.
-  config = coreConfig.normalize(userConfig, logger, lambdaConfigDefaults);
+  config = coreConfig.init(userConfig, logger, lambdaConfigDefaults);
 
   if (!config.tracing.enabled) {
     return false;

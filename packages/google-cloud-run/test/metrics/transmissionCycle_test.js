@@ -33,7 +33,7 @@ describe('transmission cycle', function () {
   let onReadyError;
 
   before(() => {
-    const config = core.coreConfig.normalize({});
+    const config = core.coreConfig.init({});
     core.secrets.init(config);
 
     metadataMockPort = portfinder();
