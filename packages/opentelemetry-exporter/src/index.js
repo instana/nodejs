@@ -8,13 +8,13 @@
 const {
   backendConnector: instanaBackendConnector,
   environment: instanaEnvironment,
-  consoleLogger: log
+  consoleLogger: serverlessLogger
 } = require('@instana/serverless');
 const { ExportResultCode } = require('@opentelemetry/core');
 const { diag } = require('@opentelemetry/api');
 
 // NOTE: Use the Opentelemetry logger.
-const logger = log.init({ logger: diag });
+const logger = serverlessLogger.init({ logger: diag });
 const instanaEndpointUrlEnvVar = 'INSTANA_ENDPOINT_URL';
 const instanaAgentKeyEnvVar = 'INSTANA_AGENT_KEY';
 
