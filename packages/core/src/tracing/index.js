@@ -17,14 +17,16 @@ const shimmer = require('./shimmer');
 const supportedVersion = require('./supportedVersion');
 const { otelInstrumentations } = require('./opentelemetry-instrumentations');
 const cls = require('./cls');
-const coreUtil = require('../util');
 
 let tracingEnabled = false;
 let tracingActivated = false;
 let instrumenationsInitialized = false;
 let automaticTracingEnabled = false;
 
-/** @type {import('../util/normalizeConfig').InstanaConfig} */
+/** @type {import('../util').CoreUtilsType} */
+let coreUtils = null;
+
+/** @type {import('../config/normalizeConfig').InstanaConfig} */
 let config = null;
 
 /** @typedef {import('../../../collector/src/pidStore')} CollectorPIDStore */
@@ -162,9 +164,12 @@ exports.registerAdditionalInstrumentations = function registerAdditionalInstrume
 };
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} preliminaryConfig
+ * @param {import('../config/normalizeConfig').InstanaConfig} preliminaryConfig
+ * @param {import('../util').CoreUtilsType} utils
  */
-exports.preInit = function preInit(preliminaryConfig) {
+exports.preInit = function preInit(preliminaryConfig, utils) {
+  coreUtils = utils;
+
   /**
    * On e.g. Fargate the `preInit` function is called as early as possible
    * and all our modules (shimmer, cls, sdk etc.) need to be initialized.
@@ -192,20 +197,23 @@ exports.preInit = function preInit(preliminaryConfig) {
 };
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} _config
+ * @param {import('../config/normalizeConfig').InstanaConfig} _config
+ * @param {import('../util').CoreUtilsType} utils
  * @param {import('..').DownstreamConnection} downstreamConnection
  * @param {CollectorPIDStore} _processIdentityProvider
  */
-exports.init = function init(_config, downstreamConnection, _processIdentityProvider) {
+exports.init = function init(_config, utils, downstreamConnection, _processIdentityProvider) {
+  coreUtils = utils;
+
   if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL === 'debug') {
-    const preloadFlags = coreUtil.preloadFlags.get();
+    const preloadFlags = coreUtils.preloadFlags.get();
 
     // eslint-disable-next-line no-console
     console.debug(`The App is using the following preload flags: ${preloadFlags}`);
   }
 
   // Consider removing this in the next major release of the @instana package.
-  if (coreUtil.esm.hasExperimentalLoaderFlag()) {
+  if (coreUtils.esm.hasExperimentalLoaderFlag()) {
     // eslint-disable-next-line no-console
     console.warn(
       'Node.js introduced breaking changes in versions 18.19.0 and above, leading to the discontinuation of support ' +
@@ -242,8 +250,8 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
       if (_config.tracing.useOpentelemetry) {
         otelInstrumentations.init(config, cls);
       }
-      if (coreUtil.esm.isESMApp()) {
-        coreUtil.iitmHook.activate();
+      if (coreUtils.esm.isESMApp()) {
+        coreUtils.iitmHook.activate();
       }
     }
   }
@@ -254,7 +262,7 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
 };
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} _config
+ * @param {import('../config/normalizeConfig').InstanaConfig} _config
  */
 function initInstrumenations(_config) {
   // initialize all instrumentations
@@ -263,7 +271,7 @@ function initInstrumenations(_config) {
       instrumentationModules[instrumentationKey] = require(instrumentationKey);
 
       if (
-        !coreUtil.disableInstrumentation.isInstrumentationDisabled({
+        !coreUtils.disableInstrumentation.isInstrumentationDisabled({
           instrumentationModules,
           instrumentationKey
         })
@@ -293,7 +301,7 @@ function initInstrumenations(_config) {
 exports.activate = function activate(extraConfig = {}) {
   if (tracingEnabled && !tracingActivated) {
     tracingActivated = true;
-    coreUtil.activate(extraConfig);
+    coreUtils.activate(extraConfig);
     spanBuffer.activate(extraConfig);
     opentracing.activate();
     sdk.activate();
@@ -309,7 +317,7 @@ exports.activate = function activate(extraConfig = {}) {
         //
         // We will revisit this in the future, especially if we encounter issues with disabled instrumentations.
         if (
-          !coreUtil.disableInstrumentation.isInstrumentationDisabled({
+          !coreUtils.disableInstrumentation.isInstrumentationDisabled({
             instrumentationModules,
             instrumentationKey
           })

@@ -4,22 +4,21 @@
 
 'use strict';
 
-/**
- * @type {import('../tracing').IgnoreEndpoints}
- */
-let ignoreEndpoints;
+/** @type {import('../instanaCtr').InstanaCtrType} */
+let instanaCtr;
+
+/** @type {import('../tracing').IgnoreEndpoints} */
+let ignoreEndpointsConfig;
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../instanaCtr').InstanaCtrType} _instanaCtr
  */
-function init(config) {
-  if (config?.tracing?.ignoreEndpoints) {
-    ignoreEndpoints = config.tracing.ignoreEndpoints;
-  }
+function init(_instanaCtr) {
+  instanaCtr = _instanaCtr;
 }
 
 /**
- * @param {import('../util/normalizeConfig').AgentConfig} extraConfig
+ * @param {import('../config/normalizeConfig').AgentConfig} extraConfig
  */
 function activate(extraConfig) {
   /**
@@ -36,9 +35,11 @@ function activate(extraConfig) {
    *
    * TODO: Perform a major refactoring of configuration priority ordering in INSTA-817.
    */
-  const isIgnoreEndpointsEmpty = !ignoreEndpoints || Object.keys(ignoreEndpoints).length === 0;
+  ignoreEndpointsConfig = instanaCtr.config().tracing.ignoreEndpoints;
+  const isIgnoreEndpointsEmpty = !ignoreEndpointsConfig || Object.keys(ignoreEndpointsConfig).length === 0;
+
   if (isIgnoreEndpointsEmpty && extraConfig?.tracing?.ignoreEndpoints) {
-    ignoreEndpoints = extraConfig.tracing.ignoreEndpoints;
+    ignoreEndpointsConfig = extraConfig.tracing.ignoreEndpoints;
   }
 }
 
@@ -127,10 +128,9 @@ function matchConnections(span, spanTypeKey, ignoreconfig) {
 
 /**
  * @param {import("../core").InstanaBaseSpan} span
- * @param {import('../tracing').IgnoreEndpoints} ignoreEndpointsConfig
  * @returns {boolean}
  */
-function shouldIgnore(span, ignoreEndpointsConfig) {
+function shouldIgnore(span) {
   // Skip if the span type is not in the ignored list
   if (!IGNORABLE_SPAN_TYPES.includes(span.n)) {
     return false;
@@ -200,7 +200,7 @@ function normalizeSpanDataTypeKey(spanType) {
  * @returns {import('../core').InstanaBaseSpan | null}
  */
 function applyFilter(span) {
-  if (ignoreEndpoints && shouldIgnore(span, ignoreEndpoints)) {
+  if (ignoreEndpointsConfig && shouldIgnore(span)) {
     return null;
   }
   return span;

@@ -8,11 +8,11 @@ const disable = require('./disable');
 const ignoreEndpoints = require('./ignoreEndpoints');
 
 /**
- * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../../instanaCtr').InstanaCtrType} instanaCtr
  */
-exports.init = function init(config) {
-  disable.init(config);
-  ignoreEndpoints.init(config);
+exports.init = function init(instanaCtr) {
+  disable.init(instanaCtr);
+  ignoreEndpoints.init(instanaCtr);
 };
 
 exports.disable = disable;

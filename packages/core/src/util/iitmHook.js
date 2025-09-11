@@ -6,17 +6,17 @@
 
 const iitmHook = require('import-in-the-middle');
 
-/** @type {import('../core').GenericLogger} */
-let logger;
+/** @type {import('../instanaCtr').InstanaCtrType} */
+let instanaCtr;
 
 /** @type {Object.<string, Function[]>} */
 const byModuleNameTransformers = {};
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../instanaCtr').InstanaCtrType} _instanaCtr
  */
-exports.init = function init(config) {
-  logger = config.logger;
+exports.init = function init(_instanaCtr) {
+  instanaCtr = _instanaCtr;
 };
 
 /**
@@ -29,7 +29,7 @@ exports.activate = function activate() {
         if (typeof transformerFn === 'function') {
           // @ts-ignore
           iitmHook([moduleName], (exports, name) => {
-            logger.debug(`iitm-hooking enabled for module ${name}`);
+            instanaCtr.logger().debug(`iitm-hooking enabled for module ${name}`);
             if (exports && exports.default) {
               exports.default = transformerFn(exports.default);
             } else {
@@ -38,11 +38,13 @@ exports.activate = function activate() {
             return exports;
           });
         } else {
-          logger.error(
-            `The transformer is not a function but of type "${typeof transformerFn}" (details: ${
-              transformerFn == null ? 'null/undefined' : transformerFn
-            }).`
-          );
+          instanaCtr
+            .logger()
+            .error(
+              `The transformer is not a function but of type "${typeof transformerFn}" (details: ${
+                transformerFn == null ? 'null/undefined' : transformerFn
+              }).`
+            );
         }
       });
     }

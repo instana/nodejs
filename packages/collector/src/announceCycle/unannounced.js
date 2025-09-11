@@ -8,7 +8,7 @@
 const {
   secrets,
   tracing,
-  util: { ensureNestedObjectExists, configNormalizers }
+  coreConfig: { configNormalizers }
 } = require('@instana/core');
 const { constants: tracingConstants } = tracing;
 
@@ -19,6 +19,9 @@ const agentOpts = require('../agent/opts');
 let logger;
 /** @type {{ pid: number }} */
 let pidStore;
+
+/** @type {import('@instana/core/src/util').CoreUtilsType} */
+let coreUtils;
 
 const initialRetryDelay = 10 * 1000; // 10 seconds
 const backoffFactor = 1.5;
@@ -35,7 +38,7 @@ const maxRetryDelay = 60 * 1000; // one minute
 /**
  * @typedef {Object} SecretsConfig
  * @property {Array.<string>} list
- * @property {import('@instana/core/src/util/normalizeConfig').MatchingOption} matcher
+ * @property {import('@instana/core/src/config/normalizeConfig').MatchingOption} matcher
  */
 
 /**
@@ -53,10 +56,12 @@ const maxRetryDelay = 60 * 1000; // one minute
  */
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/util').CoreUtilsType} utils
  * @param {any} _pidStore
  */
-function init(config, _pidStore) {
+function init(config, utils, _pidStore) {
+  coreUtils = utils;
   logger = config.logger;
   pidStore = _pidStore;
 }
@@ -130,17 +135,17 @@ function applySecretsConfiguration(agentResponse) {
   if (agentResponse.secrets) {
     if (!(typeof agentResponse.secrets.matcher === 'string')) {
       logger.warn(
-        `Received an invalid secrets configuration from the Instana host agent, attribute matcher is not a string: 
+        `Received an invalid secrets configuration from the Instana host agent, attribute matcher is not a string:
           ${agentResponse.secrets.matcher}`
       );
     } else if (Object.keys(secrets.matchers).indexOf(agentResponse.secrets.matcher) < 0) {
       logger.warn(
-        `Received an invalid secrets configuration from the Intana agent, matcher is not supported: 
+        `Received an invalid secrets configuration from the Intana agent, matcher is not supported:
           ${agentResponse.secrets.matcher}`
       );
     } else if (!Array.isArray(agentResponse.secrets.list)) {
       logger.warn(
-        `Received an invalid secrets configuration from the Instana host agent, attribute list is not an array: 
+        `Received an invalid secrets configuration from the Instana host agent, attribute list is not an array:
           ${agentResponse.secrets.list}`
       );
     } else {
@@ -168,7 +173,7 @@ function applyExtraHttpHeaderConfiguration(agentResponse) {
  */
 function actuallyApplyExtraHttpHeaderConfiguration(extraHeaders) {
   if (Array.isArray(extraHeaders)) {
-    ensureNestedObjectExists(agentOpts.config, ['tracing', 'http']);
+    coreUtils.ensureNestedObjectExists(agentOpts.config, ['tracing', 'http']);
     // The Node.js HTTP API converts all incoming HTTP headers into lowercase.
     agentOpts.config.tracing.http.extraHttpHeadersToCapture = extraHeaders.map((/** @type {string} */ s) =>
       s.toLowerCase()
@@ -188,7 +193,7 @@ function applyKafkaTracingConfiguration(agentResponse) {
           ? kafkaTracingConfigFromAgent['trace-correlation']
           : tracingConstants.kafkaTraceCorrelationDefault
     };
-    ensureNestedObjectExists(agentOpts.config, ['tracing', 'kafka']);
+    coreUtils.ensureNestedObjectExists(agentOpts.config, ['tracing', 'kafka']);
     agentOpts.config.tracing.kafka = kafkaTracingConfig;
   }
   // There is no fallback because there is are no legacy agent response attributes for the Kafka tracing config, those
@@ -201,7 +206,7 @@ function applyKafkaTracingConfiguration(agentResponse) {
 function applySpanBatchingConfiguration(agentResponse) {
   if (agentResponse.tracing) {
     if (agentResponse.tracing['span-batching-enabled'] === true) {
-      ensureNestedObjectExists(agentOpts.config, ['tracing']);
+      coreUtils.ensureNestedObjectExists(agentOpts.config, ['tracing']);
       agentOpts.config.tracing.spanBatchingEnabled = true;
     }
     return;
@@ -211,7 +216,7 @@ function applySpanBatchingConfiguration(agentResponse) {
   // common tracing options section. We can remove this legacy fallback approximately in May 2023.
   if (agentResponse.spanBatchingEnabled === true || agentResponse.spanBatchingEnabled === 'true') {
     logger.info('Enabling span batching via Instana host agent configuration.');
-    ensureNestedObjectExists(agentOpts.config, ['tracing']);
+    coreUtils.ensureNestedObjectExists(agentOpts.config, ['tracing']);
     agentOpts.config.tracing.spanBatchingEnabled = true;
   }
 }
@@ -235,7 +240,7 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
   const ignoreEndpointsConfig = agentResponse?.tracing?.['ignore-endpoints'];
   if (!ignoreEndpointsConfig) return;
 
-  ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
+  coreUtils.ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
   agentOpts.config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
 }
 
@@ -251,11 +256,12 @@ function applyDisableConfiguration(agentResponse) {
   const disablingConfig = agentResponse?.tracing?.disable;
   if (!disablingConfig) return;
 
-  ensureNestedObjectExists(agentOpts.config, ['tracing', 'disable']);
+  coreUtils.ensureNestedObjectExists(agentOpts.config, ['tracing', 'disable']);
   agentOpts.config.tracing.disable = configNormalizers.disable.normalizeExternalConfig({
     tracing: { disable: disablingConfig }
   });
 }
+
 module.exports = {
   init,
 

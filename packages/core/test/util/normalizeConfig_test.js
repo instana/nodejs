@@ -9,7 +9,7 @@ const expect = require('chai').expect;
 const fs = require('fs');
 const path = require('path');
 
-const normalizeConfig = require('../../src/util/normalizeConfig');
+const normalizeConfig = require('../../src/config/normalizeConfig');
 
 describe('util.normalizeConfig', () => {
   beforeEach(resetEnv);
@@ -862,7 +862,7 @@ describe('util.normalizeConfig', () => {
       tracingYamlPath,
       `tracing:
       ignore-endpoints:
-        kafka: 
+        kafka:
           - methods: ["consume","publish"]
             endpoints: ["topic1","topic2"]`
     );
@@ -871,7 +871,7 @@ describe('util.normalizeConfig', () => {
       comInstanaTracingYamlPath,
       `com.instana.tracing:
       ignore-endpoints:
-        kafka: 
+        kafka:
           - methods: ["consume","publish"]
             endpoints: ["topic1","topic2"]`
     );

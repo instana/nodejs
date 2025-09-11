@@ -6,7 +6,7 @@
 'use strict';
 
 const instanaCore = require('@instana/core');
-const { backendConnector, consoleLogger: log, environment } = require('@instana/serverless');
+const { backendConnector, consoleLogger: serverlessLogger, environment } = require('@instana/serverless');
 const arnParser = require('./arn');
 const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
@@ -15,21 +15,29 @@ const triggers = require('./triggers');
 const processResult = require('./process_result');
 const captureHeaders = require('./capture_headers');
 
-const { tracing, util: coreUtil } = instanaCore;
-const { normalizeConfig } = coreUtil;
+const { tracing, coreConfig, coreUtils } = instanaCore;
 const { tracingHeaders, constants, spanBuffer } = tracing;
 
 const lambdaConfigDefaults = {
   tracing: { forceTransmissionStartingAt: 25, transmissionDelay: 100, initialTransmissionDelay: 100 }
 };
 
-const logger = log.init();
-let config = normalizeConfig({}, logger, lambdaConfigDefaults);
 let coldStart = true;
+
+const instanaCtr = new instanaCore.InstanaCtr();
+
+coreUtils.init(instanaCtr);
+coreConfig.init(instanaCtr);
+serverlessLogger.init(instanaCtr);
+
+instanaCtr.set('utils', coreUtils.create());
+instanaCtr.set('config', coreConfig.create({}, lambdaConfigDefaults));
+instanaCtr.set('logger', serverlessLogger.create());
 
 // Initialize instrumentations early to allow for require statements after our
 // package has been required but before the actual instana.wrap(...) call.
-instanaCore.preInit(config);
+// TODO: refactor to use `instanaCtr` only!
+instanaCore.preInit(instanaCtr.config(), instanaCtr.utils());
 
 /**
  * Wraps an AWS Lambda handler so that metrics and traces are reported to Instana. This function will figure out if the
@@ -191,7 +199,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
       process.env.INSTANA_ENABLE_LAMBDA_TIMEOUT_DETECTION &&
       process.env.INSTANA_ENABLE_LAMBDA_TIMEOUT_DETECTION === 'true'
     ) {
-      logger.debug('Heuristical timeout detection enabled. Please only use for debugging purposes.');
+      instanaCtr.logger().debug('Heuristical timeout detection enabled. Please only use for debugging purposes.');
       registerTimeoutDetection(context, entrySpan);
     }
 
@@ -245,34 +253,41 @@ function init(event, arnInfo, _config) {
 
   // CASE: customer provides a custom logger or custom level
   if (customConfig.logger || customConfig.level) {
-    log.init(customConfig);
+    instanaCtr.setLogger(serverlessLogger.create(customConfig));
   }
 
-  // NOTE: We SHOULD renormalize because of:
+  // NOTE: We SHOULD re-create the config object, because:
   //         - in-code _config object
   //         - late env variables (less likely)
   //         - custom logger
   //         - we always renormalize unconditionally to ensure safety.
-  config = normalizeConfig(customConfig, logger, lambdaConfigDefaults);
+  //       This is a consequence of pre-initializing early.
+  instanaCtr.set('config', coreConfig.create(customConfig, lambdaConfigDefaults));
 
-  if (!config.tracing.enabled) {
+  if (!instanaCtr.config().tracing.enabled) {
     return false;
   }
 
   const useLambdaExtension = shouldUseLambdaExtension();
   if (useLambdaExtension) {
-    logger.info('@instana/aws-lambda will use the Instana Lambda extension to send data to the Instana back end.');
+    instanaCtr
+      .logger()
+      .info('@instana/aws-lambda will use the Instana Lambda extension to send data to the Instana back end.');
   } else {
-    logger.info(
-      '@instana/aws-lambda will not use the Instana Lambda extension, but instead send data to the Instana back end ' +
-        'directly.'
-    );
+    instanaCtr
+      .logger()
+      .info(
+        '@instana/aws-lambda will not use the Instana Lambda extension, ' +
+          'but instead send data to the Instana back end ' +
+          'directly.'
+      );
   }
 
   identityProvider.init(arnInfo);
-  triggers.init(config);
+  triggers.init(instanaCtr.config());
+
   backendConnector.init({
-    config,
+    config: instanaCtr.config(),
     identityProvider,
     defaultTimeout: 500,
     useLambdaExtension,
@@ -282,16 +297,16 @@ function init(event, arnInfo, _config) {
     retries: !!useLambdaExtension
   });
 
-  instanaCore.init(config, backendConnector, identityProvider);
+  instanaCore.init(instanaCtr.config(), instanaCtr.utils(), backendConnector, identityProvider);
 
   // After core init, because ssm requires require('@aws-sdk/client-ssm'), which triggers
   // the requireHook + shimmer. Any module which requires another external module has to be
   // initialized after the core.
-  ssm.init(config);
+  ssm.init(instanaCtr.config());
 
   spanBuffer.setIsFaaS(true);
-  captureHeaders.init(config);
-  metrics.init(config);
+  captureHeaders.init(instanaCtr.config());
+  metrics.init(instanaCtr.config());
   metrics.activate();
   tracing.activate();
 
@@ -311,10 +326,12 @@ function registerTimeoutDetection(context, entrySpan) {
     : 2000;
 
   if (initialRemainingMillis <= minimumTimeoutInMs) {
-    logger.debug(
-      'Heuristical timeout detection will be disabled for Lambda functions with a short timeout ' +
-        '(2 seconds and smaller).'
-    );
+    instanaCtr
+      .logger()
+      .debug(
+        'Heuristical timeout detection will be disabled for Lambda functions with a short timeout ' +
+          '(2 seconds and smaller).'
+      );
     return;
   }
 
@@ -329,9 +346,9 @@ function registerTimeoutDetection(context, entrySpan) {
     triggerTimeoutHandlingAfter = initialRemainingMillis - 400;
   }
 
-  logger.debug(
-    `Registering heuristical timeout detection to be triggered in ${triggerTimeoutHandlingAfter} milliseconds.`
-  );
+  instanaCtr
+    .logger()
+    .debug(`Registering heuristical timeout detection to be triggered in ${triggerTimeoutHandlingAfter} milliseconds.`);
 
   setTimeout(() => {
     postHandlerForTimeout(entrySpan, getRemainingTimeInMillis(context));
@@ -342,7 +359,9 @@ function getRemainingTimeInMillis(context) {
   if (context && typeof context.getRemainingTimeInMillis === 'function') {
     return context.getRemainingTimeInMillis();
   } else {
-    logger.warn('context.getRemainingTimeInMillis() is not available, timeout detection will be disabled.');
+    instanaCtr
+      .logger()
+      .warn('context.getRemainingTimeInMillis() is not available, timeout detection will be disabled.');
     return null;
   }
 }
@@ -352,7 +371,7 @@ function getRemainingTimeInMillis(context) {
 //       used or not e.g. by checking the lambda handler name if that is possible.
 function shouldUseLambdaExtension() {
   if (process.env.INSTANA_DISABLE_LAMBDA_EXTENSION) {
-    logger.info('INSTANA_DISABLE_LAMBDA_EXTENSION is set, not using the Lambda extension.');
+    instanaCtr.logger().info('INSTANA_DISABLE_LAMBDA_EXTENSION is set, not using the Lambda extension.');
     return false;
   } else {
     // Note: We could also use context.memoryLimitInMB here instead of the env var AWS_LAMBDA_FUNCTION_MEMORY_SIZE (both
@@ -360,28 +379,33 @@ function shouldUseLambdaExtension() {
     // The context object is not available to the extension, so we prefer the env var over the value from the context.
     const memorySetting = process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE;
     if (!memorySetting) {
-      logger.debug(
-        'The environment variable AWS_LAMBDA_FUNCTION_MEMORY_SIZE is not present, cannot determine memory settings.'
-      );
+      instanaCtr
+        .logger()
+        .debug(
+          'The environment variable AWS_LAMBDA_FUNCTION_MEMORY_SIZE is not present, cannot determine memory settings.'
+        );
       return true;
     }
     const memorySize = parseInt(memorySetting, 10);
     if (isNaN(memorySize)) {
-      logger.debug(
-        `Could not parse the value of the environment variable AWS_LAMBDA_FUNCTION_MEMORY_SIZE: "${memorySetting}", ` +
-          'cannot determine memory settings, not using the Lambda extension.'
-      );
+      instanaCtr
+        .logger()
+        .debug(
+          'Could not parse the value of the environment variable ' +
+            `AWS_LAMBDA_FUNCTION_MEMORY_SIZE: "${memorySetting}", ` +
+            'cannot determine memory settings, not using the Lambda extension.'
+        );
       return false;
     }
     if (memorySize < 256) {
-      let logFn = logger.debug;
+      let logFn = instanaCtr.logger().debug;
 
       // CASE: We try to determine if the customer has the extension installed. We need to put a warning
       //       because the extension is **not** working and might block the lambda extension when
       //       its not used correctly e.g. slow startup of extension or waiting for invokes or incoming spans
       //       from the tracer.
       if (process.env._HANDLER?.includes('instana-aws-lambda-auto-wrap')) {
-        logFn = logger.warn;
+        logFn = instanaCtr.logger().warn;
       }
 
       logFn(
@@ -428,7 +452,7 @@ function sendToBackend({ spans, metricsPayload, finalLambdaRequest, callback }) 
 
   return ssm.waitAndGetInstanaKey((err, value) => {
     if (err) {
-      logger.debug(err);
+      instanaCtr.logger().debug(err);
       return callback();
     }
 
@@ -513,14 +537,14 @@ function postHandlerForTimeout(entrySpan, remainingMillis) {
    * `setTimeout` is not 100% reliable
    */
   if (remainingMillis < 200) {
-    logger.debug('Skipping heuristical timeout detection because lambda timeout exceeded already.');
+    instanaCtr.logger().debug('Skipping heuristical timeout detection because lambda timeout exceeded already.');
     return;
   }
 
   if (entrySpan) {
     // CASE: Timeout not needed, we already send the data to the backend successfully
     if (entrySpan.transmitted) {
-      logger.debug('Skipping heuristical timeout detection because BE data was sent already.');
+      instanaCtr.logger().debug('Skipping heuristical timeout detection because BE data was sent already.');
       return;
     }
 
@@ -531,7 +555,7 @@ function postHandlerForTimeout(entrySpan, remainingMillis) {
     entrySpan.transmit();
   }
 
-  logger.debug(`Heuristical timeout detection was triggered with ${remainingMillis} milliseconds left.`);
+  instanaCtr.logger().debug(`Heuristical timeout detection was triggered with ${remainingMillis} milliseconds left.`);
 
   // deliberately not gathering metrics but only sending spans.
   const spans = spanBuffer.getAndResetSpans();
@@ -551,7 +575,7 @@ exports.currentSpan = function getHandleForCurrentSpan() {
 exports.sdk = tracing.sdk;
 
 exports.setLogger = function setLogger(_logger) {
-  log.init({ logger: _logger });
+  instanaCtr.logger().setLogger(_logger);
 };
 
 exports.opentracing = tracing.opentracing;

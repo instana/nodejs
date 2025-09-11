@@ -6,21 +6,21 @@
 
 const { DISABLABLE_INSTRUMENTATION_GROUPS } = require('../tracing/constants');
 
-/** @type {import('../util/normalizeConfig').InstanaConfig} */
-let config;
-
-/** @type {import('../util/normalizeConfig').AgentConfig} */
+/** @type {import('../config/normalizeConfig').AgentConfig} */
 let agentConfig;
 
+/** @type {import('../instanaCtr').InstanaCtrType} */
+let instanaCtr;
+
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} _config
+ * @param {import('../instanaCtr').InstanaCtrType} _instanaCtr
  */
-function init(_config) {
-  config = _config;
+function init(_instanaCtr) {
+  instanaCtr = _instanaCtr;
 }
 
 /**
- * @param {import('../util/normalizeConfig').AgentConfig} _agentConfig
+ * @param {import('../config/normalizeConfig').AgentConfig} _agentConfig
  */
 function activate(_agentConfig) {
   agentConfig = _agentConfig;
@@ -111,7 +111,7 @@ function isInstrumentationDisabled({ instrumentationModules = {}, instrumentatio
   const context = { moduleName, instrumentationName, group };
 
   // Give priority to service-level config
-  if (config && shouldDisable(config, context)) {
+  if (shouldDisable(instanaCtr.config(), context)) {
     return true;
   }
 

@@ -5,8 +5,6 @@
 
 'use strict';
 
-const core = require('@instana/core');
-
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 
@@ -31,13 +29,17 @@ let previousTransmittedValue;
 let transmissionTimeoutHandle;
 let transmissionDelay = 1000;
 let isActive = false;
+/** @type {import('@instana/core/src/util').CoreUtilsType} */
+let coreUtils;
 
 /**
  * @param {import('@instana/core/src/metrics').InstanaConfig} config
+ * @param {import('@instana/core/src/util').CoreUtilsType} utils
  */
-exports.init = function init(config) {
+exports.init = function init(config, utils) {
   logger = config.logger;
   transmissionDelay = config.metrics.transmissionDelay;
+  coreUtils = utils;
 };
 
 /**
@@ -90,7 +92,7 @@ function sendMetrics() {
   }
 
   // clone retrieved objects to allow mutations in metric retrievers
-  const newValueToTransmit = core.util.clone(metrics.gatherData());
+  const newValueToTransmit = coreUtils.clone(metrics.gatherData());
 
   /** @type {Object<string, *>} */
   let payload;
@@ -98,7 +100,7 @@ function sendMetrics() {
   if (isFullTransmission) {
     payload = newValueToTransmit;
   } else {
-    payload = core.util.compression(previousTransmittedValue, newValueToTransmit);
+    payload = coreUtils.compression(previousTransmittedValue, newValueToTransmit);
   }
 
   downstreamConnection.sendMetrics(payload, onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit));

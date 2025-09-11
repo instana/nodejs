@@ -44,18 +44,17 @@ const allMetrics = [
 ];
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/util').CoreUtilsType} utils
  */
-const init = function (config) {
-  util.init(config);
-  dependencies.init(config);
-  description.init(config);
-  directDependencies.init(config);
+const init = function (config, utils) {
+  dependencies.init(config, utils);
+  description.init(config, utils);
+  directDependencies.init(config, utils);
   healthchecks.init(config);
-  keywords.init(config);
-  name.init(config);
-  version.init(config);
-  name.init(config);
+  keywords.init(config, utils);
+  name.init(config, utils);
+  version.init(config, utils);
   gc.init();
   libuv.init();
 };
@@ -64,7 +63,7 @@ const init = function (config) {
  * @typedef {Object} InstanaSharedMetrics
  * @property {Array.<import('@instana/core/src/metrics').InstanaMetricsModule>} allMetrics
  * @property {import('./util')} util
- * @property {(config: import('@instana/core/src/util/normalizeConfig').InstanaConfig) => void} init
+ * @property {(config: import('@instana/core/src/config/normalizeConfig').InstanaConfig) => void} init
  * @property {(logger: import('@instana/core/src/core').GenericLogger) => void} setLogger
  */
 

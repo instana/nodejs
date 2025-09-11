@@ -16,6 +16,7 @@ try {
   // thread (0).
 }
 
+const os = require('os');
 const uninstrumentedLogger = require('./uninstrumentedLogger');
 const loggerToAgentStream = require('./agent/loggerToAgentStream');
 
@@ -49,13 +50,19 @@ class InstanaLogger {
 }
 
 /**
- * @param {import('./types/collector').CollectorConfig} config
+ * @param {import('@instana/core/src/instanaCtr').InstanaCtrType} [_instanaCtr]
  */
-exports.init = function init(config = {}) {
+// eslint-disable-next-line no-unused-vars
+exports.init = _instanaCtr => {};
+
+/**
+ * @param {import('./types/collector').CollectorConfig} customConfig
+ */
+exports.create = (customConfig = {}) => {
   /** @type {import('@instana/core/src/core').GenericLogger} */
   let parentLogger;
 
-  if (config.logger && typeof config.logger.child === 'function') {
+  if (customConfig.logger && typeof customConfig.logger.child === 'function') {
     // A bunyan or pino logger has been provided via config. In either case we create a child logger directly under the
     // given logger which serves as the parent for all loggers we create later on.
 
@@ -65,7 +72,7 @@ exports.init = function init(config = {}) {
     //      It takes the parent logger level.
     //      We cannot fix this in our side.
     //      https://github.com/winstonjs/winston/issues/1854#issuecomment-710195110
-    parentLogger = config.logger.child({
+    parentLogger = customConfig.logger.child({
       // TODO: Rename to "instana-nodejs-logger" in next major version.
       module: 'instana-nodejs-logger-parent',
       threadId
@@ -74,15 +81,16 @@ exports.init = function init(config = {}) {
     // CASE: Attach custom instana meta attribute to filter out internal instana logs.
     //       This will prevent these logs from being traced.
     parentLogger.__instana = true;
-  } else if (config.logger && hasLoggingFunctions(config.logger)) {
+  } else if (customConfig.logger && hasLoggingFunctions(customConfig.logger)) {
     // CASE: Built-in console logger or log4js. We use it as is.
     // The __instana attribute identifies the Instana logger, distinguishing it from the client application logger,
     // and also prevents these logs from being traced
     // Extends config.logger with __instana while preserving its prototype and methods.
-    parentLogger = Object.setPrototypeOf({ ...config.logger, __instana: 1 }, Object.getPrototypeOf(config.logger));
+    parentLogger = Object.setPrototypeOf(
+      { ...customConfig.logger, __instana: 1 },
+      Object.getPrototypeOf(customConfig.logger)
+    );
   } else {
-    const os = require('os');
-
     // No custom logger has been provided via config, we create a new pino logger as our internal
     // Instana logger.
 
@@ -138,8 +146,8 @@ exports.init = function init(config = {}) {
 
   if (process.env['INSTANA_DEBUG']) {
     setLoggerLevel(parentLogger, 'debug');
-  } else if (config.level) {
-    setLoggerLevel(parentLogger, config.level);
+  } else if (customConfig.level) {
+    setLoggerLevel(parentLogger, customConfig.level);
   } else if (process.env['INSTANA_LOG_LEVEL']) {
     setLoggerLevel(parentLogger, process.env['INSTANA_LOG_LEVEL'].toLowerCase());
   }

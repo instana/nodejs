@@ -363,7 +363,7 @@ exports.generate = function (isCallbackApi) {
   }
 
   /**
-   * @param {import('../../util/normalizeConfig').InstanaConfig} config
+   * @param {import('../../config/normalizeConfig').InstanaConfig} config
    * @param {import('../cls')} _cls
    */
   function init(config, _cls) {

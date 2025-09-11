@@ -6,7 +6,7 @@
 'use strict';
 
 const path = require('path');
-const { util, uninstrumentedFs: fs } = require('@instana/core');
+const { uninstrumentedFs: fs } = require('@instana/core');
 
 const CountDownLatch = require('./util/CountDownLatch');
 const { DependencyDistanceCalculator, MAX_DEPTH } = require('./util/DependencyDistanceCalculator');
@@ -14,10 +14,15 @@ const { DependencyDistanceCalculator, MAX_DEPTH } = require('./util/DependencyDi
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 
+/** @type {import('@instana/core/src/util').CoreUtilsType} */
+let coreUtils;
+
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/util').CoreUtilsType} utils
  */
-exports.init = function init(config) {
+exports.init = function init(config, utils) {
+  coreUtils = utils;
   logger = config.logger;
 };
 
@@ -43,7 +48,7 @@ exports.activate = function activate() {
   attempts++;
 
   const started = Date.now();
-  util.applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, mainPackageJsonPath) => {
+  coreUtils.applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, mainPackageJsonPath) => {
     if (err) {
       return logger.warn(`Failed to determine main package.json. Reason: ${err?.message}, ${err?.stack}`);
     } else if (!mainPackageJsonPath && attempts < exports.MAX_ATTEMPTS) {
@@ -54,7 +59,8 @@ exports.activate = function activate() {
       logger.info(
         `Main package.json could not be found after ${attempts} retries. Looking for node_modules folder now.`
       );
-      util.applicationUnderMonitoring.findNodeModulesFolder((errNodeModules, nodeModulesFolder) => {
+
+      coreUtils.applicationUnderMonitoring.findNodeModulesFolder((errNodeModules, nodeModulesFolder) => {
         if (errNodeModules) {
           return logger.warn(`Failed to determine node_modules folder. Reason: ${err?.message}, ${err?.stack}`);
         } else if (!nodeModulesFolder) {
@@ -69,7 +75,7 @@ exports.activate = function activate() {
     }
 
     let dependencyDir;
-    if (util.applicationUnderMonitoring.isAppInstalledIntoNodeModules()) {
+    if (coreUtils.applicationUnderMonitoring.isAppInstalledIntoNodeModules()) {
       dependencyDir = path.join(path.dirname(mainPackageJsonPath), '..', '..', 'node_modules');
     } else {
       dependencyDir = path.join(path.dirname(mainPackageJsonPath), 'node_modules');
@@ -199,7 +205,7 @@ function addDependency(dependency, dependencyDirPath, countDownLatch) {
       }
     } catch (parseErr) {
       return logger.info(
-        `Failed to identify version of ${dependency} dependency due to: ${parseErr?.message}. 
+        `Failed to identify version of ${dependency} dependency due to: ${parseErr?.message}.
           This means that you will not be able to see details about this dependency within Instana.`
       );
     }

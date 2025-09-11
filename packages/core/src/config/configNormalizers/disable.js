@@ -5,14 +5,15 @@
 'use strict';
 
 const { DISABLABLE_INSTRUMENTATION_GROUPS } = require('../../tracing/constants');
-/** @type {import('../../core').GenericLogger} */
-let logger;
+
+/** @type {import('../../instanaCtr').InstanaCtrType} */
+let instanaCtr;
 
 /**
- * @param {import('../../util/normalizeConfig').InstanaConfig} _config
+ * @param {import('../../instanaCtr').InstanaCtrType} _instanaCtr
  */
-exports.init = function init(_config) {
-  logger = _config.logger;
+exports.init = function init(_instanaCtr) {
+  instanaCtr = _instanaCtr;
 };
 
 /**
@@ -23,29 +24,35 @@ exports.init = function init(_config) {
  * 2. `tracing.disabledTracers` (deprecated)
  * 3. Environment variables (`INSTANA_TRACING_DISABLE*`)
  *
- * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../../config/normalizeConfig').InstanaConfig} config
  */
 exports.normalize = function normalize(config) {
   if (!config?.tracing) config.tracing = {};
   try {
     // Disable all tracing if explicitly set  'disable' to true
     if (config.tracing.disable === true) {
-      logger?.info('Tracing has been disabled via "tracing.disable: true" configuration.');
+      instanaCtr.logger().info('Tracing has been disabled via "tracing.disable: true" configuration.');
       return true;
     }
     const hasDisableConfig = isDisableConfigNonEmpty(config);
 
     if (hasDisableConfig) {
-      logger?.info(
-        `Tracing selectively disabled as per "tracing.disable" configuration: ${JSON.stringify(config.tracing.disable)}`
-      );
+      instanaCtr
+        .logger()
+        .info(
+          `Tracing selectively disabled as per "tracing.disable" configuration: ${JSON.stringify(
+            config.tracing.disable
+          )}`
+        );
     }
     // Handle deprecated `disabledTracers` config
     if (config.tracing.disabledTracers) {
-      logger?.warn(
-        'The configuration property "tracing.disabledTracers" is deprecated and will be removed in the next ' +
-          'major release. Please use "tracing.disable" instead.'
-      );
+      instanaCtr
+        .logger()
+        .warn(
+          'The configuration property "tracing.disabledTracers" is deprecated and will be removed in the next ' +
+            'major release. Please use "tracing.disable" instead.'
+        );
       if (!hasDisableConfig) {
         config.tracing.disable = { instrumentations: config.tracing.disabledTracers };
       }
@@ -75,14 +82,14 @@ exports.normalize = function normalize(config) {
     return disableConfig || {};
   } catch (error) {
     // Fallback to an empty disable config on error
-    logger?.debug(`Error while normalizing tracing.disable config: ${error?.message} ${error?.stack}`);
+    instanaCtr.logger().debug(`Error while normalizing tracing.disable config: ${error?.message} ${error?.stack}`);
     return {};
   }
 };
 
 /**
  * Handles config from agent.
- * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../../config/normalizeConfig').InstanaConfig} config
  */
 exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
   try {
@@ -91,7 +98,9 @@ exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
       return categorizeDisableEntries(flattenedEntries);
     }
   } catch (error) {
-    logger?.debug(`Error while normalizing external tracing.disable config: ${error?.message} ${error?.stack}`);
+    instanaCtr
+      .logger()
+      .debug(`Error while normalizing external tracing.disable config: ${error?.message} ${error?.stack}`);
   }
 
   return {};
@@ -111,10 +120,12 @@ function getDisableFromEnv() {
 
   // @deprecated
   if (process.env.INSTANA_DISABLED_TRACERS) {
-    logger?.warn(
-      'The environment variable "INSTANA_DISABLED_TRACERS" is deprecated and will be removed in the next ' +
-        'major release. Use "INSTANA_TRACING_DISABLE" instead.'
-    );
+    instanaCtr
+      .logger()
+      .warn(
+        'The environment variable "INSTANA_DISABLED_TRACERS" is deprecated and will be removed in the next ' +
+          'major release. Use "INSTANA_TRACING_DISABLE" instead.'
+      );
     disable.instrumentations = parseEnvVar(process.env.INSTANA_DISABLED_TRACERS);
   }
 
@@ -123,7 +134,7 @@ function getDisableFromEnv() {
     const envVarValue = process.env.INSTANA_TRACING_DISABLE;
 
     if (envVarValue === 'true') {
-      logger?.info('Tracing has been disabled via environment variable "INSTANA_TRACING_DISABLE=true".');
+      instanaCtr.logger().info('Tracing has been disabled via environment variable "INSTANA_TRACING_DISABLE=true".');
       return true;
     }
 
@@ -136,24 +147,30 @@ function getDisableFromEnv() {
         disable.groups = categorized.groups;
       }
 
-      logger?.info(`Tracing has been disabled via "INSTANA_TRACING_DISABLE=${envVarValue}"`);
+      instanaCtr.logger().info(`Tracing has been disabled via "INSTANA_TRACING_DISABLE=${envVarValue}"`);
     }
   }
 
   if (process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS) {
     disable.instrumentations = parseEnvVar(process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS);
-    logger?.info(
-      `Tracing instrumentations disabled via "INSTANA_TRACING_DISABLE_INSTRUMENTATIONS": ${JSON.stringify(
-        disable.instrumentations
-      )}`
-    );
+    instanaCtr
+      .logger()
+      .info(
+        `Tracing instrumentations disabled via "INSTANA_TRACING_DISABLE_INSTRUMENTATIONS": ${JSON.stringify(
+          disable.instrumentations
+        )}`
+      );
   }
 
   if (process.env.INSTANA_TRACING_DISABLE_GROUPS) {
     disable.groups = parseEnvVar(process.env.INSTANA_TRACING_DISABLE_GROUPS);
-    logger?.info(
-      `Tracing instrumentation groups disabled via "INSTANA_TRACING_DISABLE_GROUPS": ${JSON.stringify(disable.groups)}`
-    );
+    instanaCtr
+      .logger()
+      .info(
+        `Tracing instrumentation groups disabled via "INSTANA_TRACING_DISABLE_GROUPS": ${JSON.stringify(
+          disable.groups
+        )}`
+      );
   }
 
   return Object.keys(disable).length > 0 ? disable : null;
@@ -244,7 +261,7 @@ function isNonEmptyObject(obj) {
 }
 
 /**
- * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../../config/normalizeConfig').InstanaConfig} config
  */
 function isDisableConfigNonEmpty(config) {
   const disableConfig = config.tracing?.disable;

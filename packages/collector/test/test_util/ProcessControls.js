@@ -20,7 +20,7 @@ const globalAgent = require('../globalAgent');
 const portFinder = require('./portfinder');
 const sslDir = path.join(__dirname, '..', 'apps', 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
-const isLatestEsmSupportedVersion = require('@instana/core').util.esm.isLatestEsmSupportedVersion;
+const isLatestEsmSupportedVersion = require('@instana/core').coreUtils.esm.isLatestEsmSupportedVersion;
 
 class ProcessControls {
   /**

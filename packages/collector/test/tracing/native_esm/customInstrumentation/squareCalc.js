@@ -7,7 +7,7 @@
 const { EXIT } = require('@instana/core').tracing.constants;
 const tracingUtil = require('../../../../../core/src/tracing/tracingUtil');
 const cls = require('../../../../../core/src/tracing/cls');
-const hook = require('@instana/core').util.hook;
+const hook = require('@instana/core').coreUtils.hook;
 // eslint-disable-next-line no-unused-vars
 let isActive = false;
 

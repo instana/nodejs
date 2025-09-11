@@ -5,8 +5,8 @@
 
 'use strict';
 
-/** @type {import('../core').GenericLogger} */
-let logger;
+/** @type {import('../instanaCtr').InstanaCtrType} */
+let instanaCtr;
 let firstCall = true;
 let hasBeenInitializedTooLate = false;
 
@@ -81,10 +81,10 @@ const extraPatterns = [
 ];
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../instanaCtr').InstanaCtrType} _instanaCtr
  */
-exports.init = function init(config) {
-  logger = config.logger;
+exports.init = function init(_instanaCtr) {
+  instanaCtr = _instanaCtr;
 };
 
 /**
@@ -100,7 +100,7 @@ exports.activate = function hasThePackageBeenInitializedTooLate() {
     if (addExtraPatterns) {
       patterns = patterns.concat(extraPatterns);
     } else {
-      logger.debug(
+      instanaCtr.logger().debug(
         // eslint-disable-next-line max-len
         'Found @contrast/agent in the modules that have already been loaded. @instana/core will therefore exclude bluebird, request and winston from the check for modules that have been loaded before @instana/core.'
       );
@@ -111,7 +111,7 @@ exports.activate = function hasThePackageBeenInitializedTooLate() {
       for (let j = 0; j < patterns.length; j++) {
         if (patterns[j].test(loadedModules[i])) {
           hasBeenInitializedTooLate = true;
-          logger.debug(
+          instanaCtr.logger().debug(
             // eslint-disable-next-line max-len
             `Found a module that has been loaded before @instana/core but should have been loaded afterwards: ${loadedModules[i]}.`
           );

@@ -6,7 +6,7 @@
 'use strict';
 
 const { callbackify } = require('util');
-const { atMostOnce } = require('@instana/core').util;
+const { atMostOnce } = require('@instana/core').coreUtils;
 const { http } = require('@instana/core').uninstrumentedHttp;
 
 const agentOpts = require('../agent/opts');
@@ -17,7 +17,7 @@ const readDefaultGateway = callbackify(defaultGatewayParser.parseProcSelfNetRout
 let logger;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config/normalizeConfig').InstanaConfig} config
  */
 const init = config => {
   logger = config.logger;

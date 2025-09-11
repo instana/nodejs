@@ -11,7 +11,7 @@ const sinonChai = require('sinon-chai');
 
 const testUtils = require('@instana/core/test/test_util');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const normalizeConfig = require('../../src/util/normalizeConfig');
+const normalizeConfig = require('../../src/config/normalizeConfig');
 const kafkaJs = require('../../src/tracing/instrumentation/messaging/kafkaJs');
 const rdKafka = require('../../src/tracing/instrumentation/messaging/rdkafka');
 const grpcJs = require('../../src/tracing/instrumentation/protocols/grpcJs');

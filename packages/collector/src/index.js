@@ -46,14 +46,21 @@ const instanaNodeJsCore = require('@instana/core');
 const instanaSharedMetrics = require('@instana/shared-metrics');
 require('./tracing'); // load additional instrumentations
 
-const log = require('./logger');
+const collectorLogger = require('./logger');
 const normalizeCollectorConfig = require('./util/normalizeConfig');
 const experimental = require('./experimental');
+const { coreConfig, coreUtils } = instanaNodeJsCore;
 
-// NOTE: Default collector logger && config for cases like `preinit`.
-const logger = log.init();
-/** @type {import('./types/collector').CollectorConfig} */
-let config = instanaNodeJsCore.util.normalizeConfig({}, logger);
+const instanaCtr = new instanaNodeJsCore.InstanaCtr();
+
+coreUtils.init(instanaCtr);
+coreConfig.init(instanaCtr);
+collectorLogger.init(instanaCtr);
+
+instanaCtr.set('utils', coreUtils.create());
+instanaCtr.set('config', coreConfig.create());
+instanaCtr.set('logger', collectorLogger.create());
+
 /** @type {import('./agentConnection')} */
 let agentConnection;
 
@@ -96,13 +103,13 @@ function init(_config = {}) {
   // @ts-ignore: Property '__INSTANA_INITIALIZED' does not exist on type global
   global.__INSTANA_INITIALIZED = true;
 
-  // CASE: reinit logger if custom logger or log level is provided.
+  // CASE: recreate logger if custom logger or log level is provided.
   if (_config.logger || _config.level) {
-    log.init(_config);
+    instanaCtr.set('logger', collectorLogger.create(_config));
   }
 
-  config = normalizeCollectorConfig(_config);
-  config = instanaNodeJsCore.util.normalizeConfig(config, logger);
+  const collectorConfigNormalized = normalizeCollectorConfig(_config);
+  instanaCtr.set('config', coreConfig.create(collectorConfigNormalized));
 
   agentConnection = require('./agentConnection');
   const agentOpts = require('./agent/opts');
@@ -111,18 +118,21 @@ function init(_config = {}) {
   const announceCycle = require('./announceCycle');
   const metrics = require('./metrics');
 
-  pidStore.init(config);
-  agentOpts.init(config);
-  announceCycle.init(config, pidStore);
-  agentConnection.init(config, pidStore);
-  instanaNodeJsCore.init(config, agentConnection, pidStore);
+  pidStore.init(instanaCtr.config());
+  agentOpts.init(instanaCtr.config());
+  announceCycle.init(instanaCtr.config(), instanaCtr.utils(), pidStore);
+  agentConnection.init(instanaCtr.config(), instanaCtr.utils(), pidStore);
+  instanaNodeJsCore.init(instanaCtr.config(), instanaCtr.utils(), agentConnection, pidStore);
 
   if (isMainThread) {
-    uncaught.init(config, agentConnection, pidStore);
-    metrics.init(config, pidStore);
+    uncaught.init(instanaCtr.config(), agentConnection, pidStore);
+    metrics.init(instanaCtr.config(), instanaCtr.utils(), pidStore);
   }
 
-  logger.info(`@instana/collector module version: ${require(path.join(__dirname, '..', 'package.json')).version}`);
+  instanaCtr
+    .logger()
+    .info(`@instana/collector module version: ${require(path.join(__dirname, '..', 'package.json')).version}`);
+
   announceCycle.start();
 
   return init;
@@ -157,7 +167,7 @@ init.isConnected = function isConnected() {
  */
 init.setLogger = function setLogger(_logger) {
   // NOTE: Override our default logger with customer's logger
-  log.init({ logger: _logger });
+  instanaCtr.logger().setLogger(_logger);
 };
 
 init.core = instanaNodeJsCore;
@@ -172,7 +182,7 @@ if (process.env.INSTANA_IMMEDIATE_INIT != null && process.env.INSTANA_IMMEDIATE_
   process.env.INSTANA_EARLY_INSTRUMENTATION != null &&
   process.env.INSTANA_EARLY_INSTRUMENTATION.toLowerCase() === 'true'
 ) {
-  instanaNodeJsCore.preInit(config);
+  instanaNodeJsCore.preInit(instanaCtr.config(), instanaCtr.utils());
 }
 
 module.exports = init;

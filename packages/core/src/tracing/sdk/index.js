@@ -14,7 +14,7 @@ const callback = sdk.generate(true);
 const promise = sdk.generate(false);
 
 /**
- * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../../config/normalizeConfig').InstanaConfig} config
  * @param {import('../cls')} _cls
  */
 exports.init = function init(config, _cls) {

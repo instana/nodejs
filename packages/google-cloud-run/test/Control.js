@@ -12,7 +12,7 @@ const fetch = require('node-fetch-v2');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 const config = require('@instana/core/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
-const isLatestEsmSupportedVersion = require('@instana/core').util.esm.isLatestEsmSupportedVersion;
+const isLatestEsmSupportedVersion = require('@instana/core').coreUtils.esm.isLatestEsmSupportedVersion;
 const PATH_TO_INSTANA_GOOGLE_CLOUD_RUN_PACKAGE = path.join(__dirname, '..');
 
 function Control(opts) {

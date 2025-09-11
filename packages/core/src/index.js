@@ -12,7 +12,9 @@ const uninstrumentedFs = require('./uninstrumentedFs');
 const metrics = require('./metrics');
 const secrets = require('./secrets');
 const tracing = require('./tracing');
-const util = require('./util');
+const coreConfig = require('./config');
+const coreUtils = require('./util');
+const instanaCtr = require('./instanaCtr');
 
 /**
  * @typedef {{
@@ -58,28 +60,30 @@ function registerAdditionalInstrumentations(additionalInstrumentationModules) {
  *       access to the customers configuration yet!
  *       Some logs will appear BEFORE the actual initialization.
  *       e.g. customer passes a custom log level or a custon logger.
- * @param {import('./util/normalizeConfig').InstanaConfig} preliminaryConfig
+ * @param {import('./config/normalizeConfig').InstanaConfig} preliminaryConfig
+ * @param {import('./util/index').CoreUtilsType} utils
  */
-function preInit(preliminaryConfig) {
-  util.init(preliminaryConfig);
-  util.hasThePackageBeenInitializedTooLate.activate();
-  tracing.preInit(preliminaryConfig);
+function preInit(preliminaryConfig, utils) {
+  utils.hasThePackageBeenInitializedTooLate.activate();
   // Initialize secrets as early as possible, in particular for env var collection in fargate/google-cloud-run when
   // the config comes from INSTANA_SECRETS.
   secrets.init(preliminaryConfig);
+
+  tracing.preInit(preliminaryConfig, utils);
 }
 
 /**
  *
- * @param {import('./util/normalizeConfig').InstanaConfig} config
+ * @param {import('./config/normalizeConfig').InstanaConfig} config
+ * @param {import('./util/index').CoreUtilsType} utils
  * @param {DownstreamConnection} downstreamConnection
  * @param {import('../../collector/src/pidStore')} processIdentityProvider
  */
-function init(config, downstreamConnection, processIdentityProvider) {
-  util.init(config);
-  util.hasThePackageBeenInitializedTooLate.activate();
+function init(config, utils, downstreamConnection, processIdentityProvider) {
+  utils.hasThePackageBeenInitializedTooLate.activate();
   secrets.init(config);
-  tracing.init(config, downstreamConnection, processIdentityProvider);
+
+  tracing.init(config, utils, downstreamConnection, processIdentityProvider);
 }
 
 module.exports = {
@@ -93,8 +97,10 @@ module.exports = {
   tracing,
   uninstrumentedHttp,
   uninstrumentedFs,
-  util,
+  coreConfig,
+  coreUtils,
   init,
+  InstanaCtr: instanaCtr.InstanaCtr,
   preInit,
   registerAdditionalInstrumentations
 };

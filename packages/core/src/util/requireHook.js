@@ -35,14 +35,14 @@ let byModuleNameTransformers = {};
 let byFileNamePatternTransformers = [];
 const origLoad = /** @type {*} */ (Module)._load;
 
-/** @type {import('../core').GenericLogger} */
-let logger;
+/** @type {import('../instanaCtr').InstanaCtrType} */
+let instanaCtr;
 
 /**
- * @param {import('./normalizeConfig').InstanaConfig} [config]
+ * @param {import('../instanaCtr').InstanaCtrType} _instanaCtr
  */
-exports.init = function (config) {
-  logger = config.logger;
+exports.init = function (_instanaCtr) {
+  instanaCtr = _instanaCtr;
 
   /** @type {*} */ (Module)._load = patchedModuleLoad;
 };
@@ -126,19 +126,21 @@ function patchedModuleLoad(moduleName) {
         try {
           cacheEntry.moduleExports = transformerFn(cacheEntry.moduleExports, filename) || cacheEntry.moduleExports;
         } catch (e) {
-          logger.error(
-            `Cannot instrument ${moduleName} due to an error in instrumentation: ${e?.message}, ${e?.stack}`
-          );
+          instanaCtr
+            .logger()
+            .error(`Cannot instrument ${moduleName} due to an error in instrumentation: ${e?.message}, ${e?.stack}`);
         }
       } else {
-        logger.error(
-          `A requireHook invariant has been violated for module name ${moduleName}, index ${i}. ` +
-            `The transformer is not a function but of type "${typeof transformerFn}" (details:  ${
-              transformerFn == null ? 'null/undefined' : transformerFn
-            }). The most likely cause is that something has messed with Node.js' ` +
-            'module cache. This can result in limited tracing and health check functionality (for example, missing ' +
-            'calls in Instana).'
-        );
+        instanaCtr
+          .logger()
+          .error(
+            `A requireHook invariant has been violated for module name ${moduleName}, index ${i}. ` +
+              `The transformer is not a function but of type "${typeof transformerFn}" (details:  ${
+                transformerFn == null ? 'null/undefined' : transformerFn
+              }). The most likely cause is that something has messed with Node.js' ` +
+              'module cache. This can result in limited tracing and health check functionality (for example, missing ' +
+              'calls in Instana).'
+          );
       }
     }
     cacheEntry.appliedByModuleNameTransformers.push(moduleName);

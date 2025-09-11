@@ -6,7 +6,7 @@
 'use strict';
 
 const path = require('path');
-const slidingWindow = require('@instana/core').util.slidingWindow;
+const slidingWindow = require('@instana/core').coreUtils.slidingWindow;
 const nativeModuleRetry = require('./util/nativeModuleRetry');
 
 const windowOpts = { duration: 1000 };

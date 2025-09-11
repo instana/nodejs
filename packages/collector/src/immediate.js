@@ -17,7 +17,7 @@ if (isNodeJsTooOld()) {
   return;
 }
 
-const { util: coreUtil } = require('@instana/core');
+const excludedFromInstrumentation = require('@instana/core/src/util/excludedFromInstrumentation');
 const agentOpts = require('./agent/opts');
 
 // This file can be used with NODE_OPTIONS or `node --require` to instrument a Node.js app with Instana without
@@ -25,7 +25,7 @@ const agentOpts = require('./agent/opts');
 // eslint-disable-next-line max-len
 // https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#activating-the-collector
 
-const isExcludedFromInstrumentation = coreUtil.excludedFromInstrumentation && coreUtil.excludedFromInstrumentation();
+const isExcludedFromInstrumentation = excludedFromInstrumentation && excludedFromInstrumentation();
 
 // In case this is a child process of an instrumented parent process we might receive the agent uuid from the parent
 // process to be able to produce and collect spans immediately without waiting for a connection to the agent in this

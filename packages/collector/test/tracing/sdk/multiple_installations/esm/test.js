@@ -15,7 +15,7 @@ const config = require('@instana/core/test/config');
 const testUtils = require('@instana/core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
-const isLatestEsmSupportedVersion = require('@instana/core').util.esm.isLatestEsmSupportedVersion;
+const isLatestEsmSupportedVersion = require('@instana/core').coreUtils.esm.isLatestEsmSupportedVersion;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('[ESM] tracing/sdk/multiple_installations', function () {

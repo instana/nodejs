@@ -267,7 +267,7 @@ function copyBaggage(baggage) {
 }
 
 /**
- * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../../config/normalizeConfig').InstanaConfig} config
  * @param {CollectorPIDStore} _processIdentityProvider
  */
 Span.init = function init(config, _processIdentityProvider) {

@@ -6,25 +6,30 @@
 'use strict';
 
 const instanaCore = require('@instana/core');
-const { backendConnector, consoleLogger: log } = require('@instana/serverless');
+const { backendConnector, consoleLogger: serverlessLogger } = require('@instana/serverless');
 
 const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
 const { fullyQualifiedContainerId } = require('./metrics/container/containerUtil');
+const { tracing, coreConfig, coreUtils } = instanaCore;
 
-const { tracing, util: coreUtil } = instanaCore;
-const { normalizeConfig } = coreUtil;
+const instanaCtr = new instanaCore.InstanaCtr();
 
-const logger = log.init();
-const config = normalizeConfig({}, logger);
+coreUtils.init(instanaCtr);
+coreConfig.init(instanaCtr);
+serverlessLogger.init(instanaCtr);
+
+instanaCtr.set('utils', coreUtils.create());
+instanaCtr.set('config', coreConfig.create());
+instanaCtr.set('logger', serverlessLogger.create());
 
 function init() {
-  instanaCore.preInit(config);
+  instanaCore.preInit(instanaCtr.config(), instanaCtr.utils());
 
-  metrics.init(config, function onReady(err, ecsContainerPayload) {
+  metrics.init(instanaCtr.config(), function onReady(err, ecsContainerPayload) {
     if (err) {
-      logger.error(
-        `Initializing @instana/aws-fargate failed. This fargate task will not be monitored. 
+      instanaCtr.logger().error(
+        `Initializing @instana/aws-fargate failed. This fargate task will not be monitored.
         ${err?.message} ${err?.stack}`
       );
       metrics.deactivate();
@@ -34,10 +39,12 @@ function init() {
     try {
       const taskArn = ecsContainerPayload && ecsContainerPayload.data ? ecsContainerPayload.data.taskArn : null;
       if (!taskArn) {
-        logger.error(
-          'Initializing @instana/aws-fargate failed, the metadata did not have a task ARN. This fargate task will ' +
-            'not be monitored.'
-        );
+        instanaCtr
+          .logger()
+          .error(
+            'Initializing @instana/aws-fargate failed, the metadata did not have a task ARN. This fargate task will ' +
+              'not be monitored.'
+          );
         metrics.deactivate();
         return;
       }
@@ -45,10 +52,12 @@ function init() {
         ? fullyQualifiedContainerId(taskArn, ecsContainerPayload.data.containerName)
         : null;
       if (!containerId) {
-        logger.error(
-          'Initializing @instana/aws-fargate failed, the metadata did not have a container name. This fargate task ' +
-            'will not be monitored.'
-        );
+        instanaCtr
+          .logger()
+          .error(
+            'Initializing @instana/aws-fargate failed, the metadata did not have a container name. This fargate task ' +
+              'will not be monitored.'
+          );
         metrics.deactivate();
         return;
       }
@@ -56,23 +65,25 @@ function init() {
       identityProvider.init(taskArn, containerId);
 
       backendConnector.init({
-        config,
+        config: instanaCtr.config(),
         identityProvider,
         defaultTimeout: 950
       });
 
-      instanaCore.init(config, backendConnector, identityProvider);
+      instanaCore.init(instanaCtr.config(), instanaCtr.utils(), backendConnector, identityProvider);
       metrics.activate(backendConnector);
       tracing.activate();
 
-      logger.debug('@instana/aws-fargate initialized.');
+      instanaCtr.logger().debug('@instana/aws-fargate initialized.');
 
       // eslint-disable-next-line no-unused-expressions
       process.send && process.send('instana.aws-fargate.initialized');
     } catch (e) {
-      logger.error(
-        `Initializing @instana/aws-fargate failed. This fargate task will not be monitored. ${e?.message} ${e?.stack}`
-      );
+      instanaCtr
+        .logger()
+        .error(
+          `Initializing @instana/aws-fargate failed. This fargate task will not be monitored. ${e?.message} ${e?.stack}`
+        );
     }
   });
 }
@@ -88,7 +99,7 @@ exports.sdk = tracing.sdk;
 
 // NOTE: this is the external interface for the customer. They can set a custom logger.
 exports.setLogger = function setLogger(_logger) {
-  log.init({ logger: _logger });
+  instanaCtr.logger().setLogger(_logger);
 };
 
 exports.opentracing = tracing.opentracing;
