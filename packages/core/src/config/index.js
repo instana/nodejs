@@ -183,6 +183,7 @@ module.exports.normalize = (config, _logger, defaultsOverride = {}) => {
   }
 
   targetConfig.logger = logger;
+  configNormalizers.init({ logger });
 
   normalizeServiceName(targetConfig);
   normalizePackageJsonPath(targetConfig);
