@@ -35,7 +35,7 @@ let isConnected = false;
 let cpuSetFileContent = null;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  * @param {any} _pidStore
  */
 exports.init = function init(config, _pidStore) {

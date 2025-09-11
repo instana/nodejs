@@ -15,7 +15,7 @@ const { DependencyDistanceCalculator, MAX_DEPTH } = require('./util/DependencyDi
 let logger;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  */
 exports.init = function init(config) {
   logger = config.logger;
@@ -199,7 +199,7 @@ function addDependency(dependency, dependencyDirPath, countDownLatch) {
       }
     } catch (parseErr) {
       return logger.info(
-        `Failed to identify version of ${dependency} dependency due to: ${parseErr?.message}. 
+        `Failed to identify version of ${dependency} dependency due to: ${parseErr?.message}.
           This means that you will not be able to see details about this dependency within Instana.`
       );
     }

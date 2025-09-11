@@ -61,7 +61,7 @@ let pidStore;
 let disableEOLEvents;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  * @param {any} _pidStore
  */
 function init(config, _pidStore) {

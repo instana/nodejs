@@ -15,7 +15,7 @@ let cls;
 let automaticTracingEnabled = false;
 
 /**
- * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../../config').InstanaConfig} config
  * @param {boolean} _automaticTracingEnabled
  * @param {import('../../../../collector/src/pidStore')} processIdentityProvider
  */

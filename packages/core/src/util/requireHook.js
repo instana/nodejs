@@ -39,7 +39,7 @@ const origLoad = /** @type {*} */ (Module)._load;
 let logger;
 
 /**
- * @param {import('./normalizeConfig').InstanaConfig} [config]
+ * @param {import('../config').InstanaConfig} [config]
  */
 exports.init = function (config) {
   logger = config.logger;

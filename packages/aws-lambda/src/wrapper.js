@@ -15,8 +15,7 @@ const triggers = require('./triggers');
 const processResult = require('./process_result');
 const captureHeaders = require('./capture_headers');
 
-const { tracing, util: coreUtil } = instanaCore;
-const { normalizeConfig } = coreUtil;
+const { tracing, coreConfig } = instanaCore;
 const { tracingHeaders, constants, spanBuffer } = tracing;
 
 const lambdaConfigDefaults = {
@@ -24,7 +23,7 @@ const lambdaConfigDefaults = {
 };
 
 const logger = serverlessLogger.init();
-let config = normalizeConfig({}, logger, lambdaConfigDefaults);
+let config = coreConfig.init({}, logger, lambdaConfigDefaults);
 let coldStart = true;
 
 // Initialize instrumentations early to allow for require statements after our
@@ -253,7 +252,7 @@ function init(event, arnInfo, _config) {
   //         - late env variables (less likely)
   //         - custom logger
   //         - we always renormalize unconditionally to ensure safety.
-  config = normalizeConfig(userConfig, logger, lambdaConfigDefaults);
+  config = coreConfig.normalize(userConfig, logger, lambdaConfigDefaults);
 
   if (!config.tracing.enabled) {
     return false;

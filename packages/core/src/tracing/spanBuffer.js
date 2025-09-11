@@ -78,7 +78,7 @@ const batchBucketWidth = 18;
 const batchingBuckets = new Map();
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../config').InstanaConfig} config
  * @param {import('..').DownstreamConnection} _downstreamConnection
  */
 exports.init = function init(config, _downstreamConnection) {
@@ -103,7 +103,7 @@ exports.init = function init(config, _downstreamConnection) {
 };
 
 /**
- * @param {import('../util/normalizeConfig').AgentConfig} extraConfig
+ * @param {import('../config').AgentConfig} extraConfig
  */
 exports.activate = function activate(extraConfig) {
   if (!downstreamConnection) {

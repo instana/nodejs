@@ -15,7 +15,7 @@ const CountDownLatch = require('./CountDownLatch');
 let logger;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  */
 const init = config => {
   logger = config.logger;
@@ -89,7 +89,7 @@ class DependencyDistanceCalculator {
           parsedPackageJson = JSON.parse(contents);
         } catch (parseErr) {
           logger.debug(
-            `Failed to calculate transitive distances for some dependencies, could not parse package.json file at 
+            `Failed to calculate transitive distances for some dependencies, could not parse package.json file at
               ${packageJsonPath}: ${parseErr?.message}.`
           );
           this.globalCountDownLatchAllPackages.countDown(3);
@@ -106,7 +106,7 @@ class DependencyDistanceCalculator {
       // This catch-block is for synchronous errors from fs.readFile, which can also happen in addition to the callback
       // being called with an error.
       logger.debug(
-        `Failed to calculate transitive distances for some dependencies, synchronous error from fs.readFile for 
+        `Failed to calculate transitive distances for some dependencies, synchronous error from fs.readFile for
           ${packageJsonPath}: ${fsReadFileErr?.message}`
       );
       this.globalCountDownLatchAllPackages.countDown(3);

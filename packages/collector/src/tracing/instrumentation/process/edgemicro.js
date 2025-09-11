@@ -14,7 +14,7 @@ const selfPath = require('./selfPath');
 let logger;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  */
 exports.init = function (config) {
   logger = config.logger;

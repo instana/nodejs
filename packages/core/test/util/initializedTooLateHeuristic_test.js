@@ -12,7 +12,7 @@ const hook = require('../../src/util/hook');
 const initializedTooLateHeurstic = require('../../src/util/initializedTooLateHeuristic');
 const testConfig = require('../config');
 const testUtils = require('../test_util');
-const { normalizeConfig } = require('../../src/util');
+const coreConfig = require('../../src/config');
 
 describe('[UNIT] util.initializedTooLateHeurstic', function () {
   this.timeout(testConfig.getTestTimeout());
@@ -31,7 +31,7 @@ describe('[UNIT] util.initializedTooLateHeurstic', function () {
 
     const fakeLogger = testUtils.createFakeLogger();
     const tracing = require('../../src');
-    const config = normalizeConfig({}, fakeLogger);
+    const config = coreConfig.normalize({}, fakeLogger);
     tracing.init(config);
   });
 

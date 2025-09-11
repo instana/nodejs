@@ -11,7 +11,7 @@ const { util, uninstrumentedFs: fs } = require('@instana/core');
 let logger;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  */
 exports.init = function init(config) {
   logger = config.logger;
@@ -39,7 +39,7 @@ exports.activate = function activate() {
   util.applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, packageJsonPath) => {
     if (err) {
       return logger.info(
-        `Failed to determine main package.json for analysis of direct dependencies. 
+        `Failed to determine main package.json for analysis of direct dependencies.
         Reason: ${err?.message} ${err?.stack}`
       );
     } else if (!packageJsonPath && attempts < MAX_ATTEMPTS) {

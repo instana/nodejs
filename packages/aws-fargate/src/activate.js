@@ -12,11 +12,10 @@ const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
 const { fullyQualifiedContainerId } = require('./metrics/container/containerUtil');
 
-const { tracing, util: coreUtil } = instanaCore;
-const { normalizeConfig } = coreUtil;
+const { tracing, coreConfig } = instanaCore;
 
 const logger = serverlessLogger.init();
-const config = normalizeConfig({}, logger);
+const config = coreConfig.init({}, logger);
 
 function init() {
   instanaCore.preInit(config);

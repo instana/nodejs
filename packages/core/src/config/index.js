@@ -9,7 +9,7 @@
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
 const configNormalizers = require('./configNormalizers');
-const deepMerge = require('./deepMerge');
+const deepMerge = require('../util/deepMerge');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -143,6 +143,8 @@ let defaults = {
 
 const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
 
+module.exports.configNormalizers = configNormalizers;
+
 /**
  * Merges the config that was passed to the init function with environment variables and default values.
  */
@@ -153,7 +155,7 @@ const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-igno
  * @param {InstanaConfig} [defaultsOverride]
  * @returns {InstanaConfig}
  */
-module.exports = function normalizeConfig(config, _logger, defaultsOverride = {}) {
+module.exports.normalize = (config, _logger, defaultsOverride = {}) => {
   if (_logger) {
     logger = _logger;
   } else {

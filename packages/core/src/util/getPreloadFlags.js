@@ -8,7 +8,7 @@
 let logger;
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../config').InstanaConfig} config
  */
 exports.init = function init(config) {
   logger = config.logger;

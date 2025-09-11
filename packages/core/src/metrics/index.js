@@ -8,7 +8,7 @@
 const fs = require('../uninstrumentedFs');
 const path = require('path');
 
-/** @typedef {import('../util/normalizeConfig').InstanaConfig} InstanaConfig */
+/** @typedef {import('../config').InstanaConfig} InstanaConfig */
 
 /** @type {InstanaConfig} */
 let config;

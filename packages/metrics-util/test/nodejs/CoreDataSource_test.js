@@ -19,7 +19,7 @@ describe('core data source', function () {
   let dataSource;
   before(() => {
     const logger = createFakeLogger();
-    const config = core.util.normalizeConfig({}, logger);
+    const config = core.coreUtils.normalize({}, logger);
     dataSource = new CoreDataSource(config);
   });
 

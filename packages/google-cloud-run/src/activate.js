@@ -7,15 +7,13 @@
 
 const instanaCore = require('@instana/core');
 const { backendConnector, consoleLogger: serverlessLogger } = require('@instana/serverless');
-
 const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
 
-const { tracing, util: coreUtil } = instanaCore;
-const { normalizeConfig } = coreUtil;
+const { tracing, coreConfig } = instanaCore;
 
 const logger = serverlessLogger.init();
-const config = normalizeConfig({}, logger);
+const config = coreConfig.init({}, logger);
 
 function init() {
   if (!process.env.K_REVISION) {
