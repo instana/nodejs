@@ -9,7 +9,7 @@ const { DISABLABLE_INSTRUMENTATION_GROUPS } = require('../../tracing/constants')
 let logger;
 
 /**
- * @param {import('../../util/normalizeConfig').InstanaConfig} _config
+ * @param {import('../../config').InstanaConfig} _config
  */
 exports.init = function init(_config) {
   logger = _config.logger;
@@ -23,7 +23,7 @@ exports.init = function init(_config) {
  * 2. `tracing.disabledTracers` (deprecated)
  * 3. Environment variables (`INSTANA_TRACING_DISABLE*`)
  *
- * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../../config').InstanaConfig} config
  */
 exports.normalize = function normalize(config) {
   if (!config?.tracing) config.tracing = {};
@@ -82,7 +82,7 @@ exports.normalize = function normalize(config) {
 
 /**
  * Handles config from agent.
- * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../../config').InstanaConfig} config
  */
 exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
   try {
@@ -244,7 +244,7 @@ function isNonEmptyObject(obj) {
 }
 
 /**
- * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../../config').InstanaConfig} config
  */
 function isDisableConfigNonEmpty(config) {
   const disableConfig = config.tracing?.disable;

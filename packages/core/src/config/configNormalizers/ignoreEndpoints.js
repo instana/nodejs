@@ -5,11 +5,11 @@
 'use strict';
 
 const path = require('path');
-const { read } = require('../yamlReader');
+const { read } = require('../../util/yamlReader');
 /** @type {import('../../core').GenericLogger} */
 let logger;
 /**
- * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../../config').InstanaConfig} config
  */
 exports.init = function init(config) {
   logger = config.logger;

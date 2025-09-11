@@ -6,21 +6,21 @@
 
 const { DISABLABLE_INSTRUMENTATION_GROUPS } = require('../tracing/constants');
 
-/** @type {import('../util/normalizeConfig').InstanaConfig} */
+/** @type {import('../config').InstanaConfig} */
 let config;
 
-/** @type {import('../util/normalizeConfig').AgentConfig} */
+/** @type {import('../config').AgentConfig} */
 let agentConfig;
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} _config
+ * @param {import('../config').InstanaConfig} _config
  */
 function init(_config) {
   config = _config;
 }
 
 /**
- * @param {import('../util/normalizeConfig').AgentConfig} _agentConfig
+ * @param {import('../config').AgentConfig} _agentConfig
  */
 function activate(_agentConfig) {
   agentConfig = _agentConfig;

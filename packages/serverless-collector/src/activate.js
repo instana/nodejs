@@ -8,12 +8,11 @@ const instanaCore = require('@instana/core');
 const { backendConnector, consoleLogger: serverlessLogger } = require('@instana/serverless');
 const identityProvider = require('./identity_provider');
 
-const { tracing, util: coreUtil } = instanaCore;
-const { normalizeConfig } = coreUtil;
+const { tracing, coreConfig } = instanaCore;
 const customMetrics = require('./metrics');
 
 const logger = serverlessLogger.init();
-const config = normalizeConfig({}, logger);
+const config = coreConfig.init({}, logger);
 
 async function init() {
   // NOTE: This package does not support autotracing.

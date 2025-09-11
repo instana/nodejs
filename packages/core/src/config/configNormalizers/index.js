@@ -8,7 +8,7 @@ const disable = require('./disable');
 const ignoreEndpoints = require('./ignoreEndpoints');
 
 /**
- * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../../config').InstanaConfig} config
  */
 exports.init = function init(config) {
   disable.init(config);

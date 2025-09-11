@@ -13,6 +13,7 @@ const metrics = require('./metrics');
 const secrets = require('./secrets');
 const tracing = require('./tracing');
 const util = require('./util');
+const coreConfig = require('./config');
 
 /**
  * @typedef {{
@@ -58,7 +59,7 @@ function registerAdditionalInstrumentations(additionalInstrumentationModules) {
  *       access to the customers configuration yet!
  *       Some logs will appear BEFORE the actual initialization.
  *       e.g. customer passes a custom log level or a custon logger.
- * @param {import('./util/normalizeConfig').InstanaConfig} preliminaryConfig
+ * @param {import('./config').InstanaConfig} preliminaryConfig
  */
 function preInit(preliminaryConfig) {
   util.init(preliminaryConfig);
@@ -71,7 +72,7 @@ function preInit(preliminaryConfig) {
 
 /**
  *
- * @param {import('./util/normalizeConfig').InstanaConfig} config
+ * @param {import('./config').InstanaConfig} config
  * @param {DownstreamConnection} downstreamConnection
  * @param {import('../../collector/src/pidStore')} processIdentityProvider
  */
@@ -91,6 +92,7 @@ module.exports = {
   metrics,
   secrets,
   tracing,
+  coreConfig,
   uninstrumentedHttp,
   uninstrumentedFs,
   util,

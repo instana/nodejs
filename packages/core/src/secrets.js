@@ -174,7 +174,7 @@ function toLowerCase(configuredSecrets) {
 let isSecretInternal;
 
 /**
- * @param {import('./util/normalizeConfig').InstanaConfig} config
+ * @param {import('./config').InstanaConfig} config
  */
 exports.init = function init(config) {
   logger = config.logger;
@@ -189,7 +189,7 @@ exports.isSecret = function isSecret(key) {
 };
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').MatchingOption} matcherId
+ * @param {import('@instana/core/src/config').MatchingOption} matcherId
  * @param {Array.<string>} secretsList
  */
 exports.setMatcher = function setMatcher(matcherId, secretsList) {

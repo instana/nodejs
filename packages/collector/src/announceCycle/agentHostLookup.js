@@ -17,7 +17,7 @@ const readDefaultGateway = callbackify(defaultGatewayParser.parseProcSelfNetRout
 let logger;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  */
 const init = config => {
   logger = config.logger;

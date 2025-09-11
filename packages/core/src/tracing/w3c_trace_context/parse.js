@@ -18,7 +18,7 @@ const regexUnknownVersion = /^[0-9a-f]{2}-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f
 const instanaVendorKeyOffset = constants.w3cInstanaEquals.length;
 
 /**
- * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../../config').InstanaConfig} config
  */
 exports.init = function init(config) {
   logger = config.logger;

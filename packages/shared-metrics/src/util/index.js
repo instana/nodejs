@@ -9,7 +9,7 @@ const nativeModuleRetry = require('./nativeModuleRetry');
 const dependencyDistanceCalculator = require('./DependencyDistanceCalculator');
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  */
 const init = config => {
   nativeModuleRetry.init(config);

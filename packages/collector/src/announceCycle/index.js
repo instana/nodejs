@@ -52,7 +52,7 @@ const ctx = {
 };
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  * @param {any} pidStore
  */
 exports.init = function init(config, pidStore) {

@@ -11,7 +11,7 @@ const sinonChai = require('sinon-chai');
 
 const testUtils = require('@instana/core/test/test_util');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const normalizeConfig = require('../../src/util/normalizeConfig');
+const coreConfig = require('../../src/config');
 const kafkaJs = require('../../src/tracing/instrumentation/messaging/kafkaJs');
 const rdKafka = require('../../src/tracing/instrumentation/messaging/rdkafka');
 const grpcJs = require('../../src/tracing/instrumentation/protocols/grpcJs');
@@ -91,7 +91,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
   describe('preInit', function () {
     it('should trace on preinit', () => {
       const logger = testUtils.createFakeLogger();
-      const config = normalizeConfig({}, logger);
+      const config = coreConfig.init({}, logger);
       tracing.preInit(config);
 
       expect(initStubGrpcJs).to.have.been.called;
@@ -357,7 +357,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
 
     function initAndActivate(initConfig, extraConfigForActivate) {
       const logger = testUtils.createFakeLogger();
-      const config = normalizeConfig(initConfig, logger);
+      const config = coreConfig.init(initConfig, logger);
       util.init(config);
       tracing.init(config);
       tracing.activate(extraConfigForActivate);

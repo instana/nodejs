@@ -12,7 +12,7 @@ let logger;
 const MAX_RETRIES = 60;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  */
 function init(config) {
   logger = config.logger;
@@ -29,7 +29,7 @@ function checkWhetherAgentIsReadyToAccept(totalNumberOfAttempts, ctx) {
       ctx.transitionTo('agentready');
     } else if (totalNumberOfAttempts > MAX_RETRIES) {
       logger.warn(
-        `The Instana host agent is not yet ready to accept data after ${totalNumberOfAttempts} attempts. 
+        `The Instana host agent is not yet ready to accept data after ${totalNumberOfAttempts} attempts.
         Restarting the cycle to establish a connection.`
       );
       ctx.transitionTo('unannounced');

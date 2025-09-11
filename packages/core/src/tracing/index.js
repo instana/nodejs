@@ -24,7 +24,7 @@ let tracingActivated = false;
 let instrumenationsInitialized = false;
 let automaticTracingEnabled = false;
 
-/** @type {import('../util/normalizeConfig').InstanaConfig} */
+/** @type {import('../config').InstanaConfig} */
 let config = null;
 
 /** @typedef {import('../../../collector/src/pidStore')} CollectorPIDStore */
@@ -162,7 +162,7 @@ exports.registerAdditionalInstrumentations = function registerAdditionalInstrume
 };
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} preliminaryConfig
+ * @param {import('../config').InstanaConfig} preliminaryConfig
  */
 exports.preInit = function preInit(preliminaryConfig) {
   /**
@@ -192,7 +192,7 @@ exports.preInit = function preInit(preliminaryConfig) {
 };
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} _config
+ * @param {import('../config').InstanaConfig} _config
  * @param {import('..').DownstreamConnection} downstreamConnection
  * @param {CollectorPIDStore} _processIdentityProvider
  */
@@ -254,7 +254,7 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
 };
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} _config
+ * @param {import('../config').InstanaConfig} _config
  */
 function initInstrumenations(_config) {
   // initialize all instrumentations

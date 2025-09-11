@@ -10,7 +10,7 @@
 let ignoreEndpoints;
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../config').InstanaConfig} config
  */
 function init(config) {
   if (config?.tracing?.ignoreEndpoints) {
@@ -19,7 +19,7 @@ function init(config) {
 }
 
 /**
- * @param {import('../util/normalizeConfig').AgentConfig} extraConfig
+ * @param {import('../config').AgentConfig} extraConfig
  */
 function activate(extraConfig) {
   /**

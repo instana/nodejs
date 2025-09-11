@@ -16,7 +16,7 @@ const detectLibc = require('detect-libc');
 let logger;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  */
 exports.init = function init(config) {
   logger = config.logger;
@@ -178,7 +178,7 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
       return;
     } else if (statsErr) {
       logger.warn(
-        `Looking for a precompiled version for ${opts.nativeModuleName} ${label} failed. 
+        `Looking for a precompiled version for ${opts.nativeModuleName} ${label} failed.
         ${statsErr?.message} ${statsErr?.stack}`
       );
       callback(false);
@@ -235,7 +235,7 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
           });
       })
       .catch(tarErr => {
-        logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed. 
+        logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed.
           ${tarErr?.message} ${tarErr?.stack}`);
         callback(false);
       });

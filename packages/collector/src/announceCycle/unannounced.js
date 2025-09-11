@@ -8,7 +8,8 @@
 const {
   secrets,
   tracing,
-  util: { ensureNestedObjectExists, configNormalizers }
+  util: { ensureNestedObjectExists },
+  coreConfig: { configNormalizers }
 } = require('@instana/core');
 const { constants: tracingConstants } = tracing;
 
@@ -35,7 +36,7 @@ const maxRetryDelay = 60 * 1000; // one minute
 /**
  * @typedef {Object} SecretsConfig
  * @property {Array.<string>} list
- * @property {import('@instana/core/src/util/normalizeConfig').MatchingOption} matcher
+ * @property {import('@instana/core/src/config').MatchingOption} matcher
  */
 
 /**
@@ -53,7 +54,7 @@ const maxRetryDelay = 60 * 1000; // one minute
  */
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  * @param {any} _pidStore
  */
 function init(config, _pidStore) {
@@ -130,17 +131,17 @@ function applySecretsConfiguration(agentResponse) {
   if (agentResponse.secrets) {
     if (!(typeof agentResponse.secrets.matcher === 'string')) {
       logger.warn(
-        `Received an invalid secrets configuration from the Instana host agent, attribute matcher is not a string: 
+        `Received an invalid secrets configuration from the Instana host agent, attribute matcher is not a string:
           ${agentResponse.secrets.matcher}`
       );
     } else if (Object.keys(secrets.matchers).indexOf(agentResponse.secrets.matcher) < 0) {
       logger.warn(
-        `Received an invalid secrets configuration from the Intana agent, matcher is not supported: 
+        `Received an invalid secrets configuration from the Intana agent, matcher is not supported:
           ${agentResponse.secrets.matcher}`
       );
     } else if (!Array.isArray(agentResponse.secrets.list)) {
       logger.warn(
-        `Received an invalid secrets configuration from the Instana host agent, attribute list is not an array: 
+        `Received an invalid secrets configuration from the Instana host agent, attribute list is not an array:
           ${agentResponse.secrets.list}`
       );
     } else {

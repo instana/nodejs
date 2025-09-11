@@ -26,7 +26,7 @@ let appInstalledIntoNodeModules = false;
 let packageJsonPath;
 
 /**
- * @param {import('../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../config').InstanaConfig} config
  */
 function init(config) {
   logger = config.logger;

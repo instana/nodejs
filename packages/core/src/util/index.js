@@ -11,7 +11,6 @@ const compression = require('./compression');
 const ensureNestedObjectExists = require('./ensureNestedObjectExists');
 const excludedFromInstrumentation = require('./excludedFromInstrumentation');
 const hasThePackageBeenInitializedTooLate = require('./initializedTooLateHeuristic');
-const normalizeConfig = require('./normalizeConfig');
 const propertySizes = require('./propertySizes');
 const requireHook = require('./requireHook');
 const slidingWindow = require('./slidingWindow');
@@ -20,7 +19,6 @@ const iitmHook = require('./iitmHook');
 const hook = require('./hook');
 const esm = require('./esm');
 const preloadFlags = require('./getPreloadFlags');
-const configNormalizers = require('./configNormalizers');
 const spanFilter = require('./spanFilter');
 const yamlReader = require('./yamlReader');
 const disableInstrumentation = require('./disableInstrumentation');
@@ -29,7 +27,7 @@ const disableInstrumentation = require('./disableInstrumentation');
 let logger;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  */
 exports.init = function init(config) {
   logger = config.logger;
@@ -38,15 +36,13 @@ exports.init = function init(config) {
   requireHook.init(config);
   preloadFlags.init(config);
   iitmHook.init(config);
-  configNormalizers.init(config);
   spanFilter.init(config);
   yamlReader.init(config);
-  configNormalizers.init(config);
   disableInstrumentation.init(config);
 };
 
 /**
- * @param {import('./normalizeConfig').AgentConfig} extraConfig
+ * @param {import('../config').AgentConfig} extraConfig
  */
 exports.activate = function activate(extraConfig) {
   disableInstrumentation.activate(extraConfig);
@@ -91,7 +87,6 @@ exports.compression = compression;
 exports.ensureNestedObjectExists = ensureNestedObjectExists;
 exports.excludedFromInstrumentation = excludedFromInstrumentation;
 exports.hasThePackageBeenInitializedTooLate = hasThePackageBeenInitializedTooLate;
-exports.normalizeConfig = normalizeConfig;
 exports.propertySizes = propertySizes;
 exports.requireHook = requireHook;
 exports.slidingWindow = slidingWindow;
@@ -99,7 +94,6 @@ exports.stackTrace = stackTrace;
 exports.iitmHook = iitmHook;
 exports.hook = hook;
 exports.esm = esm;
-exports.configNormalizers = configNormalizers;
 exports.spanFilter = spanFilter;
 exports.yamlReader = yamlReader;
 exports.disableInstrumentation = disableInstrumentation;

@@ -11,7 +11,7 @@ const { applicationUnderMonitoring } = require('@instana/core').util;
 let logger;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  */
 exports.init = function init(config) {
   logger = config.logger;

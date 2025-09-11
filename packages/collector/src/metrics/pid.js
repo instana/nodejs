@@ -8,7 +8,7 @@
 let pid;
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  * @param {{ pid: number, onPidChange: (callback: (pid: number) => void) => void }} pidStore
  */
 exports.init = function init(config, pidStore) {

@@ -44,7 +44,7 @@ const allMetrics = [
 ];
 
 /**
- * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ * @param {import('@instana/core/src/config').InstanaConfig} config
  */
 const init = function (config) {
   util.init(config);
@@ -64,7 +64,7 @@ const init = function (config) {
  * @typedef {Object} InstanaSharedMetrics
  * @property {Array.<import('@instana/core/src/metrics').InstanaMetricsModule>} allMetrics
  * @property {import('./util')} util
- * @property {(config: import('@instana/core/src/util/normalizeConfig').InstanaConfig) => void} init
+ * @property {(config: import('@instana/core/src/config').InstanaConfig) => void} init
  * @property {(logger: import('@instana/core/src/core').GenericLogger) => void} setLogger
  */
 
