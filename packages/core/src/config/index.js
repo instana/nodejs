@@ -150,12 +150,12 @@ module.exports.configNormalizers = configNormalizers;
  */
 
 /**
- * @param {InstanaConfig} [config]
+ * @param {InstanaConfig} [userConfig]
  * @param {import('../core').GenericLogger} [_logger]
  * @param {InstanaConfig} [defaultsOverride]
  * @returns {InstanaConfig}
  */
-module.exports.init = (config, _logger, defaultsOverride = {}) => {
+module.exports.init = (userConfig, _logger, defaultsOverride = {}) => {
   if (_logger) {
     logger = _logger;
   } else {
@@ -178,8 +178,8 @@ module.exports.init = (config, _logger, defaultsOverride = {}) => {
   let targetConfig = {};
 
   // NOTE: Do not modify the original object
-  if (config !== null) {
-    targetConfig = Object.assign({}, config);
+  if (userConfig !== null) {
+    targetConfig = Object.assign({}, userConfig);
   }
 
   targetConfig.logger = logger;
