@@ -16,7 +16,7 @@ if (isNodeJsTooOld()) {
   return;
 }
 
-const { environment: environmentUtil, consoleLogger: log } = require('@instana/serverless');
+const { environment: environmentUtil, consoleLogger: serverlessLogger } = require('@instana/serverless');
 const ssm = require('./ssm');
 const path = require('path');
 // eslint-disable-next-line no-console
@@ -24,7 +24,7 @@ console.log('@instana/aws-lambda module version:', require(path.join(__dirname, 
 
 // TODO: we currently call "log.init()" twice. Once here
 //       and once in the wrapper.js. Please merge.
-const logger = log.init();
+const logger = serverlessLogger.init();
 environmentUtil.init({ logger });
 
 environmentUtil.validate({

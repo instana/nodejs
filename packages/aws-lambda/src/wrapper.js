@@ -6,7 +6,7 @@
 'use strict';
 
 const instanaCore = require('@instana/core');
-const { backendConnector, consoleLogger: log, environment } = require('@instana/serverless');
+const { backendConnector, consoleLogger: serverlessLogger, environment } = require('@instana/serverless');
 const arnParser = require('./arn');
 const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
@@ -23,7 +23,7 @@ const lambdaConfigDefaults = {
   tracing: { forceTransmissionStartingAt: 25, transmissionDelay: 100, initialTransmissionDelay: 100 }
 };
 
-const logger = log.init();
+const logger = serverlessLogger.init();
 let config = normalizeConfig({}, logger, lambdaConfigDefaults);
 let coldStart = true;
 
@@ -245,7 +245,7 @@ function init(event, arnInfo, _config) {
 
   // CASE: customer provides a custom logger or custom level
   if (userConfig.logger || userConfig.level) {
-    log.init(userConfig);
+    serverlessLogger.init(userConfig);
   }
 
   // NOTE: We SHOULD renormalize because of:
@@ -551,7 +551,7 @@ exports.currentSpan = function getHandleForCurrentSpan() {
 exports.sdk = tracing.sdk;
 
 exports.setLogger = function setLogger(_logger) {
-  log.init({ logger: _logger });
+  serverlessLogger.init({ logger: _logger });
 };
 
 exports.opentracing = tracing.opentracing;

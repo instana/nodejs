@@ -6,7 +6,7 @@
 'use strict';
 
 const instanaCore = require('@instana/core');
-const { backendConnector, consoleLogger: log } = require('@instana/serverless');
+const { backendConnector, consoleLogger: serverlessLogger } = require('@instana/serverless');
 
 const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
@@ -14,7 +14,7 @@ const metrics = require('./metrics');
 const { tracing, util: coreUtil } = instanaCore;
 const { normalizeConfig } = coreUtil;
 
-const logger = log.init();
+const logger = serverlessLogger.init();
 const config = normalizeConfig({}, logger);
 
 function init() {
@@ -31,7 +31,7 @@ function init() {
   metrics.init(config, function onReady(err, serviceRevisionPayload) {
     if (err) {
       logger.error(
-        `Initializing @instana/google-cloud-run failed. This container instance will not be monitored. 
+        `Initializing @instana/google-cloud-run failed. This container instance will not be monitored.
         Error: ${err?.message} ${err?.stack}`
       );
       metrics.deactivate();
@@ -85,7 +85,7 @@ exports.sdk = tracing.sdk;
 
 // NOTE: this is the external interface for the customer. They can set a custom logger.
 exports.setLogger = function setLogger(_logger) {
-  log.init({ logger: _logger });
+  serverlessLogger.init({ logger: _logger });
 };
 
 exports.opentracing = tracing.opentracing;
