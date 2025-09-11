@@ -241,11 +241,11 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
  * Initialize the wrapper.
  */
 function init(event, arnInfo, _config) {
-  const customConfig = _config || {};
+  const userConfig = _config || {};
 
   // CASE: customer provides a custom logger or custom level
-  if (customConfig.logger || customConfig.level) {
-    log.init(customConfig);
+  if (userConfig.logger || userConfig.level) {
+    log.init(userConfig);
   }
 
   // NOTE: We SHOULD renormalize because of:
@@ -253,7 +253,7 @@ function init(event, arnInfo, _config) {
   //         - late env variables (less likely)
   //         - custom logger
   //         - we always renormalize unconditionally to ensure safety.
-  config = normalizeConfig(customConfig, logger, lambdaConfigDefaults);
+  config = normalizeConfig(userConfig, logger, lambdaConfigDefaults);
 
   if (!config.tracing.enabled) {
     return false;

@@ -58,9 +58,9 @@ let config = instanaNodeJsCore.util.normalizeConfig({}, logger);
 let agentConnection;
 
 /**
- * @param {import('./types/collector').CollectorConfig} [_config]
+ * @param {import('./types/collector').CollectorConfig} [userConfig]
  */
-function init(_config = {}) {
+function init(userConfig = {}) {
   // @ts-ignore: Property '__INSTANA_INITIALIZED' does not exist on type global
   if (global.__INSTANA_INITIALIZED) {
     // Prevent initializing @instana/collector multiple times for the same process: @instana/collector has already been
@@ -97,11 +97,11 @@ function init(_config = {}) {
   global.__INSTANA_INITIALIZED = true;
 
   // CASE: reinit logger if custom logger or log level is provided.
-  if (_config.logger || _config.level) {
-    log.init(_config);
+  if (userConfig.logger || userConfig.level) {
+    log.init(userConfig);
   }
 
-  config = normalizeCollectorConfig(_config);
+  config = normalizeCollectorConfig(userConfig);
   config = instanaNodeJsCore.util.normalizeConfig(config, logger);
 
   agentConnection = require('./agentConnection');
