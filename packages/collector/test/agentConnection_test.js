@@ -121,7 +121,7 @@ mochaSuiteFn('agent connection', function () {
   });
 
   it('should throw error if size of payload exceeds maxContentLength', done => {
-    const bigData = 'a'.repeat(1024 * 1024 * 6);
+    const bigData = 'a'.repeat(1024 * 1024 * 21);
     const bigSpan = {
       n: 'span.exit',
       t: 'trace-id',
@@ -141,7 +141,7 @@ mochaSuiteFn('agent connection', function () {
   });
 
   it('should throw error if size of payload exceeds maxContentLength for profiles', done => {
-    const bigData = 'a'.repeat(1024 * 1024 * 6);
+    const bigData = 'a'.repeat(1024 * 1024 * 21);
     const profiles = { profile: bigData };
 
     agentConnection.sendProfiles(profiles, err => {
