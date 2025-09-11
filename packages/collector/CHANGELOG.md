@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.24.0](https://github.com/instana/nodejs/compare/v4.23.1...v4.24.0) (2025-09-11)
+
+
+### Bug Fixes
+
+* **collector:** resolved PayloadTooLargeError ([#1985](https://github.com/instana/nodejs/issues/1985)) ([28578f4](https://github.com/instana/nodejs/commit/28578f49fbc4e12f7fad982747c4ad767c8a1f4d))
+
+
+### Features
+
+* added support for oracledb ([#1828](https://github.com/instana/nodejs/issues/1828)) ([27e4dd3](https://github.com/instana/nodejs/commit/27e4dd35307afb20a80dabc4fd67cb8b9b32e6e0))
+
+
+
+
+
 ## [4.23.1](https://github.com/instana/nodejs/compare/v4.23.0...v4.23.1) (2025-09-01)
 
 **Note:** Version bump only for package @instana/collector
