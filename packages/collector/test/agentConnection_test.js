@@ -119,4 +119,34 @@ mochaSuiteFn('agent connection', function () {
         .catch(e => done(e));
     });
   });
+
+  it('should throw error if size of payload exceeds maxContentLength', done => {
+    const bigData = 'a'.repeat(1024 * 1024 * 21);
+    const bigSpan = {
+      n: 'span.exit',
+      t: 'trace-id',
+      p: 'entry-span-id',
+      s: 'exit-span-id',
+      k: constants.ENTRY,
+      data: {
+        bigData
+      }
+    };
+    const spans = [bigSpan];
+
+    agentConnection.sendSpans(spans, err => {
+      expect(err.message).to.match(/Request payload is too large/);
+      done();
+    });
+  });
+
+  it('should throw error if size of payload exceeds maxContentLength for profiles', done => {
+    const bigData = 'a'.repeat(1024 * 1024 * 21);
+    const profiles = { profile: bigData };
+
+    agentConnection.sendProfiles(profiles, err => {
+      expect(err.message).to.match(/Request payload is too large/);
+      done();
+    });
+  });
 });
