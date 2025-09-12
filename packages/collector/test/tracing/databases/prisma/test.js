@@ -23,7 +23,7 @@ const appDir = __dirname;
 const schemaTargetFile = path.join(appDir, 'prisma', 'schema.prisma');
 const migrationsTargetDir = path.join(appDir, 'prisma', 'migrations');
 
-describe.only('tracing/prisma', function () {
+describe('tracing/prisma', function () {
   this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
 
   ['latest'].forEach(version => {
