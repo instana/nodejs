@@ -10,7 +10,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client/edge';
 import express from 'express';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';

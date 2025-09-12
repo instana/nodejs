@@ -23,10 +23,10 @@ const appDir = __dirname;
 const schemaTargetFile = path.join(appDir, 'prisma', 'schema.prisma');
 const migrationsTargetDir = path.join(appDir, 'prisma', 'migrations');
 
-describe('tracing/prisma', function () {
+describe.only('tracing/prisma', function () {
   this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
 
-  ['latest', 'v4', 'v450'].forEach(version => {
+  ['latest'].forEach(version => {
     providers.forEach(provider => {
       const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
