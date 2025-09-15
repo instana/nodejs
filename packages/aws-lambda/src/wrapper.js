@@ -23,7 +23,8 @@ const lambdaConfigDefaults = {
 };
 
 const logger = serverlessLogger.init();
-let config = coreConfig.init({}, logger, lambdaConfigDefaults);
+coreConfig.init(logger);
+let config = coreConfig.normalize({}, lambdaConfigDefaults);
 let coldStart = true;
 
 // Initialize instrumentations early to allow for require statements after our
@@ -252,7 +253,7 @@ function init(event, arnInfo, _config) {
   //         - late env variables (less likely)
   //         - custom logger
   //         - we always renormalize unconditionally to ensure safety.
-  config = coreConfig.init(userConfig, logger, lambdaConfigDefaults);
+  config = coreConfig.normalize(userConfig, lambdaConfigDefaults);
 
   if (!config.tracing.enabled) {
     return false;

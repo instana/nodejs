@@ -146,30 +146,23 @@ const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-igno
 module.exports.configNormalizers = configNormalizers;
 
 /**
+ * @param {import('../core').GenericLogger} [_logger]
+ */
+module.exports.init = _logger => {
+  logger = _logger;
+  configNormalizers.init({ logger });
+};
+
+/**
  * Merges the config that was passed to the init function with environment variables and default values.
  */
 
 /**
  * @param {InstanaConfig} [userConfig]
- * @param {import('../core').GenericLogger} [_logger]
  * @param {InstanaConfig} [defaultsOverride]
  * @returns {InstanaConfig}
  */
-module.exports.init = (userConfig, _logger, defaultsOverride = {}) => {
-  if (_logger) {
-    logger = _logger;
-  } else {
-    // NOTE: This is only a hard backup. This should not happen. We always pass in
-    //       our custom logger from the upper package.
-    logger = {
-      debug: console.log,
-      info: console.log,
-      warn: console.warn,
-      error: console.error,
-      trace: console.trace
-    };
-  }
-
+module.exports.normalize = (userConfig, defaultsOverride = {}) => {
   if (defaultsOverride && typeof defaultsOverride === 'object') {
     defaults = deepMerge(defaults, defaultsOverride);
   }
@@ -182,8 +175,8 @@ module.exports.init = (userConfig, _logger, defaultsOverride = {}) => {
     targetConfig = Object.assign({}, userConfig);
   }
 
+  // TODO: remove this and forward the logger via init fn.
   targetConfig.logger = logger;
-  configNormalizers.init({ logger });
 
   normalizeServiceName(targetConfig);
   normalizePackageJsonPath(targetConfig);

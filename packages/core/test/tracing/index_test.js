@@ -91,7 +91,8 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
   describe('preInit', function () {
     it('should trace on preinit', () => {
       const logger = testUtils.createFakeLogger();
-      const config = coreConfig.init({}, logger);
+      coreConfig.init(logger);
+      const config = coreConfig.normalize();
       tracing.preInit(config);
 
       expect(initStubGrpcJs).to.have.been.called;
@@ -357,7 +358,8 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
 
     function initAndActivate(initConfig, extraConfigForActivate) {
       const logger = testUtils.createFakeLogger();
-      const config = coreConfig.init(initConfig, logger);
+      coreConfig.init(logger);
+      const config = coreConfig.normalize(initConfig);
       util.init(config);
       tracing.init(config);
       tracing.activate(extraConfigForActivate);

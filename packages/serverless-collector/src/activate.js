@@ -12,7 +12,9 @@ const { tracing, coreConfig } = instanaCore;
 const customMetrics = require('./metrics');
 
 const logger = serverlessLogger.init();
-const config = coreConfig.init({}, logger);
+
+coreConfig.init(logger);
+const config = coreConfig.normalize();
 
 async function init() {
   // NOTE: This package does not support autotracing.

@@ -13,7 +13,8 @@ const metrics = require('./metrics');
 const { tracing, coreConfig } = instanaCore;
 
 const logger = serverlessLogger.init();
-const config = coreConfig.init({}, logger);
+coreConfig.init(logger);
+const config = coreConfig.normalize();
 
 function init() {
   if (!process.env.K_REVISION) {

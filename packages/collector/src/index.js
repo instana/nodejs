@@ -52,8 +52,10 @@ const experimental = require('./experimental');
 
 // NOTE: Default collector logger && config for cases like `preinit`.
 const logger = log.init();
+instanaNodeJsCore.coreConfig.init(logger);
+
 /** @type {import('./types/collector').CollectorConfig} */
-let config = instanaNodeJsCore.coreConfig.init({}, logger);
+let config = instanaNodeJsCore.coreConfig.normalize();
 /** @type {import('./agentConnection')} */
 let agentConnection;
 
@@ -102,7 +104,7 @@ function init(userConfig = {}) {
   }
 
   config = normalizeCollectorConfig(userConfig);
-  config = instanaNodeJsCore.coreConfig.init(config, logger);
+  config = instanaNodeJsCore.coreConfig.normalize(config);
 
   agentConnection = require('./agentConnection');
   const agentOpts = require('./agent/opts');

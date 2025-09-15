@@ -12,7 +12,8 @@ const identityProvider = require('./identity_provider');
 const { tracing, coreConfig } = instanaCore;
 
 const logger = log.init();
-const config = coreConfig.init({}, logger);
+coreConfig.init(logger);
+const config = coreConfig.normalize();
 
 function init() {
   // For more details about environment variables in azure, please see
