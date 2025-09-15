@@ -36,7 +36,6 @@ if (!isExcludedFromInstrumentation) {
   if (parentProcessAgentUuid) {
     // @ts-ignore - Type 'string' is not assignable to type 'undefined'
     // Probably because exports.agentUuid is set to undefined and export values were not supposed to be changed
-    console.log('agent announce', process.pid, parentProcessAgentUuid);
     agentOpts.agentUuid = parentProcessAgentUuid;
     require('./index')({
       tracing: {
