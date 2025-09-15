@@ -8,10 +8,14 @@
 const expect = require('chai').expect;
 const fs = require('fs');
 const path = require('path');
-
+const { createFakeLogger } = require('../test_util');
 const coreConfig = require('../../src/config');
 
 describe('config.normalizeConfig', () => {
+  before(() => {
+    coreConfig.init(createFakeLogger());
+  });
+
   beforeEach(resetEnv);
   afterEach(resetEnv);
 
