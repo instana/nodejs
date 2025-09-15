@@ -38,7 +38,7 @@ if (process.env.BULL_QUEUE_NAME) {
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 const retryTime = 1000;
 
-mochaSuiteFn.only('tracing/messaging/bull', function () {
+mochaSuiteFn('tracing/messaging/bull', function () {
   this.timeout(config.getTestTimeout() * 3);
   const customAgentControls = new AgentStubControls();
 
@@ -166,7 +166,7 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
               urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
             });
 
-            it.only(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
               const response = await senderControls.sendRequest({
                 method: 'POST',
                 path: urlWithParams
@@ -622,7 +622,6 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
 
       const bullEntry = verifyBullEntry({
         spans,
-        parentAgentUuid: httpEntry.f.h,
         parent: bullExit,
         receiverControls,
         withError
@@ -631,7 +630,6 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
       // This is the http exit from the forked bull to the agent!
       verifyHttpExit({
         spans,
-        parentAgentUuid: httpEntry.f.h,
         parent: bullEntry,
         receiverControls,
         inProcess: receiveMethod === 'Process' ? 'child' : 'main'
@@ -652,12 +650,12 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
       ]);
     }
 
-    function verifyHttpExit({ parentAgentUuid, spans, parent, inProcess = 'main', receiverControls }) {
+    function verifyHttpExit({ spans, parent, inProcess = 'main', receiverControls }) {
       const expectations = [
         span => expect(span.t).to.equal(parent.t),
         span => expect(span.p).to.equal(parent.s),
         span => expect(span.k).to.equal(constants.EXIT),
-        span => expect(span.f.h).to.equal(parentAgentUuid),
+        span => expect(span.f.h).to.equal(`agent-stub-uuid-${receiverControls.getPid()}`),
         span => expect(span.n).to.equal('node.http.client')
       ];
 
@@ -708,13 +706,13 @@ mochaSuiteFn.only('tracing/messaging/bull', function () {
       }
     }
 
-    function verifyBullEntry({ parentAgentUuid, receiverControls, spans, parent, withError = false }) {
+    function verifyBullEntry({ receiverControls, spans, parent, withError = false }) {
       return expectExactlyOneMatching(spans, [
         span => expect(span.n).to.equal('bull'),
         span => expect(span.k).to.equal(constants.ENTRY),
         span => expect(span.t).to.equal(parent.t),
         span => expect(span.p).to.equal(parent.s),
-        span => expect(span.f.h).to.equal(parentAgentUuid),
+        span => expect(span.f.h).to.equal(`agent-stub-uuid-${receiverControls.getPid()}`),
         span => expect(span.f.e).to.equal(String(receiverControls.getPid())),
         span => expect(span.error).to.not.exist,
         span => expect(span.ec).to.equal(withError ? 1 : 0),

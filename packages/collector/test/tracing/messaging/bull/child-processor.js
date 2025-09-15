@@ -7,7 +7,7 @@
 
 const { processJob } = require('./util');
 
-const logPrefix = `Bull worker child process (${process.pid}):\t`;
+const logPrefix = `Bull child process (${process.pid}) & parent agent uuid (${process.env.INSTANA_AGENT_UUID}):\t`;
 
 function log() {
   /* eslint-disable no-console */
@@ -16,7 +16,5 @@ function log() {
   console.log.apply(console, args);
   /* eslint-enable no-console */
 }
-
-console.log('HELLO?????????', process.env.INSTANA_AGENT_UUID, process.pid);
 
 module.exports = (job, done) => processJob(job, done, log, 'separate process');
