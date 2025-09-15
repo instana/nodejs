@@ -15,7 +15,8 @@ const { fullyQualifiedContainerId } = require('./metrics/container/containerUtil
 const { tracing, coreConfig } = instanaCore;
 
 const logger = serverlessLogger.init();
-const config = coreConfig.init({}, logger);
+coreConfig.init(logger);
+const config = coreConfig.normalize();
 
 function init() {
   instanaCore.preInit(config);

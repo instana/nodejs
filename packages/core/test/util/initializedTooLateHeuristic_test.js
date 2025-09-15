@@ -31,7 +31,8 @@ describe('[UNIT] util.initializedTooLateHeurstic', function () {
 
     const fakeLogger = testUtils.createFakeLogger();
     const tracing = require('../../src');
-    const config = coreConfig.init({}, fakeLogger);
+    coreConfig.init(fakeLogger);
+    const config = coreConfig.normalize();
     tracing.init(config);
   });
 
