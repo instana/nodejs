@@ -20,6 +20,9 @@ export interface AgentConfig {
 export interface CollectorConfig {
   agentPort?: number;
   agentHost?: string;
+  agentUuid?: string | undefined;
+  requestTimeout?: number;
+  agentConfig?: AgentConfig;
   tracing?: {
     stackTraceLength?: number;
     [key: string]: any;
