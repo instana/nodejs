@@ -7,10 +7,8 @@
 // NOTE: We run the tests locally and on CI against azure redis cluster.
 // NOTE: We cannot run redis cluster on Tekton https://github.com/bitnami/charts/issues/28894
 // NOTE: We cannot use a docker based redis cluster at the moment!
-//       See https://github.com/redis/node-redis/issues/2815.
-//       These commands are useful as soon as we switch to a docker based cluster.
-//       node bin/start-test-containers.js --redis-node-0 --redis-node-1 --redis-node-2
-//       docker exec -it 2aaaac7b9112 redis-cli -p 6379 cluster info
+//       See https://github.com/redis/node-redis/issues/2815
+//       Additionally, the Bitnami images previously used are now restricted.
 module.exports = async function connect(ioredis, log) {
   if (!process.env.AZURE_REDIS_CLUSTER || !process.env.AZURE_REDIS_CLUSTER_PWD) {
     log(
