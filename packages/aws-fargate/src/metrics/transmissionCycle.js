@@ -8,10 +8,13 @@
 const { backendConnector } = require('@instana/serverless');
 const processorRegistry = require('./processorRegistry');
 
-let transmissionDelay = 1000;
+let transmissionDelay;
 let transmissionTimeoutHandle;
 let isActive = false;
 
+/**
+ * @param {import('@instana/core/src/config').InstanaConfig} config
+ */
 exports.init = function init(config, metadataUri, onReady) {
   transmissionDelay = config.metrics.transmissionDelay;
   processorRegistry.init(config, metadataUri, onReady);
