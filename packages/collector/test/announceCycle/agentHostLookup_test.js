@@ -23,13 +23,6 @@ describe('agent host lookup state', () => {
   const port = 12345;
 
   let fakeRequest;
-
-  const agentOptsMock = {
-    '@noCallThru': true,
-    host,
-    port
-  };
-
   const hostAndPort = { host, port };
   const defaultGatewayIpPort = { host: defaultGatewayIp, port };
 
@@ -97,7 +90,6 @@ describe('agent host lookup state', () => {
     };
 
     agentHostLookupState = proxyquire('../../src/announceCycle/agentHostLookup', {
-      '../agent/opts': agentOptsMock,
       '@instana/core': {
         uninstrumentedHttp: {
           http: httpStub
@@ -124,9 +116,6 @@ describe('agent host lookup state', () => {
         fakeRequest = new FakeRequest([configuredHostLookupOk], opt, cb);
         return fakeRequest;
       });
-
-      agentOptsMock.host = hostAndPort.host;
-      agentOptsMock.port = hostAndPort.port;
     });
 
     it('should find the agent at the configured IP and port', done => {
@@ -142,8 +131,6 @@ describe('agent host lookup state', () => {
 
   describe('via default gateway IP', () => {
     before(() => {
-      agentOptsMock.host = hostAndPort.host;
-      agentOptsMock.port = hostAndPort.port;
       parseProcSelfNetRouteFileStub.callsFake(async () => defaultGatewayIp);
       requestStub.callsFake((opt, cb) => {
         fakeRequest = new FakeRequest(
@@ -174,8 +161,6 @@ describe('agent host lookup state', () => {
 
   describe('via default gateway IP when something else listens on 127.0.0.1:42699', () => {
     before(() => {
-      agentOptsMock.host = hostAndPort.host;
-      agentOptsMock.port = hostAndPort.port;
       parseProcSelfNetRouteFileStub.callsFake(async () => defaultGatewayIp);
       requestStub.callsFake((opt, cb) => {
         fakeRequest = new FakeRequest(
@@ -208,8 +193,6 @@ describe('agent host lookup state', () => {
     let sinonFakeTimers;
 
     before(() => {
-      agentOptsMock.host = hostAndPort.host;
-      agentOptsMock.port = hostAndPort.port;
       parseProcSelfNetRouteFileStub.callsFake(async () => {
         throw new Error('Failed to determine the default gateway: The file /proc/self/net/route does not exist');
       });
@@ -251,8 +234,6 @@ describe('agent host lookup state', () => {
 
     const configuredHostLookupConnectionRefusedSecondAttempt = configuredHostLookupConnectionRefused.clone();
     before(() => {
-      agentOptsMock.host = hostAndPort.host;
-      agentOptsMock.port = hostAndPort.port;
       parseProcSelfNetRouteFileStub.callsFake(async () => defaultGatewayIp);
       requestStub.callsFake((opt, cb) => {
         fakeRequest = new FakeRequest(

@@ -7,13 +7,17 @@
 
 'use strict';
 
+/** @type {import('../types/collector').CollectorConfig} */
 const defaults = {
   agentHost: '127.0.0.1',
   agentPort: 42699,
   tracing: {
     stackTraceLength: 10
   },
-  autoProfile: false
+  agentConfig: {},
+  agentUuid: undefined,
+  autoProfile: false,
+  requestTimeout: 1000 * 5
 };
 
 /**
@@ -24,8 +28,11 @@ const defaults = {
 module.exports = function normalizeConfig(config = {}) {
   config.agentHost = config.agentHost || process.env.INSTANA_AGENT_HOST || defaults.agentHost;
   config.agentPort = config.agentPort || parseToPositiveInteger(process.env.INSTANA_AGENT_PORT, defaults.agentPort);
-
   config.autoProfile = config.autoProfile || process.env.INSTANA_AUTO_PROFILE || defaults.autoProfile;
+  config.agentConfig = defaults.agentConfig;
+  config.agentUuid = defaults.agentUuid;
+  config.requestTimeout = defaults.requestTimeout;
+
   config.tracing = config.tracing || {};
 
   if (config.tracing.stackTraceLength == null) {

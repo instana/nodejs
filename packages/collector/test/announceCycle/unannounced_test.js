@@ -14,21 +14,24 @@ chai.use(sinonChai);
 
 const { secrets, tracing } = require('@instana/core');
 const { constants } = tracing;
+const collectorConfig = require('../../src/util/normalizeConfig');
 const agentConnection = require('../../src/agentConnection');
 const testUtils = require('@instana/core/test/test_util');
 
 describe('unannounced state', () => {
   let unannouncedState;
 
-  let agentOptsStub;
   let agentConnectionStub;
   let tracingStub;
   let secretsStub;
   let pidStoreStub;
 
   describe('enter', () => {
-    before(() => {
-      agentOptsStub = {};
+    let configObj;
+
+    beforeEach(() => {
+      configObj = collectorConfig();
+
       agentConnectionStub = sinon.stub(agentConnection);
       tracingStub = sinon.stub(tracing);
       secretsStub = sinon.stub(secrets);
@@ -39,22 +42,20 @@ describe('unannounced state', () => {
           secrets: secretsStub,
           tracing: tracingStub
         },
-        '../agent/opts': agentOptsStub,
         '../agentConnection': agentConnectionStub
       });
 
-      unannouncedState.init({ logger: testUtils.createFakeLogger() }, pidStoreStub);
+      configObj.logger = testUtils.createFakeLogger();
+      unannouncedState.init(configObj, pidStoreStub);
     });
 
     afterEach(() => {
       agentConnectionStub.announceNodeCollector.reset();
       tracingStub.activate.reset();
       secretsStub.setMatcher.reset();
-      agentOptsStub.agentUuid = undefined;
-      agentOptsStub.config = {};
     });
 
-    after(() => {
+    afterEach(() => {
       sinon.restore();
     });
 
@@ -84,7 +85,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.agentUuid).to.equal('some agent uuid');
+          expect(configObj.agentUuid).to.equal('some agent uuid');
           done();
         }
       });
@@ -113,7 +114,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               http: {
                 extraHttpHeadersToCapture: ['x-extra-header-1', 'x-extra-header-2']
@@ -131,7 +132,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               http: {
                 extraHttpHeadersToCapture: ['x-extra-header-3', 'x-extra-header-4']
@@ -151,7 +152,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               kafka: {
                 traceCorrelation: constants.kafkaTraceCorrelationDefault
@@ -173,7 +174,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               kafka: {
                 traceCorrelation: false
@@ -191,7 +192,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               spanBatchingEnabled: true
             }
@@ -205,7 +206,7 @@ describe('unannounced state', () => {
       prepareAnnounceResponse({ spanBatchingEnabled: true });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               spanBatchingEnabled: true
             }
@@ -224,7 +225,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
                 redis: [{ methods: ['get'] }]
@@ -246,7 +247,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
                 redis: [{ methods: ['set', 'get'] }]
@@ -269,7 +270,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
                 redis: [
@@ -301,7 +302,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
                 redis: [],
@@ -335,7 +336,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
                 kafka: [
@@ -377,7 +378,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
                 kafka: [
@@ -411,7 +412,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
                 kafka: [
@@ -440,7 +441,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
                 kafka: [{ endpoints: ['topic1', 'topic2'] }]
@@ -466,7 +467,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
                 kafka: [{ methods: ['publish'] }]
@@ -492,7 +493,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
                 kafka: [{ methods: ['publish'] }]
@@ -519,7 +520,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
                 kafka: [{ methods: ['publish'], endpoints: ['topic1'] }]
@@ -542,7 +543,7 @@ describe('unannounced state', () => {
 
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
                 kafka: []
@@ -570,7 +571,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               ignoreEndpoints: {
                 kafka: [{ methods: ['publish'], endpoints: ['topic1'] }]
@@ -593,7 +594,7 @@ describe('unannounced state', () => {
 
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               ignoreEndpoints: { kafka: [] }
             }
@@ -619,7 +620,7 @@ describe('unannounced state', () => {
 
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               ignoreEndpoints: {}
             }
@@ -640,7 +641,7 @@ describe('unannounced state', () => {
 
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               disable: { groups: ['logging'] }
             }
@@ -655,7 +656,7 @@ describe('unannounced state', () => {
 
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({});
+          expect(configObj.agentConfig).to.deep.equal({});
           done();
         }
       });
@@ -673,7 +674,7 @@ describe('unannounced state', () => {
 
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               disable: { groups: ['logging'], instrumentations: ['redis'] }
             }
@@ -691,7 +692,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: { disable: {} }
           });
           done();
@@ -710,7 +711,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: { disable: { groups: ['logging'], instrumentations: ['!redis'] } }
           });
           done();
@@ -730,7 +731,7 @@ describe('unannounced state', () => {
       });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: { disable: { groups: ['!databases', 'logging'], instrumentations: ['http'] } }
           });
           done();
@@ -747,7 +748,7 @@ describe('unannounced state', () => {
 
       unannouncedState.enter({
         transitionTo: () => {
-          expect(agentOptsStub.config).to.deep.equal({
+          expect(configObj.agentConfig).to.deep.equal({
             tracing: {
               disable: {}
             }

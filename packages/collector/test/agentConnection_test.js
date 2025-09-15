@@ -62,9 +62,6 @@ mochaSuiteFn('agent connection', function () {
   const { AgentStubControls } = require('./apps/agentStubControls');
   const agentControls = new AgentStubControls();
 
-  const agentOpts = require('../src/agent/opts');
-  const originalPort = agentOpts.port;
-
   const config = { logger: testUtils.createFakeLogger() };
   const pidStore = require('../src/pidStore');
   let agentConnection;
@@ -77,17 +74,12 @@ mochaSuiteFn('agent connection', function () {
   });
 
   beforeEach(async () => {
-    agentOpts.port = agentControls.getPort();
     agentConnection = require('../src/agentConnection');
     pidStore.init(config);
     agentConnection.init(config, pidStore);
 
     await agentControls.simulateDiscovery(process.pid);
     await agentControls.clearReceivedData();
-  });
-
-  afterEach(() => {
-    agentOpts.port = originalPort;
   });
 
   it('should send traces to agent', done => {

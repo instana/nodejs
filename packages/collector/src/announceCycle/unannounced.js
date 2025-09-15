@@ -14,12 +14,14 @@ const {
 const { constants: tracingConstants } = tracing;
 
 const agentConnection = require('../agentConnection');
-const agentOpts = require('../agent/opts');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
 /** @type {{ pid: number }} */
 let pidStore;
+
+/** @type {import('@instana/collector/src/types/collector').CollectorConfig} */
+let config;
 
 const initialRetryDelay = 10 * 1000; // 10 seconds
 const backoffFactor = 1.5;
@@ -54,11 +56,12 @@ const maxRetryDelay = 60 * 1000; // one minute
  */
 
 /**
- * @param {import('@instana/core/src/config').InstanaConfig} config
+ * @param {import('@instana/collector/src/types/collector').CollectorConfig} _config
  * @param {any} _pidStore
  */
-function init(config, _pidStore) {
-  logger = config.logger;
+function init(_config, _pidStore) {
+  logger = _config.logger;
+  config = _config;
   pidStore = _pidStore;
 }
 
@@ -106,7 +109,7 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
       pidStore.pid = agentResponse.pid;
     }
 
-    agentOpts.agentUuid = agentResponse.agentUuid;
+    config.agentUuid = agentResponse.agentUuid;
     applyAgentConfiguration(agentResponse);
     ctx.transitionTo('announced');
   });
@@ -169,9 +172,9 @@ function applyExtraHttpHeaderConfiguration(agentResponse) {
  */
 function actuallyApplyExtraHttpHeaderConfiguration(extraHeaders) {
   if (Array.isArray(extraHeaders)) {
-    ensureNestedObjectExists(agentOpts.config, ['tracing', 'http']);
+    ensureNestedObjectExists(config.agentConfig, ['tracing', 'http']);
     // The Node.js HTTP API converts all incoming HTTP headers into lowercase.
-    agentOpts.config.tracing.http.extraHttpHeadersToCapture = extraHeaders.map((/** @type {string} */ s) =>
+    config.agentConfig.tracing.http.extraHttpHeadersToCapture = extraHeaders.map((/** @type {string} */ s) =>
       s.toLowerCase()
     );
   }
@@ -189,8 +192,8 @@ function applyKafkaTracingConfiguration(agentResponse) {
           ? kafkaTracingConfigFromAgent['trace-correlation']
           : tracingConstants.kafkaTraceCorrelationDefault
     };
-    ensureNestedObjectExists(agentOpts.config, ['tracing', 'kafka']);
-    agentOpts.config.tracing.kafka = kafkaTracingConfig;
+    ensureNestedObjectExists(config.agentConfig, ['tracing', 'kafka']);
+    config.agentConfig.tracing.kafka = kafkaTracingConfig;
   }
   // There is no fallback because there is are no legacy agent response attributes for the Kafka tracing config, those
   // were only introduced with the Node.js discovery version 1.2.18.
@@ -202,8 +205,8 @@ function applyKafkaTracingConfiguration(agentResponse) {
 function applySpanBatchingConfiguration(agentResponse) {
   if (agentResponse.tracing) {
     if (agentResponse.tracing['span-batching-enabled'] === true) {
-      ensureNestedObjectExists(agentOpts.config, ['tracing']);
-      agentOpts.config.tracing.spanBatchingEnabled = true;
+      ensureNestedObjectExists(config.agentConfig, ['tracing']);
+      config.agentConfig.tracing.spanBatchingEnabled = true;
     }
     return;
   }
@@ -212,8 +215,8 @@ function applySpanBatchingConfiguration(agentResponse) {
   // common tracing options section. We can remove this legacy fallback approximately in May 2023.
   if (agentResponse.spanBatchingEnabled === true || agentResponse.spanBatchingEnabled === 'true') {
     logger.info('Enabling span batching via Instana host agent configuration.');
-    ensureNestedObjectExists(agentOpts.config, ['tracing']);
-    agentOpts.config.tracing.spanBatchingEnabled = true;
+    ensureNestedObjectExists(config.agentConfig, ['tracing']);
+    config.agentConfig.tracing.spanBatchingEnabled = true;
   }
 }
 
@@ -236,8 +239,8 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
   const ignoreEndpointsConfig = agentResponse?.tracing?.['ignore-endpoints'];
   if (!ignoreEndpointsConfig) return;
 
-  ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
-  agentOpts.config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
+  ensureNestedObjectExists(config.agentConfig, ['tracing', 'ignoreEndpoints']);
+  config.agentConfig.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
 }
 
 /**
@@ -252,8 +255,8 @@ function applyDisableConfiguration(agentResponse) {
   const disablingConfig = agentResponse?.tracing?.disable;
   if (!disablingConfig) return;
 
-  ensureNestedObjectExists(agentOpts.config, ['tracing', 'disable']);
-  agentOpts.config.tracing.disable = configNormalizers.disable.normalizeExternalConfig({
+  ensureNestedObjectExists(config.agentConfig, ['tracing', 'disable']);
+  config.agentConfig.tracing.disable = configNormalizers.disable.normalizeExternalConfig({
     tracing: { disable: disablingConfig }
   });
 }

@@ -9,7 +9,6 @@ const EventEmitter = require('events').EventEmitter;
 
 const { uninstrumentedFs: fs } = require('@instana/core');
 const internalPidStore = require('./internalPidStore');
-const agentOpts = require('../agent/opts');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -19,10 +18,15 @@ const eventName = 'pidChanged';
 /** @type {import('events').EventEmitter} */
 let eventEmitter;
 
+/** @type {import('@instana/collector/src/types/collector').CollectorConfig} */
+let config;
+
 /**
- * @param {import('@instana/core/src/config').InstanaConfig} config
+ * @param {import('@instana/collector/src/types/collector').CollectorConfig} _config
  */
-exports.init = function init(config) {
+exports.init = function init(_config) {
+  config = _config;
+
   logger = config.logger;
   eventEmitter = new EventEmitter();
 
@@ -67,8 +71,7 @@ exports.getEntityId = function getEntityId() {
 exports.getFrom = function getFrom() {
   return {
     e: String(exports.pid),
-    /** @type {string} */
-    h: agentOpts.agentUuid
+    h: config.agentUuid
   };
 };
 
