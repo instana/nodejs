@@ -17,4 +17,6 @@ function log() {
   /* eslint-enable no-console */
 }
 
+console.log('HELLO?????????', process.env.INSTANA_AGENT_UUID, process.pid);
+
 module.exports = (job, done) => processJob(job, done, log, 'separate process');

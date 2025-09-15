@@ -106,6 +106,7 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
       pidStore.pid = agentResponse.pid;
     }
 
+    console.log('HELLO LOLOLOLOL', process.pid, agentResponse.agentUuid, agentOpts.agentUuid);
     agentOpts.agentUuid = agentResponse.agentUuid;
     applyAgentConfiguration(agentResponse);
     ctx.transitionTo('announced');

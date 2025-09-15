@@ -22,7 +22,7 @@ const {
   stringifyItems
 } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
-const globalAgent = require('../../../globalAgent');
+const { AgentStubControls } = require('../../../apps/agentStubControls');
 
 /**
  * !!! In order to test Bull, Redis must be running.
@@ -36,14 +36,18 @@ if (process.env.BULL_QUEUE_NAME) {
 }
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
 const retryTime = 1000;
 
-mochaSuiteFn('tracing/messaging/bull', function () {
+mochaSuiteFn.only('tracing/messaging/bull', function () {
   this.timeout(config.getTestTimeout() * 3);
+  const customAgentControls = new AgentStubControls();
 
-  globalAgent.setUpCleanUpHooks();
-  const agentControls = globalAgent.instance;
+  before(async () => {
+    await customAgentControls.startAgent({
+      // To ensure parent and child process are getting unique uuids from the agent stub!
+      uniqueAgentUuids: true
+    });
+  });
 
   describe('tracing enabled, no suppression', function () {
     let senderControls;
@@ -51,7 +55,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     before(async () => {
       senderControls = new ProcessControls({
         appPath: path.join(__dirname, 'sender'),
-        useGlobalAgent: true,
+        agentControls: customAgentControls,
         env: {
           REDIS_SERVER: 'redis://127.0.0.1:6379',
           BULL_QUEUE_NAME: queueName,
@@ -63,7 +67,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     });
 
     beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
+      await customAgentControls.clearReceivedTraceData();
     });
 
     after(async () => {
@@ -85,7 +89,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         before(async () => {
           receiverControls = new ProcessControls({
             appPath: path.join(__dirname, 'receiver'),
-            useGlobalAgent: true,
+            agentControls: customAgentControls,
             env: {
               REDIS_SERVER: 'redis://127.0.0.1:6379',
               BULL_QUEUE_NAME: queueName,
@@ -100,7 +104,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         });
 
         beforeEach(async () => {
-          await agentControls.clearReceivedTraceData();
+          await customAgentControls.clearReceivedTraceData();
         });
 
         after(async () => {
@@ -162,7 +166,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
             });
 
-            it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
+            it.only(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
               const response = await senderControls.sendRequest({
                 method: 'POST',
                 path: urlWithParams
@@ -334,7 +338,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       before(async () => {
         receiverControls = new ProcessControls({
           appPath: path.join(__dirname, 'receiver'),
-          useGlobalAgent: true,
+          agentControls: customAgentControls,
           env: {
             REDIS_SERVER: 'redis://127.0.0.1:6379',
             BULL_QUEUE_NAME: queueName,
@@ -349,7 +353,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       });
 
       beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
+        await customAgentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -596,7 +600,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
         await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
 
-        return agentControls.getSpans().then(spans => {
+        return customAgentControls.getSpans().then(spans => {
           expect(spans.length).to.equal(spanLength);
 
           verifySpans({
@@ -615,14 +619,19 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     function verifySpans({ receiverControls, receiveMethod, spans, apiPath, withError, isRepeatable, isBulk }) {
       const httpEntry = verifyHttpEntry({ spans, apiPath, withError });
       const bullExit = verifyBullExit({ spans, parent: httpEntry, withError, isRepeatable, isBulk });
+
       const bullEntry = verifyBullEntry({
         spans,
+        parentAgentUuid: httpEntry.f.h,
         parent: bullExit,
         receiverControls,
         withError
       });
+
+      // This is the http exit from the forked bull to the agent!
       verifyHttpExit({
         spans,
+        parentAgentUuid: httpEntry.f.h,
         parent: bullEntry,
         receiverControls,
         inProcess: receiveMethod === 'Process' ? 'child' : 'main'
@@ -634,7 +643,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         span => expect(span.p).to.not.exist,
         span => expect(span.k).to.equal(constants.ENTRY),
         span => expect(span.f.e).to.equal(String(senderControls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
+        span => expect(span.f.h).to.contain('agent-stub-uuid'),
         span => expect(span.n).to.equal('node.http.server'),
         span =>
           expect(`${span.data.http.url}?${span.data.http.params}`).to.equal(
@@ -643,12 +652,12 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       ]);
     }
 
-    function verifyHttpExit({ spans, parent, inProcess = 'main', receiverControls }) {
+    function verifyHttpExit({ parentAgentUuid, spans, parent, inProcess = 'main', receiverControls }) {
       const expectations = [
         span => expect(span.t).to.equal(parent.t),
         span => expect(span.p).to.equal(parent.s),
         span => expect(span.k).to.equal(constants.EXIT),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
+        span => expect(span.f.h).to.equal(parentAgentUuid),
         span => expect(span.n).to.equal('node.http.client')
       ];
 
@@ -672,7 +681,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           span => expect(span.t).to.equal(parent.t),
           span => expect(span.p).to.equal(parent.s),
           span => expect(span.f.e).to.equal(String(senderControls.getPid())),
-          span => expect(span.f.h).to.equal('agent-stub-uuid'),
+          span => expect(span.f.h).to.contain('agent-stub-uuid'),
           span => expect(span.error).to.not.exist,
           span => expect(span.async).to.not.exist,
           span => expect(span.data).to.exist,
@@ -688,7 +697,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           span => expect(span.t).to.equal(isRepeatable ? span.t : parent.t),
           span => expect(span.p).to.equal(isRepeatable ? undefined : parent.s),
           span => expect(span.f.e).to.equal(String(senderControls.getPid())),
-          span => expect(span.f.h).to.equal('agent-stub-uuid'),
+          span => expect(span.f.h).to.equal(`agent-stub-uuid-${senderControls.getPid()}`),
           span => expect(span.error).to.not.exist,
           span => expect(span.async).to.not.exist,
           span => expect(span.data).to.exist,
@@ -699,13 +708,13 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       }
     }
 
-    function verifyBullEntry({ receiverControls, spans, parent, withError = false }) {
+    function verifyBullEntry({ parentAgentUuid, receiverControls, spans, parent, withError = false }) {
       return expectExactlyOneMatching(spans, [
         span => expect(span.n).to.equal('bull'),
         span => expect(span.k).to.equal(constants.ENTRY),
         span => expect(span.t).to.equal(parent.t),
         span => expect(span.p).to.equal(parent.s),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
+        span => expect(span.f.h).to.equal(parentAgentUuid),
         span => expect(span.f.e).to.equal(String(receiverControls.getPid())),
         span => expect(span.error).to.not.exist,
         span => expect(span.ec).to.equal(withError ? 1 : 0),
@@ -730,7 +739,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       before(async () => {
         senderControls = new ProcessControls({
           appPath: path.join(__dirname, 'sender'),
-          useGlobalAgent: true,
+          agentControls: customAgentControls,
           tracingEnabled: false,
           env: {
             REDIS_SERVER: 'redis://127.0.0.1:6379',
@@ -743,7 +752,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       });
 
       beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
+        await customAgentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -761,7 +770,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         before(async () => {
           receiverControls = new ProcessControls({
             appPath: path.join(__dirname, 'receiver'),
-            useGlobalAgent: true,
+            agentControls: customAgentControls,
             tracingEnabled: false,
             env: {
               REDIS_SERVER: 'redis://127.0.0.1:6379',
@@ -777,7 +786,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         });
 
         beforeEach(async () => {
-          await agentControls.clearReceivedTraceData();
+          await customAgentControls.clearReceivedTraceData();
         });
 
         after(async () => {
@@ -809,7 +818,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               retryTime
             )
               .then(() => delay(1000))
-              .then(() => agentControls.getSpans())
+              .then(() => customAgentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {
                   fail(`Unexpected spans (Bull suppressed: ${stringifyItems(spans)}`);
@@ -827,7 +836,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     before(async () => {
       senderControls = new ProcessControls({
         appPath: path.join(__dirname, 'sender'),
-        useGlobalAgent: true,
+        agentControls: customAgentControls,
         env: {
           REDIS_SERVER: 'redis://127.0.0.1:6379',
           BULL_QUEUE_NAME: queueName,
@@ -839,7 +848,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     });
 
     beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
+      await customAgentControls.clearReceivedTraceData();
     });
 
     after(async () => {
@@ -857,7 +866,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       before(async () => {
         receiverControls = new ProcessControls({
           appPath: path.join(__dirname, 'receiver'),
-          useGlobalAgent: true,
+          agentControls: customAgentControls,
           env: {
             REDIS_SERVER: 'redis://127.0.0.1:6379',
             BULL_QUEUE_NAME: queueName,
@@ -872,7 +881,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       });
 
       beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
+        await customAgentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -903,7 +912,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
         }, retryTime)
           .then(() => delay(1000))
-          .then(() => agentControls.getSpans())
+          .then(() => customAgentControls.getSpans())
           .then(spans => {
             if (spans.length > 0) {
               fail(`Unexpected spans (Bull suppressed: ${stringifyItems(spans)}`);
@@ -918,7 +927,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
     before(async () => {
       controls = new ProcessControls({
-        useGlobalAgent: true,
+        agentControls: customAgentControls,
         appPath: path.join(__dirname, 'allowRootExitSpanApp'),
         env: {
           REDIS_SERVER: `redis://${process.env.REDIS}`,
@@ -932,13 +941,13 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     });
 
     beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
+      await customAgentControls.clearReceivedTraceData();
     });
 
     it('must trace', async function () {
       await retry(async () => {
         await delay(500);
-        const spans = await agentControls.getSpans();
+        const spans = await customAgentControls.getSpans();
 
         expect(spans.length).to.be.eql(2);
 

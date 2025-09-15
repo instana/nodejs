@@ -19,6 +19,7 @@ const _ = require('lodash');
 const app = express();
 
 const deepMerge = require('../../../core/src/util/deepMerge');
+const { inc } = require('semver');
 
 const logger = bunyan.createLogger({ name: 'agent-stub', pid: process.pid });
 
@@ -28,6 +29,7 @@ if (process.env.INSTANA_DEBUG === 'true') {
 
 // NOTE: we can leave the hardcoded port here as this file is not used in the test env!
 const port = process.env.AGENT_PORT || 42699;
+const uniqueAgentUuids = process.env.AGENT_UNIQUE_UUIDS === 'true';
 const extraHeaders = process.env.EXTRA_HEADERS ? process.env.EXTRA_HEADERS.split(',') : [];
 const secretsMatcher = process.env.SECRETS_MATCHER ? process.env.SECRETS_MATCHER : 'contains-ignore-case';
 const secretsList = process.env.SECRETS_LIST ? process.env.SECRETS_LIST.split(',') : ['pass', 'secret', 'token'];
@@ -44,6 +46,7 @@ const kafkaTraceCorrelation = process.env.KAFKA_TRACE_CORRELATION
 const ignoreEndpoints = process.env.IGNORE_ENDPOINTS && JSON.parse(process.env.IGNORE_ENDPOINTS);
 const disable = process.env.AGENT_DISABLE_TRACING && JSON.parse(process.env.AGENT_DISABLE_TRACING);
 
+const uuids = {};
 let discoveries = {};
 let rejectAnnounceAttempts = 0;
 let requests = {};
@@ -81,8 +84,16 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
   }
   logger.debug('New discovery %s with params', pid, req.body);
 
+  let uuid;
+
+  if (uniqueAgentUuids) {
+    uuid = uuids[pid] = `agent-stub-uuid-${pid}`;
+  } else {
+    uuid = 'agent-stub-uuid';
+  }
+
   const response = {
-    agentUuid: 'agent-stub-uuid',
+    agentUuid: uuid,
     pid,
     extraHeaders,
     secrets: {
