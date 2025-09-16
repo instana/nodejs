@@ -30,15 +30,15 @@ const isExcludedFromInstrumentation = coreUtil.excludedFromInstrumentation && co
 // In case this is a child process of an instrumented parent process we might receive the agent uuid from the parent
 // process to be able to produce and collect spans immediately without waiting for a connection to the agent in this
 // process.
-// TODO: This does not work because you would report spans with parent agent uuid and child process pid - this is not
-//       compatible. The test even proofs that this logic is not even used.
+// TODO: This does not work because you would report spans with parent agent uuid and the child process pid -
+//       this is not compatible. Our codebase does not support this.
 const parentProcessAgentUuid = process.env.INSTANA_AGENT_UUID;
 
 if (!isExcludedFromInstrumentation) {
   if (parentProcessAgentUuid) {
     // @ts-ignore - Type 'string' is not assignable to type 'undefined'
     // Probably because exports.agentUuid is set to undefined and export values were not supposed to be changed
-    // TODO: This has no effect. Investigate further.
+    // TODO: This has no effect. Remove! See comment above.
     agentOpts.agentUuid = parentProcessAgentUuid;
     require('./index')({
       tracing: {

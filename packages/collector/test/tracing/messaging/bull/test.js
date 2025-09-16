@@ -300,6 +300,12 @@ mochaSuiteFn('tracing/messaging/bull', function () {
                 apiPath,
                 testId,
                 withError,
+                // 1 x http entry
+                // 2 x bull exit
+                // 2 x bull entry
+                // 2 x http exit
+                // 2 x redis
+                // 4 x otel (read + write for the job files)
                 spanLength: 13,
                 isRepeatable: sendOption === 'repeat=true',
                 isBulk: sendOption === 'bulk=true'
