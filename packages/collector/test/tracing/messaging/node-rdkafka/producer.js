@@ -21,6 +21,7 @@ const express = require('express');
 const port = require('../../../test_util/app-port')();
 const enableDeliveryCb = process.env.RDKAFKA_PRODUCER_DELIVERY_CB === 'true';
 const isStream = process.env.RDKAFKA_PRODUCER_AS_STREAM === 'true';
+
 const app = express();
 const topic = 'rdkafka-topic';
 let throwDeliveryErr = false;
@@ -113,6 +114,8 @@ let messageCounter = 0;
 const producer = getProducer();
 
 /**
+ * @param {boolean} bufferErrorSender
+ * @param {string} method
  * @param {string} msg
  * @returns {{ wasSent: boolean, topic: string, msg: string, timestamp: number }}
  */
@@ -175,25 +178,22 @@ function doProduce(bufferErrorSender = false, method, msg = 'Node rdkafka is gre
 
       log('Sending message as standard on topic', topic);
 
-      setTimeout(() => {
-        const wasSent = producer.produce(topic, null, theMessage, null, null, null, [
-          { message_counter: ++messageCounter }
-        ]);
+      const wasSent = producer.produce(topic, null, theMessage, null, null, null, [
+        { message_counter: ++messageCounter }
+      ]);
 
-        log('Sent message as standard', wasSent);
+      log('Sent message as standard', wasSent);
 
-        setTimeout(async () => {
-          await fetch(`http://127.0.0.1:${agentPort}`);
-
-          resolve({
-            timestamp: Date.now(),
-            wasSent,
-            topic,
-            msg: theMessage,
-            messageCounter
-          });
-        }, 100);
-      }, 2 * 1000);
+      setTimeout(async () => {
+        await fetch(`http://127.0.0.1:${agentPort}`);
+        resolve({
+          timestamp: Date.now(),
+          wasSent,
+          topic,
+          msg: theMessage,
+          messageCounter
+        });
+      }, 100);
     });
   }
 }

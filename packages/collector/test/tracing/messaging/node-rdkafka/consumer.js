@@ -33,9 +33,8 @@ function setupConsumer() {
   let _consumer;
 
   const consumerOptions = {
-    'metadata.broker.list': process.env.KAFKA,
-    'group.id': uuid(),
-    'enable.auto.commit': false
+    'metadata.broker.list': '127.0.0.1:9092',
+    'group.id': uuid()
   };
 
   if (isStream) {
@@ -97,9 +96,8 @@ function setupConsumer() {
       span.end();
     });
   } else {
-    _consumer = new Kafka.KafkaConsumer(consumerOptions, {
-      'auto.offset.reset': 'earliest'
-    });
+    _consumer = new Kafka.KafkaConsumer(consumerOptions);
+
     _consumer.connect();
 
     _consumer.on('ready', () => {
