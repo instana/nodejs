@@ -22,7 +22,7 @@ const {
   stringifyItems
 } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
-const globalAgent = require('../../../globalAgent');
+const { AgentStubControls } = require('../../../apps/agentStubControls');
 
 /**
  * !!! In order to test Bull, Redis must be running.
@@ -36,14 +36,25 @@ if (process.env.BULL_QUEUE_NAME) {
 }
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
 const retryTime = 1000;
 
 mochaSuiteFn('tracing/messaging/bull', function () {
   this.timeout(config.getTestTimeout() * 3);
+  const customAgentControls = new AgentStubControls();
 
-  globalAgent.setUpCleanUpHooks();
-  const agentControls = globalAgent.instance;
+  before(async () => {
+    const files = fs.readdirSync(__dirname);
+    files.forEach(f => {
+      if (f.startsWith('file-created-by-job') && f.endsWith('.json')) {
+        fs.unlinkSync(path.join(__dirname, f));
+      }
+    });
+
+    await customAgentControls.startAgent({
+      // To ensure parent and child process are getting unique uuids from the agent stub!
+      uniqueAgentUuids: true
+    });
+  });
 
   describe('tracing enabled, no suppression', function () {
     let senderControls;
@@ -51,7 +62,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     before(async () => {
       senderControls = new ProcessControls({
         appPath: path.join(__dirname, 'sender'),
-        useGlobalAgent: true,
+        agentControls: customAgentControls,
         env: {
           REDIS_SERVER: 'redis://127.0.0.1:6379',
           BULL_QUEUE_NAME: queueName,
@@ -63,7 +74,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     });
 
     beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
+      await customAgentControls.clearReceivedTraceData();
     });
 
     after(async () => {
@@ -85,13 +96,14 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         before(async () => {
           receiverControls = new ProcessControls({
             appPath: path.join(__dirname, 'receiver'),
-            useGlobalAgent: true,
+            agentControls: customAgentControls,
             env: {
               REDIS_SERVER: 'redis://127.0.0.1:6379',
               BULL_QUEUE_NAME: queueName,
               BULL_RECEIVE_TYPE: receiveMethod,
               BULL_JOB_NAME: 'steve',
               BULL_JOB_NAME_ENABLED: 'true',
+              // NOTE: We always start 2 processes (child-processor) in parallel! That creates twice as many spans!
               BULL_CONCURRENCY_ENABLED: 'true'
             }
           });
@@ -100,7 +112,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         });
 
         beforeEach(async () => {
-          await agentControls.clearReceivedTraceData();
+          await customAgentControls.clearReceivedTraceData();
         });
 
         after(async () => {
@@ -288,7 +300,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
                 apiPath,
                 testId,
                 withError,
-                spanLength: 11,
+                spanLength: 13,
                 isRepeatable: sendOption === 'repeat=true',
                 isBulk: sendOption === 'bulk=true'
               });
@@ -315,7 +327,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
                 receiveMethod,
                 response,
                 apiPath,
-                spanLength: 17,
+                spanLength: 19,
                 testId,
                 withError,
                 isRepeatable: sendOption === 'repeat=true',
@@ -334,7 +346,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       before(async () => {
         receiverControls = new ProcessControls({
           appPath: path.join(__dirname, 'receiver'),
-          useGlobalAgent: true,
+          agentControls: customAgentControls,
           env: {
             REDIS_SERVER: 'redis://127.0.0.1:6379',
             BULL_QUEUE_NAME: queueName,
@@ -349,7 +361,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       });
 
       beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
+        await customAgentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -531,7 +543,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               receiveMethod,
               response,
               apiPath,
-              spanLength: 11,
+              spanLength: 13,
               testId,
               withError,
               isRepeatable: sendOption === 'repeat=true',
@@ -559,7 +571,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               receiverControls,
               receiveMethod,
               response,
-              spanLength: 17,
+              spanLength: 19,
               apiPath,
               testId,
               withError,
@@ -594,9 +606,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           throw new Error(ipcErrorMessage.error);
         }
 
-        await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
+        await delay(1000 * 2);
+        const contentsCreatedByJob = await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
 
-        return agentControls.getSpans().then(spans => {
+        return customAgentControls.getSpans().then(spans => {
           expect(spans.length).to.equal(spanLength);
 
           verifySpans({
@@ -606,24 +619,39 @@ mochaSuiteFn('tracing/messaging/bull', function () {
             apiPath,
             withError,
             isRepeatable,
-            isBulk
+            isBulk,
+            contentsCreatedByJob
           });
         });
       }, retryTime);
     }
 
-    function verifySpans({ receiverControls, receiveMethod, spans, apiPath, withError, isRepeatable, isBulk }) {
+    function verifySpans({
+      receiverControls,
+      receiveMethod,
+      spans,
+      apiPath,
+      withError,
+      isRepeatable,
+      isBulk,
+      contentsCreatedByJob
+    }) {
       const httpEntry = verifyHttpEntry({ spans, apiPath, withError });
       const bullExit = verifyBullExit({ spans, parent: httpEntry, withError, isRepeatable, isBulk });
+
       const bullEntry = verifyBullEntry({
         spans,
         parent: bullExit,
         receiverControls,
+        contentsCreatedByJob,
         withError
       });
+
+      // This is the http exit from the forked bull to the agent!
       verifyHttpExit({
         spans,
         parent: bullEntry,
+        contentsCreatedByJob,
         receiverControls,
         inProcess: receiveMethod === 'Process' ? 'child' : 'main'
       });
@@ -634,7 +662,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         span => expect(span.p).to.not.exist,
         span => expect(span.k).to.equal(constants.ENTRY),
         span => expect(span.f.e).to.equal(String(senderControls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
+        span => expect(span.f.h).to.equal(`agent-stub-uuid-${senderControls.getPid()}`),
         span => expect(span.n).to.equal('node.http.server'),
         span =>
           expect(`${span.data.http.url}?${span.data.http.params}`).to.equal(
@@ -643,19 +671,22 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       ]);
     }
 
-    function verifyHttpExit({ spans, parent, inProcess = 'main', receiverControls }) {
+    function verifyHttpExit({ spans, parent, inProcess = 'main', receiverControls, contentsCreatedByJob }) {
       const expectations = [
         span => expect(span.t).to.equal(parent.t),
         span => expect(span.p).to.equal(parent.s),
         span => expect(span.k).to.equal(constants.EXIT),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
         span => expect(span.n).to.equal('node.http.client')
       ];
 
       if (inProcess === 'main') {
         expectations.push(span => expect(span.f.e).to.equal(String(receiverControls.getPid())));
+        expectations.push(span => expect(span.f.h).to.equal(`agent-stub-uuid-${receiverControls.getPid()}`));
       } else if (inProcess === 'child') {
-        expectations.push(span => expect(span.f.e).to.not.equal(String(receiverControls.getPid())));
+        expectations.push(span => expect(span.f.e).to.be.oneOf(contentsCreatedByJob.map(c => String(c.pid))));
+        expectations.push(span =>
+          expect(span.f.h).to.be.oneOf(contentsCreatedByJob.map(c => `agent-stub-uuid-${c.pid}`))
+        );
       } else {
         expectations.push(() => fail(`Invalid value for inProcess argument: ${inProcess}.`));
       }
@@ -672,7 +703,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           span => expect(span.t).to.equal(parent.t),
           span => expect(span.p).to.equal(parent.s),
           span => expect(span.f.e).to.equal(String(senderControls.getPid())),
-          span => expect(span.f.h).to.equal('agent-stub-uuid'),
+          span => expect(span.f.h).to.equal(`agent-stub-uuid-${senderControls.getPid()}`),
           span => expect(span.error).to.not.exist,
           span => expect(span.async).to.not.exist,
           span => expect(span.data).to.exist,
@@ -688,7 +719,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           span => expect(span.t).to.equal(isRepeatable ? span.t : parent.t),
           span => expect(span.p).to.equal(isRepeatable ? undefined : parent.s),
           span => expect(span.f.e).to.equal(String(senderControls.getPid())),
-          span => expect(span.f.h).to.equal('agent-stub-uuid'),
+          span => expect(span.f.h).to.equal(`agent-stub-uuid-${senderControls.getPid()}`),
           span => expect(span.error).to.not.exist,
           span => expect(span.async).to.not.exist,
           span => expect(span.data).to.exist,
@@ -699,14 +730,16 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       }
     }
 
-    function verifyBullEntry({ receiverControls, spans, parent, withError = false }) {
+    function verifyBullEntry({ spans, parent, withError = false, receiverControls }) {
       return expectExactlyOneMatching(spans, [
         span => expect(span.n).to.equal('bull'),
         span => expect(span.k).to.equal(constants.ENTRY),
         span => expect(span.t).to.equal(parent.t),
         span => expect(span.p).to.equal(parent.s),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
+        // TODO: We forward INSTANA_AGENT_UUID in childProcess instrumentation, but the uuid is not used!
+        // TODO: We expect that the bull entry has the PID from the child forked bull process!
         span => expect(span.f.e).to.equal(String(receiverControls.getPid())),
+        span => expect(span.f.h).to.equal(`agent-stub-uuid-${receiverControls.getPid()}`),
         span => expect(span.error).to.not.exist,
         span => expect(span.ec).to.equal(withError ? 1 : 0),
         span => expect(span.async).to.not.exist,
@@ -730,7 +763,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       before(async () => {
         senderControls = new ProcessControls({
           appPath: path.join(__dirname, 'sender'),
-          useGlobalAgent: true,
+          agentControls: customAgentControls,
           tracingEnabled: false,
           env: {
             REDIS_SERVER: 'redis://127.0.0.1:6379',
@@ -743,7 +776,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       });
 
       beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
+        await customAgentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -761,7 +794,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         before(async () => {
           receiverControls = new ProcessControls({
             appPath: path.join(__dirname, 'receiver'),
-            useGlobalAgent: true,
+            agentControls: customAgentControls,
             tracingEnabled: false,
             env: {
               REDIS_SERVER: 'redis://127.0.0.1:6379',
@@ -777,7 +810,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         });
 
         beforeEach(async () => {
-          await agentControls.clearReceivedTraceData();
+          await customAgentControls.clearReceivedTraceData();
         });
 
         after(async () => {
@@ -809,7 +842,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               retryTime
             )
               .then(() => delay(1000))
-              .then(() => agentControls.getSpans())
+              .then(() => customAgentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {
                   fail(`Unexpected spans (Bull suppressed: ${stringifyItems(spans)}`);
@@ -827,7 +860,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     before(async () => {
       senderControls = new ProcessControls({
         appPath: path.join(__dirname, 'sender'),
-        useGlobalAgent: true,
+        agentControls: customAgentControls,
         env: {
           REDIS_SERVER: 'redis://127.0.0.1:6379',
           BULL_QUEUE_NAME: queueName,
@@ -839,7 +872,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     });
 
     beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
+      await customAgentControls.clearReceivedTraceData();
     });
 
     after(async () => {
@@ -857,7 +890,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       before(async () => {
         receiverControls = new ProcessControls({
           appPath: path.join(__dirname, 'receiver'),
-          useGlobalAgent: true,
+          agentControls: customAgentControls,
           env: {
             REDIS_SERVER: 'redis://127.0.0.1:6379',
             BULL_QUEUE_NAME: queueName,
@@ -872,7 +905,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       });
 
       beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
+        await customAgentControls.clearReceivedTraceData();
       });
 
       after(async () => {
@@ -903,7 +936,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
           await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
         }, retryTime)
           .then(() => delay(1000))
-          .then(() => agentControls.getSpans())
+          .then(() => customAgentControls.getSpans())
           .then(spans => {
             if (spans.length > 0) {
               fail(`Unexpected spans (Bull suppressed: ${stringifyItems(spans)}`);
@@ -918,7 +951,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
     before(async () => {
       controls = new ProcessControls({
-        useGlobalAgent: true,
+        agentControls: customAgentControls,
         appPath: path.join(__dirname, 'allowRootExitSpanApp'),
         env: {
           REDIS_SERVER: `redis://${process.env.REDIS}`,
@@ -932,13 +965,13 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     });
 
     beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
+      await customAgentControls.clearReceivedTraceData();
     });
 
     it('must trace', async function () {
       await retry(async () => {
         await delay(500);
-        const spans = await agentControls.getSpans();
+        const spans = await customAgentControls.getSpans();
 
         expect(spans.length).to.be.eql(2);
 
@@ -966,10 +999,19 @@ async function verifyResponseAndJobProcessing({ response, testId, isRepeatable, 
   // verifies that the job has been processed.
   try {
     if (isBulk) {
-      await verifyJobCreatedAFile('file-created-by-job-1.json', testId);
-      await verifyJobCreatedAFile('file-created-by-job-2.json', testId);
+      const firstJobContent = await verifyJobCreatedAFile('file-created-by-job-1.json', testId);
+      const secondJobContent = await verifyJobCreatedAFile('file-created-by-job-2.json', testId);
+      return [firstJobContent, secondJobContent];
+    } else if (isRepeatable) {
+      try {
+        const firstJobContent = await verifyJobCreatedAFile(`file-created-by-job-repeat-${testId}-1.json`, testId);
+        const secondJobContent = await verifyJobCreatedAFile(`file-created-by-job-repeat-${testId}-2.json`, testId);
+        return [firstJobContent, secondJobContent];
+      } catch (e) {
+        throw new Error('Not Ready yet.');
+      }
     } else {
-      await verifyJobCreatedAFile('file-created-by-job.json', testId);
+      return [await verifyJobCreatedAFile('file-created-by-job.json', testId)];
     }
   } catch (ex) {
     fail(ex);
@@ -998,4 +1040,6 @@ async function verifyJobCreatedAFile(filename, testId) {
   );
   const contentCreatedByJob = JSON.parse(fileCreatedByJob.toString());
   expect(contentCreatedByJob.data.testId).to.equal(testId);
+
+  return contentCreatedByJob;
 }
