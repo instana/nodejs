@@ -8,7 +8,12 @@
 // NOTE: We cannot run redis cluster on Tekton https://github.com/bitnami/charts/issues/28894
 // NOTE: We cannot use a docker based redis cluster at the moment!
 //       See https://github.com/redis/node-redis/issues/2815
-//       Additionally, the Bitnami images previously used are now restricted.
+// NOTE: The Docker-based Redis cluster(image:bitnami/redis-cluster) was removed from Docker Compose,
+//       as it was no longer used locally and will require a paid subscription after Aug 28, 2025:
+//       https://bitnami.com/announcements/bitnami-docker-image-changes
+// NOTE: If a local Docker setup is needed in the future, we can explore
+//       alternative images or solutions.
+
 module.exports = async function connect(ioredis, log) {
   if (!process.env.AZURE_REDIS_CLUSTER || !process.env.AZURE_REDIS_CLUSTER_PWD) {
     log(
