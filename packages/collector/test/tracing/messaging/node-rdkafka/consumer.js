@@ -33,8 +33,9 @@ function setupConsumer() {
   let _consumer;
 
   const consumerOptions = {
-    'metadata.broker.list': '127.0.0.1:9092',
-    'group.id': uuid()
+    'metadata.broker.list': process.env.KAFKA,
+    'group.id': uuid(),
+    'enable.auto.commit': false
   };
 
   if (isStream) {
