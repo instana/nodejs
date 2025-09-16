@@ -102,9 +102,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               BULL_QUEUE_NAME: queueName,
               BULL_RECEIVE_TYPE: receiveMethod,
               BULL_JOB_NAME: 'steve',
-              BULL_JOB_NAME_ENABLED: 'true',
-              // NOTE: We always start 2 processes (child-processor) in parallel! That creates twice as many spans!
-              BULL_CONCURRENCY_ENABLED: 'true'
+              BULL_JOB_NAME_ENABLED: 'true'
             }
           });
 
@@ -358,8 +356,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
             BULL_QUEUE_NAME: queueName,
             BULL_RECEIVE_TYPE: receiveMethod,
             BULL_JOB_NAME: 'steve',
-            BULL_JOB_NAME_ENABLED: 'true',
-            BULL_CONCURRENCY_ENABLED: 'true'
+            BULL_JOB_NAME_ENABLED: 'true'
           }
         });
 
@@ -807,8 +804,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               BULL_QUEUE_NAME: queueName,
               BULL_RECEIVE_TYPE: receiveMethod,
               BULL_JOB_NAME: 'steve',
-              BULL_JOB_NAME_ENABLED: 'true',
-              BULL_CONCURRENCY_ENABLED: 'true'
+              BULL_JOB_NAME_ENABLED: 'true'
             }
           });
 
@@ -902,8 +898,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
             BULL_QUEUE_NAME: queueName,
             BULL_RECEIVE_TYPE: receiveMethod,
             BULL_JOB_NAME: 'steve',
-            BULL_JOB_NAME_ENABLED: 'true',
-            BULL_CONCURRENCY_ENABLED: 'true'
+            BULL_JOB_NAME_ENABLED: 'true'
           }
         });
 

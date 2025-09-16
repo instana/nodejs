@@ -128,18 +128,19 @@ exports.buildReceiver = function (queue, processType, log, jobName, isConcurrent
       throw new Error(`Option ${processType} is invalid`);
   }
 
-  if (jobName && isConcurrent) {
-    log(`Job named ${jobName} and concurrent`);
-    currentTypeArgs.unshift(jobName, NUMBER_OF_PROCESSES);
-  } else if (jobName && !isConcurrent) {
+  // You cannot set name + concurrency at the same time. The concurrency is ignored in that case.
+  // See https://github.com/OptimalBits/bull/blob/v4.16.5/lib/queue.js#L668-L684
+  if (jobName) {
     log(`Job named ${jobName}, not concurrent`);
     currentTypeArgs.unshift(jobName);
   } else if (!jobName && isConcurrent) {
+    // TODO: We don't have a test for this yet.
     log('Job unnamed, concurrent');
     currentTypeArgs.unshift(NUMBER_OF_PROCESSES);
   } else {
     log('Job unnamed, not concurrent');
   }
+
   queue.process.apply(queue, currentTypeArgs);
 };
 
