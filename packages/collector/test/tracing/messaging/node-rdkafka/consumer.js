@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
 });
 
 const instana = require('../../../..')();
-const fetch = require('node-fetch-v2');
+
 const delay = require('../../../../../core/test/test_util/delay');
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const { sendToParent } = require('@instana/core/test/test_util');
