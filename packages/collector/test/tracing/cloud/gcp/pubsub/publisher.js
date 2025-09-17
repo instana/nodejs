@@ -18,7 +18,6 @@ require('../../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const fetch = require('node-fetch-v2');
 
 const asyncRoute = require('../../../../test_util/asyncExpressRoute');
 const { createTopic } = require('./pubsubUtil');

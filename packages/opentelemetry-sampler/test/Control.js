@@ -5,7 +5,7 @@
 'use strict';
 
 const { fork } = require('child_process');
-const fetch = require('node-fetch-v2');
+
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 const portfinder = require('../../collector/test/test_util/portfinder');
 
