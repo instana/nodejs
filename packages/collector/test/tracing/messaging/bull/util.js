@@ -46,11 +46,11 @@ function processJob(job, done, log, info) {
       return Promise.reject(new Error('Invalid data. Expected data structure is {name: string}'));
     }
   } else {
-    log(`Consuming: ${info || 'no extra info provided'}: ${JSON.stringify(job.data)}`);
+    log(`Consuming: ${info || 'no extra info provided'}: ${JSON.stringify(job)}`);
 
     if (done) {
       setTimeout(() => {
-        writeToAFileToProveThatThisParticularJobHasBeenProcessed(getJobData(job)).then(() => {
+        writeToAFileToProveThatThisParticularJobHasBeenProcessed(getJobData(job), log).then(() => {
           fetch(`http://127.0.0.1:${agentPort}`)
             .then(() => {
               log('The follow up request after receiving a message has happened.');
@@ -73,7 +73,7 @@ function processJob(job, done, log, info) {
       }, 100);
     } else {
       return delay(100)
-        .then(() => writeToAFileToProveThatThisParticularJobHasBeenProcessed(getJobData(job)))
+        .then(() => writeToAFileToProveThatThisParticularJobHasBeenProcessed(getJobData(job), log))
         .then(() => fetch(`http://127.0.0.1:${agentPort}`))
         .then(() => {
           log('The follow up request after receiving a message has happened.');
@@ -155,7 +155,7 @@ function getJobData(job) {
   };
 }
 
-function writeToAFileToProveThatThisParticularJobHasBeenProcessed(jobData) {
+function writeToAFileToProveThatThisParticularJobHasBeenProcessed(jobData, log) {
   let fileCreatedByJob;
 
   if (jobData.data.bulkIndex) {
@@ -185,6 +185,8 @@ function writeToAFileToProveThatThisParticularJobHasBeenProcessed(jobData) {
   }
 
   jobData.pid = process.pid;
+
+  log(`Writing file ${fileCreatedByJob} to prove that this job has been processed.`);
 
   return new Promise((resolve, reject) => {
     fs.writeFile(fileCreatedByJob, JSON.stringify(jobData, null, 2), (err, success) => {

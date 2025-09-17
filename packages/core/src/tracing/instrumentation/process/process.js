@@ -24,6 +24,10 @@ exports.init = function init(config) {
   if (config.tracing.activateBullProcessInstrumentation) {
     shimmer.wrap(process, 'emit', shimProcessEmitForBullChildWorker);
     shimmer.wrap(process, 'send', shimProcessSendForBullChildWorker);
+
+    // Activate immediately, otherwise we miss the first message event and the instana
+    // headers would not get removed from the message.
+    exports.activate();
   }
 };
 
@@ -32,6 +36,7 @@ function shimProcessEmitForBullChildWorker(originalProcessEmit) {
     if (!isActive || event !== 'message') {
       return originalProcessEmit.apply(this, arguments);
     }
+
     const ipcMessage = arguments[1];
 
     if (

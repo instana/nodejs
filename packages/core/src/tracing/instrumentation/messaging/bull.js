@@ -79,6 +79,7 @@ function instrumentedJobCreate(ctx, originalJobCreate, originalArgs, options) {
   // Job.create args: Queue data, job name or ctx.DEFAULT_JOB_NAME, job data, options
 
   // queue name should always be found, as it's required in order to start the whole process
+
   const queueName = (originalArgs[0] && originalArgs[0].name) || 'name not found';
 
   return cls.ns.runAndReturn(() => {
@@ -238,6 +239,8 @@ function instrumentedProcessJob(ctx, originalProcessJob, originalArgs) {
     }
 
     // TODO: The entry is CREATED BEFORE the child process is forked. Its created ON THE receiver process.
+    //       Sender process -> bull exit (create jobs in redis)
+    //       Receiver process -> apply for jobs -> bull entry -> process jobs via forked processes from bull
     // This is not correct.
     const span = cls.startSpan({
       spanName: exports.spanName,

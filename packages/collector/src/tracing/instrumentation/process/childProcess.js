@@ -6,8 +6,6 @@
 
 'use strict';
 
-const processIdentityProvider = require('../../../pidStore');
-
 const coreChildProcess = require('child_process');
 const { tracing } = require('@instana/core');
 const shimmer = tracing.shimmer;
@@ -90,7 +88,9 @@ function shimFork(original) {
           `Detected a child_process.fork of Bull, instrumenting it by adding --require ${selfPath.immediate}.`
         );
 
-        process.env.INSTANA_AGENT_UUID = processIdentityProvider.getFrom().h;
+        // NOTE: master.js is forked here!
+        //       https://github.com/OptimalBits/bull/blob/v4.16.5/lib/process/master.js
+        process.env.INSTANA_IS_BULL_CHILD_PROCESS = 'true';
         args.execArgv.unshift(selfPath.immediate);
         args.execArgv.unshift('--require');
       }
