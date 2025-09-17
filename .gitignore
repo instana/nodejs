@@ -20,3 +20,5 @@ example-apps/eum-serverless-collector/public/instana-eum.js
 example-apps/eum-serverless-collector/.angular
 
 .github/workflows/.secrets
+
+bin/vulnerability/app
