@@ -38,7 +38,7 @@ if (process.env.BULL_QUEUE_NAME) {
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 const retryTime = 1000;
 
-mochaSuiteFn.only('tracing/messaging/bull', function () {
+mochaSuiteFn('tracing/messaging/bull', function () {
   this.timeout(config.getTestTimeout() * 3);
   const customAgentControls = new AgentStubControls();
 
