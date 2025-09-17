@@ -68,7 +68,7 @@ app.post('/send', (request, response) => {
 
   if (repeat && !bulk) {
     options.repeat = {
-      every: 50,
+      every: 1000,
       limit: 2
     };
   }

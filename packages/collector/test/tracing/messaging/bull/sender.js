@@ -66,8 +66,11 @@ app.post('/send', (request, response) => {
 
   if (repeat && !bulk) {
     options.repeat = {
-      every: 50,
-      limit: 2
+      // NOTE: DO not use a very small value here (e.g. 50ms), because bull is too smart
+      //       and creates two processes
+      //       instead of one, because the diff is too small. We don't want that for repeat!
+      every: 1000, // repeat every second
+      limit: 2 // two repeats
     };
   }
 

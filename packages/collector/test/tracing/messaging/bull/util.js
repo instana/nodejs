@@ -112,6 +112,8 @@ exports.buildReceiver = function (queue, processType, log, jobName, isConcurrent
   const asProcessArgs = [processorPath];
   let currentTypeArgs;
 
+  log(`Process type is ${processType}`);
+
   switch (processType) {
     case ProcessTypes.CALLBACK:
       currentTypeArgs = callbackArgs;
@@ -126,18 +128,19 @@ exports.buildReceiver = function (queue, processType, log, jobName, isConcurrent
       throw new Error(`Option ${processType} is invalid`);
   }
 
-  if (jobName && isConcurrent) {
-    log(`Job named ${jobName} and concurrent`);
-    currentTypeArgs.unshift(jobName, NUMBER_OF_PROCESSES);
-  } else if (jobName && !isConcurrent) {
+  // You cannot set name + concurrency at the same time. The concurrency is ignored in that case.
+  // See https://github.com/OptimalBits/bull/blob/v4.16.5/lib/queue.js#L668-L684
+  if (jobName) {
     log(`Job named ${jobName}, not concurrent`);
     currentTypeArgs.unshift(jobName);
   } else if (!jobName && isConcurrent) {
+    // TODO: We don't have a test for this yet.
     log('Job unnamed, concurrent');
     currentTypeArgs.unshift(NUMBER_OF_PROCESSES);
   } else {
     log('Job unnamed, not concurrent');
   }
+
   queue.process.apply(queue, currentTypeArgs);
 };
 
@@ -154,11 +157,34 @@ function getJobData(job) {
 
 function writeToAFileToProveThatThisParticularJobHasBeenProcessed(jobData) {
   let fileCreatedByJob;
+
   if (jobData.data.bulkIndex) {
     fileCreatedByJob = path.join(__dirname, `file-created-by-job-${jobData.data.bulkIndex}.json`);
+  } else if (jobData.opts.jobId?.includes('repeat')) {
+    const files = fs
+      .readdirSync(__dirname)
+      .filter(f => f.startsWith(`file-created-by-job-repeat-${jobData.data.testId}-`));
+
+    if (files.length === 0) {
+      fileCreatedByJob = path.join(__dirname, `file-created-by-job-repeat-${jobData.data.testId}-1.json`);
+    } else {
+      files.forEach(f => {
+        const match = f.match(/-(\d+)\.json$/);
+        if (match) {
+          const nextAttempt = Number(match[1]) + 1;
+
+          fileCreatedByJob = path.join(
+            __dirname,
+            `file-created-by-job-repeat-${jobData.data.testId}-${nextAttempt}.json`
+          );
+        }
+      });
+    }
   } else {
     fileCreatedByJob = path.join(__dirname, 'file-created-by-job.json');
   }
+
+  jobData.pid = process.pid;
 
   return new Promise((resolve, reject) => {
     fs.writeFile(fileCreatedByJob, JSON.stringify(jobData, null, 2), (err, success) => {

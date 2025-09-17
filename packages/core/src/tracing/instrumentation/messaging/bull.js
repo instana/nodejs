@@ -237,6 +237,8 @@ function instrumentedProcessJob(ctx, originalProcessJob, originalArgs) {
       return originalProcessJob.apply(ctx, originalArgs);
     }
 
+    // TODO: The entry is CREATED BEFORE the child process is forked. Its created ON THE receiver process.
+    // This is not correct.
     const span = cls.startSpan({
       spanName: exports.spanName,
       kind: ENTRY,

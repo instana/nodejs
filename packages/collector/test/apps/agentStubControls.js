@@ -26,6 +26,8 @@ class AgentStubControls {
     env.SECRETS_MATCHER = opts.secretsMatcher || 'contains-ignore-case';
     env.SECRETS_LIST = (opts.secretsList || []).join(',');
     env.SECRETS_LIST = (opts.secretsList || []).join(',');
+    env.AGENT_UNIQUE_UUIDS = opts.uniqueAgentUuids === true;
+
     if (opts.rejectTraces) {
       env.REJECT_TRACES = 'true';
     }
