@@ -56,6 +56,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     });
   });
 
+  after(async () => {
+    await customAgentControls.stopAgent();
+  });
+
   describe('tracing enabled, no suppression', function () {
     let senderControls;
 
