@@ -74,30 +74,6 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
  * @property {number} [timeBetweenHealthcheckCalls]
  */
 
-/**
- * @typedef {Object} AgentConfig
- * @property {AgentTracingConfig} [tracing]
- */
-
-/**
- * @typedef {Object} AgentTracingConfig
- * @property {AgentTracingHttpConfig} [http]
- * @property {AgentTracingKafkaConfig} [kafka]
- * @property {boolean|string} [spanBatchingEnabled]
- * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
- * @property {import('../tracing').Disable} [disable]
- */
-
-/**
- * @typedef {Object} AgentTracingHttpConfig
- * @property {Array.<string>} [extraHttpHeadersToCapture]
- */
-
-/**
- * @typedef {Object} AgentTracingKafkaConfig
- * @property {boolean} [traceCorrelation]
- */
-
 /** @type {import('../core').GenericLogger} */
 let logger;
 

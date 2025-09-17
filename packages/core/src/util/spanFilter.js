@@ -19,7 +19,7 @@ function init(config) {
 }
 
 /**
- * @param {import('../config').AgentConfig} extraConfig
+ * @param {import('@instana/collector/src/types/collector').AgentConfig} extraConfig
  */
 function activate(extraConfig) {
   /**
