@@ -159,6 +159,14 @@ exports.init = function init(userConfig = {}) {
 exports.getLogger = () => instanaLogger;
 
 /**
+ *
+ * @param {import('./agentConnection')} downstreamConnection
+ */
+exports.setDownstreamConnection = downstreamConnection => {
+  loggerToAgentStream.setDownstreamConnection(downstreamConnection);
+};
+
+/**
  * @param {import('@instana/core/src/core').GenericLogger | *} _logger
  * @returns {boolean}
  */

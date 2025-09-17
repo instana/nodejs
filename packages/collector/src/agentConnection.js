@@ -217,6 +217,52 @@ exports.checkWhetherAgentIsReadyToAcceptData = function checkWhetherAgentIsReady
 };
 
 /**
+ * @param {*} logLevel
+ * @param {*} message
+ * @param {*} stackTrace
+ */
+exports.sendLogToAgent = function sendLogToAgent(logLevel, message, stackTrace) {
+  /** @type {{m: string, st?: string}} */
+  const payloadObject = {
+    m: message.trim()
+  };
+
+  if (stackTrace) {
+    payloadObject.st = stackTrace.trim();
+  }
+
+  const payload = Buffer.from(JSON.stringify(payloadObject), 'utf8');
+
+  const req = http.request(
+    {
+      host: agentOpts.host,
+      port: agentOpts.port,
+      path: '/com.instana.agent.logger',
+      method: 'POST',
+      agent: http.agent,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Content-Length': payload.length,
+        'x-log-level': logLevel
+      }
+    },
+    res => {
+      res.resume();
+    }
+  );
+
+  function swallow() {
+    // swallow all errors
+  }
+
+  req.setTimeout(agentOpts.requestTimeout, swallow);
+  req.on('error', swallow);
+
+  req.write(payload);
+  req.end();
+};
+
+/**
  * @param {string} path
  * @param {(...args: *) => *} cb
  */

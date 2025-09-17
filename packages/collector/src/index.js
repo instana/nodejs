@@ -113,6 +113,8 @@ function init(userConfig = {}) {
   const announceCycle = require('./announceCycle');
   const metrics = require('./metrics');
 
+  log.setDownstreamConnection(agentConnection);
+
   pidStore.init(config);
   agentOpts.init(config);
   announceCycle.init(config, pidStore);

@@ -5,11 +5,14 @@
 
 'use strict';
 
-const log = require('./log');
-
 const pidStore = require('../pidStore/internalPidStore');
 
-/** @type {NodeJS.WritableStream} */
+/** @type {import('../agentConnection')} */
+let downstreamConnection;
+
+/** @type {NodeJS.WritableStream & {
+ *    setDownstreamConnection: (downstreamConnection: import('../agentConnection')) => void
+ * }} */
 module.exports = {
   /**
    * @param {*} record
@@ -30,7 +33,14 @@ module.exports = {
       stack = record.err.stack;
     }
 
-    log(logLevel, message, stack);
+    downstreamConnection.sendLogToAgent(logLevel, message, stack);
+  },
+
+  /**
+   * @param {import('../agentConnection')} _downstreamConnection
+   */
+  setDownstreamConnection: _downstreamConnection => {
+    downstreamConnection = _downstreamConnection;
   }
 };
 
