@@ -57,16 +57,22 @@ const handleMessageFn = async message => {
   if (withError) {
     throw new Error('Forced error');
   }
+
+  // SQS Consumer v14+: must return message(s) to acknowledge; v13 and earlier acknowledged implicitly.
+  return message;
 };
 
 const handleMessageBatchFn = async messages => {
   // make sure the span took at least one second to complete
   await delay(1000);
 
+  const processed = [];
+
   messages.forEach(async function (m) {
     sendToParent(m);
     await fetch(`http://localhost:${agentPort}?msg=${m.Body}`);
     log(`Sent an HTTP request after receiving message of id ${m.MessageId}`);
+    processed.push(m);
   });
 
   await delay(200);
@@ -74,7 +80,11 @@ const handleMessageBatchFn = async messages => {
   if (withError) {
     throw new Error('Forced error');
   }
+
+  // Explicit acknowledgment for v14+ (must return successfully processed messages)
+  return processed;
 };
+
 const fn = handleMessageBatch ? { handleMessageBatch: handleMessageBatchFn } : { handleMessage: handleMessageFn };
 
 const consumerApp = Consumer.create(
