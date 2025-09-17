@@ -33,8 +33,7 @@ if (!isExcludedFromInstrumentation) {
   if (currentProcessIsBullChildProcess) {
     require('./index')({
       tracing: {
-        // We ONLY have to activate immediately, because the process instruementation removes the instana headers.
-        // If we don't ACTIVATE immediately, we miss this event.
+        // If we don't ACTIVATE the process instrumentation for bull forked processes immediately, we miss this event.
         activateBullProcessInstrumentation: true,
         forceTransmissionStartingAt: 1
       }
