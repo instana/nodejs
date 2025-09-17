@@ -18,7 +18,6 @@ if (isNodeJsTooOld()) {
 }
 
 const { util: coreUtil } = require('@instana/core');
-const agentOpts = require('./agent/opts');
 
 // This file can be used with NODE_OPTIONS or `node --require` to instrument a Node.js app with Instana without
 // modifying the source code. See
@@ -27,22 +26,15 @@ const agentOpts = require('./agent/opts');
 
 const isExcludedFromInstrumentation = coreUtil.excludedFromInstrumentation && coreUtil.excludedFromInstrumentation();
 
-// In case this is a child process of an instrumented parent process we might receive the agent uuid from the parent
-// process to be able to produce and collect spans immediately without waiting for a connection to the agent in this
-// process.
-// TODO: This does not work because you would report spans with parent agent uuid and the child process pid -
-//       this is not compatible. Our codebase does not support this.
-const parentProcessAgentUuid = process.env.INSTANA_AGENT_UUID;
+// CASE: This process is a forked child process of a bull worker.
+const currentProcessIsBullChildProcess = process.env.INSTANA_IS_BULL_CHILD_PROCESS === 'true';
 
 if (!isExcludedFromInstrumentation) {
-  if (parentProcessAgentUuid) {
-    // @ts-ignore - Type 'string' is not assignable to type 'undefined'
-    // Probably because exports.agentUuid is set to undefined and export values were not supposed to be changed
-    // TODO: This has no effect. Remove! See comment above.
-    agentOpts.agentUuid = parentProcessAgentUuid;
+  if (currentProcessIsBullChildProcess) {
     require('./index')({
       tracing: {
-        activateImmediately: true,
+        // We ONLY have to activate immediately, because the process instruementation removes the instana headers.
+        // If we don't ACTIVATE immediately, we miss this event.
         activateBullProcessInstrumentation: true,
         forceTransmissionStartingAt: 1
       }

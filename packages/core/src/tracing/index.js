@@ -248,6 +248,7 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
     }
   }
 
+  // TODO: This is not used anymore. Investigate any usages. Potentially remove/deprecate in the next major release.
   if (config.tracing.activateImmediately) {
     exports.activate();
   }
