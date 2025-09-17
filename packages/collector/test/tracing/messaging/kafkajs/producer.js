@@ -13,7 +13,6 @@ process.on('SIGTERM', () => {
 
 require('../../../..')();
 
-const fetch = require('node-fetch-v2');
 const bodyParser = require('body-parser');
 const express = require('express');
 const { Kafka } = require('kafkajs');

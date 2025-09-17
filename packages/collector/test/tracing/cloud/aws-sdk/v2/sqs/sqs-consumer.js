@@ -21,7 +21,7 @@ const instana = require('../../../../../../src')();
 const express = require('express');
 const AWS = require('aws-sdk');
 const { Consumer } = require('sqs-consumer');
-const fetch = require('node-fetch-v2');
+
 const { sendToParent } = require('../../../../../../../core/test/test_util');
 const delay = require('../../../../../../../core/test/test_util/delay');
 

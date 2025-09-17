@@ -12,7 +12,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-import fetch from 'node-fetch-v2';
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';

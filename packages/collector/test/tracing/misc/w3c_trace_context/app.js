@@ -44,7 +44,7 @@ if (isInstana()) {
 
 const fs = require('fs');
 const path = require('path');
-const fetch = require('node-fetch-v2');
+
 const { parse } = require('url');
 
 const http2Promise = require('../../../test_util/http2Promise');
