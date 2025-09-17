@@ -15,7 +15,6 @@ process.on('SIGTERM', () => {
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-import fetch from 'node-fetch';
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';

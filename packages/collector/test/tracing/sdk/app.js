@@ -22,7 +22,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const path = require('path');
-const fetch = require('node-fetch-v2');
+
 const port = require('../../test_util/app-port')();
 const { delay, getTestAppLogger } = require('../../../../core/test/test_util');
 const DummyEmitter = require('./dummyEmitter');

@@ -9,7 +9,7 @@ process.on('SIGTERM', () => {
 });
 
 import http from 'http';
-import fetch from 'node-fetch';
+
 import getAppPort from '@instana/collector/test/test_util/app-port.js';
 
 const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;

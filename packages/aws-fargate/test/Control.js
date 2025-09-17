@@ -7,7 +7,6 @@
 
 const { fork } = require('child_process');
 const path = require('path');
-const fetch = require('node-fetch-v2');
 
 const config = require('@instana/core/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');

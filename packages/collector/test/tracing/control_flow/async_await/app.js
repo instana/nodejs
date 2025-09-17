@@ -11,8 +11,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const fetch = require('node-fetch-v2');
-
 require('../../../..')({
   agentPort: process.env.AGENT_PORT,
   level: 'warn',

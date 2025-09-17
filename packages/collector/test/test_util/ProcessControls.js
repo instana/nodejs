@@ -11,7 +11,6 @@ const _ = require('lodash');
 const fork = require('child_process').fork;
 const fs = require('fs');
 const path = require('path');
-const fetch = require('node-fetch-v2');
 
 const config = require('../../../core/test/config');
 const http2Promise = require('./http2Promise');

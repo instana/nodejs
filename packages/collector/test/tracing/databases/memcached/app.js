@@ -16,7 +16,7 @@ const express = require('express');
 const app = express();
 const port = require('../../../test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
-const fetch = require('node-fetch-v2');
+
 const logPrefix = `Memcached (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const Memcached = require('memcached');

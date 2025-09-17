@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 
 require('../../../../..')();
 const { delay } = require('../../../../../../core/test/test_util');
-const fetch = require('node-fetch-v2');
+
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 // eslint-disable-next-line no-console

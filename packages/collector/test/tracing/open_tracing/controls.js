@@ -6,7 +6,7 @@
 'use strict';
 
 const spawn = require('child_process').spawn;
-const fetch = require('node-fetch-v2');
+
 const path = require('path');
 const portfinder = require('../../test_util/portfinder');
 const testUtils = require('../../../../core/test/test_util');

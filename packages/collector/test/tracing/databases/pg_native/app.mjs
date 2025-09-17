@@ -16,7 +16,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 import Client from 'pg-native';
 import express from 'express';
 import morgan from 'morgan';
-import fetch from 'node-fetch';
+
 import bodyParser from 'body-parser';
 import getAppPort from '../../../test_util/app-port.js';
 const port = getAppPort();

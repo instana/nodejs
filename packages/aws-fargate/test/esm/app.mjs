@@ -3,7 +3,6 @@
  */
 
 import http from 'http';
-import fetch from 'node-fetch';
 
 const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;
 const port = process.env.TASK_HTTP_PORT;
