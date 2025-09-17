@@ -73,5 +73,8 @@
     "read-yaml-file": "^2.1.0",
     "semver": "^7.7.2",
     "shimmer": "^1.2.1"
+  },
+  "overrides": {
+    "debug": "^4.4.3"
   }
 }

@@ -67,5 +67,8 @@
   "dependencies": {
     "@instana/core": "4.24.0",
     "https-proxy-agent": "^7.0.6"
+  },
+  "overrides": {
+    "debug": "^4.4.3"
   }
 }
