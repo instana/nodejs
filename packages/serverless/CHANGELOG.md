@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.24.1](https://github.com/instana/nodejs/compare/v4.24.0...v4.24.1) (2025-09-18)
+
+
+### Bug Fixes
+
+* forced debug dependency to ^4.4.3 ([#2007](https://github.com/instana/nodejs/issues/2007)) ([3d5caaa](https://github.com/instana/nodejs/commit/3d5caaa70a9b841945a4adfe5978db54734cf9fa))
+
+
+
+
+
 # [4.24.0](https://github.com/instana/nodejs/compare/v4.23.1...v4.24.0) (2025-09-11)
 
 **Note:** Version bump only for package @instana/serverless

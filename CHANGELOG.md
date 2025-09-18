@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.24.1](https://github.com/instana/nodejs/compare/v4.24.0...v4.24.1) (2025-09-18)
+
+
+### Bug Fixes
+
+* bumped import-in-the-middle from 1.9.0 to 1.14.2 ([#1980](https://github.com/instana/nodejs/issues/1980)) ([cfd10ae](https://github.com/instana/nodejs/commit/cfd10aeb0f3468d9466c4bf0d813f7d073a685a6))
+* bumped tar from 6.2.1 to 7.4.3 ([#1996](https://github.com/instana/nodejs/issues/1996)) ([af3ac42](https://github.com/instana/nodejs/commit/af3ac427df4d136fd542598c7bfdb32cbf9274f7))
+* forced debug dependency to ^4.4.3 ([#2007](https://github.com/instana/nodejs/issues/2007)) ([3d5caaa](https://github.com/instana/nodejs/commit/3d5caaa70a9b841945a4adfe5978db54734cf9fa))
+* resolved pino compatibility issues for v18 ([#2014](https://github.com/instana/nodejs/issues/2014)) ([a286f29](https://github.com/instana/nodejs/commit/a286f2942e5620c80862322e35c3dd31f25a1757))
+
+
+### Reverts
+
+* Revert "build: bumped prisma from 6.15.0 to 6.16.0" ([17d4bd1](https://github.com/instana/nodejs/commit/17d4bd11114b2c6b5ad544176a441045acec7446))
+* Revert "build: bumped prisma from 6.16.0 to 6.16.1" ([4e9b225](https://github.com/instana/nodejs/commit/4e9b2250fa79697ff128d04b2b0981c94365e280))
+
+
+
+
+
 # [4.24.0](https://github.com/instana/nodejs/compare/v4.23.1...v4.24.0) (2025-09-11)
 
 

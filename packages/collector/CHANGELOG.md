@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.24.1](https://github.com/instana/nodejs/compare/v4.24.0...v4.24.1) (2025-09-18)
+
+
+### Bug Fixes
+
+* resolved pino compatibility issues for v18 ([#2014](https://github.com/instana/nodejs/issues/2014)) ([a286f29](https://github.com/instana/nodejs/commit/a286f2942e5620c80862322e35c3dd31f25a1757))
+
+
+
+
+
 # [4.24.0](https://github.com/instana/nodejs/compare/v4.23.1...v4.24.0) (2025-09-11)
 
 
