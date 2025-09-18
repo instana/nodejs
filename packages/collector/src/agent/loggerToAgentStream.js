@@ -33,7 +33,10 @@ module.exports = {
       stack = record.err.stack;
     }
 
-    downstreamConnection.sendLogToAgent(logLevel, message, stack);
+    // CASE: It could be that the preinit functionality calls the logger before the agent connection is properly set up.
+    if (downstreamConnection) {
+      downstreamConnection.sendLogToAgent(logLevel, message, stack);
+    }
   },
 
   /**
