@@ -58,8 +58,7 @@ const topic = 'rdkafka-topic';
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-// TODO: enable again. Its very flaky
-mochaSuiteFn.skip('tracing/messaging/node-rdkafka', function () {
+mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   this.timeout(config.getTestTimeout() * 10);
 
   globalAgent.setUpCleanUpHooks();

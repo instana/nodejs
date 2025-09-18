@@ -97,9 +97,8 @@ function setupConsumer() {
       span.end();
     });
   } else {
-    _consumer = new Kafka.KafkaConsumer(consumerOptions, {
-      'auto.offset.reset': 'earliest'
-    });
+    _consumer = new Kafka.KafkaConsumer(consumerOptions);
+
     _consumer.connect();
 
     _consumer.on('ready', () => {
