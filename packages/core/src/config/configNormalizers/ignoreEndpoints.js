@@ -25,8 +25,8 @@ exports.init = function init(config) {
  * Normalized internal structure:
  * - { [serviceName: string]: [{ methods: string[], endpoints: string[] }] }
  *
- * @param {import('../../tracing').IgnoreEndpoints} ignoreEndpointConfig
- * @returns {import('../../tracing').IgnoreEndpoints}
+ * @param {import('../../config/types').IgnoreEndpoints} ignoreEndpointConfig
+ * @returns {import('../../config/types').IgnoreEndpoints}
  */
 
 exports.normalizeConfig = function normalizeConfig(ignoreEndpointConfig) {

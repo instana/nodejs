@@ -42,7 +42,7 @@ exports.init = function init(config) {
 };
 
 /**
- * @param {import('../config').AgentConfig} extraConfig
+ * @param {import('@instana/collector/src/types/collector').AgentConfig} extraConfig
  */
 exports.activate = function activate(extraConfig) {
   disableInstrumentation.activate(extraConfig);

@@ -103,7 +103,7 @@ exports.init = function init(config, _downstreamConnection) {
 };
 
 /**
- * @param {import('../config').AgentConfig} extraConfig
+ * @param {import('@instana/collector/src/types/collector').AgentConfig} extraConfig
  */
 exports.activate = function activate(extraConfig) {
   if (!downstreamConnection) {

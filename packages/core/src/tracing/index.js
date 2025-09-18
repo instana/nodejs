@@ -118,27 +118,6 @@ if (customInstrumentations.length > 0) {
  * @property {boolean} [traceCorrelation]
  */
 
-/**
- * @typedef {Object.<string,IgnoreEndpointsFields[]>}  IgnoreEndpoints
- */
-
-/**
- * @typedef {Object} IgnoreEndpointsFields
- * @property {string[]} [methods]
- * @property {string[]} [endpoints]
- * @property {string[]} [connections]
- */
-
-/**
- * @typedef {TracingDisableOptions|boolean} Disable
- */
-
-/**
- * @typedef {Object} TracingDisableOptions
- * @property {string[]} [instrumentations]
- * @property {string[]} [groups]
- */
-
 /** @type {Array.<InstanaInstrumentedModule>} */
 let additionalInstrumentationModules = [];
 /** @type {Object.<string, InstanaInstrumentedModule>} */

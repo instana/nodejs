@@ -23,13 +23,13 @@ const deepMerge = require('../util/deepMerge');
  * @property {number} [transmissionDelay]
  * @property {number} [stackTraceLength]
  * @property {HTTPTracingOptions} [http]
- * @property {import('../tracing').Disable} [disable]
+ * @property {import('../config/types').Disable} [disable]
  * @property {Array<string>} [disabledTracers]
  * @property {boolean} [spanBatchingEnabled]
  * @property {boolean} [disableW3cTraceCorrelation]
  * @property {KafkaTracingOptions} [kafka]
  * @property {boolean} [allowRootExitSpan]
- * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
+ * @property {import('../config/types').IgnoreEndpoints} [ignoreEndpoints]
  * @property {boolean} [ignoreEndpointsDisableSuppression]
  * @property {boolean} [disableEOLEvents]
  */
@@ -72,30 +72,6 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
  * @property {InstanaTracingOption} [tracing]
  * @property {InstanaSecretsOption} [secrets]
  * @property {number} [timeBetweenHealthcheckCalls]
- */
-
-/**
- * @typedef {Object} AgentConfig
- * @property {AgentTracingConfig} [tracing]
- */
-
-/**
- * @typedef {Object} AgentTracingConfig
- * @property {AgentTracingHttpConfig} [http]
- * @property {AgentTracingKafkaConfig} [kafka]
- * @property {boolean|string} [spanBatchingEnabled]
- * @property {import('../tracing').IgnoreEndpoints} [ignoreEndpoints]
- * @property {import('../tracing').Disable} [disable]
- */
-
-/**
- * @typedef {Object} AgentTracingHttpConfig
- * @property {Array.<string>} [extraHttpHeadersToCapture]
- */
-
-/**
- * @typedef {Object} AgentTracingKafkaConfig
- * @property {boolean} [traceCorrelation]
  */
 
 /** @type {import('../core').GenericLogger} */
