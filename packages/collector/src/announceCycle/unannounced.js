@@ -43,9 +43,9 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @typedef {Object} TracingConfig
  * @property {Array.<string>} [extra-http-headers]
  * @property {KafkaTracingConfig} [kafka]
- * @property {import('@instana/core/src/tracing').IgnoreEndpoints} [ignore-endpoints]
+ * @property {import('@instana/core/src/config/types').IgnoreEndpoints} [ignore-endpoints]
  * @property {boolean} [span-batching-enabled]
- * @property {import('@instana/core/src/tracing').Disable} [disable]
+ * @property {import('@instana/core/src/config/types').Disable} [disable]
  */
 
 /**

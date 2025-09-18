@@ -5,7 +5,7 @@
 'use strict';
 
 /**
- * @type {import('../tracing').IgnoreEndpoints}
+ * @type {import('../config/types').IgnoreEndpoints}
  */
 let ignoreEndpoints;
 
@@ -48,7 +48,7 @@ const IGNORABLE_SPAN_TYPES = ['redis', 'dynamodb', 'kafka', 'node.http.server'];
 /**
  * @param {import('../core').InstanaBaseSpan} span
  * @param {string} spanTypeKey
- * @param {import('../tracing').IgnoreEndpointsFields} ignoreconfig
+ * @param {import('../config/types').IgnoreEndpointsFields} ignoreconfig
  * @returns {boolean}
  */
 function matchEndpoints(span, spanTypeKey, ignoreconfig) {
@@ -87,7 +87,7 @@ function matchEndpoints(span, spanTypeKey, ignoreconfig) {
 /**
  * @param {import("../core").InstanaBaseSpan} span
  * @param {string} spanTypeKey
- * @param {import('../tracing').IgnoreEndpointsFields} ignoreconfig
+ * @param {import('../config/types').IgnoreEndpointsFields} ignoreconfig
  * @returns {boolean}
  */
 function matchMethods(span, spanTypeKey, ignoreconfig) {
@@ -107,7 +107,7 @@ function matchMethods(span, spanTypeKey, ignoreconfig) {
 /**
  * @param {import("../core").InstanaBaseSpan} span
  * @param {string} spanTypeKey
- * @param {import('../tracing').IgnoreEndpointsFields} ignoreconfig
+ * @param {import('../config/types').IgnoreEndpointsFields} ignoreconfig
  * @returns {boolean}
  */
 function matchConnections(span, spanTypeKey, ignoreconfig) {
@@ -127,7 +127,7 @@ function matchConnections(span, spanTypeKey, ignoreconfig) {
 
 /**
  * @param {import("../core").InstanaBaseSpan} span
- * @param {import('../tracing').IgnoreEndpoints} ignoreEndpointsConfig
+ * @param {import('../config/types').IgnoreEndpoints} ignoreEndpointsConfig
  * @returns {boolean}
  */
 function shouldIgnore(span, ignoreEndpointsConfig) {

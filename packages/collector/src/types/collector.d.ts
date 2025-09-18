@@ -1,4 +1,5 @@
 import { GenericLogger } from '@instana/core/src/core';
+import { IgnoreEndpoints, Disable } from '@instana/core/src/config/types';
 
 export interface AgentConfig {
   tracing?: {
@@ -9,8 +10,8 @@ export interface AgentConfig {
       traceCorrelation?: boolean;
     };
     spanBatchingEnabled?: boolean | string;
-    ignoreEndpoints?: import('@instana/core/src/tracing').IgnoreEndpoints;
-    disable?: import('@instana/core/src/tracing').Disable;
+    ignoreEndpoints?: IgnoreEndpoints;
+    disable?: Disable;
     [key: string]: any;
   };
   [key: string]: any;
