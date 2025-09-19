@@ -46,6 +46,7 @@ const ignoreEndpoints = process.env.IGNORE_ENDPOINTS && JSON.parse(process.env.I
 const disable = process.env.AGENT_DISABLE_TRACING && JSON.parse(process.env.AGENT_DISABLE_TRACING);
 
 const uuids = {};
+const agentLogs = [];
 let discoveries = {};
 let rejectAnnounceAttempts = 0;
 let requests = {};
@@ -135,6 +136,16 @@ app.head(
     res.send('OK');
   })
 );
+
+app.post('/com.instana.agent.logger', (req, res) => {
+  logger.info('Received log message from agent: %j', req.body);
+  agentLogs.push(req.body);
+  res.sendStatus(200);
+});
+
+app.get('/agent/logs', (req, res) => {
+  res.json(agentLogs);
+});
 
 app.post(
   '/com.instana.plugin.nodejs.:pid',
