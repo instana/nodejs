@@ -355,16 +355,16 @@ app.get('/without-port', (req, res) => {
     }
   };
 
-  log('Initiating call to ', 'https://www.google.com/search');
+  log(`Initiating call to ${options.hostname}`);
 
   const request = httpModule.request(options, response => {
+    // eslint-disable-next-line no-unused-vars
     let data = '';
     response.on('data', chunk => {
       data += chunk;
     });
     response.on('end', () => {
-      log('Call completed with response:', data);
-      res.status(200).json({ message: 'Call completed', body: data });
+      res.status(200).json({ message: 'Call completed' });
     });
   });
 
