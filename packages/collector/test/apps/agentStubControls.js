@@ -175,6 +175,15 @@ class AgentStubControls {
     });
   }
 
+  getAgentLogs() {
+    return fetch(`http://127.0.0.1:${this.agentPort}/agent/logs`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then(response => response.json());
+  }
+
   async reset() {
     // eslint-disable-next-line no-console
     console.log(`[AgentStubControls] reset ${this.agentPort}`);
