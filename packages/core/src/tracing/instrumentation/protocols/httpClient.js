@@ -336,16 +336,27 @@ function constructFromUrlOpts(options, self, forceHttps) {
 
   try {
     const agent = options.agent || self.agent;
-    const port = options.port || options.defaultPort || (agent && agent.defaultPort) || 80;
+    const isHttps = forceHttps || options.protocol === 'https:' || (agent && agent.protocol === 'https:');
+
+    // Use protocol-aware default port, 443 for HTTPS, 80 for HTTP
+    const port = options.port || options.defaultPort || (agent && agent.defaultPort) || (isHttps ? 443 : 80);
+
     const protocol =
       (port === 443 && 'https:') ||
       options.protocol ||
       (agent && agent.protocol) ||
       (forceHttps && 'https:') ||
       'http:';
+
     const host = options.hostname || options.host || 'localhost';
     const path = options.path || '/';
-    return [sanitizeUrl(`${protocol}//${host}:${port}${path}`), splitAndFilter(path)];
+
+    // Only append port if it is NOT the default for the chosen protocol
+    // - For HTTPS, append port only if it is not 443
+    // - For HTTP, append port only if it is not 80
+    const hostWithPort = (isHttps && port !== 443) || (!isHttps && port !== 80) ? `${host}:${port}` : host;
+
+    return [sanitizeUrl(`${protocol}//${hostWithPort}${path}`), splitAndFilter(path)];
   } catch (e) {
     return [undefined, undefined];
   }
