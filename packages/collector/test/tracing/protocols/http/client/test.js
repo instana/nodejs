@@ -945,6 +945,40 @@ function registerTests(appUsesHttps) {
           })
         )
       ));
+
+  it('must NOT append :80 when no port is specified in the request', () =>
+    clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/without-port'
+      })
+      .then(() =>
+        retry(() =>
+          globalAgent.instance.getSpans().then(spans => {
+            const exitSpan = spans.find(
+              s =>
+                s.n === 'node.http.client' &&
+                s.k === 2 &&
+                s.data &&
+                s.data.http &&
+                s.data.http.method === 'GET' &&
+                /google\.com/.test(s.data.http.url)
+            );
+
+            expect(exitSpan).to.exist;
+
+            const expectedUrl = appUsesHttps ? 'https://www.google.com/search' : 'http://www.google.com/search';
+            expect(exitSpan.data.http.url).to.equal(expectedUrl);
+
+            const expectedProtocol = appUsesHttps ? 'https:' : 'http:';
+            expect(exitSpan.data.http.url.startsWith(expectedProtocol)).to.be.true;
+
+            if (exitSpan.data.http.host) {
+              expect(exitSpan.data.http.host).to.not.match(/:80$/);
+            }
+          })
+        )
+      ));
 }
 
 function registerConnectionRefusalTest(appUsesHttps) {

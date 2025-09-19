@@ -345,6 +345,37 @@ app.get('/downstream-call', (req, res) => {
   downstreamReq.end();
 });
 
+app.get('/without-port', (req, res) => {
+  const options = {
+    hostname: 'www.google.com',
+    method: 'GET',
+    path: '/search?q=nodejs',
+    headers: {
+      'User-Agent': 'Node.js'
+    }
+  };
+
+  log(`Initiating call to ${options.hostname}`);
+
+  const request = httpModule.request(options, response => {
+    // eslint-disable-next-line no-unused-vars
+    let data = '';
+    response.on('data', chunk => {
+      data += chunk;
+    });
+    response.on('end', () => {
+      res.status(200).json({ message: 'Call completed' });
+    });
+  });
+
+  request.on('error', err => {
+    log('Error in downstream call:', err.message);
+    res.sendStatus(500);
+  });
+
+  request.end();
+});
+
 function createUrl(req, urlPath) {
   const pathWithQuery = req.query.withQuery ? `${urlPath}?q1=some&pass=verysecret&q2=value` : urlPath;
   return req.query.urlObject ? new URL(pathWithQuery, baseUrl) : baseUrl + pathWithQuery;
