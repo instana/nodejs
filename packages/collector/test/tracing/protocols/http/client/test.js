@@ -946,7 +946,7 @@ function registerTests(appUsesHttps) {
         )
       ));
 
-  it('must NOT append :80 for HTTPS exit spans when no port is specified', () =>
+  it('must NOT append :80 when no port is specified in the request', () =>
     clientControls
       .sendRequest({
         method: 'GET',
