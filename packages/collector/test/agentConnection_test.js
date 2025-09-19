@@ -10,6 +10,7 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const testConfig = require('../../core/test/config');
+const normalizeConfig = require('../src/util/normalizeConfig');
 const testUtils = require('../../core/test/test_util');
 
 const dummyEntry = {
@@ -62,7 +63,6 @@ mochaSuiteFn('agent connection', function () {
   const { AgentStubControls } = require('./apps/agentStubControls');
   const agentControls = new AgentStubControls();
 
-  const config = { logger: testUtils.createFakeLogger() };
   const pidStore = require('../src/pidStore');
   let agentConnection;
 
@@ -74,6 +74,9 @@ mochaSuiteFn('agent connection', function () {
   });
 
   beforeEach(async () => {
+    const config = normalizeConfig({ agentPort: agentControls.getPort() });
+    config.logger = testUtils.createFakeLogger();
+
     agentConnection = require('../src/agentConnection');
     pidStore.init(config);
     agentConnection.init(config, pidStore);
@@ -83,7 +86,11 @@ mochaSuiteFn('agent connection', function () {
   });
 
   it('should send traces to agent', done => {
-    agentConnection.sendSpans(dummySpans, () => {
+    agentConnection.sendSpans(dummySpans, err => {
+      if (err) {
+        return done(err);
+      }
+
       agentControls
         .getSpans()
         .then(spans => {
@@ -98,7 +105,10 @@ mochaSuiteFn('agent connection', function () {
     const circularSpanWithoutCircularReference = Object.assign({}, circularSpan);
     delete circularSpanWithoutCircularReference.data.c.circular;
 
-    agentConnection.sendSpans(dummySpansWithCircularReference, () => {
+    agentConnection.sendSpans(dummySpansWithCircularReference, err => {
+      if (err) {
+        return done(err);
+      }
       agentControls
         .getSpans()
         .then(spans => {

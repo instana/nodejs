@@ -438,7 +438,6 @@ exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMe
  */
 function sendData(path, data, cb, ignore404 = false) {
   cb = util.atMostOnce(`callback for sendData: ${path}`, cb);
-
   const payloadAsString = JSON.stringify(data, circularReferenceRemover());
   if (typeof logger.trace === 'function') {
     logger.trace(`Sending data to ${path}.`);
