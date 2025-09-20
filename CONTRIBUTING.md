@@ -222,7 +222,7 @@ When adding new production dependencies, there is always the choice to either:
 * add the dependency with a version _range_, e.g. list it as `"package-name": "~x.y.z"` or `"package-name": "^x.y.z"` in the `package.json` file, or
 * _pin_ an exact version, that is, add it as `"package-name": "x.y.z"` to `package.json`.
 
-Since we maintain packages that are used as _libraries_ by others (in contrast to maintaining an _application_ that we run ourselves), we should usually allow a version range of type `^` for all dependencies, unless there are very specific reasons not to. A `^` version range of `^1.2.3` matches all versions of `>= 1.2.3` and `< 2.0.0`, that is, it allows newer patch and minor versions, but no newer major version. This allows users of `@instana/collector` and other `@instana/...` packages  to update any transitive dependency these packages have on their own, without depending on IBM to release a new version of these packages. This is particularly relevant when transitive dependencies get flagged by vulnerability scanners. Nevertheless, we also always update depdencies when they get flagged by `npm audit` in a timely manner.
+Since we maintain packages that are used as _libraries_ by others (in contrast to maintaining an _application_ that we run ourselves), we should usually allow a version range of type `^` for all dependencies, unless there are very specific reasons not to. A `^` version range of `^1.2.3` matches all versions of `>= 1.2.3` and `< 2.0.0`, that is, it allows newer patch and minor versions, but no newer major version. This allows users of `@instana/collector` and other `@instana/...` packages  to update any transitive dependency these packages have on their own, without depending on IBM to release a new version of these packages. This is particularly relevant when transitive dependencies get flagged by vulnerability scanners. Nevertheless, we also always update dependencies when they get flagged by `npm audit` in a timely manner.
 
 Possible reasons to pin an exact version of a dependency:
 * We are using internals of the library (monkey-patching functions, depending on internal APIs etc.)
@@ -239,7 +239,7 @@ https://github.com/instana/nodejs/pull/932
 
 ## Naming
 
-Please choose a strong and meaninful name for the package. Discuss the name within the team.
+Please choose a strong and meaningful name for the package. Discuss the name within the team.
 
 ### Set Publishing Access For The New Package
 
@@ -358,7 +358,7 @@ Steps to follow
 
 - Create an IAM user if you don't already have one with the required rights.
 - Create `credentials` file on the following folder location, `~/.aws`
-- Add below informations to the newly created `credentials` file. The access key and secret key can be obtained from the IAM user account.
+- Add below information to the newly created `credentials` file. The access key and secret key can be obtained from the IAM user account.
 ```javascript
 [default]
 aws_access_key_id = <add your access key>
