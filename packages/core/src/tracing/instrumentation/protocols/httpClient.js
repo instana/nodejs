@@ -336,10 +336,10 @@ function constructFromUrlOpts(options, self, forceHttps) {
 
   try {
     const agent = options.agent || self.agent;
-    const isHttps = forceHttps || options.protocol === 'https:' || (agent && agent.protocol === 'https:');
+    const isHttps = forceHttps || options.protocol === 'https:' || (agent?.protocol === 'https:');
 
     // Use protocol-aware default port, 443 for HTTPS, 80 for HTTP
-    const port = options.port || options.defaultPort || (agent && agent.defaultPort) || (isHttps ? 443 : 80);
+    const port = options.port || options.defaultPort || (agent?.defaultPort) || (isHttps ? 443 : 80);
 
     const protocol =
       (port === 443 && 'https:') ||
