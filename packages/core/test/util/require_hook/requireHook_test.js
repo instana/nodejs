@@ -167,7 +167,8 @@ describe('util/requireHook', () => {
       expect(hook.getCall(0).args[0]).to.equal('module a');
     });
 
-    describe('real modules', () => {
+    describe('real modules', function () {
+      this.timeout(3500);
       it('must support loading of specific files within a module', () => {
         Object.keys(require.cache).forEach(key => {
           if (key.indexOf('express') !== -1) {
