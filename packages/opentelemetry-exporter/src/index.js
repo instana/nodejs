@@ -247,7 +247,7 @@ class InstanaExporter {
     //   If code!=STATUS_CODE_UNSET then the value of `deprecated_code` MUST be
     //   ignored, the `code` field is the sole carrier of the status.
 
-    // Adittionally to these rules, in our tests, deprecated_code / deprecatedCode is never present.
+    // Additionally to these rules, in our tests, deprecated_code / deprecatedCode is never present.
     // In these cases we will assume that only the new code status are present, because these are the status codes
     // present in the interface.
 

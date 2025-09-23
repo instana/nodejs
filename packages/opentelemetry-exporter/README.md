@@ -43,7 +43,7 @@ const { InstanaExporter } = require('@instana/opentelemetry-exporter');
 // * INSTANA_AGENT_KEY
 // * INSTANA_ENDPOINT_URL
 //
-// Alternatively, you can pass these values as an argument to the constructor (see bellow), although it is strongly
+// Alternatively, you can pass these values as an argument to the constructor (see below), although it is strongly
 // recommended that such sensitive data is not hard coded in the code base.
 // Eg: const instanaTraceExporter = new InstanaExporter({ agentKey: 'agent_key', endpointUrl: 'endpoint_url' });
 const instanaTraceExporter = new InstanaExporter();
