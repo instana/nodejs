@@ -1330,7 +1330,13 @@ spec:
         - name: coverage
           value: $(params.coverage)    
         - name: continuous-delivery-context-secret
-          value: "secure-properties"          
+          value: "secure-properties"  
+        - name: pr-number
+          value: $(params.pr-number)
+        - name: pr-branch
+          value: $(params.pr-branch)
+        - name: target-branch
+          value: $(params.target-branch)       
     - name: set-tests-running-final
       taskRef:
         name: git-set-commit-status

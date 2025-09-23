@@ -16,9 +16,9 @@ spec:
     - name: coverage
       default: "true"
     - name: pr-number
-      value: $(params.pr-number)
+      default: ""
     - name: pr-branch
-      value: $(params.pr-branch)
+      default: ""
     - name: target-branch
       default: "main"
   steps:
@@ -48,6 +48,13 @@ spec:
           echo "PIPELINE_RESULT=Succeeded"
           echo "PIPELINE_RESULT=Succeeded" >> $ARTIFACTS_PATH/$PROPERTIES_FILE
         fi
+
+        echo "=========before===================="
+          echo "Running SonarCloud PR analysis"
+          echo "PR Number: $(params.pr-number)"
+          echo "PR Branch: $(params.pr-branch)"
+          echo "Target Branch: $(params.target-branch)"
+          echo "=============================="
 
         if [ "$(params.coverage)" == "true" ]; then
           echo "Running ESLint..."
