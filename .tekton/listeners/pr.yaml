@@ -39,6 +39,8 @@ spec:
       value: $(params.skip-cache)
     - name: context
       value: "node-dev"
+    - name: coverage
+      value: "true"
 
 ---
 
