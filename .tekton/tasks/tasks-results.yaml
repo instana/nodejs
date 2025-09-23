@@ -35,12 +35,10 @@ spec:
               key: "SONAR_TOKEN"
       script: |
         #!/bin/bash
-        set -e
 
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
-        # Pipeline result
         if find "$ARTIFACTS_PATH" -maxdepth 1 -type f -name '*.failed' | grep -q .; then
           echo "PIPELINE_RESULT=Failed"
           echo "PIPELINE_RESULT=Failed" >> $ARTIFACTS_PATH/$PROPERTIES_FILE
@@ -49,12 +47,6 @@ spec:
           echo "PIPELINE_RESULT=Succeeded" >> $ARTIFACTS_PATH/$PROPERTIES_FILE
         fi
 
-        echo "=========before===================="
-          echo "Running SonarCloud PR analysis"
-          echo "PR Number: $(params.pr-number)"
-          echo "PR Branch: $(params.pr-branch)"
-          echo "Target Branch: $(params.target-branch)"
-          echo "=============================="
 
         if [ "$(params.coverage)" == "true" ]; then
           echo "Running ESLint..."
@@ -65,12 +57,6 @@ spec:
 
           echo "Running SonarCloud analysis..."
           if [ -n "$(params.pr-number)" ]; then
-            echo "=============================="
-            echo "Running SonarCloud PR analysis"
-            echo "PR Number: $(params.pr-number)"
-            echo "PR Branch: $(params.pr-branch)"
-            echo "Target Branch: $(params.target-branch)"
-            echo "=============================="
             sonar -Dsonar.login=$SONAR_TOKEN \
                   -Dsonar.pullrequest.key=$(params.pr-number) \
                   -Dsonar.pullrequest.branch=$(params.pr-branch) \
