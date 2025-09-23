@@ -14,7 +14,7 @@ describe('headers util', () => {
     expect(headersUtil.readHeaderKeyValuePairCaseInsensitive(null, 'key')).to.be.undefined;
   });
 
-  it('returns undefined when no key is not a string', () => {
+  it('returns undefined when key is not a string', () => {
     expect(headersUtil.readHeaderKeyValuePairCaseInsensitive({ foo: 'bar' }, [])).to.be.undefined;
   });
 

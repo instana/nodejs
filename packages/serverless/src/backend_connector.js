@@ -17,7 +17,7 @@ const layerExtensionPort = process.env.INSTANA_LAYER_EXTENSION_PORT
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
 
 // NOTE: The heartbeat is usually really, really fast (<30ms).
-//      But we have seen in some cases that it can take up to 500ms.
+//       But we have seen in some cases that it can take up to 500ms.
 const layerExtensionHeartbeatTimeout = 500;
 
 // NOTE: The initial heartbeat can be very slow when the Lambda is in cold start.
@@ -472,7 +472,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
       } else {
         logger.warn(
           `[${requestId}] Could not send trace data to ${resourcePath}. ` +
-            `The Instana back end seems to be unavailable. ${e?.message} , ${e?.stack}`
+            `The Instana back end seems to be unavailable. ${e?.message}, ${e?.stack}`
         );
       }
 
