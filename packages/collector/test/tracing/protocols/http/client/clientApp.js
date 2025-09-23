@@ -103,7 +103,7 @@ app.get('/request-options-only', (req, res) => {
       'x-my-exit-set-on-request-multi-header-value-1',
       'x-my-exit-set-on-request-multi-header-value-2'
     ]);
-    requestObject.setHeader('x-my-exit-set-on-request-not-captured-jeader', 'whatever');
+    requestObject.setHeader('x-my-exit-set-on-request-not-captured-header', 'whatever');
   }
   requestObject.end();
 });

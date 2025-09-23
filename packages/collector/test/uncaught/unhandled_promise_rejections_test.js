@@ -89,7 +89,7 @@ mochaSuiteFn('unhandled promise rejections', function () {
         return testUtils.retry(() =>
           agentControls.getEvents().then(events => {
             testUtils.expectAtLeastOneMatching(events, [
-              event => expect(event.title).to.equal('An unhandled promise rejection occured in a Node.js process.'),
+              event => expect(event.title).to.equal('An unhandled promise rejection occurred in a Node.js process.'),
               event => expect(event.text).to.contain('Unhandled Promise Rejection'),
               event => expect(event.text).to.contain('Stack:'),
               event =>
@@ -119,7 +119,7 @@ mochaSuiteFn('unhandled promise rejections', function () {
           return testUtils.retry(() =>
             agentControls.getEvents().then(events => {
               testUtils.expectAtLeastOneMatching(events, [
-                event => expect(event.title).to.equal('An unhandled promise rejection occured in a Node.js process.'),
+                event => expect(event.title).to.equal('An unhandled promise rejection occurred in a Node.js process.'),
                 event => expect(event.text).to.equal('"rejecting a promise with a string value"'),
                 event =>
                   expect(event.plugin).to.equal(
@@ -148,7 +148,7 @@ mochaSuiteFn('unhandled promise rejections', function () {
         return testUtils.retry(() =>
           agentControls.getEvents().then(events => {
             testUtils.expectAtLeastOneMatching(events, [
-              event => expect(event.title).to.equal('An unhandled promise rejection occured in a Node.js process.'),
+              event => expect(event.title).to.equal('An unhandled promise rejection occurred in a Node.js process.'),
               event =>
                 expect(event.text).to.equal('No "reason" parameter has been provided when the promise was rejected.'),
               event =>

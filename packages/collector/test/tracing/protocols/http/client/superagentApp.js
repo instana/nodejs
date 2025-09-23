@@ -101,7 +101,7 @@ app.get(
 
 app.listen(port, () => {
   // Instrumenting superagent late on demand. That we do it in app.listen is quite arbitrary but since this happens
-  // aynchronously after bootstrapping the app, it emulates a common real world usage.
+  // asynchronously after bootstrapping the app, it emulates a common real world usage.
   instana.experimental.instrument('superagent', superagent);
 
   log(`Listening on port: ${port}`);

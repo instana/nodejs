@@ -97,7 +97,7 @@ setTimeout(() => {
 }, 1500);
 
 consumer.on('error', err => {
-  log('Error occured in consumer:', err);
+  log('Error occurred in consumer:', err);
   const span = instana.currentSpan();
   span.disableAutoEnd();
   receivedErrors.push(err);

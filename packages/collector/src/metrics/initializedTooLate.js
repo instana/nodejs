@@ -12,7 +12,7 @@ exports.currentPayload = undefined;
 
 /*
  * This is now also reported as a monitoring event, see ../util/initializedTooLate.js. We keep the custom reporting
- * mechanism via snapshot data around for a while in parallel to accomodate for older self hosted environments that do
+ * mechanism via snapshot data around for a while in parallel to accommodate for older self hosted environments that do
  * not yet support monitoring events.
  *
  * This metric can be removed a while later.
