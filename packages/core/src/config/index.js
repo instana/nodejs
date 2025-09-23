@@ -700,8 +700,8 @@ function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) 
 
   if (typeof configValue !== 'number' || isNaN(configValue)) {
     logger.warn(
-      `The value of ${configPath} (or ${envVarKey}) ("${originalValue}") is ' +
-        'not numerical or cannot be parsed to a numerical value. Assuming the default value ${defaultValue}.`
+      `The value of ${configPath} (or ${envVarKey}) ("${originalValue}") is ` +
+        `not numerical or cannot be parsed to a numerical value. Assuming the default value ${defaultValue}.`
     );
     return defaultValue;
   }

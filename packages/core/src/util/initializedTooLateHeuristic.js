@@ -10,7 +10,7 @@ let logger;
 let firstCall = true;
 let hasBeenInitializedTooLate = false;
 
-// These patterns is used to check against the loaded modules to determine if a module has been loaded earlier or not.
+// These patterns are used to check against the loaded modules to determine if a module has been loaded earlier or not.
 
 let patterns = [
   /\/@apollo\/gateway\/dist\//,

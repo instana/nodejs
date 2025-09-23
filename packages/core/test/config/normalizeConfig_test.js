@@ -51,7 +51,7 @@ describe('config.normalizeConfig', () => {
     checkDefaults(coreConfig.normalize());
     checkDefaults(coreConfig.normalize({}));
     checkDefaults(coreConfig.normalize({ tracing: {}, metrics: {} }));
-    checkDefaults(coreConfig.normalize({ unknowConfigOption: 13 }));
+    checkDefaults(coreConfig.normalize({ unknownConfigOption: 13 }));
   });
 
   it('should accept service name', () => {
