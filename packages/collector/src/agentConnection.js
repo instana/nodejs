@@ -311,7 +311,7 @@ exports.sendMetrics = function sendMetrics(data, cb) {
     } else {
       try {
         // 2016-09-11
-        // Older sensor versions will not repond with a JSON
+        // Older sensor versions will not respond with a JSON
         // structure. Support a smooth update path.
         body = JSON.parse(body);
       } catch (e) {

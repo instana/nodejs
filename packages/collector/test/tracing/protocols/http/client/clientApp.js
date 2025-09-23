@@ -204,7 +204,7 @@ app.get('/request-malformed-url', (req, res) => {
         { ca: cert }, //
         () => {
           // eslint-disable-next-line no-console
-          console.log('This should not have happend!');
+          console.log('This should not have happened!');
         }
       )
       .end();
