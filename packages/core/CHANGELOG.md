@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.25.0](https://github.com/instana/nodejs/compare/v4.24.1...v4.25.0) (2025-09-23)
+
+
+### Bug Fixes
+
+* **http:** correctly handled default ports for HTTP/HTTPS exit spans ([#2015](https://github.com/instana/nodejs/issues/2015)) ([19e17dc](https://github.com/instana/nodejs/commit/19e17dcf74ab631d06874acf1ab3439812fb7214))
+
+
+
+
+
 ## [4.24.1](https://github.com/instana/nodejs/compare/v4.24.0...v4.24.1) (2025-09-18)
 
 

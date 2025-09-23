@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.25.0](https://github.com/instana/nodejs/compare/v4.24.1...v4.25.0) (2025-09-23)
+
+
+### Bug Fixes
+
+* bumped pino from 9.9.5 to 9.11.0 ([#2018](https://github.com/instana/nodejs/issues/2018)) ([dc9f88a](https://github.com/instana/nodejs/commit/dc9f88ab22a3113220978132366443d6ab600d57))
+* **http:** correctly handled default ports for HTTP/HTTPS exit spans ([#2015](https://github.com/instana/nodejs/issues/2015)) ([19e17dc](https://github.com/instana/nodejs/commit/19e17dcf74ab631d06874acf1ab3439812fb7214))
+
+
+### Features
+
+* added support for sqs-consumer  v14 ([#2004](https://github.com/instana/nodejs/issues/2004)) ([b3a8b30](https://github.com/instana/nodejs/commit/b3a8b30d9a85faa640135839cb3643023ed00b40))
+
+
+### Reverts
+
+* Revert "fix: resolved pino compatibility issues for v18 (#2014)" ([8ce3c91](https://github.com/instana/nodejs/commit/8ce3c911d6921ddae1e1978f6ce3c6fdd54a7b82)), closes [#2014](https://github.com/instana/nodejs/issues/2014)
+
+
+
+
+
 ## [4.24.1](https://github.com/instana/nodejs/compare/v4.24.0...v4.24.1) (2025-09-18)
 
 
