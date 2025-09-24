@@ -20,7 +20,7 @@ const instana = require('../../../..')({
 });
 
 const amqp = require('amqplib');
-const fetch = require('node-fetch-v2');
+
 const exchange = require('./amqpUtil').exchange;
 const queueName = require('./amqpUtil').queueName;
 const queueNameGet = require('./amqpUtil').queueNameGet;
