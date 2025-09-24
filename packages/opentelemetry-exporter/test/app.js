@@ -31,7 +31,8 @@ const app = express();
 
 app.get('/otel-test', (_req, res) => {
   delay(500)
-    .then(() => fetch('https://www.example.com'))
+    .then(() => fetch('https://www.google.com'))
+    .then(response => response.text())
     .then(text => {
       res.send({ ok: true, data: `${text.substr(0, 10)}...` });
     })
@@ -42,7 +43,8 @@ app.get('/otel-test', (_req, res) => {
 
 app.post('/otel-post', (_req, res) => {
   delay(500)
-    .then(() => fetch('https://www.example.com'))
+    .then(() => fetch('https://www.google.com', { method: 'POST' }))
+    .then(response => response.text())
     .then(text => {
       res.send({ ok: true, data: `${text.substr(0, 10)}...` });
     })
