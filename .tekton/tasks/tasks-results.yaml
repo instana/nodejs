@@ -14,7 +14,13 @@ spec:
     - name: continuous-delivery-context-secret
       value: $(params.continuous-delivery-context-secret)
     - name: coverage
-      value: $(params.coverage)
+      default: "true"
+    - name: pr-number
+      default: ""
+    - name: pr-branch
+      default: ""
+    - name: target-branch
+      default: "main"
   steps:
     - name: print-all-results
       image: public.ecr.aws/docker/library/node:$(params.node-version)
@@ -41,6 +47,7 @@ spec:
           echo "PIPELINE_RESULT=Succeeded" >> $ARTIFACTS_PATH/$PROPERTIES_FILE
         fi
 
+
         if [ "$(params.coverage)" == "true" ]; then
           echo "Running ESLint..."
           npx eslint packages/ -f json -o eslint-report.json || true
@@ -49,5 +56,13 @@ spec:
           npm install -g @sonar/scan
 
           echo "Running SonarCloud analysis..."
-          sonar
+          if [ -n "$(params.pr-number)" ]; then
+            sonar -Dsonar.login=$SONAR_TOKEN \
+                  -Dsonar.pullrequest.key=$(params.pr-number) \
+                  -Dsonar.pullrequest.branch=$(params.pr-branch) \
+                  -Dsonar.pullrequest.base=$(params.target-branch)
+          else
+            # Main branch analysis
+            sonar -Dsonar.login=$SONAR_TOKEN
+          fi
         fi
