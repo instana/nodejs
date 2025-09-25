@@ -26,8 +26,6 @@ spec:
             value: "localhost:2181"
           - name: "KAFKA_CREATE_TOPICS"
             value: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
-          - name: "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP"
-            value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
           - name: "KAFKA_ADVERTISED_LISTENERS"
             value: "PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092"
           - name: "KAFKA_LISTENERS"
@@ -36,10 +34,12 @@ spec:
             value: "1"
           - name: "KAFKA_DEFAULT_REPLICATION_FACTOR"
             value: "1"
+          - name: "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP"
+            value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT"
       readinessProbe:
           tcpSocket:
             port: 9092 
-          initialDelaySeconds: 30
+          initialDelaySeconds: 90
           periodSeconds: 2
           timeoutSeconds: 60
     - name: schema-registry
@@ -51,7 +51,7 @@ spec:
           - name: "SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL"
             value: "localhost:2181"
           - name: "SCHEMA_REGISTRY_LISTENERS"
-            value: "http://localhost:8081"
+            value: "http://0.0.0.0:8081"
           - name: "SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS"
             value: "PLAINTEXT://localhost:29092"
           - name: "SCHEMA_REGISTRY_DEBUG"
