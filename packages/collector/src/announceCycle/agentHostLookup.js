@@ -230,6 +230,7 @@ function handleResponse(host, res, cb) {
       );
       return;
     }
+
     if (responseJson.version !== undefined) {
       cb(null);
     } else {
