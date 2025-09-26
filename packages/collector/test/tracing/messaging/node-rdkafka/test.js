@@ -51,15 +51,16 @@ const SINGLE_TEST_PROPS = {
 };
 
 const retryTime = 5000;
-const retryTimeUntil = () => Date.now() + 1000 * 30;
+const retryTimeUntil = () => Date.now() + 1000 * 60;
 const checkStartedEvery = 5000;
 const checkStartedUntil = () => Date.now() + 1000 * 120;
 const topic = 'rdkafka-topic';
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+// node bin/start-test-containers.js --zookeeper --kafka --schema-registry --kafka-topics
 mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
-  this.timeout(config.getTestTimeout() * 10);
+  this.timeout(config.getTestTimeout() * 20);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;

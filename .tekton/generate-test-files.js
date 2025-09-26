@@ -58,6 +58,7 @@ const groups = {
     sidecars: [
       'zookeeper',
       'kafka',
+      'kafka-topics',
       'schema-registry',
       'redis',
       'nats',
@@ -186,6 +187,26 @@ for (const [groupName, { sidecars: groupSidecars, condition, split, subname, sco
           templ = templ.replace('{{env}}', '');
         }
 
+        if (sidecar.command) {
+          let res = 'command:\n';
+
+          sidecar.command.forEach(cmd => {
+            if (typeof cmd === 'string' && (cmd.includes('\n') || cmd.includes('&&'))) {
+              res += `          - |\n`;
+              const lines = cmd.split('\n').length > 1 ? cmd.split('\n') : cmd.split('&&').map(c => c.trim());
+              lines.forEach(line => {
+                res += `            ${line}\n`;
+              });
+            } else {
+              res += `          - ${JSON.stringify(cmd)}\n`;
+            }
+          });
+
+          templ = templ.replace('{{command}}', res);
+        } else {
+          templ = templ.replace('{{command}}', '');
+        }
+
         if (sidecar.args) {
           let res = 'args:\n';
 
@@ -248,7 +269,6 @@ for (const [groupName, { sidecars: groupSidecars, condition, split, subname, sco
           templ = templ.replace('{{readinessProbe}}', '');
         }
 
-        templ = templ.replace('{{command}}', '');
         templ = templ.replace('{{readinessProbe}}', '');
 
         templ = templ
