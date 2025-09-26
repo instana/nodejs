@@ -76,10 +76,6 @@
         { "name": "KAFKA_BROKER_ID", "value": "1" },
         { "name": "KAFKA_ZOOKEEPER_CONNECT", "value": "localhost:2181" },
         {
-          "name": "KAFKA_AUTO_CREATE_TOPICS_ENABLE",
-          "value": "true"
-        },
-        {
           "name": "KAFKA_ADVERTISED_LISTENERS",
           "value": "PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092"
         },
