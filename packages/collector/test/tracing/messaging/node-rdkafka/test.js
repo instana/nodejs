@@ -58,6 +58,7 @@ const topic = 'rdkafka-topic';
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+// node bin/start-test-containers.js --zookeeper --kafka --schema-registry --kafka-topics
 mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   this.timeout(config.getTestTimeout() * 20);
 

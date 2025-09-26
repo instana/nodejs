@@ -30,6 +30,7 @@ const retryTimeUntil = () => {
   return Date.now() + 60000;
 };
 
+// node bin/start-test-containers.js --zookeeper --kafka --schema-registry --kafka-topics
 mochaSuiteFn('tracing/kafkajs', function () {
   this.timeout(config.getTestTimeout() * 5);
 

@@ -44,6 +44,8 @@ const topic = 'kafka-avro-topic';
 // NOTE: flaky on CI
 // NOTE: kafka-avro is unmaintained. Only works for Node < 16.
 // https://github.com/waldophotos/kafka-avro
+
+// node bin/start-test-containers.js --zookeeper --kafka --schema-registry --kafka-topics
 describe.skip('tracing/messaging/kafka-avro', function () {
   this.timeout(1000 * 180);
 
