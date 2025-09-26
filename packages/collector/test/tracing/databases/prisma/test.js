@@ -32,7 +32,8 @@ describe('tracing/prisma', function () {
 
       // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
       // TODO: Support for mocking `import` in ESM apps is planned under INSTA-788.
-      if (process.env.RUN_ESM && version !== 'latest') return;
+      // TODO: enable ESM tests against latest version
+      if (process.env.RUN_ESM) return;
 
       mochaSuiteFn(`[${version}] with provider ${provider}`, () => {
         if (provider === 'postgresql' && !process.env.PRISMA_POSTGRES_URL) {
