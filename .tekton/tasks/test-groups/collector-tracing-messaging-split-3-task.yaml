@@ -55,11 +55,11 @@ spec:
           - name: "SCHEMA_REGISTRY_HOST_NAME"
             value: "schema-registry"
           - name: "SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL"
-            value: "localhost:2181"
+            value: "0.0.0.0:2181"
           - name: "SCHEMA_REGISTRY_LISTENERS"
             value: "http://0.0.0.0:8081"
           - name: "SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS"
-            value: "PLAINTEXT://localhost:29092"
+            value: "PLAINTEXT://0.0.0.0:29092"
           - name: "SCHEMA_REGISTRY_DEBUG"
             value: "true"
       readinessProbe:
