@@ -104,6 +104,15 @@
       }
     },
     {
+      "name": "kafka-topics",
+      "image": "confluentinc/cp-kafka:7.9.1",
+      "args": [
+        "bin/bash",
+        "-lc",
+        "kafka_server=\"kafka:29092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic kafka-avro-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
+      ]
+    },
+    {
       "name": "postgres",
       "image": "public.ecr.aws/docker/library/postgres:10.16",
       "env": [

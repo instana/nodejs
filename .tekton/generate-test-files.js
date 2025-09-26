@@ -58,6 +58,7 @@ const groups = {
     sidecars: [
       'zookeeper',
       'kafka',
+      'kafka-topics',
       'schema-registry',
       'redis',
       'nats',
