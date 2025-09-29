@@ -119,6 +119,7 @@ server.on('request', (req, res) => {
 function endResponse(query, res, body) {
   if (query.writeHead) {
     res.writeHead(200, {
+      'content-type': 'text/plain',
       'X-WRITE-HEAD-RESPONSE-HEADER': 'Write Head Response Header Value',
       'x-write-head-response-multi-header': ['value1', 'value2'],
       'x-write-head-response-not-captured-header': "just don't"

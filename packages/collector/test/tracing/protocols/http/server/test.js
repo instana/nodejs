@@ -26,6 +26,7 @@ mochaSuiteFn('tracing/http(s) server', function () {
     await agentControls.startAgent({
       extraHeaders: [
         //
+        'content-type',
         'X-My-Entry-Request-Header',
         'X-My-Entry-Request-Multi-Header',
         'X-My-Entry-Response-Header',
@@ -329,6 +330,7 @@ function registerTests(agentControls, appUsesHttps, useHttp2CompatApi) {
             const span = verifyThereIsExactlyOneHttpEntry(spans, controls, '/', 'GET', 200, false, false);
             expect(span.data.http.header).to.be.an('object');
             expect(span.data.http.header).to.deep.equal({
+              'content-type': 'text/plain',
               'x-write-head-response-header': expectedResponeHeaderValue,
               'x-write-head-response-multi-header': 'value1, value2'
             });
@@ -397,6 +399,7 @@ function registerTests(agentControls, appUsesHttps, useHttp2CompatApi) {
             expect(span.data.http.header).to.be.an('object');
             if (this.title === 'http2 compat mode') {
               expect(span.data.http.header).to.deep.equal({
+                'content-type': 'text/plain',
                 'x-my-entry-request-header': requestHeaderValue,
                 'x-my-entry-request-multi-header': 'value1, value2',
                 'x-my-entry-response-header': expectedResponeHeaderValue1,
@@ -406,6 +409,7 @@ function registerTests(agentControls, appUsesHttps, useHttp2CompatApi) {
               });
             } else {
               expect(span.data.http.header).to.deep.equal({
+                'content-type': 'text/plain',
                 'x-my-entry-request-header': requestHeaderValue,
                 'x-my-entry-request-multi-header': 'value1,value2',
                 'x-my-entry-response-header': expectedResponeHeaderValue1,
