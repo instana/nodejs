@@ -49,7 +49,6 @@ spec:
           echo "PIPELINE_RESULT=Succeeded" >> $ARTIFACTS_PATH/$PROPERTIES_FILE
         fi
 
-
         if [ "$(params.coverage)" == "true" ]; then
           echo "Running ESLint..."
           npx eslint packages/ -f json -o eslint-report.json || true
@@ -57,18 +56,19 @@ spec:
           echo "Installing SonarCloud scanner..."
           npm install -g @sonar/scan
 
-        echo "Running SonarCloud analysis..."
-        if [ -n "$(params.pr-number)" ]; then
-          if [ "$(params.pr-action)" == "review_requested" ]; then
-            echo "PR scan triggered for PR #$(params.pr-number)"
-            sonar -Dsonar.login=$SONAR_TOKEN \
-                  -Dsonar.pullrequest.key=$(params.pr-number) \
-                  -Dsonar.pullrequest.branch=$(params.pr-branch) \
-                  -Dsonar.pullrequest.base=$(params.target-branch)
+          echo "Running SonarCloud analysis..."
+          if [ -n "$(params.pr-number)" ]; then
+            if [ "$(params.pr-action)" == "review_requested" ]; then
+              echo "PR scan triggered for PR #$(params.pr-number)"
+              sonar -Dsonar.login=$SONAR_TOKEN \
+                    -Dsonar.pullrequest.key=$(params.pr-number) \
+                    -Dsonar.pullrequest.branch=$(params.pr-branch) \
+                    -Dsonar.pullrequest.base=$(params.target-branch)
+            else
+              echo "PR detected but action is '$(params.pr-action)'. Skipping Sonar scan."
+            fi
           else
-            echo "PR detected but action is '$(params.pr-action)'. Skipping Sonar scan."
+            echo "Running main branch analysis..."
+            sonar -Dsonar.login=$SONAR_TOKEN
           fi
-        else
-          echo "Running main branch analysis..."
-          sonar -Dsonar.login=$SONAR_TOKEN
         fi
