@@ -45,6 +45,8 @@ spec:
     - name: pr-action
       value: $(event.pull_request.action)
       default: ""
+    - name: pr-full
+      value: $(event.pull_request)
 
 ---
 

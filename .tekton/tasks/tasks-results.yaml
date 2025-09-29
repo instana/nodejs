@@ -23,6 +23,8 @@ spec:
       default: "main"
     - name: pr-action
       default: ""
+    - name: pr-full
+      default: ""
   steps:
     - name: print-all-results
       image: public.ecr.aws/docker/library/node:$(params.node-version)
@@ -55,6 +57,10 @@ spec:
 
           echo "Installing SonarCloud scanner..."
           npm install -g @sonar/scan
+
+          echo "==== Full Pull Request Object ===="
+          echo '$(params.pr-full)' > /artifacts/pr.json
+          cat /artifacts/pr.json
 
           echo "Running SonarCloud analysis..."
           if [ -n "$(params.pr-number)" ]; then

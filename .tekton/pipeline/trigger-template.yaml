@@ -57,6 +57,9 @@ spec:
     - name: pr-action
       value: $(params.pr-action) 
       default: ""
+    - name: pr-full
+      value: $(event.pr-full)
+
   resourcetemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
