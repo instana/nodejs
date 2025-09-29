@@ -41,7 +41,13 @@ spec:
     - name: skip-cache
       value: $(params.skip-cache)
     - name: prerelease
-      value: $(params.prerelease)   
+      value: $(params.prerelease)
+    - name: pr-action
+      description: The action performed on the pull request
+      default: ""
+    - name: pr-full
+      description: The full pull request object
+      default: "{}"
   workspaces:
     - name: artifacts
   tasks:
@@ -212,7 +218,11 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)   
+          value: $(params.prerelease)
+        - name: pr-action
+          value: $(params.pr-action)
+        - name: pr-full
+          value: $(params.pr-full)
       workspaces:
         - name: output
           workspace: artifacts
@@ -1336,7 +1346,11 @@ spec:
         - name: pr-branch
           value: $(params.pr-branch)
         - name: target-branch
-          value: $(params.target-branch)       
+          value: $(params.target-branch)
+        - name: pr-action
+          value: $(params.pr-action)
+        - name: pr-full
+          value: $(params.pr-full)
     - name: set-tests-running-final
       taskRef:
         name: git-set-commit-status
