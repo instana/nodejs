@@ -21,6 +21,8 @@ spec:
       default: ""
     - name: target-branch
       default: "main"
+    - name: pr-action
+      default: ""
   steps:
     - name: print-all-results
       image: public.ecr.aws/docker/library/node:$(params.node-version)
@@ -55,14 +57,18 @@ spec:
           echo "Installing SonarCloud scanner..."
           npm install -g @sonar/scan
 
-          echo "Running SonarCloud analysis..."
-          if [ -n "$(params.pr-number)" ]; then
+        echo "Running SonarCloud analysis..."
+        if [ -n "$(params.pr-number)" ]; then
+          if [ "$(params.pr-action)" == "review_requested" ]; then
+            echo "PR scan triggered for PR #$(params.pr-number)"
             sonar -Dsonar.login=$SONAR_TOKEN \
                   -Dsonar.pullrequest.key=$(params.pr-number) \
                   -Dsonar.pullrequest.branch=$(params.pr-branch) \
                   -Dsonar.pullrequest.base=$(params.target-branch)
           else
-            # Main branch analysis
-            sonar -Dsonar.login=$SONAR_TOKEN
+            echo "PR detected but action is '$(params.pr-action)'. Skipping Sonar scan."
           fi
+        else
+          echo "Running main branch analysis..."
+          sonar -Dsonar.login=$SONAR_TOKEN
         fi
