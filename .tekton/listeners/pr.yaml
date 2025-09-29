@@ -43,7 +43,7 @@ spec:
       value: $(params.npm-version)
       default: "true"
     - name: pr-action
-      value: $(event.action)
+      value: $(event.pull_request.action)
       default: ""
 
 ---
