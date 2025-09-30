@@ -43,8 +43,8 @@ spec:
       value: $(params.npm-version)
       default: "true"
     - name: pr-draft
-      value: $(event.pull_request.draft)
-      default: "true"
+      value: "$(event.pull_request.draft)"
+      default: "false"
     - name: pr-full
       value: $(event.pull_request)
 

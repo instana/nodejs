@@ -22,7 +22,7 @@ spec:
     - name: target-branch
       default: "main"
     - name: pr-draft
-      default: "true"
+      default: "false"
     - name: pr-full
       default: ""
   steps:
@@ -62,6 +62,15 @@ spec:
           echo "PR draft status: $(params.pr-draft)"
           echo "PR branch: $(params.pr-branch)"
           echo "Target branch: $(params.target-branch)"
+          
+          # Debug the PR draft status
+          if [ "$(params.pr-draft)" == "true" ]; then
+            echo "PR is in draft mode"
+          elif [ "$(params.pr-draft)" == "false" ]; then
+            echo "PR is not in draft mode"
+          else
+            echo "PR draft status is neither true nor false: '$(params.pr-draft)'"
+          fi
           echo "==== Full Pull Request Object ===="
           echo '$(params.pr-full)' > /artifacts/pr.json
           cat /artifacts/pr.json
