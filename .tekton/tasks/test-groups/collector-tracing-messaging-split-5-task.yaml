@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: collector-tracing-messaging-split-4
+  name: collector-tracing-messaging-split-5
 spec:
   sidecars:
     - name: zookeeper
@@ -225,13 +225,13 @@ spec:
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
             if [[ 5 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=4 npm run coverage-ci --npm_command="test:ci:collector:tracing:messaging" --report_dir="collector-tracing-messaging-split-4"
+              CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=5 npm run coverage-ci --npm_command="test:ci:collector:tracing:messaging" --report_dir="collector-tracing-messaging-split-5"
             else
-               npm run coverage-ci --npm_command="test:ci:collector:tracing:messaging" --report_dir="collector-tracing-messaging-split-4"
+               npm run coverage-ci --npm_command="test:ci:collector:tracing:messaging" --report_dir="collector-tracing-messaging-split-5"
             fi
           else
             if [[ 5 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=4 npx lerna run "test:ci:tracing:messaging" --stream --scope="@instana/collector"
+              CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=5 npx lerna run "test:ci:tracing:messaging" --stream --scope="@instana/collector"
             else
               npm run "test:ci:collector:tracing:messaging"
             fi
