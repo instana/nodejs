@@ -42,9 +42,9 @@ spec:
     - name: coverage
       value: $(params.npm-version)
       default: "true"
-    - name: pr-action
-      value: $(event.pull_request.action)
-      default: ""
+    - name: pr-draft
+      value: $(event.pull_request.draft)
+      default: "true"
     - name: pr-full
       value: $(event.pull_request)
 

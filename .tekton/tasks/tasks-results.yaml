@@ -21,8 +21,8 @@ spec:
       default: ""
     - name: target-branch
       default: "main"
-    - name: pr-action
-      default: ""
+    - name: pr-draft
+      default: "true"
     - name: pr-full
       default: ""
   steps:
@@ -58,20 +58,23 @@ spec:
           echo "Installing SonarCloud scanner..."
           npm install -g @sonar/scan
 
+          echo "PR number: $(params.pr-number)"
+          echo "PR draft status: $(params.pr-draft)"
+          echo "PR branch: $(params.pr-branch)"
+          echo "Target branch: $(params.target-branch)"
           echo "==== Full Pull Request Object ===="
           echo '$(params.pr-full)' > /artifacts/pr.json
           cat /artifacts/pr.json
-
           echo "Running SonarCloud analysis..."
           if [ -n "$(params.pr-number)" ]; then
-            if [ "$(params.pr-action)" == "review_requested" ]; then
+            if [ "$(params.pr-draft)" == "false" ]; then
               echo "PR scan triggered for PR #$(params.pr-number)"
               sonar -Dsonar.login=$SONAR_TOKEN \
                     -Dsonar.pullrequest.key=$(params.pr-number) \
                     -Dsonar.pullrequest.branch=$(params.pr-branch) \
                     -Dsonar.pullrequest.base=$(params.target-branch)
             else
-              echo "PR detected but action is '$(params.pr-action)'. Skipping Sonar scan."
+              echo "PR detected but PR is in draft. Skipping Sonar scan."
             fi
           else
             echo "Running main branch analysis..."
