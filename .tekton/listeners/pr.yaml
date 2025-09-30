@@ -39,6 +39,11 @@ spec:
       value: $(params.skip-cache)
     - name: context
       value: "node-dev"
+    - name: coverage
+      value: $(params.coverage)
+      default: "true"
+    - name: pr-payload
+      value: $(event.pull_request)
 
 ---
 

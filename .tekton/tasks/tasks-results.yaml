@@ -15,6 +15,14 @@ spec:
       value: $(params.continuous-delivery-context-secret)
     - name: coverage
       value: $(params.coverage)
+    - name: pr-number
+      default: ""
+    - name: pr-branch
+      default: ""
+    - name: target-branch
+      default: "main"
+    - name: pr-payload
+      default: ""
   steps:
     - name: print-all-results
       image: public.ecr.aws/docker/library/node:$(params.node-version)
@@ -48,6 +56,29 @@ spec:
           echo "Installing SonarCloud scanner..."
           npm install -g @sonar/scan
 
-          echo "Running SonarCloud analysis..."
-          sonar
+          if [ -n "$(params.pr-number)" ]; then
+            echo '$(params.pr-payload)' > pr.json
+
+            # Extract draft flag
+            if command -v jq >/dev/null 2>&1; then
+              PR_IS_DRAFT=$(jq -r '.draft // "false"' pr.json)
+            else
+              PR_IS_DRAFT=$(grep -o '"draft":[^,}]*' pr.json | cut -d':' -f2 | tr -d '[:space:]')
+              [ -z "$PR_IS_DRAFT" ] && PR_IS_DRAFT="false"
+            fi
+            echo "PR draft status: $PR_IS_DRAFT"
+
+            if [ "$PR_IS_DRAFT" = "false" ]; then
+              echo "Running Sonar scan for PR #$(params.pr-number)"
+              sonar -Dsonar.login="$SONAR_TOKEN" \
+                    -Dsonar.pullrequest.key="$(params.pr-number)" \
+                    -Dsonar.pullrequest.branch="$(params.pr-branch)" \
+                    -Dsonar.pullrequest.base="$(params.target-branch)"
+            else
+              echo "PR is draft — skipping Sonar scan."
+            fi
+          else
+            echo "Running main branch analysis..."
+            sonar -Dsonar.login=$SONAR_TOKEN
+          fi
         fi
