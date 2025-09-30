@@ -20,13 +20,9 @@ module.exports = {
   getTestAppLogger: require('./log').getLogger,
   createFakeLogger: () => {
     return {
-      debug: msg => {
-        console.log(msg);
-      },
+      debug: () => {},
       info: () => {},
-      warn: msg => {
-        console.log(msg);
-      },
+      warn: () => {},
       error: () => {},
       trace: () => {}
     };
