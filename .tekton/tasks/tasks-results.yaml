@@ -21,9 +21,7 @@ spec:
       default: ""
     - name: target-branch
       default: "main"
-    - name: pr-draft
-      default: "false"
-    - name: pr-full
+    - name: pr-payload
       default: ""
   steps:
     - name: print-all-results
@@ -58,38 +56,26 @@ spec:
           echo "Installing SonarCloud scanner..."
           npm install -g @sonar/scan
 
-          echo "PR number: $(params.pr-number)"
-          echo "PR branch: $(params.pr-branch)"
-          echo "Target branch: $(params.target-branch)"
-          
-          # Extract draft status directly from the PR full object
-          PR_DRAFT=$(echo '$(params.pr-full)' | grep -o '"draft":[^,}]*' | cut -d':' -f2)
-          echo "PR draft status (extracted): $PR_DRAFT"
-          
-          # Use the extracted draft status for the condition
-          if [ "$PR_DRAFT" == "true" ]; then
-            echo "PR is in draft mode"
-            PR_IS_DRAFT="true"
-          elif [ "$PR_DRAFT" == "false" ]; then
-            echo "PR is not in draft mode"
-            PR_IS_DRAFT="false"
-          else
-            echo "Could not determine PR draft status, defaulting to non-draft"
-            PR_IS_DRAFT="false"
-          fi
-          echo "==== Full Pull Request Object ===="
-          echo '$(params.pr-full)' > /artifacts/pr.json
-          cat /artifacts/pr.json
-          echo "Running SonarCloud analysis..."
           if [ -n "$(params.pr-number)" ]; then
-            if [ "$PR_IS_DRAFT" == "false" ]; then
-              echo "PR scan triggered for PR #$(params.pr-number)"
-              sonar -Dsonar.login=$SONAR_TOKEN \
-                    -Dsonar.pullrequest.key=$(params.pr-number) \
-                    -Dsonar.pullrequest.branch=$(params.pr-branch) \
-                    -Dsonar.pullrequest.base=$(params.target-branch)
+            echo '$(params.pr-payload)' > pr.json
+
+            # Extract draft flag
+            if command -v jq >/dev/null 2>&1; then
+              PR_IS_DRAFT=$(jq -r '.draft // "false"' pr.json)
             else
-              echo "PR detected but PR is in draft. Skipping Sonar scan."
+              PR_IS_DRAFT=$(grep -o '"draft":[^,}]*' pr.json | cut -d':' -f2 | tr -d '[:space:]')
+              [ -z "$PR_IS_DRAFT" ] && PR_IS_DRAFT="false"
+            fi
+            echo "PR draft status: $PR_IS_DRAFT"
+
+            if [ "$PR_IS_DRAFT" = "false" ]; then
+              echo "Running Sonar scan for PR #$(params.pr-number)"
+              sonar -Dsonar.login="$SONAR_TOKEN" \
+                    -Dsonar.pullrequest.key="$(params.pr-number)" \
+                    -Dsonar.pullrequest.branch="$(params.pr-branch)" \
+                    -Dsonar.pullrequest.base="$(params.target-branch)"
+            else
+              echo "PR is draft — skipping Sonar scan."
             fi
           else
             echo "Running main branch analysis..."

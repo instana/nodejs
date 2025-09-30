@@ -42,9 +42,7 @@ spec:
       value: $(params.skip-cache)
     - name: prerelease
       value: $(params.prerelease)
-    - name: pr-draft
-      description: The action performed on the pull request
-    - name: pr-full
+    - name: pr-payload
       description: The full pull request object
       default: "{}"
   workspaces:
@@ -1342,10 +1340,8 @@ spec:
           value: $(params.pr-branch)
         - name: target-branch
           value: $(params.target-branch)
-        - name: pr-draft
-          value: $(params.pr-draft)
-        - name: pr-full
-          value: $(params.pr-full)
+        - name: pr-payload
+          value: $(params.pr-payload)
     - name: set-tests-running-final
       taskRef:
         name: git-set-commit-status

@@ -24,9 +24,6 @@ spec:
       value: $(params.coverage)
     - name: prerelease
       value: $(params.prerelease)
-    - name: pr-full
-      description: The full pull request object
-      default: "{}"
   workspaces:
     - name: output
       mountPath: /artifacts
@@ -94,7 +91,6 @@ spec:
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
         echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
-        echo "PR Details: $(params.pr-full)"
         if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/autoprofile"; then
           echo "Skipping group."
           touch "test:ci:autoprofile.succeeded"
