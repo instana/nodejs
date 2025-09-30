@@ -14,7 +14,7 @@ spec:
     - name: continuous-delivery-context-secret
       value: $(params.continuous-delivery-context-secret)
     - name: coverage
-      default: "true"
+      value: $(params.coverage)
     - name: pr-number
       default: ""
     - name: pr-branch

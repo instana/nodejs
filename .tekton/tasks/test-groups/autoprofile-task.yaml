@@ -23,7 +23,7 @@ spec:
     - name: coverage
       value: $(params.coverage)
     - name: prerelease
-      value: $(params.prerelease)
+      value: $(params.prerelease) 
   workspaces:
     - name: output
       mountPath: /artifacts

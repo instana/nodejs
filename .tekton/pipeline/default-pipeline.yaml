@@ -43,7 +43,6 @@ spec:
     - name: prerelease
       value: $(params.prerelease)
     - name: pr-payload
-      description: The full pull request object
       default: "{}"
   workspaces:
     - name: artifacts
@@ -215,1085 +214,1085 @@ spec:
         - name: coverage
           value: $(params.coverage)
         - name: prerelease
-          value: $(params.prerelease)
+          value: $(params.prerelease)   
       workspaces:
         - name: output
           workspace: artifacts
-    # - name: aws-fargate-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: aws-fargate
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: aws-lambda-split-2-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: aws-lambda-split-2
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: aws-lambda-split-3-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: aws-lambda-split-3
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: aws-lambda-split-4-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: aws-lambda-split-4
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: aws-lambda-split-5-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: aws-lambda-split-5
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: aws-lambda-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: aws-lambda
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: azure-container-services-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: azure-container-services
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-general-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-general
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-cloud-aws-v2-split-2-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-cloud-aws-v2-split-2
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-cloud-aws-v2-split-3-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-cloud-aws-v2-split-3
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-cloud-aws-v2-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-cloud-aws-v2
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-cloud-aws-v3-split-2-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-cloud-aws-v3-split-2
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-cloud-aws-v3-split-3-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-cloud-aws-v3-split-3
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-cloud-aws-v3-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-cloud-aws-v3
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-cloud-azure-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-cloud-azure
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-cloud-gcp-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-cloud-gcp
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-database-split-10-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-database-split-10
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-database-split-2-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-database-split-2
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-database-split-3-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-database-split-3
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-database-split-4-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-database-split-4
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-database-split-5-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-database-split-5
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-database-split-6-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-database-split-6
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-database-split-7-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-database-split-7
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-database-split-8-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-database-split-8
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-database-split-9-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-database-split-9
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-database-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-database
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-frameworks-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-frameworks
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-general-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-general
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-logging-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-logging
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-messaging-split-2-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-messaging-split-2
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-messaging-split-3-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-messaging-split-3
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-messaging-split-4-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-messaging-split-4
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-messaging-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-messaging
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-misc-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-misc
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-protocols-split-2-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-protocols-split-2
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: collector-tracing-protocols-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: collector-tracing-protocols
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: core-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: core
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: google-cloud-run-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: google-cloud-run
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: metrics-util-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: metrics-util
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: opentelemetry-exporter-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: opentelemetry-exporter
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: opentelemetry-sampler-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: opentelemetry-sampler
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: serverless-collector-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: serverless-collector
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
-    # - name: serverless-task
-    #   runAfter:
-    #     - install-npm-dependencies
-    #   taskRef:
-    #     name: serverless
-    #   params:
-    #     - name: node-version
-    #       value: $(params.node-version)
-    #     - name: npm-version
-    #       value: $(params.npm-version)          
-    #     - name: repository
-    #       value: $(params.repository)
-    #     - name: revision
-    #       value: $(params.commit-id)
-    #     - name: continuous-delivery-context-secret
-    #       value: "secure-properties"
-    #     - name: esm
-    #       value: $(params.esm)
-    #     - name: coverage
-    #       value: $(params.coverage)
-    #     - name: prerelease
-    #       value: $(params.prerelease)   
-    #   workspaces:
-    #     - name: output
-    #       workspace: artifacts
+    - name: aws-fargate-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: aws-fargate
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: aws-lambda-split-2-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: aws-lambda-split-2
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: aws-lambda-split-3-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: aws-lambda-split-3
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: aws-lambda-split-4-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: aws-lambda-split-4
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: aws-lambda-split-5-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: aws-lambda-split-5
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: aws-lambda-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: aws-lambda
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: azure-container-services-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: azure-container-services
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-general-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-general
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-cloud-aws-v2-split-2-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-cloud-aws-v2-split-2
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-cloud-aws-v2-split-3-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-cloud-aws-v2-split-3
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-cloud-aws-v2-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-cloud-aws-v2
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-cloud-aws-v3-split-2-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-cloud-aws-v3-split-2
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-cloud-aws-v3-split-3-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-cloud-aws-v3-split-3
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-cloud-aws-v3-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-cloud-aws-v3
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-cloud-azure-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-cloud-azure
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-cloud-gcp-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-cloud-gcp
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-database-split-10-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-database-split-10
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-database-split-2-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-database-split-2
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-database-split-3-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-database-split-3
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-database-split-4-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-database-split-4
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-database-split-5-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-database-split-5
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-database-split-6-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-database-split-6
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-database-split-7-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-database-split-7
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-database-split-8-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-database-split-8
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-database-split-9-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-database-split-9
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-database-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-database
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-frameworks-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-frameworks
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-general-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-general
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-logging-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-logging
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-messaging-split-2-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-messaging-split-2
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-messaging-split-3-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-messaging-split-3
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-messaging-split-4-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-messaging-split-4
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-messaging-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-messaging
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-misc-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-misc
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-protocols-split-2-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-protocols-split-2
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-tracing-protocols-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-protocols
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: core-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: core
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: google-cloud-run-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: google-cloud-run
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: metrics-util-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: metrics-util
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: opentelemetry-exporter-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: opentelemetry-exporter
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: opentelemetry-sampler-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: opentelemetry-sampler
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: serverless-collector-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: serverless-collector
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: serverless-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: serverless
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
     - name: shared-metrics-task
       runAfter:
         - install-npm-dependencies
