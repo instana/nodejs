@@ -206,15 +206,16 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
 });
 
 function verifySpans(spans, appControls) {
-  // ENTRY /otel-test
-  // EXIT www.example.com
-  // 1 x tlc connect, 1 x tls connect
+  // 1 x ENTRY /otel-test
+  // 1 x EXIT https://www.google.com/
+  // 1 x tcp connect
+  // 1 x tls connect
   // NOTE: middleware spans are not collected when migrating to express v5 because:
   //       middleware initialization was removed in
   //         https://github.com/expressjs/express/commit/78e50547f16e2adb5763a953586d05308d8aba4c.
   //       middleware query functionality was removed in:
   //         https://github.com/expressjs/express/commit/dcc4eaabe86a4309437db2a853c5ef788a854699
-  expectExactlyNMatching(spans, 3, [
+  expectExactlyNMatching(spans, 4, [
     span => expect(span.ec).to.eq(0),
     span => expect(span.f.e).to.eq(appControls.getTestAppPid()),
     span => expect(span.n).to.eq('otel'),
