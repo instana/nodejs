@@ -42,7 +42,6 @@ spec:
     - name: coverage
       value: $(params.npm-version)
       default: "true"
-      default: "false"
     - name: pr-payload
       value: $(event.pull_request)
 
