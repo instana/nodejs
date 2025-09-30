@@ -40,7 +40,7 @@ spec:
     - name: context
       value: "node-dev"
     - name: coverage
-      value: $(params.npm-version)
+      value: $(params.coverage)
       default: "true"
     - name: pr-payload
       value: $(event.pull_request)
