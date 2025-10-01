@@ -1043,6 +1043,31 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
+    - name: collector-tracing-messaging-split-6-task
+      runAfter:
+        - install-npm-dependencies
+      taskRef:
+        name: collector-tracing-messaging-split-6
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
     - name: collector-tracing-messaging-task
       runAfter:
         - install-npm-dependencies

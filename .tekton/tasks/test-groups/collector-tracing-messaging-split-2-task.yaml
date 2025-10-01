@@ -224,20 +224,20 @@ spec:
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            if [[ 5 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=2 npm run coverage-ci --npm_command="test:ci:collector:tracing:messaging" --report_dir="collector-tracing-messaging-split-2"
+            if [[ 6 =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=6 CI_TEST_SPLIT_CURRENT=2 npm run coverage-ci --npm_command="test:ci:collector:tracing:messaging" --report_dir="collector-tracing-messaging-split-2"
             else
                npm run coverage-ci --npm_command="test:ci:collector:tracing:messaging" --report_dir="collector-tracing-messaging-split-2"
             fi
           else
-            if [[ 5 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=2 npx lerna run "test:ci:tracing:messaging" --stream --scope="@instana/collector"
+            if [[ 6 =~ ^[0-9]+$ ]]; then
+              CI_TEST_SPLIT=6 CI_TEST_SPLIT_CURRENT=2 npx lerna run "test:ci:tracing:messaging" --stream --scope="@instana/collector"
             else
               npm run "test:ci:collector:tracing:messaging"
             fi
           fi          
           if [ $? -eq 0 ]; then
-            if [[ 5 =~ ^[0-9]+$ ]]; then
+            if [[ 6 =~ ^[0-9]+$ ]]; then
               touch "test:ci:tracing:messaging.succeeded"
             else
               touch "test:ci:collector:tracing:messaging.succeeded"
@@ -245,7 +245,7 @@ spec:
             break
           else
             if [ $retry -eq 3 ]; then
-              if [[ 5 =~ ^[0-9]+$ ]]; then
+              if [[ 6 =~ ^[0-9]+$ ]]; then
                 touch "test:ci:tracing:messaging.failed"
               else
                 touch "test:ci:collector:tracing:messaging.failed"
