@@ -8,7 +8,6 @@
 const { util, uninstrumentedHttp, uninstrumentedFs: fs } = require('@instana/core');
 const pathUtil = require('path');
 const circularReferenceRemover = require('./util/removeCircular');
-const agentOpts = require('./agent/opts');
 const cmdline = require('./cmdline');
 
 /** @typedef {import('@instana/core/src/core').InstanaBaseSpan} InstanaBaseSpan */
@@ -34,14 +33,18 @@ let isConnected = false;
 /** @type {string | null} */
 let cpuSetFileContent = null;
 
+/** @type {import('./types/collector').CollectorConfig} */
+let config;
+
 /**
- * @param {import('@instana/core/src/config').InstanaConfig} config
+ * @param {import('./types/collector').CollectorConfig} _config
  * @param {any} _pidStore
  */
-exports.init = function init(config, _pidStore) {
-  logger = config.logger;
+exports.init = function init(_config, _pidStore) {
+  config = _config;
   pidStore = _pidStore;
 
+  logger = config.logger;
   cmdline.init(config);
   cpuSetFileContent = getCpuSetFileContent();
 };
@@ -133,8 +136,8 @@ exports.announceNodeCollector = function announceNodeCollector(callback) {
 
   const req = http.request(
     {
-      host: agentOpts.host,
-      port: agentOpts.port,
+      host: config.agentHost,
+      port: config.agentPort,
       path: '/com.instana.plugin.nodejs.discovery',
       method: 'PUT',
       agent: http.agent,
@@ -161,7 +164,7 @@ exports.announceNodeCollector = function announceNodeCollector(callback) {
     }
   );
 
-  req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
+  req.setTimeout(config.requestTimeout, function onTimeout() {
     handleCallback(new Error('Announce request to agent failed due to timeout'));
     req.destroy();
   });
@@ -235,8 +238,8 @@ exports.sendLogToAgent = function sendLogToAgent(logLevel, message, stackTrace) 
 
   const req = http.request(
     {
-      host: agentOpts.host,
-      port: agentOpts.port,
+      host: config.agentHost,
+      port: config.agentPort,
       path: '/com.instana.agent.logger',
       method: 'POST',
       agent: http.agent,
@@ -255,7 +258,7 @@ exports.sendLogToAgent = function sendLogToAgent(logLevel, message, stackTrace) 
     // swallow all errors
   }
 
-  req.setTimeout(agentOpts.requestTimeout, swallow);
+  req.setTimeout(config.requestTimeout, swallow);
   req.on('error', swallow);
 
   req.write(payload);
@@ -271,8 +274,8 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 
   const req = http.request(
     {
-      host: agentOpts.host,
-      port: agentOpts.port,
+      host: config.agentHost,
+      port: config.agentPort,
       path,
       agent: http.agent,
       method: 'HEAD'
@@ -284,7 +287,7 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
     }
   );
 
-  req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
+  req.setTimeout(config.requestTimeout, function onTimeout() {
     isConnected = false;
     cb(isConnected);
     req.destroy();
@@ -435,12 +438,11 @@ exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMe
  */
 function sendData(path, data, cb, ignore404 = false) {
   cb = util.atMostOnce(`callback for sendData: ${path}`, cb);
-
   const payloadAsString = JSON.stringify(data, circularReferenceRemover());
   if (typeof logger.trace === 'function') {
     logger.trace(`Sending data to ${path}.`);
   } else {
-    logger.debug(`Sending data to ${path}, ${agentOpts}`);
+    logger.debug(`Sending data to ${path}, ${config.agentHost}:${config.agentPort}`);
   }
 
   // Convert payload to a buffer to correctly identify content-length ahead of time.
@@ -452,8 +454,8 @@ function sendData(path, data, cb, ignore404 = false) {
 
   const req = http.request(
     {
-      host: agentOpts.host,
-      port: agentOpts.port,
+      host: config.agentHost,
+      port: config.agentPort,
       path,
       method: 'POST',
       agent: http.agent,
@@ -486,7 +488,7 @@ function sendData(path, data, cb, ignore404 = false) {
     }
   );
 
-  req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
+  req.setTimeout(config.requestTimeout, function onTimeout() {
     cb(new Error(`Failed to send data to agent via POST ${path}. Ran into a timeout.`));
     req.destroy();
   });

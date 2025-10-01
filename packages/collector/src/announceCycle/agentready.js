@@ -14,7 +14,6 @@ try {
 
 const { tracing } = require('@instana/core');
 const agentConnection = require('../agentConnection');
-const agentOpts = require('../agent/opts');
 const initializedTooLate = require('../util/initializedTooLate');
 const metrics = require('../metrics');
 const requestHandler = require('../agent/requestHandler');
@@ -55,24 +54,23 @@ let tracingMetricsTimeout = null;
 /** @type {{ pid: number, getEntityId: Function }} */
 let pidStore;
 
-/**
- * @type {boolean}
- */
-let disableEOLEvents;
+/** @type {import('@instana/collector/src/types/collector').CollectorConfig} */
+let config;
 
 /**
- * @param {import('@instana/core/src/config').InstanaConfig} config
+ * @param {import('@instana/collector/src/types/collector').CollectorConfig} _config
  * @param {any} _pidStore
  */
-function init(config, _pidStore) {
+function init(_config, _pidStore) {
+  config = _config;
+
   logger = config.logger;
   pidStore = _pidStore;
-  disableEOLEvents = config.tracing?.disableEOLEvents;
+
   initializedTooLate.init(config);
   requestHandler.init(config);
 
-  // TODO: Why is autoProfile part of agentOpts? O_o Please refactor this away in next major release.
-  if (agentOpts.autoProfile) {
+  if (config.autoProfile) {
     try {
       // @ts-ignore - TS cannot find @instana/profile.
       // TODO: @instana/autoprofile is not linted or typed
@@ -122,14 +120,14 @@ function enter(_ctx) {
       }
     );
     scheduleTracingMetrics();
-    if (!disableEOLEvents) {
+    if (!config.tracing?.disableEOLEvents) {
       detectEOLNodeVersion();
     }
   }
 
-  tracing.activate(agentOpts.config);
+  tracing.activate(config.agentConfig);
 
-  if (agentOpts.autoProfile && autoprofile) {
+  if (config.autoProfile && autoprofile) {
     profiler = autoprofile.start();
     /**
      * @param {*} profiles
@@ -236,7 +234,7 @@ function sendEOLEvent() {
       timestamp: Date.now(),
       duration: EOL_EVENT_DURATION,
       severity: agentConnection.AgentEventSeverity.WARNING,
-      path: `${agentOpts.agentUuid}/${pid}/nodejs-eol`
+      path: `${config.agentUuid}/${pid}/nodejs-eol`
     },
     err => {
       if (err) {

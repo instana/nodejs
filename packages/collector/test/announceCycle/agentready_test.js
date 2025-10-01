@@ -25,7 +25,6 @@ const eol = require('../../src/util/eol');
 describe('agent ready state', () => {
   let agentReadyState;
 
-  let agentOptsStub;
   let tracingStub;
   let agentConnectionStub;
   let initializedTooLateStub;
@@ -34,11 +33,8 @@ describe('agent ready state', () => {
   let transmissionCycleStub;
   let uncaughtStub;
   let eolStub;
+
   beforeEach(() => {
-    agentOptsStub = {
-      config: {},
-      agentUuid: 'test-uuid'
-    };
     tracingStub = sinon.stub(tracing);
     agentConnectionStub = sinon.stub(agentConnection);
     initializedTooLateStub = sinon.stub(initializedTooLate);
@@ -52,7 +48,6 @@ describe('agent ready state', () => {
       '@instana/core': {
         tracing: tracingStub
       },
-      '../agent/opts': agentOptsStub,
       '../agentConnection': agentConnectionStub,
       '../util/initializedTooLate': initializedTooLateStub,
       '../metrics': metricsStub,
@@ -63,7 +58,7 @@ describe('agent ready state', () => {
     });
 
     agentReadyState.init(
-      { logger: testUtils.createFakeLogger() },
+      { logger: testUtils.createFakeLogger(), agentConfig: { foo: { bar: 'baz' } } },
       {
         pid: 12345,
         getEntityId: () => 'test-entity-id'
@@ -88,9 +83,7 @@ describe('agent ready state', () => {
     });
 
     it('should forward agent config to tracing component', () => {
-      agentOptsStub.config = { foo: { bar: 'baz' } };
-      agentReadyState.enter();
-      expect(tracingStub.activate).to.have.been.calledWith(agentOptsStub.config);
+      expect(tracingStub.activate).to.have.been.calledWith({ foo: { bar: 'baz' } });
     });
   });
 
