@@ -18,8 +18,8 @@ const globalAgent = require('../../../globalAgent');
 const { AgentStubControls } = require('../../../apps/agentStubControls');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
 
-const checkStartedEvery = 5000;
-const retryTime = 5000;
+const checkStartedEvery = 1000;
+const retryTime = 1000;
 const retryTimeUntil = () => Date.now() + 1000 * 60;
 const checkStartedUntil = () => Date.now() + 1000 * 120;
 const topic = 'rdkafka-topic';
