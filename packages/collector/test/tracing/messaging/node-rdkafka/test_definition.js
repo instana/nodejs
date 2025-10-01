@@ -18,8 +18,8 @@ const globalAgent = require('../../../globalAgent');
 const { AgentStubControls } = require('../../../apps/agentStubControls');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
 
-const checkStartedEvery = 1000;
-const retryTime = 1000;
+const checkStartedEvery = 5000;
+const retryTime = 5000;
 const retryTimeUntil = () => Date.now() + 1000 * 60;
 const checkStartedUntil = () => Date.now() + 1000 * 120;
 const topic = 'rdkafka-topic';
@@ -57,99 +57,97 @@ module.exports.run = function ({
           }
 
           describe('tracing enabled, no suppression', function () {
-            describe(`delivery report: ${producerEnableDeliveryCb}`, function () {
-              describe(`object mode: ${objectMode}`, function () {
-                beforeEach(async () => {
-                  consumerControls = new ProcessControls({
-                    appPath: path.join(__dirname, 'consumer'),
-                    useGlobalAgent: true,
-                    env: {
-                      RDKAFKA_CONSUMER_AS_STREAM: consumerMethod === 'stream' ? 'true' : 'false',
-                      RDKAFKA_CONSUMER_ERROR: withError
-                    }
-                  });
-
-                  producerControls = new ProcessControls({
-                    appPath: path.join(__dirname, 'producer'),
-                    useGlobalAgent: true,
-                    env: {
-                      RDKAFKA_OBJECT_MODE: objectMode,
-                      RDKAFKA_PRODUCER_AS_STREAM: producerMethod === 'stream' ? 'true' : 'false',
-                      RDKAFKA_PRODUCER_DELIVERY_CB: producerEnableDeliveryCb === 'true'
-                    }
-                  });
-
-                  await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
-                  await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+            describe(`object mode: ${objectMode}`, function () {
+              beforeEach(async () => {
+                consumerControls = new ProcessControls({
+                  appPath: path.join(__dirname, 'consumer'),
+                  useGlobalAgent: true,
+                  env: {
+                    RDKAFKA_CONSUMER_AS_STREAM: consumerMethod === 'stream' ? 'true' : 'false',
+                    RDKAFKA_CONSUMER_ERROR: withError
+                  }
                 });
 
-                beforeEach(async () => {
-                  await agentControls.clearReceivedData();
+                producerControls = new ProcessControls({
+                  appPath: path.join(__dirname, 'producer'),
+                  useGlobalAgent: true,
+                  env: {
+                    RDKAFKA_OBJECT_MODE: objectMode,
+                    RDKAFKA_PRODUCER_AS_STREAM: producerMethod === 'stream' ? 'true' : 'false',
+                    RDKAFKA_PRODUCER_DELIVERY_CB: producerEnableDeliveryCb === 'true'
+                  }
                 });
 
-                afterEach(async () => {
-                  await consumerControls.stop();
-                  await producerControls.stop();
-
-                  consumerControls.clearIpcMessages();
-                  producerControls.clearIpcMessages();
-
-                  consumerControls = null;
-                  producerControls = null;
-                });
-
-                if (
-                  !RUN_SINGLE_TEST ||
-                  (RUN_SINGLE_TEST &&
-                    producerMethod === SINGLE_TEST_PROPS.producerMethod &&
-                    consumerMethod === SINGLE_TEST_PROPS.consumerMethod &&
-                    objectMode === SINGLE_TEST_PROPS.objectMode &&
-                    producerEnableDeliveryCb === SINGLE_TEST_PROPS.deliveryCbEnabled &&
-                    withError === SINGLE_TEST_PROPS.withError)
-                ) {
-                  it(`produces(${producerMethod}); consumes(${consumerMethod}); error: ${withError}`, async () => {
-                    const apiPath = `/produce/${producerMethod}`;
-
-                    let urlWithParams;
-
-                    if (withError === 'deliveryErrorSender') {
-                      urlWithParams = `${apiPath}?throwDeliveryErr=true`;
-                      await consumerControls.kill();
-                    } else if (withError === 'bufferErrorSender') {
-                      urlWithParams = `${apiPath}?bufferErrorSender=true`;
-                    } else {
-                      urlWithParams = apiPath;
-                    }
-
-                    let response;
-
-                    if (withError !== 'streamErrorReceiver') {
-                      response = await producerControls.sendRequest({
-                        method: 'GET',
-                        path: urlWithParams
-                      });
-                    } else {
-                      response = {
-                        timestamp: Date.now(),
-                        wasSent: false,
-                        topic,
-                        msg: null,
-                        messageCounter: 0
-                      };
-                    }
-
-                    return verify(
-                      consumerControls,
-                      producerControls,
-                      response,
-                      apiPath,
-                      withError,
-                      objectMode,
-                      producerMethod
-                    );
-                  });
-                }
+                await consumerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
+                await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
               });
+
+              beforeEach(async () => {
+                await agentControls.clearReceivedData();
+              });
+
+              afterEach(async () => {
+                await consumerControls.stop();
+                await producerControls.stop();
+
+                consumerControls.clearIpcMessages();
+                producerControls.clearIpcMessages();
+
+                consumerControls = null;
+                producerControls = null;
+              });
+
+              if (
+                !RUN_SINGLE_TEST ||
+                (RUN_SINGLE_TEST &&
+                  producerMethod === SINGLE_TEST_PROPS.producerMethod &&
+                  consumerMethod === SINGLE_TEST_PROPS.consumerMethod &&
+                  objectMode === SINGLE_TEST_PROPS.objectMode &&
+                  producerEnableDeliveryCb === SINGLE_TEST_PROPS.deliveryCbEnabled &&
+                  withError === SINGLE_TEST_PROPS.withError)
+              ) {
+                it(`produces(${producerMethod}); consumes(${consumerMethod}); error: ${withError}`, async () => {
+                  const apiPath = `/produce/${producerMethod}`;
+
+                  let urlWithParams;
+
+                  if (withError === 'deliveryErrorSender') {
+                    urlWithParams = `${apiPath}?throwDeliveryErr=true`;
+                    await consumerControls.kill();
+                  } else if (withError === 'bufferErrorSender') {
+                    urlWithParams = `${apiPath}?bufferErrorSender=true`;
+                  } else {
+                    urlWithParams = apiPath;
+                  }
+
+                  let response;
+
+                  if (withError !== 'streamErrorReceiver') {
+                    response = await producerControls.sendRequest({
+                      method: 'GET',
+                      path: urlWithParams
+                    });
+                  } else {
+                    response = {
+                      timestamp: Date.now(),
+                      wasSent: false,
+                      topic,
+                      msg: null,
+                      messageCounter: 0
+                    };
+                  }
+
+                  return verify(
+                    consumerControls,
+                    producerControls,
+                    response,
+                    apiPath,
+                    withError,
+                    objectMode,
+                    producerMethod
+                  );
+                });
+              }
             });
           });
         });
