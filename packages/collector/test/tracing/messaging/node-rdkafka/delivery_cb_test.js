@@ -42,7 +42,7 @@ const testDefinition = require('./test_definition');
 // node bin/start-test-containers.js --zookeeper --kafka --schema-registry --kafka-topics
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn.only('tracing/messaging/node-rdkafka: with delivery-cb', function () {
+mochaSuiteFn('tracing/messaging/node-rdkafka: with delivery-cb', function () {
   testDefinition.run.bind(this)({
     producerEnableDeliveryCb,
     producerApiMethods,
