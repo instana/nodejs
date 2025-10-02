@@ -47,7 +47,7 @@ spec:
             echo "sentinel resolve-hostnames no" >> /etc/sentinel.conf
             redis-server /etc/sentinel.conf --sentinel --port 26379
     - name: couchbase
-      image: couchbase/server:7.1.4
+      image: couchbase/server:7.6.7
       imagePullPolicy: IfNotPresent
       readinessProbe:
           httpGet:

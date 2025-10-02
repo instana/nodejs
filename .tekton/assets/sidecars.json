@@ -206,7 +206,7 @@
     },
     {
       "name": "couchbase",
-      "image": "couchbase/server:7.1.4",
+      "image": "couchbase/server:7.6.7",
       "readinessProbe": {
         "httpGet": {
           "path": "/",

@@ -47,7 +47,7 @@ services:
       - 27017:27017
 
   couchbase:
-    image: couchbase/server:7.1.4
+    image: couchbase/server:7.6.7
     hostname: couchbase
     ports:
       - '8091-8096:8091-8096'
