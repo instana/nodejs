@@ -139,9 +139,15 @@ couchbase.connect(
 
     let retries = 0;
     const flushBuckets = async function () {
+      // eslint-disable-next-line no-console
+      console.log(`Flushing buckets (retries: ${retries})...`);
+
       try {
         await bucketMng.flushBucket('projects');
         await bucketMng.flushBucket('companies');
+
+        // eslint-disable-next-line no-console
+        console.log('Flushed buckets.');
       } catch (bucketErr) {
         // eslint-disable-next-line no-console
         console.log(`Flush buckets failed: ${bucketErr.message}`);
