@@ -112,7 +112,7 @@
     "@hapi/hapi": "21.4.3",
     "@ibm/tekton-lint": "1.1.0",
     "@koa/router": "14.0.0",
-    "@redis/client": "5.8.2",
+    "@redis/client": "5.8.3",
     "@redis/client-v4": "npm:@redis/client@1.6.0",
     "@types/chai": "4.3.0",
     "@types/detect-libc": "1.0.0",
