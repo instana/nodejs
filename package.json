@@ -174,7 +174,7 @@
     "graphql-tag": "2.12.6",
     "graphql-ws": "6.0.6",
     "husky": "7.0.4",
-    "ioredis": "5.8.0",
+    "ioredis": "5.8.1",
     "js-yaml": "4.1.0",
     "kafka-node": "5.0.0",
     "kafkajs": "2.2.4",
