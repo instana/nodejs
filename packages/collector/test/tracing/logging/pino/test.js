@@ -8,6 +8,7 @@
 const expect = require('chai').expect;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
+const semver = require('semver');
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
@@ -20,7 +21,12 @@ describe('tracing/logging/pino', function () {
   const agentControls = globalAgent.instance;
 
   ['latest', 'v8'].forEach(pinoVersion => {
-    const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+    let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+
+    // Pino v10(latest) requires Node.js 20 or higher
+    if (pinoVersion === 'latest' && semver.lt(process.versions.node, '20.0.0')) {
+       mochaSuiteFn = describe.skip;
+    }
 
     mochaSuiteFn(`pino@${pinoVersion}`, function () {
       runTests(pinoVersion, false);
