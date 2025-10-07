@@ -14,6 +14,8 @@ spec:
       value: $(params.npm-version)
     - name: prod-deps-pr-limit
       value: $(params.prod-deps-pr-limit)
+    - name: org-pr-limit
+      value: $(params.org-pr-limit)
   workspaces:
     - name: output
       mountPath: /artifacts
