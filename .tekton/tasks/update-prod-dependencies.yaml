@@ -50,6 +50,6 @@ spec:
         gh auth login --with-token
         
         echo "Running production dependency updates..."
-        PROD_DEPS_PR_LIMIT=$(params.prod-deps-pr-limit) BRANCH=build node bin/dependencies/production/update-prod-dependencies.js
+        PROD_DEPS_PR_LIMIT=$(params.prod-deps-pr-limit) ORG_PR_LIMIT=$(params.org-pr-limit) BRANCH=build node bin/dependencies/production/update-prod-dependencies.js
 
         

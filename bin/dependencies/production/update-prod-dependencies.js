@@ -9,7 +9,7 @@ const utils = require('../utils');
 const BRANCH = process.env.BRANCH;
 const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
 const PROD_DEPS_PR_LIMIT = process.env.PROD_DEPS_PR_LIMIT || 5;
-const OTEL_UPDATE = process.env.OTEL_UPDATE === 'true';
+const ORG_PR_LIMIT = process.env.ORG_PR_LIMIT || 2;
 const cwd = path.join(__dirname, '..', '..', '..');
 
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
@@ -17,11 +17,12 @@ if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
 console.log(`BRANCH: ${BRANCH}`);
 console.log(`SKIP_PUSH: ${SKIP_PUSH}`);
 console.log(`PROD_DEPS_PR_LIMIT: ${PROD_DEPS_PR_LIMIT}`);
-console.log(`OTEL_UPDATE: ${OTEL_UPDATE}`);
+console.log(`ORG_PR_LIMIT: ${ORG_PR_LIMIT}`);
 
 const updatedProdDeps = [];
+const orgPrCount = {};
 
-const packagesDir = path.join(__dirname, '..', '..', '..', 'packages');
+const packagesDir = path.join(cwd, 'packages');
 const pkgPaths = utils.getPackageJsonPathsUnderPackagesDir(packagesDir);
 
 const dependencyMap = {};
@@ -32,63 +33,20 @@ pkgPaths.forEach(obj => {
     // Exclude internal libraries
     if (dep.startsWith('@instana')) return;
 
-    // Skip otel packages unless OTEL_UPDATE is true
-    if (dep.startsWith('@opentelemetry') && !OTEL_UPDATE) return;
-
     if (!dependencyMap[dep]) dependencyMap[dep] = [];
     dependencyMap[dep].push({ pkgRelDir: obj.pkgRelDir, version });
   });
 });
 
-// If OTEL_UPDATE, create a single PR for all OpenTelemetry packages
-if (OTEL_UPDATE) {
-  const otelDeps = Object.keys(dependencyMap).filter(dep => dep.startsWith('@opentelemetry'));
-
-  if (otelDeps.length > 0) {
-    const branchName = utils.createBranchName(BRANCH, 'otel', 'update');
-    utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main');
-
-    otelDeps.forEach(dep => {
-      const usageList = dependencyMap[dep];
-      const currentVersion = utils.cleanVersionString(usageList[0].version);
-      const latestVersion = utils.getLatestVersion({
-        pkgName: dep,
-        installedVersion: currentVersion,
-        isBeta: false
-      });
-
-      if (!latestVersion || latestVersion === currentVersion) {
-        return;
-      }
-      usageList.forEach(({ pkgRelDir }) => {
-        console.log(`Installing ${dep}@${latestVersion} in ${pkgRelDir}`);
-        utils.installPackage({
-          packageName: dep,
-          version: latestVersion,
-          cwd,
-          saveFlag: '',
-          workspaceFlag: pkgRelDir
-        });
-      });
-
-      utils.commitChanges({
-        message: `fix: bumped ${dep} from ${currentVersion} to ${latestVersion}`,
-        cwd
-      });
-    });
-
-    utils.createPR({
-      branchName,
-      cwd,
-      prTitle: '[Prod Dependency Bot] Bumped all @opentelemetry packages',
-      skipPush: SKIP_PUSH
-    });
-  }
-  return;
-}
-
 Object.entries(dependencyMap).some(([dep, usageList]) => {
   if (updatedProdDeps.length >= PROD_DEPS_PR_LIMIT) return true;
+
+  const orgName = dep.startsWith('@') ? dep.split('/')[0] : 'unscoped';
+
+  if ((orgPrCount[orgName] || 0) >= ORG_PR_LIMIT) {
+    console.log(`Skipping ${dep}. ${orgName} has reached its PR limit (${ORG_PR_LIMIT}).`);
+    return false;
+  }
 
   const currentVersion = utils.cleanVersionString(usageList[0].version);
   const latestVersion = utils.getLatestVersion({
@@ -111,7 +69,6 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
     utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main');
 
     usageList.forEach(({ pkgRelDir }) => {
-      console.log(`Installing ${dep}@${latestVersion} in ${pkgRelDir}`);
       utils.installPackage({
         packageName: dep,
         version: latestVersion,
@@ -133,6 +90,7 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
 
     if (prCreated) {
       updatedProdDeps.push(dep);
+      orgPrCount[orgName] = (orgPrCount[orgName] || 0) + 1;
     }
   } catch (err) {
     console.error(`Failed updating ${dep}: ${err.message}`);
