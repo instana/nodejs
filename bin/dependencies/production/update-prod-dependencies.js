@@ -6,6 +6,7 @@
 
 const path = require('path');
 const utils = require('../utils');
+
 const BRANCH = process.env.BRANCH;
 const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
 const PROD_DEPS_PR_LIMIT = process.env.PROD_DEPS_PR_LIMIT || 5;
@@ -41,9 +42,9 @@ pkgPaths.forEach(obj => {
 Object.entries(dependencyMap).some(([dep, usageList]) => {
   if (updatedProdDeps.length >= PROD_DEPS_PR_LIMIT) return true;
 
-  const orgName = dep.startsWith('@') ? dep.split('/')[0] : 'unscoped';
+  const orgName = dep.startsWith('@') ? dep.split('/')[0] : null;
 
-  if ((orgPrCount[orgName] || 0) >= ORG_PR_LIMIT) {
+  if (orgName && (orgPrCount[orgName] || 0) >= ORG_PR_LIMIT) {
     console.log(`Skipping ${dep}. ${orgName} has reached its PR limit (${ORG_PR_LIMIT}).`);
     return false;
   }
@@ -90,7 +91,9 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
 
     if (prCreated) {
       updatedProdDeps.push(dep);
-      orgPrCount[orgName] = (orgPrCount[orgName] || 0) + 1;
+      if (orgName) {
+        orgPrCount[orgName] = (orgPrCount[orgName] || 0) + 1;
+      }
     }
   } catch (err) {
     console.error(`Failed updating ${dep}: ${err.message}`);
@@ -98,3 +101,10 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
 
   return updatedProdDeps.length >= PROD_DEPS_PR_LIMIT;
 });
+
+console.log('\nSummary:');
+console.log(`Total PRs created: ${updatedProdDeps.length}`);
+Object.entries(orgPrCount).forEach(([org, count]) => {
+  console.log(`  ${org}: ${count} PR(s)`);
+});
+console.log('Done.');
