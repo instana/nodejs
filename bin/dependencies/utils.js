@@ -341,12 +341,3 @@ exports.installPackage = options => {
 exports.cleanVersionString = version => {
   return version.replace(/[^0-9.]/g, '');
 };
-
-exports.commitChanges = ({ message, cwd }) => {
-  execSync('git add .', { cwd });
-  try {
-    execSync(`git commit -m "${message}"`, { cwd });
-  } catch (err) {
-    console.log('Nothing to commit');
-  }
-};

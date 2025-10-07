@@ -22,7 +22,7 @@ console.log(`ORG_PR_LIMIT: ${ORG_PR_LIMIT}`);
 const updatedProdDeps = [];
 const orgPrCount = {};
 
-const packagesDir = path.join(cwd, 'packages');
+const packagesDir = path.join(__dirname, '..', '..', '..', 'packages');
 const pkgPaths = utils.getPackageJsonPathsUnderPackagesDir(packagesDir);
 
 const dependencyMap = {};
