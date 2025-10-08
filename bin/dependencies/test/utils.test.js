@@ -82,6 +82,16 @@ const releaseList5 = {
 };
 const installedVersion5 = '16.10.0';
 
+const releaseListWithIntegration = {
+  '1.0.0': '2024-01-01T00:00:00.000Z',
+  '1.1.0-integration.1': '2024-02-01T00:00:00.000Z',
+  '1.1.0': '2024-03-01T00:00:00.000Z',
+  '1.2.0': '2024-05-01T00:00:00.000Z',
+  '2.0.0-integration': '2024-06-01T00:00:00.000Z',
+  '2.0.0': '2024-07-01T00:00:00.000Z'
+};
+const installedVersionWithIntegration = '1.0.0';
+
 try {
   const daysBehind1 = getDaysBehind(releaseList1, installedVersion1, today);
   assert.strictEqual(daysBehind1, 145);
@@ -102,6 +112,15 @@ try {
   const daysBehind5 = getDaysBehind(releaseList5, installedVersion5, '2025-04-26T00:00:00.000Z');
   assert.strictEqual(daysBehind5, 0);
   console.log('Test 5 passed: Installed version is 0 days behind the latest version.');
+
+  // Test 6: Testing with integration releases - should skip integration versions
+  const daysBehind6 = getDaysBehind(
+    releaseListWithIntegration,
+    installedVersionWithIntegration,
+    '2024-07-15T00:00:00.000Z'
+  );
+  assert.strictEqual(daysBehind6, 136);
+  console.log('Test 6 passed: Integration version is 136 days behind the latest version');
 
   let cmd;
   installPackage({
