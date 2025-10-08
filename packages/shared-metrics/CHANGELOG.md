@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.26.0](https://github.com/instana/nodejs/compare/v4.25.0...v4.26.0) (2025-10-08)
+
+
+### Bug Fixes
+
+* bumped detect-libc from 2.0.2 to 2.1.0 ([#2025](https://github.com/instana/nodejs/issues/2025)) ([4e544fb](https://github.com/instana/nodejs/commit/4e544fb2cde75c7a338500c61614de7fb2c2beae))
+* bumped detect-libc from 2.1.0 to 2.1.1 ([#2029](https://github.com/instana/nodejs/issues/2029)) ([0526aac](https://github.com/instana/nodejs/commit/0526aacd413866225a399e831eb1c8b32593b000))
+* bumped detect-libc from 2.1.1 to 2.1.2 ([#2041](https://github.com/instana/nodejs/issues/2041)) ([fc1f33c](https://github.com/instana/nodejs/commit/fc1f33cfec91d37a0da72061e8a02f38e3245cb8))
+
+
+
+
+
 # [4.25.0](https://github.com/instana/nodejs/compare/v4.24.1...v4.25.0) (2025-09-23)
 
 **Note:** Version bump only for package @instana/shared-metrics

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.26.0](https://github.com/instana/nodejs/compare/v4.25.0...v4.26.0) (2025-10-08)
+
+
+### Bug Fixes
+
+* **aws-lambda:** reduced lambda extension binary size ([#2044](https://github.com/instana/nodejs/issues/2044)) ([8bbed42](https://github.com/instana/nodejs/commit/8bbed4288259602e233946d70a6d54abca06fa81))
+
+
+
+
+
 # [4.25.0](https://github.com/instana/nodejs/compare/v4.24.1...v4.25.0) (2025-09-23)
 
 **Note:** Version bump only for package @instana/aws-lambda
