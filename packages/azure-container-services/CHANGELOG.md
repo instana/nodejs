@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.26.0](https://github.com/instana/nodejs/compare/v4.25.0...v4.26.0) (2025-10-08)
+
+**Note:** Version bump only for package @instana/azure-container-services
+
+
+
+
+
 # [4.25.0](https://github.com/instana/nodejs/compare/v4.24.1...v4.25.0) (2025-09-23)
 
 **Note:** Version bump only for package @instana/azure-container-services

@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.26.0](https://github.com/instana/nodejs/compare/v4.25.0...v4.26.0) (2025-10-08)
+
+
+### Bug Fixes
+
+* bumped pino from 9.11.0 to 9.13.0 ([#2037](https://github.com/instana/nodejs/issues/2037)) ([2c6ba85](https://github.com/instana/nodejs/commit/2c6ba850c9fa91673f1f2d9df1aa4b1fe1935bb1))
+
+
+### Features
+
+* added support for pino v10 ([#2040](https://github.com/instana/nodejs/issues/2040)) ([0cb9bf9](https://github.com/instana/nodejs/commit/0cb9bf9f7e8f3a0557323db5d40d74c4e163d232))
+
+
+
+
+
 # [4.25.0](https://github.com/instana/nodejs/compare/v4.24.1...v4.25.0) (2025-09-23)
 
 

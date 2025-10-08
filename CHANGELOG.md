@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.26.0](https://github.com/instana/nodejs/compare/v4.25.0...v4.26.0) (2025-10-08)
+
+
+### Bug Fixes
+
+* **aws-lambda:** reduced lambda extension binary size ([#2044](https://github.com/instana/nodejs/issues/2044)) ([8bbed42](https://github.com/instana/nodejs/commit/8bbed4288259602e233946d70a6d54abca06fa81))
+* bumped detect-libc from 2.0.2 to 2.1.0 ([#2025](https://github.com/instana/nodejs/issues/2025)) ([4e544fb](https://github.com/instana/nodejs/commit/4e544fb2cde75c7a338500c61614de7fb2c2beae))
+* bumped detect-libc from 2.1.0 to 2.1.1 ([#2029](https://github.com/instana/nodejs/issues/2029)) ([0526aac](https://github.com/instana/nodejs/commit/0526aacd413866225a399e831eb1c8b32593b000))
+* bumped detect-libc from 2.1.1 to 2.1.2 ([#2041](https://github.com/instana/nodejs/issues/2041)) ([fc1f33c](https://github.com/instana/nodejs/commit/fc1f33cfec91d37a0da72061e8a02f38e3245cb8))
+* bumped pino from 9.11.0 to 9.13.0 ([#2037](https://github.com/instana/nodejs/issues/2037)) ([2c6ba85](https://github.com/instana/nodejs/commit/2c6ba850c9fa91673f1f2d9df1aa4b1fe1935bb1))
+
+
+### Features
+
+* added support for mssql v12 ([#2034](https://github.com/instana/nodejs/issues/2034)) ([8dd00fb](https://github.com/instana/nodejs/commit/8dd00fb229b5d22e8a7ac603b8b690ef1b8b7591))
+* added support for pino v10 ([#2040](https://github.com/instana/nodejs/issues/2040)) ([0cb9bf9](https://github.com/instana/nodejs/commit/0cb9bf9f7e8f3a0557323db5d40d74c4e163d232))
+
+
+
+
+
 # [4.25.0](https://github.com/instana/nodejs/compare/v4.24.1...v4.25.0) (2025-09-23)
 
 
