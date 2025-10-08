@@ -270,6 +270,7 @@ function initInstrumenations(_config) {
   }
 }
 
+// extraConfig = agentConfig
 exports.activate = function activate(extraConfig = {}) {
   if (tracingEnabled && !tracingActivated) {
     tracingActivated = true;
