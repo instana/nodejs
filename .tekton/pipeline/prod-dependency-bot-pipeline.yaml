@@ -42,6 +42,8 @@ spec:
       value: $(params.prerelease)
     - name: prod-deps-pr-limit
       value: $(params.prod-deps-pr-limit)
+    - name: org-pr-limit
+      value: $(params.org-pr-limit)
   workspaces:
     - name: artifacts
   tasks:
@@ -152,6 +154,8 @@ spec:
           value: $(params.type)
         - name: prod-deps-pr-limit
           value: $(params.prod-deps-pr-limit)
+        - name: org-pr-limit
+          value: $(params.org-pr-limit)
       workspaces:
         - name: output
           workspace: artifacts
