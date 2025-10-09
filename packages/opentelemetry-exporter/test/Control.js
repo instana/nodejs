@@ -8,7 +8,6 @@
 const AbstractServerlessControl = require('@instana/serverless/test/util/AbstractServerlessControl');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 const { fork } = require('child_process');
-const fetch = require('node-fetch-v2');
 
 class Control extends AbstractServerlessControl {
   constructor(opts) {

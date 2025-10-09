@@ -7,7 +7,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const fetch = require('node-fetch-v2');
+
 const { delay } = require('../../../../../core/test/test_util');
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
