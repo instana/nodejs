@@ -62,7 +62,7 @@
     "@instana/core": "4.26.0",
     "detect-libc": "^2.1.2",
     "event-loop-lag": "^1.4.0",
-    "semver": "^7.7.2",
+    "semver": "^7.7.3",
     "tar": "^7.5.1"
   },
   "devDependencies": {
