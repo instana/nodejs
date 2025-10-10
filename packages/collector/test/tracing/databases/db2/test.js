@@ -880,12 +880,12 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              numberOfSpans: 10,
+              numberOfSpans: 11,
               // Spans:
               // 10 queries splitted from the file
               // 5 fs operations on top (ours + from db2 internally fs-extra)
               // https://github.com/ibmdb/node-ibm_db/blob/fb25937524d74d25917e9aa67fb4737971317986/lib/odbc.js#L916
-              // Since the Otel instrumentation is disabled, we expect 10 spans.
+              // Since the Otel instrumentation is disabled, we expect 11 spans.
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,

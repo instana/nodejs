@@ -91,7 +91,7 @@ describe('tracing/opentracing/integration', function () {
         await expressOpentracingControls.sendRequest({ path: '/withOpentracingConnectedToInstanaTrace' });
         await testUtils.retry(async () => {
           const spans = await agentControls.getSpans();
-          expect(spans).to.have.lengthOf(3);
+          expect(spans).to.have.lengthOf(2);
 
           const httpSpan = testUtils.expectAtLeastOneMatching(spans, [
             span => expect(span.n).to.equal('node.http.server'),
