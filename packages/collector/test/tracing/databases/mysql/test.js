@@ -71,7 +71,9 @@ function registerSuite(agentControls, driverMode, useExecute, mysql2Version) {
   describe('suppressed', function () {
     const env = {
       DRIVER_MODE: driverMode,
-      MYSQL2_VERSION: mysql2Version
+      MYSQL2_VERSION: mysql2Version,
+      // We set the following env var to disable the OpenTelemetry instrumentation for this test
+      INSTANA_DISABLE_USE_OPENTELEMETRY: 'true'
     };
     if (useExecute) {
       env.USE_EXECUTE = 'true';
@@ -276,8 +278,8 @@ function test(env, agentControls, driverMode) {
             // 1 x mysql
             // 1 x httpserver
             // 1 x httpclient
-            // 1 x otel fs(included in mysql2/promise)
-            const expectedSpanCount = driverMode === 'mysql2/promises' ? 4 : 3;
+            // 1 x otel fs(included in mysql2/promise), but we disable otel for this test
+            const expectedSpanCount = 3;
             expect(spans.length).to.equal(expectedSpanCount);
             const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
