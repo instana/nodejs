@@ -91,7 +91,7 @@ describe('tracing/opentracing/integration', function () {
         await expressOpentracingControls.sendRequest({ path: '/withOpentracingConnectedToInstanaTrace' });
         await testUtils.retry(async () => {
           const spans = await agentControls.getSpans();
-          expect(spans).to.have.lengthOf(3);
+          expect(spans).to.have.lengthOf(2);
 
           const httpSpan = testUtils.expectAtLeastOneMatching(spans, [
             span => expect(span.n).to.equal('node.http.server'),
@@ -114,16 +114,20 @@ describe('tracing/opentracing/integration', function () {
 
           // OpenTracing lazy loads cls.js, which creates a span via the OTel fs plug-in.
           // realpathSync /path/to/repo/nodejs/packages/core/src/tracing/cls.js
-          testUtils.expectAtLeastOneMatching(spans, [
-            span => expect(span.t).to.equal(httpSpan.t),
-            span => expect(span.p).to.equal(httpSpan.s),
-            span => expect(span.s).to.be.a('string'),
-            span => expect(span.s).not.to.equal(span.t),
-            span => expect(span.s).not.to.equal(span.p),
-            span => expect(span.n).to.equal('otel'),
-            span => expect(span.f.e).to.equal(String(expressOpentracingControls.getPid())),
-            span => expect(span.f.h).to.equal('agent-stub-uuid')
-          ]);
+
+          // Currently we disable OTel instrumentation for tests due npm workspace issue, so the fs span is not created.
+          // If we re-enable OTel instrumentation for tests, we need to uncomment the check below.
+
+          // testUtils.expectAtLeastOneMatching(spans, [
+          //   span => expect(span.t).to.equal(httpSpan.t),
+          //   span => expect(span.p).to.equal(httpSpan.s),
+          //   span => expect(span.s).to.be.a('string'),
+          //   span => expect(span.s).not.to.equal(span.t),
+          //   span => expect(span.s).not.to.equal(span.p),
+          //   span => expect(span.n).to.equal('otel'),
+          //   span => expect(span.f.e).to.equal(String(expressOpentracingControls.getPid())),
+          //   span => expect(span.f.h).to.equal('agent-stub-uuid')
+          // ]);
         });
       });
 

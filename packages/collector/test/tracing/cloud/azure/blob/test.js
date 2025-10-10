@@ -88,7 +88,9 @@ if (!storageAccount || !accountKey) {
                 AZURE_CONNECTION_STRING: connStr,
                 AZURE_STORAGE_ACCOUNT: storageAccount,
                 AZURE_ACCOUNT_KEY: accountKey,
-                AZURE_BLOB_VERSION: version
+                AZURE_BLOB_VERSION: version,
+                // We set the following env var to disable the OpenTelemetry instrumentation for this test
+                INSTANA_DISABLE_USE_OPENTELEMETRY: 'true'
               }
             });
 
@@ -140,7 +142,9 @@ if (!storageAccount || !accountKey) {
                 withError: false,
                 spans: spans,
                 op: 'upload',
-                totalspans: 4 // expects 1 azure upload span, 1 fs span of otel and 2 http spans
+                // expects 1 azure upload span and 2 http spans
+                // +1 otel fs also there, but we have disabled otel instrumentation for this test
+                totalspans: 3
               });
             });
           });
@@ -159,7 +163,9 @@ if (!storageAccount || !accountKey) {
                 withError: true,
                 spans: spans,
                 op: 'upload',
-                totalspans: 3 // expects 1 azure upload span, 1 fs span of otel and 1 http span
+                // expects 1 azure upload span and 1 http span
+                // +1 otel fs also there, but we have disabled otel instrumentation for this test
+                totalspans: 2
               });
             });
           });
@@ -273,7 +279,8 @@ if (!storageAccount || !accountKey) {
                 withError: false,
                 spans: spans,
                 op: 'download',
-                totalspans: 6 // expects 3 azure spans( delete, upload, download ), 2 fs spans and 1 http span
+                // // +1 otel fs also there, but we have disabled otel instrumentation for this test
+                totalspans: 4 // expects 3 azure spans( delete, upload, download ) and 1 http span
               });
             });
           });
@@ -292,7 +299,9 @@ if (!storageAccount || !accountKey) {
                 withError: false,
                 spans: spans,
                 op: 'download',
-                totalspans: 7 // expects 3 azure spans( delete, upload, download ), 2 fs spans and 2 http spans
+                // expects 3 azure spans( delete, upload, download ) and 1 http span
+                // +2 otel fs also there, but we have disabled otel instrumentation for this test
+                totalspans: 5
               });
             });
           });
@@ -311,7 +320,9 @@ if (!storageAccount || !accountKey) {
                 withError: false,
                 spans: spans,
                 op: 'download',
-                totalspans: 7 // expects 3 azure spans( delete, upload, download ), 2 fs spans and 2 http spans
+                // expects 3 azure spans( delete, upload, download ) and 2 http spans
+                // +2 otel fs also there, but we have disabled otel instrumentation for this test
+                totalspans: 5
               });
             });
           });
@@ -330,7 +341,9 @@ if (!storageAccount || !accountKey) {
                 withError: false,
                 spans: spans,
                 op: 'download',
-                totalspans: 6 // expects 3 azure spans( delete, upload, download ), 2 fs spans and 1 http span
+                // expects 3 azure spans( delete, upload, download ) and 1 http span
+                // +2 otel fs also there, but we have disabled otel instrumentation for this test
+                totalspans: 4
               });
             });
           });

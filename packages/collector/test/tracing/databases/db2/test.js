@@ -136,7 +136,9 @@ mochaSuiteFn('tracing/db2', function () {
           DB2_TABLE_NAME_1: TABLE_NAME_1,
           DB2_TABLE_NAME_2: TABLE_NAME_2,
           DB2_TABLE_NAME_3: TABLE_NAME_3,
-          DB2_CLOSE_TIMEOUT_IN_MS
+          DB2_CLOSE_TIMEOUT_IN_MS,
+          // We set the following env var to disable the OpenTelemetry instrumentation for this test
+          INSTANA_DISABLE_USE_OPENTELEMETRY: 'true'
         }
       });
 
@@ -878,12 +880,12 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              numberOfSpans: 15,
+              numberOfSpans: 11,
               // Spans:
               // 10 queries splitted from the file
               // 5 fs operations on top (ours + from db2 internally fs-extra)
               // https://github.com/ibmdb/node-ibm_db/blob/fb25937524d74d25917e9aa67fb4737971317986/lib/odbc.js#L916
-              // If the Otel integration is disabled, we expect 11 spans.
+              // Since the Otel instrumentation is disabled, we expect 11 spans.
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,
