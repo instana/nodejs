@@ -5,25 +5,11 @@
 'use strict';
 
 /**
- * Provides a deterministic singleton instance of the OpenTelemetry API.
- *
- * Priority:
- * 1. Application root node_modules (so instrumentations installed by the app integrate properly)
- * 2. Fallback to @instana/core's local OTEL API
- *
- * This avoids conflicts when multiple OTEL API versions exist.
+ * Export the singleton OpenTelemetry API instance from the nearest
+ * @opentelemetry installation in node_modules.
+ * This guarantees all instrumentations (fs, restify, etc.) use the same API instance,
+ * avoiding conflicts between nested or root package versions.
  */
-
-/** @type {import('@opentelemetry/api')} */
-let apiInstance;
-
-try {
-  // Attempt to load OTEL API from application root
-  const appRootApiPath = require.resolve('@opentelemetry/api', { paths: [process.cwd()] });
-  apiInstance = require(appRootApiPath);
-} catch (_) {
-  // Fallback to core package OTEL API
-  apiInstance = require('@opentelemetry/api');
-}
-
-module.exports = apiInstance;
+module.exports = require(require.resolve('@opentelemetry/api', {
+  paths: [__dirname]
+}));
