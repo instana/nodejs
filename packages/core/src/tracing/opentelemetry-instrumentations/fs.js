@@ -7,7 +7,7 @@
 // NOTE: otel fs instrumentation does not capture the file name currently
 module.exports.init = cls => {
   const constants = require('../constants');
-  const api = require('@opentelemetry/api');
+  const api = require('../opentelemetry-api')();
   const { NonRecordingSpan } = require('./files/NonRecordingSpan');
   const { FsInstrumentation } = require('@opentelemetry/instrumentation-fs');
 
