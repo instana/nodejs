@@ -6,7 +6,7 @@
 'use strict';
 
 const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks');
-const api = require('../opentelemetry-api')();
+const api = require('../opentelemetry-api');
 const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
 const constants = require('../constants');
 const supportedVersion = require('../supportedVersion');
