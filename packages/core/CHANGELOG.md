@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.26.1](https://github.com/instana/nodejs/compare/v4.26.0...v4.26.1) (2025-10-13)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/instrumentation-oracledb from 0.29.0 to 0.32.0 ([#2055](https://github.com/instana/nodejs/issues/2055)) ([eddee3c](https://github.com/instana/nodejs/commit/eddee3c8af4fb0d8ebc6b1d7de88a32e7b97e31f))
+* bumped import-in-the-middle from 1.14.2 to 1.14.4 ([#2056](https://github.com/instana/nodejs/issues/2056)) ([e6e3b4f](https://github.com/instana/nodejs/commit/e6e3b4f4f7cdcbed747b2055cf8a5024c898e62c))
+* bumped import-in-the-middle from 1.14.4 to 1.15.0 ([#2064](https://github.com/instana/nodejs/issues/2064)) ([1022515](https://github.com/instana/nodejs/commit/102251575b87761e6721dd620ad2a3bb6f39b9b0))
+* bumped semver from 7.7.2 to 7.7.3 ([#2053](https://github.com/instana/nodejs/issues/2053)) ([d5f0841](https://github.com/instana/nodejs/commit/d5f08418b6d145117f5888ea25d83994986dbeff))
+
+
+
+
+
 # [4.26.0](https://github.com/instana/nodejs/compare/v4.25.0...v4.26.0) (2025-10-08)
 
 **Note:** Version bump only for package @instana/core
