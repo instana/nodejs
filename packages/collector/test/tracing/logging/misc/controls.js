@@ -22,26 +22,26 @@ exports.registerTestHooks = (opts = {}) => {
   let appName = 'app.js';
   if (opts.instanaLoggingMode) {
     switch (opts.instanaLoggingMode) {
-      case 'instana-uses-default-logger':
-        appName = 'app-instana-uses-default-logger.js';
+      case 'uses-default-logger':
+        appName = 'app-uses-default-logger.js';
         break;
-      case 'instana-receives-pino-logger':
-        appName = 'app-instana-receives-pino-logger.js';
+      case 'receives-pino-logger':
+        appName = 'app-receives-pino-logger.js';
         break;
-      case 'instana-receives-custom-dummy-logger':
-        appName = 'app-instana-receives-custom-dummy-logger.js';
+      case 'receives-custom-dummy-logger':
+        appName = 'app-receives-custom-dummy-logger.js';
         break;
-      case 'instana-receives-bunyan-logger':
-        appName = 'app-instana-receives-bunyan-logger.js';
+      case 'receives-bunyan-logger':
+        appName = 'app-receives-bunyan-logger.js';
         break;
-      case 'instana-receives-winston-logger':
-        appName = 'app-instana-receives-winston-logger.js';
+      case 'receives-winston-logger':
+        appName = 'app-receives-winston-logger.js';
         break;
-      case 'instana-receives-log4js-logger':
-        appName = 'app-instana-receives-log4js-logger.js';
+      case 'receives-log4js-logger':
+        appName = 'app-receives-log4js-logger.js';
         break;
       default:
-        throw new Error(`Unknown instanaLoggingMode: ${opts.instanaLoggingMode}`);
+        throw new Error(`Unknown app: ${opts.instanaLoggingMode}`);
     }
   }
 

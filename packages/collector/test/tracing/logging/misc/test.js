@@ -14,69 +14,68 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/instana-logger', function () {
+mochaSuiteFn('tracing/logging/misc', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
   const appControls = require('./controls');
 
-  // verify that Instana's own pino logging does not get traced
-  describe('do not trace Instana log calls', () => {
+  describe('Ensure that Instana logs are not being traced as log spans', () => {
     beforeEach(async () => {
       await agentControls.clearReceivedTraceData();
     });
 
-    describe('Instana creates a new default logger', () => {
+    describe('with the default logger', () => {
       appControls.registerTestHooks({
-        instanaLoggingMode: 'instana-uses-default-logger'
+        instanaLoggingMode: 'uses-default-logger'
       });
 
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
 
-    describe('Instana receives a pino logger', () => {
+    describe('with a custom pino logger', () => {
       appControls.registerTestHooks({
-        instanaLoggingMode: 'instana-receives-pino-logger'
+        instanaLoggingMode: 'receives-pino-logger'
       });
 
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
 
-    describe('Instana receives a custom dummy logger', () => {
+    describe('with a custom dummy logger', () => {
       appControls.registerTestHooks({
-        instanaLoggingMode: 'instana-receives-custom-dummy-logger'
+        instanaLoggingMode: 'receives-custom-dummy-logger'
       });
 
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
 
-    describe('Instana receives a log4js logger', () => {
+    describe('with a custom log4js logger', () => {
       appControls.registerTestHooks({
-        instanaLoggingMode: 'instana-receives-log4js-logger'
+        instanaLoggingMode: 'receives-log4js-logger'
       });
 
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
 
-    describe('Instana receives a bunyan logger', () => {
+    describe('with a custom bunyan logger', () => {
       appControls.registerTestHooks({
-        instanaLoggingMode: 'instana-receives-bunyan-logger'
+        instanaLoggingMode: 'receives-bunyan-logger'
       });
 
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
 
-    describe('Instana receives a winston logger', () => {
+    describe('with a custom winston logger', () => {
       appControls.registerTestHooks({
-        instanaLoggingMode: 'instana-receives-winston-logger'
+        instanaLoggingMode: 'receives-winston-logger'
       });
 
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
     });
   });
 
-  describe('Instana logger & worker threads', () => {
+  describe('Ensure that worker threads using the correct thread ID', () => {
     let controls;
 
     before(async () => {
@@ -85,7 +84,7 @@ mochaSuiteFn('tracing/instana-logger', function () {
       await agentControls.clearReceivedTraceData();
 
       controls = new ProcessControls({
-        appPath: path.join(__dirname, 'app-instana-threads.js'),
+        appPath: path.join(__dirname, 'app-threads.js'),
         useGlobalAgent: true,
         pipeSubprocessLogs: true,
         env: {
