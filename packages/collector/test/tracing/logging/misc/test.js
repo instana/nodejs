@@ -21,13 +21,13 @@ mochaSuiteFn('tracing/logging/misc', function () {
   const agentControls = globalAgent.instance;
   const AppControls = require('./controls');
 
-  describe('Ensure that logger spans are created', () => {
+  describe('Ensure that logger spans are created', function () {
     beforeEach(async () => {
       await agentControls.clearReceivedTraceData();
       await agentControls.clearAgentLogs();
     });
 
-    describe('with a custom pino logger', () => {
+    describe('with a custom pino logger', function () {
       describe('set minimal pino configuration', function () {
         let appControls;
 
@@ -85,13 +85,13 @@ mochaSuiteFn('tracing/logging/misc', function () {
     });
   });
 
-  describe('Ensure that Instana logs are not being traced as log spans', () => {
+  describe('Ensure that Instana logs are not being traced as log spans', function () {
     beforeEach(async () => {
       await agentControls.clearReceivedTraceData();
       await agentControls.clearAgentLogs();
     });
 
-    describe('with the default logger', () => {
+    describe('with the default logger', function () {
       let appControls;
 
       beforeEach(async () => {
@@ -106,10 +106,12 @@ mochaSuiteFn('tracing/logging/misc', function () {
         return appControls.stop();
       });
 
-      it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 1 }));
+      it('log calls are not traced', () => {
+        verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 1 });
+      });
     });
 
-    describe('with a custom pino logger', () => {
+    describe('with a custom pino logger', function () {
       let appControls;
 
       beforeEach(async () => {
@@ -127,7 +129,7 @@ mochaSuiteFn('tracing/logging/misc', function () {
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced(appControls));
     });
 
-    describe('with a custom dummy logger', () => {
+    describe('with a custom dummy logger', function () {
       let appControls;
 
       beforeEach(async () => {
@@ -148,7 +150,7 @@ mochaSuiteFn('tracing/logging/misc', function () {
         verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 2, expectCustomLogs: false }));
     });
 
-    describe('with a custom log4js logger', () => {
+    describe('with a custom log4js logger', function () {
       let appControls;
 
       beforeEach(async () => {
@@ -169,7 +171,7 @@ mochaSuiteFn('tracing/logging/misc', function () {
         verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 2, expectCustomLogs: false }));
     });
 
-    describe('with a custom bunyan logger', () => {
+    describe('with a custom bunyan logger', function () {
       let appControls;
 
       beforeEach(async () => {
@@ -187,7 +189,7 @@ mochaSuiteFn('tracing/logging/misc', function () {
       it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced(appControls));
     });
 
-    describe('with a custom winston logger', () => {
+    describe('with a custom winston logger', function () {
       let appControls;
 
       beforeEach(async () => {
@@ -207,7 +209,7 @@ mochaSuiteFn('tracing/logging/misc', function () {
     });
   });
 
-  describe('Ensure that worker threads using the correct thread ID', () => {
+  describe('Ensure that worker threads using the correct thread ID', function () {
     let controls;
 
     beforeEach(async () => {
@@ -258,6 +260,9 @@ mochaSuiteFn('tracing/logging/misc', function () {
 
       return testUtils.retry(() =>
         agentControls.getSpans().then(async spans => {
+          const agentLogs = await agentControls.getAgentLogs();
+          expect(agentLogs.length).to.be.at.least(4);
+
           const processLogs = appControls.getProcessLogs();
 
           processLogs.forEach(msg => {

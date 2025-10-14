@@ -118,18 +118,31 @@ exports.init = function init(userConfig = {}) {
         }
       };
 
-      const symbols = uninstrumentedLogger.symbols;
-
       const pinoOpts = {
         ...parentLogger.levels,
         level: parentLogger.level || 'info',
         base: parentLogger.bindings()
       };
 
-      if (symbols && typeof symbols === 'object') {
+      const instance = userConfig.logger || parentLogger;
+      const symbols = Object.getOwnPropertySymbols(instance);
+
+      if (symbols && Array.isArray(symbols)) {
+        const timeSym = symbols.find(sym => String(sym) === 'Symbol(pino.time)');
         // @ts-ignore
-        const timeSym = symbols.find(s => s.toString() === 'Symbol(pino.time)');
-        pinoOpts.timestamp = () => symbols[timeSym] || `,"time":"${new Date().toISOString()}"`;
+        const timestampFn = instance[timeSym];
+
+        if (timestampFn) {
+          pinoOpts.timestamp = timestampFn;
+        }
+
+        const formattersSym = symbols.find(sym => String(sym) === 'Symbol(pino.formatters)');
+        // @ts-ignore
+        const formatters = instance[formattersSym];
+
+        if (formatters) {
+          pinoOpts.formatters = formatters;
+        }
       }
 
       parentLogger = uninstrumentedLogger(pinoOpts, multiStream);
