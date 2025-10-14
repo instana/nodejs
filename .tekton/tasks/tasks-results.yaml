@@ -73,7 +73,8 @@ spec:
               sonar -Dsonar.login="$SONAR_TOKEN" \
                     -Dsonar.pullrequest.key="$(params.pr-number)" \
                     -Dsonar.pullrequest.branch="$(params.pr-branch)" \
-                    -Dsonar.pullrequest.base="$(params.target-branch)"
+                    -Dsonar.pullrequest.base="$(params.target-branch)" \
+                    -Dsonar.newCode.referenceBranch=$(params.target-branch)
             else
               echo "PR is draft — skipping Sonar scan."
             fi
