@@ -196,6 +196,12 @@ class AgentStubControls {
     });
   }
 
+  clearAgentLogs() {
+    return fetch(`http://127.0.0.1:${this.agentPort}/agent/logs`, {
+      method: 'DELETE'
+    });
+  }
+
   clearReceivedData() {
     return fetch(`http://127.0.0.1:${this.agentPort}/received/data`, {
       method: 'DELETE'

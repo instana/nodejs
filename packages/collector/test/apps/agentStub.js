@@ -147,6 +147,11 @@ app.get('/agent/logs', (req, res) => {
   res.json(agentLogs);
 });
 
+app.delete('/agent/logs', (req, res) => {
+  agentLogs.length = 0;
+  res.sendStatus(200);
+});
+
 app.post(
   '/com.instana.plugin.nodejs.:pid',
   checkExistenceOfKnownPid(function handleEntityData(req, res) {

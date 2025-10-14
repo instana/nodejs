@@ -15,7 +15,7 @@ process.on('SIGTERM', () => {
 const agentPort = process.env.AGENT_PORT;
 const instana = require('../../../..')({
   agentPort,
-  level: 'warn',
+  level: 'info',
   tracing: {
     enabled: process.env.TRACING_ENABLED !== 'false',
     forceTransmissionStartingAt: 1
@@ -28,7 +28,7 @@ log4js.configure({
     out: { type: 'stdout' }
   },
   categories: {
-    default: { appenders: ['out'], level: 'all' }
+    default: { appenders: ['out'], level: 'warn' }
   }
 });
 

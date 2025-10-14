@@ -15,14 +15,19 @@ process.on('SIGTERM', () => {
 const agentPort = process.env.AGENT_PORT;
 const instana = require('../../../..')({
   agentPort,
-  level: 'warn',
+  level: 'info',
   tracing: {
     enabled: process.env.TRACING_ENABLED !== 'false',
     forceTransmissionStartingAt: 1
   }
 });
 const pino = require('pino');
-instana.setLogger(pino({ name: 'app-logger' }));
+
+// We define a level during instantiation of Instana, but we override the level here with our custom logger.
+// Some logs can still appear from level "info", because Instana is already operating.
+// See https://jsw.ibm.com/browse/INSTA-24679
+const pinoInstance = pino({ name: 'app-logger', level: 'warn' });
+instana.setLogger(pinoInstance);
 
 const instanaLogger = require('../../../../src/logger').getLogger();
 

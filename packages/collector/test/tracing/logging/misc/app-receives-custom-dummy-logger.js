@@ -17,7 +17,7 @@ const agentPort = process.env.AGENT_PORT;
 
 const instana = require('../../../..')({
   agentPort,
-  level: 'warn',
+  level: 'info',
   tracing: {
     enabled: process.env.TRACING_ENABLED !== 'false',
     forceTransmissionStartingAt: 1
@@ -28,7 +28,9 @@ const dummyLogger = {
   debug: function () {
     // omit debug calls to not pollute test logs
   },
-  info: console.log,
+  info: function () {
+    // omit info calls to not pollute test logs
+  },
   warn: console.warn,
   error: console.error
 };
