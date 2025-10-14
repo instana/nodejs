@@ -24,6 +24,7 @@ mochaSuiteFn('tracing/logging/misc', function () {
   describe('Ensure that Instana logs are not being traced as log spans', () => {
     beforeEach(async () => {
       await agentControls.clearReceivedTraceData();
+      await agentControls.clearAgentLogs();
     });
 
     describe('with the default logger', () => {
@@ -31,7 +32,7 @@ mochaSuiteFn('tracing/logging/misc', function () {
         instanaLoggingMode: 'uses-default-logger'
       });
 
-      it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
+      it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced({ expectedAgentLogCount: 1 }));
     });
 
     describe('with a custom pino logger', () => {
@@ -47,7 +48,10 @@ mochaSuiteFn('tracing/logging/misc', function () {
         instanaLoggingMode: 'receives-custom-dummy-logger'
       });
 
-      it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
+      // Only bunyan and pino currently support agent log forwarding.
+      // See https://jsw.ibm.com/browse/INSTA-59278
+      it('log calls are not traced', () =>
+        verifyInstanaLoggingIsNotTraced({ expectedAgentLogCount: 2, expectCustomLogs: false }));
     });
 
     describe('with a custom log4js logger', () => {
@@ -55,7 +59,10 @@ mochaSuiteFn('tracing/logging/misc', function () {
         instanaLoggingMode: 'receives-log4js-logger'
       });
 
-      it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
+      // Only bunyan and pino currently support agent log forwarding.
+      // See https://jsw.ibm.com/browse/INSTA-59278
+      it('log calls are not traced', () =>
+        verifyInstanaLoggingIsNotTraced({ expectedAgentLogCount: 2, expectCustomLogs: false }));
     });
 
     describe('with a custom bunyan logger', () => {
@@ -71,7 +78,8 @@ mochaSuiteFn('tracing/logging/misc', function () {
         instanaLoggingMode: 'receives-winston-logger'
       });
 
-      it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
+      it('log calls are not traced', () =>
+        verifyInstanaLoggingIsNotTraced({ expectedAgentLogCount: 2, expectCustomLogs: false }));
     });
   });
 
@@ -120,12 +128,26 @@ mochaSuiteFn('tracing/logging/misc', function () {
     });
   });
 
-  function verifyInstanaLoggingIsNotTraced() {
+  function verifyInstanaLoggingIsNotTraced({ expectedAgentLogCount = 3, expectCustomLogs = true } = {}) {
     return appControls.trigger('trigger').then(async () => {
       await testUtils.delay(500);
 
       return testUtils.retry(() =>
-        agentControls.getSpans().then(spans => {
+        agentControls.getSpans().then(async spans => {
+          const agentLogs = await agentControls.getAgentLogs();
+
+          // See See https://jsw.ibm.com/browse/INSTA-24679
+          // We actually only expect the error log to appear, but setLogger is broken by design.
+          expect(agentLogs.length).to.equal(expectedAgentLogCount);
+
+          if (expectCustomLogs) {
+            expect(
+              agentLogs.find(log => {
+                return log.m.includes('An error logged by Instana - this must not be traced');
+              })
+            ).to.exist;
+          }
+
           testUtils.expectAtLeastOneMatching(spans, [
             span => expect(span.n).to.equal('node.http.server'),
             span => expect(span.f.e).to.equal(String(appControls.getPid())),

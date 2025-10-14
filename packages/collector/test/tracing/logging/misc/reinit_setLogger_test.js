@@ -10,17 +10,17 @@ const os = require('os');
 const path = require('path');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
-const config = require('../../core/test/config');
-const testUtils = require('../../core/test/test_util');
-const globalAgent = require('./globalAgent');
+const config = require('../../../../../core/test/config');
+const testUtils = require('../../../../../core/test/test_util');
+const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('setLogger', function () {
+mochaSuiteFn('tracing/logging/misc/reinit-setLogger', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
-  const expressControls = require('./apps/expressControls');
+  const expressControls = require('../../../apps/expressControls');
   const dummyLogFile = path.join(os.tmpdir(), 'instana-nodejs-dummy-test.log');
 
   before(async () => {

@@ -135,7 +135,7 @@ exports.init = function init(userConfig = {}) {
     parentLogger.addStream({
       type: 'raw',
       stream: loggerToAgentStream,
-      level: 'info'
+      level: parentLogger._level || 'info'
     });
   }
 
