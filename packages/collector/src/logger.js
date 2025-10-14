@@ -118,15 +118,21 @@ exports.init = function init(userConfig = {}) {
         }
       };
 
-      parentLogger = uninstrumentedLogger(
-        {
-          ...parentLogger.levels,
-          level: parentLogger.level || 'info',
-          base: parentLogger.bindings(),
-          timestamp: () => `,"time":"${new Date().toISOString()}"`
-        },
-        multiStream
-      );
+      const symbols = uninstrumentedLogger.symbols;
+
+      const pinoOpts = {
+        ...parentLogger.levels,
+        level: parentLogger.level || 'info',
+        base: parentLogger.bindings()
+      };
+
+      if (symbols && typeof symbols === 'object') {
+        // @ts-ignore
+        const timeSym = symbols.find(s => s.toString() === 'Symbol(pino.time)');
+        pinoOpts.timestamp = () => symbols[timeSym] || `,"time":"${new Date().toISOString()}"`;
+      }
+
+      parentLogger = uninstrumentedLogger(pinoOpts, multiStream);
     } catch (error) {
       parentLogger.debug(`An issue occurred while modifying the current logger: ${error.message}`);
     }

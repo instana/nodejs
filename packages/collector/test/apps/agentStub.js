@@ -138,7 +138,7 @@ app.head(
 );
 
 app.post('/com.instana.agent.logger', (req, res) => {
-  logger.info('Received log message from agent: %j', req.body);
+  logger.info('Received log message for agent: %j', req.body);
   agentLogs.push(req.body);
   res.sendStatus(200);
 });
