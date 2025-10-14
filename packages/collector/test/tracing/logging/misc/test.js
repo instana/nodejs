@@ -55,7 +55,7 @@ mochaSuiteFn('tracing/logging/misc', function () {
         });
       });
 
-      describe.only('set extended pino configuration', function () {
+      describe('set extended pino configuration', function () {
         let appControls;
 
         beforeEach(async () => {
