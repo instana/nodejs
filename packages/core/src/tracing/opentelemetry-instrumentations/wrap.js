@@ -6,8 +6,8 @@
 'use strict';
 
 const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks');
-const api = require('@opentelemetry/api');
 const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
+const apiResolver = require('../../util/opentelemetryApiResolver');
 const constants = require('../constants');
 const supportedVersion = require('../supportedVersion');
 
@@ -24,6 +24,9 @@ const instrumentations = {
   '@opentelemetry/instrumentation-oracledb': { name: 'oracle' }
 };
 
+// Store API instances for each instrumentation
+const apiInstances = {};
+
 // NOTE: using a logger might create a recursive execution
 //       logger.debug -> creates fs call -> calls transformToInstanaSpan -> calls logger.debug
 //       use uninstrumented logger, but useless for production
@@ -31,11 +34,17 @@ module.exports.init = (_config, cls) => {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
+  // For each instrumentation, retrieve its corresponding @opentelemetry/api instance
+  // using the apiResolver and store it in apiInstances.
+  // This ensures that we have an API instance available for every instrumentation.
+  Object.keys(instrumentations).forEach(instrumentationName => {
+    apiInstances[instrumentationName] = apiResolver.getApiForInstrumentation(instrumentationName);
+  });
 
   Object.keys(instrumentations).forEach(k => {
     const value = instrumentations[k];
     const instrumentation = require(`./${value.name}`);
-    instrumentation.init(cls);
+    instrumentation.init({ cls: cls, api: apiInstances[k] });
     value.module = instrumentation;
   });
 
@@ -93,28 +102,28 @@ module.exports.init = (_config, cls) => {
     }
   };
 
-  const provider = new BasicTracerProvider();
-  const contextManager = new AsyncHooksContextManager();
+  // Each instrumentation depends on @opentelemetry/instrumentation,
+  // which has a peer dependency on @opentelemetry/api.
+  // An API instance is created for each instrumentation, but multiple instrumentations
+  // may share the same underlying API instance. To avoid initializing the same API instance multiple times,
+  // we ensure that each unique @opentelemetry/api instance is initialized only once.
+  // This approach:
+  //   * Prevents duplicate apiInstance initializations
+  //   * Ensures that span transformations are applied correctly
+  const allApiInstances = Object.values(apiInstances);
+  const uniqueApis = [...new Set(allApiInstances)];
 
-  api.trace.setGlobalTracerProvider(provider);
-  api.context.setGlobalContextManager(contextManager);
+  uniqueApis.forEach(api => {
+    const provider = new BasicTracerProvider();
+    const contextManager = new AsyncHooksContextManager();
 
-  /**
-   * Each instrumentation depends on @opentelemetry/instrumentation.
-   * @opentelemetry/instrumentation has a peer dependency to @opentelemetry/api.
-   *
-   * Every instrumentation is based on @opentelemetry/instrumentation.
-   * We need to install an older version of @opentelemetry/instrumentation on root,
-   * to AVOID that the e.g. the tedious instrumentation loads
-   * the root @opentelemetry/instrumentation. Because otherwise
-   * we will load two different instances of @openetelemetry/api.
-   * And then we will get NonRecordingSpan instances when running the tests.
-   *
-   * This is an npm workspace issue. Nohoisting missing.
-   */
-  const orig = api.trace.setSpan;
-  api.trace.setSpan = function instanaSetSpan(ctx, span) {
-    transformToInstanaSpan(span);
-    return orig.apply(this, arguments);
-  };
+    api.trace.setGlobalTracerProvider(provider);
+    api.context.setGlobalContextManager(contextManager);
+
+    const originalSetSpan = api.trace.setSpan;
+    api.trace.setSpan = function instanaSetSpan(ctx, span) {
+      transformToInstanaSpan(span);
+      return originalSetSpan.apply(this, arguments);
+    };
+  });
 };
