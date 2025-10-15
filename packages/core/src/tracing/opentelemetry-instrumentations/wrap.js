@@ -111,12 +111,12 @@ module.exports.init = (_config, cls) => {
    */
   const uniqueApis = Array.from(new Set(Object.values(apiInstances)));
 
-  uniqueApis.forEach(apiInstance => {
-    const tracerProvider = new BasicTracerProvider();
-    const contextManager = new AsyncHooksContextManager();
+  const sharedProvider = new BasicTracerProvider();
+  const sharedContextManager = new AsyncHooksContextManager().enable();
 
-    apiInstance.trace.setGlobalTracerProvider(tracerProvider);
-    apiInstance.context.setGlobalContextManager(contextManager);
+  uniqueApis.forEach(apiInstance => {
+    apiInstance.trace.setGlobalTracerProvider(sharedProvider);
+    apiInstance.context.setGlobalContextManager(sharedContextManager);
 
     const originalSetSpan = apiInstance.trace.setSpan;
     apiInstance.trace.setSpan = function instanaSetSpan(ctx, span) {
