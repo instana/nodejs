@@ -152,6 +152,8 @@ exports.init = function init(userConfig = {}) {
 
       parentLogger = uninstrumentedLogger(pinoOpts, multiStream);
     } catch (error) {
+      // TODO: If any error occurs, we don't forward any logs to the agent. Why?
+      //       https://jsw.ibm.com/browse/INSTA-59515
       parentLogger.debug(`An issue occurred while modifying the current logger: ${error.message}`);
     }
   } else if (parentLogger && parentLogger.addStream) {
