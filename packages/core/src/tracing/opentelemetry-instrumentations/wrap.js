@@ -102,26 +102,24 @@ module.exports.init = (_config, cls) => {
     }
   };
 
-  // Each instrumentation depends on @opentelemetry/instrumentation,
-  // which has a peer dependency on @opentelemetry/api.
-  // An API instance is created for each instrumentation, but multiple instrumentations
-  // may share the same underlying API instance. To avoid initializing the same API instance multiple times,
-  // we ensure that each unique @opentelemetry/api instance is initialized only once.
-  // This approach:
-  //   * Prevents duplicate apiInstance initializations
-  //   * Ensures that span transformations are applied correctly
-  const allApiInstances = Object.values(apiInstances);
-  const uniqueApis = [...new Set(allApiInstances)];
+  /**
+   * Different instrumentations may use separate @opentelemetry/api instances.
+   * To ensure spans from all instrumentations are correctly captured and
+   * transformed into Instana spans, we set up a tracer provider and context
+   * manager for each unique API instance. Initializing them once per instance
+   * prevents conflicts, duplicate contexts, and lost spans.
+   */
+  const uniqueApis = Array.from(new Set(Object.values(apiInstances)));
 
-  uniqueApis.forEach(api => {
-    const provider = new BasicTracerProvider();
+  uniqueApis.forEach(apiInstance => {
+    const tracerProvider = new BasicTracerProvider();
     const contextManager = new AsyncHooksContextManager();
 
-    api.trace.setGlobalTracerProvider(provider);
-    api.context.setGlobalContextManager(contextManager);
+    apiInstance.trace.setGlobalTracerProvider(tracerProvider);
+    apiInstance.context.setGlobalContextManager(contextManager);
 
-    const originalSetSpan = api.trace.setSpan;
-    api.trace.setSpan = function instanaSetSpan(ctx, span) {
+    const originalSetSpan = apiInstance.trace.setSpan;
+    apiInstance.trace.setSpan = function instanaSetSpan(ctx, span) {
       transformToInstanaSpan(span);
       return originalSetSpan.apply(this, arguments);
     };

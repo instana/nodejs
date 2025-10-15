@@ -10,21 +10,17 @@ const path = require('path');
 const Module = require('module');
 
 /**
- * This helper detects and returns the exact @opentelemetry/api instance
- * that a specific instrumentation is using based on where it's installed.
+ * Resolves the exact @opentelemetry/api instance used by a given instrumentation.
  *
- * This solves the issue of multiple API instances being loaded in environments
- * such as monorepos, workspaces, or mixed dependency trees.
+ * This avoids issues where multiple API instances exist in environments such as
+ * monorepos, layered dependency trees, or workspace setups — ensuring the
+ * instrumentation and tracer share the same API reference.
+ *
+ *
+ * @param {string} instrumentationName - Name of the instrumentation package
+ * @returns {object} The resolved OpenTelemetry API instance
  */
-
-const apiInstanceCache = new Map();
-
 function resolveApiForInstrumentation(instrumentationName) {
-  // Return cached instance if we've already resolved it
-  if (apiInstanceCache.has(instrumentationName)) {
-    return apiInstanceCache.get(instrumentationName);
-  }
-
   let apiInstance;
 
   try {
@@ -32,6 +28,7 @@ function resolveApiForInstrumentation(instrumentationName) {
     const instrumentationDir = path.dirname(instrumentationPath);
 
     try {
+      // Resolve the @opentelemetry/api path relative to the instrumentation path
       const apiPath = Module._resolveFilename('@opentelemetry/api', {
         id: instrumentationPath,
         filename: instrumentationPath,
@@ -39,26 +36,24 @@ function resolveApiForInstrumentation(instrumentationName) {
       });
 
       apiInstance = require(apiPath);
-    } catch (err) {
-      // Fall back to the root API instance
+    } catch {
+      // Fallback: use the root-level API if not found within the instrumentation
       apiInstance = require(require.resolve('@opentelemetry/api', { paths: [process.cwd()] }));
     }
-  } catch (err) {
+  } catch {
+    // Final fallback: attempt global/root-level resolution
     apiInstance = require(require.resolve('@opentelemetry/api', { paths: [process.cwd()] }));
   }
 
-  apiInstanceCache.set(instrumentationName, apiInstance);
   return apiInstance;
 }
 
 /**
- * @param {string} instrumentationName - The name of the instrumentation package
- * @returns {object} The API instance
+ * Returns the OpenTelemetry API instance for a given instrumentation.
+ * Caches results to avoid repeated resolution overhead.
  */
 function getApiForInstrumentation(instrumentationName) {
   return resolveApiForInstrumentation(instrumentationName);
 }
 
-module.exports = {
-  getApiForInstrumentation
-};
+module.exports = { getApiForInstrumentation };
