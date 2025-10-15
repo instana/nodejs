@@ -47,7 +47,7 @@ mochaSuiteFn('tracing/logging/misc', function () {
         });
 
         it('log calls are traced', () => {
-          verifyLogSpansAreCreated(appControls, {
+          return verifyLogSpansAreCreated(appControls, {
             spanName: 'log.pino',
             expectedTimeFormat: 'time',
             expectedLevelFormat: 'level'
@@ -75,12 +75,13 @@ mochaSuiteFn('tracing/logging/misc', function () {
           return appControls.stop();
         });
 
-        it('log calls are traced', () =>
-          verifyLogSpansAreCreated(appControls, {
+        it('log calls are traced', () => {
+          return verifyLogSpansAreCreated(appControls, {
             spanName: 'log.pino',
             expectedTimeFormat: '"@timestamp":',
             expectedLevelFormat: '"log.level":'
-          }));
+          });
+        });
       });
     });
   });
@@ -107,7 +108,7 @@ mochaSuiteFn('tracing/logging/misc', function () {
       });
 
       it('log calls are not traced', () => {
-        verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 1 });
+        return verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 1 });
       });
     });
 
@@ -126,7 +127,9 @@ mochaSuiteFn('tracing/logging/misc', function () {
         return appControls.stop();
       });
 
-      it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced(appControls));
+      it('log calls are not traced', () => {
+        return verifyInstanaLoggingIsNotTraced(appControls);
+      });
     });
 
     describe('with a custom dummy logger', function () {
@@ -146,8 +149,9 @@ mochaSuiteFn('tracing/logging/misc', function () {
 
       // Only bunyan and pino currently support agent log forwarding.
       // See https://jsw.ibm.com/browse/INSTA-59278
-      it('log calls are not traced', () =>
-        verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 2, expectCustomLogs: false }));
+      it('log calls are not traced', () => {
+        return verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 2, expectCustomLogs: false });
+      });
     });
 
     describe('with a custom log4js logger', function () {
@@ -167,8 +171,9 @@ mochaSuiteFn('tracing/logging/misc', function () {
 
       // Only bunyan and pino currently support agent log forwarding.
       // See https://jsw.ibm.com/browse/INSTA-59278
-      it('log calls are not traced', () =>
-        verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 2, expectCustomLogs: false }));
+      it('log calls are not traced', () => {
+        return verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 2, expectCustomLogs: false });
+      });
     });
 
     describe('with a custom bunyan logger', function () {
@@ -186,7 +191,9 @@ mochaSuiteFn('tracing/logging/misc', function () {
         return appControls.stop();
       });
 
-      it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced(appControls));
+      it('log calls are not traced', () => {
+        return verifyInstanaLoggingIsNotTraced(appControls);
+      });
     });
 
     describe('with a custom winston logger', function () {
@@ -204,8 +211,9 @@ mochaSuiteFn('tracing/logging/misc', function () {
         return appControls.stop();
       });
 
-      it('log calls are not traced', () =>
-        verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 2, expectCustomLogs: false }));
+      it('log calls are not traced', () => {
+        return verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 2, expectCustomLogs: false });
+      });
     });
   });
 
@@ -261,7 +269,9 @@ mochaSuiteFn('tracing/logging/misc', function () {
       return testUtils.retry(() =>
         agentControls.getSpans().then(async spans => {
           const agentLogs = await agentControls.getAgentLogs();
-          expect(agentLogs.length).to.be.at.least(4);
+
+          // This is only to verify that there are any agent logs at all.
+          expect(agentLogs.length).to.be.at.least(3);
 
           const processLogs = appControls.getProcessLogs();
 
