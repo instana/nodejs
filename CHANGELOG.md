@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.26.2](https://github.com/instana/nodejs/compare/v4.26.1...v4.26.2) (2025-10-15)
+
+
+### Bug Fixes
+
+* **collector:** resolved extended formatting options for pino ([#2071](https://github.com/instana/nodejs/issues/2071)) ([2d42458](https://github.com/instana/nodejs/commit/2d42458be322d00940139787f7c3d513edc7ccef)), closes [#2066](https://github.com/instana/nodejs/issues/2066)
+* **collector:** respected log level for custom bunyan logger ([#2069](https://github.com/instana/nodejs/issues/2069)) ([929a32b](https://github.com/instana/nodejs/commit/929a32b7c0993c382a5752120fc542f3ef13dc27))
+
+
+
+
+
 ## [4.26.1](https://github.com/instana/nodejs/compare/v4.26.0...v4.26.1) (2025-10-13)
 
 
