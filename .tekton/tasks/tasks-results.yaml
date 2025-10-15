@@ -70,15 +70,16 @@ spec:
 
             if [ "$PR_IS_DRAFT" = "false" ]; then
               echo "Running Sonar scan for PR #$(params.pr-number)"
-              sonar -Dsonar.login="$SONAR_TOKEN" \
+              sonar -Dsonar.token="$SONAR_TOKEN" \
                     -Dsonar.pullrequest.key="$(params.pr-number)" \
                     -Dsonar.pullrequest.branch="$(params.pr-branch)" \
-                    -Dsonar.pullrequest.base="$(params.target-branch)"
+                    -Dsonar.pullrequest.base="$(params.target-branch)" \
+                    -Dsonar.newCode.referenceBranch=$(params.target-branch)
             else
               echo "PR is draft — skipping Sonar scan."
             fi
           else
             echo "Running main branch analysis..."
-            sonar -Dsonar.login=$SONAR_TOKEN
+            sonar -Dsonar.token=$SONAR_TOKEN
           fi
         fi
