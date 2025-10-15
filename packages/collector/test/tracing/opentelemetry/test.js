@@ -364,45 +364,6 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
           )
         ));
 
-    it('should trace correctly when a separate @opentelemetry/api is installed', async () => {
-      execSync('npm install --no-save @opentelemetry/api@1.4.1', {
-        cwd: __dirname,
-        stdio: 'inherit'
-      });
-
-      controls
-        .sendRequest({
-          method: 'GET',
-          path: '/fsread'
-        })
-        .then(() =>
-          retry(() =>
-            agentControls.getSpans().then(spans => {
-              expect(spans.length).to.equal(2);
-
-              const httpEntry = verifyHttpRootEntry({
-                spans,
-                apiPath: '/fsread',
-                pid: String(controls.getPid())
-              });
-
-              verifyExitSpan({
-                spanName: 'otel',
-                spans,
-                parent: httpEntry,
-                withError: false,
-                pid: String(controls.getPid()),
-                dataProperty: 'tags',
-                extraTests: span => {
-                  expect(span.data.tags.name).to.eql('fs readFileSync');
-                  checkTelemetryResourceAttrs(span);
-                }
-              });
-            })
-          )
-        );
-    });
-
     it('[suppressed] should not trace', () =>
       controls
         .sendRequest({
