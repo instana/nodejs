@@ -124,9 +124,14 @@ exports.init = function init(userConfig = {}) {
         base: parentLogger.bindings()
       };
 
+      // CASE: Either its the customers pino instance (and probably a different pino installation/version)
+      //       or its our own pino instance.
       const instance = userConfig.logger || parentLogger;
+
+      // NOTE: Pino uses symbols, because they don't use proper classes.
       const symbols = Object.getOwnPropertySymbols(instance);
 
+      // CASE: We copy any settings from the pino instance such as custom formats.
       if (symbols && Array.isArray(symbols)) {
         const timeSym = symbols.find(sym => String(sym) === 'Symbol(pino.time)');
         // @ts-ignore
