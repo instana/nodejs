@@ -19,74 +19,208 @@ mochaSuiteFn('tracing/logging/misc', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
-  const appControls = require('./controls');
+  const AppControls = require('./controls');
 
-  describe('Ensure that Instana logs are not being traced as log spans', () => {
+  describe('Ensure that logger spans are created', function () {
     beforeEach(async () => {
       await agentControls.clearReceivedTraceData();
       await agentControls.clearAgentLogs();
     });
 
-    describe('with the default logger', () => {
-      appControls.registerTestHooks({
-        instanaLoggingMode: 'uses-default-logger'
+    describe('with a custom pino logger', function () {
+      describe('set minimal pino configuration', function () {
+        let appControls;
+
+        beforeEach(async () => {
+          appControls = new AppControls({
+            instanaLoggingMode: 'receives-pino-logger',
+            env: {
+              CREATE_CUSTOM_LOG_SPANS: 'true'
+            }
+          });
+
+          await appControls.start();
+        });
+
+        afterEach(() => {
+          return appControls.stop();
+        });
+
+        it('log calls are traced', () => {
+          return verifyLogSpansAreCreated(appControls, {
+            spanName: 'log.pino',
+            expectedTimeFormat: 'time',
+            expectedLevelFormat: 'level'
+          });
+        });
       });
 
-      it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced({ expectedAgentLogCount: 1 }));
-    });
+      describe('set extended pino configuration', function () {
+        let appControls;
 
-    describe('with a custom pino logger', () => {
-      appControls.registerTestHooks({
-        instanaLoggingMode: 'receives-pino-logger'
+        beforeEach(async () => {
+          appControls = new AppControls({
+            instanaLoggingMode: 'receives-pino-logger',
+            pipeSubprocessLogs: true,
+            env: {
+              CREATE_CUSTOM_LOG_SPANS: 'true',
+              EXTENDED_LOGGER_CONFIG: 'true'
+            }
+          });
+
+          await appControls.start();
+        });
+
+        afterEach(() => {
+          return appControls.stop();
+        });
+
+        it('log calls are traced', () => {
+          return verifyLogSpansAreCreated(appControls, {
+            spanName: 'log.pino',
+            expectedTimeFormat: '"@timestamp":',
+            expectedLevelFormat: '"log.level":'
+          });
+        });
       });
-
-      it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
-    });
-
-    describe('with a custom dummy logger', () => {
-      appControls.registerTestHooks({
-        instanaLoggingMode: 'receives-custom-dummy-logger'
-      });
-
-      // Only bunyan and pino currently support agent log forwarding.
-      // See https://jsw.ibm.com/browse/INSTA-59278
-      it('log calls are not traced', () =>
-        verifyInstanaLoggingIsNotTraced({ expectedAgentLogCount: 2, expectCustomLogs: false }));
-    });
-
-    describe('with a custom log4js logger', () => {
-      appControls.registerTestHooks({
-        instanaLoggingMode: 'receives-log4js-logger'
-      });
-
-      // Only bunyan and pino currently support agent log forwarding.
-      // See https://jsw.ibm.com/browse/INSTA-59278
-      it('log calls are not traced', () =>
-        verifyInstanaLoggingIsNotTraced({ expectedAgentLogCount: 2, expectCustomLogs: false }));
-    });
-
-    describe('with a custom bunyan logger', () => {
-      appControls.registerTestHooks({
-        instanaLoggingMode: 'receives-bunyan-logger'
-      });
-
-      it('log calls are not traced', () => verifyInstanaLoggingIsNotTraced());
-    });
-
-    describe('with a custom winston logger', () => {
-      appControls.registerTestHooks({
-        instanaLoggingMode: 'receives-winston-logger'
-      });
-
-      it('log calls are not traced', () =>
-        verifyInstanaLoggingIsNotTraced({ expectedAgentLogCount: 2, expectCustomLogs: false }));
     });
   });
 
-  describe('Ensure that worker threads using the correct thread ID', () => {
+  describe('Ensure that Instana logs are not being traced as log spans', function () {
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+      await agentControls.clearAgentLogs();
+    });
+
+    describe('with the default logger', function () {
+      let appControls;
+
+      beforeEach(async () => {
+        appControls = new AppControls({
+          instanaLoggingMode: 'uses-default-logger'
+        });
+
+        await appControls.start();
+      });
+
+      afterEach(() => {
+        return appControls.stop();
+      });
+
+      it('log calls are not traced', () => {
+        return verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 1 });
+      });
+    });
+
+    describe('with a custom pino logger', function () {
+      let appControls;
+
+      beforeEach(async () => {
+        appControls = new AppControls({
+          instanaLoggingMode: 'receives-pino-logger'
+        });
+
+        await appControls.start();
+      });
+
+      afterEach(() => {
+        return appControls.stop();
+      });
+
+      it('log calls are not traced', () => {
+        return verifyInstanaLoggingIsNotTraced(appControls);
+      });
+    });
+
+    describe('with a custom dummy logger', function () {
+      let appControls;
+
+      beforeEach(async () => {
+        appControls = new AppControls({
+          instanaLoggingMode: 'receives-custom-dummy-logger'
+        });
+
+        await appControls.start();
+      });
+
+      afterEach(() => {
+        return appControls.stop();
+      });
+
+      // Only bunyan and pino currently support agent log forwarding.
+      // See https://jsw.ibm.com/browse/INSTA-59278
+      it('log calls are not traced', () => {
+        return verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 2, expectCustomLogs: false });
+      });
+    });
+
+    describe('with a custom log4js logger', function () {
+      let appControls;
+
+      beforeEach(async () => {
+        appControls = new AppControls({
+          instanaLoggingMode: 'receives-log4js-logger'
+        });
+
+        await appControls.start();
+      });
+
+      afterEach(() => {
+        return appControls.stop();
+      });
+
+      // Only bunyan and pino currently support agent log forwarding.
+      // See https://jsw.ibm.com/browse/INSTA-59278
+      it('log calls are not traced', () => {
+        return verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 2, expectCustomLogs: false });
+      });
+    });
+
+    describe('with a custom bunyan logger', function () {
+      let appControls;
+
+      beforeEach(async () => {
+        appControls = new AppControls({
+          instanaLoggingMode: 'receives-bunyan-logger'
+        });
+
+        await appControls.start();
+      });
+
+      afterEach(() => {
+        return appControls.stop();
+      });
+
+      it('log calls are not traced', () => {
+        return verifyInstanaLoggingIsNotTraced(appControls);
+      });
+    });
+
+    describe('with a custom winston logger', function () {
+      let appControls;
+
+      beforeEach(async () => {
+        appControls = new AppControls({
+          instanaLoggingMode: 'receives-winston-logger'
+        });
+
+        await appControls.start();
+      });
+
+      afterEach(() => {
+        return appControls.stop();
+      });
+
+      it('log calls are not traced', () => {
+        return verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount: 2, expectCustomLogs: false });
+      });
+    });
+  });
+
+  describe('Ensure that worker threads using the correct thread ID', function () {
     let controls;
 
-    before(async () => {
+    beforeEach(async () => {
       // NOTE: it could be that we will loose the worker spans,
       //       if we execute clearReceivedTraceData in beforeEach!
       await agentControls.clearReceivedTraceData();
@@ -105,7 +239,7 @@ mochaSuiteFn('tracing/logging/misc', function () {
       await controls.startAndWaitForAgentConnection();
     });
 
-    after(async () => {
+    afterEach(async () => {
       await controls.stop();
     });
 
@@ -128,7 +262,45 @@ mochaSuiteFn('tracing/logging/misc', function () {
     });
   });
 
-  function verifyInstanaLoggingIsNotTraced({ expectedAgentLogCount = 3, expectCustomLogs = true } = {}) {
+  function verifyLogSpansAreCreated(appControls, { spanName, expectedTimeFormat, expectedLevelFormat }) {
+    return appControls.trigger('trigger').then(async () => {
+      await testUtils.delay(500);
+
+      return testUtils.retry(() =>
+        agentControls.getSpans().then(async spans => {
+          const agentLogs = await agentControls.getAgentLogs();
+
+          // This is only to verify that there are any agent logs at all.
+          expect(agentLogs.length).to.be.at.least(3);
+
+          const processLogs = appControls.getProcessLogs();
+
+          processLogs.forEach(msg => {
+            // check if msg is in JSON format first
+            if (msg.indexOf('{') === -1 || msg.indexOf('}') === -1) {
+              return;
+            }
+
+            expect(msg).to.include(expectedTimeFormat);
+            expect(msg).to.include(expectedLevelFormat);
+          });
+
+          // 1 x http span + 1 x log span
+          expect(spans.length).to.be.at.least(2);
+
+          testUtils.expectAtLeastOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.f.e).to.equal(String(appControls.getPid())),
+            span => expect(span.f.h).to.equal('agent-stub-uuid')
+          ]);
+
+          testUtils.expectAtLeastOneMatching(spans, [span => expect(span.n).to.equal(spanName)]);
+        })
+      );
+    });
+  }
+
+  function verifyInstanaLoggingIsNotTraced(appControls, { expectedAgentLogCount = 3, expectCustomLogs = true } = {}) {
     return appControls.trigger('trigger').then(async () => {
       await testUtils.delay(500);
 

@@ -118,16 +118,42 @@ exports.init = function init(userConfig = {}) {
         }
       };
 
-      parentLogger = uninstrumentedLogger(
-        {
-          ...parentLogger.levels,
-          level: parentLogger.level || 'info',
-          base: parentLogger.bindings(),
-          timestamp: () => `,"time":"${new Date().toISOString()}"`
-        },
-        multiStream
-      );
+      const pinoOpts = {
+        ...parentLogger.levels,
+        level: parentLogger.level || 'info',
+        base: parentLogger.bindings()
+      };
+
+      // CASE: Either its the customers pino instance (and probably a different pino installation/version)
+      //       or its our own pino instance.
+      const instance = userConfig.logger || parentLogger;
+
+      // NOTE: Pino uses symbols, because they don't use proper classes.
+      const symbols = Object.getOwnPropertySymbols(instance);
+
+      // CASE: We copy any settings from the pino instance such as custom formats.
+      if (symbols && Array.isArray(symbols)) {
+        const timeSym = symbols.find(sym => String(sym) === 'Symbol(pino.time)');
+        // @ts-ignore
+        const timestampFn = instance[timeSym];
+
+        if (timestampFn) {
+          pinoOpts.timestamp = timestampFn;
+        }
+
+        const formattersSym = symbols.find(sym => String(sym) === 'Symbol(pino.formatters)');
+        // @ts-ignore
+        const formatters = instance[formattersSym];
+
+        if (formatters) {
+          pinoOpts.formatters = formatters;
+        }
+      }
+
+      parentLogger = uninstrumentedLogger(pinoOpts, multiStream);
     } catch (error) {
+      // TODO: If any error occurs, we don't forward any logs to the agent. Why?
+      //       https://jsw.ibm.com/browse/INSTA-59515
       parentLogger.debug(`An issue occurred while modifying the current logger: ${error.message}`);
     }
   } else if (parentLogger && parentLogger.addStream) {
