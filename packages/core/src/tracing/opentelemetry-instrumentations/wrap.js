@@ -6,10 +6,11 @@
 'use strict';
 
 const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks');
-const api = require('@opentelemetry/api');
+const otelApi = require('@opentelemetry/api');
 const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
 const constants = require('../constants');
 const supportedVersion = require('../supportedVersion');
+// const otelApi = require('./opentelemetryApi');
 
 // NOTE: Please refrain from utilizing third-party instrumentations.
 //       Instead, opt for officially released instrumentations available in the OpenTelemetry
@@ -35,7 +36,7 @@ module.exports.init = (_config, cls) => {
   Object.keys(instrumentations).forEach(k => {
     const value = instrumentations[k];
     const instrumentation = require(`./${value.name}`);
-    instrumentation.init(cls);
+    instrumentation.init({ cls, api: otelApi });
     value.module = instrumentation;
   });
 
@@ -96,8 +97,8 @@ module.exports.init = (_config, cls) => {
   const provider = new BasicTracerProvider();
   const contextManager = new AsyncHooksContextManager();
 
-  api.trace.setGlobalTracerProvider(provider);
-  api.context.setGlobalContextManager(contextManager);
+  otelApi.trace.setGlobalTracerProvider(provider);
+  otelApi.context.setGlobalContextManager(contextManager);
 
   /**
    * Each instrumentation depends on @opentelemetry/instrumentation.
@@ -112,8 +113,8 @@ module.exports.init = (_config, cls) => {
    *
    * This is an npm workspace issue. Nohoisting missing.
    */
-  const orig = api.trace.setSpan;
-  api.trace.setSpan = function instanaSetSpan(ctx, span) {
+  const orig = otelApi.trace.setSpan;
+  otelApi.trace.setSpan = function instanaSetSpan(ctx, span) {
     transformToInstanaSpan(span);
     return orig.apply(this, arguments);
   };
