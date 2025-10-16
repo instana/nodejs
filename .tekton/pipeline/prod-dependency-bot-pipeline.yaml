@@ -44,6 +44,8 @@ spec:
       value: $(params.prod-deps-pr-limit)
     - name: org-pr-limit
       value: $(params.org-pr-limit)
+    - name: skip-deps
+      value: $(params.skip-deps)
   workspaces:
     - name: artifacts
   tasks:
@@ -156,6 +158,8 @@ spec:
           value: $(params.prod-deps-pr-limit)
         - name: org-pr-limit
           value: $(params.org-pr-limit)
+        - name: skip-deps
+          value: $(params.skip-deps)
       workspaces:
         - name: output
           workspace: artifacts
