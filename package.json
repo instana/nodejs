@@ -212,7 +212,7 @@
     "node-fetch-v2": "npm:node-fetch@2.7.0",
     "node-gyp": "11.2.0",
     "node-nats-streaming": "0.3.2",
-    "oracledb": "6.9.0",
+    "oracledb": "6.10.0",
     "pg": "8.16.3",
     "pino": "10.0.0",
     "pino-http": "9.0.0",
