@@ -3222,6 +3222,61 @@ function registerTests(handlerDefinitionPath, reduced) {
         });
     });
   });
+
+  describeOrSkipIfReduced(reduced)('when handling browser asset requests', function () {
+    const assetPaths = [
+      '/favicon.ico',
+      '/assets/style.css',
+      '/js/bundle.js',
+      '/images/logo.png',
+      '/assets/main.js.map'
+    ];
+    let control;
+    before(async () => {
+      const env = prelude.bind(this)({
+        handlerDefinitionPath,
+        trigger: 'function-url',
+        instanaAgentKey
+      });
+
+      control = new Control({
+        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+        handlerDefinitionPath,
+        startBackend: true,
+        env
+      });
+
+      await control.start();
+    });
+
+    beforeEach(async () => {
+      await control.reset();
+      await control.resetBackendSpansAndMetrics();
+    });
+
+    after(async () => {
+      await control.stop();
+    });
+
+    assetPaths.forEach(assetPath => {
+      it('must skip tracing for browser asset requests', () => {
+        return verify(
+          control,
+          {
+            error: false,
+            expectMetrics: false,
+            expectSpans: false,
+            trigger: 'function-url'
+          },
+          {
+            payloadFormatVersion: '2.0',
+            assetPath: assetPath
+          }
+        );
+      });
+    });
+  });
+
   describeOrSkipIfReduced(reduced)('triggered by AWS lambda function url', function () {
     const env = prelude.bind(this)({
       handlerDefinitionPath,

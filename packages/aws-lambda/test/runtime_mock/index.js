@@ -622,12 +622,12 @@ function createEvent(error, trigger, eventOpts) {
       case 'function-url':
         event.version = '2.0';
         event.rawQueryString = '';
-        event.rawPath = '/path/to';
+        event.rawPath = eventOpts && eventOpts.assetPath ? eventOpts.assetPath : '/path/to';
         event.routeKey = '$default';
         event.requestContext = {
           http: {
             method: 'GET',
-            path: '/path/to'
+            path: eventOpts && eventOpts.assetPath ? eventOpts.assetPath : '/path/to'
           },
           domainName: 'xxxxxx.lambda-url.region.on.aws'
         };

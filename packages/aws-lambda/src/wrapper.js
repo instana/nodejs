@@ -73,7 +73,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   const arnInfo = arnParser(context);
   const tracingEnabled = init(event, arnInfo, _config);
 
-  if (!tracingEnabled) {
+  if (!tracingEnabled || skipAssetCalls(event)) {
     return originalHandler.apply(originalThis, originalArgs);
   }
 
@@ -542,6 +542,28 @@ function postHandlerForTimeout(entrySpan, remainingMillis) {
     finalLambdaRequest: true,
     callback: () => {}
   });
+}
+
+/**
+ * Determines whether a Lambda invocation corresponds to a browser-generated asset request
+ * (like CSS, JS, images, favicon, or source maps).
+ * These requests typically do not need tracing and can be safely skipped to reduce noise in spans.
+ */
+function skipAssetCalls(event) {
+  if (!event) return false;
+
+  const requestCtx = event.requestContext || {};
+  const requestCtxHttp = requestCtx.http || {};
+  const path = requestCtxHttp.path || event.rawPath || event.path;
+
+  if (!path || typeof path !== 'string') return false;
+
+  if (/^\/favicon\.ico$|\/.*\.(ico|png|jpg|jpeg|gif|svg|css|js|map)$/i.test(path)) {
+    logger.debug(`Skipping browser-generated asset request: ${path}`);
+    return true;
+  }
+
+  return false;
 }
 
 exports.currentSpan = function getHandleForCurrentSpan() {
