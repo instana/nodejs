@@ -23,7 +23,7 @@ mochaSuiteFn('tracing/mysql', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  const drivers = ['mysql2/promises'];
+  const drivers = ['mysql', 'mysql-cluster', 'mysql2', 'mysql2/promises'];
   const mysql2Versions = ['latest', 'v3114'];
   const executionModes = [false, true];
 

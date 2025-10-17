@@ -134,7 +134,7 @@ const getConnection = () => {
   }
 
   pool.getConnection((err, connection) => {
-    log('Got connection for table creation', err, connection);
+    log('Got connection for table creation', err);
 
     if (err) {
       log('Failed to get connection for table creation', err);
