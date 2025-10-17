@@ -38,7 +38,7 @@ mochaSuiteFn('tracing/mysql', function () {
     } else {
       // Generic handling for other drivers
       executionModes.forEach(useExecute => {
-        registerSuite.call(this, agentControls, driverMode, useExecute);
+        registerSuite.call(this, agentControls, driverMode, useExecute, 'latest');
       });
     }
   });
