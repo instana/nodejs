@@ -82,7 +82,7 @@
   "dependencies": {
     "@instana/core": "4.26.2",
     "@instana/shared-metrics": "4.26.2",
-    "pino": "^9.13.0",
+    "pino": "^10.1.0",
     "semver": "^7.7.3",
     "serialize-error": "^8.1.0"
   },
