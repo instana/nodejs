@@ -131,7 +131,7 @@ exports.announceNodeCollector = function announceNodeCollector(callback) {
     }
   };
 
-  logger.debug('Announcing the Node.js collector to the Instana host agent at %s:%s', agentOpts.host, agentOpts.port);
+  logger.debug(`Announcing the Node.js collector to the Instana host agent at ${agentOpts.host}:${agentOpts.port}`);
 
   const req = http.request(
     {
