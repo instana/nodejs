@@ -10,7 +10,7 @@
 const defaults = {
   agentHost: '127.0.0.1',
   agentPort: 42699,
-  requestTimeout: 5000,
+  agentRequestTimeout: 5000,
   tracing: {
     stackTraceLength: 10
   },
@@ -27,7 +27,7 @@ module.exports = function normalizeConfig(config = {}) {
   config.agentPort = config.agentPort || parseToPositiveInteger(process.env.INSTANA_AGENT_PORT, defaults.agentPort);
   config.agentRequestTimeout =
     config.agentRequestTimeout ||
-    parseToPositiveInteger(process.env.INSTANA_AGENT_REQUEST_TIMEOUT, defaults.requestTimeout);
+    parseToPositiveInteger(process.env.INSTANA_AGENT_REQUEST_TIMEOUT, defaults.agentRequestTimeout);
 
   config.autoProfile = config.autoProfile || process.env.INSTANA_AUTO_PROFILE || defaults.autoProfile;
   config.tracing = config.tracing || {};
