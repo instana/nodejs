@@ -5,6 +5,7 @@
 
 'use strict';
 
+// TODO: https://github.com/instana/nodejs/pull/2010
 // max time spend waiting for an agent response
 exports.requestTimeout = 5000;
 // @ts-ignore - Cannot redeclare exported variable
@@ -31,4 +32,6 @@ exports.init = function init(config) {
   // TODO: Why is autoProfile part of agentOpts? O_o
   // @ts-ignore - Cannot redeclare exported variable
   exports.autoProfile = config.autoProfile;
+
+  exports.requestTimeout = config.agentRequestTimeout;
 };
