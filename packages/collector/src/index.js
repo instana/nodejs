@@ -107,19 +107,17 @@ function init(userConfig = {}) {
   config = instanaNodeJsCore.coreConfig.normalize(config);
 
   agentConnection = require('./agentConnection');
-  const agentOpts = require('./agent/opts');
   const pidStore = require('./pidStore');
   const uncaught = require('./uncaught');
   const announceCycle = require('./announceCycle');
   const metrics = require('./metrics');
 
-  log.setDownstreamConnection(agentConnection);
-
-  pidStore.init(config);
-  agentOpts.init(config);
-  announceCycle.init(config, pidStore);
   agentConnection.init(config, pidStore);
+  pidStore.init(config);
+  announceCycle.init(config, pidStore);
   instanaNodeJsCore.init(config, agentConnection, pidStore);
+
+  log.setDownstreamConnection(agentConnection);
 
   if (isMainThread) {
     uncaught.init(config, agentConnection, pidStore);
