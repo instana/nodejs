@@ -113,7 +113,7 @@ function sendMetrics() {
 function onMetricsHaveBeenSent(isFullTransmission, transmittedValue, error, responsePayload) {
   if (error) {
     if (onError) {
-      logger.debug('Sending metrics to the agent failed:', error?.message);
+      logger.debug(`Sending metrics to the agent failed: ${error?.message}`);
       onError();
     }
 
