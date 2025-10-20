@@ -29,12 +29,16 @@ function buildAndCopyModulesLinux {
       -f "$dockerfile" \
       --load -t "$dockertag" \
       .
-  else
+  else if [[ "$arch" = "x64" ]]; then
     docker build \
+      --platform=linux/amd64 \
       --build-arg BASE_IMAGE=$baseimage \
       -f "$dockerfile" \
       -t "$dockertag" \
       .
+  else
+    echo "Unknown architecture parameter: $arch"
+    exit 1
   fi
 
   echo "docker build exit status: $?"
