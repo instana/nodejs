@@ -37,6 +37,11 @@ class AgentStubControls {
     if (typeof opts.tracingMetrics === 'boolean') {
       env.TRACING_METRICS = opts.tracingMetrics.toString();
     }
+
+    if (opts.slowMetricsReply) {
+      env.SLOW_METRICS_REPLY = opts.slowMetricsReply.toString();
+    }
+
     if (opts.enableSpanBatching) {
       env.ENABLE_SPANBATCHING = 'true';
     }
@@ -182,6 +187,12 @@ class AgentStubControls {
         'Content-Type': 'application/json'
       }
     }).then(response => response.json());
+  }
+
+  makeAgentHealthy() {
+    return fetch(`http://127.0.0.1:${this.agentPort}/make-healthy`, {
+      method: 'PUT'
+    });
   }
 
   async reset() {

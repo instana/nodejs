@@ -49,6 +49,9 @@ if (typeof process.env.INSTANA_TRACER_METRICS_INTERVAL === 'string') {
   }
 }
 
+/** @type {number | null} */
+let originalTracingMetricsDelay = null;
+
 /** @type {NodeJS.Timeout} */
 let tracingMetricsTimeout = null;
 
@@ -183,23 +186,38 @@ function sendTracingMetrics() {
 
   agentConnection.sendTracingMetricsToAgent(payload, error => {
     if (error) {
-      logger.info(
-        `Error received while trying to send tracing metrics to agent: ${error?.message}.` +
-          ' This will not affect monitoring or tracing.'
-      );
-      if (typeof error.message === 'string' && error.message.indexOf('Got status code 404')) {
+      if (typeof error.message === 'string' && error.message.indexOf('Got status code 404') !== -1) {
         logger.info(
           'Apparently the version of the Instana host agent on this host does not support the POST /tracermetrics ' +
-            'endpoint, will stop sending tracing metrics.'
+            'endpoint, will stop sending tracing metrics. This will not affect monitoring or tracing.'
         );
+
         return;
       }
+
+      logger.warn(
+        `Error received while trying to send tracing metrics to agent: ${error?.message}.` +
+          ' This will not affect monitoring or tracing. Will retry sending tracing metrics on next interval.'
+      );
+
+      if (originalTracingMetricsDelay === null) {
+        originalTracingMetricsDelay = tracingMetricsDelay;
+      }
+
+      // Reduce noisyness, increase retry time on error.
+      tracingMetricsDelay += 1000;
+    } else if (originalTracingMetricsDelay !== null) {
+      // on success, restore original delay
+      tracingMetricsDelay = originalTracingMetricsDelay;
+      originalTracingMetricsDelay = null;
     }
+
     scheduleTracingMetrics();
   });
 }
 
 function scheduleTracingMetrics() {
+  logger.debug(`Sending tracing metrics to /tracermetrics in ${tracingMetricsDelay} ms...`);
   tracingMetricsTimeout = setTimeout(sendTracingMetrics, tracingMetricsDelay);
   tracingMetricsTimeout.unref();
 }

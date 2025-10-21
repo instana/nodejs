@@ -275,6 +275,70 @@ mochaSuiteFn('tracing/tracing metrics', function () {
       expect(tracingMetrics).to.have.lengthOf(1);
     });
   });
+
+  describe('when agent does not respond in time for the metrics endpoints', () => {
+    const { AgentStubControls } = require('../../../apps/agentStubControls');
+    const customeAgentControls = new AgentStubControls();
+    let controls;
+
+    before(async () => {
+      await customeAgentControls.startAgent({
+        slowMetricsReply: true
+      });
+
+      controls = new ProcessControls({
+        dirname: __dirname,
+        agentControls: customeAgentControls,
+        tracingEnabled: true,
+        env: {
+          INSTANA_TRACER_METRICS_INTERVAL: 100,
+          INSTANA_AGENT_REQUEST_TIMEOUT: 1000
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await customeAgentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await controls.stop();
+      await customeAgentControls.stopAgent();
+    });
+
+    it('must reconnect to the agent and transfer metrics successfully', async () => {
+      const response = await controls.sendRequest({
+        method: 'POST',
+        path: '/create-spans'
+      });
+
+      expect(response).to.equal('OK');
+
+      await delay(5000);
+
+      const tracerMetricsBefore = await fetchTracingMetricsForProcess(customeAgentControls, controls.getPid());
+      // The agent stub does not store the metrics which have been sent. We simulate a total timeout scenario.
+      expect(tracerMetricsBefore).to.have.lengthOf(0);
+
+      const metricsBefore = await customeAgentControls.getAllMetrics(controls.getPid());
+      expect(metricsBefore).to.have.a.lengthOf(0);
+
+      // We forced the agent to return slow replies for metrics. The collector will
+      // run into constant timeouts and will try to re-announce in a loop. Now we make the agent healthy again.
+      await customeAgentControls.makeAgentHealthy();
+
+      await testUtils.retry(async () => {
+        const tracerMetrics = await fetchTracingMetricsForProcess(customeAgentControls, controls.getPid());
+        // Proof that tracer metrics and pid metrics occurred after the agent became healthy again.
+        expect(tracerMetrics).to.have.lengthOf.at.least(1);
+
+        const metrics = await customeAgentControls.getAllMetrics(controls.getPid());
+        expect(metrics).to.have.a.lengthOf.at.least(1);
+      });
+    });
+  });
 });
 
 async function fetchTracingMetricsForProcess(agentControls, pid) {
