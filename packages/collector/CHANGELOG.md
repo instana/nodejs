@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.26.3](https://github.com/instana/nodejs/compare/v4.26.2...v4.26.3) (2025-10-21)
+
+
+### Bug Fixes
+
+* **collector:** extended debug logs for agent communication ([#2082](https://github.com/instana/nodejs/issues/2082)) ([0f24598](https://github.com/instana/nodejs/commit/0f245983d84791388b7884257c960e724ba1f61b))
+
+
+
+
+
 ## [4.26.2](https://github.com/instana/nodejs/compare/v4.26.1...v4.26.2) (2025-10-15)
 
 

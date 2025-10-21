@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.26.3](https://github.com/instana/nodejs/compare/v4.26.2...v4.26.3) (2025-10-21)
+
+
+### Bug Fixes
+
+* **shared-metrics:** re-generated prebuilds for linux x64 glibc 115 ([#2083](https://github.com/instana/nodejs/issues/2083)) ([a247c1c](https://github.com/instana/nodejs/commit/a247c1ce83cf4b01789b3ddd786d4d526b3d84bc))
+
+
+
+
+
 ## [4.26.2](https://github.com/instana/nodejs/compare/v4.26.1...v4.26.2) (2025-10-15)
 
 **Note:** Version bump only for package @instana/shared-metrics
