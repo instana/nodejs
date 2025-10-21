@@ -489,11 +489,19 @@ function sendData(path, data, cb, ignore404 = false) {
   );
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
+    if (req.destroyed) {
+      return;
+    }
+
     cb(new Error(`Failed to send data to agent via POST ${path}. Ran into a timeout.`));
     req.destroy();
   });
 
   req.on('error', err => {
+    if (req.destroyed) {
+      return;
+    }
+
     cb(new Error(`Send data to agent via POST ${path}. Request failed: ${err.message}`));
   });
 
