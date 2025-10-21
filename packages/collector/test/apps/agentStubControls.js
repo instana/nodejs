@@ -38,8 +38,8 @@ class AgentStubControls {
       env.TRACING_METRICS = opts.tracingMetrics.toString();
     }
 
-    if (opts.slowTracerMetricsReply) {
-      env.SLOW_TRACER_METRICS_REPLY = opts.slowTracerMetricsReply.toString();
+    if (opts.slowMetricsReply) {
+      env.SLOW_METRICS_REPLY = opts.slowMetricsReply.toString();
     }
 
     if (opts.enableSpanBatching) {

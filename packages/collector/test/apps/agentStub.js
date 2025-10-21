@@ -38,7 +38,7 @@ const logProfiles = process.env.LOG_PROFILES === 'true';
 const rejectTraces = process.env.REJECT_TRACES === 'true';
 const doesntHandleProfiles = process.env.DOESNT_HANDLE_PROFILES === 'true';
 const tracingMetrics = process.env.TRACING_METRICS !== 'false';
-let slowTracerMetricsReply = process.env.SLOW_TRACER_METRICS_REPLY === 'true';
+let slowMetricsReply = process.env.SLOW_METRICS_REPLY === 'true';
 const enableSpanBatching = process.env.ENABLE_SPANBATCHING === 'true';
 const kafkaTraceCorrelation = process.env.KAFKA_TRACE_CORRELATION
   ? process.env.KAFKA_TRACE_CORRELATION === 'true'
@@ -156,7 +156,7 @@ app.delete('/agent/logs', (req, res) => {
 app.post(
   '/com.instana.plugin.nodejs.:pid',
   checkExistenceOfKnownPid(function handleEntityData(req, res) {
-    if (slowTracerMetricsReply) {
+    if (slowMetricsReply) {
       setTimeout(() => {
         res.send('OK');
       }, 1000 * 2);
@@ -244,7 +244,7 @@ app.post(
 );
 
 app.post('/tracermetrics', function handleTracermetrics(req, res) {
-  if (slowTracerMetricsReply) {
+  if (slowMetricsReply) {
     setTimeout(() => {
       res.send('OK');
     }, 1000 * 2);
@@ -279,7 +279,7 @@ app.post('/com.instana.plugin.generic.agent-monitoring-event', function postMoni
 });
 
 app.put('/make-healthy', (req, res) => {
-  slowTracerMetricsReply = false;
+  slowMetricsReply = false;
   res.send('OK');
 });
 

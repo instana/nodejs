@@ -283,7 +283,7 @@ mochaSuiteFn('tracing/tracing metrics', function () {
 
     before(async () => {
       await customeAgentControls.startAgent({
-        slowTracerMetricsReply: true
+        slowMetricsReply: true
       });
 
       controls = new ProcessControls({
