@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.26.4](https://github.com/instana/nodejs/compare/v4.26.3...v4.26.4) (2025-10-21)
+
+
+### Bug Fixes
+
+* **collector:** optimized metrics timeout handling ([#2084](https://github.com/instana/nodejs/issues/2084)) ([6eb2fda](https://github.com/instana/nodejs/commit/6eb2fda03543cc13505f609e3d43dfdeac0ff7f3))
+
+
+
+
+
 ## [4.26.3](https://github.com/instana/nodejs/compare/v4.26.2...v4.26.3) (2025-10-21)
 
 
