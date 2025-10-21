@@ -164,6 +164,12 @@ monitor_trigger_runs() {
     if [[ "$IS_FAILED" == "yes" ]]; then
       echo "❌ $TRIGGER has failed."
       OUTPUT=$(run_listener "$TRIGGER")
+
+      if echo "$OUTPUT" | grep -q "is disabled"; then
+        echo "⚠️ $TRIGGER → trigger is disabled – cannot retrigger."
+        continue
+      fi
+
       echo "🔄 Retriggered listener: $TRIGGER"
       echo "$OUTPUT"
       ((remaining++))
