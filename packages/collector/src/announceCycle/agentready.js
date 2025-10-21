@@ -217,7 +217,7 @@ function sendTracingMetrics() {
 }
 
 function scheduleTracingMetrics() {
-  logger.debug(`Retrying to send tracing metrics to /tracermetrics in ${tracingMetricsDelay} ms`);
+  logger.debug(`Sending tracing metrics to /tracermetrics in ${tracingMetricsDelay} ms...`);
   tracingMetricsTimeout = setTimeout(sendTracingMetrics, tracingMetricsDelay);
   tracingMetricsTimeout.unref();
 }
