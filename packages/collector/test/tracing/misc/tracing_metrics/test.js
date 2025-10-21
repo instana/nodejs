@@ -276,7 +276,7 @@ mochaSuiteFn('tracing/tracing metrics', function () {
     });
   });
 
-  describe('when agent does not respond in time for the tracermetrics endpoint', () => {
+  describe('when agent does not respond in time for the metrics endpoints', () => {
     const { AgentStubControls } = require('../../../apps/agentStubControls');
     const customeAgentControls = new AgentStubControls();
     let controls;
