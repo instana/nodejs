@@ -8,13 +8,18 @@ set -eo pipefail
 
 cd `dirname $BASH_SOURCE`
 
+# We intentionally skip defining Node.js v25 because:
+# - Node.js 25 is a non-LTS release with a short support window.
+# - Excluding v25 helps reduce the overall package size.
+# - Most users remain on stable LTS versions such as 22,24, etc.
 declare -A ABI_VERSIONS=( \
   ["108"]="18.18" \
   ["115"]="20.19" \
   ["120"]="21.2" \
   ["127"]="22.0" \
   ["131"]="23.0" \
-  ["137"]="24.0"
+  ["137"]="24.0" 
+  # ["141"]="25.0"  # Non-LTS (skipped intentionally)
   )
 
 
