@@ -261,7 +261,7 @@
     "kafka-avro": "3.2.0",
     "node-rdkafka": "3.6.0",
     "pg-native": "3.5.2",
-    "prisma": "6.17.1"
+    "prisma": "6.18.0"
   },
   "overrides": {
     "kafka-avro": {
