@@ -212,6 +212,53 @@ describe('dependencies', function () {
         })
       ));
   });
+
+  describe('with many dependencies', () => {
+    const appDir = path.join(__dirname, 'app-with-many-dependencies');
+
+    let controls;
+
+    before(async () => {
+      // eslint-disable-next-line no-console
+      console.log('Installing dependencies for app-with-many-dependencies. This may take a while...');
+      runCommandSync('rm -rf node_modules', appDir);
+      runCommandSync('npm install --no-optional --no-audit --no-package-lock', appDir);
+      // eslint-disable-next-line no-console
+      console.log('Installed dependencies for app-with-many-dependencies');
+      controls = new ProcessControls({
+        dirname: appDir,
+        useGlobalAgent: true
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    before(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    it('should limit dependencies', () => {
+      return retry(async () => {
+        const allMetrics = await agentControls.getAllMetrics(controls.getPid());
+        expect(allMetrics).to.be.an('array');
+
+        const deps = findMetric(allMetrics, ['dependencies']);
+        expect(deps).to.be.an('object');
+        expect(Object.keys(deps).length).to.be.at.least(500);
+        expect(Object.keys(deps).length).to.be.at.most(1000);
+
+        // expect that the first dependency is in the list
+        expect(deps['@ampproject/remapping']).to.exist;
+
+        // expect that the last dependency is in the list
+        expect(deps['zone.js']).to.exist;
+      });
+    });
+  });
 });
 
 /**
