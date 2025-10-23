@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.27.0](https://github.com/instana/nodejs/compare/v4.26.4...v4.27.0) (2025-10-23)
+
+
+### Features
+
+* added support for v25 ([#2075](https://github.com/instana/nodejs/issues/2075)) ([64c014d](https://github.com/instana/nodejs/commit/64c014d1c85d67407caf5e9598c864d52328a51a))
+
+
+
+
+
 ## [4.26.4](https://github.com/instana/nodejs/compare/v4.26.3...v4.26.4) (2025-10-21)
 
 

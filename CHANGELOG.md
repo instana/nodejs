@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.27.0](https://github.com/instana/nodejs/compare/v4.26.4...v4.27.0) (2025-10-23)
+
+
+### Bug Fixes
+
+* **shared-metrics:** reduce memory consumption with many dependencies ([#2088](https://github.com/instana/nodejs/issues/2088)) ([7e0b029](https://github.com/instana/nodejs/commit/7e0b029331a6657c64b29e875a529d03952e7414))
+
+
+### Features
+
+* added support for v25 ([#2075](https://github.com/instana/nodejs/issues/2075)) ([64c014d](https://github.com/instana/nodejs/commit/64c014d1c85d67407caf5e9598c864d52328a51a))
+
+
+
+
+
 ## [4.26.4](https://github.com/instana/nodejs/compare/v4.26.3...v4.26.4) (2025-10-21)
 
 
