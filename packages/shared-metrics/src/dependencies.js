@@ -152,7 +152,8 @@ function addDependenciesFromDir(dependencyDir, currentDepth = 0, callback) {
 
     filteredDependendencies.forEach(dependency => {
       if (dependency.indexOf('@') === 0) {
-        addDependenciesFromDir(path.join(dependencyDir, dependency), currentDepth + 1, () => {
+        // NOTE: We do not increase currentDepth because scoped packages are just a folder containing more packages.
+        addDependenciesFromDir(path.join(dependencyDir, dependency), currentDepth, () => {
           countDownLatch.countDown();
         });
       } else {
