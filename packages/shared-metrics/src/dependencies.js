@@ -30,7 +30,7 @@ exports.payloadPrefix = 'dependencies';
 const MAX_DEPTH_NODE_MODULES = 2;
 
 /** @type {Object.<string, string>} */
-const preliminaryPayload = {};
+let preliminaryPayload = {};
 
 /** @type {Object.<string, string>} */
 // @ts-ignore: Cannot redeclare exported variable 'currentPayload'
@@ -42,6 +42,9 @@ const DELAY = 1000;
 let attempts = 0;
 
 exports.activate = function activate() {
+  // Ensure we start fresh each time activate is called
+  preliminaryPayload = {};
+
   attempts++;
 
   const started = Date.now();
@@ -58,7 +61,9 @@ exports.activate = function activate() {
       );
       util.applicationUnderMonitoring.findNodeModulesFolder((errNodeModules, nodeModulesFolder) => {
         if (errNodeModules) {
-          return logger.warn(`Failed to determine node_modules folder. Reason: ${err?.message}, ${err?.stack}`);
+          return logger.warn(
+            `Failed to determine node_modules folder. Reason: ${errNodeModules?.message}, ${errNodeModules?.stack}`
+          );
         } else if (!nodeModulesFolder) {
           return logger.warn(
             'Neither the package.json file nor the node_modules folder could be found. Stopping dependency analysis.'
@@ -144,7 +149,8 @@ function addDependenciesFromDir(dependencyDir, currentDepth = 0, callback) {
       return;
     }
 
-    // This latch fires once all dependencies of the current directory in the node_modules tree have been analysed.
+    // NOTE: `filteredDependendencies.length` is the length of the current directory only.
+    //       The latch counts down as we finish processing each dependency in THIS current directory.
     const countDownLatch = new CountDownLatch(filteredDependendencies.length);
     countDownLatch.once('done', () => {
       callback();
@@ -199,8 +205,7 @@ function addDependency(dependency, dependencyDirPath, countDownLatch, currentDep
       logger.debug(`No package.json at ${packageJsonPath}, ignoring this directory.`);
       return;
     } else if (err) {
-      // TODO: countDownLatch.countDown(); needs to be called here too?
-      // countDownLatch.countDown();
+      countDownLatch.countDown();
       logger.info(
         `Failed to identify version of ${dependency} dependency due to: ${err?.message}. ` +
           'This means that you will not be able to see details about this dependency within Instana.'
