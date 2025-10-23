@@ -199,7 +199,8 @@ function addDependency(dependency, dependencyDirPath, countDownLatch, currentDep
       logger.debug(`No package.json at ${packageJsonPath}, ignoring this directory.`);
       return;
     } else if (err) {
-      countDownLatch.countDown();
+      // TODO: countDownLatch.countDown(); needs to be called here too?
+      // countDownLatch.countDown();
       logger.info(
         `Failed to identify version of ${dependency} dependency due to: ${err?.message}. ` +
           'This means that you will not be able to see details about this dependency within Instana.'
