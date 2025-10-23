@@ -102,7 +102,7 @@
     "@commitlint/cli": "14.1.0",
     "@commitlint/config-conventional": "14.1.0",
     "@elastic/ecs-pino-format": "^1.5.0",
-    "@elastic/elasticsearch": "9.1.1",
+    "@elastic/elasticsearch": "9.2.0",
     "@elastic/elasticsearch-v7.17.0": "npm:@elastic/elasticsearch@7.17.0",
     "@elastic/elasticsearch-v7.9.0": "npm:@elastic/elasticsearch@7.9.0",
     "@google-cloud/pubsub": "5.2.0",
