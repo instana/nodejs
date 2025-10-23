@@ -58,6 +58,8 @@ spec:
       value: $(params.pr-payload)
     - name: org-pr-limit
       value: $(params.org-pr-limit)
+    - name: skip-deps
+      value: $(params.skip-deps)
 
   resourcetemplates:
     - apiVersion: v1
@@ -140,3 +142,5 @@ spec:
             value: $(params.pr-payload)
           - name: org-pr-limit
             value: $(params.org-pr-limit)
+          - name: skip-deps
+            value: $(params.skip-deps)
