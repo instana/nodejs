@@ -93,7 +93,7 @@ function addAllDependencies(dependencyDir, started, packageJsonPath) {
     // TODO: This check happens AFTER we have already collected the dependencies.
     //       This is quiet useless for a large dependency tree, because we consume resources to collect
     //       all the dependencies (fs.stats, fs.readFile etc), but then discard most of them here.
-    //       This is only critical for a very large package.json.
+    //       This is only critical for a very large number of defined dependencies in package.json (vertical).
     // NOTE: There is an extra protection in the `addDependenciesFromDir` fn to
     //       limit the depth of traversing node_modules.
     if (Object.keys(preliminaryPayload).length <= exports.MAX_DEPENDENCIES) {
