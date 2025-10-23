@@ -24,7 +24,7 @@ if (process.env.AWS_SDK_CLIENT_DYNAMODB_REQUIRE !== '@aws-sdk/client-dynamodb') 
 require('../../../../../..')();
 
 const express = require('express');
-const fetch = require('node-fetch-v2');
+
 const awsRegion = 'us-east-2';
 let dynamoDB;
 

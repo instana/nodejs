@@ -19,7 +19,7 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
 import ioredis from 'ioredis';
-import fetch from 'node-fetch';
+
 import portFactory from '../../../test_util/app-port.js';
 import connect from './connect-via/index.js';
 const port = portFactory();
