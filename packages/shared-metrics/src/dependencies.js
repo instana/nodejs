@@ -27,8 +27,10 @@ exports.MAX_DEPENDENCIES = 750;
 /** @type {string} */
 exports.payloadPrefix = 'dependencies';
 
+const MAX_DEPTH_NODE_MODULES = 2;
+
 /** @type {Object.<string, string>} */
-const preliminaryPayload = {};
+let preliminaryPayload = {};
 
 /** @type {Object.<string, string>} */
 // @ts-ignore: Cannot redeclare exported variable 'currentPayload'
@@ -40,6 +42,9 @@ const DELAY = 1000;
 let attempts = 0;
 
 exports.activate = function activate() {
+  // Ensure we start fresh each time activate is called
+  preliminaryPayload = {};
+
   attempts++;
 
   const started = Date.now();
@@ -56,7 +61,9 @@ exports.activate = function activate() {
       );
       util.applicationUnderMonitoring.findNodeModulesFolder((errNodeModules, nodeModulesFolder) => {
         if (errNodeModules) {
-          return logger.warn(`Failed to determine node_modules folder. Reason: ${err?.message}, ${err?.stack}`);
+          return logger.warn(
+            `Failed to determine node_modules folder. Reason: ${errNodeModules?.message}, ${errNodeModules?.stack}`
+          );
         } else if (!nodeModulesFolder) {
           return logger.warn(
             'Neither the package.json file nor the node_modules folder could be found. Stopping dependency analysis.'
@@ -87,7 +94,13 @@ exports.activate = function activate() {
  * @param {string} packageJsonPath
  */
 function addAllDependencies(dependencyDir, started, packageJsonPath) {
-  addDependenciesFromDir(dependencyDir, () => {
+  addDependenciesFromDir(dependencyDir, 0, () => {
+    // TODO: This check happens AFTER we have already collected the dependencies.
+    //       This is quiet useless for a large dependency tree, because we consume resources to collect
+    //       all the dependencies (fs.stats, fs.readFile etc), but then discard most of them here.
+    //       This is only critical for a very large package.json.
+    // NOTE: There is an extra protection in the `addDependenciesFromDir` fn to
+    //       limit the depth of traversing node_modules.
     if (Object.keys(preliminaryPayload).length <= exports.MAX_DEPENDENCIES) {
       // @ts-ignore: Cannot redeclare exported variable 'currentPayload'
       exports.currentPayload = preliminaryPayload;
@@ -114,7 +127,11 @@ function addAllDependencies(dependencyDir, started, packageJsonPath) {
  * @param {string} dependencyDir
  * @param {() => void} callback
  */
-function addDependenciesFromDir(dependencyDir, callback) {
+function addDependenciesFromDir(dependencyDir, currentDepth = 0, callback) {
+  if (currentDepth >= MAX_DEPTH_NODE_MODULES) {
+    return callback();
+  }
+
   fs.readdir(dependencyDir, (readDirErr, dependencies) => {
     if (readDirErr || !dependencies) {
       logger.warn(`Cannot analyse dependencies due to ${readDirErr?.message}`);
@@ -132,7 +149,8 @@ function addDependenciesFromDir(dependencyDir, callback) {
       return;
     }
 
-    // This latch fires once all dependencies of the current directory in the node_modules tree have been analysed.
+    // NOTE: `filteredDependendencies.length` is the length of the current directory only.
+    //       The latch counts down as we finish processing each dependency in THIS current directory.
     const countDownLatch = new CountDownLatch(filteredDependendencies.length);
     countDownLatch.once('done', () => {
       callback();
@@ -140,11 +158,12 @@ function addDependenciesFromDir(dependencyDir, callback) {
 
     filteredDependendencies.forEach(dependency => {
       if (dependency.indexOf('@') === 0) {
-        addDependenciesFromDir(path.join(dependencyDir, dependency), () => {
+        addDependenciesFromDir(path.join(dependencyDir, dependency), currentDepth + 1, () => {
           countDownLatch.countDown();
         });
       } else {
         const fullDirPath = path.join(dependencyDir, dependency);
+
         // Only check directories. For example, yarn adds a .yarn-integrity file to /node_modules/ which we need to
         // exclude, otherwise we get a confusing "Failed to identify version of .yarn-integrity dependency due to:
         // ENOTDIR: not a directory, open '.../node_modules/.yarn-integrity/package.json'." in the logs.
@@ -159,7 +178,7 @@ function addDependenciesFromDir(dependencyDir, callback) {
             return;
           }
 
-          addDependency(dependency, fullDirPath, countDownLatch);
+          addDependency(dependency, fullDirPath, countDownLatch, currentDepth);
         });
       }
     });
@@ -173,9 +192,11 @@ function addDependenciesFromDir(dependencyDir, callback) {
  * @param {string} dependency
  * @param {string} dependencyDirPath
  * @param {import('./util/CountDownLatch')} countDownLatch
+ * @param {number} currentDepth
  */
-function addDependency(dependency, dependencyDirPath, countDownLatch) {
+function addDependency(dependency, dependencyDirPath, countDownLatch, currentDepth) {
   const packageJsonPath = path.join(dependencyDirPath, 'package.json');
+
   fs.readFile(packageJsonPath, { encoding: 'utf8' }, (err, contents) => {
     if (err && err.code === 'ENOENT') {
       // This directory does not contain a package json. This happens for example for node_modules/.cache etc.
@@ -198,19 +219,22 @@ function addDependency(dependency, dependencyDirPath, countDownLatch) {
         preliminaryPayload[parsedPackageJson.name] = parsedPackageJson.version;
       }
     } catch (parseErr) {
+      countDownLatch.countDown();
       return logger.info(
         `Failed to identify version of ${dependency} dependency due to: ${parseErr?.message}.
           This means that you will not be able to see details about this dependency within Instana.`
       );
     }
 
+    // NOTE: The dependency metric collector does not respect if the node_modules are dev dependencies or production
+    //       dependencies. It collects all dependencies that are installed in the node_modules folder.
     const potentialNestedNodeModulesFolder = path.join(dependencyDirPath, 'node_modules');
     fs.stat(potentialNestedNodeModulesFolder, (statErr, stats) => {
       if (statErr || !stats.isDirectory()) {
         countDownLatch.countDown();
         return;
       }
-      addDependenciesFromDir(potentialNestedNodeModulesFolder, () => {
+      addDependenciesFromDir(potentialNestedNodeModulesFolder, currentDepth + 1, () => {
         countDownLatch.countDown();
       });
     });
