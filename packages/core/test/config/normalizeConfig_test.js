@@ -45,6 +45,7 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_IGNORE_ENDPOINTS;
     delete process.env.INSTANA_IGNORE_ENDPOINTS_PATH;
     delete process.env.INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION;
+    delete process.env.INSTANA_METRICS_DISABLE;
   }
 
   it('should apply all defaults', () => {
@@ -812,6 +813,47 @@ describe('config.normalizeConfig', () => {
       process.env.INSTANA_TRACING_DISABLE_EOL_EVENTS = 'test';
       const config = coreConfig.normalize();
       expect(config.tracing.disableEOLEvents).to.equal(false);
+    });
+
+    describe('config.metrics.enabled', () => {
+      it('should enable metrics by default', () => {
+        const config = coreConfig.normalize();
+        expect(config.metrics.enabled).to.be.true;
+      });
+
+      it('should disable metrics via config', () => {
+        const config = coreConfig.normalize({
+          metrics: {
+            enabled: false
+          }
+        });
+        expect(config.metrics.enabled).to.be.false;
+      });
+
+      it('should enable metrics explicitly via config', () => {
+        const config = coreConfig.normalize({
+          metrics: {
+            enabled: true
+          }
+        });
+        expect(config.metrics.enabled).to.be.true;
+      });
+
+      it('should disable metrics via INSTANA_METRICS_DISABLE environment variable', () => {
+        process.env.INSTANA_METRICS_DISABLE = 'true';
+        const config = coreConfig.normalize();
+        expect(config.metrics.enabled).to.be.false;
+      });
+
+      it('should keep metrics enabled when INSTANA_METRICS_DISABLE is not "true"', () => {
+        process.env.INSTANA_METRICS_DISABLE = 'false';
+        const config = coreConfig.normalize();
+        expect(config.metrics.enabled).to.be.true;
+
+        process.env.INSTANA_METRICS_DISABLE = 'something';
+        const config2 = coreConfig.normalize();
+        expect(config2.metrics.enabled).to.be.true;
+      });
     });
   });
 

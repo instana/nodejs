@@ -22,9 +22,10 @@ const memory = require('./memory');
 const name = require('./name');
 const version = require('./version');
 const util = require('./util');
+const disable = require('./util/disable');
 
 /** @type {Array.<import('@instana/core/src/metrics').InstanaMetricsModule>} */
-const allMetrics = [
+const metricModules = [
   activeHandles,
   activeRequests,
   args,
@@ -48,6 +49,12 @@ const allMetrics = [
  */
 const init = function (config) {
   util.init(config);
+  disable.init(config);
+
+  if (disable.areMetricsDisabled()) {
+    return;
+  }
+
   dependencies.init(config);
   description.init(config);
   directDependencies.init(config);
@@ -55,7 +62,6 @@ const init = function (config) {
   keywords.init(config);
   name.init(config);
   version.init(config);
-  name.init(config);
   gc.init();
   libuv.init();
 };
@@ -69,10 +75,14 @@ const init = function (config) {
  */
 
 /** @type {InstanaSharedMetrics} */
-module.exports = {
-  allMetrics,
+const exported = {
   util,
   init,
-  // TODO: Remove in next major release
-  setLogger: () => {}
+  setLogger: () => {},
+  get allMetrics() {
+    // filtered dynamically if metrics are disabled
+    return disable.areMetricsDisabled() ? [] : metricModules;
+  }
 };
+
+module.exports = exported;

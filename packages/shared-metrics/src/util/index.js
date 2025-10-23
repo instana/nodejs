@@ -7,6 +7,7 @@
 
 const nativeModuleRetry = require('./nativeModuleRetry');
 const dependencyDistanceCalculator = require('./DependencyDistanceCalculator');
+const disable = require('./disable');
 
 /**
  * @param {import('@instana/core/src/config').InstanaConfig} config
@@ -14,10 +15,12 @@ const dependencyDistanceCalculator = require('./DependencyDistanceCalculator');
 const init = config => {
   nativeModuleRetry.init(config);
   dependencyDistanceCalculator.init(config);
+  disable.init(config);
 };
 
 module.exports = {
   init,
   nativeModuleRetry,
-  dependencyDistanceCalculator
+  dependencyDistanceCalculator,
+  disable
 };

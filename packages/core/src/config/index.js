@@ -48,6 +48,7 @@ const deepMerge = require('../util/deepMerge');
  * @typedef {Object} InstanaMetricsOption
  * @property {number} [transmissionDelay]
  * @property {number} [timeBetweenHealthcheckCalls]
+ * @property {boolean} [enabled]
  */
 
 /**
@@ -84,7 +85,8 @@ let defaults = {
 
   metrics: {
     transmissionDelay: 1000,
-    timeBetweenHealthcheckCalls: 3000
+    timeBetweenHealthcheckCalls: 3000,
+    enabled: true
   },
 
   tracing: {
@@ -201,6 +203,8 @@ function normalizeMetricsConfig(config) {
     config.metrics = {};
   }
 
+  normalizeMetricsEnabled(config);
+
   config.metrics.transmissionDelay = normalizeSingleValue(
     config.metrics.transmissionDelay,
     defaults.metrics.transmissionDelay,
@@ -210,6 +214,27 @@ function normalizeMetricsConfig(config) {
 
   config.metrics.timeBetweenHealthcheckCalls =
     config.metrics.timeBetweenHealthcheckCalls || defaults.metrics.timeBetweenHealthcheckCalls;
+}
+
+/**
+ * @param {InstanaConfig} config
+ */
+function normalizeMetricsEnabled(config) {
+  if (config.metrics.enabled === false) {
+    logger.info('Not enabling metrics collection as it is explicitly disabled via config.');
+    return;
+  }
+  if (config.metrics.enabled === true) {
+    return;
+  }
+
+  if (process.env['INSTANA_METRICS_DISABLE'] === 'true') {
+    logger.info('Not enabling metrics collection as it is explicitly disabled via environment variable INSTANA_METRICS_DISABLE.');
+    config.metrics.enabled = false;
+    return;
+  }
+
+  config.metrics.enabled = defaults.metrics.enabled;
 }
 
 /**
