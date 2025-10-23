@@ -14,3 +14,7 @@ export interface TracingDisableOptions {
 }
 
 export type Disable = TracingDisableOptions | boolean;
+
+export interface MetricsDisableOptions {
+  enabled?: boolean;
+}
