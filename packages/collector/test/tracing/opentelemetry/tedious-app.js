@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
 });
 
 /* eslint-disable no-console */
-require('@instana/collector')({
+require('../../../src')({
   tracing: {
     useOpentelemetry: process.env.OTEL_ENABLED
   }

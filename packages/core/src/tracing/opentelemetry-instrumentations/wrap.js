@@ -6,10 +6,10 @@
 'use strict';
 
 const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks');
-const api = require('@opentelemetry/api');
 const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
 const constants = require('../constants');
 const supportedVersion = require('../supportedVersion');
+const api = require('./opentelemetryApi');
 
 // NOTE: Please refrain from utilizing third-party instrumentations.
 //       Instead, opt for officially released instrumentations available in the OpenTelemetry
@@ -35,7 +35,7 @@ module.exports.init = (_config, cls) => {
   Object.keys(instrumentations).forEach(k => {
     const value = instrumentations[k];
     const instrumentation = require(`./${value.name}`);
-    instrumentation.init(cls);
+    instrumentation.init({ cls, api: api });
     value.module = instrumentation;
   });
 
@@ -93,12 +93,24 @@ module.exports.init = (_config, cls) => {
     }
   };
 
-  const provider = new BasicTracerProvider();
   const contextManager = new AsyncHooksContextManager();
 
-  api.trace.setGlobalTracerProvider(provider);
-  api.context.setGlobalContextManager(contextManager);
+  /**
+   * - OpenTelemetry uses a ProxyTracerProvider as the default global provider
+   *   when no real tracer provider has been registered.
+   *   https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/trace/ProxyTracerProvider.ts#L35
+   * - The proxy delegates to a real provider if one is set.
+   * - We check if the current provider is still the proxy with no delegate,
+   *   which means no provider is configured yet.
+   * - Only in that case do we create and register our own BasicTracerProvider.
+   */
+  const currentProvider = api.trace.getTracerProvider();
+  if (currentProvider === api.trace._proxyTracerProvider || !api.trace._proxyTracerProvider._delegate) {
+    const provider = new BasicTracerProvider();
+    api.trace.setGlobalTracerProvider(provider);
+  }
 
+  api.context.setGlobalContextManager(contextManager);
   /**
    * Each instrumentation depends on @opentelemetry/instrumentation.
    * @opentelemetry/instrumentation has a peer dependency to @opentelemetry/api.

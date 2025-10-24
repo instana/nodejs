@@ -11,7 +11,6 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../core/test/config');
 const portfinder = require('../../test_util/portfinder');
-const { execSync } = require('child_process');
 const {
   retry,
   verifyHttpRootEntry,
@@ -34,24 +33,6 @@ const runTests =
 
 mochaSuiteFn('opentelemetry/instrumentations', function () {
   this.timeout(config.getTestTimeout() * 2);
-
-  before(() => {
-    if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS === 'true') {
-      return;
-    }
-
-    execSync('./preinstall.sh', { cwd: __dirname, stdio: 'inherit' });
-
-    execSync('npm install --no-save --no-package-lock --prefix ./ ./core.tgz', {
-      cwd: __dirname,
-      stdio: 'inherit'
-    });
-
-    execSync('npm install --no-save --no-package-lock --prefix ./ ./collector.tgz', {
-      cwd: __dirname,
-      stdio: 'inherit'
-    });
-  });
 
   // TODO: Restify test is broken in v24. See Issue: https://github.com/restify/node-restify/issues/1984
   runTests('restify', function () {
@@ -439,7 +420,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                 pid: String(serverControls.getPid()),
                 dataProperty: 'tags',
                 extraTests: span => {
-                  expect(span.data.tags.name).to.contain('test_reply receive');
+                  expect(span.data.tags.name).to.contain('receive /');
                   expect(span.data.tags['messaging.system']).to.eql('socket.io');
                   expect(span.data.tags['messaging.destination']).to.eql('ON test_reply');
                   expect(span.data.tags['messaging.operation']).to.eql('receive');

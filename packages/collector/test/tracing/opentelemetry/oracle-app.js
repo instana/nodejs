@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 
 const opentelemetryDisabled = process.env.INSTANA_DISABLE_USE_OPENTELEMETRY === 'true';
 
-require('@instana/collector')({
+require('../../../src')({
   tracing: {
     useOpentelemetry: !opentelemetryDisabled
   }
