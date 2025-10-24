@@ -131,19 +131,17 @@ function instrument(redis) {
       };
     };
 
-    const creatPoolWrap = originalCreatePool => {
+    const createPoolWrap = originalCreatePool => {
       return function instrumentedCreateRedisPool(poolOptions) {
         const redisPoolInstance = originalCreatePool.apply(this, arguments);
         const redisUrl = poolOptions?.url;
-        const redisPoolPrototype = Object.getPrototypeOf(redisPoolInstance);
 
-        shimAllCommands(redisPoolPrototype, redisUrl, false, redisCommandList);
+        shimAllCommands(redisPoolInstance, redisUrl, false, redisCommandList);
 
-        if (typeof redisPoolPrototype.multi === 'function') {
-          shimmer.wrap(redisPoolPrototype, 'multi', wrapMulti(redisUrl, false));
+        if (typeof redisPoolInstance.multi === 'function') {
+          shimmer.wrap(redisPoolInstance, 'multi', wrapMulti(redisUrl, false));
         }
-
-        return redisPoolPrototype;
+        return redisPoolInstance;
       };
     };
 
@@ -191,11 +189,11 @@ function instrument(redis) {
             configurable: true,
             enumerable: true,
             get() {
-              return creatPoolWrap(poolDescriptor.get.call(this));
+              return createPoolWrap(poolDescriptor.get.call(this));
             }
           });
         } else {
-          shimmer.wrap(redis, 'createClientPool', creatPoolWrap);
+          shimmer.wrap(redis, 'createClientPool', createPoolWrap);
         }
       }
     };
