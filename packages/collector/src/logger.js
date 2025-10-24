@@ -95,7 +95,9 @@ exports.init = function init(userConfig = {}) {
     parentLogger = uninstrumentedLogger({
       name: '@instana/collector',
       level: 'info',
-      base: { threadId, pid: process.pid, hostname: os.hostname() }
+      base: { threadId, pid: process.pid, hostname: os.hostname() },
+      // Set ISO timestamp format for the default logger
+      timestamp: () => `,"time":"${new Date().toISOString()}"`
     });
   }
 
@@ -133,12 +135,17 @@ exports.init = function init(userConfig = {}) {
 
       // CASE: We copy any settings from the pino instance such as custom formats.
       if (symbols && Array.isArray(symbols)) {
+        // If there's a custom timestamp function from the userConfig logger  , we'll respect that
         const timeSym = symbols.find(sym => String(sym) === 'Symbol(pino.time)');
         // @ts-ignore
         const timestampFn = instance[timeSym];
 
-        if (timestampFn) {
+        // Only use the user's timestamp function if it's from a user-provided logger
+        if (timestampFn && userConfig.logger) {
           pinoOpts.timestamp = timestampFn;
+        } else if (!pinoOpts.timestamp) {
+          // If no timestamp function is set yet, fallback to ISO format
+          pinoOpts.timestamp = () => `,"time":"${new Date().toISOString()}"`;
         }
 
         const formattersSym = symbols.find(sym => String(sym) === 'Symbol(pino.formatters)');
