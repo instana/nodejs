@@ -420,7 +420,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                 pid: String(serverControls.getPid()),
                 dataProperty: 'tags',
                 extraTests: span => {
-                  expect(span.data.tags.name).to.contain('test_reply receive');
+                  expect(span.data.tags.name).to.contain('receive /');
                   expect(span.data.tags['messaging.system']).to.eql('socket.io');
                   expect(span.data.tags['messaging.destination']).to.eql('ON test_reply');
                   expect(span.data.tags['messaging.operation']).to.eql('receive');
