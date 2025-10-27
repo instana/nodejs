@@ -9,6 +9,7 @@ coverage
 .vscode
 currency-report.md
 *.zip
+*instruction*.md
 
 # CI
 node-modules*.tar
