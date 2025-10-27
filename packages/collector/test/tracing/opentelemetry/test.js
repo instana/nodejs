@@ -897,14 +897,23 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
       await controls.clearIpcMessages();
     });
 
-    it('should trace', () =>
+    it('should trace with both Instana and OpenTelemetry SDK', () =>
       controls
         .sendRequest({
           method: 'GET',
           path: '/otel-sdk-fs'
         })
-        .then(() =>
-          retry(() =>
+        .then(response => {
+          // Verify OpenTelemetry spans in the response
+          expect(response.success).to.be.true;
+          expect(response.otelspan).to.be.an('object');
+          expect(response.otelspan.name).to.eql('explicit-otel-operation');
+          expect(response.otelspan._spanContext).to.have.property('traceId');
+          expect(response.otelspan._spanContext).to.have.property('spanId');
+          expect(response.otelspan.instrumentationLibrary).to.be.an('object');
+          expect(response.otelspan.instrumentationLibrary.name).to.eql('otel-sdk-app-tracer');
+
+          return retry(() =>
             agentControls.getSpans().then(spans => {
               expect(spans.length).to.equal(3);
 
@@ -940,8 +949,8 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                 }
               });
             })
-          )
-        ));
+          );
+        }));
 
     it('[suppressed] should not trace', () =>
       controls

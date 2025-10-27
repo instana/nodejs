@@ -46,6 +46,8 @@ app.get('/', (req, res) => {
 });
 
 app.get('/otel-sdk-fs', (req, res) => {
+  // To verify the OpenTelemetry SDK is active, we create an explicit span
+  // We assert in the test that this span is present in the response
   const span = tracer.startSpan('explicit-otel-operation');
 
   try {
@@ -56,7 +58,7 @@ app.get('/otel-sdk-fs', (req, res) => {
     const stats = fs.statSync(path.join(__dirname, '../test.js'));
     log(`File stats: ${JSON.stringify(stats.size)}`);
     span.end();
-    res.send({ success: true, size: content.length });
+    res.send({ success: true, size: content.length, otelspan: span });
   } catch (err) {
     span.recordException(err);
     span.end();
