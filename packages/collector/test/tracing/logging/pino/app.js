@@ -21,6 +21,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const pino = require('pino');
+const path = require('path');
 const port = require('../../../test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const pinoOptions = {
@@ -30,17 +31,44 @@ const pinoOptions = {
   }
 };
 
+// NOTE: This is the same pino instance as in the uninstrumentedLogger.js!
+//       We already test against multiple pino versions. If we test with pino-v8,
+//       this loads a different npm pino version into the cache.
 const plainVanillaPino = pino(pinoOptions);
-const expressPino = require('pino-http')(pinoOptions);
+let expressPino;
+
+// requiring pino-http creates a false positive test, because this pino version is not in the node cache yet.
+if (process.env.PINO_EXPRESS === 'true') {
+  expressPino = require('pino-http')(pinoOptions);
+}
 
 const app = express();
-const logPrefix = `Pino App (${process.pid}):\t`;
+const logPrefix = `Pino App with pino-http: ${process.env.PINO_EXPRESS} (${process.pid}):\t`;
+
+let secondPinoVersion;
+if (process.env.PINO_SECOND_VERSION === 'true') {
+  const rootFolder = path.join(__dirname, '..', '..', '..', '..', '..', '..', 'node_modules', 'pino');
+  const pinoRoot = require(rootFolder);
+  secondPinoVersion = pinoRoot(pinoOptions);
+
+  log(`Loaded second pino version from root in ${rootFolder}`);
+}
+
+let secondPinoInstance;
+if (process.env.PINO_SECOND_INSTANCE === 'true') {
+  const secondRequire = require('pino');
+  secondPinoInstance = secondRequire(pinoOptions);
+
+  log('Loaded second pino instance');
+}
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
-app.use(expressPino);
+if (process.env.PINO_EXPRESS === 'true') {
+  app.use(expressPino);
+}
 
 app.use(bodyParser.json());
 
@@ -60,6 +88,15 @@ app.get('/warn', (req, res) => {
 
 app.get('/error', (req, res) => {
   plainVanillaPino.error('Error message - should be traced.');
+
+  if (process.env.PINO_SECOND_VERSION === 'true') {
+    secondPinoVersion.error('Error from second pino version - should be traced.');
+  }
+
+  if (process.env.PINO_SECOND_INSTANCE === 'true') {
+    secondPinoInstance.error('Error from second pino instance - should be traced.');
+  }
+
   finish(res);
 });
 
