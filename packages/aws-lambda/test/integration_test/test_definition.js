@@ -110,6 +110,10 @@ function prelude(opts) {
     env.SERVER_TIMING_HEADER = opts.serverTiming;
   }
 
+  if (opts.disableAssetCalls) {
+    env.INSTANA_TRACING_DISABLE_LAMBDA_ASSET_CALLS = true;
+  }
+
   // The option useExtension controls whether the Lambda under test should try to talk to the extension or to the back
   // end directly.
   if (opts.useExtension) {
@@ -3231,48 +3235,98 @@ function registerTests(handlerDefinitionPath, reduced) {
       '/images/logo.png',
       '/assets/main.js.map'
     ];
-    let control;
-    before(async () => {
-      const env = prelude.bind(this)({
-        handlerDefinitionPath,
-        trigger: 'function-url',
-        instanaAgentKey
+    describeOrSkipIfReduced(reduced)('default case', function () {
+      let control;
+      before(async () => {
+        const env = prelude.bind(this)({
+          handlerDefinitionPath,
+          trigger: 'function-url',
+          instanaAgentKey
+        });
+
+        control = new Control({
+          faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+          handlerDefinitionPath,
+          startBackend: true,
+          env
+        });
+
+        await control.start();
       });
 
-      control = new Control({
-        faasRuntimePath: path.join(__dirname, '../runtime_mock'),
-        handlerDefinitionPath,
-        startBackend: true,
-        env
+      beforeEach(async () => {
+        await control.reset();
+        await control.resetBackendSpansAndMetrics();
       });
 
-      await control.start();
+      after(async () => {
+        await control.stop();
+      });
+
+      assetPaths.forEach(assetPath => {
+        it('should trace browser asset requests', () => {
+          return verify(
+            control,
+            {
+              error: false,
+              expectMetrics: true,
+              expectSpans: true,
+              trigger: 'aws:lambda.function.url'
+            },
+            {
+              payloadFormatVersion: '2.0',
+              assetPath: assetPath
+            }
+          );
+        });
+      });
     });
 
-    beforeEach(async () => {
-      await control.reset();
-      await control.resetBackendSpansAndMetrics();
-    });
+    describeOrSkipIfReduced(reduced)('when INSTANA_TRACING_DISABLE_LAMBDA_ASSET_CALLS=true', function () {
+      let control;
+      before(async () => {
+        const env = prelude.bind(this)({
+          handlerDefinitionPath,
+          trigger: 'function-url',
+          instanaAgentKey,
+          disableAssetCalls: true
+        });
 
-    after(async () => {
-      await control.stop();
-    });
+        control = new Control({
+          faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+          handlerDefinitionPath,
+          startBackend: true,
+          env
+        });
 
-    assetPaths.forEach(assetPath => {
-      it('must skip tracing for browser asset requests', () => {
-        return verify(
-          control,
-          {
-            error: false,
-            expectMetrics: false,
-            expectSpans: false,
-            trigger: 'function-url'
-          },
-          {
-            payloadFormatVersion: '2.0',
-            assetPath: assetPath
-          }
-        );
+        await control.start();
+      });
+
+      beforeEach(async () => {
+        await control.reset();
+        await control.resetBackendSpansAndMetrics();
+      });
+
+      after(async () => {
+        await control.stop();
+      });
+
+      assetPaths.forEach(assetPath => {
+        it('must skip tracing for browser asset requests', () => {
+          return verify(
+            control,
+            {
+              error: false,
+              expectMetrics: false,
+              expectSpans: false,
+              trigger: 'aws:lambda.function.url'
+            },
+            {
+              payloadFormatVersion: '2.0',
+              assetPath: assetPath
+            }
+          );
+        });
       });
     });
   });

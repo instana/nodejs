@@ -546,21 +546,39 @@ function postHandlerForTimeout(entrySpan, remainingMillis) {
 
 /**
  * Determines whether a Lambda invocation corresponds to a browser-generated asset request
- * (like CSS, JS, images, favicon, or source maps).
- * These requests typically do not need tracing and can be safely skipped to reduce noise in spans.
+ * (such as CSS, JS, images, favicon, or source maps).
+ * These requests typically do not require tracing and can be safely skipped
+ * to reduce noise in tracing spans.
  */
 function skipAssetCalls(event) {
   if (!event) return false;
 
-  const requestCtx = event.requestContext || {};
-  const requestCtxHttp = requestCtx.http || {};
-  const path = requestCtxHttp.path || event.rawPath || event.path;
+  const isAssetTracingDisabled =
+    process.env.INSTANA_TRACING_DISABLE_LAMBDA_ASSET_CALLS &&
+    process.env.INSTANA_TRACING_DISABLE_LAMBDA_ASSET_CALLS === 'true';
+
+  const requestContext = event.requestContext || {};
+  const httpContext = requestContext.http || {};
+  const path = httpContext.path || event.rawPath || event.path;
 
   if (!path || typeof path !== 'string') return false;
 
-  if (/^\/favicon\.ico$|\/.*\.(ico|png|jpg|jpeg|gif|svg|css|js|map)$/i.test(path)) {
-    logger.debug(`Skipping browser-generated asset request: ${path}`);
-    return true;
+  const assetPattern = /^\/favicon\.ico$|\/.*\.(ico|png|jpg|jpeg|gif|svg|css|js|map)$/i;
+
+  if (assetPattern.test(path)) {
+    // Skip asset calls only if explicitly configured to do so, for safe migration.
+    // In the next major release, this behavior will become the default.
+    if (isAssetTracingDisabled) {
+      logger.debug(`Skipping browser-generated asset request: ${path}`);
+      return true;
+    }
+
+    logger.warn(
+      `Asset request detected: ${path}. Starting from the next major release, asset calls will be skipped by default. 
+      To enable this behavior now, set the environment variable 'INSTANA_TRACING_DISABLE_LAMBDA_ASSET_CALLS'=true.`
+    );
+
+    return false;
   }
 
   return false;
