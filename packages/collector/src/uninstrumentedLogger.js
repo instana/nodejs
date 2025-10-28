@@ -18,6 +18,7 @@ const pinoWasRequiredBeforeUs = Object.keys(require.cache).some(key => key.inclu
 //       Furthermore, using "onModuleLoad" is much more clean because we don't have to rely on the precense of
 //       lib/tools.js.
 // SEE:  https://jsw.ibm.com/browse/INSTA-23066
+// SEE:  https://github.com/instana/nodejs/pull/2105/files#r2468756290
 
 // eslint-disable-next-line import/no-extraneous-dependencies, instana/no-unsafe-require
 const pino = require('pino').default;
