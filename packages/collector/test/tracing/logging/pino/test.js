@@ -5,6 +5,7 @@
 
 'use strict';
 
+const path = require('path');
 const expect = require('chai').expect;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
@@ -37,6 +38,13 @@ describe('tracing/logging/pino', function () {
         let controls;
 
         before(async () => {
+          testUtils.runCommandSync('rm -rf node_modules', path.join(__dirname, 'lib'));
+
+          testUtils.runCommandSync(
+            'npm install --production --no-audit --no-package-lock --prefix ./',
+            path.join(__dirname, 'lib')
+          );
+
           controls = new ProcessControls({
             dirname: __dirname,
             useGlobalAgent: true,

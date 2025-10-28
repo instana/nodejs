@@ -21,7 +21,6 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const pino = require('pino');
-const path = require('path');
 const port = require('../../../test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const pinoOptions = {
@@ -47,11 +46,9 @@ const logPrefix = `Pino App with pino-http: ${process.env.PINO_EXPRESS} (${proce
 
 let secondPinoVersion;
 if (process.env.PINO_SECOND_VERSION === 'true') {
-  const rootFolder = path.join(__dirname, '..', '..', '..', '..', '..', '..', 'node_modules', 'pino');
-  const pinoRoot = require(rootFolder);
-  secondPinoVersion = pinoRoot(pinoOptions);
-
-  log(`Loaded second pino version from root in ${rootFolder}`);
+  const pinoSecondVersion = require('./lib/load-pino');
+  secondPinoVersion = pinoSecondVersion(pinoOptions);
+  log('Loaded second pino version.');
 }
 
 let secondPinoInstance;
