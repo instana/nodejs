@@ -28,6 +28,7 @@ const globalAgent = require('../../../globalAgent');
 // Clustering support was officially introduced in v4
 // Redis Sentinel support was added in v5.
 const legacyVersion = 'v3';
+const versionsSinceV5 = ['latest', 'v583'];
 
 /**
  * Supported Redis setups for local testing:
@@ -52,7 +53,7 @@ const allSetupTypes = ['default', 'cluster', 'sentinel'];
 const selectedSetupType = false;
 const setupTypesToRun = allSetupTypes.includes(selectedSetupType) ? [selectedSetupType] : allSetupTypes;
 
-const allVersions = ['latest', 'v4', 'v3'];
+const allVersions = ['latest', 'v583', 'v4', 'v3'];
 const selectedVersion = false;
 const versionsToRun = allVersions.includes(selectedVersion) ? [selectedVersion] : allVersions;
 
@@ -68,7 +69,7 @@ setupTypesToRun.forEach(setupType => {
 
           const shouldSkipCluster = setupType === 'cluster' && redisVersion === legacyVersion;
           // NOTE: sentinel support added in v5(latest).
-          const shouldSkipSentinel = setupType === 'sentinel' && redisVersion !== 'latest';
+          const shouldSkipSentinel = setupType === 'sentinel' && !versionsSinceV5.includes(redisVersion);
 
           if (shouldSkipCluster || shouldSkipSentinel) {
             mochaSuiteFn = describe.skip;
@@ -127,7 +128,7 @@ setupTypesToRun.forEach(setupType => {
             // In v5, Redis moved “Isolation Pool” into RedisClientPool.
             // see: https://github.com/redis/node-redis/blob/master/docs/pool.md
             // Only for this test the connection is established via the pool.
-            if (redisVersion === 'latest' && setupType === 'default') {
+            if (versionsSinceV5.includes(redisVersion) && setupType === 'default') {
               mochaSuiteFn('When connected via clientpool', function () {
                 globalAgent.setUpCleanUpHooks();
                 let controls;
@@ -801,8 +802,8 @@ setupTypesToRun.forEach(setupType => {
                           ]);
                           // NOTE: v5 SCAN iterators yield collection of keys, enabling multi-key commands like MGET.
                           // See: https://github.com/redis/node-redis/blob/master/docs/v4-to-v5.md#scan-iterators
-                          const expectedSpanCount = redisVersion === 'latest' ? 1 : 4;
-                          const expectedRedisCommand = redisVersion === 'latest' ? 'mGet' : 'get';
+                          const expectedSpanCount = versionsSinceV5.includes(redisVersion) ? 1 : 4;
+                          const expectedRedisCommand = versionsSinceV5.includes(redisVersion) ? 'mGet' : 'get';
 
                           expectExactlyNMatching(spans, expectedSpanCount, [
                             span => expect(span.t).to.equal(entrySpan.t),
@@ -828,7 +829,7 @@ setupTypesToRun.forEach(setupType => {
               // The "Isolation Pool" was introduced via RedisClientPool in v5.
               // This new pool type requires a different connection mechanism.
               // As a result, this test is being skipped.
-              if (redisVersion !== 'latest') {
+              if (!versionsSinceV5.includes(redisVersion)) {
                 it('blocking', () => testBlockingCommand(controls, setupType));
               }
             }
