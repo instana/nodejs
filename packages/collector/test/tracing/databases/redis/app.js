@@ -146,8 +146,8 @@ app.get('/blocking', async (req, res) => {
 });
 
 app.get('/scan-iterator', async (req, res) => {
-  if (redisVersion === 'latest') {
-    // v5: SCAN iterators return collection of keys, enabling multi-key commands like mGet
+  // v5: SCAN iterators return collection of keys, enabling multi-key commands like mGet
+  if (redisVersion === 'latest' || redisVersion === 'v583') {
     // eslint-disable-next-line no-restricted-syntax
     for await (const keys of connection.scanIterator()) {
       try {
