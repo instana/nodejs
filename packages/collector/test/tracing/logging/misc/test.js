@@ -286,7 +286,7 @@ mochaSuiteFn('tracing/logging/misc', function () {
           });
 
           // 1 x http span + 1 x log span
-          expect(spans.length).to.be.at.least(2);
+          expect(spans.length).to.equal(2);
 
           testUtils.expectAtLeastOneMatching(spans, [
             span => expect(span.n).to.equal('node.http.server'),

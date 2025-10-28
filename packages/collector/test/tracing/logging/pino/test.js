@@ -25,7 +25,7 @@ describe('tracing/logging/pino', function () {
 
     // Pino v10(latest) requires Node.js 20 or higher
     if (pinoVersion === 'latest' && semver.lt(process.versions.node, '20.0.0')) {
-       mochaSuiteFn = describe.skip;
+      mochaSuiteFn = describe.skip;
     }
 
     mochaSuiteFn(`pino@${pinoVersion}`, function () {

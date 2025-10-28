@@ -97,6 +97,8 @@ exports.init = function init(userConfig = {}) {
       level: 'info',
       base: { threadId, pid: process.pid, hostname: os.hostname() }
     });
+
+    // We don't have to set __instana here, because our instance is loaded before the pino instrumentation.
   }
 
   // Passing the log stream to agentStream for Debugging purposes
@@ -151,6 +153,7 @@ exports.init = function init(userConfig = {}) {
       }
 
       parentLogger = uninstrumentedLogger(pinoOpts, multiStream);
+      // We don't have to set __instana here, because our instance is loaded before the pino instrumentation.
     } catch (error) {
       // TODO: If any error occurs, we don't forward any logs to the agent. Why?
       //       https://jsw.ibm.com/browse/INSTA-59515

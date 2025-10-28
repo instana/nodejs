@@ -4,27 +4,14 @@
 
 'use strict';
 
-const pinoWasRequiredBeforeUs = Object.keys(require.cache).some(key => key.includes('node_modules/pino'));
-
-// eslint-disable-next-line import/no-extraneous-dependencies, instana/no-unsafe-require
-
+/**
+ * CASE 1: We use our internal pino logger as the Instana logger. The logs are automatically not traced because
+ *         this file is loaded before the pino instrumentation is applied.
+ *
+ * CASE 2: Customer sets custom pino logger. Works out of the box because we create our own uninstrumented pino logger
+ *         instances as a child logger because of unsupported multistreams for child loggers (see logger.js line 155).
+ *
+ * CASE 3: Customer sets non pino logger. The target instrumentations protect tracing internal logs with __instana.
+ */
 const pino = require('pino').default;
-
-// TODO: Fix the issue with Pino instrumentation. If Pino is required multiple times,
-//       only the first require is instrumented. `onFileLoad` causes the behavior for that.
-//       See https://jsw.ibm.com/browse/INSTA-23066
-// NOTE: We need the removal of the cache here anyway, because we do not want to trigger the pino instrumentation.
-//       This is an uninstrumented pino logger.
-//       If pino was required before us, we leave the cache as it is.
-// NOTE: Clearing the require cache is only needed because of onFileLoad usage in the pino instrumentation.
-//       As soon as we can migrate to use onModuleLoad in the instrumentation,
-//       we can remove this and ensure that the internal logger is called before the instr initialization.
-if (!pinoWasRequiredBeforeUs) {
-  Object.keys(require.cache).forEach(key => {
-    if (key.includes('node_modules/pino')) {
-      delete require.cache[key];
-    }
-  });
-}
-
 module.exports = pino;
