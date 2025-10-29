@@ -14,6 +14,16 @@ const cls = require('../../cls');
 
 let isActive = false;
 
+// We register hooks for both redis and @redis/client,
+// but since redis internally loads @redis/client,
+// it triggers the instrumentation callback twice — leading to duplicate instrumentation.
+const instrumentationState = {
+  createClient: false,
+  createCluster: false,
+  createSentinel: false,
+  createClientPool: false
+};
+
 exports.spanName = 'redis';
 exports.batchable = true;
 
@@ -179,6 +189,11 @@ function instrument(redis) {
     };
 
     const instrumentPool = () => {
+      // Skip if already instrumented
+      if (instrumentationState.createClientPool) {
+        return;
+      }
+
       // In Redis v5, createClientPool support was added. The createClientPool defined in different ways:
       //   1. As a getter (in redis), which requires special handling.
       //   2. As a regular function (@redis/client).
@@ -192,18 +207,31 @@ function instrument(redis) {
               return createPoolWrap(poolDescriptor.get.call(this));
             }
           });
+          instrumentationState.createClientPool = true;
         } else {
           shimmer.wrap(redis, 'createClientPool', createPoolWrap);
+          instrumentationState.createClientPool = true;
         }
       }
     };
 
-    shimmer.wrap(redis, 'createCluster', createClusterWrap);
-    shimmer.wrap(redis, 'createClient', createClientWrap);
-    // v5, redis sentinel support was added.
-    if (typeof redis.createSentinel === 'function') {
-      shimmer.wrap(redis, 'createSentinel', createSentinelWrap);
+    // Only instrument each function once
+    if (!instrumentationState.createCluster && typeof redis.createCluster === 'function') {
+      shimmer.wrap(redis, 'createCluster', createClusterWrap);
+      instrumentationState.createCluster = true;
     }
+
+    if (!instrumentationState.createClient && typeof redis.createClient === 'function') {
+      shimmer.wrap(redis, 'createClient', createClientWrap);
+      instrumentationState.createClient = true;
+    }
+
+    // v5, redis sentinel support was added.
+    if (!instrumentationState.createSentinel && typeof redis.createSentinel === 'function') {
+      shimmer.wrap(redis, 'createSentinel', createSentinelWrap);
+      instrumentationState.createSentinel = true;
+    }
+
     instrumentPool();
   } else {
     const redisClientProto = redis.RedisClient.prototype;
