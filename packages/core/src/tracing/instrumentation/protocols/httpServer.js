@@ -180,6 +180,7 @@ function shimEmit(realEmit) {
 
         // Always capture duration and HTTP response details, no matter if a higher level instrumentation
         // (like graphql.server) has modified the span or not.
+        // Date.now() provides only millisecond precision, microsecond accuracy is not supported.
         span.d = Date.now() - span.ts;
         span.data.http = span.data.http || {};
         if (res.headersSent) {
