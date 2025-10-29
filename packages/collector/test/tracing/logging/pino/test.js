@@ -5,6 +5,7 @@
 
 'use strict';
 
+const path = require('path');
 const expect = require('chai').expect;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
@@ -25,12 +26,80 @@ describe('tracing/logging/pino', function () {
 
     // Pino v10(latest) requires Node.js 20 or higher
     if (pinoVersion === 'latest' && semver.lt(process.versions.node, '20.0.0')) {
-       mochaSuiteFn = describe.skip;
+      mochaSuiteFn = describe.skip;
     }
 
     mochaSuiteFn(`pino@${pinoVersion}`, function () {
-      runTests(pinoVersion, false);
-      runTests(pinoVersion, true);
+      describe('default', function () {
+        runTests(pinoVersion, false);
+      });
+
+      describe('with second pino version', function () {
+        let controls;
+
+        before(async () => {
+          testUtils.runCommandSync('rm -rf node_modules', path.join(__dirname, 'lib'));
+
+          testUtils.runCommandSync(
+            'npm install --production --no-audit --no-package-lock --prefix ./',
+            path.join(__dirname, 'lib')
+          );
+
+          controls = new ProcessControls({
+            dirname: __dirname,
+            useGlobalAgent: true,
+            env: {
+              PINO_VERSION: pinoVersion,
+              PINO_EXPRESS: 'false',
+              PINO_SECOND_VERSION: 'true'
+            }
+          });
+
+          await controls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
+        after(async () => {
+          await controls.stop();
+        });
+
+        it('must trace error', () => runTest('error', false, true, 'Error message - should be traced.', controls, 4));
+      });
+
+      describe('with second pino instance', function () {
+        let controls;
+
+        before(async () => {
+          controls = new ProcessControls({
+            dirname: __dirname,
+            useGlobalAgent: true,
+            env: {
+              PINO_VERSION: pinoVersion,
+              PINO_EXPRESS: 'false',
+              PINO_SECOND_INSTANCE: 'true'
+            }
+          });
+
+          await controls.startAndWaitForAgentConnection();
+        });
+
+        beforeEach(async () => {
+          await agentControls.clearReceivedTraceData();
+        });
+
+        after(async () => {
+          await controls.stop();
+        });
+
+        it('must trace error', () => runTest('error', false, true, 'Error message - should be traced.', controls, 4));
+      });
+
+      describe('with express-pino', function () {
+        runTests(pinoVersion, true);
+      });
     });
   });
 
@@ -44,7 +113,8 @@ describe('tracing/logging/pino', function () {
         dirname: __dirname,
         useGlobalAgent: true,
         env: {
-          PINO_VERSION: pinoVersion
+          PINO_VERSION: pinoVersion,
+          PINO_EXPRESS: useExpressPino ? 'true' : 'false'
         }
       });
 
@@ -164,7 +234,7 @@ describe('tracing/logging/pino', function () {
     });
   }
 
-  function runTest(level, useExpressPino, expectErroneous, message, controls) {
+  function runTest(level, useExpressPino, expectErroneous, message, controls, expectedSpans = 3) {
     return trigger(level, useExpressPino, controls).then(() =>
       testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
@@ -180,7 +250,7 @@ describe('tracing/logging/pino', function () {
           // entry + exit + pino log
           // NOTE: Pino uses process.stdout directly
           //       Length of 3 just ensures that our console.* instrumentation isn't counted when customer uses pino
-          expect(spans.length).to.eql(3);
+          expect(spans.length).to.eql(expectedSpans);
         })
       )
     );

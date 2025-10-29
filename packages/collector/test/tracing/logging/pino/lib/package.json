@@ -1,0 +1,7 @@
+{
+  "name": "load-pino",
+  "main": "load-pino.js",
+  "dependencies": {
+    "pino": "^7.0.0"
+  }
+}

@@ -6,19 +6,23 @@
 
 const pinoWasRequiredBeforeUs = Object.keys(require.cache).some(key => key.includes('node_modules/pino'));
 
-// eslint-disable-next-line import/no-extraneous-dependencies, instana/no-unsafe-require
+// NOTE: The pino instrumentation is not yet loaded. The logger is loaded very early in our codebase.
+//       Therefore our internal pino instance will not be instrumented.
+//       BUT our pino require still loads pino into the internal node.js cache. Especially the files of the pino library
+//       such as lib/tools.js. These sub requires are not triggered anymore when pino is required the second time.
+//       That means if the customer is using the SAME npm version (our version), it won't get traced without our manual
+//       cache deletion below.
+//       If the customer has its own pino version, it will be traced correctly, because it will trigger "onFileLoad".
+// TODO: Consider migrating to "onModuleLoad". This will remove the need of having to manually delete the cache entry,
+//       because any later pino require will trigger the require hook again with "pino" as module name.
+//       Furthermore, using "onModuleLoad" is much more clean because we don't have to rely on the precense of
+//       lib/tools.js.
+// SEE:  https://jsw.ibm.com/browse/INSTA-23066
+// SEE:  https://github.com/instana/nodejs/pull/2105/files#r2468756290
 
+// eslint-disable-next-line import/no-extraneous-dependencies, instana/no-unsafe-require
 const pino = require('pino').default;
 
-// TODO: Fix the issue with Pino instrumentation. If Pino is required multiple times,
-//       only the first require is instrumented. `onFileLoad` causes the behavior for that.
-//       See https://jsw.ibm.com/browse/INSTA-23066
-// NOTE: We need the removal of the cache here anyway, because we do not want to trigger the pino instrumentation.
-//       This is an uninstrumented pino logger.
-//       If pino was required before us, we leave the cache as it is.
-// NOTE: Clearing the require cache is only needed because of onFileLoad usage in the pino instrumentation.
-//       As soon as we can migrate to use onModuleLoad in the instrumentation,
-//       we can remove this and ensure that the internal logger is called before the instr initialization.
 if (!pinoWasRequiredBeforeUs) {
   Object.keys(require.cache).forEach(key => {
     if (key.includes('node_modules/pino')) {
