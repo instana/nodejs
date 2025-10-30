@@ -16,7 +16,8 @@ let isActive = false;
 
 // We register hooks for both redis and @redis/client,
 // but since redis internally loads @redis/client,
-// it triggers the instrumentation callback twice — leading to duplicate instrumentation.
+// it triggers the instrumentation callback twice — leading to duplicate instr
+// so this object is to keep track of the fn instrumented to avoid multiple instr.
 const instrumentationState = {
   createClient: false,
   createCluster: false,
