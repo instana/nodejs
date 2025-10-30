@@ -17,12 +17,17 @@ let isActive = false;
 exports.spanName = 'redis';
 exports.batchable = true;
 
+let isRedisClientInstrumented = false;
+
 exports.activate = function activate() {
   isActive = true;
 };
 
 exports.deactivate = function deactivate() {
   isActive = false;
+
+  // need to reset the tracking when instrumentation is disabled
+  isRedisClientInstrumented = false;
 };
 
 exports.init = function init() {
@@ -46,6 +51,15 @@ function instrument(redis) {
   // NOTE: v4 no longer exposes the RedisClient. We need to wait till `createClient` get's called
   //       to get the instance of the redis client
   if (!redis.RedisClient) {
+    // redis automatically loads @redis/client, which can trigger a second instrumentation call.
+    // We track the instrumentation status via `isRedisClientInstrumented  and skip second time.
+    if (isRedisClientInstrumented) {
+      return;
+    }
+
+    // Mark as instrumented to prevent double instrumentation
+    isRedisClientInstrumented = true;
+
     const wrapMulti = (addressUrl, isCluster) => {
       return function innerWrapMulti(originalMultiFn) {
         return function instrumentedMultiInstana() {
@@ -200,10 +214,12 @@ function instrument(redis) {
 
     shimmer.wrap(redis, 'createCluster', createClusterWrap);
     shimmer.wrap(redis, 'createClient', createClientWrap);
+
     // v5, redis sentinel support was added.
     if (typeof redis.createSentinel === 'function') {
       shimmer.wrap(redis, 'createSentinel', createSentinelWrap);
     }
+
     instrumentPool();
   } else {
     const redisClientProto = redis.RedisClient.prototype;
