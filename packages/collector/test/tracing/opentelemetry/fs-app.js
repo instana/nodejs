@@ -12,14 +12,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const expect = require('chai').expect;
-
-/**
- * We install the latest version of the collector here locally.
- * This ensures we are using the Opentelemetry production dependencies.
- */
-expect(require.resolve('@instana/collector')).to.contain('opentelemetry/node_modules/@instana/collector');
-require('@instana/collector')();
+require('../../../src')();
 
 const express = require('express');
 const fs = require('fs');
