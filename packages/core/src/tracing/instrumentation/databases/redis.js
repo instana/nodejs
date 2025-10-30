@@ -27,6 +27,7 @@ const instrumentationState = {
 
 exports.spanName = 'redis';
 exports.batchable = true;
+let isRedisClientInstrumented = false;
 
 exports.activate = function activate() {
   isActive = true;
@@ -57,6 +58,14 @@ function instrument(redis) {
   // NOTE: v4 no longer exposes the RedisClient. We need to wait till `createClient` get's called
   //       to get the instance of the redis client
   if (!redis.RedisClient) {
+    // Added a check to prevent double instrumentation in Redis.
+    // Since redis automatically loads @redis/client,
+    // which triggers a second instrumentation call, we now restrict it.
+    if (isRedisClientInstrumented) {
+      return;
+    }
+    isRedisClientInstrumented = true;
+
     const wrapMulti = (addressUrl, isCluster) => {
       return function innerWrapMulti(originalMultiFn) {
         return function instrumentedMultiInstana() {
