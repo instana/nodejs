@@ -6,10 +6,10 @@
 'use strict';
 
 const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks');
-const api = require('@opentelemetry/api');
 const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
 const constants = require('../constants');
 const supportedVersion = require('../supportedVersion');
+const api = require('./opentelemetryApi');
 
 // NOTE: Please refrain from utilizing third-party instrumentations.
 //       Instead, opt for officially released instrumentations available in the OpenTelemetry
@@ -35,7 +35,7 @@ module.exports.init = (_config, cls) => {
   Object.keys(instrumentations).forEach(k => {
     const value = instrumentations[k];
     const instrumentation = require(`./${value.name}`);
-    instrumentation.init(cls);
+    instrumentation.init({ cls, api: api });
     value.module = instrumentation;
   });
 
@@ -93,25 +93,34 @@ module.exports.init = (_config, cls) => {
     }
   };
 
+  /**
+   * OpenTelemetry uses a ProxyTracerProvider as the default global tracer provider
+   * when no real tracer provider has been registered yet.
+   *
+   * This means initially, any tracer requests go through a proxy until a concrete
+   * TracerProvider (like BasicTracerProvider or NodeTracerProvider) is registered.
+   *
+   * Only if no provider is already registered, we create and register our own
+   * BasicTracerProvider instance. This ensures OpenTelemetry has a proper, configured
+   * tracer provider to create and manage traces.
+   *
+   * Note:
+   * If a global tracer provider is already set, calling
+   * api.trace.setGlobalTracerProvider() again will be ignored to prevent accidentally overriding
+   * an existing and functioning configuration. This acts as a safeguard to maintain telemetry consistency.
+   *
+   * Similar behavior applies to the global context manager.
+   *
+   * Reference:
+   * https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/internal/global-utils.ts#L37
+   */
   const provider = new BasicTracerProvider();
-  const contextManager = new AsyncHooksContextManager();
-
   api.trace.setGlobalTracerProvider(provider);
+
+  const contextManager = new AsyncHooksContextManager();
+  contextManager.enable();
   api.context.setGlobalContextManager(contextManager);
 
-  /**
-   * Each instrumentation depends on @opentelemetry/instrumentation.
-   * @opentelemetry/instrumentation has a peer dependency to @opentelemetry/api.
-   *
-   * Every instrumentation is based on @opentelemetry/instrumentation.
-   * We need to install an older version of @opentelemetry/instrumentation on root,
-   * to AVOID that the e.g. the tedious instrumentation loads
-   * the root @opentelemetry/instrumentation. Because otherwise
-   * we will load two different instances of @openetelemetry/api.
-   * And then we will get NonRecordingSpan instances when running the tests.
-   *
-   * This is an npm workspace issue. Nohoisting missing.
-   */
   const orig = api.trace.setSpan;
   api.trace.setSpan = function instanaSetSpan(ctx, span) {
     transformToInstanaSpan(span);
