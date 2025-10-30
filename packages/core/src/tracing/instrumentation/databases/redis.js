@@ -14,20 +14,10 @@ const cls = require('../../cls');
 
 let isActive = false;
 
-// We register hooks for both redis and @redis/client,
-// but since redis internally loads @redis/client,
-// it triggers the instrumentation callback twice — leading to duplicate instr
-// so this object is to keep track of the fn instrumented to avoid multiple instr.
-const instrumentationState = {
-  createClient: false,
-  createCluster: false,
-  createSentinel: false,
-  createClientPool: false
-};
-
 exports.spanName = 'redis';
 exports.batchable = true;
-let isRedisClientInstrumented = false;
+
+let isRedisInstrumented = false;
 
 exports.activate = function activate() {
   isActive = true;
@@ -35,6 +25,9 @@ exports.activate = function activate() {
 
 exports.deactivate = function deactivate() {
   isActive = false;
+
+  // need to reset the tracking when instrumentation is disabled
+  isRedisInstrumented = false;
 };
 
 exports.init = function init() {
@@ -55,17 +48,17 @@ function captureCommands(file) {
 }
 
 function instrument(redis) {
+  // Check if instrumentation is not already instrumented
+  if (isRedisInstrumented) {
+    return;
+  }
+
+  // Mark as instrumented to prevent double instrumentation
+  isRedisInstrumented = true;
+
   // NOTE: v4 no longer exposes the RedisClient. We need to wait till `createClient` get's called
   //       to get the instance of the redis client
   if (!redis.RedisClient) {
-    // Added a check to prevent double instrumentation in Redis.
-    // Since redis automatically loads @redis/client,
-    // which triggers a second instrumentation call, we now restrict it.
-    if (isRedisClientInstrumented) {
-      return;
-    }
-    isRedisClientInstrumented = true;
-
     const wrapMulti = (addressUrl, isCluster) => {
       return function innerWrapMulti(originalMultiFn) {
         return function instrumentedMultiInstana() {
@@ -199,11 +192,6 @@ function instrument(redis) {
     };
 
     const instrumentPool = () => {
-      // Skip if already instrumented
-      if (instrumentationState.createClientPool) {
-        return;
-      }
-
       // In Redis v5, createClientPool support was added. The createClientPool defined in different ways:
       //   1. As a getter (in redis), which requires special handling.
       //   2. As a regular function (@redis/client).
@@ -217,29 +205,18 @@ function instrument(redis) {
               return createPoolWrap(poolDescriptor.get.call(this));
             }
           });
-          instrumentationState.createClientPool = true;
         } else {
           shimmer.wrap(redis, 'createClientPool', createPoolWrap);
-          instrumentationState.createClientPool = true;
         }
       }
     };
 
-    // Only instrument each function once
-    if (!instrumentationState.createCluster && typeof redis.createCluster === 'function') {
-      shimmer.wrap(redis, 'createCluster', createClusterWrap);
-      instrumentationState.createCluster = true;
-    }
-
-    if (!instrumentationState.createClient && typeof redis.createClient === 'function') {
-      shimmer.wrap(redis, 'createClient', createClientWrap);
-      instrumentationState.createClient = true;
-    }
+    shimmer.wrap(redis, 'createCluster', createClusterWrap);
+    shimmer.wrap(redis, 'createClient', createClientWrap);
 
     // v5, redis sentinel support was added.
-    if (!instrumentationState.createSentinel && typeof redis.createSentinel === 'function') {
+    if (typeof redis.createSentinel === 'function') {
       shimmer.wrap(redis, 'createSentinel', createSentinelWrap);
-      instrumentationState.createSentinel = true;
     }
 
     instrumentPool();
