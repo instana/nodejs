@@ -93,37 +93,35 @@ module.exports.init = (_config, cls) => {
     }
   };
 
+  /**
+   * OpenTelemetry uses a ProxyTracerProvider as the default global tracer provider
+   * when no real tracer provider has been registered yet.
+   *
+   * This means initially, any tracer requests go through a proxy until a concrete
+   * TracerProvider (like BasicTracerProvider or NodeTracerProvider) is registered.
+   *
+   * Only if no provider is already registered, we create and register our own
+   * BasicTracerProvider instance. This ensures OpenTelemetry has a proper, configured
+   * tracer provider to create and manage traces.
+   *
+   * Note:
+   * If a global tracer provider is already set, calling
+   * api.trace.setGlobalTracerProvider() again will be ignored to prevent accidentally overriding
+   * an existing and functioning configuration. This acts as a safeguard to maintain telemetry consistency.
+   *
+   * Similar behavior applies to the global context manager.
+   *
+   * Reference:
+   * https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/internal/global-utils.ts#L37
+   */
+
+  const provider = new BasicTracerProvider();
+  api.trace.setGlobalTracerProvider(provider);
+
   const contextManager = new AsyncHooksContextManager();
-
-  /**
-   * - OpenTelemetry uses a ProxyTracerProvider as the default global provider
-   *   when no real tracer provider has been registered.
-   *   https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/trace/ProxyTracerProvider.ts#L35
-   * - The proxy delegates to a real provider if one is set.
-   * - We check if the current provider is still the proxy with no delegate,
-   *   which means no provider is configured yet.
-   * - Only in that case do we create and register our own BasicTracerProvider.
-   */
-  const currentProvider = api.trace.getTracerProvider();
-  if (currentProvider === api.trace._proxyTracerProvider || !api.trace._proxyTracerProvider._delegate) {
-    const provider = new BasicTracerProvider();
-    api.trace.setGlobalTracerProvider(provider);
-  }
-
+  contextManager.enable();
   api.context.setGlobalContextManager(contextManager);
-  /**
-   * Each instrumentation depends on @opentelemetry/instrumentation.
-   * @opentelemetry/instrumentation has a peer dependency to @opentelemetry/api.
-   *
-   * Every instrumentation is based on @opentelemetry/instrumentation.
-   * We need to install an older version of @opentelemetry/instrumentation on root,
-   * to AVOID that the e.g. the tedious instrumentation loads
-   * the root @opentelemetry/instrumentation. Because otherwise
-   * we will load two different instances of @openetelemetry/api.
-   * And then we will get NonRecordingSpan instances when running the tests.
-   *
-   * This is an npm workspace issue. Nohoisting missing.
-   */
+
   const orig = api.trace.setSpan;
   api.trace.setSpan = function instanaSetSpan(ctx, span) {
     transformToInstanaSpan(span);
