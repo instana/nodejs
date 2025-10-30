@@ -17,7 +17,7 @@ let isActive = false;
 exports.spanName = 'redis';
 exports.batchable = true;
 
-let isRedisInstrumented = false;
+let isRedisClientInstrumented = false;
 
 exports.activate = function activate() {
   isActive = true;
@@ -27,7 +27,7 @@ exports.deactivate = function deactivate() {
   isActive = false;
 
   // need to reset the tracking when instrumentation is disabled
-  isRedisInstrumented = false;
+  isRedisClientInstrumented = false;
 };
 
 exports.init = function init() {
@@ -48,17 +48,17 @@ function captureCommands(file) {
 }
 
 function instrument(redis) {
-  // Check if instrumentation is not already instrumented
-  if (isRedisInstrumented) {
-    return;
-  }
-
-  // Mark as instrumented to prevent double instrumentation
-  isRedisInstrumented = true;
-
   // NOTE: v4 no longer exposes the RedisClient. We need to wait till `createClient` get's called
   //       to get the instance of the redis client
   if (!redis.RedisClient) {
+    // if redisClient is already instrumented, then
+    if (isRedisClientInstrumented) {
+      return;
+    }
+
+    // Mark as instrumented to prevent double instrumentation
+    isRedisClientInstrumented = true;
+
     const wrapMulti = (addressUrl, isCluster) => {
       return function innerWrapMulti(originalMultiFn) {
         return function instrumentedMultiInstana() {
