@@ -10,29 +10,45 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
-const { registerInstrumentations } = require('@opentelemetry/instrumentation');
-const { HttpInstrumentation } = require('@opentelemetry/instrumentation-http');
-const { FsInstrumentation } = require('@opentelemetry/instrumentation-fs');
-const { Resource } = require('@opentelemetry/resources');
-const { ATTR_SERVICE_NAME } = require('@opentelemetry/semantic-conventions');
-const api = require('@opentelemetry/api');
+function initializeOpenTelemetry() {
+  const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
+  const { registerInstrumentations } = require('@opentelemetry/instrumentation');
+  const { HttpInstrumentation } = require('@opentelemetry/instrumentation-http');
+  const { FsInstrumentation } = require('@opentelemetry/instrumentation-fs');
+  const { Resource } = require('@opentelemetry/resources');
+  const { ATTR_SERVICE_NAME } = require('@opentelemetry/semantic-conventions');
+  const api = require('@opentelemetry/api');
 
-const provider = new NodeTracerProvider({
-  resource: new Resource({
-    [ATTR_SERVICE_NAME]: 'otel-sdk-test-service'
-  })
-});
+  const provider = new NodeTracerProvider({
+    resource: new Resource({
+      [ATTR_SERVICE_NAME]: 'otel-sdk-test-service'
+    })
+  });
 
-provider.register();
+  provider.register();
 
-registerInstrumentations({
-  instrumentations: [new HttpInstrumentation(), new FsInstrumentation()]
-});
+  registerInstrumentations({
+    instrumentations: [new HttpInstrumentation(), new FsInstrumentation()]
+  });
 
-const tracer = api.trace.getTracer('otel-sdk-app-tracer');
+  return api.trace.getTracer('otel-sdk-app-tracer');
+}
 
-require('../../../../src')();
+function initializeInstanaCollector() {
+  return require('../../../../src')();
+}
+
+const collectorFirst = process.env.COLLECTOR_FIRST === 'true';
+let tracer;
+
+if (collectorFirst) {
+  // This case the tracing is not working correctly
+  initializeInstanaCollector();
+  tracer = initializeOpenTelemetry();
+} else {
+  tracer = initializeOpenTelemetry();
+  initializeInstanaCollector();
+}
 
 const express = require('express');
 const fs = require('fs');
