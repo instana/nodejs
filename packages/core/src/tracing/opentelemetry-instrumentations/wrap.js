@@ -94,25 +94,20 @@ module.exports.init = (_config, cls) => {
   };
 
   /**
-   * OpenTelemetry uses a ProxyTracerProvider as the default global tracer provider
-   * when no real tracer provider has been registered yet.
+   * OpenTelemetry initializes with a ProxyTracerProvider as the default global tracer provider
+   * when no actual provider has been registered yet. Initially, all tracer requests are routed
+   * through this proxy until a concrete TracerProvider (e.g., BasicTracerProvider or NodeTracerProvider) is registered.
    *
-   * This means initially, any tracer requests go through a proxy until a concrete
-   * TracerProvider (like BasicTracerProvider or NodeTracerProvider) is registered.
+   * The OTEL API implementation ensures that if a concrete TracerProvider has already been registered and delegated,
+   * subsequent calls to set the global provider(setGlobalTracerProvider) are ignored. This prevents
+   * accidental configuration overrides and maintains telemetry consistency.
    *
-   * Only if no provider is already registered, we create and register our own
-   * BasicTracerProvider instance. This ensures OpenTelemetry has a proper, configured
-   * tracer provider to create and manage traces.
+   * Therefore, setGlobalTracerProvider will only register our provider(BasicTracerProvider) if none is currently set.
+   * (Handled internally by the OTEL API — see:
+   * https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/internal/global-utils.ts#L37)
    *
-   * Note:
-   * If a global tracer provider is already set, calling
-   * api.trace.setGlobalTracerProvider() again will be ignored to prevent accidentally overriding
-   * an existing and functioning configuration. This acts as a safeguard to maintain telemetry consistency.
+   * The same approach applies to the global context manager.
    *
-   * Similar behavior applies to the global context manager.
-   *
-   * Reference:
-   * https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/internal/global-utils.ts#L37
    */
   const provider = new BasicTracerProvider();
   api.trace.setGlobalTracerProvider(provider);
