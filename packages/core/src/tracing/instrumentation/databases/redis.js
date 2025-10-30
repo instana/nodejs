@@ -51,7 +51,8 @@ function instrument(redis) {
   // NOTE: v4 no longer exposes the RedisClient. We need to wait till `createClient` get's called
   //       to get the instance of the redis client
   if (!redis.RedisClient) {
-    // if redisClient is already instrumented, then
+    // redis automatically loads @redis/client, which can trigger a second instrumentation call.
+    // We track the instrumentation status via `isRedisClientInstrumented  and skip second time.
     if (isRedisClientInstrumented) {
       return;
     }
