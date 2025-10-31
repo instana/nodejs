@@ -56,8 +56,10 @@ spec:
       value: $(params.prod-deps-pr-limit)
     - name: pr-payload
       value: $(params.pr-payload)
-    - name: org-pr-limit
-      value: $(params.org-pr-limit)
+    - name: prod-deps-org-pr-limit
+      value: $(params.prod-deps-org-pr-limit)
+    - name: prod-deps-skip
+      value: $(params.prod-deps-skip)
 
   resourcetemplates:
     - apiVersion: v1
@@ -138,5 +140,7 @@ spec:
             value: $(params.prod-deps-pr-limit)
           - name: pr-payload
             value: $(params.pr-payload)
-          - name: org-pr-limit
-            value: $(params.org-pr-limit)
+          - name: prod-deps-org-pr-limit
+            value: $(params.prod-deps-org-pr-limit)
+          - name: prod-deps-skip
+            value: $(params.prod-deps-skip)
