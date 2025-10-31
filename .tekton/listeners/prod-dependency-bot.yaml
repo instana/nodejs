@@ -26,10 +26,10 @@ spec:
       default: "" 
     - name: prod-deps-pr-limit
       value: $(params.prod-deps-pr-limit)
-    - name: org-pr-limit
-      value: $(params.org-pr-limit)
-    - name: skip-deps
-      value: $(params.skip-deps)
+    - name: prod-deps-org-pr-limit
+      value: $(params.prod-deps-org-pr-limit)
+    - name: prod-deps-skip
+      value: $(params.prod-deps-skip)
     - name: pl-name
       value: "prod-dependency-bot-$(params.node-version)"
     - name: pipeline-ref

@@ -10,8 +10,8 @@ const utils = require('../utils');
 const BRANCH = process.env.BRANCH;
 const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
 const PROD_DEPS_PR_LIMIT = process.env.PROD_DEPS_PR_LIMIT || 5;
-const ORG_PR_LIMIT = process.env.ORG_PR_LIMIT || 2;
-const SKIP_DEPS = process.env.SKIP_DEPS ? process.env.SKIP_DEPS.split(',').map(p => p.trim()) : [];
+const PROD_DEPS_ORG_PR_LIMIT = process.env.PROD_DEPS_ORG_PR_LIMIT || 2;
+const PROD_DEPS_SKIP = process.env.PROD_DEPS_SKIP ? process.env.PROD_DEPS_SKIP.split(',').map(p => p.trim()) : [];
 const cwd = path.join(__dirname, '..', '..', '..');
 
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
@@ -19,8 +19,8 @@ if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
 console.log(`BRANCH: ${BRANCH}`);
 console.log(`SKIP_PUSH: ${SKIP_PUSH}`);
 console.log(`PROD_DEPS_PR_LIMIT: ${PROD_DEPS_PR_LIMIT}`);
-console.log(`ORG_PR_LIMIT: ${ORG_PR_LIMIT}`);
-console.log(`SKIP_DEPS: ${SKIP_DEPS.length ? SKIP_DEPS.join(', ') : '(none)'}`);
+console.log(`PROD_DEPS_ORG_PR_LIMIT: ${PROD_DEPS_ORG_PR_LIMIT}`);
+console.log(`PROD_DEPS_SKIP: ${PROD_DEPS_SKIP.length ? PROD_DEPS_SKIP.join(', ') : '(none)'}`);
 
 const updatedProdDeps = [];
 const orgPrCount = {};
@@ -42,16 +42,16 @@ pkgPaths.forEach(obj => {
 });
 
 Object.entries(dependencyMap).some(([dep, usageList]) => {
-  if (SKIP_DEPS.includes(dep)) {
-    console.log(`Skipping ${dep}. It is listed in SKIP_DEPS.`);
+  if (PROD_DEPS_SKIP.includes(dep)) {
+    console.log(`Skipping ${dep}. It is listed in PROD_DEPS_SKIP.`);
     return false;
   }
   if (updatedProdDeps.length >= PROD_DEPS_PR_LIMIT) return true;
 
   const orgName = dep.startsWith('@') ? dep.split('/')[0] : null;
 
-  if (orgName && (orgPrCount[orgName] || 0) >= ORG_PR_LIMIT) {
-    console.log(`Skipping ${dep}. ${orgName} has reached its PR limit (${ORG_PR_LIMIT}).`);
+  if (orgName && (orgPrCount[orgName] || 0) >= PROD_DEPS_ORG_PR_LIMIT) {
+    console.log(`Skipping ${dep}. ${orgName} has reached its PR limit (${PROD_DEPS_ORG_PR_LIMIT}).`);
     return false;
   }
 
