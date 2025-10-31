@@ -253,12 +253,21 @@ exports.branchExists = (branchName, cwd) => {
  * @param {string} cwd - Current working directory
  * @param {boolean} isMainBranch - Whether the current branch is 'main'
  */
-exports.prepareGitEnvironment = (branchName, cwd, isMainBranch) => {
-  execSync('git checkout main', { cwd });
-  execSync('npm i --no-audit', { cwd });
+exports.prepareGitEnvironment = (branchName, cwd, isMainBranch, isDryRun) => {
+  if (!isDryRun) {
+    execSync('git checkout main', { cwd });
+    execSync('npm i --no-audit', { cwd });
 
-  if (!isMainBranch) {
-    execSync(`git checkout -b ${branchName}`, { cwd });
+    if (!isMainBranch) {
+      execSync(`git checkout -b ${branchName}`, { cwd });
+    }
+  } else {
+    console.log('[DRY RUN] git checkout main');
+    console.log('[DRY RUN] npm i --no-audit');
+
+    if (!isMainBranch) {
+      console.log(`[DRY RUN] git checkout -b ${branchName}`);
+    }
   }
 };
 
@@ -275,16 +284,25 @@ exports.prepareGitEnvironment = (branchName, cwd, isMainBranch) => {
  * @returns {boolean} True if PR was created, false otherwise
  */
 exports.commitAndCreatePR = options => {
-  const { packageName, currentVersion, newVersion, branchName, cwd, skipPush, prTitle } = options;
+  const { packageName, currentVersion, newVersion, branchName, cwd, skipPush, prTitle, isDryRun } = options;
 
-  execSync("git add '*package.json' package-lock.json", { cwd });
-  execSync(`git commit -m "build: bumped ${packageName} from ${currentVersion} to ${newVersion}"`, { cwd });
+  if (!isDryRun) {
+    execSync("git add '*package.json' package-lock.json", { cwd });
+    execSync(`git commit -m "build: bumped ${packageName} from ${currentVersion} to ${newVersion}"`, { cwd });
+  } else {
+    console.log("[DRY RUN] git add '*package.json' package-lock.json");
+    console.log(`[DRY RUN] git commit -m "build: bumped ${packageName} from ${currentVersion} to ${newVersion}"`);
+  }
 
   if (exports.hasCommits(branchName, cwd)) {
-    if (!skipPush) {
+    if (!skipPush && !isDryRun) {
       execSync(`git push origin ${branchName} --no-verify`, { cwd });
       execSync(`gh pr create --base main --head ${branchName} --title "${prTitle}" --body "Tada!"`, { cwd });
       console.log(`Pushed the branch: ${branchName} and raised PR`);
+      return true;
+    } else {
+      console.log(`[DRY RUN] git push origin ${branchName} --no-verify`);
+      console.log(`[DRY RUN] gh pr create --base main --head ${branchName} --title "${prTitle}" --body "Tada!"`);
       return true;
     }
   } else {
@@ -322,7 +340,7 @@ exports.isExactVersion = ({ workspaceFlag, packageName, cwd, saveFlag }) => {
  * @param {Function} options.execSyncFn - Optional custom execSync function
  */
 exports.installPackage = options => {
-  const { packageName, version, cwd, saveFlag, workspaceFlag, execSyncFn } = options;
+  const { packageName, version, cwd, saveFlag, workspaceFlag, execSyncFn, isDryRun } = options;
 
   const workspaceOption = workspaceFlag ? `-w ${workspaceFlag}` : '';
   let command = `npm i ${saveFlag} ${packageName}@${version} ${workspaceOption} --no-audit`;
@@ -334,12 +352,19 @@ exports.installPackage = options => {
     command += ' --save-exact';
   }
 
-  console.log(command);
-  execFn(command, { stdio: 'inherit', cwd });
+  if (!isDryRun) {
+    execFn(command, { stdio: 'inherit', cwd });
+  } else {
+    console.log(`[DRY RUN] ${command}`);
+  }
 
   // For optional dependencies, run an extra npm install due to npm bug
   if (saveFlag === '--save-optional') {
-    execFn('npm i', { stdio: 'inherit', cwd });
+    if (!isDryRun) {
+      execFn('npm i', { stdio: 'inherit', cwd });
+    } else {
+      console.log('[DRY RUN] npm i');
+    }
   }
 };
 
