@@ -5,10 +5,12 @@
 'use strict';
 
 const path = require('path');
+// eslint-disable-next-line import/no-extraneous-dependencies
+const semver = require('semver');
 const utils = require('../utils');
 
 const BRANCH = process.env.BRANCH;
-const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
+const DRY_RUN = process.env.DRY_RUN === 'true';
 const PROD_DEPS_PR_LIMIT = process.env.PROD_DEPS_PR_LIMIT || 5;
 const PROD_DEPS_ORG_PR_LIMIT = process.env.PROD_DEPS_ORG_PR_LIMIT || 2;
 const PROD_DEPS_SKIP = process.env.PROD_DEPS_SKIP ? process.env.PROD_DEPS_SKIP.split(',').map(p => p.trim()) : [];
@@ -17,7 +19,7 @@ const cwd = path.join(__dirname, '..', '..', '..');
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
 
 console.log(`BRANCH: ${BRANCH}`);
-console.log(`SKIP_PUSH: ${SKIP_PUSH}`);
+console.log(`DRY_RUN: ${DRY_RUN}`);
 console.log(`PROD_DEPS_PR_LIMIT: ${PROD_DEPS_PR_LIMIT}`);
 console.log(`PROD_DEPS_ORG_PR_LIMIT: ${PROD_DEPS_ORG_PR_LIMIT}`);
 console.log(`PROD_DEPS_SKIP: ${PROD_DEPS_SKIP.length ? PROD_DEPS_SKIP.join(', ') : '(none)'}`);
@@ -42,10 +44,6 @@ pkgPaths.forEach(obj => {
 });
 
 Object.entries(dependencyMap).some(([dep, usageList]) => {
-  if (PROD_DEPS_SKIP.includes(dep)) {
-    console.log(`Skipping ${dep}. It is listed in PROD_DEPS_SKIP.`);
-    return false;
-  }
   if (updatedProdDeps.length >= PROD_DEPS_PR_LIMIT) return true;
 
   const orgName = dep.startsWith('@') ? dep.split('/')[0] : null;
@@ -68,12 +66,37 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
   console.log(`Preparing PR for ${dep} (${currentVersion} -> ${latestVersion})`);
 
   try {
+    // CASE: PROD_DEPS_SKIP="pino,@opentelemetry/instrumentation-tedious"
+    if (PROD_DEPS_SKIP.includes(dep)) {
+      console.log(`Skipping ${dep}. It is listed in PROD_DEPS_SKIP.`);
+      return false;
+    }
+
+    // CASE: PROD_DEPS_SKIP="pino,@opentelemetry/instrumentation-tedious@2" (to skip all v2 updates)
+    if (
+      PROD_DEPS_SKIP.some(skipEntry => {
+        const matched = skipEntry.match(/^(.*)@(\d)$/);
+        if (!matched) return false;
+
+        const skipDep = matched[1];
+        const skipMajorVersion = matched[2];
+
+        if (skipDep !== dep) return false;
+
+        const latestMajorVersion = semver.major(latestVersion).toString();
+        return latestMajorVersion === skipMajorVersion;
+      })
+    ) {
+      console.log(`Skipping ${dep}. It is listed in PROD_DEPS_SKIP.`);
+      return false;
+    }
+
     if (utils.branchExists(branchName, cwd)) {
       console.log(`Skipping ${dep}. Branch ${branchName} already exists.`);
       return false;
     }
 
-    utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main');
+    utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main', DRY_RUN);
 
     usageList.forEach(({ pkgRelDir }) => {
       utils.installPackage({
@@ -81,7 +104,8 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
         version: latestVersion,
         cwd,
         saveFlag: '',
-        workspaceFlag: pkgRelDir
+        workspaceFlag: pkgRelDir,
+        isDryRun: DRY_RUN
       });
     });
 
@@ -91,7 +115,7 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
       newVersion: latestVersion,
       branchName,
       cwd,
-      skipPush: SKIP_PUSH,
+      isDryRun: DRY_RUN,
       prTitle: `[Prod Dependency Bot] Bumped ${dep} from ${currentVersion} to ${latestVersion}`
     });
 
