@@ -93,12 +93,27 @@ const getHighestMajorVersion = versions => {
   return highestMajorVersion;
 };
 
-exports.getLatestVersion = ({ pkgName, installedVersion, isBeta }) => {
-  let latestVersion = execSync(`npm info ${pkgName} version`).toString().trim();
+exports.getLatestVersion = ({ pkgName, installedVersion, isBeta, fromInstalledMajor }) => {
+  let latestVersion;
+
+  // CASE: get the latest version within the installed major version
+  if (fromInstalledMajor) {
+    const installedMajor = semver.major(installedVersion);
+    const versions = execSync(`npm info ${pkgName}@${installedMajor} version`).toString().trim().split('\n');
+
+    if (versions.length === 1) {
+      latestVersion = versions[0].replaceAll("'", '');
+    } else {
+      latestVersion = versions[versions.length - 1].split(' ')[1].replaceAll("'", '');
+    }
+  } else {
+    latestVersion = execSync(`npm info ${pkgName} version`).toString().trim();
+  }
+
   const allVersions = getAllVersions(pkgName);
   const highestMajorVersion = getHighestMajorVersion(allVersions);
 
-  if (semver.major(highestMajorVersion) > semver.major(latestVersion)) {
+  if (!fromInstalledMajor && semver.major(highestMajorVersion) > semver.major(latestVersion)) {
     const highestMajorVersionIsPrerelease =
       hasPrereleaseTag(pkgName, semver.major(highestMajorVersion)) || semver.prerelease(highestMajorVersion);
 
