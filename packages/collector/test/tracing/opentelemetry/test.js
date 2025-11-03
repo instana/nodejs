@@ -7,7 +7,6 @@
 const expect = require('chai').expect;
 const path = require('path');
 const semver = require('semver');
-const { execSync } = require('child_process');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../core/test/config');
@@ -791,95 +790,6 @@ const runTests =
             ));
       });
     });
-  });
-  // add new tests here
-  describe.skip('with different otel-api version installed on app', function () {
-    globalAgent.setUpCleanUpHooks();
-    const agentControls = globalAgent.instance;
-
-    let controls;
-
-    before(async () => {
-      // Install dependencies directly in the test directory
-      execSync('npm install --no-save --no-package-lock', {
-        cwd: path.join(__dirname, './diff-otel-api-version'),
-        stdio: 'inherit'
-      });
-      controls = new ProcessControls({
-        appPath: path.join(__dirname, './diff-otel-api-version/app.js'),
-        useGlobalAgent: true
-      });
-
-      await controls.startAndWaitForAgentConnection();
-    });
-
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
-    after(async () => {
-      await controls.stop();
-    });
-
-    afterEach(async () => {
-      await controls.clearIpcMessages();
-    });
-
-    it('should trace', () =>
-      controls
-        .sendRequest({
-          method: 'GET',
-          path: '/fs-read'
-        })
-        .then(() =>
-          retry(() =>
-            agentControls.getSpans().then(spans => {
-              expect(spans.length).to.equal(3);
-
-              const httpEntry = verifyHttpRootEntry({
-                spans,
-                apiPath: '/fs-read',
-                pid: String(controls.getPid())
-              });
-
-              verifyExitSpan({
-                spanName: 'otel',
-                spans,
-                parent: httpEntry,
-                withError: false,
-                pid: String(controls.getPid()),
-                dataProperty: 'tags',
-                extraTests: span => {
-                  expect(span.data.tags.name).to.eql('fs readFileSync');
-                  checkTelemetryResourceAttrs(span);
-                }
-              });
-
-              verifyExitSpan({
-                spanName: 'otel',
-                spans,
-                parent: httpEntry,
-                withError: false,
-                pid: String(controls.getPid()),
-                dataProperty: 'tags',
-                extraTests: span => {
-                  expect(span.data.tags.name).to.eql('fs statSync');
-                  checkTelemetryResourceAttrs(span);
-                }
-              });
-            })
-          )
-        ));
-
-    it('[suppressed] should not trace', () =>
-      controls
-        .sendRequest({
-          method: 'GET',
-          path: '/fs-read',
-          suppressTracing: true
-        })
-        .then(() => delay(DELAY_TIMEOUT_IN_MS))
-        .then(() => retry(() => agentControls.getSpans().then(spans => expect(spans).to.be.empty))));
   });
 });
 

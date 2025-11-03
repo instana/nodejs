@@ -19,7 +19,18 @@
  * Note:
  * In practice, the fallback case is not currently known to occur — we’ve kept it
  * as a safety measure in case of future structural changes or unusual setups.
+ *
+ * Version Compatibility:
+ *   - Supported versions: 1.3.0 ≤ v < 1.10.0 (see core/package.json)
+ *   - If an unsupported version is installed at the root, the system will
+ *     install the highest compatible version from this range in the core node_modules.
+ *   - However, tracing will not function correctly in such cases because
+ *     multiple API instances (root vs child) may exist simultaneously.
+ *
+ *   Tracing only works when a supported @opentelemetry/api version
+ *   (within the specified range in this package’s dependencies) is installed at the root.
  */
+
 let api;
 
 try {
