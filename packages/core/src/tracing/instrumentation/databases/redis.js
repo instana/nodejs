@@ -504,7 +504,7 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
 
         if (err.message) {
           span.data.redis.error = err.message;
-        } else if (err instanceof Array && err.length) {
+        } else if (Array.isArray(err) && err.length) {
           span.data.redis.error = err[0].message;
         } else {
           span.data.redis.error = 'Unknown error';
