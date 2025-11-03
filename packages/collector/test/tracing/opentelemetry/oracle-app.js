@@ -12,6 +12,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('./mock-otel-api-version');
+
 const opentelemetryDisabled = process.env.INSTANA_DISABLE_USE_OPENTELEMETRY === 'true';
 
 require('../../../src')({

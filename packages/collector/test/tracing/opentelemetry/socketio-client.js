@@ -12,6 +12,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('./mock-otel-api-version');
+
 require('../../../src')();
 
 const socketioclient = require('socket.io-client');

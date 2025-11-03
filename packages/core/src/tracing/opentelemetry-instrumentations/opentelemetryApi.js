@@ -16,9 +16,9 @@
  * avoiding conflicts that can arise when multiple versions (root vs nested)
  * are loaded within the same process.
  *
-* Example structure:
- * ├── node_modules/@opentelemetry/api/      # root (preferred)
- * └── packages/service/node_modules/@opentelemetry/api/  # fallback
+ * Note:
+ * In practice, the fallback case is not currently known to occur — we’ve kept it
+ * as a safety measure in case of future structural changes or unusual setups.
  */
 let api;
 

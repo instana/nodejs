@@ -10,6 +10,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+require('./mock-otel-api-version');
+
 /* eslint-disable no-console */
 require('../../../src')({
   tracing: {

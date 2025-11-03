@@ -113,7 +113,6 @@ module.exports.init = (_config, cls) => {
   api.trace.setGlobalTracerProvider(provider);
 
   const contextManager = new AsyncHooksContextManager();
-  contextManager.enable();
   api.context.setGlobalContextManager(contextManager);
 
   const orig = api.trace.setSpan;
