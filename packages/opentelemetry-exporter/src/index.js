@@ -292,7 +292,7 @@ class InstanaExporter {
 
     if (spanId.length < stringLen) {
       const difference = stringLen - spanId.length;
-      const padding = Array(difference + 1).join('0');
+      const padding = new Array(difference + 1).join('0');
       result = `${padding}${spanId}`;
     }
 
