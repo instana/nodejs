@@ -79,10 +79,10 @@ class AutoProfiler {
   }
 
   getOption(name, defaultVal) {
-    if (!this.options || !this.options[name]) {
-      return defaultVal;
-    } else {
+    if (this.options?.[name] !== undefined) {
       return this.options[name];
+    } else {
+      return defaultVal;
     }
   }
 
