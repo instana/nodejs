@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.27.1](https://github.com/instana/nodejs/compare/v4.27.0...v4.27.1) (2025-11-03)
+
+
+### Bug Fixes
+
+* bumped tar from 7.5.1 to 7.5.2 ([#2110](https://github.com/instana/nodejs/issues/2110)) ([acfa855](https://github.com/instana/nodejs/commit/acfa855a599c7d4147f0caff37a3df1567e6d638)), closes [isaacs/node-tar#445](https://github.com/isaacs/node-tar/issues/445)
+
+
+
+
+
 # [4.27.0](https://github.com/instana/nodejs/compare/v4.26.4...v4.27.0) (2025-10-23)
 
 

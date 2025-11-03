@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.27.1](https://github.com/instana/nodejs/compare/v4.27.0...v4.27.1) (2025-11-03)
+
+
+### Bug Fixes
+
+* bumped import-in-the-middle from 1.15.0 to 2.0.0 ([#2081](https://github.com/instana/nodejs/issues/2081)) ([3276651](https://github.com/instana/nodejs/commit/3276651a5d8c6873f5e361cd534777ec9625351c))
+* **redis:** resolved pool instrumentation to use instance instead of prototype ([404111a](https://github.com/instana/nodejs/commit/404111a0adcb986a9988c1ffbab1c94288df7ced))
+
+
+
+
+
 # [4.27.0](https://github.com/instana/nodejs/compare/v4.26.4...v4.27.0) (2025-10-23)
 
 **Note:** Version bump only for package @instana/core
