@@ -53,7 +53,7 @@ const allSetupTypes = ['default', 'cluster', 'sentinel'];
 const selectedSetupType = false;
 const setupTypesToRun = allSetupTypes.includes(selectedSetupType) ? [selectedSetupType] : allSetupTypes;
 
-const allVersions = ['latest', 'v583', 'v4', 'v3'];
+const allVersions = ['latest', 'v5.8.3', 'v4', 'v3'];
 const selectedVersion = false;
 const versionsToRun = allVersions.includes(selectedVersion) ? [selectedVersion] : allVersions;
 
