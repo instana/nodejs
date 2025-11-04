@@ -33,7 +33,7 @@ const ATLAS_USER = process.env.ATLAS_USER || '';
 const ATLAS_PASSWORD = process.env.ATLAS_PASSWORD || '';
 const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
-const isLatestMajor = process.env.MONGOOSE_VERSION === 'latest' || process.env.MONGOOSE_VERSION === 'v854';
+const isLatestMajor = process.env.MONGOOSE_VERSION === 'latest' || process.env.MONGOOSE_VERSION === 'v8.5.4';
 
 let connectString;
 if (USE_ATLAS) {

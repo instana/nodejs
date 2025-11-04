@@ -28,10 +28,10 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
 // Recent Snappy versions (>=7.3.2) restrict access to package.json via the "exports" field,
 // causing to throw ERR_PACKAGE_PATH_NOT_EXPORTED.
 // This only affects Mongoose v5; tests can be re-enabled once the issue is resolved.
-['latest', 'v854', 'v7', 'v6'].forEach(version => {
+['latest', 'v8.5.4', 'v7', 'v6'].forEach(version => {
   const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-  const isLatestMajor = version === 'latest' || version === 'v854';
+  const isLatestMajor = version === 'latest' || version === 'v8.5.4';
 
   // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
   if (process.env.RUN_ESM && !isLatestMajor) return;

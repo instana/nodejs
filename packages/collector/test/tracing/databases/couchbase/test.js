@@ -149,7 +149,7 @@ async function configureCouchbase() {
   }
 }
 
-const couchbaseVersions = ['latest', 'v443'];
+const couchbaseVersions = ['latest', 'v4.4.3'];
 
 couchbaseVersions.forEach(version => {
   // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
@@ -523,14 +523,14 @@ couchbaseVersions.forEach(version => {
 
                     // It is difficult to get exact query from couchbase after v4.4.4 release
                     // as they are not generating queries from JS anymore, so we use the function name instead
-                    // for v443, we use partial query statement
+                    // for v4.4.3, we use partial query statement
                     expectExactlyNMatching(
                       spans,
                       1,
                       verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: '',
                         type: '',
-                        sql: version === 'v443' ? 'SELECT ' : 'GET ALL INDEXES'
+                        sql: version === 'v4.4.3' ? 'SELECT ' : 'GET ALL INDEXES'
                       })
                     );
                     expectExactlyOneMatching(
@@ -538,7 +538,7 @@ couchbaseVersions.forEach(version => {
                       verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: 'projects',
                         type: 'membase',
-                        sql: version === 'v443' ? 'SELECT ' : 'GET ALL DATASETS '
+                        sql: version === 'v4.4.3' ? 'SELECT ' : 'GET ALL DATASETS '
                       })
                     );
                   }
