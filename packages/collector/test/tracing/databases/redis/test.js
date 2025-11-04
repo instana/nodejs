@@ -28,7 +28,7 @@ const globalAgent = require('../../../globalAgent');
 // Clustering support was officially introduced in v4
 // Redis Sentinel support was added in v5.
 const legacyVersion = 'v3';
-const versionsSinceV5 = ['latest', 'v583'];
+const versionsSinceV5 = ['latest', 'v5.8.3'];
 
 /**
  * Supported Redis setups for local testing:
