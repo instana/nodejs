@@ -41,16 +41,6 @@ mochaSuiteFn('opentelemetry tests', function () {
     }
 
     execSync('./preinstall.sh', { cwd: __dirname, stdio: 'inherit' });
-
-    execSync('npm install --no-save --no-package-lock --prefix ./ ./core.tgz', {
-      cwd: __dirname,
-      stdio: 'inherit'
-    });
-
-    execSync('npm install --no-save --no-package-lock --prefix ./ ./collector.tgz', {
-      cwd: __dirname,
-      stdio: 'inherit'
-    });
   });
 
   // We run tests against multiple @opentelemetry/api versions to ensure compatibility.
@@ -64,6 +54,20 @@ mochaSuiteFn('opentelemetry tests', function () {
   // - latest is the latest verified release.
   ['latest', 'v1.3.0'].forEach(version => {
     mochaSuiteFn(`opentelemetry/instrumentations using @opentelemetry/api version: ${version}`, function () {
+      before(() => {
+        if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS === 'true') {
+          return;
+        }
+        execSync('npm install --no-save --no-package-lock --prefix ./ ./core.tgz', {
+          cwd: __dirname,
+          stdio: 'inherit'
+        });
+
+        execSync('npm install --no-save --no-package-lock --prefix ./ ./collector.tgz', {
+          cwd: __dirname,
+          stdio: 'inherit'
+        });
+      });
       // TODO: Restify test is broken in v24. See Issue: https://github.com/restify/node-restify/issues/1984
       runTests('restify', function () {
         describe('opentelemetry is enabled', function () {
@@ -826,9 +830,12 @@ mochaSuiteFn('opentelemetry tests', function () {
     });
   });
 
-  describe('when otel sdk and instana is enabled', function () {
+  mochaSuiteFn('when otel sdk and instana is enabled', function () {
     this.timeout(config.getTestTimeout() * 4);
     before(async () => {
+      if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS === 'true') {
+        return;
+      }
       execSync('rm -rf ./otel-sdk-and-instana/node_modules', { cwd: __dirname, stdio: 'inherit' });
       execSync('npm install --no-save --no-package-lock', {
         cwd: path.join(__dirname, './otel-sdk-and-instana'),
