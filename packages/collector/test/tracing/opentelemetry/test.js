@@ -62,7 +62,7 @@ mochaSuiteFn('opentelemetry tests', function () {
   // To verify stability across the supported range, we test with both v1.3.0 and v1.9.0:
   // - v1.3.0 represents the lowest supported version.
   // - latest is the latest verified release.
-  ['latest', 'v130'].forEach(version => {
+  ['latest', 'v1.3.0'].forEach(version => {
     mochaSuiteFn(`opentelemetry/instrumentations using @opentelemetry/api version: ${version}`, function () {
       // TODO: Restify test is broken in v24. See Issue: https://github.com/restify/node-restify/issues/1984
       runTests('restify', function () {
