@@ -6,7 +6,8 @@
 'use strict';
 
 const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks');
-const api = require('@opentelemetry/api');
+const api = require(require.resolve('@opentelemetry/api', { paths: [process.cwd()] }));
+console.log(require.resolve('@opentelemetry/api', { paths: [process.cwd()] }));
 const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
 const constants = require('../constants');
 const supportedVersion = require('../supportedVersion');
@@ -35,7 +36,7 @@ module.exports.init = (_config, cls) => {
   Object.keys(instrumentations).forEach(k => {
     const value = instrumentations[k];
     const instrumentation = require(`./${value.name}`);
-    instrumentation.init(cls);
+    instrumentation.init(cls, api);
     value.module = instrumentation;
   });
 
