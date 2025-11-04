@@ -35,7 +35,7 @@ module.exports.init = (_config, cls) => {
   Object.keys(instrumentations).forEach(k => {
     const value = instrumentations[k];
     const instrumentation = require(`./${value.name}`);
-    instrumentation.init(cls);
+    instrumentation.init({ cls, api: api });
     value.module = instrumentation;
   });
 
@@ -93,25 +93,28 @@ module.exports.init = (_config, cls) => {
     }
   };
 
+  /**
+   * OpenTelemetry initializes with a ProxyTracerProvider as the default global tracer provider
+   * when no actual provider has been registered yet. Initially, all tracer requests are routed
+   * through this proxy until a concrete TracerProvider (e.g., BasicTracerProvider or NodeTracerProvider) is registered.
+   *
+   * The OTEL API implementation ensures that if a concrete TracerProvider has already been registered and delegated,
+   * subsequent calls to set the global provider(setGlobalTracerProvider) are ignored. This prevents
+   * accidental configuration overrides and maintains telemetry consistency.
+   *
+   * Therefore, setGlobalTracerProvider will only register our provider(BasicTracerProvider) if none is currently set.
+   * (Handled internally by the OTEL API — see:
+   * https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/internal/global-utils.ts#L37)
+   *
+   * The same approach applies to the global context manager.
+   *
+   */
   const provider = new BasicTracerProvider();
   const contextManager = new AsyncHooksContextManager();
 
   api.trace.setGlobalTracerProvider(provider);
   api.context.setGlobalContextManager(contextManager);
 
-  /**
-   * Each instrumentation depends on @opentelemetry/instrumentation.
-   * @opentelemetry/instrumentation has a peer dependency to @opentelemetry/api.
-   *
-   * Every instrumentation is based on @opentelemetry/instrumentation.
-   * We need to install an older version of @opentelemetry/instrumentation on root,
-   * to AVOID that the e.g. the tedious instrumentation loads
-   * the root @opentelemetry/instrumentation. Because otherwise
-   * we will load two different instances of @openetelemetry/api.
-   * And then we will get NonRecordingSpan instances when running the tests.
-   *
-   * This is an npm workspace issue. Nohoisting missing.
-   */
   const orig = api.trace.setSpan;
   api.trace.setSpan = function instanaSetSpan(ctx, span) {
     transformToInstanaSpan(span);
