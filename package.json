@@ -134,7 +134,7 @@
     "admin": "1.4.1",
     "admin-plugin-healthcheck": "1.1.0",
     "amqplib": "0.10.9",
-    "amqplib-v0": "npm:amqplib@0.8.0",
+    "amqplib-v0.8.0": "npm:amqplib@0.8.0",
     "async": "3.2.6",
     "aws-sdk": "2.1692.0",
     "basic-auth-parser": "0.0.2",
