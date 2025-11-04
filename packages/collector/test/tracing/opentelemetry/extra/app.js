@@ -35,6 +35,7 @@ function initializeOpenTelemetry() {
 }
 
 function initializeInstanaCollector() {
+  console.log(require.resolve('@instana/collector'));
   require('@instana/collector')();
 }
 

@@ -41,12 +41,13 @@ mochaSuiteFn.only('opentelemetry/instrumentations', function () {
     }
 
     execSync('rm -rf ./extra/node_modules', { cwd: __dirname, stdio: 'inherit' });
+    execSync('rm -rf ./node_modules', { cwd: __dirname, stdio: 'inherit' });
 
     execSync('rm -rf ./core.tgz ./collector.tgz', { cwd: __dirname, stdio: 'inherit' });
 
     execSync('./preinstall.sh', { cwd: __dirname, stdio: 'inherit' });
 
-    execSync('npm install --no-save --no-package-lock --prefix ./', {
+    execSync('npm install --no-save --no-package-lock', {
       cwd: path.join(__dirname, './extra'),
       stdio: 'inherit'
     });
@@ -59,9 +60,9 @@ mochaSuiteFn.only('opentelemetry/instrumentations', function () {
     let controls;
     before(async () => {
       controls = new ProcessControls({
-        appPath: path.join(__dirname, './extra/app'),
         useGlobalAgent: true,
-        cwd: __dirname,
+        dirname: path.join(__dirname, './extra'),
+        cwd: path.join(__dirname, './extra'),
         env: {
           COLLECTOR_FIRST: 'false'
         }
