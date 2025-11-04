@@ -57,7 +57,7 @@
   },
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/core/README.md",
   "dependencies": {
-    "@opentelemetry/api": "1.9.0",
+    "@opentelemetry/api": ">=1.3.0 <1.10.0",
     "@opentelemetry/context-async-hooks": "1.25.0",
     "@opentelemetry/instrumentation-fs": "0.12.0",
     "@opentelemetry/instrumentation-oracledb": "0.32.0",
