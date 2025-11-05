@@ -27,11 +27,6 @@ const globalAgent = require('../../globalAgent');
 const DELAY_TIMEOUT_IN_MS = 500;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-const runTests =
-  supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '<=23.x')
-    ? describe
-    : describe.skip;
-
 mochaSuiteFn('opentelemetry tests', function () {
   this.timeout(config.getTestTimeout() * 2);
 
@@ -69,7 +64,8 @@ mochaSuiteFn('opentelemetry tests', function () {
         });
       });
       // TODO: Restify test is broken in v24. See Issue: https://github.com/restify/node-restify/issues/1984
-      runTests('restify', function () {
+      const restifyTest = semver.gte(process.versions.node, '24.0.0') ? describe.skip : describe;
+      restifyTest('restify', function () {
         describe('opentelemetry is enabled', function () {
           globalAgent.setUpCleanUpHooks();
           const agentControls = globalAgent.instance;
