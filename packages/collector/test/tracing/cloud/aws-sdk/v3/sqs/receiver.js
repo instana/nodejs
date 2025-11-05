@@ -15,7 +15,7 @@ const mock = require('@instana/core/test/test_util/mockRequire');
 
 /**
  * NOTE:
- * Link e.g. @aws-sdk/client-sqs-v3 to @aws-sdk/client-sqs
+ * Link e.g. @aws-sdk/client-sqs-vx to @aws-sdk/client-sqs
  */
 if (process.env.AWS_SDK_CLIENT_SQS_REQUIRE && process.env.AWS_SDK_CLIENT_SQS_REQUIRE !== '@aws-sdk/client-sqs') {
   mock('@aws-sdk/client-sqs', process.env.AWS_SDK_CLIENT_SQS_REQUIRE);
