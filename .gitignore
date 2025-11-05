@@ -10,6 +10,7 @@ coverage
 currency-report.md
 *.zip
 *instruction*.md
+eslint-report.json
 
 # CI
 node-modules*.tar
