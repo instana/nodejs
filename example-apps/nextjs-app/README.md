@@ -1,18 +1,16 @@
 # Instana Next.js Example
 
-A simple Next.js app integrated with Instana for automatic tracing and monitoring.
+A simple Next.js app integrated with Instana.
 
 ## Setup
 
-Instana’s ESM loader is configured in `package.json`:
+ESM loader is configured in `package.json`:
 
 ```json
 "start": "NODE_OPTIONS='--import ./node_modules/@instana/collector/esm-register.mjs' INSTANA_DEBUG=true next start"
 ```
 
 ## Run the App
-
-### Development
 
 ```bash
 npm i
@@ -21,7 +19,6 @@ npm run start
 ```
 
 App runs at `http://localhost:3000`.
-
 
 ## Routes
 
