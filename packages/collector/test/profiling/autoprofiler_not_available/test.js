@@ -71,7 +71,7 @@ mochaSuiteFn('tracing/autoprofiler: not available', function () {
       expect(events[0].code).to.equal('nodejs_collector_native_addon_autoprofile_missing');
 
       const profiles = await agentControls.getProfiles();
-      expect(profiles.length).to.be(0);
+      expect(profiles.length).to.equal(0);
     });
   });
 });
