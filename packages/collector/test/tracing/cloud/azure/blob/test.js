@@ -140,7 +140,7 @@ if (!storageAccount || !accountKey) {
                 withError: false,
                 spans: spans,
                 op: 'upload',
-                totalspans: 4 // expects 1 azure upload span, 1 fs span of otel and 2 http spans
+                totalspans: 3 // expects 1 azure upload span and 2 http spans
               });
             });
           });
@@ -159,7 +159,7 @@ if (!storageAccount || !accountKey) {
                 withError: true,
                 spans: spans,
                 op: 'upload',
-                totalspans: 3 // expects 1 azure upload span, 1 fs span of otel and 1 http span
+                totalspans: 2 // expects 1 azure upload span and 1 http span
               });
             });
           });
@@ -273,7 +273,7 @@ if (!storageAccount || !accountKey) {
                 withError: false,
                 spans: spans,
                 op: 'download',
-                totalspans: 6 // expects 3 azure spans( delete, upload, download ), 2 fs spans and 1 http span
+                totalspans: 4 // expects 3 azure spans( delete, upload, download ) and 1 http span
               });
             });
           });
@@ -292,7 +292,7 @@ if (!storageAccount || !accountKey) {
                 withError: false,
                 spans: spans,
                 op: 'download',
-                totalspans: 7 // expects 3 azure spans( delete, upload, download ), 2 fs spans and 2 http spans
+                totalspans: 5 // expects 3 azure spans( delete, upload, download ) and 2 http spans
               });
             });
           });
@@ -311,7 +311,7 @@ if (!storageAccount || !accountKey) {
                 withError: false,
                 spans: spans,
                 op: 'download',
-                totalspans: 7 // expects 3 azure spans( delete, upload, download ), 2 fs spans and 2 http spans
+                totalspans: 5 // expects 3 azure spans( delete, upload, download ) and 2 http spans
               });
             });
           });
@@ -330,7 +330,7 @@ if (!storageAccount || !accountKey) {
                 withError: false,
                 spans: spans,
                 op: 'download',
-                totalspans: 6 // expects 3 azure spans( delete, upload, download ), 2 fs spans and 1 http span
+                totalspans: 4 // expects 3 azure spans( delete, upload, download ) and 1 http span
               });
             });
           });

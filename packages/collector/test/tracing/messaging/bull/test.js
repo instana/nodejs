@@ -155,11 +155,10 @@ mochaSuiteFn('tracing/messaging/bull', function () {
                 testId,
                 // 1 x node.http.server 1
                 // 1 x bull receive
-                // 1 x otel (?)
                 // 1 x node.http.client (?)
                 // 1 x redis
                 // 1 x bull sender
-                spanLength: 6,
+                spanLength: 5,
                 withError,
                 isRepeatable: sendOption === 'repeat=true',
                 isBulk: sendOption === 'bulk=true'
@@ -188,7 +187,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
                 response,
                 apiPath,
                 testId,
-                spanLength: 9,
+                // 2 x bull
+                // 1 x http entry
+                // 1 x http exit
+                // 4 x redis
+                spanLength: 8,
                 withError,
                 isRepeatable: sendOption === 'repeat=true',
                 isBulk: sendOption === 'bulk=true'
@@ -231,7 +234,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
                 testId,
                 // TODO: all other bull tests also produce a huge number of spans
                 //       https://jsw.ibm.com/browse/INSTA-15029
-                spanLength: 16,
+                // 6 x bull
+                // 1 x http server
+                // 3 x redis
+                // 3 x http client
+                spanLength: 13,
                 withError,
                 isRepeatable: sendOption === 'repeat=true',
                 isBulk: sendOption === 'bulk=true'
@@ -261,7 +268,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
                 apiPath,
                 testId,
                 withError,
-                spanLength: 25,
+                // 6 x bull
+                // 12 x redis
+                // 1 x http server
+                // 3 x http client
+                spanLength: 22,
                 isRepeatable: sendOption === 'repeat=true',
                 isBulk: sendOption === 'bulk=true'
               });
@@ -307,8 +318,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
                 // 2 x bull entry
                 // 2 x http exit
                 // 2 x redis
-                // 4 x otel (read + write for the job files)
-                spanLength: 13,
+                spanLength: 9,
                 isRepeatable: sendOption === 'repeat=true',
                 isBulk: sendOption === 'bulk=true'
               });
@@ -335,7 +345,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
                 receiveMethod,
                 response,
                 apiPath,
-                spanLength: 19,
+                // 4 x bull
+                // 1 x http server
+                // 8 x redis
+                // 2 x http client
+                spanLength: 15,
                 testId,
                 withError,
                 isRepeatable: sendOption === 'repeat=true',
@@ -410,7 +424,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               receiveMethod,
               response,
               apiPath,
-              spanLength: 6,
+              // 2 x bull
+              // 1 x http server
+              // 1 x redis
+              // 1 x http client
+              spanLength: 5,
               testId,
               withError,
               isRepeatable: sendOption === 'repeat=true',
@@ -438,7 +456,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               receiverControls,
               receiveMethod,
               response,
-              spanLength: 9,
+              // 2 x bull
+              // 1 x http server
+              // 4 x redis
+              // 1 x http client
+              spanLength: 8,
               apiPath,
               testId,
               withError,
@@ -482,7 +504,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               apiPath,
               testId,
               withError,
-              spanLength: 16,
+              // 6 x bull
+              // 1 x http server
+              // 3 x redis
+              // 3 x http client
+              spanLength: 13,
               isRepeatable: sendOption === 'repeat=true',
               isBulk: sendOption === 'bulk=true'
             });
@@ -509,7 +535,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               receiveMethod,
               response,
               apiPath,
-              spanLength: 25,
+              // 6 x bull
+              // 1 x http server
+              // 12 x redis
+              // 3 x http client
+              spanLength: 22,
               testId,
               withError,
               isRepeatable: sendOption === 'repeat=true',
@@ -550,7 +580,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               receiveMethod,
               response,
               apiPath,
-              spanLength: 13,
+              // 4 x bull
+              // 1 x http server
+              // 2 x redis
+              // 2 x http client
+              spanLength: 9,
               testId,
               withError,
               isRepeatable: sendOption === 'repeat=true',
@@ -578,7 +612,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               receiverControls,
               receiveMethod,
               response,
-              spanLength: 19,
+              // 4 x bull
+              // 1 x http server
+              // 8 x redis
+              // 2 x http client
+              spanLength: 15,
               apiPath,
               testId,
               withError,

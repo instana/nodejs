@@ -65,7 +65,7 @@ function registerSuite(agentControls, driverMode, useExecute, mysql2Version) {
       env.USE_EXECUTE = 'true';
     }
 
-    test(env, agentControls, driverMode);
+    test(env, agentControls);
   });
 
   describe('suppressed', function () {
@@ -122,7 +122,7 @@ function registerSuite(agentControls, driverMode, useExecute, mysql2Version) {
   });
 }
 
-function test(env, agentControls, driverMode) {
+function test(env, agentControls) {
   let controls;
 
   before(async () => {
@@ -161,9 +161,8 @@ function test(env, agentControls, driverMode) {
           agentControls.getSpans().then(spans => {
             // 1 x mysql
             // 1 x httpserver
-            // 1 x otel fs(not included in mysql2/promise)
-            const expectedSpanCount = driverMode === 'mysql2/promises' ? 2 : 3;
-            expect(spans.length).to.equal(expectedSpanCount);
+            // Expect 2 spans if OTEL is disabled, or 3 if enabled — except when driverMode is 'mysql2/promises'.
+            expect(spans.length).to.equal(2);
             const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.f.e).to.equal(String(controls.getPid())),
@@ -276,9 +275,8 @@ function test(env, agentControls, driverMode) {
             // 1 x mysql
             // 1 x httpserver
             // 1 x httpclient
-            // 1 x otel fs(included in mysql2/promise)
-            const expectedSpanCount = driverMode === 'mysql2/promises' ? 4 : 3;
-            expect(spans.length).to.equal(expectedSpanCount);
+            // Expect 3 spans if OTEL is disabled, or 4 if enabled — except when driverMode is 'mysql2/promises'.
+            expect(spans.length).to.equal(3);
             const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.f.e).to.equal(String(controls.getPid())),

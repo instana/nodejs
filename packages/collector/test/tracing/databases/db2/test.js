@@ -878,7 +878,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              numberOfSpans: 15,
+              numberOfSpans: 11,
               // Spans:
               // 10 queries splitted from the file
               // 5 fs operations on top (ours + from db2 internally fs-extra)
@@ -929,10 +929,8 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              // 10 Instana spans + 5 Otel Spans
-              // FYI: CI is flaky. Locally 15 spans, on CI 15. Too hard to investigate
-              // I assume its because of the Otel spans
-              numberOfSpansAtLeast: 14,
+              // If the Otel integration is disabled, we expect 11 spans, else 14 spans.
+              numberOfSpansAtLeast: 11,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,
@@ -978,10 +976,8 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              // 10 Instana spans + 5 Otel Spans
-              // FYI: CI is flaky. Locally 15 spans, on CI 15. Too hard to investigate
-              // I assume its because of the Otel spans
-              numberOfSpansAtLeast: 14,
+              // If the Otel integration is disabled, we expect 11 spans, else 14 spans.
+              numberOfSpansAtLeast: 11,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,
