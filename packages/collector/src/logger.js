@@ -123,7 +123,8 @@ exports.init = function init(userConfig = {}) {
       const pinoOpts = {
         ...parentLogger.levels,
         level: parentLogger.level || 'info',
-        base: parentLogger.bindings()
+        base: parentLogger.bindings(),
+        timestamp: () => `,"time":"${new Date().toISOString()}"`
       };
 
       // CASE: Either its the customers pino instance (and probably a different pino installation/version)
@@ -134,18 +135,14 @@ exports.init = function init(userConfig = {}) {
       const symbols = Object.getOwnPropertySymbols(instance);
 
       // CASE: We copy any settings from the pino instance such as custom formats.
-      if (symbols && Array.isArray(symbols)) {
+      if (userConfig.logger && symbols && Array.isArray(symbols)) {
         // If there's a custom timestamp function from the userConfig logger  , we'll respect that
         const timeSym = symbols.find(sym => String(sym) === 'Symbol(pino.time)');
         // @ts-ignore
         const timestampFn = instance[timeSym];
 
-        // Only use the user's timestamp function if it's from a user-provided logger
-        if (timestampFn && userConfig.logger) {
+        if (timestampFn) {
           pinoOpts.timestamp = timestampFn;
-        } else if (!pinoOpts.timestamp) {
-          // If no timestamp function is set yet, fallback to ISO format
-          pinoOpts.timestamp = () => `,"time":"${new Date().toISOString()}"`;
         }
 
         const formattersSym = symbols.find(sym => String(sym) === 'Symbol(pino.formatters)');
