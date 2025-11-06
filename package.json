@@ -84,7 +84,7 @@
     "@apollo/subgraph": "2.12.0",
     "@as-integrations/express5": "1.1.2",
     "@aws-sdk/client-cloudwatch-logs": "3.696.0",
-    "@aws-sdk/client-dynamodb": "3.922.0",
+    "@aws-sdk/client-dynamodb": "3.925.0",
     "@aws-sdk/client-kinesis": "3.923.0",
     "@aws-sdk/client-kms": "3.922.0",
     "@aws-sdk/client-lambda": "3.922.0",
