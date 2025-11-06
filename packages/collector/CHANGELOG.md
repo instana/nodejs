@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.28.0](https://github.com/instana/nodejs/compare/v4.27.1...v4.28.0) (2025-11-06)
+
+
+### Bug Fixes
+
+* resolved TypeError undefined (reading 'pid') ([#2124](https://github.com/instana/nodejs/issues/2124)) ([216c6db](https://github.com/instana/nodejs/commit/216c6dbc3e25bbb322b0b0e4337f56e671f3345c))
+
+
+### Features
+
+* added support for parallel OpenTelemetry tracing ([#2118](https://github.com/instana/nodejs/issues/2118)) ([1aa0bd4](https://github.com/instana/nodejs/commit/1aa0bd446023a9165945320075b6c452aedfcff3)), closes [#2054](https://github.com/instana/nodejs/issues/2054)
+
+
+
+
+
 ## [4.27.1](https://github.com/instana/nodejs/compare/v4.27.0...v4.27.1) (2025-11-03)
 
 **Note:** Version bump only for package @instana/collector
