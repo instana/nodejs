@@ -857,6 +857,7 @@ mochaSuiteFn('opentelemetry tests', function () {
           appPath: path.join(__dirname, './otel-sdk-and-instana/app'),
           useGlobalAgent: true,
           cwd: path.join(__dirname, './otel-sdk-and-instana'),
+          enableOtelInstr: true,
           env: {
             COLLECTOR_FIRST: 'false'
           }
@@ -954,6 +955,7 @@ mochaSuiteFn('opentelemetry tests', function () {
           appPath: path.join(__dirname, './otel-sdk-and-instana/app'),
           useGlobalAgent: true,
           cwd: path.join(__dirname, './otel-sdk-and-instana'),
+          enableOtelInstr: true,
           env: {
             COLLECTOR_FIRST: 'true'
           }
