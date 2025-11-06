@@ -113,7 +113,7 @@ class ProcessControls {
     // By default, we test without OpenTelemetry instrumentation enabled
     // because the test setup is currently broken and not capturing OTEL spans.
     // TODO: INSTA-62539
-    this.enableOtelInstr = opts.enableOtelInstr !== false;
+    this.enableOtelInstr = opts.enableOtelInstr || false;
     // http/https/http2 port
     this.port = opts.port || process.env.APP_PORT || portFinder();
 

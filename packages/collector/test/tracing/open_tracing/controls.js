@@ -29,7 +29,7 @@ exports.registerTestHooks = opts => {
     // By default, we test without OpenTelemetry instrumentation enabled
     // because the test setup is currently broken and not capturing OTEL spans.
     // TODO: INSTA-62539
-    env.INSTANA_DISABLE_USE_OPENTELEMETRY = opts.enableOtelInstr !== true;
+    env.INSTANA_DISABLE_USE_OPENTELEMETRY = opts.enableOtelInstr ? 'false' : 'true';
 
     expressOpentracingApp = spawn('node', [path.join(__dirname, 'app.js')], {
       stdio: config.getAppStdio(),
