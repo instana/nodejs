@@ -108,7 +108,7 @@
     "@grpc/grpc-js": "1.14.0",
     "@grpc/grpc-js-v1": "npm:@grpc/grpc-js@1.9.4",
     "@grpc/proto-loader": "0.8.0",
-    "@hapi/hapi": "21.4.3",
+    "@hapi/hapi": "21.4.4",
     "@ibm/tekton-lint": "1.1.0",
     "@koa/router": "14.0.0",
     "@redis/client": "5.9.0",
