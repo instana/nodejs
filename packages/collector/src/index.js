@@ -116,8 +116,9 @@ function init(userConfig = {}) {
 
   pidStore.init(config);
   agentOpts.init(config);
-  announceCycle.init(config, pidStore);
   agentConnection.init(config, pidStore);
+
+  announceCycle.init(config, pidStore);
   instanaNodeJsCore.init(config, agentConnection, pidStore);
 
   if (isMainThread) {
