@@ -29,9 +29,21 @@ IFS=$'\n' sorted=($(printf "%s\n" $files | sort))
 unset IFS
 
 total=${#sorted[@]}
-perGroup=$(( (total + MAX_SPLIT - 1) / MAX_SPLIT ))
-start=$(( (SPLIT - 1) * perGroup ))
 
-for ((i = start; i < start + perGroup && i < total; i++)); do
+# Calculate files per group using floor division
+# This ensures more even distribution across all splits
+perGroup=$(( total / MAX_SPLIT ))
+
+remainder=$(( total % MAX_SPLIT ))
+
+if [ $SPLIT -le $remainder ]; then
+  start=$(( (SPLIT - 1) * (perGroup + 1) ))
+  count=$(( perGroup + 1 ))
+else
+  start=$(( remainder * (perGroup + 1) + (SPLIT - remainder - 1) * perGroup ))
+  count=$perGroup
+fi
+
+for ((i = start; i < start + count && i < total; i++)); do
   echo "${sorted[$i]}"
 done
