@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.29.0](https://github.com/instana/nodejs/compare/v4.28.0...v4.29.0) (2025-11-07)
+
+
+### Features
+
+* added ability to disable worker thread tracing ([#2131](https://github.com/instana/nodejs/issues/2131)) ([342d301](https://github.com/instana/nodejs/commit/342d301091043dad2870a4961d518e7c5b925582))
+
+
+
+
+
 # [4.28.0](https://github.com/instana/nodejs/compare/v4.27.1...v4.28.0) (2025-11-06)
 
 
