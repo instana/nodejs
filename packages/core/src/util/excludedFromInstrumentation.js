@@ -14,7 +14,8 @@
 const excludePattern = /^.*\/(?:npm(?:\.js)?|npm-cli(?:\.js)?|yarn(?:\.js)?|yarn\/lib\/cli(?:\.js)?)$/i;
 
 /**
- * Check if the current process is a Pino thread-stream worker thread
+ * Determines if the current process is a Pino thread-stream worker.
+ * Pino uses background worker threads for "thread-stream" logging, which should not be instrumented.
  * @returns {boolean}
  */
 function isPinoThreadStreamWorker() {
@@ -47,30 +48,31 @@ function isPinoThreadStreamWorker() {
 module.exports = exports = function isExcludedFromInstrumentation() {
   const mainModule = process.argv[1];
   let excludedFromInstrumentation = typeof mainModule === 'string' && excludePattern.test(mainModule);
-  let exclusionReason = 'npm or yarn';
+  let reason = 'npm-yarn';
 
-  // Skip Instana instrumentation in Pino thread-stream workers.
-  // Pino uses internal worker threads for its "thread-stream" transport.
-  // These threads are not part of the main application logic and should
-  // not be instrumented.
   if (!excludedFromInstrumentation && isPinoThreadStreamWorker()) {
     excludedFromInstrumentation = true;
-    exclusionReason = 'Pino thread-stream worker';
+    reason = 'pino-thread-stream';
   }
 
-  if (excludedFromInstrumentation) {
-    const logLevelIsDebugOrInfo =
-      process.env.INSTANA_DEBUG ||
-      (process.env.INSTANA_LOG_LEVEL &&
-        (process.env.INSTANA_LOG_LEVEL.toLowerCase() === 'info' ||
-          process.env.INSTANA_LOG_LEVEL.toLowerCase() === 'debug'));
+  const logEnabled =
+    process.env.INSTANA_DEBUG ||
+    (process.env.INSTANA_LOG_LEVEL && ['info', 'debug'].includes(process.env.INSTANA_LOG_LEVEL.toLowerCase()));
 
-    if (logLevelIsDebugOrInfo) {
+  if (excludedFromInstrumentation && logEnabled) {
+    if (reason === 'pino-thread-stream') {
+      // eslint-disable-next-line no-console
+      console.log(
+        // eslint-disable-next-line max-len
+        `[Instana] INFO: Skipping instrumentation for process ${process.pid} - detected as a Pino thread-stream worker. ` +
+          'Logging threads do not require instrumentation.'
+      );
+    } else {
       // eslint-disable-next-line no-console
       console.log(
         `[Instana] INFO: Not instrumenting process ${process.pid}: ${process.argv[0]} ${mainModule}` +
           // eslint-disable-next-line max-len
-          ` - this Node.js process seems to be ${exclusionReason}. A child process started via "npm start" or "yarn start" ` +
+          ' - this Node.js process seems to be npm or yarn. A child process started via "npm start" or "yarn start" ' +
           '_will_ be instrumented, but not npm or yarn itself.'
       );
     }
