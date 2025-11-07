@@ -14,7 +14,10 @@ process.on('SIGTERM', () => {
 });
 
 require('./mockVersion');
-require('../../../..')();
+
+if (!process.env.NODE_OPTIONS || !process.env.NODE_OPTIONS.includes('src/immediate')) {
+  require('../../../..')();
+}
 
 const fetch = require('node-fetch-v2');
 const bodyParser = require('body-parser');
@@ -210,6 +213,22 @@ app.get('/express-pino-error-object-and-string', (req, res) => {
 app.get('/express-pino-error-random-object-and-string', (req, res) => {
   req.log.error({ foo: { bar: 'baz' } }, 'Error message - should be traced.');
   finish(res);
+});
+
+app.get('/thread-stream-test', (req, res) => {
+  try {
+    const mode = process.env.PINO_WORKER_MODE || 'transport';
+
+    const logger =
+      mode === 'transport'
+        ? pino({ transport: { target: 'pino-pretty', options: { destination: 1 } } })
+        : pino({ destination: 1 });
+    logger.error('Pino worker test error log');
+
+    res.sendStatus(200);
+  } catch (e) {
+    res.status(500).send(`Failed: ${e.message}`);
+  }
 });
 
 function finish(res) {
