@@ -465,10 +465,19 @@ app.post('/analyticsindexes-promise', async (req, res) => {
     await cluster.analyticsIndexes().createDataverse(dvName, {
       ignoreIfExists: true
     });
+  } catch (err) {
+    return res.status(500).json({ err: `${err.message} cluster.analyticsIndexes().createDataverse` });
+  }
 
+  try {
     await cluster.analyticsIndexes().createDataset(bucket1.name, dsName, {
       dataverseName: dvName
     });
+  } catch (err) {
+    return res.status(500).json({ err: `${err.message} cluster.analyticsIndexes().createDataset` });
+  }
+
+  try {
     await cluster.analyticsIndexes().createIndex(
       dsName,
       idxName,
@@ -477,18 +486,43 @@ app.post('/analyticsindexes-promise', async (req, res) => {
         dataverseName: dvName
       }
     );
+  } catch (err) {
+    return res.status(500).json({ err: `${err.message} cluster.analyticsIndexes().createIndex` });
+  }
+
+  try {
     await cluster.analyticsIndexes().getAllDatasets();
+  } catch (err) {
+    return res.status(500).json({ err: `${err.message} cluster.analyticsIndexes().getAllDatasets` });
+  }
+
+  try {
     await cluster.analyticsIndexes().getAllIndexes();
+  } catch (err) {
+    return res.status(500).json({ err: `${err.message} cluster.analyticsIndexes().getAllIndexes` });
+  }
+
+  try {
     await cluster.analyticsIndexes().dropIndex(dsName, idxName, {
       dataverseName: dvName
     });
+  } catch (err) {
+    return res.status(500).json({ err: `${err.message} cluster.analyticsIndexes().dropIndex` });
+  }
+
+  try {
     await cluster.analyticsIndexes().dropDataset(dsName, {
       dataverseName: dvName
     });
+  } catch (err) {
+    return res.status(500).json({ err: `${err.message} cluster.analyticsIndexes().dropDataset` });
+  }
+
+  try {
     await cluster.analyticsIndexes().dropDataverse(dvName);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ err: err.message });
+    res.status(500).json({ err: `${err.message} cluster.analyticsIndexes().dropDataverse` });
   }
 });
 
