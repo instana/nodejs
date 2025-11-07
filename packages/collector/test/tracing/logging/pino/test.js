@@ -141,7 +141,7 @@ describe('tracing/logging/pino', function () {
 
       const httpSpan = spans.find(s => s.n === 'node.http.server');
       expect(httpSpan).to.exist;
-      expect(httpSpan.data.http.path_tpl).to.equal('/pino-worker-test');
+      expect(httpSpan.data.http.path_tpl).to.equal('/thread-stream-test');
       expect(httpSpan.data.http.status).to.equal(200);
 
       expect(spans).to.have.lengthOf(2);
