@@ -102,6 +102,51 @@ describe('tracing/logging/pino', function () {
       });
     });
   });
+  describe('pino thread-stream worker', function () {
+    let controls;
+
+    before(async () => {
+      controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          PINO_WORKER_MODE: 'transport',
+          PINO_EXPRESS: 'false',
+          NODE_OPTIONS: `--require ${path.join(__dirname, '../../../..', 'src', 'immediate.js')}`
+        }
+      });
+
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await controls.stop();
+    });
+
+    it('must trace without errors', async () => {
+      await controls.sendRequest({
+        method: 'GET',
+        path: '/thread-stream-test'
+      });
+      await testUtils.delay(1000);
+      const spans = await agentControls.getSpans();
+
+      const logSpan = spans.find(s => s.n === 'log.pino');
+      expect(logSpan).to.exist;
+      expect(logSpan.data.log.message).to.equal('Pino worker test error log');
+
+      const httpSpan = spans.find(s => s.n === 'node.http.server');
+      expect(httpSpan).to.exist;
+      expect(httpSpan.data.http.path_tpl).to.equal('/thread-stream-test');
+      expect(httpSpan.data.http.status).to.equal(200);
+
+      expect(spans).to.have.lengthOf(2);
+    });
+  });
 
   function runTests(pinoVersion, useExpressPino) {
     const suffix = useExpressPino ? ' (express-pino)' : '';

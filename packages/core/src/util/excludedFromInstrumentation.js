@@ -14,21 +14,60 @@
 const excludePattern = /^.*\/(?:npm(?:\.js)?|npm-cli(?:\.js)?|yarn(?:\.js)?|yarn\/lib\/cli(?:\.js)?)$/i;
 
 /**
+ * Determines if the current process is a Pino thread-stream worker.
+ * Pino uses background worker threads for "thread-stream" logging, which should not be instrumented.
+ * @returns {boolean}
+ */
+function isPinoThreadStreamWorker() {
+  try {
+    const { isMainThread, workerData } = require('worker_threads');
+    if (isMainThread) return false;
+
+    if (workerData && typeof workerData === 'object') {
+      const nested = workerData.workerData;
+      const isPinoWorker =
+        typeof workerData.filename === 'string' &&
+        nested &&
+        nested.$context &&
+        typeof nested.$context.threadStreamVersion === 'string';
+
+      if (isPinoWorker) {
+        return true;
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * @type {Function}
  * @returns {boolean}
  */
 module.exports = exports = function isExcludedFromInstrumentation() {
   const mainModule = process.argv[1];
-  const excludedFromInstrumentation = typeof mainModule === 'string' && excludePattern.test(mainModule);
+  let excludedFromInstrumentation = typeof mainModule === 'string' && excludePattern.test(mainModule);
+  let reason = 'npm-yarn';
 
-  if (excludedFromInstrumentation) {
-    const logLevelIsDebugOrInfo =
-      process.env.INSTANA_DEBUG ||
-      (process.env.INSTANA_LOG_LEVEL &&
-        (process.env.INSTANA_LOG_LEVEL.toLowerCase() === 'info' ||
-          process.env.INSTANA_LOG_LEVEL.toLowerCase() === 'debug'));
+  if (!excludedFromInstrumentation && isPinoThreadStreamWorker()) {
+    excludedFromInstrumentation = true;
+    reason = 'pino-thread-stream';
+  }
 
-    if (logLevelIsDebugOrInfo) {
+  const logEnabled =
+    process.env.INSTANA_DEBUG ||
+    (process.env.INSTANA_LOG_LEVEL && ['info', 'debug'].includes(process.env.INSTANA_LOG_LEVEL.toLowerCase()));
+
+  if (excludedFromInstrumentation && logEnabled) {
+    if (reason === 'pino-thread-stream') {
+      // eslint-disable-next-line no-console
+      console.log(
+        // eslint-disable-next-line max-len
+        `[Instana] INFO: Skipping instrumentation for process ${process.pid} - detected as a Pino thread-stream worker. ` +
+          'Logging threads do not require instrumentation.'
+      );
+    } else {
       // eslint-disable-next-line no-console
       console.log(
         `[Instana] INFO: Not instrumenting process ${process.pid}: ${process.argv[0]} ${mainModule}` +
