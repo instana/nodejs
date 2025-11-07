@@ -48,16 +48,12 @@ const versionsSinceV5 = ['latest', 'v5.8.3'];
  *    - To run tests against Redis Sentinel, start Redis Sentinel setup (1 master, 1 slave, 1 sentinel) with:
  *        node bin/start-test-containers.js --redis --redis-slave --redis-sentinel
  */
-const allSetupTypes = ['default', 'cluster', 'sentinel'];
-// Set to one of the setup types to run a single one, or set to false to run all
-const selectedSetupType = false;
-const setupTypesToRun = allSetupTypes.includes(selectedSetupType) ? [selectedSetupType] : allSetupTypes;
 
 const allVersions = ['latest', 'v5.8.3', 'v4', 'v3'];
 const selectedVersion = false;
 const versionsToRun = allVersions.includes(selectedVersion) ? [selectedVersion] : allVersions;
 
-setupTypesToRun.forEach(setupType => {
+module.exports = function (setupType) {
   describe(`tracing/redis ${setupType}`, function () {
     ['redis', '@redis/client'].forEach(redisPkg => {
       describe(`require: ${redisPkg}`, function () {
@@ -125,7 +121,7 @@ setupTypesToRun.forEach(setupType => {
                 });
               });
             });
-            // In v5, Redis moved “Isolation Pool” into RedisClientPool.
+            // In v5, Redis moved "Isolation Pool" into RedisClientPool.
             // see: https://github.com/redis/node-redis/blob/master/docs/pool.md
             // Only for this test the connection is established via the pool.
             if (versionsSinceV5.includes(redisVersion) && setupType === 'default') {
@@ -1289,4 +1285,4 @@ setupTypesToRun.forEach(setupType => {
       });
     });
   });
-});
+};
