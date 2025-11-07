@@ -33,6 +33,7 @@ if (isNodeJsTooOld()) {
   // @ts-ignore TS1108 (return can only be used within a function body)
   return;
 }
+
 let isMainThread = true;
 try {
   isMainThread = require('worker_threads').isMainThread;

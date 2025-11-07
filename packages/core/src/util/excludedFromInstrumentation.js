@@ -71,7 +71,6 @@ module.exports = exports = function isExcludedFromInstrumentation() {
       // eslint-disable-next-line no-console
       console.log(
         `[Instana] INFO: Not instrumenting process ${process.pid}: ${process.argv[0]} ${mainModule}` +
-          // eslint-disable-next-line max-len
           ' - this Node.js process seems to be npm or yarn. A child process started via "npm start" or "yarn start" ' +
           '_will_ be instrumented, but not npm or yarn itself.'
       );
