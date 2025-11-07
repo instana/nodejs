@@ -41,6 +41,25 @@ try {
   // Worker threads are not available, so we know that this is the main thread.
 }
 
+// Check if worker threads should be disabled via environment variable.
+// Disabling worker threads may be necessary in environments where
+// multi-threading causes issues or monitoring of worker threads is not required.
+const disableWorkerThreads = process.env.INSTANA_DISABLE_WORKER_THREADS?.toLowerCase() === 'true';
+
+if (disableWorkerThreads && !isMainThread) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    'Worker threads are disabled via INSTANA_DISABLE_WORKER_THREADS. ' +
+      'This worker thread will not be monitored by Instana.'
+  );
+
+  module.exports = function noOp() {};
+  module.exports.default = function noOp() {};
+
+  // @ts-ignore
+  return;
+}
+
 const path = require('path');
 const instanaNodeJsCore = require('@instana/core');
 const instanaSharedMetrics = require('@instana/shared-metrics');
