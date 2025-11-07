@@ -33,31 +33,27 @@ if (isNodeJsTooOld()) {
   // @ts-ignore TS1108 (return can only be used within a function body)
   return;
 }
-
-let isMainThread = true;
-try {
-  isMainThread = require('worker_threads').isMainThread;
-} catch (err) {
-  // Worker threads are not available, so we know that this is the main thread.
-}
-
+const skipPinoWorker = require('./util/skipPinoWorker');
 // Skip Instana instrumentation in Pino thread-stream workers.
 // Pino uses internal worker threads for its "thread-stream" transport.
 // These threads are not part of the main application logic and should
 // not be instrumented.
 //
 // This prevents errors when the collector is loaded via NODE_OPTIONS in worker threads.
-const { workerData } = require('worker_threads');
-if (!isMainThread && workerData && typeof workerData === 'object') {
-  const dataString = Object.values(workerData).join(' ').toLowerCase();
-  if (dataString.includes('thread-stream')) {
-    // eslint-disable-next-line no-console
-    console.warn('[Instana] Skipping instrumentation in thread-stream worker.');
-    module.exports = function noOp() {};
-    module.exports.default = function noOp() {};
-    // @ts-ignore
-    return;
-  }
+if (skipPinoWorker()) {
+  // eslint-disable-next-line no-console
+  console.warn('[Instana] Skipping instrumentation in Pino thread-stream worker.');
+  module.exports = function noOp() {};
+  module.exports.default = function noOp() {};
+  // @ts-ignore
+  return;
+}
+
+let isMainThread = true;
+try {
+  isMainThread = require('worker_threads').isMainThread;
+} catch (err) {
+  // Worker threads are not available, so we know that this is the main thread.
 }
 
 const path = require('path');
