@@ -41,6 +41,25 @@ try {
   // Worker threads are not available, so we know that this is the main thread.
 }
 
+// Skip Instana instrumentation in Pino thread-stream workers.
+// Pino uses internal worker threads for its "thread-stream" transport.
+// These threads are not part of the main application logic and should
+// not be instrumented.
+//
+// This prevents errors when the collector is loaded via NODE_OPTIONS in worker threads.
+const { workerData } = require('worker_threads');
+if (!isMainThread && workerData && typeof workerData === 'object') {
+  const dataString = Object.values(workerData).join(' ').toLowerCase();
+  if (dataString.includes('thread-stream')) {
+    // eslint-disable-next-line no-console
+    console.warn('[Instana] Skipping instrumentation in thread-stream worker.');
+    module.exports = function noOp() {};
+    module.exports.default = function noOp() {};
+    // @ts-ignore
+    return;
+  }
+}
+
 const path = require('path');
 const instanaNodeJsCore = require('@instana/core');
 const instanaSharedMetrics = require('@instana/shared-metrics');
