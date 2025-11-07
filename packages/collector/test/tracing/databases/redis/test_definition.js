@@ -49,11 +49,21 @@ const versionsSinceV5 = ['latest', 'v5.8.3'];
  *        node bin/start-test-containers.js --redis --redis-slave --redis-sentinel
  */
 
-const allVersions = ['latest', 'v5.8.3', 'v4', 'v3'];
-const selectedVersion = false;
-const versionsToRun = allVersions.includes(selectedVersion) ? [selectedVersion] : allVersions;
-
 module.exports = function (setupType) {
+  const allVersions = ['latest', 'v5.8.3', 'v4', 'v3'];
+
+  let versionsToRun;
+  if (setupType === 'cluster') {
+    // Cluster doesn't support v3 (legacy version)
+    versionsToRun = ['latest', 'v5.8.3', 'v4'];
+  } else if (setupType === 'sentinel') {
+    // Sentinel only supports v5+
+    versionsToRun = ['latest', 'v5.8.3'];
+  } else {
+    // Default setup supports all versions
+    versionsToRun = allVersions;
+  }
+
   ['redis', '@redis/client'].forEach(redisPkg => {
     describe(`require: ${redisPkg}`, function () {
       this.timeout(config.getTestTimeout() * 4);
@@ -62,14 +72,7 @@ module.exports = function (setupType) {
       versionsToRun.forEach(redisVersion => {
         let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-        const shouldSkipCluster = setupType === 'cluster' && redisVersion === legacyVersion;
-        // NOTE: sentinel support added in v5(latest).
-        const shouldSkipSentinel = setupType === 'sentinel' && !versionsSinceV5.includes(redisVersion);
-
-        if (shouldSkipCluster || shouldSkipSentinel) {
-          mochaSuiteFn = describe.skip;
-        }
-
+        // Skip @redis/client package for legacy version (v3) as it's not supported
         if (redisVersion === legacyVersion && redisPkg === '@redis/client') {
           mochaSuiteFn = describe.skip;
         }
