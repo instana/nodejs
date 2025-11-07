@@ -14,12 +14,49 @@
 const excludePattern = /^.*\/(?:npm(?:\.js)?|npm-cli(?:\.js)?|yarn(?:\.js)?|yarn\/lib\/cli(?:\.js)?)$/i;
 
 /**
+ * Check if the current process is a Pino thread-stream worker thread
+ * @returns {boolean}
+ */
+function isPinoThreadStreamWorker() {
+  try {
+    const { isMainThread, workerData } = require('worker_threads');
+    if (isMainThread) return false;
+
+    if (workerData && typeof workerData === 'object') {
+      const nested = workerData.workerData;
+      const isPinoWorker =
+        typeof workerData.filename === 'string' &&
+        nested &&
+        nested.$context &&
+        typeof nested.$context.threadStreamVersion === 'string';
+
+      if (isPinoWorker) {
+        return true;
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * @type {Function}
  * @returns {boolean}
  */
 module.exports = exports = function isExcludedFromInstrumentation() {
   const mainModule = process.argv[1];
-  const excludedFromInstrumentation = typeof mainModule === 'string' && excludePattern.test(mainModule);
+  let excludedFromInstrumentation = typeof mainModule === 'string' && excludePattern.test(mainModule);
+  let exclusionReason = 'npm or yarn';
+
+  // Skip Instana instrumentation in Pino thread-stream workers.
+  // Pino uses internal worker threads for its "thread-stream" transport.
+  // These threads are not part of the main application logic and should
+  // not be instrumented.
+  if (!excludedFromInstrumentation && isPinoThreadStreamWorker()) {
+    excludedFromInstrumentation = true;
+    exclusionReason = 'Pino thread-stream worker';
+  }
 
   if (excludedFromInstrumentation) {
     const logLevelIsDebugOrInfo =
@@ -32,7 +69,8 @@ module.exports = exports = function isExcludedFromInstrumentation() {
       // eslint-disable-next-line no-console
       console.log(
         `[Instana] INFO: Not instrumenting process ${process.pid}: ${process.argv[0]} ${mainModule}` +
-          ' - this Node.js process seems to be npm or yarn. A child process started via "npm start" or "yarn start" ' +
+          // eslint-disable-next-line max-len
+          ` - this Node.js process seems to be ${exclusionReason}. A child process started via "npm start" or "yarn start" ` +
           '_will_ be instrumented, but not npm or yarn itself.'
       );
     }
