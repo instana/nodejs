@@ -6,4 +6,6 @@
 
 const setupType = 'default';
 
-require('./test_definition')(setupType);
+describe(`tracing/redis/${setupType}`, function () {
+  require('./test_definition').call(this, setupType);
+});
