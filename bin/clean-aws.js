@@ -8,7 +8,7 @@
 
 'use strict';
 
-const yargs = require('yargs/yargs');
+const yargs = require('yargs');
 const { hideBin } = require('yargs/helpers');
 const aws = require('aws-sdk');
 const region = { region: 'us-east-2' };
