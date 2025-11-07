@@ -77,7 +77,7 @@ mochaSuiteFn('opentelemetry tests', function () {
               appPath: path.join(__dirname, './restify-app'),
               useGlobalAgent: true,
               cwd: __dirname,
-              enableOtelInstr: true,
+              enableOtelIntegration: true,
               env: { OTEL_API_VERSION: version }
             });
 
@@ -220,7 +220,7 @@ mochaSuiteFn('opentelemetry tests', function () {
               appPath: path.join(__dirname, './restify-app'),
               useGlobalAgent: true,
               cwd: __dirname,
-              enableOtelInstr: true,
+              enableOtelIntegration: true,
               env: {
                 INSTANA_DISABLE_USE_OPENTELEMETRY: true,
                 OTEL_API_VERSION: version
@@ -286,7 +286,7 @@ mochaSuiteFn('opentelemetry tests', function () {
             appPath: path.join(__dirname, './fs-app'),
             useGlobalAgent: true,
             cwd: __dirname,
-            enableOtelInstr: true,
+            enableOtelIntegration: true,
             env: { OTEL_API_VERSION: version }
           });
 
@@ -410,7 +410,7 @@ mochaSuiteFn('opentelemetry tests', function () {
             appPath: path.join(__dirname, './socketio-server'),
             useGlobalAgent: true,
             cwd: __dirname,
-            enableOtelInstr: true,
+            enableOtelIntegration: true,
             env: {
               SOCKETIOSERVER_PORT: socketIOServerPort,
               OTEL_API_VERSION: version
@@ -421,7 +421,7 @@ mochaSuiteFn('opentelemetry tests', function () {
             appPath: path.join(__dirname, './socketio-client'),
             useGlobalAgent: true,
             cwd: __dirname,
-            enableOtelInstr: true,
+            enableOtelIntegration: true,
             env: {
               SOCKETIOSERVER_PORT: socketIOServerPort,
               OTEL_API_VERSION: version
@@ -569,7 +569,7 @@ mochaSuiteFn('opentelemetry tests', function () {
               appPath: path.join(__dirname, './tedious-app'),
               useGlobalAgent: true,
               cwd: __dirname,
-              enableOtelInstr: true,
+              enableOtelIntegration: true,
               env: {
                 OTEL_ENABLED: true,
                 OTEL_API_VERSION: version
@@ -663,7 +663,7 @@ mochaSuiteFn('opentelemetry tests', function () {
             controls = new ProcessControls({
               appPath: path.join(__dirname, './tedious-app'),
               useGlobalAgent: true,
-              enableOtelInstr: true,
+              enableOtelIntegration: true,
               env: {
                 OTEL_ENABLED: false,
                 OTEL_API_VERSION: version
@@ -712,7 +712,7 @@ mochaSuiteFn('opentelemetry tests', function () {
               appPath: path.join(__dirname, './oracle-app'),
               useGlobalAgent: true,
               cwd: __dirname,
-              enableOtelInstr: true,
+              enableOtelIntegration: true,
               env: { OTEL_API_VERSION: version }
             });
 
@@ -788,7 +788,7 @@ mochaSuiteFn('opentelemetry tests', function () {
               appPath: path.join(__dirname, './oracle-app'),
               useGlobalAgent: true,
               cwd: __dirname,
-              enableOtelInstr: true,
+              enableOtelIntegration: true,
               env: {
                 INSTANA_DISABLE_USE_OPENTELEMETRY: true,
                 OTEL_API_VERSION: version
@@ -857,7 +857,7 @@ mochaSuiteFn('opentelemetry tests', function () {
           appPath: path.join(__dirname, './otel-sdk-and-instana/app'),
           useGlobalAgent: true,
           cwd: path.join(__dirname, './otel-sdk-and-instana'),
-          enableOtelInstr: true,
+          enableOtelIntegration: true,
           env: {
             COLLECTOR_FIRST: 'false'
           }
@@ -955,7 +955,7 @@ mochaSuiteFn('opentelemetry tests', function () {
           appPath: path.join(__dirname, './otel-sdk-and-instana/app'),
           useGlobalAgent: true,
           cwd: path.join(__dirname, './otel-sdk-and-instana'),
-          enableOtelInstr: true,
+          enableOtelIntegration: true,
           env: {
             COLLECTOR_FIRST: 'true'
           }

@@ -87,8 +87,6 @@ mochaSuiteFn('tracing/logging/bunyan', function () {
         '{"_id":"638dea148cff492d47e792ea","index":0,"guid":"01b61bfa-fe4c-4d75-9224-389c4c04de10","isActive":false,"balance":"$1,919.18","picture":"http://placehold.it/32x32","age":37,"eyeColor":"blue","name":"Manning Brady","gender":"male","company":"ZYTRAC","email":"manningbrady@zytrac.com","phone":"+1 (957) 538-2183","address":"146 Bushwick Court, Gilgo, New York, 2992","about":"Ullamco cillum reprehenderit eu proident veniam laboris tempor voluptate. Officia deserunt velit incididunt consequat la...',
         controls,
         500,
-        // otel integration adds an extra fs span
-        // currently otel integration is disabled
         3
       ));
 
