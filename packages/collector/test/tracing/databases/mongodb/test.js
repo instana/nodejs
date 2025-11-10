@@ -6,6 +6,7 @@
 'use strict';
 
 const expect = require('chai').expect;
+const semver = require('semver');
 const Promise = require('bluebird');
 const { v4: uuid } = require('uuid');
 const _ = require('lodash');
@@ -19,8 +20,13 @@ const globalAgent = require('../../../globalAgent');
 
 const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
-['latest', 'v5', 'v4'].forEach(version => {
-  const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+['latest', 'v6', 'v4'].forEach(version => {
+  let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+
+  // mongodb v7 does not support node versions < 20
+  if (version === 'latest' && semver.lt(process.versions.node, '20.0.0')) {
+    mochaSuiteFn = describe.skip;
+  }
 
   // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
   if (process.env.RUN_ESM && version !== 'latest') return;
