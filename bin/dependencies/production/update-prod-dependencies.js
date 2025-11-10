@@ -75,7 +75,7 @@ Object.entries(dependencyMap).some(([dep, usageList]) => {
     // CASE: PROD_DEPS_SKIP="pino,@opentelemetry/instrumentation-tedious@2" (to skip all v2 updates)
     if (
       PROD_DEPS_SKIP.some(skipEntry => {
-        const matched = skipEntry.match(/^(.*)@(\d)$/);
+        const matched = skipEntry.match(/^(.*)@(\d+)$/);
         if (!matched) return false;
 
         const skipDep = matched[1];

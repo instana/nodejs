@@ -384,10 +384,29 @@ exports.installPackage = options => {
 };
 
 /**
- * Cleans a version string by removing non-numeric characters except dots
+ * Cleans and normalizes a version string into a valid semver value
  * @param {string} version - The version string to clean
  * @returns {string} Cleaned version string
  */
 exports.cleanVersionString = version => {
-  return version.replace(/[^0-9.]/g, '');
+  if (semver.valid(version)) return version;
+
+  // "<"  returns one minor version below the upper bound (e.g. "1.9.0")
+  // "<=" returns the upper bound itself (e.g. "1.10.0")
+  const upperMatch = version.match(/<\s*=?\s*(\d+\.\d+\.\d+)/);
+  if (upperMatch) {
+    const upper = semver.coerce(upperMatch[1]).version;
+    const hasEqual = version.includes('<=');
+    if (hasEqual) return upper;
+
+    const parsed = semver.parse(upper);
+    return `${parsed.major}.${Math.max(0, parsed.minor - 1)}.0`;
+  }
+
+  const versions = version.match(/\d+\.\d+\.\d+/g);
+  if (versions) return versions.sort(semver.rcompare)[0];
+
+  // Fallback
+  const coerced = semver.coerce(version);
+  return coerced ? coerced.version : '0.0.0';
 };
