@@ -110,6 +110,10 @@ class ProcessControls {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     }
 
+    // By default, we test without OpenTelemetry instrumentation enabled
+    // because the test setup is currently broken and not capturing OTEL spans.
+    // TODO: INSTA-62539
+    this.enableOtelIntegration = opts.enableOtelIntegration || false;
     // http/https/http2 port
     this.port = opts.port || process.env.APP_PORT || portFinder();
 
@@ -146,7 +150,8 @@ class ProcessControls {
         INSTANA_FULL_METRICS_INTERNAL_IN_S: 1,
         INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS: 500,
         INSTANA_RETRY_AGENT_CONNECTION_IN_MS: 500,
-        APP_USES_HTTPS: this.appUsesHttps ? 'true' : 'false'
+        APP_USES_HTTPS: this.appUsesHttps ? 'true' : 'false',
+        INSTANA_DISABLE_USE_OPENTELEMETRY: !this.enableOtelIntegration
       },
       opts.env
     );

@@ -275,7 +275,8 @@ mochaSuiteFn('tracing/sdk', function () {
               expect(response.indexOf('The MIT License')).to.equal(0);
               return retry(() =>
                 agentControls.getSpans().then(spans => {
-                  expect(spans.length).to.equal(4);
+                  // 1 x entry, 1 x intermediate, 1 x exit
+                  expect(spans.length).to.equal(3);
                   const httpEntry = expectHttpEntry({
                     spans,
                     path: `/${apiType}/create-intermediate`,
