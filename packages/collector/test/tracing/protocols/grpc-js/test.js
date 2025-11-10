@@ -25,7 +25,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
  *   - mali seems unmaintained. no release since > 2y
  *   - we removed the test cases for now
  */
-['latest', 'v1'].forEach(version => {
+['latest', 'v1.9.4'].forEach(version => {
   mochaSuiteFn(`tracing/grpc-js@${version}`, function () {
     this.timeout(config.getTestTimeout());
 
