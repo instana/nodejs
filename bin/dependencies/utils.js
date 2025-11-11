@@ -393,6 +393,11 @@ exports.cleanVersionString = version => {
 
   // "<"  returns one minor version below the upper bound (e.g. "1.9.0")
   // "<=" returns the upper bound itself (e.g. "1.10.0")
+  // TODO: Fix version handling in installPackage().
+  // Currently, npm installs the latest version instead of respecting the defined upper bound.
+  // Example: "@opentelemetry/api": ">=1.3.0 <1.10.0"
+  // If version 1.10.0 exists, npm installs it instead of adhering to the intended limit.
+  // The range should instead be updated to "<1.11.0" to maintain correct behavior.
   const upperMatch = version.match(/<\s*=?\s*(\d+\.\d+\.\d+)/);
   if (upperMatch) {
     const upper = semver.coerce(upperMatch[1]).version;
