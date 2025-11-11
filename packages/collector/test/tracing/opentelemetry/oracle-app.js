@@ -12,13 +12,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const opentelemetryDisabled = process.env.INSTANA_DISABLE_USE_OPENTELEMETRY === 'true';
-
-require('@instana/collector')({
-  tracing: {
-    useOpentelemetry: !opentelemetryDisabled
-  }
-});
+require('@instana/collector')();
 
 const oracledb = require('oracledb');
 const port = require('../../test_util/app-port')();

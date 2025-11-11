@@ -220,9 +220,8 @@ mochaSuiteFn('opentelemetry tests', function () {
               appPath: path.join(__dirname, './restify-app'),
               useGlobalAgent: true,
               cwd: __dirname,
-              enableOtelIntegration: true,
+              enableOtelIntegration: false,
               env: {
-                INSTANA_DISABLE_USE_OPENTELEMETRY: true,
                 OTEL_API_VERSION: version
               }
             });
@@ -571,7 +570,6 @@ mochaSuiteFn('opentelemetry tests', function () {
               cwd: __dirname,
               enableOtelIntegration: true,
               env: {
-                OTEL_ENABLED: true,
                 OTEL_API_VERSION: version
               }
             });
@@ -663,9 +661,8 @@ mochaSuiteFn('opentelemetry tests', function () {
             controls = new ProcessControls({
               appPath: path.join(__dirname, './tedious-app'),
               useGlobalAgent: true,
-              enableOtelIntegration: true,
+              enableOtelIntegration: false,
               env: {
-                OTEL_ENABLED: false,
                 OTEL_API_VERSION: version
               }
             });
@@ -788,9 +785,8 @@ mochaSuiteFn('opentelemetry tests', function () {
               appPath: path.join(__dirname, './oracle-app'),
               useGlobalAgent: true,
               cwd: __dirname,
-              enableOtelIntegration: true,
+              enableOtelIntegration: false,
               env: {
-                INSTANA_DISABLE_USE_OPENTELEMETRY: true,
                 OTEL_API_VERSION: version
               }
             });

@@ -12,8 +12,7 @@ process.on('SIGTERM', () => {
 
 require('../../../../src')({
   tracing: {
-    allowRootExitSpan: true,
-    useOpentelemetry: false
+    allowRootExitSpan: true
   }
 });
 const agentPort = process.env.INSTANA_AGENT_PORT;

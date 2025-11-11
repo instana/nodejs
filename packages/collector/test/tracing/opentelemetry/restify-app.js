@@ -13,13 +13,8 @@ process.on('SIGTERM', () => {
 });
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
-const opentelemetryDisabled = process.env.INSTANA_DISABLE_USE_OPENTELEMETRY === 'true';
 
-require('@instana/collector')({
-  tracing: {
-    useOpentelemetry: !opentelemetryDisabled
-  }
-});
+require('@instana/collector')();
 
 const restify = require('restify');
 const fetch = require('node-fetch-v2');
