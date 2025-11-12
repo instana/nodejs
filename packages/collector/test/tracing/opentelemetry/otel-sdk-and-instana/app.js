@@ -17,7 +17,10 @@ function initializeOpenTelemetry() {
   const { FsInstrumentation } = require('@opentelemetry/instrumentation-fs');
   const { Resource } = require('@opentelemetry/resources');
   const { ATTR_SERVICE_NAME } = require('@opentelemetry/semantic-conventions');
+  const { InMemorySpanExporter, SimpleSpanProcessor } = require('@opentelemetry/sdk-trace-base');
   const api = require('@opentelemetry/api');
+
+  const memoryExporter = new InMemorySpanExporter();
 
   const provider = new NodeTracerProvider({
     resource: new Resource({
@@ -25,13 +28,14 @@ function initializeOpenTelemetry() {
     })
   });
 
+  provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
   provider.register();
 
   registerInstrumentations({
     instrumentations: [new HttpInstrumentation(), new FsInstrumentation()]
   });
 
-  return api.trace.getTracer('otel-sdk-app-tracer');
+  return { tracer: api.trace.getTracer('otel-sdk-app-tracer'), exporter: memoryExporter };
 }
 
 function initializeInstanaCollector() {
@@ -40,14 +44,20 @@ function initializeInstanaCollector() {
 
 const collectorFirst = process.env.COLLECTOR_FIRST === 'true';
 let tracer;
+let otelExporter;
 
 if (collectorFirst) {
   // NOTE: In this case, our tracing does not function correctly.
   // This is a known issue.
+
   initializeInstanaCollector();
-  tracer = initializeOpenTelemetry();
+  const otelSetup = initializeOpenTelemetry();
+  tracer = otelSetup.tracer;
+  otelExporter = otelSetup.exporter;
 } else {
-  tracer = initializeOpenTelemetry();
+  const otelSetup = initializeOpenTelemetry();
+  tracer = otelSetup.tracer;
+  otelExporter = otelSetup.exporter;
   initializeInstanaCollector();
 }
 
@@ -64,7 +74,6 @@ app.get('/', (req, res) => {
 
 app.get('/otel-sdk-fs', (req, res) => {
   // To verify the OpenTelemetry SDK is active, we create an explicit span
-  // We assert in the test that this span is present in the response
   const span = tracer.startSpan('explicit-otel-operation');
 
   try {
@@ -75,12 +84,35 @@ app.get('/otel-sdk-fs', (req, res) => {
     const stats = fs.statSync(path.join(__dirname, '../test.js'));
     log(`File stats: ${JSON.stringify(stats.size)}`);
     span.end();
-    res.send({ success: true, size: content.length, otelspan: span });
+
+    res.send({ success: true, size: content.length });
   } catch (err) {
     span.recordException(err);
     span.end();
     res.status(500).send({ error: err.message });
   }
+});
+
+app.get('/otel-spans', (req, res) => {
+  const spans = otelExporter.getFinishedSpans();
+  // console.log(`Returning ${spans.length} spans from OTel exporter`);
+  const seen = new WeakSet();
+  const safeSpans = JSON.parse(
+    JSON.stringify(spans, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) return '[Circular]';
+        seen.add(value);
+      }
+      return value;
+    })
+  );
+
+  res.status(200).json({ spans: safeSpans });
+});
+
+app.post('/clear-otel-spans', (req, res) => {
+  otelExporter.reset();
+  res.sendStatus(200);
 });
 
 app.listen(port, () => {

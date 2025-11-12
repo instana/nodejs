@@ -833,13 +833,14 @@ mochaSuiteFn('opentelemetry tests', function () {
       });
     });
   });
-
-  mochaSuiteFn('when otel sdk and instana is enabled', function () {
+  mochaSuiteFn.only('when otel sdk and instana are enabled', function () {
     this.timeout(config.getTestTimeout() * 4);
+
     before(async () => {
       if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS === 'true') {
         return;
       }
+
       execSync('rm -rf ./otel-sdk-and-instana/node_modules', { cwd: __dirname, stdio: 'inherit' });
       execSync('npm install --no-save --no-package-lock', {
         cwd: path.join(__dirname, './otel-sdk-and-instana'),
@@ -847,11 +848,11 @@ mochaSuiteFn('opentelemetry tests', function () {
       });
     });
 
-    describe('when openTelemetry initialized first', function () {
+    describe('when OpenTelemetry is initialized first', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
-
       let controls;
+
       before(async () => {
         controls = new ProcessControls({
           appPath: path.join(__dirname, './otel-sdk-and-instana/app'),
@@ -868,6 +869,13 @@ mochaSuiteFn('opentelemetry tests', function () {
 
       beforeEach(async () => {
         await agentControls.clearReceivedTraceData();
+
+        // Clear otel spans
+        await controls.sendRequest({
+          method: 'POST',
+          path: '/clear-otel-spans',
+          suppressTracing: true
+        });
       });
 
       after(async () => {
@@ -878,76 +886,94 @@ mochaSuiteFn('opentelemetry tests', function () {
         await controls.clearIpcMessages();
       });
 
-      it('should trace with both Instana and OpenTelemetry SDK', () =>
-        controls
-          .sendRequest({
-            method: 'GET',
-            path: '/otel-sdk-fs'
-          })
-          .then(response => {
-            // Verify otel spans in the response
-            expect(response.success).to.be.true;
-            expect(response.otelspan).to.be.an('object');
-            expect(response.otelspan.name).to.eql('explicit-otel-operation');
-            expect(response.otelspan._spanContext).to.have.property('traceId');
-            expect(response.otelspan._spanContext).to.have.property('spanId');
-            expect(response.otelspan.instrumentationLibrary).to.be.an('object');
-            expect(response.otelspan.instrumentationLibrary.name).to.eql('otel-sdk-app-tracer');
+      it('should trace with both Instana and OpenTelemetry SDK', async () => {
+        const response = await controls.sendRequest({
+          method: 'GET',
+          path: '/otel-sdk-fs'
+        });
 
-            return retry(() =>
-              agentControls.getSpans().then(spans => {
-                expect(spans.length).to.equal(3);
+        expect(response.success).to.be.true;
 
-                const httpEntry = verifyHttpRootEntry({
-                  spans,
-                  apiPath: '/otel-sdk-fs',
-                  pid: String(controls.getPid())
-                });
+        const otelResponse = await controls.sendRequest({
+          method: 'GET',
+          path: '/otel-spans',
+          suppressTracing: true
+        });
 
-                verifyExitSpan({
-                  spanName: 'otel',
-                  spans,
-                  parent: httpEntry,
-                  withError: false,
-                  pid: String(controls.getPid()),
-                  dataProperty: 'tags',
-                  extraTests: span => {
-                    expect(span.data.tags.name).to.eql('fs readFileSync');
-                    checkTelemetryResourceAttrs(span);
-                  }
-                });
+        expect(otelResponse.spans).to.be.an('array');
+        expect(otelResponse.spans.length).to.be.at.least(5);
 
-                verifyExitSpan({
-                  spanName: 'otel',
-                  spans,
-                  parent: httpEntry,
-                  withError: false,
-                  pid: String(controls.getPid()),
-                  dataProperty: 'tags',
-                  extraTests: span => {
-                    expect(span.data.tags.name).to.eql('fs statSync');
-                    checkTelemetryResourceAttrs(span);
-                  }
-                });
-              })
-            );
-          }));
+        const otelSdkSpan = otelResponse.spans.find(span => span.name === 'explicit-otel-operation');
+        expect(otelSdkSpan).to.exist;
+        expect(otelSdkSpan._spanContext).to.exist;
+        expect(otelSdkSpan._spanContext).to.have.property('traceId');
+        expect(otelSdkSpan._spanContext).to.have.property('spanId');
+        expect(otelSdkSpan.instrumentationLibrary).to.be.an('object');
+        expect(otelSdkSpan.instrumentationLibrary.name).to.eql('otel-sdk-app-tracer');
 
-      it('[suppressed] should not trace', () =>
-        controls
-          .sendRequest({
-            method: 'GET',
-            path: '/otel-sdk-fs',
-            suppressTracing: true
-          })
-          .then(() => delay(DELAY_TIMEOUT_IN_MS))
-          .then(() => retry(() => agentControls.getSpans().then(spans => expect(spans).to.be.empty))));
+        // Verify fs spans captured by otel
+        const fsReadSpan = otelResponse.spans.find(span => span.name === 'fs readFileSync');
+        const fsStatSpan = otelResponse.spans.find(span => span.name === 'fs statSync');
+        expect(fsReadSpan).to.exist;
+        expect(fsStatSpan).to.exist;
+
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          expect(spans.length).to.equal(3);
+
+          const httpEntry = verifyHttpRootEntry({
+            spans,
+            apiPath: '/otel-sdk-fs',
+            pid: String(controls.getPid())
+          });
+
+          verifyExitSpan({
+            spanName: 'otel',
+            spans,
+            parent: httpEntry,
+            withError: false,
+            pid: String(controls.getPid()),
+            dataProperty: 'tags',
+            extraTests: span => {
+              expect(span.data.tags.name).to.eql('fs readFileSync');
+              checkTelemetryResourceAttrs(span);
+            }
+          });
+
+          verifyExitSpan({
+            spanName: 'otel',
+            spans,
+            parent: httpEntry,
+            withError: false,
+            pid: String(controls.getPid()),
+            dataProperty: 'tags',
+            extraTests: span => {
+              expect(span.data.tags.name).to.eql('fs statSync');
+              checkTelemetryResourceAttrs(span);
+            }
+          });
+        });
+      });
+
+      it('[suppressed] should not trace', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/otel-sdk-fs',
+          suppressTracing: true
+        });
+
+        await delay(DELAY_TIMEOUT_IN_MS);
+
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          expect(spans).to.be.empty;
+        });
+      });
     });
 
-    describe('when Collector initialized first', function () {
+    describe('when Collector is initialized first', function () {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
-
       let controls;
 
       before(async () => {
@@ -976,45 +1002,59 @@ mochaSuiteFn('opentelemetry tests', function () {
         await controls.clearIpcMessages();
       });
 
-      // TODO: There’s a current limitation with the OpenTelemetry integration.
-      // When Instana is initialized first, our tracing doesn’t function correctly.
-      // OpenTelemetry tracing continues to work, but our tracing does not.
-      // This issue needs to be resolved in a future update.
-      it('should trace with OpenTelemetry SDK spans and should not trace Instana spans', () =>
-        controls
-          .sendRequest({
-            method: 'GET',
-            path: '/otel-sdk-fs'
-          })
-          .then(response => {
-            // Verify otel spans in the response
-            expect(response.success).to.be.true;
-            expect(response.otelspan).to.be.an('object');
-            expect(response.otelspan.name).to.eql('explicit-otel-operation');
-            expect(response.otelspan._spanContext).to.have.property('traceId');
-            expect(response.otelspan._spanContext).to.have.property('spanId');
-            expect(response.otelspan.instrumentationLibrary).to.be.an('object');
-            expect(response.otelspan.instrumentationLibrary.name).to.eql('otel-sdk-app-tracer');
-          })
-          .then(() => delay(DELAY_TIMEOUT_IN_MS))
-          .then(() =>
-            retry(() =>
-              agentControls.getSpans().then(spans => {
-                // our tracing should not capture spans
-                expect(spans).to.be.empty;
-              })
-            )
-          ));
+      // Known limitation: Instana tracing does not work if it initializes before OTel.
+      it.only('should trace only OpenTelemetry SDK spans and not Instana spans', async () => {
+        const response = await controls.sendRequest({
+          method: 'GET',
+          path: '/otel-sdk-fs'
+        });
 
-      it('[suppressed] should not trace', () =>
-        controls
-          .sendRequest({
-            method: 'GET',
-            path: '/otel-sdk-fs',
-            suppressTracing: true
-          })
-          .then(() => delay(DELAY_TIMEOUT_IN_MS))
-          .then(() => retry(() => agentControls.getSpans().then(spans => expect(spans).to.be.empty))));
+        expect(response.success).to.be.true;
+
+        const otelResponse = await controls.sendRequest({
+          method: 'GET',
+          path: '/otel-spans',
+          suppressTracing: true
+        });
+        console.log('otelResponse.spans', otelResponse);
+        expect(otelResponse.spans).to.be.an('array');
+        expect(otelResponse.spans.length).to.be.at.least(1);
+
+        const otelSdkSpan = otelResponse.spans.find(span => span.name === 'explicit-otel-operation');
+        expect(otelSdkSpan).to.exist;
+        expect(otelSdkSpan._spanContext).to.exist;
+        expect(otelSdkSpan._spanContext).to.have.property('traceId');
+        expect(otelSdkSpan._spanContext).to.have.property('spanId');
+        expect(otelSdkSpan.instrumentationLibrary).to.be.an('object');
+        expect(otelSdkSpan.instrumentationLibrary.name).to.eql('otel-sdk-app-tracer');
+
+        const fsReadSpan = otelResponse.spans.find(span => span.name === 'fs readFileSync');
+        const fsStatSpan = otelResponse.spans.find(span => span.name === 'fs statSync');
+        expect(fsReadSpan).to.exist;
+        expect(fsStatSpan).to.exist;
+
+        await delay(DELAY_TIMEOUT_IN_MS);
+
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          expect(spans).to.be.empty; // Instana should not trace
+        });
+      });
+
+      it('[suppressed] should not trace', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/otel-sdk-fs',
+          suppressTracing: true
+        });
+
+        await delay(DELAY_TIMEOUT_IN_MS);
+
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          expect(spans).to.be.empty;
+        });
+      });
     });
   });
 });
