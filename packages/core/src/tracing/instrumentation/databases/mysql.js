@@ -168,7 +168,8 @@ function instrumentedAccessFunction(
       kind: constants.EXIT
     });
     span.b = { s: 1 };
-    span.stack = tracingUtil.getStackTrace(instrumentedAccessFunction);
+    // Defer stack trace collection - will be generated on error or before transmit
+    span.stack = [];
     span.data.mysql = {
       stmt: tracingUtil.shortenDatabaseStatement(
         typeof statementOrOpts === 'string' ? statementOrOpts : statementOrOpts.sql
@@ -185,12 +186,17 @@ function instrumentedAccessFunction(
       resultPromise
         .then(result => {
           span.d = Date.now() - span.ts;
+          // Generate stack trace for successful request before transmit
+          if (!span.stack || span.stack.length === 0) {
+            span.stack = tracingUtil.getStackTrace(instrumentedAccessFunction);
+          }
           span.transmit();
           return result;
         })
         .catch(error => {
           span.data.mysql.error = tracingUtil.getErrorDetails(error);
           span.d = Date.now() - span.ts;
+          // Generate stack trace for error
           tracingUtil.setSpanError(span, instrumentedAccessFunction);
           span.transmit();
           return error;
@@ -204,7 +210,11 @@ function instrumentedAccessFunction(
     function onResult(error) {
       if (error) {
         span.data.mysql.error = tracingUtil.getErrorDetails(error);
+        // Generate stack trace for error
         tracingUtil.setSpanError(span, instrumentedAccessFunction);
+      } else if (!span.stack || span.stack.length === 0) {
+        // Generate stack trace for successful request before transmit
+        span.stack = tracingUtil.getStackTrace(instrumentedAccessFunction);
       }
 
       span.d = Date.now() - span.ts;

@@ -225,7 +225,7 @@ function instrument(coreModule, forceHttps) {
         params = urlAndQuery[1];
       }
 
-      span.stack = tracingUtil.getStackTrace(request);
+      span.stack = [];
 
       const boundCallback = cls.ns.bind(function boundCallback(res) {
         span.data.http = {
@@ -243,6 +243,8 @@ function instrument(coreModule, forceHttps) {
         span.d = Date.now() - span.ts;
         if (res.statusCode >= 500) {
           tracingUtil.setSpanError(span, request);
+        } else if (!span.stack || span.stack.length === 0) {
+          span.stack = tracingUtil.getStackTrace(request);
         }
         span.transmit();
 
@@ -269,7 +271,7 @@ function instrument(coreModule, forceHttps) {
           error: e ? e.message : ''
         };
         span.d = Date.now() - span.ts;
-        span.ec = 1;
+        tracingUtil.setSpanError(span, request);
         span.transmit();
         throw e;
       }

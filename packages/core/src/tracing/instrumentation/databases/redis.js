@@ -319,7 +319,7 @@ function instrumentCommand(original, command, address, cbStyle) {
         kind: constants.EXIT,
         spanData
       });
-      span.stack = tracingUtil.getStackTrace(instrumentCommand);
+      span.stack = [];
 
       let userProvidedCallback;
 
@@ -366,6 +366,8 @@ function instrumentCommand(original, command, address, cbStyle) {
         if (error) {
           span.data.redis.error = tracingUtil.getErrorDetails(error);
           tracingUtil.setSpanError(span, instrumentCommand);
+        } else if (!span.stack || span.stack.length === 0) {
+          span.stack = tracingUtil.getStackTrace(instrumentCommand);
         }
 
         span.transmit();
