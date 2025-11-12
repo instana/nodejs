@@ -189,10 +189,9 @@ function instrumentedAccessFunction(
           return result;
         })
         .catch(error => {
-          span.ec = 1;
           span.data.mysql.error = tracingUtil.getErrorDetails(error);
-
           span.d = Date.now() - span.ts;
+          tracingUtil.setSpanError(span, instrumentedAccessFunction);
           span.transmit();
           return error;
         });
@@ -204,8 +203,8 @@ function instrumentedAccessFunction(
 
     function onResult(error) {
       if (error) {
-        span.ec = 1;
         span.data.mysql.error = tracingUtil.getErrorDetails(error);
+        tracingUtil.setSpanError(span, instrumentedAccessFunction);
       }
 
       span.d = Date.now() - span.ts;

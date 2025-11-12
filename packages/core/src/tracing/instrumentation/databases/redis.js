@@ -364,8 +364,8 @@ function instrumentCommand(original, command, address, cbStyle) {
         span.d = Date.now() - span.ts;
 
         if (error) {
-          span.ec = 1;
           span.data.redis.error = tracingUtil.getErrorDetails(error);
+          tracingUtil.setSpanError(span, instrumentCommand);
         }
 
         span.transmit();

@@ -276,3 +276,18 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
     callbackIndex
   };
 };
+
+/**
+ * Sets error count and captures stack trace for error scenarios.
+ * This is a common utility to handle error cases in span instrumentation.
+ *
+ * @param {import('../core').InstanaBaseSpan} span - The span to update
+ * @param {Function} referenceFunction - The function to use as reference for stack trace
+ * @param {number} [drop] - Number of stack frames to drop
+ */
+exports.setSpanError = function setSpanError(span, referenceFunction, drop) {
+  span.ec = 1;
+
+  // Override the stack trace in case of error
+  span.stack = exports.getStackTrace(referenceFunction, drop);
+};
