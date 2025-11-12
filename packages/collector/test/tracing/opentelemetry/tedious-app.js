@@ -11,11 +11,7 @@ process.on('SIGTERM', () => {
 });
 
 /* eslint-disable no-console */
-require('@instana/collector')({
-  tracing: {
-    useOpentelemetry: process.env.OTEL_ENABLED
-  }
-});
+require('@instana/collector')();
 const express = require('express');
 const fs = require('fs');
 const { isCI } = require('@instana/core/test/test_util');
