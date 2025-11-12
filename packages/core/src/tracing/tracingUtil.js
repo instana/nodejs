@@ -288,6 +288,9 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
 exports.setSpanError = function setSpanError(span, referenceFunction, drop) {
   span.ec = 1;
 
-  // Override the stack trace in case of error
-  span.stack = exports.getStackTrace(referenceFunction, drop);
+  // This maintains the existing behavior — no override will occur since most instrumentations
+  // already have a stack trace set at the time of span creation
+  if (!span.stack || span.stack.length === 0) {
+    span.stack = exports.getStackTrace(referenceFunction, drop);
+  }
 };
