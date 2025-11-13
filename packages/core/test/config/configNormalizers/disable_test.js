@@ -10,7 +10,6 @@ const { expect } = require('chai');
 const { normalize, normalizeExternalConfig } = require('../../../src/config/configNormalizers/disable');
 
 function resetEnv() {
-  delete process.env.INSTANA_DISABLED_TRACERS;
   delete process.env.INSTANA_TRACING_DISABLE;
   delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
   delete process.env.INSTANA_TRACING_DISABLE_GROUPS;
@@ -32,35 +31,6 @@ describe('util.configNormalizers.disable', () => {
 
       expect(result).to.deep.equal({});
       expect(config.tracing).to.exist;
-    });
-
-    it('should handle deprecated "disabledTracers" to "disable.instrumentations"', () => {
-      const config = {
-        tracing: {
-          disabledTracers: ['AWS-SDK', 'mongodb']
-        }
-      };
-
-      const result = normalize(config);
-
-      expect(result).to.deep.equal({
-        instrumentations: ['aws-sdk', 'mongodb']
-      });
-      expect(config.tracing.disabledTracers).to.be.undefined;
-    });
-
-    it('should prioritize "disable" when both "disabledTracers" and "disable" are defined', () => {
-      const config = {
-        tracing: {
-          disabledTracers: ['AWS-SDK'],
-          disable: {
-            instrumentations: ['redis']
-          }
-        }
-      };
-
-      const result = normalize(config);
-      expect(result.instrumentations).to.deep.equal(['redis']);
     });
 
     it('should normalize instrumentation names: lowercase and trim whitespace', () => {
@@ -243,25 +213,6 @@ describe('util.configNormalizers.disable', () => {
       const result = normalize(config);
 
       expect(result.groups).to.deep.equal(['logging', 'databases']);
-    });
-
-    it('should fallback to deprected "INSTANA_DISABLED_TRACERS"', () => {
-      process.env.INSTANA_DISABLED_TRACERS = 'redis, mysql';
-
-      const config = {};
-      const result = normalize(config);
-
-      expect(result.instrumentations).to.deep.equal(['redis', 'mysql']);
-    });
-
-    it('should prioritize "INSTANA_TRACING_DISABLE_INSTRUMENTATIONS" over "INSTANA_DISABLED_TRACERS"', () => {
-      process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'aws-sdk';
-      process.env.INSTANA_DISABLED_TRACERS = 'redis';
-
-      const config = {};
-      const result = normalize(config);
-
-      expect(result.instrumentations).to.deep.equal(['aws-sdk']);
     });
 
     it('should support semicolon-separated values in environment variable', () => {
