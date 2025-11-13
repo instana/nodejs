@@ -81,7 +81,7 @@
     "@apollo/gateway": "2.12.1",
     "@apollo/server": "5.1.0",
     "@apollo/server-v4": "npm:@apollo/server@4.12.2",
-    "@apollo/subgraph": "2.12.0",
+    "@apollo/subgraph": "2.12.1",
     "@as-integrations/express5": "1.1.2",
     "@aws-sdk/client-cloudwatch-logs": "3.696.0",
     "@aws-sdk/client-dynamodb": "3.929.0",
