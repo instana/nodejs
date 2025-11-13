@@ -225,8 +225,6 @@ function instrument(coreModule, forceHttps) {
         params = urlAndQuery[1];
       }
 
-      span.stack = [];
-
       const boundCallback = cls.ns.bind(function boundCallback(res) {
         span.data.http = {
           method: clientRequest.method,
@@ -240,13 +238,8 @@ function instrument(coreModule, forceHttps) {
           span.data.http.header = headers;
         }
 
-        span.d = Date.now() - span.ts;
-        if (res.statusCode >= 500) {
-          tracingUtil.setSpanError(span, request);
-        } else if (!span.stack || span.stack.length === 0) {
-          span.stack = tracingUtil.getStackTrace(request);
-        }
-        span.transmit();
+        const error = res.statusCode >= 500 ? new Error(`HTTP ${res.statusCode}`) : null;
+        tracingUtil.completeSpan({ span, referenceFunction: request, error });
 
         if (callback) {
           callback(res);
@@ -270,9 +263,8 @@ function instrument(coreModule, forceHttps) {
           url: completeCallUrl,
           error: e ? e.message : ''
         };
-        span.d = Date.now() - span.ts;
-        tracingUtil.setSpanError(span, request);
-        span.transmit();
+
+        tracingUtil.completeSpan({ span, referenceFunction: request, error: e });
         throw e;
       }
 
@@ -318,9 +310,8 @@ function instrument(coreModule, forceHttps) {
           url: completeCallUrl,
           error: errorMessage
         };
-        span.d = Date.now() - span.ts;
-        tracingUtil.setSpanError(span, request);
-        span.transmit();
+
+        tracingUtil.completeSpan({ span, referenceFunction: request, error: err });
       });
     });
     return clientRequest;

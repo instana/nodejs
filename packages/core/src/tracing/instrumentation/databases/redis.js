@@ -361,16 +361,11 @@ function instrumentCommand(original, command, address, cbStyle) {
       }
 
       function onResult(error) {
-        span.d = Date.now() - span.ts;
-
         if (error) {
           span.data.redis.error = tracingUtil.getErrorDetails(error);
-          tracingUtil.setSpanError(span, instrumentCommand);
-        } else if (!span.stack || span.stack.length === 0) {
-          span.stack = tracingUtil.getStackTrace(instrumentCommand);
         }
 
-        span.transmit();
+        tracingUtil.completeSpan({ span, referenceFunction: instrumentCommand, error });
 
         if (typeof userProvidedCallback === 'function') {
           return userProvidedCallback.apply(this, arguments);

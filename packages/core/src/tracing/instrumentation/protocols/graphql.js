@@ -142,7 +142,7 @@ function traceQueryOrMutation(
         kind: constants.ENTRY
       });
     }
-    span.stack = tracingUtil.getStackTrace(stackTraceRef);
+
     span.data.graphql = {
       operationType: operationDefinition.operation,
       operationName: operationDefinition.name ? operationDefinition.name.value : operationName,
@@ -151,7 +151,7 @@ function traceQueryOrMutation(
     };
     addFieldsAndArguments(span, operationDefinition);
 
-    return runOriginalAndFinish(originalFunction, originalThis, originalArgs, span);
+    return runOriginalAndFinish(originalFunction, originalThis, originalArgs, span, stackTraceRef);
   });
 }
 
@@ -187,7 +187,6 @@ function traceSubscriptionUpdate(
         parentSpanId: parentSpan.s
       });
       span.ts = Date.now();
-      span.stack = tracingUtil.getStackTrace(stackTraceRef);
       span.data.graphql = {
         operationType: subscriptionUpdate,
         operationName: operationDefinition.name ? operationDefinition.name.value : operationName,
@@ -195,7 +194,7 @@ function traceSubscriptionUpdate(
         args: {}
       };
       addFieldsAndArguments(span, operationDefinition);
-      return runOriginalAndFinish(originalFunction, originalThis, originalArgs, span);
+      return runOriginalAndFinish(originalFunction, originalThis, originalArgs, span, stackTraceRef);
     });
   } else {
     return originalFunction.apply(originalThis, originalArgs);
@@ -250,13 +249,13 @@ function traverseSelections(definition, selectionPostProcessor) {
   return selectionPostProcessor(candidates);
 }
 
-function runOriginalAndFinish(originalFunction, originalThis, originalArgs, span) {
+function runOriginalAndFinish(originalFunction, originalThis, originalArgs, span, stackTraceRef) {
   let result;
   try {
     result = originalFunction.apply(originalThis, originalArgs);
   } catch (e) {
     // A synchronous exception happened when resolving the GraphQL query, finish immediately.
-    finishWithException(span, e);
+    finishWithException(span, e, stackTraceRef);
     return result;
   }
 
@@ -266,43 +265,55 @@ function runOriginalAndFinish(originalFunction, originalThis, originalArgs, span
   if (result && typeof result.then === 'function') {
     return result.then(
       promiseResult => {
-        finishSpan(span, promiseResult);
+        finishSpan(span, promiseResult, stackTraceRef);
         return promiseResult;
       },
       err => {
-        finishWithException(span, err);
+        finishWithException(span, err, stackTraceRef);
         throw err;
       }
     );
   } else {
     // The GraphQL operation returned a value instead of a promise - that means, the resolver finished synchronously. We
     // can finish the span immediately.
-    finishSpan(span, result);
+    finishSpan(span, result, stackTraceRef);
     return result;
   }
 }
 
-function finishSpan(span, result) {
-  span.ec = result.errors && result.errors.length >= 1 ? 1 : 0;
-  span.d = Date.now() - span.ts;
+function finishSpan(span, result, stackTraceRef) {
+  const hasErrors = result.errors && result.errors.length >= 1;
+
   if (Array.isArray(result.errors)) {
     span.data.graphql.errors = result.errors
       .map(singleError => (typeof singleError.message === 'string' ? singleError.message : null))
       .filter(msg => !!msg)
       .join(', ');
   }
-  if (!span.postponeTransmit && !span.postponeTransmitApolloGateway) {
-    span.transmit();
-  }
+
+  // call completeSpan with conditional transmission based on postpone flags
+  const shouldSkipTransmit = span.postponeTransmit || span.postponeTransmitApolloGateway;
+  const error = hasErrors ? new Error(span.data.graphql.errors || 'GraphQL errors') : null;
+
+  tracingUtil.completeSpan({
+    span,
+    referenceFunction: stackTraceRef || finishSpan,
+    error,
+    skipTransmit: shouldSkipTransmit
+  });
 }
 
-function finishWithException(span, err) {
-  span.ec = 1;
-  span.d = Date.now() - span.ts;
+function finishWithException(span, err, stackTraceRef) {
   span.data.graphql.errors = err.message;
-  if (!span.postponeTransmit) {
-    span.transmit();
-  }
+
+  const shouldSkipTransmit = span.postponeTransmit;
+
+  tracingUtil.completeSpan({
+    span,
+    referenceFunction: stackTraceRef || finishWithException,
+    error: err,
+    skipTransmit: shouldSkipTransmit
+  });
 }
 
 function instrumentApolloGatewayExecuteQueryPlan(apolloGatewayExecuteQueryPlanModule) {

@@ -278,19 +278,43 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
 };
 
 /**
- * Sets error count and captures stack trace for error scenarios.
- * This is a common utility to handle error cases in span instrumentation.
+ * Ensures span has a stack trace before transmission.
  *
  * @param {import('../core').InstanaBaseSpan} span - The span to update
  * @param {Function} referenceFunction - The function to use as reference for stack trace
  * @param {number} [drop] - Number of stack frames to drop
  */
-exports.setSpanError = function setSpanError(span, referenceFunction, drop) {
-  span.ec = 1;
-
-  // This maintains the existing behavior — no override will occur since most instrumentations
-  // already have a stack trace set at the time of span creation
+exports.ensureStackTrace = function ensureStackTrace(span, referenceFunction, drop) {
   if (!span.stack || span.stack.length === 0) {
     span.stack = exports.getStackTrace(referenceFunction, drop);
+  }
+};
+
+/**
+ * Completes a span with lazy stack trace generation.
+ * This is a convenience wrapper that:
+ * 1. Sets span.d (duration)
+ * 2. Handles error case (sets ec=1 and captures stack trace)
+ * 3. Handles success case (captures stack trace if not already set)
+ * 4. Conditionally transmits the span (unless skipTransmit is true)
+ *
+ * @param {Object} options - Configuration object
+ * @param {import('../core').InstanaBaseSpan} options.span - The span to complete
+ * @param {Function} options.referenceFunction - The function to use as reference for stack trace
+ * @param {Error} [options.error] - Optional error object
+ * @param {number} [options.drop] - Number of stack frames to drop
+ * @param {boolean} [options.skipTransmit] - If true, skip calling span.transmit() (for special cases like GraphQL)
+ */
+exports.completeSpan = function completeSpan({ span, referenceFunction, error, drop, skipTransmit }) {
+  span.d = Date.now() - span.ts;
+
+  if (error) {
+    span.ec = 1;
+  }
+
+  exports.ensureStackTrace(span, referenceFunction, drop);
+
+  if (!skipTransmit) {
+    span.transmit();
   }
 };
