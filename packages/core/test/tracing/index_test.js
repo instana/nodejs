@@ -76,9 +76,6 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     initAwsSdkv2.reset();
     initAwsSdkv3.reset();
 
-    // @deprecated
-    delete process.env.INSTANA_DISABLED_TRACERS;
-
     delete process.env.INSTANA_TRACING_DISABLE;
     delete process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS;
     delete process.env.INSTANA_TRACING_DISABLE_GROUPS;
@@ -269,89 +266,6 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
 
           expect(initAwsSdkv2).to.have.been.called;
           expect(activateAwsSdkv2).to.have.been.called;
-        });
-      });
-
-      describe('[deprecated] when using disabledTracers config', () => {
-        it('should deactivate tracers as specified', () => {
-          initAndActivate({ tracing: { disabledTracers: ['grpc', 'kafkajs', 'aws-sdk/v2'] } });
-
-          // grpcJs instrumentation has not been disabled, make sure its init and activate are called
-          expect(initStubGrpcJs).to.have.been.called;
-          expect(activateStubGrpcJs).to.have.been.called;
-
-          // kafkajs has been disabled...
-          expect(initStubKafkaJs).to.not.have.been.called;
-          expect(activateStubKafkaJs).to.not.have.been.called;
-
-          // ...but rdkafka has not been disabled
-          expect(initStubRdKafka).to.have.been.called;
-          expect(activateStubRdKafka).to.have.been.called;
-
-          // aws-sdk/v2 has been disabled (via aws-sdk/v2)
-          expect(initAwsSdkv2).not.to.have.been.called;
-          expect(activateAwsSdkv2).not.to.have.been.called;
-
-          // aws-sdk/v3 has not been disabled
-          expect(initAwsSdkv3).to.have.been.called;
-          expect(activateAwsSdkv3).to.have.been.called;
-        });
-
-        it('should respect INSTANA_DISABLED_TRACERS environment variable', () => {
-          process.env.INSTANA_DISABLED_TRACERS = 'kafkajs';
-          initAndActivate({});
-
-          expect(initStubKafkaJs).not.to.have.been.called;
-          expect(activateStubKafkaJs).not.to.have.been.called;
-        });
-
-        it('should handle empty disabledTracers array', () => {
-          initAndActivate({ tracing: { disabledTracers: [] } });
-
-          expect(initStubGrpcJs).to.have.been.called;
-          expect(initStubKafkaJs).to.have.been.called;
-          expect(initStubRdKafka).to.have.been.called;
-        });
-
-        it('should trim whitespace in environment variable values', () => {
-          process.env.INSTANA_DISABLED_TRACERS = '  grpc  ,  kafkajs  ';
-          initAndActivate({});
-
-          expect(initStubGrpcJs).to.have.been.called;
-          expect(activateStubGrpcJs).to.have.been.called;
-
-          expect(initStubKafkaJs).not.to.have.been.called;
-          expect(activateStubKafkaJs).not.to.have.been.called;
-        });
-
-        it('should prefer disable over disabledTracers when both exist', () => {
-          initAndActivate({
-            tracing: {
-              disabledTracers: ['grpc', 'kafkajs'],
-              disable: { instrumentations: ['aws-sdk/v2'] }
-            }
-          });
-
-          expect(initAwsSdkv2).not.to.have.been.called;
-          expect(activateAwsSdkv2).not.to.have.been.called;
-
-          expect(initStubGrpcJs).to.have.been.called;
-          expect(activateStubGrpcJs).to.have.been.called;
-
-          expect(initStubKafkaJs).to.have.been.called;
-          expect(activateStubKafkaJs).to.have.been.called;
-        });
-
-        it('should prefer INSTANA_TRACING_DISABLE_INSTRUMENTATIONS over INSTANA_DISABLED_TRACERS', () => {
-          process.env.INSTANA_TRACING_DISABLE_INSTRUMENTATIONS = 'aws-sdk/v2';
-          process.env.INSTANA_DISABLED_TRACERS = 'kafkajs';
-          initAndActivate({});
-
-          expect(initAwsSdkv2).not.to.have.been.called;
-          expect(activateAwsSdkv2).not.to.have.been.called;
-
-          expect(initStubKafkaJs).to.have.been.called;
-          expect(activateStubKafkaJs).to.have.been.called;
         });
       });
     });
