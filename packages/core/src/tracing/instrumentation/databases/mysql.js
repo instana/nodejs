@@ -168,8 +168,7 @@ function instrumentedAccessFunction(
       kind: constants.EXIT
     });
     span.b = { s: 1 };
-    // Defer stack trace collection - will be generated on error or before transmit
-    span.stack = [];
+
     span.data.mysql = {
       stmt: tracingUtil.shortenDatabaseStatement(
         typeof statementOrOpts === 'string' ? statementOrOpts : statementOrOpts.sql

@@ -319,7 +319,6 @@ function instrumentCommand(original, command, address, cbStyle) {
         kind: constants.EXIT,
         spanData
       });
-      span.stack = [];
 
       let userProvidedCallback;
 
