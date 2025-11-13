@@ -255,15 +255,11 @@
     "couchbase": "4.6.0",
     "couchbase-v4.4.3": "npm:couchbase@4.4.3",
     "ibm_db": "3.3.4",
-    "kafka-avro": "3.2.0",
     "node-rdkafka": "3.6.0",
     "pg-native": "3.5.2",
     "prisma": "6.19.0"
   },
   "overrides": {
-    "kafka-avro": {
-      "axios": "v0.21.1"
-    },
     "kafka-node": {
       "uuid": "7.0.3"
     },
