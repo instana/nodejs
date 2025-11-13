@@ -24,7 +24,6 @@ const deepMerge = require('../util/deepMerge');
  * @property {number} [stackTraceLength]
  * @property {HTTPTracingOptions} [http]
  * @property {import('../config/types').Disable} [disable]
- * @property {Array<string>} [disabledTracers]
  * @property {boolean} [spanBatchingEnabled]
  * @property {boolean} [disableW3cTraceCorrelation]
  * @property {KafkaTracingOptions} [kafka]
@@ -247,17 +246,6 @@ function normalizeTracingEnabled(config) {
     return;
   }
   if (config.tracing.enabled === true) {
-    return;
-  }
-
-  // @deprecated
-  if (process.env['INSTANA_DISABLE_TRACING'] === 'true') {
-    logger.info('Not enabling tracing as it is explicitly disabled via environment variable INSTANA_DISABLE_TRACING.');
-    logger.warn(
-      'The environment variable INSTANA_DISABLE_TRACING is deprecated and will be removed in the next major release. ' +
-        'Please use INSTANA_TRACING_DISABLE="true" instead.'
-    );
-    config.tracing.enabled = false;
     return;
   }
 
