@@ -21,12 +21,15 @@ const awsProducts = [
 /** @type {Object.<string, import('./instana_aws_product').InstanaAWSProduct} */
 const operationMap = {};
 let isActive = false;
+let logger;
 
 exports.isActive = function () {
   return isActive;
 };
 
 exports.init = function init(config) {
+  logger = config.logger;
+
   awsProducts.forEach(AwsProductClass => {
     const awsProduct = new AwsProductClass(config);
     Object.assign(operationMap, awsProduct.getOperations());
@@ -43,7 +46,17 @@ exports.deactivate = function deactivate() {
   isActive = false;
 };
 
+function logDeprecationWarning() {
+  logger.warn(
+    // eslint-disable-next-line max-len
+    '[Deprecation Warning] The support for AWS SDK v2 (aws-sdk) is deprecated and will be removed in the next major release. ' +
+      'Please migrate to AWS SDK v3 (@aws-sdk/*). For more information, see: ' +
+      'https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/migrating.html'
+  );
+}
+
 function instrumentAWS(AWS) {
+  logDeprecationWarning();
   shimmer.wrap(AWS.Service.prototype, 'makeRequest', shimMakeRequest);
 }
 
