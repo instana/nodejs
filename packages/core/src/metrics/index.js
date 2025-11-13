@@ -23,7 +23,7 @@ exports.init = _config => {
 /**
  * Depending on what kind of data the metric or snapshot attributes represents, a number of different payloads are
  * valid. Ultimately, it depends on what the backend understands.
- * @typedef {string|Object.<string, any>|Array.<string>} SnapshotOrMetricsPayload
+ * @typedef {Number|string|Object.<string, any>|Array.<string>} SnapshotOrMetricsPayload
  */
 
 /**
