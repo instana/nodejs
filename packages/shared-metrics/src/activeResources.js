@@ -5,11 +5,10 @@
 
 'use strict';
 
-exports.payloadPrefix = 'activeRequests';
+exports.payloadPrefix = 'activeResources';
 
 Object.defineProperty(exports, 'currentPayload', {
   get: function () {
-    // @ts-ignore
-    return process._getActiveRequests().length;
+    return process.getActiveResourcesInfo().length;
   }
 });

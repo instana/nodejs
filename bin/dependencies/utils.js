@@ -128,7 +128,7 @@ exports.getLatestVersion = ({ pkgName, installedVersion, isBeta, fromInstalledMa
     }
   }
 
-  // e.g. kafka-avro released a wrong order of versions
+  // some packages released a wrong order of versions
   if (installedVersion && semver.lt(latestVersion, installedVersion)) {
     return installedVersion;
   }
