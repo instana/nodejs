@@ -13,6 +13,9 @@
     "addons/linux",
     "CHANGELOG.md"
   ],
+  "engines": {
+    "node": ">=18.19.0"
+  },
   "publishConfig": {
     "access": "public"
   },

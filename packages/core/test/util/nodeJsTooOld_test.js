@@ -77,6 +77,21 @@ describe('util.nodeJsTooOld', () => {
     expect(isNodeJsTooOld()).to.be.true;
   });
 
+  it('should reject Node.js 18.18.0', () => {
+    setProcessVersion('v18.18.0');
+    expect(isNodeJsTooOld()).to.be.true;
+  });
+
+  it('should reject Node.js 18.18.9', () => {
+    setProcessVersion('v18.18.0');
+    expect(isNodeJsTooOld()).to.be.true;
+  });
+
+  it('should accept Node.js 18.19.0', () => {
+    setProcessVersion('v18.19.0');
+    expect(isNodeJsTooOld()).to.be.false;
+  });
+
   it('should accept if process.version is not set', () => {
     setProcessVersion(undefined);
     expect(isNodeJsTooOld()).to.be.false;
