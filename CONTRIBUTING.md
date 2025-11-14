@@ -376,15 +376,8 @@ We have added the ESM support for all Node.js versions, Since version 20.6, [ESM
 
 Use the following command to enable experimental ESM support:
 
-- For Node.js versions greater than or equal to 18.19:
-
 ```sh
 node --import  /path/to/instana/node_modules/@instana/collector/esm-register.mjs entry-point
-```
-- For Node.js versions less than 18.19:
-
-```sh
-node --experimental-loader /path/to/instana/node_modules/@instana/collector/esm-loader.mjs entry-point
 ```
 
 ## Node.js prerelease
