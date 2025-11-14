@@ -9,16 +9,13 @@ const path = require('path');
 const { execSync } = require('child_process');
 const config = require('../../../../../../core/test/config');
 const testUtils = require('../../../../../../core/test/test_util');
-const isLatestEsmSupportedVersion = require('../../../../../../core').util.esm.isLatestEsmSupportedVersion;
 const supportedVersion = require('../../../../../../core').tracing.supportedVersion;
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-const loaderPath = isLatestEsmSupportedVersion(process.versions.node)
-  ? ['--import', path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-register.mjs')]
-  : ['--experimental-loader', path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-loader.mjs')];
+const loaderPath = ['--import', path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-register.mjs')];
 
 mochaSuiteFn('Typescript TS->ESM', function () {
   this.timeout(config.getTestTimeout() * 5);
