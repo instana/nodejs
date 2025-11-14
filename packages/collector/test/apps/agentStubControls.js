@@ -42,6 +42,10 @@ class AgentStubControls {
       env.SLOW_METRICS_REPLY = opts.slowMetricsReply.toString();
     }
 
+    if (opts.slowHostResponse) {
+      env.SLOW_HOST_RESPONSE = opts.slowHostResponse.toString();
+    }
+
     if (opts.enableSpanBatching) {
       env.ENABLE_SPANBATCHING = 'true';
     }
@@ -80,7 +84,7 @@ class AgentStubControls {
   }
 
   async waitUntilAgentHasStarted() {
-    const url = `http://127.0.0.1:${this.agentPort}`;
+    const url = `http://127.0.0.1:${this.agentPort}/ping`;
 
     // eslint-disable-next-line no-console
     console.log(`[AgentStubControls] starting: ${url}`);
