@@ -10,7 +10,7 @@
  * Node.js v18.19 and above we are not supporting --experimental-loader flag
  */
 exports.hasExperimentalLoaderFlag = function hasExperimentalLoaderFlag() {
-  return (
+  return !!(
     (process.env.NODE_OPTIONS && process.env.NODE_OPTIONS.includes('--experimental-loader')) ||
     (process.execArgv[0] && process.execArgv[0].includes('--experimental-loader'))
   );
@@ -21,7 +21,7 @@ exports.hasExperimentalLoaderFlag = function hasExperimentalLoaderFlag() {
  * @returns {boolean} - True if esm-loader.mjs is present in Node options or execArgv, false otherwise.
  */
 exports.hasEsmLoaderFile = function hasEsmLoaderFile() {
-  return (
+  return !!(
     (process.env.NODE_OPTIONS && process.env.NODE_OPTIONS.includes('esm-loader.mjs')) ||
     process.execArgv.some(arg => arg.includes('esm-loader.mjs'))
   );
