@@ -13,7 +13,7 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const { AgentStubControls } = require('../../../apps/agentStubControls');
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn.only('tracing/activateImmediately', function () {
+mochaSuiteFn('tracing/activateImmediately', function () {
   this.timeout(config.getTestTimeout());
 
   let customAgent;
