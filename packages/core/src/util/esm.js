@@ -17,6 +17,17 @@ exports.hasExperimentalLoaderFlag = function hasExperimentalLoaderFlag() {
 };
 
 /**
+ * Check if esm-loader.mjs is being used.
+ * @returns {boolean} - True if esm-loader.mjs is present in Node options or execArgv, false otherwise.
+ */
+exports.hasEsmLoaderFile = function hasEsmLoaderFile() {
+  return (
+    (process.env.NODE_OPTIONS && process.env.NODE_OPTIONS.includes('esm-loader.mjs')) ||
+    process.execArgv.some(arg => arg.includes('esm-loader.mjs'))
+  );
+};
+
+/**
  * Checks if the application is an ECMAScript Modules (ESM) app by inspecting
  * the presence of flags like --experimental-loader and --import in the environment.
  * @returns {boolean} True if an ESM app is detected, false otherwise.
