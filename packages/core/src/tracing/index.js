@@ -183,31 +183,7 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
     console.debug(`The App is using the following preload flags: ${preloadFlags}`);
   }
 
-  // v18.19 and above usage of --experimental-loader flag no longer supported
-  // TODO: Remove warnings in the next major release(v6)
-  if (coreUtil.esm.hasExperimentalLoaderFlag()) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      'Node.js introduced breaking changes in versions 18.19.0 and above, leading to the discontinuation of support ' +
-        `for the --experimental-loader flag by Instana. The current Node.js version is ${process.version}. ` +
-        "To ensure tracing by Instana, please use the '--import' flag instead. For more information, " +
-        'refer to the Instana documentation: ' +
-        'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
-    );
-  }
 
-  //  Warning for usage of the legacy 'esm-loader.mjs' file.
-  //  This loader worked with '--experimental-loader' in Node.js versions below 18.19.
-  //  TODO: Remove 'esm-loader.mjs' file and this warning in the next major release (v6).
-  if (coreUtil.esm.hasEsmLoaderFile()) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      "Detected use of 'esm-loader.mjs'. This file is no longer supported and will be removed in next major release. " +
-        "To ensure tracing by Instana, please use the 'esm-register.mjs' file instead. For more information, " +
-        'refer to the Instana documentation: ' +
-        'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
-    );
-  }
 
   config = _config;
   processIdentityProvider = _processIdentityProvider;
