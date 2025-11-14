@@ -29,6 +29,7 @@ if (process.env.INSTANA_DEBUG === 'true') {
 // NOTE: we can leave the hardcoded port here as this file is not used in the test env!
 const port = process.env.AGENT_PORT || 42699;
 const uniqueAgentUuids = process.env.AGENT_UNIQUE_UUIDS === 'true';
+const slowHostResponse = process.env.SLOW_HOST_RESPONSE === 'true';
 const extraHeaders = process.env.EXTRA_HEADERS ? process.env.EXTRA_HEADERS.split(',') : [];
 const secretsMatcher = process.env.SECRETS_MATCHER ? process.env.SECRETS_MATCHER : 'contains-ignore-case';
 const secretsList = process.env.SECRETS_LIST ? process.env.SECRETS_LIST.split(',') : ['pass', 'secret', 'token'];
@@ -65,8 +66,22 @@ app.use(
   })
 );
 
+// This endpoint is for the "checkHost" (agentHostLookup) functionality.
 app.get('/', (req, res) => {
+  if (slowHostResponse) {
+    setTimeout(() => {
+      res.json({ version: '1.1.999' });
+    }, 1000 * 3);
+
+    return;
+  }
+
   res.json({ version: '1.1.999' });
+});
+
+// This endpoint is for our test env to check if the instance is up.
+app.get('/ping', (req, res) => {
+  res.send('pong');
 });
 
 app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
@@ -127,6 +142,7 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
       response.tracing.disable = disable;
     }
   }
+
   res.send(response);
 });
 
