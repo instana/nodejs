@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.30.0](https://github.com/instana/nodejs/compare/v4.29.0...v4.30.0) (2025-11-17)
+
+
+### Bug Fixes
+
+* bumped nan from 2.14.2 to 2.23.1 ([#2133](https://github.com/instana/nodejs/issues/2133)) ([7c283eb](https://github.com/instana/nodejs/commit/7c283eb4ac1e138b5f14d29251510aeb24d1c8ce))
+
+
+
+
+
 # [4.29.0](https://github.com/instana/nodejs/compare/v4.28.0...v4.29.0) (2025-11-07)
 
 **Note:** Version bump only for package @instana/autoprofile

@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.30.0](https://github.com/instana/nodejs/compare/v4.29.0...v4.30.0) (2025-11-17)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/instrumentation-fs from 0.12.0 to 0.27.0 ([bbc727d](https://github.com/instana/nodejs/commit/bbc727d11fac7ac81b80b732b178446861cc8aad))
+* bumped @opentelemetry/instrumentation-fs from 0.27.0 to 0.28.0 ([#2137](https://github.com/instana/nodejs/issues/2137)) ([06c34c8](https://github.com/instana/nodejs/commit/06c34c86a8d1f8afa68a615aaabf77d7e57725c3))
+* bumped @opentelemetry/instrumentation-oracledb from 0.32.0 to 0.33.0 ([b268d81](https://github.com/instana/nodejs/commit/b268d8143d8c0f5e13485208bfec18a804f377b4))
+* bumped @opentelemetry/instrumentation-restify from 0.38 to 0.53.0 ([c17d9b7](https://github.com/instana/nodejs/commit/c17d9b77adb5f3c6f52c1161d4edc8231ba17a32))
+* bumped @opentelemetry/instrumentation-socket.io from 0.39.0 to 0.54.0 ([dc98e2e](https://github.com/instana/nodejs/commit/dc98e2eb7151023befeaa805dc1617c0afbcd74a))
+* bumped @opentelemetry/instrumentation-tedious from 0.13.0 to 0.26.0 ([729640b](https://github.com/instana/nodejs/commit/729640b92c7594892930978771a8bb3cdc3d348a))
+* bumped js-yaml from 4.1.0 to 4.1.1 ([#2157](https://github.com/instana/nodejs/issues/2157)) ([2c7962f](https://github.com/instana/nodejs/commit/2c7962ff92bde0754f61255a043c8106920cbd91))
+
+
+
+
+
 # [4.29.0](https://github.com/instana/nodejs/compare/v4.28.0...v4.29.0) (2025-11-07)
 
 **Note:** Version bump only for package @instana/core
