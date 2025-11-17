@@ -59,5 +59,8 @@
     "@instana/core": "4.29.0",
     "@instana/shared-metrics": "4.29.0",
     "node-fetch": "^2.6.7"
+  },
+  "engines": {
+    "node": ">=18.19.0"
   }
 }
