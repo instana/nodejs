@@ -118,6 +118,7 @@ mochaSuiteFn('opentelemetry tests', function () {
                       dataProperty: 'tags',
                       extraTests: span => {
                         expect(span.data.tags.name).to.eql('request handler - /test');
+                        expect(span.data.operation).to.equal('restify');
                         expect(span.data.tags['restify.version']).to.eql('11.1.0');
                         expect(span.data.tags['restify.type']).to.eql('request_handler');
                         expect(span.data.tags['restify.method']).to.eql('get');
@@ -330,6 +331,7 @@ mochaSuiteFn('opentelemetry tests', function () {
                     dataProperty: 'tags',
                     extraTests: span => {
                       expect(span.data.tags.name).to.eql('fs readFileSync');
+                      expect(span.data.operation).to.eql('fs');
                       checkTelemetryResourceAttrs(span);
                     }
                   });
@@ -464,6 +466,7 @@ mochaSuiteFn('opentelemetry tests', function () {
                     pid: String(serverControls.getPid()),
                     dataProperty: 'tags',
                     extraTests: span => {
+                      expect(span.data.operation).to.equal('socket.io');
                       expect(span.data.tags.name).to.contain('receive');
                       expect(span.data.tags['messaging.system']).to.eql('socket.io');
                       expect(span.data.tags['messaging.destination']).to.eql('ON test_reply');
@@ -613,6 +616,8 @@ mochaSuiteFn('opentelemetry tests', function () {
                       extraTests: span => {
                         const queryType = endpoint === '/packages/batch' ? 'execSqlBatch' : 'execSql';
                         expect(span.data.tags.name).to.eql(`${queryType} azure-nodejs-test`);
+
+                        expect(span.data.operation).to.equal('tedious');
                         expect(span.data.tags['db.system']).to.eql('mssql');
                         expect(span.data.tags['db.name']).to.eql('azure-nodejs-test');
                         expect(span.data.tags['db.user']).to.eql('admin@instana@nodejs-team-db-server');
@@ -748,6 +753,7 @@ mochaSuiteFn('opentelemetry tests', function () {
                 pid: String(controls.getPid()),
                 dataProperty: 'tags',
                 extraTests: span => {
+                  expect(span.data.operation).to.equal('oracledb');
                   expect(span.data.tags.name).to.eql('oracledb.Connection.execute');
                   expect(span.data.tags['db.system.name']).to.eql('oracle.db');
                   expect(span.data.tags['server.address']).to.eql('localhost');
@@ -1016,6 +1022,7 @@ mochaSuiteFn('opentelemetry tests', function () {
 });
 
 function checkTelemetryResourceAttrs(span) {
+  expect(span.data.resource['service.name']).to.not.exist;
   expect(span.data.resource['telemetry.sdk.language']).to.eql('nodejs');
   expect(span.data.resource['telemetry.sdk.name']).to.eql('opentelemetry');
   expect(span.data.resource['telemetry.sdk.version']).to.match(/1\.\d+\.\d/);
