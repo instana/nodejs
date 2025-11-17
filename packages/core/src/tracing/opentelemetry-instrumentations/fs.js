@@ -44,3 +44,24 @@ module.exports.init = ({ cls, api }) => {
     instrumentation.enable();
   }
 };
+
+exports.transform = otelSpan => {
+  // NOTE: This assignment is necessary to display the service name correlation in the UI.
+  // We inherit the service name from the parent Instana span's service name if available.
+  const cls = require('../cls');
+  const parentSpan = cls.getCurrentSpan();
+
+  if (parentSpan && parentSpan.data && parentSpan.data.service) {
+    otelSpan.resource._attributes['service.name'] = parentSpan.data.service;
+  } else {
+    // Fallback to a contsant for now.
+    // This logic needs to be updated
+    otelSpan.resource._attributes['service.name'] = 'fs';
+  }
+  return otelSpan;
+};
+
+module.exports.getKind = () => {
+  const constants = require('../constants');
+  return constants.EXIT;
+};
