@@ -73,11 +73,22 @@ module.exports.init = (_config, cls) => {
 
     try {
       cls.ns.runAndReturn(() => {
+        // NOTE: 'service.name' is "unknown" - probably because we don't setup otel completely.
+        //       The removal fixes incorrect infrastructure correlation.
+        delete otelSpan.resource.attributes['service.name'];
+
         const instanaSpan = cls.startSpan({
           spanName: 'otel',
           kind: kind
         });
+
+        // opentelemetry/instrumentation-fs -> we only want the name behind instrumentation-
+        const operation = targetInstrumentionName.split('-').pop();
+
         instanaSpan.data = {
+          // span.data.operation is mapped to endpoint for otel span plugin in BE. We need to set the endpoint otherwise
+          // the ui will show unspecified
+          operation,
           tags: Object.assign({ name: otelSpan.name }, otelSpan.attributes),
           resource: otelSpan.resource.attributes
         };
