@@ -86,7 +86,7 @@ const commandMapping = {
 };
 function enforceErrors(options) {
   // this will enforce error for all commands except liststreams
-  options.ShardCount = 0;
+  options.StreamName = 'invalid_stream_name!';
 }
 async function executeOperation(operation, withError, method) {
   const operationOptions = availableOperations[operation];

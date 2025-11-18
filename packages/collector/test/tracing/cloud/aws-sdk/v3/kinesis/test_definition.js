@@ -144,10 +144,22 @@ function start(version) {
                   ? 'listShards'
                   : operationsInfo[operation]
               ),
-            span =>
-              expect(span.data.kinesis.stream).to.equal(
-                !span.data.kinesis.op.match(/^getRecords$|^listStreams$/) ? streamName : undefined
-              ),
+            span => {
+              const op = span.data.kinesis.op;
+              const noStreamOps = /^getRecords$|^listStreams$|^listShards$/;
+              let expected;
+
+              if (withError) {
+                // withError case, we send an invalid stream name
+                expected = 'invalid_stream_name!';
+              } else if (noStreamOps.test(op)) {
+                expected = undefined;
+              } else {
+                expected = streamName;
+              }
+
+              expect(span.data.kinesis.stream).to.equal(expected);
+            },
             span => {
               if (span.data.kinesis.op === 'getShardIterator') {
                 expect(span.data.kinesis.shard).to.equal('shardId-000000000000');
