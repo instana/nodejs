@@ -5,7 +5,6 @@
 'use strict';
 
 const { isNodeJsTooOld, minimumNodeJsVersion } = require('@instana/core/src/util/nodeJsVersionCheck');
-const { esm: esmUtil } = require('@instana/core/src/util');
 
 // As of now, Azure App Service supports Node.js versions 16-lts,18-lts and 20-lts. However, for existing services,
 // older Node.js versions might still be supported. You can find more information about configuring Node.js on Azure
@@ -20,6 +19,7 @@ if (isNodeJsTooOld()) {
   return;
 }
 
+const { esm: esmUtil } = require('@instana/core/src/util');
 if (esmUtil.hasExperimentalLoaderFlag()) {
   // eslint-disable-next-line no-console
   console.error(

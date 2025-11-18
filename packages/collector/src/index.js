@@ -6,7 +6,6 @@
 'use strict';
 
 const { isNodeJsTooOld, minimumNodeJsVersion } = require('@instana/core/src/util/nodeJsVersionCheck');
-const { hasEsmLoaderFile, hasExperimentalLoaderFlag } = require('@instana/core/src/util/esm');
 const { isProcessAvailable } = require('@instana/core/src/util/moduleAvailable');
 
 if (!isProcessAvailable()) {
@@ -35,9 +34,10 @@ if (isNodeJsTooOld()) {
   return;
 }
 
+const { esm: esmUtil } = require('@instana/core/src/util');
 // v18.19 and above usage of --experimental-loader flag no longer supported
 // TODO: Remove error log in the next major release(v6)
-if (hasExperimentalLoaderFlag()) {
+if (esmUtil.hasExperimentalLoaderFlag()) {
   // eslint-disable-next-line no-console
   console.error(
     'Node.js introduced breaking changes in versions 18.19.0 and above, leading to the discontinuation of support ' +
@@ -54,7 +54,7 @@ if (hasExperimentalLoaderFlag()) {
 
 //  This loader worked with '--experimental-loader' in Node.js versions below 18.19.
 //  TODO: Remove 'esm-loader.mjs' file and this log in the next major release (v6).
-if (hasEsmLoaderFile()) {
+if (esmUtil.hasEsmLoaderFile()) {
   // eslint-disable-next-line no-console
   console.error(
     "Detected use of 'esm-loader.mjs'. This file is no longer supported and will be removed in next major release. " +
