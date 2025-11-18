@@ -87,29 +87,14 @@ function cap(str) {
   return str[0].toUpperCase() + str.substr(1);
 }
 
-function enforceErrors(options, operation) {
-  // There is no particular way to break listBuckets as it doesn't have any arguments
-
-  if (operation === 'createBucket') {
-    options.GrantFullControl = {};
-  }
-
-  if (operation === 'deleteBucket') {
-    options.ExpectedBucketOwner = {};
-  }
-
-  if (
-    operation === 'headObject' ||
-    operation === 'getObject' ||
-    operation === 'deleteObject' ||
-    operation === 'putObject'
-  ) {
-    options.Key = {};
-  }
-
-  if (operation === 'listObjects' || operation === 'listObjectsV2') {
-    options.Delimiter = {};
-  }
+function enforceErrors(options) {
+  // Use an invalid bucket name to trigger a server-side AWS error.
+  // Newer SDK versions validate inputs strictly, so previous error injections
+  // (like invalid types) fail client-side. This approach
+  // stays schema-safe and guarantees a real failing S3 request for every operation.
+  //
+  // Deliberately invalid bucket name (underscores + punctuation) to trigger AWS-side errors
+  options.Bucket = 'invalid_bucket_name!';
 }
 
 // When the operation is getObject, the data comes in a StreamReader
