@@ -167,27 +167,14 @@ function cap(str) {
 }
 
 function enforceErrors(options, operation) {
-  options.InvalidDynamoDBKey = '999';
+  // Inject errors for DynamoDB operations:
+  // - Provide an invalid TableName to consistently trigger errors across all operations except list.
+  // - For listTables, also provide invalid types for Limit and ExclusiveStartTableName
+  options.TableName = 'invalid_table_name!';
 
   if (operation === 'listTables') {
     options.Limit = 'this should be a number';
     options.ExclusiveStartTableName = {};
-  }
-
-  if (operation === 'createTable') {
-    options.TableName = '';
-  }
-
-  if (operation === 'putItem') {
-    options.Item = 'Invalid format';
-  }
-
-  if (operation === 'getItem' || operation === 'updateItem' || operation === 'deleteItem') {
-    options.Key = 'Invalid format';
-  }
-
-  if (operation === 'scan' || operation === 'query') {
-    options.ExpressionAttributeNames = -666;
   }
 }
 

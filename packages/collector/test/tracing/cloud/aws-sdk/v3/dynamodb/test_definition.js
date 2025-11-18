@@ -515,6 +515,9 @@ function start(version, requestMethod, reducedTestSuite = false) {
                 expected = tableName;
               }
             }
+            if (withError) {
+              expected = 'invalid_table_name!';
+            }
 
             expect(span.data.dynamodb.table).to.equal(expected);
           },
