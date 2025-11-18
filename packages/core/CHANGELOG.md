@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.30.1](https://github.com/instana/nodejs/compare/v4.30.0...v4.30.1) (2025-11-18)
+
+
+### Bug Fixes
+
+* resolved infrastructure and endpoint correlation for otel spans ([#2159](https://github.com/instana/nodejs/issues/2159)) ([8c6b0d0](https://github.com/instana/nodejs/commit/8c6b0d0dfdc8ce1451938cf72928149c948c60e6))
+
+
+
+
+
 # [4.30.0](https://github.com/instana/nodejs/compare/v4.29.0...v4.30.0) (2025-11-17)
 
 
