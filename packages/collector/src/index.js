@@ -40,11 +40,9 @@ const { esm: esmUtil } = require('@instana/core/src/util');
 if (esmUtil.hasExperimentalLoaderFlag()) {
   // eslint-disable-next-line no-console
   console.error(
-    'Node.js introduced breaking changes in versions 18.19.0 and above, leading to the discontinuation of support ' +
-      `for the --experimental-loader flag by Instana. The current Node.js version is ${process.version} and` +
-      'this process will not be monitored by Instana. ' +
-      "To ensure tracing by Instana, please use the '--import' flag instead. For more information, " +
-      'refer to the Instana documentation: ' +
+    "Node.js 18.19.0 and later no longer support the '--experimental-loader' flag for ESM. " +
+      `Your current version is ${process.version}. To ensure tracing by Instana, ` +
+      "please use the '--import' flag instead. For more information, refer to the Instana documentation: " +
       'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
   );
   module.exports.default = function noOp() {};
@@ -57,9 +55,9 @@ if (esmUtil.hasExperimentalLoaderFlag()) {
 if (esmUtil.hasEsmLoaderFile()) {
   // eslint-disable-next-line no-console
   console.error(
-    "Detected use of 'esm-loader.mjs'. This file is no longer supported and will be removed in next major release. " +
+    "Importing 'esm-loader.mjs' is not supported and will be removed in next major release. " +
       'This process will not be monitored by Instana. ' +
-      "To ensure tracing by Instana, please use the 'esm-register.mjs' file instead. For more information, " +
+      "Use 'esm-register.mjs' with '--import' to enable tracing.  For more information, " +
       'refer to the Instana documentation: ' +
       'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
   );

@@ -62,34 +62,6 @@ function registerAdditionalInstrumentations(additionalInstrumentationModules) {
  * @param {import('./config').InstanaConfig} preliminaryConfig
  */
 function preInit(preliminaryConfig) {
-  // Check for unsupported ESM loader configurations and exit early
-  if (util.esm.hasExperimentalLoaderFlag()) {
-    // eslint-disable-next-line no-console
-    console.error(
-      'Node.js introduced breaking changes in versions 18.19.0 and above, leading to the discontinuation of support ' +
-        `for the --experimental-loader flag by Instana. The current Node.js version is ${process.version} and ` +
-        'this process will not be monitored by Instana. ' +
-        "To ensure tracing by Instana, please use the '--import' flag instead. For more information, " +
-        'refer to the Instana documentation: ' +
-        'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
-    );
-    return; // Exit early - no-op
-  }
-
-  // This loader worked with '--experimental-loader' in Node.js versions below 18.19.
-  // TODO: Remove 'esm-loader.mjs' file and this log in the next major release (v6).
-  if (util.esm.hasEsmLoaderFile()) {
-    // eslint-disable-next-line no-console
-    console.error(
-      "Detected use of 'esm-loader.mjs'. This file is no longer supported and will be removed in next major release. " +
-        'This process will not be monitored by Instana. ' +
-        "To ensure tracing by Instana, please use the 'esm-register.mjs' file instead. For more information, " +
-        'refer to the Instana documentation: ' +
-        'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
-    );
-    return; // Exit early - no-op
-  }
-
   util.init(preliminaryConfig);
   util.hasThePackageBeenInitializedTooLate.activate();
   tracing.preInit(preliminaryConfig);
@@ -105,34 +77,6 @@ function preInit(preliminaryConfig) {
  * @param {import('../../collector/src/pidStore')} processIdentityProvider
  */
 function init(config, downstreamConnection, processIdentityProvider) {
-  // Check for unsupported ESM loader configurations and exit early
-  if (util.esm.hasExperimentalLoaderFlag()) {
-    // eslint-disable-next-line no-console
-    console.error(
-      'Node.js introduced breaking changes in versions 18.19.0 and above, leading to the discontinuation of support ' +
-        `for the --experimental-loader flag by Instana. The current Node.js version is ${process.version} and ` +
-        'this process will not be monitored by Instana. ' +
-        "To ensure tracing by Instana, please use the '--import' flag instead. For more information, " +
-        'refer to the Instana documentation: ' +
-        'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
-    );
-    return; // Exit early - no-op
-  }
-
-  // This loader worked with '--experimental-loader' in Node.js versions below 18.19.
-  // TODO: Remove 'esm-loader.mjs' file and this log in the next major release (v6).
-  if (util.esm.hasEsmLoaderFile()) {
-    // eslint-disable-next-line no-console
-    console.error(
-      "Detected use of 'esm-loader.mjs'. This file is no longer supported and will be removed in next major release. " +
-        'This process will not be monitored by Instana. ' +
-        "To ensure tracing by Instana, please use the 'esm-register.mjs' file instead. For more information, " +
-        'refer to the Instana documentation: ' +
-        'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
-    );
-    return; // Exit early - no-op
-  }
-
   util.init(config);
   util.hasThePackageBeenInitializedTooLate.activate();
   secrets.init(config);
