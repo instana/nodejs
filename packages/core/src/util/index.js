@@ -22,6 +22,7 @@ const preloadFlags = require('./getPreloadFlags');
 const spanFilter = require('./spanFilter');
 const yamlReader = require('./yamlReader');
 const disableInstrumentation = require('./disableInstrumentation');
+const nodeJsVersionCheck = require('./nodeJsVersionCheck');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -97,3 +98,4 @@ exports.esm = esm;
 exports.spanFilter = spanFilter;
 exports.yamlReader = yamlReader;
 exports.disableInstrumentation = disableInstrumentation;
+exports.nodeJsVersionCheck = nodeJsVersionCheck;

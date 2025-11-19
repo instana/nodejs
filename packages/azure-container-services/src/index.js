@@ -4,23 +4,23 @@
 
 'use strict';
 
-const { isNodeJsTooOld, minimumNodeJsVersion } = require('@instana/core/src/util/nodeJsVersionCheck');
+const { esm, nodeJsVersionCheck } = require('@instana/core/src/util');
 
 // As of now, Azure App Service supports Node.js versions 16-lts,18-lts and 20-lts. However, for existing services,
 // older Node.js versions might still be supported. You can find more information about configuring Node.js on Azure
 // App Service at: https://learn.microsoft.com/en-us/azure/app-service/configure-language-nodejs?pivots=platform-linux
 
-if (isNodeJsTooOld()) {
+if (nodeJsVersionCheck.isNodeJsTooOld()) {
   // eslint-disable-next-line no-console
   console.error(
-    `The package @instana/azure-container-services requires at least Node.js ${minimumNodeJsVersion} but this` +
+    // eslint-disable-next-line max-len
+    `The package @instana/azure-container-services requires at least Node.js ${nodeJsVersionCheck.minimumNodeJsVersion} but this` +
       `process is running on Node.js ${process.version}. This azure container service will not be monitored by Instana.`
   );
   return;
 }
 
-const { esm: esmUtil } = require('@instana/core/src/util');
-if (esmUtil.hasExperimentalLoaderFlag()) {
+if (esm.hasExperimentalLoaderFlag()) {
   // eslint-disable-next-line no-console
   console.error(
     "Node.js 18.19.0 and later no longer support the '--experimental-loader' flag for ESM. " +
@@ -33,7 +33,7 @@ if (esmUtil.hasExperimentalLoaderFlag()) {
 
 // This loader worked with '--experimental-loader' in Node.js versions below 18.19.
 // TODO: Remove 'esm-loader.mjs' file and this log in the next major release (v6).
-if (esmUtil.hasEsmLoaderFile()) {
+if (esm.hasEsmLoaderFile()) {
   // eslint-disable-next-line no-console
   console.error(
     "Importing 'esm-loader.mjs' is not supported and will be removed in next major release. " +
