@@ -16,8 +16,6 @@ if (nodeJsVersionCheck.isNodeJsTooOld()) {
   return;
 }
 
-const { util: coreUtil } = require('@instana/core');
-
 // Check for unsupported ESM loader configurations and exit early
 if (esm.hasExperimentalLoaderFlag()) {
   // eslint-disable-next-line no-console
@@ -44,6 +42,7 @@ if (esm.hasEsmLoaderFile()) {
   return;
 }
 
+const { util: coreUtil } = require('@instana/core');
 const { environment: environmentUtil, consoleLogger: serverlessLogger } = require('@instana/serverless');
 
 // TODO: we currently call "log.init()" twice. Once here
