@@ -5,7 +5,7 @@
 
 'use strict';
 
-const { isNodeJsTooOld, minimumNodeJsVersion } = require('@instana/core/src/util/nodeJsVersionCheck');
+const { esm, nodeJsVersionCheck } = require('@instana/core/src/util');
 const { isProcessAvailable } = require('@instana/core/src/util/moduleAvailable');
 
 if (!isProcessAvailable()) {
@@ -20,10 +20,11 @@ if (!isProcessAvailable()) {
   return;
 }
 
-if (isNodeJsTooOld()) {
+if (nodeJsVersionCheck.isNodeJsTooOld()) {
   // eslint-disable-next-line no-console
   console.error(
-    `The package @instana/collector requires at least Node.js ${minimumNodeJsVersion} but this process is ` +
+    // eslint-disable-next-line max-len
+    `The package @instana/collector requires at least Node.js ${nodeJsVersionCheck.minimumNodeJsVersion} but this process is ` +
       `running on Node.js ${process.version}. This process will not be monitored by Instana.`
   );
 
@@ -34,6 +35,36 @@ if (isNodeJsTooOld()) {
   return;
 }
 
+// v18.19 and above usage of --experimental-loader flag no longer supported
+// TODO: Remove error log in the next major release(v6)
+if (esm.hasExperimentalLoaderFlag()) {
+  // eslint-disable-next-line no-console
+  console.error(
+    "Node.js 18.19.0 and later no longer support the '--experimental-loader' flag for ESM. " +
+      `Your current version is ${process.version}. To ensure tracing by Instana, ` +
+      "please use the '--import' flag instead. For more information, refer to the Instana documentation: " +
+      'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
+  );
+  module.exports.default = function noOp() {};
+  // @ts-ignore TS1108
+  return;
+}
+
+//  This loader worked with '--experimental-loader' in Node.js versions below 18.19.
+//  TODO: Remove 'esm-loader.mjs' file and this log in the next major release (v6).
+if (esm.hasEsmLoaderFile()) {
+  // eslint-disable-next-line no-console
+  console.error(
+    "Importing 'esm-loader.mjs' is not supported and will be removed in next major release. " +
+      'This process will not be monitored by Instana. ' +
+      "Use 'esm-register.mjs' with '--import' to enable tracing.  For more information, " +
+      'refer to the Instana documentation: ' +
+      'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
+  );
+  module.exports.default = function noOp() {};
+  // @ts-ignore TS1108
+  return;
+}
 let isMainThread = true;
 try {
   isMainThread = require('worker_threads').isMainThread;

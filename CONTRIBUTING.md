@@ -374,17 +374,10 @@ REGIONS=<region> SKIP_DOCKER_IMAGE=true BUILD_LAYER_WITH=local LAYER_NAME=experi
 
 We have added the ESM support for all Node.js versions, Since version 20.6, [ESM loaders are off-thread](https://github.com/nodejs/node/pull/44710), loaded separately, a shift from previous setups where the Instana collector was loaded within the loader, leading to a disruption in existing implementation. To resolve this, we've replaced the deprecated `--experimental-loader` with `--import`, facilitating the loading of the collector in the main thread. However, note that `--import` is only compatible with Node.js v18.19 and later, necessitating the maintenance of both styles for different Node.js versions.
 
-Use the following command to enable experimental ESM support:
-
-- For Node.js versions greater than or equal to 18.19:
+Use the following command to enable ESM support:
 
 ```sh
 node --import  /path/to/instana/node_modules/@instana/collector/esm-register.mjs entry-point
-```
-- For Node.js versions less than 18.19:
-
-```sh
-node --experimental-loader /path/to/instana/node_modules/@instana/collector/esm-loader.mjs entry-point
 ```
 
 ## Node.js prerelease
