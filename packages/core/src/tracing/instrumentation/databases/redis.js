@@ -319,7 +319,6 @@ function instrumentCommand(original, command, address, cbStyle) {
         kind: constants.EXIT,
         spanData
       });
-      span.stack = tracingUtil.getStackTrace(instrumentCommand);
 
       let userProvidedCallback;
 
@@ -361,14 +360,11 @@ function instrumentCommand(original, command, address, cbStyle) {
       }
 
       function onResult(error) {
-        span.d = Date.now() - span.ts;
-
         if (error) {
-          span.ec = 1;
           span.data.redis.error = tracingUtil.getErrorDetails(error);
         }
 
-        span.transmit();
+        tracingUtil.completeSpan({ span, referenceFunction: instrumentCommand, error });
 
         if (typeof userProvidedCallback === 'function') {
           return userProvidedCallback.apply(this, arguments);

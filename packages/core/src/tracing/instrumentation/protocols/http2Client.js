@@ -120,7 +120,7 @@ function instrumentClientHttp2Session(clientHttp2Session) {
       const pathWithoutQuery = sanitizeUrl(path);
       const params = splitAndFilter(path);
 
-      span.stack = tracingUtil.getStackTrace(request);
+      const spanStackRefFn = originalRequest;
 
       span.data.http = {
         method,
@@ -138,13 +138,12 @@ function instrumentClientHttp2Session(clientHttp2Session) {
       });
 
       stream.on('end', () => {
-        span.d = Date.now() - span.ts;
         span.ec = status >= 500 ? 1 : 0;
         span.data.http.status = status;
         if (capturedHeaders) {
           span.data.http.header = capturedHeaders;
         }
-        span.transmit();
+        tracingUtil.completeSpan({ span, referenceFunction: spanStackRefFn, error: null });
       });
 
       return stream;

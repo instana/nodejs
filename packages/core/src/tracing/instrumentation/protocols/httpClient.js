@@ -225,7 +225,11 @@ function instrument(coreModule, forceHttps) {
         params = urlAndQuery[1];
       }
 
+      // This needs to be revisited and removed
       span.stack = tracingUtil.getStackTrace(request);
+
+      // Store original request for span stack collection
+      const spanStackRefFn = originalRequest;
 
       const boundCallback = cls.ns.bind(function boundCallback(res) {
         span.data.http = {
@@ -240,9 +244,8 @@ function instrument(coreModule, forceHttps) {
           span.data.http.header = headers;
         }
 
-        span.d = Date.now() - span.ts;
-        span.ec = res.statusCode >= 500 ? 1 : 0;
-        span.transmit();
+        const error = res.statusCode >= 500 ? new Error(`HTTP ${res.statusCode}`) : null;
+        tracingUtil.completeSpan({ span, referenceFunction: spanStackRefFn, error });
 
         if (callback) {
           callback(res);
@@ -266,9 +269,8 @@ function instrument(coreModule, forceHttps) {
           url: completeCallUrl,
           error: e ? e.message : ''
         };
-        span.d = Date.now() - span.ts;
-        span.ec = 1;
-        span.transmit();
+
+        tracingUtil.completeSpan({ span, referenceFunction: spanStackRefFn, error: e });
         throw e;
       }
 
@@ -314,9 +316,8 @@ function instrument(coreModule, forceHttps) {
           url: completeCallUrl,
           error: errorMessage
         };
-        span.d = Date.now() - span.ts;
-        span.ec = 1;
-        span.transmit();
+
+        tracingUtil.completeSpan({ span, referenceFunction: spanStackRefFn, error: err });
       });
     });
     return clientRequest;
@@ -336,10 +337,10 @@ function constructFromUrlOpts(options, self, forceHttps) {
 
   try {
     const agent = options.agent || self.agent;
-    const isHttps = forceHttps || options.protocol === 'https:' || (agent?.protocol === 'https:');
+    const isHttps = forceHttps || options.protocol === 'https:' || agent?.protocol === 'https:';
 
     // Use protocol-aware default port, 443 for HTTPS, 80 for HTTP
-    const port = options.port || options.defaultPort || (agent?.defaultPort) || (isHttps ? 443 : 80);
+    const port = options.port || options.defaultPort || agent?.defaultPort || (isHttps ? 443 : 80);
 
     const protocol =
       (port === 443 && 'https:') ||

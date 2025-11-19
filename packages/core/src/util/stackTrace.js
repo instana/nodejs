@@ -160,6 +160,51 @@ exports.buildFunctionIdentifier = function buildFunctionIdentifier(callSite) {
 };
 
 /**
+ * Filters stack trace to show only customer application code by removing:
+ * - Node.js internal calls (node:*)
+ * - Instana instrumentation code
+ * - CLS/async context tracking code
+ *
+ * @param {Array.<InstanaCallSite>} stack - The stack trace array
+ * @returns {Array.<InstanaCallSite>} Filtered stack trace containing only customer code
+ */
+exports.filterCustomerCode = function filterCustomerCode(stack) {
+  if (!Array.isArray(stack) || stack.length === 0) {
+    return stack;
+  }
+
+  const filtered = stack.filter(frame => {
+    const filePath = frame.c || '';
+
+    if (!filePath) return false;
+
+    // Filter Node.js internals (node:*, internal/*)
+    if (filePath.startsWith('node:') || filePath.startsWith('internal/')) {
+      return false;
+    }
+
+    // Filter Instana packages in monorepo structure
+    if (filePath.includes('/packages/core/') || filePath.includes('/packages/collector/')) {
+      return false;
+    }
+
+    // Filter CLS/async context tracking
+    if (filePath.includes('/cls-hooked/') || filePath.includes('/clsHooked/') || filePath.includes('async_hooks')) {
+      return false;
+    }
+
+    // Filter shimmer/instrumentation utilities
+    if (filePath.includes('/shimmer.js') || filePath.includes('/hook.js')) {
+      return false;
+    }
+
+    return true;
+  });
+
+  return filtered;
+};
+
+/**
  * @param {Error} error
  * @param {Array<*>} frames
  */

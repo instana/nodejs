@@ -168,7 +168,7 @@ function instrumentedAccessFunction(
       kind: constants.EXIT
     });
     span.b = { s: 1 };
-    span.stack = tracingUtil.getStackTrace(instrumentedAccessFunction);
+
     span.data.mysql = {
       stmt: tracingUtil.shortenDatabaseStatement(
         typeof statementOrOpts === 'string' ? statementOrOpts : statementOrOpts.sql
@@ -184,16 +184,12 @@ function instrumentedAccessFunction(
 
       resultPromise
         .then(result => {
-          span.d = Date.now() - span.ts;
-          span.transmit();
+          tracingUtil.completeSpan({ span, referenceFunction: instrumentedAccessFunction });
           return result;
         })
         .catch(error => {
-          span.ec = 1;
           span.data.mysql.error = tracingUtil.getErrorDetails(error);
-
-          span.d = Date.now() - span.ts;
-          span.transmit();
+          tracingUtil.completeSpan({ span, referenceFunction: instrumentedAccessFunction, error });
           return error;
         });
       return resultPromise;
@@ -204,12 +200,10 @@ function instrumentedAccessFunction(
 
     function onResult(error) {
       if (error) {
-        span.ec = 1;
         span.data.mysql.error = tracingUtil.getErrorDetails(error);
       }
 
-      span.d = Date.now() - span.ts;
-      span.transmit();
+      tracingUtil.completeSpan({ span, referenceFunction: instrumentedAccessFunction, error });
 
       if (originalCallback) {
         return originalCallback.apply(this, arguments);

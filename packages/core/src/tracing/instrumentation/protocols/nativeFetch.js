@@ -167,7 +167,9 @@ function instrument() {
         params
       };
 
-      span.stack = tracingUtil.getStackTrace(instanaFetch);
+      // span.stack = tracingUtil.getStackTrace(instanaFetch);
+
+      tracingUtil.completeSpan({ span, referenceFunction: instanaFetch });
 
       injectTraceCorrelationHeaders(originalArgs, span, w3cTraceContext);
 
@@ -183,15 +185,16 @@ function instrument() {
           );
         })
         .catch(err => {
-          span.ec = 1;
           span.data.http.error = err.message;
+
+          tracingUtil.completeSpan({ span, referenceFunction: instanaFetch, skipTransmit: true, error: err });
         })
         .finally(() => {
-          span.d = Date.now() - span.ts;
           if (capturedHeaders != null && Object.keys(capturedHeaders).length > 0) {
             span.data.http.header = capturedHeaders;
           }
-          span.transmit();
+
+          tracingUtil.completeSpan({ span, referenceFunction: instanaFetch });
         });
 
       return fetchPromise;

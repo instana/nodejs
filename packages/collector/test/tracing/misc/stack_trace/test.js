@@ -90,6 +90,10 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
       });
 
       beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      beforeEach(async () => {
         await agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid());
       });
 
@@ -107,7 +111,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
           .then(() =>
             testUtils.retry(() =>
               agentControls.getSpans().then(spans => {
-                expect(spans.length).to.equal(6);
+                expect(spans.length).to.equal(3);
                 testUtils.expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.stack).to.have.lengthOf(0)
@@ -124,17 +128,16 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
             responseStatus: 201
           })
           .then(() =>
-            testUtils.retry(() =>
-              agentControls.getSpans().then(spans => {
-                expect(spans.length).to.equal(9);
-                testUtils.expectAtLeastOneMatching(spans, [
-                  span => expect(span.n).to.equal('node.http.client'),
-                  span => expect(span.k).to.equal(constants.EXIT),
-                  span => expect(span.stack[2].m).to.equal('fetch'),
-                  span => expect(span.stack[2].c).to.contains('node-fetch')
-                ]);
-              })
-            )
+            agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(3);
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.client'),
+                span => expect(span.k).to.equal(constants.EXIT),
+                // since we remove internal code, only customer code is present in stack trace from now on
+                span => expect(span.stack[1].m).to.equal('fetch'),
+                span => expect(span.stack[1].c).to.contains('node-fetch')
+              ]);
+            })
           ));
     });
   });
