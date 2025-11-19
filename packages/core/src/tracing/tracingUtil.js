@@ -25,12 +25,28 @@ exports.init = function (config) {
 };
 
 /**
+ * Captures and filters stack trace to show only customer application code.
+ *
+ * Strategy: Capture more frames than needed (3x the configured length), filter out
+ * internal frames, then limit to the configured stackTraceLength. This ensures we
+ * get enough customer code frames even after filtering.
+ *
  * @param {Function} referenceFunction
  * @param {number} [drop]
  * @returns {Array.<*>}
  */
 exports.getStackTrace = function getStackTrace(referenceFunction, drop) {
-  return stackTrace.captureStackTrace(stackTraceLength, referenceFunction, drop);
+  if (stackTraceLength <= 0) {
+    return [];
+  }
+
+  // Currently this seems enough for capturing and discarding unwanted calls, may need to revisit
+  const captureLength = stackTraceLength * 3;
+  const rawStack = stackTrace.captureStackTrace(captureLength, referenceFunction, drop);
+
+  const filteredStack = stackTrace.filterCustomerCode(rawStack);
+
+  return filteredStack.slice(0, stackTraceLength);
 };
 
 exports.generateRandomTraceId = function generateRandomTraceId() {
@@ -275,4 +291,46 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
     originalCallback,
     callbackIndex
   };
+};
+
+/**
+ * Ensures span has a stack trace before transmission.
+ *
+ * @param {import('../core').InstanaBaseSpan} span - The span to update
+ * @param {Function} referenceFunction - The function to use as reference for stack trace
+ * @param {number} [drop] - Number of stack frames to drop
+ */
+exports.ensureStackTrace = function ensureStackTrace(span, referenceFunction, drop) {
+  if (!span.stack || span.stack.length === 0) {
+    span.stack = exports.getStackTrace(referenceFunction, drop);
+  }
+};
+
+/**
+ * Completes a span with lazy stack trace generation.
+ * This is a convenience wrapper that:
+ * 1. Sets span.d (duration)
+ * 2. Handles error case (sets ec=1 and captures stack trace)
+ * 3. Handles success case (captures stack trace if not already set)
+ * 4. Conditionally transmits the span (unless skipTransmit is true)
+ *
+ * @param {Object} options - Configuration object
+ * @param {import('../core').InstanaBaseSpan} options.span - The span to complete
+ * @param {Function} options.referenceFunction - The function to use as reference for stack trace
+ * @param {Error} [options.error] - Optional error object
+ * @param {number} [options.drop] - Number of stack frames to drop
+ * @param {boolean} [options.skipTransmit] - If true, skip calling span.transmit() (for special cases like GraphQL)
+ */
+exports.completeSpan = function completeSpan({ span, referenceFunction, error, drop, skipTransmit = false }) {
+  span.d = Date.now() - span.ts;
+
+  if (error) {
+    span.ec = 1;
+  }
+
+  exports.ensureStackTrace(span, referenceFunction, drop);
+
+  if (!skipTransmit) {
+    span.transmit();
+  }
 };
