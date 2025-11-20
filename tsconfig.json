@@ -21,6 +21,8 @@
     "packages/shared-metrics",
     "packages/collector/src"
   ],
-  // See: https://www.typescriptlang.org/tsconfig/#exclude
+
+  // TypeScript checking is currently skipped for autoprofile
+  // TODO: Add proper typing and linting support for @instana/autoprofile (INSTA-65031)
   "exclude": ["node_modules", "packages/shared-metrics/test", "packages/autoprofile"]
 }
