@@ -3,6 +3,8 @@
  * (c) Copyright Instana Inc. and contributors 2020
  */
 
+// @ts-nocheck
+
 'use strict';
 
 const CallSite = require('../profile').CallSite;

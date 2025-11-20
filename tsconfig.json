@@ -5,7 +5,7 @@
     "allowJs": true,
     "checkJs": true,
     // There is an open issue with the latest version of node-fetch that cause type errors.
-    // Please refer to https://github.com/node-fetch/node-fetch/issues/1617 for more details. 
+    // Please refer to https://github.com/node-fetch/node-fetch/issues/1617 for more details.
     // As a temporary workaround, we've added "DOM" to this section.
     "lib": ["esnext.asynciterable", "DOM"],
     "moduleResolution": "node",
@@ -21,5 +21,8 @@
     "packages/shared-metrics",
     "packages/collector/src"
   ],
-  "exclude": ["node_modules", "packages/shared-metrics/test"]
+
+  // Skipping autoprofile doesn’t work because TS still type-checks imported files.
+  // TODO: fix in INSTA-65031
+  "exclude": ["node_modules", "packages/shared-metrics/test", "packages/autoprofile"]
 }
