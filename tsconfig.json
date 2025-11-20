@@ -22,7 +22,7 @@
     "packages/collector/src"
   ],
 
-  // TypeScript checking is currently skipped for autoprofile
-  // TODO: Add proper typing and linting support for @instana/autoprofile (INSTA-65031)
+  // Skipping autoprofile doesn’t work because TS still type-checks imported files.
+  // TODO: fix in INSTA-65031
   "exclude": ["node_modules", "packages/shared-metrics/test", "packages/autoprofile"]
 }
