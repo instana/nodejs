@@ -3,6 +3,7 @@
  * (c) Copyright Instana Inc. and contributors 2020
  */
 
+// @ts-nocheck
 /* eslint-disable no-restricted-syntax */
 
 'use strict';
