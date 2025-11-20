@@ -776,7 +776,7 @@
     "latestVersion": "",
     "cloudNative": false,
     "isBeta": false,
-    "ignoreUpdates": false,
+    "ignoreUpdates": true,
     "note": "",
     "core": false
   },
