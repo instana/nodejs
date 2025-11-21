@@ -276,7 +276,7 @@ function instrument(coreModule, forceHttps) {
         };
         span.d = Date.now() - span.ts;
         span.ec = 1;
-        tracingUtil.setErrorStack(span, e, 'http');
+        tracingUtil.setErrorStack(span, e, exports.spanName);
 
         span.transmit();
         throw e;
@@ -326,7 +326,7 @@ function instrument(coreModule, forceHttps) {
         };
         span.d = Date.now() - span.ts;
         span.ec = 1;
-        tracingUtil.setErrorStack(span, err, 'http');
+        tracingUtil.setErrorStack(span, err, exports.spanName);
 
         span.transmit();
       });

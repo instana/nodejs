@@ -197,8 +197,7 @@ function startSpanBeforeSync(ctx, originalFn, originalArgs, statement, stackTrac
 function finishSpan(error, span) {
   if (error) {
     span.ec = 1;
-    span.data.pg.error = tracingUtil.getErrorDetails(error);
-    tracingUtil.setErrorStack(span, error, 'pg');
+    tracingUtil.setErrorStack(span, error, exports.spanName);
   }
 
   span.d = Date.now() - span.ts;
