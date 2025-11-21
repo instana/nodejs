@@ -243,6 +243,7 @@ function instrument(coreModule, forceHttps) {
         span.d = Date.now() - span.ts;
         span.ec = res.statusCode >= 500 ? 1 : 0;
 
+        // Internal: Remove/update before RFR
         // Currently we don't parse anything from the body, and its not advised too
         // so do not override here, only override on the event of an error catch
         // if (span.ec === 1) {
