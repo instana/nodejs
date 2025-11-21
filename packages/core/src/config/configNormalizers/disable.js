@@ -16,12 +16,11 @@ exports.init = function init(_config) {
 };
 
 /**
- * Handles deprecated properties, environment variables, and array inputs.
+ * Handles environment variables, and array inputs.
  *
  * Precedence order (highest to lowest):
  * 1. `tracing.disable`
- * 2. `tracing.disabledTracers` (deprecated)
- * 3. Environment variables (`INSTANA_TRACING_DISABLE*`)
+ * 2. Environment variables (`INSTANA_TRACING_DISABLE*`)
  *
  * @param {import('../../config').InstanaConfig} config
  */
@@ -39,17 +38,6 @@ exports.normalize = function normalize(config) {
       logger?.info(
         `Tracing selectively disabled as per "tracing.disable" configuration: ${JSON.stringify(config.tracing.disable)}`
       );
-    }
-    // Handle deprecated `disabledTracers` config
-    if (config.tracing.disabledTracers) {
-      logger?.warn(
-        'The configuration property "tracing.disabledTracers" is deprecated and will be removed in the next ' +
-          'major release. Please use "tracing.disable" instead.'
-      );
-      if (!hasDisableConfig) {
-        config.tracing.disable = { instrumentations: config.tracing.disabledTracers };
-      }
-      delete config.tracing.disabledTracers;
     }
 
     // Fallback to environment variables if `disable` is not explicitly configured
@@ -102,21 +90,11 @@ exports.normalizeExternalConfig = function normalizeExternalConfig(config) {
  * 1. INSTANA_TRACING_DISABLE=true/false
  * 2. INSTANA_TRACING_DISABLE_INSTRUMENTATIONS / INSTANA_TRACING_DISABLE_GROUPS
  * 3. INSTANA_TRACING_DISABLE=list
- * 4. INSTANA_DISABLED_TRACERS (deprecated)
  *
  * @returns {import('../../config/types').Disable}
  */
 function getDisableFromEnv() {
   const disable = {};
-
-  // @deprecated
-  if (process.env.INSTANA_DISABLED_TRACERS) {
-    logger?.warn(
-      'The environment variable "INSTANA_DISABLED_TRACERS" is deprecated and will be removed in the next ' +
-        'major release. Use "INSTANA_TRACING_DISABLE" instead.'
-    );
-    disable.instrumentations = parseEnvVar(process.env.INSTANA_DISABLED_TRACERS);
-  }
 
   // This env var may contains true/false and also both groups and instrumentations
   if (process.env.INSTANA_TRACING_DISABLE) {
