@@ -275,7 +275,7 @@ function instrument(coreModule, forceHttps) {
         span.data.http.error = e ? e.message : '';
         span.d = Date.now() - span.ts;
         span.ec = 1;
-        tracingUtil.setErrorStack(span, e, 'http');
+        tracingUtil.setErrorStack(span, e, exports.spanName);
 
         span.transmit();
         throw e;
@@ -325,7 +325,7 @@ function instrument(coreModule, forceHttps) {
         span.data.http.error = errorMessage;
         span.d = Date.now() - span.ts;
         span.ec = 1;
-        tracingUtil.setErrorStack(span, err, 'http');
+        tracingUtil.setErrorStack(span, err, exports.spanName);
 
         span.transmit();
       });
