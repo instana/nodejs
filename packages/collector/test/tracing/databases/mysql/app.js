@@ -200,6 +200,14 @@ app.post('/valuesAndCall', (req, res) => {
   }
 });
 
+app.post('/error', (req, res) => {
+  if (driver === 'mysql2/promise') {
+    triggerErrorWithPromises(req, res);
+  } else {
+    triggerError(req, res);
+  }
+});
+
 app.listen(port, () => {
   log(
     `Listening on port: ${process.env.APP_PORT} (driver: ${driver}, access: ${accessFunction}, cluster: ${useCluster})`
@@ -301,6 +309,51 @@ function insertValuesWithPromisesAndCall(req, res) {
     })
     .catch(err => {
       log('Could not process request.', err);
+      res.sendStatus(500);
+    });
+}
+
+function triggerError(req, res) {
+  pool.getConnection((err, connection) => {
+    if (err) {
+      log('Failed to get connection', err);
+      res.sendStatus(500);
+      return;
+    }
+
+    // Execute an invalid SQL query to trigger an error
+    connection[accessFunction]('SELECT * FROM non_existent_table', queryError => {
+      connection.release();
+
+      if (queryError) {
+        log('Expected error occurred', queryError);
+        res.sendStatus(500);
+        return;
+      }
+
+      res.sendStatus(200);
+    });
+  });
+}
+
+function triggerErrorWithPromises(req, res) {
+  pool
+    .getConnection()
+    .then(connection => {
+      // Execute an invalid SQL query to trigger an error
+      wrapAccess(connection, 'SELECT * FROM non_existent_table', null, queryError => {
+        connection.release();
+
+        if (queryError) {
+          log('Expected error occurred', queryError);
+          res.sendStatus(500);
+        } else {
+          res.sendStatus(200);
+        }
+      });
+    })
+    .catch(err => {
+      log('Failed to get connection', err);
       res.sendStatus(500);
     });
 }

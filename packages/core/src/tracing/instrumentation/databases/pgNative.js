@@ -198,6 +198,7 @@ function finishSpan(error, span) {
   if (error) {
     span.ec = 1;
     span.data.pg.error = tracingUtil.getErrorDetails(error);
+    tracingUtil.setErrorStack(error);
   }
 
   span.d = Date.now() - span.ts;

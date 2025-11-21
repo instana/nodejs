@@ -320,4 +320,53 @@ function test(env, agentControls) {
           })
         );
       }));
+
+  it('must replace stack trace with error stack when query fails', () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/error'
+      })
+      .then(() =>
+        testUtils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            expect(spans.length).to.equal(2);
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid')
+            ]);
+
+            const mysqlSpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s),
+              span => expect(span.n).to.equal('mysql'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.ec).to.equal(1),
+              span => expect(span.data.mysql.error).to.exist
+            ]);
+
+            expect(mysqlSpan.stack).to.be.an('array');
+            expect(mysqlSpan.stack.length).to.be.greaterThan(0);
+
+            mysqlSpan.stack.forEach(frame => {
+              expect(frame).to.have.property('m');
+              expect(frame).to.have.property('c');
+              expect(frame.m).to.be.a('string');
+              expect(frame.c).to.be.a('string');
+            });
+
+            const hasRelevantFrame = mysqlSpan.stack.some(
+              frame =>
+                frame.c.includes('app.js') ||
+                frame.c.includes('mysql') ||
+                frame.m.includes('query') ||
+                frame.m.includes('Query')
+            );
+            expect(hasRelevantFrame).to.be.true;
+          })
+        )
+      ));
 }

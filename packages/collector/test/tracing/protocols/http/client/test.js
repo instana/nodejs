@@ -979,6 +979,36 @@ function registerTests(appUsesHttps) {
           })
         )
       ));
+
+  it('must replace span stack with error stack when response status >= 500', () =>
+    clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/trigger-error',
+        simple: false
+      })
+      .then(() =>
+        retry(() =>
+          globalAgent.instance.getSpans().then(spans => {
+            const httpClientSpan = expectExactlyOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.ec).to.equal(1),
+              span => expect(span.data.http.status).to.equal(500)
+            ]);
+
+            expect(httpClientSpan.stack).to.be.an('array');
+            expect(httpClientSpan.stack.length).to.be.greaterThan(0);
+
+            httpClientSpan.stack.forEach(frame => {
+              expect(frame).to.have.property('m');
+              expect(frame).to.have.property('c');
+              expect(frame.m).to.be.a('string');
+              expect(frame.c).to.be.a('string');
+            });
+          })
+        )
+      ));
 }
 
 function registerConnectionRefusalTest(appUsesHttps) {

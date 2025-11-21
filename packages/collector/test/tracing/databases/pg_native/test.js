@@ -189,6 +189,52 @@ mochaSuiteFn('tracing/pg-native', function () {
         );
       }));
 
+  it('must replace span stack with error stack when error occurs', () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/error',
+        simple: false
+      })
+      .then(response => {
+        expect(response).to.exist;
+        expect(response.error).to.contain('Error: ERROR:');
+        expect(response.error).to.contain('relation "nonexistanttable" does not exist');
+
+        return retry(() =>
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/error');
+            const pgExit = expectAtLeastOneMatching(spans, span => {
+              verifyPgExitBase(span, httpEntry, 'SELECT name, email FROM nonexistanttable');
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(1);
+              expect(span.data.pg.error).to.contain('relation "nonexistanttable" does not exist');
+            });
+
+            expect(pgExit.stack).to.be.an('array');
+            expect(pgExit.stack.length).to.be.greaterThan(0);
+
+            pgExit.stack.forEach(frame => {
+              expect(frame).to.have.property('m');
+              expect(frame).to.have.property('c');
+              expect(frame.m).to.be.a('string');
+              expect(frame.c).to.be.a('string');
+            });
+
+            const hasErrorFrame = pgExit.stack.some(
+              frame =>
+                frame.c.includes('pg-native') ||
+                frame.c.includes('app.js') ||
+                frame.m.includes('query') ||
+                frame.m.includes('Query')
+            );
+            expect(hasErrorFrame).to.be.true;
+
+            verifyHttpExit(spans, httpEntry);
+          })
+        );
+      }));
+
   it('must suppress', () =>
     controls
       .sendRequest({
