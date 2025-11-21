@@ -242,6 +242,14 @@ function instrument(coreModule, forceHttps) {
 
         span.d = Date.now() - span.ts;
         span.ec = res.statusCode >= 500 ? 1 : 0;
+
+        // Internal: Remove/update before RFR
+        // Currently we don't parse anything from the body, and its not advised too
+        // so do not override here, only override on the event of an error catch
+        // if (span.ec === 1) {
+        //   tracingUtil.setErrorStack(span, res.body.stack);
+        // }
+
         span.transmit();
 
         if (callback) {
@@ -268,6 +276,8 @@ function instrument(coreModule, forceHttps) {
         };
         span.d = Date.now() - span.ts;
         span.ec = 1;
+        tracingUtil.setErrorStack(span, e, exports.spanName);
+
         span.transmit();
         throw e;
       }
@@ -316,6 +326,8 @@ function instrument(coreModule, forceHttps) {
         };
         span.d = Date.now() - span.ts;
         span.ec = 1;
+        tracingUtil.setErrorStack(span, err, exports.spanName);
+
         span.transmit();
       });
     });
@@ -336,10 +348,10 @@ function constructFromUrlOpts(options, self, forceHttps) {
 
   try {
     const agent = options.agent || self.agent;
-    const isHttps = forceHttps || options.protocol === 'https:' || (agent?.protocol === 'https:');
+    const isHttps = forceHttps || options.protocol === 'https:' || agent?.protocol === 'https:';
 
     // Use protocol-aware default port, 443 for HTTPS, 80 for HTTP
-    const port = options.port || options.defaultPort || (agent?.defaultPort) || (isHttps ? 443 : 80);
+    const port = options.port || options.defaultPort || agent?.defaultPort || (isHttps ? 443 : 80);
 
     const protocol =
       (port === 443 && 'https:') ||

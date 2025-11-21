@@ -276,3 +276,26 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
     callbackIndex
   };
 };
+
+/**
+ * @param {import('../core').InstanaBaseSpan} span - The span to update
+ * @param {Error} error
+ * @param {string} technology - The technology name (e.g., 'mysql', 'pg', 'http')
+ */
+// @ts-ignore
+exports.setErrorStack = function setErrorStack(span, error, technology) {
+  if (error == null) {
+    return undefined;
+  }
+
+  if (technology && span.data[technology]) {
+    // for some cases like http, it is already set with custom values and no need to overwrite the message
+    span.data[technology].error = span.data[technology].error || exports.getErrorDetails(error);
+  }
+
+  if (error && error.stack) {
+    // no need to consider length for error cases, we can send the whole stack trace as per design
+    // TODO: It will be recorded as string, revisit to change structure
+    span.stack = error.stack;
+  }
+};
