@@ -276,3 +276,34 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
     callbackIndex
   };
 };
+
+/**
+ * @param {import('../core').InstanaBaseSpan} span - The span to update
+ * @param {Error | { stack?: string }} error - The error object or error-like object with
+ * stack property
+ * @returns {boolean} - Returns true if the stack was set, false otherwise
+ */
+exports.setErrorStack = function setErrorStack(span, error) {
+  if (!span || !error) {
+    return false;
+  }
+
+  const maxLen = stackTraceLength;
+
+  if (typeof error === 'object') {
+    /**
+     * @type {string | any[]}
+     */
+    const errorStack = error.stack || [];
+
+    if (typeof errorStack === 'string') {
+      return false;
+    } else if (Array.isArray(errorStack)) {
+      span.stack = errorStack.slice(0, maxLen);
+
+      return true;
+    }
+  }
+
+  return false;
+};
