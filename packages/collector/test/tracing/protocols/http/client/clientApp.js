@@ -320,7 +320,7 @@ app.get('/downstream-call', (req, res) => {
   const options = {
     hostname: '127.0.0.1',
     port: agentPort,
-    path: '/',
+    path: '/ping',
     method: 'GET'
   };
 
