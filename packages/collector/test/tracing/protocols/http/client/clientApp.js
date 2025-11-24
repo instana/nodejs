@@ -324,7 +324,7 @@ app.get('/downstream-call', (req, res) => {
     method: 'GET'
   };
 
-  log('Initiating downstream call to', `http://127.0.0.1:${agentPort}/`);
+  log('Initiating downstream call to', `http://127.0.0.1:${agentPort}/ping`);
 
   const downstreamReq = httpModule.request(options, downstreamRes => {
     let data = '';
