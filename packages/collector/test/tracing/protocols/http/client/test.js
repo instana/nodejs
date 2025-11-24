@@ -306,7 +306,7 @@ mochaSuiteFn('tracing/http client', function () {
               span.n === 'node.http.client' &&
               span.k === 2 &&
               span.data.http.method === 'GET' &&
-              span.data.http.url === `http://127.0.0.1:${globalAgent.instance.agentPort}/`
+              span.data.http.url === `http://127.0.0.1:${globalAgent.instance.agentPort}/ping`
           );
 
           expect(spans).to.have.length(1);
@@ -328,7 +328,7 @@ mochaSuiteFn('tracing/http client', function () {
             http: [
               {
                 methods: ['get'],
-                endpoints: [`http://127.0.0.1:${customAgentControls.agentPort}/`]
+                endpoints: [`http://127.0.0.1:${customAgentControls.agentPort}/ping`]
               }
             ]
           }
@@ -371,7 +371,7 @@ mochaSuiteFn('tracing/http client', function () {
               span.n === 'node.http.client' &&
               span.k === 2 &&
               span.data.http.method === 'GET' &&
-              span.data.http.url === `http://127.0.0.1:${customAgentControls.agentPort}/`
+              span.data.http.url === `http://127.0.0.1:${customAgentControls.agentPort}/ping`
           );
 
           expect(spans).to.have.length(2);
@@ -499,14 +499,14 @@ function registerTests(appUsesHttps) {
               verifyHttpExit({
                 spans,
                 parent: entryInClient,
-                url: `http://127.0.0.1:${globalAgent.instance.agentPort}/`,
+                url: `http://127.0.0.1:${globalAgent.instance.agentPort}/ping`,
                 params: 'k=1'
               });
 
               verifyHttpExit({
                 spans,
                 parent: entryInClient,
-                url: `http://127.0.0.1:${globalAgent.instance.agentPort}/`,
+                url: `http://127.0.0.1:${globalAgent.instance.agentPort}/ping`,
                 params: 'k=2'
               });
             });
@@ -1211,7 +1211,7 @@ function verifySuperagentSpans(spans, clientEndpoint, serverEndpoint, clientCont
     method: 'GET',
     status: serverEndpoint === '/does-not-exist' ? 404 : 200
   });
-  verifyHttpExit({ spans, parent: entryInClient, url: `http://127.0.0.1:${globalAgent.instance.agentPort}/` });
+  verifyHttpExit({ spans, parent: entryInClient, url: `http://127.0.0.1:${globalAgent.instance.agentPort}/ping` });
   verifyHttpEntry({
     spans,
     parent: firstExitInClient,
