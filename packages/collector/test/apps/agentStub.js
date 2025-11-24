@@ -72,7 +72,7 @@ app.get('/', (req, res) => {
 
 // Use this endpoint to check if the instance is up or to send an exit request.
 app.get('/ping', (req, res) => {
-  res.send('pong');
+  res.json({ msg: 'pong' });
 });
 
 app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
