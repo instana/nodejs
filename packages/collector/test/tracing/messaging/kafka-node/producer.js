@@ -86,7 +86,7 @@ app.post('/send-message', (req, res) => {
       }
 
       log('Message was sent.');
-      fetch(`http://127.0.0.1:${agentPort}`)
+      fetch(`http://127.0.0.1:${agentPort}/ping`)
         .then(() => {
           res.sendStatus(200);
         })

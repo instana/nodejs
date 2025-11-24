@@ -61,7 +61,7 @@ server.get('/test', function (req, res, next) {
       return res.sendStatus(500);
     }
     // Execute another traced call to verify that we keep the tracing context.
-    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+    fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
       res.send(results);
       next();
     });

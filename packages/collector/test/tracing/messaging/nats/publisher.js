@@ -178,7 +178,7 @@ function afterPublish(res, err, msg) {
     mostRecentEmittedError = null;
   }
 
-  fetch(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}/ping`)
     .then(() => {
       // nats has a bug that makes the callback called twice in some situations
       if (!res.headersSent) {

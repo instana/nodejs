@@ -58,7 +58,7 @@ amqp
         span.disableAutoEnd();
         // simulating asynchronous follow up steps with setTimeout
         setTimeout(() => {
-          fetch(`http://127.0.0.1:${agentPort}`)
+          fetch(`http://127.0.0.1:${agentPort}/ping`)
             .then(() => {
               span.end();
               channel.ack(msg);
@@ -84,7 +84,7 @@ amqp
         span.disableAutoEnd();
         // simulating asynchronous follow up steps with setTimeout
         setTimeout(() => {
-          fetch(`http://127.0.0.1:${agentPort}`)
+          fetch(`http://127.0.0.1:${agentPort}/ping`)
             .then(() => {
               span.end();
               channel.ack(msg);
@@ -116,7 +116,7 @@ amqp
               // simulating asynchronous follow up steps with setTimeout
               setTimeout(
                 () =>
-                  fetch(`http://127.0.0.1:${agentPort}`)
+                  fetch(`http://127.0.0.1:${agentPort}/ping`)
                     .then(() => {
                       span.end();
                       channel.ack(msg);
@@ -149,7 +149,7 @@ amqp
         span.disableAutoEnd();
         // simulating asynchronous follow up steps with setTimeout
         setTimeout(() => {
-          fetch(`http://127.0.0.1:${agentPort}`)
+          fetch(`http://127.0.0.1:${agentPort}/ping`)
             .then(() => {
               span.end();
               confirmChannel.ack(msg);

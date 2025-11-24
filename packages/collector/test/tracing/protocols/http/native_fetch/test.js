@@ -84,14 +84,14 @@ mochaSuiteFn('tracing/native fetch', function () {
             verifyHttpExit({
               spans,
               parent: entryInClient,
-              url: `http://127.0.0.1:${globalAgent.instance.agentPort}/`,
+              url: `http://127.0.0.1:${globalAgent.instance.agentPort}/ping`,
               params: 'k=1'
             });
 
             verifyHttpExit({
               spans,
               parent: entryInClient,
-              url: `http://127.0.0.1:${globalAgent.instance.agentPort}/`,
+              url: `http://127.0.0.1:${globalAgent.instance.agentPort}/ping`,
               params: 'k=2'
             });
           });

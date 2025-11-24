@@ -125,7 +125,7 @@ app.post('/insert-one', (req, res) => {
     .then(r => {
       mongoResponse = r;
       // Execute another traced call to verify that we keep the tracing context.
-      return fetch(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}/ping`);
     })
     .then(() => {
       res.json(mongoResponse);
@@ -143,7 +143,7 @@ app.post('/update-one', (req, res) => {
     .then(r => {
       mongoResponse = r;
       // Execute another traced call to verify that we keep the tracing context.
-      return fetch(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}/ping`);
     })
     .then(() => {
       res.json(mongoResponse);
@@ -161,7 +161,7 @@ app.post('/replace-one', (req, res) => {
     .then(r => {
       mongoResponse = r;
       // Execute another traced call to verify that we keep the tracing context.
-      return fetch(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}/ping`);
     })
     .then(() => {
       log('mongoResponse to replace document', mongoResponse);
@@ -180,7 +180,7 @@ app.post('/delete-one', (req, res) => {
     .then(r => {
       mongoResponse = r;
       // Execute another traced call to verify that we keep the tracing context.
-      return fetch(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}/ping`);
     })
     .then(() => {
       res.json(mongoResponse);
@@ -198,7 +198,7 @@ app.post('/find-one', (req, res) => {
     .then(r => {
       mongoResponse = r;
       // Execute another traced call to verify that we keep the tracing context.
-      return fetch(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}/ping`);
     })
     .then(() => {
       res.json(mongoResponse);
@@ -241,7 +241,7 @@ app.post('/long-find', (req, res) => {
     .then(r => {
       mongoResponse = r;
       // Execute another traced call to verify that we keep the tracing context.
-      return fetch(`http://127.0.0.1:${agentPort}?call=${call}`);
+      return fetch(`http://127.0.0.1:${agentPort}/ping?call=${call}`);
     })
     .then(() => res.json(mongoResponse || {}))
     .catch(e => {
@@ -264,7 +264,7 @@ app.get('/findall', async (req, res) => {
     }
 
     const resp = await collection.find(filter, findOpts).toArray();
-    await fetch(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}/ping`);
     res.json(resp);
     return;
   }
@@ -282,7 +282,7 @@ app.get('/findall', async (req, res) => {
         res.status(500).json(err);
       } else {
         // Execute another traced call to verify that we keep the tracing context.
-        return fetch(`http://127.0.0.1:${agentPort}`)
+        return fetch(`http://127.0.0.1:${agentPort}/ping`)
           .then(() => {
             res.json(docs);
           })

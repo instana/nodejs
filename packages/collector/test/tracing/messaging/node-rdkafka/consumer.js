@@ -95,7 +95,7 @@ function setupConsumer() {
       }
 
       await delay(200);
-      await fetch(`http://127.0.0.1:${agentPort}`);
+      await fetch(`http://127.0.0.1:${agentPort}/ping`);
       span.end();
     });
   } else {
@@ -157,7 +157,7 @@ function setupConsumer() {
             sendToParent(data);
 
             await delay(200);
-            await fetch(`http://127.0.0.1:${agentPort}`);
+            await fetch(`http://127.0.0.1:${agentPort}/ping`);
             span.end();
           });
         }, 2 * 1000);

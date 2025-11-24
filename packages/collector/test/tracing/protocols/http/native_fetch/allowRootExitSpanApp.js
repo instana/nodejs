@@ -19,9 +19,9 @@ console.log('Starting allowRootExitSpanApp...');
 
 const main = async () => {
   await delay(100);
-  await fetch(`http://127.0.0.1:${agentPort}`);
+  await fetch(`http://127.0.0.1:${agentPort}/ping`);
 
-  await fetch(`http://127.0.0.1:${agentPort}`);
+  await fetch(`http://127.0.0.1:${agentPort}/ping`);
 };
 
 const app = async () => {

@@ -81,7 +81,7 @@ const SNSApi = {
               return reject(data);
             } else {
               setTimeout(() => {
-                fetch(`http://127.0.0.1:${agentPort}`)
+                fetch(`http://127.0.0.1:${agentPort}/ping`)
                   .then(() => resolve(data))
                   .catch(err2 => reject(err2));
               });
@@ -96,7 +96,7 @@ const SNSApi = {
               promiseData = data;
               return delay(200);
             })
-            .then(() => fetch(`http://127.0.0.1:${agentPort}`))
+            .then(() => fetch(`http://127.0.0.1:${agentPort}/ping`))
             .then(() => {
               if (promiseData && promiseData.code) {
                 reject(promiseData);
@@ -117,7 +117,7 @@ const SNSApi = {
             }
 
             await delay(200);
-            await fetch(`http://127.0.0.1:${agentPort}`);
+            await fetch(`http://127.0.0.1:${agentPort}/ping`);
 
             return resolve(data);
           } catch (err) {

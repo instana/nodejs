@@ -104,7 +104,7 @@ consumer.on('error', err => {
 
   // simulating asynchronous follow up steps with setTimeout
   setTimeout(() => {
-    fetch(`http://127.0.0.1:${agentPort}`).finally(() => {
+    fetch(`http://127.0.0.1:${agentPort}/ping`).finally(() => {
       span.end(1);
     });
   }, 100);
@@ -119,7 +119,7 @@ consumer.on('message', ({ topic, key, value }) => {
 
   // simulating asynchronous follow up steps with setTimeout
   setTimeout(() => {
-    fetch(`http://127.0.0.1:${agentPort}`).finally(() => {
+    fetch(`http://127.0.0.1:${agentPort}/ping`).finally(() => {
       span.end();
     });
   }, 100);

@@ -20,7 +20,7 @@ const fetch = require('node-fetch-v2');
 
 function main() {
   setTimeout(async () => {
-    await fetch(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}/ping`);
   }, 100);
 }
 

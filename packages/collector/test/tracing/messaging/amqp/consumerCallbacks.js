@@ -86,7 +86,7 @@ function consumer(conn) {
             log(msg.content.toString());
             // simulating asynchronous follow up steps with setTimeout
             setTimeout(() => {
-              fetch(`http://127.0.0.1:${agentPort}`)
+              fetch(`http://127.0.0.1:${agentPort}/ping`)
                 .then(() => {
                   span.end();
                   channel.ack(msg);
@@ -107,7 +107,7 @@ function consumer(conn) {
             log(msg.content.toString());
             // simulating asynchronous follow up steps with setTimeout
             setTimeout(() => {
-              fetch(`http://127.0.0.1:${agentPort}`)
+              fetch(`http://127.0.0.1:${agentPort}/ping`)
                 .then(() => {
                   span.end();
                   channel.ack(msg);
@@ -134,7 +134,7 @@ function consumer(conn) {
                 span.disableAutoEnd();
                 // simulating asynchronous follow up steps with setTimeout
                 setTimeout(() => {
-                  fetch(`http://127.0.0.1:${agentPort}`)
+                  fetch(`http://127.0.0.1:${agentPort}/ping`)
                     .then(() => {
                       span.end();
                       channel.ack(msg);
@@ -187,7 +187,7 @@ function consumerConfirm(conn) {
             log(msg.content.toString());
             // simulating asynchronous follow up steps with setTimeout
             setTimeout(() => {
-              fetch(`http://127.0.0.1:${agentPort}`)
+              fetch(`http://127.0.0.1:${agentPort}/ping`)
                 .then(() => {
                   span.end();
                   channel.ack(msg);

@@ -42,7 +42,7 @@ app.get('/callback', (req, res) => {
       log(err);
       return res.sendStatus(500);
     }
-    superagent.get(`http://127.0.0.1:${agentPort}`, err2 => {
+    superagent.get(`http://127.0.0.1:${agentPort}/ping`, err2 => {
       if (err2) {
         log(err2);
         return res.sendStatus(500);
@@ -55,7 +55,7 @@ app.get('/callback', (req, res) => {
 app.get('/then', async (req, res) => {
   superagent
     .get(createUrl('/request-url-opts'))
-    .then(() => superagent.get(`http://127.0.0.1:${agentPort}`))
+    .then(() => superagent.get(`http://127.0.0.1:${agentPort}/ping`))
     .then(() => res.sendStatus(200))
     .catch(err => {
       log(err);
@@ -69,7 +69,7 @@ app.get('/catch', async (req, res) => {
     .then(() => {
       res.sendStatus(500);
     })
-    .catch(() => superagent.get(`http://127.0.0.1:${agentPort}`).then(() => res.sendStatus(200)));
+    .catch(() => superagent.get(`http://127.0.0.1:${agentPort}/ping`).then(() => res.sendStatus(200)));
 });
 
 app.get(
@@ -77,7 +77,7 @@ app.get(
   asyncRoute(async (req, res) => {
     try {
       await superagent.get(createUrl('/request-url-opts'));
-      await superagent.get(`http://127.0.0.1:${agentPort}`);
+      await superagent.get(`http://127.0.0.1:${agentPort}/ping`);
       res.sendStatus(200);
     } catch (err) {
       log(err);
@@ -93,7 +93,7 @@ app.get(
       await superagent.get(createUrl('/does-not-exist'));
       res.sendStatus(500);
     } catch (err) {
-      await superagent.get(`http://127.0.0.1:${agentPort}`);
+      await superagent.get(`http://127.0.0.1:${agentPort}/ping`);
       res.sendStatus(200);
     }
   })

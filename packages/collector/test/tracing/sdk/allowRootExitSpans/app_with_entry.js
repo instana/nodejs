@@ -24,7 +24,7 @@ const executeRequest = async () => {
 
   try {
     await instana.sdk.async.startEntrySpan('my-translation-service');
-    await fetch(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}/ping`);
   } catch (err) {
     error = err;
   } finally {

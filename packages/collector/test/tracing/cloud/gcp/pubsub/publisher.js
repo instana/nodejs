@@ -106,7 +106,7 @@ app.listen(port, () => {
 });
 
 function afterPublish(err, res, messageId) {
-  fetch(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}/ping`)
     .then(response => response.json())
     .then(() => {
       if (err) {

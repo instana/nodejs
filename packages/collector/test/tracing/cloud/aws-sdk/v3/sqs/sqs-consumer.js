@@ -51,7 +51,7 @@ const handleMessageFn = async message => {
   sendToParent(message);
   await delay(200);
 
-  await fetch(`http://localhost:${agentPort}?msg=${message.Body}`);
+  await fetch(`http://localhost:${agentPort}/ping?msg=${message.Body}`);
   log(`Sent an HTTP request after receiving message of id ${message.MessageId}`);
 
   if (withError) {
@@ -70,7 +70,7 @@ const handleMessageBatchFn = async messages => {
 
   messages.forEach(async function (m) {
     sendToParent(m);
-    await fetch(`http://localhost:${agentPort}?msg=${m.Body}`);
+    await fetch(`http://localhost:${agentPort}/ping?msg=${m.Body}`);
     log(`Sent an HTTP request after receiving message of id ${m.MessageId}`);
     processed.push(m);
   });

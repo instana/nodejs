@@ -57,7 +57,7 @@ app.get('/produce', async (req, res) => {
   log('Sent message');
 
   setTimeout(async () => {
-    await fetch(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}/ping`);
 
     res.send({
       topicName,

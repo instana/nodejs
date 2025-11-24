@@ -65,8 +65,14 @@ app.use(
   })
 );
 
+// Use this endpoint for the "checkHost" (agentHostLookup) functionality.
 app.get('/', (req, res) => {
   res.json({ version: '1.1.999' });
+});
+
+// Use this endpoint to check if the instance is up or to send an exit request.
+app.get('/ping', (req, res) => {
+  res.json({ msg: 'pong' });
 });
 
 app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {

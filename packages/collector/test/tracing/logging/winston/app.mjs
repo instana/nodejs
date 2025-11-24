@@ -119,7 +119,7 @@ app.get('/log', (req, res) => {
 });
 
 function finish(res) {
-  fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+  fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
     res.sendStatus(200);
   });
 }

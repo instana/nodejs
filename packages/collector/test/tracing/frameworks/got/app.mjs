@@ -40,7 +40,7 @@ app.get('/', async (req, res) => {
 });
 
 app.get('/request', async (req, res) => {
-  await got.get(`http://127.0.0.1:${agentPort}`);
+  await got.get(`http://127.0.0.1:${agentPort}/ping`);
 
   res.json({});
 });

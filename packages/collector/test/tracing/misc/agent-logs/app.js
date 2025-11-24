@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/trace', async (req, res) => {
-  await fetch(`http://127.0.0.1:${agentPort}`);
+  await fetch(`http://127.0.0.1:${agentPort}/ping`);
   res.send();
 });
 

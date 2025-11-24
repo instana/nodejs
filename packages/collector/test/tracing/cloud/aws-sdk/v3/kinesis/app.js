@@ -205,7 +205,7 @@ operationNames.forEach(operation => {
     const method = req.params.method;
     try {
       const data = await executeOperation(operation, withError, method);
-      await fetch(`http://127.0.0.1:${agentPort}`);
+      await fetch(`http://127.0.0.1:${agentPort}/ping`);
       httpSuccess(res, data);
     } catch (err) {
       httpError(res, err);

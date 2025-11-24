@@ -65,12 +65,12 @@ app.get('/get', (req, res) => {
         id: req.query.id
       })
       .then(response => {
-        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
           res.json({ response: commonReturnValue(response) });
         });
       })
       .catch(err => {
-        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
           res.json({ error: err });
         });
       });
@@ -83,7 +83,7 @@ app.get('/get', (req, res) => {
       {},
       (error, response) => {
         // Execute another traced call to verify that we keep the tracing context.
-        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
           res.json({ error, response: commonReturnValue(response) });
         });
       }
@@ -101,7 +101,7 @@ app.get('/search', (req, res) => {
     .then(response => {
       searchResponse = response;
       // Execute another traced call to verify that we keep the tracing context.
-      return fetch(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}/ping`);
     })
     .then(() => {
       res.json({ response: commonReturnValue(searchResponse) });
