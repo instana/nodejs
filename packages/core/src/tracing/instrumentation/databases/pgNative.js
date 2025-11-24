@@ -197,7 +197,10 @@ function startSpanBeforeSync(ctx, originalFn, originalArgs, statement, stackTrac
 function finishSpan(error, span) {
   if (error) {
     span.ec = 1;
-    tracingUtil.setErrorStack(span, error, exports.spanName);
+    // Note: Instead of 'pg', we could've passed exports.spanName if they were the same,
+    //       We can’t use spanName here because for this instr the span name is
+    //       "postgres", but the data is stored under span.data.pg.
+    tracingUtil.setErrorStack(span, error, 'pg');
   }
 
   span.d = Date.now() - span.ts;
