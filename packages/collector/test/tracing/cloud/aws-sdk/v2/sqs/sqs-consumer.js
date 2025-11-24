@@ -53,7 +53,7 @@ const consumerApp = Consumer.create({
     await delay(1000);
     sendToParent(message);
     await delay(200);
-    await fetch(`http://localhost:${agentPort}?msg=${message.Body}`);
+    await fetch(`http://localhost:${agentPort}/ping?msg=${message.Body}`);
     log(`Sent an HTTP request after receiving message of id ${message.MessageId}`);
 
     if (withError) {

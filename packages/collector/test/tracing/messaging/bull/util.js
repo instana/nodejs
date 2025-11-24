@@ -51,7 +51,7 @@ function processJob(job, done, log, info) {
     if (done) {
       setTimeout(() => {
         writeToAFileToProveThatThisParticularJobHasBeenProcessed(getJobData(job), log).then(() => {
-          fetch(`http://127.0.0.1:${agentPort}`)
+          fetch(`http://127.0.0.1:${agentPort}/ping`)
             .then(() => {
               log('The follow up request after receiving a message has happened.');
 
@@ -74,7 +74,7 @@ function processJob(job, done, log, info) {
     } else {
       return delay(100)
         .then(() => writeToAFileToProveThatThisParticularJobHasBeenProcessed(getJobData(job), log))
-        .then(() => fetch(`http://127.0.0.1:${agentPort}`))
+        .then(() => fetch(`http://127.0.0.1:${agentPort}/ping`))
         .then(() => {
           log('The follow up request after receiving a message has happened.');
           if (job.data.withError) {

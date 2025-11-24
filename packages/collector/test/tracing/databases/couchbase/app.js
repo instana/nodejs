@@ -219,7 +219,7 @@ app.get('/', (req, res) => {
 app.get('/get-promise', async (req, res) => {
   try {
     const result = await collection1.get('get-key-1');
-    await fetch(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}/ping`);
 
     res.json({ result: result.value });
   } catch (err) {
@@ -231,7 +231,7 @@ app.get('/get-callback', (req, res) => {
   collection1.get('get-key-2', (err, result) => {
     if (err) return res.status(500).send({ err: err.message });
 
-    fetch(`http://127.0.0.1:${agentPort}`)
+    fetch(`http://127.0.0.1:${agentPort}/ping`)
       .then(() => {
         res.json({ result: result.value });
       })

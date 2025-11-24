@@ -136,7 +136,7 @@ async function createEntryAsync(message) {
 function afterCreateEntry(instanaSdk, message) {
   setCorrelationAttributesForIpcMessage(message);
   // follow-up with an IO action that is auto-traced to validate tracing context integrity
-  fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+  fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
     const error = message.error ? new Error('Boom!') : null;
     instanaSdk.completeEntrySpan(
       error,
@@ -214,7 +214,7 @@ function afterCreateIntermediate(instanaSdk, file, encoding, res) {
   fs.readFile(file, encoding, (err, content) => {
     if (err) {
       if (err.code === 'ENOENT') {
-        return fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+        return fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
           // intermediate span is finished after the http exit, so the http exit is s child of the intermediate span
           instana.sdk.callback.completeIntermediateSpan(err, { error: err.message });
           return res.sendStatus(404);
@@ -223,7 +223,7 @@ function afterCreateIntermediate(instanaSdk, file, encoding, res) {
       return res.status(500).send(err);
     }
     // trigger another IO action that is auto-traced to validate tracing context integrity
-    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+    fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
       // intermediate span is finished after the http exit, so the http exit is s child of the intermediate span
       instana.sdk.callback.completeIntermediateSpan(null, { success: true });
       res.send(content);
@@ -355,13 +355,13 @@ function afterCreateExit(instanaSdk, file, encoding, res) {
     if (err) {
       instanaSdk.completeExitSpan(err, { error: err.message });
       if (err.code === 'ENOENT') {
-        return fetch(`http://127.0.0.1:${agentPort}`).then(() => res.sendStatus(404));
+        return fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => res.sendStatus(404));
       }
       return res.status(500).send(err);
     }
     instanaSdk.completeExitSpan(null, { success: true });
     // follow-up with an IO action that is auto-traced to validate tracing context integrity
-    fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+    fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
       res.send(content);
     });
   });
@@ -373,7 +373,7 @@ app.post('/callback/create-exit-synchronous-result', function createExitCallback
     return 42;
   });
   // follow-up with an IO action that is auto-traced to validate tracing context integrity
-  fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+  fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
     res.send({ result });
   });
 });
@@ -435,7 +435,7 @@ function onEmittedEvent(instanaSdk, emitter, message) {
   emitter.on('tick', () => {
     if (receivedTicks++ === 5) {
       emitter.stop();
-      fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+      fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
         instanaSdk.completeEntrySpan();
         process.send(`done: ${message.command}`);
       });

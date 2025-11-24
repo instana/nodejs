@@ -83,7 +83,7 @@ app.post('/publish', (req, res) => {
 });
 
 function afterPublish(res, err) {
-  fetch(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}/ping`)
     .then(() => {
       if (err) {
         return res.status(500).send(err.message ? err.message : err);

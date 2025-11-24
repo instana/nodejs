@@ -172,7 +172,7 @@ operationNames.forEach(operation => {
             httpError(res, err);
           } else {
             setTimeout(() => {
-              fetch(`http://127.0.0.1:${agentPort}`)
+              fetch(`http://127.0.0.1:${agentPort}/ping`)
                 .then(() => {
                   httpSuccess(res, data);
                 })
@@ -188,7 +188,7 @@ operationNames.forEach(operation => {
     } else if (method === 'Promise') {
       execOperation(operation, null, null, withError)
         .then(data => {
-          fetch(`http://127.0.0.1:${agentPort}`)
+          fetch(`http://127.0.0.1:${agentPort}/ping`)
             .then(() => {
               httpSuccess(res, data);
             })

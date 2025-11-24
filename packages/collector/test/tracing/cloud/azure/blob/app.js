@@ -247,7 +247,7 @@ app.get('/upload', async (req, res) => {
   blockBlobClient
     .upload(pdfData, pdfData.length)
     .then(() => {
-      fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+      fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
         res.json('success');
       });
     })

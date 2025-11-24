@@ -84,7 +84,7 @@ let receivedMessages = [];
         // simulating asynchronous follow up steps
         await delay(100);
         if (!runAsStandAlone) {
-          await fetch(`http://127.0.0.1:${agentPort}`);
+          await fetch(`http://127.0.0.1:${agentPort}/ping`);
         }
         span.end();
         if (runAsStandAlone) {
@@ -148,7 +148,7 @@ let receivedMessages = [];
         // simulating asynchronous follow up steps
         await delay(100);
         if (!runAsStandAlone) {
-          await fetch(`http://127.0.0.1:${agentPort}`);
+          await fetch(`http://127.0.0.1:${agentPort}/ping`);
         }
         span.end();
         if (runAsStandAlone) {

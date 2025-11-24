@@ -111,7 +111,7 @@ function httpSuccess(res, data) {
 app.get('/execute', async (req, res) => {
   try {
     const data = await executeCommand(req.query);
-    await fetch(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}/ping`);
     httpSuccess(res, data);
   } catch (err) {
     httpError(res, err);

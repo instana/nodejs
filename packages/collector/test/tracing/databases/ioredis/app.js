@@ -87,7 +87,7 @@ app.get('/keepTracing', (req, res) => {
     .then(redisRes => {
       redisResponse = redisRes;
       // Execute another traced call to verify that we keep the tracing context.
-      return fetch(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}/ping`);
     })
     .then(() => {
       res.send(redisResponse);
@@ -114,7 +114,7 @@ app.get('/keepTracingCallback', async (req, res) => {
     });
 
     // Execute another traced call to verify that we keep the tracing context.
-    const response = await fetch(`http://127.0.0.1:${agentPort}`);
+    const response = await fetch(`http://127.0.0.1:${agentPort}/ping`);
     if (!response.ok) {
       log('HTTP call failed', response.statusText);
       throw new Error(response.statusText);
@@ -177,7 +177,7 @@ app.post('/multiKeepTracing', (req, res) => {
     .then(redisRes => {
       redisResponse = redisRes;
       // Execute another traced call to verify that we keep the tracing context.
-      return fetch(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}/ping`);
     })
     .then(httpRes => {
       res.send(`${httpRes};${redisResponse}`);
@@ -228,7 +228,7 @@ app.post('/pipelineKeepTracing', (req, res) => {
     .then(redisRes => {
       redisResponse = redisRes;
       // Execute another traced call to verify that we keep the tracing context.
-      return fetch(`http://127.0.0.1:${agentPort}`);
+      return fetch(`http://127.0.0.1:${agentPort}/ping`);
     })
     .then(httpRes => {
       res.send(`${httpRes};${redisResponse}`);

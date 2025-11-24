@@ -156,7 +156,7 @@ async function runAsPromise(isV2Style = false) {
       return sqs
         .send(deletionCommand)
         .then(() => delay(200))
-        .then(() => fetch(`http://127.0.0.1:${agentPort}`))
+        .then(() => fetch(`http://127.0.0.1:${agentPort}/ping`))
         .then(() => delay(1000))
         .then(() => {
           log('The follow up request after receiving a message has happened.');
@@ -218,7 +218,7 @@ async function runV3AsCallback(cb) {
     sqs.send(deletionCommand, () => {
       setTimeout(async () => {
         try {
-          await fetch(`http://127.0.0.1:${agentPort}`);
+          await fetch(`http://127.0.0.1:${agentPort}/ping`);
           setTimeout(() => {
             log('The follow up request after receiving a message has happened.');
             span.end();

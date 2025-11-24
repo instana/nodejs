@@ -80,7 +80,7 @@ class AgentStubControls {
   }
 
   async waitUntilAgentHasStarted() {
-    const url = `http://127.0.0.1:${this.agentPort}`;
+    const url = `http://127.0.0.1:${this.agentPort}/ping`;
 
     // eslint-disable-next-line no-console
     console.log(`[AgentStubControls] starting: ${url}`);

@@ -115,7 +115,7 @@ const S3Api = {
               return reject(err);
             } else {
               setTimeout(() => {
-                fetch(`http://127.0.0.1:${agentPort}`)
+                fetch(`http://127.0.0.1:${agentPort}/ping`)
                   .then(() => resolve(data))
                   .catch(err2 => {
                     logger(
@@ -138,7 +138,7 @@ const S3Api = {
               promiseData = data;
               return delay(200);
             })
-            .then(() => fetch(`http://127.0.0.1:${agentPort}`))
+            .then(() => fetch(`http://127.0.0.1:${agentPort}/ping`))
             .then(() => {
               resolve(promiseData);
             })
@@ -159,7 +159,7 @@ const S3Api = {
             logger(`/${operation}/${method} got data from AWS SDK`);
 
             await delay(200);
-            await fetch(`http://127.0.0.1:${agentPort}`);
+            await fetch(`http://127.0.0.1:${agentPort}/ping`);
 
             return resolve(data);
           } catch (err) {

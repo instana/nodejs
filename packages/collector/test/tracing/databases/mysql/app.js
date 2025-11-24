@@ -192,7 +192,7 @@ app.post('/valuesAndCall', (req, res) => {
     insertValuesWithPromisesAndCall(req, res);
   } else {
     insertValues(req, res, cb => {
-      fetch(`http://127.0.0.1:${agentPort}`)
+      fetch(`http://127.0.0.1:${agentPort}/ping`)
         .then(response => response.json())
         .then(data => cb(null, data))
         .catch(err => cb(err, null));
@@ -294,7 +294,7 @@ function insertValuesWithPromisesAndCall(req, res) {
     .then(() => {
       connection.release();
     })
-    .then(() => fetch(`http://127.0.0.1:${agentPort}`))
+    .then(() => fetch(`http://127.0.0.1:${agentPort}/ping`))
     .then(response => response.json())
     .then(() => {
       res.json(instana.opentracing.getCurrentlyActiveInstanaSpanContext());

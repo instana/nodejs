@@ -50,7 +50,7 @@ const availableOperations = {
 const operationNames = Object.keys(availableOperations);
 
 function makeHTTPCall(data, cb) {
-  fetch(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}/ping`)
     .then(() => {
       log('HTTP request made after interacting with memcached');
       cb(null, data);

@@ -136,7 +136,7 @@ const DynamoDBApi = {
             } else {
               setTimeout(async () => {
                 try {
-                  const response = await fetch(`http://127.0.0.1:${agentPort}`);
+                  const response = await fetch(`http://127.0.0.1:${agentPort}/ping`);
                   const jsonData = await response.json();
                   resolve(jsonData);
                 } catch (err2) {
@@ -155,7 +155,7 @@ const DynamoDBApi = {
               return delay(200);
             })
             .then(async () => {
-              const response = await fetch(`http://127.0.0.1:${agentPort}`);
+              const response = await fetch(`http://127.0.0.1:${agentPort}/ping`);
               const jsonData = await response.json();
               return jsonData;
             })
@@ -179,7 +179,7 @@ const DynamoDBApi = {
             }
 
             await delay(200);
-            const response = await fetch(`http://127.0.0.1:${agentPort}`);
+            const response = await fetch(`http://127.0.0.1:${agentPort}/ping`);
             const jsonData = await response.json();
             resolve(jsonData);
           } catch (err) {

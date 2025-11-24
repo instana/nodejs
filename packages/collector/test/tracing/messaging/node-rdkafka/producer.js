@@ -172,7 +172,7 @@ function doProduce(bufferErrorSender = false, method, msg = 'Node rdkafka is gre
       log('Sent message as stream');
 
       setTimeout(async () => {
-        await fetch(`http://127.0.0.1:${agentPort}`);
+        await fetch(`http://127.0.0.1:${agentPort}/ping`);
 
         resolve({
           timestamp: Date.now(),
@@ -200,7 +200,7 @@ function doProduce(bufferErrorSender = false, method, msg = 'Node rdkafka is gre
       log('Sent message as standard', wasSent);
 
       setTimeout(async () => {
-        await fetch(`http://127.0.0.1:${agentPort}`);
+        await fetch(`http://127.0.0.1:${agentPort}/ping`);
         resolve({
           timestamp: Date.now(),
           wasSent,

@@ -69,7 +69,7 @@ const topicName = 'kafka-avro-topic';
     log('Got message');
 
     await delay(200);
-    await fetch(`http://127.0.0.1:${agentPort}`);
+    await fetch(`http://127.0.0.1:${agentPort}/ping`);
     span.end();
   });
 

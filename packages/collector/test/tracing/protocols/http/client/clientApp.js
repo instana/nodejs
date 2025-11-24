@@ -57,10 +57,10 @@ app.get('/request-url-only', (req, res) => {
 
 app.get('/request-deferred', (req, res) => {
   setTimeout(() => {
-    httpModule.get(`http://127.0.0.1:${agentPort}?k=2`, () => {}).end();
+    httpModule.get(`http://127.0.0.1:${agentPort}/ping?k=2`, () => {}).end();
   }, 500);
 
-  httpModule.get(`http://127.0.0.1:${agentPort}?k=1`, () => res.sendStatus(200)).end();
+  httpModule.get(`http://127.0.0.1:${agentPort}/ping?k=1`, () => res.sendStatus(200)).end();
 });
 
 app.get('/request-options-only', (req, res) => {

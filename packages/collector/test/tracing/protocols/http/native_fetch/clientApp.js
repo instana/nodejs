@@ -47,15 +47,15 @@ app.get('/', (req, res) => res.sendStatus(200));
 
 app.get('/fetch-deferred', async (req, res) => {
   setTimeout(async () => {
-    await fetch(`http://127.0.0.1:${agentPort}?k=2`);
+    await fetch(`http://127.0.0.1:${agentPort}/ping?k=2`);
   }, 500);
 
-  await fetch(`http://127.0.0.1:${agentPort}?k=1`);
+  await fetch(`http://127.0.0.1:${agentPort}/ping?k=1`);
   res.sendStatus(200);
 });
 
 app.get('/downstream-call', async (req, res) => {
-  await fetch(`http://127.0.0.1:${agentPort}?k=1`);
+  await fetch(`http://127.0.0.1:${agentPort}/ping?k=1`);
   res.sendStatus(200);
 });
 

@@ -63,13 +63,13 @@ app.post('/send-messages', (req, res) => {
     log('Sending messages with key %s and value %s using %s.', key, value, useSendBatch ? 'sendBatch' : 'sendMessage');
   }
   send(req.body)
-    .then(() => (runAsStandAlone ? Promise.resolve() : fetch(`http://127.0.0.1:${agentPort}`)))
+    .then(() => (runAsStandAlone ? Promise.resolve() : fetch(`http://127.0.0.1:${agentPort}/ping`)))
     .then(() => res.sendStatus(200))
     .then(() => log('Messages have been sent.')) // eslint-disable-line
     .catch(err => {
       if (error === 'producer') {
         log('Send error has been triggered.', err.message);
-        (runAsStandAlone ? Promise.resolve() : fetch(`http://127.0.0.1:${agentPort}`))
+        (runAsStandAlone ? Promise.resolve() : fetch(`http://127.0.0.1:${agentPort}/ping`))
           .then(() => res.sendStatus(200))
           .catch(err2 => {
             log('Follow up request failed', err2);

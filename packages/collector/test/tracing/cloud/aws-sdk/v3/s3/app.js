@@ -157,7 +157,7 @@ availableOperations.forEach(op => {
     switch (method) {
       case 'v3':
         runV3AsPromise(withError, op)
-          .then(data => fetch(`http://127.0.0.1:${agentPort}`).then(() => data))
+          .then(data => fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => data))
           .then(data => {
             if (op === 'getObject') {
               handleGetObject(res, data);
@@ -174,7 +174,7 @@ availableOperations.forEach(op => {
         break;
       case 'v2':
         runV3AsV2Style(withError, op)
-          .then(data => fetch(`http://127.0.0.1:${agentPort}`).then(() => data))
+          .then(data => fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => data))
           .then(data => {
             if (op === 'getObject') {
               handleGetObject(res, data);
@@ -195,7 +195,7 @@ availableOperations.forEach(op => {
             res.status(500).send({ error: String(err) });
           } else {
             setTimeout(() => {
-              fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+              fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
                 if (op === 'getObject') {
                   handleGetObject(res, data);
                 } else {

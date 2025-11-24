@@ -80,7 +80,7 @@ app.post('/values', (req, res) => {
       log('Set with key %s, value %s failed', key, value, err);
       res.sendStatus(500);
     } else {
-      fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+      fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
         res.sendStatus(200);
       });
     }
@@ -99,7 +99,7 @@ app.get('/hset-hget', (req, res) => {
           return res.sendStatus(500);
         }
 
-        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
           res.status(200).send(val);
         });
       });
@@ -111,7 +111,7 @@ app.get('/hset-hget', (req, res) => {
 app.get('/get-without-waiting', (req, res) => {
   const key = req.query.key;
   client.get(key);
-  fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+  fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
     res.sendStatus(200);
   });
 });
@@ -122,7 +122,7 @@ app.get('/set-without-waiting', (req, res) => {
 
   client.set(key, value);
 
-  fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+  fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
     res.sendStatus(200);
   });
 });
@@ -134,7 +134,7 @@ app.get('/values', (req, res) => {
       log('Get with key %s failed', key, err);
       res.sendStatus(500);
     } else {
-      fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+      fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
         res.send(redisRes);
       });
     }
@@ -145,7 +145,7 @@ app.get('/failure', (req, res) => {
   // simulating wrong get usage
   client.get('someCollection', 'someKey', 'someValue', (err, redisRes) => {
     if (err) {
-      fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+      fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
         res.sendStatus(500);
       });
     } else {
@@ -164,7 +164,7 @@ app.get('/multi', (req, res) => {
         log('Multi failed', err);
         res.sendStatus(500);
       } else {
-        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
           res.sendStatus(200);
         });
       }
@@ -182,7 +182,7 @@ app.get('/multi-sub-cb', (req, res) => {
       if (err) {
         log('Multi failed', err);
 
-        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
           res.sendStatus(200);
         });
       } else {
@@ -194,7 +194,7 @@ app.get('/multi-sub-cb', (req, res) => {
 app.get('/multi-no-waiting', (req, res) => {
   client.multi().hset('someCollection', 'key', 'value').hget('someCollection', 'key').exec();
 
-  fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+  fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
     res.sendStatus(200);
   });
 });
@@ -208,7 +208,7 @@ app.get('/multiFailure', (req, res) => {
     .exec(err => {
       if (err) {
         log('Multi failed', err);
-        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
           res.sendStatus(200);
         });
       } else {
@@ -228,7 +228,7 @@ app.get('/batchSuccess', (req, res) => {
         log('batch should not fail', err);
         res.sendStatus(500);
       } else {
-        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
           res.sendStatus(200);
         });
       }
@@ -246,7 +246,7 @@ app.get('/batchFailure', (req, res) => {
         log('batch should not fail', err);
         res.sendStatus(500);
       } else {
-        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
           res.sendStatus(200);
         });
       }
@@ -270,7 +270,7 @@ app.get('/callSequence', (req, res) => {
         return;
       }
 
-      fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+      fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
         res.send(result);
       });
     });

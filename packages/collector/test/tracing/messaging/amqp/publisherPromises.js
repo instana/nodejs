@@ -85,7 +85,7 @@ app.post('/publish', (req, res) => {
   // RabbitMQ - see https://github.com/squaremo/amqp.node/issues/89#issuecomment-62632326
   channel.publish(exchange, '', Buffer.from(req.body.message));
 
-  fetch(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}/ping`)
     .then(() => {
       res.status(201).send('OK');
     })
@@ -100,7 +100,7 @@ app.post('/send-to-queue', (req, res) => {
   // RabbitMQ - see https://github.com/squaremo/amqp.node/issues/89#issuecomment-62632326
   channel.sendToQueue(queueName, Buffer.from(req.body.message));
 
-  fetch(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}/ping`)
     .then(() => {
       res.status(201).send('OK');
     })
@@ -116,7 +116,7 @@ app.post('/send-to-get-queue', (req, res) => {
   log('sending to', queueNameGet);
   channel.sendToQueue(queueNameGet, Buffer.from(req.body.message));
 
-  fetch(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}/ping`)
     .then(() => {
       res.status(201).send('OK');
     })
@@ -134,7 +134,7 @@ app.post('/publish-to-confirm-channel-without-callback', (req, res) => {
   // https://github.com/amqp-node/amqplib/blob/v0.10.3/lib/channel_model.js#L265
   confirmChannel.publish(exchange, '', Buffer.from(req.body.message));
 
-  fetch(`http://127.0.0.1:${agentPort}`)
+  fetch(`http://127.0.0.1:${agentPort}/ping`)
     .then(() => {
       res.status(201).send('OK');
     })
@@ -153,7 +153,7 @@ app.post('/send-to-confirm-queue', (req, res) => {
       log(err || !ok);
       return res.sendStatus(500);
     }
-    fetch(`http://127.0.0.1:${agentPort}`)
+    fetch(`http://127.0.0.1:${agentPort}/ping`)
       .then(() => {
         res.status(201).send('OK');
       })

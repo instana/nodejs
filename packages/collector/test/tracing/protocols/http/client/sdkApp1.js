@@ -19,7 +19,7 @@ const main = async () => {
   let err1;
 
   try {
-    const req = new nodeFetch.Request(`http://127.0.0.1:${agentPort}`);
+    const req = new nodeFetch.Request(`http://127.0.0.1:${agentPort}/ping`);
     await nodeFetch(req);
 
     await instana.sdk.async.startEntrySpan('my-translation-service');

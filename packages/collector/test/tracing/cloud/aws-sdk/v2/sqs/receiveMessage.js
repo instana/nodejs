@@ -115,7 +115,7 @@ function receivePromise() {
         })
         .promise()
         .then(() => delay(200))
-        .then(() => fetch(`http://127.0.0.1:${agentPort}`))
+        .then(() => fetch(`http://127.0.0.1:${agentPort}/ping`))
         .then(() => delay(1000))
         .then(() => {
           log('The follow up request after receiving a message has happened.');
@@ -172,7 +172,7 @@ async function receiveAsync() {
           .promise();
 
         await delay(1000);
-        await fetch(`http://127.0.0.1:${agentPort}`);
+        await fetch(`http://127.0.0.1:${agentPort}/ping`);
         log('The follow up request after receiving a message has happened.');
         span.end();
         return resolve();
@@ -224,7 +224,7 @@ function receiveCallback(cb) {
           } else {
             log('Messages deleted');
             setTimeout(() => {
-              fetch(`http://127.0.0.1:${agentPort}`)
+              fetch(`http://127.0.0.1:${agentPort}/ping`)
                 .then(() => {
                   log('The follow up request after receiving a message has happened.');
                   span.end();

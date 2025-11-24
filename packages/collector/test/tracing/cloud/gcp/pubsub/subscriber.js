@@ -50,7 +50,7 @@ async function connect() {
 
       log(`received message: ${msg.id} from ${subscription.name} with content "${content}"`);
       setTimeout(() => {
-        fetch(`http://127.0.0.1:${agentPort}`)
+        fetch(`http://127.0.0.1:${agentPort}/ping`)
           .then(response => response.json())
           .then(() => {
             log('The follow up request after receiving a message has happened.');

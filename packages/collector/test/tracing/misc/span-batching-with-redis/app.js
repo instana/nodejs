@@ -72,7 +72,7 @@ app.post('/quick-successive-calls', (req, res) => {
           log(`Consecutive read access returned different results: ${redisGetResponse1} != ${redisRes2}`);
           return res.sendStatus(500);
         }
-        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
           res.send(redisGetResponse1);
         });
       });
@@ -96,7 +96,7 @@ app.post('/quick-successive-calls-with-errors', (req, res) => {
           log('Get unexpectedly succeeded');
           return res.sendStatus(500);
         }
-        fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+        fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => {
           res.send('done');
         });
       });

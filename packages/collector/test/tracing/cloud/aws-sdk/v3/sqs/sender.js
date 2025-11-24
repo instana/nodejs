@@ -118,7 +118,7 @@ app.get('/send-message/:method', (req, res) => {
           await delay(200);
           return data;
         })
-        .then(data => fetch(`http://127.0.0.1:${agentPort}`).then(() => data))
+        .then(data => fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => data))
         .then(data => {
           res.send({
             status: 'ok',
@@ -135,7 +135,7 @@ app.get('/send-message/:method', (req, res) => {
           await delay(200);
           return data;
         })
-        .then(data => fetch(`http://127.0.0.1:${agentPort}`).then(() => data))
+        .then(data => fetch(`http://127.0.0.1:${agentPort}/ping`).then(() => data))
         .then(data => {
           res.send({
             status: 'ok',
@@ -152,7 +152,7 @@ app.get('/send-message/:method', (req, res) => {
           res.status(500).send({ error: String(err) });
         } else {
           setTimeout(() => {
-            fetch(`http://127.0.0.1:${agentPort}`)
+            fetch(`http://127.0.0.1:${agentPort}/ping`)
               .then(() => {
                 res.send({
                   status: 'ok',
