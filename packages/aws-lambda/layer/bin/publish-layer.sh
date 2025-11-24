@@ -97,12 +97,9 @@ if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
   printf "If not, the AWS CLI commands will fail.\n"
 fi
 
-
 # The us-gov-* regions are only available to US government agencies, U.S. government etc. The regions have not been (and
 # maybe cannot be) enabled for our AWS account. We currently do not publish Lambda layers to these regions.
 SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1'
-
-
 
 if [[ -z $REGIONS ]]; then
   printf "\nstep 1/9: Fetching AWS regions\n"
@@ -125,7 +122,7 @@ while IFS= read -r region; do
   else
     REGIONS_OTHERS+=("$region")
   fi
-done <<< "$REGIONS"
+done <<<"$REGIONS"
 
 if [[ "$PUBLISH_TO_CHINA_REGIONS" == "true" ]]; then
   REGIONS=("${REGIONS_CN[@]}")
@@ -152,9 +149,12 @@ if [[ -z $NO_PROMPT ]]; then
   while true; do
     read -p "Do you wish to continue (yes or no)? " yn
     case $yn in
-      [Yy]* ) echo "Let's go!"; break;;
-      [Nn]* ) exit 1;;
-      * ) echo "Please answer yes or no.";;
+    [Yy]*)
+      echo "Let's go!"
+      break
+      ;;
+    [Nn]*) exit 1 ;;
+    *) echo "Please answer yes or no." ;;
     esac
   done
 fi
@@ -196,7 +196,7 @@ rm -rf $ZIP_NAME
 rm -rf $TMP_ZIP_DIR
 LAYER_WORKDIR=$TMP_ZIP_DIR/nodejs
 mkdir -p $LAYER_WORKDIR
-pushd $LAYER_WORKDIR > /dev/null
+pushd $LAYER_WORKDIR >/dev/null
 
 # convert relative workdir path into absolute path
 LAYER_WORKDIR=$(pwd)
@@ -204,7 +204,7 @@ echo Will build the layer in working directory: $LAYER_WORKDIR
 
 # We need a dummy package.json file, otherwise npm would think we want to install @instana/aws-lambda into
 # packages/aws-lambda/node_modules.
-cat <<EOF >> package.json
+cat <<EOF >>package.json
 {
   "private":true
 }
@@ -225,7 +225,7 @@ if [[ $BUILD_LAYER_WITH == local ]]; then
   echo "step 3/9: building local(!) packages for experimental layer"
 
   # Move up to packages directory
-  pushd ../../../.. > /dev/null
+  pushd ../../../.. >/dev/null
 
   echo "Building local tar.gz for @instana/core."
   cd core
@@ -244,9 +244,9 @@ if [[ $BUILD_LAYER_WITH == local ]]; then
 
   if [[ -n $REBUILD_LAMBDA_EXTENSION ]]; then
     echo "Rebuilding Lambda extension from local sources for @instana/aws-lambda."
-    pushd ../../../lambda-extension > /dev/null
+    pushd ../../../lambda-extension >/dev/null
     make build
-    popd > /dev/null
+    popd >/dev/null
     cp ../../../lambda-extension/_build/extensions/$LAMBDA_ARCHITECTURE/instana-lambda-extension layer/include/$LAMBDA_ARCHITECTURE/instana-lambda-extension
   fi
 
@@ -260,7 +260,7 @@ if [[ $BUILD_LAYER_WITH == local ]]; then
   npm --loglevel=warn pack
   mv instana-aws-lambda-auto-wrap-*.tgz $LAYER_WORKDIR/instana-aws-lambda-auto-wrap.tgz
 
-  popd > /dev/null
+  popd >/dev/null
 
   # Install locally built packages (basically extracting them into node_modules) to prepare the structure that is
   # expected from an AWS Node.js Lambda layer.
@@ -300,7 +300,7 @@ cp ../../../aws-lambda-auto-wrap/src/utils.js nodejs/node_modules/instana-aws-la
 echo "step 5/9: creating local zip file with layer contents"
 zip -qr $ZIP_PREFIX .
 mv $ZIP_NAME ..
-popd > /dev/null
+popd >/dev/null
 
 export AWS_PAGER=""
 export AWS_MAX_ATTEMPTS=$AWS_CLI_RETRY_MAX_ATTEMPTS
@@ -309,7 +309,6 @@ BUILD_SHOULD_FAIL=0
 
 if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
   echo "step 6/9: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to specifed regions"
-
 
   for region in "${REGIONS[@]}"; do
     if [[ "$SKIPPED_REGIONS" == *"$region"* ]]; then
@@ -338,20 +337,20 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
 
     # See https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html for documentation.
     # NOTE: --compatible-architectures $LAMBDA_ARCHITECTURE is not working in all regions.
-    lambda_layer_version=$( \
+    lambda_layer_version=$(
       aws \
-      --region $region  \
-      $aws_cli_timeout_options \
-      lambda \
+        --region $region \
+        $aws_cli_timeout_options \
+        lambda \
         publish-layer-version \
         --layer-name $LAYER_NAME \
         --description "Provides Instana tracing and monitoring for AWS Lambdas (@instana/aws-lambda@$VERSION)" \
         --license-info $LICENSE \
         --zip-file fileb://$ZIP_NAME \
         --output json \
-        --compatible-runtimes $SUPPORTED_RUNTIMES \
-        | jq '.Version' \
-    ) || true  # NOTE: If the upload fails, the bash script should not fail.
+        --compatible-runtimes $SUPPORTED_RUNTIMES |
+        jq '.Version'
+    ) || true # NOTE: If the upload fails, the bash script should not fail.
 
     if [[ -z $lambda_layer_version ]] || [[ ! $lambda_layer_version =~ ^[0-9]+$ ]]; then
       echo "   + ERROR: Failed to publish layer in region $region, continuing to the next region."
@@ -364,10 +363,10 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
     if [[ $lambda_layer_version =~ ^[0-9]+$ ]]; then
       echo "   + setting required permission on Lambda layer $LAYER_NAME / version $lambda_layer_version in region $region"
       aws \
-      --region $region \
-      $aws_cli_timeout_options \
-      lambda \
-      add-layer-version-permission \
+        --region $region \
+        $aws_cli_timeout_options \
+        lambda \
+        add-layer-version-permission \
         --layer-name $LAYER_NAME \
         --version-number $lambda_layer_version \
         --statement-id public-permission-all-accounts \
@@ -377,17 +376,17 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
     else
       echo "   + WARNING: Lambda layer version $lambda_layer_version does not seem to be numeric, will not set permissions in region $region"
     fi
-  done <<< "$REGIONS"
+  done <<<"$REGIONS"
 else
   echo "step 6/9: publishing AWS Lambda layer $LAYER_NAME (skipping)"
 fi
 
-  # NOTE: We currently build and publish only x86-based images. 
-  # Support for ARM-based images is not yet added.(TODO: INSTA-36216)
+# NOTE: We currently build and publish only x86-based images.
+# Support for ARM-based images is not yet added.(TODO: INSTA-36216)
 if [[ -z $SKIP_DOCKER_IMAGE ]]; then
   echo "Step 7/9: Building Docker image for Lambda layer targeting Node.js version $NODEJS_DEV_VERSION"
 
-# Build the Docker image for the specified Node.js version
+  # Build the Docker image for the specified Node.js version
   docker build --build-arg NODEJS_VERSION=$NODEJS_DEV_VERSION . -t "$DOCKER_IMAGE_NAME:$VERSION"
 
   # NOTE: serverless/ci/pipeline.yaml passes PACKAGE_VERSION=1 for 1.x branch
