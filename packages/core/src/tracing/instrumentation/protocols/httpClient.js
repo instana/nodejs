@@ -264,7 +264,10 @@ function instrument(coreModule, forceHttps) {
         // example is a case that triggers a synchronous exception.
         span.data.http.url = completeCallUrl;
 
-        span.data.http.error = e ? e.message : '';
+        const errorValue = e ? e.message : '';
+        const key = 'http';
+
+        span.data[key].error = errorValue;
         span.d = Date.now() - span.ts;
         span.ec = 1;
         span.transmit();
@@ -312,7 +315,10 @@ function instrument(coreModule, forceHttps) {
           method: clientRequest.method,
           url: completeCallUrl
         };
-        span.data.http.error = errorMessage;
+        const errorValue = errorMessage;
+        const key = 'http';
+
+        span.data[key].error = errorValue;
         span.d = Date.now() - span.ts;
         span.ec = 1;
         span.transmit();

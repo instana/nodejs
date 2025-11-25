@@ -116,7 +116,9 @@ function modifyArgs(name, originalArgs, span) {
         } else {
           span.ec = 1;
           if (errorMessage) {
-            span.data.rpc.error = errorMessage;
+            const errorValue = errorMessage;
+            const key = 'rpc';
+            span.data[key].error = errorValue;
           }
         }
       }
@@ -345,7 +347,9 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
           if (err) {
             span.ec = 1;
             if (err.message || err.details) {
-              span.data.rpc.error = err.message || err.details;
+              const errorValue = err.message || err.details;
+              const key = 'rpc';
+              span.data[key].error = errorValue;
             }
           }
           span.d = Date.now() - span.ts;
@@ -370,7 +374,9 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
         call.on('error', err => {
           span.ec = 1;
           if (err.message || err.details) {
-            span.data.rpc.error = err.message || err.details;
+            const errorValue = err.message || err.details;
+            const key = 'rpc';
+            span.data[key].error = errorValue;
           }
         });
 
@@ -432,7 +438,9 @@ function instrumentedClientMethod(
         } else {
           span.ec = 1;
           if (errorMessage) {
-            span.data.rpc.error = errorMessage;
+            const errorValue = errorMessage;
+            const key = 'rpc';
+            span.data[key].error = errorValue;
           }
         }
         span.transmit();

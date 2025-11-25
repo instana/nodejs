@@ -184,7 +184,9 @@ function instrument() {
         })
         .catch(err => {
           span.ec = 1;
-          span.data.http.error = err.message;
+          const errorValue = err.message;
+          const key = 'http';
+          span.data[key].error = errorValue;
         })
         .finally(() => {
           span.d = Date.now() - span.ts;
