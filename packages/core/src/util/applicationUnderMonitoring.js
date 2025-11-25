@@ -187,20 +187,13 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
       }
     }
 
-    try {
-      // The collector may be preloaded via --require in ESM apps or frameworks (e.g., react-scripts),
-      // which is not supported and can happen in auto-tracing setups.
-      // In such cases, require.main or process.argv[1] might be missing or invalid,
-      // so mainModule.filename can be undefined.
-      if (!mainModule?.filename) {
-        logger.warn('Application entrypoint could not be identified. Package.json resolution will be skipped.');
-        return process.nextTick(cb);
-      }
-      startDirectory = path.dirname(mainModule.filename);
-    } catch (e) {
-      logger.warn(`Unable to resolve application entrypoint ${e.message}. Package.json resolution will be skipped.`);
+    // In case if require.main or process.argv[1] might be missing or invalid,
+    // so mainModule.filename can be undefined.
+    if (!mainModule?.filename) {
+      logger.warn('Application entrypoint could not be identified. Package.json resolution will be skipped.');
       return process.nextTick(cb);
     }
+    startDirectory = path.dirname(mainModule.filename);
   }
 
   searchForPackageJsonInDirectoryTreeUpwards(startDirectory, (err, main) => {
