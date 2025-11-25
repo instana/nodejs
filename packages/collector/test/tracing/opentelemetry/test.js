@@ -53,7 +53,13 @@ mochaSuiteFn('opentelemetry tests', function () {
         if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS === 'true') {
           return;
         }
+
         execSync('npm install --no-save --no-package-lock --prefix ./ ./core.tgz', {
+          cwd: __dirname,
+          stdio: 'inherit'
+        });
+
+        execSync('npm install --no-save --no-package-lock --prefix ./ ./shared-metrics.tgz', {
           cwd: __dirname,
           stdio: 'inherit'
         });

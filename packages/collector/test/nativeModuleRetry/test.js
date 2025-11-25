@@ -94,42 +94,20 @@ mochaSuiteFn('retry loading native addons', function () {
       before(async () => {
         execSync(`rm -rf ${tmpFolder}`, { cwd: __dirname, stdio: 'inherit' });
         execSync(`mkdir -p ${tmpFolder}`, { cwd: __dirname, stdio: 'inherit' });
-
         execSync(`cp app.js ${tmpFolder}/`, { cwd: __dirname, stdio: 'inherit' });
 
         // eslint-disable-next-line no-console
         console.log('Running npm install in', tmpFolder);
         execSync('rm -rf node_modules', { cwd: tmpFolder, stdio: 'inherit' });
 
-        const copath = path.join(__dirname, '..', '..', '..', 'collector');
-        runCommandSync('npm pack', copath);
+        execSync('./preinstall.sh', { cwd: __dirname, stdio: 'inherit' });
 
-        const coversion = require(`${copath}/package.json`).version;
+        runCommandSync(`npm install --no-save --no-package-lock --prefix ./ ${__dirname}/core.tgz`, tmpFolder);
         runCommandSync(
-          `npm install --production --no-optional --no-audit ${copath}/instana-collector-${coversion}.tgz`,
+          `npm install --no-save --no-package-lock --prefix ./ ${__dirname}/shared-metrics.tgz`,
           tmpFolder
         );
-
-        // NOTE: Override the core npm dependency with the local code base
-        const corepath = path.join(__dirname, '..', '..', '..', 'core');
-        runCommandSync('npm pack', corepath);
-
-        const coreversion = require(`${copath}/package.json`).version;
-        runCommandSync(
-          `npm install  --prefix ./ --production --no-optional --no-audit ${corepath}/instana-core-${coreversion}.tgz`,
-          tmpFolder
-        );
-
-        // Install the shared metrics module
-        const sharedMetricsPath = path.join(__dirname, '..', '..', '..', 'shared-metrics');
-        runCommandSync('npm pack', sharedMetricsPath);
-
-        const sharedMetricsVersion = require(`${copath}/package.json`).version;
-        runCommandSync(
-          // eslint-disable-next-line max-len
-          `npm install  --prefix ./ --production --no-optional --no-audit ${sharedMetricsPath}/instana-shared-metrics-${sharedMetricsVersion}.tgz`,
-          tmpFolder
-        );
+        runCommandSync(`npm install --no-save --no-package-lock --prefix ./ ${__dirname}/collector.tgz`, tmpFolder);
 
         // Remove the target c++ module
         execSync(`rm -rf node_modules/${opts.name}`, { cwd: tmpFolder, stdio: 'inherit' });
