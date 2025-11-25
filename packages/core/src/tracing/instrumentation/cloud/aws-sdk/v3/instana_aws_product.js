@@ -48,8 +48,7 @@ class InstanaAWSProduct {
   addErrorToSpan(err, span) {
     if (err) {
       span.ec = 1;
-      const spanData = span.data && span.data[this.spanName];
-      if (spanData) {
+      if (span.data?.[this.spanName]) {
         span.data[this.spanName].error = err.message || err.code || JSON.stringify(err);
       }
     }

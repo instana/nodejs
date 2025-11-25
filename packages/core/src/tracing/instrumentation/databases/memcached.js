@@ -136,8 +136,7 @@ function finishSpan(err, span) {
 function addErrorToSpan(err, span) {
   if (err) {
     span.ec = 1;
-    const spanData = span.data && span.data[SPAN_NAME];
-    if (spanData) {
+    if (span.data?.[SPAN_NAME]) {
       span.data.memcached.error = err.message || err.code || JSON.stringify(err);
     }
   }
