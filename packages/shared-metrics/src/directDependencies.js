@@ -11,6 +11,7 @@ let logger;
 /**
  * @param {import('@instana/core/src/config').InstanaConfig} config
  */
+// eslint-disable-next-line no-unused-vars
 exports.init = function init(config) {
   logger = config.logger;
 };
