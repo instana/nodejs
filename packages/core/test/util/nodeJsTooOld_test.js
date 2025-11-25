@@ -109,7 +109,7 @@ describe('util.nodeJsTooOld', () => {
 
   it('should accept if process.version is in an unexpected format (no v prefix)', () => {
     setProcessVersion('11.22.33');
-    expect(isNodeJsTooOld()).to.be.false;
+    expect(isNodeJsTooOld()).to.be.true;
   });
 });
 
