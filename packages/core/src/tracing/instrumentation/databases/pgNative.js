@@ -27,6 +27,8 @@ const connectionUriRegex =
 exports.spanName = 'postgres';
 exports.batchable = true;
 
+const technology = 'pg';
+
 exports.init = function init() {
   hook.onModuleLoad('pg-native', instrumentPgNative);
 };
@@ -197,9 +199,8 @@ function startSpanBeforeSync(ctx, originalFn, originalArgs, statement, stackTrac
 function finishSpan(error, span) {
   if (error) {
     span.ec = 1;
-    const errorValue = tracingUtil.getErrorDetails(error);
-    const key = 'pg';
-    span.data[key].error = errorValue;
+    const errorDetails = tracingUtil.getErrorDetails(error);
+    span.data[technology].error = errorDetails;
   }
 
   span.d = Date.now() - span.ts;

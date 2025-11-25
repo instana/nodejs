@@ -15,6 +15,7 @@ const cls = require('../../cls');
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
 let logger;
 let isActive = false;
+const technology = 'kafka';
 
 exports.init = function init(config) {
   logger = config.logger;
@@ -105,9 +106,8 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
       })
       .catch(error => {
         span.ec = 1;
-        const errorValue = error.message;
-        const key = 'kafka';
-        span.data[key].error = errorValue;
+        const errorDetails = error.message;
+        span.data[technology].error = errorDetails;
         span.d = Date.now() - span.ts;
         span.transmit();
         throw error;
@@ -186,9 +186,8 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
       })
       .catch(error => {
         span.ec = 1;
-        const errorValue = error.message;
-        const key = 'kafka';
-        span.data[key].error = errorValue;
+        const errorDetails = error.message;
+        span.data[technology].error = errorDetails;
         span.d = Date.now() - span.ts;
         span.transmit();
         throw error;

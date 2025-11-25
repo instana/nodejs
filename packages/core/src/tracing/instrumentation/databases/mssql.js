@@ -16,6 +16,8 @@ let isActive = false;
 exports.spanName = 'mssql';
 exports.batchable = true;
 
+const technology = exports.spanName;
+
 exports.init = function init() {
   hook.onModuleLoad('mssql', instrumentMssql);
 };
@@ -161,9 +163,8 @@ function shimBeginTransaction(originalFunction) {
 function finishSpan(error, span) {
   if (error) {
     span.ec = 1;
-    const errorValue = tracingUtil.getErrorDetails(error);
-    const key = 'mssql';
-    span.data[key].error = errorValue;
+    const errorDetails = tracingUtil.getErrorDetails(error);
+    span.data[technology].error = errorDetails;
   }
 
   span.d = Date.now() - span.ts;

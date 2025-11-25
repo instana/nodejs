@@ -15,6 +15,8 @@ const cls = require('../../cls');
 
 let active = false;
 
+const technology = 'http';
+
 exports.activate = function activate() {
   active = true;
 };
@@ -116,9 +118,8 @@ function annotateHttpEntrySpanWithError(err) {
     return;
   }
 
-  const errorValue = tracingUtil.getErrorDetails(err);
-  const key = 'http';
-  span.data[key].error = errorValue;
+  const errorDetails = tracingUtil.getErrorDetails(err);
+  span.data[technology].error = errorDetails;
 }
 
 function shimHandlerRegistration(original) {

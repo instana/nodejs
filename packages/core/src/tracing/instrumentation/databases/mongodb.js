@@ -32,6 +32,8 @@ const commands = [
 exports.spanName = 'mongo';
 exports.batchable = true;
 
+const technology = exports.spanName;
+
 exports.init = function init() {
   // unified topology layer
   hook.onFileLoad(/\/mongodb\/lib\/cmap\/connection\.js/, instrumentCmapConnection);
@@ -438,9 +440,8 @@ function createWrappedCallback(span, originalCallback) {
   return cls.ns.bind(function (error) {
     if (error) {
       span.ec = 1;
-      const errorValue = tracingUtil.getErrorDetails(error);
-      const key = 'mongo';
-      span.data[key].error = errorValue;
+      const errorDetails = tracingUtil.getErrorDetails(error);
+      span.data[technology].error = errorDetails;
     }
 
     span.d = Date.now() - span.ts;
@@ -468,9 +469,8 @@ function handleCallbackOrPromise(ctx, originalArgs, originalFunction, span) {
       })
       .catch(err => {
         span.ec = 1;
-        const errorValue = tracingUtil.getErrorDetails(err);
-        const key = 'mongo';
-        span.data[key].error = errorValue;
+        const errorDetails = tracingUtil.getErrorDetails(err);
+        span.data[technology].error = errorDetails;
         span.d = Date.now() - span.ts;
         span.transmit();
         return err;

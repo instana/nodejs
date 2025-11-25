@@ -8,6 +8,8 @@ const shimmer = require('../../../../shimmer');
 const hook = require('../../../../../util/hook');
 const cls = require('../../../../cls');
 
+const technology = 'sqs';
+
 function init() {
   hook.onModuleLoad('sqs-consumer', instrument);
 }
@@ -30,9 +32,8 @@ function instrument(SQSConsumer) {
             })
             .catch(err => {
               span.ec = 1;
-              const errorValue = err.message || err.code || JSON.stringify(err);
-              const key = 'sqs';
-              span.data[key].error = errorValue;
+              const errorDetails = err.message || err.code || JSON.stringify(err);
+              span.data[technology].error = errorDetails;
               span.d = Date.now() - span.ts;
               span.transmitManual();
             });
@@ -64,9 +65,8 @@ function instrument(SQSConsumer) {
             })
             .catch(err => {
               span.ec = 1;
-              const errorValue = err.message || err.code || JSON.stringify(err);
-              const key = 'sqs';
-              span.data[key].error = errorValue;
+              const errorDetails = err.message || err.code || JSON.stringify(err);
+              span.data[technology].error = errorDetails;
               span.d = Date.now() - span.ts;
               span.transmitManual();
             });

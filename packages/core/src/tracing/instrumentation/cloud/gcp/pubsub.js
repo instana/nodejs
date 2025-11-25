@@ -22,6 +22,8 @@ const subscriptionRegex = /^projects\/([^/]+)\/subscriptions\/(.+)$/;
 let logger;
 let isActive = false;
 
+const technology = 'gcps';
+
 exports.init = function init(config) {
   logger = config.logger;
 
@@ -255,13 +257,11 @@ function addErrorToSpan(err, span) {
   if (err) {
     span.ec = 1;
     if (err.message) {
-      const errorValue = err.message;
-      const key = 'gcps';
-      span.data[key].error = errorValue;
+      const errorDetails = err.message;
+      span.data[technology].error = errorDetails;
     } else if (typeof err === 'string') {
-      const errorValue = err;
-      const key = 'gcps';
-      span.data[key].error = errorValue;
+      const errorDetails = err;
+      span.data[technology].error = errorDetails;
     }
   }
 }

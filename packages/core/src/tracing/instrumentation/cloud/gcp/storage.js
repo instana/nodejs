@@ -14,6 +14,7 @@ const hook = require('../../../../util/hook');
 const tracingUtil = require('../../../tracingUtil');
 
 let isActive = false;
+const technology = 'gcs';
 
 exports.init = function init() {
   hook.onModuleLoad('@google-cloud/storage', instrument);
@@ -458,9 +459,8 @@ function instrumentedCreateStream(operation, bindEvent, finalEvent, ctx, origina
 function finishSpan(error, result, span, extractorPost) {
   if (error) {
     span.ec = 1;
-    const errorValue = tracingUtil.getErrorDetails(error);
-    const key = 'gcs';
-    span.data[key].error = errorValue;
+    const errorDetails = tracingUtil.getErrorDetails(error);
+    span.data[technology].error = errorDetails;
   }
 
   if (extractorPost) {

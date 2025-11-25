@@ -37,6 +37,8 @@ let logger;
 
 let isActive = false;
 
+const technology = 'sqs';
+
 exports.init = function init(config) {
   logger = config.logger;
 
@@ -392,9 +394,8 @@ function finishSpan(err, data, span) {
 function addErrorToSpan(err, span) {
   if (err) {
     span.ec = 1;
-    const errorValue = err.message || err.code || JSON.stringify(err);
-    const key = 'sqs';
-    span.data[key].error = errorValue;
+    const errorDetails = err.message || err.code || JSON.stringify(err);
+    span.data[technology].error = errorDetails;
   }
 }
 

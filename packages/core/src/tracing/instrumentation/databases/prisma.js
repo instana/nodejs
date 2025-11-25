@@ -14,6 +14,7 @@ let logger;
 let isActive = false;
 
 const providerAndDataSourceUriMap = new WeakMap();
+const technology = 'prisma';
 
 exports.init = function init(config) {
   logger = config.logger;
@@ -221,9 +222,8 @@ function redactPasswordFromMsSQLUrl(url) {
 function finishSpan(error, span) {
   if (error) {
     span.ec = 1;
-    const errorValue = getErrorDetails(error);
-    const key = 'prisma';
-    span.data[key].error = errorValue;
+    const errorDetails = getErrorDetails(error);
+    span.data[technology].error = errorDetails;
   }
 
   span.d = Date.now() - span.ts;

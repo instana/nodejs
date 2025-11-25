@@ -15,6 +15,8 @@ let isActive = false;
 
 exports.spanName = 'azstorage';
 
+const technology = exports.spanName;
+
 exports.init = function init() {
   // Starting from v12.28.0, the package has been migrated to ESM.
   // To support ESM-based applications, we now utilize the IITM hook.
@@ -105,9 +107,8 @@ function instrumentingOperation({
 function finishSpan(error, span) {
   if (error) {
     span.ec = 1;
-    const errorValue = tracingUtil.getErrorDetails(error);
-    const key = 'azstorage';
-    span.data[key].error = errorValue;
+    const errorDetails = tracingUtil.getErrorDetails(error);
+    span.data[technology].error = errorDetails;
   }
   span.d = Date.now() - span.ts;
   span.transmit();

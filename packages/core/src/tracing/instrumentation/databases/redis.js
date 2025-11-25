@@ -17,6 +17,8 @@ let isActive = false;
 exports.spanName = 'redis';
 exports.batchable = true;
 
+const technology = exports.spanName;
+
 let isRedisClientInstrumented = false;
 
 exports.activate = function activate() {
@@ -365,9 +367,8 @@ function instrumentCommand(original, command, address, cbStyle) {
 
         if (error) {
           span.ec = 1;
-          const errorValue = tracingUtil.getErrorDetails(error);
-          const key = 'redis';
-          span.data[key].error = errorValue;
+          const errorDetails = tracingUtil.getErrorDetails(error);
+          span.data[technology].error = errorDetails;
         }
 
         span.transmit();
@@ -504,23 +505,22 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
       if (err) {
         span.ec = 1;
 
-        const key = 'redis';
-        let errorValue;
+        let errorDetails;
 
         if (err.message) {
-          errorValue = err.message;
+          errorDetails = err.message;
         } else if (Array.isArray(err) && err.length) {
-          errorValue = err[0].message;
+          errorDetails = err[0].message;
         } else {
-          errorValue = 'Unknown error';
+          errorDetails = 'Unknown error';
         }
 
         // v3 = provides sub errors
         if (err.errors && err.errors.length) {
-          errorValue = err.errors.map(subErr => subErr.message).join('\n');
+          errorDetails = err.errors.map(subErr => subErr.message).join('\n');
         }
 
-        span.data[key].error = errorValue;
+        span.data[technology].error = errorDetails;
       }
 
       span.transmit();
@@ -540,9 +540,8 @@ function buildSubCommandCallback(span, userProvidedCallback) {
       span.ec++;
 
       if (!span.data.redis.error) {
-        const errorValue = tracingUtil.getErrorDetails(err);
-        const key = 'redis';
-        span.data[key].error = errorValue;
+        const errorDetails = tracingUtil.getErrorDetails(err);
+        span.data[technology].error = errorDetails;
       }
     }
 

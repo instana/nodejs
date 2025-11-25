@@ -14,6 +14,7 @@ const cls = require('../../cls');
 
 let logger;
 let isActive = false;
+const technology = 'kafka';
 
 // FYI: officially deprecated. No release since 4 years. But still very
 //      high usage on npm trends. We will drop it in any upcoming major release.
@@ -81,9 +82,8 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
       cls.ns.bind(function onSendCompleted(err) {
         if (err) {
           span.ec = 1;
-          const errorValue = err.message;
-          const key = 'kafka';
-          span.data[key].error = errorValue;
+          const errorDetails = err.message;
+          span.data[technology].error = errorDetails;
         }
 
         span.d = Date.now() - span.ts;

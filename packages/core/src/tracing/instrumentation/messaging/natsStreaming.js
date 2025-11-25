@@ -17,6 +17,7 @@ const cls = require('../../cls');
 let isActive = false;
 let clientHasBeenInstrumented = false;
 let logger;
+const technology = 'nats';
 
 exports.init = function init(config) {
   logger = config.logger;
@@ -201,13 +202,11 @@ function addErrorToSpan(err, span) {
       errMsg = err;
     }
     if (errMsg && span.data.nats.error) {
-      const errorValue = `${span.data.nats.error}, ${errMsg}`;
-      const key = 'nats';
-      span.data[key].error = errorValue;
+      const errorDetails = `${span.data.nats.error}, ${errMsg}`;
+      span.data[technology].error = errorDetails;
     } else if (errMsg) {
-      const errorValue = errMsg;
-      const key = 'nats';
-      span.data[key].error = errorValue;
+      const errorDetails = errMsg;
+      span.data[technology].error = errorDetails;
     }
   }
 }

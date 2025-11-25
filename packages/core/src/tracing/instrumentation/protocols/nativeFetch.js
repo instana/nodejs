@@ -21,6 +21,7 @@ const originalFetch = global.fetch;
 
 let extraHttpHeadersToCapture;
 let isActive = false;
+const technology = 'http';
 
 // This determines whether we need to apply a workaround for a bug in Node.js fetch implementation (or rather, the
 // underlying dependency undici).
@@ -184,9 +185,8 @@ function instrument() {
         })
         .catch(err => {
           span.ec = 1;
-          const errorValue = err.message;
-          const key = 'http';
-          span.data[key].error = errorValue;
+          const errorDetails = err.message;
+          span.data[technology].error = errorDetails;
         })
         .finally(() => {
           span.d = Date.now() - span.ts;

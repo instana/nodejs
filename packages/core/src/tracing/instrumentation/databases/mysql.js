@@ -17,6 +17,8 @@ let isActive = false;
 exports.spanName = 'mysql';
 exports.batchable = true;
 
+const technology = exports.spanName;
+
 exports.init = function init() {
   hook.onModuleLoad('mysql', instrumentMysql);
   hook.onModuleLoad('mysql2', instrumentMysql2);
@@ -190,9 +192,8 @@ function instrumentedAccessFunction(
         })
         .catch(error => {
           span.ec = 1;
-          const errorValue = tracingUtil.getErrorDetails(error);
-          const key = 'mysql';
-          span.data[key].error = errorValue;
+          const errorDetails = tracingUtil.getErrorDetails(error);
+          span.data[technology].error = errorDetails;
 
           span.d = Date.now() - span.ts;
           span.transmit();
@@ -207,9 +208,8 @@ function instrumentedAccessFunction(
     function onResult(error) {
       if (error) {
         span.ec = 1;
-        const errorValue = tracingUtil.getErrorDetails(error);
-        const key = 'mysql';
-        span.data[key].error = errorValue;
+        const errorDetails = tracingUtil.getErrorDetails(error);
+        span.data[technology].error = errorDetails;
       }
 
       span.d = Date.now() - span.ts;

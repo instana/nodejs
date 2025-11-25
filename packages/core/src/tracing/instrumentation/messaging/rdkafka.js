@@ -16,6 +16,7 @@ let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
 
 let logger;
 let isActive = false;
+const technology = 'kafka';
 
 exports.init = function init(config) {
   logger = config.logger;
@@ -167,9 +168,8 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
 
         if (err) {
           span.ec = 1;
-          const errorValue = err.message;
-          const key = 'kafka';
-          span.data[key].error = errorValue;
+          const errorDetails = err.message;
+          span.data[technology].error = errorDetails;
         }
 
         span.transmit();
@@ -189,9 +189,8 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
       // e.g. cannot send message because format is byte
       //      "Message must be a buffer or null"
       span.ec = 1;
-      const errorValue = error.message;
-      const key = 'kafka';
-      span.data[key].error = errorValue;
+      const errorDetails = error.message;
+      span.data[technology].error = errorDetails;
 
       if (!deliveryCb) {
         span.d = Date.now() - span.ts;
@@ -309,9 +308,8 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
         delete messageData.headers;
 
         span.ec = 1;
-        const errorValue = messageData.message;
-        const key = 'kafka';
-        span.data[key].error = errorValue;
+        const errorDetails = messageData.message;
+        span.data[technology].error = errorDetails;
       }
 
       setImmediate(() => {

@@ -14,6 +14,7 @@ let isActive = false;
 const bucketLookup = {};
 
 exports.spanName = 'couchbase';
+const technology = exports.spanName;
 
 exports.activate = function activate() {
   isActive = true;
@@ -430,9 +431,8 @@ function instrumentTransactions(cluster, connectionStr) {
                     result
                       .catch(err => {
                         span.ec = 1;
-                        const errorValue = tracingUtil.getErrorDetails(err);
-                        const key = 'couchbase';
-                        span.data[key].error = errorValue;
+                        const errorDetails = tracingUtil.getErrorDetails(err);
+                        span.data[technology].error = errorDetails;
                       })
                       .finally(() => {
                         span.d = Date.now() - span.ts;
@@ -499,9 +499,8 @@ function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sql, 
             })
             .catch(err => {
               span.ec = 1;
-              const errorValue = tracingUtil.getErrorDetails(err);
-              const key = 'couchbase';
-              span.data[key].error = errorValue;
+              const errorDetails = tracingUtil.getErrorDetails(err);
+              span.data[technology].error = errorDetails;
             })
             .finally(() => {
               span.d = Date.now() - span.ts;
@@ -514,9 +513,8 @@ function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sql, 
         originalArgs[callbackIndex] = cls.ns.bind(function instanaCallback(err, result) {
           if (err) {
             span.ec = 1;
-            const errorValue = tracingUtil.getErrorDetails(err);
-            const key = 'couchbase';
-            span.data[key].error = errorValue;
+            const errorDetails = tracingUtil.getErrorDetails(err);
+            span.data[technology].error = errorDetails;
           }
 
           if (resultHandler) {

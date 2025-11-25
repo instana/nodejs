@@ -17,6 +17,8 @@ let isActive = false;
 
 exports.spanName = 'bull';
 
+const technology = exports.spanName;
+
 exports.init = function init(config) {
   logger = config.logger;
   hook.onModuleLoad('bull', instrumentBull);
@@ -326,13 +328,11 @@ function addErrorToSpan(err, span) {
   if (err) {
     span.ec = 1;
     if (err.code) {
-      const errorValue = err.code;
-      const key = 'bull';
-      span.data[key].error = errorValue;
+      const errorDetails = err.code;
+      span.data[technology].error = errorDetails;
     } else if (typeof err === 'string') {
-      const errorValue = err;
-      const key = 'bull';
-      span.data[key].error = errorValue;
+      const errorDetails = err;
+      span.data[technology].error = errorDetails;
     }
   }
 }

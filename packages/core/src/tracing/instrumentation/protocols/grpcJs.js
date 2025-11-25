@@ -13,6 +13,7 @@ const cls = require('../../cls');
 let logger;
 let Metadata;
 let isActive = false;
+const technology = 'rpc';
 
 const TYPES = {
   UNARY: 'unary',
@@ -116,9 +117,8 @@ function modifyArgs(name, originalArgs, span) {
         } else {
           span.ec = 1;
           if (errorMessage) {
-            const errorValue = errorMessage;
-            const key = 'rpc';
-            span.data[key].error = errorValue;
+            const errorDetails = errorMessage;
+            span.data[technology].error = errorDetails;
           }
         }
       }
@@ -347,9 +347,8 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
           if (err) {
             span.ec = 1;
             if (err.message || err.details) {
-              const errorValue = err.message || err.details;
-              const key = 'rpc';
-              span.data[key].error = errorValue;
+              const errorDetails = err.message || err.details;
+              span.data[technology].error = errorDetails;
             }
           }
           span.d = Date.now() - span.ts;
@@ -374,9 +373,8 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
         call.on('error', err => {
           span.ec = 1;
           if (err.message || err.details) {
-            const errorValue = err.message || err.details;
-            const key = 'rpc';
-            span.data[key].error = errorValue;
+            const errorDetails = err.message || err.details;
+            span.data[technology].error = errorDetails;
           }
         });
 
@@ -438,9 +436,8 @@ function instrumentedClientMethod(
         } else {
           span.ec = 1;
           if (errorMessage) {
-            const errorValue = errorMessage;
-            const key = 'rpc';
-            span.data[key].error = errorValue;
+            const errorDetails = errorMessage;
+            span.data[technology].error = errorDetails;
           }
         }
         span.transmit();

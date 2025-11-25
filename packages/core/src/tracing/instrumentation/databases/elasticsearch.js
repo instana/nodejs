@@ -20,6 +20,7 @@ let isActive = false;
 
 exports.spanName = 'elasticsearch';
 exports.batchable = true;
+const technology = exports.spanName;
 
 exports.init = function init(config) {
   logger = config.logger;
@@ -200,9 +201,8 @@ function onError(span, error) {
   span.d = Date.now() - span.ts;
   span.ec = 1;
   if (error) {
-    const errorValue = tracingUtil.getErrorDetails(error);
-    const key = 'elasticsearch';
-    span.data[key].error = errorValue;
+    const errorDetails = tracingUtil.getErrorDetails(error);
+    span.data[technology].error = errorDetails;
   }
   if (error.meta && error.meta.meta) {
     getConnectionDetailsFromResultMeta(span, error.meta);
