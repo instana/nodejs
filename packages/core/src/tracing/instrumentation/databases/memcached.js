@@ -137,7 +137,7 @@ function addErrorToSpan(err, span) {
   if (err) {
     span.ec = 1;
     if (span.data?.[SPAN_NAME]) {
-      span.data.memcached.error = err.message || err.code || JSON.stringify(err);
+      span.data[SPAN_NAME].error = err.message || err.code || JSON.stringify(err);
     }
   }
 }
