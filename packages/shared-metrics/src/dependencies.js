@@ -36,48 +36,37 @@ const preliminaryPayload = {};
 // @ts-ignore: Cannot redeclare exported variable 'currentPayload'
 exports.currentPayload = {};
 
-exports.MAX_ATTEMPTS = 20;
-
-const DELAY = 1000;
-let attempts = 0;
-
-exports.activate = function activate() {
-  attempts++;
-
+// @ts-ignore
+exports.activate = function activate(config, packageJsonObj) {
   const started = Date.now();
-  util.applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, mainPackageJsonPath) => {
-    if (err) {
-      return logger.warn(`Failed to determine main package.json. Reason: ${err?.message}, ${err?.stack}`);
-    } else if (!mainPackageJsonPath && attempts < exports.MAX_ATTEMPTS) {
-      logger.debug(`Main package.json could not be found at ${mainPackageJsonPath}. Will try again later.`);
-      setTimeout(exports.activate, DELAY).unref();
-      return;
-    } else if (!mainPackageJsonPath) {
-      logger.info(
-        `Main package.json could not be found after ${attempts} retries. Looking for node_modules folder now.`
-      );
-      util.applicationUnderMonitoring.findNodeModulesFolder((errNodeModules, nodeModulesFolder) => {
-        if (errNodeModules) {
-          return logger.warn(`Failed to determine node_modules folder. Reason: ${err?.message}, ${err?.stack}`);
-        } else if (!nodeModulesFolder) {
-          return logger.warn(
-            'Neither the package.json file nor the node_modules folder could be found. Stopping dependency analysis.'
-          );
-        }
 
-        addAllDependencies(path.join(nodeModulesFolder), started, null);
-      });
-      return;
-    }
+  if (!packageJsonObj || !packageJsonObj.file) {
+    util.applicationUnderMonitoring.findNodeModulesFolder((errNodeModules, nodeModulesFolder) => {
+      if (errNodeModules) {
+        return logger.warn(
+          `Failed to determine node_modules folder. Reason: ${errNodeModules?.message}, ${errNodeModules?.stack}`
+        );
+      } else if (!nodeModulesFolder) {
+        return logger.warn(
+          'Neither the package.json file nor the node_modules folder could be found. Stopping dependency analysis.'
+        );
+      }
 
-    let dependencyDir;
-    if (util.applicationUnderMonitoring.isAppInstalledIntoNodeModules()) {
-      dependencyDir = path.join(path.dirname(mainPackageJsonPath), '..', '..', 'node_modules');
-    } else {
-      dependencyDir = path.join(path.dirname(mainPackageJsonPath), 'node_modules');
-    }
-    addAllDependencies(dependencyDir, started, mainPackageJsonPath);
-  });
+      addAllDependencies(path.join(nodeModulesFolder), started, null);
+    });
+
+    return;
+  }
+
+  let dependencyDir;
+
+  if (util.applicationUnderMonitoring.isAppInstalledIntoNodeModules()) {
+    dependencyDir = path.join(path.dirname(packageJsonObj.path), '..', '..', 'node_modules');
+  } else {
+    dependencyDir = path.join(path.dirname(packageJsonObj.path), 'node_modules');
+  }
+
+  addAllDependencies(dependencyDir, started, packageJsonObj.path);
 };
 
 /**

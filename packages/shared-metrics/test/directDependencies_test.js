@@ -6,6 +6,8 @@
 'use strict';
 
 const expect = require('chai').expect;
+const path = require('path');
+const fs = require('fs');
 
 const testUtils = require('@instana/core/test/test_util');
 const directDependencies = require('../src/directDependencies');
@@ -29,11 +31,14 @@ describe('metrics.directDependencies', function () {
   });
 
   it('should provide the set of dependencies with versions', () => {
-    directDependencies.activate();
+    // We simply simulate that mocha is our app. It does not matter which package.json we use as long as it has
+    // dependencies.
+    const anyPackageJsonPath = path.join(path.dirname(require.resolve('mocha')), 'package.json');
+    const anyPackageJsonFile = JSON.parse(fs.readFileSync(anyPackageJsonPath, 'utf8'));
+
+    directDependencies.activate({}, { file: anyPackageJsonFile, path: anyPackageJsonPath });
 
     return testUtils.retry(() => {
-      // Mocha is the main module when running the tests and direct dependencies are evaluated as the content of the
-      // the main modules accompanying package.json file. Thus testing against Mocha dependencies here.
       const deps = directDependencies.currentPayload.dependencies;
       expect(deps).to.exist;
       expect(deps['browser-stdout']).to.equal('1.3.1');

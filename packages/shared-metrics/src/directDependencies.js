@@ -5,7 +5,7 @@
 
 'use strict';
 
-const { util, uninstrumentedFs: fs } = require('@instana/core');
+const { uninstrumentedFs: fs } = require('@instana/core');
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
 let logger;
@@ -26,56 +26,25 @@ exports.currentPayload = {
   optionalDependencies: {}
 };
 
-const MAX_ATTEMPTS = 20;
-const DELAY = 1000;
-let attempts = 0;
+exports.deactivate = function deactivate() {};
 
-exports.deactivate = function deactivate() {
-  attempts = 0;
-};
-
-exports.activate = function activate() {
-  attempts++;
-  util.applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, packageJsonPath) => {
-    if (err) {
-      return logger.info(
-        `Failed to determine main package.json for analysis of direct dependencies.
-        Reason: ${err?.message} ${err?.stack}`
-      );
-    } else if (!packageJsonPath && attempts < MAX_ATTEMPTS) {
-      setTimeout(exports.activate, DELAY).unref();
-      return;
-    } else if (!packageJsonPath) {
-      // final attempt failed, ignore silently
-      return;
-    }
-
-    addDirectDependenciesFromMainPackageJson(packageJsonPath);
-  });
-};
-
-/**
- * @param {string} packageJsonPath
- */
-function addDirectDependenciesFromMainPackageJson(packageJsonPath) {
-  logger.debug(`addDirectDependenciesFromMainPackageJson: ${packageJsonPath}`);
+// @ts-ignore
+exports.activate = function activate(config, packageJsonObj) {
+  if (!packageJsonObj || !packageJsonObj.file) {
+    return;
+  }
 
   const started = Date.now();
-  fs.readFile(packageJsonPath, { encoding: 'utf8' }, (err, contents) => {
-    if (err) {
-      return logger.debug(`Failed to analyze direct dependencies dependency due to: ${err?.message}`);
-    }
+  const packageJson = packageJsonObj.file;
 
-    try {
-      const pckg = JSON.parse(contents);
-      exports.currentPayload.dependencies = pckg.dependencies || {};
-      exports.currentPayload.peerDependencies = pckg.peerDependencies || {};
-      exports.currentPayload.optionalDependencies = pckg.optionalDependencies || {};
-      exports.currentPayload[pckg.name] = pckg.version;
-      logger.debug(`Collection of direct dependencies took ${Date.now() - started} ms.`);
-    } catch (subErr) {
-      logger.debug(`Collection of direct dependencies took ${Date.now() - started} ms.`);
-      return logger.debug(`Failed to parse package.json ${packageJsonPath} dependency due to: ${subErr?.message}`);
-    }
-  });
-}
+  try {
+    exports.currentPayload.dependencies = packageJson.dependencies || {};
+    exports.currentPayload.peerDependencies = packageJson.peerDependencies || {};
+    exports.currentPayload.optionalDependencies = packageJson.optionalDependencies || {};
+    exports.currentPayload[packageJson.name] = packageJson.version;
+    logger.debug(`Collection of direct dependencies took ${Date.now() - started} ms.`);
+  } catch (subErr) {
+    logger.debug(`Collection of direct dependencies took ${Date.now() - started} ms.`);
+    return logger.debug(`Failed to parse package.json dependency due to: ${subErr?.message}`);
+  }
+};
