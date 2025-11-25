@@ -50,7 +50,7 @@ class InstanaAWSProduct {
       span.ec = 1;
       const spanData = span.data && span.data[this.spanName];
       if (spanData) {
-        spanData.error = err.message || err.code || JSON.stringify(err);
+        span.data[this.spanName].error = err.message || err.code || JSON.stringify(err);
       }
     }
   }
