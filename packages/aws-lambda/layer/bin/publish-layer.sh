@@ -160,7 +160,7 @@ if [[ -z $NO_PROMPT ]]; then
 fi
 
 # List of supported AWS Lambda Node.js runtimes
-SUPPORTED_RUNTIMES="nodejs18.x nodejs20.x nodejs22.x"
+SUPPORTED_RUNTIMES="nodejs18.x nodejs20.x nodejs22.x nodejs24.x"
 
 # The Node.js version to use for building the Docker image.
 # This should be aligned with one of the supported runtimes above.
