@@ -6,11 +6,10 @@
 'use strict';
 
 const expect = require('chai').expect;
-const sinon = require('sinon');
+const fs = require('fs');
 const path = require('path');
 const testUtils = require('../../core/test/test_util');
 const name = require('../src/name');
-const { applicationUnderMonitoring } = require('@instana/core').util;
 
 describe('metrics.name', () => {
   before(() => {
@@ -19,7 +18,6 @@ describe('metrics.name', () => {
 
   afterEach(() => {
     name.reset();
-    applicationUnderMonitoring.reset();
   });
 
   it('should export a name payload prefix', () => {
@@ -28,7 +26,10 @@ describe('metrics.name', () => {
 
   describe('when the package.json can be found', function () {
     it('it should extract the package.json name', async () => {
-      name.activate();
+      const anyPackageJsonPath = path.join(path.dirname(require.resolve('mocha')), 'package.json');
+      const anyPackageJsonFile = JSON.parse(fs.readFileSync(anyPackageJsonPath, 'utf8'));
+
+      name.activate({}, { file: anyPackageJsonFile, path: anyPackageJsonPath });
 
       return testUtils.retry(() => {
         // Mocha is used to execute the tests via the mocha executable.
@@ -39,69 +40,11 @@ describe('metrics.name', () => {
   });
 
   describe('when the package.json cannot be found', function () {
-    before(() => {
-      sinon.stub(applicationUnderMonitoring, 'getMainPackageJsonStartingAtMainModule').callsFake(cb => {
-        cb(null, null);
-      });
-    });
-
-    after(() => {
-      sinon.restore();
-    });
-
     it('it should use the main module name', async () => {
-      name.MAX_ATTEMPTS = 5;
-      name.DELAY = 50;
-      name.activate();
+      name.activate({}, { file: null, path: null });
 
       return testUtils.retry(() => {
         expect(name.currentPayload).to.contain('node_modules/mocha/bin/mocha');
-      });
-    });
-  });
-
-  describe('when packageJsonPath is provided', function () {
-    it('[absolute] it should use the provided package json', async () => {
-      name.MAX_ATTEMPTS = 5;
-      name.DELAY = 50;
-
-      applicationUnderMonitoring.init({
-        packageJsonPath: path.join(__dirname, './esm-require-in-preload/module/package.json')
-      });
-
-      name.activate();
-
-      return testUtils.retry(() => {
-        expect(name.currentPayload).to.contain('esm-require-in-preload');
-      });
-    });
-
-    it('[relative] it should use the provided package json', async () => {
-      name.MAX_ATTEMPTS = 5;
-      name.DELAY = 50;
-
-      applicationUnderMonitoring.init({
-        // NOTE: relative to process.cwd()
-        packageJsonPath: 'test/esm-require-in-preload/module/package.json'
-      });
-
-      name.activate();
-
-      return testUtils.retry(() => {
-        expect(name.currentPayload).to.contain('esm-require-in-preload');
-      });
-    });
-
-    it('it should not use the provided package json', async () => {
-      name.MAX_ATTEMPTS = 5;
-      name.DELAY = 50;
-
-      applicationUnderMonitoring.init({ packageJsonPath: null });
-
-      name.activate();
-
-      return testUtils.retry(() => {
-        expect(name.currentPayload).to.contain('mocha');
       });
     });
   });

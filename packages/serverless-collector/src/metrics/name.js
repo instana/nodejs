@@ -22,14 +22,14 @@ module.exports = config => {
   }
 
   return new Promise(resolve => {
-    instanaCore.util.applicationUnderMonitoring.getMainPackageJsonStartingAtMainModule((err, packageJson) => {
+    instanaCore.util.applicationUnderMonitoring.getMainPackageJsonStartingAtMainModule((err, packageJsonObj) => {
       if (err) {
         logger.debug(`Failed to determine main package.json. ${err?.message} ${err?.stack}`);
         return resolve();
       }
 
-      logger.debug(`Found main package.json: ${packageJson.name}`);
-      resolve(packageJson.name);
+      logger.debug(`Found main package.json: ${packageJsonObj.file.name}`);
+      resolve(packageJsonObj.file.name);
     });
   });
 };

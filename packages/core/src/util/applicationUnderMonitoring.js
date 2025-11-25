@@ -38,6 +38,10 @@ function isAppInstalledIntoNodeModules() {
   return appInstalledIntoNodeModules;
 }
 
+const MAX_ATTEMPTS = 5;
+const DELAY = 1500;
+let attempts = 0;
+
 /**
  * Looks for the app's main package.json file, parses it and returns the parsed content. The search is started at
  * path.dirname(require.main.filename).
@@ -50,7 +54,7 @@ function isAppInstalledIntoNodeModules() {
 function getMainPackageJsonStartingAtMainModule(cb) {
   // NOTE: we already cached the package.json
   if (parsedMainPackageJson !== undefined) {
-    return cb(null, parsedMainPackageJson);
+    return cb(null, { file: parsedMainPackageJson, path: mainPackageJsonPath });
   }
 
   // CASE: customer provided custom package.json path, let's try loading it
@@ -58,7 +62,23 @@ function getMainPackageJsonStartingAtMainModule(cb) {
     return readFile(packageJsonPath, cb);
   }
 
-  return getMainPackageJsonStartingAtDirectory(null, cb);
+  return getMainPackageJsonStartingAtDirectory(null, (err, pkg) => {
+    // CASE: using --require or --import can result in an empty require.main initially
+    if (err && attempts < MAX_ATTEMPTS) {
+      attempts++;
+
+      logger.warn(
+        `Could not determine main package.json yet. Retrying ${attempts}/${MAX_ATTEMPTS} after ${DELAY}ms...`
+      );
+
+      return setTimeout(() => {
+        getMainPackageJsonStartingAtMainModule(cb);
+      }, DELAY).unref();
+    }
+
+    attempts = 0;
+    return cb(err, pkg);
+  });
 }
 
 /**
@@ -110,20 +130,8 @@ function readFile(filePath, cb) {
       return cb(e, null);
     }
 
-    return cb(null, parsedMainPackageJson);
+    return cb(null, { file: parsedMainPackageJson, path: filePath });
   });
-}
-
-/**
- * Looks for path of the app's main package.json file, starting the search at path.dirname(require.main.filename).
- *
- * In case the search is successful, the result will be cached for consecutive invocations.
- *
- * @param {(err: Error, packageJsonPath: string) => void} cb - the callback will be called with an error or the path to
- * the package.json file
- */
-function getMainPackageJsonPathStartingAtMainModule(cb) {
-  return getMainPackageJsonPathStartingAtDirectory(null, cb);
 }
 
 /**
@@ -185,6 +193,12 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
       } else {
         return process.nextTick(cb);
       }
+    }
+
+    // CASE: node --require .../src/immediate.js
+    if (!mainModule?.filename) {
+      const err = new Error('Application entrypoint could not be identified.');
+      return process.nextTick(cb, err, null);
     }
 
     startDirectory = path.dirname(mainModule.filename);
@@ -332,6 +346,7 @@ function searchInParentDir(dir, onParentDir, cb) {
 const reset = () => {
   parsedMainPackageJson = undefined;
   mainPackageJsonPath = undefined;
+  attempts = 0;
 };
 
 module.exports = {
@@ -339,7 +354,6 @@ module.exports = {
   isAppInstalledIntoNodeModules,
   getMainPackageJsonStartingAtMainModule,
   getMainPackageJsonStartingAtDirectory,
-  getMainPackageJsonPathStartingAtMainModule,
   getMainPackageJsonPathStartingAtDirectory,
   findNodeModulesFolder,
   reset

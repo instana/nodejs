@@ -5,19 +5,24 @@
 
 'use strict';
 
-const fs = require('../uninstrumentedFs');
 const path = require('path');
+const fs = require('../uninstrumentedFs');
+const util = require('../util');
 
 /** @typedef {import('../config').InstanaConfig} InstanaConfig */
 
 /** @type {InstanaConfig} */
 let config;
 
+/** @type {import('../core').GenericLogger} */
+let logger;
+
 /**
  * @param {InstanaConfig} _config
  */
 exports.init = _config => {
   config = _config;
+  logger = config.logger;
 };
 
 /**
@@ -65,10 +70,20 @@ exports.registerAdditionalMetrics = function registerAdditionalMetrics(additiona
 };
 
 exports.activate = () => {
-  metricsModules.forEach(metricsModule => {
-    if (metricsModule.activate) {
-      metricsModule.activate(config);
+  util.applicationUnderMonitoring.getMainPackageJsonStartingAtMainModule((err, packageJsonObj) => {
+    if (err) {
+      logger.warn(
+        `Failed to determine main package.json. Some metrics might not work. Reason: ${err?.message} ${err?.stack}`
+      );
+      return;
     }
+
+    metricsModules.forEach(metricsModule => {
+      if (metricsModule.activate) {
+        // @ts-ignore
+        metricsModule.activate(config, packageJsonObj);
+      }
+    });
   });
 };
 
