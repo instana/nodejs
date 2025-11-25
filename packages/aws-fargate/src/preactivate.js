@@ -5,14 +5,41 @@
 
 'use strict';
 
-const { isNodeJsTooOld, minimumNodeJsVersion } = require('@instana/core/src/util/nodeJsVersionCheck');
+const { esm, nodeJsVersionCheck } = require('@instana/core/src/util');
 
-if (isNodeJsTooOld()) {
+if (nodeJsVersionCheck.isNodeJsTooOld()) {
   // eslint-disable-next-line no-console
   console.error(
-    `The package @instana/aws-fargate requires at least Node.js ${minimumNodeJsVersion} but this process is ` +
+    // eslint-disable-next-line max-len
+    `The package @instana/aws-fargate requires at least Node.js ${nodeJsVersionCheck.minimumNodeJsVersion} but this process is ` +
       `running on Node.js ${process.version}. This Fargate container will not be monitored by Instana.` +
       'See https://www.ibm.com/docs/en/instana-observability/current?topic=agents-aws-fargate#versioning.'
+  );
+  return;
+}
+
+// Check for unsupported ESM loader configurations and exit early
+if (esm.hasExperimentalLoaderFlag()) {
+  // eslint-disable-next-line no-console
+  console.error(
+    "Node.js 18.19.0 and later no longer support the '--experimental-loader' flag for ESM. " +
+      `Your current version is ${process.version}. To ensure tracing by Instana, ` +
+      "please use the '--import' flag instead. For more information, refer to the Instana documentation: " +
+      'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
+  );
+  return;
+}
+
+// This loader worked with '--experimental-loader' in Node.js versions below 18.19.
+// TODO: Remove 'esm-loader.mjs' file and this log in the next major release (v6).
+if (esm.hasEsmLoaderFile()) {
+  // eslint-disable-next-line no-console
+  console.error(
+    "Importing 'esm-loader.mjs' is not a valid command. " +
+      'This process will not be monitored by Instana. ' +
+      "Use 'esm-register.mjs' with '--import' to enable tracing.  For more information, " +
+      'refer to the Instana documentation: ' +
+      'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
   );
   return;
 }
