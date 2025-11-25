@@ -2,12 +2,12 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  // prisma-client-js provider will be removed in future releases of Prisma ORM.
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+  url      = env("PRISMA_SQLITE_URL")
 }
 
 model Person {

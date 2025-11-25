@@ -5,8 +5,6 @@
 
 'use strict';
 
-const semver = require('semver');
-
 // NOTE: default docker compose hosts, ports and credentials
 const DEFAULT_ENV_VALUES = {
   MONGODB: '127.0.0.1:27017',
@@ -39,11 +37,12 @@ const DEFAULT_ENV_VALUES = {
   POSTGRES_PASSWORD: 'nodepw',
   POSTGRES_DB: 'nodedb',
   POSTGRES_HOST: '127.0.0.1',
-  PRISMA_POSTGRES_URL: `postgresql://node:nodepw@127.0.0.1/nodedb?schema=prisma-${semver.major(process.version)}`,
+  PRISMA_POSTGRES_URL: 'postgresql://node:nodepw@127.0.0.1/nodedb?schema=public',
   MSSQL_HOST: 'localhost',
   MSSQL_PORT: '1433',
   MSSQL_USER: 'sa',
-  MSSQL_PW: 'stanCanHazMsSQL1'
+  MSSQL_PW: 'stanCanHazMsSQL1',
+  PRISMA_SQLITE_URL: 'file:./dev.db'
 };
 
 // CASE: if env variable is not set from outside, fallback to defaults
