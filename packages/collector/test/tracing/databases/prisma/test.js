@@ -9,6 +9,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const recursiveCopy = require('recursive-copy');
 const rimraf = require('util').promisify(require('rimraf'));
+const semver = require('semver');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
@@ -26,10 +27,14 @@ const migrationsTargetDir = path.join(appDir, 'prisma', 'migrations');
 describe('tracing/prisma', function () {
   this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
 
-  ['latest', 'v4', 'v4.5.0'].forEach(version => {
+  ['latest', 'v6.19.0', 'v4', 'v4.5.0'].forEach(version => {
     providers.forEach(provider => {
       const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+      // V7 only support version v20.19 and above
+      if (version === 'latest' && semver.lt(process.versions.node, '20.19.0')) {
+        return;
+      }
       // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
       // TODO: Support for mocking `import` in ESM apps is planned under INSTA-788.
       if (process.env.RUN_ESM && version !== 'latest') return;
@@ -62,11 +67,29 @@ describe('tracing/prisma', function () {
           } catch (err) {
             // ignore
           }
+
+          // Install db adapters for Prisma v7+
+          // https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-7
+          if (version === 'latest') {
+            const adapter =
+              provider === 'postgresql'
+                ? `@prisma/adapter-pg@${versionToInstall}`
+                : `@prisma/adapter-better-sqlite3@${versionToInstall}`;
+
+            try {
+              await executeAsync(`npm i ${adapter}`, appDir);
+            } catch {
+              // ignore errors
+            }
+          }
         });
 
         // Set up Prisma stuff for the provider we want to test with (either sqlite or postgresql).
         before(async () => {
-          const schemaSourceFile = path.join(appDir, 'prisma', `schema.prisma.${provider}`);
+          // Starting with v7, the migrations no longer reads the url directly from the schema.
+          // Instead, it expects the url to be defined in prisma.config files
+          const schemaSuffix = version !== 'latest' ? `${provider}.legacy` : provider;
+          const schemaSourceFile = path.join(appDir, 'prisma', `schema.prisma.${schemaSuffix}`);
 
           await fs.rm(schemaTargetFile, { force: true });
           await fs.copyFile(schemaSourceFile, schemaTargetFile);
@@ -77,10 +100,11 @@ describe('tracing/prisma', function () {
 
           // Run the prisma client tooling to generate the database client access code.
           // See https://www.prisma.io/docs/reference/api-reference/command-reference#generate
-          await executeAsync('npx prisma generate', appDir);
+          const prismaConfig = version === 'latest' ? `--config prisma-${provider}.config.js` : '';
+          await executeAsync(`npx prisma generate ${prismaConfig}`, appDir);
 
-          // Run database migrations to create the table.
-          await executeAsync('npx prisma migrate dev', appDir);
+          // Run database migrations to create the table
+          await executeAsync(`npx prisma migrate reset --force ${prismaConfig}`, appDir);
         });
 
         after(async () => {
@@ -93,9 +117,15 @@ describe('tracing/prisma', function () {
         let controls;
 
         before(async () => {
+          const env = {
+            PRISMA_VERSION: version,
+            PROVIDER: provider
+          };
+
           controls = new ProcessControls({
             dirname: __dirname,
-            useGlobalAgent: true
+            useGlobalAgent: true,
+            env
           });
 
           await controls.startAndWaitForAgentConnection();
@@ -197,7 +227,7 @@ describe('tracing/prisma', function () {
 
   function verifyReadResponse(response, version, withError) {
     if (withError) {
-      if (version === 'latest') {
+      if (['latest', 'v6.19.0'].includes(version)) {
         expect(response).to.include('PrismaClientValidationError');
       } else {
         expect(response).to.include('Unknown arg `email` in where.email');
@@ -241,7 +271,8 @@ describe('tracing/prisma', function () {
         span => expect(span.data.prisma.action).to.equal(action),
         span =>
           // Explanation in https://github.com/instana/nodejs/pull/1114
-          version !== 'v4'
+          // In v7, SQLite adapter doesn't expose the URL
+          !(version === 'v4' || (provider === 'sqlite' && version === 'latest'))
             ? expect(span.data.prisma.url).to.equal(expectedUrl)
             : expect(span.data.prisma.url).to.equal(''),
         span => {

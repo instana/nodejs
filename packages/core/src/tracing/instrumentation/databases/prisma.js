@@ -80,11 +80,27 @@ function instrumentClientConstructor(prismaClientModule) {
           const provider = this._engineConfig.activeProvider;
           let dataSourceUrl = '';
 
-          try {
-            const envVarName = this._engineConfig.inlineDatasources.db.url.fromEnvVar;
-            dataSourceUrl = redactPassword(provider, process.env[envVarName]);
-          } catch (err) {
-            logger.debug('[Instana] Cannot read engine config. Database url will not be captured on spans.');
+          // From v7 prisma client requires adapters.
+          // For postgres adapters, the url can be found in either `connectionString` or  `externalPool`
+          // TODO: Extend support for other types of adapters
+          if (this._engineConfig.adapter) {
+            const adapter = this._engineConfig.adapter;
+            try {
+              if (adapter?.config?.connectionString) {
+                dataSourceUrl = redactPassword(provider, adapter.config.connectionString);
+              } else if (adapter?.externalPool?.options?.connectionString) {
+                dataSourceUrl = redactPassword(provider, adapter.externalPool.options.connectionString);
+              }
+            } catch (err) {
+              logger.debug('[Instana] Cannot extract URL from Prisma adapter config:', err);
+            }
+          } else {
+            try {
+              const envVarName = this._engineConfig.inlineDatasources.db.url.fromEnvVar;
+              dataSourceUrl = redactPassword(provider, process.env[envVarName]);
+            } catch (err) {
+              logger.debug('[Instana] Cannot read engine config. Database url will not be captured on spans.');
+            }
           }
 
           try {
