@@ -187,6 +187,11 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
       }
     }
 
+    if (!mainModule?.filename) {
+      const err = new Error('Application entrypoint could not be identified.');
+      return process.nextTick(cb, err, null);
+    }
+
     startDirectory = path.dirname(mainModule.filename);
   }
 
