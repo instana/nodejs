@@ -35,7 +35,7 @@ if (esm.hasExperimentalLoaderFlag()) {
 if (esm.hasEsmLoaderFile()) {
   // eslint-disable-next-line no-console
   console.error(
-    "Importing 'esm-loader.mjs' is not supported and will be removed in next major release. " +
+    "Importing 'esm-loader.mjs' is not a valid command. " +
       'This process will not be monitored by Instana. ' +
       "Use 'esm-register.mjs' with '--import' to enable tracing.  For more information, " +
       'refer to the Instana documentation: ' +
