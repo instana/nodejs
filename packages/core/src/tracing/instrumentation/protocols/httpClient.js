@@ -262,10 +262,9 @@ function instrument(coreModule, forceHttps) {
       } catch (e) {
         // A synchronous exception indicates a failure that is not covered by the listeners. Using a malformed URL for
         // example is a case that triggers a synchronous exception.
-        span.data.http = {
-          url: completeCallUrl,
-          error: e ? e.message : ''
-        };
+        span.data.http = {};
+        span.data.http.url = completeCallUrl;
+        span.data.http.error = e ? e.message : '';
         span.d = Date.now() - span.ts;
         span.ec = 1;
         span.transmit();
@@ -311,9 +310,9 @@ function instrument(coreModule, forceHttps) {
         }
         span.data.http = {
           method: clientRequest.method,
-          url: completeCallUrl,
-          error: errorMessage
+          url: completeCallUrl
         };
+        span.data.http.error = errorMessage;
         span.d = Date.now() - span.ts;
         span.ec = 1;
         span.transmit();
