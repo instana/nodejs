@@ -458,7 +458,9 @@ function instrumentedCreateStream(operation, bindEvent, finalEvent, ctx, origina
 function finishSpan(error, result, span, extractorPost) {
   if (error) {
     span.ec = 1;
-    span.data.gcs.error = tracingUtil.getErrorDetails(error);
+    const errorValue = tracingUtil.getErrorDetails(error);
+    const key = 'gcs';
+    span.data[key].error = errorValue;
   }
 
   if (extractorPost) {

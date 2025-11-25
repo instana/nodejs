@@ -255,9 +255,13 @@ function addErrorToSpan(err, span) {
   if (err) {
     span.ec = 1;
     if (err.message) {
-      span.data.gcps.error = err.message;
+      const errorValue = err.message;
+      const key = 'gcps';
+      span.data[key].error = errorValue;
     } else if (typeof err === 'string') {
-      span.data.gcps.error = err;
+      const errorValue = err;
+      const key = 'gcps';
+      span.data[key].error = errorValue;
     }
   }
 }
