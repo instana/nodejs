@@ -200,7 +200,9 @@ function onError(span, error) {
   span.d = Date.now() - span.ts;
   span.ec = 1;
   if (error) {
-    span.data.elasticsearch.error = tracingUtil.getErrorDetails(error);
+    const errorValue = tracingUtil.getErrorDetails(error);
+    const key = 'elasticsearch';
+    span.data[key].error = errorValue;
   }
   if (error.meta && error.meta.meta) {
     getConnectionDetailsFromResultMeta(span, error.meta);

@@ -438,7 +438,9 @@ function createWrappedCallback(span, originalCallback) {
   return cls.ns.bind(function (error) {
     if (error) {
       span.ec = 1;
-      span.data.mongo.error = tracingUtil.getErrorDetails(error);
+      const errorValue = tracingUtil.getErrorDetails(error);
+      const key = 'mongo';
+      span.data[key].error = errorValue;
     }
 
     span.d = Date.now() - span.ts;
@@ -466,7 +468,9 @@ function handleCallbackOrPromise(ctx, originalArgs, originalFunction, span) {
       })
       .catch(err => {
         span.ec = 1;
-        span.data.mongo.error = tracingUtil.getErrorDetails(err);
+        const errorValue = tracingUtil.getErrorDetails(err);
+        const key = 'mongo';
+        span.data[key].error = errorValue;
         span.d = Date.now() - span.ts;
         span.transmit();
         return err;

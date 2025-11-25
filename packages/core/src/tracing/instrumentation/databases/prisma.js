@@ -221,7 +221,9 @@ function redactPasswordFromMsSQLUrl(url) {
 function finishSpan(error, span) {
   if (error) {
     span.ec = 1;
-    span.data.prisma.error = getErrorDetails(error);
+    const errorValue = getErrorDetails(error);
+    const key = 'prisma';
+    span.data[key].error = errorValue;
   }
 
   span.d = Date.now() - span.ts;

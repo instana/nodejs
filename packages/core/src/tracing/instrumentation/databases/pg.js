@@ -103,7 +103,9 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
 function finishSpan(error, span) {
   if (error) {
     span.ec = 1;
-    span.data.pg.error = tracingUtil.getErrorDetails(error);
+    const errorValue = tracingUtil.getErrorDetails(error);
+    const key = 'pg';
+    span.data[key].error = errorValue;
   }
 
   span.d = Date.now() - span.ts;

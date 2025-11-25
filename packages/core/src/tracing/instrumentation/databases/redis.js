@@ -365,7 +365,9 @@ function instrumentCommand(original, command, address, cbStyle) {
 
         if (error) {
           span.ec = 1;
-          span.data.redis.error = tracingUtil.getErrorDetails(error);
+          const errorValue = tracingUtil.getErrorDetails(error);
+          const key = 'redis';
+          span.data[key].error = errorValue;
         }
 
         span.transmit();
@@ -502,18 +504,23 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
       if (err) {
         span.ec = 1;
 
+        const key = 'redis';
+        let errorValue;
+
         if (err.message) {
-          span.data.redis.error = err.message;
+          errorValue = err.message;
         } else if (Array.isArray(err) && err.length) {
-          span.data.redis.error = err[0].message;
+          errorValue = err[0].message;
         } else {
-          span.data.redis.error = 'Unknown error';
+          errorValue = 'Unknown error';
         }
 
         // v3 = provides sub errors
         if (err.errors && err.errors.length) {
-          span.data.redis.error = err.errors.map(subErr => subErr.message).join('\n');
+          errorValue = err.errors.map(subErr => subErr.message).join('\n');
         }
+
+        span.data[key].error = errorValue;
       }
 
       span.transmit();
@@ -533,7 +540,9 @@ function buildSubCommandCallback(span, userProvidedCallback) {
       span.ec++;
 
       if (!span.data.redis.error) {
-        span.data.redis.error = tracingUtil.getErrorDetails(err);
+        const errorValue = tracingUtil.getErrorDetails(err);
+        const key = 'redis';
+        span.data[key].error = errorValue;
       }
     }
 

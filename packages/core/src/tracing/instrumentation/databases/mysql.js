@@ -190,7 +190,9 @@ function instrumentedAccessFunction(
         })
         .catch(error => {
           span.ec = 1;
-          span.data.mysql.error = tracingUtil.getErrorDetails(error);
+          const errorValue = tracingUtil.getErrorDetails(error);
+          const key = 'mysql';
+          span.data[key].error = errorValue;
 
           span.d = Date.now() - span.ts;
           span.transmit();
@@ -205,7 +207,9 @@ function instrumentedAccessFunction(
     function onResult(error) {
       if (error) {
         span.ec = 1;
-        span.data.mysql.error = tracingUtil.getErrorDetails(error);
+        const errorValue = tracingUtil.getErrorDetails(error);
+        const key = 'mysql';
+        span.data[key].error = errorValue;
       }
 
       span.d = Date.now() - span.ts;
