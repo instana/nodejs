@@ -5,7 +5,7 @@
 
 'use strict';
 
-const coreMetrics = require('@instana/core').metrics;
+const core = require('@instana/core');
 const sharedMetrics = require('@instana/shared-metrics');
 const transmissionCycle = require('./transmissionCycle');
 const pid = require('./pid');
@@ -17,7 +17,7 @@ const additionalMetrics = [pid];
  * @param {any} pidStore
  */
 exports.init = function init(config, pidStore) {
-  coreMetrics.init(config);
+  core.metrics.init(config);
   sharedMetrics.init(config);
   transmissionCycle.init(config);
 
@@ -25,19 +25,19 @@ exports.init = function init(config, pidStore) {
     metric.init(config, pidStore);
   });
 
-  coreMetrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
-  const additionalCollectorMetrics = coreMetrics.findAndRequire(__dirname);
-  coreMetrics.registerAdditionalMetrics(additionalCollectorMetrics);
+  core.metrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
+  const additionalCollectorMetrics = core.metrics.findAndRequire(__dirname);
+  core.metrics.registerAdditionalMetrics(additionalCollectorMetrics);
 };
 
 exports.activate = function activate() {
-  coreMetrics.activate();
+  core.metrics.activate();
 };
 
 exports.deactivate = function deactivate() {
-  coreMetrics.deactivate();
+  core.metrics.deactivate();
 };
 
 exports.gatherData = function gatherData() {
-  return coreMetrics.gatherData();
+  return core.metrics.gatherData();
 };

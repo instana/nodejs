@@ -5,28 +5,28 @@
 
 'use strict';
 
-const { metrics: coreMetrics } = require('@instana/core');
+const core = require('@instana/core');
 const npmPackageName = require('./npmPackageName');
 const npmPackageVersion = require('./npmPackageVersion');
 const npmPackageDescription = require('./npmPackageDescription');
 
 exports.init = function init(config) {
-  coreMetrics.init(config);
+  core.metrics.init(config);
   npmPackageName.init(config);
   npmPackageVersion.init(config);
   npmPackageDescription.init(config);
 
-  coreMetrics.registerAdditionalMetrics([npmPackageName, npmPackageVersion, npmPackageDescription]);
+  core.metrics.registerAdditionalMetrics([npmPackageName, npmPackageVersion, npmPackageDescription]);
 };
 
 exports.activate = function activate() {
-  coreMetrics.activate();
+  core.metrics.activate();
 };
 
 exports.deactivate = function deactivate() {
-  coreMetrics.deactivate();
+  core.metrics.deactivate();
 };
 
 exports.gatherData = function gatherData() {
-  return coreMetrics.gatherData();
+  return core.metrics.gatherData();
 };
