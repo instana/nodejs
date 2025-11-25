@@ -326,9 +326,13 @@ function addErrorToSpan(err, span) {
   if (err) {
     span.ec = 1;
     if (err.code) {
-      span.data.bull.error = err.code;
+      const errorValue = err.code;
+      const key = 'bull';
+      span.data[key].error = errorValue;
     } else if (typeof err === 'string') {
-      span.data.bull.error = err;
+      const errorValue = err;
+      const key = 'bull';
+      span.data[key].error = errorValue;
     }
   }
 }

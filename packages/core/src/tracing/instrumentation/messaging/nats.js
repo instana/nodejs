@@ -404,9 +404,13 @@ function addErrorToSpan(err, span) {
       errMsg = err;
     }
     if (errMsg && span.data.nats.error) {
-      span.data.nats.error += `, ${errMsg}`;
+      const errorValue = `${span.data.nats.error}, ${errMsg}`;
+      const key = 'nats';
+      span.data[key].error = errorValue;
     } else if (errMsg) {
-      span.data.nats.error = errMsg;
+      const errorValue = errMsg;
+      const key = 'nats';
+      span.data[key].error = errorValue;
     }
   }
 }

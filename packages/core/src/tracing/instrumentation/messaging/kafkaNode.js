@@ -81,7 +81,9 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
       cls.ns.bind(function onSendCompleted(err) {
         if (err) {
           span.ec = 1;
-          span.data.kafka.error = err.message;
+          const errorValue = err.message;
+          const key = 'kafka';
+          span.data[key].error = errorValue;
         }
 
         span.d = Date.now() - span.ts;

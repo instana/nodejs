@@ -167,7 +167,9 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
 
         if (err) {
           span.ec = 1;
-          span.data.kafka.error = err.message;
+          const errorValue = err.message;
+          const key = 'kafka';
+          span.data[key].error = errorValue;
         }
 
         span.transmit();
@@ -187,7 +189,9 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
       // e.g. cannot send message because format is byte
       //      "Message must be a buffer or null"
       span.ec = 1;
-      span.data.kafka.error = error.message;
+      const errorValue = error.message;
+      const key = 'kafka';
+      span.data[key].error = errorValue;
 
       if (!deliveryCb) {
         span.d = Date.now() - span.ts;
@@ -305,7 +309,9 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
         delete messageData.headers;
 
         span.ec = 1;
-        span.data.kafka.error = messageData.message;
+        const errorValue = messageData.message;
+        const key = 'kafka';
+        span.data[key].error = errorValue;
       }
 
       setImmediate(() => {
