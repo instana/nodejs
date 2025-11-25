@@ -392,7 +392,9 @@ function finishSpan(err, data, span) {
 function addErrorToSpan(err, span) {
   if (err) {
     span.ec = 1;
-    span.data.sqs.error = err.message || err.code || JSON.stringify(err);
+    const errorValue = err.message || err.code || JSON.stringify(err);
+    const key = 'sqs';
+    span.data[key].error = errorValue;
   }
 }
 

@@ -30,7 +30,9 @@ function instrument(SQSConsumer) {
             })
             .catch(err => {
               span.ec = 1;
-              span.data.sqs.error = err.message || err.code || JSON.stringify(err);
+              const errorValue = err.message || err.code || JSON.stringify(err);
+              const key = 'sqs';
+              span.data[key].error = errorValue;
               span.d = Date.now() - span.ts;
               span.transmitManual();
             });
@@ -62,7 +64,9 @@ function instrument(SQSConsumer) {
             })
             .catch(err => {
               span.ec = 1;
-              span.data.sqs.error = err.message || err.code || JSON.stringify(err);
+              const errorValue = err.message || err.code || JSON.stringify(err);
+              const key = 'sqs';
+              span.data[key].error = errorValue;
               span.d = Date.now() - span.ts;
               span.transmitManual();
             });
