@@ -5,6 +5,8 @@
 
 'use strict';
 
+const { payloadPrefix } = require('./activeHandles');
+
 const { applicationUnderMonitoring } = require('@instana/core').util;
 
 /** @type {import('@instana/core/src/core').GenericLogger} */
@@ -28,9 +30,14 @@ let attempts = 0;
 exports.activate = function activate() {
   attempts++;
 
+  // TODO: all metrics call `getMainPackageJsonStartingAtMainModule` - if `getMainPackageJsonStartingAtMainModule` fails
+  //       for the 1st metrics, the other metrics will try again...we should initiate
+  //       `getMainPackageJsonStartingAtMainModule` only once in a central place!
   applicationUnderMonitoring.getMainPackageJsonStartingAtMainModule((err, packageJson) => {
     if (err) {
-      return logger.warn(`Failed to determine main package json. Reason: ${err?.message} ${err?.stack}`);
+      return logger.warn(
+        `Failed to determine main package.json for "${payloadPrefix}" metric. Reason: ${err?.message} ${err?.stack}`
+      );
     } else if (!packageJson && attempts < MAX_ATTEMPTS) {
       setTimeout(exports.activate, DELAY).unref();
       return;

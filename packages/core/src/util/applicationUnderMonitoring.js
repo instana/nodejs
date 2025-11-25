@@ -187,12 +187,17 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
       }
     }
 
-    // In case if require.main or process.argv[1] might be missing or invalid,
-    // so mainModule.filename can be undefined.
+    // CASE: node --require .../src/immediate.js
     if (!mainModule?.filename) {
       logger.warn('Application entrypoint could not be identified. Package.json resolution will be skipped.');
-      return process.nextTick(cb);
+      const err = new Error('Application entrypoint could not be identified. Search for package.json failed.');
+
+      // @ts-ignore
+      err.code = 'INSTANA_NO_MAIN_MODULE';
+
+      return process.nextTick(cb, err, null);
     }
+
     startDirectory = path.dirname(mainModule.filename);
   }
 

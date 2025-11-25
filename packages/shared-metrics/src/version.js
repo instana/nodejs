@@ -28,9 +28,15 @@ let attempts = 0;
 exports.activate = function activate() {
   attempts++;
 
+  // TODO: all metrics call `getMainPackageJsonStartingAtMainModule` - if `getMainPackageJsonStartingAtMainModule` fails
+  //       for the 1st metrics, the other metrics will try again...we should initiate
+  //       `getMainPackageJsonStartingAtMainModule` only once in a central place!
   applicationUnderMonitoring.getMainPackageJsonStartingAtMainModule((err, packageJson) => {
     if (err) {
-      return logger.warn(`Failed to determine main package json. Reason: ${err?.message} ${err?.stack}`);
+      return logger.warn(
+        // eslint-disable-next-line max-len
+        `Failed to determine main package.json for "${exports.payloadPrefix}" metric. Reason: ${err?.message} ${err?.stack}`
+      );
     } else if (!packageJson && attempts < MAX_ATTEMPTS) {
       setTimeout(exports.activate, DELAY).unref();
 

@@ -21,10 +21,13 @@ module.exports = config => {
     return process.env.INSTANA_SERVICE_NAME;
   }
 
+  // TODO: all metrics call `getMainPackageJsonStartingAtMainModule` - if `getMainPackageJsonStartingAtMainModule` fails
+  //       for the 1st metrics, the other metrics will try again...we should initiate
+  //       `getMainPackageJsonStartingAtMainModule` only once in a central place!
   return new Promise(resolve => {
     instanaCore.util.applicationUnderMonitoring.getMainPackageJsonStartingAtMainModule((err, packageJson) => {
       if (err) {
-        logger.debug(`Failed to determine main package.json. ${err?.message} ${err?.stack}`);
+        logger.debug(`Failed to determine main package.json for "name" metric. ${err?.message} ${err?.stack}`);
         return resolve();
       }
 
