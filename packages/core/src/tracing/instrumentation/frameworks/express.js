@@ -116,7 +116,9 @@ function annotateHttpEntrySpanWithError(err) {
     return;
   }
 
-  span.data.http.error = tracingUtil.getErrorDetails(err);
+  const errorValue = tracingUtil.getErrorDetails(err);
+  const key = 'http';
+  span.data[key].error = errorValue;
 }
 
 function shimHandlerRegistration(original) {
