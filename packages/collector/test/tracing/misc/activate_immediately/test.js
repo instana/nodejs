@@ -52,6 +52,7 @@ mochaSuiteFn('tracing/activateImmediately', function () {
 
   after(async () => {
     await appControls.stop();
+    await customAgent.stopAgent();
   });
 
   afterEach(async () => {
