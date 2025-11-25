@@ -189,7 +189,6 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
 
     // CASE: node --require .../src/immediate.js
     if (!mainModule?.filename) {
-      logger.warn('Application entrypoint could not be identified. Package.json resolution will be skipped.');
       const err = new Error('Application entrypoint could not be identified. Search for package.json failed.');
 
       // @ts-ignore
