@@ -11,9 +11,11 @@ if (nodeJsVersionCheck.isNodeJsTooOld()) {
   // eslint-disable-next-line no-console
   console.error(
     // eslint-disable-next-line max-len
-    `The package @instana/aws-fargate requires at least Node.js ${nodeJsVersionCheck.minimumNodeJsVersion} but this process is ` +
-      `running on Node.js ${process.version}. This Fargate container will not be monitored by Instana.` +
-      'See https://www.ibm.com/docs/en/instana-observability/current?topic=agents-aws-fargate#versioning.'
+    `The package @instana/aws-fargate requires at least Node.js ${nodeJsVersionCheck.minimumNodeJsVersion} ` +
+      `but this process is running on Node.js ${process.version}. This Fargate container will  ` +
+      'not be monitored by Instana. For more information, see:  ' +
+      // eslint-disable-next-line max-len
+      'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-support-information#breaking-changes-in-nodejs-collector-upgrade'
   );
   return;
 }
