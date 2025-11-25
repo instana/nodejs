@@ -5,7 +5,10 @@
 
 'use strict';
 
-exports.init = function init() {};
+/**
+ * @param {import('@instana/core/src/config').InstanaConfig} config
+ */
+exports.init = function init(config) {};
 
 exports.payloadPrefix = 'description';
 // @ts-ignore
