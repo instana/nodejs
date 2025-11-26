@@ -392,7 +392,7 @@ function finishSpan(err, data, span) {
 function addErrorToSpan(err, span) {
   if (err) {
     span.ec = 1;
-    span.data.sqs.error = err.message || err.code || JSON.stringify(err);
+    tracingUtil.setErrorStack(span, err, 'sqs');
   }
 }
 
