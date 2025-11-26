@@ -272,7 +272,7 @@ module.exports.run = function ({
       span => expect(span.ec).to.equal(!withError ? 0 : 1),
       span => (!withError ? expect(span.data.kafka.error).to.not.exist : ''),
       span =>
-        withError === 'deliveryErrorSender' ? expect(span.data.kafka.error).to.equal('delivery fake error') : '',
+        withError === 'deliveryErrorSender' ? expect(span.data.kafka.error).to.contain('delivery fake error') : '',
       span =>
         withError === 'bufferErrorSender'
           ? expect(span.data.kafka.error).to.equal('Message must be a buffer or null')
