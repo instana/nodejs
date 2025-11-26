@@ -11,7 +11,7 @@
 // NODE_OPTIONS="--require /usr/src/app/node_modules/@instana/collector/src/immediate" is set, we would instrument both
 // processes, that is, npm/yarn as well as the actual application. Attempting to instrument the npm or yarn process has
 // no value and also creates confusing log output, so we exclude them here explicitly.
-const excludePattern = /^.*\/(?:npm(?:\.js)?|npm-cli(?:\.js)?|yarn(?:\.js)?|yarn\/lib\/cli(?:\.js)?)$/i;
+const excludePattern = /^.*\/(?:npm(?:\.js)?|npm-cli(?:\.js)?|yarn(?:\.js)?|yarn\/lib\/cli(?:\.js)?|ng(?:\.js)?)$/i;
 
 /**
  * @type {Function}
