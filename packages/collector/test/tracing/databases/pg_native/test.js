@@ -211,23 +211,6 @@ mochaSuiteFn('tracing/pg-native', function () {
             });
 
             expect(pgExit.stack).to.be.a('string');
-            // expect(pgExit.stack.length).to.be.greaterThan(0);
-
-            // pgExit.stack.forEach(frame => {
-            //   expect(frame).to.have.property('m');
-            //   expect(frame).to.have.property('c');
-            //   expect(frame.m).to.be.a('string');
-            //   expect(frame.c).to.be.a('string');
-            // });
-
-            // const hasErrorFrame = pgExit.stack.some(
-            //   frame =>
-            //     frame.c.includes('pg-native') ||
-            //     frame.c.includes('app.js') ||
-            //     frame.m.includes('query') ||
-            //     frame.m.includes('Query')
-            // );
-            // expect(hasErrorFrame).to.be.true;
 
             verifyHttpExit(spans, httpEntry);
           })
