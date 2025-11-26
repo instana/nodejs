@@ -249,6 +249,7 @@ function instrument(coreModule, forceHttps) {
         // if (span.ec === 1) {
         //   tracingUtil.setErrorStack(span, res.body.stack);
         // }
+        // here no Error is found for parsing
 
         span.transmit();
 
@@ -272,7 +273,7 @@ function instrument(coreModule, forceHttps) {
         // example is a case that triggers a synchronous exception.
         span.data.http = {};
         span.data.http.url = completeCallUrl;
-        tracingUtil.setErrorStack(span, e, exports.spanName);
+        tracingUtil.setErrorStack(span, e, 'http');
         span.d = Date.now() - span.ts;
         span.ec = 1;
         span.transmit();
