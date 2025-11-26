@@ -29,7 +29,6 @@ const baseUrl = `${protocol}://user:password@localhost:${process.env.SERVER_PORT
 const sslDir = path.join(__dirname, '..', '..', '..', '..', 'apps', 'ssl');
 const key = fs.readFileSync(path.join(sslDir, 'key'));
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
-const { handleErrorResponse } = require('./errorHelper');
 
 const app = express();
 
@@ -366,43 +365,6 @@ app.get('/without-port', (req, res) => {
     });
     response.on('end', () => {
       res.status(200).json({ message: 'Call completed' });
-    });
-  });
-
-  request.on('error', err => {
-    log('Error in downstream call:', err.message);
-    res.sendStatus(500);
-  });
-
-  request.end();
-});
-
-app.get('/trigger-error', (req, res) => {
-  const options = {
-    hostname: 'localhost',
-    port: process.env.SERVER_PORT,
-    method: 'GET',
-    path: '/error-endpoint',
-    ca: cert
-  };
-
-  log('Initiating call to error endpoint');
-
-  const request = httpModule.request(options, response => {
-    let data = '';
-    response.on('data', chunk => {
-      data += chunk;
-    });
-    response.on('end', () => {
-      log(`Error endpoint responded with status ${response.statusCode}`);
-      try {
-        handleErrorResponse(response.statusCode, data);
-        res.status(response.statusCode).json({ message: 'Error endpoint called', body: data });
-      } catch (error) {
-        log('Caught error from handleErrorResponse:', error.message);
-
-        res.status(500).json({ error: error.message, stack: error.stack });
-      }
     });
   });
 

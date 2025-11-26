@@ -67,10 +67,6 @@ app.put('/continue', (req, res) => {
   res.json({ response: 'yada yada yada' });
 });
 
-app.get('/error-endpoint', (req, res) => {
-  res.status(500).json({ error: 'Internal Server Error' });
-});
-
 if (process.env.APP_USES_HTTPS === 'true') {
   const sslDir = path.join(__dirname, '..', '..', '..', '..', 'apps', 'ssl');
   require('https')
