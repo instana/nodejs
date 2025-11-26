@@ -43,7 +43,7 @@ if [[ -z $PUBLISH_TO_CHINA_REGIONS ]]; then
   PUBLISH_TO_CHINA_REGIONS=false
 fi
 
-PACKAGE_NAMES="@instana/aws-lambda@$PACKAGE_VERSION instana-aws-lambda-auto-wrap@$PACKAGE_VERSION"
+PACKAGE_NAMES="@instana/aws-lambda@$PACKAGE_VERSION"
 
 # The default layer name is instana-nodejs. If you want to push experimental changes under a different layer name, you
 # can provide the LAYER_NAME environment variable for that purpose. If you build the layer from your local source files
@@ -262,18 +262,35 @@ if [[ $BUILD_LAYER_WITH == local ]]; then
 
   popd >/dev/null
 
+  build_aws_lambda_auto_wrap_locally() {
+    echo "Building local tar.gz for instana-aws-lambda-auto-wrap (private package)."
+    pushd ../../../aws-lambda-auto-wrap >/dev/null
+    rm -rf instana-aws-lambda-auto-wrap-*.tgz
+    npm --loglevel=warn pack
+    mv instana-aws-lambda-auto-wrap-*.tgz $LAYER_WORKDIR/instana-aws-lambda-auto-wrap.tgz
+    popd >/dev/null
+
+    npm install instana-aws-lambda-auto-wrap.tgz
+    rm -rf instana-aws-lambda-auto-wrap.tgz
+  }
+
   # Install locally built packages (basically extracting them into node_modules) to prepare the structure that is
   # expected from an AWS Node.js Lambda layer.
-  npm install instana-aws-lambda-auto-wrap.tgz
+
+  build_aws_lambda_auto_wrap_locally
+
   npm install instana-aws-lambda.tgz
   npm install instana-serverless.tgz
   npm install instana-core.tgz
-  rm -rf instana-aws-lambda-auto-wrap.tgz
   rm -rf instana-aws-lambda.tgz
   rm -rf instana-serverless.tgz
   rm -rf instana-core.tgz
 
 elif [[ $BUILD_LAYER_WITH == npm ]] || [[ -z $BUILD_LAYER_WITH ]]; then
+
+  # Build instana-aws-lambda-auto-wrap locally (internal package)
+  build_aws_lambda_auto_wrap_locally
+
   echo "step 3/9: downloading packages from npm (version $PACKAGE_VERSION)"
   npm install $PACKAGE_NAMES
 else
