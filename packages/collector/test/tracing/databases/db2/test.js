@@ -261,7 +261,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: 'select invalid query',
-              error: 'Error: [IBM][CLI Driver][DB2/LINUXX8664] SQL0104N  An unexpected token'
+              error: '[IBM][CLI Driver][DB2/LINUXX8664] SQL0104N  An unexpected token'
             })
           )
         );
@@ -598,7 +598,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`,
-              error: 'Error: [IBM][CLI Driver][DB2/LINUXX8664] SQL0181N  The string representatio'
+              error: '[IBM][CLI Driver][DB2/LINUXX8664] SQL0181N  The string representatio'
             })
           )
         );
@@ -646,7 +646,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
-              error: 'TypeError'
+              error: "Cannot read properties of null (reading 'fetchMode')"
             })
           )
         );
@@ -720,7 +720,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`,
-              error: 'Error: [IBM][CLI Driver] CLI0100E  Wrong number of parameters. SQLSTATE=07001'
+              error: '[IBM][CLI Driver] CLI0100E  Wrong number of parameters. SQLSTATE=07001'
             })
           )
         );
@@ -790,7 +790,7 @@ mochaSuiteFn('tracing/db2', function () {
     });
 
     it('[with fetch and error] must trace prepare execute mixed 1', function () {
-      const expectedError = 'TypeError: Cannot read properties of null (reading';
+      const expectedError = 'Cannot read properties of null (reading';
 
       return controls
         .sendRequest({
