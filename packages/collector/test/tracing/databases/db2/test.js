@@ -646,7 +646,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
-              error: 'TypeError'
+              error: "TypeError: Cannot read properties of null (reading 'fetchMode')"
             })
           )
         );
