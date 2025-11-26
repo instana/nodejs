@@ -1,0 +1,16 @@
+{
+  "name": "nestjs-app",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "start": "NODE_OPTIONS='--import ./node_modules/@instana/collector/esm-register.mjs' INSTANA_DEBUG=true nest start"
+  },
+  "dependencies": {
+    "@instana/collector": "latest",
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/core": "^11.0.1"
+  }
+}
