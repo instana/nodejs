@@ -284,18 +284,19 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
  */
 // @ts-ignore
 exports.setErrorStack = function setErrorStack(span, error, technology) {
-  if (error == null) {
-    return undefined;
+  if (!error) {
+    return;
   }
 
-  if (technology && span.data[technology]) {
-    // for some cases like http, it is already set with custom values and no need to overwrite the message
-    span.data[technology].error = span.data[technology].error || exports.getErrorDetails(error);
+  if (technology && span.data && span.data[technology]) {
+    // Do not overwrite if instrumentation already set a custom value eg: httpClient
+    if (!span.data[technology].error) {
+      span.data[technology].error = exports.getErrorDetails(error);
+    }
   }
 
-  if (error && error.stack) {
-    // no need to consider length for error cases, we can send the whole stack trace as per design
-    // TODO: It will be recorded as string, revisit to change structure
+  // TODO: Once the configuration change is ready, optionally trim the span.stack to the configured length
+  if (error.stack) {
     span.stack = error.stack;
   }
 };

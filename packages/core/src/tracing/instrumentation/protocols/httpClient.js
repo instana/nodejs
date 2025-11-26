@@ -272,11 +272,9 @@ function instrument(coreModule, forceHttps) {
         // example is a case that triggers a synchronous exception.
         span.data.http = {};
         span.data.http.url = completeCallUrl;
-        span.data.http.error = e ? e.message : '';
+        tracingUtil.setErrorStack(span, e, exports.spanName);
         span.d = Date.now() - span.ts;
         span.ec = 1;
-        tracingUtil.setErrorStack(span, e, exports.spanName);
-
         span.transmit();
         throw e;
       }
@@ -322,6 +320,8 @@ function instrument(coreModule, forceHttps) {
           method: clientRequest.method,
           url: completeCallUrl
         };
+        // This assignment is intentional
+        // Even though setErrorStack runs in this codeblock, this custom error message is a special-case behavior
         span.data.http.error = errorMessage;
         span.d = Date.now() - span.ts;
         span.ec = 1;
