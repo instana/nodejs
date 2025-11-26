@@ -190,7 +190,7 @@ function instrumentedAccessFunction(
         })
         .catch(error => {
           span.ec = 1;
-          tracingUtil.setErrorStack(span, error, exports.spanName);
+          tracingUtil.setErrorDetails(span, error, exports.spanName);
 
           span.d = Date.now() - span.ts;
           span.transmit();
@@ -205,7 +205,7 @@ function instrumentedAccessFunction(
     function onResult(error) {
       if (error) {
         span.ec = 1;
-        tracingUtil.setErrorStack(span, error, exports.spanName);
+        tracingUtil.setErrorDetails(span, error, exports.spanName);
       }
 
       span.d = Date.now() - span.ts;

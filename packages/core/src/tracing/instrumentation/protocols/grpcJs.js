@@ -119,7 +119,7 @@ function modifyArgs(name, originalArgs, span) {
           if (errorMessage) {
             span.data.rpc.error = errorMessage;
           }
-          tracingUtil.setErrorStack(span, err, 'rpc');
+          tracingUtil.setErrorDetails(span, err, 'rpc');
         }
       }
 
@@ -349,7 +349,7 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
             if (err.message || err.details) {
               span.data.rpc.error = err.message || err.details;
             }
-            tracingUtil.setErrorStack(span, err, 'rpc');
+            tracingUtil.setErrorDetails(span, err, 'rpc');
           }
           span.d = Date.now() - span.ts;
           span.transmit();
@@ -375,7 +375,7 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
           if (err.message || err.details) {
             span.data.rpc.error = err.message || err.details;
           }
-          tracingUtil.setErrorStack(span, err, 'rpc');
+          tracingUtil.setErrorDetails(span, err, 'rpc');
         });
 
         call.on('cancelled', () => {
@@ -438,7 +438,7 @@ function instrumentedClientMethod(
           if (errorMessage) {
             span.data.rpc.error = errorMessage;
           }
-          tracingUtil.setErrorStack(span, err, 'rpc');
+          tracingUtil.setErrorDetails(span, err, 'rpc');
         }
         span.transmit();
       });

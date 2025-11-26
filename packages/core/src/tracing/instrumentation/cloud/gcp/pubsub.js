@@ -254,7 +254,7 @@ function finishSpan(err, messageId, span) {
 function addErrorToSpan(err, span) {
   if (err) {
     span.ec = 1;
-    tracingUtil.setErrorStack(span, err, 'gcps');
+    tracingUtil.setErrorDetails(span, err, 'gcps');
   }
 }
 

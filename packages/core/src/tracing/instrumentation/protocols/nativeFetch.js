@@ -184,7 +184,7 @@ function instrument() {
         })
         .catch(err => {
           span.ec = 1;
-          tracingUtil.setErrorStack(span, err, 'http');
+          tracingUtil.setErrorDetails(span, err, 'http');
         })
         .finally(() => {
           span.d = Date.now() - span.ts;

@@ -105,7 +105,7 @@ function instrumentingOperation({
 function finishSpan(error, span) {
   if (error) {
     span.ec = 1;
-    tracingUtil.setErrorStack(span, error, 'azstorage');
+    tracingUtil.setErrorDetails(span, error, 'azstorage');
   }
   span.d = Date.now() - span.ts;
   span.transmit();

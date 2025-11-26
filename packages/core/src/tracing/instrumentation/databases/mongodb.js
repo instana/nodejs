@@ -438,7 +438,7 @@ function createWrappedCallback(span, originalCallback) {
   return cls.ns.bind(function (error) {
     if (error) {
       span.ec = 1;
-      tracingUtil.setErrorStack(span, error, 'mongo');
+      tracingUtil.setErrorDetails(span, error, 'mongo');
     }
 
     span.d = Date.now() - span.ts;
@@ -466,7 +466,7 @@ function handleCallbackOrPromise(ctx, originalArgs, originalFunction, span) {
       })
       .catch(err => {
         span.ec = 1;
-        tracingUtil.setErrorStack(span, err, 'mongo');
+        tracingUtil.setErrorDetails(span, err, 'mongo');
         span.d = Date.now() - span.ts;
         span.transmit();
         return err;

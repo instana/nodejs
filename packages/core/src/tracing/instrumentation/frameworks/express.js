@@ -116,7 +116,7 @@ function annotateHttpEntrySpanWithError(err) {
     return;
   }
 
-  tracingUtil.setErrorStack(span, err, 'http');
+  tracingUtil.setErrorDetails(span, err, 'http');
 }
 
 function shimHandlerRegistration(original) {

@@ -283,7 +283,7 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
  * @param {string} technology - The technology name (e.g., 'mysql', 'pg', 'http')
  */
 // @ts-ignore
-exports.setErrorStack = function setErrorStack(span, error, technology) {
+exports.setErrorDetails = function setErrorDetails(span, error, technology) {
   if (!error) {
     return;
   }

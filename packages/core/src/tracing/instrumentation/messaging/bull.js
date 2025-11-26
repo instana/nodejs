@@ -327,7 +327,7 @@ function addErrorToSpan(err, span) {
     span.ec = 1;
 
     // TODO: need to give priority for err.code?
-    tracingUtil.setErrorStack(span, err, 'bull');
+    tracingUtil.setErrorDetails(span, err, 'bull');
   }
 }
 

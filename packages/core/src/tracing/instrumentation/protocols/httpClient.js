@@ -247,7 +247,7 @@ function instrument(coreModule, forceHttps) {
         // Currently we don't parse anything from the body, and its not advised too
         // so do not override here, only override on the event of an error catch
         // if (span.ec === 1) {
-        //   tracingUtil.setErrorStack(span, res.body.stack);
+        //   tracingUtil.setErrorDetails(span, res.body.stack);
         // }
         // here no Error is found for parsing
 
@@ -273,7 +273,7 @@ function instrument(coreModule, forceHttps) {
         // example is a case that triggers a synchronous exception.
         span.data.http = {};
         span.data.http.url = completeCallUrl;
-        tracingUtil.setErrorStack(span, e, 'http');
+        tracingUtil.setErrorDetails(span, e, 'http');
         span.d = Date.now() - span.ts;
         span.ec = 1;
         span.transmit();
@@ -322,11 +322,11 @@ function instrument(coreModule, forceHttps) {
           url: completeCallUrl
         };
         // This assignment is intentional
-        // Even though setErrorStack runs in this codeblock, this custom error message is a special-case behavior
+        // Even though setErrorDetails runs in this codeblock, this custom error message is a special-case behavior
         span.data.http.error = errorMessage;
         span.d = Date.now() - span.ts;
         span.ec = 1;
-        tracingUtil.setErrorStack(span, err, exports.spanName);
+        tracingUtil.setErrorDetails(span, err, exports.spanName);
 
         span.transmit();
       });

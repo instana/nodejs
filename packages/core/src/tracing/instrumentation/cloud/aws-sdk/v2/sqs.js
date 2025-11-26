@@ -392,7 +392,7 @@ function finishSpan(err, data, span) {
 function addErrorToSpan(err, span) {
   if (err) {
     span.ec = 1;
-    tracingUtil.setErrorStack(span, err, 'sqs');
+    tracingUtil.setErrorDetails(span, err, 'sqs');
   }
 }
 

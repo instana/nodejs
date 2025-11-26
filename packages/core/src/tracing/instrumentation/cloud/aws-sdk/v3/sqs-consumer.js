@@ -31,7 +31,7 @@ function instrument(SQSConsumer) {
             })
             .catch(err => {
               span.ec = 1;
-              tracingUtil.setErrorStack(span, err, 'sqs');
+              tracingUtil.setErrorDetails(span, err, 'sqs');
               span.d = Date.now() - span.ts;
               span.transmitManual();
             });
@@ -63,7 +63,7 @@ function instrument(SQSConsumer) {
             })
             .catch(err => {
               span.ec = 1;
-              tracingUtil.setErrorStack(span, err, 'sqs');
+              tracingUtil.setErrorDetails(span, err, 'sqs');
               span.d = Date.now() - span.ts;
               span.transmitManual();
             });

@@ -365,7 +365,7 @@ function instrumentCommand(original, command, address, cbStyle) {
 
         if (error) {
           span.ec = 1;
-          tracingUtil.setErrorStack(span, error, 'redis');
+          tracingUtil.setErrorDetails(span, error, 'redis');
         }
 
         span.transmit();
@@ -502,7 +502,7 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
       if (err) {
         span.ec = 1;
 
-        tracingUtil.setErrorStack(span, err, 'redis');
+        tracingUtil.setErrorDetails(span, err, 'redis');
 
         // v3 = provides sub errors
         if (err.errors && err.errors.length) {
@@ -526,7 +526,7 @@ function buildSubCommandCallback(span, userProvidedCallback) {
   return function subCommandCallback(err) {
     if (err) {
       span.ec++;
-      tracingUtil.setErrorStack(span, err, 'redis');
+      tracingUtil.setErrorDetails(span, err, 'redis');
     }
 
     if (typeof userProvidedCallback === 'function') {

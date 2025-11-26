@@ -200,7 +200,7 @@ function finishSpan(error, span) {
     // Note: Instead of 'pg', we could've passed exports.spanName if they were the same,
     //       We can’t use spanName here because for this instr the span name is
     //       "postgres", but the data is stored under span.data.pg.
-    tracingUtil.setErrorStack(span, error, 'pg');
+    tracingUtil.setErrorDetails(span, error, 'pg');
   }
 
   span.d = Date.now() - span.ts;
