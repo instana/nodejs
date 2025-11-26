@@ -858,7 +858,9 @@ function verifyHttpExit({
     expectations.push(span => expect(span.data.http.status).to.not.exist);
     // Early v18.x Node.js versions had "The operation was aborted", the message later changed to
     // "The operation was aborted due to timeout".
-    expectations.push(span => expect(span.data.http.error).to.match(/^The operation was aborted(?: due to timeout)?/));
+    expectations.push(span =>
+      expect(span.data.http.error).to.match(/^TimeoutError: The operation was aborted(?: due to timeout)?/)
+    );
   } else {
     expectations.push(span => expect(span.data.http.status).to.equal(status));
     expectations.push(span => expect(span.data.http.error).to.not.exist);
