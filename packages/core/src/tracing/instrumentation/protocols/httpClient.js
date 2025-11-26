@@ -243,14 +243,6 @@ function instrument(coreModule, forceHttps) {
         span.d = Date.now() - span.ts;
         span.ec = res.statusCode >= 500 ? 1 : 0;
 
-        // Internal: Remove/update before RFR
-        // Currently we don't parse anything from the body, and its not advised too
-        // so do not override here, only override on the event of an error catch
-        // if (span.ec === 1) {
-        //   tracingUtil.setErrorDetails(span, res.body.stack);
-        // }
-        // here no Error is found for parsing
-
         span.transmit();
 
         if (callback) {
@@ -321,8 +313,7 @@ function instrument(coreModule, forceHttps) {
           method: clientRequest.method,
           url: completeCallUrl
         };
-        // This assignment is intentional
-        // Even though setErrorDetails runs in this codeblock, this custom error message is a special-case behavior
+        // Note: Not removing the span.data.http.error assignment because this custom error message is a special-case
         span.data.http.error = errorMessage;
         span.d = Date.now() - span.ts;
         span.ec = 1;
