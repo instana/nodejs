@@ -25,7 +25,9 @@ if (nodeJsVersionCheck.isNodeJsTooOld()) {
   console.error(
     // eslint-disable-next-line max-len
     `The package @instana/collector requires at least Node.js ${nodeJsVersionCheck.minimumNodeJsVersion} but this process is ` +
-      `running on Node.js ${process.version}. This process will not be monitored by Instana.`
+      `running on Node.js ${process.version}. This process will not be monitored by Instana. For more information, ` +
+      // eslint-disable-next-line max-len
+      'see: https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-support-information#breaking-changes-in-nodejs-collector-upgrade'
   );
 
   // ESM default exports for TS
