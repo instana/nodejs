@@ -10,10 +10,11 @@ const { esm, nodeJsVersionCheck } = require('@instana/core/src/util');
 if (nodeJsVersionCheck.isNodeJsTooOld()) {
   // eslint-disable-next-line no-console
   console.error(
-    // eslint-disable-next-line max-len
-    `The package @instana/google-cloud-run requires at least Node.js ${nodeJsVersionCheck.minimumNodeJsVersion} but this process is ` +
-      `running on Node.js ${process.version}. This Google Cloud Run service will not be monitored by Instana.` +
-      'See https://www.ibm.com/docs/en/instana-observability/current?topic=agents-google-cloud-run#versioning.'
+    `The package @instana/google-cloud-run requires at least Node.js ${nodeJsVersionCheck.minimumNodeJsVersion} ` +
+      `but this process is running on Node.js ${process.version}. This Google Cloud Run service will not be ` +
+      'monitored by Instana. For more information, see: ' +
+      // eslint-disable-next-line max-len
+      'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-support-information#breaking-changes-in-nodejs-collector-upgrade'
   );
   return;
 }
