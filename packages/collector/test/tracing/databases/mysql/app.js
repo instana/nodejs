@@ -321,7 +321,6 @@ function triggerError(req, res) {
       return;
     }
 
-    // Execute an invalid SQL query to trigger an error
     connection[accessFunction]('SELECT * FROM non_existent_table', queryError => {
       connection.release();
 
@@ -340,7 +339,6 @@ function triggerErrorWithPromises(req, res) {
   pool
     .getConnection()
     .then(connection => {
-      // Execute an invalid SQL query to trigger an error
       wrapAccess(connection, 'SELECT * FROM non_existent_table', null, queryError => {
         connection.release();
 
