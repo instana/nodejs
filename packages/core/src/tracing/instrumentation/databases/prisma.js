@@ -6,7 +6,7 @@
 
 const shimmer = require('../../shimmer');
 const hook = require('../../../util/hook');
-const { getErrorDetails, getStackTrace } = require('../../tracingUtil');
+const tracingUtil = require('../../tracingUtil');
 const { EXIT } = require('../../constants');
 const cls = require('../../cls');
 
@@ -140,7 +140,7 @@ function instrumentedRequest(ctx, originalRequest, argsForOriginalRequest) {
       spanName: 'prisma',
       kind: EXIT
     });
-    span.stack = getStackTrace(instrumentedRequest, 1);
+    span.stack = tracingUtil.getStackTrace(instrumentedRequest, 1);
     const params = argsForOriginalRequest[0] || {};
 
     const providerAndDataSourceUri = ctx._engine ? providerAndDataSourceUriMap.get(ctx._engine) || {} : {};
@@ -221,7 +221,7 @@ function redactPasswordFromMsSQLUrl(url) {
 function finishSpan(error, span) {
   if (error) {
     span.ec = 1;
-    span.data.prisma.error = getErrorDetails(error);
+    tracingUtil.setErrorStack(span, error, 'prisma');
   }
 
   span.d = Date.now() - span.ts;

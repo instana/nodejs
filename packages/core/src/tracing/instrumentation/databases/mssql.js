@@ -161,7 +161,7 @@ function shimBeginTransaction(originalFunction) {
 function finishSpan(error, span) {
   if (error) {
     span.ec = 1;
-    span.data.mssql.error = tracingUtil.getErrorDetails(error);
+    tracingUtil.setErrorStack(span, error, 'mssql');
   }
 
   span.d = Date.now() - span.ts;

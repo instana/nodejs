@@ -430,7 +430,7 @@ function instrumentTransactions(cluster, connectionStr) {
                     result
                       .catch(err => {
                         span.ec = 1;
-                        span.data.couchbase.error = tracingUtil.getErrorDetails(err);
+                        tracingUtil.setErrorStack(span, err, 'couchbase');
                       })
                       .finally(() => {
                         span.d = Date.now() - span.ts;
@@ -497,7 +497,7 @@ function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sql, 
             })
             .catch(err => {
               span.ec = 1;
-              span.data.couchbase.error = tracingUtil.getErrorDetails(err);
+              tracingUtil.setErrorStack(span, err, 'couchbase');
             })
             .finally(() => {
               span.d = Date.now() - span.ts;
@@ -510,7 +510,7 @@ function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sql, 
         originalArgs[callbackIndex] = cls.ns.bind(function instanaCallback(err, result) {
           if (err) {
             span.ec = 1;
-            span.data.couchbase.error = tracingUtil.getErrorDetails(err);
+            tracingUtil.setErrorStack(span, err, 'couchbase');
           }
 
           if (resultHandler) {
