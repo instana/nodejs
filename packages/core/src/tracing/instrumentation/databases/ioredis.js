@@ -257,7 +257,7 @@ function pipelineCommandEndCallback(clsContextForMultiOrPipeline, span, error, r
 
     if (numberOfErrors > 0) {
       span.ec = numberOfErrors;
-      tracingUtil.setErrorStack(span, error, 'redis');
+      tracingUtil.setErrorStack(span, sampledError, 'redis');
     }
   }
 
