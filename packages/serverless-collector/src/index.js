@@ -11,7 +11,10 @@ if (nodeJsVersionCheck.isNodeJsTooOld()) {
   console.error(
     // eslint-disable-next-line max-len
     `The package @instana/serverless-collector requires at least Node.js v${nodeJsVersionCheck.minimumNodeJsVersion} but this ` +
-      `process is running on Node.js ${process.version}. This process will not be traced by Instana.`
+      `process is running on Node.js ${process.version}. This process will not be traced by Instana. ` +
+      'For more information, see: ' +
+      // eslint-disable-next-line max-len
+      'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-support-information#breaking-changes-in-nodejs-collector-upgrade'
   );
   return;
 }
