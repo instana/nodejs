@@ -330,6 +330,8 @@ exports.generate = function (isCallbackApi) {
         span.data.sdk.custom.tags = {};
       }
       if (span.data.sdk.custom.tags.message == null) {
+        // TODO: this is a special case as the key if not span.data.tech.error
+        // This fn used getErrorDetails for now and will need to change
         span.data.sdk.custom.tags.message = tracingUtil.getErrorDetails(error);
       }
     }
