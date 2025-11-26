@@ -291,12 +291,12 @@ exports.setErrorStack = function setErrorStack(span, error, technology) {
   if (technology && span.data && span.data[technology]) {
     // Do not overwrite if instrumentation already set a custom value eg: httpClient
     if (!span.data[technology].error) {
-      span.data[technology].error = exports.getErrorDetails(error);
+      span.data[technology].error = String(error.stack || error.message || error).substring(0, 500);
     }
   }
 
   // TODO: Once the configuration change is ready, optionally trim the span.stack to the configured length
   if (error.stack) {
-    span.stack = error.stack;
+    span.stack = String(error.stack).substring(500);
   }
 };
