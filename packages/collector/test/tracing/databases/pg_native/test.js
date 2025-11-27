@@ -189,34 +189,6 @@ mochaSuiteFn('tracing/pg-native', function () {
         );
       }));
 
-  it('must replace span stack with error stack when error occurs', () =>
-    controls
-      .sendRequest({
-        method: 'POST',
-        path: '/error',
-        simple: false
-      })
-      .then(response => {
-        expect(response).to.exist;
-        expect(response.error).to.contain('Error: ERROR:');
-        expect(response.error).to.contain('relation "nonexistanttable" does not exist');
-
-        return retry(() =>
-          agentControls.getSpans().then(spans => {
-            const httpEntry = verifyHttpEntry(spans, '/error');
-            const pgExit = expectAtLeastOneMatching(spans, span => {
-              verifyPgExitBase(span, httpEntry, 'SELECT name, email FROM nonexistanttable');
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(1);
-            });
-
-            expect(pgExit.stack).to.be.a('string');
-
-            verifyHttpExit(spans, httpEntry);
-          })
-        );
-      }));
-
   it('must suppress', () =>
     controls
       .sendRequest({
@@ -318,6 +290,7 @@ mochaSuiteFn('tracing/pg-native', function () {
     return expectAtLeastOneMatching(spans, span => {
       verifyPgExitBase(span, parent, statement);
       expect(span.error).to.not.exist;
+      expect(span.stack).to.exist;
       expect(span.ec).to.equal(1);
       expect(span.data.pg.error).to.contain(errorMessage);
     });

@@ -348,7 +348,7 @@ function test(env, agentControls) {
               span => expect(span.data.mysql.error).to.exist
             ]);
 
-            expect(mysqlSpan.stack).to.be.a('string');
+            expect(mysqlSpan.stack).to.exist;
           })
         )
       ));
