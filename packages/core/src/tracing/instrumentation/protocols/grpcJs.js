@@ -115,9 +115,11 @@ function modifyArgs(name, originalArgs, span) {
           // No-op, we do not want to mark cancelled calls as erroneous.
         } else {
           span.ec = 1;
+          // TODO: special case of error message
           if (errorMessage) {
             span.data.rpc.error = errorMessage;
           }
+          tracingUtil.setErrorDetails(span, err, 'rpc');
         }
       }
 
@@ -347,6 +349,7 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
             if (err.message || err.details) {
               span.data.rpc.error = err.message || err.details;
             }
+            tracingUtil.setErrorDetails(span, err, 'rpc');
           }
           span.d = Date.now() - span.ts;
           span.transmit();
@@ -372,6 +375,7 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
           if (err.message || err.details) {
             span.data.rpc.error = err.message || err.details;
           }
+          tracingUtil.setErrorDetails(span, err, 'rpc');
         });
 
         call.on('cancelled', () => {
@@ -434,6 +438,7 @@ function instrumentedClientMethod(
           if (errorMessage) {
             span.data.rpc.error = errorMessage;
           }
+          tracingUtil.setErrorDetails(span, err, 'rpc');
         }
         span.transmit();
       });
