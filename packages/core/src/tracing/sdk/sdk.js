@@ -330,6 +330,8 @@ exports.generate = function (isCallbackApi) {
         span.data.sdk.custom.tags = {};
       }
       if (span.data.sdk.custom.tags.message == null) {
+        // TODO: fix sdk error capture and handling
+        // This fn used getErrorDetails for now and will need to change
         span.data.sdk.custom.tags.message = tracingUtil.getErrorDetails(error);
       }
     }

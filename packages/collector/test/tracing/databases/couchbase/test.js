@@ -46,7 +46,7 @@ const verifyCouchbaseSpan = (controls, entrySpan, options = {}) => [
   span => expect(span.data.couchbase.sql).to.contain(options.sql || 'GET'),
   span =>
     options.error
-      ? expect(span.data.couchbase.error).to.equal(options.error)
+      ? expect(span.data.couchbase.error).to.contain(options.error)
       : expect(span.data.couchbase.error).to.not.exist
 ];
 
