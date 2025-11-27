@@ -54,7 +54,7 @@ mongoose.model(
 );
 const Person = mongoose.model('Person');
 
-if (isLatestMajor || process.env.MONGOOSE_VERSION === 'v7') {
+if (isLatestMajor) {
   (async () => {
     try {
       await mongoose.connect(connectString);
@@ -65,6 +65,7 @@ if (isLatestMajor || process.env.MONGOOSE_VERSION === 'v7') {
     }
   })();
 } else {
+  // < v7
   mongoose.connect(connectString, err => {
     if (err) {
       log('Failed to connect to Mongodb', err);

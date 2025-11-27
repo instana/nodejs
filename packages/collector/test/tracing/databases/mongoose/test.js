@@ -20,18 +20,13 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
 // v5 uses mongodb v3
 // v6 uses mongodb v4
 // v7 uses mongodb v5
-// v8 (latest) uses mongodb v6
+// v8 uses mongodb v6
+// v9 uses mongodb v7
 
-// Skipping v5 tests temporarily due to Snappy issue (see https://github.com/Brooooooklyn/snappy/issues/283).
-// Mongoose v5 depends on MongoDB v3, which uses optional-require to load Snappy.
-// The issue surfaced after MongoDB update from v6.18 to v6.19.
-// Recent Snappy versions (>=7.3.2) restrict access to package.json via the "exports" field,
-// causing to throw ERR_PACKAGE_PATH_NOT_EXPORTED.
-// This only affects Mongoose v5; tests can be re-enabled once the issue is resolved.
-['latest', 'v8.5.4', 'v7', 'v6'].forEach(version => {
+['latest', 'v6'].forEach(version => {
   const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-  const isLatestMajor = version === 'latest' || version === 'v8.5.4';
+  const isLatestMajor = version === 'latest';
 
   // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
   if (process.env.RUN_ESM && !isLatestMajor) return;
