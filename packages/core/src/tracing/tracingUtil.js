@@ -292,7 +292,7 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
     // This check is for special cases where instrumentation already set a custom value like in httpClient
     if (!span.data[technology].error) {
       span.data[technology].error = error.message
-        ? error.message.substring(0, 100)
+        ? error.message.substring(0, 200)
         : // @ts-ignore
           error?.code || 'No error message found.';
     }
