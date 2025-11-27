@@ -82,7 +82,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 10
     - name: postgres
-      image: public.ecr.aws/docker/library/postgres:10.16
+      image: public.ecr.aws/docker/library/postgres:15.15
       imagePullPolicy: IfNotPresent
       env:
           - name: "POSTGRES_USER"
