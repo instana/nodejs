@@ -295,7 +295,7 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
     }
   }
 
-  // TODO: Once the configuration change is ready, optionally trim the span.stack to the configured length
+  // TODO: Change substring usage to frame capturing - see util/stackTrace.js
   if (error.stack) {
     span.stack = String(error.stack).substring(500);
   }
