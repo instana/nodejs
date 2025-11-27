@@ -289,7 +289,7 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
   }
 
   if (technology && span.data?.[technology]) {
-    // This check is for special cases where instrumentation already set a custom value like in httpClient
+    // This extra check allows instrumentations to override the error property (not recommended)
     if (!span.data[technology].error) {
       const combinedMessage = error?.message
         ? `${error.name || 'Error'}: ${error.message}`
