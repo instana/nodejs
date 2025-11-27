@@ -550,9 +550,12 @@ function finishSpan(ctx, result, span) {
       if (!closeSyncCalled) {
         closeSyncCalled = true;
         span.ec = 1;
-        // there is a manualr erro string assignment and no error object pressent,
-        // so we will not replace stack.trace from here
         span.data.db2.error = `'result.closeSync' was not called within ${CLOSE_TIMEOUT_IN_MS}ms.`;
+        tracingUtil.setErrorDetails(
+          span,
+          new Error(`'result.closeSync' was not called within ${CLOSE_TIMEOUT_IN_MS}ms.`),
+          'db2'
+        );
         span.d = Date.now() - span.ts;
         span.transmit();
       }
