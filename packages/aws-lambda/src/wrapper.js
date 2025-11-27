@@ -43,8 +43,9 @@ exports.wrap = function wrap(_config, originalHandler) {
     _config = null;
   }
 
-  // Apparently the AWS Lambda Node.js runtime does not inspect the handlers signature for the number of arguments it
-  // accepts. But to be extra safe, we strive to return a function with the same number of arguments anyway.
+  // For Node.js 24+, we must always return a handler with 2 parameters (event, context) to avoid
+  // the Runtime.CallbackHandlerDeprecated error. The shimmedHandler internally handles both
+  // callback-based and promise-based original handlers.
   switch (originalHandler.length) {
     case 0:
       return function handler0() {
@@ -54,12 +55,9 @@ exports.wrap = function wrap(_config, originalHandler) {
       return function handler1(event) {
         return shimmedHandler(originalHandler, this, arguments, _config);
       };
-    case 2:
-      return function handler2(event, context) {
-        return shimmedHandler(originalHandler, this, arguments, _config);
-      };
     default:
-      return function handler3(event, context, callback) {
+      // For handlers with 2 or 3 parameters, always return a 2-parameter function
+      return function handler2(event, context) {
         return shimmedHandler(originalHandler, this, arguments, _config);
       };
   }

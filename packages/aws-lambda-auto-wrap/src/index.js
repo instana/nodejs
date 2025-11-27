@@ -20,10 +20,12 @@ if (!wrappedHandler) {
   }
 }
 
-exports.handler = function instanaAutowrapHandler(event, context, callback) {
-  if (!wrappedHandler) return callback(capturedError);
+exports.handler = async function instanaAutowrapHandler(event, context) {
+  if (!wrappedHandler) {
+    throw capturedError;
+  }
 
-  return wrappedHandler(event, context, callback);
+  return wrappedHandler(event, context);
 };
 
 function loadTargetHandlerFunction() {

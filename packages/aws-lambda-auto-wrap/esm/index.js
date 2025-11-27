@@ -18,10 +18,10 @@ if (!supportedVersion(process.versions.node)) {
   );
 }
 
-exports.handler = async function instanaAutowrapHandler(event, context, callback) {
+exports.handler = async function instanaAutowrapHandler(event, context) {
   const targetHandler = await loadTargetHandlerFunction();
   const wrappedHandler = instana.wrap(targetHandler);
-  return wrappedHandler(event, context, callback);
+  return wrappedHandler(event, context);
 };
 
 async function loadTargetHandlerFunction() {
