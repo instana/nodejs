@@ -313,7 +313,7 @@ function instrument(coreModule, forceHttps) {
           method: clientRequest.method,
           url: completeCallUrl
         };
-        // Note: Not removing the span.data.http.error assignment because this custom error message is a special-case
+        // TODO: special-case, we remove this in separate PR
         span.data.http.error = errorMessage;
         span.d = Date.now() - span.ts;
         span.ec = 1;
