@@ -5,6 +5,7 @@
 
 'use strict';
 
+const semver = require('semver');
 const instanaCore = require('@instana/core');
 const { backendConnector, consoleLogger: serverlessLogger, environment } = require('@instana/serverless');
 const arnParser = require('./arn');
@@ -43,9 +44,10 @@ exports.wrap = function wrap(_config, originalHandler) {
     _config = null;
   }
 
-  // For Node.js 24+, we must always return a handler with 2 parameters (event, context) to avoid
-  // the Runtime.CallbackHandlerDeprecated error. The shimmedHandler internally handles both
-  // callback-based and promise-based original handlers.
+  // Node.js 24+ removed support for callback-based handlers (3 parameters).
+  // For Node.js < 24, we preserve the original behavior to maintain backward compatibility.
+  const latestRuntime = semver.gte(process.version, '24.0.0');
+
   switch (originalHandler.length) {
     case 0:
       return function handler0() {
@@ -55,12 +57,22 @@ exports.wrap = function wrap(_config, originalHandler) {
       return function handler1(event) {
         return shimmedHandler(originalHandler, this, arguments, _config);
       };
-    default:
-      // For handlers with 2 or 3 parameters, always return a 2-parameter function
-      return function handler2(event, context) {
+    case 2:
+    return function (event, context) {
+      return shimmedHandler(originalHandler, this, arguments, _config);
+    };
+    default: {
+      if (latestRuntime) {
+        // Required for Node.js 24+: callback is not allowed
+        return function (event, context) {
+          return shimmedHandler(originalHandler, this, arguments, _config);
+        };
+      }
+      // For Node.js < 24, allow callback-based handlers
+      return function (event, context, callback) {
         return shimmedHandler(originalHandler, this, arguments, _config);
       };
-  }
+    }
 };
 
 function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
