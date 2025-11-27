@@ -368,7 +368,7 @@ function instrumentCommand(original, command, address, cbStyle) {
 
         if (error) {
           span.ec = 1;
-          span.data.redis.error = tracingUtil.getErrorDetails(error);
+          tracingUtil.setErrorDetails(span, error, 'redis');
         }
 
         span.transmit();
@@ -515,6 +515,7 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
 
         // v3 = provides sub errors
         if (err.errors && err.errors.length) {
+          // TODO: Not updating now as special case
           span.data.redis.error = err.errors.map(subErr => subErr.message).join('\n');
         }
       }
@@ -534,10 +535,7 @@ function buildSubCommandCallback(span, userProvidedCallback) {
   return function subCommandCallback(err) {
     if (err) {
       span.ec++;
-
-      if (!span.data.redis.error) {
-        span.data.redis.error = tracingUtil.getErrorDetails(err);
-      }
+      tracingUtil.setErrorDetails(span, err, 'redis');
     }
 
     if (typeof userProvidedCallback === 'function') {

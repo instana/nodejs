@@ -134,6 +134,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
                 testUtils.expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.client'),
                   span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.data.http.status).to.equal(201),
                   span => expect(span.stack[2].m).to.equal('fetch'),
                   span => expect(span.stack[2].c).to.contains('node-fetch')
                 ]);
