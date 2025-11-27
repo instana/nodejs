@@ -502,7 +502,13 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
       if (err) {
         span.ec = 1;
 
-        tracingUtil.setErrorDetails(span, err, 'redis');
+        if (err.message) {
+          span.data.redis.error = err.message;
+        } else if (Array.isArray(err) && err.length) {
+          span.data.redis.error = err[0].message;
+        } else {
+          span.data.redis.error = 'Unknown error';
+        }
 
         // v3 = provides sub errors
         if (err.errors && err.errors.length) {
