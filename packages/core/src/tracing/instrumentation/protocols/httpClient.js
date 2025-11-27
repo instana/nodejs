@@ -317,7 +317,7 @@ function instrument(coreModule, forceHttps) {
         span.data.http.error = errorMessage;
         span.d = Date.now() - span.ts;
         span.ec = 1;
-        tracingUtil.setErrorDetails(span, err, exports.spanName);
+        tracingUtil.setErrorDetails(span, err, 'http');
 
         span.transmit();
       });
