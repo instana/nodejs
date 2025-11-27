@@ -221,6 +221,7 @@
     "prebuildify": "5.0.1",
     "prebuildify-cross": "5.1.1",
     "prettier": "2.5.1",
+    "prisma-v5": "npm:prisma@5.9.1",
     "prisma-v4": "npm:prisma@4.16.2",
     "prisma-v4.5.0": "npm:prisma@4.5.0",
     "proxy": "1.0.2",

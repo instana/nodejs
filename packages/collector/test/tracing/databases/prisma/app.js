@@ -104,6 +104,32 @@ app.post('/update', async (req, res) => {
   }
 });
 
+async function getExcludedPersonIds(user) {
+  return []; // for testing, nothing is excluded
+}
+
+app.post('/persons', async (req, res) => {
+  const user = req.body;
+
+  if (!user) return res.status(400).send('User object required');
+
+  try {
+    const excludedIds = await getExcludedPersonIds(user);
+
+    const persons = await prisma.person.findMany({
+      where: {
+        id: { notIn: excludedIds }
+        // Optional: add a "teamId" filter if you had it
+        // OR other filters if needed
+      }
+    });
+
+    res.json(persons);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 app.listen(port, () => {
   log(`Listening on port: ${port}`);
 });

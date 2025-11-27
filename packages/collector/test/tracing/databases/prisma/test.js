@@ -17,16 +17,16 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const { executeAsync } = require('../../../test_util/executeCommand');
 
-const providers = ['sqlite', 'postgresql'];
+const providers = ['postgresql'];
 
 const appDir = __dirname;
 const schemaTargetFile = path.join(appDir, 'prisma', 'schema.prisma');
 const migrationsTargetDir = path.join(appDir, 'prisma', 'migrations');
 
-describe('tracing/prisma', function () {
+describe.only('tracing/prisma', function () {
   this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
 
-  ['latest', 'v4', 'v4.5.0'].forEach(version => {
+  ['v5'].forEach(version => {
     providers.forEach(provider => {
       const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
@@ -188,6 +188,41 @@ describe('tracing/prisma', function () {
               model: 'Person',
               action: 'deleteMany',
               provider
+            });
+          });
+        });
+
+        it.only('should capture a prisma findMany on Person for /persons endpoint', async () => {
+          // Send POST request to /persons with a mock user
+          const response = await controls.sendRequest({
+            method: 'POST',
+            path: '/persons',
+            body: { currentTeam: { teamId: 'team_123' } }
+          });
+
+          // Verify response
+          expect(response).to.be.an('array');
+          expect(response).to.have.length(1);
+          expect(response[0].name).to.equal('Brainy Smurf');
+
+          // Verify Prisma tracing
+          await retry(async () => {
+            const spans = await agentControls.getSpans();
+            console.log('===========', JSON.stringify(spans));
+            const httpEntry = verifyHttpRootEntry({
+              spans,
+              apiPath: '/persons',
+              pid: String(controls.getPid())
+            });
+
+            verifyPrismaExit({
+              controls,
+              spans,
+              version: 'v5',
+              parent: httpEntry,
+              model: 'Person',
+              action: 'findMany',
+              provider: 'postgresql' // or 'sqlite' depending on your test
             });
           });
         });

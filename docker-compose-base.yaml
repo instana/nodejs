@@ -155,7 +155,7 @@ services:
       - ./packages/collector/test/tracing/databases/mysql/conf.d:/etc/mysql/conf.d
 
   postgres:
-    image: postgres:10.5
+    image: postgres:15.15
     ports:
       - 5432:5432
     environment:

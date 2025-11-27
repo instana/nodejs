@@ -11,6 +11,10 @@
   "dependencies": {
     "@instana/collector": "latest",
     "@nestjs/common": "^11.0.1",
-    "@nestjs/core": "^11.0.1"
+    "@nestjs/core": "^11.0.1",
+    "@prisma/client": "5.9.1"
+  },
+  "devDependencies": {
+    "prisma": "5.9.1"
   }
 }
