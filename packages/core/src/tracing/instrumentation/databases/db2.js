@@ -222,7 +222,7 @@ function captureFetchError(result, span) {
         argsFetch[fetchIndex] = function instanaFetchCb(fetchCbErr) {
           if (fetchCbErr) {
             span.ec = 1;
-            span.data.db2.error = tracingUtil.getErrorDetails(fetchCbErr);
+            tracingUtil.setErrorDetails(span, fetchCbErr, 'db2');
           }
 
           return fetchCb.apply(this, arguments);
@@ -232,7 +232,7 @@ function captureFetchError(result, span) {
           return originalFn.apply(this, arguments);
         } catch (caughtErr) {
           span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(caughtErr);
+          tracingUtil.setErrorDetails(span, caughtErr, 'db2');
           throw caughtErr;
         }
       };
@@ -249,12 +249,12 @@ function captureFetchError(result, span) {
 
           if (res instanceof Error) {
             span.ec = 1;
-            span.data.db2.error = tracingUtil.getErrorDetails(res);
+            tracingUtil.setErrorDetails(span, res, 'db2');
           }
           return res;
         } catch (err) {
           span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(err);
+          tracingUtil.setErrorDetails(span, err, 'db2');
 
           return err;
         }
@@ -278,14 +278,14 @@ function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsyn
 
         if (result instanceof Error) {
           span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(result);
+          tracingUtil.setErrorDetails(span, result, 'db2');
         }
 
         finishSpan(ctx, result, span);
         return result;
       } catch (e) {
         span.ec = 1;
-        span.data.db2.error = tracingUtil.getErrorDetails(e);
+        tracingUtil.setErrorDetails(span, e, 'db2');
         finishSpan(ctx, null, span);
         throw e;
       }
@@ -304,7 +304,7 @@ function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsyn
       originalArgs[customerCallbackIndex] = function instanaCallback(err) {
         if (err) {
           span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(err);
+          tracingUtil.setErrorDetails(span, err, 'db2');
         }
 
         finishSpan(ctx, null, span);
@@ -324,7 +324,7 @@ function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsyn
         })
         .catch(err => {
           span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(err);
+          tracingUtil.setErrorDetails(span, err, 'db2');
           finishSpan(ctx, null, span);
           return err;
         });
@@ -394,7 +394,7 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParen
         return result;
       } catch (err) {
         span.ec = 1;
-        span.data.db2.error = tracingUtil.getErrorDetails(err);
+        tracingUtil.setErrorDetails(span, err, 'db2');
         finishSpan(ctx, null, span);
         return err;
       }
@@ -441,7 +441,7 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParen
       args[origCallbackIndex] = function instanaExecuteCallback(executeErr, result) {
         if (executeErr) {
           span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(executeErr);
+          tracingUtil.setErrorDetails(span, executeErr, 'db2');
           finishSpan(ctx, null, span);
           return origCallback.apply(this, arguments);
         }
@@ -470,7 +470,7 @@ function instrumentQueryResultHelper(ctx, originalArgs, originalFunction, stmt, 
         return result;
       } catch (err) {
         span.ec = 1;
-        span.data.db2.error = tracingUtil.getErrorDetails(err);
+        tracingUtil.setErrorDetails(span, err, 'db2');
         finishSpan(ctx, null, span);
         return err;
       }
@@ -489,7 +489,7 @@ function instrumentQueryResultHelper(ctx, originalArgs, originalFunction, stmt, 
       originalArgs[customerCallbackIndex] = function instanaCallback(err) {
         if (err) {
           span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(err);
+          tracingUtil.setErrorDetails(span, err, 'db2');
         }
 
         const result = customerCallback.apply(this, arguments);
@@ -551,6 +551,11 @@ function finishSpan(ctx, result, span) {
         closeSyncCalled = true;
         span.ec = 1;
         span.data.db2.error = `'result.closeSync' was not called within ${CLOSE_TIMEOUT_IN_MS}ms.`;
+        tracingUtil.setErrorDetails(
+          span,
+          new Error(`'result.closeSync' was not called within ${CLOSE_TIMEOUT_IN_MS}ms.`),
+          'db2'
+        );
         span.d = Date.now() - span.ts;
         span.transmit();
       }
@@ -578,7 +583,7 @@ function handleTransaction(ctx, span) {
           arguments[1] = function instanaOnEndOverride(onEndErr) {
             if (onEndErr) {
               span.ec = 1;
-              span.data.db2.error = tracingUtil.getErrorDetails(onEndErr) || 'Error not available.';
+              tracingUtil.setErrorDetails(span, onEndErr, 'db2');
             }
 
             span.d = Date.now() - span.ts;
@@ -597,7 +602,7 @@ function handleTransaction(ctx, span) {
           return result;
         } catch (err) {
           span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(err) || 'Error not available.';
+          tracingUtil.setErrorDetails(span, err, 'db2');
           span.transmit();
           throw err;
         }

@@ -276,3 +276,32 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
     callbackIndex
   };
 };
+
+/**
+ * @param {import('../core').InstanaBaseSpan} span - The span to update
+ * @param {Error} error
+ * @param {string} technology - The technology name (e.g., 'mysql', 'pg', 'http')
+ */
+// @ts-ignore
+exports.setErrorDetails = function setErrorDetails(span, error, technology) {
+  if (!error) {
+    return;
+  }
+
+  if (technology && span.data?.[technology]) {
+    // This extra check allows instrumentations to override the error property (not recommended)
+    if (!span.data[technology].error) {
+      const combinedMessage = error?.message
+        ? `${error.name || 'Error'}: ${error.message}`
+        : // @ts-ignore
+          error?.code || 'No error message found.';
+
+      span.data[technology].error = combinedMessage.substring(0, 200);
+    }
+  }
+
+  // TODO: Change substring usage to frame capturing - see util/stackTrace.js
+  if (error.stack) {
+    span.stack = String(error.stack).substring(500);
+  }
+};
