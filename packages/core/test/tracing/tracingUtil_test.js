@@ -22,7 +22,8 @@ const {
   readTraceContextFromBuffer,
   sanitizeConnectionStr,
   unsignedHexStringToBuffer,
-  unsignedHexStringsToBuffer
+  unsignedHexStringsToBuffer,
+  findCallback
 } = require('../../src/tracing/tracingUtil');
 
 describe('tracing/tracingUtil', () => {
@@ -405,6 +406,42 @@ describe('tracing/tracingUtil', () => {
           'DATABASE=MY_DATABASE;HOSTNAME=localhost;PORT=50000;PROTOCOL=TCPIP;UID=my_user;PWD=123456'
         )
       ).to.equal('DATABASE=MY_DATABASE;HOSTNAME=localhost;PORT=50000;PROTOCOL=TCPIP;UID=my_user;PWD=<redacted>');
+    });
+  });
+
+  describe('findCallback', () => {
+    it('finds the last function and ignores class constructors', () => {
+      class C {}
+      function a() {}
+      function b() {}
+      const args = [1, C, a, b];
+      const res = findCallback(args);
+      expect(res.originalCallback).to.equal(b);
+      expect(res.callbackIndex).to.equal(3);
+    });
+
+    it('picks the previous function when the last argument is a class', () => {
+      class C {}
+      function a() {}
+      const args = [a, C];
+      const res = findCallback(args);
+      expect(res.originalCallback).to.equal(a);
+      expect(res.callbackIndex).to.equal(0);
+    });
+
+    it('returns undefined and -1 when no function is present', () => {
+      const args = [1, 'x', {}];
+      const res = findCallback(args);
+      expect(res.originalCallback).to.equal(undefined);
+      expect(res.callbackIndex).to.equal(-1);
+    });
+
+    it('accepts arrow functions as callbacks', () => {
+      const arrow = () => {};
+      const args = [null, arrow];
+      const res = findCallback(args);
+      expect(res.originalCallback).to.equal(arrow);
+      expect(res.callbackIndex).to.equal(1);
     });
   });
 });
