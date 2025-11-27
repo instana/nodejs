@@ -397,6 +397,7 @@ function addErrorToSpan(err, span) {
   if (err) {
     span.ec = 1;
 
+    // TODO: Special logic of appending error
     let errMsg = null;
     if (err.message) {
       errMsg = err.message;

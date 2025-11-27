@@ -7,6 +7,7 @@
 const shimmer = require('../../../../shimmer');
 const hook = require('../../../../../util/hook');
 const cls = require('../../../../cls');
+const tracingUtil = require('../../../../tracingUtil');
 
 function init() {
   hook.onModuleLoad('sqs-consumer', instrument);
@@ -30,7 +31,7 @@ function instrument(SQSConsumer) {
             })
             .catch(err => {
               span.ec = 1;
-              span.data.sqs.error = err.message || err.code || JSON.stringify(err);
+              tracingUtil.setErrorDetails(span, err, 'sqs');
               span.d = Date.now() - span.ts;
               span.transmitManual();
             });
@@ -62,7 +63,7 @@ function instrument(SQSConsumer) {
             })
             .catch(err => {
               span.ec = 1;
-              span.data.sqs.error = err.message || err.code || JSON.stringify(err);
+              tracingUtil.setErrorDetails(span, err, 'sqs');
               span.d = Date.now() - span.ts;
               span.transmitManual();
             });

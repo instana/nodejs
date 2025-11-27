@@ -105,7 +105,7 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
       })
       .catch(error => {
         span.ec = 1;
-        span.data.kafka.error = error.message;
+        tracingUtil.setErrorDetails(span, error, 'kafka');
         span.d = Date.now() - span.ts;
         span.transmit();
         throw error;
@@ -184,7 +184,7 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
       })
       .catch(error => {
         span.ec = 1;
-        span.data.kafka.error = error.message;
+        tracingUtil.setErrorDetails(span, error, 'kafka');
         span.d = Date.now() - span.ts;
         span.transmit();
         throw error;
