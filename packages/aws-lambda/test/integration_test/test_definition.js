@@ -45,9 +45,13 @@ function prelude(opts) {
     INSTANA_EXTRA_HTTP_HEADERS:
       'x-request-header-1; X-REQUEST-HEADER-2 ; x-response-header-1;X-RESPONSE-HEADER-2 , x-downstream-header  ',
     AWS_REGION: awsRegion,
-    INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS: '1000',
+    INSTANA_AWS_SSM_TIMEOUT_IN_MS: '1000',
     ...opts.env
   };
+
+  if (opts.ssmTimeout) {
+    env.INSTANA_AWS_SSM_TIMEOUT_IN_MS = opts.ssmTimeout;
+  }
   if (opts.error) {
     env.LAMDBA_ERROR = opts.error;
   }
@@ -251,6 +255,45 @@ function registerTests(handlerDefinitionPath, reduced) {
         handlerDefinitionPath,
         instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKeyMissing'
       });
+
+      let control;
+
+      before(async () => {
+        control = new Control({
+          faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+          handlerDefinitionPath,
+          startBackend: true,
+          env
+        });
+
+        await control.start();
+      });
+
+      beforeEach(async () => {
+        await control.reset();
+        await control.resetBackendSpansAndMetrics();
+      });
+
+      after(async () => {
+        await control.stop();
+      });
+
+      it('must not capture metrics and spans', () => {
+        return verify(control, { error: false, expectMetrics: false, expectSpans: false });
+      });
+    });
+
+    describeOrSkipIfReduced(reduced)('but fetching the key runs in a timeout', () => {
+      // - INSTANA_ENDPOINT_URL is configured
+      // - INSTANA_AGENT_KEY is configured via SSM
+      // - back end is reachable
+      // - lambda function ends with success
+      const env = prelude.bind(this)({
+        instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKeyMissing',
+        ssmTimeout: 50
+      });
+
+      env.DETACHED_REQUEST = 'true';
 
       let control;
 
