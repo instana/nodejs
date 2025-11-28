@@ -310,6 +310,15 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
     }
   }
 
+  const instanaAgentKey = environmentUtil.getInstanaAgentKey();
+
+  // CASE: aws lambda ssm key cannot be fetched, but either detached requests are sent
+  //       after the handler finished or coldstart delayed the handler execution
+  if (!instanaAgentKey) {
+    logger.warn(`[${requestId}] No Instana agent key configured. Cannot send data to Instana.`);
+    return handleCallback();
+  }
+
   // prepend backend's path if the configured URL has a path component
   const requestPath =
     options.useLambdaExtension || environmentUtil.getBackendPath() === '/'
@@ -329,7 +338,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
       'Content-Length': Buffer.byteLength(serializedPayload),
       Connection: 'keep-alive',
       [constants.xInstanaHost]: hostHeader,
-      [constants.xInstanaKey]: environmentUtil.getInstanaAgentKey()
+      [constants.xInstanaKey]: instanaAgentKey
     },
     rejectUnauthorized: !disableCaCheck
   };

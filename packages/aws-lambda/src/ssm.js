@@ -110,7 +110,8 @@ module.exports.waitAndGetInstanaKey = callback => {
     ? Number(process.env.INSTANA_AWS_SSM_TIMEOUT_IN_MS)
     : 1000;
 
-  // CASE: The time between SSM initialization and waitAndGetInstanaKey is too long to wait for the AWS response
+  // CASE: The time between SSM initialization and waitAndGetInstanaKey is too long to wait for the AWS response.
+  //       See init fn - we fetch the key as early as possible.
   if (endInMs - initTimeoutInMs > awsTimeoutInMs) {
     return callback(`Stopped waiting for AWS SSM response after ${awsTimeoutInMs}ms.`);
   }

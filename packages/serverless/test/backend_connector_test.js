@@ -41,6 +41,10 @@ describe('[UNIT] backend connector', () => {
   describe('Lambda Heartbeat', function () {
     this.timeout(testConfig.getTestTimeout());
 
+    before(() => {
+      environmentUtil.setInstanaAgentKey('fake-key');
+    });
+
     let onStub;
     let onceStub;
     let destroyStub;
@@ -371,7 +375,7 @@ describe('[UNIT] backend connector', () => {
     });
   });
 
-  describe('Backend URL handling', function () {
+  describe('Agent Url cases', function () {
     this.timeout(testConfig.getTestTimeout());
 
     let requestStub;
@@ -395,6 +399,8 @@ describe('[UNIT] backend connector', () => {
       requestStub = sinon.stub().returns(fakeRequest);
       sinon.stub(uninstrumentedHttp, 'https').value({ request: requestStub });
       sinon.stub(environmentUtil, 'getBackendHost').returns('example.com');
+      sinon.stub(environmentUtil, 'getInstanaAgentKey').returns('fake key');
+
       backendConnector.init({ config });
     });
 
@@ -424,6 +430,52 @@ describe('[UNIT] backend connector', () => {
       const reqOptions = requestStub.getCall(0).args[0];
       expect(reqOptions.path).to.equal('/traces');
       expect(reqOptions.path).to.not.include('//');
+    });
+  });
+
+  describe('Agent Key cases', function () {
+    this.timeout(testConfig.getTestTimeout());
+
+    let requestStub;
+    let fakeRequest;
+    let onStub;
+    let endStub;
+
+    beforeEach(() => {
+      onStub = sinon.stub();
+      endStub = sinon.stub();
+
+      fakeRequest = {
+        on: onStub,
+        end: endStub,
+        setTimeout: sinon.stub(),
+        once: sinon.stub(),
+        removeAllListeners: sinon.stub(),
+        destroy: sinon.stub()
+      };
+
+      requestStub = sinon.stub().returns(fakeRequest);
+      sinon.stub(uninstrumentedHttp, 'https').value({ request: requestStub });
+      sinon.stub(environmentUtil, 'getBackendHost').returns('example.com');
+      sinon.stub(environmentUtil, 'getInstanaAgentKey').returns(null);
+      backendConnector.init({ config });
+    });
+
+    afterEach(() => {
+      sinon.restore();
+    });
+
+    it('should return error when agent key is not set', cb => {
+      config.logger.warn = sinon.spy();
+
+      backendConnector.sendSpans({}, err => {
+        expect(err).to.not.exist;
+        expect(config.logger.warn.calledOnce).to.be.true;
+        expect(config.logger.warn.firstCall.args[0]).to.include(
+          'No Instana agent key configured. Cannot send data to Instana.'
+        );
+        cb();
+      });
     });
   });
 });
