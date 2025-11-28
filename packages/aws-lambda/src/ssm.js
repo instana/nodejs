@@ -11,6 +11,7 @@ let envValue = null;
 let errorFromAWS = null;
 let initTimeoutInMs = 0;
 let logger;
+let coldStart;
 
 module.exports.reset = () => {
   fetchedValue = null;
@@ -33,8 +34,9 @@ module.exports.validate = () => {
   return true;
 };
 
-module.exports.init = config => {
+module.exports.init = (config, _coldStart) => {
   logger = config.logger;
+  coldStart = _coldStart;
 
   // CASE: INSTANA_SSM_PARAM_NAME is not set, skip
   if (!exports.isUsed()) {
@@ -106,9 +108,14 @@ module.exports.waitAndGetInstanaKey = callback => {
   }
 
   const endInMs = Date.now();
-  const awsTimeoutInMs = process.env.INSTANA_AWS_SSM_TIMEOUT_IN_MS
+  let awsTimeoutInMs = process.env.INSTANA_AWS_SSM_TIMEOUT_IN_MS
     ? Number(process.env.INSTANA_AWS_SSM_TIMEOUT_IN_MS)
     : 1000;
+
+  // CASE: cold start will freeze the handler for a while and we have to allow more time to get the SSM response
+  if (coldStart) {
+    awsTimeoutInMs += 2000;
+  }
 
   // CASE: The time between SSM initialization and waitAndGetInstanaKey is too long to wait for the AWS response.
   //       See init fn - we fetch the key as early as possible.
