@@ -312,7 +312,8 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
 
   const instanaAgentKey = environmentUtil.getInstanaAgentKey();
 
-  // CASE: aws lambda ssm key cannot be fetched, but either detached requests are sent after the handler finished or coldstart delayed the handler execution
+  // CASE: aws lambda ssm key cannot be fetched, but either detached requests are sent
+  //       after the handler finished or coldstart delayed the handler execution
   if (!instanaAgentKey) {
     logger.warn(`[${requestId}] No Instana agent key configured. Cannot send data to Instana.`);
     return handleCallback();
