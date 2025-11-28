@@ -58,9 +58,9 @@ exports.wrap = function wrap(_config, originalHandler) {
         return shimmedHandler(originalHandler, this, arguments, _config);
       };
     case 2:
-    return function (event, context) {
-      return shimmedHandler(originalHandler, this, arguments, _config);
-    };
+      return function (event, context) {
+        return shimmedHandler(originalHandler, this, arguments, _config);
+      };
     default: {
       if (latestRuntime) {
         // Required for Node.js 24+: callback is not allowed
@@ -73,6 +73,7 @@ exports.wrap = function wrap(_config, originalHandler) {
         return shimmedHandler(originalHandler, this, arguments, _config);
       };
     }
+  }
 };
 
 function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
