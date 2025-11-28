@@ -33,8 +33,7 @@ let isActive = false;
 exports.shouldAddHeadersToOptionsUnconditionally = function () {
   return (
     semver.eq(process.version, '21.0.0') ||
-    (semver.gte(process.version, '20.8.1') && semver.lt(process.version, '20.10.0')) ||
-    (semver.gte(process.version, '18.18.2') && semver.lt(process.version, '18.19.0'))
+    (semver.gte(process.version, '20.8.1') && semver.lt(process.version, '20.10.0'))
   );
 };
 
