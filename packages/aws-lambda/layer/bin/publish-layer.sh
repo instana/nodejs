@@ -210,6 +210,21 @@ cat <<EOF >>package.json
 }
 EOF
 
+build_and_install_aws_lambda_auto_wrap() {
+  local current_dir=$(pwd)
+  echo "Building and installing instana-aws-lambda-auto-wrap (internal package)."
+
+  pushd "$ROOT_DIR/packages/aws-lambda-auto-wrap" >/dev/null
+  rm -rf instana-aws-lambda-auto-wrap-*.tgz
+  npm --loglevel=warn pack
+  mv instana-aws-lambda-auto-wrap-*.tgz "$LAYER_WORKDIR/instana-aws-lambda-auto-wrap.tgz"
+  popd >/dev/null
+
+  cd "$LAYER_WORKDIR"
+  npm install instana-aws-lambda-auto-wrap.tgz
+  rm -rf instana-aws-lambda-auto-wrap.tgz
+}
+
 if [[ $BUILD_LAYER_WITH == local ]]; then
   # Experimental layer build with local packages.
 
@@ -254,30 +269,12 @@ if [[ $BUILD_LAYER_WITH == local ]]; then
   npm --loglevel=warn pack
   mv instana-aws-lambda-*.tgz $LAYER_WORKDIR/instana-aws-lambda.tgz
 
-  echo "Building local tar.gz for instana-aws-lambda-auto-wrap."
-  cd ../aws-lambda-auto-wrap
-  rm -rf instana-aws-lambda-auto-wrap-*.tgz
-  npm --loglevel=warn pack
-  mv instana-aws-lambda-auto-wrap-*.tgz $LAYER_WORKDIR/instana-aws-lambda-auto-wrap.tgz
-
   popd >/dev/null
-
-  build_aws_lambda_auto_wrap_locally() {
-    echo "Building local tar.gz for instana-aws-lambda-auto-wrap (private package)."
-    pushd ../../../aws-lambda-auto-wrap >/dev/null
-    rm -rf instana-aws-lambda-auto-wrap-*.tgz
-    npm --loglevel=warn pack
-    mv instana-aws-lambda-auto-wrap-*.tgz $LAYER_WORKDIR/instana-aws-lambda-auto-wrap.tgz
-    popd >/dev/null
-
-    npm install instana-aws-lambda-auto-wrap.tgz
-    rm -rf instana-aws-lambda-auto-wrap.tgz
-  }
 
   # Install locally built packages (basically extracting them into node_modules) to prepare the structure that is
   # expected from an AWS Node.js Lambda layer.
 
-  build_aws_lambda_auto_wrap_locally
+  build_and_install_aws_lambda_auto_wrap
 
   npm install instana-aws-lambda.tgz
   npm install instana-serverless.tgz
@@ -288,11 +285,11 @@ if [[ $BUILD_LAYER_WITH == local ]]; then
 
 elif [[ $BUILD_LAYER_WITH == npm ]] || [[ -z $BUILD_LAYER_WITH ]]; then
 
-  # Build instana-aws-lambda-auto-wrap locally (internal package)
-  build_aws_lambda_auto_wrap_locally
-
   echo "step 3/9: downloading packages from npm (version $PACKAGE_VERSION)"
   npm install $PACKAGE_NAMES
+
+  # internal package
+  build_and_install_aws_lambda_auto_wrap
 else
   echo "Invalid option for BUILD_LAYER_WITH: $BUILD_LAYER_WITH, terminating."
   exit 1
