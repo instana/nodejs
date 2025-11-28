@@ -23,6 +23,9 @@ const lambdaConfigDefaults = {
   tracing: { forceTransmissionStartingAt: 25, transmissionDelay: 100, initialTransmissionDelay: 100 }
 };
 
+// Node.js 24+ removed support for callback-based handlers (3 parameters).
+const latestRuntime = semver.gte(process.version, '24.0.0');
+
 const logger = serverlessLogger.init();
 coreConfig.init(logger);
 let config = coreConfig.normalize({}, lambdaConfigDefaults);
@@ -43,10 +46,6 @@ exports.wrap = function wrap(_config, originalHandler) {
     originalHandler = _config;
     _config = null;
   }
-
-  // Node.js 24+ removed support for callback-based handlers (3 parameters).
-  // For Node.js < 24, we preserve the original behavior to maintain backward compatibility.
-  const latestRuntime = semver.gte(process.version, '24.0.0');
 
   switch (originalHandler.length) {
     case 0:
@@ -81,6 +80,19 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   const context = originalArgs[1];
   const lambdaCallback = originalArgs[2];
 
+  // For Node.js 24+, if handler expects callback but runtime doesn't provide one,
+  // skip wrapping and return handler directly
+  const handlerExpectsCallback = originalHandler?.length >= 3;
+
+  if (latestRuntime && handlerExpectsCallback && !lambdaCallback) {
+    // eslint-disable-next-line no-console
+    logger.warn(
+      `Warning: Callback-based Lambda handlers are not supported in Node.js ${process.version}. ` +
+        'Skipping Instana instrumentation. Please migrate to async/await or promise-based handlers.'
+    );
+    return originalHandler.apply(originalThis, originalArgs);
+  }
+
   const arnInfo = arnParser(context);
   const tracingEnabled = init(event, arnInfo, _config);
 
@@ -95,6 +107,8 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   // (return a promise and resolve it _and_ call the callback), it depends on the timing. Whichever happens first
   // dictates the result of the lambda invocation, the later result is ignored. To match this behaviour, we always
   // wrap the given callback _and_ return an instrumented promise.
+  //
+  // Note: In Node.js 24+, the runtime only passes 2 parameters (event, context) and doesn't provide a callback.
   let handlerHasFinished = false;
   return tracing.getCls().ns.runPromiseOrRunAndReturn(() => {
     const traceCorrelationData = triggers.readTraceCorrelationData(event, context);
