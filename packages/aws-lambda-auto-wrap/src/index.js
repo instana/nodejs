@@ -6,6 +6,7 @@
 'use strict';
 
 const instana = require('@instana/aws-lambda');
+const semver = require('semver');
 const localUtils = require('./utils');
 
 let wrappedHandler;
@@ -19,14 +20,25 @@ if (!wrappedHandler) {
     capturedError = e;
   }
 }
+// Node.js 24+ removed support for callback-based handlers (3 parameters).
+// For Node.js < 24, we preserve the callback signature for backward compatibility.
+const latestRuntime = semver.gte(process.version, '24.0.0');
 
-exports.handler = async function instanaAutowrapHandler(event, context) {
-  if (!wrappedHandler) {
-    throw capturedError;
-  }
+if (latestRuntime) {
+  exports.handler = async function instanaAutowrapHandler(event, context) {
+    if (!wrappedHandler) {
+      throw capturedError;
+    }
 
-  return wrappedHandler(event, context);
-};
+    return wrappedHandler(event, context);
+  };
+} else {
+  exports.handler = function instanaAutowrapHandler(event, context, callback) {
+    if (!wrappedHandler) return callback(capturedError);
+
+    return wrappedHandler(event, context, callback);
+  };
+}
 
 function loadTargetHandlerFunction() {
   const {
