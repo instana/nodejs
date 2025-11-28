@@ -5,13 +5,14 @@
 'use strict';
 
 const mock = require('@instana/core/test/test_util/mockRequire');
+const { createFakeLogger, delay } = require('@instana/core/test/test_util');
 const sinon = require('sinon');
 const expect = require('chai').expect;
 const ssm = require('../src/ssm');
 
 let sendCommandMock;
 
-describe('Unit: ssm library', () => {
+describe('Unit: ssm library', function () {
   before(() => {
     process.env.AWS_REGION = 'a-region';
   });
@@ -38,7 +39,9 @@ describe('Unit: ssm library', () => {
     expect(ssm.isUsed()).to.be.true;
   });
 
-  describe('init & waitAndGetInstanaKey', () => {
+  describe('init & waitAndGetInstanaKey', function () {
+    this.timeout(5000);
+
     beforeEach(() => {
       sendCommandMock = sinon.stub();
 
@@ -61,7 +64,7 @@ describe('Unit: ssm library', () => {
 
     it('should not fetch AWS SSM value if ssm env is not set', () => {
       ssm.validate();
-      expect(ssm.init({ logger: sinon.stub() })).to.be.undefined;
+      expect(ssm.init({ logger: createFakeLogger() })).to.be.undefined;
       expect(ssm.isUsed()).to.be.false;
       expect(sendCommandMock.callCount).to.equal(0);
     });
@@ -70,7 +73,7 @@ describe('Unit: ssm library', () => {
       process.env.INSTANA_SSM_PARAM_NAME = 'hello instana agent key';
 
       ssm.validate();
-      expect(ssm.init({ logger: { debug: sinon.stub(), warn: sinon.stub() } })).to.be.undefined;
+      expect(ssm.init({ logger: createFakeLogger() })).to.be.undefined;
 
       expect(sendCommandMock.callCount).to.equal(1);
       expect(sendCommandMock.getCall(0).args[0].Name).to.equal('hello instana agent key');
@@ -99,7 +102,7 @@ describe('Unit: ssm library', () => {
         });
       });
 
-      expect(ssm.init({ logger: { debug: sinon.stub() } })).to.be.undefined;
+      expect(ssm.init({ logger: createFakeLogger() })).to.be.undefined;
 
       expect(sendCommandMock.callCount).to.equal(1);
       expect(sendCommandMock.getCall(0).args[0].Name).to.equal('hello instana agent key');
@@ -129,7 +132,7 @@ describe('Unit: ssm library', () => {
         });
       });
 
-      expect(ssm.init({ logger: { debug: sinon.stub() } })).to.be.undefined;
+      expect(ssm.init({ logger: createFakeLogger() })).to.be.undefined;
 
       expect(sendCommandMock.callCount).to.equal(1);
       expect(sendCommandMock.getCall(0).args[0].Name).to.equal('hello instana agent key');
@@ -151,9 +154,11 @@ describe('Unit: ssm library', () => {
       ssm.validate();
       expect(ssm.isUsed()).to.be.true;
 
+      let callsFakeCalled = false;
       sendCommandMock.callsFake(() => {
         return new Promise(resolve => {
           setTimeout(() => {
+            callsFakeCalled = true;
             resolve({
               Parameter: {
                 Value: 'instana-value'
@@ -163,7 +168,7 @@ describe('Unit: ssm library', () => {
         });
       });
 
-      expect(ssm.init({ logger: { debug: sinon.stub() } })).to.be.undefined;
+      expect(ssm.init({ logger: createFakeLogger() })).to.be.undefined;
       expect(sendCommandMock.callCount).to.equal(1);
 
       const interval = ssm.waitAndGetInstanaKey((err, value) => {
@@ -172,10 +177,87 @@ describe('Unit: ssm library', () => {
             '"hello instana agent key", because we have not received a response from AWS.'
         );
         expect(value).to.be.undefined;
-        callback();
+
+        const checkIfCalled = () => {
+          if (callsFakeCalled) {
+            callback();
+          } else {
+            setTimeout(checkIfCalled, 50);
+          }
+        };
+
+        checkIfCalled();
       });
 
       expect(interval).to.exist;
+    });
+
+    it('coldstart is true', cb => {
+      process.env.INSTANA_SSM_PARAM_NAME = 'hello instana agent key';
+
+      ssm.validate();
+      expect(ssm.isUsed()).to.be.true;
+
+      let callsFakeCalled = false;
+      sendCommandMock.callsFake(() => {
+        return new Promise(resolve => {
+          setTimeout(() => {
+            callsFakeCalled = true;
+            resolve({
+              Parameter: {
+                Value: 'instana-value'
+              }
+            });
+          }, 2100);
+        });
+      });
+
+      ssm.init({ logger: createFakeLogger() }, true);
+      expect(sendCommandMock.callCount).to.equal(1);
+
+      delay(2000).then(() => {
+        ssm.waitAndGetInstanaKey(err => {
+          expect(err).to.not.exist;
+
+          const checkIfCalled = () => {
+            if (callsFakeCalled) {
+              cb();
+            } else {
+              setTimeout(checkIfCalled, 50);
+            }
+          };
+
+          checkIfCalled();
+        });
+      });
+    });
+
+    it('coldstart is false', cb => {
+      process.env.INSTANA_SSM_PARAM_NAME = 'hello instana agent key';
+
+      ssm.validate();
+      expect(ssm.isUsed()).to.be.true;
+
+      sendCommandMock.callsFake(() => {
+        return new Promise(resolve => {
+          setTimeout(() => {
+            resolve({
+              Parameter: {
+                Value: 'instana-value'
+              }
+            });
+          }, 900);
+        });
+      });
+
+      ssm.init({ logger: createFakeLogger() }, false);
+
+      delay(800).then(() => {
+        ssm.waitAndGetInstanaKey(err => {
+          expect(err).to.not.exist;
+          cb();
+        });
+      });
     });
   });
 });
