@@ -11,12 +11,13 @@ const supportedTracingVersion = require('../../src/tracing/supportedVersion');
 
 describe('supported versions for Node.js auto tracing', () => {
   it('must support various Node.js versions', () => {
-    expect(supportedTracingVersion('18.1.1')).to.equal(true);
+    expect(supportedTracingVersion('18.19.0')).to.equal(true);
     expect(supportedTracingVersion('20.0.0')).to.equal(true);
     expect(supportedTracingVersion('21.2.0')).to.equal(true);
     expect(supportedTracingVersion('22.0.0')).to.equal(true);
     expect(supportedTracingVersion('23.0.0')).to.equal(true);
     expect(supportedTracingVersion('24.0.0')).to.equal(true);
+    expect(supportedTracingVersion('25.0.0')).to.equal(true);
   });
 
   it('must report various Node.js versions as not supported', () => {
@@ -45,5 +46,6 @@ describe('supported versions for Node.js auto tracing', () => {
     expect(supportedTracingVersion('12.0.0')).to.equal(false);
     expect(supportedTracingVersion('14.0.0')).to.equal(false);
     expect(supportedTracingVersion('16.1.0')).to.equal(false);
+    expect(supportedTracingVersion('18.18.0')).to.equal(false);
   });
 });
