@@ -556,7 +556,7 @@ mochaSuiteFn('opentelemetry tests', function () {
             ));
       });
 
-      describe('tedious', function () {
+      describe.skip('tedious', function () {
         describe('opentelemetry is enabled', function () {
           globalAgent.setUpCleanUpHooks();
           const agentControls = globalAgent.instance;

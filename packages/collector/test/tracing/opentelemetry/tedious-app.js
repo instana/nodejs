@@ -34,7 +34,7 @@ app.use(bodyParser.json());
 // Locally:
 // To obtain the credentials for the Azure SQL Database, you can find them in 1password. Search for
 // "Team Node.js: Azure SQL credentials", download the file and copy this to your CMD line:
-// export AZURE_SQL_CONFIG=~/Downloads/nodejs-tracer-azure-sql.json
+// export AZURE_SQL_CONFIG=~/Downloads/nodejs-tracer-azure-sql-server.json
 if (!isCI() && !process.env.AZURE_SQL_CONFIG) {
   throw new Error('Please set the env variable `AZURE_SQL_CONFIG`.');
 }
