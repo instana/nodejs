@@ -87,7 +87,7 @@
     "@aws-sdk/client-dynamodb": "3.940.0",
     "@aws-sdk/client-kinesis": "3.940.0",
     "@aws-sdk/client-kms": "3.940.0",
-    "@aws-sdk/client-lambda": "3.940.0",
+    "@aws-sdk/client-lambda": "3.942.0",
     "@aws-sdk/client-s3": "3.940.0",
     "@aws-sdk/client-sns": "3.940.0",
     "@aws-sdk/client-sqs": "3.940.0",
