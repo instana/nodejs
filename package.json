@@ -158,7 +158,7 @@
     "eslint-plugin-mocha": "10.1.0",
     "eslint-plugin-monorepo-cop": "1.0.2",
     "event-loop-stats": "1.4.1",
-    "express": "5.1.0",
+    "express": "5.2.0",
     "express-v4": "npm:express@4.21.2",
     "express-winston": "4.2.0",
     "fastify": "5.6.2",
