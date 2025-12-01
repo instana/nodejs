@@ -57,7 +57,7 @@ exports.wrap = function wrap(_config, originalHandler) {
         return shimmedHandler(originalHandler, this, arguments, _config);
       };
     case 2:
-      return function (event, context) {
+      return function handler2(event, context) {
         return shimmedHandler(originalHandler, this, arguments, _config);
       };
     default: {
