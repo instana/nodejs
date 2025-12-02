@@ -7,6 +7,8 @@
 const instana = require('@instana/aws-lambda');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const localUtils = require('./utils');
+// eslint-disable-next-line instana/no-unsafe-require
+const semver = require('semver');
 
 // NOTE: The esm handler can be used for Lambdas with commonjs or es module.
 //       See https://github.com/nodejs/node/pull/35249
@@ -18,11 +20,23 @@ if (!supportedVersion(process.versions.node)) {
   );
 }
 
-exports.handler = async function instanaAutowrapHandler(event, context, callback) {
-  const targetHandler = await loadTargetHandlerFunction();
-  const wrappedHandler = instana.wrap(targetHandler);
-  return wrappedHandler(event, context, callback);
-};
+// Node.js 24+ removed support for callback-based handlers (3 parameters).
+// For Node.js < 24, we preserve the callback signature for backward compatibility.
+const latestRuntime = semver.gte(process.version, '24.0.0');
+
+if (latestRuntime) {
+  exports.handler = async function instanaAutowrapHandler(event, context) {
+    const targetHandler = await loadTargetHandlerFunction();
+    const wrappedHandler = instana.wrap(targetHandler);
+    return wrappedHandler(event, context);
+  };
+} else {
+  exports.handler = async function instanaAutowrapHandler(event, context, callback) {
+    const targetHandler = await loadTargetHandlerFunction();
+    const wrappedHandler = instana.wrap(targetHandler);
+    return wrappedHandler(event, context, callback);
+  };
+}
 
 async function loadTargetHandlerFunction() {
   const {

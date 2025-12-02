@@ -5,6 +5,8 @@
 
 'use strict';
 
+// eslint-disable-next-line instana/no-unsafe-require
+const semver = require('semver');
 const instanaCore = require('@instana/core');
 const { backendConnector, consoleLogger: serverlessLogger, environment } = require('@instana/serverless');
 const arnParser = require('./arn');
@@ -21,6 +23,9 @@ const { tracingHeaders, constants, spanBuffer } = tracing;
 const lambdaConfigDefaults = {
   tracing: { forceTransmissionStartingAt: 25, transmissionDelay: 100, initialTransmissionDelay: 100 }
 };
+
+// Node.js 24+ removed support for callback-based handlers (3 parameters).
+const latestRuntime = semver.gte(process.version, '24.0.0');
 
 const logger = serverlessLogger.init();
 coreConfig.init(logger);
@@ -43,8 +48,6 @@ exports.wrap = function wrap(_config, originalHandler) {
     _config = null;
   }
 
-  // Apparently the AWS Lambda Node.js runtime does not inspect the handlers signature for the number of arguments it
-  // accepts. But to be extra safe, we strive to return a function with the same number of arguments anyway.
   switch (originalHandler.length) {
     case 0:
       return function handler0() {
@@ -58,10 +61,18 @@ exports.wrap = function wrap(_config, originalHandler) {
       return function handler2(event, context) {
         return shimmedHandler(originalHandler, this, arguments, _config);
       };
-    default:
-      return function handler3(event, context, callback) {
+    default: {
+      if (latestRuntime) {
+        // Required for Node.js 24+: callback is not allowed
+        return function handlerAsync(event, context) {
+          return shimmedHandler(originalHandler, this, arguments, _config);
+        };
+      }
+      // For Node.js < 24, allow callback-based handlers
+      return function handlerCallback(event, context, callback) {
         return shimmedHandler(originalHandler, this, arguments, _config);
       };
+    }
   }
 };
 
@@ -69,6 +80,19 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   const event = originalArgs[0];
   const context = originalArgs[1];
   const lambdaCallback = originalArgs[2];
+
+  // For Node.js 24+, if handler expects callback but runtime doesn't provide one,
+  // skip wrapping and return handler directly
+  const handlerExpectsCallback = originalHandler?.length >= 3;
+
+  if (latestRuntime && handlerExpectsCallback && !lambdaCallback) {
+    // eslint-disable-next-line no-console
+    logger.warn(
+      `Callback-based Lambda handlers are not supported in Node.js ${process.version}. ` +
+        'Skipping Instana instrumentation. Please migrate to async/await or promise-based handlers.'
+    );
+    return originalHandler.apply(originalThis, originalArgs);
+  }
 
   const arnInfo = arnParser(context);
   const tracingEnabled = init(event, arnInfo, _config);
@@ -84,6 +108,8 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   // (return a promise and resolve it _and_ call the callback), it depends on the timing. Whichever happens first
   // dictates the result of the lambda invocation, the later result is ignored. To match this behaviour, we always
   // wrap the given callback _and_ return an instrumented promise.
+  //
+  // Note: In Node.js 24+, the runtime only passes 2 parameters (event, context) and doesn't provide a callback.
   let handlerHasFinished = false;
   return tracing.getCls().ns.runPromiseOrRunAndReturn(() => {
     const traceCorrelationData = triggers.readTraceCorrelationData(event, context);
