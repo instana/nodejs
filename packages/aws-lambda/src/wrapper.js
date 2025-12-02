@@ -5,6 +5,7 @@
 
 'use strict';
 
+// eslint-disable-next-line instana/no-unsafe-require
 const semver = require('semver');
 const instanaCore = require('@instana/core');
 const { backendConnector, consoleLogger: serverlessLogger, environment } = require('@instana/serverless');
@@ -63,12 +64,12 @@ exports.wrap = function wrap(_config, originalHandler) {
     default: {
       if (latestRuntime) {
         // Required for Node.js 24+: callback is not allowed
-        return function (event, context) {
+        return function handlerAsync(event, context) {
           return shimmedHandler(originalHandler, this, arguments, _config);
         };
       }
       // For Node.js < 24, allow callback-based handlers
-      return function (event, context, callback) {
+      return function handlerCallback(event, context, callback) {
         return shimmedHandler(originalHandler, this, arguments, _config);
       };
     }
@@ -87,7 +88,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   if (latestRuntime && handlerExpectsCallback && !lambdaCallback) {
     // eslint-disable-next-line no-console
     logger.warn(
-      `Warning: Callback-based Lambda handlers are not supported in Node.js ${process.version}. ` +
+      `Callback-based Lambda handlers are not supported in Node.js ${process.version}. ` +
         'Skipping Instana instrumentation. Please migrate to async/await or promise-based handlers.'
     );
     return originalHandler.apply(originalThis, originalArgs);

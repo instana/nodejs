@@ -6,6 +6,7 @@
 'use strict';
 
 const instana = require('@instana/aws-lambda');
+// eslint-disable-next-line instana/no-unsafe-require
 const semver = require('semver');
 const localUtils = require('./utils');
 

@@ -7,6 +7,7 @@
 const instana = require('@instana/aws-lambda');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const localUtils = require('./utils');
+// eslint-disable-next-line instana/no-unsafe-require
 const semver = require('semver');
 
 // NOTE: The esm handler can be used for Lambdas with commonjs or es module.
