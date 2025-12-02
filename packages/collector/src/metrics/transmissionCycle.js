@@ -81,7 +81,10 @@ exports.activate = function activate(_metrics, _downstreamConnection, _onSuccess
   isActive = true;
 
   transmissionsSinceLastFullDataEmit = 0;
-  sendMetrics();
+
+  if (process.env.INSTANA_DISABLE_METRICS !== 'true') {
+    sendMetrics();
+  }
 };
 
 function sendMetrics() {
