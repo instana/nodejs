@@ -853,12 +853,11 @@ function verifyHttpExit({
       expectedClientError = `Failed to parse URL from http:127.0.0.1:${serverControls.port}malformed-url`;
     }
     expectations.push(span => expect(span.data.http.status).to.not.exist);
-    expectations.push(span => expect(span.data.http.error).to.equal(expectedClientError));
+    expectations.push(span => expect(span.data.http.error).to.contain(expectedClientError));
   } else if (withTimeout) {
     expectations.push(span => expect(span.data.http.status).to.not.exist);
     // Early v18.x Node.js versions had "The operation was aborted", the message later changed to
-    // "The operation was aborted due to timeout".
-    expectations.push(span => expect(span.data.http.error).to.match(/^The operation was aborted(?: due to timeout)?/));
+    expectations.push(span => expect(span.data.http.error).to.contain('The operation was aborted due to timeout'));
   } else {
     expectations.push(span => expect(span.data.http.status).to.equal(status));
     expectations.push(span => expect(span.data.http.error).to.not.exist);
