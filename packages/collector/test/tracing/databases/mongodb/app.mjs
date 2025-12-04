@@ -184,7 +184,24 @@ app.post('/delete-one', (req, res) => {
     });
 });
 
-app.post('/find-one', (req, res) => {
+app.post('/findOneAndUpdate', (req, res) => {
+  let mongoResponse = null;
+  collection
+    .findOneAndUpdate(req.body.filter, req.body.update, { returnDocument: 'after' })
+    .then(r => {
+      mongoResponse = r;
+      return request(`http://127.0.0.1:${agentPort}`);
+    })
+    .then(() => {
+      res.json(mongoResponse);
+    })
+    .catch(e => {
+      log('Failed to find document', e);
+      res.sendStatus(500);
+    });
+});
+
+app.get('/find-one', (req, res) => {
   let mongoResponse = null;
   collection
     .findOne(req.body)

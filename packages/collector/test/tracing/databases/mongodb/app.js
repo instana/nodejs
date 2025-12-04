@@ -14,7 +14,6 @@ process.on('SIGTERM', () => {
 require('./mockVersion');
 
 const isLegacy = process.env.MONGODB_VERSION === 'v4';
-
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 require('../../../..')({
@@ -132,6 +131,23 @@ app.post('/insert-one', (req, res) => {
     })
     .catch(e => {
       log('Failed to write document', e);
+      res.sendStatus(500);
+    });
+});
+
+app.post('/findOneAndUpdate', (req, res) => {
+  let mongoResponse = null;
+  collection
+    .findOneAndUpdate(req.body.filter, req.body.update, { returnDocument: 'after' })
+    .then(r => {
+      mongoResponse = r;
+      return fetch(`http://127.0.0.1:${agentPort}`);
+    })
+    .then(() => {
+      res.json(mongoResponse);
+    })
+    .catch(e => {
+      log('Failed to find document', e);
       res.sendStatus(500);
     });
 });

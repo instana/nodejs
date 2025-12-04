@@ -20,7 +20,7 @@ const globalAgent = require('../../../globalAgent');
 
 const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
-['latest', 'v6', 'v4'].forEach(version => {
+['latest', 'v6', 'v4', 'v3'].forEach(version => {
   let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
   // mongodb v7 does not support node versions < 20
@@ -31,7 +31,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
   // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
   if (process.env.RUN_ESM && version !== 'latest') return;
 
-  mochaSuiteFn(`tracing/mongodb@${version}`, function () {
+  mochaSuiteFn.only(`tracing/mongodb@${version}`, function () {
     const timeout = USE_ATLAS ? config.getTestTimeout() * 2 : config.getTestTimeout();
     this.timeout(timeout);
 
@@ -123,6 +123,57 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
                 })
               )
             ));
+
+        it.only('must trace findOneAndUpdate requests', () => {
+          const unique = uuid();
+
+          return insertDoc(controls, unique)
+            .then(() =>
+              controls.sendRequest({
+                method: 'POST',
+                path: '/findOneAndUpdate',
+                body: {
+                  filter: { unique },
+                  update: {
+                    $set: {
+                      content: 'updated content'
+                    }
+                  }
+                }
+              })
+            )
+            .then(() => findDoc(controls, unique))
+            .then(response => {
+              expect(response._id).to.exist;
+              expect(response.unique).to.equal(unique);
+              expect(response.content).to.equal('updated content');
+
+              return retry(() =>
+                agentControls.getSpans().then(spans => {
+                  const entrySpanUpdate = expectHttpEntry(controls, spans, '/findOneAndUpdate');
+
+                  // 1xinsert for the test
+                  // 1xfindOneAndUpdate
+                  // 1xget doc
+                  // 1xhttp server
+                  // 1xhttp client to agent (some more of these)
+                  expect(spans.length).to.equal(9);
+
+                  expectMongoExit(
+                    controls,
+                    spans,
+                    entrySpanUpdate,
+                    'findAndModify',
+                    JSON.stringify({
+                      unique
+                    })
+                  );
+
+                  expectHttpExit(controls, spans, entrySpanUpdate);
+                })
+              );
+            });
+        });
 
         it('must trace update requests', () => {
           const unique = uuid();
