@@ -4,8 +4,6 @@
 
 'use strict';
 
-const iitmHook = require('import-in-the-middle');
-
 /** @type {import('../core').GenericLogger} */
 let logger;
 
@@ -23,6 +21,8 @@ exports.init = function init(config) {
  * Initializes the import-in-the-middle hooking.
  */
 exports.activate = function activate() {
+  const iitmHook = require('import-in-the-middle');
+
   Object.entries(byModuleNameTransformers).forEach(([moduleName, applicableTransformers]) => {
     if (applicableTransformers) {
       applicableTransformers.forEach(transformerFn => {
