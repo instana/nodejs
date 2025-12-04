@@ -1,6 +1,7 @@
 {
   "name": "instana-aws-lambda-auto-wrap",
   "version": "4.30.1",
+  "private": true,
   "description": "Automatically wrap AWS Lambdas for Instana tracing and monitoring without code modification.",
   "author": {
     "name": "Bastian Krol",
