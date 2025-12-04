@@ -256,7 +256,7 @@
     "couchbase-v4.4.3": "npm:couchbase@4.4.3",
     "ibm_db": "3.3.4",
     "kafka-avro": "3.2.0",
-    "node-rdkafka": "3.6.0",
+    "node-rdkafka": "3.6.1",
     "pg-native": "3.5.2",
     "prisma": "6.19.0"
   },
