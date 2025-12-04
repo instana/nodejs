@@ -34,7 +34,7 @@ describe('actions/source', function () {
 
   beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
 
-  it('retrieve fully qualified source file', () => {
+  it('must not allow any request', () => {
     const messageId = 'a';
     const semverPath = require.resolve('semver');
 
@@ -51,38 +51,14 @@ describe('actions/source', function () {
           agentControls.getResponses().then(responses => {
             testUtils.expectAtLeastOneMatching(responses, [
               response => expect(response.messageId).to.equal(messageId),
-              response => expect(response.data.data).to.be.a('string'),
-              response => expect(response.data.data).to.match(/SEMVER_SPEC_VERSION/i)
+              response => expect(response.data.error).to.match(/functionality disabled./i)
             ]);
           })
         )
       );
   });
 
-  it('must allow package.json requests', () => {
-    const messageId = 'a';
-    return agentControls
-      .addRequestForPid(expressControls.getPid(), {
-        action: 'node.source',
-        messageId,
-        args: {
-          file: path.join(process.cwd(), 'package.json')
-        }
-      })
-      .then(() =>
-        testUtils.retry(() =>
-          agentControls.getResponses().then(responses => {
-            testUtils.expectAtLeastOneMatching(responses, [
-              response => expect(response.messageId).to.equal(messageId),
-              response => expect(response.data.data).to.be.a('string'),
-              response => expect(response.data.data).to.match(/"name": "@instana\/collector"/i)
-            ]);
-          })
-        )
-      );
-  });
-
-  it('must not allow JSON requests', () => {
+  it('must not allow any request', () => {
     const messageId = 'a';
     return agentControls
       .addRequestForPid(expressControls.getPid(), {
@@ -97,7 +73,7 @@ describe('actions/source', function () {
           agentControls.getResponses().then(responses => {
             testUtils.expectAtLeastOneMatching(responses, [
               response => expect(response.messageId).to.equal(messageId),
-              response => expect(response.data.error).to.match(/JavaScript file/i)
+              response => expect(response.data.error).to.match(/functionality disabled./i)
             ]);
           })
         )
