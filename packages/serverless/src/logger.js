@@ -128,9 +128,6 @@ exports.getLogger = () => {
   };
 });
 
-// TODO: Legacy. Remove in next major release.
-exports.setLevel = setLoggerLevel;
-
 /**
  * @param {import('@instana/core/src/core').GenericLogger | *} _logger
  * @returns {boolean}

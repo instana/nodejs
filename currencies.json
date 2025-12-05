@@ -748,17 +748,6 @@
     "core": false
   },
   {
-    "name": "kafka-avro",
-    "policy": "Deprecated",
-    "lastSupportedVersion": "",
-    "latestVersion": "",
-    "cloudNative": false,
-    "isBeta": false,
-    "ignoreUpdates": false,
-    "note": "",
-    "core": false
-  },
-  {
     "name": "node-rdkafka",
     "policy": "45-days",
     "lastSupportedVersion": "",

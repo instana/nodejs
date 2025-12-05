@@ -14,17 +14,13 @@ const shimmer = require('../../shimmer');
 const { getFunctionArguments } = require('../../../util/function_arguments');
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
 
-let logger;
 let isActive = false;
 
 exports.init = function init(config) {
-  logger = config.logger;
-
   hook.onFileLoad(/\/node-rdkafka\/lib\/producer\.js/, instrumentProducer);
   hook.onFileLoad(/\/node-rdkafka\/lib\/kafka-consumer-stream\.js/, instrumentConsumerAsStream);
   hook.onModuleLoad('node-rdkafka', instrumentConsumer);
 
-  hook.onModuleLoad('kafka-avro', logDeprecationKafkaAvroMessage);
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
 };
 
@@ -384,12 +380,6 @@ function findInstanaHeaderValues(instanaHeadersAsObject) {
   return { level, traceId, longTraceId, parentSpanId };
 }
 
-function logDeprecationKafkaAvroMessage() {
-  logger.warn(
-    // eslint-disable-next-line max-len
-    '[Deprecation Warning] The support for kafka-avro library is deprecated and might be removed in the next major release. See https://github.com/waldophotos/kafka-avro/issues/120'
-  );
-}
 function setTraceHeaders({ headers, span }) {
   if (span.shouldSuppressDownstream) {
     // Suppress trace propagation to downstream services.

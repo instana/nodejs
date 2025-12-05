@@ -40,11 +40,19 @@ module.exports.init = (_config, cls) => {
   });
 
   const transformToInstanaSpan = otelSpan => {
-    if (!otelSpan || !otelSpan.instrumentationLibrary) {
+    // TODO: remove instrumentationLibrary in next major release
+    //       instrumentationScope was introduced in OpenTelemetry v2
+    if (!otelSpan || (!otelSpan.instrumentationScope && !otelSpan.instrumentationLibrary)) {
       return;
     }
 
-    const targetInstrumentionName = otelSpan.instrumentationLibrary.name;
+    const targetInstrumentionName =
+      otelSpan.instrumentationScope?.name || otelSpan.instrumentationLibrary?.name || null;
+
+    if (!targetInstrumentionName) {
+      return;
+    }
+
     let kind = constants.EXIT;
 
     if (instrumentations[targetInstrumentionName] && instrumentations[targetInstrumentionName].module) {
