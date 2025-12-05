@@ -66,7 +66,7 @@ const download = async _blobName => {
     const downloadBlobResponse = await _blockBlobClient.downloadToFile(localFilePath);
     return downloadBlobResponse;
   } catch (e) {
-    log('Error occured while downloading');
+    log('Error occurred while downloading');
   }
 };
 

@@ -217,7 +217,7 @@ jobs:
         icon_emoji: ':white_check_mark:'
         text: |
               :white_check_mark: Version ((.:package-version)) build with ((.:nodejs-version)) of the container image `instana/aws-fargate-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `delivery.instana.io`/`containers.instana.io`.
-        attachments: &slack-alert-attachements-success
+        attachments: &slack-alert-attachments-success
           - color: '#00ff00'
             fields:
               - title: 'Job'
@@ -235,7 +235,7 @@ jobs:
         icon_emoji: ':check-failed:'
         text: |
               :x: Building/pushing a new version of the container image `instana/aws-fargate-nodejs` has failed.
-        attachments: &slack-alert-attachements-failure
+        attachments: &slack-alert-attachments-failure
           - color: '#ff0000'
             fields:
               - title: 'Job'
@@ -311,7 +311,7 @@ jobs:
         icon_emoji: ':white_check_mark:'
         text: |
               :white_check_mark: Version ((.:package-version)) build with ((.:nodejs-version)) of the container image `instana/google-cloud-run-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `delivery.instana.io`/`containers.instana.io`.
-        attachments: *slack-alert-attachements-success
+        attachments: *slack-alert-attachments-success
     on_failure: &slack-notify-failure-cloud-run
       put: slack-alert
       params:
@@ -319,7 +319,7 @@ jobs:
         icon_emoji: ':check-failed:'
         text: |
               :x: Building/pushing a new version of the container image `instana/google-cloud-run-nodejs` has failed.
-        attachments: *slack-alert-attachements-failure
+        attachments: *slack-alert-attachments-failure
     on_error: *slack-notify-failure-cloud-run
 
 
@@ -409,7 +409,7 @@ jobs:
               icon_emoji: ':white_check_mark:'
               text: |
                     :white_check_mark: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has been successfully deployed to all the *non-cn* regions (x86_64 architecture).
-              attachments: *slack-alert-attachements-success
+              attachments: *slack-alert-attachments-success
           on_failure: &slack-notify-failure-lambda
             put: slack-alert
             params:
@@ -417,7 +417,7 @@ jobs:
               icon_emoji: ':check-failed:'
               text: |
                     :x: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has failed while publishing to *non-cn* regions (x86_64 architecture).
-              attachments: *slack-alert-attachements-failure
+              attachments: *slack-alert-attachments-failure
           on_error: *slack-notify-failure-lambda
 
         - task: build-and-publish-aws-lambda-layer-and-image-arm64
@@ -451,7 +451,7 @@ jobs:
               icon_emoji: ':white_check_mark:'
               text: |
                     :white_check_mark: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has been successfully deployed to all the *non-cn* regions (arm64 architecture).
-              attachments: *slack-alert-attachements-success
+              attachments: *slack-alert-attachments-success
           on_failure: &slack-notify-failure-lambda
             put: slack-alert
             params:
@@ -459,7 +459,7 @@ jobs:
               icon_emoji: ':check-failed:'
               text: |
                     :x: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has failed while publishing to *non-cn* regions (arm64 architecture).
-              attachments: *slack-alert-attachements-failure
+              attachments: *slack-alert-attachments-failure
           on_error: *slack-notify-failure-lambda
 
         - task: build-and-publish-aws-lambda-layer-and-image-china-x86_64
@@ -493,7 +493,7 @@ jobs:
               icon_emoji: ':white_check_mark:'
               text: |
                     :white_check_mark: The AWS Lambda layer for the Instana Node.js package version ((.:package-version)) has been successfully deployed to the *cn* regions (x86_64 architecture).
-              attachments: *slack-alert-attachements-success
+              attachments: *slack-alert-attachments-success
           on_failure: &slack-notify-failure-lambda
             put: slack-alert
             params:
@@ -501,7 +501,7 @@ jobs:
               icon_emoji: ':check-failed:'
               text: |
                     :x: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has failed while publishing to the *cn* regions (x86_64 architecture).
-              attachments: *slack-alert-attachements-failure
+              attachments: *slack-alert-attachments-failure
           on_error: *slack-notify-failure-lambda
 
         - task: build-and-publish-aws-lambda-layer-and-image-china-arm64
@@ -536,7 +536,7 @@ jobs:
               icon_emoji: ':white_check_mark:'
               text: |
                     :white_check_mark: The AWS Lambda layer for the Instana Node.js package version ((.:package-version)) has been successfully deployed to the *cn* regions (arm64 architecture).
-              attachments: *slack-alert-attachements-success
+              attachments: *slack-alert-attachments-success
           on_failure: &slack-notify-failure-lambda
             put: slack-alert
             params:
@@ -544,7 +544,7 @@ jobs:
               icon_emoji: ':check-failed:'
               text: |
                     :x: The AWS Lambda layer deployment for the Instana Node.js package version ((.:package-version)) has failed while publishing to the *cn* regions (arm64 architecture).
-              attachments: *slack-alert-attachements-failure
+              attachments: *slack-alert-attachments-failure
           on_error: *slack-notify-failure-lambda
 
   - name: azure-container-services-nodejs-container-image-layer
@@ -602,7 +602,7 @@ jobs:
         icon_emoji: ':white_check_mark:'
         text: |
               :white_check_mark: Version ((.:package-version)) build with ((.:nodejs-version)) of the container image `instana/azure-container-services-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `delivery.instana.io`/`containers.instana.io`.
-        attachments: *slack-alert-attachements-success
+        attachments: *slack-alert-attachments-success
     on_failure: &slack-notify-failure-azure-container-services
       put: slack-alert
       params:
@@ -610,5 +610,5 @@ jobs:
         icon_emoji: ':check-failed:'
         text: |
               :x: Building/pushing a new version of the container image `instana/azure-container-services-nodejs` has failed.
-        attachments: *slack-alert-attachements-failure
+        attachments: *slack-alert-attachments-failure
     on_error: *slack-notify-failure-azure-container-services

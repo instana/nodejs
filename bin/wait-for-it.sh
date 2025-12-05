@@ -7,7 +7,7 @@
 
 # Copied from:
 # https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh, with the patch from https://github.com/vishnubob/wait-for-it/pull/19
-# (fix for timout command) and another local patch for realpath command applied
+# (fix for timeout command) and another local patch for realpath command applied
 # to support OS X.
 
 # License:

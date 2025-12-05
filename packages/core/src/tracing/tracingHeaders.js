@@ -35,7 +35,7 @@ exports.init = function (config) {
  *     - will be used for propagating X-INSTANA-T downstream
  *     - will be used for the trace ID part when propagating traceparent downstream
  * @property {string} [longTraceId]
- *     - the full trace ID, when limiting a 128 bit trace ID to 64 bit has occured
+ *     - the full trace ID, when limiting a 128 bit trace ID to 64 bit has occurred
  *     - when no limiting has been applied, this is unset
  *     - will be used for span.lt
  * @property {boolean} usedTraceParent

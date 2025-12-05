@@ -135,7 +135,7 @@ exports.init = function init(opts) {
  * "finalLambdaRequest":
  * When using AWS Lambda, we send metrics and spans together
  * using the function "sendBundle" at the end of the invocation - before the AWS Lambda
- * runtime might freeze the process. The span buffer sends data reguarly using `sendSpans`.
+ * runtime might freeze the process. The span buffer sends data regularly using `sendSpans`.
  */
 exports.sendBundle = function sendBundle(bundle, finalLambdaRequest, callback) {
   const requestId = getRequestId();
@@ -355,7 +355,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   if (skipWaitingForHttpResponse) {
     // If the Lambda extension is not available to act as a proxy between the Lambda and serverless-acceptor (and
     // additionally, if no user-configured proxy is in place), we change the HTTP handling a bit to reduce the time
-    // we keep the Lamdba alive: We deliberately do not pass a callback when calling https.request but instead we pass
+    // we keep the Lambda alive: We deliberately do not pass a callback when calling https.request but instead we pass
     // the callback to req.end. This way, we do not wait for the HTTP _response_, but we still make sure the request
     // data is written to the network  completely. This reduces the delay we add to the Lambda execution time to
     // report metrics and traces quite a bit. The (acceptable) downside is that we do not get to examine the response
@@ -407,7 +407,7 @@ function send({ resourcePath, payload, finalLambdaRequest, callback, tries, requ
   });
 
   // See above for the difference between the timeout attribute in the request options and handling the 'timeout'
-  // event. This only adds a read timeout after the connection has been established and we need the timout attribute
+  // event. This only adds a read timeout after the connection has been established and we need the timeout attribute
   // in the request options additionally for protection against cases where *connecting* to the socket takes too long,
   // see https://nodejs.org/api/http.html#http_request_settimeout_timeout_callback:
   // > Once a socket is assigned to this request **and is connected**

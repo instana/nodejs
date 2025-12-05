@@ -100,7 +100,7 @@ describe('tracing/shimmer', () => {
     expect(shimmerConsoleErrorArgs).to.not.exist;
     expect(loggerStub.warn.called).to.eql(true);
     expect(loggerStub.warn.getCall(0).args[0]).to.contain(
-      'An internal error happend in the Instana Node.js collector. Please contact support. TypeError: oops'
+      'An internal error happened in the Instana Node.js collector. Please contact support. TypeError: oops'
     );
   });
 
@@ -157,7 +157,7 @@ describe('tracing/shimmer', () => {
     expect(shimmerConsoleErrorArgs).to.not.exist;
     expect(loggerStub.warn.called).to.eql(true);
     expect(loggerStub.warn.getCall(0).args[0]).to.contain(
-      'An internal error happend in the Instana Node.js collector. Please contact support. TypeError: ooops'
+      'An internal error happened in the Instana Node.js collector. Please contact support. TypeError: ooops'
     );
   });
 

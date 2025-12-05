@@ -65,8 +65,8 @@ class DependencyDistanceCalculator {
     // For each package.json that we find in the dependency tree, we initially increase the global count down latch
     // by 3, that is, one for each type of dependencies (normal, optional, peer). Once we have in turn queued all
     // dependencies found in this package.json for a particular dependency type, we decrement the global count down
-    // latch by one. When this has happend for all three types of dependencies, the net change for the global latch will
-    // be zero, but sub dependencies will already have been incremented the global count down latch.
+    // latch by one. When this has happened for all three types of dependencies, the net change for the global latch
+    // will be zero, but sub dependencies will already have been incremented the global count down latch.
     this.globalCountDownLatchAllPackages.countUp(3);
 
     // Read the associated package.json and parse it.
@@ -115,7 +115,7 @@ class DependencyDistanceCalculator {
 
   /**
    * Iterates over the given set of dependencies to calculate their distances. The set of dependencies will what is
-   * defined in a package.json file for one particular type of dependencys (normal, optional, or peer).
+   * defined in a package.json file for one particular type of dependencies (normal, optional, or peer).
    *
    * @param {Array<string>} dependencies The dependencies to analyze
    * @param {number} distance How far the dependencies are from the root package

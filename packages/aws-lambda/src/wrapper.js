@@ -219,7 +219,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
         return handlerPromise;
       }
     } catch (e) {
-      // A synchronous exception occured in the original handler.
+      // A synchronous exception occurred in the original handler.
       handlerHasFinished = true;
       // eslint-disable-next-line no-console
       console.error(

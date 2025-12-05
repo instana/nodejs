@@ -69,7 +69,7 @@ function connect() {
       ready = true;
     })
     .catch(err => {
-      console.log(`Error occured while connecting ${err.message}`);
+      console.log(`Error occurred while connecting ${err.message}`);
     });
 }
 

@@ -122,23 +122,23 @@ function addDependenciesFromDir(dependencyDir, callback) {
       return;
     }
 
-    const filteredDependendencies = dependencies.filter(
+    const filteredDependencies = dependencies.filter(
       (
         dependency // exclude the .bin directory
       ) => dependency !== '.bin'
     );
-    if (filteredDependendencies.length === 0) {
+    if (filteredDependencies.length === 0) {
       callback();
       return;
     }
 
     // This latch fires once all dependencies of the current directory in the node_modules tree have been analysed.
-    const countDownLatch = new CountDownLatch(filteredDependendencies.length);
+    const countDownLatch = new CountDownLatch(filteredDependencies.length);
     countDownLatch.once('done', () => {
       callback();
     });
 
-    filteredDependendencies.forEach(dependency => {
+    filteredDependencies.forEach(dependency => {
       if (dependency.indexOf('@') === 0) {
         addDependenciesFromDir(path.join(dependencyDir, dependency), () => {
           countDownLatch.countDown();
@@ -230,7 +230,7 @@ function limitAndSet(distances = {}) {
   // packages with the same distance, we sort in a reverse lexicographic order. That means, that if no distances are
   // available at all, packages will be in reverse lexicographical order.
   //
-  // At any rate, we start deleting collected depenencies from the payload at index 0, that is, we either remove the
+  // At any rate, we start deleting collected dependencies from the payload at index 0, that is, we either remove the
   // most distant ones or the ones that are at the end of the lexicographic order.
   for (let i = 0; i < keys.length - exports.MAX_DEPENDENCIES; i++) {
     delete preliminaryPayload[keys[i]];

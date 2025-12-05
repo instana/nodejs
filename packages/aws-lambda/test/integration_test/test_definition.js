@@ -1624,7 +1624,7 @@ function registerTests(handlerDefinitionPath, reduced) {
       return retry(async () => {
         const spansFromExtension = await control.getSpansFromExtension();
 
-        // Times out twice to extenstion -> direct backend transmit
+        // Times out twice to extension -> direct backend transmit
         expect(spansFromExtension).to.have.length(0);
 
         const spans = await control.getSpans();

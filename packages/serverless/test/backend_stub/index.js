@@ -54,7 +54,7 @@ app.use(
 );
 
 // This endpoint will be called when the Lambda integration test simulates talking directly to serverless-acceptor
-// instead of the Lambda extenstion (default case).
+// instead of the Lambda extension (default case).
 app.post('/serverless/bundle', acceptBundle);
 
 function acceptBundle(req, res) {
@@ -88,7 +88,7 @@ function acceptBundle(req, res) {
 }
 
 // This endpoint will be called when the Lambda integration test simulates talking directly to serverless-acceptor
-// instead of the Lambda extenstion (default case).
+// instead of the Lambda extension (default case).
 app.post('/serverless/metrics', acceptMetrics);
 
 // This endpoint will be called when the Lambda integration test simulates talking to the Lambda extension instead of
@@ -118,7 +118,7 @@ function acceptMetrics(req, res) {
 }
 
 // This endpoint will be called when the Lambda integration test simulates talking directly to serverless-acceptor
-// instead of the Lambda extenstion (default case).
+// instead of the Lambda extension (default case).
 app.post('/serverless/traces', acceptTraces);
 
 // This endpoint will be called when the Lambda integration test simulates talking to the Lambda extension instead of

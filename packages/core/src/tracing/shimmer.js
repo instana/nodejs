@@ -86,7 +86,7 @@ exports.wrap = (origObject, origMethod, instrumentationWrapperMethod) => {
         }
 
         logger.warn(
-          `An internal error happend in the Instana Node.js collector. Please contact support. ${err?.stack}`
+          `An internal error happened in the Instana Node.js collector. Please contact support. ${err?.stack}`
         );
 
         if (originalCalled) return;
