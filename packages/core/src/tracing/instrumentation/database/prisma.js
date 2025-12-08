@@ -9,12 +9,6 @@
 // via SIGKILL, which will deprive Istanbul of the opportunity to report test coverage for Prisma correctly.
 
 const shimmer = require('../../shimmer');
-
-let logger;
-logger = require('../../../logger').getLogger('tracing/prisma', newLogger => {
-  logger = newLogger;
-});
-
 const requireHook = require('../../../util/requireHook');
 const { getErrorDetails, getStackTrace } = require('../../tracingUtil');
 const { EXIT } = require('../../constants');
@@ -74,14 +68,14 @@ function instrumentClientConstructor(prismaClientModule) {
               }
             });
           } else {
-            logger.debug(
-              'The operation getConfig did not yield a thenable, the database URL will not be captured on spans.'
-            );
+            // logger.debug(
+            //   'The operation getConfig did not yield a thenable, the database URL will not be captured on spans.'
+            // );
           }
         } else {
-          logger.debug(
-            'PrismaClient#_engine.getConfig does not exist, the database URL will not be captured on spans.'
-          );
+          // logger.debug(
+          //   'PrismaClient#_engine.getConfig does not exist, the database URL will not be captured on spans.'
+          // );
         }
       }
     }
@@ -96,7 +90,7 @@ function shimRequest(prismaClientModule) {
     !prismaClientModule.PrismaClient.prototype ||
     !prismaClientModule.PrismaClient.prototype._request
   ) {
-    logger.debug('prismaClientModule.PrismaClient.prototype._request does not exist, will not instrument Prisma.');
+    // logger.debug('prismaClientModule.PrismaClient.prototype._request does not exist, will not instrument Prisma.');
     return;
   }
 
