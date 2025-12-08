@@ -288,7 +288,7 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
   }
 
   // Normalize error to object format at the beginning
-  /** @type {{ message?: string, stack?: object | string | null, name?: string, code?: string }} */
+  /** @type {{ message?: string, stack?: object | string | null, name?: string, code?: string, details?: string }} */
   let normalizedError;
 
   if (typeof error === 'string') {
@@ -304,6 +304,8 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
 
       if (normalizedError?.message) {
         combinedMessage = `${normalizedError.name || 'Error'}: ${normalizedError.message}`;
+      } else if (normalizedError?.details) {
+        combinedMessage = `${normalizedError.name || 'Error'}: ${normalizedError.details}`;
       } else {
         combinedMessage = normalizedError?.code || 'No error message found.';
       }

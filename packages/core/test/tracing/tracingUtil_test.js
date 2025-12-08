@@ -540,5 +540,32 @@ describe('tracing/tracingUtil', () => {
 
       expect(span.stack).to.have.lengthOf(500);
     });
+
+    it('should handle error objects with details property (gRPC errors)', () => {
+      const span = {
+        data: {
+          rpc: {}
+        }
+      };
+      const error = { details: 'UNAVAILABLE: Connection refused' };
+      setErrorDetails(span, error, 'rpc');
+
+      expect(span.data.rpc.error).to.equal('UNAVAILABLE: Connection refused');
+    });
+
+    it('should prioritize details over message for gRPC errors', () => {
+      const span = {
+        data: {
+          rpc: {}
+        }
+      };
+      const error = {
+        message: 'Generic error message',
+        details: 'UNAVAILABLE: Connection refused'
+      };
+      setErrorDetails(span, error, 'rpc');
+
+      expect(span.data.rpc.error).to.equal('UNAVAILABLE: Connection refused');
+    });
   });
 });
