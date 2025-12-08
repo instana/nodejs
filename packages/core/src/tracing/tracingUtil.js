@@ -302,6 +302,6 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
 
   // TODO: Change substring usage to frame capturing - see util/stackTrace.js
   if (error.stack) {
-    span.stack = String(error.stack).substring(500);
+    span.stack = String(error.stack).substring(0, 500);
   }
 };
