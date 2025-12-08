@@ -35,6 +35,22 @@ app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
+// eslint-disable-next-line no-unused-vars
+app.get('/trigger-error', (req, res) => {
+  // This endpoint makes an HTTP client call that will fail
+  // This will trigger setErrorDetails on the http.client span
+  fetch('http://localhost:1/non-existent-endpoint', {
+    method: 'GET',
+    timeout: 100
+  })
+    .then(response => {
+      res.sendStatus(response.status);
+    })
+    .catch(err => {
+      res.status(500).send(err);
+    });
+});
+
 app.use((req, res) => {
   log(req.method, req.url);
   const delay = parseInt(req.query.delay || 0, 10);
