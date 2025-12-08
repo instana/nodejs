@@ -85,7 +85,7 @@
     "@as-integrations/express5": "1.1.2",
     "@aws-sdk/client-cloudwatch-logs": "3.696.0",
     "@aws-sdk/client-dynamodb": "3.946.0",
-    "@aws-sdk/client-kinesis": "3.943.0",
+    "@aws-sdk/client-kinesis": "3.946.0",
     "@aws-sdk/client-kms": "3.943.0",
     "@aws-sdk/client-lambda": "3.945.0",
     "@aws-sdk/client-s3": "3.943.0",
