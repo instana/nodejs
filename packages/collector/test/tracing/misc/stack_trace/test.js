@@ -141,6 +141,33 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
               })
             )
           ));
+
+      it('must replace error.stack with span.stack when error occurs', () =>
+        expressProxyControls
+          .sendRequest({
+            method: 'GET',
+            path: '/trigger-error'
+          })
+          .then(() =>
+            testUtils.retry(() =>
+              agentControls.getSpans().then(spans => {
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.client'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.ec).to.equal(1),
+                  span => expect(span.data.http.error).to.exist,
+                  span => {
+                    // When setErrorDetails is called with an error that has a stack,
+                    // the error.stack should be captured in span.stack as a string (first 500 chars)
+                    expect(span.stack).to.be.a('string');
+                    expect(span.stack.length).to.be.greaterThan(0);
+                    expect(span.stack.length).to.be.at.most(500);
+                    expect(span.stack).to.match(/Error|ECONNREFUSED/);
+                  }
+                ]);
+              })
+            )
+          ));
     });
   });
 });
