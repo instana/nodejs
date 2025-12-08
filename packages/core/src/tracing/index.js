@@ -15,7 +15,6 @@ const tracingUtil = require('./tracingUtil');
 const spanBuffer = require('./spanBuffer');
 const shimmer = require('./shimmer');
 const supportedVersion = require('./supportedVersion');
-const { otelInstrumentations } = require('./opentelemetry-instrumentations');
 const cls = require('./cls');
 const coreUtil = require('../util');
 
@@ -44,7 +43,6 @@ let instrumentations = [
   './instrumentation/cloud/aws-sdk/v3',
   './instrumentation/cloud/aws-sdk/v2/sdk',
   './instrumentation/cloud/aws-sdk/v2/sqs',
-  './instrumentation/cloud/azure/blob',
   './instrumentation/cloud/gcp/pubsub',
   './instrumentation/cloud/gcp/storage',
   './instrumentation/control_flow/bluebird',
@@ -218,9 +216,6 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
     if (automaticTracingEnabled) {
       initInstrumenations(config);
 
-      if (_config.tracing.useOpentelemetry) {
-        otelInstrumentations.init(config, cls);
-      }
       if (coreUtil.esm.isESMApp()) {
         coreUtil.iitmHook.activate();
       }
