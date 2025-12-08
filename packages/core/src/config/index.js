@@ -298,9 +298,6 @@ function normalizeUseOpentelemetry(config) {
     return;
   }
   if (process.env['INSTANA_DISABLE_USE_OPENTELEMETRY'] === 'true') {
-    logger.info(
-      'Not using OpenTelemetry as it is explicitly disabled via environment variable INSTANA_DISABLE_USE_OPENTELEMETRY.'
-    );
     config.tracing.useOpentelemetry = false;
     return;
   }
