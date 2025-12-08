@@ -32,6 +32,8 @@ exports.init = function init(config) {
  * @property {string} [loadFrom]
  */
 
+process.env.INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS = 'true';
+
 const copyPrecompiledDisabled =
   process.env.INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS &&
   process.env.INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS.toLowerCase() === 'false';
