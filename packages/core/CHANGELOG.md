@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.31.0](https://github.com/instana/nodejs/compare/v4.30.1...v4.31.0) (2025-12-08)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/instrumentation-oracledb from 0.33.0 to 0.34.0 ([#2155](https://github.com/instana/nodejs/issues/2155)) ([d572379](https://github.com/instana/nodejs/commit/d5723795a3a635b264c86d7400ceefea2dda9473))
+* bumped @opentelemetry/instrumentation-tedious from 0.26.0 to 0.27.0 ([#2171](https://github.com/instana/nodejs/issues/2171)) ([fcbf7a0](https://github.com/instana/nodejs/commit/fcbf7a0c1b480aa90876bd429e228c747613a73e))
+* excluded ng from tracing ([#2187](https://github.com/instana/nodejs/issues/2187)) ([1dd607d](https://github.com/instana/nodejs/commit/1dd607d7a6d472ebcd3bdc5630c496827dd12a32))
+* resolved TypeError when Node.js entrypoint is unknown ([#2182](https://github.com/instana/nodejs/issues/2182)) ([19746e5](https://github.com/instana/nodejs/commit/19746e5713e94e8047b022f239e035779b4c8c2c))
+
+
+### Features
+
+* added support for Prisma V7 ([#2184](https://github.com/instana/nodejs/issues/2184)) ([5476da1](https://github.com/instana/nodejs/commit/5476da1aa6c9b68f2995819a922f3d60734279bc))
+
+
+
+
+
 ## [4.30.1](https://github.com/instana/nodejs/compare/v4.30.0...v4.30.1) (2025-11-18)
 
 

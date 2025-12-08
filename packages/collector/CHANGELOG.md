@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.31.0](https://github.com/instana/nodejs/compare/v4.30.1...v4.31.0) (2025-12-08)
+
+
+### Bug Fixes
+
+* resolved TypeError when Node.js entrypoint is unknown ([#2182](https://github.com/instana/nodejs/issues/2182)) ([19746e5](https://github.com/instana/nodejs/commit/19746e5713e94e8047b022f239e035779b4c8c2c))
+
+
+### Features
+
+* added support for mongoose v9 ([#2169](https://github.com/instana/nodejs/issues/2169)) ([8bac4f9](https://github.com/instana/nodejs/commit/8bac4f995ed42518dfc8cbf8e13747a0899e03eb))
+* added support for Prisma V7 ([#2184](https://github.com/instana/nodejs/issues/2184)) ([5476da1](https://github.com/instana/nodejs/commit/5476da1aa6c9b68f2995819a922f3d60734279bc))
+
+
+
+
+
 ## [4.30.1](https://github.com/instana/nodejs/compare/v4.30.0...v4.30.1) (2025-11-18)
 
 

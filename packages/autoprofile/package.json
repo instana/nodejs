@@ -1,6 +1,6 @@
 {
   "name": "@instana/autoprofile",
-  "version": "4.30.1",
+  "version": "4.31.0",
   "description": "Automatic Node.js Profiler",
   "author": {
     "name": "Dmitri Melikyan",
@@ -49,7 +49,7 @@
     }
   ],
   "dependencies": {
-    "@instana/core": "4.30.1",
+    "@instana/core": "4.31.0",
     "detect-libc": "^2.1.2",
     "nan": "^2.23.1",
     "node-gyp-build": "^4.8.4",

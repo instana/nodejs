@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.31.0](https://github.com/instana/nodejs/compare/v4.30.1...v4.31.0) (2025-12-08)
+
+
+### Bug Fixes
+
+* **aws-lambda-auto-wrap:** stopped publishing to npm ([#2185](https://github.com/instana/nodejs/issues/2185)) ([3e83397](https://github.com/instana/nodejs/commit/3e83397fdb7e7c03f90be95ce2d629c1ebeb0c3b))
+* bumped @opentelemetry/instrumentation-oracledb from 0.33.0 to 0.34.0 ([#2155](https://github.com/instana/nodejs/issues/2155)) ([d572379](https://github.com/instana/nodejs/commit/d5723795a3a635b264c86d7400ceefea2dda9473))
+* bumped @opentelemetry/instrumentation-tedious from 0.26.0 to 0.27.0 ([#2171](https://github.com/instana/nodejs/issues/2171)) ([fcbf7a0](https://github.com/instana/nodejs/commit/fcbf7a0c1b480aa90876bd429e228c747613a73e))
+* excluded ng from tracing ([#2187](https://github.com/instana/nodejs/issues/2187)) ([1dd607d](https://github.com/instana/nodejs/commit/1dd607d7a6d472ebcd3bdc5630c496827dd12a32))
+* resolved TypeError when Node.js entrypoint is unknown ([#2182](https://github.com/instana/nodejs/issues/2182)) ([19746e5](https://github.com/instana/nodejs/commit/19746e5713e94e8047b022f239e035779b4c8c2c))
+* **serverless:** resolved TypeError when agent key is not available ([#2197](https://github.com/instana/nodejs/issues/2197)) ([d24e759](https://github.com/instana/nodejs/commit/d24e759cd220dfb92975d88fd845cd3de5b99ad2))
+
+
+### Features
+
+* added support for mongoose v9 ([#2169](https://github.com/instana/nodejs/issues/2169)) ([8bac4f9](https://github.com/instana/nodejs/commit/8bac4f995ed42518dfc8cbf8e13747a0899e03eb))
+* added support for Prisma V7 ([#2184](https://github.com/instana/nodejs/issues/2184)) ([5476da1](https://github.com/instana/nodejs/commit/5476da1aa6c9b68f2995819a922f3d60734279bc))
+* **aws-lambda:** added support for Node v24 runtime ([#2174](https://github.com/instana/nodejs/issues/2174)) ([71e11fb](https://github.com/instana/nodejs/commit/71e11fbee4008ea3a3fda209805f0e6f03e01413))
+* **iaws-lambda:** added runtime-aware handler support for Node.js 24 compatibility ([#2195](https://github.com/instana/nodejs/issues/2195)) ([35a7fbc](https://github.com/instana/nodejs/commit/35a7fbc9ede5119a7c48d15823f390f407889311))
+
+
+
+
+
 ## [4.30.1](https://github.com/instana/nodejs/compare/v4.30.0...v4.30.1) (2025-11-18)
 
 

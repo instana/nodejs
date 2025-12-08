@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.31.0](https://github.com/instana/nodejs/compare/v4.30.1...v4.31.0) (2025-12-08)
+
+
+### Bug Fixes
+
+* **aws-lambda-auto-wrap:** stopped publishing to npm ([#2185](https://github.com/instana/nodejs/issues/2185)) ([3e83397](https://github.com/instana/nodejs/commit/3e83397fdb7e7c03f90be95ce2d629c1ebeb0c3b))
+* **serverless:** resolved TypeError when agent key is not available ([#2197](https://github.com/instana/nodejs/issues/2197)) ([d24e759](https://github.com/instana/nodejs/commit/d24e759cd220dfb92975d88fd845cd3de5b99ad2))
+
+
+### Features
+
+* **aws-lambda:** added support for Node v24 runtime ([#2174](https://github.com/instana/nodejs/issues/2174)) ([71e11fb](https://github.com/instana/nodejs/commit/71e11fbee4008ea3a3fda209805f0e6f03e01413))
+* **iaws-lambda:** added runtime-aware handler support for Node.js 24 compatibility ([#2195](https://github.com/instana/nodejs/issues/2195)) ([35a7fbc](https://github.com/instana/nodejs/commit/35a7fbc9ede5119a7c48d15823f390f407889311))
+
+
+
+
+
 ## [4.30.1](https://github.com/instana/nodejs/compare/v4.30.0...v4.30.1) (2025-11-18)
 
 **Note:** Version bump only for package @instana/aws-lambda

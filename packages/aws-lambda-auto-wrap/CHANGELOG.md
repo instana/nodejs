@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.31.0](https://github.com/instana/nodejs/compare/v4.30.1...v4.31.0) (2025-12-08)
+
+
+### Bug Fixes
+
+* **aws-lambda-auto-wrap:** stopped publishing to npm ([#2185](https://github.com/instana/nodejs/issues/2185)) ([3e83397](https://github.com/instana/nodejs/commit/3e83397fdb7e7c03f90be95ce2d629c1ebeb0c3b))
+
+
+### Features
+
+* **iaws-lambda:** added runtime-aware handler support for Node.js 24 compatibility ([#2195](https://github.com/instana/nodejs/issues/2195)) ([35a7fbc](https://github.com/instana/nodejs/commit/35a7fbc9ede5119a7c48d15823f390f407889311))
+
+
+
+
+
 ## [4.30.1](https://github.com/instana/nodejs/compare/v4.30.0...v4.30.1) (2025-11-18)
 
 **Note:** Version bump only for package instana-aws-lambda-auto-wrap
