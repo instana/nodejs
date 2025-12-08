@@ -31,8 +31,10 @@ describe('tracing/prisma', function () {
     providers.forEach(provider => {
       const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-      // V7 only support version v20.19 and above
-      if (version === 'latest' && semver.lt(process.versions.node, '20.19.0')) {
+      // V7 only supports Node.js versions 20.19+, 22.12+, 24.0+
+      // https://github.com/prisma/prisma/blob/main/package.json#L7C1-L7C42
+      const requiredNodeVersion = '^20.19.0 || ^22.12.0 || >=24.0';
+      if (version === 'latest' && !semver.satisfies(process.versions.node, requiredNodeVersion)) {
         return;
       }
       // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
