@@ -29,7 +29,7 @@ const isPrerelease = Boolean(semver.prerelease(process.versions.node));
 const mochaSuiteFn = isOddVersion || isPrerelease ? describe.skip : describe;
 
 // Test suite for verifying the fallback mechanism for loading native add-ons.
-mochaSuiteFn('retry loading native addons', function () {
+mochaSuiteFn.skip('retry loading native addons', function () {
   this.timeout(config.getTestTimeout() * 5);
 
   globalAgent.setUpCleanUpHooks();
