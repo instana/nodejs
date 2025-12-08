@@ -279,7 +279,7 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
 
 /**
  * @param {import('../core').InstanaBaseSpan} span - The span to update
- * @param {Error} error
+ * @param {Error | string} error
  * @param {string} technology - The technology name (e.g., 'mysql', 'pg', 'http')
  */
 // @ts-ignore
@@ -291,17 +291,25 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
   if (technology && span.data?.[technology]) {
     // This extra check allows instrumentations to override the error property (not recommended)
     if (!span.data[technology].error) {
-      const combinedMessage = error?.message
-        ? `${error.name || 'Error'}: ${error.message}`
-        : // @ts-ignore
-          error?.code || 'No error message found.';
+      let combinedMessage;
+
+      if (typeof error === 'string') {
+        combinedMessage = error;
+      } else if (error?.message) {
+        combinedMessage = `${error.name || 'Error'}: ${error.message}`;
+      } else {
+        // @ts-ignore
+        combinedMessage = error?.code || 'No error message found.';
+      }
 
       span.data[technology].error = combinedMessage.substring(0, 200);
     }
   }
 
   // TODO: Change substring usage to frame capturing - see util/stackTrace.js
-  if (error.stack) {
-    span.stack = String(error.stack).substring(500);
+  if (typeof error === 'object' && error.stack) {
+    span.stack = String(error.stack).substring(0, 500);
+  } else if (typeof error === 'string' && error.length) {
+    span.stack = error.substring(0, 500);
   }
 };
