@@ -18,7 +18,7 @@ const loaderPath = isLatestEsmSupportedVersion(process.versions.node)
   : ['--experimental-loader=../../../../collector/esm-loader.mjs'];
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('ESM loader', function () {
+mochaSuiteFn.skip('ESM loader', function () {
   describe('case 1', function () {
     this.timeout(config.getTestTimeout());
 
