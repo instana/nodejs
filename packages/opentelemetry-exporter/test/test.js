@@ -209,7 +209,7 @@ function verifySpans(spans, appControls) {
   // 1 x ENTRY /otel-test
   // 1 x EXIT /internal-endpoint
   // 1 x tcp connect
-  // 1 x tls connect
+  // 1 x ENTRY /internal-endpoint because this is the same server
   // NOTE: middleware spans are not collected when migrating to express v5 because:
   //       middleware initialization was removed in
   //         https://github.com/expressjs/express/commit/78e50547f16e2adb5763a953586d05308d8aba4c.
