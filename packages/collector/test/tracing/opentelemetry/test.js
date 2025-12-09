@@ -31,6 +31,8 @@ const agentControls = globalAgent.instance;
 mochaSuiteFn('opentelemetry tests', function () {
   this.timeout(config.getTestTimeout() * 2);
 
+  globalAgent.setUpCleanUpHooks();
+
   before(() => {
     if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS === 'true') {
       return;
@@ -287,9 +289,6 @@ mochaSuiteFn('opentelemetry tests', function () {
         });
 
         describe('opentelemetry is disabled', function () {
-          globalAgent.setUpCleanUpHooks();
-          const agentControls = globalAgent.instance;
-
           let controls;
 
           before(async () => {
@@ -353,7 +352,6 @@ mochaSuiteFn('opentelemetry tests', function () {
 
       describe('fs', function () {
         globalAgent.setUpCleanUpHooks();
-        const agentControls = globalAgent.instance;
 
         let controls;
 
@@ -473,8 +471,6 @@ mochaSuiteFn('opentelemetry tests', function () {
       });
 
       describe('socket.io', function () {
-        globalAgent.setUpCleanUpHooks();
-        const agentControls = globalAgent.instance;
         let socketIOServerPort;
 
         let serverControls;
@@ -634,8 +630,6 @@ mochaSuiteFn('opentelemetry tests', function () {
 
       describe('tedious', function () {
         describe('opentelemetry is enabled', function () {
-          globalAgent.setUpCleanUpHooks();
-          const agentControls = globalAgent.instance;
           let controls;
 
           // We need to increase the waiting timeout here for the initial azure connection,
@@ -734,8 +728,6 @@ mochaSuiteFn('opentelemetry tests', function () {
         });
 
         describe('opentelemetry is disabled', function () {
-          globalAgent.setUpCleanUpHooks();
-          const agentControls = globalAgent.instance;
           let controls;
 
           before(async () => {
@@ -780,9 +772,6 @@ mochaSuiteFn('opentelemetry tests', function () {
         this.timeout(1000 * 60);
 
         describe('opentelemetry is enabled', function () {
-          globalAgent.setUpCleanUpHooks();
-          const agentControls = globalAgent.instance;
-
           let controls;
 
           before(async () => {
@@ -857,9 +846,6 @@ mochaSuiteFn('opentelemetry tests', function () {
         });
 
         describe('opentelemetry is disabled', function () {
-          globalAgent.setUpCleanUpHooks();
-          const agentControls = globalAgent.instance;
-
           let controls;
 
           before(async () => {
@@ -926,9 +912,6 @@ mochaSuiteFn('opentelemetry tests', function () {
     });
 
     describe('when openTelemetry initialized first', function () {
-      globalAgent.setUpCleanUpHooks();
-      const agentControls = globalAgent.instance;
-
       let controls;
       before(async () => {
         controls = new ProcessControls({
@@ -1023,9 +1006,6 @@ mochaSuiteFn('opentelemetry tests', function () {
     });
 
     describe('when Collector initialized first', function () {
-      globalAgent.setUpCleanUpHooks();
-      const agentControls = globalAgent.instance;
-
       let controls;
 
       before(async () => {
