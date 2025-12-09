@@ -23,7 +23,8 @@ const {
   sanitizeConnectionStr,
   unsignedHexStringToBuffer,
   unsignedHexStringsToBuffer,
-  findCallback
+  findCallback,
+  setErrorDetails
 } = require('../../src/tracing/tracingUtil');
 
 describe('tracing/tracingUtil', () => {
@@ -442,6 +443,102 @@ describe('tracing/tracingUtil', () => {
       const res = findCallback(args);
       expect(res.originalCallback).to.equal(arrow);
       expect(res.callbackIndex).to.equal(1);
+    });
+  });
+
+  describe('setErrorDetails', () => {
+    it('should handle Error objects with message and stack', () => {
+      const span = {
+        data: {
+          nats: {}
+        }
+      };
+      const error = new Error('Test error message');
+      setErrorDetails(span, error, 'nats');
+
+      expect(span.data.nats.error).to.match(/Error: Test error message/);
+      expect(span.stack).to.be.a('string');
+      expect(span.stack).to.match(/Test error message/);
+    });
+
+    it('should handle error objects with only a message property', () => {
+      const span = {
+        data: {
+          mysql: {}
+        }
+      };
+      const error = { message: 'Database connection failed', stack: 'some test' };
+      setErrorDetails(span, error, 'mysql');
+
+      expect(span.data.mysql.error).to.equal('Error: Database connection failed');
+      expect(span.stack).to.contain('some test');
+    });
+
+    it('should handle error objects with code property', () => {
+      const span = {
+        data: {
+          http: {}
+        }
+      };
+      const error = { code: 'ECONNREFUSED', stack: 'test stack' };
+      setErrorDetails(span, error, 'http');
+
+      expect(span.data.http.error).to.equal('ECONNREFUSED');
+      expect(span.stack).to.contain('test stack');
+    });
+
+    it('should not overwrite existing error property', () => {
+      const span = {
+        data: {
+          nats: {
+            error: 'Existing error'
+          }
+        }
+      };
+      const error = 'New error';
+      setErrorDetails(span, error, 'nats');
+
+      expect(span.data.nats.error).to.equal('Existing error');
+    });
+
+    it('should handle null or undefined errors gracefully', () => {
+      const span = {
+        data: {
+          nats: {}
+        }
+      };
+      setErrorDetails(span, null, 'nats');
+      expect(span.data.nats.error).to.be.undefined;
+
+      setErrorDetails(span, undefined, 'nats');
+      expect(span.data.nats.error).to.be.undefined;
+    });
+
+    it('should truncate long error messages to 200 characters', () => {
+      const span = {
+        data: {
+          nats: {}
+        }
+      };
+      const longError = 'a'.repeat(300);
+      setErrorDetails(span, longError, 'nats');
+
+      expect(span.data.nats.error).to.have.lengthOf(200);
+      // The prefix `Error: ` (length 7) is excluded from the trimming logic.
+      expect(span.data.nats.error).to.equal(`Error: ${'a'.repeat(193)}`);
+    });
+
+    it('should truncate stack traces to 500 characters', () => {
+      const span = {
+        data: {
+          nats: {}
+        }
+      };
+      const error = new Error('Test');
+      error.stack = `Error: Test\n${'at someFunction\n'.repeat(100)}`;
+      setErrorDetails(span, error, 'nats');
+
+      expect(span.stack).to.have.lengthOf(500);
     });
   });
 });

@@ -147,8 +147,8 @@ mochaSuiteFn('tracing/nats', function () {
                           ? expect(res).to.equal('Subject must be supplied')
                           : expect(res).to.equal('BAD_SUBJECT');
                       } else if (typeof res === 'object') {
-                        expect(res.code).to.equal('BAD_SUBJECT');
-                        expect(res.message).to.equal('Subject must be supplied');
+                        expect(res.code).to.equal('NatsError: BAD_SUBJECT');
+                        expect(res.message).to.equal('NatsError: Subject must be supplied');
                       } else {
                         fail(`Unexpected response of type "${typeof res}": ${JSON.stringify(res)}`);
                       }
@@ -198,9 +198,11 @@ mochaSuiteFn('tracing/nats', function () {
 
                           version === 'v1'
                             ? expectations.push(span =>
-                                expect(span.data.nats.error).to.equal('Subject must be supplied')
+                                expect(span.data.nats.error).to.equal('NatsError: Subject must be supplied')
                               )
-                            : expectations.push(span => expect(span.data.nats.error).to.equal('BAD_SUBJECT'));
+                            : expectations.push(span =>
+                                expect(span.data.nats.error).to.equal('NatsError: BAD_SUBJECT')
+                              );
                         } else {
                           expectations.push(span => expect(span.ec).to.equal(0));
                           expectations.push(span => expect(span.data.nats.error).to.not.exist);
@@ -375,7 +377,7 @@ mochaSuiteFn('tracing/nats', function () {
                       if (withError) {
                         expectations.push(span => expect(span.error).to.not.exist);
                         expectations.push(span => expect(span.ec).to.equal(1));
-                        expectations.push(span => expect(span.data.nats.error).to.equal('Boom!'));
+                        expectations.push(span => expect(span.data.nats.error).to.contain('Boom!'));
                       } else {
                         expectations.push(span => expect(span.error).to.not.exist);
                         expectations.push(span => expect(span.ec).to.equal(0));
