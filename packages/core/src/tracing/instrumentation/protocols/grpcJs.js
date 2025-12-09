@@ -115,10 +115,6 @@ function modifyArgs(name, originalArgs, span) {
           // No-op, we do not want to mark cancelled calls as erroneous.
         } else {
           span.ec = 1;
-          // TODO: special case of error message
-          if (errorMessage) {
-            span.data.rpc.error = errorMessage;
-          }
           tracingUtil.setErrorDetails(span, err, 'rpc');
         }
       }
@@ -346,9 +342,6 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
         originalArgs[1] = cls.ns.bind(function (err) {
           if (err) {
             span.ec = 1;
-            if (err.message || err.details) {
-              span.data.rpc.error = err.message || err.details;
-            }
             tracingUtil.setErrorDetails(span, err, 'rpc');
           }
           span.d = Date.now() - span.ts;
@@ -372,9 +365,6 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
 
         call.on('error', err => {
           span.ec = 1;
-          if (err.message || err.details) {
-            span.data.rpc.error = err.message || err.details;
-          }
           tracingUtil.setErrorDetails(span, err, 'rpc');
         });
 
@@ -435,9 +425,6 @@ function instrumentedClientMethod(
           // No-op, we do not want to mark cancelled calls as erroneous.
         } else {
           span.ec = 1;
-          if (errorMessage) {
-            span.data.rpc.error = errorMessage;
-          }
           tracingUtil.setErrorDetails(span, err, 'rpc');
         }
         span.transmit();
