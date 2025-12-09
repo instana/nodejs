@@ -207,7 +207,7 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
 
 function verifySpans(spans, appControls) {
   // 1 x ENTRY /otel-test
-  // 1 x EXIT https://www.google.com/
+  // 1 x EXIT /internal-endpoint
   // 1 x tcp connect
   // 1 x tls connect
   // NOTE: middleware spans are not collected when migrating to express v5 because:
