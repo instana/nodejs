@@ -111,7 +111,7 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
 
       it('sends spans to the backend', async () => {
         // We need some time so OTel tracing starts
-        await delay(1500);
+        await delay(1000);
 
         await appControls.sendRequest({
           path: '/otel-test'
