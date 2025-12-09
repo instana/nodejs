@@ -193,19 +193,7 @@ function captureErrorInCurrentSpan(ctx, originalEmit, originalArgs) {
 function addErrorToSpan(err, span) {
   if (err) {
     span.ec = 1;
-
-    // TODO: special logic of appending error
-    let errMsg = null;
-    if (err.message) {
-      errMsg = err.message;
-    } else if (typeof err === 'string') {
-      errMsg = err;
-    }
-    if (errMsg && span.data.nats.error) {
-      span.data.nats.error += `, ${errMsg}`;
-    } else if (errMsg) {
-      span.data.nats.error = errMsg;
-    }
+    tracingUtil.setErrorDetails(span, err, 'nats');
   }
 }
 
