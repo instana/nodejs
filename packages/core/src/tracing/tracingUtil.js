@@ -278,9 +278,18 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
 };
 
 /**
+ * Sets error details on a span for a specific technology.
+ * Handles different error formats: strings, objects with details/message/code properties.
+ * Supports nested paths for SDK spans via dot-separated strings or arrays.
+ *
+ * Examples:
+ * - setErrorDetails(span, error, 'nats') // flat key
+ * - setErrorDetails(span, error, 'sdk.custom.tags.message') // dot-separated string
+ * - setErrorDetails(span, error, ['sdk', 'custom', 'tags', 'message']) // array path
+ *
  * @param {import('../core').InstanaBaseSpan} span - The span to update
- * @param {Error | string} error
- * @param {string} technology - The technology name (e.g., 'mysql', 'pg', 'http')
+ * @param {Error | string | Object} error - The error object, error string, or object with error properties
+ * @param {string | Array<string>} technology - The technology name or nested path
  */
 exports.setErrorDetails = function setErrorDetails(span, error, technology) {
   if (!error) {
@@ -297,20 +306,44 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
     normalizedError = error;
   }
 
-  if (technology && span.data?.[technology]) {
-    // This extra check allows instrumentations to override the error property (not recommended)
-    if (!span.data[technology].error) {
-      let combinedMessage;
+  const extractErrorMessage = () => {
+    if (normalizedError?.details) {
+      return `${normalizedError.name || 'Error'}: ${normalizedError.details}`;
+    } else if (normalizedError?.message) {
+      return `${normalizedError.name || 'Error'}: ${normalizedError.message}`;
+    } else {
+      return normalizedError?.code || 'No error message found.';
+    }
+  };
 
-      if (normalizedError?.details) {
-        combinedMessage = `${normalizedError.name || 'Error'}: ${normalizedError.details}`;
-      } else if (normalizedError?.message) {
-        combinedMessage = `${normalizedError.name || 'Error'}: ${normalizedError.message}`;
-      } else {
-        combinedMessage = normalizedError?.code || 'No error message found.';
+  let errorPath = null;
+  if (Array.isArray(technology)) {
+    errorPath = technology;
+  } else if (typeof technology === 'string' && technology.includes('.')) {
+    errorPath = technology.split('.');
+  }
+
+  if (errorPath) {
+    let target = span.data;
+
+    // Traverse the object path and create missing nested objects along the way
+    // Without this, deeper properties would fail to assign if their parent objects don't exist
+    for (let i = 0; i < errorPath.length - 1; i++) {
+      const key = errorPath[i];
+      if (!target[key]) {
+        target[key] = {};
       }
+      target = target[key];
+    }
 
-      span.data[technology].error = combinedMessage.substring(0, 200);
+    const errorKey = errorPath[errorPath.length - 1];
+
+    if (!target[errorKey]) {
+      target[errorKey] = extractErrorMessage().substring(0, 200);
+    }
+  } else if (typeof technology === 'string' && technology && span.data?.[technology]) {
+    if (!span.data[technology].error) {
+      span.data[technology].error = extractErrorMessage().substring(0, 200);
     }
   }
 
