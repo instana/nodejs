@@ -302,10 +302,10 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
     if (!span.data[technology].error) {
       let combinedMessage;
 
-      if (normalizedError?.message) {
-        combinedMessage = `${normalizedError.name || 'Error'}: ${normalizedError.message}`;
-      } else if (normalizedError?.details) {
+      if (normalizedError?.details) {
         combinedMessage = `${normalizedError.name || 'Error'}: ${normalizedError.details}`;
+      } else if (normalizedError?.message) {
+        combinedMessage = `${normalizedError.name || 'Error'}: ${normalizedError.message}`;
       } else {
         combinedMessage = normalizedError?.code || 'No error message found.';
       }

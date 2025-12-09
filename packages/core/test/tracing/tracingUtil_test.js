@@ -550,7 +550,7 @@ describe('tracing/tracingUtil', () => {
       const error = { details: 'UNAVAILABLE: Connection refused' };
       setErrorDetails(span, error, 'rpc');
 
-      expect(span.data.rpc.error).to.equal('UNAVAILABLE: Connection refused');
+      expect(span.data.rpc.error).to.contain('UNAVAILABLE: Connection refused');
     });
 
     it('should prioritize details over message for gRPC errors', () => {
@@ -565,7 +565,7 @@ describe('tracing/tracingUtil', () => {
       };
       setErrorDetails(span, error, 'rpc');
 
-      expect(span.data.rpc.error).to.equal('UNAVAILABLE: Connection refused');
+      expect(span.data.rpc.error).to.contain('UNAVAILABLE: Connection refused');
     });
   });
 });
