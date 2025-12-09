@@ -1,10 +1,10 @@
 /*
- * (c) Copyright IBM Corp. 2025
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. and contributors 2019
  */
 
 'use strict';
 
-// NOTE: c8 bug https://github.com/bcoe/c8/issues/166
 process.on('SIGTERM', () => {
   process.disconnect();
   process.exit(0);
@@ -22,10 +22,8 @@ const KafkaLib = require('@confluentinc/kafka-javascript');
 const app = express();
 app.use(bodyParser.json());
 
-// Hinweis: Verwende KAFKA_BROKER, falls du vorher KAFKA verwendet hast
 const broker = process.env.KAFKA;
 const topic = process.env.CONFLUENT_KAFKA_TOPIC;
-// Umgebungsvariable zur Auswahl des Client-Typs
 const clientType = (process.env.KAFKA_CLIENT_TYPE || 'kafkajs').toLowerCase();
 
 let consumer;
@@ -38,12 +36,10 @@ async function setupConsumer() {
   let useRdKafka = false;
 
   if (clientType === 'rdkafka') {
-    // Wenn 'rdkafka' gewählt ist, verwenden wir RdKafka.KafkaConsumer
     KafkaClient = KafkaLib.KafkaConsumer || KafkaLib.RdKafka.KafkaConsumer;
     useRdKafka = true;
     log(`Using ${clientType} (node-rdkafka) client.`);
   } else {
-    // Standardmäßig oder bei 'kafkajs' verwenden wir KafkaJS.Kafka
     KafkaClient = KafkaLib.KafkaJS.Kafka || KafkaLib.Kafka;
     log(`Using ${clientType} (kafkajs) client.`);
   }
@@ -55,7 +51,6 @@ async function setupConsumer() {
 
   try {
     if (useRdKafka) {
-      // node-rdkafka (RdKafka) Initialisierung
       consumer = new KafkaClient({
         'group.id': `confluent-consumer-${process.pid}`,
         'metadata.broker.list': broker
@@ -86,8 +81,6 @@ async function setupConsumer() {
         log('RdKafka Consumer error:', err.message);
       });
     } else {
-      // kafkajs Initialisierung (ENDGÜLTIG KORRIGIERT)
-      // Alle kafkajs-spezifischen Konfigurationen müssen im 'kafkaJS' Block liegen.
       const kafka = new KafkaClient({
         kafkaJS: {
           clientId: 'confluent-consumer',
@@ -96,16 +89,13 @@ async function setupConsumer() {
         }
       });
 
-      // consumer() wird nun ohne groupId aufgerufen
       consumer = kafka.consumer();
 
       await consumer.connect();
       log('Consumer connected, subscribing to topic:', topic);
-      // NOTE: fromBeginning is NOT supported. Dont use.
       await consumer.subscribe({ topic });
       log('Consumer subscribed to topic:', topic);
 
-      // kafkajs verwendet die run-Methode
       log('Starting consumer.run()...');
       await consumer.run({
         eachMessage: async ({ topic: t, message }) => {

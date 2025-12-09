@@ -6,6 +6,8 @@
 
 const constants = require('../constants');
 
+const isEntrySpan = otelSpan => otelSpan.attributes?.['messaging.operation.type'] === 'deliver';
+
 module.exports.init = () => {
   const { ConfluentKafkaInstrumentation } = require('@drazke/instrumentation-confluent-kafka-javascript');
 
@@ -16,7 +18,10 @@ module.exports.init = () => {
   }
 };
 
-module.exports.getKind = () => {
-  const kind = constants.EXIT;
-  return kind;
+module.exports.getKind = otelSpan => {
+  if (isEntrySpan(otelSpan)) {
+    return constants.ENTRY;
+  }
+
+  return constants.EXIT;
 };

@@ -46,9 +46,23 @@ mochaSuiteFn('opentelemetry tests', function () {
     const topic = 'confluent-kafka-topic';
 
     before(async () => {
+      if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS === 'true') {
+        return;
+      }
+      execSync('npm install --no-save --no-package-lock --prefix ./ ./core.tgz', {
+        cwd: __dirname,
+        stdio: 'inherit'
+      });
+
+      execSync('npm install --no-save --no-package-lock --prefix ./ ./collector.tgz', {
+        cwd: __dirname,
+        stdio: 'inherit'
+      });
+
       producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'confluent-kafka-producer-app.js'),
         useGlobalAgent: true,
+        cwd: __dirname,
         enableOtelIntegration: true,
         env: {
           CONFLUENT_KAFKA_TOPIC: topic
@@ -110,7 +124,43 @@ mochaSuiteFn('opentelemetry tests', function () {
 
         return retry(() => {
           return agentControls.getSpans().then(spans => {
-            expect(spans.length).to.equal(2);
+            expect(spans.length).to.equal(3);
+
+            const httpEntry = verifyHttpRootEntry({
+              spans,
+              apiPath: '/produce',
+              pid: String(producerControls.getPid())
+            });
+
+            verifyExitSpan({
+              spanName: 'otel',
+              spans,
+              parent: httpEntry,
+              withError: false,
+              pid: String(producerControls.getPid()),
+              dataProperty: 'tags',
+              extraTests: span => {
+                expect(span.data.tags.name).to.eql('confluent-kafka-topic');
+                expect(span.data.tags['messaging.system']).to.equal('kafka');
+                expect(span.data.tags['messaging.operation.name']).to.equal('produce');
+                checkTelemetryResourceAttrs(span);
+              }
+            });
+
+            verifyEntrySpan({
+              spanName: 'otel',
+              spans,
+              parent: httpEntry,
+              withError: false,
+              pid: String(producerControls.getPid()),
+              dataProperty: 'tags',
+              extraTests: span => {
+                expect(span.data.tags.name).to.eql('confluent-kafka-topic');
+                expect(span.data.tags['messaging.system']).to.equal('kafka');
+                expect(span.data.tags['messaging.operation.type']).to.equal('deliver');
+                checkTelemetryResourceAttrs(span);
+              }
+            });
           });
         });
       });
