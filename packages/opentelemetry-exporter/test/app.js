@@ -43,7 +43,7 @@ app.get('/otel-test', (_req, res) => {
 
 app.post('/otel-post', (_req, res) => {
   delay(500)
-    .then(() => fetch('https://www.google.com', { method: 'POST' }))
+    .then(() => fetch('https://www.google.com', { method: 'GET' }))
     .then(response => response.text())
     .then(text => {
       res.send({ ok: true, data: `${text.substr(0, 10)}...` });
