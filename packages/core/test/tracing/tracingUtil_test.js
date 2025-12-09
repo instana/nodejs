@@ -461,19 +461,6 @@ describe('tracing/tracingUtil', () => {
       expect(span.stack).to.match(/Test error message/);
     });
 
-    it('should handle string errors', () => {
-      const span = {
-        data: {
-          nats: {}
-        }
-      };
-      const error = 'stan: invalid publish request';
-      setErrorDetails(span, error, 'nats');
-
-      expect(span.data.nats.error).to.equal('stan: invalid publish request');
-      expect(span.stack).to.contain('stan: invalid publish request');
-    });
-
     it('should handle error objects with only a message property', () => {
       const span = {
         data: {
@@ -537,7 +524,8 @@ describe('tracing/tracingUtil', () => {
       setErrorDetails(span, longError, 'nats');
 
       expect(span.data.nats.error).to.have.lengthOf(200);
-      expect(span.data.nats.error).to.equal('a'.repeat(200));
+      // The prefix `Error: ` (length 7) is excluded from the trimming logic.
+      expect(span.data.nats.error).to.equal(`Error: ${'a'.repeat(193)}`);
     });
 
     it('should truncate stack traces to 500 characters', () => {

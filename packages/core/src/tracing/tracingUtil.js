@@ -282,10 +282,19 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
  * @param {Error | string} error
  * @param {string} technology - The technology name (e.g., 'mysql', 'pg', 'http')
  */
-// @ts-ignore
 exports.setErrorDetails = function setErrorDetails(span, error, technology) {
   if (!error) {
     return;
+  }
+
+  // Normalize error to object format at the beginning
+  /** @type {{ message?: string, stack?: object | string | null, name?: string, code?: string }} */
+  let normalizedError;
+
+  if (typeof error === 'string') {
+    normalizedError = { message: error, stack: null };
+  } else {
+    normalizedError = error;
   }
 
   if (technology && span.data?.[technology]) {
@@ -293,15 +302,10 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
     if (!span.data[technology].error) {
       let combinedMessage;
 
-      if (typeof error === 'string') {
-        combinedMessage = error;
-      } else if (typeof error === 'object' && error?.message) {
-      const name = error.name || 'Error';
-       combinedMessage = `${name}: ${error.message}`;
-        combinedMessage = `${error.name || 'Error'}: ${error.message}`;
+      if (normalizedError?.message) {
+        combinedMessage = `${normalizedError.name || 'Error'}: ${normalizedError.message}`;
       } else {
-        // @ts-ignore
-        combinedMessage = error?.code || 'No error message found.';
+        combinedMessage = normalizedError?.code || 'No error message found.';
       }
 
       span.data[technology].error = combinedMessage.substring(0, 200);
@@ -309,9 +313,7 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
   }
 
   // TODO: Change substring usage to frame capturing - see util/stackTrace.js
-  if (typeof error === 'object' && error.stack) {
-    span.stack = String(error.stack).substring(0, 500);
-  } else if (typeof error === 'string' && error.length) {
-    span.stack = error.substring(0, 500);
+  if (normalizedError.stack) {
+    span.stack = String(normalizedError.stack).substring(0, 500);
   }
 };
