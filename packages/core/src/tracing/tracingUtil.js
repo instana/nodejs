@@ -295,7 +295,9 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
 
       if (typeof error === 'string') {
         combinedMessage = error;
-      } else if (error?.message) {
+      } else if (typeof error === 'object' && error?.message) {
+      const name = error.name || 'Error';
+       combinedMessage = `${name}: ${error.message}`;
         combinedMessage = `${error.name || 'Error'}: ${error.message}`;
       } else {
         // @ts-ignore
