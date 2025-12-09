@@ -278,9 +278,44 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
 };
 
 /**
+ * Extracts error message from various error formats.
+ *
+ * @param {Error | string } error - The error to extract message from
+ * @returns {string} The extracted error message
+ */
+function extractErrorMessage(error) {
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  // @ts-ignore
+  if (error?.message) {
+    // @ts-ignore
+    return `${error.name || 'Error'}: ${error.message}`;
+  }
+
+  // @ts-ignore
+  if (error?.details) {
+    // @ts-ignore
+    return error.details;
+  }
+  // @ts-ignore
+  return error?.code || 'No error message found.';
+}
+
+/**
+ * Sets error details on a span for a specific technology.
+ * Handles different error formats: strings, objects with details/message/code properties.
+ * Supports nested paths for SDK spans via dot-separated strings or arrays.
+ *
+ * Examples:
+ * - setErrorDetails(span, error, 'nats') // flat key
+ * - setErrorDetails(span, error, 'sdk.custom.tags.message') // dot-separated string
+ * - setErrorDetails(span, error, ['sdk', 'custom', 'tags', 'message']) // array path
+ *
  * @param {import('../core').InstanaBaseSpan} span - The span to update
- * @param {Error | string} error
- * @param {string} technology - The technology name (e.g., 'mysql', 'pg', 'http')
+ * @param {Error | string | Object} error - The error object, string, or object with error properties
+ * @param {string | Array<string>} technology - The technology name or nested path
  */
 // @ts-ignore
 exports.setErrorDetails = function setErrorDetails(span, error, technology) {
@@ -288,30 +323,46 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
     return;
   }
 
-  if (technology && span.data?.[technology]) {
-    // This extra check allows instrumentations to override the error property (not recommended)
-    if (!span.data[technology].error) {
-      let combinedMessage;
+  // Convert dot-separated string to array or use array directly
+  let errorPath = null;
+  if (Array.isArray(technology)) {
+    errorPath = technology;
+  } else if (typeof technology === 'string' && technology.includes('.')) {
+    errorPath = technology.split('.');
+  }
 
-      if (typeof error === 'string') {
-        combinedMessage = error;
-      } else if (typeof error === 'object' && error?.message) {
-      const name = error.name || 'Error';
-       combinedMessage = `${name}: ${error.message}`;
-        combinedMessage = `${error.name || 'Error'}: ${error.message}`;
-      } else {
-        // @ts-ignore
-        combinedMessage = error?.code || 'No error message found.';
+  if (errorPath) {
+    // Handle nested path (e.g., ['sdk', 'custom', 'tags', 'message'] or 'sdk.custom.tags.message')
+    let target = span.data;
+
+    // Navigate to parent object, creating nested objects as needed
+    for (let i = 0; i < errorPath.length - 1; i++) {
+      const key = errorPath[i];
+      if (!target[key]) {
+        target[key] = {};
       }
+      target = target[key];
+    }
 
-      span.data[technology].error = combinedMessage.substring(0, 200);
+    const errorKey = errorPath[errorPath.length - 1];
+
+    // Only set if not already set
+    if (!target[errorKey]) {
+      // @ts-ignore
+      target[errorKey] = extractErrorMessage(error).substring(0, 500);
+    }
+    // @ts-ignore
+  } else if (technology && span.data?.[technology]) {
+    // @ts-ignore
+    if (!span.data[technology].error) {
+      // @ts-ignore
+      span.data[technology].error = extractErrorMessage(error).substring(0, 200);
     }
   }
 
-  // TODO: Change substring usage to frame capturing - see util/stackTrace.js
+  // @ts-ignore
   if (typeof error === 'object' && error.stack) {
+    // @ts-ignore
     span.stack = String(error.stack).substring(0, 500);
-  } else if (typeof error === 'string' && error.length) {
-    span.stack = error.substring(0, 500);
   }
 };

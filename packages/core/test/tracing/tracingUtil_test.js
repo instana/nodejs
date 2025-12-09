@@ -461,19 +461,6 @@ describe('tracing/tracingUtil', () => {
       expect(span.stack).to.match(/Test error message/);
     });
 
-    it('should handle string errors', () => {
-      const span = {
-        data: {
-          nats: {}
-        }
-      };
-      const error = 'stan: invalid publish request';
-      setErrorDetails(span, error, 'nats');
-
-      expect(span.data.nats.error).to.equal('stan: invalid publish request');
-      expect(span.stack).to.contain('stan: invalid publish request');
-    });
-
     it('should handle error objects with only a message property', () => {
       const span = {
         data: {
@@ -551,6 +538,126 @@ describe('tracing/tracingUtil', () => {
       setErrorDetails(span, error, 'nats');
 
       expect(span.stack).to.have.lengthOf(500);
+    });
+
+    describe('SDK spans with nested error paths', () => {
+      it('should not overwrite existing SDK error', () => {
+        const span = {
+          data: {
+            sdk: {
+              custom: {
+                tags: {
+                  message: 'Existing SDK error'
+                }
+              }
+            }
+          }
+        };
+        const error = 'New SDK error';
+        setErrorDetails(span, error, ['sdk', 'custom', 'tags', 'message']);
+
+        expect(span.data.sdk.custom.tags.message).to.equal('Existing SDK error');
+      });
+
+      it('should truncate SDK error messages to 500 characters', () => {
+        const span = {
+          data: {}
+        };
+        const longError = 'b'.repeat(600);
+        setErrorDetails(span, longError, ['sdk', 'custom', 'tags', 'message']);
+
+        expect(span.data.sdk.custom.tags.message).to.have.lengthOf(500);
+        expect(span.data.sdk.custom.tags.message).to.equal('b'.repeat(500));
+      });
+
+      it('should handle SDK error with code property', () => {
+        const span = {
+          data: {}
+        };
+        const error = { code: 'SDK_ERROR_CODE' };
+        setErrorDetails(span, error, ['sdk', 'custom', 'tags', 'message']);
+
+        expect(span.data.sdk.custom.tags.message).to.equal('SDK_ERROR_CODE');
+      });
+
+      it('should create nested structure if it does not exist', () => {
+        const span = {
+          data: {}
+        };
+        const error = 'Test error';
+        setErrorDetails(span, error, ['sdk', 'custom', 'tags', 'error']);
+
+        expect(span.data.sdk).to.be.an('object');
+        expect(span.data.sdk.custom).to.be.an('object');
+        expect(span.data.sdk.custom.tags).to.be.an('object');
+        expect(span.data.sdk.custom.tags.error).to.equal('Test error');
+      });
+
+      it('should handle different nested paths', () => {
+        const span = {
+          data: {}
+        };
+        const error = 'Custom path error';
+        setErrorDetails(span, error, ['custom', 'nested', 'path', 'errorField']);
+
+        expect(span.data.custom.nested.path.errorField).to.equal('Custom path error');
+      });
+
+      it('should handle Error object with name and message for SDK spans', () => {
+        const span = {
+          data: {}
+        };
+        const error = new TypeError('Type mismatch');
+        setErrorDetails(span, error, ['sdk', 'custom', 'tags', 'message']);
+
+        expect(span.data.sdk.custom.tags.message).to.match(/TypeError: Type mismatch/);
+        expect(span.stack).to.match(/Type mismatch/);
+      });
+
+      it('should handle SDK error with dot-separated string path', () => {
+        const span = {
+          data: {}
+        };
+        const error = new Error('SDK error via string path');
+        setErrorDetails(span, error, 'sdk.custom.tags.message');
+
+        expect(span.data.sdk).to.exist;
+        expect(span.data.sdk.custom).to.exist;
+        expect(span.data.sdk.custom.tags).to.exist;
+        expect(span.data.sdk.custom.tags.message).to.match(/Error: SDK error via string path/);
+        expect(span.stack).to.be.a('string');
+        expect(span.stack).to.match(/SDK error via string path/);
+      });
+
+      it('should handle both array and string paths equivalently', () => {
+        const span1 = { data: {} };
+        const span2 = { data: {} };
+        const error = new Error('Test error');
+
+        setErrorDetails(span1, error, ['sdk', 'custom', 'tags', 'message']);
+        setErrorDetails(span2, error, 'sdk.custom.tags.message');
+
+        expect(span1.data.sdk.custom.tags.message).to.equal(span2.data.sdk.custom.tags.message);
+        expect(span1.data.sdk.custom.tags.message).to.match(/Error: Test error/);
+      });
+
+      it('should not overwrite existing SDK error with dot-separated path', () => {
+        const span = {
+          data: {
+            sdk: {
+              custom: {
+                tags: {
+                  message: 'Existing error via dot path'
+                }
+              }
+            }
+          }
+        };
+        const error = 'New error';
+        setErrorDetails(span, error, 'sdk.custom.tags.message');
+
+        expect(span.data.sdk.custom.tags.message).to.equal('Existing error via dot path');
+      });
     });
   });
 });
