@@ -29,12 +29,16 @@ const port = getAppPort();
 
 const app = express();
 
+app.get('/internal-endpoint', (_req, res) => {
+  res.send({ message: 'Internal endpoint response' });
+});
+
 app.get('/otel-test', (_req, res) => {
   delay(500)
-    .then(() => fetch('https://www.google.com'))
-    .then(response => response.text())
-    .then(text => {
-      res.send({ ok: true, data: `${text.substr(0, 10)}...` });
+    .then(() => fetch(`http://localhost:${port}/internal-endpoint`))
+    .then(response => response.json())
+    .then(data => {
+      res.send({ ok: true, data: data.message });
     })
     .catch(err => {
       res.status(500).send({ error: err });
@@ -43,10 +47,10 @@ app.get('/otel-test', (_req, res) => {
 
 app.post('/otel-post', (_req, res) => {
   delay(500)
-    .then(() => fetch('https://www.google.com', { method: 'POST' }))
-    .then(response => response.text())
-    .then(text => {
-      res.send({ ok: true, data: `${text.substr(0, 10)}...` });
+    .then(() => fetch(`http://localhost:${port}/internal-endpoint`, { method: 'POST' }))
+    .then(response => response.json())
+    .then(data => {
+      res.send({ ok: true, data: data.message });
     })
     .catch(err => {
       res.status(500).send({ error: err });
