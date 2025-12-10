@@ -134,7 +134,7 @@
     "amqplib": "0.10.9",
     "amqplib-v0.8.0": "npm:amqplib@0.8.0",
     "async": "3.2.6",
-    "aws-sdk": "2.1692.0",
+    "aws-sdk": "2.1693.0",
     "basic-auth-parser": "0.0.2",
     "bluebird": "3.7.2",
     "body-parser": "1.19.0",
