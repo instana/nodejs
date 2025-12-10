@@ -18,7 +18,6 @@ const {
   generateRandomId,
   generateRandomSpanId,
   generateRandomTraceId,
-  getErrorDetails,
   readTraceContextFromBuffer,
   sanitizeConnectionStr,
   unsignedHexStringToBuffer,
@@ -355,25 +354,6 @@ describe('tracing/tracingUtil', () => {
     function allZeroesBuffer() {
       return Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
     }
-  });
-
-  describe('getErrorDetails', () => {
-    it('must not fail on null/undefined', () => {
-      expect(getErrorDetails(null)).to.equal(undefined);
-      expect(getErrorDetails(undefined)).to.equal(undefined);
-    });
-
-    it('must use error stack when available', () => {
-      expect(getErrorDetails(new Error('Whhoooopppppss'))).to.match(/Whhoooopppppss/);
-    });
-
-    it('must use error message when available', () => {
-      expect(getErrorDetails({ message: 'Whhoooopppppss' })).to.match(/Whhoooopppppss/);
-    });
-
-    it('must use the whole provided error when all else fails', () => {
-      expect(getErrorDetails('Whhoooopppppss')).to.match(/Whhoooopppppss/);
-    });
   });
 
   describe('sanitizeConnectionStr', () => {

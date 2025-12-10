@@ -160,17 +160,6 @@ exports.renderTraceContextToBuffer = function renderTraceContextToBuffer(span) {
 };
 
 /**
- * @param {Error} err
- * @returns {string}
- */
-exports.getErrorDetails = function getErrorDetails(err) {
-  if (err == null) {
-    return undefined;
-  }
-  return String(err.stack || err.message || err).substring(0, 500);
-};
-
-/**
  * @param {string} stmt
  * @returns {string}
  */
