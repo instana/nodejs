@@ -167,3 +167,67 @@ function defaultPrepareStackTrace(error, frames) {
   frames.push(error);
   return frames.reverse().join('\n    at ');
 }
+
+/**
+ * Parses a string stack trace into the structured format used by Instana.
+ * Extracts function name, file path, and line number from each frame.
+ *
+ * @param {string} stackString - The string stack trace to parse
+ * @returns {Array.<InstanaCallSite>} - Array of structured call site objects
+ */
+exports.parseStackTraceFromString = function parseStackTraceFromString(stackString) {
+  if (!stackString || typeof stackString !== 'string') {
+    return [];
+  }
+
+  const lines = stackString.split('\n');
+  /** @type {Array.<InstanaCallSite>} */
+  const result = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    // Skip empty lines and the error message line
+    if (!line || !line.includes('at ')) {
+      continue;
+    }
+
+    // Remove any prefix like "@instana/collector:" or "    at "
+    const cleanLine = line.replace(/^.*?at\s+/, '');
+
+    /** @type {InstanaCallSite} */
+    const callSite = {
+      m: '<anonymous>',
+      c: undefined,
+      n: undefined
+    };
+
+    // Pattern 1: "FunctionName (file:line:column)" or "Object.method (file:line:column)"
+    const matchWithParens = cleanLine.match(/^(.+?)\s+\((.+?):(\d+)(?::\d+)?\)$/);
+    if (matchWithParens) {
+      callSite.m = matchWithParens[1].trim();
+      callSite.c = matchWithParens[2];
+      callSite.n = parseInt(matchWithParens[3], 10);
+      result.push(callSite);
+      continue;
+    }
+
+    // Pattern 2: "file:line:column" (no function name)
+    const matchWithoutParens = cleanLine.match(/^(.+?):(\d+)(?::\d+)?$/);
+    if (matchWithoutParens) {
+      callSite.m = '<anonymous>';
+      callSite.c = matchWithoutParens[1];
+      callSite.n = parseInt(matchWithoutParens[2], 10);
+      result.push(callSite);
+      continue;
+    }
+
+    // Pattern 3: Just a function name without location info
+    if (cleanLine && !cleanLine.includes(':')) {
+      callSite.m = cleanLine;
+      result.push(callSite);
+    }
+  }
+
+  return result;
+};
