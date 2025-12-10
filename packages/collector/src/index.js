@@ -100,7 +100,7 @@ function init(userConfig = {}) {
     }
 
     if (collectorIndexCacheKey) {
-      process?.send?.('instana.collector.initialized');
+      // process?.send?.('instana.collector.initialized');
 
       return require.cache[collectorIndexCacheKey].exports;
     } else {
