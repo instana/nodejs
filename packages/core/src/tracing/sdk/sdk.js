@@ -321,19 +321,9 @@ exports.generate = function (isCallbackApi) {
 
     if (error) {
       span.ec = 1;
-      if (!span.data.sdk.custom) {
-        span.data.sdk.custom = {
-          tags: {}
-        };
-      }
-      if (!span.data.sdk.custom.tags) {
-        span.data.sdk.custom.tags = {};
-      }
-      if (span.data.sdk.custom.tags.message == null) {
-        // TODO: fix sdk error capture and handling
-        // This fn used getErrorDetails for now and will need to change
-        span.data.sdk.custom.tags.message = tracingUtil.getErrorDetails(error);
-      }
+      // since the key for error message is different in sdk, we pass the complete path as dot(.) separated string
+      // also it can be passed as an array like ["sdk", "custom", "tags", "message"]
+      tracingUtil.setErrorDetails(span, error, 'sdk.custom.tags.message');
     }
 
     if (span.data.sdk.custom && tags) {
