@@ -187,12 +187,10 @@ exports.parseStackTraceFromString = function parseStackTraceFromString(stackStri
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
 
-    // Skip empty lines and the error message line
     if (!line || !line.includes('at ')) {
       continue;
     }
 
-    // Remove any prefix like "@instana/collector:" or "    at "
     const cleanLine = line.replace(/^.*?at\s+/, '');
 
     /** @type {InstanaCallSite} */
@@ -202,7 +200,6 @@ exports.parseStackTraceFromString = function parseStackTraceFromString(stackStri
       n: undefined
     };
 
-    // Pattern 1: "FunctionName (file:line:column)" or "Object.method (file:line:column)"
     const matchWithParens = cleanLine.match(/^(.+?)\s+\((.+?):(\d+)(?::\d+)?\)$/);
     if (matchWithParens) {
       callSite.m = matchWithParens[1].trim();
@@ -212,7 +209,6 @@ exports.parseStackTraceFromString = function parseStackTraceFromString(stackStri
       continue;
     }
 
-    // Pattern 2: "file:line:column" (no function name)
     const matchWithoutParens = cleanLine.match(/^(.+?):(\d+)(?::\d+)?$/);
     if (matchWithoutParens) {
       callSite.m = '<anonymous>';
@@ -222,7 +218,6 @@ exports.parseStackTraceFromString = function parseStackTraceFromString(stackStri
       continue;
     }
 
-    // Pattern 3: Just a function name without location info
     if (cleanLine && !cleanLine.includes(':')) {
       callSite.m = cleanLine;
       result.push(callSite);
