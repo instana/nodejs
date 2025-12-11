@@ -152,8 +152,9 @@ function enter(_ctx) {
   // TODO: Add an EventEmitter functionality for the current process
   //       such as `instana.on('instana.collector.initialized')`.
   // eslint-disable-next-line no-unused-expressions
-  process?.send?.('instana.collector.initialized');
+  // process?.send?.('instana.collector.initialized');
 
+  /*
   if (!isMainThread) {
     const { parentPort } = require('worker_threads');
 
@@ -162,6 +163,7 @@ function enter(_ctx) {
       parentPort.postMessage('instana.collector.initialized');
     }
   }
+  */
 }
 
 function leave() {
