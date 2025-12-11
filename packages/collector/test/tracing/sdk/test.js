@@ -725,7 +725,7 @@ mochaSuiteFn('tracing/sdk', function () {
         if (functionName && !error) {
           expect(span.stack[0].m).to.match(functionName);
         } else if (error) {
-          // For this error scenario, the V8 stack frame does not contain the function name.
+          // For this error scenario, the V8 stack frame does not contain the function name
           // In such cases, defaults to `<anonymous>` as the method (m) field.
           expect(span.stack[0].m).to.match(/<anonymous>/);
         }
@@ -836,13 +836,8 @@ mochaSuiteFn('tracing/sdk', function () {
       span => expect(span.data.sdk.type).to.equal(constants.SDK[kind]),
       span => {
         expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
-
-        if (functionName && !error) {
+        if (functionName) {
           expect(span.stack[0].m).to.match(functionName);
-        } else if (error) {
-          // For async / promises / callbacks, the fn name varies,
-          // but all generated functions start with "createExit"
-          expect(span.stack[0].m).to.match(/^createExit/);
         }
       },
       span => expect(span.data.sdk.custom).to.be.an('object'),
