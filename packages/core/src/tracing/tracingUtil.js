@@ -338,6 +338,7 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
 
   if (normalizedError.stack) {
     const stackString = String(normalizedError.stack);
-    span.stack = stackTrace.parseStackTraceFromString(stackString);
+    const stackArray = stackTrace.parseStackTraceFromString(stackString);
+    span.stack = stackArray.length > 0 ? stackArray : span.stack || [];
   }
 };

@@ -437,8 +437,11 @@ describe('tracing/tracingUtil', () => {
       setErrorDetails(span, error, 'nats');
 
       expect(span.data.nats.error).to.match(/Error: Test error message/);
-      expect(span.stack).to.be.a('string');
-      expect(span.stack).to.match(/Test error message/);
+      expect(span.stack).to.be.an('array');
+      expect(span.stack.length).to.be.greaterThan(0);
+      expect(span.stack[0]).to.have.property('m');
+      expect(span.stack[0]).to.have.property('c');
+      expect(span.stack[0]).to.have.property('n');
     });
 
     it('should handle error objects with only a message property', () => {
@@ -451,7 +454,7 @@ describe('tracing/tracingUtil', () => {
       setErrorDetails(span, error, 'mysql');
 
       expect(span.data.mysql.error).to.equal('Error: Database connection failed');
-      expect(span.stack).to.contain('some test');
+      expect(span.stack).to.be.an('array');
     });
 
     it('should handle error objects with code property', () => {
@@ -464,7 +467,7 @@ describe('tracing/tracingUtil', () => {
       setErrorDetails(span, error, 'http');
 
       expect(span.data.http.error).to.equal('ECONNREFUSED');
-      expect(span.stack).to.contain('test stack');
+      expect(span.stack).to.be.an('array');
     });
 
     it('should not overwrite existing error property', () => {
@@ -508,17 +511,21 @@ describe('tracing/tracingUtil', () => {
       expect(span.data.nats.error).to.equal(`Error: ${'a'.repeat(193)}`);
     });
 
-    it('should truncate stack traces to 500 characters', () => {
+    it('should parse stack traces into structured format', () => {
       const span = {
         data: {
           nats: {}
         }
       };
       const error = new Error('Test');
-      error.stack = `Error: Test\n${'at someFunction\n'.repeat(100)}`;
+      error.stack = `Error: Test\n${'at someFunction (file.js:10:5)\n'.repeat(10)}`;
       setErrorDetails(span, error, 'nats');
 
-      expect(span.stack).to.have.lengthOf(500);
+      expect(span.stack).to.be.an('array');
+      expect(span.stack.length).to.equal(10);
+      expect(span.stack[0]).to.have.property('m', 'someFunction');
+      expect(span.stack[0]).to.have.property('c', 'file.js');
+      expect(span.stack[0]).to.have.property('n', 10);
     });
 
     it('should handle error objects with details property (gRPC errors)', () => {
@@ -609,7 +616,8 @@ describe('tracing/tracingUtil', () => {
         setErrorDetails(span, error, ['sdk', 'custom', 'tags', 'message']);
 
         expect(span.data.sdk.custom.tags.message).to.match(/TypeError: Type mismatch/);
-        expect(span.stack).to.match(/Type mismatch/);
+        expect(span.stack).to.be.an('array');
+        expect(span.stack.length).to.be.greaterThan(0);
       });
 
       it('should handle SDK error with dot-separated string path', () => {
@@ -623,8 +631,8 @@ describe('tracing/tracingUtil', () => {
         expect(span.data.sdk.custom).to.exist;
         expect(span.data.sdk.custom.tags).to.exist;
         expect(span.data.sdk.custom.tags.message).to.match(/Error: SDK error via string path/);
-        expect(span.stack).to.be.a('string');
-        expect(span.stack).to.match(/SDK error via string path/);
+        expect(span.stack).to.be.an('array');
+        expect(span.stack.length).to.be.greaterThan(0);
       });
 
       it('should handle both array and string paths equivalently', () => {
