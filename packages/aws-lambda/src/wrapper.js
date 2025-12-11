@@ -313,7 +313,7 @@ function init(event, arnInfo, _config) {
   // After core init, because ssm requires require('@aws-sdk/client-ssm'), which triggers
   // the requireHook + shimmer. Any module which requires another external module has to be
   // initialized after the core.
-  ssm.init(config);
+  ssm.init(config, coldStart);
 
   spanBuffer.setIsFaaS(true);
   captureHeaders.init(config);
