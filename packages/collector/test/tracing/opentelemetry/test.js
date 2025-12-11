@@ -915,7 +915,10 @@ mochaSuiteFn('opentelemetry tests', function () {
                   dataProperty: 'tags',
                   extraTests: span => {
                     expect(span.data.tags.name).to.eql('fs readFileSync');
-                    checkTelemetryResourceAttrs(span);
+
+                    // This test uses a global OpenTelemetry SDK instance, which still uses sdk version v1.
+                    // Its nice to keep it like that to proof that v1 and v2 work fine with our integration.
+                    checkTelemetryResourceAttrs(span, /1\.\d+\.\d/);
                   }
                 });
 
@@ -928,7 +931,7 @@ mochaSuiteFn('opentelemetry tests', function () {
                   dataProperty: 'tags',
                   extraTests: span => {
                     expect(span.data.tags.name).to.eql('fs statSync');
-                    checkTelemetryResourceAttrs(span);
+                    checkTelemetryResourceAttrs(span, /1\.\d+\.\d/);
                   }
                 });
               })
@@ -995,8 +998,8 @@ mochaSuiteFn('opentelemetry tests', function () {
             expect(response.otelspan.name).to.eql('explicit-otel-operation');
             expect(response.otelspan._spanContext).to.have.property('traceId');
             expect(response.otelspan._spanContext).to.have.property('spanId');
-            expect(response.otelspan.instrumentationLibrary).to.be.an('object');
-            expect(response.otelspan.instrumentationLibrary.name).to.eql('otel-sdk-app-tracer');
+            expect(response.otelspan.instrumentationScope).to.be.an('object');
+            expect(response.otelspan.instrumentationScope.name).to.eql('otel-sdk-app-tracer');
           })
           .then(() => delay(DELAY_TIMEOUT_IN_MS))
           .then(() =>
@@ -1021,11 +1024,11 @@ mochaSuiteFn('opentelemetry tests', function () {
   });
 });
 
-function checkTelemetryResourceAttrs(span) {
+function checkTelemetryResourceAttrs(span, otelSdkVersion = /2\.\d+\.\d/) {
   expect(span.data.resource['service.name']).to.not.exist;
   expect(span.data.resource['telemetry.sdk.language']).to.eql('nodejs');
   expect(span.data.resource['telemetry.sdk.name']).to.eql('opentelemetry');
-  expect(span.data.resource['telemetry.sdk.version']).to.match(/1\.\d+\.\d/);
+  expect(span.data.resource['telemetry.sdk.version']).to.match(otelSdkVersion);
 }
 
 function verifyHttpExit(spans, parentSpan) {

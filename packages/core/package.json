@@ -64,7 +64,7 @@
     "@opentelemetry/instrumentation-restify": "0.53.0",
     "@opentelemetry/instrumentation-socket.io": "0.54.0",
     "@opentelemetry/instrumentation-tedious": "0.27.0",
-    "@opentelemetry/sdk-trace-base": "1.25.0",
+    "@opentelemetry/sdk-trace-base": "2.2.0",
     "cls-bluebird": "^2.1.0",
     "import-in-the-middle": "2.0.0",
     "lru-cache": "^10.1.0",

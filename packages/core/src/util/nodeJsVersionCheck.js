@@ -4,10 +4,11 @@
 
 'use strict';
 
+const semver = require('semver');
 /**
  * This is the minimum required Node.js version for all @instana packages.
  */
-exports.minimumNodeJsVersion = 18;
+exports.minimumNodeJsVersion = '18.19.0';
 
 /**
  * Checks if the value of process.version denotes a Node.js version that is not supported, that is, older than the given
@@ -17,12 +18,9 @@ exports.minimumNodeJsVersion = 18;
  */
 exports.isNodeJsTooOld = function isNodeJsTooOld() {
   const currentVersion = process.version;
-  if (typeof currentVersion === 'string') {
-    const majorVersionStr = process.version.split('.')[0];
-    if (majorVersionStr.length > 1 && majorVersionStr.charAt(0) === 'v') {
-      const majorVersion = parseInt(majorVersionStr.substring(1), 10);
-      return !isNaN(majorVersion) && majorVersion < exports.minimumNodeJsVersion;
-    }
+  if (!semver.valid(currentVersion)) {
+    return false;
   }
-  return false;
+
+  return semver.lt(currentVersion, exports.minimumNodeJsVersion);
 };

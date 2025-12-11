@@ -13,6 +13,9 @@
     "esm-loader.mjs",
     "esm-register.mjs"
   ],
+  "engines": {
+    "node": ">=18.19.0"
+  },
   "publishConfig": {
     "access": "public"
   },

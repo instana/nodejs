@@ -19,7 +19,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.19.0"
   },
   "contributors": [
     {
@@ -262,9 +262,6 @@
     "prisma": "7.1.0"
   },
   "overrides": {
-    "kafka-avro": {
-      "axios": "v0.21.1"
-    },
     "kafka-node": {
       "uuid": "7.0.3"
     },

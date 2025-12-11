@@ -5,6 +5,8 @@
 'use strict';
 
 /**
+ * IMPORTANT: This file is deprecated, no longer supported, and will be removed in the next major release (v6).
+ *
  * IMPORTANT NOTE: From Node.js version 18.19 and above, the ESM loaders operate off-thread.
  * Consequently, ESM instrumentation using '--experimental-loader' becomes deprecated.
  * Instead, we are using '--import' for loading instrumentation and relocated the Instana collector
@@ -19,7 +21,10 @@
  */
 
 import instana from './src/index.js';
-instana();
+
+if (typeof instana === 'function') {
+  instana();
+}
 // Here we export all named exports from '@instana/core/iitm-loader.mjs', enabling
 // integration of import-in-the-middle (IITM) for Native ESM module support.
 export * from '@instana/core/iitm-loader.mjs';
