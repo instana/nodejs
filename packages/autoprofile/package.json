@@ -51,7 +51,7 @@
   "dependencies": {
     "@instana/core": "4.31.0",
     "detect-libc": "^2.1.2",
-    "nan": "^2.23.1",
+    "nan": "^2.24.0",
     "node-gyp-build": "^4.8.4",
     "semver": "^7.7.3"
   },
