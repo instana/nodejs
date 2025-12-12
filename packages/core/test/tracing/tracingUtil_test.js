@@ -647,5 +647,56 @@ describe('tracing/tracingUtil', () => {
         expect(span1.data.sdk.custom.tags.message).to.match(/Error: Test error/);
       });
     });
+
+    it('should handle errors when logger fails', () => {
+      const span = {
+        data: {
+          test: {}
+        }
+      };
+      setErrorDetails(span, { message: 'test' }, 'test');
+      expect(span.data.test.error).to.match(/Error: test/);
+    });
+
+    it('should preserve existing stack if error has no stack', () => {
+      const existingStack = [{ m: 'existing', c: 'file.js', n: 1 }];
+      const span = {
+        data: { test: {} },
+        stack: existingStack
+      };
+      const error = { message: 'No stack error' };
+      setErrorDetails(span, error, 'test');
+
+      expect(span.stack).to.equal(existingStack);
+    });
+
+    it('should handle empty stack string', () => {
+      const span = {
+        data: { test: {} }
+      };
+      const error = { message: 'test', stack: '' };
+      setErrorDetails(span, error, 'test');
+
+      expect(span.stack).to.deep.equal([]);
+    });
+  });
+
+  describe('generateRandomLongTraceId', () => {
+    const { generateRandomLongTraceId } = require('../../src/tracing/tracingUtil');
+
+    it('should generate 128-bit (32 character) trace IDs', () => {
+      const id = generateRandomLongTraceId();
+      expect(id).to.be.a('string');
+      expect(id.length).to.equal(32);
+      expect(id).to.match(/^[a-f0-9]{32}$/);
+    });
+
+    it('should generate unique IDs', () => {
+      const ids = new Set();
+      for (let i = 0; i < 1000; i++) {
+        ids.add(generateRandomLongTraceId());
+      }
+      expect(ids.size).to.equal(1000);
+    });
   });
 });

@@ -184,14 +184,17 @@ function defaultPrepareStackTrace(error, frames) {
     /** @type {Array.<InstanaCallSite>} */
     const result = [];
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
+    const regexWithParens = /^(.+?)\s+\((.+?):(\d+)(?::\d+)?\)$/;
+    const regexWithoutParens = /^(.+?):(\d+)(?::\d+)?$/;
 
-      if (!line || !line.includes('at ')) {
+    for (let i = 0; i < lines.length; i++) {
+      const trimmedLine = lines[i].trim();
+
+      if (!trimmedLine?.includes('at ')) {
         continue;
       }
 
-      const cleanLine = line.replace(/^.*?at\s+/, '');
+      const cleanLine = trimmedLine.replace(/^.*?at\s+/, '');
 
       /** @type {InstanaCallSite} */
       const callSite = {
@@ -200,7 +203,7 @@ function defaultPrepareStackTrace(error, frames) {
         n: undefined
       };
 
-      const matchWithParens = cleanLine.match(/^(.+?)\s+\((.+?):(\d+)(?::\d+)?\)$/);
+      const matchWithParens = regexWithParens.exec(cleanLine);
       if (matchWithParens) {
         callSite.m = matchWithParens[1].trim();
         callSite.c = matchWithParens[2];
@@ -209,7 +212,7 @@ function defaultPrepareStackTrace(error, frames) {
         continue;
       }
 
-      const matchWithoutParens = cleanLine.match(/^(.+?):(\d+)(?::\d+)?$/);
+      const matchWithoutParens = regexWithoutParens.exec(cleanLine);
       if (matchWithoutParens) {
         callSite.m = '<anonymous>';
         callSite.c = matchWithoutParens[1];
@@ -226,6 +229,8 @@ function defaultPrepareStackTrace(error, frames) {
 
     return result;
   } catch (err) {
+    // If parsing fails for any reason, return empty array as fallback
+    // This prevents the function from throwing and breaking the caller
     return [];
   }
 };

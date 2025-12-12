@@ -287,7 +287,7 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
     }
 
     // Normalize error to object format at the beginning
-    /** @type {{ message?: string, stack?: object | string | null, name?: string, code?: string, details?: string }} */
+    /** @type {{ message?: string, stack?: string | null, name?: string, code?: string, details?: string }} */
     let normalizedError;
 
     if (typeof error === 'string') {
@@ -338,9 +338,10 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
     }
 
     if (normalizedError.stack) {
-      const stackString = String(normalizedError.stack);
-      const stackArray = stackTrace.parseStackTraceFromString(stackString);
+      const stackArray = stackTrace.parseStackTraceFromString(normalizedError.stack);
       span.stack = stackArray.length > 0 ? stackArray : span.stack || [];
+    } else {
+      span.stack = span.stack || [];
     }
   } catch (err) {
     logger.error('Failed to set error details on span:', err);
