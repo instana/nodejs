@@ -31,8 +31,13 @@ exports.init = function init(config) {
     logDeprecatedWarning();
     instrumentRouter(module);
   });
-
-  hook.onModuleLoad('@koa/router', instrumentRouter);
+  hook.onModuleLoad(
+    '@koa/router',
+    module => {
+      instrumentRouter(module.default || module);
+    },
+    { nativeEsm: true }
+  );
 };
 
 function instrumentRouter(Router) {

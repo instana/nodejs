@@ -10,11 +10,12 @@ process.on('SIGTERM', () => {
   process.disconnect();
   process.exit(0);
 });
+require('./mockVersion');
 
 require('../../../..')();
 
 const Koa = require('koa');
-const Router = require('@koa/router');
+const Router = process.env.KOA_VERSION === 'latest' ? require('@koa/router').default : require('@koa/router');
 const bodyParser = require('koa-bodyparser');
 const morgan = require('koa-morgan');
 const port = require('../../../test_util/app-port')();
