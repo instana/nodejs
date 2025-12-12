@@ -174,9 +174,10 @@ function defaultPrepareStackTrace(error, frames) {
  *
  * @param {string} stackString - The string stack trace to parse
  * @returns {Array.<InstanaCallSite>} - Array of structured call site objects
- */ exports.parseStackTraceFromString = function parseStackTraceFromString(stackString) {
+ */
+exports.parseStackTraceFromString = function parseStackTraceFromString(stackString) {
   try {
-    if (!stackString || typeof stackString !== 'string') {
+    if (typeof stackString !== 'string') {
       return [];
     }
 
@@ -184,53 +185,94 @@ function defaultPrepareStackTrace(error, frames) {
     /** @type {Array.<InstanaCallSite>} */
     const result = [];
 
-    const regexWithParens = /^(.+?)\s+\((.+?):(\d+)(?::\d+)?\)$/;
-    const regexWithoutParens = /^(.+?):(\d+)(?::\d+)?$/;
+    lines.forEach(rawLine => {
+      let trimmed = rawLine.trim();
 
-    for (let i = 0; i < lines.length; i++) {
-      const trimmedLine = lines[i].trim();
-
-      if (!trimmedLine?.includes('at ')) {
-        continue;
+      if (trimmed.startsWith('@instana/collector:')) {
+        trimmed = trimmed.slice('@instana/collector:'.length).trim();
       }
 
-      const cleanLine = trimmedLine.replace(/^.*?at\s+/, '');
+      if (!trimmed.startsWith('at ')) return;
+
+      const line = trimmed.slice(3).trim();
 
       /** @type {InstanaCallSite} */
-      const callSite = {
-        m: '<anonymous>',
-        c: undefined,
-        n: undefined
-      };
+      const callSite = { m: '<anonymous>', c: undefined, n: undefined };
 
-      const matchWithParens = regexWithParens.exec(cleanLine);
-      if (matchWithParens) {
-        callSite.m = matchWithParens[1].trim();
-        callSite.c = matchWithParens[2];
-        callSite.n = parseInt(matchWithParens[3], 10);
-        result.push(callSite);
-        continue;
+      const lastParenIndex = line.lastIndexOf('(');
+      const lastParenClose = line.endsWith(')');
+
+      if (lastParenIndex !== -1 && lastParenClose) {
+        const funcName = line.slice(0, lastParenIndex).trim();
+        const inside = line.slice(lastParenIndex + 1, -1);
+
+        if (inside === '<anonymous>' || inside === 'native code') {
+          callSite.m = funcName;
+          result.push(callSite);
+          return;
+        }
+
+        const lastColon = inside.lastIndexOf(':');
+        if (lastColon !== -1) {
+          const afterLastColon = inside.slice(lastColon + 1);
+          const num = parseInt(afterLastColon, 10);
+
+          if (!isNaN(num)) {
+            const beforeLastColon = inside.slice(0, lastColon);
+            const secondLastColon = beforeLastColon.lastIndexOf(':');
+
+            if (secondLastColon !== -1) {
+              const lineNum = parseInt(beforeLastColon.slice(secondLastColon + 1), 10);
+              if (!isNaN(lineNum)) {
+                const path = beforeLastColon.slice(0, secondLastColon);
+                callSite.m = funcName;
+                callSite.c = path;
+                callSite.n = lineNum;
+                result.push(callSite);
+                return;
+              }
+            }
+            callSite.m = funcName;
+            callSite.c = beforeLastColon;
+            callSite.n = num;
+            result.push(callSite);
+            return;
+          }
+        }
       }
 
-      const matchWithoutParens = regexWithoutParens.exec(cleanLine);
-      if (matchWithoutParens) {
-        callSite.m = '<anonymous>';
-        callSite.c = matchWithoutParens[1];
-        callSite.n = parseInt(matchWithoutParens[2], 10);
-        result.push(callSite);
-        continue;
-      }
+      const lastColon = line.lastIndexOf(':');
+      if (lastColon !== -1) {
+        const afterLastColon = line.slice(lastColon + 1);
+        const maybeLine = parseInt(afterLastColon, 10);
 
-      if (cleanLine && !cleanLine.includes(':')) {
-        callSite.m = cleanLine;
-        result.push(callSite);
+        if (!isNaN(maybeLine)) {
+          const beforeLastColon = line.slice(0, lastColon);
+          const secondLastColon = beforeLastColon.lastIndexOf(':');
+
+          if (secondLastColon !== -1) {
+            const lineNum = parseInt(beforeLastColon.slice(secondLastColon + 1), 10);
+            if (!isNaN(lineNum)) {
+              const path = beforeLastColon.slice(0, secondLastColon);
+              callSite.c = path;
+              callSite.n = lineNum;
+              result.push(callSite);
+              return;
+            }
+          }
+
+          callSite.c = beforeLastColon;
+          callSite.n = maybeLine;
+          result.push(callSite);
+          return;
+        }
       }
-    }
+      callSite.m = line;
+      result.push(callSite);
+    });
 
     return result;
-  } catch (err) {
-    // If parsing fails for any reason, return empty array as fallback
-    // This prevents the function from throwing and breaking the caller
+  } catch {
     return [];
   }
 };
