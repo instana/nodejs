@@ -18,12 +18,12 @@ const {
   generateRandomId,
   generateRandomSpanId,
   generateRandomTraceId,
-  getErrorDetails,
   readTraceContextFromBuffer,
   sanitizeConnectionStr,
   unsignedHexStringToBuffer,
   unsignedHexStringsToBuffer,
-  findCallback
+  findCallback,
+  setErrorDetails
 } = require('../../src/tracing/tracingUtil');
 
 describe('tracing/tracingUtil', () => {
@@ -356,25 +356,6 @@ describe('tracing/tracingUtil', () => {
     }
   });
 
-  describe('getErrorDetails', () => {
-    it('must not fail on null/undefined', () => {
-      expect(getErrorDetails(null)).to.equal(undefined);
-      expect(getErrorDetails(undefined)).to.equal(undefined);
-    });
-
-    it('must use error stack when available', () => {
-      expect(getErrorDetails(new Error('Whhoooopppppss'))).to.match(/Whhoooopppppss/);
-    });
-
-    it('must use error message when available', () => {
-      expect(getErrorDetails({ message: 'Whhoooopppppss' })).to.match(/Whhoooopppppss/);
-    });
-
-    it('must use the whole provided error when all else fails', () => {
-      expect(getErrorDetails('Whhoooopppppss')).to.match(/Whhoooopppppss/);
-    });
-  });
-
   describe('sanitizeConnectionStr', () => {
     it('should redact password at the start of the connection string', () => {
       expect(
@@ -442,6 +423,221 @@ describe('tracing/tracingUtil', () => {
       const res = findCallback(args);
       expect(res.originalCallback).to.equal(arrow);
       expect(res.callbackIndex).to.equal(1);
+    });
+  });
+
+  describe('setErrorDetails', () => {
+    it('should handle Error objects with message and stack', () => {
+      const span = {
+        data: {
+          nats: {}
+        }
+      };
+      const error = new Error('Test error message');
+      setErrorDetails(span, error, 'nats');
+
+      expect(span.data.nats.error).to.match(/Error: Test error message/);
+      expect(span.stack).to.be.a('string');
+      expect(span.stack).to.match(/Test error message/);
+    });
+
+    it('should handle error objects with only a message property', () => {
+      const span = {
+        data: {
+          mysql: {}
+        }
+      };
+      const error = { message: 'Database connection failed', stack: 'some test' };
+      setErrorDetails(span, error, 'mysql');
+
+      expect(span.data.mysql.error).to.equal('Error: Database connection failed');
+      expect(span.stack).to.contain('some test');
+    });
+
+    it('should handle error objects with code property', () => {
+      const span = {
+        data: {
+          http: {}
+        }
+      };
+      const error = { code: 'ECONNREFUSED', stack: 'test stack' };
+      setErrorDetails(span, error, 'http');
+
+      expect(span.data.http.error).to.equal('ECONNREFUSED');
+      expect(span.stack).to.contain('test stack');
+    });
+
+    it('should not overwrite existing error property', () => {
+      const span = {
+        data: {
+          nats: {
+            error: 'Existing error'
+          }
+        }
+      };
+      const error = 'New error';
+      setErrorDetails(span, error, 'nats');
+
+      expect(span.data.nats.error).to.equal('Existing error');
+    });
+
+    it('should handle null or undefined errors gracefully', () => {
+      const span = {
+        data: {
+          nats: {}
+        }
+      };
+      setErrorDetails(span, null, 'nats');
+      expect(span.data.nats.error).to.be.undefined;
+
+      setErrorDetails(span, undefined, 'nats');
+      expect(span.data.nats.error).to.be.undefined;
+    });
+
+    it('should truncate long error messages to 200 characters', () => {
+      const span = {
+        data: {
+          nats: {}
+        }
+      };
+      const longError = 'a'.repeat(300);
+      setErrorDetails(span, longError, 'nats');
+
+      expect(span.data.nats.error).to.have.lengthOf(200);
+      // The prefix `Error: ` (length 7) is excluded from the trimming logic.
+      expect(span.data.nats.error).to.equal(`Error: ${'a'.repeat(193)}`);
+    });
+
+    it('should truncate stack traces to 500 characters', () => {
+      const span = {
+        data: {
+          nats: {}
+        }
+      };
+      const error = new Error('Test');
+      error.stack = `Error: Test\n${'at someFunction\n'.repeat(100)}`;
+      setErrorDetails(span, error, 'nats');
+
+      expect(span.stack).to.have.lengthOf(500);
+    });
+
+    it('should handle error objects with details property (gRPC errors)', () => {
+      const span = {
+        data: {
+          rpc: {}
+        }
+      };
+      const error = { details: 'UNAVAILABLE: Connection refused' };
+      setErrorDetails(span, error, 'rpc');
+
+      expect(span.data.rpc.error).to.contain('UNAVAILABLE: Connection refused');
+    });
+
+    it('should prioritize details over message for gRPC errors', () => {
+      const span = {
+        data: {
+          rpc: {}
+        }
+      };
+      const error = {
+        message: 'Generic error message',
+        details: 'UNAVAILABLE: Connection refused'
+      };
+      setErrorDetails(span, error, 'rpc');
+
+      expect(span.data.rpc.error).to.contain('UNAVAILABLE: Connection refused');
+    });
+
+    describe('SDK spans with nested error paths', () => {
+      it('should not overwrite existing SDK error', () => {
+        const span = {
+          data: {
+            sdk: {
+              custom: {
+                tags: {
+                  message: 'Existing SDK error'
+                }
+              }
+            }
+          }
+        };
+        const error = 'New SDK error';
+        setErrorDetails(span, error, ['sdk', 'custom', 'tags', 'message']);
+
+        expect(span.data.sdk.custom.tags.message).to.equal('Existing SDK error');
+      });
+
+      it('should truncate SDK error messages to 200 characters', () => {
+        const span = {
+          data: {}
+        };
+        const longError = 'b'.repeat(600);
+        setErrorDetails(span, longError, ['sdk', 'custom', 'tags', 'message']);
+
+        expect(span.data.sdk.custom.tags.message).to.have.lengthOf(200);
+        expect(span.data.sdk.custom.tags.message).to.equal(`Error: ${'b'.repeat(193)}`);
+      });
+
+      it('should create nested structure if it does not exist', () => {
+        const span = {
+          data: {}
+        };
+        const error = 'Test error';
+        setErrorDetails(span, error, ['sdk', 'custom', 'tags', 'error']);
+
+        expect(span.data.sdk).to.be.an('object');
+        expect(span.data.sdk.custom).to.be.an('object');
+        expect(span.data.sdk.custom.tags).to.be.an('object');
+        expect(span.data.sdk.custom.tags.error).to.equal('Error: Test error');
+      });
+
+      it('should handle different nested paths', () => {
+        const span = {
+          data: {}
+        };
+        const error = 'Custom path error';
+        setErrorDetails(span, error, ['custom', 'nested', 'path', 'errorField']);
+
+        expect(span.data.custom.nested.path.errorField).to.equal('Error: Custom path error');
+      });
+
+      it('should handle Error object with name and message for SDK spans', () => {
+        const span = {
+          data: {}
+        };
+        const error = new TypeError('Type mismatch');
+        setErrorDetails(span, error, ['sdk', 'custom', 'tags', 'message']);
+
+        expect(span.data.sdk.custom.tags.message).to.match(/TypeError: Type mismatch/);
+        expect(span.stack).to.match(/Type mismatch/);
+      });
+
+      it('should handle SDK error with dot-separated string path', () => {
+        const span = {
+          data: {}
+        };
+        const error = new Error('SDK error via string path');
+        setErrorDetails(span, error, 'sdk.custom.tags.message');
+
+        expect(span.data.sdk).to.exist;
+        expect(span.data.sdk.custom).to.exist;
+        expect(span.data.sdk.custom.tags).to.exist;
+        expect(span.data.sdk.custom.tags.message).to.match(/Error: SDK error via string path/);
+        expect(span.stack).to.be.a('string');
+        expect(span.stack).to.match(/SDK error via string path/);
+      });
+
+      it('should handle both array and string paths equivalently', () => {
+        const span1 = { data: {} };
+        const span2 = { data: {} };
+        const error = new Error('Test error');
+
+        setErrorDetails(span1, error, ['sdk', 'custom', 'tags', 'message']);
+        setErrorDetails(span2, error, 'sdk.custom.tags.message');
+
+        expect(span1.data.sdk.custom.tags.message).to.equal(span2.data.sdk.custom.tags.message);
+        expect(span1.data.sdk.custom.tags.message).to.match(/Error: Test error/);
+      });
     });
   });
 });

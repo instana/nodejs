@@ -290,6 +290,7 @@ mochaSuiteFn('tracing/pg-native', function () {
     return expectAtLeastOneMatching(spans, span => {
       verifyPgExitBase(span, parent, statement);
       expect(span.error).to.not.exist;
+      expect(span.stack).to.exist;
       expect(span.ec).to.equal(1);
       expect(span.data.pg.error).to.contain(errorMessage);
     });

@@ -242,6 +242,7 @@ function instrument(coreModule, forceHttps) {
 
         span.d = Date.now() - span.ts;
         span.ec = res.statusCode >= 500 ? 1 : 0;
+
         span.transmit();
 
         if (callback) {
@@ -262,10 +263,9 @@ function instrument(coreModule, forceHttps) {
       } catch (e) {
         // A synchronous exception indicates a failure that is not covered by the listeners. Using a malformed URL for
         // example is a case that triggers a synchronous exception.
-        span.data.http = {
-          url: completeCallUrl,
-          error: e ? e.message : ''
-        };
+        span.data.http = {};
+        span.data.http.url = completeCallUrl;
+        tracingUtil.setErrorDetails(span, e, 'http');
         span.d = Date.now() - span.ts;
         span.ec = 1;
         span.transmit();
@@ -311,11 +311,14 @@ function instrument(coreModule, forceHttps) {
         }
         span.data.http = {
           method: clientRequest.method,
-          url: completeCallUrl,
-          error: errorMessage
+          url: completeCallUrl
         };
+        // TODO: special-case, we remove this in separate PR
+        span.data.http.error = errorMessage;
         span.d = Date.now() - span.ts;
         span.ec = 1;
+        tracingUtil.setErrorDetails(span, err, 'http');
+
         span.transmit();
       });
     });
