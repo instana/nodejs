@@ -26,9 +26,12 @@ const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 const DELAY_TIMEOUT_IN_MS = 500;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const agentControls = globalAgent.instance;
 
 mochaSuiteFn('opentelemetry tests', function () {
   this.timeout(config.getTestTimeout() * 2);
+
+  globalAgent.setUpCleanUpHooks();
 
   before(() => {
     if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS === 'true') {
@@ -36,6 +39,132 @@ mochaSuiteFn('opentelemetry tests', function () {
     }
 
     execSync('./preinstall.sh', { cwd: __dirname, stdio: 'inherit' });
+  });
+
+  describe('tracing/confluent-kafka', function () {
+    let producerControls;
+    const topic = 'confluent-kafka-topic';
+
+    before(async () => {
+      if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS === 'true') {
+        return;
+      }
+      execSync('npm install --no-save --no-package-lock --prefix ./ ./core.tgz', {
+        cwd: __dirname,
+        stdio: 'inherit'
+      });
+
+      execSync('npm install --no-save --no-package-lock --prefix ./ ./collector.tgz', {
+        cwd: __dirname,
+        stdio: 'inherit'
+      });
+
+      producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'confluent-kafka-producer-app.js'),
+        useGlobalAgent: true,
+        cwd: __dirname,
+        enableOtelIntegration: true,
+        env: {
+          CONFLUENT_KAFKA_TOPIC: topic
+        }
+      });
+
+      await producerControls.startAndWaitForAgentConnection();
+    });
+
+    beforeEach(async () => {
+      await agentControls.clearReceivedTraceData();
+    });
+
+    after(async () => {
+      await producerControls.stop();
+    });
+
+    afterEach(async () => {
+      await producerControls.clearIpcMessages();
+    });
+
+    describe('consuming message', () => {
+      let consumerControls;
+
+      before(async () => {
+        consumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'confluent-kafka-consumer-app.js'),
+          useGlobalAgent: true,
+          enableOtelIntegration: true,
+          env: {
+            CONFLUENT_KAFKA_TOPIC: topic
+          }
+        });
+
+        await consumerControls.startAndWaitForAgentConnection();
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      after(async () => {
+        await consumerControls.stop();
+      });
+
+      afterEach(async () => {
+        await consumerControls.clearIpcMessages();
+      });
+
+      const apiPath = '/produce';
+
+      it('produces and consumes a message', async () => {
+        const response = await producerControls.sendRequest({
+          method: 'GET',
+          path: apiPath
+        });
+
+        expect(response.produced).to.equal(true);
+
+        return retry(() => {
+          return agentControls.getSpans().then(spans => {
+            expect(spans.length).to.equal(3);
+
+            const httpEntry = verifyHttpRootEntry({
+              spans,
+              apiPath: '/produce',
+              pid: String(producerControls.getPid())
+            });
+
+            verifyExitSpan({
+              spanName: 'otel',
+              spans,
+              parent: httpEntry,
+              withError: false,
+              pid: String(producerControls.getPid()),
+              dataProperty: 'tags',
+              extraTests: span => {
+                expect(span.data.tags.name).to.eql('confluent-kafka-topic');
+                expect(span.data.tags['messaging.system']).to.equal('kafka');
+                expect(span.data.tags['messaging.operation.name']).to.equal('produce');
+                checkTelemetryResourceAttrs(span);
+              }
+            });
+
+            verifyEntrySpan({
+              spanName: 'otel',
+              spans,
+              parent: httpEntry,
+              withError: false,
+              pid: String(producerControls.getPid()),
+              dataProperty: 'tags',
+              extraTests: span => {
+                expect(span.data.tags.name).to.eql('confluent-kafka-topic');
+                expect(span.data.tags['messaging.system']).to.equal('kafka');
+                expect(span.data.tags['messaging.operation.type']).to.equal('deliver');
+                checkTelemetryResourceAttrs(span);
+              }
+            });
+          });
+        });
+      });
+    });
   });
 
   // We run tests against multiple @opentelemetry/api versions to ensure compatibility.
@@ -68,7 +197,6 @@ mochaSuiteFn('opentelemetry tests', function () {
       restifyTest('restify', function () {
         describe('opentelemetry is enabled', function () {
           globalAgent.setUpCleanUpHooks();
-          const agentControls = globalAgent.instance;
 
           let controls;
 
@@ -211,9 +339,6 @@ mochaSuiteFn('opentelemetry tests', function () {
         });
 
         describe('opentelemetry is disabled', function () {
-          globalAgent.setUpCleanUpHooks();
-          const agentControls = globalAgent.instance;
-
           let controls;
 
           before(async () => {
@@ -277,7 +402,6 @@ mochaSuiteFn('opentelemetry tests', function () {
 
       describe('fs', function () {
         globalAgent.setUpCleanUpHooks();
-        const agentControls = globalAgent.instance;
 
         let controls;
 
@@ -397,8 +521,6 @@ mochaSuiteFn('opentelemetry tests', function () {
       });
 
       describe('socket.io', function () {
-        globalAgent.setUpCleanUpHooks();
-        const agentControls = globalAgent.instance;
         let socketIOServerPort;
 
         let serverControls;
@@ -558,8 +680,6 @@ mochaSuiteFn('opentelemetry tests', function () {
 
       describe('tedious', function () {
         describe('opentelemetry is enabled', function () {
-          globalAgent.setUpCleanUpHooks();
-          const agentControls = globalAgent.instance;
           let controls;
 
           // We need to increase the waiting timeout here for the initial azure connection,
@@ -658,8 +778,6 @@ mochaSuiteFn('opentelemetry tests', function () {
         });
 
         describe('opentelemetry is disabled', function () {
-          globalAgent.setUpCleanUpHooks();
-          const agentControls = globalAgent.instance;
           let controls;
 
           before(async () => {
@@ -704,9 +822,6 @@ mochaSuiteFn('opentelemetry tests', function () {
         this.timeout(1000 * 60);
 
         describe('opentelemetry is enabled', function () {
-          globalAgent.setUpCleanUpHooks();
-          const agentControls = globalAgent.instance;
-
           let controls;
 
           before(async () => {
@@ -781,9 +896,6 @@ mochaSuiteFn('opentelemetry tests', function () {
         });
 
         describe('opentelemetry is disabled', function () {
-          globalAgent.setUpCleanUpHooks();
-          const agentControls = globalAgent.instance;
-
           let controls;
 
           before(async () => {
@@ -850,9 +962,6 @@ mochaSuiteFn('opentelemetry tests', function () {
     });
 
     describe('when openTelemetry initialized first', function () {
-      globalAgent.setUpCleanUpHooks();
-      const agentControls = globalAgent.instance;
-
       let controls;
       before(async () => {
         controls = new ProcessControls({
@@ -947,9 +1056,6 @@ mochaSuiteFn('opentelemetry tests', function () {
     });
 
     describe('when Collector initialized first', function () {
-      globalAgent.setUpCleanUpHooks();
-      const agentControls = globalAgent.instance;
-
       let controls;
 
       before(async () => {
