@@ -174,55 +174,58 @@ function defaultPrepareStackTrace(error, frames) {
  *
  * @param {string} stackString - The string stack trace to parse
  * @returns {Array.<InstanaCallSite>} - Array of structured call site objects
- */
-exports.parseStackTraceFromString = function parseStackTraceFromString(stackString) {
-  if (!stackString || typeof stackString !== 'string') {
+ */ exports.parseStackTraceFromString = function parseStackTraceFromString(stackString) {
+  try {
+    if (!stackString || typeof stackString !== 'string') {
+      return [];
+    }
+
+    const lines = stackString.split('\n');
+    /** @type {Array.<InstanaCallSite>} */
+    const result = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      if (!line || !line.includes('at ')) {
+        continue;
+      }
+
+      const cleanLine = line.replace(/^.*?at\s+/, '');
+
+      /** @type {InstanaCallSite} */
+      const callSite = {
+        m: '<anonymous>',
+        c: undefined,
+        n: undefined
+      };
+
+      const matchWithParens = cleanLine.match(/^(.+?)\s+\((.+?):(\d+)(?::\d+)?\)$/);
+      if (matchWithParens) {
+        callSite.m = matchWithParens[1].trim();
+        callSite.c = matchWithParens[2];
+        callSite.n = parseInt(matchWithParens[3], 10);
+        result.push(callSite);
+        continue;
+      }
+
+      const matchWithoutParens = cleanLine.match(/^(.+?):(\d+)(?::\d+)?$/);
+      if (matchWithoutParens) {
+        callSite.m = '<anonymous>';
+        callSite.c = matchWithoutParens[1];
+        callSite.n = parseInt(matchWithoutParens[2], 10);
+        result.push(callSite);
+        continue;
+      }
+
+      if (cleanLine && !cleanLine.includes(':')) {
+        callSite.m = cleanLine;
+        result.push(callSite);
+      }
+    }
+
+    return result;
+  } catch (err) {
     return [];
   }
-
-  const lines = stackString.split('\n');
-  /** @type {Array.<InstanaCallSite>} */
-  const result = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-
-    if (!line || !line.includes('at ')) {
-      continue;
-    }
-
-    const cleanLine = line.replace(/^.*?at\s+/, '');
-
-    /** @type {InstanaCallSite} */
-    const callSite = {
-      m: '<anonymous>',
-      c: undefined,
-      n: undefined
-    };
-
-    const matchWithParens = cleanLine.match(/^(.+?)\s+\((.+?):(\d+)(?::\d+)?\)$/);
-    if (matchWithParens) {
-      callSite.m = matchWithParens[1].trim();
-      callSite.c = matchWithParens[2];
-      callSite.n = parseInt(matchWithParens[3], 10);
-      result.push(callSite);
-      continue;
-    }
-
-    const matchWithoutParens = cleanLine.match(/^(.+?):(\d+)(?::\d+)?$/);
-    if (matchWithoutParens) {
-      callSite.m = '<anonymous>';
-      callSite.c = matchWithoutParens[1];
-      callSite.n = parseInt(matchWithoutParens[2], 10);
-      result.push(callSite);
-      continue;
-    }
-
-    if (cleanLine && !cleanLine.includes(':')) {
-      callSite.m = cleanLine;
-      result.push(callSite);
-    }
-  }
-
-  return result;
 };
