@@ -634,7 +634,7 @@ function registerTests(appUsesHttps) {
               },
               span => expect(span.t).to.equal(entrySpan.t),
               span => expect(span.p).to.equal(entrySpan.s),
-              span => expect(span.stack).to.be.a('string')
+              span => expect(span.stack).to.be.an('array')
             ]);
             expectExactlyOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');

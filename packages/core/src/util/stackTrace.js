@@ -167,3 +167,112 @@ function defaultPrepareStackTrace(error, frames) {
   frames.push(error);
   return frames.reverse().join('\n    at ');
 }
+
+/**
+ * Parses a string stack trace into the structured format used by Instana.
+ * Extracts function name, file path, and line number from each frame.
+ *
+ * @param {string} stackString - The string stack trace to parse
+ * @returns {Array.<InstanaCallSite>} - Array of structured call site objects
+ */
+exports.parseStackTraceFromString = function parseStackTraceFromString(stackString) {
+  try {
+    if (typeof stackString !== 'string') {
+      return [];
+    }
+
+    const lines = stackString.split('\n');
+    /** @type {Array.<InstanaCallSite>} */
+    const result = [];
+
+    lines.forEach(rawLine => {
+      let trimmed = rawLine.trim();
+
+      if (trimmed.startsWith('@instana/collector:')) {
+        trimmed = trimmed.slice('@instana/collector:'.length).trim();
+      }
+
+      if (!trimmed.startsWith('at ')) return;
+
+      const line = trimmed.slice(3).trim();
+
+      /** @type {InstanaCallSite} */
+      const callSite = { m: '<anonymous>', c: undefined, n: undefined };
+
+      const lastParenIndex = line.lastIndexOf('(');
+      const lastParenClose = line.endsWith(')');
+
+      if (lastParenIndex !== -1 && lastParenClose) {
+        const funcName = line.slice(0, lastParenIndex).trim();
+        const inside = line.slice(lastParenIndex + 1, -1);
+
+        if (inside === '<anonymous>' || inside === 'native code') {
+          callSite.m = funcName;
+          result.push(callSite);
+          return;
+        }
+
+        const lastColon = inside.lastIndexOf(':');
+        if (lastColon !== -1) {
+          const afterLastColon = inside.slice(lastColon + 1);
+          const num = parseInt(afterLastColon, 10);
+
+          if (!isNaN(num)) {
+            const beforeLastColon = inside.slice(0, lastColon);
+            const secondLastColon = beforeLastColon.lastIndexOf(':');
+
+            if (secondLastColon !== -1) {
+              const lineNum = parseInt(beforeLastColon.slice(secondLastColon + 1), 10);
+              if (!isNaN(lineNum)) {
+                const path = beforeLastColon.slice(0, secondLastColon);
+                callSite.m = funcName;
+                callSite.c = path;
+                callSite.n = lineNum;
+                result.push(callSite);
+                return;
+              }
+            }
+            callSite.m = funcName;
+            callSite.c = beforeLastColon;
+            callSite.n = num;
+            result.push(callSite);
+            return;
+          }
+        }
+      }
+
+      const lastColon = line.lastIndexOf(':');
+      if (lastColon !== -1) {
+        const afterLastColon = line.slice(lastColon + 1);
+        const maybeLine = parseInt(afterLastColon, 10);
+
+        if (!isNaN(maybeLine)) {
+          const beforeLastColon = line.slice(0, lastColon);
+          const secondLastColon = beforeLastColon.lastIndexOf(':');
+
+          if (secondLastColon !== -1) {
+            const lineNum = parseInt(beforeLastColon.slice(secondLastColon + 1), 10);
+            if (!isNaN(lineNum)) {
+              const path = beforeLastColon.slice(0, secondLastColon);
+              callSite.c = path;
+              callSite.n = lineNum;
+              result.push(callSite);
+              return;
+            }
+          }
+
+          callSite.c = beforeLastColon;
+          callSite.n = maybeLine;
+          result.push(callSite);
+          return;
+        }
+      }
+      callSite.m = line;
+      result.push(callSite);
+    });
+
+    return result;
+  } catch {
+    return [];
+  }
+};

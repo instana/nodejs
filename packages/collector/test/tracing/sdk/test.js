@@ -721,14 +721,13 @@ mochaSuiteFn('tracing/sdk', function () {
       span => expect(span.data.sdk.name).to.equal('custom-entry'),
       span => expect(span.data.sdk.type).to.equal(constants.SDK.ENTRY),
       span => {
-        // TODO: Remove this !error condition when the span.stack to array conversion is implemented
+        expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
         if (functionName && !error) {
-          // When there's an error, span.stack is overwritten with error stack string, not stack frames array
-          expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
           expect(span.stack[0].m).to.match(functionName);
         } else if (error) {
-          // For errors, span.stack is a string containing the error stack trace
-          expect(span.stack).to.be.a('string');
+          // For this error scenario, the V8 stack frame does not contain the function name
+          // In such cases, defaults to `<anonymous>` as the method (m) field.
+          expect(span.stack[0].m).to.match(/<anonymous>/);
         }
       }
     ]);
@@ -836,15 +835,9 @@ mochaSuiteFn('tracing/sdk', function () {
           : expect(span.data.sdk.name).to.equal(kind === 'INTERMEDIATE' ? 'intermediate-file-access' : 'file-access'),
       span => expect(span.data.sdk.type).to.equal(constants.SDK[kind]),
       span => {
-        // TODO: Remove this !error condition when the span.stack to array conversion is implemented
-        if (functionName && !error) {
-          // When there's an error, span.stack is overwritten with error stack string, not stack frames array
-          expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
+        expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
+        if (functionName) {
           expect(span.stack[0].m).to.match(functionName);
-        } else if (error) {
-          // For errors, span.stack is a string containing the error stack trace
-          expect(span.stack).to.be.a('string');
-          expect(span.stack).to.contain('Error: ENOENT');
         }
       },
       span => expect(span.data.sdk.custom).to.be.an('object'),

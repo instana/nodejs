@@ -153,12 +153,11 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
                   span => expect(span.ec).to.equal(1),
                   span => expect(span.data.http.error).to.exist,
                   span => {
-                    // When setErrorDetails is called with an error that has a stack,
-                    // the error.stack should be captured in span.stack as a string (first 500 chars)
-                    expect(span.stack).to.be.a('string');
+                    expect(span.stack).to.be.an('array');
                     expect(span.stack.length).to.be.greaterThan(0);
-                    expect(span.stack.length).to.be.at.most(500);
-                    expect(span.stack).to.match(/Error|ECONNREFUSED/);
+                    expect(span.stack[0]).to.have.property('m');
+                    expect(span.stack[0]).to.have.property('c');
+                    expect(span.stack[0]).to.have.property('n');
                   }
                 ]);
               })
