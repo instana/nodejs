@@ -81,10 +81,10 @@ jobs:
             git --no-pager diff --cached
             git --no-pager diff
           elif [[ $FROM_PACKAGE = true ]]; then
-            npx lerna publish --yes --no-verify-access from-package
+            npx lerna publish --dist-tag v4 --yes --no-verify-access from-package
             git log -p -n1
           else
-            npx lerna publish --yes --no-verify-access
+            npx lerna publish --dist-tag v4 --yes --no-verify-access
             git log -p -n1
           fi
 

@@ -403,7 +403,7 @@ if [[ -z $SKIP_DOCKER_IMAGE ]]; then
   # Build the Docker image for the specified Node.js version
   docker build --build-arg NODEJS_VERSION=$NODEJS_DEV_VERSION . -t "$DOCKER_IMAGE_NAME:$VERSION"
 
-  # NOTE: serverless/ci/pipeline.yaml passes PACKAGE_VERSION=1 for 1.x branch
+  # NOTE: serverless/ci/pipeline.yaml passes PACKAGE_VERSION=X for e.g. 1.x or 4.x branch
   if [[ $PACKAGE_VERSION == latest ]]; then
     docker tag $DOCKER_IMAGE_NAME:$VERSION $DOCKER_IMAGE_NAME:latest
   fi
