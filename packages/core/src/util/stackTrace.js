@@ -167,3 +167,114 @@ function defaultPrepareStackTrace(error, frames) {
   frames.push(error);
   return frames.reverse().join('\n    at ');
 }
+
+/**
+ * Parses a string stack trace into the structured format used by Instana.
+ * Extracts function name, file path, and line number from each frame.
+ *
+ * @param {string} stackString - The string stack trace to parse
+ * @returns {Array.<InstanaCallSite>} - Array of structured call site objects
+ */
+exports.parseStackTraceFromString = function parseStackTraceFromString(stackString) {
+  try {
+    if (typeof stackString !== 'string') {
+      return [];
+    }
+
+    const stackLines = stackString.split('\n');
+    /** @type {Array.<InstanaCallSite>} */
+    const callSites = [];
+
+    stackLines.forEach(rawStackLine => {
+      const normalizedLine = rawStackLine.trim();
+
+      // stack traces start with at, otherwise ignore
+      if (!normalizedLine.startsWith('at ')) return;
+
+      const frameText = normalizedLine.slice(3).trim();
+
+      /** @type {InstanaCallSite} */
+      const callSite = {
+        m: '<anonymous>',
+        c: undefined,
+        n: undefined
+      };
+
+      let functionName;
+      let locationText = frameText;
+
+      // Case: "function (something)"
+      const openParenIndex = frameText.lastIndexOf('(');
+
+      if (openParenIndex !== -1 && frameText.endsWith(')')) {
+        const candidateLocation = frameText.slice(openParenIndex + 1, -1);
+        const parsed = parseLocation(candidateLocation);
+        if (parsed) {
+          functionName = frameText.slice(0, openParenIndex).trim();
+          locationText = candidateLocation;
+          callSite.c = parsed.file;
+          callSite.n = parsed.line;
+        }
+      }
+
+      // Case: no parentheses or "(something)" was not a location
+      if (callSite.c === undefined) {
+        const parsed = parseLocation(locationText);
+        if (parsed) {
+          callSite.c = parsed.file;
+          callSite.n = parsed.line;
+        }
+      }
+
+      // Resolve method name
+      if (functionName) {
+        callSite.m = functionName;
+      } else if (callSite.c === undefined) {
+        callSite.m = frameText;
+      }
+
+      callSites.push(callSite);
+    });
+
+    return callSites;
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Parses "file:line[:column]" safely without regex
+ * @param {string} locationText
+ */
+function parseLocation(locationText) {
+  const lastColon = locationText.lastIndexOf(':');
+
+  // file only (no line info)
+  if (lastColon === -1) {
+    return null;
+  }
+
+  const lastPart = parseInt(locationText.slice(lastColon + 1), 10);
+  if (isNaN(lastPart)) {
+    return { file: locationText, line: null };
+  }
+
+  const beforeLast = locationText.slice(0, lastColon);
+  const secondLastColon = beforeLast.lastIndexOf(':');
+
+  // file:line:column
+  if (secondLastColon !== -1) {
+    const line = parseInt(beforeLast.slice(secondLastColon + 1), 10);
+    if (!isNaN(line)) {
+      return {
+        file: beforeLast.slice(0, secondLastColon),
+        line
+      };
+    }
+  }
+
+  return {
+    file: beforeLast,
+    line: lastPart
+  };
+}
