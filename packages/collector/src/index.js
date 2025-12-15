@@ -100,7 +100,9 @@ function init(userConfig = {}) {
     }
 
     if (collectorIndexCacheKey) {
-      // process?.send?.('instana.collector.initialized');
+      if (process.env.INSTANA_IPC_ENABLED === 'true') {
+        process?.send?.('instana.collector.initialized');
+      }
 
       return require.cache[collectorIndexCacheKey].exports;
     } else {

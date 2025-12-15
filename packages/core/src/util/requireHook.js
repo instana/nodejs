@@ -66,18 +66,20 @@ function patchedModuleLoad(moduleName) {
   //       However, when an ESM library imports a CommonJS package, our requireHook is triggered.
   //       For native ESM libraries the iitmHook is triggered.
   if (path.isAbsolute(moduleName) && ['.node', '.json', '.ts'].indexOf(path.extname(moduleName)) === -1) {
+    // Normalize Windows paths (backslashes) to forward slashes for regex matching
+    const normalizedModuleName = moduleName.replace(/\\/g, '/');
     // EDGE CASE for ESM: mysql2/promise.js
-    if (moduleName.indexOf('node_modules/mysql2/promise.js') !== -1) {
+    if (normalizedModuleName.indexOf('node_modules/mysql2/promise.js') !== -1) {
       moduleName = 'mysql2/promise';
     } else {
       // e.g. path is node_modules/@elastic/elasicsearch/index.js
-      let match = moduleName.match(/node_modules\/(@.*?(?=\/)\/.*?(?=\/))/);
+      let match = normalizedModuleName.match(/node_modules\/(@.*?(?=\/)\/.*?(?=\/))/);
 
       if (match && match.length > 1) {
         moduleName = match[1];
       } else {
         // e.g. path is node_modules/mysql/lib/index.js
-        match = moduleName.match(/node_modules\/(.*?(?=\/))/);
+        match = normalizedModuleName.match(/node_modules\/(.*?(?=\/))/);
 
         if (match && match.length > 1) {
           moduleName = match[1];
@@ -145,8 +147,11 @@ function patchedModuleLoad(moduleName) {
   }
 
   if (!cacheEntry.byFileNamePatternTransformersApplied) {
+    // Normalize Windows paths (backslashes) to forward slashes for regex pattern matching
+    // This ensures patterns with forward slashes (like /\/mongodb-core\/lib\/connection\/pool\.js/) work on Windows
+    const normalizedFilename = filename.replace(/\\/g, '/');
     for (let i = 0; i < byFileNamePatternTransformers.length; i++) {
-      if (byFileNamePatternTransformers[i].pattern.test(filename)) {
+      if (byFileNamePatternTransformers[i].pattern.test(normalizedFilename)) {
         cacheEntry.moduleExports =
           byFileNamePatternTransformers[i].fn(cacheEntry.moduleExports, filename) || cacheEntry.moduleExports;
       }
@@ -192,14 +197,26 @@ exports.buildFileNamePattern = function buildFileNamePattern(arr) {
 };
 
 /**
+ * Escapes special regex characters in a string
+ * @param {string} str
+ * @returns {string}
+ */
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * @param {string} agg
  * @param {string} pathSegment
  * @returns {string}
  */
 function buildFileNamePatternReducer(agg, pathSegment) {
   if (agg.length > 0) {
-    agg += `\\${path.sep}`;
+    // Always use forward slashes in patterns since we normalize filenames to forward slashes
+    // This ensures patterns work consistently on both Windows and Unix systems
+    agg += '\\/';
   }
-  agg += pathSegment;
+  // Escape special regex characters in path segments (e.g., '.' in 'express.js' should be '\.')
+  agg += escapeRegex(pathSegment);
   return agg;
 }

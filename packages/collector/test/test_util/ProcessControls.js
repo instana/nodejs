@@ -151,7 +151,8 @@ class ProcessControls {
         INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS: 500,
         INSTANA_RETRY_AGENT_CONNECTION_IN_MS: 500,
         APP_USES_HTTPS: this.appUsesHttps ? 'true' : 'false',
-        INSTANA_DISABLE_USE_OPENTELEMETRY: !this.enableOtelIntegration
+        INSTANA_DISABLE_USE_OPENTELEMETRY: !this.enableOtelIntegration,
+        INSTANA_IPC_ENABLED: 'true'
       },
       opts.env
     );
