@@ -101,6 +101,7 @@ function init(userConfig = {}) {
 
     if (collectorIndexCacheKey) {
       if (process.env.INSTANA_IPC_ENABLED === 'true') {
+        logger?.debug('IPC enabled.');
         process?.send?.('instana.collector.initialized');
       }
 

@@ -153,6 +153,7 @@ function enter(_ctx) {
   //       such as `instana.on('instana.collector.initialized')`.
   // eslint-disable-next-line no-unused-expressions
   if (process.env.INSTANA_IPC_ENABLED === 'true') {
+    logger?.debug('IPC enabled.');
     process?.send?.('instana.collector.initialized');
 
     if (!isMainThread) {
