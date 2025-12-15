@@ -196,19 +196,19 @@ exports.parseStackTraceFromString = function parseStackTraceFromString(stackStri
       /** @type {InstanaCallSite} */
       const callSite = {
         m: '<anonymous>',
-        c: null,
-        n: null
+        c: undefined,
+        n: undefined
       };
 
       let functionName;
       let locationText = frameText;
 
-      // Try "(location)" format first
+      // Case: "function (something)"
       const openParenIndex = frameText.lastIndexOf('(');
+
       if (openParenIndex !== -1 && frameText.endsWith(')')) {
         const candidateLocation = frameText.slice(openParenIndex + 1, -1);
         const parsed = parseLocation(candidateLocation);
-
         if (parsed) {
           functionName = frameText.slice(0, openParenIndex).trim();
           locationText = candidateLocation;
@@ -217,8 +217,8 @@ exports.parseStackTraceFromString = function parseStackTraceFromString(stackStri
         }
       }
 
-      // If not parsed yet i.e, without parens, try entire frame
-      if (callSite.c === null) {
+      // Case: no parentheses or "(something)" was not a location
+      if (callSite.c === undefined) {
         const parsed = parseLocation(locationText);
         if (parsed) {
           callSite.c = parsed.file;
@@ -229,7 +229,7 @@ exports.parseStackTraceFromString = function parseStackTraceFromString(stackStri
       // Resolve method name
       if (functionName) {
         callSite.m = functionName;
-      } else if (callSite.c === null) {
+      } else if (callSite.c === undefined) {
         callSite.m = frameText;
       }
 
@@ -251,7 +251,7 @@ function parseLocation(locationText) {
 
   // file only (no line info)
   if (lastColon === -1) {
-    return { file: locationText, line: null };
+    return null;
   }
 
   const lastPart = parseInt(locationText.slice(lastColon + 1), 10);
