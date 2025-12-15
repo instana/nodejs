@@ -22,6 +22,7 @@ exports.registerTestHooks = opts => {
     env.TRACING_ENABLED = opts.enableTracing !== false;
     env.AMQPLIB_VERSION = opts.version;
     env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;
+    env.INSTANA_IPC_ENABLED = 'true';
 
     app = spawn('node', [path.join(__dirname, `consumer${opts.apiType}.js`)], {
       stdio: config.getAppStdio(),
