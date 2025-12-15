@@ -6,6 +6,7 @@
 'use strict';
 
 const expect = require('chai').expect;
+const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -14,7 +15,8 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '20.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing/koa', function () {
   this.timeout(config.getTestTimeout());
