@@ -13,7 +13,8 @@ const {
   retry,
   delay,
   expectExactlyOneMatching,
-  expectExactlyNMatching
+  expectExactlyNMatching,
+  isCI
 } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
@@ -70,7 +71,7 @@ const verifySpans = (agentControls, controls, options = {}) =>
     expectExactlyOneMatching(spans, verifyCouchbaseSpan(controls, entrySpan, options));
   });
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 let tries = 0;
 const maxTries = 100;
@@ -154,6 +155,12 @@ const couchbaseVersions = ['latest', 'v4.4.3'];
 couchbaseVersions.forEach(version => {
   // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
   if (process.env.RUN_ESM && version !== 'latest') return;
+
+  // CASE: This test suite is highly flaky in CI; skip it until it can be stabilized.
+  // TODO: INSTA-57559
+  if (isCI() && version === 'latest') {
+    mochaSuiteFn = describe.skip;
+  }
 
   // NOTE: it takes 1-2 minutes till the couchbase server can be reached via docker
   mochaSuiteFn(`tracing/couchbase@${version}`, function () {
