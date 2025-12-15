@@ -29,7 +29,7 @@ exports.start = opts => {
 
   env.UPSTREAM_PORT = opts.expressControls ? opts.expressControls.getPort() : null;
   env.USE_REQUEST_PROMISE = String(opts.useRequestPromise);
-
+  env.INSTANA_IPC_ENABLED = 'true';
   // eslint-disable-next-line no-console
   console.log(
     // eslint-disable-next-line max-len

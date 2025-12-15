@@ -70,6 +70,7 @@ class AppControls {
     env.TRACING_ENABLED = opts.enableTracing !== false;
     env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;
     env.PINO_VERSION = opts.PINO_VERSION;
+    env.INSTANA_IPC_ENABLED = 'true';
 
     if (this.customEnv) {
       env = Object.assign(env, this.customEnv);
