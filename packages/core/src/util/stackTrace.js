@@ -181,98 +181,100 @@ exports.parseStackTraceFromString = function parseStackTraceFromString(stackStri
       return [];
     }
 
-    const lines = stackString.split('\n');
+    const stackLines = stackString.split('\n');
     /** @type {Array.<InstanaCallSite>} */
-    const result = [];
+    const callSites = [];
 
-    lines.forEach(rawLine => {
-      let trimmed = rawLine.trim();
+    stackLines.forEach(rawStackLine => {
+      const normalizedLine = rawStackLine.trim();
 
-      if (trimmed.startsWith('@instana/collector:')) {
-        trimmed = trimmed.slice('@instana/collector:'.length).trim();
-      }
+      // stack traces start with at, otherwise ignore
+      if (!normalizedLine.startsWith('at ')) return;
 
-      if (!trimmed.startsWith('at ')) return;
-
-      const line = trimmed.slice(3).trim();
+      const frameText = normalizedLine.slice(3).trim();
 
       /** @type {InstanaCallSite} */
-      const callSite = { m: '<anonymous>', c: undefined, n: undefined };
+      const callSite = {
+        m: '<anonymous>',
+        c: null,
+        n: null
+      };
 
-      const lastParenIndex = line.lastIndexOf('(');
-      const lastParenClose = line.endsWith(')');
+      let functionName;
+      let locationText = frameText;
 
-      if (lastParenIndex !== -1 && lastParenClose) {
-        const funcName = line.slice(0, lastParenIndex).trim();
-        const inside = line.slice(lastParenIndex + 1, -1);
+      // Try "(location)" format first
+      const openParenIndex = frameText.lastIndexOf('(');
+      if (openParenIndex !== -1 && frameText.endsWith(')')) {
+        const candidateLocation = frameText.slice(openParenIndex + 1, -1);
+        const parsed = parseLocation(candidateLocation);
 
-        if (inside === '<anonymous>' || inside === 'native code') {
-          callSite.m = funcName;
-          result.push(callSite);
-          return;
-        }
-
-        const lastColon = inside.lastIndexOf(':');
-        if (lastColon !== -1) {
-          const afterLastColon = inside.slice(lastColon + 1);
-          const num = parseInt(afterLastColon, 10);
-
-          if (!isNaN(num)) {
-            const beforeLastColon = inside.slice(0, lastColon);
-            const secondLastColon = beforeLastColon.lastIndexOf(':');
-
-            if (secondLastColon !== -1) {
-              const lineNum = parseInt(beforeLastColon.slice(secondLastColon + 1), 10);
-              if (!isNaN(lineNum)) {
-                const path = beforeLastColon.slice(0, secondLastColon);
-                callSite.m = funcName;
-                callSite.c = path;
-                callSite.n = lineNum;
-                result.push(callSite);
-                return;
-              }
-            }
-            callSite.m = funcName;
-            callSite.c = beforeLastColon;
-            callSite.n = num;
-            result.push(callSite);
-            return;
-          }
+        if (parsed) {
+          functionName = frameText.slice(0, openParenIndex).trim();
+          locationText = candidateLocation;
+          callSite.c = parsed.file;
+          callSite.n = parsed.line;
         }
       }
 
-      const lastColon = line.lastIndexOf(':');
-      if (lastColon !== -1) {
-        const afterLastColon = line.slice(lastColon + 1);
-        const maybeLine = parseInt(afterLastColon, 10);
-
-        if (!isNaN(maybeLine)) {
-          const beforeLastColon = line.slice(0, lastColon);
-          const secondLastColon = beforeLastColon.lastIndexOf(':');
-
-          if (secondLastColon !== -1) {
-            const lineNum = parseInt(beforeLastColon.slice(secondLastColon + 1), 10);
-            if (!isNaN(lineNum)) {
-              const path = beforeLastColon.slice(0, secondLastColon);
-              callSite.c = path;
-              callSite.n = lineNum;
-              result.push(callSite);
-              return;
-            }
-          }
-
-          callSite.c = beforeLastColon;
-          callSite.n = maybeLine;
-          result.push(callSite);
-          return;
+      // If not parsed yet i.e, without parens, try entire frame
+      if (callSite.c === null) {
+        const parsed = parseLocation(locationText);
+        if (parsed) {
+          callSite.c = parsed.file;
+          callSite.n = parsed.line;
         }
       }
-      callSite.m = line;
-      result.push(callSite);
+
+      // Resolve method name
+      if (functionName) {
+        callSite.m = functionName;
+      } else if (callSite.c === null) {
+        callSite.m = frameText;
+      }
+
+      callSites.push(callSite);
     });
 
-    return result;
+    return callSites;
   } catch {
     return [];
   }
 };
+
+/**
+ * Parses "file:line[:column]" safely without regex
+ * @param {string} locationText
+ */
+function parseLocation(locationText) {
+  const lastColon = locationText.lastIndexOf(':');
+
+  // file only (no line info)
+  if (lastColon === -1) {
+    return { file: locationText, line: null };
+  }
+
+  const lastPart = parseInt(locationText.slice(lastColon + 1), 10);
+  if (isNaN(lastPart)) {
+    return { file: locationText, line: null };
+  }
+
+  const beforeLast = locationText.slice(0, lastColon);
+  const secondLastColon = beforeLast.lastIndexOf(':');
+
+  // file:line:column
+  if (secondLastColon !== -1) {
+    const line = parseInt(beforeLast.slice(secondLastColon + 1), 10);
+    if (!isNaN(line)) {
+      return {
+        file: beforeLast.slice(0, secondLastColon),
+        line
+      };
+    }
+  }
+
+  return {
+    file: beforeLast,
+    line: lastPart
+  };
+}

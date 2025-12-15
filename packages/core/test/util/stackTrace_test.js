@@ -105,30 +105,6 @@ describe('util/stackTrace', () => {
       expect(result[2].n).to.equal(574);
     });
 
-    it('must parse stack trace with @instana/collector prefix', () => {
-      const stackString = `FetchError: request to http://localhost:3564/ failed, reason:
-@instana/collector:     at ClientRequest.<anonymous> (/artifacts/node_modules/node-fetch-v2/lib/index.js:1501:11)
-@instana/collector:     at ClientRequest.emit (node:events:519:28)
-@instana/collector:     at emitErrorEvent (node:_http_client:107:11)`;
-
-      const result = stackTrace.parseStackTraceFromString(stackString);
-
-      expect(result).to.be.an('array');
-      expect(result).to.have.lengthOf(3);
-
-      expect(result[0].m).to.equal('ClientRequest.<anonymous>');
-      expect(result[0].c).to.equal('/artifacts/node_modules/node-fetch-v2/lib/index.js');
-      expect(result[0].n).to.equal(1501);
-
-      expect(result[1].m).to.equal('ClientRequest.emit');
-      expect(result[1].c).to.equal('node:events');
-      expect(result[1].n).to.equal(519);
-
-      expect(result[2].m).to.equal('emitErrorEvent');
-      expect(result[2].c).to.equal('node:_http_client');
-      expect(result[2].n).to.equal(107);
-    });
-
     it('must parse stack trace with anonymous functions', () => {
       const stackString = `Error: test error
     at /path/to/file.js:123:45
