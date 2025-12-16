@@ -3,6 +3,44 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.0.0](https://github.com/instana/nodejs/compare/v4.31.0...v5.0.0) (2025-12-16)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/sdk-trace-base to v2 ([#2196](https://github.com/instana/nodejs/issues/2196)) ([31c4435](https://github.com/instana/nodejs/commit/31c44350483367ea633049f10ebd6e57cbd03fae))
+* depreacted aws sdk v2 ([#2147](https://github.com/instana/nodejs/issues/2147)) ([45e9c9c](https://github.com/instana/nodejs/commit/45e9c9c38bb4e8bf3dd5c543cc5bd2d1b4ce2bcb))
+* dropped support for kafka-avro ([#2141](https://github.com/instana/nodejs/issues/2141)) ([3e05a1e](https://github.com/instana/nodejs/commit/3e05a1e52936477eed91ea96357bd682a29ebeb4))
+* enforced Node.js 18.19 as the minimum supported version ([#2151](https://github.com/instana/nodejs/issues/2151)) ([5d688e2](https://github.com/instana/nodejs/commit/5d688e22ff03a6e4721a0363011002801a1ee045))
+* removed deprecated config options for disabling tracing ([#2145](https://github.com/instana/nodejs/issues/2145)) ([efe07ed](https://github.com/instana/nodejs/commit/efe07ed7c5b09fa66869f8305ce9a829638c1e0c))
+* removed support for experimental loader flag ([#2153](https://github.com/instana/nodejs/issues/2153)) ([7e9a24a](https://github.com/instana/nodejs/commit/7e9a24a60b5afd0c73b3213df0f033d6554e388d))
+
+
+### BREAKING CHANGES
+
+* Dropped support for Node.js versions below 18.19
+* - Removed support for --experimental-loader
+- Removed support for esm-loader.mjs
+
+Migration Recommendations: 
+
+- Replace --experimental-loader with --import
+- Use esm-register.mjs instead of esm-loader.mjs
+
+e.g. --import /path/to/instana/node_modules/@instana/collector/esm-register.mjs
+* The following environment variables and configuration options, previously used to disable tracing, have been removed:
+- INSTANA_DISABLED_TRACERS
+- INSTANA_DISABLE_TRACING
+- tracing.disabledTracers
+
+Migration Recommendations:
+Replace INSTANA_DISABLED_TRACERS and INSTANA_DISABLE_TRACING with INSTANA_TRACING_DISABLE.
+Replace tracing.disabledTracers with tracing.disable.
+
+
+
+
+
 # [4.31.0](https://github.com/instana/nodejs/compare/v4.30.1...v4.31.0) (2025-12-08)
 
 

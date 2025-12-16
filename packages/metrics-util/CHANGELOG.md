@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.0.0](https://github.com/instana/nodejs/compare/v4.31.0...v5.0.0) (2025-12-16)
+
+
+### Bug Fixes
+
+* enforced Node.js 18.19 as the minimum supported version ([#2151](https://github.com/instana/nodejs/issues/2151)) ([5d688e2](https://github.com/instana/nodejs/commit/5d688e22ff03a6e4721a0363011002801a1ee045))
+
+
+### BREAKING CHANGES
+
+* Dropped support for Node.js versions below 18.19
+
+
+
+
+
 # [4.31.0](https://github.com/instana/nodejs/compare/v4.30.1...v4.31.0) (2025-12-08)
 
 **Note:** Version bump only for package @instana/metrics-util

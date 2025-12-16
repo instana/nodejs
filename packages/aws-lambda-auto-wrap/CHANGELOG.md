@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.0.0](https://github.com/instana/nodejs/compare/v4.31.0...v5.0.0) (2025-12-16)
+
+
+### Bug Fixes
+
+* **aws-lambda-auto-wrap:** restricted package to publish to npm ([#2198](https://github.com/instana/nodejs/issues/2198)) ([241cc0e](https://github.com/instana/nodejs/commit/241cc0e57c6a358de3e35f112c5fa68a33fe63c7))
+
+
+
+
+
 # [4.31.0](https://github.com/instana/nodejs/compare/v4.30.1...v4.31.0) (2025-12-08)
 
 

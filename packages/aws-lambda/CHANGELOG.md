@@ -3,6 +3,31 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.0.0](https://github.com/instana/nodejs/compare/v4.31.0...v5.0.0) (2025-12-16)
+
+
+### Bug Fixes
+
+* enforced Node.js 18.19 as the minimum supported version ([#2151](https://github.com/instana/nodejs/issues/2151)) ([5d688e2](https://github.com/instana/nodejs/commit/5d688e22ff03a6e4721a0363011002801a1ee045))
+* removed deprecated config options for disabling tracing ([#2145](https://github.com/instana/nodejs/issues/2145)) ([efe07ed](https://github.com/instana/nodejs/commit/efe07ed7c5b09fa66869f8305ce9a829638c1e0c))
+
+
+### BREAKING CHANGES
+
+* Dropped support for Node.js versions below 18.19
+* The following environment variables and configuration options, previously used to disable tracing, have been removed:
+- INSTANA_DISABLED_TRACERS
+- INSTANA_DISABLE_TRACING
+- tracing.disabledTracers
+
+Migration Recommendations:
+Replace INSTANA_DISABLED_TRACERS and INSTANA_DISABLE_TRACING with INSTANA_TRACING_DISABLE.
+Replace tracing.disabledTracers with tracing.disable.
+
+
+
+
+
 # [4.31.0](https://github.com/instana/nodejs/compare/v4.30.1...v4.31.0) (2025-12-08)
 
 

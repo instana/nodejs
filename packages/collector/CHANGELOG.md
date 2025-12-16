@@ -3,6 +3,35 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.0.0](https://github.com/instana/nodejs/compare/v4.31.0...v5.0.0) (2025-12-16)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/sdk-trace-base to v2 ([#2196](https://github.com/instana/nodejs/issues/2196)) ([31c4435](https://github.com/instana/nodejs/commit/31c44350483367ea633049f10ebd6e57cbd03fae))
+* dropped support for kafka-avro ([#2141](https://github.com/instana/nodejs/issues/2141)) ([3e05a1e](https://github.com/instana/nodejs/commit/3e05a1e52936477eed91ea96357bd682a29ebeb4))
+* enforced Node.js 18.19 as the minimum supported version ([#2151](https://github.com/instana/nodejs/issues/2151)) ([5d688e2](https://github.com/instana/nodejs/commit/5d688e22ff03a6e4721a0363011002801a1ee045))
+* handled instana export safely when using experimental loader ([#2227](https://github.com/instana/nodejs/issues/2227)) ([a42c7e4](https://github.com/instana/nodejs/commit/a42c7e4a5887671cc025706150578e914e8824dd))
+* removed support for experimental loader flag ([#2153](https://github.com/instana/nodejs/issues/2153)) ([7e9a24a](https://github.com/instana/nodejs/commit/7e9a24a60b5afd0c73b3213df0f033d6554e388d))
+
+
+### BREAKING CHANGES
+
+* Dropped support for Node.js versions below 18.19
+* - Removed support for --experimental-loader
+- Removed support for esm-loader.mjs
+
+Migration Recommendations: 
+
+- Replace --experimental-loader with --import
+- Use esm-register.mjs instead of esm-loader.mjs
+
+e.g. --import /path/to/instana/node_modules/@instana/collector/esm-register.mjs
+
+
+
+
+
 # [4.31.0](https://github.com/instana/nodejs/compare/v4.30.1...v4.31.0) (2025-12-08)
 
 

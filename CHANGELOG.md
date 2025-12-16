@@ -3,6 +3,49 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.0.0](https://github.com/instana/nodejs/compare/v4.31.0...v5.0.0) (2025-12-16)
+
+
+### Bug Fixes
+
+* **aws-lambda-auto-wrap:** restricted package to publish to npm ([#2198](https://github.com/instana/nodejs/issues/2198)) ([241cc0e](https://github.com/instana/nodejs/commit/241cc0e57c6a358de3e35f112c5fa68a33fe63c7))
+* bumped @opentelemetry/sdk-trace-base to v2 ([#2196](https://github.com/instana/nodejs/issues/2196)) ([31c4435](https://github.com/instana/nodejs/commit/31c44350483367ea633049f10ebd6e57cbd03fae))
+* bumped nan from 2.23.1 to 2.24.0 ([#2211](https://github.com/instana/nodejs/issues/2211)) ([0946cc5](https://github.com/instana/nodejs/commit/0946cc5e4ebe1dc12578297235b49ce7dad649ce))
+* depreacted aws sdk v2 ([#2147](https://github.com/instana/nodejs/issues/2147)) ([45e9c9c](https://github.com/instana/nodejs/commit/45e9c9c38bb4e8bf3dd5c543cc5bd2d1b4ce2bcb))
+* dropped support for kafka-avro ([#2141](https://github.com/instana/nodejs/issues/2141)) ([3e05a1e](https://github.com/instana/nodejs/commit/3e05a1e52936477eed91ea96357bd682a29ebeb4))
+* enforced Node.js 18.19 as the minimum supported version ([#2151](https://github.com/instana/nodejs/issues/2151)) ([5d688e2](https://github.com/instana/nodejs/commit/5d688e22ff03a6e4721a0363011002801a1ee045))
+* handled instana export safely when using experimental loader ([#2227](https://github.com/instana/nodejs/issues/2227)) ([a42c7e4](https://github.com/instana/nodejs/commit/a42c7e4a5887671cc025706150578e914e8824dd))
+* removed deprecated config options for disabling tracing ([#2145](https://github.com/instana/nodejs/issues/2145)) ([efe07ed](https://github.com/instana/nodejs/commit/efe07ed7c5b09fa66869f8305ce9a829638c1e0c))
+* removed prebuilds for non-lts versions ([#2148](https://github.com/instana/nodejs/issues/2148)) ([2f32603](https://github.com/instana/nodejs/commit/2f32603e53fe546a3a9d07eba4f2dd9b02160c83))
+* removed setLogger fn from serverless logger ([#2188](https://github.com/instana/nodejs/issues/2188)) ([47763f5](https://github.com/instana/nodejs/commit/47763f5d683d191c5512a804359adfb7e7f925de))
+* removed support for experimental loader flag ([#2153](https://github.com/instana/nodejs/issues/2153)) ([7e9a24a](https://github.com/instana/nodejs/commit/7e9a24a60b5afd0c73b3213df0f033d6554e388d))
+
+
+### BREAKING CHANGES
+
+* Dropped support for Node.js versions below 18.19
+* - Removed support for --experimental-loader
+- Removed support for esm-loader.mjs
+
+Migration Recommendations: 
+
+- Replace --experimental-loader with --import
+- Use esm-register.mjs instead of esm-loader.mjs
+
+e.g. --import /path/to/instana/node_modules/@instana/collector/esm-register.mjs
+* The following environment variables and configuration options, previously used to disable tracing, have been removed:
+- INSTANA_DISABLED_TRACERS
+- INSTANA_DISABLE_TRACING
+- tracing.disabledTracers
+
+Migration Recommendations:
+Replace INSTANA_DISABLED_TRACERS and INSTANA_DISABLE_TRACING with INSTANA_TRACING_DISABLE.
+Replace tracing.disabledTracers with tracing.disable.
+
+
+
+
+
 # [4.31.0](https://github.com/instana/nodejs/compare/v4.30.1...v4.31.0) (2025-12-08)
 
 

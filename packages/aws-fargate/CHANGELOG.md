@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.0.0](https://github.com/instana/nodejs/compare/v4.31.0...v5.0.0) (2025-12-16)
+
+
+### Bug Fixes
+
+* enforced Node.js 18.19 as the minimum supported version ([#2151](https://github.com/instana/nodejs/issues/2151)) ([5d688e2](https://github.com/instana/nodejs/commit/5d688e22ff03a6e4721a0363011002801a1ee045))
+* removed support for experimental loader flag ([#2153](https://github.com/instana/nodejs/issues/2153)) ([7e9a24a](https://github.com/instana/nodejs/commit/7e9a24a60b5afd0c73b3213df0f033d6554e388d))
+
+
+### BREAKING CHANGES
+
+* Dropped support for Node.js versions below 18.19
+* - Removed support for --experimental-loader
+- Removed support for esm-loader.mjs
+
+Migration Recommendations: 
+
+- Replace --experimental-loader with --import
+- Use esm-register.mjs instead of esm-loader.mjs
+
+e.g. --import /path/to/instana/node_modules/@instana/collector/esm-register.mjs
+
+
+
+
+
 # [4.31.0](https://github.com/instana/nodejs/compare/v4.30.1...v4.31.0) (2025-12-08)
 
 **Note:** Version bump only for package @instana/aws-fargate
