@@ -27,7 +27,8 @@ resources:
     icon: docker
     source:
       repository: us.icr.io/instana-tracer-nodejs/concourse-dind-nodejs-aws-jq
-      tag: latest
+      # NOTE: Deliberately omitting `tag: latest` here on the branch for 4.x so
+      # we do not accidentally tag 4.x image versions with `latest`.
       username: iamapikey
       password: ((team-nodejs-ibm-cloud-icr-api-key))
 
@@ -47,7 +48,8 @@ resources:
       repository: icr.io/instana/aws-fargate-nodejs
       username: ((concourse-icr-containers-public.apikey))
       password: ((concourse-icr-containers-public.password))
-      tag: latest
+      # NOTE: Deliberately omitting `tag: latest` here on the branch for 4.x so
+      # we do not accidentally tag 4.x image versions with `latest`.
 
   - name: aws-fargate-nodejs-image-containers-instana-io
     type: registry-image
@@ -61,7 +63,8 @@ resources:
       repository: delivery.instana.io/rel-docker-agent-local/agent/aws/fargate/nodejs
       username: ((delivery-instana-io-release-project-artifact-read-writer-creds.username))
       password: ((delivery-instana-io-release-project-artifact-read-writer-creds.password))
-      tag: latest
+      # NOTE: Deliberately omitting `tag: latest` here on the branch for 4.x so
+      # we do not accidentally tag 4.x image versions with `latest`.
 
   - name: instana-google-cloud-run-npm-package
     type: npm-resource
@@ -79,7 +82,8 @@ resources:
       repository: icr.io/instana/google-cloud-run-nodejs
       username: ((concourse-icr-containers-public.apikey))
       password: ((concourse-icr-containers-public.password))
-      tag: latest
+      # NOTE: Deliberately omitting `tag: latest` here on the branch for 4.x so
+      # we do not accidentally tag 4.x image versions with `latest`.
 
   - name: google-cloud-run-nodejs-image-containers-instana-io
     type: registry-image
@@ -93,7 +97,8 @@ resources:
       repository: delivery.instana.io/rel-docker-agent-local/agent/google/cloud-run/nodejs
       username: ((delivery-instana-io-release-project-artifact-read-writer-creds.username))
       password: ((delivery-instana-io-release-project-artifact-read-writer-creds.password))
-      tag: latest
+      # NOTE: Deliberately omitting `tag: latest` here on the branch for 4.x so
+      # we do not accidentally tag 4.x image versions with `latest`.
 
   - name: instana-aws-lambda-npm-package
     type: npm-resource
@@ -126,7 +131,8 @@ resources:
       repository: icr.io/instana/azure-container-services-nodejs
       username: ((concourse-icr-containers-public.apikey))
       password: ((concourse-icr-containers-public.password))
-      tag: latest
+      # NOTE: Deliberately omitting `tag: latest` here on the branch for 4.x so
+      # we do not accidentally tag 4.x image versions with `latest`.
 
 resource_types:
 
@@ -199,6 +205,7 @@ jobs:
       - put: aws-fargate-nodejs-image-icr
         params:
           image: image/image.tar
+          # In fact, on the branch for 4.x, this will be the only tag, not an _additional_ tag.
           additional_tags: instana-aws-fargate-npm-package/version
         get_params:
           skip_download: true
@@ -206,6 +213,7 @@ jobs:
       - put: aws-fargate-nodejs-image-containers-instana-io
         params:
           image: image/image.tar
+          # In fact, on the branch for 4.x, this will be the only tag, not an _additional_ tag.
           additional_tags: instana-aws-fargate-npm-package/version
         get_params:
           skip_download: true
@@ -293,6 +301,7 @@ jobs:
       - put: google-cloud-run-nodejs-image-icr
         params:
           image: image/image.tar
+          # In fact, on the branch for 4.x, this will be the only tag, not an _additional_ tag.
           additional_tags: instana-google-cloud-run-npm-package/version
         get_params:
           skip_download: true
@@ -300,6 +309,7 @@ jobs:
       - put: google-cloud-run-nodejs-image-containers-instana-io
         params:
           image: image/image.tar
+          # In fact, on the branch for 4.x, this will be the only tag, not an _additional_ tag.
           additional_tags: instana-google-cloud-run-npm-package/version
         get_params:
           skip_download: true
@@ -387,13 +397,15 @@ jobs:
             platform: linux
             inputs:
               - name: nodejs-repository
+            # Passing in PACKAGE_VERSION=4 will use the latest 4.x package and also avoid tagging the resulting
+            # container image as latest. 
             run:
               path: entrypoint.sh
               args:
               - bash
               - -ceux
               - |
-                  BUILD_LAYER_WITH=npm \
+                  PACKAGE_VERSION=4 \
                   NO_PROMPT=true \
                   CONTAINER_REGISTRY_USER=iamapikey \
                   CONTAINER_REGISTRY_PASSWORD=((concourse-icr-containers-public.password)) \
@@ -427,13 +439,15 @@ jobs:
             platform: linux
             inputs:
               - name: nodejs-repository
+            # Passing in PACKAGE_VERSION=4 will use the latest 4.x package and also avoid tagging the resulting
+            # container image as latest.
             run:
               path: entrypoint.sh
               args:
               - bash
               - -ceux
               - |
-                  BUILD_LAYER_WITH=npm \
+                  PACKAGE_VERSION=4 \
                   NO_PROMPT=true \
                   SKIP_DOCKER_IMAGE=true \
                   LAMBDA_ARCHITECTURE=arm64 \
@@ -469,13 +483,15 @@ jobs:
             platform: linux
             inputs:
               - name: nodejs-repository
+            # Passing in PACKAGE_VERSION=4 will use the latest 4.x package and also avoid tagging the resulting
+            # container image as latest.
             run:
               path: entrypoint.sh
               args:
               - bash
               - -ceux
               - |
-                  BUILD_LAYER_WITH=npm \
+                  PACKAGE_VERSION=4 \
                   NO_PROMPT=true \
                   SKIP_DOCKER_IMAGE=true \
                   PUBLISH_TO_CHINA_REGIONS=true \
@@ -511,13 +527,15 @@ jobs:
             platform: linux
             inputs:
               - name: nodejs-repository
+            # Passing in PACKAGE_VERSION=4 will use the latest 4.x package and also avoid tagging the resulting
+            # container image as latest.
             run:
               path: entrypoint.sh
               args:
               - bash
               - -ceux
               - |
-                  BUILD_LAYER_WITH=npm \
+                  PACKAGE_VERSION=4 \
                   NO_PROMPT=true \
                   SKIP_DOCKER_IMAGE=true \
                   LAMBDA_ARCHITECTURE=arm64 \
@@ -591,6 +609,7 @@ jobs:
       - put: azure-container-services-nodejs-image-icr
         params:
           image: image/image.tar
+          # In fact, on the branch for 4.x, this will be the only tag, not an _additional_ tag.
           additional_tags: instana-azure-container-services-npm-package/version
         get_params:
           skip_download: true
