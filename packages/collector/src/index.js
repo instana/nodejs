@@ -15,6 +15,7 @@ if (!isProcessAvailable()) {
 
   // ESM default exports for TS
   module.exports.default = function noOp() {};
+  module.exports = function noOp() {};
 
   // @ts-ignore TS1108 (return can only be used within a function body)
   return;
@@ -32,6 +33,7 @@ if (nodeJsVersionCheck.isNodeJsTooOld()) {
 
   // ESM default exports for TS
   module.exports.default = function noOp() {};
+  module.exports = function noOp() {};
 
   // @ts-ignore TS1108 (return can only be used within a function body)
   return;
@@ -48,6 +50,7 @@ if (esm.hasExperimentalLoaderFlag()) {
       'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
   );
   module.exports.default = function noOp() {};
+  module.exports = function noOp() {};
   // @ts-ignore TS1108
   return;
 }
@@ -64,6 +67,7 @@ if (esm.hasEsmLoaderFile()) {
       'https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation.'
   );
   module.exports.default = function noOp() {};
+  module.exports = function noOp() {};
   // @ts-ignore TS1108
   return;
 }
