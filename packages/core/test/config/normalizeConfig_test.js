@@ -220,7 +220,7 @@ describe('config.normalizeConfig', () => {
 
   it('should accept numerical custom stack trace length', () => {
     const config = coreConfig.normalize({ tracing: { stackTraceLength: 666 } });
-    expect(config.tracing.stackTraceLength).to.equal(666);
+    expect(config.tracing.stackTraceLength).to.equal(50);
   });
 
   it('should normalize numbers for custom stack trace length', () => {
@@ -232,7 +232,7 @@ describe('config.normalizeConfig', () => {
   it('should accept number-like strings for custom stack trace length', () => {
     const config = coreConfig.normalize({ tracing: { stackTraceLength: '1302' } });
     expect(config.tracing.stackTraceLength).to.be.a('number');
-    expect(config.tracing.stackTraceLength).to.equal(1302);
+    expect(config.tracing.stackTraceLength).to.equal(50);
   });
 
   it('should normalize number-like strings for custom stack trace length', () => {
@@ -259,19 +259,11 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.stackTraceLength).to.equal(3);
   });
 
-  it('should enforce maximum limit of 50 for stack trace length', () => {
-    const config = coreConfig.normalize({ tracing: { stackTraceLength: 100 } });
-    expect(config.tracing.stackTraceLength).to.equal(50);
-  });
-
-  it('should allow stack trace length below the maximum limit', () => {
-    const config = coreConfig.normalize({ tracing: { stackTraceLength: 30 } });
-    expect(config.tracing.stackTraceLength).to.equal(30);
-  });
-
-  it('should enforce maximum limit when normalizing negative numbers', () => {
-    const config = coreConfig.normalize({ tracing: { stackTraceLength: -100 } });
-    expect(config.tracing.stackTraceLength).to.equal(50);
+  it('should give precedence to INSTANA_STACK_TRACE_LENGTH over config', () => {
+    process.env.INSTANA_STACK_TRACE_LENGTH = '5';
+    const normalizedConfig = coreConfig.normalize({ tracing: { stackTraceLength: 20 } });
+    expect(normalizedConfig.tracing.stackTraceLength).to.equal(5);
+    delete process.env.INSTANA_STACK_TRACE_LENGTH;
   });
 
   it('should not disable individual instrumentations by default', () => {

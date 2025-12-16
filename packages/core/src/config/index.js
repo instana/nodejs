@@ -445,10 +445,10 @@ function parseHeadersEnvVar(envVarValue) {
  * @param {InstanaConfig} config
  */
 function normalizeTracingStackTraceLength(config) {
-  if (config.tracing.stackTraceLength == null && process.env['INSTANA_STACK_TRACE_LENGTH']) {
+  // Give precedence to INSTANA_STACK_TRACE_LENGTH environment variable
+  if (process.env['INSTANA_STACK_TRACE_LENGTH']) {
     parseStringStackTraceLength(config, process.env['INSTANA_STACK_TRACE_LENGTH']);
-  }
-  if (config.tracing.stackTraceLength != null) {
+  } else if (config.tracing.stackTraceLength != null) {
     if (typeof config.tracing.stackTraceLength === 'number') {
       config.tracing.stackTraceLength = normalizeNumericalStackTraceLength(config.tracing.stackTraceLength);
     } else if (typeof config.tracing.stackTraceLength === 'string') {
