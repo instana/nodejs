@@ -99,7 +99,7 @@ fi
 
 # The us-gov-* regions are only available to US government agencies, U.S. government etc. The regions have not been (and
 # maybe cannot be) enabled for our AWS account. We currently do not publish Lambda layers to these regions.
-SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1'
+SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1\neusc-de-east-1'
 
 if [[ -z $REGIONS ]]; then
   printf "\nstep 1/9: Fetching AWS regions\n"
