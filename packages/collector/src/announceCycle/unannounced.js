@@ -46,6 +46,13 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {import('@instana/core/src/config/types').IgnoreEndpoints} [ignore-endpoints]
  * @property {boolean} [span-batching-enabled]
  * @property {import('@instana/core/src/config/types').Disable} [disable]
+ * @property {StackTraceConfig} [global]
+ */
+
+/**
+ * @typedef {Object} StackTraceConfig
+ * @property {string} [stack-trace] - Stack trace mode ('error'|'all'|'none'|)
+ * @property {number} [stack-trace-length] - Maximum number of stack trace frames to capture
  */
 
 /**
@@ -121,6 +128,7 @@ function applyAgentConfiguration(agentResponse) {
   applyKafkaTracingConfiguration(agentResponse);
   applySpanBatchingConfiguration(agentResponse);
   applyIgnoreEndpointsConfiguration(agentResponse);
+  applyStackTraceConfiguration(agentResponse);
   applyDisableConfiguration(agentResponse);
 }
 
@@ -238,6 +246,53 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
   agentOpts.config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
+}
+
+/**
+ * Apply global stack trace configuration from the agent response.
+ *
+ * Configuration structure:
+ * {
+ *   tracing: {
+ *     global: {
+ *       "stack-trace": "error",
+ *       "stack-trace-length": 10
+ *     }
+ *   }
+ * }
+ *
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyStackTraceConfiguration(agentResponse) {
+  const globalConfig = agentResponse?.tracing?.global;
+  if (!globalConfig) return;
+
+  ensureNestedObjectExists(agentOpts.config, ['tracing']);
+
+  // Apply stack-trace mode configuration if provided
+  if (globalConfig['stack-trace'] != null) {
+    agentOpts.config.tracing.stackTrace = globalConfig['stack-trace'];
+    logger.info(`Applied global stack trace mode configuration: ${globalConfig['stack-trace']}`);
+  }
+
+  // Apply stack-trace-length configuration if provided
+  if (globalConfig['stack-trace-length'] != null) {
+    const rawValue = globalConfig['stack-trace-length'];
+    let stackTraceLength;
+
+    if (typeof rawValue === 'number') {
+      stackTraceLength = rawValue;
+    } else if (typeof rawValue === 'string') {
+      stackTraceLength = parseInt(rawValue, 10);
+    }
+
+    if (stackTraceLength != null && !isNaN(stackTraceLength)) {
+      agentOpts.config.tracing.stackTraceLength = stackTraceLength;
+      logger.info(`Applied global stack trace length configuration: ${stackTraceLength}`);
+    } else {
+      logger.warn(`Invalid stack-trace-length value: ${rawValue}. Expected a number or numeric string.`);
+    }
+  }
 }
 
 /**

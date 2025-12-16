@@ -490,12 +490,24 @@ function parseStringStackTraceLength(config, value) {
 function normalizeNumericalStackTraceLength(numericalLength) {
   // just in case folks provide non-integral numbers or negative numbers
   const normalized = Math.abs(Math.round(numericalLength));
-  if (normalized !== numericalLength) {
+
+  // Apply maximum limit of 50
+  const maxLimit = 50;
+  let finalValue = normalized;
+
+  if (normalized > maxLimit) {
     logger.warn(
-      `Normalized the provided value of config.tracing.stackTraceLength (${numericalLength}) to ${normalized}.`
+      `The provided value of config.tracing.stackTraceLength (${numericalLength}) exceeds the maximum limit of ${maxLimit}. ` +
+        `Using the maximum value of ${maxLimit}.`
+    );
+    finalValue = maxLimit;
+  } else if (normalized !== numericalLength) {
+    logger.warn(
+      `Normalized the provided value of config.tracing.stackTraceLength (${numericalLength}) to ${finalValue}.`
     );
   }
-  return normalized;
+
+  return finalValue;
 }
 
 /**

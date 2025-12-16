@@ -259,6 +259,21 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.stackTraceLength).to.equal(3);
   });
 
+  it('should enforce maximum limit of 50 for stack trace length', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: 100 } });
+    expect(config.tracing.stackTraceLength).to.equal(50);
+  });
+
+  it('should allow stack trace length below the maximum limit', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: 30 } });
+    expect(config.tracing.stackTraceLength).to.equal(30);
+  });
+
+  it('should enforce maximum limit when normalizing negative numbers', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: -100 } });
+    expect(config.tracing.stackTraceLength).to.equal(50);
+  });
+
   it('should not disable individual instrumentations by default', () => {
     const config = coreConfig.normalize();
     expect(config.tracing.disable).to.deep.equal({});
