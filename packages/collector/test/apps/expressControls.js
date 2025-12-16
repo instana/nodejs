@@ -30,6 +30,7 @@ exports.start = function start(opts = {}, retryTime = null) {
   env.TRACING_ENABLED = opts.enableTracing !== false;
   env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
   env.APP_USES_HTTPS = opts.appUsesHttps === true;
+  env.INSTANA_IPC_ENABLED = 'true';
 
   if (env.APP_USES_HTTPS) {
     // CASE: target app uses HTTPS (self cert)

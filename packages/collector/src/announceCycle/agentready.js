@@ -152,14 +152,17 @@ function enter(_ctx) {
   // TODO: Add an EventEmitter functionality for the current process
   //       such as `instana.on('instana.collector.initialized')`.
   // eslint-disable-next-line no-unused-expressions
-  process?.send?.('instana.collector.initialized');
+  if (process.env.INSTANA_IPC_ENABLED === 'true') {
+    logger?.debug('IPC enabled.');
+    process?.send?.('instana.collector.initialized');
 
-  if (!isMainThread) {
-    const { parentPort } = require('worker_threads');
+    if (!isMainThread) {
+      const { parentPort } = require('worker_threads');
 
-    if (parentPort) {
-      // CASE: This is for the worker thread if available.
-      parentPort.postMessage('instana.collector.initialized');
+      if (parentPort) {
+        // CASE: This is for the worker thread if available.
+        parentPort.postMessage('instana.collector.initialized');
+      }
     }
   }
 }
