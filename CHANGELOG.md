@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.0.2](https://github.com/instana/nodejs/compare/v5.0.1...v5.0.2) (2025-12-16)
+
+
+### Bug Fixes
+
+* resolved the type error when initialize with unsupported node versions ([2cb51fb](https://github.com/instana/nodejs/commit/2cb51fbbc3d41eed71495fb3a437d7ed806d9181))
+
+
+
+
+
 ## [5.0.1](https://github.com/instana/nodejs/compare/v5.0.0...v5.0.1) (2025-12-16)
 
 
