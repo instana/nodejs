@@ -37,7 +37,7 @@ Please use our [@instana/serverless-collector](packages/serverless-collector/REA
 
 ## Breaking Changes
 
-The current major release is `4.x.y`.
+The current major release is `5.x.y`.
 
 Checkout our [breaking changes documentation](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-support-information#breaking-changes-in-nodejs-collector-upgrade).
 
