@@ -51,7 +51,7 @@ const maxRetryDelay = 60 * 1000; // one minute
 
 /**
  * @typedef {Object} StackTraceConfig
- * @property {string} [stack-trace] - Stack trace mode ('error'|'all'|'none'|)
+ * @property {string} [stack-trace] - Stack trace mode ('error'|'all'|'none')
  * @property {number} [stack-trace-length] - Maximum number of stack trace frames to capture
  */
 
