@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.0.1](https://github.com/instana/nodejs/compare/v5.0.0...v5.0.1) (2025-12-16)
+
+
+### Bug Fixes
+
+* updated v5 as the current version ([7f259c4](https://github.com/instana/nodejs/commit/7f259c4a3c3fae05bcd4ca22b0509d45288d8e42))
+
+
+
+
+
 # [5.0.0](https://github.com/instana/nodejs/compare/v4.31.0...v5.0.0) (2025-12-16)
 
 
