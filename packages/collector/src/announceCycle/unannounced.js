@@ -269,28 +269,25 @@ function applyStackTraceConfiguration(agentResponse) {
 
   ensureNestedObjectExists(agentOpts.config, ['tracing']);
 
+  const stackTrace = globalConfig['stack-trace'];
+  const stackTraceLength = globalConfig['stack-trace-length'];
+
   // Apply stack-trace mode configuration if provided
-  if (globalConfig['stack-trace'] != null) {
-    agentOpts.config.tracing.stackTrace = globalConfig['stack-trace'];
-    logger.info(`Applied global stack trace mode configuration: ${globalConfig['stack-trace']}`);
+  // TODO: Add conditions for (error|all|none)
+  if (stackTrace) {
+    agentOpts.config.tracing.stackTrace = stackTrace;
+    logger.info(`Applied global stack trace mode configuration: ${stackTrace}`);
   }
 
   // Apply stack-trace-length configuration if provided
-  if (globalConfig['stack-trace-length'] != null) {
-    const rawValue = globalConfig['stack-trace-length'];
-    let stackTraceLength;
+  if (stackTraceLength) {
+    const parsedLength = typeof stackTraceLength === 'number' ? stackTraceLength : Number(stackTraceLength);
 
-    if (typeof rawValue === 'number') {
-      stackTraceLength = rawValue;
-    } else if (typeof rawValue === 'string') {
-      stackTraceLength = parseInt(rawValue, 10);
-    }
-
-    if (stackTraceLength != null && !isNaN(stackTraceLength)) {
-      agentOpts.config.tracing.stackTraceLength = stackTraceLength;
-      logger.info(`Applied global stack trace length configuration: ${stackTraceLength}`);
+    if (Number.isFinite(parsedLength)) {
+      agentOpts.config.tracing.stackTraceLength = parsedLength;
+      logger.info(`Applied global stack trace length configuration: ${parsedLength}`);
     } else {
-      logger.warn(`Invalid stack-trace-length value: ${rawValue}. Expected a number or numeric string.`);
+      logger.warn(`Invalid stack-trace-length value: ${stackTraceLength}. Expected a number or numeric string.`);
     }
   }
 }
