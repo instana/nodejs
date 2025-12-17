@@ -30,6 +30,7 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_METRICS_TRANSMISSION_DELAY;
     delete process.env.INSTANA_SECRETS;
     delete process.env.INSTANA_SERVICE_NAME;
+    delete process.env.INSTANA_STACK_TRACE;
     delete process.env.INSTANA_STACK_TRACE_LENGTH;
     delete process.env.INSTANA_TRACING_TRANSMISSION_DELAY;
     delete process.env.INSTANA_SPANBATCHING_ENABLED;
@@ -264,6 +265,60 @@ describe('config.normalizeConfig', () => {
     const normalizedConfig = coreConfig.normalize({ tracing: { stackTraceLength: 20 } });
     expect(normalizedConfig.tracing.stackTraceLength).to.equal(5);
     delete process.env.INSTANA_STACK_TRACE_LENGTH;
+  });
+
+  it('should use default stack trace mode', () => {
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTrace).to.equal('all');
+  });
+
+  it('should accept valid stack trace mode from config', () => {
+    const config = coreConfig.normalize({ tracing: { stackTrace: 'error' } });
+    expect(config.tracing.stackTrace).to.equal('error');
+  });
+
+  it('should accept "none" stack trace mode from config', () => {
+    const config = coreConfig.normalize({ tracing: { stackTrace: 'none' } });
+    expect(config.tracing.stackTrace).to.equal('none');
+  });
+
+  it('should normalize stack trace mode to lowercase from config', () => {
+    const config = coreConfig.normalize({ tracing: { stackTrace: 'ERROR' } });
+    expect(config.tracing.stackTrace).to.equal('error');
+  });
+
+  it('should read stack trace mode from INSTANA_STACK_TRACE', () => {
+    process.env.INSTANA_STACK_TRACE = 'error';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTrace).to.equal('error');
+  });
+
+  it('should normalize stack trace mode to lowercase from INSTANA_STACK_TRACE', () => {
+    process.env.INSTANA_STACK_TRACE = 'NONE';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTrace).to.equal('none');
+  });
+
+  it('should give precedence to INSTANA_STACK_TRACE over config', () => {
+    process.env.INSTANA_STACK_TRACE = 'none';
+    const config = coreConfig.normalize({ tracing: { stackTrace: 'all' } });
+    expect(config.tracing.stackTrace).to.equal('none');
+  });
+
+  it('should reject invalid stack trace mode from config and use default', () => {
+    const config = coreConfig.normalize({ tracing: { stackTrace: 'invalid' } });
+    expect(config.tracing.stackTrace).to.equal('all');
+  });
+
+  it('should reject invalid stack trace mode from INSTANA_STACK_TRACE and use default', () => {
+    process.env.INSTANA_STACK_TRACE = 'invalid';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTrace).to.equal('all');
+  });
+
+  it('should reject non-string stack trace mode from config', () => {
+    const config = coreConfig.normalize({ tracing: { stackTrace: 123 } });
+    expect(config.tracing.stackTrace).to.equal('all');
   });
 
   it('should not disable individual instrumentations by default', () => {
@@ -799,6 +854,7 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.http.extraHttpHeadersToCapture).to.be.an('array');
     expect(config.tracing.http.extraHttpHeadersToCapture).to.be.empty;
     expect(config.tracing.http.extraHttpHeadersToCapture).to.be.empty;
+    expect(config.tracing.stackTrace).to.equal('all');
     expect(config.tracing.stackTraceLength).to.equal(10);
     expect(config.tracing.spanBatchingEnabled).to.be.false;
     expect(config.tracing.disableW3cTraceCorrelation).to.be.false;

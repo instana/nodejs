@@ -24,7 +24,7 @@ let pidStore;
 const initialRetryDelay = 10 * 1000; // 10 seconds
 const backoffFactor = 1.5;
 const maxRetryDelay = 60 * 1000; // one minute
-
+const validStackTraceModes = ['error', 'all', 'none'];
 /**
  * @typedef {Object} AgentAnnounceResponse
  * @property {SecretsConfig} [secrets]
@@ -273,10 +273,18 @@ function applyStackTraceConfiguration(agentResponse) {
   const stackTraceLength = globalConfig['stack-trace-length'];
 
   // Apply stack-trace mode configuration if provided
-  // TODO: Add conditions for (error|all|none)
   if (stackTrace) {
-    agentOpts.config.tracing.stackTrace = stackTrace;
-    logger.info(`Applied global stack trace mode configuration: ${stackTrace}`);
+    const normalizedStackTrace = typeof stackTrace === 'string' ? stackTrace.toLowerCase() : stackTrace;
+
+    if (validStackTraceModes.includes(normalizedStackTrace)) {
+      agentOpts.config.tracing.stackTrace = normalizedStackTrace;
+      logger.info(`Applied global stack trace mode configuration: ${normalizedStackTrace}`);
+    } else {
+      logger.warn(
+        `Invalid stack-trace value from agent: ${stackTrace}. ` +
+          `Valid values are: ${validStackTraceModes.join(', ')}. Ignoring configuration.`
+      );
+    }
   }
 
   // Explicitly added null and undefined checks because we want to allow 0 as a valid length

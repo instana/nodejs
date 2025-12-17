@@ -12,10 +12,13 @@ const defaults = {
   agentPort: 42699,
   agentRequestTimeout: 5000,
   tracing: {
+    stackTrace: 'all',
     stackTraceLength: 10
   },
   autoProfile: false
 };
+
+const validStackTraceModes = ['error', 'all', 'none'];
 
 /**
  * Merges the config that was passed to the init function with environment variables and default values.
@@ -31,6 +34,25 @@ module.exports = function normalizeConfig(config = {}) {
 
   config.autoProfile = config.autoProfile || process.env.INSTANA_AUTO_PROFILE || defaults.autoProfile;
   config.tracing = config.tracing || {};
+
+  // Normalize stack trace mode
+  if (process.env.INSTANA_STACK_TRACE) {
+    const envValue = process.env.INSTANA_STACK_TRACE.toLowerCase();
+    if (validStackTraceModes.includes(envValue)) {
+      config.tracing.stackTrace = envValue;
+    } else {
+      config.tracing.stackTrace = defaults.tracing.stackTrace;
+    }
+  } else if (config.tracing.stackTrace != null) {
+    const configValue = typeof config.tracing.stackTrace === 'string' ? config.tracing.stackTrace.toLowerCase() : null;
+    if (configValue && validStackTraceModes.includes(configValue)) {
+      config.tracing.stackTrace = configValue;
+    } else {
+      config.tracing.stackTrace = defaults.tracing.stackTrace;
+    }
+  } else {
+    config.tracing.stackTrace = defaults.tracing.stackTrace;
+  }
 
   if (config.tracing.stackTraceLength == null) {
     config.tracing.stackTraceLength = defaults.tracing.stackTraceLength;

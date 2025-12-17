@@ -21,6 +21,7 @@ const deepMerge = require('../util/deepMerge');
  * @property {number} [initialTransmissionDelay]
  * @property {number} [maxBufferedSpans]
  * @property {number} [transmissionDelay]
+ * @property {string} [stackTrace]
  * @property {number} [stackTraceLength]
  * @property {HTTPTracingOptions} [http]
  * @property {import('../config/types').Disable} [disable]
@@ -99,6 +100,7 @@ let defaults = {
     http: {
       extraHttpHeadersToCapture: []
     },
+    stackTrace: 'all',
     stackTraceLength: 10,
     disable: {},
     spanBatchingEnabled: false,
@@ -117,6 +119,7 @@ let defaults = {
 };
 
 const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
+const validStackTraceModes = ['error', 'all', 'none'];
 
 module.exports.configNormalizers = configNormalizers;
 
@@ -226,6 +229,7 @@ function normalizeTracingConfig(config) {
   normalizeActivateImmediately(config);
   normalizeTracingTransmission(config);
   normalizeTracingHttp(config);
+  normalizeTracingStackTrace(config);
   normalizeTracingStackTraceLength(config);
   normalizeSpanBatchingEnabled(config);
   normalizeDisableW3cTraceCorrelation(config);
@@ -439,6 +443,46 @@ function parseHeadersEnvVar(envVarValue) {
     .split(/[;,]/)
     .map(header => header.trim())
     .filter(header => header !== '');
+}
+
+/**
+ * @param {InstanaConfig} config
+ */
+function normalizeTracingStackTrace(config) {
+  // Give precedence to INSTANA_STACK_TRACE environment variable
+  if (process.env['INSTANA_STACK_TRACE']) {
+    const envValue = process.env['INSTANA_STACK_TRACE'].toLowerCase();
+    if (validStackTraceModes.includes(envValue)) {
+      config.tracing.stackTrace = envValue;
+    } else {
+      logger.warn(
+        `Invalid value for INSTANA_STACK_TRACE: "${process.env['INSTANA_STACK_TRACE']}". ` +
+          `Valid values are: ${validStackTraceModes.join(', ')}. Using default: ${defaults.tracing.stackTrace}`
+      );
+      config.tracing.stackTrace = defaults.tracing.stackTrace;
+    }
+  } else if (config.tracing.stackTrace != null) {
+    if (typeof config.tracing.stackTrace === 'string') {
+      const configValue = config.tracing.stackTrace.toLowerCase();
+      if (validStackTraceModes.includes(configValue)) {
+        config.tracing.stackTrace = configValue;
+      } else {
+        logger.warn(
+          `Invalid value for config.tracing.stackTrace: "${config.tracing.stackTrace}". ` +
+            `Valid values are: ${validStackTraceModes.join(', ')}. Using default: ${defaults.tracing.stackTrace}`
+        );
+        config.tracing.stackTrace = defaults.tracing.stackTrace;
+      }
+    } else {
+      logger.warn(
+        `The value of config.tracing.stackTrace has the non-supported type ${typeof config.tracing.stackTrace} ` +
+          `(the value is "${config.tracing.stackTrace}"). Using default: ${defaults.tracing.stackTrace}`
+      );
+      config.tracing.stackTrace = defaults.tracing.stackTrace;
+    }
+  } else {
+    config.tracing.stackTrace = defaults.tracing.stackTrace;
+  }
 }
 
 /**
