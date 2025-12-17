@@ -14,8 +14,10 @@ const stackTrace = require('../util/stackTrace');
 /** @type {import('../core').GenericLogger} */
 let logger;
 const hexDecoder = new StringDecoder('hex');
-let stackTraceLength = 10;
-
+/**
+ * @type {number}
+ */
+let stackTraceLength;
 /**
  * @param {import('../config').InstanaConfig} config
  */
@@ -30,7 +32,8 @@ exports.init = function (config) {
  * @returns {Array.<*>}
  */
 exports.getStackTrace = function getStackTrace(referenceFunction, drop) {
-  return stackTrace.captureStackTrace(stackTraceLength, referenceFunction, drop);
+  const effectiveLength = stackTraceLength;
+  return stackTrace.captureStackTrace(effectiveLength, referenceFunction, drop);
 };
 
 exports.generateRandomTraceId = function generateRandomTraceId() {
@@ -339,7 +342,7 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
 
     if (normalizedError.stack) {
       const stackArray = stackTrace.parseStackTraceFromString(normalizedError.stack);
-      span.stack = stackArray.length > 0 ? stackArray : span.stack || [];
+      span.stack = stackArray.length > 0 ? stackArray.slice(0, stackTraceLength) : span.stack || [];
     } else {
       span.stack = span.stack || [];
     }

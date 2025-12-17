@@ -528,6 +528,25 @@ describe('tracing/tracingUtil', () => {
       expect(span.stack[0]).to.have.property('n', 10);
     });
 
+    it('should respect configured stackTraceLength limit', () => {
+      const testSpan = {
+        data: {
+          nats: {}
+        }
+      };
+      const testError = new Error('Test');
+      testError.stack = `Error: Test\n${'at someFunction (file.js:10:5)\n'.repeat(20)}`;
+      setErrorDetails(testSpan, testError, 'nats');
+
+      expect(testSpan.stack).to.be.an('array');
+
+      // Should be limited to the configured stackTraceLength (default 10)
+      expect(testSpan.stack.length).to.equal(10);
+      expect(testSpan.stack[0]).to.have.property('m', 'someFunction');
+      expect(testSpan.stack[0]).to.have.property('c', 'file.js');
+      expect(testSpan.stack[0]).to.have.property('n', 10);
+    });
+
     it('should handle error objects with details property (gRPC errors)', () => {
       const span = {
         data: {
@@ -678,6 +697,42 @@ describe('tracing/tracingUtil', () => {
       setErrorDetails(span, error, 'test');
 
       expect(span.stack).to.deep.equal([]);
+    });
+
+    describe('getStackTrace', () => {
+      const { getStackTrace } = require('../../src/tracing/tracingUtil');
+
+      it('should use configured stackTraceLength by default', () => {
+        const stack = getStackTrace(getStackTrace);
+
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.be.at.most(10);
+        expect(stack.length).to.be.greaterThan(0);
+      });
+
+      it('should allow overriding stackTraceLength with custom length parameter', () => {
+        const stack = getStackTrace(getStackTrace, 0, 5);
+
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.be.at.most(5);
+        expect(stack.length).to.be.greaterThan(0);
+      });
+
+      it('should handle drop parameter correctly', () => {
+        const stackWithoutDrop = getStackTrace(getStackTrace, 0);
+        const stackWithDrop = getStackTrace(getStackTrace, 2);
+
+        expect(stackWithoutDrop).to.be.an('array');
+        expect(stackWithDrop).to.be.an('array');
+        expect(stackWithDrop.length).to.be.lessThan(stackWithoutDrop.length);
+      });
+
+      it('should combine drop and custom length parameters', () => {
+        const stack = getStackTrace(getStackTrace, 1, 3);
+
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.be.at.most(3);
+      });
     });
   });
 
