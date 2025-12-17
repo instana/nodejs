@@ -279,8 +279,8 @@ function applyStackTraceConfiguration(agentResponse) {
     logger.info(`Applied global stack trace mode configuration: ${stackTrace}`);
   }
 
-  // Apply stack-trace-length configuration if provided
-  if (stackTraceLength) {
+  // Explicitly added null and undefined checks because we want to allow 0 as a valid length
+  if (stackTraceLength !== null && stackTraceLength !== undefined) {
     const parsedLength = typeof stackTraceLength === 'number' ? stackTraceLength : Number(stackTraceLength);
 
     if (Number.isFinite(parsedLength)) {
