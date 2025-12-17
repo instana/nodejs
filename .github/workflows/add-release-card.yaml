@@ -59,7 +59,7 @@ jobs:
           cat > commits.txt <<EOF
           ${{ steps.commits.outputs.COMMITS }}
           EOF
-          REFS=$(grep -oiP 'ref(?:s)?\s+\Khttps?://\S+' commits.txt | sort -u)
+          REFS=$(grep -oiP 'ref(?:s)?\s+\Khttps?://\S+' commits.txt | sort -u || true)
 
           if [[ -z "$REFS" ]]; then
             echo "No referenced links found."
