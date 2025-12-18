@@ -277,7 +277,6 @@ function applyStackTraceConfiguration(agentResponse) {
 
     if (validStackTraceModes.includes(normalizedStackTraceMode)) {
       agentOpts.config.tracing.stackTrace = normalizedStackTraceMode;
-      logger.info(`Applied global stack trace mode configuration: ${normalizedStackTraceMode}`);
     } else {
       logger.warn(
         `Invalid stack-trace value from agent: ${stackTrace}. ` +
@@ -292,7 +291,6 @@ function applyStackTraceConfiguration(agentResponse) {
 
     if (Number.isFinite(parsedLength)) {
       agentOpts.config.tracing.stackTraceLength = parsedLength;
-      logger.info(`Applied global stack trace length configuration: ${parsedLength}`);
     } else {
       logger.warn(`Invalid stack-trace-length value: ${stackTraceLength}. Expected a number or numeric string.`);
     }
