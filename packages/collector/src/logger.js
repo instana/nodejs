@@ -95,7 +95,9 @@ exports.init = function init(userConfig = {}) {
     parentLogger = uninstrumentedLogger({
       name: '@instana/collector',
       level: 'info',
-      base: { threadId, pid: process.pid, hostname: os.hostname() }
+      base: { threadId, pid: process.pid, hostname: os.hostname() },
+      // Set ISO timestamp format for the default logger
+      timestamp: () => `,"time":"${new Date().toISOString()}"`
     });
   }
 
@@ -121,7 +123,8 @@ exports.init = function init(userConfig = {}) {
       const pinoOpts = {
         ...parentLogger.levels,
         level: parentLogger.level || 'info',
-        base: parentLogger.bindings()
+        base: parentLogger.bindings(),
+        timestamp: () => `,"time":"${new Date().toISOString()}"`
       };
 
       // CASE: Either its the customers pino instance (and probably a different pino installation/version)

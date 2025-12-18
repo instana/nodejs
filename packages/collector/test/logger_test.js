@@ -139,6 +139,58 @@ describe('logger', () => {
       stream => expect(stream.level).to.equal('info')
     );
   });
+
+  it('should use ISO timestamp format for pino logger', () => {
+    const logger = log.init({});
+
+    // Create a mock write stream to capture the log output
+    const capturedLogs = [];
+    const mockStream = {
+      write: function (chunk) {
+        capturedLogs.push(JSON.parse(chunk));
+      }
+    };
+
+    const originalStream = logger.logger[uninstrumentedLogger.symbols.streamSym];
+    logger.logger[uninstrumentedLogger.symbols.streamSym] = mockStream;
+
+    logger.info('Test log message');
+
+    logger.logger[uninstrumentedLogger.symbols.streamSym] = originalStream;
+
+    expect(capturedLogs.length).to.equal(1);
+    expect(capturedLogs[0]).to.have.property('time');
+    expect(capturedLogs[0].time).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+  });
+
+  it('should preserve custom timestamp format when user provides pino logger with custom config', () => {
+    const customPinoLogger = pino({
+      name: 'custom-app-logger',
+      timestamp: () => `,"time":${Date.now()}`
+    });
+
+    const logger = log.init({ logger: customPinoLogger });
+
+    const capturedLogs = [];
+    const mockStream = {
+      write: function (chunk) {
+        capturedLogs.push(JSON.parse(chunk));
+      }
+    };
+
+    const originalStream = logger.logger[uninstrumentedLogger.symbols.streamSym];
+    logger.logger[uninstrumentedLogger.symbols.streamSym] = mockStream;
+
+    logger.info('Test log message with custom timestamp');
+
+    logger.logger[uninstrumentedLogger.symbols.streamSym] = originalStream;
+
+    expect(capturedLogs.length).to.equal(1);
+    expect(capturedLogs[0]).to.have.property('time');
+
+    expect(capturedLogs[0].time).to.be.a('number');
+    expect(capturedLogs[0].time).to.not.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+  });
 });
 
 /**
