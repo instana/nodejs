@@ -166,29 +166,5 @@ describe('util/requireHook', () => {
       expect(hook.callCount).to.equal(1);
       expect(hook.getCall(0).args[0]).to.equal('module a');
     });
-
-    describe('real modules', function () {
-      this.timeout(3500);
-      it('must support loading of specific files within a module', () => {
-        Object.keys(require.cache).forEach(key => {
-          if (key.indexOf('express') !== -1) {
-            delete require.cache[key];
-          }
-        });
-
-        requireHook.init({ logger: testUtils.createFakeLogger() });
-        // NOTE: Adapt to v5: file structure is different in v4 and v5
-        //       v5 - https://github.com/expressjs/express/tree/master/lib
-        //       v4 - https://github.com/expressjs/express/tree/4.x/lib
-        const pattern = requireHook.buildFileNamePattern(['node_modules', 'express', 'lib', 'express.js']);
-        requireHook.onFileLoad(pattern, hook);
-
-        expect(require('express')).to.be.a('function');
-
-        expect(hook.callCount).to.equal(1);
-        expect(hook.getCall(0).args[0]).to.be.a('function');
-        expect(hook.getCall(0).args[0].name).to.equal('createApplication');
-      });
-    });
   });
 });

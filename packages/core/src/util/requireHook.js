@@ -183,23 +183,3 @@ exports.onFileLoad = function onFileLoad(pattern, fn) {
     fn
   });
 };
-
-/**
- * @param {Array<string>} arr
- */
-exports.buildFileNamePattern = function buildFileNamePattern(arr) {
-  return new RegExp(`${arr.reduce(buildFileNamePatternReducer, '')}$`);
-};
-
-/**
- * @param {string} agg
- * @param {string} pathSegment
- * @returns {string}
- */
-function buildFileNamePatternReducer(agg, pathSegment) {
-  if (agg.length > 0) {
-    agg += `\\${path.sep}`;
-  }
-  agg += pathSegment;
-  return agg;
-}
