@@ -8,7 +8,10 @@
 const {
   secrets,
   tracing,
-  util: { ensureNestedObjectExists },
+  util: {
+    ensureNestedObjectExists,
+    constants: { validStackTraceModes }
+  },
   coreConfig: { configNormalizers }
 } = require('@instana/core');
 const { constants: tracingConstants } = tracing;
@@ -24,7 +27,6 @@ let pidStore;
 const initialRetryDelay = 10 * 1000; // 10 seconds
 const backoffFactor = 1.5;
 const maxRetryDelay = 60 * 1000; // one minute
-const validStackTraceModes = ['error', 'all', 'none'];
 /**
  * @typedef {Object} AgentAnnounceResponse
  * @property {SecretsConfig} [secrets]

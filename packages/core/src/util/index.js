@@ -8,6 +8,7 @@
 const applicationUnderMonitoring = require('./applicationUnderMonitoring');
 const clone = require('./clone');
 const compression = require('./compression');
+const constants = require('./constants');
 const ensureNestedObjectExists = require('./ensureNestedObjectExists');
 const excludedFromInstrumentation = require('./excludedFromInstrumentation');
 const hasThePackageBeenInitializedTooLate = require('./initializedTooLateHeuristic');
@@ -85,6 +86,7 @@ exports.atMostOnce = function atMostOnce(name, cb) {
 exports.preloadFlags = preloadFlags;
 exports.clone = clone;
 exports.compression = compression;
+exports.constants = constants;
 exports.ensureNestedObjectExists = ensureNestedObjectExists;
 exports.excludedFromInstrumentation = excludedFromInstrumentation;
 exports.hasThePackageBeenInitializedTooLate = hasThePackageBeenInitializedTooLate;

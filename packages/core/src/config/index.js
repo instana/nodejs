@@ -10,6 +10,7 @@
 const supportedTracingVersion = require('../tracing/supportedVersion');
 const configNormalizers = require('./configNormalizers');
 const deepMerge = require('../util/deepMerge');
+const { validStackTraceModes } = require('../util/constants');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -119,7 +120,6 @@ let defaults = {
 };
 
 const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
-const validStackTraceModes = ['error', 'all', 'none'];
 
 module.exports.configNormalizers = configNormalizers;
 
