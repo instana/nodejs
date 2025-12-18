@@ -32,11 +32,13 @@ exports.init = function init(config) {
     instrumentRouter(module);
   });
 
-  hook.onModuleLoad('@koa/router', instrumentRouter);
+  hook.onModuleLoad('@koa/router', instrumentRouter, { nativeEsm: true });
 };
 
 function instrumentRouter(Router) {
   shimmer.wrap(Router.prototype, 'routes', shimRoutes);
+  // Return Router for ESM compatibility: iitmHook reassigns the return value to exports.default
+  return Router;
 }
 
 function shimRoutes(originalFunction) {
