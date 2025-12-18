@@ -20,7 +20,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 ['latest', 'v14'].forEach(version => {
   mochaSuiteFn(`tracing/koa with @koa/router ${version}`, function () {
     // @koa/router v15 requires Node.js 20 or later
-    if (semver.gte(process.versions.node, '20.0.0') && version === 'latest') {
+    if (semver.lt(process.versions.node, '20.0.0') && version === 'latest') {
       return;
     }
 
