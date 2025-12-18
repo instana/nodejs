@@ -10,7 +10,7 @@
 const supportedTracingVersion = require('../tracing/supportedVersion');
 const configNormalizers = require('./configNormalizers');
 const deepMerge = require('../util/deepMerge');
-const { validStackTraceModes } = require('../util/constants');
+const { validStackTraceModes, maxStackFrameLimit } = require('../util/constants');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -535,16 +535,14 @@ function normalizeNumericalStackTraceLength(numericalLength) {
   // just in case folks provide non-integral numbers or negative numbers
   const normalized = Math.abs(Math.round(numericalLength));
 
-  // Apply maximum limit of 50
-  const maxLimit = 50;
   let finalValue = normalized;
 
-  if (normalized > maxLimit) {
+  if (normalized > maxStackFrameLimit) {
     logger.warn(
-      `The provided value of config.tracing.stackTraceLength (${numericalLength}) exceeds the maximum limit of ${maxLimit}. ` +
-        `Using the maximum value of ${maxLimit}.`
+      `The provided value of config.tracing.stackTraceLength (${numericalLength}) exceeds the maximum limit of ${maxStackFrameLimit}. ` +
+        `Using the maximum value of ${maxStackFrameLimit}.`
     );
-    finalValue = maxLimit;
+    finalValue = maxStackFrameLimit;
   } else if (normalized !== numericalLength) {
     logger.warn(
       `Normalized the provided value of config.tracing.stackTraceLength (${numericalLength}) to ${finalValue}.`
