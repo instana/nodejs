@@ -1,6 +1,7 @@
 node_modules
 npm-debug*
 lerna-debug.log
+.cursorrules
 nodejs-license-report.csv
 docker-compose.yaml
 coverage
