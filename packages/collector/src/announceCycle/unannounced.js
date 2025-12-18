@@ -287,15 +287,12 @@ function applyStackTraceConfiguration(agentResponse) {
     }
   }
 
-  // Explicitly added null and undefined checks because we want to allow 0 as a valid length
-  if (stackTraceLength !== null && stackTraceLength !== undefined) {
-    const parsedLength = typeof stackTraceLength === 'number' ? stackTraceLength : Number(stackTraceLength);
+  const parsedLength = typeof stackTraceLength === 'number' ? stackTraceLength : Number(stackTraceLength);
 
-    if (Number.isFinite(parsedLength)) {
-      agentOpts.config.tracing.stackTraceLength = parsedLength;
-    } else {
-      logger.warn(`Invalid stack-trace-length value: ${stackTraceLength}. Expected a number or numeric string.`);
-    }
+  if (Number.isFinite(parsedLength)) {
+    agentOpts.config.tracing.stackTraceLength = parsedLength;
+  } else {
+    logger.warn(`Invalid stack-trace-length value: ${stackTraceLength}. Expected a number or numeric string.`);
   }
 }
 
