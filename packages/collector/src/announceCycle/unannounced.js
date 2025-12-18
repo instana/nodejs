@@ -272,7 +272,6 @@ function applyStackTraceConfiguration(agentResponse) {
   const stackTrace = globalConfig['stack-trace'];
   const stackTraceLength = globalConfig['stack-trace-length'];
 
-  // Apply stack-trace mode configuration if provided
   if (stackTrace) {
     const normalizedStackTrace = typeof stackTrace === 'string' ? stackTrace.toLowerCase() : stackTrace;
 
