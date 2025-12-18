@@ -931,6 +931,175 @@ describe('unannounced state', () => {
           }
         });
       });
+
+      it('should handle invalid stack-trace mode gracefully', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace': 'invalid-mode'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {}
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle stack-trace mode with uppercase normalization', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace': 'ERROR'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTrace: 'error'
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle non-string stack-trace mode', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace': 123
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {}
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle stack-trace-length as float', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace-length': 15.7
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTraceLength: 15.7
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle large stack-trace-length values', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace-length': 1000
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTraceLength: 1000
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle stack-trace-length as numeric string with decimals', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace-length': '25.5'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTraceLength: 25.5
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle undefined stack-trace-length', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace-length': undefined
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {}
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle empty string stack-trace-length', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace-length': ''
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTraceLength: 0
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should not apply config when tracing.global is missing', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            'extra-http-headers': ['x-custom']
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config.tracing.stackTrace).to.be.undefined;
+            expect(agentOptsStub.config.tracing.stackTraceLength).to.be.undefined;
+            done();
+          }
+        });
+      });
     });
 
     function prepareAnnounceResponse(announceResponse) {

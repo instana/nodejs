@@ -321,6 +321,182 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.stackTrace).to.equal('all');
   });
 
+  it('should handle null stack trace mode from config', () => {
+    const config = coreConfig.normalize({ tracing: { stackTrace: null } });
+    expect(config.tracing.stackTrace).to.equal('all');
+  });
+
+  it('should handle undefined stack trace mode from config', () => {
+    const config = coreConfig.normalize({ tracing: { stackTrace: undefined } });
+    expect(config.tracing.stackTrace).to.equal('all');
+  });
+
+  it('should handle empty string stack trace mode from config', () => {
+    const config = coreConfig.normalize({ tracing: { stackTrace: '' } });
+    expect(config.tracing.stackTrace).to.equal('all');
+  });
+
+  it('should handle boolean stack trace mode from config', () => {
+    const config = coreConfig.normalize({ tracing: { stackTrace: true } });
+    expect(config.tracing.stackTrace).to.equal('all');
+  });
+
+  it('should handle object stack trace mode from config', () => {
+    const config = coreConfig.normalize({ tracing: { stackTrace: {} } });
+    expect(config.tracing.stackTrace).to.equal('all');
+  });
+
+  it('should handle array stack trace mode from config', () => {
+    const config = coreConfig.normalize({ tracing: { stackTrace: ['error'] } });
+    expect(config.tracing.stackTrace).to.equal('all');
+  });
+
+  it('should accept zero as valid stack trace length', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: 0 } });
+    expect(config.tracing.stackTraceLength).to.equal(0);
+  });
+
+  it('should handle negative stack trace length', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: -10 } });
+    expect(config.tracing.stackTraceLength).to.equal(10);
+  });
+
+  it('should handle very large negative stack trace length', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: -100 } });
+    // this will be 50 because we take the absolute value
+    expect(config.tracing.stackTraceLength).to.equal(50);
+  });
+
+  it('should handle stack trace length as positive float', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: 15.9 } });
+    expect(config.tracing.stackTraceLength).to.equal(16);
+  });
+
+  it('should handle stack trace length as negative float', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: -15.9 } });
+    expect(config.tracing.stackTraceLength).to.equal(16);
+  });
+
+  it('should handle stack trace length as string with leading zeros', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: '007' } });
+    expect(config.tracing.stackTraceLength).to.equal(7);
+  });
+
+  it('should handle stack trace length as string with whitespace', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: '  25  ' } });
+    expect(config.tracing.stackTraceLength).to.equal(25);
+  });
+
+  it('should handle stack trace length as string with plus sign', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: '+30' } });
+    expect(config.tracing.stackTraceLength).to.equal(30);
+  });
+
+  it('should reject stack trace length as null', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: null } });
+    expect(config.tracing.stackTraceLength).to.equal(10);
+  });
+
+  it('should reject stack trace length as undefined', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: undefined } });
+    expect(config.tracing.stackTraceLength).to.equal(10);
+  });
+
+  it('should reject stack trace length as empty string', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: '' } });
+    expect(config.tracing.stackTraceLength).to.equal(10);
+  });
+
+  it('should reject stack trace length as object', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: {} } });
+    expect(config.tracing.stackTraceLength).to.equal(10);
+  });
+
+  it('should reject stack trace length as array', () => {
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: [10] } });
+    expect(config.tracing.stackTraceLength).to.equal(10);
+  });
+
+  it('should handle stack trace length from INSTANA_STACK_TRACE_LENGTH as zero', () => {
+    process.env.INSTANA_STACK_TRACE_LENGTH = '0';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(0);
+  });
+
+  it('should handle stack trace length from INSTANA_STACK_TRACE_LENGTH with negative value', () => {
+    process.env.INSTANA_STACK_TRACE_LENGTH = '-20';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(20);
+  });
+
+  it('should handle stack trace length from INSTANA_STACK_TRACE_LENGTH exceeding max', () => {
+    process.env.INSTANA_STACK_TRACE_LENGTH = '100';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(50);
+  });
+
+  it('should handle stack trace length from INSTANA_STACK_TRACE_LENGTH as float', () => {
+    process.env.INSTANA_STACK_TRACE_LENGTH = '12.3';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(12);
+  });
+
+  it('should reject invalid INSTANA_STACK_TRACE_LENGTH', () => {
+    process.env.INSTANA_STACK_TRACE_LENGTH = 'not-a-number';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(10);
+  });
+
+  it('should reject empty INSTANA_STACK_TRACE_LENGTH', () => {
+    process.env.INSTANA_STACK_TRACE_LENGTH = '';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(10);
+  });
+
+  it('should reject INSTANA_STACK_TRACE_LENGTH with only whitespace', () => {
+    process.env.INSTANA_STACK_TRACE_LENGTH = '   ';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(10);
+  });
+
+  it('should handle INSTANA_STACK_TRACE_LENGTH with mixed valid and invalid characters', () => {
+    process.env.INSTANA_STACK_TRACE_LENGTH = '15abc';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(15);
+  });
+
+  it('should handle both INSTANA_STACK_TRACE and INSTANA_STACK_TRACE_LENGTH together', () => {
+    process.env.INSTANA_STACK_TRACE = 'error';
+    process.env.INSTANA_STACK_TRACE_LENGTH = '25';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTrace).to.equal('error');
+    expect(config.tracing.stackTraceLength).to.equal(25);
+  });
+
+  it('should handle config with both stackTrace and stackTraceLength', () => {
+    const config = coreConfig.normalize({
+      tracing: {
+        stackTrace: 'none',
+        stackTraceLength: 30
+      }
+    });
+    expect(config.tracing.stackTrace).to.equal('none');
+    expect(config.tracing.stackTraceLength).to.equal(30);
+  });
+
+  it('should give precedence to env vars over config for both stack trace settings', () => {
+    process.env.INSTANA_STACK_TRACE = 'error';
+    process.env.INSTANA_STACK_TRACE_LENGTH = '15';
+    const config = coreConfig.normalize({
+      tracing: {
+        stackTrace: 'all',
+        stackTraceLength: 40
+      }
+    });
+    expect(config.tracing.stackTrace).to.equal('error');
+    expect(config.tracing.stackTraceLength).to.equal(15);
+  });
+
   it('should not disable individual instrumentations by default', () => {
     const config = coreConfig.normalize();
     expect(config.tracing.disable).to.deep.equal({});
