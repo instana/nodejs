@@ -253,16 +253,6 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
 /**
  * Apply global stack trace configuration from the agent response.
  *
- * Configuration structure:
- * {
- *   tracing: {
- *     global: {
- *       "stack-trace": "error",
- *       "stack-trace-length": 10
- *     }
- *   }
- * }
- *
  * @param {AgentAnnounceResponse} agentResponse
  */
 function applyStackTraceConfiguration(agentResponse) {
