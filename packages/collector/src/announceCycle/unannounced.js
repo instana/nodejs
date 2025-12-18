@@ -273,11 +273,11 @@ function applyStackTraceConfiguration(agentResponse) {
   const stackTraceLength = globalConfig['stack-trace-length'];
 
   if (stackTrace) {
-    const normalizedStackTrace = typeof stackTrace === 'string' ? stackTrace.toLowerCase() : stackTrace;
+    const normalizedStackTraceMode = typeof stackTrace === 'string' ? stackTrace.toLowerCase() : stackTrace;
 
-    if (validStackTraceModes.includes(normalizedStackTrace)) {
-      agentOpts.config.tracing.stackTrace = normalizedStackTrace;
-      logger.info(`Applied global stack trace mode configuration: ${normalizedStackTrace}`);
+    if (validStackTraceModes.includes(normalizedStackTraceMode)) {
+      agentOpts.config.tracing.stackTrace = normalizedStackTraceMode;
+      logger.info(`Applied global stack trace mode configuration: ${normalizedStackTraceMode}`);
     } else {
       logger.warn(
         `Invalid stack-trace value from agent: ${stackTrace}. ` +
