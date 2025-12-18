@@ -136,7 +136,6 @@ exports.init = function init(userConfig = {}) {
 
       // CASE: We copy any settings from the pino instance such as custom formats.
       if (symbols && Array.isArray(symbols)) {
-        // If there's a custom timestamp function from the userConfig logger  , we'll respect that
         const timeSym = symbols.find(sym => String(sym) === 'Symbol(pino.time)');
         // @ts-ignore
         const timestampFn = instance[timeSym];
