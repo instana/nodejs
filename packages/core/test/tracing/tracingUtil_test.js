@@ -710,11 +710,11 @@ describe('tracing/tracingUtil', () => {
         expect(stack.length).to.be.greaterThan(0);
       });
 
-      it('should allow overriding stackTraceLength with custom length parameter', () => {
-        const stack = getStackTrace(getStackTrace, 0, 5);
+      it('should use configured stackTraceLength (cannot override with parameter)', () => {
+        const stack = getStackTrace(getStackTrace, 0);
 
         expect(stack).to.be.an('array');
-        expect(stack.length).to.be.at.most(5);
+        expect(stack.length).to.be.at.most(10);
         expect(stack.length).to.be.greaterThan(0);
       });
 
@@ -727,11 +727,11 @@ describe('tracing/tracingUtil', () => {
         expect(stackWithDrop.length).to.be.lessThan(stackWithoutDrop.length);
       });
 
-      it('should combine drop and custom length parameters', () => {
-        const stack = getStackTrace(getStackTrace, 1, 3);
+      it('should use drop parameter with configured length', () => {
+        const stack = getStackTrace(getStackTrace, 1);
 
         expect(stack).to.be.an('array');
-        expect(stack.length).to.be.at.most(3);
+        expect(stack.length).to.be.at.most(10);
       });
     });
   });

@@ -32,6 +32,7 @@ describe('config.normalizeConfig', () => {
     delete process.env.INSTANA_SERVICE_NAME;
     delete process.env.INSTANA_STACK_TRACE;
     delete process.env.INSTANA_STACK_TRACE_LENGTH;
+    delete process.env.STACK_TRACE_LENGTH;
     delete process.env.INSTANA_TRACING_TRANSMISSION_DELAY;
     delete process.env.INSTANA_SPANBATCHING_ENABLED;
     delete process.env.INSTANA_DISABLE_SPANBATCHING;
@@ -260,10 +261,10 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.stackTraceLength).to.equal(3);
   });
 
-  it('should give precedence to INSTANA_STACK_TRACE_LENGTH over config', () => {
+  it('should give precedence to config over INSTANA_STACK_TRACE_LENGTH', () => {
     process.env.INSTANA_STACK_TRACE_LENGTH = '5';
     const normalizedConfig = coreConfig.normalize({ tracing: { stackTraceLength: 20 } });
-    expect(normalizedConfig.tracing.stackTraceLength).to.equal(5);
+    expect(normalizedConfig.tracing.stackTraceLength).to.equal(20);
     delete process.env.INSTANA_STACK_TRACE_LENGTH;
   });
 
@@ -299,13 +300,13 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.stackTrace).to.equal('none');
   });
 
-  it('should give precedence to INSTANA_STACK_TRACE over config', () => {
+  it('should give precedence to config over INSTANA_STACK_TRACE', () => {
     process.env.INSTANA_STACK_TRACE = 'none';
     const config = coreConfig.normalize({ tracing: { stackTrace: 'all' } });
-    expect(config.tracing.stackTrace).to.equal('none');
+    expect(config.tracing.stackTrace).to.equal('all');
   });
 
-  it('should reject invalid stack trace mode from config and use default', () => {
+  it('should reject invalid stack trace mode from config and fallback to default', () => {
     const config = coreConfig.normalize({ tracing: { stackTrace: 'invalid' } });
     expect(config.tracing.stackTrace).to.equal('all');
   });
@@ -484,7 +485,7 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.stackTraceLength).to.equal(30);
   });
 
-  it('should give precedence to env vars over config for both stack trace settings', () => {
+  it('should give precedence to config over env vars for both stack trace settings', () => {
     process.env.INSTANA_STACK_TRACE = 'error';
     process.env.INSTANA_STACK_TRACE_LENGTH = '15';
     const config = coreConfig.normalize({
@@ -493,8 +494,118 @@ describe('config.normalizeConfig', () => {
         stackTraceLength: 40
       }
     });
-    expect(config.tracing.stackTrace).to.equal('error');
+    expect(config.tracing.stackTrace).to.equal('all');
+    expect(config.tracing.stackTraceLength).to.equal(40);
+  });
+
+  it('should read stack trace length from STACK_TRACE_LENGTH', () => {
+    process.env.STACK_TRACE_LENGTH = '8';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(8);
+    delete process.env.STACK_TRACE_LENGTH;
+  });
+
+  it('should handle stack trace length from STACK_TRACE_LENGTH as zero', () => {
+    process.env.STACK_TRACE_LENGTH = '0';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(0);
+    delete process.env.STACK_TRACE_LENGTH;
+  });
+
+  it('should handle stack trace length from STACK_TRACE_LENGTH with negative value', () => {
+    process.env.STACK_TRACE_LENGTH = '-15';
+    const config = coreConfig.normalize();
     expect(config.tracing.stackTraceLength).to.equal(15);
+    delete process.env.STACK_TRACE_LENGTH;
+  });
+
+  it('should handle stack trace length from STACK_TRACE_LENGTH exceeding max', () => {
+    process.env.STACK_TRACE_LENGTH = '200';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(50);
+    delete process.env.STACK_TRACE_LENGTH;
+  });
+
+  it('should handle stack trace length from STACK_TRACE_LENGTH as float', () => {
+    process.env.STACK_TRACE_LENGTH = '18.7';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(18);
+    delete process.env.STACK_TRACE_LENGTH;
+  });
+
+  it('should reject invalid STACK_TRACE_LENGTH', () => {
+    process.env.STACK_TRACE_LENGTH = 'invalid';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(10);
+    delete process.env.STACK_TRACE_LENGTH;
+  });
+
+  it('should reject empty STACK_TRACE_LENGTH', () => {
+    process.env.STACK_TRACE_LENGTH = '';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(10);
+    delete process.env.STACK_TRACE_LENGTH;
+  });
+
+  // Tests for precedence between INSTANA_STACK_TRACE_LENGTH and STACK_TRACE_LENGTH
+  it('should give precedence to INSTANA_STACK_TRACE_LENGTH over STACK_TRACE_LENGTH', () => {
+    process.env.INSTANA_STACK_TRACE_LENGTH = '12';
+    process.env.STACK_TRACE_LENGTH = '25';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(12);
+    delete process.env.INSTANA_STACK_TRACE_LENGTH;
+    delete process.env.STACK_TRACE_LENGTH;
+  });
+
+  it('should use STACK_TRACE_LENGTH when INSTANA_STACK_TRACE_LENGTH is not set', () => {
+    process.env.STACK_TRACE_LENGTH = '22';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(22);
+    delete process.env.STACK_TRACE_LENGTH;
+  });
+
+  it('should use INSTANA_STACK_TRACE_LENGTH when STACK_TRACE_LENGTH is not set', () => {
+    process.env.INSTANA_STACK_TRACE_LENGTH = '18';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(18);
+    delete process.env.INSTANA_STACK_TRACE_LENGTH;
+  });
+
+  it('should give precedence to INSTANA_STACK_TRACE_LENGTH even when invalid STACK_TRACE_LENGTH is set', () => {
+    process.env.INSTANA_STACK_TRACE_LENGTH = '14';
+    process.env.STACK_TRACE_LENGTH = 'invalid';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(14);
+    delete process.env.INSTANA_STACK_TRACE_LENGTH;
+    delete process.env.STACK_TRACE_LENGTH;
+  });
+
+  it('should fallback to STACK_TRACE_LENGTH when INSTANA_STACK_TRACE_LENGTH is invalid', () => {
+    process.env.INSTANA_STACK_TRACE_LENGTH = 'invalid';
+    process.env.STACK_TRACE_LENGTH = '17';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(17);
+    delete process.env.INSTANA_STACK_TRACE_LENGTH;
+    delete process.env.STACK_TRACE_LENGTH;
+  });
+
+  it('should use default when both INSTANA_STACK_TRACE_LENGTH and STACK_TRACE_LENGTH are invalid', () => {
+    process.env.INSTANA_STACK_TRACE_LENGTH = 'invalid';
+    process.env.STACK_TRACE_LENGTH = 'also-invalid';
+    const config = coreConfig.normalize();
+    expect(config.tracing.stackTraceLength).to.equal(10);
+    delete process.env.INSTANA_STACK_TRACE_LENGTH;
+    delete process.env.STACK_TRACE_LENGTH;
+  });
+
+  it('should give precedence to in-code config over env variables', () => {
+    process.env.INSTANA_STACK_TRACE_LENGTH = '12';
+    process.env.STACK_TRACE_LENGTH = '25';
+    const config = coreConfig.normalize({ tracing: { stackTraceLength: 35 } });
+    // in-code config has highest precedence
+    expect(config.tracing.stackTraceLength).to.equal(35);
+    delete process.env.INSTANA_STACK_TRACE_LENGTH;
+    delete process.env.STACK_TRACE_LENGTH;
   });
 
   it('should not disable individual instrumentations by default', () => {

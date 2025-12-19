@@ -4,7 +4,12 @@
 
 'use strict';
 
-const { MAX_STACK_TRACE_LENGTH, validStackTraceModes } = require('../../util/constants');
+const {
+  MAX_STACK_TRACE_LENGTH,
+  validStackTraceModes,
+  DEFAULT_STACK_TRACE_MODE,
+  DEFAULT_STACK_TRACE_LENGTH
+} = require('../../util/constants');
 
 /** @type {import('../../core').GenericLogger} */
 let logger;
@@ -76,7 +81,7 @@ function normalizeStackTraceMode(config) {
     }
   }
 
-  return null;
+  return DEFAULT_STACK_TRACE_MODE;
 }
 
 /**
@@ -119,7 +124,20 @@ function normalizeStackTraceLength(config) {
     }
   }
 
-  return null;
+  // Support legacy STACK_TRACE_LENGTH variable (lower priority than INSTANA_STACK_TRACE_LENGTH)
+  if (process.env.STACK_TRACE_LENGTH) {
+    const parsed = parseInt(process.env.STACK_TRACE_LENGTH, 10);
+    if (!isNaN(parsed)) {
+      return normalizeNumericalStackTraceLength(parsed);
+    } else {
+      logger?.warn(
+        `The value of STACK_TRACE_LENGTH ("${process.env.STACK_TRACE_LENGTH}") ` +
+          'cannot be parsed to a numerical value. Falling back to next priority.'
+      );
+    }
+  }
+
+  return DEFAULT_STACK_TRACE_LENGTH;
 }
 
 /**
