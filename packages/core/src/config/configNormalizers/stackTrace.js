@@ -22,9 +22,9 @@ exports.init = function init(config) {
 };
 
 // TODO: The current precedence order is:
-// in-code config → environment variable → agent → default.
-// This order exists for backward compatibility with the original stackTraceLength behavior
-// and should be revised as a breaking change in INSTA-817
+//       in-code config → environment variable → agent → default.
+//       This order exists for backward compatibility with the original stackTraceLength behavior
+//       and should be revised as a breaking change in INSTA-817
 
 /**
  *
@@ -39,10 +39,9 @@ exports.normalize = function normalize(config) {
     };
   }
 
-  if (!config?.tracing) config.tracing = {};
+  if (!config.tracing) config.tracing = {};
 
   const stackTrace = normalizeStackTraceMode(config);
-
   const stackTraceLength = normalizeStackTraceLength(config);
 
   return {

@@ -445,26 +445,14 @@ function parseHeadersEnvVar(envVarValue) {
 }
 
 /**
- * Handles both stackTrace and stacTraceLength configuration
+ * Handles both stackTrace and stackTraceLength configuration
  * @param {InstanaConfig} config
  */
 function normalizeTracingStackTrace(config) {
   const stackTraceConfig = configNormalizers.stackTrace.normalize(config);
 
-  if (stackTraceConfig && typeof stackTraceConfig === 'object') {
-    if (stackTraceConfig.stackTrace) {
-      config.tracing.stackTrace = stackTraceConfig.stackTrace;
-    }
-
-    if (stackTraceConfig.stackTraceLength || stackTraceConfig.stackTraceLength === 0) {
-      config.tracing.stackTraceLength = stackTraceConfig.stackTraceLength;
-    }
-  }
-
-  config.tracing.stackTrace = config.tracing.stackTrace || defaults.tracing.stackTrace;
-  // ?? check allows 0 if configured, otherwise falls back to default.
-  config.tracing.stackTraceLength = config.tracing.stackTraceLength ?? defaults.tracing.stackTraceLength;
-
+  config.tracing.stackTrace = stackTraceConfig.stackTrace;
+  config.tracing.stackTraceLength = stackTraceConfig.stackTraceLength;
   return;
 }
 
