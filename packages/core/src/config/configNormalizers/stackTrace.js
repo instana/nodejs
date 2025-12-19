@@ -31,6 +31,13 @@ exports.init = function init(config) {
  * @returns {{ stackTrace: string, stackTraceLength: number }}
  */
 exports.normalize = function normalize(config) {
+  if (!config) {
+    return {
+      stackTrace: DEFAULT_STACK_TRACE_MODE,
+      stackTraceLength: DEFAULT_STACK_TRACE_LENGTH
+    };
+  }
+
   if (!config?.tracing) config.tracing = {};
 
   const stackTrace = normalizeStackTraceMode(config);
