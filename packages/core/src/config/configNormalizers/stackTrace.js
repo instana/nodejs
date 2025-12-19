@@ -134,8 +134,8 @@ exports.normalizeAgentConfig = function normalizeAgentConfig(config) {
   }
 
   const result = {
-    stackTrace: normalizeAgentStackTrace(config['stack-trace']),
-    stackTraceLength: normalizeAgentStackTraceLength(config['stack-trace-length'])
+    stackTrace: normalizeAgentStackTrace(config.stackTrace),
+    stackTraceLength: normalizeAgentStackTraceLength(config.stackTraceLength)
   };
 
   return result;

@@ -10,6 +10,7 @@ const path = require('path');
 const StringDecoder = require('string_decoder').StringDecoder;
 
 const stackTrace = require('../util/stackTrace');
+const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -19,11 +20,47 @@ const hexDecoder = new StringDecoder('hex');
  */
 let stackTraceLength;
 /**
+ * @type {string}
+ */
+let stackTraceMode;
+/**
  * @param {import('../config').InstanaConfig} config
  */
 exports.init = function (config) {
   logger = config.logger;
-  stackTraceLength = config.tracing.stackTraceLength;
+  stackTraceLength = config?.tracing?.stackTraceLength;
+  stackTraceMode = config?.tracing?.stackTrace;
+};
+
+/**
+ * @param {import('@instana/collector/src/types/collector').AgentConfig} extraConfig
+ */
+exports.activate = function activate(extraConfig) {
+  /**
+   * Configuration priority order:
+   * 1. In-code configuration
+   * 2. Environment variables:
+   *    - `INSTANA_STACK_TRACE`
+   *    - `INSTANA_STACK_TRACE_LENGTH` || `STACK_TRACE_LENGTH` (legacy)
+   * 3. Agent configuration (loaded later)
+   *
+   * Since the agent configuration is loaded later, we first check
+   * that stackTrace and stackTraceLength are still at their default values.
+   * If they are at default values, we are allowed to fall back to
+   * the agent's configuration.
+   *
+   * TODO: Perform a major refactoring of configuration priority ordering in INSTA-817.
+   */
+
+  const agentTraceConfig = extraConfig?.tracing;
+
+  if (agentTraceConfig?.stackTrace && stackTraceMode === DEFAULT_STACK_TRACE_MODE) {
+    stackTraceMode = agentTraceConfig.stackTrace;
+  }
+
+  if (agentTraceConfig?.stackTraceLength != null && stackTraceLength === DEFAULT_STACK_TRACE_LENGTH) {
+    stackTraceLength = agentTraceConfig.stackTraceLength;
+  }
 };
 
 /**

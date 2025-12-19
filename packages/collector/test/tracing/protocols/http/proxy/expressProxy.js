@@ -17,15 +17,16 @@ require('./mockVersion');
 // latency and response codes. This can be used a baselines for many tests, e.g.
 // to test distributed tracing.
 
-require('../../../../..')({
+const instanaConfig = {
   agentPort: process.env.AGENT_PORT,
   level: 'warn',
   tracing: {
     enabled: true,
-    forceTransmissionStartingAt: 1,
-    stackTraceLength: process.env.STACK_TRACE_LENGTH != null ? process.env.STACK_TRACE_LENGTH : 10
+    forceTransmissionStartingAt: 1
   }
-});
+};
+
+require('../../../../..')(instanaConfig);
 const express = require('express');
 const fetch = require('node-fetch-v2');
 const port = require('../../../../test_util/app-port')();
