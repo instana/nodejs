@@ -97,8 +97,10 @@ if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
   printf "If not, the AWS CLI commands will fail.\n"
 fi
 
-# The us-gov-* regions are only available to US government agencies, U.S. government etc. The regions have not been (and
-# maybe cannot be) enabled for our AWS account. We currently do not publish Lambda layers to these regions.
+# We currently do not publish Lambda layers to these regions:
+# - us-gov-* (only available to U.S. government agencies; not enabled for our account)
+# - eusc-de-east-1 (AWS European Sovereign Cloud; cannot be deployed from standard accounts)
+#   Ref: INSTA-69685
 SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1\neusc-de-east-1'
 
 if [[ -z $REGIONS ]]; then
