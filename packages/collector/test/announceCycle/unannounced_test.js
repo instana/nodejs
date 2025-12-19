@@ -757,8 +757,8 @@ describe('unannounced state', () => {
       });
     });
 
-    describe('stack trace configuration', () => {
-      it('should apply global stack-trace mode configuration', done => {
+    describe('applyStackTraceConfiguration', () => {
+      it('should apply stack trace mode from agent response', done => {
         prepareAnnounceResponse({
           tracing: {
             global: {
@@ -770,7 +770,8 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                stackTrace: 'all'
+                stackTrace: 'all',
+                global: {}
               }
             });
             done();
@@ -778,10 +779,53 @@ describe('unannounced state', () => {
         });
       });
 
-      it('should apply global stack-trace-length configuration as number', done => {
+      it('should apply stack trace length from agent response (kebab-case)', done => {
         prepareAnnounceResponse({
           tracing: {
             global: {
+              'stack-trace-length': 15
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTraceLength: 15,
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply stack trace length from agent response (camelCase for backward compatibility)', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              stackTraceLength: 15
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTraceLength: 15,
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply both stack trace mode and length from agent response (kebab-case)', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace': 'error',
               'stack-trace-length': 20
             }
           }
@@ -790,7 +834,9 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                stackTraceLength: 20
+                stackTrace: 'error',
+                stackTraceLength: 20,
+                global: {}
               }
             });
             done();
@@ -798,32 +844,12 @@ describe('unannounced state', () => {
         });
       });
 
-      it('should apply global stack-trace-length configuration as string', done => {
+      it('should apply both stack trace mode and length from agent response (camelCase)', done => {
         prepareAnnounceResponse({
           tracing: {
             global: {
-              'stack-trace-length': '15'
-            }
-          }
-        });
-        unannouncedState.enter({
-          transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                stackTraceLength: 15
-              }
-            });
-            done();
-          }
-        });
-      });
-
-      it('should apply both global stack-trace and stack-trace-length', done => {
-        prepareAnnounceResponse({
-          tracing: {
-            global: {
-              'stack-trace': 'error',
-              'stack-trace-length': 25
+              stackTrace: 'error',
+              stackTraceLength: 20
             }
           }
         });
@@ -832,7 +858,8 @@ describe('unannounced state', () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
                 stackTrace: 'error',
-                stackTraceLength: 25
+                stackTraceLength: 20,
+                global: {}
               }
             });
             done();
@@ -840,36 +867,207 @@ describe('unannounced state', () => {
         });
       });
 
-      it('should handle invalid stack-trace-length gracefully', done => {
+      it('should apply both stack trace mode and length from agent response (mixed case)', done => {
         prepareAnnounceResponse({
           tracing: {
             global: {
-              'stack-trace-length': 'invalid'
+              'stack-trace': 'error',
+              stackTraceLength: 25
             }
           }
         });
         unannouncedState.enter({
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
-              tracing: {}
+              tracing: {
+                stackTrace: 'error',
+                stackTraceLength: 25,
+                global: {}
+              }
             });
             done();
           }
         });
       });
 
-      it('should apply global stack trace config alongside other tracing configs', done => {
+      it('should prioritize kebab-case over camelCase when both are present', done => {
         prepareAnnounceResponse({
           tracing: {
             global: {
-              'stack-trace': 'all',
-              'stack-trace-length': 10
-            },
-            'extra-http-headers': ['x-custom-header'],
-            kafka: {
-              'trace-correlation': false
-            },
-            'span-batching-enabled': true
+              'stack-trace': 'error',
+              stackTrace: 'all',
+              'stack-trace-length': 30,
+              stackTraceLength: 10
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTrace: 'error',
+                stackTraceLength: 30,
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should normalize stack trace mode to lowercase', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              stackTrace: 'ERROR'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTrace: 'error',
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle none stack trace mode', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              stackTrace: 'none'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTrace: 'none',
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should not apply stack trace config when tracing.global is missing', done => {
+        prepareAnnounceResponse({
+          tracing: {}
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
+            done();
+          }
+        });
+      });
+
+      it('should not apply stack trace config when tracing is missing', done => {
+        prepareAnnounceResponse({});
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
+            done();
+          }
+        });
+      });
+
+      it('should handle invalid stack trace mode gracefully', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              stackTrace: 'invalid-mode'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle invalid stack trace length gracefully', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              stackTraceLength: 'not-a-number'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle negative stack trace length gracefully', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              stackTraceLength: -5
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                global: {},
+                stackTraceLength: 5
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle zero stack trace length', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              stackTraceLength: 0
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTraceLength: 0,
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply valid config and ignore invalid config', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              stackTrace: 'all',
+              stackTraceLength: 'invalid'
+            }
           }
         });
         unannouncedState.enter({
@@ -877,14 +1075,7 @@ describe('unannounced state', () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
                 stackTrace: 'all',
-                stackTraceLength: 10,
-                http: {
-                  extraHttpHeadersToCapture: ['x-custom-header']
-                },
-                kafka: {
-                  traceCorrelation: false
-                },
-                spanBatchingEnabled: true
+                global: {}
               }
             });
             done();
@@ -892,210 +1083,19 @@ describe('unannounced state', () => {
         });
       });
 
-      it('should handle zero as valid stack-trace-length', done => {
+      it('should handle empty global object', done => {
         prepareAnnounceResponse({
           tracing: {
-            global: {
-              'stack-trace-length': 0
-            }
+            global: {}
           }
         });
         unannouncedState.enter({
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                stackTraceLength: 0
+                global: {}
               }
             });
-            done();
-          }
-        });
-      });
-
-      it('should handle negative stack-trace-length as valid', done => {
-        prepareAnnounceResponse({
-          tracing: {
-            global: {
-              'stack-trace-length': -5
-            }
-          }
-        });
-        unannouncedState.enter({
-          transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                stackTraceLength: -5
-              }
-            });
-            done();
-          }
-        });
-      });
-
-      it('should handle invalid stack-trace mode gracefully', done => {
-        prepareAnnounceResponse({
-          tracing: {
-            global: {
-              'stack-trace': 'invalid-mode'
-            }
-          }
-        });
-        unannouncedState.enter({
-          transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {}
-            });
-            done();
-          }
-        });
-      });
-
-      it('should handle stack-trace mode with uppercase normalization', done => {
-        prepareAnnounceResponse({
-          tracing: {
-            global: {
-              'stack-trace': 'ERROR'
-            }
-          }
-        });
-        unannouncedState.enter({
-          transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                stackTrace: 'error'
-              }
-            });
-            done();
-          }
-        });
-      });
-
-      it('should handle non-string stack-trace mode', done => {
-        prepareAnnounceResponse({
-          tracing: {
-            global: {
-              'stack-trace': 123
-            }
-          }
-        });
-        unannouncedState.enter({
-          transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {}
-            });
-            done();
-          }
-        });
-      });
-
-      it('should handle stack-trace-length as float', done => {
-        prepareAnnounceResponse({
-          tracing: {
-            global: {
-              'stack-trace-length': 15.7
-            }
-          }
-        });
-        unannouncedState.enter({
-          transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                stackTraceLength: 15.7
-              }
-            });
-            done();
-          }
-        });
-      });
-
-      it('should handle large stack-trace-length values', done => {
-        prepareAnnounceResponse({
-          tracing: {
-            global: {
-              'stack-trace-length': 1000
-            }
-          }
-        });
-        unannouncedState.enter({
-          transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                stackTraceLength: 500
-              }
-            });
-            done();
-          }
-        });
-      });
-
-      it('should handle stack-trace-length as numeric string with decimals', done => {
-        prepareAnnounceResponse({
-          tracing: {
-            global: {
-              'stack-trace-length': '25.5'
-            }
-          }
-        });
-        unannouncedState.enter({
-          transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                stackTraceLength: 25.5
-              }
-            });
-            done();
-          }
-        });
-      });
-
-      it('should handle undefined stack-trace-length', done => {
-        prepareAnnounceResponse({
-          tracing: {
-            global: {
-              'stack-trace-length': undefined
-            }
-          }
-        });
-        unannouncedState.enter({
-          transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {}
-            });
-            done();
-          }
-        });
-      });
-
-      it('should handle empty string stack-trace-length', done => {
-        prepareAnnounceResponse({
-          tracing: {
-            global: {
-              'stack-trace-length': ''
-            }
-          }
-        });
-        unannouncedState.enter({
-          transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                stackTraceLength: 0
-              }
-            });
-            done();
-          }
-        });
-      });
-
-      it('should not apply config when tracing.global is missing', done => {
-        prepareAnnounceResponse({
-          tracing: {
-            'extra-http-headers': ['x-custom']
-          }
-        });
-        unannouncedState.enter({
-          transitionTo: () => {
-            expect(agentOptsStub.config.tracing.stackTrace).to.be.undefined;
-            expect(agentOptsStub.config.tracing.stackTraceLength).to.be.undefined;
             done();
           }
         });

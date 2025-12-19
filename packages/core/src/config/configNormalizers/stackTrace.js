@@ -146,9 +146,10 @@ exports.normalizeAgentConfig = function normalizeAgentConfig(config) {
     return { stackTrace: null, stackTraceLength: null };
   }
 
+  // TODO: check agent config and see which key exactly is coming, and remove the unwanted case
   const result = {
-    stackTrace: normalizeAgentStackTrace(config.stackTrace),
-    stackTraceLength: normalizeAgentStackTraceLength(config.stackTraceLength)
+    stackTrace: normalizeAgentStackTrace(config['stack-trace'] || config.stackTrace),
+    stackTraceLength: normalizeAgentStackTraceLength(config['stack-trace-length'] || config.stackTraceLength)
   };
 
   return result;
