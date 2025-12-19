@@ -10,7 +10,7 @@
 const supportedTracingVersion = require('../tracing/supportedVersion');
 const configNormalizers = require('./configNormalizers');
 const deepMerge = require('../util/deepMerge');
-const { validStackTraceModes, maxStackFrameLimit } = require('../util/constants');
+const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -101,8 +101,8 @@ let defaults = {
     http: {
       extraHttpHeadersToCapture: []
     },
-    stackTrace: 'all',
-    stackTraceLength: 10,
+    stackTrace: DEFAULT_STACK_TRACE_MODE,
+    stackTraceLength: DEFAULT_STACK_TRACE_LENGTH,
     disable: {},
     spanBatchingEnabled: false,
     disableW3cTraceCorrelation: false,
@@ -230,7 +230,6 @@ function normalizeTracingConfig(config) {
   normalizeTracingTransmission(config);
   normalizeTracingHttp(config);
   normalizeTracingStackTrace(config);
-  normalizeTracingStackTraceLength(config);
   normalizeSpanBatchingEnabled(config);
   normalizeDisableW3cTraceCorrelation(config);
   normalizeTracingKafka(config);
@@ -446,110 +445,27 @@ function parseHeadersEnvVar(envVarValue) {
 }
 
 /**
+ * Handles both stackTrace and stacTraceLength configuration
  * @param {InstanaConfig} config
  */
 function normalizeTracingStackTrace(config) {
-  // Give precedence to INSTANA_STACK_TRACE environment variable
-  if (process.env['INSTANA_STACK_TRACE']) {
-    const envValue = process.env['INSTANA_STACK_TRACE'].toLowerCase();
-    if (validStackTraceModes.includes(envValue)) {
-      config.tracing.stackTrace = envValue;
-    } else {
-      logger.warn(
-        `Invalid value for INSTANA_STACK_TRACE: "${process.env['INSTANA_STACK_TRACE']}". ` +
-          `Valid values are: ${validStackTraceModes.join(', ')}. Using default: ${defaults.tracing.stackTrace}`
-      );
-      config.tracing.stackTrace = defaults.tracing.stackTrace;
+  const stackTraceConfig = configNormalizers.stackTrace.normalize(config);
+
+  if (stackTraceConfig && typeof stackTraceConfig === 'object') {
+    if (stackTraceConfig.stackTrace) {
+      config.tracing.stackTrace = stackTraceConfig.stackTrace;
     }
-  } else if (config.tracing.stackTrace != null) {
-    if (typeof config.tracing.stackTrace === 'string') {
-      const configValue = config.tracing.stackTrace.toLowerCase();
-      if (validStackTraceModes.includes(configValue)) {
-        config.tracing.stackTrace = configValue;
-      } else {
-        logger.warn(
-          `Invalid value for config.tracing.stackTrace: "${config.tracing.stackTrace}". ` +
-            `Valid values are: ${validStackTraceModes.join(', ')}. Using default: ${defaults.tracing.stackTrace}`
-        );
-        config.tracing.stackTrace = defaults.tracing.stackTrace;
-      }
-    } else {
-      logger.warn(
-        `The value of config.tracing.stackTrace has the non-supported type ${typeof config.tracing.stackTrace} ` +
-          `(the value is "${config.tracing.stackTrace}"). Using default: ${defaults.tracing.stackTrace}`
-      );
-      config.tracing.stackTrace = defaults.tracing.stackTrace;
+
+    if (stackTraceConfig.stackTraceLength || stackTraceConfig.stackTraceLength === 0) {
+      config.tracing.stackTraceLength = stackTraceConfig.stackTraceLength;
     }
-  } else {
-    config.tracing.stackTrace = defaults.tracing.stackTrace;
-  }
-}
-
-/**
- * @param {InstanaConfig} config
- */
-function normalizeTracingStackTraceLength(config) {
-  // Give precedence to INSTANA_STACK_TRACE_LENGTH environment variable
-  if (process.env['INSTANA_STACK_TRACE_LENGTH']) {
-    parseStringStackTraceLength(config, process.env['INSTANA_STACK_TRACE_LENGTH']);
-  } else if (config.tracing.stackTraceLength != null) {
-    if (typeof config.tracing.stackTraceLength === 'number') {
-      config.tracing.stackTraceLength = normalizeNumericalStackTraceLength(config.tracing.stackTraceLength);
-    } else if (typeof config.tracing.stackTraceLength === 'string') {
-      parseStringStackTraceLength(config, config.tracing.stackTraceLength);
-    } else {
-      logger.warn(
-        `The value of config.tracing.stackTraceLength has the non-supported type ${typeof config.tracing
-          .stackTraceLength} (the value is "${config.tracing.stackTraceLength}").` +
-          `Assuming the default stack trace length ${defaults.tracing.stackTraceLength}.`
-      );
-      config.tracing.stackTraceLength = defaults.tracing.stackTraceLength;
-    }
-  } else {
-    config.tracing.stackTraceLength = defaults.tracing.stackTraceLength;
-  }
-}
-
-/**
- * @param {InstanaConfig} config
- * @param {string} value
- */
-function parseStringStackTraceLength(config, value) {
-  config.tracing.stackTraceLength = parseInt(value, 10);
-  if (!isNaN(config.tracing.stackTraceLength)) {
-    config.tracing.stackTraceLength = normalizeNumericalStackTraceLength(config.tracing.stackTraceLength);
-  } else {
-    logger.warn(
-      `The value of config.tracing.stackTraceLength ("${value}") has type string and cannot be parsed to a numerical ` +
-        `value. Assuming the default stack trace length ${defaults.tracing.stackTraceLength}.`
-    );
-    config.tracing.stackTraceLength = defaults.tracing.stackTraceLength;
-  }
-}
-
-/**
- * @param {number} numericalLength
- * @returns {number}
- */
-function normalizeNumericalStackTraceLength(numericalLength) {
-  // just in case folks provide non-integral numbers or negative numbers
-  const normalized = Math.abs(Math.round(numericalLength));
-
-  let finalValue = normalized;
-
-  if (normalized > maxStackFrameLimit) {
-    logger.warn(
-      `The provided value of config.tracing.stackTraceLength (${numericalLength}) exceeds the maximum limit of ${maxStackFrameLimit}. ` +
-        `Using the maximum value of ${maxStackFrameLimit}.`
-    );
-    finalValue = maxStackFrameLimit;
-  } else if (normalized !== numericalLength) {
-    logger.warn(
-      `Normalized the provided value of config.tracing.stackTraceLength (${numericalLength}) to ${finalValue}.`
-    );
   }
 
-  return finalValue;
+  config.tracing.stackTrace = config.tracing.stackTrace || defaults.tracing.stackTrace;
+  // ?? check allows 0 if configured, otherwise falls back to default.
+  config.tracing.stackTraceLength = config.tracing.stackTraceLength ?? defaults.tracing.stackTraceLength;
+
+  return;
 }
 
 /**

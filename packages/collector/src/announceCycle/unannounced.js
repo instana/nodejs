@@ -8,10 +8,7 @@
 const {
   secrets,
   tracing,
-  util: {
-    ensureNestedObjectExists,
-    constants: { validStackTraceModes }
-  },
+  util: { ensureNestedObjectExists },
   coreConfig: { configNormalizers }
 } = require('@instana/core');
 const { constants: tracingConstants } = tracing;
@@ -261,28 +258,14 @@ function applyStackTraceConfiguration(agentResponse) {
 
   ensureNestedObjectExists(agentOpts.config, ['tracing']);
 
-  const stackTrace = globalConfig['stack-trace'];
-  const stackTraceLength = globalConfig['stack-trace-length'];
+  const normalized = configNormalizers.stackTrace.normalizeAgentConfig(globalConfig);
 
-  if (stackTrace) {
-    const normalizedStackTraceMode = typeof stackTrace === 'string' ? stackTrace.toLowerCase() : stackTrace;
-
-    if (validStackTraceModes.includes(normalizedStackTraceMode)) {
-      agentOpts.config.tracing.stackTrace = normalizedStackTraceMode;
-    } else {
-      logger.warn(
-        `Invalid stack-trace value from agent: ${stackTrace}. ` +
-          `Valid values are: ${validStackTraceModes.join(', ')}. Ignoring configuration.`
-      );
-    }
+  if (normalized.stackTrace !== null) {
+    agentOpts.config.tracing.stackTrace = normalized.stackTrace;
   }
 
-  const parsedLength = typeof stackTraceLength === 'number' ? stackTraceLength : Number(stackTraceLength);
-
-  if (Number.isFinite(parsedLength)) {
-    agentOpts.config.tracing.stackTraceLength = parsedLength;
-  } else {
-    logger.warn(`Invalid stack-trace-length value: ${stackTraceLength}. Expected a number or numeric string.`);
+  if (normalized.stackTraceLength !== null) {
+    agentOpts.config.tracing.stackTraceLength = normalized.stackTraceLength;
   }
 }
 
