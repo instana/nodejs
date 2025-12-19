@@ -804,7 +804,7 @@ describe('unannounced state', () => {
         prepareAnnounceResponse({
           tracing: {
             global: {
-              stackTraceLength: 15
+              'stack-trace-length': 15
             }
           }
         });
@@ -848,8 +848,8 @@ describe('unannounced state', () => {
         prepareAnnounceResponse({
           tracing: {
             global: {
-              stackTrace: 'error',
-              stackTraceLength: 20
+              'stack-trace': 'error',
+              'stack-trace-length': 20
             }
           }
         });
@@ -872,7 +872,7 @@ describe('unannounced state', () => {
           tracing: {
             global: {
               'stack-trace': 'error',
-              stackTraceLength: 25
+              'stack-trace-length': 25
             }
           }
         });
@@ -895,9 +895,7 @@ describe('unannounced state', () => {
           tracing: {
             global: {
               'stack-trace': 'error',
-              stackTrace: 'all',
-              'stack-trace-length': 30,
-              stackTraceLength: 10
+              'stack-trace-length': 30
             }
           }
         });
@@ -919,7 +917,7 @@ describe('unannounced state', () => {
         prepareAnnounceResponse({
           tracing: {
             global: {
-              stackTrace: 'ERROR'
+              'stack-trace': 'ERROR'
             }
           }
         });
@@ -940,7 +938,7 @@ describe('unannounced state', () => {
         prepareAnnounceResponse({
           tracing: {
             global: {
-              stackTrace: 'none'
+              'stack-trace': 'none'
             }
           }
         });
@@ -983,7 +981,7 @@ describe('unannounced state', () => {
         prepareAnnounceResponse({
           tracing: {
             global: {
-              stackTrace: 'invalid-mode'
+              'stack-trace': 'invalid-mode'
             }
           }
         });
@@ -1003,7 +1001,7 @@ describe('unannounced state', () => {
         prepareAnnounceResponse({
           tracing: {
             global: {
-              stackTraceLength: 'not-a-number'
+              'stack-trace-length': 'not-a-number'
             }
           }
         });
@@ -1023,7 +1021,7 @@ describe('unannounced state', () => {
         prepareAnnounceResponse({
           tracing: {
             global: {
-              stackTraceLength: -5
+              'stack-trace-length': -5
             }
           }
         });
@@ -1044,7 +1042,7 @@ describe('unannounced state', () => {
         prepareAnnounceResponse({
           tracing: {
             global: {
-              stackTraceLength: 0
+              'stack-trace-length': 0
             }
           }
         });
@@ -1065,8 +1063,8 @@ describe('unannounced state', () => {
         prepareAnnounceResponse({
           tracing: {
             global: {
-              stackTrace: 'all',
-              stackTraceLength: 'invalid'
+              'stack-trace': 'all',
+              'stack-trace-length': 'invalid'
             }
           }
         });

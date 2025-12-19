@@ -173,8 +173,8 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
         before(async () => {
           await agentStubControls.startAgent({
             stackTraceConfig: {
-              stackTrace: 'all',
-              stackTraceLength: 3
+              'stack-trace': 'all',
+              'stack-trace-length': 3
             },
             ignoreEndpoints: true
           });
