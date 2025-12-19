@@ -21,9 +21,10 @@ exports.init = function init(config) {
   logger = config.logger;
 };
 
-//  TODO: Currently the precendence order is:
-//  in code config -> env variable -> agent -> default, because this was the existing behavior for stackTraceLength
-//  It needs to be revised as breaking change with https://jsw.ibm.com/browse/INSTA-817
+// TODO: The current precedence order is:
+// in-code config → environment variable → agent → default.
+// This order exists for backward compatibility with the original stackTraceLength behavior
+// and should be revised as a breaking change in INSTA-817
 
 /**
  *

@@ -256,7 +256,7 @@ function applyStackTraceConfiguration(agentResponse) {
   const globalConfig = agentResponse?.tracing?.global;
   if (!globalConfig) return;
 
-  ensureNestedObjectExists(agentOpts.config, ['tracing']);
+  ensureNestedObjectExists(agentOpts.config, ['tracing', 'global']);
 
   const normalized = configNormalizers.stackTrace.normalizeAgentConfig(globalConfig);
 

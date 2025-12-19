@@ -29,8 +29,6 @@ module.exports = function normalizeConfig(config = {}) {
   config.autoProfile = config.autoProfile || process.env.INSTANA_AUTO_PROFILE || defaults.autoProfile;
   config.tracing = config.tracing || {};
 
-  // Note: stackTraceLength is now handled by @instana/core's configNormalizers.stackTrace
-
   if (config.reportUnhandledPromiseRejections == null) {
     config.reportUnhandledPromiseRejections = false;
   }
