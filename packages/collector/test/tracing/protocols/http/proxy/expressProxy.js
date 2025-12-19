@@ -22,7 +22,8 @@ const instanaConfig = {
   level: 'warn',
   tracing: {
     enabled: true,
-    forceTransmissionStartingAt: 1
+    forceTransmissionStartingAt: 1,
+    stackTraceLength: process.env.STACK_TRACE_LENGTH_TEST != null ? process.env.STACK_TRACE_LENGTH_TEST : 10
   }
 };
 

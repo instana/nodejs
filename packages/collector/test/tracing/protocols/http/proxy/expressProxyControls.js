@@ -56,7 +56,7 @@ exports.start = async (opts = {}) => {
   env.UPSTREAM_PORT = opts.expressControls ? opts.expressControls.getPort() : null;
 
   if (opts.stackTraceLength != null) {
-    env.STACK_TRACE_LENGTH = opts.stackTraceLength;
+    env.STACK_TRACE_LENGTH_TEST = opts.stackTraceLength;
   }
 
   env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;

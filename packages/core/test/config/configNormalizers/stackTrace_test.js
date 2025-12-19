@@ -18,7 +18,6 @@ const {
 function resetEnv() {
   delete process.env.INSTANA_STACK_TRACE;
   delete process.env.INSTANA_STACK_TRACE_LENGTH;
-  delete process.env.STACK_TRACE_LENGTH;
 }
 
 describe('config.configNormalizers.stackTrace', () => {
@@ -277,56 +276,6 @@ describe('config.configNormalizers.stackTrace', () => {
         const result = stackTraceNormalizer.normalize(config);
 
         expect(result.stackTraceLength).to.equal(30);
-      });
-
-      it('should accept stack trace length from legacy STACK_TRACE_LENGTH env var', () => {
-        process.env.STACK_TRACE_LENGTH = '15';
-        const config = {};
-        const result = stackTraceNormalizer.normalize(config);
-
-        expect(result.stackTraceLength).to.equal(15);
-      });
-
-      it('should prioritize INSTANA_STACK_TRACE_LENGTH over STACK_TRACE_LENGTH', () => {
-        process.env.INSTANA_STACK_TRACE_LENGTH = '30';
-        process.env.STACK_TRACE_LENGTH = '15';
-        const config = {};
-        const result = stackTraceNormalizer.normalize(config);
-
-        expect(result.stackTraceLength).to.equal(30);
-      });
-
-      it('should prioritize config over environment variables', () => {
-        process.env.INSTANA_STACK_TRACE_LENGTH = '30';
-        process.env.STACK_TRACE_LENGTH = '15';
-        const config = {
-          tracing: {
-            stackTraceLength: 25
-          }
-        };
-        const result = stackTraceNormalizer.normalize(config);
-
-        expect(result.stackTraceLength).to.equal(25);
-      });
-
-      it('should fall back to STACK_TRACE_LENGTH when INSTANA_STACK_TRACE_LENGTH is invalid', () => {
-        process.env.INSTANA_STACK_TRACE_LENGTH = 'invalid';
-        process.env.STACK_TRACE_LENGTH = '15';
-        const config = {};
-        const result = stackTraceNormalizer.normalize(config);
-
-        expect(result.stackTraceLength).to.equal(15);
-        expect(logger.warn.calledOnce).to.be.true;
-      });
-
-      it('should warn and use default when all env vars are invalid', () => {
-        process.env.INSTANA_STACK_TRACE_LENGTH = 'invalid';
-        process.env.STACK_TRACE_LENGTH = 'also-invalid';
-        const config = {};
-        const result = stackTraceNormalizer.normalize(config);
-
-        expect(result.stackTraceLength).to.equal(DEFAULT_STACK_TRACE_LENGTH);
-        expect(logger.warn.calledTwice).to.be.true;
       });
 
       it('should handle zero value', () => {

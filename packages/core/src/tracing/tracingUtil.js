@@ -41,7 +41,7 @@ exports.activate = function activate(extraConfig) {
    * 1. In-code configuration
    * 2. Environment variables:
    *    - `INSTANA_STACK_TRACE`
-   *    - `INSTANA_STACK_TRACE_LENGTH` || `STACK_TRACE_LENGTH` (legacy)
+   *    - `INSTANA_STACK_TRACE_LENGTH`
    * 3. Agent configuration (loaded later)
    *
    * Since the agent configuration is loaded later, we first check
@@ -69,8 +69,7 @@ exports.activate = function activate(extraConfig) {
  * @returns {Array.<*>}
  */
 exports.getStackTrace = function getStackTrace(referenceFunction, drop) {
-  const effectiveLength = stackTraceLength;
-  return stackTrace.captureStackTrace(effectiveLength, referenceFunction, drop);
+  return stackTrace.captureStackTrace(stackTraceLength, referenceFunction, drop);
 };
 
 exports.generateRandomTraceId = function generateRandomTraceId() {
