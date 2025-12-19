@@ -221,7 +221,7 @@ describe('config.normalizeConfig', () => {
 
   it('should accept numerical custom stack trace length', () => {
     const config = coreConfig.normalize({ tracing: { stackTraceLength: 666 } });
-    expect(config.tracing.stackTraceLength).to.equal(50);
+    expect(config.tracing.stackTraceLength).to.equal(500);
   });
 
   it('should normalize numbers for custom stack trace length', () => {
@@ -233,7 +233,7 @@ describe('config.normalizeConfig', () => {
   it('should accept number-like strings for custom stack trace length', () => {
     const config = coreConfig.normalize({ tracing: { stackTraceLength: '1302' } });
     expect(config.tracing.stackTraceLength).to.be.a('number');
-    expect(config.tracing.stackTraceLength).to.equal(50);
+    expect(config.tracing.stackTraceLength).to.equal(500);
   });
 
   it('should normalize number-like strings for custom stack trace length', () => {
@@ -363,8 +363,7 @@ describe('config.normalizeConfig', () => {
 
   it('should handle very large negative stack trace length', () => {
     const config = coreConfig.normalize({ tracing: { stackTraceLength: -100 } });
-    // this will be 50 because we take the absolute value
-    expect(config.tracing.stackTraceLength).to.equal(50);
+    expect(config.tracing.stackTraceLength).to.equal(100);
   });
 
   it('should handle stack trace length as positive float', () => {
@@ -430,9 +429,9 @@ describe('config.normalizeConfig', () => {
   });
 
   it('should handle stack trace length from INSTANA_STACK_TRACE_LENGTH exceeding max', () => {
-    process.env.INSTANA_STACK_TRACE_LENGTH = '100';
+    process.env.INSTANA_STACK_TRACE_LENGTH = '1000';
     const config = coreConfig.normalize();
-    expect(config.tracing.stackTraceLength).to.equal(50);
+    expect(config.tracing.stackTraceLength).to.equal(500);
   });
 
   it('should handle stack trace length from INSTANA_STACK_TRACE_LENGTH as float', () => {

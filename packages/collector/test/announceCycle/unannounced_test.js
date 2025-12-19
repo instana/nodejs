@@ -1020,7 +1020,7 @@ describe('unannounced state', () => {
           transitionTo: () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
-                stackTraceLength: 1000
+                stackTraceLength: 500
               }
             });
             done();

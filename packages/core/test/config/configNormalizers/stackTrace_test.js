@@ -236,7 +236,7 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should cap at MAX_STACK_TRACE_LENGTH', () => {
         const config = {
           tracing: {
-            stackTraceLength: 100
+            stackTraceLength: 1000
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -405,7 +405,7 @@ describe('config.configNormalizers.stackTrace', () => {
       });
 
       it('should cap at MAX_STACK_TRACE_LENGTH from agent', () => {
-        const config = { stackTraceLength: 100 };
+        const config = { stackTraceLength: 1000 };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTraceLength).to.equal(MAX_STACK_TRACE_LENGTH);

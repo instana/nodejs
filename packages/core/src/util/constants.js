@@ -9,6 +9,6 @@
  * @type {string[]}
  */
 exports.validStackTraceModes = ['error', 'all', 'none'];
-exports.MAX_STACK_TRACE_LENGTH = 50;
+exports.MAX_STACK_TRACE_LENGTH = 500;
 exports.DEFAULT_STACK_TRACE_LENGTH = 10;
 exports.DEFAULT_STACK_TRACE_MODE = 'all';
