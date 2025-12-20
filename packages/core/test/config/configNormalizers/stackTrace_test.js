@@ -338,21 +338,21 @@ describe('config.configNormalizers.stackTrace', () => {
       });
 
       it('should accept valid stack trace mode from agent', () => {
-        const config = { stackTrace: 'error' };
+        const config = { 'stack-trace': 'error' };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTrace).to.equal('error');
       });
 
       it('should normalize agent stack trace mode to lowercase', () => {
-        const config = { stackTrace: 'ALL' };
+        const config = { 'stack-trace': 'ALL' };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTrace).to.equal('all');
       });
 
       it('should return null and warn for invalid agent stack trace mode', () => {
-        const config = { stackTrace: 'invalid' };
+        const config = { 'stack-trace': 'invalid' };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTrace).to.be.null;
@@ -361,14 +361,14 @@ describe('config.configNormalizers.stackTrace', () => {
       });
 
       it('should return null when agent stackTrace is null', () => {
-        const config = { stackTrace: null };
+        const config = { 'stack-trace': null };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTrace).to.be.null;
       });
 
       it('should return null when agent stackTrace is undefined', () => {
-        const config = { stackTrace: undefined };
+        const config = { 'stack-trace': undefined };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTrace).to.be.null;
@@ -377,42 +377,42 @@ describe('config.configNormalizers.stackTrace', () => {
 
     describe('stackTraceLength from agent', () => {
       it('should accept valid numeric stack trace length from agent', () => {
-        const config = { stackTraceLength: 20 };
+        const config = { 'stack-trace-length': 20 };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTraceLength).to.equal(20);
       });
 
       it('should accept string numeric stack trace length from agent', () => {
-        const config = { stackTraceLength: '25' };
+        const config = { 'stack-trace-length': '25' };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTraceLength).to.equal(25);
       });
 
       it('should round decimal values from agent', () => {
-        const config = { stackTraceLength: 15.7 };
+        const config = { 'stack-trace-length': 15.7 };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTraceLength).to.equal(16);
       });
 
       it('should convert negative values to positive from agent', () => {
-        const config = { stackTraceLength: -10 };
+        const config = { 'stack-trace-length': -10 };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTraceLength).to.equal(10);
       });
 
       it('should cap at MAX_STACK_TRACE_LENGTH from agent', () => {
-        const config = { stackTraceLength: 1000 };
+        const config = { 'stack-trace-length': 1000 };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTraceLength).to.equal(MAX_STACK_TRACE_LENGTH);
       });
 
       it('should return null and warn for invalid agent stack trace length', () => {
-        const config = { stackTraceLength: 'invalid' };
+        const config = { 'stack-trace-length': 'invalid' };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTraceLength).to.be.null;
@@ -421,21 +421,21 @@ describe('config.configNormalizers.stackTrace', () => {
       });
 
       it('should return null when agent stackTraceLength is null', () => {
-        const config = { stackTraceLength: null };
+        const config = { 'stack-trace-length': null };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTraceLength).to.be.null;
       });
 
       it('should return null when agent stackTraceLength is undefined', () => {
-        const config = { stackTraceLength: undefined };
+        const config = { 'stack-trace-length': undefined };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTraceLength).to.be.null;
       });
 
       it('should handle zero value from agent', () => {
-        const config = { stackTraceLength: 0 };
+        const config = { 'stack-trace-length': 0 };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTraceLength).to.equal(0);
@@ -445,8 +445,8 @@ describe('config.configNormalizers.stackTrace', () => {
     describe('combined agent config', () => {
       it('should normalize both stackTrace and stackTraceLength from agent', () => {
         const config = {
-          stackTrace: 'error',
-          stackTraceLength: 20
+          'stack-trace': 'error',
+          'stack-trace-length': 20
         };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
@@ -455,7 +455,7 @@ describe('config.configNormalizers.stackTrace', () => {
       });
 
       it('should handle partial agent config', () => {
-        const config = { stackTrace: 'none' };
+        const config = { 'stack-trace': 'none' };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTrace).to.equal('none');
@@ -472,8 +472,8 @@ describe('config.configNormalizers.stackTrace', () => {
 
       it('should handle agent config with both valid values', () => {
         const config = {
-          stackTrace: 'error',
-          stackTraceLength: 30
+          'stack-trace': 'error',
+          'stack-trace-length': 30
         };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
@@ -483,8 +483,8 @@ describe('config.configNormalizers.stackTrace', () => {
 
       it('should handle agent config with one valid and one invalid value', () => {
         const config = {
-          stackTrace: 'error',
-          stackTraceLength: 'not-a-number'
+          'stack-trace': 'error',
+          'stack-trace-length': 'not-a-number'
         };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
@@ -494,7 +494,7 @@ describe('config.configNormalizers.stackTrace', () => {
       });
 
       it('should handle non-string agent stackTrace that is not a valid mode', () => {
-        const config = { stackTrace: 123 };
+        const config = { 'stack-trace': 123 };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTrace).to.be.null;
@@ -502,7 +502,7 @@ describe('config.configNormalizers.stackTrace', () => {
       });
 
       it('should handle Infinity for agent stackTraceLength', () => {
-        const config = { stackTraceLength: Infinity };
+        const config = { 'stack-trace-length': Infinity };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTraceLength).to.be.null;
@@ -510,7 +510,7 @@ describe('config.configNormalizers.stackTrace', () => {
       });
 
       it('should handle NaN for agent stackTraceLength', () => {
-        const config = { stackTraceLength: NaN };
+        const config = { 'stack-trace-length': NaN };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTraceLength).to.be.null;
@@ -518,7 +518,7 @@ describe('config.configNormalizers.stackTrace', () => {
       });
 
       it('should handle object for agent stackTraceLength', () => {
-        const config = { stackTraceLength: {} };
+        const config = { 'stack-trace-length': {} };
         const result = stackTraceNormalizer.normalizeAgentConfig(config);
 
         expect(result.stackTraceLength).to.be.null;
