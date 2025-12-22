@@ -240,13 +240,6 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
               'stack-trace-length': 3
             }
           });
-        });
-
-        after(async () => {
-          await agentStubControls.stopAgent();
-        });
-
-        before(async () => {
           await expressControls.start({
             agentControls: agentStubControls,
             EXPRESS_VERSION: version
@@ -262,6 +255,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
         after(async () => {
           await expressControls.stop();
           await expressProxyControls.stop();
+          await agentStubControls.stopAgent();
         });
 
         beforeEach(async () => {
@@ -271,7 +265,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
         beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
         beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
 
-        it('should use in-code config stackTraceLength over agent config', () =>
+        it('should use agent config stackTraceLength over in-code config', () =>
           expressProxyControls
             .sendRequest({
               method: 'POST',
@@ -288,9 +282,66 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
                     span => expect(span.k).to.equal(constants.EXIT)
                   ]);
 
-                  // in code has precedence over agent config
+                  // currently agent has precedence over other configs
                   expect(httpClientSpan.stack).to.be.an('array');
-                  expect(httpClientSpan.stack.length).to.equal(4);
+                  expect(httpClientSpan.stack.length).to.equal(3);
+                })
+              )
+            ));
+      });
+
+      describe('when both agent and in-code config is provided and agent is 0', () => {
+        before(async () => {
+          await agentStubControls.startAgent({
+            stackTraceConfig: {
+              'stack-trace-length': 0
+            }
+          });
+          await expressControls.start({
+            agentControls: agentStubControls,
+            EXPRESS_VERSION: version
+          });
+          await expressProxyControls.start({
+            agentControls: agentStubControls,
+            expressControls,
+            stackTraceLength: 4,
+            EXPRESS_VERSION: version
+          });
+        });
+
+        after(async () => {
+          await expressControls.stop();
+          await expressProxyControls.stop();
+          await agentStubControls.stopAgent();
+        });
+
+        beforeEach(async () => {
+          await agentStubControls.clearReceivedTraceData();
+        });
+
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
+
+        it('should use agent config stackTraceLength over in-code config', () =>
+          expressProxyControls
+            .sendRequest({
+              method: 'POST',
+              path: '/checkout',
+              responseStatus: 201
+            })
+            .then(() =>
+              testUtils.retry(() =>
+                agentStubControls.getSpans().then(spans => {
+                  expect(spans.length).to.be.at.least(2);
+
+                  const httpClientSpan = testUtils.expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.client'),
+                    span => expect(span.k).to.equal(constants.EXIT)
+                  ]);
+
+                  // currently agent has precedence over other configs
+                  expect(httpClientSpan.stack).to.be.an('array');
+                  expect(httpClientSpan.stack.length).to.equal(0);
                 })
               )
             ));
