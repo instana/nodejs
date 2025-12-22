@@ -20,7 +20,7 @@ exports.init = function init(config) {
 };
 
 // The precedence order is:
-//       agent → programmatic config → environment variable → default.
+//       agent → tracing.global.stackTrace → tracing.stackTraceLength → environment variable → default.
 
 /**
  *
@@ -71,32 +71,48 @@ exports.normalizeAgentConfig = function normalizeAgentConfig(config) {
 
 /**
  * Normalizes stack trace mode configuration.
- * Priority: agent → programmatic config → env var → default
+ * Priority: agent → tracing.global.stackTrace → tracing.stackTrace → env var → default
  *
  * @param {*} tracingObj - The tracing object containing stackTrace
  * @param {boolean} [isAgentConfig=false] - Whether this is from agent config
  * @returns {string | null} - Normalized value or null if from agent and invalid
  */
 function normalizeStackTraceMode(tracingObj, isAgentConfig = false) {
-  const configPath = isAgentConfig ? 'stack-trace value from agent' : 'config.tracing.stackTrace';
   const envVar = 'INSTANA_STACK_TRACE';
 
-  if (tracingObj.stackTrace != null) {
-    const validated = validateStackTraceMode(tracingObj.stackTrace, configPath);
-    if (validated != null) {
-      return validated;
-    }
-  }
-
-  // For agent config normalisation, we don't check environment variables or use defaults
+  // For agent config, only validate the agent value
   if (isAgentConfig) {
+    const configPath = 'stack-trace value from agent';
+
+    const validatedAgentConfig = validateStackTraceMode(tracingObj?.stackTrace, configPath);
+
+    if (validatedAgentConfig != null) {
+      return validatedAgentConfig;
+    }
+
     return null;
   }
 
+  // Check tracing.global.stackTrace first (highest priority for in-code config)
+  const validatedConfigGlobal = validateStackTraceMode(
+    tracingObj?.global?.stackTrace,
+    'config.tracing.global.stackTrace'
+  );
+  if (validatedConfigGlobal != null) {
+    return validatedConfigGlobal;
+  }
+
+  // Check tracing.stackTrace (backward compatibility, lower priority)
+  const validatedConfig = validateStackTraceMode(tracingObj?.stackTrace, 'config.tracing.stackTrace');
+  if (validatedConfig != null) {
+    return validatedConfig;
+  }
+
+  // Check environment variable
   if (process.env[envVar]) {
-    const validated = validateStackTraceMode(process.env[envVar], envVar);
-    if (validated != null) {
-      return validated;
+    const validatedEnv = validateStackTraceMode(process.env[envVar], envVar);
+    if (validatedEnv != null) {
+      return validatedEnv;
     }
   }
 
@@ -105,32 +121,47 @@ function normalizeStackTraceMode(tracingObj, isAgentConfig = false) {
 
 /**
  * Normalizes stack trace length configuration.
- * Priority: agent → programmatic config → env var → default
+ * Priority: agent → tracing.global.stackTraceLength → tracing.stackTraceLength → env var → default
  *
  * @param {*} tracingObj - The tracing object containing stackTraceLength
  * @param {boolean} [isAgentConfig=false] - Whether this is from agent config
  * @returns {number | null} - Normalized value or null if from agent and invalid
  */
 function normalizeStackTraceLength(tracingObj, isAgentConfig = false) {
-  const configPath = isAgentConfig ? 'stack-trace-length value from agent' : 'config.tracing.stackTraceLength';
   const envVar = 'INSTANA_STACK_TRACE_LENGTH';
 
-  if (tracingObj.stackTraceLength != null) {
-    const validated = validateStackTraceLength(tracingObj.stackTraceLength, configPath);
-    if (validated != null) {
-      return validated;
-    }
-  }
-
-  // For agent config normalisation, we don't check environment variables or use defaults
+  // For agent config, only validate the agent value
   if (isAgentConfig) {
+    const configPath = 'stack-trace-length value from agent';
+
+    const validatedAgentConfig = validateStackTraceLength(tracingObj?.stackTraceLength, configPath);
+    if (validatedAgentConfig != null) {
+      return validatedAgentConfig;
+    }
+
     return null;
   }
 
+  // Check tracing.global.stackTraceLength first (highest priority for in-code config)
+  const validatedConfigGlobal = validateStackTraceLength(
+    tracingObj?.global?.stackTraceLength,
+    'config.tracing.global.stackTraceLength'
+  );
+  if (validatedConfigGlobal != null) {
+    return validatedConfigGlobal;
+  }
+
+  // Check tracing.stackTraceLength (backward compatibility, lower priority)
+  const validatedConfig = validateStackTraceLength(tracingObj?.stackTraceLength, 'config.tracing.stackTraceLength');
+  if (validatedConfig != null) {
+    return validatedConfig;
+  }
+
+  // Check environment variable
   if (process.env[envVar]) {
-    const validated = validateStackTraceLength(process.env[envVar], envVar);
-    if (validated != null) {
-      return validated;
+    const validatedEnv = validateStackTraceLength(process.env[envVar], envVar);
+    if (validatedEnv != null) {
+      return validatedEnv;
     }
   }
 

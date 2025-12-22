@@ -52,7 +52,9 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should accept valid stack trace mode from config (all)', () => {
         const config = {
           tracing: {
-            stackTrace: 'all'
+            global: {
+              stackTrace: 'all'
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -63,7 +65,9 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should accept valid stack trace mode from config (error)', () => {
         const config = {
           tracing: {
-            stackTrace: 'error'
+            global: {
+              stackTrace: 'error'
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -74,7 +78,9 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should accept valid stack trace mode from config (none)', () => {
         const config = {
           tracing: {
-            stackTrace: 'none'
+            global: {
+              stackTrace: 'none'
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -85,7 +91,9 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should normalize stack trace mode to lowercase', () => {
         const config = {
           tracing: {
-            stackTrace: 'ALL'
+            global: {
+              stackTrace: 'ALL'
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -96,7 +104,9 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should normalize mixed case stack trace mode', () => {
         const config = {
           tracing: {
-            stackTrace: 'ErRoR'
+            global: {
+              stackTrace: 'ErRoR'
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -107,20 +117,24 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should warn and use default for invalid stack trace mode', () => {
         const config = {
           tracing: {
-            stackTrace: 'invalid'
+            global: {
+              stackTrace: 'invalid'
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
 
         expect(result.stackTrace).to.equal(DEFAULT_STACK_TRACE_MODE);
         expect(logger.warn.calledOnce).to.be.true;
-        expect(logger.warn.firstCall.args[0]).to.include('Invalid value for config.tracing.stackTrace');
+        expect(logger.warn.firstCall.args[0]).to.include('Invalid value for config.tracing.global.stackTrace');
       });
 
       it('should warn and use default for non-string stack trace mode', () => {
         const config = {
           tracing: {
-            stackTrace: 123
+            global: {
+              stackTrace: 123
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -160,7 +174,9 @@ describe('config.configNormalizers.stackTrace', () => {
         process.env.INSTANA_STACK_TRACE = 'error';
         const config = {
           tracing: {
-            stackTrace: 'none'
+            global: {
+              stackTrace: 'none'
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -172,7 +188,9 @@ describe('config.configNormalizers.stackTrace', () => {
         process.env.INSTANA_STACK_TRACE = 'error';
         const config = {
           tracing: {
-            stackTrace: 'invalid'
+            global: {
+              stackTrace: 'invalid'
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -192,7 +210,9 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should accept valid numeric stack trace length from config', () => {
         const config = {
           tracing: {
-            stackTraceLength: 20
+            global: {
+              stackTraceLength: 20
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -203,7 +223,9 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should accept string numeric stack trace length from config', () => {
         const config = {
           tracing: {
-            stackTraceLength: '25'
+            global: {
+              stackTraceLength: '25'
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -214,7 +236,9 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should round decimal values', () => {
         const config = {
           tracing: {
-            stackTraceLength: 15.7
+            global: {
+              stackTraceLength: 15.7
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -225,7 +249,9 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should convert negative values to positive', () => {
         const config = {
           tracing: {
-            stackTraceLength: -10
+            global: {
+              stackTraceLength: -10
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -236,7 +262,9 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should cap at MAX_STACK_TRACE_LENGTH', () => {
         const config = {
           tracing: {
-            stackTraceLength: 1000
+            global: {
+              stackTraceLength: 1000
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -247,7 +275,9 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should warn and use default for non-numeric string', () => {
         const config = {
           tracing: {
-            stackTraceLength: 'invalid'
+            global: {
+              stackTraceLength: 'invalid'
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -260,7 +290,9 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should warn and use default for non-supported type', () => {
         const config = {
           tracing: {
-            stackTraceLength: {}
+            global: {
+              stackTraceLength: {}
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -281,7 +313,9 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should handle zero value', () => {
         const config = {
           tracing: {
-            stackTraceLength: 0
+            global: {
+              stackTraceLength: 0
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -294,8 +328,10 @@ describe('config.configNormalizers.stackTrace', () => {
       it('should normalize both stackTrace and stackTraceLength', () => {
         const config = {
           tracing: {
-            stackTrace: 'error',
-            stackTraceLength: 20
+            global: {
+              stackTrace: 'error',
+              stackTraceLength: 20
+            }
           }
         };
         const result = stackTraceNormalizer.normalize(config);
@@ -310,6 +346,120 @@ describe('config.configNormalizers.stackTrace', () => {
 
         expect(config.tracing).to.exist;
         expect(config.tracing).to.be.an('object');
+      });
+    });
+
+    describe('tracing.stackTraceLength legacy config paths', () => {
+      describe('stackTraceLength', () => {
+        it('should accept valid stack trace length from tracing.stackTraceLength', () => {
+          const config = {
+            tracing: {
+              stackTraceLength: 25
+            }
+          };
+          const result = stackTraceNormalizer.normalize(config);
+
+          expect(result.stackTraceLength).to.equal(25);
+        });
+
+        it('should prioritize tracing.global.stackTraceLength over tracing.stackTraceLength', () => {
+          const config = {
+            tracing: {
+              global: {
+                stackTraceLength: 30
+              },
+              stackTraceLength: 20
+            }
+          };
+          const result = stackTraceNormalizer.normalize(config);
+
+          expect(result.stackTraceLength).to.equal(30);
+        });
+
+        it('should fall back to tracing.stackTraceLength when tracing.global.stackTraceLength is not set', () => {
+          const config = {
+            tracing: {
+              global: {},
+              stackTraceLength: 15
+            }
+          };
+          const result = stackTraceNormalizer.normalize(config);
+
+          expect(result.stackTraceLength).to.equal(15);
+        });
+
+        it('should prioritize tracing.stackTraceLength over environment variable', () => {
+          process.env.INSTANA_STACK_TRACE_LENGTH = '40';
+          const config = {
+            tracing: {
+              stackTraceLength: 25
+            }
+          };
+          const result = stackTraceNormalizer.normalize(config);
+
+          expect(result.stackTraceLength).to.equal(25);
+        });
+
+        it('should fall back to env var when tracing.stackTraceLength is invalid', () => {
+          process.env.INSTANA_STACK_TRACE_LENGTH = '35';
+          const config = {
+            tracing: {
+              stackTraceLength: 'invalid'
+            }
+          };
+          const result = stackTraceNormalizer.normalize(config);
+
+          expect(result.stackTraceLength).to.equal(35);
+          expect(logger.warn.calledOnce).to.be.true;
+        });
+      });
+
+      describe('combined tracing config', () => {
+        it('should normalize both stackTrace and stackTraceLength from tracing.global', () => {
+          const config = {
+            tracing: {
+              global: {
+                stackTrace: 'error',
+                stackTraceLength: 25
+              }
+            }
+          };
+          const result = stackTraceNormalizer.normalize(config);
+
+          expect(result.stackTrace).to.equal('error');
+          expect(result.stackTraceLength).to.equal(25);
+        });
+
+        it('should handle mixed config with tracing.global and tracing direct properties', () => {
+          const config = {
+            tracing: {
+              global: {
+                stackTrace: 'error'
+              },
+              stackTraceLength: 20
+            }
+          };
+          const result = stackTraceNormalizer.normalize(config);
+
+          expect(result.stackTrace).to.equal('error');
+          expect(result.stackTraceLength).to.equal(20);
+        });
+
+        it('should prioritize tracing.global for both when both levels are present', () => {
+          const config = {
+            tracing: {
+              global: {
+                stackTrace: 'none',
+                stackTraceLength: 30
+              },
+              stackTraceLength: 10
+            }
+          };
+          const result = stackTraceNormalizer.normalize(config);
+
+          expect(result.stackTrace).to.equal('none');
+          expect(result.stackTraceLength).to.equal(30);
+        });
       });
     });
   });
@@ -679,7 +829,9 @@ describe('config.configNormalizers.stackTrace', () => {
     it('should handle whitespace-only string for stackTrace mode', () => {
       const config = {
         tracing: {
-          stackTrace: '   '
+          global: {
+            stackTrace: '   '
+          }
         }
       };
       const result = stackTraceNormalizer.normalize(config);
@@ -691,7 +843,9 @@ describe('config.configNormalizers.stackTrace', () => {
     it('should handle boolean for stackTrace mode', () => {
       const config = {
         tracing: {
-          stackTrace: true
+          global: {
+            stackTrace: true
+          }
         }
       };
       const result = stackTraceNormalizer.normalize(config);
@@ -703,7 +857,9 @@ describe('config.configNormalizers.stackTrace', () => {
     it('should handle array for stackTrace mode', () => {
       const config = {
         tracing: {
-          stackTrace: ['error']
+          global: {
+            stackTrace: ['error']
+          }
         }
       };
       const result = stackTraceNormalizer.normalize(config);
@@ -715,7 +871,9 @@ describe('config.configNormalizers.stackTrace', () => {
     it('should handle object for stackTrace mode', () => {
       const config = {
         tracing: {
-          stackTrace: { mode: 'error' }
+          global: {
+            stackTrace: { mode: 'error' }
+          }
         }
       };
       const result = stackTraceNormalizer.normalize(config);

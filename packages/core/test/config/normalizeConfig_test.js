@@ -273,17 +273,17 @@ describe('config.normalizeConfig', () => {
   });
 
   it('should accept valid stack trace mode from config', () => {
-    const config = coreConfig.normalize({ tracing: { stackTrace: 'error' } });
+    const config = coreConfig.normalize({ tracing: { global: { stackTrace: 'error' } } });
     expect(config.tracing.stackTrace).to.equal('error');
   });
 
   it('should accept "none" stack trace mode from config', () => {
-    const config = coreConfig.normalize({ tracing: { stackTrace: 'none' } });
+    const config = coreConfig.normalize({ tracing: { global: { stackTrace: 'none' } } });
     expect(config.tracing.stackTrace).to.equal('none');
   });
 
   it('should normalize stack trace mode to lowercase from config', () => {
-    const config = coreConfig.normalize({ tracing: { stackTrace: 'ERROR' } });
+    const config = coreConfig.normalize({ tracing: { global: { stackTrace: 'ERROR' } } });
     expect(config.tracing.stackTrace).to.equal('error');
   });
 
@@ -301,12 +301,12 @@ describe('config.normalizeConfig', () => {
 
   it('should give precedence to config over INSTANA_STACK_TRACE', () => {
     process.env.INSTANA_STACK_TRACE = 'none';
-    const config = coreConfig.normalize({ tracing: { stackTrace: 'all' } });
+    const config = coreConfig.normalize({ tracing: { global: { stackTrace: 'all' } } });
     expect(config.tracing.stackTrace).to.equal('all');
   });
 
   it('should reject invalid stack trace mode from config and fallback to default', () => {
-    const config = coreConfig.normalize({ tracing: { stackTrace: 'invalid' } });
+    const config = coreConfig.normalize({ tracing: { global: { stackTrace: 'invalid' } } });
     expect(config.tracing.stackTrace).to.equal('all');
   });
 
@@ -317,37 +317,37 @@ describe('config.normalizeConfig', () => {
   });
 
   it('should reject non-string stack trace mode from config', () => {
-    const config = coreConfig.normalize({ tracing: { stackTrace: 123 } });
+    const config = coreConfig.normalize({ tracing: { global: { stackTrace: 123 } } });
     expect(config.tracing.stackTrace).to.equal('all');
   });
 
   it('should handle null stack trace mode from config', () => {
-    const config = coreConfig.normalize({ tracing: { stackTrace: null } });
+    const config = coreConfig.normalize({ tracing: { global: { stackTrace: null } } });
     expect(config.tracing.stackTrace).to.equal('all');
   });
 
   it('should handle undefined stack trace mode from config', () => {
-    const config = coreConfig.normalize({ tracing: { stackTrace: undefined } });
+    const config = coreConfig.normalize({ tracing: { global: { stackTrace: undefined } } });
     expect(config.tracing.stackTrace).to.equal('all');
   });
 
   it('should handle empty string stack trace mode from config', () => {
-    const config = coreConfig.normalize({ tracing: { stackTrace: '' } });
+    const config = coreConfig.normalize({ tracing: { global: { stackTrace: '' } } });
     expect(config.tracing.stackTrace).to.equal('all');
   });
 
   it('should handle boolean stack trace mode from config', () => {
-    const config = coreConfig.normalize({ tracing: { stackTrace: true } });
+    const config = coreConfig.normalize({ tracing: { global: { stackTrace: true } } });
     expect(config.tracing.stackTrace).to.equal('all');
   });
 
   it('should handle object stack trace mode from config', () => {
-    const config = coreConfig.normalize({ tracing: { stackTrace: {} } });
+    const config = coreConfig.normalize({ tracing: { global: { stackTrace: {} } } });
     expect(config.tracing.stackTrace).to.equal('all');
   });
 
   it('should handle array stack trace mode from config', () => {
-    const config = coreConfig.normalize({ tracing: { stackTrace: ['error'] } });
+    const config = coreConfig.normalize({ tracing: { global: { stackTrace: ['error'] } } });
     expect(config.tracing.stackTrace).to.equal('all');
   });
 
@@ -475,8 +475,10 @@ describe('config.normalizeConfig', () => {
   it('should handle config with both stackTrace and stackTraceLength', () => {
     const config = coreConfig.normalize({
       tracing: {
-        stackTrace: 'none',
-        stackTraceLength: 30
+        global: {
+          stackTrace: 'none',
+          stackTraceLength: 30
+        }
       }
     });
     expect(config.tracing.stackTrace).to.equal('none');
@@ -488,8 +490,10 @@ describe('config.normalizeConfig', () => {
     process.env.INSTANA_STACK_TRACE_LENGTH = '15';
     const config = coreConfig.normalize({
       tracing: {
-        stackTrace: 'all',
-        stackTraceLength: 40
+        global: {
+          stackTrace: 'all',
+          stackTraceLength: 40
+        }
       }
     });
     expect(config.tracing.stackTrace).to.equal('all');
