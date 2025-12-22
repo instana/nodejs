@@ -130,8 +130,35 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
                 testUtils.expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.client'),
                   span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.data.http.status).to.equal(201),
                   span => expect(span.stack[2].m).to.equal('fetch'),
                   span => expect(span.stack[2].c).to.contains('node-fetch')
+                ]);
+              })
+            )
+          ));
+
+      it('must replace error.stack with span.stack when error occurs', () =>
+        expressProxyControls
+          .sendRequest({
+            method: 'GET',
+            path: '/trigger-error'
+          })
+          .then(() =>
+            testUtils.retry(() =>
+              agentControls.getSpans().then(spans => {
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.client'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.ec).to.equal(1),
+                  span => expect(span.data.http.error).to.exist,
+                  span => {
+                    expect(span.stack).to.be.an('array');
+                    expect(span.stack.length).to.be.greaterThan(0);
+                    expect(span.stack[0]).to.have.property('m');
+                    expect(span.stack[0]).to.have.property('c');
+                    expect(span.stack[0]).to.have.property('n');
+                  }
                 ]);
               })
             )

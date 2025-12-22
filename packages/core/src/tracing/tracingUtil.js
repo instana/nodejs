@@ -160,17 +160,6 @@ exports.renderTraceContextToBuffer = function renderTraceContextToBuffer(span) {
 };
 
 /**
- * @param {Error} err
- * @returns {string}
- */
-exports.getErrorDetails = function getErrorDetails(err) {
-  if (err == null) {
-    return undefined;
-  }
-  return String(err.stack || err.message || err).substring(0, 500);
-};
-
-/**
  * @param {string} stmt
  * @returns {string}
  */
@@ -275,4 +264,86 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
     originalCallback,
     callbackIndex
   };
+};
+
+/**
+ * Sets error details on a span for a specific technology.
+ * Handles different error formats: strings, objects with details/message/code properties.
+ * Supports nested paths for SDK spans via dot-separated strings or arrays.
+ *
+ * Examples:
+ * - setErrorDetails(span, error, 'nats') // flat key
+ * - setErrorDetails(span, error, 'sdk.custom.tags.message') // dot-separated string
+ * - setErrorDetails(span, error, ['sdk', 'custom', 'tags', 'message']) // array path
+ *
+ * @param {import('../core').InstanaBaseSpan} span - The span to update
+ * @param {Error | string | Object} error - The error object, error string, or object with error properties
+ * @param {string | Array<string>} technology - The technology name or nested path
+ */
+exports.setErrorDetails = function setErrorDetails(span, error, technology) {
+  try {
+    if (!error) {
+      return;
+    }
+
+    // Normalize error to object format at the beginning
+    /** @type {{ message?: string, stack?: string | null, name?: string, code?: string, details?: string }} */
+    let normalizedError;
+
+    if (typeof error === 'string') {
+      normalizedError = { message: error, stack: null };
+    } else {
+      normalizedError = error;
+    }
+
+    const extractErrorMessage = () => {
+      if (normalizedError?.details) {
+        return `${normalizedError.name || 'Error'}: ${normalizedError.details}`;
+      } else if (normalizedError?.message) {
+        return `${normalizedError.name || 'Error'}: ${normalizedError.message}`;
+      } else {
+        return normalizedError?.code || 'No error message found.';
+      }
+    };
+
+    let errorPath = null;
+    if (Array.isArray(technology)) {
+      errorPath = technology;
+    } else if (typeof technology === 'string' && technology.includes('.')) {
+      errorPath = technology.split('.');
+    }
+
+    if (errorPath) {
+      let target = span.data;
+
+      // Traverse the object path and create missing nested objects along the way
+      // Without this, deeper properties would fail to assign if their parent objects don't exist
+      for (let i = 0; i < errorPath.length - 1; i++) {
+        const key = errorPath[i];
+        if (!target[key]) {
+          target[key] = {};
+        }
+        target = target[key];
+      }
+
+      const errorKey = errorPath[errorPath.length - 1];
+
+      if (!target[errorKey]) {
+        target[errorKey] = extractErrorMessage().substring(0, 200);
+      }
+    } else if (typeof technology === 'string' && technology && span.data?.[technology]) {
+      if (!span.data[technology].error) {
+        span.data[technology].error = extractErrorMessage().substring(0, 200);
+      }
+    }
+
+    if (normalizedError.stack) {
+      const stackArray = stackTrace.parseStackTraceFromString(normalizedError.stack);
+      span.stack = stackArray.length > 0 ? stackArray : span.stack || [];
+    } else {
+      span.stack = span.stack || [];
+    }
+  } catch (err) {
+    logger.error('Failed to set error details on span:', err);
+  }
 };

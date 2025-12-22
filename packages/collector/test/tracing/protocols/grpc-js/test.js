@@ -398,7 +398,7 @@ function checkGrpcClientSpan({ httpEntry, clientControls, url, erroneous = false
     expectations = expectations.concat([
       span => expect(span.ec).to.be.equal(1),
       span => expect(span.error).to.not.exist,
-      span => expect(span.data.rpc.error).to.equal('Boom!')
+      span => expect(span.data.rpc.error).to.equal('Error: Boom!')
     ]);
   } else {
     expectations = expectations.concat([
@@ -426,7 +426,7 @@ function checkGrpcServerSpan({ grpcExit, serverControls, url, erroneous }) {
     expectations = expectations.concat([
       span => expect(span.ec).to.be.equal(1),
       span => expect(span.error).to.not.exist,
-      span => expect(span.data.rpc.error).to.equal('Boom!')
+      span => expect(span.data.rpc.error).to.equal('Error: Boom!')
     ]);
   } else {
     expectations = expectations.concat([
