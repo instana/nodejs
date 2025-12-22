@@ -70,7 +70,6 @@ describe('util.normalizeConfig', () => {
     expect(config.agentHost).to.equal('127.0.0.1');
     expect(config.agentPort).to.equal(42699);
     expect(config.tracing).to.be.an('object');
-    expect(config.tracing.stackTraceLength).to.equal(10);
     expect(config.reportUnhandledPromiseRejections).to.be.false;
   }
 });

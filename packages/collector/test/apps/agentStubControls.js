@@ -64,6 +64,10 @@ class AgentStubControls {
       env.AGENT_DISABLE_TRACING = JSON.stringify(opts.disable);
     }
 
+    if (opts.stackTraceConfig) {
+      env.STACK_TRACE_CONFIG = JSON.stringify(opts.stackTraceConfig);
+    }
+
     this.agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {
       stdio: config.getAppStdio(),
       env

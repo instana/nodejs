@@ -10,18 +10,57 @@ const path = require('path');
 const StringDecoder = require('string_decoder').StringDecoder;
 
 const stackTrace = require('../util/stackTrace');
+const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
 const hexDecoder = new StringDecoder('hex');
-let stackTraceLength = 10;
-
+/**
+ * @type {number}
+ */
+let stackTraceLength;
+/**
+ * @type {string}
+ */
+let stackTraceMode;
 /**
  * @param {import('../config').InstanaConfig} config
  */
 exports.init = function (config) {
   logger = config.logger;
-  stackTraceLength = config.tracing.stackTraceLength;
+  stackTraceLength = config?.tracing?.stackTraceLength;
+  stackTraceMode = config?.tracing?.stackTrace;
+};
+
+/**
+ * @param {import('@instana/collector/src/types/collector').AgentConfig} extraConfig
+ */
+exports.activate = function activate(extraConfig) {
+  /**
+   * Configuration priority order:
+   * 1. In-code configuration
+   * 2. Environment variables:
+   *    - `INSTANA_STACK_TRACE`
+   *    - `INSTANA_STACK_TRACE_LENGTH`
+   * 3. Agent configuration (loaded later)
+   *
+   * Since the agent configuration is loaded later, we first check
+   * that stackTrace and stackTraceLength are still at their default values.
+   * If they are at default values, we are allowed to fall back to
+   * the agent's configuration.
+   *
+   * TODO: Perform a major refactoring of configuration priority ordering in INSTA-817.
+   */
+
+  const agentTraceConfig = extraConfig?.tracing;
+
+  if (agentTraceConfig?.stackTrace && stackTraceMode === DEFAULT_STACK_TRACE_MODE) {
+    stackTraceMode = agentTraceConfig.stackTrace;
+  }
+
+  if (agentTraceConfig?.stackTraceLength != null && stackTraceLength === DEFAULT_STACK_TRACE_LENGTH) {
+    stackTraceLength = agentTraceConfig.stackTraceLength;
+  }
 };
 
 /**
@@ -30,6 +69,10 @@ exports.init = function (config) {
  * @returns {Array.<*>}
  */
 exports.getStackTrace = function getStackTrace(referenceFunction, drop) {
+  // If stackTraceMode is not 'all', do not generate stack traces
+  if (stackTraceMode !== 'all') {
+    return [];
+  }
   return stackTrace.captureStackTrace(stackTraceLength, referenceFunction, drop);
 };
 
@@ -337,9 +380,19 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
       }
     }
 
+    // Handle stack trace based on stackTraceMode
+    // If mode is 'none', do not generate stack traces
+    // If mode is 'error' or 'all', generate stack traces (overwrite existing)
+    if (stackTraceMode === 'none') {
+      // Do not overwrite stack traces
+      span.stack = span.stack || [];
+      return;
+    }
+
+    // mode is 'error' or 'all' - generate and overwrite stack traces with error
     if (normalizedError.stack) {
       const stackArray = stackTrace.parseStackTraceFromString(normalizedError.stack);
-      span.stack = stackArray.length > 0 ? stackArray : span.stack || [];
+      span.stack = stackArray.length > 0 ? stackArray.slice(0, stackTraceLength) : span.stack || [];
     } else {
       span.stack = span.stack || [];
     }
