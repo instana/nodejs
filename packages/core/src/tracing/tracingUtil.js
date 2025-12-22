@@ -69,6 +69,10 @@ exports.activate = function activate(extraConfig) {
  * @returns {Array.<*>}
  */
 exports.getStackTrace = function getStackTrace(referenceFunction, drop) {
+  // If stackTraceMode is not 'all', do not generate stack traces
+  if (stackTraceMode !== 'all') {
+    return [];
+  }
   return stackTrace.captureStackTrace(stackTraceLength, referenceFunction, drop);
 };
 
@@ -376,6 +380,16 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
       }
     }
 
+    // Handle stack trace based on stackTraceMode
+    // If mode is 'none', do not generate stack traces
+    // If mode is 'error' or 'all', generate stack traces (overwrite existing)
+    if (stackTraceMode === 'none') {
+      // Do not overwrite stack traces
+      span.stack = span.stack || [];
+      return;
+    }
+
+    // mode is 'error' or 'all' - generate and overwrite stack traces with error
     if (normalizedError.stack) {
       const stackArray = stackTrace.parseStackTraceFromString(normalizedError.stack);
       span.stack = stackArray.length > 0 ? stackArray.slice(0, stackTraceLength) : span.stack || [];
