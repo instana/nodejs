@@ -5,26 +5,22 @@
 'use strict';
 
 const {
-  MAX_STACK_TRACE_LENGTH,
-  validStackTraceModes,
-  DEFAULT_STACK_TRACE_MODE,
-  DEFAULT_STACK_TRACE_LENGTH
-} = require('../../util/constants');
+  setLogger,
+  validateStackTraceMode,
+  validateStackTraceLength
+} = require('../configValidators/stackTraceValidation');
 
-/** @type {import('../../core').GenericLogger} */
-let logger;
+const { DEFAULT_STACK_TRACE_MODE, DEFAULT_STACK_TRACE_LENGTH } = require('../../util/constants');
 
 /**
  * @param {import('../../config').InstanaConfig} config
  */
 exports.init = function init(config) {
-  logger = config.logger;
+  setLogger(config.logger);
 };
 
-// TODO: The current precedence order is:
-//       in-code config → environment variable → agent → default.
-//       This order exists for backward compatibility with the original stackTraceLength behavior
-//       and should be revised as a breaking change in INSTA-817
+// The precedence order is:
+//       agent → programmatic config → environment variable → default.
 
 /**
  *
@@ -33,106 +29,21 @@ exports.init = function init(config) {
  */
 exports.normalize = function normalize(config) {
   if (!config) {
-    return {
-      stackTrace: DEFAULT_STACK_TRACE_MODE,
-      stackTraceLength: DEFAULT_STACK_TRACE_LENGTH
-    };
+    config = {};
   }
 
-  if (!config.tracing) config.tracing = {};
+  if (!config.tracing) {
+    config.tracing = {};
+  }
 
-  const stackTrace = normalizeStackTraceMode(config);
-  const stackTraceLength = normalizeStackTraceLength(config);
+  const stackTrace = normalizeStackTraceMode(config.tracing);
+  const stackTraceLength = normalizeStackTraceLength(config.tracing);
 
   return {
     stackTrace,
     stackTraceLength
   };
 };
-
-/**
- * Normalizes stack trace mode configuration.
- *
- * @param {import('../../config').InstanaConfig} config
- * @returns {string}
- */
-function normalizeStackTraceMode(config) {
-  if (config?.tracing?.stackTrace) {
-    if (typeof config.tracing.stackTrace === 'string') {
-      const configValue = config.tracing.stackTrace.toLowerCase();
-      if (validStackTraceModes.includes(configValue)) {
-        return configValue;
-      } else {
-        logger?.warn(
-          `Invalid value for config.tracing.stackTrace: "${config.tracing.stackTrace}". ` +
-            `Valid values are: ${validStackTraceModes.join(', ')}. Using default: all`
-        );
-      }
-    } else {
-      logger?.warn(
-        `The value of config.tracing.stackTrace has the non-supported type ${typeof config.tracing.stackTrace}. ` +
-          `Valid values are: ${validStackTraceModes.join(', ')}. Using default: all`
-      );
-    }
-  }
-
-  if (process.env.INSTANA_STACK_TRACE) {
-    const envValue = process.env.INSTANA_STACK_TRACE.toLowerCase();
-    if (validStackTraceModes.includes(envValue)) {
-      return envValue;
-    } else {
-      logger?.warn(
-        `Invalid value for INSTANA_STACK_TRACE: "${process.env.INSTANA_STACK_TRACE}". ` +
-          `Valid values are: ${validStackTraceModes.join(', ')}. Using default: all`
-      );
-    }
-  }
-
-  return DEFAULT_STACK_TRACE_MODE;
-}
-
-/**
- * Normalizes stack trace length configuration.
- *
- * @param {import('../../config').InstanaConfig} config
- * @returns {number}
- */
-function normalizeStackTraceLength(config) {
-  if (config.tracing.stackTraceLength != null) {
-    if (typeof config.tracing.stackTraceLength === 'number') {
-      return normalizeNumericalStackTraceLength(config.tracing.stackTraceLength);
-    } else if (typeof config.tracing.stackTraceLength === 'string') {
-      const parsed = parseInt(config.tracing.stackTraceLength, 10);
-      if (!isNaN(parsed)) {
-        return normalizeNumericalStackTraceLength(parsed);
-      } else {
-        logger?.warn(
-          `The value of config.tracing.stackTraceLength ("${config.tracing.stackTraceLength}") ` +
-            'cannot be parsed to a numerical value. Using default value.'
-        );
-      }
-    } else {
-      logger?.warn(
-        `The value of config.tracing.stackTraceLength has the non-supported type ${typeof config.tracing
-          .stackTraceLength}. Using default value.`
-      );
-    }
-  }
-
-  if (process.env.INSTANA_STACK_TRACE_LENGTH) {
-    const parsed = parseInt(process.env.INSTANA_STACK_TRACE_LENGTH, 10);
-    if (!isNaN(parsed)) {
-      return normalizeNumericalStackTraceLength(parsed);
-    } else {
-      logger?.warn(
-        `The value of INSTANA_STACK_TRACE_LENGTH ("${process.env.INSTANA_STACK_TRACE_LENGTH}") ` +
-          'cannot be parsed to a numerical value. Falling back to next priority.'
-      );
-    }
-  }
-
-  return DEFAULT_STACK_TRACE_LENGTH;
-}
 
 /**
  * Normalizes stack trace configuration from agent.
@@ -145,78 +56,83 @@ exports.normalizeAgentConfig = function normalizeAgentConfig(config) {
     return { stackTrace: null, stackTraceLength: null };
   }
 
+  const tracingObj = {
+    stackTrace: config['stack-trace'],
+    stackTraceLength: config['stack-trace-length']
+  };
+
   const result = {
-    stackTrace: normalizeAgentStackTrace(config['stack-trace']),
-    stackTraceLength: normalizeAgentStackTraceLength(config['stack-trace-length'])
+    stackTrace: normalizeStackTraceMode(tracingObj, true),
+    stackTraceLength: normalizeStackTraceLength(tracingObj, true)
   };
 
   return result;
 };
 
 /**
- * Normalizes stack trace mode from agent configuration.
+ * Normalizes stack trace mode configuration.
+ * Priority: agent → programmatic config → env var → default
  *
- * @param {string} agentStackTrace - Stack trace mode from agent
- * @returns {string | null} - Normalized value or null if should not be applied
+ * @param {*} tracingObj - The tracing object containing stackTrace
+ * @param {boolean} [isAgentConfig=false] - Whether this is from agent config
+ * @returns {string | null} - Normalized value or null if from agent and invalid
  */
-function normalizeAgentStackTrace(agentStackTrace) {
-  if (agentStackTrace == null) {
+function normalizeStackTraceMode(tracingObj, isAgentConfig = false) {
+  const configPath = isAgentConfig ? 'stack-trace value from agent' : 'config.tracing.stackTrace';
+  const envVar = 'INSTANA_STACK_TRACE';
+
+  if (tracingObj.stackTrace != null) {
+    const validated = validateStackTraceMode(tracingObj.stackTrace, configPath);
+    if (validated != null) {
+      return validated;
+    }
+  }
+
+  // For agent config normalisation, we don't check environment variables or use defaults
+  if (isAgentConfig) {
     return null;
   }
 
-  const normalizedStackTraceMode =
-    typeof agentStackTrace === 'string' ? agentStackTrace.toLowerCase() : agentStackTrace;
-
-  if (validStackTraceModes.includes(normalizedStackTraceMode)) {
-    return normalizedStackTraceMode;
-  } else {
-    logger?.warn(
-      `Invalid stack-trace value from agent: ${agentStackTrace}. ` +
-        `Valid values are: ${validStackTraceModes.join(', ')}. Ignoring configuration.`
-    );
-    return null;
+  if (process.env[envVar]) {
+    const validated = validateStackTraceMode(process.env[envVar], envVar);
+    if (validated != null) {
+      return validated;
+    }
   }
+
+  return DEFAULT_STACK_TRACE_MODE;
 }
 
 /**
+ * Normalizes stack trace length configuration.
+ * Priority: agent → programmatic config → env var → default
  *
- * @param {number | string} agentStackTraceLength - Stack trace length from agent
- * @returns {number | null} - Normalized value or null if should not be applied
+ * @param {*} tracingObj - The tracing object containing stackTraceLength
+ * @param {boolean} [isAgentConfig=false] - Whether this is from agent config
+ * @returns {number | null} - Normalized value or null if from agent and invalid
  */
-function normalizeAgentStackTraceLength(agentStackTraceLength) {
-  if (agentStackTraceLength == null) {
+function normalizeStackTraceLength(tracingObj, isAgentConfig = false) {
+  const configPath = isAgentConfig ? 'stack-trace-length value from agent' : 'config.tracing.stackTraceLength';
+  const envVar = 'INSTANA_STACK_TRACE_LENGTH';
+
+  if (tracingObj.stackTraceLength != null) {
+    const validated = validateStackTraceLength(tracingObj.stackTraceLength, configPath);
+    if (validated != null) {
+      return validated;
+    }
+  }
+
+  // For agent config normalisation, we don't check environment variables or use defaults
+  if (isAgentConfig) {
     return null;
   }
 
-  const parsedLength =
-    typeof agentStackTraceLength === 'number' ? agentStackTraceLength : Number(agentStackTraceLength);
-
-  if (Number.isFinite(parsedLength)) {
-    const normalized = normalizeNumericalStackTraceLength(parsedLength);
-    return normalized;
-  } else {
-    logger?.warn(
-      `Invalid stack-trace-length value from agent: ${agentStackTraceLength}. Expected a number or numeric string.`
-    );
-    return null;
-  }
-}
-
-/**
- * Normalizes a numerical stack trace length value.
- * Ensures it's a positive integer within the maximum limit.
- *
- * @param {number} numericalLength
- * @returns {number}
- */
-function normalizeNumericalStackTraceLength(numericalLength) {
-  const normalized = Math.abs(Math.round(numericalLength));
-
-  let finalValue = normalized;
-
-  if (normalized > MAX_STACK_TRACE_LENGTH) {
-    finalValue = MAX_STACK_TRACE_LENGTH;
+  if (process.env[envVar]) {
+    const validated = validateStackTraceLength(process.env[envVar], envVar);
+    if (validated != null) {
+      return validated;
+    }
   }
 
-  return finalValue;
+  return DEFAULT_STACK_TRACE_LENGTH;
 }

@@ -357,7 +357,7 @@ describe('config.configNormalizers.stackTrace', () => {
 
         expect(result.stackTrace).to.be.null;
         expect(logger.warn.calledOnce).to.be.true;
-        expect(logger.warn.firstCall.args[0]).to.include('Invalid stack-trace value from agent');
+        expect(logger.warn.firstCall.args[0]).to.include('Invalid value for stack-trace value from agent');
       });
 
       it('should return null when agent stackTrace is null', () => {
@@ -417,7 +417,9 @@ describe('config.configNormalizers.stackTrace', () => {
 
         expect(result.stackTraceLength).to.be.null;
         expect(logger.warn.calledOnce).to.be.true;
-        expect(logger.warn.firstCall.args[0]).to.include('Invalid stack-trace-length value from agent');
+        expect(logger.warn.firstCall.args[0]).to.include(
+          'The value of stack-trace-length value from agent ("invalid") cannot be parsed to a numerical value'
+        );
       });
 
       it('should return null when agent stackTraceLength is null', () => {
