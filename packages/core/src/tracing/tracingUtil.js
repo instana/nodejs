@@ -14,14 +14,42 @@ const stackTrace = require('../util/stackTrace');
 /** @type {import('../core').GenericLogger} */
 let logger;
 const hexDecoder = new StringDecoder('hex');
-let stackTraceLength = 10;
-
+/**
+ * @type {number}
+ */
+let stackTraceLength;
+/**
+ * @type {string}
+ */
+// eslint-disable-next-line no-unused-vars
+let stackTraceMode;
 /**
  * @param {import('../config').InstanaConfig} config
  */
 exports.init = function (config) {
   logger = config.logger;
-  stackTraceLength = config.tracing.stackTraceLength;
+  stackTraceLength = config?.tracing?.stackTraceLength;
+  stackTraceMode = config?.tracing?.stackTrace;
+};
+
+/**
+ * @param {import('@instana/collector/src/types/collector').AgentConfig} extraConfig
+ */
+exports.activate = function activate(extraConfig) {
+  /**
+   * TODO: Perform a major refactoring of configuration priority ordering in INSTA-817.
+   */
+
+  const agentTraceConfig = extraConfig?.tracing;
+
+  if (agentTraceConfig?.stackTrace) {
+    stackTraceMode = agentTraceConfig.stackTrace;
+  }
+
+  // stackTraceLength is valid when set to any number, including 0
+  if (typeof agentTraceConfig?.stackTraceLength === 'number') {
+    stackTraceLength = agentTraceConfig.stackTraceLength;
+  }
 };
 
 /**
@@ -339,7 +367,7 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
 
     if (normalizedError.stack) {
       const stackArray = stackTrace.parseStackTraceFromString(normalizedError.stack);
-      span.stack = stackArray.length > 0 ? stackArray : span.stack || [];
+      span.stack = stackArray.length > 0 ? stackArray.slice(0, stackTraceLength) : span.stack || [];
     } else {
       span.stack = span.stack || [];
     }

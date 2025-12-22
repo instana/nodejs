@@ -24,7 +24,6 @@ let pidStore;
 const initialRetryDelay = 10 * 1000; // 10 seconds
 const backoffFactor = 1.5;
 const maxRetryDelay = 60 * 1000; // one minute
-
 /**
  * @typedef {Object} AgentAnnounceResponse
  * @property {SecretsConfig} [secrets]
@@ -46,6 +45,13 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {import('@instana/core/src/config/types').IgnoreEndpoints} [ignore-endpoints]
  * @property {boolean} [span-batching-enabled]
  * @property {import('@instana/core/src/config/types').Disable} [disable]
+ * @property {StackTraceConfig} [global]
+ */
+
+/**
+ * @typedef {Object} StackTraceConfig
+ * @property {string} [stack-trace] - Stack trace mode ('error'|'all'|'none')
+ * @property {number} [stack-trace-length] - Maximum number of stack trace frames to capture
  */
 
 /**
@@ -121,6 +127,7 @@ function applyAgentConfiguration(agentResponse) {
   applyKafkaTracingConfiguration(agentResponse);
   applySpanBatchingConfiguration(agentResponse);
   applyIgnoreEndpointsConfiguration(agentResponse);
+  applyStackTraceConfiguration(agentResponse);
   applyDisableConfiguration(agentResponse);
 }
 
@@ -238,6 +245,28 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
   agentOpts.config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
+}
+
+/**
+ * Apply global stack trace configuration from the agent response.
+ *
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyStackTraceConfiguration(agentResponse) {
+  const globalConfig = agentResponse?.tracing?.global;
+  if (!globalConfig) return;
+
+  ensureNestedObjectExists(agentOpts.config, ['tracing', 'global']);
+
+  const normalized = configNormalizers.stackTrace.normalizeAgentConfig(globalConfig);
+
+  if (normalized.stackTrace !== null) {
+    agentOpts.config.tracing.stackTrace = normalized.stackTrace;
+  }
+
+  if (normalized.stackTraceLength !== null) {
+    agentOpts.config.tracing.stackTraceLength = normalized.stackTraceLength;
+  }
 }
 
 /**

@@ -10,6 +10,7 @@
 const supportedTracingVersion = require('../tracing/supportedVersion');
 const configNormalizers = require('./configNormalizers');
 const deepMerge = require('../util/deepMerge');
+const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -21,6 +22,7 @@ const deepMerge = require('../util/deepMerge');
  * @property {number} [initialTransmissionDelay]
  * @property {number} [maxBufferedSpans]
  * @property {number} [transmissionDelay]
+ * @property {string} [stackTrace]
  * @property {number} [stackTraceLength]
  * @property {HTTPTracingOptions} [http]
  * @property {import('../config/types').Disable} [disable]
@@ -99,7 +101,8 @@ let defaults = {
     http: {
       extraHttpHeadersToCapture: []
     },
-    stackTraceLength: 10,
+    stackTrace: DEFAULT_STACK_TRACE_MODE,
+    stackTraceLength: DEFAULT_STACK_TRACE_LENGTH,
     disable: {},
     spanBatchingEnabled: false,
     disableW3cTraceCorrelation: false,
@@ -226,7 +229,7 @@ function normalizeTracingConfig(config) {
   normalizeActivateImmediately(config);
   normalizeTracingTransmission(config);
   normalizeTracingHttp(config);
-  normalizeTracingStackTraceLength(config);
+  normalizeTracingStackTrace(config);
   normalizeSpanBatchingEnabled(config);
   normalizeDisableW3cTraceCorrelation(config);
   normalizeTracingKafka(config);
@@ -442,60 +445,15 @@ function parseHeadersEnvVar(envVarValue) {
 }
 
 /**
+ * Handles both stackTrace and stackTraceLength configuration
  * @param {InstanaConfig} config
  */
-function normalizeTracingStackTraceLength(config) {
-  if (config.tracing.stackTraceLength == null && process.env['INSTANA_STACK_TRACE_LENGTH']) {
-    parseStringStackTraceLength(config, process.env['INSTANA_STACK_TRACE_LENGTH']);
-  }
-  if (config.tracing.stackTraceLength != null) {
-    if (typeof config.tracing.stackTraceLength === 'number') {
-      config.tracing.stackTraceLength = normalizeNumericalStackTraceLength(config.tracing.stackTraceLength);
-    } else if (typeof config.tracing.stackTraceLength === 'string') {
-      parseStringStackTraceLength(config, config.tracing.stackTraceLength);
-    } else {
-      logger.warn(
-        `The value of config.tracing.stackTraceLength has the non-supported type ${typeof config.tracing
-          .stackTraceLength} (the value is "${config.tracing.stackTraceLength}").` +
-          `Assuming the default stack trace length ${defaults.tracing.stackTraceLength}.`
-      );
-      config.tracing.stackTraceLength = defaults.tracing.stackTraceLength;
-    }
-  } else {
-    config.tracing.stackTraceLength = defaults.tracing.stackTraceLength;
-  }
-}
+function normalizeTracingStackTrace(config) {
+  const stackTraceConfig = configNormalizers.stackTrace.normalize(config);
 
-/**
- * @param {InstanaConfig} config
- * @param {string} value
- */
-function parseStringStackTraceLength(config, value) {
-  config.tracing.stackTraceLength = parseInt(value, 10);
-  if (!isNaN(config.tracing.stackTraceLength)) {
-    config.tracing.stackTraceLength = normalizeNumericalStackTraceLength(config.tracing.stackTraceLength);
-  } else {
-    logger.warn(
-      `The value of config.tracing.stackTraceLength ("${value}") has type string and cannot be parsed to a numerical ` +
-        `value. Assuming the default stack trace length ${defaults.tracing.stackTraceLength}.`
-    );
-    config.tracing.stackTraceLength = defaults.tracing.stackTraceLength;
-  }
-}
-
-/**
- * @param {number} numericalLength
- * @returns {number}
- */
-function normalizeNumericalStackTraceLength(numericalLength) {
-  // just in case folks provide non-integral numbers or negative numbers
-  const normalized = Math.abs(Math.round(numericalLength));
-  if (normalized !== numericalLength) {
-    logger.warn(
-      `Normalized the provided value of config.tracing.stackTraceLength (${numericalLength}) to ${normalized}.`
-    );
-  }
-  return normalized;
+  config.tracing.stackTrace = stackTraceConfig.stackTrace;
+  config.tracing.stackTraceLength = stackTraceConfig.stackTraceLength;
+  return;
 }
 
 /**
