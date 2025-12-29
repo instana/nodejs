@@ -79,7 +79,7 @@ const groups = {
     subname: 'test:ci:tracing:protocols'
   },
   'test:ci:collector:tracing:general': {
-    sidecars: ['postgres', 'oracledb'],
+    sidecars: ['postgres', 'oracledb', 'zookeeper', 'kafka', 'kafka-topics', 'schema-registry'],
     condition: ' && true'
   },
   'test:ci:collector:tracing:misc': {

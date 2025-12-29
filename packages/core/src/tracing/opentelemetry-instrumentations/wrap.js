@@ -6,6 +6,7 @@
 'use strict';
 
 const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks');
+const { W3CTraceContextPropagator } = require('@opentelemetry/core');
 const api = require('@opentelemetry/api');
 const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
 const constants = require('../constants');
@@ -21,7 +22,8 @@ const instrumentations = {
   '@opentelemetry/instrumentation-restify': { name: 'restify' },
   '@opentelemetry/instrumentation-socket.io': { name: 'socket.io' },
   '@opentelemetry/instrumentation-tedious': { name: 'tedious' },
-  '@opentelemetry/instrumentation-oracledb': { name: 'oracle' }
+  '@opentelemetry/instrumentation-oracledb': { name: 'oracle' },
+  '@drazke/instrumentation-confluent-kafka-javascript': { name: 'confluent-kafka' }
 };
 
 // NOTE: using a logger might create a recursive execution
@@ -41,6 +43,8 @@ module.exports.init = (_config, cls) => {
 
   const prepareData = (otelSpan, instrumentationModule, instrumentationName) => {
     const obj = {
+      traceId: null,
+      parentSpanId: null,
       kind: constants.EXIT,
       resource: { ...otelSpan.resource.attributes },
       tags: { ...otelSpan.attributes },
@@ -63,6 +67,14 @@ module.exports.init = (_config, cls) => {
 
     obj.tags = Object.assign({ name: otelSpan.name }, obj.tags);
 
+    if (instrumentationModule.getTraceId) {
+      obj.traceId = instrumentationModule.getTraceId(obj.kind, otelSpan);
+    }
+
+    if (instrumentationModule.getParentId) {
+      obj.parentSpanId = instrumentationModule.getParentId(obj.kind, otelSpan);
+    }
+
     return obj;
   };
 
@@ -77,10 +89,19 @@ module.exports.init = (_config, cls) => {
 
     try {
       const createInstanaSpan = onEndCallback => {
-        const instanaSpan = cls.startSpan({
-          spanName: 'otel',
-          kind: preparedData.kind
-        });
+        const spanAttributes = preparedData.traceId
+          ? {
+              spanName: 'otel',
+              kind: preparedData.kind,
+              traceId: preparedData.traceId,
+              parentSpanId: preparedData.parentSpanId
+            }
+          : {
+              spanName: 'otel',
+              kind: preparedData.kind
+            };
+
+        const instanaSpan = cls.startSpan(spanAttributes);
 
         instanaSpan.data = {
           // span.data.operation is mapped to endpoint for otel span plugin in BE.
@@ -89,6 +110,8 @@ module.exports.init = (_config, cls) => {
           tags: preparedData.tags,
           resource: preparedData.resource
         };
+
+        otelSpan._instanaSpan = instanaSpan;
 
         const origEnd = otelSpan.end;
         otelSpan.end = function instanaOnEnd() {
@@ -100,7 +123,16 @@ module.exports.init = (_config, cls) => {
         };
       };
 
-      cls.ns.runAndReturn(() => createInstanaSpan());
+      if (preparedData.kind === constants.ENTRY) {
+        const clsContext = cls.ns.createContext();
+        cls.ns.enter(clsContext);
+
+        createInstanaSpan(() => {
+          cls.ns.exit(clsContext);
+        });
+      } else {
+        cls.ns.runAndReturn(() => createInstanaSpan());
+      }
     } catch (e) {
       // ignore for now
     }
@@ -127,6 +159,8 @@ module.exports.init = (_config, cls) => {
 
   api.trace.setGlobalTracerProvider(provider);
   api.context.setGlobalContextManager(contextManager);
+  // NOTE: Required for EXIT -> ENTRY (e.g. Kafka) correlation
+  api.propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
   const orig = api.trace.setSpan;
   api.trace.setSpan = function instanaSetSpan(otelCtx, otelSpan) {
@@ -152,6 +186,14 @@ module.exports.init = (_config, cls) => {
     const preparedData = prepareData(otelSpan, instrumentationModule, instrumentationName);
 
     transformToInstanaSpan(otelSpan, preparedData);
-    return orig.apply(this, arguments);
+    const originalCtx = orig.apply(this, arguments);
+
+    if (otelSpan && otelSpan._instanaSpan) {
+      if (instrumentationModule.modifyContext && preparedData.kind === constants.EXIT) {
+        return instrumentationModule.modifyContext(api, otelSpan, otelSpan._instanaSpan, originalCtx);
+      }
+    }
+
+    return originalCtx;
   };
 };
