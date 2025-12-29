@@ -9,6 +9,7 @@
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
 const configNormalizers = require('./configNormalizers');
+const configValidators = require('./configValidators');
 const deepMerge = require('../util/deepMerge');
 const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
 const { validateStackTraceMode, validateStackTraceLength } = require('./configValidators/stackTraceValidation');
@@ -130,9 +131,7 @@ let defaults = {
 const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
 
 module.exports.configNormalizers = configNormalizers;
-module.exports.configValidators = {
-  stackTraceValidation: require('./configValidators/stackTraceValidation')
-};
+module.exports.configValidators = configValidators;
 
 /**
  * @param {import('../core').GenericLogger} [_logger]
