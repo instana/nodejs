@@ -265,30 +265,30 @@ function applyStackTraceConfiguration(agentResponse) {
 
   if (globalConfig['stack-trace'] !== undefined) {
     const validateMode = validateStackTraceMode(globalConfig['stack-trace']);
-    if (!validateMode.isValid) {
+    if (validateMode.isValid) {
+      const normalizedStackTrace = configNormalizers.stackTrace.normalizeStackTraceModeFromAgent(
+        globalConfig['stack-trace']
+      );
+      if (normalizedStackTrace != null) {
+        agentOpts.config.tracing.stackTrace = normalizedStackTrace;
+      }
+    } else {
       logger.warn(`Invalid stack-trace value from agent: ${validateMode.error}`);
     }
   }
 
-  const normalizedStackTrace = configNormalizers.stackTrace.normalizeStackTraceModeFromAgent(
-    globalConfig['stack-trace']
-  );
-  if (normalizedStackTrace !== null) {
-    agentOpts.config.tracing.stackTrace = normalizedStackTrace;
-  }
-
   if (globalConfig['stack-trace-length'] !== undefined) {
     const validateLength = validateStackTraceLength(globalConfig['stack-trace-length']);
-    if (!validateLength.isValid) {
+    if (validateLength.isValid) {
+      const normalizedStackTraceLength = configNormalizers.stackTrace.normalizeStackTraceLengthFromAgent(
+        globalConfig['stack-trace-length']
+      );
+      if (normalizedStackTraceLength != null) {
+        agentOpts.config.tracing.stackTraceLength = normalizedStackTraceLength;
+      }
+    } else {
       logger.warn(`Invalid stack-trace-length value from agent: ${validateLength.error}`);
     }
-  }
-
-  const normalizedStackTraceLength = configNormalizers.stackTrace.normalizeStackTraceLengthFromAgent(
-    globalConfig['stack-trace-length']
-  );
-  if (normalizedStackTraceLength !== null) {
-    agentOpts.config.tracing.stackTraceLength = normalizedStackTraceLength;
   }
 }
 
