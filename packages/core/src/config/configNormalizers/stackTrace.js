@@ -5,12 +5,11 @@
 'use strict';
 
 const {
-  setLogger,
-  validateStackTraceMode,
-  validateStackTraceLength
-} = require('../configValidators/stackTraceValidation');
-
-const { DEFAULT_STACK_TRACE_MODE, DEFAULT_STACK_TRACE_LENGTH } = require('../../util/constants');
+  DEFAULT_STACK_TRACE_MODE,
+  DEFAULT_STACK_TRACE_LENGTH,
+  MAX_STACK_TRACE_LENGTH,
+  validStackTraceModes
+} = require('../../util/constants');
 
 /** @type {import('../../core').GenericLogger} */
 let logger;
@@ -20,98 +19,82 @@ let logger;
  */
 exports.init = function init(config) {
   logger = config.logger;
-  setLogger(config.logger);
 };
 
-// Precedence order:
-//   agent > in-code > environment variable > default
-
 /**
- *
+ * Normalizes stackTrace mode from config
  * @param {import('../../config').InstanaConfig} config
- * @returns {{ stackTrace: string, stackTraceLength: number }}
+ * @returns {string}
  */
-exports.normalize = function normalize(config) {
-  if (!config) {
-    config = {};
-  }
-
-  if (!config.tracing) {
-    config.tracing = {};
-  }
-
-  const stackTrace = normalizeStackTraceMode(config.tracing);
-  const stackTraceLength = normalizeStackTraceLength(config.tracing);
-
-  return {
-    stackTrace,
-    stackTraceLength
-  };
+exports.normalizeStackTraceMode = function (config) {
+  return normalizeStackTraceMode(config?.tracing);
 };
 
 /**
- * Normalizes stack trace configuration from agent.
+ * Normalizes stackTraceLength from config
+ * @param {import('../../config').InstanaConfig} config
+ * @returns {number}
+ */
+exports.normalizeStackTraceLength = function (config) {
+  return normalizeStackTraceLength(config?.tracing);
+};
+
+/**
+ * Normalizes stackTrace mode from agent config
+ * @param {*} stackTraceValue - tracing.global[stack-trace] config from agent
+ * @returns {string | null}
+ */
+exports.normalizeStackTraceModeFromAgent = function (stackTraceValue) {
+  return stackTraceValue?.toLowerCase();
+};
+
+/**
+ * Normalizes stackTraceLength from agent config
+ * @param {*} stackTraceLength - tracing.global[stack-trace-length] from agent
+ * @returns {number | null}
+ */
+exports.normalizeStackTraceLengthFromAgent = function (stackTraceLength) {
+  const parsed = typeof stackTraceLength === 'number' ? stackTraceLength : parseInt(stackTraceLength, 10);
+  if (!isNaN(parsed) && Number.isFinite(parsed)) {
+    return normalizeNumericalStackTraceLength(parsed);
+  }
+
+  return null;
+};
+
+/**
+ * Normalizes a numerical stack trace length value.
+ * Ensures it's a positive integer within the maximum limit.
  *
- * @param {*} config - tracing.global config from agent containing stack-trace and stack-trace-length
- * @returns {{ stackTrace: string | null, stackTraceLength: number | null }} - Normalized values
+ * @param {number} numericalLength
+ * @returns {number}
  */
-exports.normalizeAgentConfig = function normalizeAgentConfig(config) {
-  if (!config || typeof config !== 'object') {
-    return { stackTrace: null, stackTraceLength: null };
-  }
-
-  const tracingObj = {
-    stackTrace: config['stack-trace'],
-    stackTraceLength: config['stack-trace-length']
-  };
-
-  const result = {
-    stackTrace: normalizeStackTraceMode(tracingObj, true),
-    stackTraceLength: normalizeStackTraceLength(tracingObj, true)
-  };
-
-  return result;
-};
+function normalizeNumericalStackTraceLength(numericalLength) {
+  const normalized = Math.abs(Math.round(numericalLength));
+  return Math.min(normalized, MAX_STACK_TRACE_LENGTH);
+}
 
 /**
- * Normalizes stack trace mode configuration.
+ * Normalizes stack trace mode configuration based on precedence.
+ * Precedence: global config > env var > default
  *
  * @param {*} tracingObj - The tracing object containing stackTrace
- * @param {boolean} [isAgentConfig=false] - Whether this is from agent config
- * @returns {string | null} - Normalized value or null if from agent and invalid
+ * @returns {string} - Normalized value
  */
-function normalizeStackTraceMode(tracingObj, isAgentConfig = false) {
-  const envVar = 'INSTANA_STACK_TRACE';
-
-  if (isAgentConfig) {
-    const configPath = 'stack-trace value from agent';
-
-    const validatedAgentConfig = validateStackTraceMode(tracingObj?.stackTrace, configPath);
-
-    if (validatedAgentConfig != null) {
-      return validatedAgentConfig;
+function normalizeStackTraceMode(tracingObj) {
+  const value = tracingObj?.global?.stackTrace;
+  if (typeof value === 'string') {
+    const normalized = value.toLowerCase();
+    if (validStackTraceModes.includes(normalized)) {
+      return normalized;
     }
-
-    return null;
   }
 
-  const validatedConfigGlobal = validateStackTraceMode(
-    tracingObj?.global?.stackTrace,
-    'config.tracing.global.stackTrace'
-  );
-  if (validatedConfigGlobal != null) {
-    return validatedConfigGlobal;
-  }
-
-  const validatedConfig = validateStackTraceMode(tracingObj?.stackTrace, 'config.tracing.stackTrace');
-  if (validatedConfig != null) {
-    return validatedConfig;
-  }
-
+  const envVar = 'INSTANA_STACK_TRACE';
   if (process.env[envVar]) {
-    const validatedEnv = validateStackTraceMode(process.env[envVar], envVar);
-    if (validatedEnv != null) {
-      return validatedEnv;
+    const normalized = process.env[envVar].toLowerCase();
+    if (validStackTraceModes.includes(normalized)) {
+      return normalized;
     }
   }
 
@@ -119,49 +102,47 @@ function normalizeStackTraceMode(tracingObj, isAgentConfig = false) {
 }
 
 /**
- * Normalizes stack trace length configuration.
+ * Normalizes stack trace length configuration based on precedence.
+ * Precedence: global config > config > env var > default
  *
  * @param {*} tracingObj - The tracing object containing stackTraceLength
- * @param {boolean} [isAgentConfig=false] - Whether this is from agent config
- * @returns {number | null} - Normalized value or null if from agent and invalid
+ * @returns {number} - Normalized value
  */
-function normalizeStackTraceLength(tracingObj, isAgentConfig = false) {
-  const envVar = 'INSTANA_STACK_TRACE_LENGTH';
-
-  if (isAgentConfig) {
-    const configPath = 'stack-trace-length value from agent';
-
-    const validatedAgentConfig = validateStackTraceLength(tracingObj?.stackTraceLength, configPath);
-    if (validatedAgentConfig != null) {
-      return validatedAgentConfig;
+function normalizeStackTraceLength(tracingObj) {
+  // Check global config first (highest precedence for in-code config)
+  if (tracingObj?.global?.stackTraceLength != null) {
+    const parsed =
+      typeof tracingObj.global.stackTraceLength === 'number'
+        ? tracingObj.global.stackTraceLength
+        : parseInt(tracingObj.global.stackTraceLength, 10);
+    if (!isNaN(parsed) && Number.isFinite(parsed)) {
+      const normalized = Math.abs(Math.round(parsed));
+      return Math.min(normalized, MAX_STACK_TRACE_LENGTH);
     }
-
-    return null;
   }
 
-  // Note: We currently have 2 in-code config for stackTraceLength:
-  //       tracing.global.stackTraceLength(new) takes precedence over tracing.stackTraceLength(legacy)
-  const validatedConfigGlobal = validateStackTraceLength(
-    tracingObj?.global?.stackTraceLength,
-    'config.tracing.global.stackTraceLength'
-  );
-  if (validatedConfigGlobal != null) {
-    return validatedConfigGlobal;
+  // Check legacy config
+  if (tracingObj?.stackTraceLength != null) {
+    const parsed =
+      typeof tracingObj.stackTraceLength === 'number'
+        ? tracingObj.stackTraceLength
+        : parseInt(tracingObj.stackTraceLength, 10);
+    if (!isNaN(parsed) && Number.isFinite(parsed)) {
+      logger.warn(
+        'The configuration option config.tracing.stackTraceLength is deprecated and will be removed in a ' +
+          'future release. Please use config.tracing.global.stackTraceLength instead.'
+      );
+      const normalized = Math.abs(Math.round(parsed));
+      return Math.min(normalized, MAX_STACK_TRACE_LENGTH);
+    }
   }
 
-  const validatedConfig = validateStackTraceLength(tracingObj?.stackTraceLength, 'config.tracing.stackTraceLength');
-  if (validatedConfig != null) {
-    logger.warn(
-      'The configuration option config.tracing.stackTraceLength is deprecated and will be removed in a ' +
-        'future release. Please use config.tracing.global.stackTraceLength instead.'
-    );
-    return validatedConfig;
-  }
-
+  const envVar = 'INSTANA_STACK_TRACE_LENGTH';
   if (process.env[envVar]) {
-    const validatedEnv = validateStackTraceLength(process.env[envVar], envVar);
-    if (validatedEnv != null) {
-      return validatedEnv;
+    const parsed = parseInt(process.env[envVar], 10);
+    if (!isNaN(parsed) && Number.isFinite(parsed)) {
+      const normalized = Math.abs(Math.round(parsed));
+      return Math.min(normalized, MAX_STACK_TRACE_LENGTH);
     }
   }
 

@@ -9,8 +9,11 @@ const {
   secrets,
   tracing,
   util: { ensureNestedObjectExists },
-  coreConfig: { configNormalizers }
+  coreConfig: { configNormalizers, configValidators }
 } = require('@instana/core');
+
+const { validateStackTraceMode, validateStackTraceLength } = configValidators.stackTraceValidation;
+
 const { constants: tracingConstants } = tracing;
 
 const agentConnection = require('../agentConnection');
@@ -260,14 +263,32 @@ function applyStackTraceConfiguration(agentResponse) {
   // Prefer the local configuration when present; otherwise, fall back to the global configuration.
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'global']);
 
-  const normalized = configNormalizers.stackTrace.normalizeAgentConfig(globalConfig);
-
-  if (normalized.stackTrace !== null) {
-    agentOpts.config.tracing.stackTrace = normalized.stackTrace;
+  if (globalConfig['stack-trace'] !== undefined) {
+    const validateMode = validateStackTraceMode(globalConfig['stack-trace']);
+    if (!validateMode.isValid) {
+      logger.warn(`Invalid stack-trace value from agent: ${validateMode.error}`);
+    }
   }
 
-  if (normalized.stackTraceLength !== null) {
-    agentOpts.config.tracing.stackTraceLength = normalized.stackTraceLength;
+  const normalizedStackTrace = configNormalizers.stackTrace.normalizeStackTraceModeFromAgent(
+    globalConfig['stack-trace']
+  );
+  if (normalizedStackTrace !== null) {
+    agentOpts.config.tracing.stackTrace = normalizedStackTrace;
+  }
+
+  if (globalConfig['stack-trace-length'] !== undefined) {
+    const validateLength = validateStackTraceLength(globalConfig['stack-trace-length']);
+    if (!validateLength.isValid) {
+      logger.warn(`Invalid stack-trace-length value from agent: ${validateLength.error}`);
+    }
+  }
+
+  const normalizedStackTraceLength = configNormalizers.stackTrace.normalizeStackTraceLengthFromAgent(
+    globalConfig['stack-trace-length']
+  );
+  if (normalizedStackTraceLength !== null) {
+    agentOpts.config.tracing.stackTraceLength = normalizedStackTraceLength;
   }
 }
 

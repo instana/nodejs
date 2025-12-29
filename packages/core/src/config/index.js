@@ -11,6 +11,7 @@ const supportedTracingVersion = require('../tracing/supportedVersion');
 const configNormalizers = require('./configNormalizers');
 const deepMerge = require('../util/deepMerge');
 const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
+const { validateStackTraceMode, validateStackTraceLength } = require('./configValidators/stackTraceValidation');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -33,6 +34,7 @@ const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../uti
  * @property {import('../config/types').IgnoreEndpoints} [ignoreEndpoints]
  * @property {boolean} [ignoreEndpointsDisableSuppression]
  * @property {boolean} [disableEOLEvents]
+ * @property {globalStackTraceConfig} [global]
  */
 
 /**
@@ -43,6 +45,12 @@ const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../uti
 /**
  * @typedef {Object} KafkaTracingOptions
  * @property {boolean} [traceCorrelation]
+ */
+
+/**
+ * @typedef {Object} globalStackTraceConfig
+ * @property {string} [stackTrace]
+ * @property {number} [stackTraceLength]
  */
 
 /**
@@ -122,6 +130,9 @@ let defaults = {
 const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
 
 module.exports.configNormalizers = configNormalizers;
+module.exports.configValidators = {
+  stackTraceValidation: require('./configValidators/stackTraceValidation')
+};
 
 /**
  * @param {import('../core').GenericLogger} [_logger]
@@ -449,10 +460,32 @@ function parseHeadersEnvVar(envVarValue) {
  * @param {InstanaConfig} config
  */
 function normalizeTracingStackTrace(config) {
-  const stackTraceConfig = configNormalizers.stackTrace.normalize(config);
+  if (config.tracing.global?.stackTrace !== undefined) {
+    const modeResult = validateStackTraceMode(config.tracing.global.stackTrace);
+    if (!modeResult.isValid) {
+      logger.warn(`Invalid config.tracing.global.stackTrace: ${modeResult.error}`);
+    }
+  }
+  config.tracing.stackTrace = configNormalizers.stackTrace.normalizeStackTraceMode(config);
 
-  config.tracing.stackTrace = stackTraceConfig.stackTrace;
-  config.tracing.stackTraceLength = stackTraceConfig.stackTraceLength;
+  // Validate and normalize stackTraceLength (check global first, then legacy)
+  if (config.tracing.global?.stackTraceLength !== undefined) {
+    const lengthResult = validateStackTraceLength(config.tracing.global.stackTraceLength);
+    if (!lengthResult.isValid) {
+      logger.warn(`Invalid config.tracing.global.stackTraceLength: ${lengthResult.error}`);
+    }
+  } else if (config.tracing.stackTraceLength !== undefined) {
+    logger.warn(
+      'The configuration option config.tracing.stackTraceLength is deprecated and will be removed in a ' +
+        'future release. Please use config.tracing.global.stackTraceLength instead.'
+    );
+    const lengthResult = validateStackTraceLength(config.tracing.stackTraceLength);
+    if (!lengthResult.isValid) {
+      logger.warn(`Invalid config.tracing.stackTraceLength: ${lengthResult.error}`);
+    }
+  }
+  config.tracing.stackTraceLength = configNormalizers.stackTrace.normalizeStackTraceLength(config);
+
   return;
 }
 
