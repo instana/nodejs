@@ -79,7 +79,12 @@ mochaSuiteFn('opentelemetry tests', function () {
       });
 
       // TODO: Restify test is broken in v24. See Issue: https://github.com/restify/node-restify/issues/1984
-      const restifyTest = semver.gte(process.versions.node, '24.0.0') ? describe.skip : describe;
+      let restifyTest = semver.gte(process.versions.node, '24.0.0') ? describe.skip : describe;
+
+      if (process.env.RUN_ESM === 'true') {
+        restifyTest = describe.skip;
+      }
+
       restifyTest('restify', function () {
         describe('opentelemetry is enabled', function () {
           globalAgent.setUpCleanUpHooks();
@@ -290,7 +295,12 @@ mochaSuiteFn('opentelemetry tests', function () {
         });
       });
 
-      describe('fs', function () {
+      let runFs = describe;
+      if (process.env.RUN_ESM === 'true') {
+        runFs = describe.skip;
+      }
+
+      runFs('fs', function () {
         globalAgent.setUpCleanUpHooks();
         const agentControls = globalAgent.instance;
 
@@ -411,7 +421,12 @@ mochaSuiteFn('opentelemetry tests', function () {
             .then(() => retry(() => agentControls.getSpans().then(spans => expect(spans).to.be.empty))));
       });
 
-      describe('socket.io', function () {
+      let runSocketIo = describe;
+      if (process.env.RUN_ESM === 'true') {
+        runSocketIo = describe.skip;
+      }
+
+      runSocketIo('socket.io', function () {
         globalAgent.setUpCleanUpHooks();
         const agentControls = globalAgent.instance;
         let socketIOServerPort;
@@ -725,7 +740,12 @@ mochaSuiteFn('opentelemetry tests', function () {
         });
       });
 
-      describe('OracleDB', function () {
+      let runOracleDb = describe;
+      if (process.env.RUN_ESM === 'true') {
+        runOracleDb = describe.skip;
+      }
+
+      runOracleDb('OracleDB', function () {
         this.timeout(1000 * 60);
 
         describe('opentelemetry is enabled', function () {
@@ -861,7 +881,12 @@ mochaSuiteFn('opentelemetry tests', function () {
     });
   });
 
-  mochaSuiteFn('when otel sdk and instana is enabled', function () {
+  let runOtelSdkAndInstana = mochaSuiteFn;
+  if (process.env.RUN_ESM === 'true') {
+    runOtelSdkAndInstana = describe.skip;
+  }
+
+  runOtelSdkAndInstana('when otel sdk and instana is enabled', function () {
     this.timeout(config.getTestTimeout() * 4);
     before(async () => {
       if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS === 'true') {
