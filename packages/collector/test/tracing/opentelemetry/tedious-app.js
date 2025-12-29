@@ -14,9 +14,20 @@ process.on('SIGTERM', () => {
 require('@instana/collector')();
 const express = require('express');
 const fs = require('fs');
+const path = require('path');
 const { isCI } = require('@instana/core/test/test_util');
 const port = require('../../test_util/app-port')();
 const tedious = require('tedious');
+
+// Verify that tedious is loaded from the local node_modules
+const tediousPath = require.resolve('tedious');
+const expectedLocalPath = path.resolve(__dirname, 'node_modules', 'tedious');
+if (!tediousPath.includes(expectedLocalPath)) {
+  throw new Error(
+    // eslint-disable-next-line max-len
+    `tedious must be loaded from local node_modules. Expected path containing: ${expectedLocalPath}, but got: ${tediousPath}`
+  );
+}
 
 const Connection = tedious.Connection;
 const Request = tedious.Request;
