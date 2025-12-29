@@ -35,8 +35,8 @@ mochaSuiteFn('opentelemetry tests', function () {
       return;
     }
 
-    execSync('rm package-lock.json', { cwd: __dirname, stdio: 'inherit' });
-    execSync('rm package.json', { cwd: __dirname, stdio: 'inherit' });
+    execSync('rm -rf package-lock.json', { cwd: __dirname, stdio: 'inherit' });
+    execSync('rm -rf package.json', { cwd: __dirname, stdio: 'inherit' });
     execSync('rm -rf node_modules', { cwd: __dirname, stdio: 'inherit' });
     execSync('./preinstall.sh', { cwd: __dirname, stdio: 'inherit' });
   });
@@ -868,7 +868,6 @@ mochaSuiteFn('opentelemetry tests', function () {
         return;
       }
 
-      execSync('rm package-lock.json', { cwd: __dirname, stdio: 'inherit' });
       execSync('rm -rf ./otel-sdk-and-instana/node_modules', { cwd: __dirname, stdio: 'inherit' });
       execSync('npm install --save', {
         cwd: path.join(__dirname, './otel-sdk-and-instana'),
