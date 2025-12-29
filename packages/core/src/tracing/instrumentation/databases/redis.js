@@ -346,7 +346,7 @@ function instrumentCommand(original, command, address, cbStyle) {
         }
       } else {
         const promise = original.apply(origCtx, origArgs);
-        if (typeof promise.then === 'function') {
+        if (typeof promise?.then === 'function') {
           promise
             .then(value => {
               onResult();
@@ -356,6 +356,9 @@ function instrumentCommand(original, command, address, cbStyle) {
               onResult(error);
               return error;
             });
+        } else {
+          // No promise returned, call onResult immediately to close the span
+          onResult();
         }
         return promise;
       }
@@ -476,7 +479,7 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
       try {
         const promise = original.apply(origCtx, modifiedArgs);
 
-        if (typeof promise.then === 'function') {
+        if (typeof promise?.then === 'function') {
           promise
             .then(value => {
               onResult();
