@@ -894,7 +894,7 @@ mochaSuiteFn('opentelemetry tests', function () {
       }
 
       execSync('rm -rf ./otel-sdk-and-instana/node_modules', { cwd: __dirname, stdio: 'inherit' });
-      execSync('npm install --save', {
+      execSync('npm install --no-save --no-package-lock', {
         cwd: path.join(__dirname, './otel-sdk-and-instana'),
         stdio: 'inherit'
       });
