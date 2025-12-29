@@ -356,6 +356,9 @@ function instrumentCommand(original, command, address, cbStyle) {
               onResult(error);
               return error;
             });
+        } else {
+          // No promise returned, call onResult immediately to close the span
+          onResult();
         }
         return promise;
       }
