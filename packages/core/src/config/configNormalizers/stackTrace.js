@@ -109,7 +109,8 @@ function normalizeStackTraceMode(tracingObj) {
  * @returns {number} - Normalized value
  */
 function normalizeStackTraceLength(tracingObj) {
-  // Check global config first (highest precedence for in-code config)
+  // Note: For in-code configuration, global takes precedence.
+  // tracing.global.stackTraceLength > tracing.stackTraceLength
   if (tracingObj?.global?.stackTraceLength != null) {
     const parsed =
       typeof tracingObj.global.stackTraceLength === 'number'
@@ -121,13 +122,7 @@ function normalizeStackTraceLength(tracingObj) {
     }
   }
 
-  // Check legacy config
   if (tracingObj?.stackTraceLength != null) {
-    logger.warn(
-      'The configuration option config.tracing.stackTraceLength is deprecated and will be removed in a ' +
-        'future release. Please use config.tracing.global.stackTraceLength instead.'
-    );
-
     const parsed =
       typeof tracingObj.stackTraceLength === 'number'
         ? tracingObj.stackTraceLength

@@ -459,29 +459,53 @@ function parseHeadersEnvVar(envVarValue) {
  * @param {InstanaConfig} config
  */
 function normalizeTracingStackTrace(config) {
-  if (config.tracing.global?.stackTrace !== undefined) {
-    const modeResult = validateStackTraceMode(config.tracing.global.stackTrace);
-    if (!modeResult.isValid) {
-      logger.warn(`Invalid config.tracing.global.stackTrace: ${modeResult.error}`);
+  const tracing = config.tracing;
+
+  if (tracing.global?.stackTrace !== undefined) {
+    const result = validateStackTraceMode(tracing.global.stackTrace);
+
+    if (result.isValid) {
+      tracing.stackTrace = configNormalizers.stackTrace.normalizeStackTraceMode(config);
+    } else {
+      logger.warn(
+        `Invalid config.tracing.global.stackTrace: ${result.error}, Using default: ${defaults.tracing.stackTrace}`
+      );
     }
   }
-  config.tracing.stackTrace = configNormalizers.stackTrace.normalizeStackTraceMode(config);
 
-  // Validate and normalize stackTraceLength (check global first, then legacy)
-  if (config.tracing.global?.stackTraceLength !== undefined) {
-    const lengthResult = validateStackTraceLength(config.tracing.global.stackTraceLength);
-    if (!lengthResult.isValid) {
-      logger.warn(`Invalid config.tracing.global.stackTraceLength: ${lengthResult.error}`);
+  const isGlobalLengthDefined = tracing.global?.stackTraceLength !== undefined;
+  const isLegacyLengthDefined = tracing.stackTraceLength !== undefined;
+
+  const lengthValue = isGlobalLengthDefined ? tracing.global.stackTraceLength : tracing.stackTraceLength;
+
+  if (lengthValue !== undefined) {
+    if (isLegacyLengthDefined && !isGlobalLengthDefined) {
+      logger.warn(
+        'The configuration option config.tracing.stackTraceLength is deprecated and will be removed in a ' +
+          'future release. Please use "config.tracing.global.stackTraceLength" instead.'
+      );
     }
-  } else if (config.tracing.stackTraceLength !== undefined) {
-    const lengthResult = validateStackTraceLength(config.tracing.stackTraceLength);
-    if (!lengthResult.isValid) {
-      logger.warn(`Invalid config.tracing.stackTraceLength: ${lengthResult.error}`);
+
+    const result = validateStackTraceLength(lengthValue);
+
+    if (result.isValid) {
+      tracing.stackTraceLength = configNormalizers.stackTrace.normalizeStackTraceLength(config);
+    } else {
+      logger.warn(
+        `Invalid config.tracing.${isGlobalLengthDefined ? 'global.stackTraceLength' : 'stackTraceLength'}: ${
+          result.error
+        }`
+      );
     }
   }
-  config.tracing.stackTraceLength = configNormalizers.stackTrace.normalizeStackTraceLength(config);
 
-  return;
+  if (tracing.stackTraceLength === undefined) {
+    tracing.stackTraceLength = defaults.tracing.stackTraceLength;
+  }
+
+  if (!tracing.stackTrace) {
+    tracing.stackTrace = defaults.tracing.stackTrace;
+  }
 }
 
 /**
