@@ -35,6 +35,9 @@ mochaSuiteFn('opentelemetry tests', function () {
       return;
     }
 
+    execSync('rm -rf package-lock.json', { cwd: __dirname, stdio: 'inherit' });
+    execSync('rm -rf package.json', { cwd: __dirname, stdio: 'inherit' });
+    execSync('rm -rf node_modules', { cwd: __dirname, stdio: 'inherit' });
     execSync('./preinstall.sh', { cwd: __dirname, stdio: 'inherit' });
   });
 
@@ -53,18 +56,35 @@ mochaSuiteFn('opentelemetry tests', function () {
         if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS === 'true') {
           return;
         }
-        execSync('npm install --no-save --no-package-lock --prefix ./ ./core.tgz', {
+
+        execSync('npm install --save --prefix ./ ./core.tgz', {
           cwd: __dirname,
           stdio: 'inherit'
         });
 
-        execSync('npm install --no-save --no-package-lock --prefix ./ ./collector.tgz', {
+        execSync('npm install --save --prefix ./ ./collector.tgz', {
+          cwd: __dirname,
+          stdio: 'inherit'
+        });
+
+        execSync('npm install --save --prefix ./ @opentelemetry/api@1.9.0', {
+          cwd: __dirname,
+          stdio: 'inherit'
+        });
+
+        execSync('npm install --save --prefix ./ "@opentelemetry/api-v1.3.0@npm:@opentelemetry/api@1.3.0"', {
           cwd: __dirname,
           stdio: 'inherit'
         });
       });
+
       // TODO: Restify test is broken in v24. See Issue: https://github.com/restify/node-restify/issues/1984
-      const restifyTest = semver.gte(process.versions.node, '24.0.0') ? describe.skip : describe;
+      let restifyTest = semver.gte(process.versions.node, '24.0.0') ? describe.skip : describe;
+
+      if (process.env.RUN_ESM === 'true') {
+        restifyTest = describe.skip;
+      }
+
       restifyTest('restify', function () {
         describe('opentelemetry is enabled', function () {
           globalAgent.setUpCleanUpHooks();
@@ -275,7 +295,12 @@ mochaSuiteFn('opentelemetry tests', function () {
         });
       });
 
-      describe('fs', function () {
+      let runFs = describe;
+      if (process.env.RUN_ESM === 'true') {
+        runFs = describe.skip;
+      }
+
+      runFs('fs', function () {
         globalAgent.setUpCleanUpHooks();
         const agentControls = globalAgent.instance;
 
@@ -396,7 +421,12 @@ mochaSuiteFn('opentelemetry tests', function () {
             .then(() => retry(() => agentControls.getSpans().then(spans => expect(spans).to.be.empty))));
       });
 
-      describe('socket.io', function () {
+      let runSocketIo = describe;
+      if (process.env.RUN_ESM === 'true') {
+        runSocketIo = describe.skip;
+      }
+
+      runSocketIo('socket.io', function () {
         globalAgent.setUpCleanUpHooks();
         const agentControls = globalAgent.instance;
         let socketIOServerPort;
@@ -567,10 +597,20 @@ mochaSuiteFn('opentelemetry tests', function () {
           this.timeout(1000 * 60 * 2);
 
           before(async () => {
+            if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS !== 'true') {
+              const rootPackageJson = require('../../../../../package.json');
+              const tediousVersion = rootPackageJson.devDependencies.tedious;
+              execSync(`npm i "tedious@${tediousVersion}" --prefix ./ --save`, {
+                cwd: __dirname,
+                stdio: 'inherit'
+              });
+            }
+
             controls = new ProcessControls({
               appPath: path.join(__dirname, './tedious-app'),
               useGlobalAgent: true,
               cwd: __dirname,
+              esmLoaderPath: path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-register.mjs'),
               enableOtelIntegration: true,
               env: {
                 OTEL_API_VERSION: version
@@ -700,7 +740,12 @@ mochaSuiteFn('opentelemetry tests', function () {
         });
       });
 
-      describe('OracleDB', function () {
+      let runOracleDb = describe;
+      if (process.env.RUN_ESM === 'true') {
+        runOracleDb = describe.skip;
+      }
+
+      runOracleDb('OracleDB', function () {
         this.timeout(1000 * 60);
 
         describe('opentelemetry is enabled', function () {
@@ -836,12 +881,18 @@ mochaSuiteFn('opentelemetry tests', function () {
     });
   });
 
-  mochaSuiteFn('when otel sdk and instana is enabled', function () {
+  let runOtelSdkAndInstana = mochaSuiteFn;
+  if (process.env.RUN_ESM === 'true') {
+    runOtelSdkAndInstana = describe.skip;
+  }
+
+  runOtelSdkAndInstana('when otel sdk and instana is enabled', function () {
     this.timeout(config.getTestTimeout() * 4);
     before(async () => {
       if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS === 'true') {
         return;
       }
+
       execSync('rm -rf ./otel-sdk-and-instana/node_modules', { cwd: __dirname, stdio: 'inherit' });
       execSync('npm install --no-save --no-package-lock', {
         cwd: path.join(__dirname, './otel-sdk-and-instana'),

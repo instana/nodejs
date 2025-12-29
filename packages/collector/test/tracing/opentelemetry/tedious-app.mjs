@@ -1,8 +1,8 @@
 /*
- * (c) Copyright IBM Corp. 2024
+ * (c) Copyright IBM Corp. 2025
  */
 
-'use strict';
+/* eslint-disable no-console */
 
 // NOTE: c8 bug https://github.com/bcoe/c8/issues/166
 process.on('SIGTERM', () => {
@@ -10,27 +10,30 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-/* eslint-disable no-console */
-require('@instana/collector')();
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const { isCI } = require('@instana/core/test/test_util');
-const port = require('../../test_util/app-port')();
-const tedious = require('tedious');
-
+import express from 'express';
+import fs from 'fs';
+import bodyParser from 'body-parser';
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+import testUtil from '../../../../core/test/test_util/index.js';
+import getAppPort from '../../test_util/app-port.js';
+const port = getAppPort();
+const isCI = testUtil.isCI;
+import tedious from 'tedious';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const require = createRequire(import.meta.url);
 const tediousPath = require.resolve('tedious');
-const expectedLocalPath = path.resolve(__dirname, 'node_modules', 'tedious');
+const expectedLocalPath = resolve(__dirname, 'node_modules', 'tedious');
 if (!tediousPath.includes(expectedLocalPath)) {
   throw new Error(
-    // eslint-disable-next-line max-len
     `tedious must be loaded from local node_modules. Expected path containing: ${expectedLocalPath}, but got: ${tediousPath}`
   );
 }
 
 const Connection = tedious.Connection;
 const Request = tedious.Request;
-const bodyParser = require('body-parser');
 const app = express();
 
 app.use(bodyParser.json());
