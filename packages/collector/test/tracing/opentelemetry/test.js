@@ -567,6 +567,15 @@ mochaSuiteFn('opentelemetry tests', function () {
           this.timeout(1000 * 60 * 2);
 
           before(async () => {
+            if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS !== 'true') {
+              const rootPackageJson = require('../../../../../package.json');
+              const tediousVersion = rootPackageJson.devDependencies.tedious;
+              execSync(`npm i "tedious@${tediousVersion}" --prefix ./ --no-save --no-package-lock`, {
+                cwd: __dirname,
+                stdio: 'inherit'
+              });
+            }
+
             controls = new ProcessControls({
               appPath: path.join(__dirname, './tedious-app'),
               useGlobalAgent: true,
