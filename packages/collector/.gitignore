@@ -12,3 +12,6 @@ test/tracing/misc/typescript/ts_cjs/dist
 
 test/tracing/misc/esbuild-external/dist/
 test/tracing/misc/esbuild-external/.env
+
+test/tracing/opentelemetry/package-lock.json
+test/tracing/opentelemetry/package.json

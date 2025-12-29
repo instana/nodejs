@@ -56,7 +56,9 @@ class ProcessControls {
     }
 
     if (process.env.RUN_ESM && !opts.execArgv) {
-      const esmLoader = [`--import=${path.join(__dirname, '..', '..', 'esm-register.mjs')}`];
+      const esmLoader = [
+        `--import=${opts.esmLoaderPath ? opts.esmLoaderPath : path.join(__dirname, '..', '..', 'esm-register.mjs')}`
+      ];
 
       try {
         // Custom appPath is provided, use that. here we check the exact file name for esm app
