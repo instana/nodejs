@@ -4,8 +4,6 @@
 # (c) Copyright IBM Corp. 2025
 #######################################
 
-currentDir=$(pwd)
-
 cd "$(dirname "$0")/../../../../collector"
 echo "Running npm pack in $(pwd)"
 npm pack
