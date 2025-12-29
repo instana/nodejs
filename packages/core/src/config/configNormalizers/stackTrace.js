@@ -123,15 +123,16 @@ function normalizeStackTraceLength(tracingObj) {
 
   // Check legacy config
   if (tracingObj?.stackTraceLength != null) {
+    logger.warn(
+      'The configuration option config.tracing.stackTraceLength is deprecated and will be removed in a ' +
+        'future release. Please use config.tracing.global.stackTraceLength instead.'
+    );
+
     const parsed =
       typeof tracingObj.stackTraceLength === 'number'
         ? tracingObj.stackTraceLength
         : parseInt(tracingObj.stackTraceLength, 10);
     if (!isNaN(parsed) && Number.isFinite(parsed)) {
-      logger.warn(
-        'The configuration option config.tracing.stackTraceLength is deprecated and will be removed in a ' +
-          'future release. Please use config.tracing.global.stackTraceLength instead.'
-      );
       const normalized = Math.abs(Math.round(parsed));
       return Math.min(normalized, MAX_STACK_TRACE_LENGTH);
     }

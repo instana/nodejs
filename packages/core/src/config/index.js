@@ -475,10 +475,6 @@ function normalizeTracingStackTrace(config) {
       logger.warn(`Invalid config.tracing.global.stackTraceLength: ${lengthResult.error}`);
     }
   } else if (config.tracing.stackTraceLength !== undefined) {
-    logger.warn(
-      'The configuration option config.tracing.stackTraceLength is deprecated and will be removed in a ' +
-        'future release. Please use config.tracing.global.stackTraceLength instead.'
-    );
     const lengthResult = validateStackTraceLength(config.tracing.stackTraceLength);
     if (!lengthResult.isValid) {
       logger.warn(`Invalid config.tracing.stackTraceLength: ${lengthResult.error}`);
