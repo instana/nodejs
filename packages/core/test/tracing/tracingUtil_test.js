@@ -430,6 +430,20 @@ describe('tracing/tracingUtil', () => {
   });
 
   describe('setErrorDetails', () => {
+    before(() => {
+      tracingUtil.init({
+        logger: {
+          debug: () => {},
+          info: () => {},
+          warn: () => {},
+          error: () => {}
+        },
+        tracing: {
+          stackTraceLength: 10
+        }
+      });
+    });
+
     it('should handle Error objects with message and stack', () => {
       const span = {
         data: {
@@ -531,7 +545,7 @@ describe('tracing/tracingUtil', () => {
       expect(span.stack[0]).to.have.property('n', 10);
     });
 
-    it('should respect configured stackTraceLength limit', () => {
+    it('should respect default stackTraceLength limit', () => {
       const testSpan = {
         data: {
           nats: {}
