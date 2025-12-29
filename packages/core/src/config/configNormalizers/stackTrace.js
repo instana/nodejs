@@ -12,10 +12,14 @@ const {
 
 const { DEFAULT_STACK_TRACE_MODE, DEFAULT_STACK_TRACE_LENGTH } = require('../../util/constants');
 
+/** @type {import('../../core').GenericLogger} */
+let logger;
+
 /**
  * @param {import('../../config').InstanaConfig} config
  */
 exports.init = function init(config) {
+  logger = config.logger;
   setLogger(config.logger);
 };
 
@@ -147,6 +151,10 @@ function normalizeStackTraceLength(tracingObj, isAgentConfig = false) {
 
   const validatedConfig = validateStackTraceLength(tracingObj?.stackTraceLength, 'config.tracing.stackTraceLength');
   if (validatedConfig != null) {
+    logger.warn(
+      'The configuration option config.tracing.stackTraceLength is deprecated and will be removed in a ' +
+        'future release. Please use config.tracing.global.stackTraceLength instead.'
+    );
     return validatedConfig;
   }
 
