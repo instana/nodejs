@@ -21,8 +21,6 @@ import getAppPort from '../../test_util/app-port.js';
 const port = getAppPort();
 const isCI = testUtil.isCI;
 import tedious from 'tedious';
-
-// Verify that tedious is loaded from the local node_modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const require = createRequire(import.meta.url);

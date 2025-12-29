@@ -19,7 +19,6 @@ const { isCI } = require('@instana/core/test/test_util');
 const port = require('../../test_util/app-port')();
 const tedious = require('tedious');
 
-// Verify that tedious is loaded from the local node_modules
 const tediousPath = require.resolve('tedious');
 const expectedLocalPath = path.resolve(__dirname, 'node_modules', 'tedious');
 if (!tediousPath.includes(expectedLocalPath)) {
