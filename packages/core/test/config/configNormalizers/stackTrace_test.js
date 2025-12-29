@@ -25,14 +25,6 @@ describe('config.configNormalizers.stackTrace', () => {
 
   beforeEach(() => {
     resetEnv();
-    logger = {
-      debug: sinon.stub(),
-      info: sinon.stub(),
-      warn: sinon.stub(),
-      error: sinon.stub(),
-      trace: sinon.stub()
-    };
-    stackTraceNormalizer.init({ logger });
   });
 
   afterEach(() => {
@@ -314,8 +306,6 @@ describe('config.configNormalizers.stackTrace', () => {
       const result = stackTraceNormalizer.normalizeStackTraceLength(config);
 
       expect(result).to.equal(25);
-      expect(logger.warn.calledOnce).to.be.true;
-      expect(logger.warn.firstCall.args[0]).to.include('deprecated');
     });
 
     it('should prioritize tracing.stackTraceLength over environment variable', () => {

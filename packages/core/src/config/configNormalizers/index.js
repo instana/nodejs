@@ -14,7 +14,6 @@ const stackTrace = require('./stackTrace');
 exports.init = function init(config) {
   disable.init(config);
   ignoreEndpoints.init(config);
-  stackTrace.init(config);
 };
 
 exports.disable = disable;

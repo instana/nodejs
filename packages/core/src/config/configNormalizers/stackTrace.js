@@ -11,16 +11,6 @@ const {
   validStackTraceModes
 } = require('../../util/constants');
 
-/** @type {import('../../core').GenericLogger} */
-let logger;
-
-/**
- * @param {import('../../config').InstanaConfig} config
- */
-exports.init = function init(config) {
-  logger = config.logger;
-};
-
 /**
  * Normalizes stackTrace mode from config
  * @param {import('../../config').InstanaConfig} config
