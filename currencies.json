@@ -867,5 +867,16 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false
+  },
+  {
+    "name": "@confluentinc/kafka-javascript",
+    "policy": "45-days",
+    "lastSupportedVersion": "",
+    "latestVersion": "",
+    "cloudNative": false,
+    "isBeta": false,
+    "ignoreUpdates": false,
+    "note": "",
+    "core": false
   }
 ]
