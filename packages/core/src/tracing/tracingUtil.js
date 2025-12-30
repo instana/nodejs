@@ -47,7 +47,7 @@ exports.activate = function activate(extraConfig) {
   }
 
   // stackTraceLength is valid when set to any number, including 0
-  if (typeof agentTraceConfig?.stackTraceLength === 'number') {
+  if (agentTraceConfig?.stackTraceLength != null) {
     stackTraceLength = agentTraceConfig.stackTraceLength;
   }
 };
