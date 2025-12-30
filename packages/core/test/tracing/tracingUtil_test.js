@@ -12,7 +12,7 @@ const fail = require('assert').fail;
 const util = require('util');
 
 const config = require('../config');
-const { isCI } = require('../test_util');
+const { isCI, createFakeLogger } = require('../test_util');
 
 const {
   findCallback,
@@ -432,12 +432,7 @@ describe('tracing/tracingUtil', () => {
   describe('setErrorDetails', () => {
     before(() => {
       tracingUtil.init({
-        logger: {
-          debug: () => {},
-          info: () => {},
-          warn: () => {},
-          error: () => {}
-        },
+        logger: createFakeLogger(),
         tracing: {
           stackTraceLength: 10
         }
@@ -720,12 +715,7 @@ describe('tracing/tracingUtil', () => {
   describe('getStackTrace', () => {
     before(() => {
       tracingUtil.init({
-        logger: {
-          debug: () => {},
-          info: () => {},
-          warn: () => {},
-          error: () => {}
-        },
+        logger: createFakeLogger(),
         tracing: {
           stackTraceLength: 10
         }
