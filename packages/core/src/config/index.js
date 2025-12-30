@@ -483,7 +483,7 @@ function normalizeTracingStackTrace(config) {
     const result = validateStackTraceMode(envStackTrace);
 
     if (result.isValid) {
-      const normalized = configNormalizers.stackTrace.normalizeStackTraceModeEnv(envStackTrace);
+      const normalized = configNormalizers.stackTrace.normalizeStackTraceModeFromEnv(envStackTrace);
       if (normalized !== null) {
         tracing.stackTrace = normalized;
       } else {
@@ -526,7 +526,7 @@ function normalizeTracingStackTrace(config) {
     const result = validateStackTraceLength(envStackTraceLength);
 
     if (result.isValid) {
-      const normalized = configNormalizers.stackTrace.normalizeStackTraceLengthEnv(envStackTraceLength);
+      const normalized = configNormalizers.stackTrace.normalizeStackTraceLengthFromEnv(envStackTraceLength);
       if (normalized !== null) {
         tracing.stackTraceLength = normalized;
       } else {

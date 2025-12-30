@@ -478,156 +478,156 @@ describe('config.configNormalizers.stackTrace', () => {
     });
   });
 
-  describe('normalizeStackTraceModeEnv()', () => {
+  describe('normalizeStackTraceModeFromEnv()', () => {
     it('should normalize valid env value to lowercase', () => {
-      const result = stackTraceNormalizer.normalizeStackTraceModeEnv('ALL');
+      const result = stackTraceNormalizer.normalizeStackTraceModeFromEnv('ALL');
 
       expect(result).to.equal('all');
     });
 
     it('should handle lowercase input', () => {
-      const result = stackTraceNormalizer.normalizeStackTraceModeEnv('error');
+      const result = stackTraceNormalizer.normalizeStackTraceModeFromEnv('error');
 
       expect(result).to.equal('error');
     });
 
     it('should handle mixed case input', () => {
-      const result = stackTraceNormalizer.normalizeStackTraceModeEnv('NoNe');
+      const result = stackTraceNormalizer.normalizeStackTraceModeFromEnv('NoNe');
 
       expect(result).to.equal('none');
     });
 
     it('should return null for invalid mode', () => {
-      const result = stackTraceNormalizer.normalizeStackTraceModeEnv('invalid');
+      const result = stackTraceNormalizer.normalizeStackTraceModeFromEnv('invalid');
 
       expect(result).to.be.null;
     });
 
     it('should return null for empty string', () => {
-      const result = stackTraceNormalizer.normalizeStackTraceModeEnv('');
+      const result = stackTraceNormalizer.normalizeStackTraceModeFromEnv('');
 
       expect(result).to.be.null;
     });
 
     it('should return null for null', () => {
-      const result = stackTraceNormalizer.normalizeStackTraceModeEnv(null);
+      const result = stackTraceNormalizer.normalizeStackTraceModeFromEnv(null);
 
       expect(result).to.be.null;
     });
 
     it('should return null for undefined', () => {
-      const result = stackTraceNormalizer.normalizeStackTraceModeEnv(undefined);
+      const result = stackTraceNormalizer.normalizeStackTraceModeFromEnv(undefined);
 
       expect(result).to.be.null;
     });
 
     it('should handle numeric string by converting to string', () => {
-      const result = stackTraceNormalizer.normalizeStackTraceModeEnv(123);
+      const result = stackTraceNormalizer.normalizeStackTraceModeFromEnv(123);
 
       expect(result).to.be.null;
     });
 
-    describe('normalizeStackTraceLengthEnv()', () => {
+    describe('normalizeStackTraceLengthFromEnv()', () => {
       it('should accept valid numeric string from env', () => {
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('20');
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv('20');
 
         expect(result).to.equal(20);
       });
 
       it('should round decimal string values', () => {
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('15.2');
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv('15.2');
 
         expect(result).to.equal(15);
       });
 
       it('should convert negative string values to positive', () => {
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('-10');
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv('-10');
 
         expect(result).to.equal(10);
       });
 
       it('should cap at MAX_STACK_TRACE_LENGTH', () => {
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('1000');
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv('1000');
 
         expect(result).to.equal(MAX_STACK_TRACE_LENGTH);
       });
 
       it('should handle zero value', () => {
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('0');
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv('0');
 
         expect(result).to.equal(0);
       });
 
       it('should return null for invalid string', () => {
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('invalid');
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv('invalid');
 
         expect(result).to.be.null;
       });
 
       it('should return null for empty string', () => {
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('');
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv('');
 
         expect(result).to.be.null;
       });
 
       it('should return null for null', () => {
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv(null);
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv(null);
 
         expect(result).to.be.null;
       });
 
       it('should return null for undefined', () => {
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv(undefined);
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv(undefined);
 
         expect(result).to.be.null;
       });
 
       it('should handle string with leading/trailing spaces', () => {
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('  25  ');
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv('  25  ');
 
         expect(result).to.equal(25);
       });
 
       it('should return null for Infinity string', () => {
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('Infinity');
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv('Infinity');
 
         expect(result).to.be.null;
       });
 
       it('should return null for NaN string', () => {
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('NaN');
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv('NaN');
 
         expect(result).to.be.null;
       });
 
       it('should handle very large negative string value', () => {
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('-1000');
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv('-1000');
 
         expect(result).to.equal(MAX_STACK_TRACE_LENGTH);
       });
 
       it('should handle stackTraceLength exactly at MAX_STACK_TRACE_LENGTH', () => {
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv(String(MAX_STACK_TRACE_LENGTH));
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv(String(MAX_STACK_TRACE_LENGTH));
 
         expect(result).to.equal(MAX_STACK_TRACE_LENGTH);
       });
 
       it('should handle stackTraceLength just below MAX_STACK_TRACE_LENGTH', () => {
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv(String(MAX_STACK_TRACE_LENGTH - 1));
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv(String(MAX_STACK_TRACE_LENGTH - 1));
 
         expect(result).to.equal(MAX_STACK_TRACE_LENGTH - 1);
       });
 
       it('should normalize INSTANA_STACK_TRACE_LENGTH=0 from environment variable to 0', () => {
         process.env.INSTANA_STACK_TRACE_LENGTH = '0';
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv(process.env.INSTANA_STACK_TRACE_LENGTH);
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv(process.env.INSTANA_STACK_TRACE_LENGTH);
 
         expect(result).to.equal(0);
       });
 
       it('should normalize INSTANA_STACK_TRACE_LENGTH=0 from environment variable to 0', () => {
         process.env.INSTANA_STACK_TRACE_LENGTH = 0;
-        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv(process.env.INSTANA_STACK_TRACE_LENGTH);
+        const result = stackTraceNormalizer.normalizeStackTraceLengthFromEnv(process.env.INSTANA_STACK_TRACE_LENGTH);
 
         expect(result).to.equal(0);
       });

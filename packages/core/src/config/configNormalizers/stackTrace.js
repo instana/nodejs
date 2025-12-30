@@ -98,7 +98,7 @@ function normalizeNumericalStackTraceLength(numericalLength) {
  * @param {string} envValue - The environment variable value to normalize
  * @returns {string | null}
  */
-exports.normalizeStackTraceModeEnv = function (envValue) {
+exports.normalizeStackTraceModeFromEnv = function (envValue) {
   if (envValue) {
     const normalized = String(envValue).toLowerCase();
     if (validStackTraceModes.includes(normalized)) {
@@ -114,7 +114,7 @@ exports.normalizeStackTraceModeEnv = function (envValue) {
  * @param {string} envValue - The environment variable value to normalize
  * @returns {number | null}
  */
-exports.normalizeStackTraceLengthEnv = function (envValue) {
+exports.normalizeStackTraceLengthFromEnv = function (envValue) {
   if (envValue) {
     const parsed = parseInt(envValue, 10);
     if (!isNaN(parsed) && Number.isFinite(parsed)) {
