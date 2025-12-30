@@ -150,7 +150,8 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
       response.tracing.disable = disable;
     }
     if (stackTraceConfig) {
-      response.tracing.global = stackTraceConfig;
+      response.tracing.global = response.tracing.global || {};
+      deepMerge(response.tracing.global, stackTraceConfig);
     }
   }
 

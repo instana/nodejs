@@ -263,8 +263,8 @@ function applyStackTraceConfiguration(agentResponse) {
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'global']);
 
   if (globalConfig['stack-trace'] !== undefined) {
-    const validateMode = validateStackTraceMode(globalConfig['stack-trace']);
-    if (validateMode.isValid) {
+    const stackTraceModeValidation = validateStackTraceMode(globalConfig['stack-trace']);
+    if (stackTraceModeValidation.isValid) {
       const normalizedStackTrace = configNormalizers.stackTrace.normalizeStackTraceModeFromAgent(
         globalConfig['stack-trace']
       );
@@ -272,13 +272,13 @@ function applyStackTraceConfiguration(agentResponse) {
         agentOpts.config.tracing.stackTrace = normalizedStackTrace;
       }
     } else {
-      logger.warn(`Invalid stack-trace value from agent: ${validateMode.error}`);
+      logger.warn(`Invalid stack-trace value from agent: ${stackTraceModeValidation.error}`);
     }
   }
 
   if (globalConfig['stack-trace-length'] !== undefined) {
-    const validateLength = validateStackTraceLength(globalConfig['stack-trace-length']);
-    if (validateLength.isValid) {
+    const stackTraceLengthValidation = validateStackTraceLength(globalConfig['stack-trace-length']);
+    if (stackTraceLengthValidation.isValid) {
       const normalizedStackTraceLength = configNormalizers.stackTrace.normalizeStackTraceLengthFromAgent(
         globalConfig['stack-trace-length']
       );
@@ -286,7 +286,7 @@ function applyStackTraceConfiguration(agentResponse) {
         agentOpts.config.tracing.stackTraceLength = normalizedStackTraceLength;
       }
     } else {
-      logger.warn(`Invalid stack-trace-length value from agent: ${validateLength.error}`);
+      logger.warn(`Invalid stack-trace-length value from agent: ${stackTraceLengthValidation.error}`);
     }
   }
 }
