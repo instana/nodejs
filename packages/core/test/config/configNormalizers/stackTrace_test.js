@@ -617,6 +617,20 @@ describe('config.configNormalizers.stackTrace', () => {
 
         expect(result).to.equal(MAX_STACK_TRACE_LENGTH - 1);
       });
+
+      it('should normalize INSTANA_STACK_TRACE_LENGTH=0 from environment variable to 0', () => {
+        process.env.INSTANA_STACK_TRACE_LENGTH = '0';
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv(process.env.INSTANA_STACK_TRACE_LENGTH);
+
+        expect(result).to.equal(0);
+      });
+
+      it('should normalize INSTANA_STACK_TRACE_LENGTH=0 from environment variable to 0', () => {
+        process.env.INSTANA_STACK_TRACE_LENGTH = 0;
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv(process.env.INSTANA_STACK_TRACE_LENGTH);
+
+        expect(result).to.equal(0);
+      });
     });
   });
 });

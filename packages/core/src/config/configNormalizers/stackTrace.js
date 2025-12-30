@@ -41,8 +41,7 @@ exports.normalizeStackTraceLength = function (config) {
         ? tracingObj.global.stackTraceLength
         : parseInt(tracingObj.global.stackTraceLength, 10);
     if (!isNaN(parsed) && Number.isFinite(parsed)) {
-      const normalized = Math.abs(Math.round(parsed));
-      return Math.min(normalized, MAX_STACK_TRACE_LENGTH);
+      return normalizeNumericalStackTraceLength(parsed);
     }
   }
 
@@ -52,8 +51,7 @@ exports.normalizeStackTraceLength = function (config) {
         ? tracingObj.stackTraceLength
         : parseInt(tracingObj.stackTraceLength, 10);
     if (!isNaN(parsed) && Number.isFinite(parsed)) {
-      const normalized = Math.abs(Math.round(parsed));
-      return Math.min(normalized, MAX_STACK_TRACE_LENGTH);
+      return normalizeNumericalStackTraceLength(parsed);
     }
   }
 
