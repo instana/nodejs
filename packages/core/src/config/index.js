@@ -464,7 +464,7 @@ function normalizeTracingStackTrace(config) {
   const envStackTrace = process.env['INSTANA_STACK_TRACE'];
   const envStackTraceLength = process.env['INSTANA_STACK_TRACE_LENGTH'];
 
-  // handles stackTraceMode
+  // tracing.global?.stackTrace == stack trace mode (all, error, none)
   if (tracing.global?.stackTrace !== undefined) {
     const result = validateStackTraceMode(tracing.global.stackTrace);
 
