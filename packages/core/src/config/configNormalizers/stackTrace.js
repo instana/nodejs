@@ -32,7 +32,7 @@ exports.normalizeStackTraceMode = function (config) {
 exports.normalizeStackTraceLength = function (config) {
   const tracingObj = config?.tracing;
 
-  // Note: For in-code configuration, global takes precedence.
+  // Note: For in-code configuration, global takes precedence, because we are migrating away from legacy config tracing.stackTraceLength
   // tracing.global.stackTraceLength > tracing.stackTraceLength
   if (tracingObj?.global?.stackTraceLength != null) {
     const parsed =
