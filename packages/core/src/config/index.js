@@ -498,20 +498,18 @@ function normalizeTracingStackTrace(config) {
   }
 
   // handles stackTraceLength
-  const isGlobalLengthDefined = tracing.global?.stackTraceLength !== undefined;
   const isLegacyLengthDefined = tracing.stackTraceLength !== undefined;
+  const stackTraceConfigValue = tracing.global?.stackTraceLength || tracing.stackTraceLength;
 
-  if (isGlobalLengthDefined || isLegacyLengthDefined) {
-    if (isLegacyLengthDefined && !isGlobalLengthDefined) {
+  if (stackTraceConfigValue !== undefined) {
+    if (isLegacyLengthDefined) {
       logger.warn(
         '[Deprecation Warning] The configuration option config.tracing.stackTraceLength is deprecated and will be removed in a future release. ' +
           'Please use config.tracing.global.stackTraceLength instead.'
       );
     }
 
-    const result = validateStackTraceLength(
-      isGlobalLengthDefined ? tracing.global.stackTraceLength : tracing.stackTraceLength
-    );
+    const result = validateStackTraceLength(stackTraceConfigValue);
 
     if (result.isValid) {
       const normalized = configNormalizers.stackTrace.normalizeStackTraceLength(config);
