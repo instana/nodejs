@@ -260,7 +260,6 @@ function applyStackTraceConfiguration(agentResponse) {
   if (!globalConfig) return;
 
   // TODO: Implement local configuration handling.
-  // Prefer the local configuration when present; otherwise, fall back to the global configuration.
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'global']);
 
   if (globalConfig['stack-trace'] !== undefined) {
