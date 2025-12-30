@@ -260,10 +260,10 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.stackTraceLength).to.equal(3);
   });
 
-  it('should give precedence to config over INSTANA_STACK_TRACE_LENGTH', () => {
+  it('should give precedence to INSTANA_STACK_TRACE_LENGTH over config', () => {
     process.env.INSTANA_STACK_TRACE_LENGTH = '5';
     const normalizedConfig = coreConfig.normalize({ tracing: { stackTraceLength: 20 } });
-    expect(normalizedConfig.tracing.stackTraceLength).to.equal(20);
+    expect(normalizedConfig.tracing.stackTraceLength).to.equal(5);
     delete process.env.INSTANA_STACK_TRACE_LENGTH;
   });
 
@@ -299,10 +299,10 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.stackTrace).to.equal('none');
   });
 
-  it('should give precedence to config over INSTANA_STACK_TRACE', () => {
+  it('should give precedence to env INSTANA_STACK_TRACE over config', () => {
     process.env.INSTANA_STACK_TRACE = 'none';
     const config = coreConfig.normalize({ tracing: { global: { stackTrace: 'all' } } });
-    expect(config.tracing.stackTrace).to.equal('all');
+    expect(config.tracing.stackTrace).to.equal('none');
   });
 
   it('should reject invalid stack trace mode from config and fallback to default', () => {
@@ -485,7 +485,7 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.stackTraceLength).to.equal(30);
   });
 
-  it('should give precedence to config over env vars for both stack trace settings', () => {
+  it('should give precedence to env vars for both stack trace settings over config', () => {
     process.env.INSTANA_STACK_TRACE = 'error';
     process.env.INSTANA_STACK_TRACE_LENGTH = '15';
     const config = coreConfig.normalize({
@@ -496,8 +496,8 @@ describe('config.normalizeConfig', () => {
         }
       }
     });
-    expect(config.tracing.stackTrace).to.equal('all');
-    expect(config.tracing.stackTraceLength).to.equal(40);
+    expect(config.tracing.stackTrace).to.equal('error');
+    expect(config.tracing.stackTraceLength).to.equal(15);
   });
 
   it('should use INSTANA_STACK_TRACE_LENGTH when STACK_TRACE_LENGTH is not set', () => {

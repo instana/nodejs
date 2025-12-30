@@ -464,21 +464,7 @@ function normalizeTracingStackTrace(config) {
   const envStackTrace = process.env['INSTANA_STACK_TRACE'];
   const envStackTraceLength = process.env['INSTANA_STACK_TRACE_LENGTH'];
 
-  if (tracing.global?.stackTrace !== undefined) {
-    const result = validateStackTraceMode(tracing.global.stackTrace);
-
-    if (result.isValid) {
-      const normalized = configNormalizers.stackTrace.normalizeStackTraceMode(config);
-      if (normalized !== null) {
-        tracing.stackTrace = normalized;
-      } else {
-        tracing.stackTrace = defaults.tracing.stackTrace;
-      }
-    } else {
-      logger.warn(`Invalid config.tracing.global.stackTrace: ${result.error}`);
-      tracing.stackTrace = defaults.tracing.stackTrace;
-    }
-  } else if (envStackTrace !== undefined) {
+  if (envStackTrace !== undefined) {
     const result = validateStackTraceMode(envStackTrace);
 
     if (result.isValid) {
@@ -492,15 +478,42 @@ function normalizeTracingStackTrace(config) {
       logger.warn(`Invalid env INSTANA_STACK_TRACE: ${result.error}`);
       tracing.stackTrace = defaults.tracing.stackTrace;
     }
+  } else if (tracing.global?.stackTrace !== undefined) {
+    const result = validateStackTraceMode(tracing.global.stackTrace);
+
+    if (result.isValid) {
+      const normalized = configNormalizers.stackTrace.normalizeStackTraceMode(config);
+      if (normalized !== null) {
+        tracing.stackTrace = normalized;
+      } else {
+        tracing.stackTrace = defaults.tracing.stackTrace;
+      }
+    } else {
+      logger.warn(`Invalid config.tracing.global.stackTrace: ${result.error}`);
+      tracing.stackTrace = defaults.tracing.stackTrace;
+    }
   } else {
     tracing.stackTrace = defaults.tracing.stackTrace;
   }
 
-  // handles stackTraceLength
   const isLegacyLengthDefined = tracing.stackTraceLength !== undefined;
   const stackTraceConfigValue = tracing.global?.stackTraceLength || tracing.stackTraceLength;
 
-  if (stackTraceConfigValue !== undefined) {
+  if (envStackTraceLength !== undefined) {
+    const result = validateStackTraceLength(envStackTraceLength);
+
+    if (result.isValid) {
+      const normalized = configNormalizers.stackTrace.normalizeStackTraceLengthFromEnv(envStackTraceLength);
+      if (normalized !== null) {
+        tracing.stackTraceLength = normalized;
+      } else {
+        tracing.stackTraceLength = defaults.tracing.stackTraceLength;
+      }
+    } else {
+      logger.warn(`Invalid env INSTANA_STACK_TRACE_LENGTH: ${result.error}`);
+      tracing.stackTraceLength = defaults.tracing.stackTraceLength;
+    }
+  } else if (stackTraceConfigValue !== undefined) {
     if (isLegacyLengthDefined) {
       logger.warn(
         '[Deprecation Warning] The configuration option config.tracing.stackTraceLength is deprecated and will be removed in a future release. ' +
@@ -519,20 +532,6 @@ function normalizeTracingStackTrace(config) {
       }
     } else {
       logger.warn(`Invalid stackTraceLength value: ${result.error}`);
-      tracing.stackTraceLength = defaults.tracing.stackTraceLength;
-    }
-  } else if (envStackTraceLength !== undefined) {
-    const result = validateStackTraceLength(envStackTraceLength);
-
-    if (result.isValid) {
-      const normalized = configNormalizers.stackTrace.normalizeStackTraceLengthFromEnv(envStackTraceLength);
-      if (normalized !== null) {
-        tracing.stackTraceLength = normalized;
-      } else {
-        tracing.stackTraceLength = defaults.tracing.stackTraceLength;
-      }
-    } else {
-      logger.warn(`Invalid env INSTANA_STACK_TRACE_LENGTH: ${result.error}`);
       tracing.stackTraceLength = defaults.tracing.stackTraceLength;
     }
   } else {
