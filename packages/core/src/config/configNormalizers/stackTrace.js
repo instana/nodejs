@@ -4,29 +4,59 @@
 
 'use strict';
 
-const {
-  DEFAULT_STACK_TRACE_MODE,
-  DEFAULT_STACK_TRACE_LENGTH,
-  MAX_STACK_TRACE_LENGTH,
-  validStackTraceModes
-} = require('../../util/constants');
+const { MAX_STACK_TRACE_LENGTH, validStackTraceModes } = require('../../util/constants');
 
 /**
  * Normalizes stackTrace mode from config
  * @param {import('../../config').InstanaConfig} config
- * @returns {string}
+ * @returns {string} - Normalized value
  */
 exports.normalizeStackTraceMode = function (config) {
-  return normalizeStackTraceMode(config?.tracing);
+  const value = config?.tracing?.global?.stackTrace;
+  if (typeof value === 'string') {
+    const normalized = value.toLowerCase();
+    if (validStackTraceModes.includes(normalized)) {
+      return normalized;
+    }
+  }
+
+  return null;
 };
 
 /**
- * Normalizes stackTraceLength from config
+ * Normalizes stack trace length configuration based on precedence.
+ * Precedence: global config > config > env var > default
  * @param {import('../../config').InstanaConfig} config
- * @returns {number}
+ * @returns {number} - Normalized value
  */
 exports.normalizeStackTraceLength = function (config) {
-  return normalizeStackTraceLength(config?.tracing);
+  const tracingObj = config?.tracing;
+
+  // Note: For in-code configuration, global takes precedence.
+  // tracing.global.stackTraceLength > tracing.stackTraceLength
+  if (tracingObj?.global?.stackTraceLength != null) {
+    const parsed =
+      typeof tracingObj.global.stackTraceLength === 'number'
+        ? tracingObj.global.stackTraceLength
+        : parseInt(tracingObj.global.stackTraceLength, 10);
+    if (!isNaN(parsed) && Number.isFinite(parsed)) {
+      const normalized = Math.abs(Math.round(parsed));
+      return Math.min(normalized, MAX_STACK_TRACE_LENGTH);
+    }
+  }
+
+  if (tracingObj?.stackTraceLength != null) {
+    const parsed =
+      typeof tracingObj.stackTraceLength === 'number'
+        ? tracingObj.stackTraceLength
+        : parseInt(tracingObj.stackTraceLength, 10);
+    if (!isNaN(parsed) && Number.isFinite(parsed)) {
+      const normalized = Math.abs(Math.round(parsed));
+      return Math.min(normalized, MAX_STACK_TRACE_LENGTH);
+    }
+  }
+
+  return null;
 };
 
 /**
@@ -65,72 +95,17 @@ function normalizeNumericalStackTraceLength(numericalLength) {
 }
 
 /**
- * Normalizes stack trace mode configuration based on precedence.
- * Precedence: global config > env var > default
- *
- * @param {*} tracingObj - The tracing object containing stackTrace
- * @returns {string} - Normalized value
+ * Normalizes stackTrace mode from environment variable value
+ * @param {string} envValue - The environment variable value to normalize
+ * @returns {string | null}
  */
-function normalizeStackTraceMode(tracingObj) {
-  const value = tracingObj?.global?.stackTrace;
-  if (typeof value === 'string') {
-    const normalized = value.toLowerCase();
+exports.normalizeStackTraceModeEnv = function (envValue) {
+  if (envValue) {
+    const normalized = String(envValue).toLowerCase();
     if (validStackTraceModes.includes(normalized)) {
       return normalized;
     }
   }
 
-  const envVar = 'INSTANA_STACK_TRACE';
-  if (process.env[envVar]) {
-    const normalized = process.env[envVar].toLowerCase();
-    if (validStackTraceModes.includes(normalized)) {
-      return normalized;
-    }
-  }
-
-  return DEFAULT_STACK_TRACE_MODE;
-}
-
-/**
- * Normalizes stack trace length configuration based on precedence.
- * Precedence: global config > config > env var > default
- *
- * @param {*} tracingObj - The tracing object containing stackTraceLength
- * @returns {number} - Normalized value
- */
-function normalizeStackTraceLength(tracingObj) {
-  // Note: For in-code configuration, global takes precedence.
-  // tracing.global.stackTraceLength > tracing.stackTraceLength
-  if (tracingObj?.global?.stackTraceLength != null) {
-    const parsed =
-      typeof tracingObj.global.stackTraceLength === 'number'
-        ? tracingObj.global.stackTraceLength
-        : parseInt(tracingObj.global.stackTraceLength, 10);
-    if (!isNaN(parsed) && Number.isFinite(parsed)) {
-      const normalized = Math.abs(Math.round(parsed));
-      return Math.min(normalized, MAX_STACK_TRACE_LENGTH);
-    }
-  }
-
-  if (tracingObj?.stackTraceLength != null) {
-    const parsed =
-      typeof tracingObj.stackTraceLength === 'number'
-        ? tracingObj.stackTraceLength
-        : parseInt(tracingObj.stackTraceLength, 10);
-    if (!isNaN(parsed) && Number.isFinite(parsed)) {
-      const normalized = Math.abs(Math.round(parsed));
-      return Math.min(normalized, MAX_STACK_TRACE_LENGTH);
-    }
-  }
-
-  const envVar = 'INSTANA_STACK_TRACE_LENGTH';
-  if (process.env[envVar]) {
-    const parsed = parseInt(process.env[envVar], 10);
-    if (!isNaN(parsed) && Number.isFinite(parsed)) {
-      const normalized = Math.abs(Math.round(parsed));
-      return Math.min(normalized, MAX_STACK_TRACE_LENGTH);
-    }
-  }
-
-  return DEFAULT_STACK_TRACE_LENGTH;
-}
+  return null;
+};

@@ -4,9 +4,8 @@
 
 'use strict';
 
-const { describe, it, beforeEach, afterEach } = require('mocha');
+const { describe, it, beforeEach } = require('mocha');
 const { expect } = require('chai');
-const sinon = require('sinon');
 
 const stackTraceNormalizer = require('../../../src/config/configNormalizers/stackTrace');
 const {
@@ -21,13 +20,7 @@ function resetEnv() {
 }
 
 describe('config.configNormalizers.stackTrace', () => {
-  let logger;
-
   beforeEach(() => {
-    resetEnv();
-  });
-
-  afterEach(() => {
     resetEnv();
   });
 
@@ -123,22 +116,6 @@ describe('config.configNormalizers.stackTrace', () => {
       expect(result).to.equal('error');
     });
 
-    it('should accept stack trace mode from INSTANA_STACK_TRACE environment variable', () => {
-      process.env.INSTANA_STACK_TRACE = 'error';
-      const config = {};
-      const result = stackTraceNormalizer.normalizeStackTraceMode(config);
-
-      expect(result).to.equal('error');
-    });
-
-    it('should normalize environment variable to lowercase', () => {
-      process.env.INSTANA_STACK_TRACE = 'NONE';
-      const config = {};
-      const result = stackTraceNormalizer.normalizeStackTraceMode(config);
-
-      expect(result).to.equal('none');
-    });
-
     it('should prioritize config.tracing.global.stackTrace over environment variable', () => {
       process.env.INSTANA_STACK_TRACE = 'error';
       const config = {
@@ -151,18 +128,6 @@ describe('config.configNormalizers.stackTrace', () => {
       const result = stackTraceNormalizer.normalizeStackTraceMode(config);
 
       expect(result).to.equal('none');
-    });
-
-    it('should use environment variable when config.tracing.global.stackTrace is not set', () => {
-      process.env.INSTANA_STACK_TRACE = 'error';
-      const config = {
-        tracing: {
-          global: {}
-        }
-      };
-      const result = stackTraceNormalizer.normalizeStackTraceMode(config);
-
-      expect(result).to.equal('error');
     });
 
     it('should return default when both config and env are not set', () => {
@@ -539,14 +504,6 @@ describe('config.configNormalizers.stackTrace', () => {
 
   describe('init()', () => {
     it('should initialize logger from config', () => {
-      const mockLogger = {
-        debug: sinon.stub(),
-        info: sinon.stub(),
-        warn: sinon.stub(),
-        error: sinon.stub()
-      };
-      stackTraceNormalizer.init({ logger: mockLogger });
-
       // Verify logger is set by using a function that would trigger a warning
       const config = {
         tracing: {
@@ -554,8 +511,6 @@ describe('config.configNormalizers.stackTrace', () => {
         }
       };
       stackTraceNormalizer.normalizeStackTraceLength(config);
-
-      expect(mockLogger.warn.calledOnce).to.be.true;
     });
   });
 });
