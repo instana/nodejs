@@ -779,7 +779,7 @@ describe('unannounced state', () => {
         });
       });
 
-      it('should apply stack trace length from agent response (kebab-case)', done => {
+      it('should apply stack trace length from agent response', done => {
         prepareAnnounceResponse({
           tracing: {
             global: {
@@ -792,73 +792,6 @@ describe('unannounced state', () => {
             expect(agentOptsStub.config).to.deep.equal({
               tracing: {
                 stackTraceLength: 15,
-                global: {}
-              }
-            });
-            done();
-          }
-        });
-      });
-
-      it('should apply stack trace length from agent response (camelCase for backward compatibility)', done => {
-        prepareAnnounceResponse({
-          tracing: {
-            global: {
-              'stack-trace-length': 15
-            }
-          }
-        });
-        unannouncedState.enter({
-          transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                stackTraceLength: 15,
-                global: {}
-              }
-            });
-            done();
-          }
-        });
-      });
-
-      it('should apply both stack trace mode and length from agent response (kebab-case)', done => {
-        prepareAnnounceResponse({
-          tracing: {
-            global: {
-              'stack-trace': 'error',
-              'stack-trace-length': 20
-            }
-          }
-        });
-        unannouncedState.enter({
-          transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                stackTrace: 'error',
-                stackTraceLength: 20,
-                global: {}
-              }
-            });
-            done();
-          }
-        });
-      });
-
-      it('should apply both stack trace mode and length from agent response (camelCase)', done => {
-        prepareAnnounceResponse({
-          tracing: {
-            global: {
-              'stack-trace': 'error',
-              'stack-trace-length': 20
-            }
-          }
-        });
-        unannouncedState.enter({
-          transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                stackTrace: 'error',
-                stackTraceLength: 20,
                 global: {}
               }
             });
@@ -871,7 +804,7 @@ describe('unannounced state', () => {
         prepareAnnounceResponse({
           tracing: {
             global: {
-              'stack-trace': 'error',
+              'stack-trace': 'eRrOr',
               'stack-trace-length': 25
             }
           }
@@ -882,29 +815,6 @@ describe('unannounced state', () => {
               tracing: {
                 stackTrace: 'error',
                 stackTraceLength: 25,
-                global: {}
-              }
-            });
-            done();
-          }
-        });
-      });
-
-      it('should prioritize kebab-case over camelCase when both are present', done => {
-        prepareAnnounceResponse({
-          tracing: {
-            global: {
-              'stack-trace': 'error',
-              'stack-trace-length': 30
-            }
-          }
-        });
-        unannouncedState.enter({
-          transitionTo: () => {
-            expect(agentOptsStub.config).to.deep.equal({
-              tracing: {
-                stackTrace: 'error',
-                stackTraceLength: 30,
                 global: {}
               }
             });

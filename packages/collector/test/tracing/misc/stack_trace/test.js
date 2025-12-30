@@ -175,8 +175,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
             stackTraceConfig: {
               'stack-trace': 'all',
               'stack-trace-length': 3
-            },
-            ignoreEndpoints: true
+            }
           });
         });
 
