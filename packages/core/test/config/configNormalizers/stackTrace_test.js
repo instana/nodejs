@@ -8,11 +8,7 @@ const { describe, it, beforeEach } = require('mocha');
 const { expect } = require('chai');
 
 const stackTraceNormalizer = require('../../../src/config/configNormalizers/stackTrace');
-const {
-  MAX_STACK_TRACE_LENGTH,
-  DEFAULT_STACK_TRACE_LENGTH,
-  DEFAULT_STACK_TRACE_MODE
-} = require('../../../src/util/constants');
+const { MAX_STACK_TRACE_LENGTH } = require('../../../src/util/constants');
 
 function resetEnv() {
   delete process.env.INSTANA_STACK_TRACE;
@@ -25,30 +21,30 @@ describe('config.configNormalizers.stackTrace', () => {
   });
 
   describe('normalizeStackTraceMode()', () => {
-    it('should return default stack trace mode when no config is provided', () => {
+    it('should return null when no config is provided', () => {
       const config = {};
       const result = stackTraceNormalizer.normalizeStackTraceMode(config);
 
-      expect(result).to.equal(DEFAULT_STACK_TRACE_MODE);
+      expect(result).to.be.null;
     });
 
-    it('should return default when config is null', () => {
+    it('should return null when config is null', () => {
       const result = stackTraceNormalizer.normalizeStackTraceMode(null);
 
-      expect(result).to.equal(DEFAULT_STACK_TRACE_MODE);
+      expect(result).to.be.null;
     });
 
-    it('should return default when config is undefined', () => {
+    it('should return null when config is undefined', () => {
       const result = stackTraceNormalizer.normalizeStackTraceMode(undefined);
 
-      expect(result).to.equal(DEFAULT_STACK_TRACE_MODE);
+      expect(result).to.be.null;
     });
 
-    it('should return default when tracing is not present', () => {
+    it('should return null when tracing is not present', () => {
       const config = { someOtherConfig: true };
       const result = stackTraceNormalizer.normalizeStackTraceMode(config);
 
-      expect(result).to.equal(DEFAULT_STACK_TRACE_MODE);
+      expect(result).to.be.null;
     });
 
     it('should accept valid stack trace mode from config.tracing.global.stackTrace (all)', () => {
@@ -116,21 +112,20 @@ describe('config.configNormalizers.stackTrace', () => {
       expect(result).to.equal('error');
     });
 
-    it('should prioritize config.tracing.global.stackTrace over environment variable', () => {
-      process.env.INSTANA_STACK_TRACE = 'error';
+    it('should return null for invalid stack trace mode', () => {
       const config = {
         tracing: {
           global: {
-            stackTrace: 'none'
+            stackTrace: 'invalid'
           }
         }
       };
       const result = stackTraceNormalizer.normalizeStackTraceMode(config);
 
-      expect(result).to.equal('none');
+      expect(result).to.be.null;
     });
 
-    it('should return default when both config and env are not set', () => {
+    it('should return null when config.tracing.global is empty', () => {
       const config = {
         tracing: {
           global: {}
@@ -138,28 +133,41 @@ describe('config.configNormalizers.stackTrace', () => {
       };
       const result = stackTraceNormalizer.normalizeStackTraceMode(config);
 
-      expect(result).to.equal(DEFAULT_STACK_TRACE_MODE);
+      expect(result).to.be.null;
+    });
+
+    it('should return null for non-string values', () => {
+      const config = {
+        tracing: {
+          global: {
+            stackTrace: 123
+          }
+        }
+      };
+      const result = stackTraceNormalizer.normalizeStackTraceMode(config);
+
+      expect(result).to.be.null;
     });
   });
 
   describe('normalizeStackTraceLength()', () => {
-    it('should return default stack trace length when no config is provided', () => {
+    it('should return null when no config is provided', () => {
       const config = {};
       const result = stackTraceNormalizer.normalizeStackTraceLength(config);
 
-      expect(result).to.equal(DEFAULT_STACK_TRACE_LENGTH);
+      expect(result).to.be.null;
     });
 
-    it('should return default when config is null', () => {
+    it('should return null when config is null', () => {
       const result = stackTraceNormalizer.normalizeStackTraceLength(null);
 
-      expect(result).to.equal(DEFAULT_STACK_TRACE_LENGTH);
+      expect(result).to.be.null;
     });
 
-    it('should return default when config is undefined', () => {
+    it('should return null when config is undefined', () => {
       const result = stackTraceNormalizer.normalizeStackTraceLength(undefined);
 
-      expect(result).to.equal(DEFAULT_STACK_TRACE_LENGTH);
+      expect(result).to.be.null;
     });
 
     it('should accept valid numeric stack trace length from config.tracing.global.stackTraceLength', () => {
@@ -240,14 +248,6 @@ describe('config.configNormalizers.stackTrace', () => {
       expect(result).to.equal(0);
     });
 
-    it('should accept stack trace length from INSTANA_STACK_TRACE_LENGTH env var', () => {
-      process.env.INSTANA_STACK_TRACE_LENGTH = '30';
-      const config = {};
-      const result = stackTraceNormalizer.normalizeStackTraceLength(config);
-
-      expect(result).to.equal(30);
-    });
-
     it('should prioritize config.tracing.global.stackTraceLength over tracing.stackTraceLength', () => {
       const config = {
         tracing: {
@@ -273,31 +273,7 @@ describe('config.configNormalizers.stackTrace', () => {
       expect(result).to.equal(25);
     });
 
-    it('should prioritize tracing.stackTraceLength over environment variable', () => {
-      process.env.INSTANA_STACK_TRACE_LENGTH = '40';
-      const config = {
-        tracing: {
-          stackTraceLength: 25
-        }
-      };
-      const result = stackTraceNormalizer.normalizeStackTraceLength(config);
-
-      expect(result).to.equal(25);
-    });
-
-    it('should fall back to env var when tracing.stackTraceLength is invalid', () => {
-      process.env.INSTANA_STACK_TRACE_LENGTH = '35';
-      const config = {
-        tracing: {
-          stackTraceLength: 'invalid'
-        }
-      };
-      const result = stackTraceNormalizer.normalizeStackTraceLength(config);
-
-      expect(result).to.equal(35);
-    });
-
-    it('should return default for non-numeric string', () => {
+    it('should return null for non-numeric string', () => {
       const config = {
         tracing: {
           global: {
@@ -307,10 +283,10 @@ describe('config.configNormalizers.stackTrace', () => {
       };
       const result = stackTraceNormalizer.normalizeStackTraceLength(config);
 
-      expect(result).to.equal(DEFAULT_STACK_TRACE_LENGTH);
+      expect(result).to.be.null;
     });
 
-    it('should return default for Infinity', () => {
+    it('should return null for Infinity', () => {
       const config = {
         tracing: {
           global: {
@@ -320,10 +296,10 @@ describe('config.configNormalizers.stackTrace', () => {
       };
       const result = stackTraceNormalizer.normalizeStackTraceLength(config);
 
-      expect(result).to.equal(DEFAULT_STACK_TRACE_LENGTH);
+      expect(result).to.be.null;
     });
 
-    it('should return default for NaN', () => {
+    it('should return null for NaN', () => {
       const config = {
         tracing: {
           global: {
@@ -333,7 +309,7 @@ describe('config.configNormalizers.stackTrace', () => {
       };
       const result = stackTraceNormalizer.normalizeStackTraceLength(config);
 
-      expect(result).to.equal(DEFAULT_STACK_TRACE_LENGTH);
+      expect(result).to.be.null;
     });
 
     it('should handle stackTraceLength exactly at MAX_STACK_TRACE_LENGTH', () => {
@@ -502,15 +478,145 @@ describe('config.configNormalizers.stackTrace', () => {
     });
   });
 
-  describe('init()', () => {
-    it('should initialize logger from config', () => {
-      // Verify logger is set by using a function that would trigger a warning
-      const config = {
-        tracing: {
-          stackTraceLength: 25
-        }
-      };
-      stackTraceNormalizer.normalizeStackTraceLength(config);
+  describe('normalizeStackTraceModeEnv()', () => {
+    it('should normalize valid env value to lowercase', () => {
+      const result = stackTraceNormalizer.normalizeStackTraceModeEnv('ALL');
+
+      expect(result).to.equal('all');
+    });
+
+    it('should handle lowercase input', () => {
+      const result = stackTraceNormalizer.normalizeStackTraceModeEnv('error');
+
+      expect(result).to.equal('error');
+    });
+
+    it('should handle mixed case input', () => {
+      const result = stackTraceNormalizer.normalizeStackTraceModeEnv('NoNe');
+
+      expect(result).to.equal('none');
+    });
+
+    it('should return null for invalid mode', () => {
+      const result = stackTraceNormalizer.normalizeStackTraceModeEnv('invalid');
+
+      expect(result).to.be.null;
+    });
+
+    it('should return null for empty string', () => {
+      const result = stackTraceNormalizer.normalizeStackTraceModeEnv('');
+
+      expect(result).to.be.null;
+    });
+
+    it('should return null for null', () => {
+      const result = stackTraceNormalizer.normalizeStackTraceModeEnv(null);
+
+      expect(result).to.be.null;
+    });
+
+    it('should return null for undefined', () => {
+      const result = stackTraceNormalizer.normalizeStackTraceModeEnv(undefined);
+
+      expect(result).to.be.null;
+    });
+
+    it('should handle numeric string by converting to string', () => {
+      const result = stackTraceNormalizer.normalizeStackTraceModeEnv(123);
+
+      expect(result).to.be.null;
+    });
+
+    describe('normalizeStackTraceLengthEnv()', () => {
+      it('should accept valid numeric string from env', () => {
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('20');
+
+        expect(result).to.equal(20);
+      });
+
+      it('should round decimal string values', () => {
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('15.2');
+
+        expect(result).to.equal(15);
+      });
+
+      it('should convert negative string values to positive', () => {
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('-10');
+
+        expect(result).to.equal(10);
+      });
+
+      it('should cap at MAX_STACK_TRACE_LENGTH', () => {
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('1000');
+
+        expect(result).to.equal(MAX_STACK_TRACE_LENGTH);
+      });
+
+      it('should handle zero value', () => {
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('0');
+
+        expect(result).to.equal(0);
+      });
+
+      it('should return null for invalid string', () => {
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('invalid');
+
+        expect(result).to.be.null;
+      });
+
+      it('should return null for empty string', () => {
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('');
+
+        expect(result).to.be.null;
+      });
+
+      it('should return null for null', () => {
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv(null);
+
+        expect(result).to.be.null;
+      });
+
+      it('should return null for undefined', () => {
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv(undefined);
+
+        expect(result).to.be.null;
+      });
+
+      it('should handle string with leading/trailing spaces', () => {
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('  25  ');
+
+        expect(result).to.equal(25);
+      });
+
+      it('should return null for Infinity string', () => {
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('Infinity');
+
+        expect(result).to.be.null;
+      });
+
+      it('should return null for NaN string', () => {
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('NaN');
+
+        expect(result).to.be.null;
+      });
+
+      it('should handle very large negative string value', () => {
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv('-1000');
+
+        expect(result).to.equal(MAX_STACK_TRACE_LENGTH);
+      });
+
+      it('should handle stackTraceLength exactly at MAX_STACK_TRACE_LENGTH', () => {
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv(String(MAX_STACK_TRACE_LENGTH));
+
+        expect(result).to.equal(MAX_STACK_TRACE_LENGTH);
+      });
+
+      it('should handle stackTraceLength just below MAX_STACK_TRACE_LENGTH', () => {
+        const result = stackTraceNormalizer.normalizeStackTraceLengthEnv(String(MAX_STACK_TRACE_LENGTH - 1));
+
+        expect(result).to.equal(MAX_STACK_TRACE_LENGTH - 1);
+      });
     });
   });
 });

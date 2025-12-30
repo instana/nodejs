@@ -109,3 +109,19 @@ exports.normalizeStackTraceModeEnv = function (envValue) {
 
   return null;
 };
+
+/**
+ * Normalizes stackTraceLength from environment variable value
+ * @param {string} envValue - The environment variable value to normalize
+ * @returns {number | null}
+ */
+exports.normalizeStackTraceLengthEnv = function (envValue) {
+  if (envValue) {
+    const parsed = parseInt(envValue, 10);
+    if (!isNaN(parsed) && Number.isFinite(parsed)) {
+      return normalizeNumericalStackTraceLength(parsed);
+    }
+  }
+
+  return null;
+};
