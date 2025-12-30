@@ -23,6 +23,7 @@ let patterns = [
   /\/@google-cloud\/storage\/build\/cjs\/src\/index.js/,
   /\/@grpc\/grpc-js\/build\/src\//,
   /\/@hapi\/call\/lib\//,
+  /\/@koa\/router\/dist\//,
   /\/@koa\/router\/lib\//,
   /\/@prisma\/client\//,
   /\/@redis\/client\/dist\/lib\/cluster\/commands.js/,
