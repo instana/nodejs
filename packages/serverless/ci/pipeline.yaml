@@ -49,20 +49,6 @@ resources:
       password: ((concourse-icr-containers-public.password))
       tag: latest
 
-  - name: aws-fargate-nodejs-image-containers-instana-io
-    type: registry-image
-    icon: docker
-    source:
-      # We push to delivery.instana.io/rel-docker-agent-local/agent/.... The redirect proxy for containers.instana.io
-      # will make the container image available as
-      #   containers.instana.io/instana/release/aws/fargate/nodejs
-      # by redirecting to
-      #   delivery.instana.io/rel-docker-agent-local/agent/fargate/aws/nodejs
-      repository: delivery.instana.io/rel-docker-agent-local/agent/aws/fargate/nodejs
-      username: ((delivery-instana-io-release-project-artifact-read-writer-creds.username))
-      password: ((delivery-instana-io-release-project-artifact-read-writer-creds.password))
-      tag: latest
-
   - name: instana-google-cloud-run-npm-package
     type: npm-resource
     icon: cube-outline
@@ -79,20 +65,6 @@ resources:
       repository: icr.io/instana/google-cloud-run-nodejs
       username: ((concourse-icr-containers-public.apikey))
       password: ((concourse-icr-containers-public.password))
-      tag: latest
-
-  - name: google-cloud-run-nodejs-image-containers-instana-io
-    type: registry-image
-    icon: docker
-    source:
-      # We push to delivery.instana.io/rel-docker-agent-local/agent/.... The redirect proxy for containers.instana.io
-      # will make the container image available as
-      #   containers.instana.io/instana/release/google/cloud-run/nodejs
-      # by redirecting to
-      #   delivery.instana.io/rel-docker-agent-local/agent/google/cloud-run/nodejs
-      repository: delivery.instana.io/rel-docker-agent-local/agent/google/cloud-run/nodejs
-      username: ((delivery-instana-io-release-project-artifact-read-writer-creds.username))
-      password: ((delivery-instana-io-release-project-artifact-read-writer-creds.password))
       tag: latest
 
   - name: instana-aws-lambda-npm-package
@@ -203,20 +175,13 @@ jobs:
         get_params:
           skip_download: true
 
-      - put: aws-fargate-nodejs-image-containers-instana-io
-        params:
-          image: image/image.tar
-          additional_tags: instana-aws-fargate-npm-package/version
-        get_params:
-          skip_download: true
-
     on_success:
       put: slack-alert
       params:
         channel: '#team-node'
         icon_emoji: ':white_check_mark:'
         text: |
-              :white_check_mark: Version ((.:package-version)) build with ((.:nodejs-version)) of the container image `instana/aws-fargate-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `delivery.instana.io`/`containers.instana.io`.
+              :white_check_mark: Version ((.:package-version)) build with ((.:nodejs-version)) of the container image `instana/aws-fargate-nodejs` has been pushed to the IBM Container registry `icr.io`.
         attachments: &slack-alert-attachements-success
           - color: '#00ff00'
             fields:
@@ -297,20 +262,13 @@ jobs:
         get_params:
           skip_download: true
 
-      - put: google-cloud-run-nodejs-image-containers-instana-io
-        params:
-          image: image/image.tar
-          additional_tags: instana-google-cloud-run-npm-package/version
-        get_params:
-          skip_download: true
-
     on_success:
       put: slack-alert
       params:
         channel: '#team-node'
         icon_emoji: ':white_check_mark:'
         text: |
-              :white_check_mark: Version ((.:package-version)) build with ((.:nodejs-version)) of the container image `instana/google-cloud-run-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `delivery.instana.io`/`containers.instana.io`.
+              :white_check_mark: Version ((.:package-version)) build with ((.:nodejs-version)) of the container image `instana/google-cloud-run-nodejs` has been pushed to the IBM Container registry `icr.io`.
         attachments: *slack-alert-attachements-success
     on_failure: &slack-notify-failure-cloud-run
       put: slack-alert
@@ -601,7 +559,7 @@ jobs:
         channel: '#team-node'
         icon_emoji: ':white_check_mark:'
         text: |
-              :white_check_mark: Version ((.:package-version)) build with ((.:nodejs-version)) of the container image `instana/azure-container-services-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `delivery.instana.io`/`containers.instana.io`.
+              :white_check_mark: Version ((.:package-version)) build with ((.:nodejs-version)) of the container image `instana/azure-container-services-nodejs` has been pushed to the IBM Container registry `icr.io`.
         attachments: *slack-alert-attachements-success
     on_failure: &slack-notify-failure-azure-container-services
       put: slack-alert
