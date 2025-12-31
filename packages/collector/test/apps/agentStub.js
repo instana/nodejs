@@ -46,6 +46,7 @@ const kafkaTraceCorrelation = process.env.KAFKA_TRACE_CORRELATION
   : null;
 const ignoreEndpoints = process.env.IGNORE_ENDPOINTS && JSON.parse(process.env.IGNORE_ENDPOINTS);
 const disable = process.env.AGENT_DISABLE_TRACING && JSON.parse(process.env.AGENT_DISABLE_TRACING);
+const stackTraceConfig = process.env.STACK_TRACE_CONFIG && JSON.parse(process.env.STACK_TRACE_CONFIG);
 
 const uuids = {};
 const agentLogs = [];
@@ -118,7 +119,14 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     }
   };
 
-  if (kafkaTraceCorrelation != null || extraHeaders.length > 0 || enableSpanBatching || ignoreEndpoints || disable) {
+  if (
+    kafkaTraceCorrelation != null ||
+    extraHeaders.length > 0 ||
+    enableSpanBatching ||
+    ignoreEndpoints ||
+    disable ||
+    stackTraceConfig
+  ) {
     response.tracing = {};
 
     if (extraHeaders.length > 0) {
@@ -140,6 +148,10 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     }
     if (disable) {
       response.tracing.disable = disable;
+    }
+    if (stackTraceConfig) {
+      response.tracing.global = response.tracing.global || {};
+      deepMerge(response.tracing.global, stackTraceConfig);
     }
   }
 

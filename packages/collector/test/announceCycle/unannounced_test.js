@@ -757,6 +757,259 @@ describe('unannounced state', () => {
       });
     });
 
+    describe('applyStackTraceConfiguration', () => {
+      it('should apply stack trace mode from agent response', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace': 'all'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTrace: 'all',
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply stack trace length from agent response', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace-length': 15
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTraceLength: 15,
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply both stack trace mode and length from agent response (mixed case)', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace': 'eRrOr',
+              'stack-trace-length': 25
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTrace: 'error',
+                stackTraceLength: 25,
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should normalize stack trace mode to lowercase', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace': 'ERROR'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTrace: 'error',
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle none stack trace mode', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace': 'none'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTrace: 'none',
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should not apply stack trace config when tracing.global is missing', done => {
+        prepareAnnounceResponse({
+          tracing: {}
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
+            done();
+          }
+        });
+      });
+
+      it('should not apply stack trace config when tracing is missing', done => {
+        prepareAnnounceResponse({});
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({});
+            done();
+          }
+        });
+      });
+
+      it('should handle invalid stack trace mode gracefully', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace': 'invalid-mode'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle invalid stack trace length gracefully', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace-length': 'not-a-number'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle negative stack trace length gracefully', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace-length': -5
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                global: {},
+                stackTraceLength: 5
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle zero stack trace length', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace-length': 0
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTraceLength: 0,
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should apply valid config and ignore invalid config', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {
+              'stack-trace': 'all',
+              'stack-trace-length': 'invalid'
+            }
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                stackTrace: 'all',
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+
+      it('should handle empty global object', done => {
+        prepareAnnounceResponse({
+          tracing: {
+            global: {}
+          }
+        });
+        unannouncedState.enter({
+          transitionTo: () => {
+            expect(agentOptsStub.config).to.deep.equal({
+              tracing: {
+                global: {}
+              }
+            });
+            done();
+          }
+        });
+      });
+    });
+
     function prepareAnnounceResponse(announceResponse) {
       agentConnectionStub.announceNodeCollector.callsArgWithAsync(0, null, JSON.stringify(announceResponse));
     }

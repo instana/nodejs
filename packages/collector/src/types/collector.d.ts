@@ -13,6 +13,10 @@ export interface AgentConfig {
     ignoreEndpoints?: IgnoreEndpoints;
     disable?: Disable;
     [key: string]: any;
+    global?: {
+      stackTrace?: string;
+      stackTraceLength?: number;
+    };
   };
   [key: string]: any;
 }

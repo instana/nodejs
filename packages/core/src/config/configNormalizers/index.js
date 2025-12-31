@@ -6,6 +6,7 @@
 
 const disable = require('./disable');
 const ignoreEndpoints = require('./ignoreEndpoints');
+const stackTrace = require('./stackTrace');
 
 /**
  * @param {import('../../config').InstanaConfig} config
@@ -17,3 +18,4 @@ exports.init = function init(config) {
 
 exports.disable = disable;
 exports.ignoreEndpoints = ignoreEndpoints;
+exports.stackTrace = stackTrace;

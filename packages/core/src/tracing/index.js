@@ -263,6 +263,7 @@ exports.activate = function activate(extraConfig = {}) {
   if (tracingEnabled && !tracingActivated) {
     tracingActivated = true;
     coreUtil.activate(extraConfig);
+    tracingUtil.activate(extraConfig);
     spanBuffer.activate(extraConfig);
     opentracing.activate();
     sdk.activate();
