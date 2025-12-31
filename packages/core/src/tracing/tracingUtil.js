@@ -39,6 +39,13 @@ exports.init = function (config) {
 exports.activate = function activate(extraConfig) {
   const agentTraceConfig = extraConfig?.tracing;
 
+  // Note: We check whether the already-initialized stackTraceLength equals the default value.
+  //       If it does, we can safely override it, since the user did not explicitly configure it.
+
+  // Note: If the user configured a value via env or code and also configured a different value in the agent,
+  //       but the env/code value happens to equal the default, the agent value would overwrite it.
+  //       This is a rare edge case and acceptable for now.
+
   if (agentTraceConfig?.stackTrace && stackTraceMode === DEFAULT_STACK_TRACE_MODE) {
     stackTraceMode = agentTraceConfig.stackTrace;
   }
