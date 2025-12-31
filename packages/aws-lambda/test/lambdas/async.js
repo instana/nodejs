@@ -63,11 +63,13 @@ const handler = async event => {
 
   if (process.env.DETACHED_REQUEST) {
     setTimeout(async () => {
-      await fetch(downstreamDummyUrl, { headers: { 'X-Downstream-Header': 'yes' } });
+      const fetchResponse = await fetch(downstreamDummyUrl, { headers: { 'X-Downstream-Header': 'yes' } });
+      await fetchResponse.text();
     }, 1000);
   }
 
-  await fetch(downstreamDummyUrl, { headers: { 'X-Downstream-Header': 'yes' } });
+  const fetchResponse = await fetch(downstreamDummyUrl, { headers: { 'X-Downstream-Header': 'yes' } });
+  await fetchResponse.text();
   if (process.env.HANDLER_DELAY) {
     console.log(`Introducing an artificial delay in the handler of ${process.env.HANDLER_DELAY} ms.`);
     await delay(parseInt(process.env.HANDLER_DELAY, 10));
