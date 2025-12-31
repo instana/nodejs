@@ -10,7 +10,7 @@ const path = require('path');
 const StringDecoder = require('string_decoder').StringDecoder;
 
 const stackTrace = require('../util/stackTrace');
-const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
+const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE, STACK_TRACE_MODES } = require('../util/constants');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -62,7 +62,7 @@ exports.activate = function activate(extraConfig) {
  * @returns {Array.<*>}
  */
 exports.getStackTrace = function getStackTrace(referenceFunction, drop) {
-  if (stackTraceMode === 'none') {
+  if (stackTraceMode === STACK_TRACE_MODES.NONE) {
     return [];
   }
   return stackTrace.captureStackTrace(stackTraceLength, referenceFunction, drop);
@@ -373,7 +373,7 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
     }
 
     // If the mode is none, we set span.data[technology].error (as done above) and return immediately
-    if (stackTraceMode === 'none') {
+    if (stackTraceMode === STACK_TRACE_MODES.NONE) {
       span.stack = span.stack || [];
       return;
     }
