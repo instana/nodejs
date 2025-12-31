@@ -59,7 +59,7 @@ jobs:
           cat > commits.txt <<EOF
           ${{ steps.commits.outputs.COMMITS }}
           EOF
-          REFS=$(grep -oiP 'ref(?:s)?\s+\Khttps?://\S+' commits.txt | sort -u)
+          REFS=$(grep -oiP 'ref(?:s)?\s+\Khttps?://\S+' commits.txt | sort -u || true)
 
           if [[ -z "$REFS" ]]; then
             echo "No referenced links found."
@@ -127,8 +127,9 @@ jobs:
           echo "✅ Created release issue: $NEW_KEY"
 
           KEYS=$(printf '%s\n' "$REFS_LIST" \
-                   | grep -oP '/browse/\K[A-Z]+-[0-9]+' \
-                   | sort -u)
+                        | grep -oP '/browse/\K[A-Z]+-[0-9]+' \
+                        | sort -u || true)
+
 
           for TGT in $KEYS; do
             [[ "$TGT" == "$NEW_KEY" ]] && continue
