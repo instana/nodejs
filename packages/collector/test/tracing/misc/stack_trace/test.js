@@ -403,5 +403,255 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
             ));
       });
     });
+
+    describe('stackTraceMode configuration', () => {
+      const { AgentStubControls } = require('../../../apps/agentStubControls');
+      const agentStubControls = new AgentStubControls();
+
+      describe('with stackTraceMode = "none"', () => {
+        before(async () => {
+          await agentStubControls.startAgent({
+            stackTraceConfig: {
+              'stack-trace': 'none',
+              'stack-trace-length': 10
+            }
+          });
+          await expressControls.start({
+            agentControls: agentStubControls,
+            EXPRESS_VERSION: version
+          });
+          await expressProxyControls.start({
+            agentControls: agentStubControls,
+            expressControls,
+            EXPRESS_VERSION: version
+          });
+        });
+
+        after(async () => {
+          await expressControls.stop();
+          await expressProxyControls.stop();
+          await agentStubControls.stopAgent();
+        });
+
+        beforeEach(async () => {
+          await agentStubControls.clearReceivedTraceData();
+        });
+
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
+
+        it('should not generate stack traces for exit spans when mode is "none"', () =>
+          expressProxyControls
+            .sendRequest({
+              method: 'POST',
+              path: '/checkout',
+              responseStatus: 201
+            })
+            .then(() =>
+              testUtils.retry(() =>
+                agentStubControls.getSpans().then(spans => {
+                  expect(spans.length).to.be.at.least(2);
+
+                  const httpClientSpan = testUtils.expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.client'),
+                    span => expect(span.k).to.equal(constants.EXIT)
+                  ]);
+
+                  expect(httpClientSpan.stack).to.be.an('array');
+                  expect(httpClientSpan.stack.length).to.equal(0);
+                })
+              )
+            ));
+
+        it('should not generate stack traces even when error occurs with mode "none"', () =>
+          expressProxyControls
+            .sendRequest({
+              method: 'GET',
+              path: '/trigger-error'
+            })
+            .then(() =>
+              testUtils.retry(() =>
+                agentStubControls.getSpans().then(spans => {
+                  const httpClientSpan = testUtils.expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.client'),
+                    span => expect(span.k).to.equal(constants.EXIT),
+                    span => expect(span.ec).to.equal(1)
+                  ]);
+
+                  expect(httpClientSpan.data.http.error).to.exist;
+                  expect(httpClientSpan.stack).to.be.an('array');
+                  expect(httpClientSpan.stack.length).to.equal(0);
+                })
+              )
+            ));
+      });
+
+      describe('with stackTraceMode = "error"', () => {
+        before(async () => {
+          await agentStubControls.startAgent({
+            stackTraceConfig: {
+              'stack-trace': 'error',
+              'stack-trace-length': 10
+            }
+          });
+          await expressControls.start({
+            agentControls: agentStubControls,
+            EXPRESS_VERSION: version
+          });
+          await expressProxyControls.start({
+            agentControls: agentStubControls,
+            expressControls,
+            EXPRESS_VERSION: version
+          });
+        });
+
+        after(async () => {
+          await expressControls.stop();
+          await expressProxyControls.stop();
+          await agentStubControls.stopAgent();
+        });
+
+        beforeEach(async () => {
+          await agentStubControls.clearReceivedTraceData();
+        });
+
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
+
+        it('should not generate stack traces for successful exit spans when mode is "error"', () =>
+          expressProxyControls
+            .sendRequest({
+              method: 'POST',
+              path: '/checkout',
+              responseStatus: 201
+            })
+            .then(() =>
+              testUtils.retry(() =>
+                agentStubControls.getSpans().then(spans => {
+                  expect(spans.length).to.be.at.least(2);
+
+                  const httpClientSpan = testUtils.expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.client'),
+                    span => expect(span.k).to.equal(constants.EXIT),
+                    span => expect(span.data.http.status).to.equal(201)
+                  ]);
+
+                  expect(httpClientSpan.stack).to.be.an('array');
+                  expect(httpClientSpan.stack.length).to.equal(0);
+                })
+              )
+            ));
+
+        it('should generate stack traces only when error occurs with mode "error"', () =>
+          expressProxyControls
+            .sendRequest({
+              method: 'GET',
+              path: '/trigger-error'
+            })
+            .then(() =>
+              testUtils.retry(() =>
+                agentStubControls.getSpans().then(spans => {
+                  const httpClientSpan = testUtils.expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.client'),
+                    span => expect(span.k).to.equal(constants.EXIT),
+                    span => expect(span.ec).to.equal(1)
+                  ]);
+
+                  expect(httpClientSpan.data.http.error).to.exist;
+                  expect(httpClientSpan.stack).to.be.an('array');
+                  expect(httpClientSpan.stack.length).to.be.greaterThan(0);
+                  expect(httpClientSpan.stack[0]).to.have.property('m');
+                  expect(httpClientSpan.stack[0]).to.have.property('c');
+                  expect(httpClientSpan.stack[0]).to.have.property('n');
+                })
+              )
+            ));
+      });
+
+      describe('with stackTraceMode = "all"', () => {
+        before(async () => {
+          await agentStubControls.startAgent({
+            stackTraceConfig: {
+              'stack-trace': 'all',
+              'stack-trace-length': 10
+            }
+          });
+          await expressControls.start({
+            agentControls: agentStubControls,
+            EXPRESS_VERSION: version
+          });
+          await expressProxyControls.start({
+            agentControls: agentStubControls,
+            expressControls,
+            EXPRESS_VERSION: version
+          });
+        });
+
+        after(async () => {
+          await expressControls.stop();
+          await expressProxyControls.stop();
+          await agentStubControls.stopAgent();
+        });
+
+        beforeEach(async () => {
+          await agentStubControls.clearReceivedTraceData();
+        });
+
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
+
+        it('should generate stack traces for all exit spans when mode is "all"', () =>
+          expressProxyControls
+            .sendRequest({
+              method: 'POST',
+              path: '/checkout',
+              responseStatus: 201
+            })
+            .then(() =>
+              testUtils.retry(() =>
+                agentStubControls.getSpans().then(spans => {
+                  expect(spans.length).to.be.at.least(2);
+
+                  const httpClientSpan = testUtils.expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.client'),
+                    span => expect(span.k).to.equal(constants.EXIT),
+                    span => expect(span.data.http.status).to.equal(201)
+                  ]);
+
+                  expect(httpClientSpan.stack).to.be.an('array');
+                  expect(httpClientSpan.stack.length).to.be.greaterThan(0);
+                  expect(httpClientSpan.stack[0]).to.have.property('m');
+                  expect(httpClientSpan.stack[0]).to.have.property('c');
+                  expect(httpClientSpan.stack[0]).to.have.property('n');
+                })
+              )
+            ));
+
+        it('should generate stack traces when error occurs with mode "all"', () =>
+          expressProxyControls
+            .sendRequest({
+              method: 'GET',
+              path: '/trigger-error'
+            })
+            .then(() =>
+              testUtils.retry(() =>
+                agentStubControls.getSpans().then(spans => {
+                  const httpClientSpan = testUtils.expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.client'),
+                    span => expect(span.k).to.equal(constants.EXIT),
+                    span => expect(span.ec).to.equal(1)
+                  ]);
+
+                  expect(httpClientSpan.data.http.error).to.exist;
+                  expect(httpClientSpan.stack).to.be.an('array');
+                  expect(httpClientSpan.stack.length).to.be.greaterThan(0);
+                  expect(httpClientSpan.stack[0]).to.have.property('m');
+                  expect(httpClientSpan.stack[0]).to.have.property('c');
+                  expect(httpClientSpan.stack[0]).to.have.property('n');
+                })
+              )
+            ));
+      });
+    });
   });
 });
