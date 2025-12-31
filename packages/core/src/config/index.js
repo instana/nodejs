@@ -9,7 +9,10 @@
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
 const configNormalizers = require('./configNormalizers');
+const configValidators = require('./configValidators');
 const deepMerge = require('../util/deepMerge');
+const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
+const { validateStackTraceMode, validateStackTraceLength } = require('./configValidators/stackTraceValidation');
 
 /**
  * @typedef {Object} InstanaTracingOption
@@ -21,6 +24,7 @@ const deepMerge = require('../util/deepMerge');
  * @property {number} [initialTransmissionDelay]
  * @property {number} [maxBufferedSpans]
  * @property {number} [transmissionDelay]
+ * @property {string} [stackTrace]
  * @property {number} [stackTraceLength]
  * @property {HTTPTracingOptions} [http]
  * @property {import('../config/types').Disable} [disable]
@@ -31,6 +35,7 @@ const deepMerge = require('../util/deepMerge');
  * @property {import('../config/types').IgnoreEndpoints} [ignoreEndpoints]
  * @property {boolean} [ignoreEndpointsDisableSuppression]
  * @property {boolean} [disableEOLEvents]
+ * @property {globalStackTraceConfig} [global]
  */
 
 /**
@@ -41,6 +46,12 @@ const deepMerge = require('../util/deepMerge');
 /**
  * @typedef {Object} KafkaTracingOptions
  * @property {boolean} [traceCorrelation]
+ */
+
+/**
+ * @typedef {Object} globalStackTraceConfig
+ * @property {string} [stackTrace]
+ * @property {number} [stackTraceLength]
  */
 
 /**
@@ -99,7 +110,8 @@ let defaults = {
     http: {
       extraHttpHeadersToCapture: []
     },
-    stackTraceLength: 10,
+    stackTrace: DEFAULT_STACK_TRACE_MODE,
+    stackTraceLength: DEFAULT_STACK_TRACE_LENGTH,
     disable: {},
     spanBatchingEnabled: false,
     disableW3cTraceCorrelation: false,
@@ -119,6 +131,7 @@ let defaults = {
 const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
 
 module.exports.configNormalizers = configNormalizers;
+module.exports.configValidators = configValidators;
 
 /**
  * @param {import('../core').GenericLogger} [_logger]
@@ -226,7 +239,7 @@ function normalizeTracingConfig(config) {
   normalizeActivateImmediately(config);
   normalizeTracingTransmission(config);
   normalizeTracingHttp(config);
-  normalizeTracingStackTraceLength(config);
+  normalizeTracingStackTrace(config);
   normalizeSpanBatchingEnabled(config);
   normalizeDisableW3cTraceCorrelation(config);
   normalizeTracingKafka(config);
@@ -442,60 +455,88 @@ function parseHeadersEnvVar(envVarValue) {
 }
 
 /**
+ * Handles both stackTrace and stackTraceLength configuration
  * @param {InstanaConfig} config
  */
-function normalizeTracingStackTraceLength(config) {
-  if (config.tracing.stackTraceLength == null && process.env['INSTANA_STACK_TRACE_LENGTH']) {
-    parseStringStackTraceLength(config, process.env['INSTANA_STACK_TRACE_LENGTH']);
-  }
-  if (config.tracing.stackTraceLength != null) {
-    if (typeof config.tracing.stackTraceLength === 'number') {
-      config.tracing.stackTraceLength = normalizeNumericalStackTraceLength(config.tracing.stackTraceLength);
-    } else if (typeof config.tracing.stackTraceLength === 'string') {
-      parseStringStackTraceLength(config, config.tracing.stackTraceLength);
+function normalizeTracingStackTrace(config) {
+  const tracing = config.tracing;
+
+  const envStackTrace = process.env['INSTANA_STACK_TRACE'];
+  const envStackTraceLength = process.env['INSTANA_STACK_TRACE_LENGTH'];
+
+  if (envStackTrace !== undefined) {
+    const result = validateStackTraceMode(envStackTrace);
+
+    if (result.isValid) {
+      const normalized = configNormalizers.stackTrace.normalizeStackTraceModeFromEnv(envStackTrace);
+      if (normalized !== null) {
+        tracing.stackTrace = normalized;
+      } else {
+        tracing.stackTrace = defaults.tracing.stackTrace;
+      }
     } else {
-      logger.warn(
-        `The value of config.tracing.stackTraceLength has the non-supported type ${typeof config.tracing
-          .stackTraceLength} (the value is "${config.tracing.stackTraceLength}").` +
-          `Assuming the default stack trace length ${defaults.tracing.stackTraceLength}.`
-      );
-      config.tracing.stackTraceLength = defaults.tracing.stackTraceLength;
+      logger.warn(`Invalid env INSTANA_STACK_TRACE: ${result.error}`);
+      tracing.stackTrace = defaults.tracing.stackTrace;
+    }
+  } else if (tracing.global?.stackTrace !== undefined) {
+    const result = validateStackTraceMode(tracing.global.stackTrace);
+
+    if (result.isValid) {
+      const normalized = configNormalizers.stackTrace.normalizeStackTraceMode(config);
+      if (normalized !== null) {
+        tracing.stackTrace = normalized;
+      } else {
+        tracing.stackTrace = defaults.tracing.stackTrace;
+      }
+    } else {
+      logger.warn(`Invalid config.tracing.global.stackTrace: ${result.error}`);
+      tracing.stackTrace = defaults.tracing.stackTrace;
     }
   } else {
-    config.tracing.stackTraceLength = defaults.tracing.stackTraceLength;
+    tracing.stackTrace = defaults.tracing.stackTrace;
   }
-}
 
-/**
- * @param {InstanaConfig} config
- * @param {string} value
- */
-function parseStringStackTraceLength(config, value) {
-  config.tracing.stackTraceLength = parseInt(value, 10);
-  if (!isNaN(config.tracing.stackTraceLength)) {
-    config.tracing.stackTraceLength = normalizeNumericalStackTraceLength(config.tracing.stackTraceLength);
+  const isLegacyLengthDefined = tracing.stackTraceLength !== undefined;
+  const stackTraceConfigValue = tracing.global?.stackTraceLength || tracing.stackTraceLength;
+
+  if (envStackTraceLength !== undefined) {
+    const result = validateStackTraceLength(envStackTraceLength);
+
+    if (result.isValid) {
+      const normalized = configNormalizers.stackTrace.normalizeStackTraceLengthFromEnv(envStackTraceLength);
+      if (normalized !== null) {
+        tracing.stackTraceLength = normalized;
+      } else {
+        tracing.stackTraceLength = defaults.tracing.stackTraceLength;
+      }
+    } else {
+      logger.warn(`Invalid env INSTANA_STACK_TRACE_LENGTH: ${result.error}`);
+      tracing.stackTraceLength = defaults.tracing.stackTraceLength;
+    }
+  } else if (stackTraceConfigValue !== undefined) {
+    if (isLegacyLengthDefined) {
+      logger.warn(
+        '[Deprecation Warning] The configuration option config.tracing.stackTraceLength is deprecated and will be removed in a future release. ' +
+          'Please use config.tracing.global.stackTraceLength instead.'
+      );
+    }
+
+    const result = validateStackTraceLength(stackTraceConfigValue);
+
+    if (result.isValid) {
+      const normalized = configNormalizers.stackTrace.normalizeStackTraceLength(config);
+      if (normalized !== null) {
+        tracing.stackTraceLength = normalized;
+      } else {
+        tracing.stackTraceLength = defaults.tracing.stackTraceLength;
+      }
+    } else {
+      logger.warn(`Invalid stackTraceLength value: ${result.error}`);
+      tracing.stackTraceLength = defaults.tracing.stackTraceLength;
+    }
   } else {
-    logger.warn(
-      `The value of config.tracing.stackTraceLength ("${value}") has type string and cannot be parsed to a numerical ` +
-        `value. Assuming the default stack trace length ${defaults.tracing.stackTraceLength}.`
-    );
-    config.tracing.stackTraceLength = defaults.tracing.stackTraceLength;
+    tracing.stackTraceLength = defaults.tracing.stackTraceLength;
   }
-}
-
-/**
- * @param {number} numericalLength
- * @returns {number}
- */
-function normalizeNumericalStackTraceLength(numericalLength) {
-  // just in case folks provide non-integral numbers or negative numbers
-  const normalized = Math.abs(Math.round(numericalLength));
-  if (normalized !== numericalLength) {
-    logger.warn(
-      `Normalized the provided value of config.tracing.stackTraceLength (${numericalLength}) to ${normalized}.`
-    );
-  }
-  return normalized;
 }
 
 /**
