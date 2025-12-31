@@ -845,6 +845,132 @@ describe('tracing/tracingUtil', () => {
           expect(span.stack.length).to.be.greaterThan(0);
         });
       });
+
+      it('should handle error with name property but no message', () => {
+        const span = {
+          data: {
+            test: {}
+          }
+        };
+        const error = { name: 'CustomError', stack: 'test stack' };
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('No error message found.');
+      });
+
+      it('should handle error with both name and details properties', () => {
+        const span = {
+          data: {
+            grpc: {}
+          }
+        };
+        const error = { name: 'GrpcError', details: 'Connection timeout', stack: 'test' };
+        setErrorDetails(span, error, 'grpc');
+
+        expect(span.data.grpc.error).to.equal('GrpcError: Connection timeout');
+      });
+
+      it('should handle nested path with single element array', () => {
+        const span = {
+          data: {}
+        };
+        const error = 'Single level error';
+        setErrorDetails(span, error, ['error']);
+
+        expect(span.data.error).to.equal('Error: Single level error');
+      });
+
+      it('should handle flat technology key without dot notation', () => {
+        const span = {
+          data: {
+            redis: {}
+          }
+        };
+        const error = { message: 'Redis connection failed', stack: 'test' };
+        setErrorDetails(span, error, 'redis');
+
+        expect(span.data.redis.error).to.equal('Error: Redis connection failed');
+      });
+
+      it('should handle error object with only code property and no stack', () => {
+        const span = {
+          data: {
+            net: {}
+          }
+        };
+        const error = { code: 'ETIMEDOUT' };
+        setErrorDetails(span, error, 'net');
+
+        expect(span.data.net.error).to.equal('ETIMEDOUT');
+        expect(span.stack).to.deep.equal([]);
+      });
+
+      it('should handle deeply nested path with more than 4 levels', () => {
+        const span = {
+          data: {}
+        };
+        const error = 'Deep nested error';
+        setErrorDetails(span, error, ['level1', 'level2', 'level3', 'level4', 'level5', 'error']);
+
+        expect(span.data.level1.level2.level3.level4.level5.error).to.equal('Error: Deep nested error');
+      });
+
+      it('should handle error with empty string message', () => {
+        const span = {
+          data: {
+            test: {}
+          }
+        };
+        const error = { message: '', stack: 'test' };
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('No error message found.');
+      });
+
+      it('should not create error property when technology path does not exist in span.data', () => {
+        const span = {
+          data: {}
+        };
+        const error = 'Test error';
+        setErrorDetails(span, error, 'nonexistent');
+
+        expect(span.data.nonexistent).to.be.undefined;
+      });
+
+      it('should handle mixed dot notation with existing partial structure', () => {
+        const span = {
+          data: {
+            sdk: {
+              custom: {}
+            }
+          }
+        };
+        const error = 'Partial structure error';
+        setErrorDetails(span, error, 'sdk.custom.tags.message');
+
+        expect(span.data.sdk.custom.tags.message).to.equal('Error: Partial structure error');
+      });
+
+      it('should handle error with stack property that parses to empty array', () => {
+        const span = {
+          data: {
+            test: {}
+          }
+        };
+        const error = { message: 'test', stack: 'Invalid stack format without proper lines' };
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: test');
+        expect(span.stack).to.be.an('array');
+      });
+
+      it('should handle getStackTrace without reference function', () => {
+        const stack = getStackTrace();
+
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.be.greaterThan(0);
+        expect(stack.length).to.be.at.most(10);
+      });
     });
   });
 
