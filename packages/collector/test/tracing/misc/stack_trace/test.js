@@ -168,5 +168,244 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
             )
           ));
     });
+
+    describe('verify precedence order env > in-code > agent', () => {
+      const { AgentStubControls } = require('../../../apps/agentStubControls');
+      const agentStubControls = new AgentStubControls();
+
+      describe('when only agent config is provided', () => {
+        before(async () => {
+          await agentStubControls.startAgent({
+            stackTraceConfig: {
+              'stack-trace': 'all',
+              'stack-trace-length': 3
+            }
+          });
+        });
+
+        after(async () => {
+          await agentStubControls.stopAgent();
+        });
+
+        before(async () => {
+          await expressControls.start({
+            agentControls: agentStubControls,
+            EXPRESS_VERSION: version
+          });
+          await expressProxyControls.start({
+            agentControls: agentStubControls,
+            expressControls,
+            EXPRESS_VERSION: version
+            // Don't set stackTraceLength - let it use default so agent config can override
+          });
+        });
+
+        after(async () => {
+          await expressControls.stop();
+          await expressProxyControls.stop();
+        });
+
+        beforeEach(async () => {
+          await agentStubControls.clearReceivedTraceData();
+        });
+
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
+
+        it('should apply agent config stackTraceLength to exit spans', () =>
+          expressProxyControls
+            .sendRequest({
+              method: 'POST',
+              path: '/checkout',
+              responseStatus: 201
+            })
+            .then(() =>
+              testUtils.retry(() =>
+                agentStubControls.getSpans().then(spans => {
+                  expect(spans.length).to.be.at.least(2);
+
+                  const httpClientSpan = testUtils.expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.client'),
+                    span => expect(span.k).to.equal(constants.EXIT)
+                  ]);
+
+                  expect(httpClientSpan.stack).to.be.an('array');
+                  expect(httpClientSpan.stack.length).to.equal(3);
+                })
+              )
+            ));
+      });
+
+      describe('when both agent and in-code config is provided', () => {
+        before(async () => {
+          await agentStubControls.startAgent({
+            stackTraceConfig: {
+              'stack-trace-length': 2
+            }
+          });
+          await expressControls.start({
+            agentControls: agentStubControls,
+            EXPRESS_VERSION: version
+          });
+          await expressProxyControls.start({
+            agentControls: agentStubControls,
+            expressControls,
+            stackTraceLength: 4,
+            EXPRESS_VERSION: version
+          });
+        });
+
+        after(async () => {
+          await expressControls.stop();
+          await expressProxyControls.stop();
+          await agentStubControls.stopAgent();
+        });
+
+        beforeEach(async () => {
+          await agentStubControls.clearReceivedTraceData();
+        });
+
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
+
+        it('should use in-code config over agent config', () =>
+          expressProxyControls
+            .sendRequest({
+              method: 'POST',
+              path: '/checkout',
+              responseStatus: 201
+            })
+            .then(() =>
+              testUtils.retry(() =>
+                agentStubControls.getSpans().then(spans => {
+                  expect(spans.length).to.be.at.least(2);
+
+                  const httpClientSpan = testUtils.expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.client'),
+                    span => expect(span.k).to.equal(constants.EXIT)
+                  ]);
+
+                  expect(httpClientSpan.stack).to.be.an('array');
+                  expect(httpClientSpan.stack.length).to.equal(4);
+                })
+              )
+            ));
+      });
+
+      describe('when env var, in-code config, and agent config are all provided', () => {
+        before(async () => {
+          await agentStubControls.startAgent({
+            stackTraceConfig: {
+              'stack-trace-length': 2
+            }
+          });
+          await expressControls.start({
+            agentControls: agentStubControls,
+            EXPRESS_VERSION: version
+          });
+          await expressProxyControls.start({
+            agentControls: agentStubControls,
+            expressControls,
+            stackTraceLength: 4,
+            EXPRESS_VERSION: version,
+            env: {
+              INSTANA_STACK_TRACE_LENGTH: '6'
+            }
+          });
+        });
+
+        after(async () => {
+          await expressControls.stop();
+          await expressProxyControls.stop();
+          await agentStubControls.stopAgent();
+        });
+
+        beforeEach(async () => {
+          await agentStubControls.clearReceivedTraceData();
+        });
+
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
+
+        it('should use env var over in-code config and agent config (env has highest priority)', () =>
+          expressProxyControls
+            .sendRequest({
+              method: 'POST',
+              path: '/checkout',
+              responseStatus: 201
+            })
+            .then(() =>
+              testUtils.retry(() =>
+                agentStubControls.getSpans().then(spans => {
+                  expect(spans.length).to.be.at.least(2);
+
+                  const httpClientSpan = testUtils.expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.client'),
+                    span => expect(span.k).to.equal(constants.EXIT)
+                  ]);
+
+                  expect(httpClientSpan.stack).to.be.an('array');
+                  expect(httpClientSpan.stack.length).to.equal(6);
+                })
+              )
+            ));
+      });
+
+      describe('when only env var is provided', () => {
+        before(async () => {
+          await agentStubControls.startAgent({
+            stackTraceConfig: {}
+          });
+          await expressControls.start({
+            agentControls: agentStubControls,
+            EXPRESS_VERSION: version
+          });
+          await expressProxyControls.start({
+            agentControls: agentStubControls,
+            expressControls,
+            EXPRESS_VERSION: version,
+            env: {
+              INSTANA_STACK_TRACE_LENGTH: '5'
+            }
+          });
+        });
+
+        after(async () => {
+          await expressControls.stop();
+          await expressProxyControls.stop();
+          await agentStubControls.stopAgent();
+        });
+
+        beforeEach(async () => {
+          await agentStubControls.clearReceivedTraceData();
+        });
+
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
+        beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
+
+        it('should apply env var stackTraceLength to exit spans', () =>
+          expressProxyControls
+            .sendRequest({
+              method: 'POST',
+              path: '/checkout',
+              responseStatus: 201
+            })
+            .then(() =>
+              testUtils.retry(() =>
+                agentStubControls.getSpans().then(spans => {
+                  expect(spans.length).to.be.at.least(2);
+
+                  const httpClientSpan = testUtils.expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.client'),
+                    span => expect(span.k).to.equal(constants.EXIT)
+                  ]);
+
+                  expect(httpClientSpan.stack).to.be.an('array');
+                  expect(httpClientSpan.stack.length).to.equal(5);
+                })
+              )
+            ));
+      });
+    });
   });
 });
