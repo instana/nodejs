@@ -12,19 +12,22 @@ const fail = require('assert').fail;
 const util = require('util');
 
 const config = require('../config');
-const { isCI } = require('../test_util');
+const { isCI, createFakeLogger } = require('../test_util');
 
 const {
+  findCallback,
   generateRandomId,
   generateRandomSpanId,
   generateRandomTraceId,
+  getStackTrace,
   readTraceContextFromBuffer,
   sanitizeConnectionStr,
+  setErrorDetails,
   unsignedHexStringToBuffer,
-  unsignedHexStringsToBuffer,
-  findCallback,
-  setErrorDetails
+  unsignedHexStringsToBuffer
 } = require('../../src/tracing/tracingUtil');
+
+const tracingUtil = require('../../src/tracing/tracingUtil');
 
 describe('tracing/tracingUtil', () => {
   describe('generate random IDs', function () {
@@ -427,6 +430,15 @@ describe('tracing/tracingUtil', () => {
   });
 
   describe('setErrorDetails', () => {
+    before(() => {
+      tracingUtil.init({
+        logger: createFakeLogger(),
+        tracing: {
+          stackTraceLength: 10
+        }
+      });
+    });
+
     it('should handle Error objects with message and stack', () => {
       const span = {
         data: {
@@ -526,6 +538,25 @@ describe('tracing/tracingUtil', () => {
       expect(span.stack[0]).to.have.property('m', 'someFunction');
       expect(span.stack[0]).to.have.property('c', 'file.js');
       expect(span.stack[0]).to.have.property('n', 10);
+    });
+
+    it('should respect default stackTraceLength limit', () => {
+      const testSpan = {
+        data: {
+          nats: {}
+        }
+      };
+      const testError = new Error('Test');
+      testError.stack = `Error: Test\n${'at someFunction (file.js:10:5)\n'.repeat(20)}`;
+      setErrorDetails(testSpan, testError, 'nats');
+
+      expect(testSpan.stack).to.be.an('array');
+
+      // Should be limited to the configured stackTraceLength (default 10)
+      expect(testSpan.stack.length).to.equal(10);
+      expect(testSpan.stack[0]).to.have.property('m', 'someFunction');
+      expect(testSpan.stack[0]).to.have.property('c', 'file.js');
+      expect(testSpan.stack[0]).to.have.property('n', 10);
     });
 
     it('should handle error objects with details property (gRPC errors)', () => {
@@ -678,6 +709,118 @@ describe('tracing/tracingUtil', () => {
       setErrorDetails(span, error, 'test');
 
       expect(span.stack).to.deep.equal([]);
+    });
+  });
+
+  describe('getStackTrace', () => {
+    before(() => {
+      tracingUtil.init({
+        logger: createFakeLogger(),
+        tracing: {
+          stackTraceLength: 10
+        }
+      });
+    });
+
+    // Helper functions to create a deep call stack for testing
+    function deepFunction11() {
+      return getStackTrace(deepFunction11);
+    }
+    function deepFunction10() {
+      return deepFunction11();
+    }
+    function deepFunction9() {
+      return deepFunction10();
+    }
+    function deepFunction8() {
+      return deepFunction9();
+    }
+    function deepFunction7() {
+      return deepFunction8();
+    }
+    function deepFunction6() {
+      return deepFunction7();
+    }
+    function deepFunction5() {
+      return deepFunction6();
+    }
+    function deepFunction4() {
+      return deepFunction5();
+    }
+    function deepFunction3() {
+      return deepFunction4();
+    }
+    function deepFunction2() {
+      return deepFunction3();
+    }
+    function deepFunction1() {
+      return deepFunction2();
+    }
+
+    it('should use configured stackTraceLength by default', () => {
+      const stack = deepFunction1();
+
+      expect(stack).to.be.an('array');
+      expect(stack.length).to.be.at.most(10);
+      expect(stack.length).to.be.greaterThan(0);
+    });
+
+    it('should use configured stackTraceLength (cannot override with parameter)', () => {
+      function testFunc() {
+        return getStackTrace(testFunc, 0);
+      }
+      function caller1() {
+        return testFunc();
+      }
+      function caller2() {
+        return caller1();
+      }
+      function caller3() {
+        return caller2();
+      }
+      const stack = caller3();
+
+      expect(stack).to.be.an('array');
+      expect(stack.length).to.be.at.most(10);
+      expect(stack.length).to.be.greaterThan(0);
+    });
+
+    it('should handle drop parameter correctly', () => {
+      function testFunc(drop) {
+        return getStackTrace(testFunc, drop);
+      }
+      function caller1(drop) {
+        return testFunc(drop);
+      }
+      function caller2(drop) {
+        return caller1(drop);
+      }
+      function caller3(drop) {
+        return caller2(drop);
+      }
+
+      const stackWithoutDrop = caller3(0);
+      const stackWithDrop = caller3(5);
+
+      expect(stackWithoutDrop).to.be.an('array');
+      expect(stackWithDrop).to.be.an('array');
+      expect(stackWithDrop.length).to.be.lessThan(stackWithoutDrop.length);
+    });
+
+    it('should use drop parameter with configured length', () => {
+      function testFunc() {
+        return getStackTrace(testFunc, 1);
+      }
+      function caller1() {
+        return testFunc();
+      }
+      function caller2() {
+        return caller1();
+      }
+      const stack = caller2();
+
+      expect(stack).to.be.an('array');
+      expect(stack.length).to.be.at.most(10);
     });
   });
 
