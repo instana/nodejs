@@ -193,7 +193,7 @@ if (supportedVersion(process.versions.node)) {
         expect(span.data.http.url).to.contain(control.downstreamDummyUrl);
         expect(span.data.http.header).to.deep.equal({
           'x-exit-request-header-1': 'exit request header value 1',
-          'x-exit-request-header-2': 'exit,request,header,value 2'
+          'x-exit-request-header-2': 'exit, request, header, value 2'
         });
         expect(span.ec).to.equal(0);
         verifyHeaders(span);
