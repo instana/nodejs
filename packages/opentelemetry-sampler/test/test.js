@@ -68,9 +68,11 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
         //         https://github.com/expressjs/express/commit/78e50547f16e2adb5763a953586d05308d8aba4c.
         //       middleware query functionality was removed in:
         //         https://github.com/expressjs/express/commit/dcc4eaabe86a4309437db2a853c5ef788a854699
-        const spanNames = ['tcp.connect', 'tls.connect', 'GET', 'GET'];
+        // NOTE: Native fetch with OpenTelemetry does not create an EXIT span for the HTTP client call.
+        // OpenTelemetry's auto-instrumentations do not include native fetch instrumentation by default.
+        const spanNames = ['tcp.connect', 'tls.connect', 'GET'];
         expect(spanNames).to.eql(spans.map(s => s.data.operation));
-        expect(spans.length).to.eql(4);
+        expect(spans.length).to.eql(3);
       });
     });
   });
@@ -123,9 +125,11 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
       //         https://github.com/expressjs/express/commit/78e50547f16e2adb5763a953586d05308d8aba4c.
       //       middleware query functionality was removed in:
       //         https://github.com/expressjs/express/commit/dcc4eaabe86a4309437db2a853c5ef788a854699
-      const spanNames = ['tcp.connect', 'tls.connect', 'GET', 'GET'];
+      // NOTE: Native fetch with OpenTelemetry does not create an EXIT span for the HTTP client call.
+      // OpenTelemetry's auto-instrumentations do not include native fetch instrumentation by default.
+      const spanNames = ['tcp.connect', 'tls.connect', 'GET'];
       expect(spanNames).to.eql(resp.spans.map(s => s.name));
-      expect(resp.spans.length).to.be.gte(4);
+      expect(resp.spans.length).to.be.gte(3);
     });
   });
 

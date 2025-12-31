@@ -36,7 +36,9 @@ app.get('/internal-endpoint', (_req, res) => {
 app.get('/otel-test', (_req, res) => {
   delay(500)
     .then(() => fetch(`http://localhost:${port}/internal-endpoint`))
-    .then(response => response.json())
+    .then(async response => {
+      return response.json();
+    })
     .then(data => {
       res.send({ ok: true, data: data.message });
     })
@@ -48,7 +50,9 @@ app.get('/otel-test', (_req, res) => {
 app.post('/otel-post', (_req, res) => {
   delay(500)
     .then(() => fetch(`http://localhost:${port}/internal-endpoint`, { method: 'POST' }))
-    .then(response => response.json())
+    .then(async response => {
+      return response.json();
+    })
     .then(data => {
       res.send({ ok: true, data: data.message });
     })
