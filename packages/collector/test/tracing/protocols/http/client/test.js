@@ -1038,7 +1038,8 @@ function registerConnectionRefusalTest(appUsesHttps) {
                 span => expect(span.n).to.equal('node.http.client'),
                 span => expect(span.k).to.equal(constants.EXIT),
                 span => expect(span.ec).to.equal(1),
-                span => expect(span.data.http.error).to.match(/ECONNREFUSED/)
+                // Native fetch wraps connection errors with "fetch failed" message
+                span => expect(span.data.http.error).to.match(/fetch failed|ECONNREFUSED/)
               ]);
             })
           )
