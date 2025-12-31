@@ -100,8 +100,7 @@ mochaSuiteFn('tracing/logging/console', function () {
       runAndTrace(
         'exit-span',
         true,
-        'request to http://127.0.0.1:65212/ failed, reason: connect ' +
-          'ECONNREFUSED 127.0.0.1:65212 -- console.error - should be traced'
+        /(?:request to http:\/\/127\.0\.0\.1:65212\/ failed, reason: connect ECONNREFUSED 127\.0\.0\.1:65212|fetch failed).*console\.error - should be traced/ // eslint-disable-line max-len
       ));
 
     it('must trace an error object', () => runAndTrace('error-object', true, 'console.error - should be traced'));
