@@ -20,6 +20,12 @@ const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 
+// From v3 onwards, node-fetch is a pure ESM module and does not support require().
+// To use it in a CommonJS environment, we load it via a dynamic import and
+// forward all arguments to the default export.
+// eslint-disable-next-line no-shadow
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+
 const port = require('../../../test_util/app-port')();
 const app = express();
 const logPrefix = `fetch App (${process.pid}):\t`;
