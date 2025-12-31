@@ -374,7 +374,6 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
 
     // If the mode is none, we set span.data[technology].error (as done above) and return immediately
     if (stackTraceMode === STACK_TRACE_MODES.NONE) {
-      span.stack = span.stack || [];
       return;
     }
 

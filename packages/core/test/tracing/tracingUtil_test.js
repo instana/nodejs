@@ -727,7 +727,8 @@ describe('tracing/tracingUtil', () => {
           const span = {
             data: {
               http: {}
-            }
+            },
+            stack: []
           };
           const error = new Error('Test error');
           setErrorDetails(span, error, 'http');
