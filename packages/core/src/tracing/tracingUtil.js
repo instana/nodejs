@@ -62,8 +62,7 @@ exports.activate = function activate(extraConfig) {
  * @returns {Array.<*>}
  */
 exports.getStackTrace = function getStackTrace(referenceFunction, drop) {
-  // If stackTraceMode is not 'all', we do not generate stack traces
-  if (stackTraceMode !== 'all') {
+  if (stackTraceMode === 'none') {
     return [];
   }
   return stackTrace.captureStackTrace(stackTraceLength, referenceFunction, drop);
