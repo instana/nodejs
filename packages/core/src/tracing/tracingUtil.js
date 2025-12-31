@@ -10,6 +10,7 @@ const path = require('path');
 const StringDecoder = require('string_decoder').StringDecoder;
 
 const stackTrace = require('../util/stackTrace');
+const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -36,18 +37,14 @@ exports.init = function (config) {
  * @param {import('@instana/collector/src/types/collector').AgentConfig} extraConfig
  */
 exports.activate = function activate(extraConfig) {
-  /**
-   * TODO: Perform a major refactoring of configuration priority ordering in INSTA-817.
-   */
-
   const agentTraceConfig = extraConfig?.tracing;
 
-  if (agentTraceConfig?.stackTrace) {
+  if (agentTraceConfig?.stackTrace && stackTraceMode === DEFAULT_STACK_TRACE_MODE) {
     stackTraceMode = agentTraceConfig.stackTrace;
   }
 
   // stackTraceLength is valid when set to any number, including 0
-  if (agentTraceConfig?.stackTraceLength != null) {
+  if (agentTraceConfig?.stackTraceLength != null && stackTraceLength === DEFAULT_STACK_TRACE_LENGTH) {
     stackTraceLength = agentTraceConfig.stackTraceLength;
   }
 };

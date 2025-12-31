@@ -59,6 +59,10 @@ exports.start = async (opts = {}) => {
     env.STACK_TRACE_LENGTH_TEST = opts.stackTraceLength;
   }
 
+  if (opts.env) {
+    Object.assign(env, opts.env);
+  }
+
   env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;
   env.EXPRESS_VERSION = opts.EXPRESS_VERSION;
 
