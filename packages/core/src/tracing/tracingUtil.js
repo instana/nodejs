@@ -373,13 +373,13 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
       }
     }
 
-    // if the mode is none, we set the span.data[technology].error  and return without over writing the stack trace
+    // If the mode is none, we set span.data[technology].error (as done above) and return immediately
     if (stackTraceMode === 'none') {
       span.stack = span.stack || [];
       return;
     }
 
-    // mode is 'error' or 'all' and error occurred - generate and overwrite stack traces with error
+    // If the mode is error or all and an error occurred, generate and overwrite the stack trace with the error
     if (normalizedError.stack) {
       const stackArray = stackTrace.parseStackTraceFromString(normalizedError.stack);
       span.stack = stackArray.length > 0 ? stackArray.slice(0, stackTraceLength) : span.stack || [];
