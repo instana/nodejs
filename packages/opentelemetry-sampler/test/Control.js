@@ -81,7 +81,8 @@ class Control extends AbstractServerlessControl {
       headers
     });
 
-    return response.json();
+    const data = await response.json();
+    return data;
   }
 
   hasMonitoredProcessTerminated() {
