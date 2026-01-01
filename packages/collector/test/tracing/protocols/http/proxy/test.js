@@ -199,7 +199,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
               agentControls.getSpans().then(spans => {
                 // Note: With native fetch, a client span is created even for malformed URLs
                 // because fetch returns a rejected promise rather than throwing synchronously.
-                // This differs from node-fetch v2 behavior where no span was created.
+                // This differs from node-fetch behavior where no span was created.
                 // We expect 2 spans: 1 server span + 1 client span (with error)
                 expect(spans).to.have.lengthOf(2);
 
