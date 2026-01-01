@@ -62,7 +62,7 @@ exports.activate = function activate(extraConfig) {
  * @returns {Array.<*>}
  */
 exports.getStackTrace = function getStackTrace(referenceFunction, drop) {
-  if (stackTraceMode === STACK_TRACE_MODES.NONE) {
+  if (stackTraceMode === STACK_TRACE_MODES.NONE || stackTraceMode === STACK_TRACE_MODES.ERROR) {
     return [];
   }
   return stackTrace.captureStackTrace(stackTraceLength, referenceFunction, drop);

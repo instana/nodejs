@@ -1112,7 +1112,7 @@ describe('tracing/tracingUtil', () => {
         });
       });
 
-      it('should generate stack traces when mode is "error"', () => {
+      it('should not generate stack traces when mode is "error"', () => {
         function testFunc() {
           return getStackTrace(testFunc);
         }
@@ -1123,7 +1123,7 @@ describe('tracing/tracingUtil', () => {
         const stack = caller1();
 
         expect(stack).to.be.an('array');
-        expect(stack.length).to.equal(10);
+        expect(stack.length).to.equal(0);
       });
     });
   });

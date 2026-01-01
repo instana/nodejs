@@ -518,7 +518,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
         beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
         beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
 
-        it('should generate stack traces for successful exit spans when mode is "error"', () =>
+        it('should not generate stack traces for successful exit spans when mode is "error"', () =>
           expressProxyControls
             .sendRequest({
               method: 'POST',
@@ -537,10 +537,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
                   ]);
 
                   expect(httpClientSpan.stack).to.be.an('array');
-                  expect(httpClientSpan.stack.length).to.be.greaterThan(0);
-                  expect(httpClientSpan.stack[0]).to.have.property('m');
-                  expect(httpClientSpan.stack[0]).to.have.property('c');
-                  expect(httpClientSpan.stack[0]).to.have.property('n');
+                  expect(httpClientSpan.stack.length).to.equal(0);
                 })
               )
             ));
