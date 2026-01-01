@@ -19,11 +19,13 @@ const main = async () => {
   let err1;
 
   try {
-    const req = new fetch.Request(`http://127.0.0.1:${agentPort}/ping`);
-    await fetch(req);
+    // eslint-disable-next-line no-unused-vars
+    const pingResponse = await fetch(`http://127.0.0.1:${agentPort}/ping`);
 
     await instana.sdk.async.startEntrySpan('my-translation-service');
-    await fetch('https://www.ibm.com/products/instana');
+
+    // eslint-disable-next-line no-unused-vars
+    const response = await fetch('https://www.ibm.com/products/instana');
   } catch (err) {
     err1 = err;
   }
