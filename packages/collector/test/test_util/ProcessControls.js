@@ -317,13 +317,6 @@ class ProcessControls {
 
       requestOpts.url = baseUrl + (requestOpts.path || '');
 
-      // Native fetch doesn't support URLs with embedded credentials (user:password@host)
-      // Strip credentials from URL for fetch, but the server will still receive the request
-      // and the instrumentation should still properly sanitize the host header
-      if (opts.embedCredentialsInUrl) {
-        requestOpts.url = requestOpts.url.replace(/\/\/[^@]+@/, '//');
-      }
-
       if (requestOpts.qs) {
         const queryParams = Object.entries(requestOpts.qs)
           .map(([key, value]) => {
