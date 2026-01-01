@@ -508,39 +508,31 @@ function registerTests(agentControls, appUsesHttps, useHttp2CompatApi) {
       });
   });
 
-  it(`must capture an HTTP entry when the client closes the connection (HTTPS: ${appUsesHttps})`, () =>
-    controls
-      .sendRequest({
-        path: '/dont-respond',
-        timeout: 100,
-        simple: false
+  it(`must capture an HTTP entry when the client closes the connection (HTTPS: ${appUsesHttps})`, async () => {
+    const requestPromise = controls.sendRequest({
+      path: '/dont-respond',
+      simple: false
+    });
+    await delay(200);
+
+    // Verify that an entry span has been created even though the request hasn't completed yet
+    // The span is captured when the client closes the connection via the req.on('close') event
+    await retry(() =>
+      agentControls.getSpans().then(spans => {
+        // Note: For HTTP 1, the captured HTTP status will be 200 even for a client timeout, because the we take
+        // the status from the response object which is created before the request is processed by user code. The
+        // default for the status attribute is 200 and so this is what we capture (or whatever the user code sets
+        // on the response object before running the request is aborted due to the timeout). For HTTP 2, the
+        // situation is different because we inspect a response header of the stream (HTTP2_HEADER_STATUS), which
+        // does not exist until a response is actually sent. Thus, for HTTP 2, span.data.http.status will be
+        // undefined.
+        verifyThereIsExactlyOneHttpEntry(spans, controls, '/dont-respond', 'GET', 200, false, false);
       })
-      .then(() => {
-        fail('Expected the HTTP call to time out.');
-      })
-      .catch(err => {
-        if (
-          (err.error && (err.error.code === 'ESOCKETTIMEDOUT' || err.error.code === 'ETIMEDOUT')) ||
-          err.type === 'request-timeout'
-        ) {
-          // We actually expect the request to time out. But we still want to verify that an entry span has been created
-          // for it.
-          return retry(() =>
-            agentControls.getSpans().then(spans => {
-              // Note: For HTTP 1, the captured HTTP status will be 200 even for a client timeout, because the we take
-              // the status from the response object which is created before the request is processed by user code. The
-              // default for the status attribute is 200 and so this is what we capture (or whatever the user code sets
-              // on the response object before running the request is aborted due to the timeout). For HTTP 2, the
-              // situation is different because we inspect a response header of the stream (HTTP2_HEADER_STATUS), which
-              // does not exist until a response is actually sent. Thus, for HTTP 2, span.data.http.status will be
-              // undefined.
-              verifyThereIsExactlyOneHttpEntry(spans, controls, '/dont-respond', 'GET', undefined, false, false);
-            })
-          );
-        } else {
-          throw err;
-        }
-      }));
+    );
+
+    // The request will eventually complete after 4 seconds (as defined in app.js)
+    return requestPromise.catch(() => {});
+  });
 
   it(`must capture an HTTP entry when the server destroys the socket (HTTPS: ${appUsesHttps})`, () =>
     controls
