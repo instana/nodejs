@@ -99,28 +99,27 @@ app.post('/mutation', (req, res) =>
 
 app.post('/subscription', (req, res) => establishSubscription(req, res));
 
-app.post('/publish-update-via-http', (req, res) =>
-  fetch(`${serverBaseUrl}/publish-update`, {
-    method: 'POST',
-    url: `${serverBaseUrl}/publish-update`,
-    body: JSON.stringify({
-      id: req.body.id || 1,
-      name: req.body.name || 'Updated Name',
-      profession: req.body.profession || 'Updated Profession'
-    }),
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  })
-    .then(response => response.json())
-    .then(response => {
-      res.send(response);
-    })
-    .catch(e => {
-      log(e);
-      res.sendStatus(500);
-    })
-);
+app.post('/publish-update-via-http', async (req, res) => {
+  try {
+    const response = await fetch(`${serverBaseUrl}/publish-update`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: req.body.id || 1,
+        name: req.body.name || 'Updated Name',
+        profession: req.body.profession || 'Updated Profession'
+      })
+    });
+
+    const data = await response.json();
+    res.send(data);
+  } catch (e) {
+    log(e);
+    res.sendStatus(500);
+  }
+});
 
 app.post('/publish-update-via-graphql', (req, res) =>
   runMutation(req, res, {
@@ -159,25 +158,22 @@ function runQuery(req, res, resolverType) {
   }
 }
 
-function runQueryViaHttp(query, res) {
-  return fetch(serverGraphQLEndpoint, {
-    method: 'POST',
-    url: serverGraphQLEndpoint,
-    body: JSON.stringify({
-      query
-    }),
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  })
-    .then(response => response.json())
-    .then(response => {
-      res.send(response);
-    })
-    .catch(e => {
-      log(e);
-      res.sendStatus(500);
+async function runQueryViaHttp(query, res) {
+  try {
+    const response = await fetch(serverGraphQLEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ query })
     });
+
+    const data = await response.json();
+    res.send(data);
+  } catch (e) {
+    log(e);
+    res.sendStatus(500);
+  }
 }
 
 function runQueryViaAmqp(query, res) {
@@ -216,7 +212,7 @@ function runQueryViaAmqp(query, res) {
   });
 }
 
-function runMutation(req, res, input) {
+async function runMutation(req, res, input) {
   const mutation = `
     mutation UpdateCharacter($id: ID!, $name: String, $profession: String) {
       updateCharacter(input: { id: $id, name: $name, profession: $profession }) {
@@ -226,25 +222,24 @@ function runMutation(req, res, input) {
     }
   `;
 
-  return fetch(serverGraphQLEndpoint, {
-    method: 'POST',
-    url: serverGraphQLEndpoint,
-    body: JSON.stringify({
-      query: mutation,
-      variables: input
-    }),
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  })
-    .then(response => response.json())
-    .then(response => {
-      res.send(response);
-    })
-    .catch(e => {
-      log(e);
-      res.sendStatus(500);
+  try {
+    const response = await fetch(serverGraphQLEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query: mutation,
+        variables: input
+      })
     });
+
+    const data = await response.json();
+    res.send(data);
+  } catch (e) {
+    log(e);
+    res.sendStatus(500);
+  }
 }
 
 function establishSubscription(req, res) {
