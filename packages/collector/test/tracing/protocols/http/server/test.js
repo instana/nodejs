@@ -544,7 +544,7 @@ function registerTests(agentControls, appUsesHttps, useHttp2CompatApi) {
         fail('Expected the HTTP connection to be closed by the server.');
       })
       .catch(err => {
-        if ((err.error && err.error.code === 'ECONNRESET') || err.code === 'ECONNRESET') {
+        if (err.error?.code === 'ECONNRESET' || err.code === 'ECONNRESET' || err.cause?.code === 'UND_ERR_SOCKET') {
           // We actually expect the request to time out. But we still want to verify that an entry span has been created
           // for it.
           return retry(() =>
