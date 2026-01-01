@@ -30,6 +30,7 @@ const instanaConfig = {
 require('../../../../..')(instanaConfig);
 const express = require('express');
 const fetch = require('node-fetch-v2');
+const http = require('http');
 const port = require('../../../../test_util/app-port')();
 const app = express();
 
@@ -51,6 +52,34 @@ app.get('/trigger-error', (req, res) => {
     .catch(err => {
       res.status(500).send(err);
     });
+});
+
+// eslint-disable-next-line no-unused-vars
+app.get('/trigger-error-no-stack', (req, res) => {
+  const options = {
+    hostname: 'localhost',
+    port: process.env.UPSTREAM_PORT,
+    path: '/return-error',
+    method: 'GET'
+  };
+
+  const clientRequest = http.request(options, response => {
+    response.on('data', () => {});
+    response.on('end', () => {});
+  });
+
+  setImmediate(() => {
+    const errorWithoutStack = {
+      message: 'Error without stack',
+      code: 'NO_STACK_ERROR',
+      name: 'CustomError'
+    };
+
+    clientRequest.emit('error', errorWithoutStack);
+    res.status(500).send(errorWithoutStack);
+  });
+
+  clientRequest.end();
 });
 
 app.use((req, res) => {

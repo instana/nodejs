@@ -566,6 +566,28 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
                 })
               )
             ));
+        // This test ensures that when stackTraceMode = 'error', we neither generate nor overwrite stack traces.
+        // It assumes the error object already contains a stack (common case).
+        // Some edge cases (e.g., gRPC or NATS) may not provide one and can be handled later if needed.
+        it('should have empty stack when error occurs without error.stack property with mode "error"', () =>
+          expressProxyControls
+            .sendRequest({
+              method: 'GET',
+              path: '/trigger-error-no-stack'
+            })
+            .then(() =>
+              testUtils.retry(() =>
+                agentStubControls.getSpans().then(spans => {
+                  const httpClientSpan = testUtils.expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.client'),
+                    span => expect(span.k).to.equal(constants.EXIT)
+                  ]);
+
+                  expect(httpClientSpan.stack).to.be.an('array');
+                  expect(httpClientSpan.stack.length).to.equal(0);
+                })
+              )
+            ));
       });
 
       describe('with stackTraceMode = "all"', () => {
