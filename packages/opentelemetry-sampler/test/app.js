@@ -80,7 +80,6 @@ app.post('/otel-post', (_req, res) => {
   delay(500)
     .then(() => fetch('https://www.example.com'))
     .then(async response => {
-      // Consume response body for proper span completion with native fetch
       await response.text();
     })
     .then(() => {
