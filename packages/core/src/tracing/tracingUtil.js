@@ -10,7 +10,7 @@ const path = require('path');
 const StringDecoder = require('string_decoder').StringDecoder;
 
 const stackTrace = require('../util/stackTrace');
-const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE } = require('../util/constants');
+const { DEFAULT_STACK_TRACE_LENGTH, DEFAULT_STACK_TRACE_MODE, STACK_TRACE_MODES } = require('../util/constants');
 
 /** @type {import('../core').GenericLogger} */
 let logger;
@@ -62,6 +62,9 @@ exports.activate = function activate(extraConfig) {
  * @returns {Array.<*>}
  */
 exports.getStackTrace = function getStackTrace(referenceFunction, drop) {
+  if (stackTraceMode === STACK_TRACE_MODES.NONE || stackTraceMode === STACK_TRACE_MODES.ERROR) {
+    return [];
+  }
   return stackTrace.captureStackTrace(stackTraceLength, referenceFunction, drop);
 };
 
@@ -369,6 +372,12 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
       }
     }
 
+    // If the mode is none, we set span.data[technology].error (as done above) and return immediately
+    if (stackTraceMode === STACK_TRACE_MODES.NONE) {
+      return;
+    }
+
+    // If the mode is error or all and an error occurred, generate and overwrite the stack trace with the error
     if (normalizedError.stack) {
       const stackArray = stackTrace.parseStackTraceFromString(normalizedError.stack);
       span.stack = stackArray.length > 0 ? stackArray.slice(0, stackTraceLength) : span.stack || [];

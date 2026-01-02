@@ -12,3 +12,8 @@ exports.validStackTraceModes = ['error', 'all', 'none'];
 exports.MAX_STACK_TRACE_LENGTH = 500;
 exports.DEFAULT_STACK_TRACE_LENGTH = 10;
 exports.DEFAULT_STACK_TRACE_MODE = 'all';
+exports.STACK_TRACE_MODES = {
+  ERROR: 'error',
+  ALL: 'all',
+  NONE: 'none'
+};
