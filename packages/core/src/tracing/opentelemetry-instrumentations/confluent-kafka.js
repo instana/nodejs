@@ -14,7 +14,7 @@ module.exports.init = () => {
   //       This works, because "import type" does not load the target library.
   // eslint-disable-next-line max-len
   // EXAMPLE: https://github.com/open-telemetry/opentelemetry-js-contrib/blob/instrumentation-express-v0.57.1/packages/instrumentation-express/src/instrumentation.ts#L25
-  const { ConfluentKafkaInstrumentation } = require('@drazke/instrumentation-confluent-kafka-javascript');
+  const { ConfluentKafkaInstrumentation } = require('@instana/instrumentation-confluent-kafka-javascript');
 
   const instrumentation = new ConfluentKafkaInstrumentation({});
 
