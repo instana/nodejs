@@ -112,6 +112,10 @@ router.get('/subPath', (req, res) => {
 });
 app.use('/routed', router);
 
+app.get('/return-error', (req, res) => {
+  res.status(500).send({ error: 'Internal Server Error' });
+});
+
 app.use((req, res) => {
   log(req.method, req.url);
   const delay = parseInt(req.query.delay || 0, 10);
