@@ -710,19 +710,273 @@ describe('tracing/tracingUtil', () => {
 
       expect(span.stack).to.deep.equal([]);
     });
+
+    describe('setErrorDetails with stackTraceMode filtering', () => {
+      describe('with stackTraceMode = "none"', () => {
+        before(() => {
+          tracingUtil.init({
+            logger: createFakeLogger(),
+            tracing: {
+              stackTraceLength: 10,
+              stackTrace: 'none'
+            }
+          });
+        });
+
+        it('should set error message but not generate stack trace when mode is "none"', () => {
+          const span = {
+            data: {
+              http: {}
+            },
+            stack: []
+          };
+          const error = new Error('Test error');
+          setErrorDetails(span, error, 'http');
+
+          expect(span.data.http.error).to.match(/Error: Test error/);
+          expect(span.stack).to.be.an('array');
+          expect(span.stack.length).to.equal(0);
+        });
+
+        it('should not overwrite existing stack when mode is "none"', () => {
+          const existingStack = [{ m: 'existing', c: 'file.js', n: 1 }];
+          const span = {
+            data: { test: {} },
+            stack: existingStack
+          };
+          const error = new Error('New error');
+          setErrorDetails(span, error, 'test');
+
+          expect(span.data.test.error).to.match(/Error: New error/);
+          expect(span.stack).to.equal(existingStack);
+        });
+      });
+
+      describe('with stackTraceMode = "error"', () => {
+        before(() => {
+          tracingUtil.init({
+            logger: createFakeLogger(),
+            tracing: {
+              stackTraceLength: 10,
+              stackTrace: 'error'
+            }
+          });
+        });
+
+        it('should generate stack trace from error when mode is "error"', () => {
+          const span = {
+            data: {
+              mysql: {}
+            }
+          };
+          const error = new Error('Database error');
+          setErrorDetails(span, error, 'mysql');
+
+          expect(span.data.mysql.error).to.match(/Error: Database error/);
+          expect(span.stack).to.be.an('array');
+          expect(span.stack.length).to.be.greaterThan(0);
+          expect(span.stack[0]).to.have.property('m');
+          expect(span.stack[0]).to.have.property('c');
+          expect(span.stack[0]).to.have.property('n');
+        });
+
+        it('should respect stackTraceLength when mode is "error"', () => {
+          const span = {
+            data: {
+              test: {}
+            }
+          };
+          const error = new Error('Test');
+          error.stack = `Error: Test\n${'at someFunction (file.js:10:5)\n'.repeat(20)}`;
+          setErrorDetails(span, error, 'test');
+
+          expect(span.stack).to.be.an('array');
+          expect(span.stack.length).to.equal(10);
+        });
+
+        it('should set empty stack array when error has no stack property', () => {
+          const span = {
+            data: {
+              test: {}
+            }
+          };
+          const error = { message: 'No stack error' };
+          setErrorDetails(span, error, 'test');
+
+          expect(span.data.test.error).to.match(/Error: No stack error/);
+          expect(span.stack).to.be.an('array');
+          expect(span.stack.length).to.equal(0);
+        });
+      });
+
+      describe('with stackTraceMode = "all"', () => {
+        before(() => {
+          tracingUtil.init({
+            logger: createFakeLogger(),
+            tracing: {
+              stackTraceLength: 10,
+              stackTrace: 'all'
+            }
+          });
+        });
+
+        it('should generate stack trace from error when mode is "all"', () => {
+          const span = {
+            data: {
+              nats: {}
+            }
+          };
+          const error = new Error('NATS error');
+          setErrorDetails(span, error, 'nats');
+
+          expect(span.data.nats.error).to.match(/Error: NATS error/);
+          expect(span.stack).to.be.an('array');
+          expect(span.stack.length).to.be.greaterThan(0);
+        });
+
+        it('should handle SDK spans with nested paths when mode is "all"', () => {
+          const span = {
+            data: {}
+          };
+          const error = new Error('SDK error');
+          setErrorDetails(span, error, 'sdk.custom.tags.message');
+
+          expect(span.data.sdk.custom.tags.message).to.match(/Error: SDK error/);
+          expect(span.stack).to.be.an('array');
+          expect(span.stack.length).to.be.greaterThan(0);
+        });
+      });
+
+      it('should handle error with name property but no message', () => {
+        const span = {
+          data: {
+            test: {}
+          }
+        };
+        const error = { name: 'CustomError', stack: 'test stack' };
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('No error message found.');
+      });
+
+      it('should handle error with both name and details properties', () => {
+        const span = {
+          data: {
+            grpc: {}
+          }
+        };
+        const error = { name: 'GrpcError', details: 'Connection timeout', stack: 'test' };
+        setErrorDetails(span, error, 'grpc');
+
+        expect(span.data.grpc.error).to.equal('GrpcError: Connection timeout');
+      });
+
+      it('should handle nested path with single element array', () => {
+        const span = {
+          data: {}
+        };
+        const error = 'Single level error';
+        setErrorDetails(span, error, ['error']);
+
+        expect(span.data.error).to.equal('Error: Single level error');
+      });
+
+      it('should handle flat technology key without dot notation', () => {
+        const span = {
+          data: {
+            redis: {}
+          }
+        };
+        const error = { message: 'Redis connection failed', stack: 'test' };
+        setErrorDetails(span, error, 'redis');
+
+        expect(span.data.redis.error).to.equal('Error: Redis connection failed');
+      });
+
+      it('should handle error object with only code property and no stack', () => {
+        const span = {
+          data: {
+            net: {}
+          }
+        };
+        const error = { code: 'ETIMEDOUT' };
+        setErrorDetails(span, error, 'net');
+
+        expect(span.data.net.error).to.equal('ETIMEDOUT');
+        expect(span.stack).to.deep.equal([]);
+      });
+
+      it('should handle deeply nested path with more than 4 levels', () => {
+        const span = {
+          data: {}
+        };
+        const error = 'Deep nested error';
+        setErrorDetails(span, error, ['level1', 'level2', 'level3', 'level4', 'level5', 'error']);
+
+        expect(span.data.level1.level2.level3.level4.level5.error).to.equal('Error: Deep nested error');
+      });
+
+      it('should handle error with empty string message', () => {
+        const span = {
+          data: {
+            test: {}
+          }
+        };
+        const error = { message: '', stack: 'test' };
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('No error message found.');
+      });
+
+      it('should not create error property when technology path does not exist in span.data', () => {
+        const span = {
+          data: {}
+        };
+        const error = 'Test error';
+        setErrorDetails(span, error, 'nonexistent');
+
+        expect(span.data.nonexistent).to.be.undefined;
+      });
+
+      it('should handle mixed dot notation with existing partial structure', () => {
+        const span = {
+          data: {
+            sdk: {
+              custom: {}
+            }
+          }
+        };
+        const error = 'Partial structure error';
+        setErrorDetails(span, error, 'sdk.custom.tags.message');
+
+        expect(span.data.sdk.custom.tags.message).to.equal('Error: Partial structure error');
+      });
+
+      it('should handle error with stack property that parses to empty array', () => {
+        const span = {
+          data: {
+            test: {}
+          }
+        };
+        const error = { message: 'test', stack: 'Invalid stack format without proper lines' };
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: test');
+        expect(span.stack).to.be.an('array');
+      });
+
+      it('should handle getStackTrace without reference function', () => {
+        const stack = getStackTrace();
+
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.be.greaterThan(0);
+        expect(stack.length).to.be.at.most(10);
+      });
+    });
   });
 
   describe('getStackTrace', () => {
-    before(() => {
-      tracingUtil.init({
-        logger: createFakeLogger(),
-        tracing: {
-          stackTraceLength: 10
-        }
-      });
-    });
-
-    // Helper functions to create a deep call stack for testing
+    // helper function for deep stackTrace
     function deepFunction11() {
       return getStackTrace(deepFunction11);
     }
@@ -757,70 +1011,120 @@ describe('tracing/tracingUtil', () => {
       return deepFunction2();
     }
 
-    it('should use configured stackTraceLength by default', () => {
-      const stack = deepFunction1();
+    describe('with stackTraceMode = "all"', () => {
+      before(() => {
+        tracingUtil.init({
+          logger: createFakeLogger(),
+          tracing: {
+            stackTraceLength: 10,
+            stackTrace: 'all'
+          }
+        });
+      });
 
-      expect(stack).to.be.an('array');
-      expect(stack.length).to.be.at.most(10);
-      expect(stack.length).to.be.greaterThan(0);
+      it('should generate stack traces when mode is "all"', () => {
+        const stack = deepFunction1();
+
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.be.greaterThan(0);
+        expect(stack.length).to.be.at.most(10);
+      });
+
+      it('should use configured stackTraceLength', () => {
+        const stack = deepFunction1();
+
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.be.at.most(10);
+        expect(stack.length).to.be.greaterThan(0);
+      });
+
+      it('should handle drop parameter correctly', () => {
+        function testFunc(drop) {
+          return getStackTrace(testFunc, drop);
+        }
+        function caller1(drop) {
+          return testFunc(drop);
+        }
+        function caller2(drop) {
+          return caller1(drop);
+        }
+        function caller3(drop) {
+          return caller2(drop);
+        }
+
+        const stackWithoutDrop = caller3(0);
+        const stackWithDrop = caller3(5);
+
+        expect(stackWithoutDrop).to.be.an('array');
+        expect(stackWithDrop).to.be.an('array');
+        expect(stackWithDrop.length).to.be.lessThan(stackWithoutDrop.length);
+      });
     });
 
-    it('should use configured stackTraceLength (cannot override with parameter)', () => {
-      function testFunc() {
-        return getStackTrace(testFunc, 0);
-      }
-      function caller1() {
-        return testFunc();
-      }
-      function caller2() {
-        return caller1();
-      }
-      function caller3() {
-        return caller2();
-      }
-      const stack = caller3();
+    describe('with stackTraceMode = "none"', () => {
+      before(() => {
+        tracingUtil.init({
+          logger: createFakeLogger(),
+          tracing: {
+            stackTraceLength: 10,
+            stackTrace: 'none'
+          }
+        });
+      });
 
-      expect(stack).to.be.an('array');
-      expect(stack.length).to.be.at.most(10);
-      expect(stack.length).to.be.greaterThan(0);
+      it('should not generate stack traces when mode is "none"', () => {
+        function testFunc() {
+          return getStackTrace(testFunc);
+        }
+        function caller1() {
+          return testFunc();
+        }
+        function caller2() {
+          return caller1();
+        }
+
+        const stack = caller2();
+
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.equal(0);
+      });
+
+      it('should return empty array regardless of drop parameter', () => {
+        function testFunc(drop) {
+          return getStackTrace(testFunc, drop);
+        }
+
+        const stack = testFunc(0);
+
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.equal(0);
+      });
     });
 
-    it('should handle drop parameter correctly', () => {
-      function testFunc(drop) {
-        return getStackTrace(testFunc, drop);
-      }
-      function caller1(drop) {
-        return testFunc(drop);
-      }
-      function caller2(drop) {
-        return caller1(drop);
-      }
-      function caller3(drop) {
-        return caller2(drop);
-      }
+    describe('with stackTraceMode = "error"', () => {
+      before(() => {
+        tracingUtil.init({
+          logger: createFakeLogger(),
+          tracing: {
+            stackTraceLength: 10,
+            stackTrace: 'error'
+          }
+        });
+      });
 
-      const stackWithoutDrop = caller3(0);
-      const stackWithDrop = caller3(5);
+      it('should not generate stack traces when mode is "error"', () => {
+        function testFunc() {
+          return getStackTrace(testFunc);
+        }
+        function caller1() {
+          return testFunc();
+        }
 
-      expect(stackWithoutDrop).to.be.an('array');
-      expect(stackWithDrop).to.be.an('array');
-      expect(stackWithDrop.length).to.be.lessThan(stackWithoutDrop.length);
-    });
+        const stack = caller1();
 
-    it('should use drop parameter with configured length', () => {
-      function testFunc() {
-        return getStackTrace(testFunc, 1);
-      }
-      function caller1() {
-        return testFunc();
-      }
-      function caller2() {
-        return caller1();
-      }
-      const stack = caller2();
-
-      expect(stack).to.be.an('array');
-      expect(stack.length).to.be.at.most(10);
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.equal(0);
+      });
     });
   });
 
