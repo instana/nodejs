@@ -12,7 +12,7 @@ process.on('SIGTERM', () => {
 });
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
-import fetch from 'node-fetch';
+
 import delay from '../../../../../../../core/test/test_util/delay.js';
 import getAppPort from '../../../../../test_util/app-port.js';
 import logger from '@instana/core/test/test_util/log.js';

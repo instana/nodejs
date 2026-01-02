@@ -8,7 +8,6 @@
 const AbstractServerlessControl = require('@instana/serverless/test/util/AbstractServerlessControl');
 const portfinder = require('@instana/collector/test/test_util/portfinder');
 const { fork } = require('child_process');
-const fetch = require('node-fetch-v2');
 
 class Control extends AbstractServerlessControl {
   constructor(opts) {
@@ -64,7 +63,8 @@ class Control extends AbstractServerlessControl {
       throw new Error('The option path must be provided');
     }
     const response = await fetch(`http://localhost:${this.port}${opts.path}`);
-    return response.json();
+    const data = await response.json();
+    return data;
   }
 
   getPort() {

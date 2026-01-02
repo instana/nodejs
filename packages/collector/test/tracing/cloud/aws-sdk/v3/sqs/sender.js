@@ -24,7 +24,7 @@ if (process.env.AWS_SDK_CLIENT_SQS_REQUIRE !== '@aws-sdk/client-sqs') {
 require('../../../../../..')();
 const express = require('express');
 const delay = require('@instana/core/test/test_util/delay');
-const fetch = require('node-fetch-v2');
+
 const awsSdk3 = require('@aws-sdk/client-sqs');
 const logPrefix = `AWS SDK v3 SQS Sender (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);

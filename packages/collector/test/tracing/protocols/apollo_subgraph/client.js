@@ -15,7 +15,6 @@ require('../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const fetch = require('node-fetch-v2');
 
 const serverPort = process.env.SERVER_PORT;
 const serverBaseUrl = `http://127.0.0.1:${serverPort}`;
@@ -57,24 +56,21 @@ function runQuery(req, res) {
   return runQueryViaHttp(query, res);
 }
 
-function runQueryViaHttp(query, res) {
-  return fetch(serverGraphQLEndpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      query
-    })
-  })
-    .then(response => response.json())
-    .then(data => {
-      res.send(data);
-    })
-    .catch(error => {
-      log(error);
-      res.sendStatus(500);
+async function runQueryViaHttp(query, res) {
+  try {
+    const response = await fetch(serverGraphQLEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ query })
     });
+    const data = await response.json();
+    res.send(data);
+  } catch (error) {
+    log(error);
+    res.sendStatus(500);
+  }
 }
 
 app.listen(port, () => {
