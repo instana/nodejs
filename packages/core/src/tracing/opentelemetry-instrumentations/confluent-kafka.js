@@ -22,7 +22,7 @@ module.exports.init = () => {
   }
 };
 
-module.exports.modifyContext = (api, otelSpan, instanaSpan, originalCtx) => {
+module.exports.manipulateOtelSpan = (api, otelSpan, instanaSpan, originalCtx) => {
   const W3cTraceContext = require('../w3c_trace_context/W3cTraceContext');
   const w3cTraceContext = new W3cTraceContext();
   w3cTraceContext.instanaTraceId = instanaSpan.t;
