@@ -66,18 +66,21 @@ function patchedModuleLoad(moduleName) {
   //       However, when an ESM library imports a CommonJS package, our requireHook is triggered.
   //       For native ESM libraries the iitmHook is triggered.
   if (path.isAbsolute(moduleName) && ['.node', '.json', '.ts'].indexOf(path.extname(moduleName)) === -1) {
+    // CASE: normalize windows paths (backslashes)
+    const normalizedModuleName = moduleName.replace(/\\/g, '/');
+
     // EDGE CASE for ESM: mysql2/promise.js
-    if (moduleName.indexOf('node_modules/mysql2/promise.js') !== -1) {
+    if (normalizedModuleName.indexOf('node_modules/mysql2/promise.js') !== -1) {
       moduleName = 'mysql2/promise';
     } else {
       // e.g. path is node_modules/@elastic/elasicsearch/index.js
-      let match = moduleName.match(/node_modules\/(@.*?(?=\/)\/.*?(?=\/))/);
+      let match = normalizedModuleName.match(/node_modules\/(@.*?(?=\/)\/.*?(?=\/))/);
 
       if (match && match.length > 1) {
         moduleName = match[1];
       } else {
         // e.g. path is node_modules/mysql/lib/index.js
-        match = moduleName.match(/node_modules\/(.*?(?=\/))/);
+        match = normalizedModuleName.match(/node_modules\/(.*?(?=\/))/);
 
         if (match && match.length > 1) {
           moduleName = match[1];
@@ -145,8 +148,11 @@ function patchedModuleLoad(moduleName) {
   }
 
   if (!cacheEntry.byFileNamePatternTransformersApplied) {
+    // CASE: normalize windows paths (backslashes)
+    const normalizedFilename = filename.replace(/\\/g, '/');
+
     for (let i = 0; i < byFileNamePatternTransformers.length; i++) {
-      if (byFileNamePatternTransformers[i].pattern.test(filename)) {
+      if (byFileNamePatternTransformers[i].pattern.test(normalizedFilename)) {
         cacheEntry.moduleExports =
           byFileNamePatternTransformers[i].fn(cacheEntry.moduleExports, filename) || cacheEntry.moduleExports;
       }
