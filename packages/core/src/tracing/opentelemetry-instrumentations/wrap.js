@@ -39,74 +39,68 @@ module.exports.init = (_config, cls) => {
     value.module = instrumentation;
   });
 
-  const transformToInstanaSpan = otelSpan => {
-    // TODO: remove instrumentationLibrary in next major release
-    //       instrumentationScope was introduced in OpenTelemetry v2
-    if (!otelSpan || (!otelSpan.instrumentationScope && !otelSpan.instrumentationLibrary)) {
-      return;
+  const prepareData = (otelSpan, instrumentationModule, instrumentationName) => {
+    const obj = {
+      kind: constants.EXIT,
+      resource: { ...otelSpan.resource.attributes },
+      tags: { ...otelSpan.attributes },
+      // NOTE: opentelemetry/instrumentation-fs -> we only want the name behind instrumentation-
+      operation: instrumentationName.split('-').pop()
+    };
+
+    // NOTE: 'service.name' is "unknown" - probably because we don't setup otel completely.
+    //       The removal fixes incorrect infrastructure correlation.
+    delete obj.resource['service.name'];
+
+    if (instrumentationModule.getKind) {
+      obj.kind = instrumentationModule.getKind(otelSpan);
     }
 
-    const targetInstrumentionName =
-      otelSpan.instrumentationScope?.name || otelSpan.instrumentationLibrary?.name || null;
-
-    if (!targetInstrumentionName) {
-      return;
+    // CASE: instrumentations are allowed to manipulate the attributes to prepare our Instana span
+    if (instrumentationModule.changeTags) {
+      obj.tags = instrumentationModule.changeTags(obj.tags);
     }
 
-    let kind = constants.EXIT;
+    obj.tags = Object.assign({ name: otelSpan.name }, obj.tags);
 
-    if (instrumentations[targetInstrumentionName] && instrumentations[targetInstrumentionName].module) {
-      const targetInstrumentationModule = instrumentations[targetInstrumentionName].module;
+    return obj;
+  };
 
-      if (targetInstrumentationModule.getKind) {
-        kind = targetInstrumentationModule.getKind(otelSpan);
-      }
-
-      if (targetInstrumentationModule.transform) {
-        otelSpan = targetInstrumentationModule.transform(otelSpan);
-      }
-    } else {
-      // CASE: A customer has installed an Opentelemetry instrumentation, but
-      //       we do not want to capture these spans. We only support our own set of modules.
-      return;
-    }
-
+  const transformToInstanaSpan = (otelSpan, preparedData) => {
     if (cls.tracingSuppressed()) {
       return;
     }
 
-    if (kind === constants.EXIT && cls.skipExitTracing()) {
+    if (preparedData.kind === constants.EXIT && cls.skipExitTracing()) {
       return;
     }
 
     try {
-      cls.ns.runAndReturn(() => {
-        // NOTE: 'service.name' is "unknown" - probably because we don't setup otel completely.
-        //       The removal fixes incorrect infrastructure correlation.
-        delete otelSpan.resource.attributes['service.name'];
-
+      const createInstanaSpan = onEndCallback => {
         const instanaSpan = cls.startSpan({
           spanName: 'otel',
-          kind: kind
+          kind: preparedData.kind
         });
 
-        // opentelemetry/instrumentation-fs -> we only want the name behind instrumentation-
-        const operation = targetInstrumentionName.split('-').pop();
-
         instanaSpan.data = {
-          // span.data.operation is mapped to endpoint for otel span plugin in BE. We need to set the endpoint otherwise
-          // the ui will show unspecified
-          operation,
-          tags: Object.assign({ name: otelSpan.name }, otelSpan.attributes),
-          resource: otelSpan.resource.attributes
+          // span.data.operation is mapped to endpoint for otel span plugin in BE.
+          // We need to set the endpoint otherwise the ui will show unspecified
+          operation: preparedData.operation,
+          tags: preparedData.tags,
+          resource: preparedData.resource
         };
 
         const origEnd = otelSpan.end;
         otelSpan.end = function instanaOnEnd() {
           instanaSpan.transmit();
+          if (onEndCallback) {
+            onEndCallback();
+          }
           return origEnd.apply(this, arguments);
         };
-      });
+      };
+
+      cls.ns.runAndReturn(() => createInstanaSpan());
     } catch (e) {
       // ignore for now
     }
@@ -135,8 +129,29 @@ module.exports.init = (_config, cls) => {
   api.context.setGlobalContextManager(contextManager);
 
   const orig = api.trace.setSpan;
-  api.trace.setSpan = function instanaSetSpan(ctx, span) {
-    transformToInstanaSpan(span);
+  api.trace.setSpan = function instanaSetSpan(otelCtx, otelSpan) {
+    // TODO: remove instrumentationLibrary in next major release
+    //       instrumentationScope was introduced in OpenTelemetry v2
+    if (!otelSpan.instrumentationScope && !otelSpan.instrumentationLibrary) {
+      return orig.apply(this, arguments);
+    }
+
+    const instrumentationName = otelSpan.instrumentationScope?.name || otelSpan.instrumentationLibrary?.name;
+
+    if (!instrumentationName) {
+      return orig.apply(this, arguments);
+    }
+
+    const instrumentationModule = instrumentations[instrumentationName]?.module;
+
+    // CASE: we don't support this instrumentation
+    if (!instrumentationModule) {
+      return orig.apply(this, arguments);
+    }
+
+    const preparedData = prepareData(otelSpan, instrumentationModule, instrumentationName);
+
+    transformToInstanaSpan(otelSpan, preparedData);
     return orig.apply(this, arguments);
   };
 };

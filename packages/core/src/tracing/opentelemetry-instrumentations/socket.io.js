@@ -36,15 +36,15 @@ exports.getKind = otelSpan => {
   return kind;
 };
 
-exports.transform = otelSpan => {
+exports.changeTags = tags => {
   // NOTE: this adaption is needed to show the event name instead of a '/' for the endpoint name in the UI
-  if (otelSpan.attributes && 'messaging.socket.io.event_name' in otelSpan.attributes) {
-    if (isOnEvent(otelSpan)) {
-      otelSpan.attributes['messaging.destination'] = `ON ${otelSpan.attributes['messaging.socket.io.event_name']}`;
+  if (tags && 'messaging.socket.io.event_name' in tags) {
+    if (isOnEvent(tags)) {
+      tags['messaging.destination'] = `ON ${tags['messaging.socket.io.event_name']}`;
     } else {
-      otelSpan.attributes['messaging.destination'] = `EMIT ${otelSpan.attributes['messaging.socket.io.event_name']}`;
+      tags['messaging.destination'] = `EMIT ${tags['messaging.socket.io.event_name']}`;
     }
   }
 
-  return otelSpan;
+  return tags;
 };
