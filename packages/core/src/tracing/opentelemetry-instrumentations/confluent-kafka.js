@@ -5,6 +5,8 @@
 'use strict';
 
 const constants = require('../constants');
+const W3cTraceContext = require('../w3c_trace_context/W3cTraceContext');
+const TraceFlags = require('./files/trace_flags').TraceFlags;
 
 const isEntrySpan = otelSpan => otelSpan.attributes?.['messaging.operation.type'] === 'receive';
 
@@ -22,25 +24,6 @@ module.exports.init = () => {
   }
 };
 
-module.exports.manipulateOtelSpan = (api, otelSpan, instanaSpan, originalCtx) => {
-  const W3cTraceContext = require('../w3c_trace_context/W3cTraceContext');
-  const w3cTraceContext = new W3cTraceContext();
-  w3cTraceContext.instanaTraceId = instanaSpan.t;
-  w3cTraceContext.instanaParentId = instanaSpan.s;
-  w3cTraceContext.traceParentTraceId = instanaSpan.t ? instanaSpan.t.padStart(32, '0') : null;
-  w3cTraceContext.traceParentParentId = instanaSpan.s;
-  w3cTraceContext.sampled = true;
-  w3cTraceContext.traceParentValid = true;
-  w3cTraceContext.traceStateValid = true;
-
-  const carrier = {};
-  carrier[constants.w3cTraceParent] = w3cTraceContext.renderTraceParent();
-  if (w3cTraceContext.hasTraceState()) {
-    carrier[constants.w3cTraceState] = w3cTraceContext.renderTraceState();
-  }
-  return api.propagation.extract(originalCtx, carrier);
-};
-
 module.exports.getKind = otelSpan => {
   if (isEntrySpan(otelSpan)) {
     return constants.ENTRY;
@@ -49,56 +32,66 @@ module.exports.getKind = otelSpan => {
   return constants.EXIT;
 };
 
-module.exports.getTraceId = (kind, otelSpan) => {
-  if (kind === constants.ENTRY) {
-    const spanContext = otelSpan._spanContext;
-    if (spanContext?.traceState) {
-      const traceState = spanContext.traceState;
-      const traceParentTraceId = spanContext.traceId;
-
-      const w3cTraceContext = require('../w3c_trace_context/parse').execute(
-        `00-${traceParentTraceId}-${spanContext.spanId}-01`,
-        traceState.toString()
-      );
-      if (w3cTraceContext.instanaTraceId) {
-        return w3cTraceContext.instanaTraceId;
-      }
-    }
-
-    const otelTraceId = otelSpan._spanContext.traceId;
-    if (otelTraceId && otelTraceId.length === 32) {
-      return otelTraceId.substring(16);
-    }
-    return otelTraceId;
+module.exports.setW3CTraceContext = (api, preparedData, otelSpan, originalCtx) => {
+  if (preparedData.kind !== constants.EXIT) {
+    return originalCtx;
   }
 
-  return null;
+  const instanaSpan = otelSpan._instanaSpan;
+  const otelSpanContext = otelSpan.spanContext();
+
+  const w3cTraceContext = W3cTraceContext.fromInstanaIds(
+    instanaSpan ? instanaSpan.t : otelSpanContext.traceId,
+    instanaSpan ? instanaSpan.s : otelSpanContext.spanId,
+    // If Instana suppressed is true, sampled should be false!
+    preparedData.isSuppressed === false
+  );
+
+  const carrier = {};
+  carrier[constants.w3cTraceParent] = w3cTraceContext.renderTraceParent();
+  if (w3cTraceContext.hasTraceState()) {
+    carrier[constants.w3cTraceState] = w3cTraceContext.renderTraceState();
+  }
+
+  return api.propagation.extract(originalCtx, carrier);
 };
 
-module.exports.getParentId = (kind, otelSpan) => {
-  if (kind === constants.ENTRY) {
-    const spanContext = otelSpan._spanContext;
-    if (spanContext?.traceState) {
-      const traceState = spanContext.traceState;
-      const traceParentTraceId = spanContext.traceId;
-      let traceStateString = traceState.toString();
+module.exports.extractW3CTraceContext = (preparedData, otelSpan) => {
+  const result = {
+    traceId: null,
+    parentSpanId: null
+  };
 
-      if (!traceStateString || !traceStateString.includes(constants.w3cInstanaEquals)) {
-        const instanaValue = traceState.get(constants.w3cInstana);
-        if (instanaValue) {
-          traceStateString = `${constants.w3cInstanaEquals}${instanaValue}`;
-        }
-      }
-      const w3cTraceContext = require('../w3c_trace_context/parse').execute(
-        `00-${traceParentTraceId}-${spanContext.spanId}-01`,
-        traceStateString
-      );
-      if (w3cTraceContext.instanaParentId) {
-        return w3cTraceContext.instanaParentId;
-      }
-    }
-    return otelSpan.parentSpanId;
+  if (preparedData.kind !== constants.ENTRY) {
+    return result;
   }
 
-  return null;
+  const spanContext = otelSpan.parentSpanContext || otelSpan._spanContext;
+
+  if (spanContext?.traceState) {
+    const traceState = spanContext.traceState;
+    const instanaValue = traceState.get(constants.w3cInstana);
+    if (instanaValue) {
+      const parts = instanaValue.split(';');
+      if (parts.length === 2) {
+        result.traceId = parts[0];
+        result.parentSpanId = parts[1];
+      }
+    }
+  }
+
+  if (!result.traceId && spanContext?.traceId) {
+    const otelTraceId = spanContext.traceId;
+    if (otelTraceId.length === 32) {
+      result.traceId = otelTraceId.substring(16);
+    } else {
+      result.traceId = otelTraceId;
+    }
+  }
+
+  if (!result.parentSpanId) {
+    result.parentSpanId = otelSpan.parentSpanId || spanContext?.spanId;
+  }
+
+  return result;
 };

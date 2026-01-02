@@ -96,7 +96,7 @@ mochaSuiteFn('opentelemetry tests', function () {
       });
 
       // node bin/start-test-containers.js --zookeeper --kafka --schema-registry --kafka-topics
-      describe.only('tracing/confluent-kafka', function () {
+      describe('tracing/confluent-kafka', function () {
         const topic = 'confluent-kafka-topic';
 
         before(async () => {
@@ -214,6 +214,23 @@ mochaSuiteFn('opentelemetry tests', function () {
               });
             });
           });
+
+          it('[suppressed] must not trace', async () => {
+            const response = await producerControls.sendRequest({
+              method: 'GET',
+              path: apiPath,
+              suppressTracing: true
+            });
+
+            expect(response.produced).to.equal(true);
+
+            await delay(1000 * 5);
+
+            return retry(async () => {
+              const spans = await agentControls.getSpans();
+              expect(spans).to.have.lengthOf(0);
+            });
+          });
         });
 
         describe('rdkafka style', function () {
@@ -317,6 +334,23 @@ mochaSuiteFn('opentelemetry tests', function () {
 
                 verifyHttpExit(spans, consumerEntry);
               });
+            });
+          });
+
+          it('[suppressed] must not trace', async () => {
+            const response = await producerControls.sendRequest({
+              method: 'GET',
+              path: apiPath,
+              suppressTracing: true
+            });
+
+            expect(response.produced).to.equal(true);
+
+            await delay(1000 * 5);
+
+            return retry(async () => {
+              const spans = await agentControls.getSpans();
+              expect(spans).to.have.lengthOf(0);
             });
           });
         });
