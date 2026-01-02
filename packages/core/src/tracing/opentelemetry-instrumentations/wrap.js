@@ -189,8 +189,8 @@ module.exports.init = (_config, cls) => {
     const originalCtx = orig.apply(this, arguments);
 
     if (otelSpan && otelSpan._instanaSpan) {
-      if (instrumentationModule.modifyContext && preparedData.kind === constants.EXIT) {
-        return instrumentationModule.modifyContext(api, otelSpan, otelSpan._instanaSpan, originalCtx);
+      if (instrumentationModule.manipulateOtelSpan && preparedData.kind === constants.EXIT) {
+        return instrumentationModule.manipulateOtelSpan(api, otelSpan, otelSpan._instanaSpan, originalCtx);
       }
     }
 
