@@ -12,19 +12,22 @@ const fail = require('assert').fail;
 const util = require('util');
 
 const config = require('../config');
-const { isCI } = require('../test_util');
+const { isCI, createFakeLogger } = require('../test_util');
 
 const {
+  findCallback,
   generateRandomId,
   generateRandomSpanId,
   generateRandomTraceId,
-  getErrorDetails,
+  getStackTrace,
   readTraceContextFromBuffer,
   sanitizeConnectionStr,
+  setErrorDetails,
   unsignedHexStringToBuffer,
-  unsignedHexStringsToBuffer,
-  findCallback
+  unsignedHexStringsToBuffer
 } = require('../../src/tracing/tracingUtil');
+
+const tracingUtil = require('../../src/tracing/tracingUtil');
 
 describe('tracing/tracingUtil', () => {
   describe('generate random IDs', function () {
@@ -356,25 +359,6 @@ describe('tracing/tracingUtil', () => {
     }
   });
 
-  describe('getErrorDetails', () => {
-    it('must not fail on null/undefined', () => {
-      expect(getErrorDetails(null)).to.equal(undefined);
-      expect(getErrorDetails(undefined)).to.equal(undefined);
-    });
-
-    it('must use error stack when available', () => {
-      expect(getErrorDetails(new Error('Whhoooopppppss'))).to.match(/Whhoooopppppss/);
-    });
-
-    it('must use error message when available', () => {
-      expect(getErrorDetails({ message: 'Whhoooopppppss' })).to.match(/Whhoooopppppss/);
-    });
-
-    it('must use the whole provided error when all else fails', () => {
-      expect(getErrorDetails('Whhoooopppppss')).to.match(/Whhoooopppppss/);
-    });
-  });
-
   describe('sanitizeConnectionStr', () => {
     it('should redact password at the start of the connection string', () => {
       expect(
@@ -442,6 +426,724 @@ describe('tracing/tracingUtil', () => {
       const res = findCallback(args);
       expect(res.originalCallback).to.equal(arrow);
       expect(res.callbackIndex).to.equal(1);
+    });
+  });
+
+  describe('setErrorDetails', () => {
+    before(() => {
+      tracingUtil.init({
+        logger: createFakeLogger(),
+        tracing: {
+          stackTraceLength: 10
+        }
+      });
+    });
+
+    it('should handle Error objects with message and stack', () => {
+      const span = {
+        data: {
+          nats: {}
+        }
+      };
+      const error = new Error('Test error message');
+      setErrorDetails(span, error, 'nats');
+
+      expect(span.data.nats.error).to.match(/Error: Test error message/);
+      expect(span.stack).to.be.an('array');
+      expect(span.stack.length).to.be.greaterThan(0);
+      expect(span.stack[0]).to.have.property('m');
+      expect(span.stack[0]).to.have.property('c');
+      expect(span.stack[0]).to.have.property('n');
+    });
+
+    it('should handle error objects with only a message property', () => {
+      const span = {
+        data: {
+          mysql: {}
+        }
+      };
+      const error = { message: 'Database connection failed', stack: 'some test' };
+      setErrorDetails(span, error, 'mysql');
+
+      expect(span.data.mysql.error).to.equal('Error: Database connection failed');
+      expect(span.stack).to.be.an('array');
+    });
+
+    it('should handle error objects with code property', () => {
+      const span = {
+        data: {
+          http: {}
+        }
+      };
+      const error = { code: 'ECONNREFUSED', stack: 'test stack' };
+      setErrorDetails(span, error, 'http');
+
+      expect(span.data.http.error).to.equal('ECONNREFUSED');
+      expect(span.stack).to.be.an('array');
+    });
+
+    it('should not overwrite existing error property', () => {
+      const span = {
+        data: {
+          nats: {
+            error: 'Existing error'
+          }
+        }
+      };
+      const error = 'New error';
+      setErrorDetails(span, error, 'nats');
+
+      expect(span.data.nats.error).to.equal('Existing error');
+    });
+
+    it('should handle null or undefined errors gracefully', () => {
+      const span = {
+        data: {
+          nats: {}
+        }
+      };
+      setErrorDetails(span, null, 'nats');
+      expect(span.data.nats.error).to.be.undefined;
+
+      setErrorDetails(span, undefined, 'nats');
+      expect(span.data.nats.error).to.be.undefined;
+    });
+
+    it('should truncate long error messages to 200 characters', () => {
+      const span = {
+        data: {
+          nats: {}
+        }
+      };
+      const longError = 'a'.repeat(300);
+      setErrorDetails(span, longError, 'nats');
+
+      expect(span.data.nats.error).to.have.lengthOf(200);
+      // The prefix `Error: ` (length 7) is excluded from the trimming logic.
+      expect(span.data.nats.error).to.equal(`Error: ${'a'.repeat(193)}`);
+    });
+
+    it('should parse stack traces into structured format', () => {
+      const span = {
+        data: {
+          nats: {}
+        }
+      };
+      const error = new Error('Test');
+      error.stack = `Error: Test\n${'at someFunction (file.js:10:5)\n'.repeat(10)}`;
+      setErrorDetails(span, error, 'nats');
+
+      expect(span.stack).to.be.an('array');
+      expect(span.stack.length).to.equal(10);
+      expect(span.stack[0]).to.have.property('m', 'someFunction');
+      expect(span.stack[0]).to.have.property('c', 'file.js');
+      expect(span.stack[0]).to.have.property('n', 10);
+    });
+
+    it('should respect default stackTraceLength limit', () => {
+      const testSpan = {
+        data: {
+          nats: {}
+        }
+      };
+      const testError = new Error('Test');
+      testError.stack = `Error: Test\n${'at someFunction (file.js:10:5)\n'.repeat(20)}`;
+      setErrorDetails(testSpan, testError, 'nats');
+
+      expect(testSpan.stack).to.be.an('array');
+
+      // Should be limited to the configured stackTraceLength (default 10)
+      expect(testSpan.stack.length).to.equal(10);
+      expect(testSpan.stack[0]).to.have.property('m', 'someFunction');
+      expect(testSpan.stack[0]).to.have.property('c', 'file.js');
+      expect(testSpan.stack[0]).to.have.property('n', 10);
+    });
+
+    it('should handle error objects with details property (gRPC errors)', () => {
+      const span = {
+        data: {
+          rpc: {}
+        }
+      };
+      const error = { details: 'UNAVAILABLE: Connection refused' };
+      setErrorDetails(span, error, 'rpc');
+
+      expect(span.data.rpc.error).to.contain('UNAVAILABLE: Connection refused');
+    });
+
+    it('should prioritize details over message for gRPC errors', () => {
+      const span = {
+        data: {
+          rpc: {}
+        }
+      };
+      const error = {
+        message: 'Generic error message',
+        details: 'UNAVAILABLE: Connection refused'
+      };
+      setErrorDetails(span, error, 'rpc');
+
+      expect(span.data.rpc.error).to.contain('UNAVAILABLE: Connection refused');
+    });
+
+    describe('SDK spans with nested error paths', () => {
+      it('should not overwrite existing SDK error', () => {
+        const span = {
+          data: {
+            sdk: {
+              custom: {
+                tags: {
+                  message: 'Existing SDK error'
+                }
+              }
+            }
+          }
+        };
+        const error = 'New SDK error';
+        setErrorDetails(span, error, ['sdk', 'custom', 'tags', 'message']);
+
+        expect(span.data.sdk.custom.tags.message).to.equal('Existing SDK error');
+      });
+
+      it('should truncate SDK error messages to 200 characters', () => {
+        const span = {
+          data: {}
+        };
+        const longError = 'b'.repeat(600);
+        setErrorDetails(span, longError, ['sdk', 'custom', 'tags', 'message']);
+
+        expect(span.data.sdk.custom.tags.message).to.have.lengthOf(200);
+        expect(span.data.sdk.custom.tags.message).to.equal(`Error: ${'b'.repeat(193)}`);
+      });
+
+      it('should create nested structure if it does not exist', () => {
+        const span = {
+          data: {}
+        };
+        const error = 'Test error';
+        setErrorDetails(span, error, ['sdk', 'custom', 'tags', 'error']);
+
+        expect(span.data.sdk).to.be.an('object');
+        expect(span.data.sdk.custom).to.be.an('object');
+        expect(span.data.sdk.custom.tags).to.be.an('object');
+        expect(span.data.sdk.custom.tags.error).to.equal('Error: Test error');
+      });
+
+      it('should handle different nested paths', () => {
+        const span = {
+          data: {}
+        };
+        const error = 'Custom path error';
+        setErrorDetails(span, error, ['custom', 'nested', 'path', 'errorField']);
+
+        expect(span.data.custom.nested.path.errorField).to.equal('Error: Custom path error');
+      });
+
+      it('should handle Error object with name and message for SDK spans', () => {
+        const span = {
+          data: {}
+        };
+        const error = new TypeError('Type mismatch');
+        setErrorDetails(span, error, ['sdk', 'custom', 'tags', 'message']);
+
+        expect(span.data.sdk.custom.tags.message).to.match(/TypeError: Type mismatch/);
+        expect(span.stack).to.be.an('array');
+        expect(span.stack.length).to.be.greaterThan(0);
+      });
+
+      it('should handle SDK error with dot-separated string path', () => {
+        const span = {
+          data: {}
+        };
+        const error = new Error('SDK error via string path');
+        setErrorDetails(span, error, 'sdk.custom.tags.message');
+
+        expect(span.data.sdk).to.exist;
+        expect(span.data.sdk.custom).to.exist;
+        expect(span.data.sdk.custom.tags).to.exist;
+        expect(span.data.sdk.custom.tags.message).to.match(/Error: SDK error via string path/);
+        expect(span.stack).to.be.an('array');
+        expect(span.stack.length).to.be.greaterThan(0);
+      });
+
+      it('should handle both array and string paths equivalently', () => {
+        const span1 = { data: {} };
+        const span2 = { data: {} };
+        const error = new Error('Test error');
+
+        setErrorDetails(span1, error, ['sdk', 'custom', 'tags', 'message']);
+        setErrorDetails(span2, error, 'sdk.custom.tags.message');
+
+        expect(span1.data.sdk.custom.tags.message).to.equal(span2.data.sdk.custom.tags.message);
+        expect(span1.data.sdk.custom.tags.message).to.match(/Error: Test error/);
+      });
+    });
+
+    it('should handle errors when logger fails', () => {
+      const span = {
+        data: {
+          test: {}
+        }
+      };
+      setErrorDetails(span, { message: 'test' }, 'test');
+      expect(span.data.test.error).to.match(/Error: test/);
+    });
+
+    it('should preserve existing stack if error has no stack', () => {
+      const existingStack = [{ m: 'existing', c: 'file.js', n: 1 }];
+      const span = {
+        data: { test: {} },
+        stack: existingStack
+      };
+      const error = { message: 'No stack error' };
+      setErrorDetails(span, error, 'test');
+
+      expect(span.stack).to.equal(existingStack);
+    });
+
+    it('should handle empty stack string', () => {
+      const span = {
+        data: { test: {} }
+      };
+      const error = { message: 'test', stack: '' };
+      setErrorDetails(span, error, 'test');
+
+      expect(span.stack).to.deep.equal([]);
+    });
+
+    describe('setErrorDetails with stackTraceMode filtering', () => {
+      describe('with stackTraceMode = "none"', () => {
+        before(() => {
+          tracingUtil.init({
+            logger: createFakeLogger(),
+            tracing: {
+              stackTraceLength: 10,
+              stackTrace: 'none'
+            }
+          });
+        });
+
+        it('should set error message but not generate stack trace when mode is "none"', () => {
+          const span = {
+            data: {
+              http: {}
+            },
+            stack: []
+          };
+          const error = new Error('Test error');
+          setErrorDetails(span, error, 'http');
+
+          expect(span.data.http.error).to.match(/Error: Test error/);
+          expect(span.stack).to.be.an('array');
+          expect(span.stack.length).to.equal(0);
+        });
+
+        it('should not overwrite existing stack when mode is "none"', () => {
+          const existingStack = [{ m: 'existing', c: 'file.js', n: 1 }];
+          const span = {
+            data: { test: {} },
+            stack: existingStack
+          };
+          const error = new Error('New error');
+          setErrorDetails(span, error, 'test');
+
+          expect(span.data.test.error).to.match(/Error: New error/);
+          expect(span.stack).to.equal(existingStack);
+        });
+      });
+
+      describe('with stackTraceMode = "error"', () => {
+        before(() => {
+          tracingUtil.init({
+            logger: createFakeLogger(),
+            tracing: {
+              stackTraceLength: 10,
+              stackTrace: 'error'
+            }
+          });
+        });
+
+        it('should generate stack trace from error when mode is "error"', () => {
+          const span = {
+            data: {
+              mysql: {}
+            }
+          };
+          const error = new Error('Database error');
+          setErrorDetails(span, error, 'mysql');
+
+          expect(span.data.mysql.error).to.match(/Error: Database error/);
+          expect(span.stack).to.be.an('array');
+          expect(span.stack.length).to.be.greaterThan(0);
+          expect(span.stack[0]).to.have.property('m');
+          expect(span.stack[0]).to.have.property('c');
+          expect(span.stack[0]).to.have.property('n');
+        });
+
+        it('should respect stackTraceLength when mode is "error"', () => {
+          const span = {
+            data: {
+              test: {}
+            }
+          };
+          const error = new Error('Test');
+          error.stack = `Error: Test\n${'at someFunction (file.js:10:5)\n'.repeat(20)}`;
+          setErrorDetails(span, error, 'test');
+
+          expect(span.stack).to.be.an('array');
+          expect(span.stack.length).to.equal(10);
+        });
+
+        it('should set empty stack array when error has no stack property', () => {
+          const span = {
+            data: {
+              test: {}
+            }
+          };
+          const error = { message: 'No stack error' };
+          setErrorDetails(span, error, 'test');
+
+          expect(span.data.test.error).to.match(/Error: No stack error/);
+          expect(span.stack).to.be.an('array');
+          expect(span.stack.length).to.equal(0);
+        });
+      });
+
+      describe('with stackTraceMode = "all"', () => {
+        before(() => {
+          tracingUtil.init({
+            logger: createFakeLogger(),
+            tracing: {
+              stackTraceLength: 10,
+              stackTrace: 'all'
+            }
+          });
+        });
+
+        it('should generate stack trace from error when mode is "all"', () => {
+          const span = {
+            data: {
+              nats: {}
+            }
+          };
+          const error = new Error('NATS error');
+          setErrorDetails(span, error, 'nats');
+
+          expect(span.data.nats.error).to.match(/Error: NATS error/);
+          expect(span.stack).to.be.an('array');
+          expect(span.stack.length).to.be.greaterThan(0);
+        });
+
+        it('should handle SDK spans with nested paths when mode is "all"', () => {
+          const span = {
+            data: {}
+          };
+          const error = new Error('SDK error');
+          setErrorDetails(span, error, 'sdk.custom.tags.message');
+
+          expect(span.data.sdk.custom.tags.message).to.match(/Error: SDK error/);
+          expect(span.stack).to.be.an('array');
+          expect(span.stack.length).to.be.greaterThan(0);
+        });
+      });
+
+      it('should handle error with name property but no message', () => {
+        const span = {
+          data: {
+            test: {}
+          }
+        };
+        const error = { name: 'CustomError', stack: 'test stack' };
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('No error message found.');
+      });
+
+      it('should handle error with both name and details properties', () => {
+        const span = {
+          data: {
+            grpc: {}
+          }
+        };
+        const error = { name: 'GrpcError', details: 'Connection timeout', stack: 'test' };
+        setErrorDetails(span, error, 'grpc');
+
+        expect(span.data.grpc.error).to.equal('GrpcError: Connection timeout');
+      });
+
+      it('should handle nested path with single element array', () => {
+        const span = {
+          data: {}
+        };
+        const error = 'Single level error';
+        setErrorDetails(span, error, ['error']);
+
+        expect(span.data.error).to.equal('Error: Single level error');
+      });
+
+      it('should handle flat technology key without dot notation', () => {
+        const span = {
+          data: {
+            redis: {}
+          }
+        };
+        const error = { message: 'Redis connection failed', stack: 'test' };
+        setErrorDetails(span, error, 'redis');
+
+        expect(span.data.redis.error).to.equal('Error: Redis connection failed');
+      });
+
+      it('should handle error object with only code property and no stack', () => {
+        const span = {
+          data: {
+            net: {}
+          }
+        };
+        const error = { code: 'ETIMEDOUT' };
+        setErrorDetails(span, error, 'net');
+
+        expect(span.data.net.error).to.equal('ETIMEDOUT');
+        expect(span.stack).to.deep.equal([]);
+      });
+
+      it('should handle deeply nested path with more than 4 levels', () => {
+        const span = {
+          data: {}
+        };
+        const error = 'Deep nested error';
+        setErrorDetails(span, error, ['level1', 'level2', 'level3', 'level4', 'level5', 'error']);
+
+        expect(span.data.level1.level2.level3.level4.level5.error).to.equal('Error: Deep nested error');
+      });
+
+      it('should handle error with empty string message', () => {
+        const span = {
+          data: {
+            test: {}
+          }
+        };
+        const error = { message: '', stack: 'test' };
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('No error message found.');
+      });
+
+      it('should not create error property when technology path does not exist in span.data', () => {
+        const span = {
+          data: {}
+        };
+        const error = 'Test error';
+        setErrorDetails(span, error, 'nonexistent');
+
+        expect(span.data.nonexistent).to.be.undefined;
+      });
+
+      it('should handle mixed dot notation with existing partial structure', () => {
+        const span = {
+          data: {
+            sdk: {
+              custom: {}
+            }
+          }
+        };
+        const error = 'Partial structure error';
+        setErrorDetails(span, error, 'sdk.custom.tags.message');
+
+        expect(span.data.sdk.custom.tags.message).to.equal('Error: Partial structure error');
+      });
+
+      it('should handle error with stack property that parses to empty array', () => {
+        const span = {
+          data: {
+            test: {}
+          }
+        };
+        const error = { message: 'test', stack: 'Invalid stack format without proper lines' };
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: test');
+        expect(span.stack).to.be.an('array');
+      });
+
+      it('should handle getStackTrace without reference function', () => {
+        const stack = getStackTrace();
+
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.be.greaterThan(0);
+        expect(stack.length).to.be.at.most(10);
+      });
+    });
+  });
+
+  describe('getStackTrace', () => {
+    // helper function for deep stackTrace
+    function deepFunction11() {
+      return getStackTrace(deepFunction11);
+    }
+    function deepFunction10() {
+      return deepFunction11();
+    }
+    function deepFunction9() {
+      return deepFunction10();
+    }
+    function deepFunction8() {
+      return deepFunction9();
+    }
+    function deepFunction7() {
+      return deepFunction8();
+    }
+    function deepFunction6() {
+      return deepFunction7();
+    }
+    function deepFunction5() {
+      return deepFunction6();
+    }
+    function deepFunction4() {
+      return deepFunction5();
+    }
+    function deepFunction3() {
+      return deepFunction4();
+    }
+    function deepFunction2() {
+      return deepFunction3();
+    }
+    function deepFunction1() {
+      return deepFunction2();
+    }
+
+    describe('with stackTraceMode = "all"', () => {
+      before(() => {
+        tracingUtil.init({
+          logger: createFakeLogger(),
+          tracing: {
+            stackTraceLength: 10,
+            stackTrace: 'all'
+          }
+        });
+      });
+
+      it('should generate stack traces when mode is "all"', () => {
+        const stack = deepFunction1();
+
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.be.greaterThan(0);
+        expect(stack.length).to.be.at.most(10);
+      });
+
+      it('should use configured stackTraceLength', () => {
+        const stack = deepFunction1();
+
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.be.at.most(10);
+        expect(stack.length).to.be.greaterThan(0);
+      });
+
+      it('should handle drop parameter correctly', () => {
+        function testFunc(drop) {
+          return getStackTrace(testFunc, drop);
+        }
+        function caller1(drop) {
+          return testFunc(drop);
+        }
+        function caller2(drop) {
+          return caller1(drop);
+        }
+        function caller3(drop) {
+          return caller2(drop);
+        }
+
+        const stackWithoutDrop = caller3(0);
+        const stackWithDrop = caller3(5);
+
+        expect(stackWithoutDrop).to.be.an('array');
+        expect(stackWithDrop).to.be.an('array');
+        expect(stackWithDrop.length).to.be.lessThan(stackWithoutDrop.length);
+      });
+    });
+
+    describe('with stackTraceMode = "none"', () => {
+      before(() => {
+        tracingUtil.init({
+          logger: createFakeLogger(),
+          tracing: {
+            stackTraceLength: 10,
+            stackTrace: 'none'
+          }
+        });
+      });
+
+      it('should not generate stack traces when mode is "none"', () => {
+        function testFunc() {
+          return getStackTrace(testFunc);
+        }
+        function caller1() {
+          return testFunc();
+        }
+        function caller2() {
+          return caller1();
+        }
+
+        const stack = caller2();
+
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.equal(0);
+      });
+
+      it('should return empty array regardless of drop parameter', () => {
+        function testFunc(drop) {
+          return getStackTrace(testFunc, drop);
+        }
+
+        const stack = testFunc(0);
+
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.equal(0);
+      });
+    });
+
+    describe('with stackTraceMode = "error"', () => {
+      before(() => {
+        tracingUtil.init({
+          logger: createFakeLogger(),
+          tracing: {
+            stackTraceLength: 10,
+            stackTrace: 'error'
+          }
+        });
+      });
+
+      it('should not generate stack traces when mode is "error"', () => {
+        function testFunc() {
+          return getStackTrace(testFunc);
+        }
+        function caller1() {
+          return testFunc();
+        }
+
+        const stack = caller1();
+
+        expect(stack).to.be.an('array');
+        expect(stack.length).to.equal(0);
+      });
+    });
+  });
+
+  describe('generateRandomLongTraceId', () => {
+    const { generateRandomLongTraceId } = require('../../src/tracing/tracingUtil');
+
+    it('should generate 128-bit (32 character) trace IDs', () => {
+      const id = generateRandomLongTraceId();
+      expect(id).to.be.a('string');
+      expect(id.length).to.equal(32);
+      expect(id).to.match(/^[a-f0-9]{32}$/);
+    });
+
+    it('should generate unique IDs', () => {
+      const ids = new Set();
+      for (let i = 0; i < 1000; i++) {
+        ids.add(generateRandomLongTraceId());
+      }
+      expect(ids.size).to.equal(1000);
     });
   });
 });

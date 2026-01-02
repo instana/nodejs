@@ -17,22 +17,69 @@ require('./mockVersion');
 // latency and response codes. This can be used a baselines for many tests, e.g.
 // to test distributed tracing.
 
-require('../../../../..')({
+const instanaConfig = {
   agentPort: process.env.AGENT_PORT,
   level: 'warn',
   tracing: {
     enabled: true,
     forceTransmissionStartingAt: 1,
-    stackTraceLength: process.env.STACK_TRACE_LENGTH != null ? process.env.STACK_TRACE_LENGTH : 10
+    stackTraceLength: process.env.STACK_TRACE_LENGTH_TEST != null ? process.env.STACK_TRACE_LENGTH_TEST : 10
   }
-});
+};
+
+require('../../../../..')(instanaConfig);
 const express = require('express');
 const fetch = require('node-fetch-v2');
+const http = require('http');
 const port = require('../../../../test_util/app-port')();
 const app = express();
 
 app.get('/', (req, res) => {
   res.sendStatus(200);
+});
+
+// eslint-disable-next-line no-unused-vars
+app.get('/trigger-error', (req, res) => {
+  // This endpoint makes an HTTP client call that will fail
+  // This will trigger setErrorDetails on the http.client span
+  fetch('http://localhost:1/non-existent-endpoint', {
+    method: 'GET',
+    timeout: 100
+  })
+    .then(response => {
+      res.sendStatus(response.status);
+    })
+    .catch(err => {
+      res.status(500).send(err);
+    });
+});
+
+// eslint-disable-next-line no-unused-vars
+app.get('/trigger-error-no-stack', (req, res) => {
+  const options = {
+    hostname: 'localhost',
+    port: process.env.UPSTREAM_PORT,
+    path: '/return-error',
+    method: 'GET'
+  };
+
+  const clientRequest = http.request(options, response => {
+    response.on('data', () => {});
+    response.on('end', () => {});
+  });
+
+  setImmediate(() => {
+    const errorWithoutStack = {
+      message: 'Error without stack',
+      code: 'NO_STACK_ERROR',
+      name: 'CustomError'
+    };
+
+    clientRequest.emit('error', errorWithoutStack);
+    res.status(500).send(errorWithoutStack);
+  });
+
+  clientRequest.end();
 });
 
 app.use((req, res) => {

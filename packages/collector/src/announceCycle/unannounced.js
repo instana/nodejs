@@ -9,8 +9,11 @@ const {
   secrets,
   tracing,
   util: { ensureNestedObjectExists },
-  coreConfig: { configNormalizers }
+  coreConfig: { configNormalizers, configValidators }
 } = require('@instana/core');
+
+const { validateStackTraceMode, validateStackTraceLength } = configValidators.stackTraceValidation;
+
 const { constants: tracingConstants } = tracing;
 
 const agentConnection = require('../agentConnection');
@@ -24,7 +27,6 @@ let pidStore;
 const initialRetryDelay = 10 * 1000; // 10 seconds
 const backoffFactor = 1.5;
 const maxRetryDelay = 60 * 1000; // one minute
-
 /**
  * @typedef {Object} AgentAnnounceResponse
  * @property {SecretsConfig} [secrets]
@@ -46,6 +48,13 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @property {import('@instana/core/src/config/types').IgnoreEndpoints} [ignore-endpoints]
  * @property {boolean} [span-batching-enabled]
  * @property {import('@instana/core/src/config/types').Disable} [disable]
+ * @property {StackTraceConfig} [global]
+ */
+
+/**
+ * @typedef {Object} StackTraceConfig
+ * @property {string} [stack-trace] - Stack trace mode ('error'|'all'|'none')
+ * @property {number} [stack-trace-length] - Maximum number of stack trace frames to capture
  */
 
 /**
@@ -121,6 +130,7 @@ function applyAgentConfiguration(agentResponse) {
   applyKafkaTracingConfiguration(agentResponse);
   applySpanBatchingConfiguration(agentResponse);
   applyIgnoreEndpointsConfiguration(agentResponse);
+  applyStackTraceConfiguration(agentResponse);
   applyDisableConfiguration(agentResponse);
 }
 
@@ -238,6 +248,46 @@ function applyIgnoreEndpointsConfiguration(agentResponse) {
 
   ensureNestedObjectExists(agentOpts.config, ['tracing', 'ignoreEndpoints']);
   agentOpts.config.tracing.ignoreEndpoints = configNormalizers.ignoreEndpoints.normalizeConfig(ignoreEndpointsConfig);
+}
+
+/**
+ * Apply global stack trace configuration from the agent response.
+ *
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyStackTraceConfiguration(agentResponse) {
+  const globalConfig = agentResponse?.tracing?.global;
+  if (!globalConfig) return;
+
+  ensureNestedObjectExists(agentOpts.config, ['tracing', 'global']);
+
+  if (globalConfig['stack-trace'] !== undefined) {
+    const stackTraceModeValidation = validateStackTraceMode(globalConfig['stack-trace']);
+    if (stackTraceModeValidation.isValid) {
+      const normalizedStackTrace = configNormalizers.stackTrace.normalizeStackTraceModeFromAgent(
+        globalConfig['stack-trace']
+      );
+      if (normalizedStackTrace != null) {
+        agentOpts.config.tracing.stackTrace = normalizedStackTrace;
+      }
+    } else {
+      logger.warn(`Invalid stack-trace value from agent: ${stackTraceModeValidation.error}`);
+    }
+  }
+
+  if (globalConfig['stack-trace-length'] !== undefined) {
+    const stackTraceLengthValidation = validateStackTraceLength(globalConfig['stack-trace-length']);
+    if (stackTraceLengthValidation.isValid) {
+      const normalizedStackTraceLength = configNormalizers.stackTrace.normalizeStackTraceLengthFromAgent(
+        globalConfig['stack-trace-length']
+      );
+      if (normalizedStackTraceLength != null) {
+        agentOpts.config.tracing.stackTraceLength = normalizedStackTraceLength;
+      }
+    } else {
+      logger.warn(`Invalid stack-trace-length value from agent: ${stackTraceLengthValidation.error}`);
+    }
+  }
 }
 
 /**

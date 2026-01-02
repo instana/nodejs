@@ -132,7 +132,7 @@ mochaSuiteFn('tracing/nats-streaming', function () {
                     }
                     expect(span.data.nats.address).to.equal(process.env.NATS_STREAMING);
                     if (withError) {
-                      expect(span.data.nats.error).to.equal('stan: invalid publish request');
+                      expect(span.data.nats.error).to.equal('Error: stan: invalid publish request');
                     } else {
                       expect(span.data.nats.error).to.not.exist;
                     }
@@ -246,7 +246,7 @@ mochaSuiteFn('tracing/nats-streaming', function () {
                     expect(span.data.nats.subject).to.equal('subscribe-test-subject');
                     expect(span.data.nats.address).to.equal(process.env.NATS_STREAMING);
                     if (withError) {
-                      expect(span.data.nats.error).to.equal(`Boom: ${uniqueId}`);
+                      expect(span.data.nats.error).to.equal(`Error: Boom: ${uniqueId}`);
                     } else {
                       expect(span.data.nats.error).to.not.exist;
                     }

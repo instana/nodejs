@@ -710,8 +710,7 @@ mochaSuiteFn('tracing/sdk', function () {
     if (error) {
       expectations = expectations.concat([
         span => expect(span.ec).to.equal(1),
-        span => expect(span.data.sdk.custom.tags.message).to.contain('Error: Boom!\n'),
-        span => expect(span.data.sdk.custom.tags.message).to.contain('packages/collector/test/tracing/sdk/app.js')
+        span => expect(span.data.sdk.custom.tags.message).to.contain('Error: Boom!')
       ]);
     } else {
       expectations.push(span => expect(span.ec).to.equal(0));
@@ -721,8 +720,16 @@ mochaSuiteFn('tracing/sdk', function () {
       span => expect(span.data.sdk).to.exist,
       span => expect(span.data.sdk.name).to.equal('custom-entry'),
       span => expect(span.data.sdk.type).to.equal(constants.SDK.ENTRY),
-      span => expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/),
-      span => expect(span.stack[0].m).to.match(functionName)
+      span => {
+        expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
+        if (functionName && !error) {
+          expect(span.stack[0].m).to.match(functionName);
+        } else if (error) {
+          // For this error scenario, the V8 stack frame does not contain the function name
+          // In such cases, defaults to `<anonymous>` as the method (m) field.
+          expect(span.stack[0].m).to.match(/<anonymous>/);
+        }
+      }
     ]);
 
     tagsAt = tagsAt || 'none';
@@ -828,8 +835,8 @@ mochaSuiteFn('tracing/sdk', function () {
           : expect(span.data.sdk.name).to.equal(kind === 'INTERMEDIATE' ? 'intermediate-file-access' : 'file-access'),
       span => expect(span.data.sdk.type).to.equal(constants.SDK[kind]),
       span => {
+        expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
         if (functionName) {
-          expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
           expect(span.stack[0].m).to.match(functionName);
         }
       },
