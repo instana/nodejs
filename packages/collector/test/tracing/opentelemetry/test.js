@@ -95,6 +95,267 @@ mochaSuiteFn('opentelemetry tests', function () {
         console.log('Installed @opentelemetry/api-v1.3.0@npm:@opentelemetry/api@1.3.0');
       });
 
+      // node bin/start-test-containers.js --zookeeper --kafka --schema-registry --kafka-topics
+      describe('tracing/confluent-kafka', function () {
+        const topic = 'confluent-kafka-topic';
+
+        before(async () => {
+          if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS !== 'true') {
+            const rootPackageJson = require('../../../../../package.json');
+            const confluentKafkaVersion = rootPackageJson.devDependencies['@confluentinc/kafka-javascript'];
+            execSync(`npm i "@confluentinc/kafka-javascript@${confluentKafkaVersion}" --prefix ./ --save`, {
+              cwd: __dirname,
+              stdio: 'inherit'
+            });
+
+            // eslint-disable-next-line no-console
+            console.log('Installed kafka-javascript');
+          }
+        });
+
+        describe('kafkajs style', function () {
+          let consumerControls;
+          let producerControls;
+
+          before(async () => {
+            producerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'confluent-kafka-producer-app.js'),
+              useGlobalAgent: true,
+              cwd: __dirname,
+              enableOtelIntegration: true,
+              esmLoaderPath: path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-register.mjs'),
+              env: {
+                CONFLUENT_KAFKA_TOPIC: topic
+              }
+            });
+
+            await producerControls.startAndWaitForAgentConnection();
+
+            consumerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'confluent-kafka-consumer-app.js'),
+              useGlobalAgent: true,
+              enableOtelIntegration: true,
+              esmLoaderPath: path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-register.mjs'),
+              env: {
+                CONFLUENT_KAFKA_TOPIC: topic
+              }
+            });
+
+            await consumerControls.startAndWaitForAgentConnection();
+          });
+
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+
+          after(async () => {
+            await consumerControls.stop();
+            await producerControls.stop();
+          });
+
+          afterEach(async () => {
+            await consumerControls.clearIpcMessages();
+            await producerControls.clearIpcMessages();
+          });
+
+          const apiPath = '/produce';
+
+          it('produces and consumes a message', async () => {
+            const response = await producerControls.sendRequest({
+              method: 'GET',
+              path: apiPath
+            });
+
+            expect(response.produced).to.equal(true);
+
+            return retry(() => {
+              return agentControls.getSpans().then(spans => {
+                expect(spans.length).to.equal(4);
+
+                const httpEntry = verifyHttpRootEntry({
+                  spans,
+                  apiPath: '/produce',
+                  pid: String(producerControls.getPid())
+                });
+
+                const producerExit = verifyExitSpan({
+                  spanName: 'otel',
+                  spans,
+                  parent: httpEntry,
+                  withError: false,
+                  pid: String(producerControls.getPid()),
+                  dataProperty: 'tags',
+                  extraTests: span => {
+                    expect(span.t).to.equal(httpEntry.t);
+                    expect(span.data.tags.name).to.eql('confluent-kafka-topic');
+                    expect(span.data.tags['messaging.system']).to.equal('kafka');
+                    expect(span.data.tags['messaging.operation.name']).to.equal('send');
+                    checkTelemetryResourceAttrs(span);
+                  }
+                });
+
+                const consumerEntry = verifyEntrySpan({
+                  spanName: 'otel',
+                  spans,
+                  withError: false,
+                  pid: String(consumerControls.getPid()),
+                  dataProperty: 'tags',
+                  extraTests: span => {
+                    expect(span.t).to.equal(httpEntry.t);
+                    expect(span.p).to.equal(producerExit.s);
+                    expect(span.data.tags.name).to.eql('confluent-kafka-topic');
+                    expect(span.data.tags['messaging.system']).to.equal('kafka');
+                    expect(span.data.tags['messaging.operation.type']).to.equal('receive');
+                    checkTelemetryResourceAttrs(span);
+                  }
+                });
+
+                verifyHttpExit(spans, consumerEntry);
+              });
+            });
+          });
+
+          it('[suppressed] must not trace', async () => {
+            const response = await producerControls.sendRequest({
+              method: 'GET',
+              path: apiPath,
+              suppressTracing: true
+            });
+
+            expect(response.produced).to.equal(true);
+
+            await delay(1000 * 5);
+
+            return retry(async () => {
+              const spans = await agentControls.getSpans();
+              expect(spans).to.have.lengthOf(0);
+            });
+          });
+        });
+
+        describe('rdkafka style', function () {
+          let consumerControls;
+          let producerControls;
+
+          before(async () => {
+            producerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'confluent-kafka-producer-app.js'),
+              useGlobalAgent: true,
+              cwd: __dirname,
+              enableOtelIntegration: true,
+              esmLoaderPath: path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-register.mjs'),
+              env: {
+                CONFLUENT_KAFKA_TOPIC: topic,
+                KAFKA_CLIENT_TYPE: 'rdkafka'
+              }
+            });
+
+            await producerControls.startAndWaitForAgentConnection();
+
+            consumerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'confluent-kafka-consumer-app.js'),
+              useGlobalAgent: true,
+              enableOtelIntegration: true,
+              esmLoaderPath: path.join(__dirname, 'node_modules', '@instana', 'collector', 'esm-register.mjs'),
+              env: {
+                CONFLUENT_KAFKA_TOPIC: topic,
+                KAFKA_CLIENT_TYPE: 'rdkafka'
+              }
+            });
+
+            await consumerControls.startAndWaitForAgentConnection(1000, Date.now() + 1000 * 10);
+          });
+
+          beforeEach(async () => {
+            await agentControls.clearReceivedTraceData();
+          });
+
+          after(async () => {
+            await consumerControls.stop();
+            await producerControls.stop();
+          });
+
+          afterEach(async () => {
+            await consumerControls.clearIpcMessages();
+            await producerControls.clearIpcMessages();
+          });
+
+          const apiPath = '/produce';
+
+          it('produces and consumes a message', async () => {
+            const response = await producerControls.sendRequest({
+              method: 'GET',
+              path: apiPath
+            });
+
+            expect(response.produced).to.equal(true);
+
+            return retry(() => {
+              return agentControls.getSpans().then(spans => {
+                expect(spans.length).to.equal(4);
+
+                const httpEntry = verifyHttpRootEntry({
+                  spans,
+                  apiPath: '/produce',
+                  pid: String(producerControls.getPid())
+                });
+
+                const producerExit = verifyExitSpan({
+                  spanName: 'otel',
+                  spans,
+                  parent: httpEntry,
+                  withError: false,
+                  pid: String(producerControls.getPid()),
+                  dataProperty: 'tags',
+                  extraTests: span => {
+                    expect(span.t).to.equal(httpEntry.t);
+                    expect(span.data.tags.name).to.eql('confluent-kafka-topic');
+                    expect(span.data.tags['messaging.system']).to.equal('kafka');
+                    expect(span.data.tags['messaging.operation.name']).to.equal('produce');
+                    checkTelemetryResourceAttrs(span);
+                  }
+                });
+
+                const consumerEntry = verifyEntrySpan({
+                  spanName: 'otel',
+                  spans,
+                  withError: false,
+                  pid: String(consumerControls.getPid()),
+                  dataProperty: 'tags',
+                  extraTests: span => {
+                    expect(span.t).to.equal(httpEntry.t);
+                    expect(span.p).to.equal(producerExit.s);
+                    expect(span.data.tags.name).to.eql('confluent-kafka-topic');
+                    expect(span.data.tags['messaging.system']).to.equal('kafka');
+                    expect(span.data.tags['messaging.operation.type']).to.equal('receive');
+                    checkTelemetryResourceAttrs(span);
+                  }
+                });
+
+                verifyHttpExit(spans, consumerEntry);
+              });
+            });
+          });
+
+          it('[suppressed] must not trace', async () => {
+            const response = await producerControls.sendRequest({
+              method: 'GET',
+              path: apiPath,
+              suppressTracing: true
+            });
+
+            expect(response.produced).to.equal(true);
+
+            await delay(1000 * 5);
+
+            return retry(async () => {
+              const spans = await agentControls.getSpans();
+              expect(spans).to.have.lengthOf(0);
+            });
+          });
+        });
+      });
+
       // TODO: Restify test is broken in v24. See Issue: https://github.com/restify/node-restify/issues/1984
       let restifyTest = semver.gte(process.versions.node, '24.0.0') ? describe.skip : describe;
 
@@ -801,7 +1062,7 @@ mochaSuiteFn('opentelemetry tests', function () {
                 pid: String(controls.getPid()),
                 dataProperty: 'tags',
                 extraTests: span => {
-                  expect(span.data.operation).to.equal('oracledb');
+                  expect(span.data.operation).to.equal('oracle');
                   expect(span.data.tags.name).to.eql('oracledb.Connection.execute');
                   expect(span.data.tags['db.system.name']).to.eql('oracle.db');
                   expect(span.data.tags['server.address']).to.eql('localhost');
