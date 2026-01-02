@@ -1062,7 +1062,7 @@ mochaSuiteFn('opentelemetry tests', function () {
                 pid: String(controls.getPid()),
                 dataProperty: 'tags',
                 extraTests: span => {
-                  expect(span.data.operation).to.equal('oracledb');
+                  expect(span.data.operation).to.equal('oracle');
                   expect(span.data.tags.name).to.eql('oracledb.Connection.execute');
                   expect(span.data.tags['db.system.name']).to.eql('oracle.db');
                   expect(span.data.tags['server.address']).to.eql('localhost');
