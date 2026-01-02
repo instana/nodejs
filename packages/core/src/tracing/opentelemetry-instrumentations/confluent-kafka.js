@@ -6,7 +6,6 @@
 
 const constants = require('../constants');
 const W3cTraceContext = require('../w3c_trace_context/W3cTraceContext');
-const TraceFlags = require('./files/trace_flags').TraceFlags;
 
 const isEntrySpan = otelSpan => otelSpan.attributes?.['messaging.operation.type'] === 'receive';
 
