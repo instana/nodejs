@@ -9,6 +9,7 @@ const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks
 const { W3CTraceContextPropagator } = require('@opentelemetry/core');
 const api = require('@opentelemetry/api');
 const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
+const utils = require('./utils');
 const constants = require('../constants');
 const supportedVersion = require('../supportedVersion');
 
@@ -41,45 +42,51 @@ module.exports.init = (_config, cls) => {
     value.module = instrumentation;
   });
 
-  const prepareData = (otelSpan, instrumentationModule, instrumentationName) => {
+  const prepareData = (otelSpan, instrumentation) => {
     const obj = {
       traceId: null,
       parentSpanId: null,
       kind: constants.EXIT,
       resource: { ...otelSpan.resource.attributes },
       tags: { ...otelSpan.attributes },
-      // NOTE: opentelemetry/instrumentation-fs -> we only want the name behind instrumentation-
-      operation: instrumentationName.split('-').pop()
+      instrumentation,
+      operation: instrumentation.name,
+      isSuppressed: cls.tracingSuppressed()
     };
 
     // NOTE: 'service.name' is "unknown" - probably because we don't setup otel completely.
     //       The removal fixes incorrect infrastructure correlation.
     delete obj.resource['service.name'];
 
-    if (instrumentationModule.getKind) {
-      obj.kind = instrumentationModule.getKind(otelSpan);
+    if (instrumentation.module.getKind) {
+      obj.kind = instrumentation.module.getKind(otelSpan);
     }
 
     // CASE: instrumentations are allowed to manipulate the attributes to prepare our Instana span
-    if (instrumentationModule.changeTags) {
-      obj.tags = instrumentationModule.changeTags(otelSpan, obj.tags);
+    if (instrumentation.module.changeTags) {
+      obj.tags = instrumentation.module.changeTags(otelSpan, obj.tags);
     }
 
     obj.tags = Object.assign({ name: otelSpan.name }, obj.tags);
 
-    if (instrumentationModule.getTraceId) {
-      obj.traceId = instrumentationModule.getTraceId(obj.kind, otelSpan);
-    }
+    if (instrumentation.module.extractW3CTraceContext) {
+      const w3cData = instrumentation.module.extractW3CTraceContext(obj, otelSpan);
 
-    if (instrumentationModule.getParentId) {
-      obj.parentSpanId = instrumentationModule.getParentId(obj.kind, otelSpan);
+      if (w3cData.traceId !== null) {
+        obj.traceId = w3cData.traceId;
+      }
+
+      if (w3cData.parentSpanId !== null) {
+        obj.parentSpanId = w3cData.parentSpanId;
+      }
     }
 
     return obj;
   };
 
   const transformToInstanaSpan = (otelSpan, preparedData) => {
-    if (cls.tracingSuppressed()) {
+    if (preparedData.isSuppressed) {
+      cls.setTracingLevel('0');
       return;
     }
 
@@ -164,9 +171,18 @@ module.exports.init = (_config, cls) => {
 
   const orig = api.trace.setSpan;
   api.trace.setSpan = function instanaSetSpan(otelCtx, otelSpan) {
-    // TODO: remove instrumentationLibrary in next major release
-    //       instrumentationScope was introduced in OpenTelemetry v2
-    if (!otelSpan.instrumentationScope && !otelSpan.instrumentationLibrary) {
+    const isSampled = utils.getSamplingDecision(otelSpan);
+
+    if (!isSampled) {
+      const clsContext = cls.ns.createContext();
+      cls.ns.enter(clsContext);
+      cls.setTracingLevel('0');
+      const origEnd = otelSpan.end;
+      otelSpan.end = function instanaOnEnd() {
+        cls.ns.exit(clsContext);
+        return origEnd.apply(this, arguments);
+      };
+
       return orig.apply(this, arguments);
     }
 
@@ -176,22 +192,20 @@ module.exports.init = (_config, cls) => {
       return orig.apply(this, arguments);
     }
 
-    const instrumentationModule = instrumentations[instrumentationName]?.module;
+    const instrumentation = instrumentations[instrumentationName];
 
     // CASE: we don't support this instrumentation
-    if (!instrumentationModule) {
+    if (!instrumentation || !instrumentation.module) {
       return orig.apply(this, arguments);
     }
 
-    const preparedData = prepareData(otelSpan, instrumentationModule, instrumentationName);
+    const preparedData = prepareData(otelSpan, instrumentation);
 
     transformToInstanaSpan(otelSpan, preparedData);
     const originalCtx = orig.apply(this, arguments);
 
-    if (otelSpan && otelSpan._instanaSpan) {
-      if (instrumentationModule.manipulateOtelSpan && preparedData.kind === constants.EXIT) {
-        return instrumentationModule.manipulateOtelSpan(api, otelSpan, otelSpan._instanaSpan, originalCtx);
-      }
+    if (otelSpan && instrumentation.module.setW3CTraceContext) {
+      return instrumentation.module.setW3CTraceContext(api, preparedData, otelSpan, originalCtx);
     }
 
     return originalCtx;
