@@ -36,10 +36,10 @@ exports.getKind = otelSpan => {
   return kind;
 };
 
-exports.changeTags = tags => {
+exports.changeTags = (otelSpan, tags) => {
   // NOTE: this adaption is needed to show the event name instead of a '/' for the endpoint name in the UI
   if (tags && 'messaging.socket.io.event_name' in tags) {
-    if (isOnEvent(tags)) {
+    if (isOnEvent(otelSpan)) {
       tags['messaging.destination'] = `ON ${tags['messaging.socket.io.event_name']}`;
     } else {
       tags['messaging.destination'] = `EMIT ${tags['messaging.socket.io.event_name']}`;

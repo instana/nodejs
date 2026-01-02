@@ -58,7 +58,7 @@ module.exports.init = (_config, cls) => {
 
     // CASE: instrumentations are allowed to manipulate the attributes to prepare our Instana span
     if (instrumentationModule.changeTags) {
-      obj.tags = instrumentationModule.changeTags(obj.tags);
+      obj.tags = instrumentationModule.changeTags(otelSpan, obj.tags);
     }
 
     obj.tags = Object.assign({ name: otelSpan.name }, obj.tags);
