@@ -50,7 +50,11 @@ module.exports.setW3CTraceContext = (api, preparedData, otelSpan, instanaSpan, o
   //         We take the original Otel ids and forward the suppression state. The entry span will follow the decision.
   // CASE 2: Instana Tracing is active, we push the Instana ids into the Otel context.
   if (!instanaSpan) {
-    w3cTraceContext = W3cTraceContext.createEmptyUnsampled(otelSpanContext.traceId, otelSpanContext.spanId);
+    w3cTraceContext = W3cTraceContext.fromOtelIds(
+      otelSpanContext.traceId,
+      otelSpanContext.spanId,
+      preparedData.isSuppressed === false
+    );
   } else {
     w3cTraceContext = W3cTraceContext.fromInstanaIds(instanaSpan.t, instanaSpan.s, preparedData.isSuppressed === false);
   }
