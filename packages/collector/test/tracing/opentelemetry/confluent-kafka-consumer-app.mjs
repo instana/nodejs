@@ -11,7 +11,6 @@ process.on('SIGTERM', () => {
 
 import express from 'express';
 import bodyParser from 'body-parser';
-import fetch from 'node-fetch-v2';
 import delay from '../../../../core/test/test_util/delay.js';
 import getAppPort from '../../test_util/app-port.js';
 const port = getAppPort();
