@@ -79,7 +79,7 @@ async function setupProducer() {
         log('RdKafka Producer error:', err.message);
       });
     } else {
-      // kafkajs Initialisierung
+      // kafkajs Initialization
       const kafka = new KafkaClient({
         'bootstrap.servers': broker,
         kafkaJS: { clientId: 'confluent-producer', brokers: [broker] }
