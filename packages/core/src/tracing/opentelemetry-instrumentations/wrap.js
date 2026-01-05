@@ -163,7 +163,8 @@ module.exports.init = (_config, cls) => {
 
   api.trace.setGlobalTracerProvider(provider);
   api.context.setGlobalContextManager(contextManager);
-  // NOTE: Required for EXIT -> ENTRY (e.g. Kafka) correlation
+  // NOTE: Required for EXIT -> ENTRY (e.g. Kafka) correlation. W3CTraceContextPropagator will extract
+  //       the w3c trace context from the incoming request and set it to the CLS context.
   api.propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
   const orig = api.trace.setSpan;
