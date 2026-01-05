@@ -171,6 +171,8 @@ module.exports.init = (_config, cls) => {
 
   const orig = api.trace.setSpan;
   api.trace.setSpan = function instanaSetSpan(otelCtx, otelSpan) {
+    // CASE: Otel reads incoming w3c trace context and the trace flag is set to NOT_RECORD (suppressed).
+    //       We immediately suppress the trace for further sub spans and return the original context.
     const isSampled = utils.getSamplingDecision(otelSpan);
 
     if (!isSampled) {

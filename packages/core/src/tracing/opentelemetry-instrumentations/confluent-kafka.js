@@ -7,13 +7,7 @@
 const constants = require('../constants');
 const W3cTraceContext = require('../w3c_trace_context/W3cTraceContext');
 
-const isEntrySpan = otelSpan => otelSpan.attributes?.['messaging.operation.type'] === 'receive';
-
 module.exports.init = () => {
-  // NOTE: Otel instrumentations sometimes require the target library TYPE to mock on top of their instrumentation.
-  //       This works, because "import type" does not load the target library.
-  // eslint-disable-next-line max-len
-  // EXAMPLE: https://github.com/open-telemetry/opentelemetry-js-contrib/blob/instrumentation-express-v0.57.1/packages/instrumentation-express/src/instrumentation.ts#L25
   const { ConfluentKafkaInstrumentation } = require('@instana/instrumentation-confluent-kafka-javascript');
 
   const instrumentation = new ConfluentKafkaInstrumentation({});
@@ -24,13 +18,26 @@ module.exports.init = () => {
 };
 
 module.exports.getKind = otelSpan => {
-  if (isEntrySpan(otelSpan)) {
+  if (otelSpan.attributes?.['messaging.operation.type'] === 'receive') {
     return constants.ENTRY;
   }
 
   return constants.EXIT;
 };
 
+/**
+ * The Otel instrumentations are part of our tracing pipeline.
+ * As soon as there is an Exit -> Entry pair (such as Kafka), we have to manipulate
+ * the Otel context to inject our Instana ids into the W3C trace context, because Otel internally creates their
+ * own W3C trace context ids (via tracer.startSpan()). We do not monkey patch `startSpan` currently.
+ *
+ * The flow is:
+ * - trace.setSpan(context.active(), span);
+ * - wrap.js setSpan override
+ * - create Instana span
+ * - manipulate the returned context of `setSpan` with our ids
+ * - the Otel span will be cleaned up automatically from Otel SDK
+ */
 module.exports.setW3CTraceContext = (api, preparedData, otelSpan, originalCtx) => {
   if (preparedData.kind !== constants.EXIT) {
     return originalCtx;
@@ -38,23 +45,28 @@ module.exports.setW3CTraceContext = (api, preparedData, otelSpan, originalCtx) =
 
   const instanaSpan = otelSpan._instanaSpan;
   const otelSpanContext = otelSpan.spanContext();
+  let w3cTraceContext;
 
-  const w3cTraceContext = W3cTraceContext.fromInstanaIds(
-    instanaSpan ? instanaSpan.t : otelSpanContext.traceId,
-    instanaSpan ? instanaSpan.s : otelSpanContext.spanId,
-    // If Instana suppressed is true, sampled should be false!
-    preparedData.isSuppressed === false
-  );
+  // CASE 1: Instana Tracing is suppressed, we do not create the Instana span - see transformToInstanaSpan in wrap.js.
+  //         We take the original Otel ids and forward the suppression state. The entry span will follow the decision.
+  // CASE 2: Instana Tracing is active, we push the Instana ids into the Otel context.
+  if (!instanaSpan) {
+    w3cTraceContext = W3cTraceContext.createEmptyUnsampled(otelSpanContext.traceId, otelSpanContext.spanId);
+  } else {
+    w3cTraceContext = W3cTraceContext.fromInstanaIds(instanaSpan.t, instanaSpan.s, preparedData.isSuppressed === false);
+  }
 
   const carrier = {};
   carrier[constants.w3cTraceParent] = w3cTraceContext.renderTraceParent();
-  if (w3cTraceContext.hasTraceState()) {
-    carrier[constants.w3cTraceState] = w3cTraceContext.renderTraceState();
-  }
 
   return api.propagation.extract(originalCtx, carrier);
 };
 
+/**
+ * We have to extract the w3c information from the otel span, because
+ * the entry otel span will contain our Instana trace and parent information, which we have to
+ * extract and connect to our Instana spans to keep the correlation.
+ */
 module.exports.extractW3CTraceContext = (preparedData, otelSpan) => {
   const result = {
     traceId: null,
@@ -65,31 +77,14 @@ module.exports.extractW3CTraceContext = (preparedData, otelSpan) => {
     return result;
   }
 
-  const spanContext = otelSpan.parentSpanContext || otelSpan._spanContext;
+  const spanContext = otelSpan.parentSpanContext;
 
-  if (spanContext?.traceState) {
-    const traceState = spanContext.traceState;
-    const instanaValue = traceState.get(constants.w3cInstana);
-    if (instanaValue) {
-      const parts = instanaValue.split(';');
-      if (parts.length === 2) {
-        result.traceId = parts[0];
-        result.parentSpanId = parts[1];
-      }
-    }
+  if (spanContext?.traceId) {
+    result.traceId = spanContext.traceId.substring(16);
   }
 
-  if (!result.traceId && spanContext?.traceId) {
-    const otelTraceId = spanContext.traceId;
-    if (otelTraceId.length === 32) {
-      result.traceId = otelTraceId.substring(16);
-    } else {
-      result.traceId = otelTraceId;
-    }
-  }
-
-  if (!result.parentSpanId) {
-    result.parentSpanId = otelSpan.parentSpanId || spanContext?.spanId;
+  if (spanContext?.spanId) {
+    result.parentSpanId = spanContext.spanId;
   }
 
   return result;
