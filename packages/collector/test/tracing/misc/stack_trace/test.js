@@ -286,7 +286,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
                   ]);
 
                   expect(httpClientSpan.stack).to.be.an('array');
-                  expect(httpClientSpan.stack.length).to.equal(4);
+                  expect(httpClientSpan.stack.length).to.equal(3);
                 })
               )
             ));
@@ -345,7 +345,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
                   ]);
 
                   expect(httpClientSpan.stack).to.be.an('array');
-                  expect(httpClientSpan.stack.length).to.equal(6);
+                  expect(httpClientSpan.stack.length).to.equal(3);
                 })
               )
             ));
@@ -401,7 +401,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
                   ]);
 
                   expect(httpClientSpan.stack).to.be.an('array');
-                  expect(httpClientSpan.stack.length).to.equal(5);
+                  expect(httpClientSpan.stack.length).to.equal(3);
                 })
               )
             ));
