@@ -96,7 +96,7 @@ mochaSuiteFn('opentelemetry tests', function () {
       });
 
       // node bin/start-test-containers.js --zookeeper --kafka --schema-registry --kafka-topics
-      describe.only('tracing/confluent-kafka', function () {
+      describe('tracing/confluent-kafka', function () {
         const topic = 'confluent-kafka-topic';
 
         before(async () => {

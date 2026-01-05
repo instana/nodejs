@@ -38,12 +38,11 @@ module.exports.getKind = otelSpan => {
  * - manipulate the returned context of `setSpan` with our ids
  * - the Otel span will be cleaned up automatically from Otel SDK
  */
-module.exports.setW3CTraceContext = (api, preparedData, otelSpan, originalCtx) => {
+module.exports.setW3CTraceContext = (api, preparedData, otelSpan, instanaSpan, originalCtx) => {
   if (preparedData.kind !== constants.EXIT) {
     return originalCtx;
   }
 
-  const instanaSpan = otelSpan._instanaSpan;
   const otelSpanContext = otelSpan.spanContext();
   let w3cTraceContext;
 

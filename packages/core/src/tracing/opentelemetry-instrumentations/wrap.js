@@ -95,7 +95,7 @@ module.exports.init = (_config, cls) => {
     }
 
     try {
-      const createInstanaSpan = onEndCallback => {
+      const createInstanaSpan = clsContext => {
         const spanAttributes = preparedData.traceId
           ? {
               spanName: 'otel',
@@ -118,28 +118,25 @@ module.exports.init = (_config, cls) => {
           resource: preparedData.resource
         };
 
-        otelSpan._instanaSpan = instanaSpan;
-
         const origEnd = otelSpan.end;
         otelSpan.end = function instanaOnEnd() {
           instanaSpan.transmit();
-          if (onEndCallback) {
-            onEndCallback();
+          if (clsContext) {
+            cls.ns.exit(clsContext);
           }
           return origEnd.apply(this, arguments);
         };
+
+        return instanaSpan;
       };
 
-      if (preparedData.kind === constants.ENTRY) {
-        const clsContext = cls.ns.createContext();
-        cls.ns.enter(clsContext);
+      // NOTE: Create new context and inherit the parent context to keep the correlation.
+      //       The whole flow is synchronous, no need to use runAndReturn async helper.
+      const clsContext = cls.ns.createContext();
+      cls.ns.enter(clsContext);
 
-        createInstanaSpan(() => {
-          cls.ns.exit(clsContext);
-        });
-      } else {
-        cls.ns.runAndReturn(() => createInstanaSpan());
-      }
+      const instanaSpan = createInstanaSpan(clsContext);
+      return instanaSpan;
     } catch (e) {
       // ignore for now
     }
@@ -203,11 +200,11 @@ module.exports.init = (_config, cls) => {
 
     const preparedData = prepareData(otelSpan, instrumentation);
 
-    transformToInstanaSpan(otelSpan, preparedData);
+    const instanaSpan = transformToInstanaSpan(otelSpan, preparedData);
     const originalCtx = orig.apply(this, arguments);
 
     if (otelSpan && instrumentation.module.setW3CTraceContext) {
-      return instrumentation.module.setW3CTraceContext(api, preparedData, otelSpan, originalCtx);
+      return instrumentation.module.setW3CTraceContext(api, preparedData, otelSpan, instanaSpan, originalCtx);
     }
 
     return originalCtx;
