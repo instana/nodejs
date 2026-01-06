@@ -68,8 +68,10 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
         //         https://github.com/expressjs/express/commit/78e50547f16e2adb5763a953586d05308d8aba4c.
         //       middleware query functionality was removed in:
         //         https://github.com/expressjs/express/commit/dcc4eaabe86a4309437db2a853c5ef788a854699
-        // NOTE: Native fetch with OpenTelemetry does not create an EXIT span for the HTTP client call.
-        // OpenTelemetry's auto-instrumentations do not include native fetch instrumentation by default.
+        // NOTE: Native fetch with OpenTelemetry does not create an EXIT span for the HTTP client call
+        // in older versions. Starting with @opentelemetry/auto-instrumentations-node v0.46+,
+        // @opentelemetry/instrumentation-undici is included and enabled by default, which instruments
+        // native fetch. However, this test use an older version without undici instrumentation.
         const spanNames = ['tcp.connect', 'tls.connect', 'GET'];
         expect(spanNames).to.eql(spans.map(s => s.data.operation));
         expect(spans.length).to.eql(3);
@@ -125,8 +127,10 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
       //         https://github.com/expressjs/express/commit/78e50547f16e2adb5763a953586d05308d8aba4c.
       //       middleware query functionality was removed in:
       //         https://github.com/expressjs/express/commit/dcc4eaabe86a4309437db2a853c5ef788a854699
-      // NOTE: Native fetch with OpenTelemetry does not create an EXIT span for the HTTP client call.
-      // OpenTelemetry's auto-instrumentations do not include native fetch instrumentation by default.
+      // NOTE: Native fetch with OpenTelemetry does not create an EXIT span for the HTTP client call
+      // in older versions. Starting with @opentelemetry/auto-instrumentations-node v0.46+,
+      // @opentelemetry/instrumentation-undici is included and enabled by default, which instruments
+      // native fetch. However, this test may use an older version without undici instrumentation.
       const spanNames = ['tcp.connect', 'tls.connect', 'GET'];
       expect(spanNames).to.eql(resp.spans.map(s => s.name));
       expect(resp.spans.length).to.be.gte(3);
