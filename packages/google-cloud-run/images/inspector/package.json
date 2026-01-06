@@ -13,7 +13,6 @@
   "author": "Bastian Krol <bastian.krol@instana.com>",
   "license": "ISC",
   "dependencies": {
-    "is-whitespace": "0.3.0",
-    "node-fetch": "^2.6.0"
+    "is-whitespace": "0.3.0"
   }
 }
