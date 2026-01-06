@@ -471,7 +471,7 @@ function registerTests(agentControls, appUsesHttps, useHttp2CompatApi) {
         )
       ));
 
-  // Skip this test because native fetch does not allow URLs with embedded credentials
+  // Skipped this test because native fetch does not allow URLs with embedded credentials
   // Error: "Request cannot be constructed from a URL that includes credentials"
   // This is a security feature of the Fetch API standard
   it.skip(`must not collect credentials embedded in URLs (HTTPS: ${appUsesHttps})`, () =>
@@ -530,7 +530,7 @@ function registerTests(agentControls, appUsesHttps, useHttp2CompatApi) {
       })
     );
 
-    // The request will eventually complete after 4 seconds (as defined in app.js)
+    // The request will eventually complete after 4 seconds
     return requestPromise.catch(() => {});
   });
 
