@@ -212,7 +212,7 @@ function verifySpans(spans, appControls) {
   // NOTE: Native fetch with OpenTelemetry does not create an EXIT span for the HTTP client call
   // in older versions. Starting with @opentelemetry/auto-instrumentations-node v0.46+,
   // @opentelemetry/instrumentation-undici is included and enabled by default, which instruments
-  // native fetch. However, this test may use an older version without undici instrumentation.
+  // native fetch. However, this test use an older version without the instrumentation.
   // NOTE: middleware spans are not collected when migrating to express v5 because:
   //       middleware initialization was removed in
   //         https://github.com/expressjs/express/commit/78e50547f16e2adb5763a953586d05308d8aba4c.

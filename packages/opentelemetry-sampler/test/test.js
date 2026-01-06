@@ -130,7 +130,7 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
       // NOTE: Native fetch with OpenTelemetry does not create an EXIT span for the HTTP client call
       // in older versions. Starting with @opentelemetry/auto-instrumentations-node v0.46+,
       // @opentelemetry/instrumentation-undici is included and enabled by default, which instruments
-      // native fetch. However, this test may use an older version without undici instrumentation.
+      // native fetch. However, this test use an older version without undici instrumentation.
       const spanNames = ['tcp.connect', 'tls.connect', 'GET'];
       expect(spanNames).to.eql(resp.spans.map(s => s.name));
       expect(resp.spans.length).to.be.gte(3);
