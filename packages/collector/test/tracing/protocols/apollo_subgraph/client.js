@@ -56,21 +56,24 @@ function runQuery(req, res) {
   return runQueryViaHttp(query, res);
 }
 
-async function runQueryViaHttp(query, res) {
-  try {
-    const response = await fetch(serverGraphQLEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ query })
+function runQueryViaHttp(query, res) {
+  return fetch(serverGraphQLEndpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      query
+    })
+  })
+    .then(response => response.json())
+    .then(data => {
+      res.send(data);
+    })
+    .catch(error => {
+      log(error);
+      res.sendStatus(500);
     });
-    const data = await response.json();
-    res.send(data);
-  } catch (error) {
-    log(error);
-    res.sendStatus(500);
-  }
 }
 
 app.listen(port, () => {
