@@ -57,8 +57,7 @@
   "license": "MIT",
   "dependencies": {
     "@instana/core": "5.0.2",
-    "@instana/shared-metrics": "5.0.2",
-    "node-fetch": "^2.6.7"
+    "@instana/shared-metrics": "5.0.2"
   },
   "engines": {
     "node": ">=18.19.0"
