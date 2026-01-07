@@ -7,8 +7,13 @@
 const fs = require('fs');
 const path = require('path');
 
-const tmpDir = './coverage/tmp';
-const processedDir = './coverage/tmp-processed';
+const tmpDir = process.argv[2];
+const processedDir = process.argv[3];
+
+if (!tmpDir || !processedDir) {
+  console.error('Usage: node manipulate-c8.js <tmpDir> <processedDir>');
+  process.exit(1);
+}
 
 if (!fs.existsSync(tmpDir)) {
   console.error('No coverage data found!');
