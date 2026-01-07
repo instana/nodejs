@@ -1,3 +1,11 @@
 {
-  "exclude": ["node_modules", "example-apps", "bin", ".tekton", "misc", "**/test"]
+  "exclude": [
+    "node_modules",
+    "!**/test/**/node_modules/@instana/**/src/**",
+    "example-apps",
+    "bin",
+    ".tekton",
+    "misc",
+    "**/test"
+  ]
 }
