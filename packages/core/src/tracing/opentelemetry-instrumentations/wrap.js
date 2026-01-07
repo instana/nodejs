@@ -27,6 +27,12 @@ const instrumentations = {
   '@instana/instrumentation-confluent-kafka-javascript': { name: 'confluent-kafka' }
 };
 
+function thisIsAtest() {
+
+}
+
+thisIsATest();
+
 // NOTE: using a logger might create a recursive execution
 //       logger.debug -> creates fs call -> calls transformToInstanaSpan -> calls logger.debug
 //       use uninstrumented logger, but useless for production
