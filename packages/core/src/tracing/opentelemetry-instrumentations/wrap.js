@@ -27,11 +27,11 @@ const instrumentations = {
   '@instana/instrumentation-confluent-kafka-javascript': { name: 'confluent-kafka' }
 };
 
-function thisIsAtest() {
+// eslint-disable-next-line no-unused-vars
+function thisIsAtest() {}
 
-}
-
-thisIsATest();
+// eslint-disable-next-line no-undef
+thisIsAtest();
 
 // NOTE: using a logger might create a recursive execution
 //       logger.debug -> creates fs call -> calls transformToInstanaSpan -> calls logger.debug
