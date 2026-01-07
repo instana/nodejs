@@ -83,7 +83,7 @@ describe('util/stackTrace', () => {
   describe('parseStackTraceFromString', () => {
     it('must parse stack trace with function names and file paths', () => {
       const stackString = `Error: test error
-    at ClientRequest.<anonymous> (/artifacts/node_modules/node-fetch-v2/lib/index.js:1501:11)
+    at ClientRequest.<anonymous> (/artifacts/node_modules/fetch/lib/index.js:1501:11)
     at ClientRequest.emit (node:events:519:28)
     at Socket.socketErrorListener (node:_http_client:574:5)`;
 
@@ -93,7 +93,7 @@ describe('util/stackTrace', () => {
       expect(result).to.have.lengthOf(3);
 
       expect(result[0].m).to.equal('ClientRequest.<anonymous>');
-      expect(result[0].c).to.equal('/artifacts/node_modules/node-fetch-v2/lib/index.js');
+      expect(result[0].c).to.equal('/artifacts/node_modules/fetch/lib/index.js');
       expect(result[0].n).to.equal(1501);
 
       expect(result[1].m).to.equal('ClientRequest.emit');
