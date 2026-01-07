@@ -71,7 +71,7 @@ files.forEach(file => {
           if (absolutePrefix) {
             normalizedPath = path.join(absolutePrefix, relativePath);
           } else {
-            normalizedPath = relativePath;
+            normalizedPath = path.resolve(workspaceRoot, relativePath);
           }
 
           if (hadFilePrefix) {
