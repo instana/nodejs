@@ -57,9 +57,12 @@ files.forEach(file => {
           relativePath = relativePath.replace(/^nodejs\//, '');
 
           if (relativePath.includes('node_modules/@instana/')) {
-            const match = relativePath.match(/node_modules\/@instana\/(.+)$/);
+            const match = relativePath.match(/node_modules\/@instana\/([^/]+)\/(src|lib)\/(.+)$/);
             if (match) {
-              relativePath = `packages/${match[1]}`;
+              const packageName = match[1];
+              const sourceDir = match[2];
+              const filePath = match[3];
+              relativePath = `packages/${packageName}/${sourceDir}/${filePath}`;
             }
           }
 
