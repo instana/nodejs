@@ -6,8 +6,10 @@
 'use strict';
 
 const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks');
+const { W3CTraceContextPropagator } = require('@opentelemetry/core');
 const api = require('@opentelemetry/api');
 const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
+const utils = require('./utils');
 const constants = require('../constants');
 const supportedVersion = require('../supportedVersion');
 
@@ -21,7 +23,8 @@ const instrumentations = {
   '@opentelemetry/instrumentation-restify': { name: 'restify' },
   '@opentelemetry/instrumentation-socket.io': { name: 'socket.io' },
   '@opentelemetry/instrumentation-tedious': { name: 'tedious' },
-  '@opentelemetry/instrumentation-oracledb': { name: 'oracle' }
+  '@opentelemetry/instrumentation-oracledb': { name: 'oracle' },
+  '@instana/instrumentation-confluent-kafka-javascript': { name: 'confluent-kafka' }
 };
 
 // NOTE: using a logger might create a recursive execution
@@ -39,35 +42,51 @@ module.exports.init = (_config, cls) => {
     value.module = instrumentation;
   });
 
-  const prepareData = (otelSpan, instrumentationModule, instrumentationName) => {
+  const prepareData = (otelSpan, instrumentation) => {
     const obj = {
+      traceId: null,
+      parentSpanId: null,
       kind: constants.EXIT,
       resource: { ...otelSpan.resource.attributes },
       tags: { ...otelSpan.attributes },
-      // NOTE: opentelemetry/instrumentation-fs -> we only want the name behind instrumentation-
-      operation: instrumentationName.split('-').pop()
+      instrumentation,
+      operation: instrumentation.name,
+      isSuppressed: cls.tracingSuppressed()
     };
 
     // NOTE: 'service.name' is "unknown" - probably because we don't setup otel completely.
     //       The removal fixes incorrect infrastructure correlation.
     delete obj.resource['service.name'];
 
-    if (instrumentationModule.getKind) {
-      obj.kind = instrumentationModule.getKind(otelSpan);
+    if (instrumentation.module.getKind) {
+      obj.kind = instrumentation.module.getKind(otelSpan);
     }
 
     // CASE: instrumentations are allowed to manipulate the attributes to prepare our Instana span
-    if (instrumentationModule.changeTags) {
-      obj.tags = instrumentationModule.changeTags(otelSpan, obj.tags);
+    if (instrumentation.module.changeTags) {
+      obj.tags = instrumentation.module.changeTags(otelSpan, obj.tags);
     }
 
     obj.tags = Object.assign({ name: otelSpan.name }, obj.tags);
+
+    if (instrumentation.module.extractW3CTraceContext) {
+      const w3cData = instrumentation.module.extractW3CTraceContext(obj, otelSpan);
+
+      if (w3cData.traceId !== null) {
+        obj.traceId = w3cData.traceId;
+      }
+
+      if (w3cData.parentSpanId !== null) {
+        obj.parentSpanId = w3cData.parentSpanId;
+      }
+    }
 
     return obj;
   };
 
   const transformToInstanaSpan = (otelSpan, preparedData) => {
-    if (cls.tracingSuppressed()) {
+    if (preparedData.isSuppressed) {
+      cls.setTracingLevel('0');
       return;
     }
 
@@ -76,11 +95,20 @@ module.exports.init = (_config, cls) => {
     }
 
     try {
-      const createInstanaSpan = onEndCallback => {
-        const instanaSpan = cls.startSpan({
-          spanName: 'otel',
-          kind: preparedData.kind
-        });
+      const createInstanaSpan = clsContext => {
+        const spanAttributes = preparedData.traceId
+          ? {
+              spanName: 'otel',
+              kind: preparedData.kind,
+              traceId: preparedData.traceId,
+              parentSpanId: preparedData.parentSpanId
+            }
+          : {
+              spanName: 'otel',
+              kind: preparedData.kind
+            };
+
+        const instanaSpan = cls.startSpan(spanAttributes);
 
         instanaSpan.data = {
           // span.data.operation is mapped to endpoint for otel span plugin in BE.
@@ -93,14 +121,22 @@ module.exports.init = (_config, cls) => {
         const origEnd = otelSpan.end;
         otelSpan.end = function instanaOnEnd() {
           instanaSpan.transmit();
-          if (onEndCallback) {
-            onEndCallback();
+          if (clsContext) {
+            cls.ns.exit(clsContext);
           }
           return origEnd.apply(this, arguments);
         };
+
+        return instanaSpan;
       };
 
-      cls.ns.runAndReturn(() => createInstanaSpan());
+      // NOTE: Create new context and inherit the parent context to keep the correlation.
+      //       The whole flow is synchronous, no need to use runAndReturn async helper.
+      const clsContext = cls.ns.createContext();
+      cls.ns.enter(clsContext);
+
+      const instanaSpan = createInstanaSpan(clsContext);
+      return instanaSpan;
     } catch (e) {
       // ignore for now
     }
@@ -127,12 +163,26 @@ module.exports.init = (_config, cls) => {
 
   api.trace.setGlobalTracerProvider(provider);
   api.context.setGlobalContextManager(contextManager);
+  // NOTE: Required for EXIT -> ENTRY (e.g. Kafka) correlation. W3CTraceContextPropagator will extract
+  //       the w3c trace context from the incoming request and set it to the CLS context.
+  api.propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
   const orig = api.trace.setSpan;
   api.trace.setSpan = function instanaSetSpan(otelCtx, otelSpan) {
-    // TODO: remove instrumentationLibrary in next major release
-    //       instrumentationScope was introduced in OpenTelemetry v2
-    if (!otelSpan.instrumentationScope && !otelSpan.instrumentationLibrary) {
+    // CASE: Otel reads incoming w3c trace context and the trace flag is set to NOT_RECORD (suppressed).
+    //       We immediately suppress the trace for further sub spans and return the original context.
+    const isSampled = utils.getSamplingDecision(otelSpan);
+
+    if (!isSampled) {
+      const clsContext = cls.ns.createContext();
+      cls.ns.enter(clsContext);
+      cls.setTracingLevel('0');
+      const origEnd = otelSpan.end;
+      otelSpan.end = function instanaOnEnd() {
+        cls.ns.exit(clsContext);
+        return origEnd.apply(this, arguments);
+      };
+
       return orig.apply(this, arguments);
     }
 
@@ -142,16 +192,22 @@ module.exports.init = (_config, cls) => {
       return orig.apply(this, arguments);
     }
 
-    const instrumentationModule = instrumentations[instrumentationName]?.module;
+    const instrumentation = instrumentations[instrumentationName];
 
     // CASE: we don't support this instrumentation
-    if (!instrumentationModule) {
+    if (!instrumentation || !instrumentation.module) {
       return orig.apply(this, arguments);
     }
 
-    const preparedData = prepareData(otelSpan, instrumentationModule, instrumentationName);
+    const preparedData = prepareData(otelSpan, instrumentation);
 
-    transformToInstanaSpan(otelSpan, preparedData);
-    return orig.apply(this, arguments);
+    const instanaSpan = transformToInstanaSpan(otelSpan, preparedData);
+    const originalCtx = orig.apply(this, arguments);
+
+    if (otelSpan && instrumentation.module.setW3CTraceContext) {
+      return instrumentation.module.setW3CTraceContext(api, preparedData, otelSpan, instanaSpan, originalCtx);
+    }
+
+    return originalCtx;
   };
 };

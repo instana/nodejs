@@ -68,6 +68,22 @@ W3cTraceContext.fromInstanaIds = function fromInstanaIds(instanaTraceId, instana
 };
 
 /**
+ * @param {string} otelTraceId
+ * @param {string} otelParentId
+ * @param {boolean | *} sampled
+ * @returns {W3cTraceContext}
+ */
+W3cTraceContext.fromOtelIds = function fromOtelIds(otelTraceId, otelParentId, sampled) {
+  const traceContext = new W3cTraceContext();
+  traceContext.traceParentValid = true;
+  traceContext.version = VERSION00;
+  traceContext.traceParentTraceId = otelTraceId;
+  traceContext.traceParentParentId = otelParentId;
+  traceContext.sampled = sampled;
+  return traceContext;
+};
+
+/**
  * @param {string} traceId
  * @param {string} parentId
  * @returns

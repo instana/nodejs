@@ -15,7 +15,7 @@ const isOnEvent = otelSpan => otelSpan.name.indexOf('receive') !== -1;
  * https://github.com/socketio/socket.io-client/blob/4.6.1/lib/socket.ts#L9
  *
  * Trace correlation does not work with socket.io, because they do not support
- * headers or meta data, only payload.
+ * headers or meta data, only payload!
  */
 exports.init = () => {
   const { SocketIoInstrumentation } = require('@opentelemetry/instrumentation-socket.io');
