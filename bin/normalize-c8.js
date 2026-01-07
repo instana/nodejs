@@ -11,7 +11,7 @@ const tmpDir = process.argv[2];
 const processedDir = process.argv[3];
 
 if (!tmpDir || !processedDir) {
-  console.error('Usage: node manipulate-c8.js <tmpDir> <processedDir>');
+  console.error('Usage: node normalize-c8.js <tmpDir> <processedDir>');
   process.exit(1);
 }
 
