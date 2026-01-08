@@ -21,6 +21,8 @@ import bodyParser from 'body-parser';
 import getAppPort from '../../../test_util/app-port.js';
 const port = getAppPort();
 
+import fetch from 'node-fetch';
+
 const app = express();
 const logPrefix = `fetch App (${process.pid}):\t`;
 
