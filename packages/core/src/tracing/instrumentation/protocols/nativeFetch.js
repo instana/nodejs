@@ -180,16 +180,18 @@ function instrument() {
             response.headers,
             extraHttpHeadersToCapture
           );
-        })
-        .catch(err => {
-          span.ec = 1;
-          tracingUtil.setErrorDetails(span, err, 'http');
-        })
-        .finally(() => {
+
           span.d = Date.now() - span.ts;
           if (capturedHeaders != null && Object.keys(capturedHeaders).length > 0) {
             span.data.http.header = capturedHeaders;
           }
+          span.transmit();
+        })
+        .catch(err => {
+          span.ec = 1;
+          tracingUtil.setErrorDetails(span, err, 'http');
+
+          span.d = Date.now() - span.ts;
           span.transmit();
         });
 
