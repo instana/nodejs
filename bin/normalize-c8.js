@@ -25,6 +25,16 @@ if (!fs.existsSync(processedDir)) {
 }
 
 const workspaceRoot = process.cwd();
+const packagesDir = path.join(workspaceRoot, 'packages');
+
+const existingPackages = new Set();
+if (fs.existsSync(packagesDir)) {
+  const packageNames = fs
+    .readdirSync(packagesDir, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name);
+  packageNames.forEach(name => existingPackages.add(name));
+}
 
 const files = fs.readdirSync(tmpDir);
 
@@ -37,6 +47,10 @@ files.forEach(file => {
     if (content.result) {
       content.result.forEach(entry => {
         if (entry.url) {
+          if (entry.url.startsWith('node:')) {
+            return;
+          }
+
           let normalizedPath = entry.url;
           const originalPath = normalizedPath;
           const hadFilePrefix = originalPath.startsWith('file://');
@@ -60,9 +74,11 @@ files.forEach(file => {
             const match = relativePath.match(/node_modules\/@instana\/([^/]+)\/(src|lib)\/(.+)$/);
             if (match) {
               const packageName = match[1];
-              const sourceDir = match[2];
-              const filePath = match[3];
-              relativePath = `packages/${packageName}/${sourceDir}/${filePath}`;
+              if (existingPackages.has(packageName)) {
+                const sourceDir = match[2];
+                const filePath = match[3];
+                relativePath = `packages/${packageName}/${sourceDir}/${filePath}`;
+              }
             }
           }
 
