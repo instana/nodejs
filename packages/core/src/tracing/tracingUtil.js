@@ -304,8 +304,8 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
 exports.extractErrorMessage = (/** @type {any} */ normalizedError) => {
   // If error has cause property that is an Error, we want to extract the message from the cause
   // Reference Node.js error cause: https://nodejs.org/api/errors.html#errorcause
-  if (normalizedError?.cause instanceof Error && normalizedError?.cause?.message) {
-    return `${normalizedError?.cause.name || 'Error'}: ${normalizedError?.cause.message}`;
+  if (normalizedError?.cause instanceof Error) {
+    normalizedError = normalizedError.cause;
   }
 
   if (normalizedError?.details) {
