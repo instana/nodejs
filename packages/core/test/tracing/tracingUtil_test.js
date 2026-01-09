@@ -711,7 +711,7 @@ describe('tracing/tracingUtil', () => {
       expect(span.stack).to.deep.equal([]);
     });
 
-    describe('setErrorMessage with different err combinations', () => {
+    describe('setErrorMessage with different error combinations', () => {
       it('should extract error message from Error cause', () => {
         const span = {
           data: { test: {} }

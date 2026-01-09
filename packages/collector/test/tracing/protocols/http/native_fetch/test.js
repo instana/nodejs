@@ -830,7 +830,6 @@ function verifyHttpExit({
   withClientError,
   withServerError,
   withTimeout,
-  serverControls,
   params = null
 }) {
   const expectations = [
@@ -848,9 +847,9 @@ function verifyHttpExit({
   if (withClientError) {
     let expectedClientError;
     if (withClientError === 'unreachable') {
-      expectedClientError = 'fetch failed';
+      expectedClientError = 'ECONNREFUSED';
     } else if (withClientError === 'malformed-url') {
-      expectedClientError = `Failed to parse URL from http:127.0.0.1:${serverControls.port}malformed-url`;
+      expectedClientError = 'TypeError: Invalid URL';
     }
     expectations.push(span => expect(span.data.http.status).to.not.exist);
     expectations.push(span => expect(span.data.http.error).to.contain(expectedClientError));
