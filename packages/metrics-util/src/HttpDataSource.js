@@ -5,8 +5,6 @@
 
 'use strict';
 
-const fetch = require('node-fetch');
-
 const DataSource = require('./DataSource');
 
 /**
