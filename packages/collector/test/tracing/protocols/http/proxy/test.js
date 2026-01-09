@@ -212,7 +212,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
                 expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.client'),
                   span => expect(span.ec).to.equal(1),
-                  span => expect(span.data.http.error).to.include('Failed to parse URL')
+                  span => expect(span.data.http.error).to.include('TypeError: Invalid URL')
                 ]);
               })
             )
