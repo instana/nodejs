@@ -23,7 +23,7 @@ const main = async () => {
 
     await instana.sdk.async.startEntrySpan('my-translation-service');
 
-    await fetch('https://www.ibm.com/products/instana');
+    await fetch(`http://127.0.0.1:${agentPort}/ping`);
   } catch (err) {
     err1 = err;
   }
