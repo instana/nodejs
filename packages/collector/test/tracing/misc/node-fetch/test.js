@@ -18,7 +18,7 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-['latest', 'v2'].forEach(version => {
+['latest', 'v2.7.0'].forEach(version => {
   mochaSuiteFn(`tracing/node-fetch @${version}`, function () {
     // Skip testing the latest version in CommonJS mode, as it is ESM-only.
     // From v3 onwards, node-fetch is a pure ESM module and does not support require().

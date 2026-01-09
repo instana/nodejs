@@ -20,15 +20,13 @@ const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 
-const fetch = require('node-fetch-v2');
-
 const port = require('../../../test_util/app-port')();
 const app = express();
 const logPrefix = `fetch App (${process.pid}):\t`;
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 // From v3 onwards, node-fetch is a pure ESM module and does not support require().
-const fetchVersion = process.env.NODE_FETCH_VERSION || 'v2';
+const fetchVersion = process.env.NODE_FETCH_VERSION || 'v2.7.0';
 const fetch = fetchVersion === 'latest' ? require('node-fetch') : require(`node-fetch-${fetchVersion}`);
 
 if (process.env.WITH_STDOUT) {

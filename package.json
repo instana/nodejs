@@ -206,6 +206,7 @@
     "nats": "2.29.3",
     "nats-v1": "npm:nats@1.4.12",
     "node-fetch": "3.3.2",
+    "node-fetch-v2.7.0": "npm:node-fetch@2.7.0",
     "node-gyp": "11.2.0",
     "node-nats-streaming": "0.3.2",
     "oracledb": "6.10.0",
