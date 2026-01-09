@@ -61,32 +61,39 @@ jobs:
             should_delete=false
             delete_reason=""
 
-            # Check if branch has a merged PR older than 60 days
-            pr_info=$(gh pr list --state merged --base main --head "$branch_name" --json mergedAt)
-            pr_merged_at=$(echo "$pr_info" | jq -r '.[0].mergedAt' 2>/dev/null)
+            # Check if branch starts with build- or currency-bot-
+            # These branches can be deleted immediately if no open PR exists
+            if [[ "$branch_name" =~ ^(build-|currency-bot-) ]]; then
+              should_delete=true
+              delete_reason="automated branch with no open PR"
+            else
+              # For other branches, check if branch has a merged PR older than 60 days
+              pr_info=$(gh pr list --state merged --base main --head "$branch_name" --json mergedAt)
+              pr_merged_at=$(echo "$pr_info" | jq -r '.[0].mergedAt' 2>/dev/null)
 
-            if [[ -n "$pr_merged_at" && "$pr_merged_at" != "null" ]]; then
-              pr_merged_at_cleaned=$(echo "$pr_merged_at" | sed 's/Z$//')
-              pr_merged_timestamp=$(date -d "$pr_merged_at_cleaned" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "$pr_merged_at_cleaned" +%s)
+              if [[ -n "$pr_merged_at" && "$pr_merged_at" != "null" ]]; then
+                pr_merged_at_cleaned=$(echo "$pr_merged_at" | sed 's/Z$//')
+                pr_merged_timestamp=$(date -d "$pr_merged_at_cleaned" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "$pr_merged_at_cleaned" +%s)
 
-              if [[ $pr_merged_timestamp -lt $THRESHOLD_DATE ]]; then
-                should_delete=true
-                delete_reason="merged PR older than 60 days"
-              fi
-            fi
-
-            # If not marked for deletion by merge logic, check last commit date
-            if [[ $should_delete == false ]]; then
-              last_commit_date=$(git log -1 --format=%ct "origin/$branch_name" 2>/dev/null)
-
-              if [[ -z "$last_commit_date" ]]; then
-                echo "Could not determine last commit date for $branch_name. Skipping."
-                continue
+                if [[ $pr_merged_timestamp -lt $THRESHOLD_DATE ]]; then
+                  should_delete=true
+                  delete_reason="merged PR older than 60 days"
+                fi
               fi
 
-              if [[ $last_commit_date -lt $THRESHOLD_DATE ]]; then
-                should_delete=true
-                delete_reason="inactive for more than 60 days"
+              # If not marked for deletion by merge logic, check last commit date
+              if [[ $should_delete == false ]]; then
+                last_commit_date=$(git log -1 --format=%ct "origin/$branch_name" 2>/dev/null)
+
+                if [[ -z "$last_commit_date" ]]; then
+                  echo "Could not determine last commit date for $branch_name. Skipping."
+                  continue
+                fi
+
+                if [[ $last_commit_date -lt $THRESHOLD_DATE ]]; then
+                  should_delete=true
+                  delete_reason="inactive for more than 60 days"
+                fi
               fi
             fi
 
