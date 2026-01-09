@@ -63,8 +63,7 @@ class Control extends AbstractServerlessControl {
       throw new Error('The option path must be provided');
     }
     const response = await fetch(`http://localhost:${this.port}${opts.path}`);
-    const data = await response.json();
-    return data;
+    return response.json();
   }
 
   getPort() {

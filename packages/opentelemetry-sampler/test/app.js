@@ -46,9 +46,6 @@ const app = express();
 app.get('/otel-test', (_req, res) => {
   delay(500)
     .then(() => fetch('https://www.example.com'))
-    .then(async response => {
-      await response.text();
-    })
     .then(() => {
       res.status(200).json({ success: true });
     })
@@ -79,9 +76,6 @@ app.get('/get-otel-spans', (_req, res) => {
 app.post('/otel-post', (_req, res) => {
   delay(500)
     .then(() => fetch('https://www.example.com'))
-    .then(async response => {
-      await response.text();
-    })
     .then(() => {
       res.status(200).json({ success: true });
     })
