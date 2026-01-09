@@ -29,7 +29,6 @@ const instanaConfig = {
 
 require('../../../../..')(instanaConfig);
 const express = require('express');
-const fetch = require('node-fetch-v2');
 const http = require('http');
 const port = require('../../../../test_util/app-port')();
 const app = express();

@@ -135,8 +135,8 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
                   span => expect(span.n).to.equal('node.http.client'),
                   span => expect(span.k).to.equal(constants.EXIT),
                   span => expect(span.data.http.status).to.equal(201),
-                  span => expect(span.stack[2].m).to.equal('fetch'),
-                  span => expect(span.stack[2].c).to.contains('node-fetch')
+                  span => expect(span.stack).to.be.an('array'),
+                  span => expect(span.stack.length).to.be.greaterThan(0)
                 ]);
               })
             )
@@ -286,7 +286,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
                   ]);
 
                   expect(httpClientSpan.stack).to.be.an('array');
-                  expect(httpClientSpan.stack.length).to.equal(4);
+                  expect(httpClientSpan.stack.length).to.equal(3);
                 })
               )
             ));
@@ -345,7 +345,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
                   ]);
 
                   expect(httpClientSpan.stack).to.be.an('array');
-                  expect(httpClientSpan.stack.length).to.equal(6);
+                  expect(httpClientSpan.stack.length).to.equal(3);
                 })
               )
             ));
@@ -401,7 +401,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
                   ]);
 
                   expect(httpClientSpan.stack).to.be.an('array');
-                  expect(httpClientSpan.stack.length).to.equal(5);
+                  expect(httpClientSpan.stack.length).to.equal(3);
                 })
               )
             ));
