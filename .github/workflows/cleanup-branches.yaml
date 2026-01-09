@@ -34,7 +34,7 @@ jobs:
         run: |
           gh auth login --with-token <<< "${{ secrets.GH_PAT }}"
 
-      - name: Delete old merged branches
+      - name: Delete old merged and inactive branches
         env:
           DRY_RUN: ${{ github.event.inputs.dryRun }}
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
@@ -50,25 +50,55 @@ jobs:
           for branch in $(git branch -r | grep -E 'origin/(chore-|docs-|fix-|feat-|test-|refactor-|ci-|build-|currency-bot-)'); do
             branch_name=$(echo "$branch" | sed 's|origin/||')
 
+            # Check if branch has an open PR
+            open_pr_count=$(gh pr list --state open --head "$branch_name" --json number | jq '. | length')
+            
+            if [[ $open_pr_count -gt 0 ]]; then
+              echo "Branch $branch_name has an open PR. Skipping."
+              continue
+            fi
+
+            should_delete=false
+            delete_reason=""
+
+            # Check if branch has a merged PR older than 60 days
             pr_info=$(gh pr list --state merged --base main --head "$branch_name" --json mergedAt)
             pr_merged_at=$(echo "$pr_info" | jq -r '.[0].mergedAt' 2>/dev/null)
 
-            if [[ -z "$pr_merged_at" || "$pr_merged_at" == "null" ]]; then
-                echo "Branch $branch_name has no merged PR. Skipping."
-                continue
+            if [[ -n "$pr_merged_at" && "$pr_merged_at" != "null" ]]; then
+              pr_merged_at_cleaned=$(echo "$pr_merged_at" | sed 's/Z$//')
+              pr_merged_timestamp=$(date -d "$pr_merged_at_cleaned" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "$pr_merged_at_cleaned" +%s)
+
+              if [[ $pr_merged_timestamp -lt $THRESHOLD_DATE ]]; then
+                should_delete=true
+                delete_reason="merged PR older than 60 days"
+              fi
             fi
 
-            pr_merged_at_cleaned=$(echo "$pr_merged_at" | sed 's/Z$//')
-            pr_merged_timestamp=$(date -d "$pr_merged_at_cleaned" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "$pr_merged_at_cleaned" +%s)
+            # If not marked for deletion by merge logic, check last commit date
+            if [[ $should_delete == false ]]; then
+              last_commit_date=$(git log -1 --format=%ct "origin/$branch_name" 2>/dev/null)
 
-            if [[ $pr_merged_timestamp -lt $THRESHOLD_DATE ]]; then
+              if [[ -z "$last_commit_date" ]]; then
+                echo "Could not determine last commit date for $branch_name. Skipping."
+                continue
+              fi
+
+              if [[ $last_commit_date -lt $THRESHOLD_DATE ]]; then
+                should_delete=true
+                delete_reason="inactive for more than 60 days"
+              fi
+            fi
+
+            # Delete branch if marked for deletion
+            if [[ $should_delete == true ]]; then
               if [[ $DRY_RUN = true ]]; then
-                echo "Dry run: git push origin --delete $branch_name"
+                echo "Dry run: git push origin --delete $branch_name ($delete_reason)"
               else
-                echo "Deleting branch: $branch_name"
+                echo "Deleting branch: $branch_name ($delete_reason)"
                 git push origin --delete "$branch_name"
               fi
             else
-              echo "Skipping branch: $branch_name (merged less than 60 days ago)."
+              echo "Skipping branch: $branch_name (active less than 60 days ago)."
             fi
           done
