@@ -34,7 +34,7 @@ jobs:
         run: |
           gh auth login --with-token <<< "${{ secrets.GH_PAT }}"
 
-      - name: Delete old merged and inactive branches
+      - name: Delete old merged and inactive (+ closed) branches
         env:
           DRY_RUN: ${{ github.event.inputs.dryRun }}
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
