@@ -711,6 +711,66 @@ describe('tracing/tracingUtil', () => {
       expect(span.stack).to.deep.equal([]);
     });
 
+    describe('setErrorMessage with different err combinations', () => {
+      it('should extract error message from Error cause', () => {
+        const span = {
+          data: { test: {} }
+        };
+        const cause = new Error('The remote HTTP server responded with a 500 status');
+        const error = new Error('The message failed to send', { cause });
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: The remote HTTP server responded with a 500 status');
+      });
+
+      it('should use cause message when both message and cause exist', () => {
+        const span = { data: { test: {} } };
+        const cause = new Error('Cause error message');
+        const error = new Error('Wrapper message', { cause });
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: Cause error message');
+      });
+
+      it('should use cause message when only cause exists', () => {
+        const span = { data: { test: {} } };
+        const cause = new Error('Only cause message');
+        const error = { cause };
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: Only cause message');
+      });
+
+      it('should use message when only message exists', () => {
+        const span = { data: { test: {} } };
+        const error = { message: 'Only message present' };
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: Only message present');
+      });
+
+      it('should fall back to details, code, or default when neither cause nor message exist', () => {
+        const span1 = { data: { test: {} } };
+        const error1 = { details: 'Details present' };
+        setErrorDetails(span1, error1, 'test');
+        expect(span1.data.test.error).to.equal('Error: Details present');
+
+        const span2 = { data: { test: {} } };
+        const error2 = { code: 'ECONNRESET' };
+        setErrorDetails(span2, error2, 'test');
+        expect(span2.data.test.error).to.equal('ECONNRESET');
+
+        const span3 = { data: { test: {} } };
+        const error3 = {};
+        setErrorDetails(span3, error3, 'test');
+        expect(span3.data.test.error).to.equal('No error message found.');
+      });
+    });
+
     describe('setErrorDetails with stackTraceMode filtering', () => {
       describe('with stackTraceMode = "none"', () => {
         before(() => {

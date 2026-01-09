@@ -301,6 +301,22 @@ exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
   };
 };
 
+exports.extractErrorMessage = (/** @type {any} */ normalizedError) => {
+  // If error has cause property that is an Error, we want to extract the message from the cause
+  // Reference Node.js error cause: https://nodejs.org/api/errors.html#errorcause
+  if (normalizedError?.cause instanceof Error && normalizedError?.cause?.message) {
+    return `${normalizedError?.cause.name || 'Error'}: ${normalizedError?.cause.message}`;
+  }
+
+  if (normalizedError?.details) {
+    return `${normalizedError.name || 'Error'}: ${normalizedError.details}`;
+  } else if (normalizedError?.message) {
+    return `${normalizedError.name || 'Error'}: ${normalizedError.message}`;
+  } else {
+    return normalizedError?.code || 'No error message found.';
+  }
+};
+
 /**
  * Sets error details on a span for a specific technology.
  * Handles different error formats: strings, objects with details/message/code properties.
@@ -322,7 +338,15 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
     }
 
     // Normalize error to object format at the beginning
-    /** @type {{ message?: string, stack?: string | null, name?: string, code?: string, details?: string }} */
+    /** @type {{
+     *   message?: string,
+     *   stack?: string | null,
+     *   name?: string,
+     *   code?: string,
+     *   details?: string,
+     *   cause?: any
+     * }}
+     */
     let normalizedError;
 
     if (typeof error === 'string') {
@@ -331,15 +355,7 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
       normalizedError = error;
     }
 
-    const extractErrorMessage = () => {
-      if (normalizedError?.details) {
-        return `${normalizedError.name || 'Error'}: ${normalizedError.details}`;
-      } else if (normalizedError?.message) {
-        return `${normalizedError.name || 'Error'}: ${normalizedError.message}`;
-      } else {
-        return normalizedError?.code || 'No error message found.';
-      }
-    };
+    const errorMessage = exports.extractErrorMessage(normalizedError);
 
     let errorPath = null;
     if (Array.isArray(technology)) {
@@ -364,11 +380,11 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
       const errorKey = errorPath[errorPath.length - 1];
 
       if (!target[errorKey]) {
-        target[errorKey] = extractErrorMessage().substring(0, 200);
+        target[errorKey] = errorMessage.substring(0, 200);
       }
     } else if (typeof technology === 'string' && technology && span.data?.[technology]) {
       if (!span.data[technology].error) {
-        span.data[technology].error = extractErrorMessage().substring(0, 200);
+        span.data[technology].error = errorMessage.substring(0, 200);
       }
     }
 
