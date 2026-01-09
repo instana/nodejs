@@ -769,6 +769,57 @@ describe('tracing/tracingUtil', () => {
         setErrorDetails(span3, error3, 'test');
         expect(span3.data.test.error).to.equal('No error message found.');
       });
+      it('should ignore cause when it is not an Error and use the error message', () => {
+        const span = {
+          data: { test: {} }
+        };
+
+        const cause = {};
+        const error = new Error('The message failed to send', { cause });
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: The message failed to send');
+      });
+
+      it('should ignore string cause and use error message', () => {
+        const span = {
+          data: { test: {} }
+        };
+
+        const cause = 'remote server failed';
+        const error = new Error('The message failed to send', { cause });
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: The message failed to send');
+      });
+
+      it('should ignore non-Error cause and use details when message is missing', () => {
+        const span = { data: { test: {} } };
+
+        const error = {
+          details: 'Detailed error info',
+          cause: 'not an error'
+        };
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: Detailed error info');
+      });
+
+      it('should ignore numeric cause and use error message', () => {
+        const span = {
+          data: { test: {} }
+        };
+
+        const cause = 500;
+        const error = new Error('The message failed to send', { cause });
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: The message failed to send');
+      });
     });
 
     describe('setErrorDetails with stackTraceMode filtering', () => {
