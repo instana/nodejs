@@ -711,6 +711,117 @@ describe('tracing/tracingUtil', () => {
       expect(span.stack).to.deep.equal([]);
     });
 
+    describe('setErrorMessage with different error combinations', () => {
+      it('should extract error message from Error cause', () => {
+        const span = {
+          data: { test: {} }
+        };
+        const cause = new Error('The remote HTTP server responded with a 500 status');
+        const error = new Error('The message failed to send', { cause });
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: The remote HTTP server responded with a 500 status');
+      });
+
+      it('should use cause message when both message and cause exist', () => {
+        const span = { data: { test: {} } };
+        const cause = new Error('Cause error message');
+        const error = new Error('Wrapper message', { cause });
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: Cause error message');
+      });
+
+      it('should use cause message when only cause exists', () => {
+        const span = { data: { test: {} } };
+        const cause = new Error('Only cause message');
+        const error = { cause };
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: Only cause message');
+      });
+
+      it('should use message when only message exists', () => {
+        const span = { data: { test: {} } };
+        const error = { message: 'Only message present' };
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: Only message present');
+      });
+
+      it('should fall back to details, code, or default when neither cause nor message exist', () => {
+        const span1 = { data: { test: {} } };
+        const error1 = { details: 'Details present' };
+        setErrorDetails(span1, error1, 'test');
+        expect(span1.data.test.error).to.equal('Error: Details present');
+
+        const span2 = { data: { test: {} } };
+        const error2 = { code: 'ECONNRESET' };
+        setErrorDetails(span2, error2, 'test');
+        expect(span2.data.test.error).to.equal('ECONNRESET');
+
+        const span3 = { data: { test: {} } };
+        const error3 = {};
+        setErrorDetails(span3, error3, 'test');
+        expect(span3.data.test.error).to.equal('No error message found.');
+      });
+      it('should ignore cause when it is not an Error and use the error message', () => {
+        const span = {
+          data: { test: {} }
+        };
+
+        const cause = {};
+        const error = new Error('The message failed to send', { cause });
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: The message failed to send');
+      });
+
+      it('should ignore string cause and use error message', () => {
+        const span = {
+          data: { test: {} }
+        };
+
+        const cause = 'remote server failed';
+        const error = new Error('The message failed to send', { cause });
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: The message failed to send');
+      });
+
+      it('should ignore non-Error cause and use details when message is missing', () => {
+        const span = { data: { test: {} } };
+
+        const error = {
+          details: 'Detailed error info',
+          cause: 'not an error'
+        };
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: Detailed error info');
+      });
+
+      it('should ignore numeric cause and use error message', () => {
+        const span = {
+          data: { test: {} }
+        };
+
+        const cause = 500;
+        const error = new Error('The message failed to send', { cause });
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: The message failed to send');
+      });
+    });
+
     describe('setErrorDetails with stackTraceMode filtering', () => {
       describe('with stackTraceMode = "none"', () => {
         before(() => {
