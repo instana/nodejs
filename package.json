@@ -276,6 +276,9 @@
     },
     "gcstats.js": {
       "nan": "2.22.2"
+    },
+    "mongodb-v6": {
+      "gcp-metadata": "7.0.1"
     }
   },
   "config": {
