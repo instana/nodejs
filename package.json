@@ -99,7 +99,6 @@
     "@azure/storage-blob-v12.27.0": "npm:@azure/storage-blob@12.27.0",
     "@commitlint/cli": "14.1.0",
     "@commitlint/config-conventional": "14.1.0",
-    "@confluentinc/kafka-javascript": "1.8.0",
     "@elastic/ecs-pino-format": "^1.5.0",
     "@elastic/elasticsearch": "9.2.0",
     "@elastic/elasticsearch-v7.17.0": "npm:@elastic/elasticsearch@7.17.0",
@@ -255,6 +254,7 @@
     "yargs": "17.5.1"
   },
   "optionalDependencies": {
+    "@confluentinc/kafka-javascript": "1.8.0",
     "couchbase": "4.6.0",
     "couchbase-v4.4.3": "npm:couchbase@4.4.3",
     "ibm_db": "3.3.4",
