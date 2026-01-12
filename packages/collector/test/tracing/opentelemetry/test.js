@@ -96,13 +96,19 @@ mochaSuiteFn('opentelemetry tests', function () {
       });
 
       // node bin/start-test-containers.js --zookeeper --kafka --schema-registry --kafka-topics
-      describe('tracing/confluent-kafka', function () {
+      // Note: Node v25 does not currently support confluent-kafka
+      //       https://github.com/confluentinc/confluent-kafka-javascript/issues/397
+      const confluentKafkaSuiteFn = semver.satisfies(process.versions.node, '>=25.x') ? describe.skip : describe;
+
+      confluentKafkaSuiteFn('tracing/confluent-kafka', function () {
         const topic = 'confluent-kafka-topic';
 
         before(async () => {
           if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS !== 'true') {
             const rootPackageJson = require('../../../../../package.json');
-            const confluentKafkaVersion = rootPackageJson.devDependencies['@confluentinc/kafka-javascript'];
+            const confluentKafkaVersion =
+              rootPackageJson.optionalDependencies['@confluentinc/kafka-javascript'] ||
+              rootPackageJson.devDependencies['@confluentinc/kafka-javascript'];
             execSync(`npm i "@confluentinc/kafka-javascript@${confluentKafkaVersion}" --prefix ./ --save`, {
               cwd: __dirname,
               stdio: 'inherit'
