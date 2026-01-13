@@ -10,8 +10,8 @@ const logPrefix = `OpenTelemetry Sampler tracing (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const opentelemetry = require('@opentelemetry/sdk-node');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
-const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
-const { Resource } = require('@opentelemetry/resources');
+const { ATTR_SERVICE_NAME } = require('@opentelemetry/semantic-conventions');
+const { resourceFromAttributes } = require('@opentelemetry/resources');
 const { InstanaExporter } = require('../../opentelemetry-exporter/src/index');
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
 const { BatchSpanProcessor } = require('@opentelemetry/sdk-trace-base');
@@ -40,8 +40,8 @@ if (otelEndpoint) {
   sdk = new opentelemetry.NodeSDK({
     traceExporter: traceOtlpExporter,
     instrumentations: [nodeAutoInstrumentations],
-    resource: new Resource({
-      [SemanticResourceAttributes.SERVICE_NAME]: 'my-service'
+    resource: resourceFromAttributes({
+      [ATTR_SERVICE_NAME.SERVICE_NAME]: 'my-service'
     }),
     sampler: new InstanaAlwaysOnSampler()
   });
@@ -59,8 +59,8 @@ if (otelEndpoint) {
 
   sdk = new opentelemetry.NodeSDK({
     instrumentations: [nodeAutoInstrumentations],
-    resource: new Resource({
-      [SemanticResourceAttributes.SERVICE_NAME]: 'my-service'
+    resource: resourceFromAttributes({
+      [ATTR_SERVICE_NAME.SERVICE_NAME]: 'my-service'
     }),
     spanProcessor: spanProcessor,
     sampler: new InstanaAlwaysOnSampler()
