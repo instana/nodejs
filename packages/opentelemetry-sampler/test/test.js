@@ -63,14 +63,9 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
 
       await retry(async () => {
         const spans = await appControls.getSpans();
-        // NOTE: middleware spans are not collected when migrating to express v5 because:
-        //       middleware initialization was removed in
-        //         https://github.com/expressjs/express/commit/78e50547f16e2adb5763a953586d05308d8aba4c.
-        //       middleware query functionality was removed in:
-        //         https://github.com/expressjs/express/commit/dcc4eaabe86a4309437db2a853c5ef788a854699
-        const spanNames = ['tcp.connect', 'tls.connect', 'GET', 'GET'];
+        const spanNames = ['tcp.connect', 'tls.connect', 'request handler - /otel-test', 'GET /otel-test', 'GET'];
         expect(spanNames).to.eql(spans.map(s => s.data.operation));
-        expect(spans.length).to.eql(4);
+        expect(spans.length).to.eql(5);
       });
     });
   });
@@ -118,14 +113,10 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
         path: '/get-otel-spans',
         suppressTracing: true
       });
-      // NOTE: middleware spans are not collected when migrating to express v5 because:
-      //       middleware initialization was removed in
-      //         https://github.com/expressjs/express/commit/78e50547f16e2adb5763a953586d05308d8aba4c.
-      //       middleware query functionality was removed in:
-      //         https://github.com/expressjs/express/commit/dcc4eaabe86a4309437db2a853c5ef788a854699
-      const spanNames = ['tcp.connect', 'tls.connect', 'GET', 'GET'];
+
+      const spanNames = ['tcp.connect', 'tls.connect', 'request handler - /otel-test', 'GET /otel-test', 'GET'];
       expect(spanNames).to.eql(resp.spans.map(s => s.name));
-      expect(resp.spans.length).to.be.gte(4);
+      expect(resp.spans.length).to.be.gte(5);
     });
   });
 
