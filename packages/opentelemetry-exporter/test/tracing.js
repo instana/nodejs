@@ -12,8 +12,8 @@ const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const opentelemetry = require('@opentelemetry/sdk-node');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
 const { InstanaExporter } = require('../src/index');
-const { Resource } = require('@opentelemetry/resources');
-const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
+const { resourceFromAttributes } = require('@opentelemetry/resources');
+const { ATTR_SERVICE_NAME } = require('@opentelemetry/semantic-conventions');
 const { BatchSpanProcessor } = require('@opentelemetry/sdk-trace-base');
 const pinkAgentKey = '';
 const pinkEndpointUrl = '';
@@ -36,8 +36,8 @@ const nodeAutoInstrumentations = getNodeAutoInstrumentations({
 });
 
 const sdk = new opentelemetry.NodeSDK({
-  resource: new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: 'my-service'
+  resource: resourceFromAttributes({
+    [ATTR_SERVICE_NAME.SERVICE_NAME]: 'my-service'
   }),
   spanProcessor: spanProcessor,
   instrumentations: [nodeAutoInstrumentations]

@@ -7,7 +7,8 @@
 
 const { expect } = require('chai');
 const chai = require('chai');
-const chaiSpies = require('chai-spies');
+const sinon = require('sinon');
+const sinonChai = require('sinon-chai');
 const { getTestTimeout } = require('@instana/core/test/config');
 const { supportedVersion } = require('@instana/core').tracing;
 const { delay, retry } = require('@instana/core/test/test_util');
@@ -15,8 +16,9 @@ const expectExactlyNMatching = require('@instana/core/test/test_util/expectExact
 const { spans: otelSpans } = require('./otel_spans');
 const { InstanaExporter } = require('../src/index');
 const { Control } = require('./Control');
+const { environment: instanaEnvironment } = require('@instana/serverless');
 
-chai.use(chaiSpies);
+chai.use(sinonChai);
 
 let mochaSuiteFn;
 
@@ -33,14 +35,14 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
   let instanaExporter;
 
   after(() => {
-    chai.spy.restore(instanaExporter, '_sendSpans');
+    sinon.restore();
   });
 
   describe('OTel spans conversion to Instana spans', () => {
     it('converts OTel spans to Instana spans', done => {
       instanaExporter = new InstanaExporter({ agentKey: 'agent key', endpointUrl: 'https://some-endpoint' });
 
-      chai.spy.on(instanaExporter, '_sendSpans', spans => {
+      const stub = sinon.stub(instanaExporter, '_sendSpans').callsFake(spans => {
         const httpSpans = spans.filter(span => span.data.kind === 'server');
         const intermediateSpans = spans.filter(span => span.data.kind === 'internal');
         const erroneousSpans = spans.filter(span => span.ec === 1);
@@ -67,19 +69,33 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
         done();
       });
 
-      const spy = chai.spy(instanaExporter._sendSpans);
       instanaExporter.export(otelSpans, () => {});
 
-      expect(spy).to.be.called;
+      expect(stub).to.have.been.called;
     });
 
     it("doesn't export spans when agent key and/or endpoint URL are not provided", () => {
+      const originalEndpointUrl = process.env.INSTANA_ENDPOINT_URL;
+      const originalAgentKey = process.env.INSTANA_AGENT_KEY;
+
+      instanaEnvironment._reset();
+      delete process.env.INSTANA_ENDPOINT_URL;
+      delete process.env.INSTANA_AGENT_KEY;
+
       instanaExporter = new InstanaExporter();
 
-      const spy = chai.spy(instanaExporter._sendSpans);
+      const spy = sinon.spy(instanaExporter, '_sendSpans');
 
       instanaExporter.export(otelSpans, () => {});
-      expect(spy).to.not.be.called;
+
+      expect(spy).to.not.have.been.called;
+
+      if (originalEndpointUrl) {
+        process.env.INSTANA_ENDPOINT_URL = originalEndpointUrl;
+      }
+      if (originalAgentKey) {
+        process.env.INSTANA_AGENT_KEY = originalAgentKey;
+      }
     });
   });
 
@@ -206,16 +222,13 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
 });
 
 function verifySpans(spans, appControls) {
-  // 1 x ENTRY /otel-test
-  // 1 x EXIT /internal-endpoint
   // 1 x tcp connect
-  // 1 x ENTRY /internal-endpoint because this is the same server
-  // NOTE: middleware spans are not collected when migrating to express v5 because:
-  //       middleware initialization was removed in
-  //         https://github.com/expressjs/express/commit/78e50547f16e2adb5763a953586d05308d8aba4c.
-  //       middleware query functionality was removed in:
-  //         https://github.com/expressjs/express/commit/dcc4eaabe86a4309437db2a853c5ef788a854699
-  expectExactlyNMatching(spans, 4, [
+  // 1 x request handler - /internal-endpoint
+  // 1 x GET /internal-endpoint (server)
+  // 1 x GET (client)
+  // 1 x request handler - /otel-test
+  // 1 x GET /otel-test (server)
+  expectExactlyNMatching(spans, 6, [
     span => expect(span.ec).to.eq(0),
     span => expect(span.f.e).to.eq(appControls.getTestAppPid()),
     span => expect(span.n).to.eq('otel'),
