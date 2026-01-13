@@ -63,8 +63,6 @@
     "@opentelemetry/sdk-node": "^0.209.0",
     "@opentelemetry/sdk-trace-base": "^2.3.0",
     "@opentelemetry/semantic-conventions": "^1.38.0",
-    "chai": "^6.2.2",
-    "chai-spies": "^1.1.0",
     "nock": "^14.0.10"
   }
 }

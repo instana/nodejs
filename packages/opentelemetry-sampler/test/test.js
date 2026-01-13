@@ -5,15 +5,10 @@
 'use strict';
 
 const { expect } = require('chai');
-
-const chai = require('chai');
-const chaiSpies = require('chai-spies');
 const { getTestTimeout } = require('@instana/core/test/config');
 const { supportedVersion } = require('@instana/core').tracing;
 const { retry } = require('@instana/core/test/test_util');
 const { Control } = require('./Control');
-
-chai.use(chaiSpies);
 
 let mochaSuiteFn;
 
