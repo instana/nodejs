@@ -3,6 +3,31 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.1.0](https://github.com/instana/nodejs/compare/v5.0.2...v5.1.0) (2026-01-13)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/instrumentation-oracledb from 0.34.0 to 0.34.1 ([#2245](https://github.com/instana/nodejs/issues/2245)) ([d906d0d](https://github.com/instana/nodejs/commit/d906d0dab871160a46ad3e38f2602bbec620f88c))
+* bumped @opentelemetry/instrumentation-socket.io from 0.54.0 to 0.55.1 ([#2246](https://github.com/instana/nodejs/issues/2246)) ([1925644](https://github.com/instana/nodejs/commit/19256443f88eb1191680f75d980e005d359b6ef9))
+* bumped @opentelemetry/instrumentation-tedious from 0.27.0 to 0.28.0 ([#2251](https://github.com/instana/nodejs/issues/2251)) ([8a10a89](https://github.com/instana/nodejs/commit/8a10a89b8370e46b5cd57dc3a088403086a86b23))
+* bumped import-in-the-middle from 2.0.0 to 2.0.1 ([#2252](https://github.com/instana/nodejs/issues/2252)) ([4a0f0ee](https://github.com/instana/nodejs/commit/4a0f0eee1897fa1e465c0c8c5ab4e1e68b043781))
+* improved windows support ([#2240](https://github.com/instana/nodejs/issues/2240)) ([1d1fec4](https://github.com/instana/nodejs/commit/1d1fec4e9cde2dcfd9c47bb4d64336aa452719b1))
+* **native-fetch:** transmitted span immediately after receiving headers ([#2265](https://github.com/instana/nodejs/issues/2265)) ([69c65c4](https://github.com/instana/nodejs/commit/69c65c4b49e246df63ecbbef76123100150be9df))
+* resolved type error in redis instrumentation ([#2249](https://github.com/instana/nodejs/issues/2249)) ([62dddcb](https://github.com/instana/nodejs/commit/62dddcbf37e8b5ce7dafc8aa8489391b94df6464))
+
+
+### Features
+
+* added stack trace mode filtering ([#2237](https://github.com/instana/nodejs/issues/2237)) ([f63dc4f](https://github.com/instana/nodejs/commit/f63dc4f46dedb54095433a9fb2b1cb7db1793253))
+* added support for @confluentinc/kafka-javascript  ([#2221](https://github.com/instana/nodejs/issues/2221)) ([986c8e0](https://github.com/instana/nodejs/commit/986c8e00f9255803184644f0e35f3e755cfed1ad))
+* added support for @koa/router v15 ([#2205](https://github.com/instana/nodejs/issues/2205)) ([3ccd300](https://github.com/instana/nodejs/commit/3ccd30070d23124b03c5fce940c484a8df9187f2))
+* added support for native error cause property ([#2268](https://github.com/instana/nodejs/issues/2268)) ([d248a81](https://github.com/instana/nodejs/commit/d248a8171a78cb6fa081468ec45a11a1b9e20d74))
+
+
+
+
+
 ## [5.0.2](https://github.com/instana/nodejs/compare/v5.0.1...v5.0.2) (2025-12-16)
 
 **Note:** Version bump only for package @instana/core

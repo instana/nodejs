@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.1.0](https://github.com/instana/nodejs/compare/v5.0.2...v5.1.0) (2026-01-13)
+
+
+### Bug Fixes
+
+* updated timestamp in internal logger from epoch time to ISO string ([#2096](https://github.com/instana/nodejs/issues/2096)) ([20e8d29](https://github.com/instana/nodejs/commit/20e8d29e5af1f1efb7d805dbdebdc31d037bc3cb))
+
+
+### Features
+
+* added stack trace mode filtering ([#2237](https://github.com/instana/nodejs/issues/2237)) ([f63dc4f](https://github.com/instana/nodejs/commit/f63dc4f46dedb54095433a9fb2b1cb7db1793253))
+* added support for @confluentinc/kafka-javascript  ([#2221](https://github.com/instana/nodejs/issues/2221)) ([986c8e0](https://github.com/instana/nodejs/commit/986c8e00f9255803184644f0e35f3e755cfed1ad))
+* added support for @koa/router v15 ([#2205](https://github.com/instana/nodejs/issues/2205)) ([3ccd300](https://github.com/instana/nodejs/commit/3ccd30070d23124b03c5fce940c484a8df9187f2))
+* added support for native error cause property ([#2268](https://github.com/instana/nodejs/issues/2268)) ([d248a81](https://github.com/instana/nodejs/commit/d248a8171a78cb6fa081468ec45a11a1b9e20d74))
+
+
+
+
+
 ## [5.0.2](https://github.com/instana/nodejs/compare/v5.0.1...v5.0.2) (2025-12-16)
 
 
