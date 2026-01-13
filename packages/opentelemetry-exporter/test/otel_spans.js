@@ -5,7 +5,7 @@
 
 'use strict';
 
-const { Resource } = require('@opentelemetry/resources');
+const { resourceFromAttributes } = require('@opentelemetry/resources');
 
 // Deprecated code rules can be seen here:
 // https://github.com/open-telemetry/opentelemetry-proto/blob/main/opentelemetry/proto/trace/v1/trace.proto#L264
@@ -45,7 +45,7 @@ const codeUnsetWithDeprecatedCodeError = {
   parentSpanId: undefined,
   kind: 1,
   startTime: [1631107937, 168820225],
-  resource: Resource.empty(),
+  resource: resourceFromAttributes({}),
   instrumentationLibrary: { name: '@opentelemetry/instrumentation-http', version: '0.24.0' }
 };
 
@@ -84,7 +84,7 @@ const codeUnsetWithDeprecatedCodeOk = {
   parentSpanId: undefined,
   kind: 1,
   startTime: [1631107937, 168820225],
-  resource: Resource.empty(),
+  resource: resourceFromAttributes({}),
   instrumentationLibrary: { name: '@opentelemetry/instrumentation-http', version: '0.24.0' }
 };
 
@@ -123,7 +123,7 @@ const codeUnsetWithoutDeprecatedCode = {
   parentSpanId: undefined,
   kind: 1,
   startTime: [1631107937, 168820225],
-  resource: Resource.empty(),
+  resource: resourceFromAttributes({}),
   instrumentationLibrary: { name: '@opentelemetry/instrumentation-http', version: '0.24.0' }
 };
 
@@ -150,7 +150,7 @@ const wrongTraceIdSizeSpan = {
   parentSpanId: 'f6b0a4ce066bb9a2',
   kind: 0,
   startTime: [1631107937, 171700192],
-  resource: Resource.empty(),
+  resource: resourceFromAttributes({}),
   instrumentationLibrary: {
     name: '@opentelemetry/instrumentation-express',
     version: '0.24.0'
@@ -180,7 +180,7 @@ const wrongSpanIdSizeSpan = {
   parentSpanId: 'f6b0a4ce066bb9a2',
   kind: 0,
   startTime: [1631107937, 171700192],
-  resource: Resource.empty(),
+  resource: resourceFromAttributes({}),
   instrumentationLibrary: {
     name: '@opentelemetry/instrumentation-express',
     version: '0.24.0'
@@ -210,7 +210,7 @@ const expressQuerySpan = {
   parentSpanId: 'f6b0a4ce066bb9a2',
   kind: 0,
   startTime: [1631107937, 171700192],
-  resource: Resource.empty(),
+  resource: resourceFromAttributes({}),
   instrumentationLibrary: {
     name: '@opentelemetry/instrumentation-express',
     version: '0.24.0'
@@ -240,7 +240,7 @@ const expressInitSpan = {
   parentSpanId: 'f6b0a4ce066bb9a2',
   kind: 0,
   startTime: [1631107937, 172826662],
-  resource: Resource.empty(),
+  resource: resourceFromAttributes({}),
   instrumentationLibrary: {
     name: '@opentelemetry/instrumentation-express',
     version: '0.24.0'
@@ -270,7 +270,7 @@ const expressHandlerSpan = {
   parentSpanId: 'f6b0a4ce066bb9a2',
   kind: 0,
   startTime: [1631107937, 173324366],
-  resource: Resource.empty(),
+  resource: resourceFromAttributes({}),
   instrumentationLibrary: {
     name: '@opentelemetry/instrumentation-express',
     version: '0.24.0'
@@ -312,7 +312,7 @@ const expressGetSpan = {
   parentSpanId: undefined,
   kind: 1,
   startTime: [1631107937, 168820225],
-  resource: Resource.empty(),
+  resource: resourceFromAttributes({}),
   instrumentationLibrary: { name: '@opentelemetry/instrumentation-http', version: '0.24.0' }
 };
 
