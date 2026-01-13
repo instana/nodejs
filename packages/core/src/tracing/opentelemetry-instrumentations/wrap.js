@@ -6,7 +6,7 @@
 'use strict';
 
 const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks');
-const { W3CTraceContextPropagator } = require('@opentelemetry/core');
+const { W3CTraceContextPropagator, hrTimeDuration, hrTimeToMilliseconds } = require('@opentelemetry/core');
 const api = require('@opentelemetry/api');
 const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
 const utils = require('./utils');
@@ -120,11 +120,22 @@ module.exports.init = (_config, cls) => {
 
         const origEnd = otelSpan.end;
         otelSpan.end = function instanaOnEnd() {
+          const resp = origEnd.apply(this, arguments);
+
+          if (otelSpan.duration) {
+            instanaSpan.d = Math.round(hrTimeToMilliseconds(otelSpan.duration));
+          } else if (otelSpan.startTime && otelSpan.endTime) {
+            const durationHrTime = hrTimeDuration(otelSpan.startTime, otelSpan.endTime);
+            instanaSpan.d = Math.round(hrTimeToMilliseconds(durationHrTime));
+          }
+
           instanaSpan.transmit();
+
           if (clsContext) {
             cls.ns.exit(clsContext);
           }
-          return origEnd.apply(this, arguments);
+
+          return resp;
         };
 
         return instanaSpan;
