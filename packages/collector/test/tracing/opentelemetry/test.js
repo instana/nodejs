@@ -196,6 +196,7 @@ mochaSuiteFn('opentelemetry tests', function () {
                     expect(span.data.tags.name).to.eql('confluent-kafka-topic');
                     expect(span.data.tags['messaging.system']).to.equal('kafka');
                     expect(span.data.tags['messaging.operation.name']).to.equal('send');
+                    expect(span.d).to.be.greaterThan(10);
                     checkTelemetryResourceAttrs(span);
                   }
                 });
@@ -212,6 +213,7 @@ mochaSuiteFn('opentelemetry tests', function () {
                     expect(span.data.tags.name).to.eql('confluent-kafka-topic');
                     expect(span.data.tags['messaging.system']).to.equal('kafka');
                     expect(span.data.tags['messaging.operation.type']).to.equal('receive');
+                    expect(span.d).to.be.greaterThan(10);
                     checkTelemetryResourceAttrs(span);
                   }
                 });
