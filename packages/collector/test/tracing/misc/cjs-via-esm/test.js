@@ -13,7 +13,7 @@ const globalAgent = require('../../../globalAgent');
 const { retry } = require('../../../../../core/test/test_util');
 
 const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.satisfies(process.versions.node, '18') ? describe : describe.skip;
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.19.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing/cjs-via-esm', function () {
   this.timeout(1000 * 60);
