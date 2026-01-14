@@ -29,7 +29,7 @@ mochaSuiteFn('tracing/cjs-via-esm', function () {
       useGlobalAgent: true,
       dirname: __dirname,
       enableOtelIntegration: true,
-      execArgv: ['--experimental-loader', `${rootFolder}/esm-loader.mjs`]
+      execArgv: ['--import', `${rootFolder}/esm-register.mjs`]
     });
 
     await controls.startAndWaitForAgentConnection();
