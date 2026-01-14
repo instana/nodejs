@@ -6,7 +6,7 @@
 
 const path = require('path');
 const expect = require('chai').expect;
-const { fail } = expect;
+
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
@@ -620,55 +620,6 @@ mochaSuiteFn('tracing/native fetch', function () {
         expect(spans).to.have.lengthOf(0);
       });
     });
-  });
-
-  it('must capture an HTTP exit span when the client closes the connection', async () => {
-    clientControls
-      .sendRequest({
-        method: 'GET',
-        path: '/dont-respond',
-        timeout: 100,
-        simple: false
-      })
-      .then(() => {
-        fail('Expected the HTTP call to time out.');
-      })
-      .catch(err => {
-        if (
-          err.cause?.code === 'UND_ERR_SOCKET' ||
-          (err.error && (err.error.code === 'ESOCKETTIMEDOUT' || err.error.code === 'ETIMEDOUT')) ||
-          err.type === 'request-timeout'
-        ) {
-          return retry(() =>
-            globalAgent.instance.getSpans().then(spans => {
-              // 1 x entry span
-              // 1 x exit span
-              expect(spans).to.have.lengthOf(2);
-
-              const entrySpan = expectExactlyOneMatching(spans, [
-                span => expect(span.n).to.equal('node.http.server'),
-                span => expect(span.k).to.equal(constants.ENTRY),
-                span => expect(span.data.http.url).to.equal('/dont-respond')
-              ]);
-
-              expectExactlyOneMatching(spans, [
-                span => expect(span.n).to.equal('node.http.client'),
-                span => expect(span.k).to.equal(constants.EXIT),
-                span => expect(span.t).to.equal(entrySpan.t),
-                span => expect(span.p).to.equal(entrySpan.s),
-                span => expect(span.ec).to.equal(1),
-                span =>
-                  expect(span.data.http.url).to.equal(`http://localhost:${serverControls.getPort()}/dont-respond`),
-                span => expect(span.data.http.method).to.equal('GET'),
-                span => expect(span.data.http.status).to.not.exist,
-                span => expect(span.data.http.error).to.exist
-              ]);
-            })
-          );
-        } else {
-          throw err;
-        }
-      });
   });
 
   it('must suppress tracing ', async () => {

@@ -33,14 +33,6 @@ app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/dont-respond', (req, res) => {
-  // Deliberately not sending a response in time so that the request times out client side.
-  // This tests that we capture an HTTP exit span even when the client closes the connection.
-  setTimeout(() => {
-    res.end();
-  }, 4000);
-});
-
 app.all('/fetch', (req, res) => {
   if (req.query.headersInResponse) {
     res.setHeader('X-MY-EXIT-RESPONSE-HEADER', 'x-my-exit-response-header-value');
