@@ -68,17 +68,17 @@ function instrumentedLog(ctx, originalLog, originalArgs, options) {
     } else if (firstArg instanceof Error) {
       // CASE: e.g. console.error(new Error('err msg'))
       secondArg = tracingUtil.extractErrorMessage(firstArg);
-    } else if (firstArg && firstArg.err instanceof Error && typeof secondArg === 'string') {
+    } else if (firstArg?.err instanceof Error && typeof secondArg === 'string') {
       // CASE: e.g. console.error({err: new Error(..)}, 'Another message')
       const errorMessage = tracingUtil.extractErrorMessage(firstArg.err);
       secondArg = `${errorMessage} -- ${secondArg}`;
-    } else if (firstArg && firstArg.err instanceof Error) {
+    } else if (firstArg?.err instanceof Error) {
       // CASE: e.g. console.error({err: new Error(..)})
       secondArg = tracingUtil.extractErrorMessage(firstArg.err);
-    } else if (firstArg && firstArg.err && typeof firstArg.err.message === 'string' && typeof secondArg === 'string') {
+    } else if (firstArg?.err && typeof firstArg.err.message === 'string' && typeof secondArg === 'string') {
       // CASE: e.g. console.error({err: {message: 'err msg'}}, 'Another message')
       secondArg = `${firstArg.err.message} -- ${secondArg}`;
-    } else if (firstArg && firstArg.err && typeof firstArg.err.message === 'string') {
+    } else if (firstArg?.err && typeof firstArg.err.message === 'string') {
       // CASE: e.g. console.error({err: {message: 'err msg'}})
       secondArg = firstArg.err.message;
     } else if (typeof secondArg !== 'string') {
