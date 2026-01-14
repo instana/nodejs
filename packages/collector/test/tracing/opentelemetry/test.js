@@ -196,7 +196,7 @@ mochaSuiteFn('opentelemetry tests', function () {
                     expect(span.data.tags.name).to.eql('confluent-kafka-topic');
                     expect(span.data.tags['messaging.system']).to.equal('kafka');
                     expect(span.data.tags['messaging.operation.name']).to.equal('send');
-                    expect(span.d).to.be.greaterThan(1);
+                    expect(span.d).to.be.greaterThan(2);
                     checkTelemetryResourceAttrs(span);
                   }
                 });
