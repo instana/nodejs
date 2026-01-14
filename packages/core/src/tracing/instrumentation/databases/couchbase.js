@@ -426,13 +426,15 @@ function instrumentTransactions(cluster, connectionStr) {
 
                   const result = originalFn.apply(this, arguments);
 
-                  if (result.then && result.catch && result.finally) {
+                  if (result.then && result.catch) {
                     result
+                      .then(() => {
+                        span.d = Date.now() - span.ts;
+                        span.transmit();
+                      })
                       .catch(err => {
                         span.ec = 1;
                         tracingUtil.setErrorDetails(span, err, 'couchbase');
-                      })
-                      .finally(() => {
                         span.d = Date.now() - span.ts;
                         span.transmit();
                       });
@@ -493,13 +495,13 @@ function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sql, 
                 resultHandler(span, result);
               }
 
+              span.d = Date.now() - span.ts;
+              span.transmit();
               return result;
             })
             .catch(err => {
               span.ec = 1;
               tracingUtil.setErrorDetails(span, err, 'couchbase');
-            })
-            .finally(() => {
               span.d = Date.now() - span.ts;
               span.transmit();
             });
