@@ -453,7 +453,7 @@ mochaSuiteFn('tracing/native fetch', function () {
       });
     });
 
-    it('must capture a synchronous client-side error', async () => {
+    it('must capture a synchronous client-side error(malformed-url)', async () => {
       await clientControls.sendRequest({
         path: constructPath({
           basePath: '/fetch',
@@ -509,27 +509,6 @@ mochaSuiteFn('tracing/native fetch', function () {
         verifySpans({
           spans,
           withTimeout: true,
-          serverControls,
-          clientControls
-        });
-      });
-    });
-
-    it('must not explode when request with a malformed url', async () => {
-      await clientControls.sendRequest({
-        path: constructPath({
-          basePath: '/fetch',
-          resourceType: 'string',
-          withClientError: 'malformed-url'
-        }),
-        simple: false
-      });
-      await retry(async () => {
-        const spans = await globalAgent.instance.getSpans();
-        expect(spans).to.have.lengthOf(2);
-        verifySpans({
-          spans,
-          withClientError: 'malformed-url',
           serverControls,
           clientControls
         });
