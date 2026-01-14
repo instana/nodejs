@@ -261,16 +261,16 @@ function instrumentedProcessJob(ctx, originalProcessJob, originalArgs) {
     return promise
       .then(data => {
         finishSpan(job.failedReason, data, span);
+        // Make sure the instana foreigner data is removed.
+        delete options.X_INSTANA_L;
         return data;
       })
       .catch(err => {
         addErrorToSpan(err, span);
         finishSpan(null, null, span);
-        throw err;
-      })
-      .finally(() => {
         // Make sure the instana foreigner data is removed.
         delete options.X_INSTANA_L;
+        throw err;
       });
   });
 }
