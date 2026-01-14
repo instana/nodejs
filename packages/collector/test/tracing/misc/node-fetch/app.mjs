@@ -43,6 +43,11 @@ app.get('/request', async (req, res) => {
   res.json({});
 });
 
+app.get('/callInvalidUrl', async (req, res) => {
+  await fetch('://127.0.0.555:49162/foobar');
+  res.sendStatus(200);
+});
+
 app.listen(port, () => {
   log(`Listening on port: ${port}`);
 });

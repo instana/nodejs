@@ -185,28 +185,6 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
               })
             )
           ));
-
-      it('must not explode when asked to request a malformed url', () =>
-        expressProxyControls
-          .sendRequest({
-            method: 'POST',
-            path: '/callInvalidUrl',
-            responseStatus: 503,
-            target: '://127.0.0.555:49162/foobar'
-          })
-          .then(() =>
-            retry(() =>
-              agentControls.getSpans().then(spans => {
-                expect(spans).to.have.lengthOf(1);
-
-                expectAtLeastOneMatching(spans, [
-                  span => expect(span.n).to.equal('node.http.server'),
-                  span => expect(span.error).to.not.exist,
-                  span => expect(span.ec).to.equal(1)
-                ]);
-              })
-            )
-          ));
     });
 
     it('must support tracing of concurrent calls', () => {

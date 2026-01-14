@@ -514,6 +514,27 @@ mochaSuiteFn('tracing/native fetch', function () {
         });
       });
     });
+
+    it('must not explode when request with a malformed url', async () => {
+      await clientControls.sendRequest({
+        path: constructPath({
+          basePath: '/fetch',
+          resourceType: 'string',
+          withClientError: 'malformed-url'
+        }),
+        simple: false
+      });
+      await retry(async () => {
+        const spans = await globalAgent.instance.getSpans();
+        expect(spans).to.have.lengthOf(2);
+        verifySpans({
+          spans,
+          withClientError: 'malformed-url',
+          serverControls,
+          clientControls
+        });
+      });
+    });
   });
 
   // When INSTANA_ALLOW_ROOT_EXIT_SPAN is set to TRUE via environment variable
