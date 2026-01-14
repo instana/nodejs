@@ -100,11 +100,12 @@ mochaSuiteFn('tracing/logging/console', function () {
       runAndTrace(
         'exit-span',
         true,
-        'request to http://127.0.0.1:65212/ failed, reason: connect ' +
+        'FetchError: request to http://127.0.0.1:65212/ failed, reason: connect ' +
           'ECONNREFUSED 127.0.0.1:65212 -- console.error - should be traced'
       ));
 
-    it('must trace an error object', () => runAndTrace('error-object', true, 'console.error - should be traced'));
+    it('must trace an error object', () =>
+      runAndTrace('error-object', true, 'Error: console.error - should be traced'));
 
     it('must not trace a random object', () =>
       runAndTrace(
@@ -120,14 +121,31 @@ mochaSuiteFn('tracing/logging/console', function () {
       runAndTrace(
         'error-object-and-extra-string-field',
         true,
-        'This is an error. -- console.error - should be traced'
+        'Error: This is an error. -- console.error - should be traced'
       ));
 
     it("must trace a nested error object's message and an additional string", () =>
       runAndTrace(
         'nested-error-object-and-extra-string-field',
         true,
-        'This is a nested error. -- console.error - should be traced'
+        'Error: This is a nested error. -- console.error - should be traced'
+      ));
+
+    it('must trace an error with cause property', () =>
+      runAndTrace('error-with-cause', true, 'Error: This is the cause error'));
+
+    it('must trace an error with cause property and extra string', () =>
+      runAndTrace(
+        'error-with-cause-and-extra-string',
+        true,
+        'Error: This is the cause error -- console.error - should be traced'
+      ));
+
+    it('must trace a nested error with cause property and extra string', () =>
+      runAndTrace(
+        'nested-error-with-cause',
+        true,
+        'Error: This is the cause error -- console.error - should be traced'
       ));
   });
 
