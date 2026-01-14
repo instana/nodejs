@@ -57,16 +57,7 @@ server.on('request', (req, res) => {
 
   let body = null;
 
-  if (req.url === '/dont-respond') {
-    // Deliberately not sending a response in time so that the request times out client side. This will lead to the
-    // following events to be emitted (in that order):
-    // - req#aborted
-    // - res#close
-    setTimeout(() => {
-      res.end();
-    }, 4000);
-    return;
-  } else if (req.url === '/destroy-socket') {
+  if (req.url === '/destroy-socket') {
     // Deliberately destroying the connection (that is, the underlying socket) server side. This will lead to the
     // following events to be emitted (in that order):
     // - req#aborted

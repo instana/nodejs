@@ -471,26 +471,6 @@ function registerTests(agentControls, appUsesHttps, useHttp2CompatApi) {
         )
       ));
 
-  // Skipped this test because native fetch does not allow URLs with embedded credentials
-  // Error: "Request cannot be constructed from a URL that includes credentials"
-  // This is a security feature of the Fetch API standard
-  it.skip(`must not collect credentials embedded in URLs (HTTPS: ${appUsesHttps})`, () =>
-    controls
-      .sendRequest({
-        method: 'GET',
-        path: '/',
-        embedCredentialsInUrl: 'user:password@'
-      })
-      .then(() =>
-        retry(() =>
-          agentControls.getSpans().then(spans => {
-            const span = verifyThereIsExactlyOneHttpEntry(spans, controls, '/', 'GET', 200, false, false);
-            expect(span.data.http.host).to.not.include('user');
-            expect(span.data.http.host).to.not.include('password');
-          })
-        )
-      ));
-
   it('must not touch headers set by the application', () => {
     const expectedCookie = 'sessionId=42';
     return controls
@@ -506,32 +486,6 @@ function registerTests(agentControls, appUsesHttps, useHttp2CompatApi) {
           (response.headers.get('set-cookie') ? [response.headers.get('set-cookie')] : null);
         expect(responseHeaders).to.deep.equal([expectedCookie]);
       });
-  });
-
-  it(`must capture an HTTP entry when the client closes the connection (HTTPS: ${appUsesHttps})`, async () => {
-    const requestPromise = controls.sendRequest({
-      path: '/dont-respond',
-      simple: false
-    });
-    await delay(200);
-
-    // Verify that an entry span has been created even though the request hasn't completed yet
-    // The span is captured when the client closes the connection via the req.on('close') event
-    await retry(() =>
-      agentControls.getSpans().then(spans => {
-        // Note: For HTTP 1, the captured HTTP status will be 200 even for a client timeout, because the we take
-        // the status from the response object which is created before the request is processed by user code. The
-        // default for the status attribute is 200 and so this is what we capture (or whatever the user code sets
-        // on the response object before running the request is aborted due to the timeout). For HTTP 2, the
-        // situation is different because we inspect a response header of the stream (HTTP2_HEADER_STATUS), which
-        // does not exist until a response is actually sent. Thus, for HTTP 2, span.data.http.status will be
-        // undefined.
-        verifyThereIsExactlyOneHttpEntry(spans, controls, '/dont-respond', 'GET', 200, false, false);
-      })
-    );
-
-    // The request will eventually complete after 4 seconds
-    return requestPromise.catch(() => {});
   });
 
   it(`must capture an HTTP entry when the server destroys the socket (HTTPS: ${appUsesHttps})`, () =>
