@@ -453,7 +453,7 @@ mochaSuiteFn('tracing/native fetch', function () {
       });
     });
 
-    it('must capture a synchronous client-side error', async () => {
+    it('must capture a synchronous client-side error(malformed-url)', async () => {
       await clientControls.sendRequest({
         path: constructPath({
           basePath: '/fetch',

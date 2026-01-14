@@ -8,10 +8,14 @@ const expect = require('chai').expect;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const { retry, verifyHttpRootEntry, verifyExitSpan } = require('../../../../../core/test/test_util');
+const {
+  retry,
+  verifyHttpRootEntry,
+  verifyExitSpan,
+  expectAtLeastOneMatching
+} = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
-
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 ['latest', 'v2'].forEach(version => {
@@ -85,6 +89,27 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
                   }
                 ]
               });
+            })
+          )
+        ));
+
+    it('must not explode when request with a malformed url', () =>
+      controls
+        .sendRequest({
+          method: 'GET',
+          path: '/callInvalidUrl',
+          simple: false
+        })
+        .then(() =>
+          retry(() =>
+            agentControls.getSpans().then(spans => {
+              expect(spans).to.have.lengthOf(1);
+
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(1)
+              ]);
             })
           )
         ));
