@@ -88,7 +88,7 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
     }
 
     const promise = originalFunction.apply(ctx, originalArgs);
-    if (typeof promise.then === 'function') {
+    if (typeof promise?.then === 'function') {
       promise
         .then(value => {
           finishSpan(null, span);

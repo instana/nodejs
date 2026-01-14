@@ -171,29 +171,31 @@ function instrument() {
       injectTraceCorrelationHeaders(originalArgs, span, w3cTraceContext);
 
       const fetchPromise = originalFetch.apply(originalThis, originalArgs);
-      fetchPromise
-        .then(response => {
-          span.data.http.status = response.status;
-          span.ec = response.status >= 500 ? 1 : 0;
-          capturedHeaders = mergeExtraHeadersFromFetchHeaders(
-            capturedHeaders,
-            response.headers,
-            extraHttpHeadersToCapture
-          );
+      if (typeof fetchPromise?.then === 'function') {
+        fetchPromise
+          .then(response => {
+            span.data.http.status = response.status;
+            span.ec = response.status >= 500 ? 1 : 0;
+            capturedHeaders = mergeExtraHeadersFromFetchHeaders(
+              capturedHeaders,
+              response.headers,
+              extraHttpHeadersToCapture
+            );
 
-          span.d = Date.now() - span.ts;
-          if (capturedHeaders != null && Object.keys(capturedHeaders).length > 0) {
-            span.data.http.header = capturedHeaders;
-          }
-          span.transmit();
-        })
-        .catch(err => {
-          span.ec = 1;
-          tracingUtil.setErrorDetails(span, err, 'http');
+            span.d = Date.now() - span.ts;
+            if (capturedHeaders != null && Object.keys(capturedHeaders).length > 0) {
+              span.data.http.header = capturedHeaders;
+            }
+            span.transmit();
+          })
+          .catch(err => {
+            span.ec = 1;
+            tracingUtil.setErrorDetails(span, err, 'http');
 
-          span.d = Date.now() - span.ts;
-          span.transmit();
-        });
+            span.d = Date.now() - span.ts;
+            span.transmit();
+          });
+      }
 
       return fetchPromise;
     });

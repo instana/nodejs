@@ -61,18 +61,20 @@ function instrumentedRoutes(thisContext, originalRoutes, originalArgs) {
   const instrumentedDispatch = function (ctx, next) {
     if (active && cls.isTracing()) {
       const dispatchResult = dispatch.apply(this, arguments);
-      return dispatchResult.then(resolvedValue => {
-        if (ctx.matched && ctx.matched.length && ctx.matched.length > 0) {
-          const matchedRouteLayers = ctx.matched.slice();
-          matchedRouteLayers.sort(byLeastSpecificLayer);
-          const mostSpecificPath = normalizeLayerPath(matchedRouteLayers[matchedRouteLayers.length - 1].path);
-          annotateHttpEntrySpanWithPathTemplate(mostSpecificPath);
-        }
-        return resolvedValue;
-      });
-    } else {
-      return dispatch.apply(this, arguments);
+      if (typeof dispatchResult?.then === 'function') {
+        return dispatchResult.then(resolvedValue => {
+          if (ctx.matched && ctx.matched.length && ctx.matched.length > 0) {
+            const matchedRouteLayers = ctx.matched.slice();
+            matchedRouteLayers.sort(byLeastSpecificLayer);
+            const mostSpecificPath = normalizeLayerPath(matchedRouteLayers[matchedRouteLayers.length - 1].path);
+            annotateHttpEntrySpanWithPathTemplate(mostSpecificPath);
+          }
+          return resolvedValue;
+        });
+      }
+      return dispatchResult;
     }
+    return dispatch.apply(this, arguments);
   };
 
   // The router attaches itself as a property to the dispatch function and other methods in koa-router rely on this, so

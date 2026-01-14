@@ -249,56 +249,61 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
       kind: constants.ENTRY
     });
 
-    return originalGet.apply(ctx, originalArgs).then(result => {
-      if (!result) {
-        // get did not fetch a new message from RabbitMQ (because the queue has no messages), no need to create a span.
-        span.cancel();
+    const promise = originalGet.apply(ctx, originalArgs);
+    if (typeof promise?.then === 'function') {
+      return promise.then(result => {
+        if (!result) {
+          // get did not fetch a new message from RabbitMQ (because the queue has no messages), no need to create a
+          // span.
+          span.cancel();
+          return result;
+        }
+        const fields = result.fields || {};
+        const headers = result.properties && result.properties.headers ? result.properties.headers : {};
+
+        if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
+          cls.setTracingLevel('0');
+          span.cancel();
+          return result;
+        }
+
+        const traceId = tracingUtil.readAttribCaseInsensitive(headers, constants.traceIdHeaderName);
+        const parentSpanId = tracingUtil.readAttribCaseInsensitive(headers, constants.spanIdHeaderName);
+        if (traceId && parentSpanId) {
+          span.t = traceId;
+          span.p = parentSpanId;
+        }
+
+        span.ts = Date.now();
+        span.stack = tracingUtil.getStackTrace(instrumentedChannelModelGet);
+        span.data.rabbitmq = {
+          sort: 'consume'
+        };
+
+        if (ctx.connection.stream) {
+          span.data.rabbitmq.address =
+            typeof ctx.connection.stream.getProtocol === 'function'
+              ? 'amqps://'
+              : //
+                `amqp://${ctx.connection.stream.remoteAddress}:${ctx.connection.stream.remotePort}`;
+        }
+        if (fields.exchange) {
+          span.data.rabbitmq.exchange = fields.exchange;
+        }
+        if (fields.routingKey) {
+          span.data.rabbitmq.key = fields.routingKey;
+        }
+
+        setImmediate(() => {
+          // Client code is expected to end the span manually, end it automatically in case client code doesn't. Child
+          // exit spans won't be captured, but at least the RabbitMQ entry span is there.
+          span.d = Date.now() - span.ts;
+          span.transmit();
+        });
         return result;
-      }
-      const fields = result.fields || {};
-      const headers = result.properties && result.properties.headers ? result.properties.headers : {};
-
-      if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
-        cls.setTracingLevel('0');
-        span.cancel();
-        return result;
-      }
-
-      const traceId = tracingUtil.readAttribCaseInsensitive(headers, constants.traceIdHeaderName);
-      const parentSpanId = tracingUtil.readAttribCaseInsensitive(headers, constants.spanIdHeaderName);
-      if (traceId && parentSpanId) {
-        span.t = traceId;
-        span.p = parentSpanId;
-      }
-
-      span.ts = Date.now();
-      span.stack = tracingUtil.getStackTrace(instrumentedChannelModelGet);
-      span.data.rabbitmq = {
-        sort: 'consume'
-      };
-
-      if (ctx.connection.stream) {
-        span.data.rabbitmq.address =
-          typeof ctx.connection.stream.getProtocol === 'function'
-            ? 'amqps://'
-            : //
-              `amqp://${ctx.connection.stream.remoteAddress}:${ctx.connection.stream.remotePort}`;
-      }
-      if (fields.exchange) {
-        span.data.rabbitmq.exchange = fields.exchange;
-      }
-      if (fields.routingKey) {
-        span.data.rabbitmq.key = fields.routingKey;
-      }
-
-      setImmediate(() => {
-        // Client code is expected to end the span manually, end it automatically in case client code doesn't. Child
-        // exit spans won't be captured, but at least the RabbitMQ entry span is there.
-        span.d = Date.now() - span.ts;
-        span.transmit();
       });
-      return result;
-    });
+    }
+    return promise;
   });
 }
 

@@ -100,15 +100,18 @@ function instrumentedJobCreate(ctx, originalJobCreate, originalArgs, options) {
 
     const promise = originalJobCreate.apply(ctx, originalArgs);
 
-    return promise
-      .then(job => {
-        finishSpan(null, job, span);
-        return job;
-      })
-      .catch(err => {
-        finishSpan(err, null, span);
-        return err;
-      });
+    if (typeof promise?.then === 'function') {
+      return promise
+        .then(job => {
+          finishSpan(null, job, span);
+          return job;
+        })
+        .catch(err => {
+          finishSpan(err, null, span);
+          return err;
+        });
+    }
+    return promise;
   });
 }
 

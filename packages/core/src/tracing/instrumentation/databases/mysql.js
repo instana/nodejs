@@ -182,20 +182,23 @@ function instrumentedAccessFunction(
     if (isPromiseImpl) {
       const resultPromise = originalFunction.apply(ctx, originalArgs);
 
-      resultPromise
-        .then(result => {
-          span.d = Date.now() - span.ts;
-          span.transmit();
-          return result;
-        })
-        .catch(error => {
-          span.ec = 1;
-          tracingUtil.setErrorDetails(span, error, exports.spanName);
+      if (typeof resultPromise?.then === 'function') {
+        resultPromise
+          .then(result => {
+            span.d = Date.now() - span.ts;
+            span.transmit();
+            return result;
+          })
+          .catch(error => {
+            span.ec = 1;
+            tracingUtil.setErrorDetails(span, error, exports.spanName);
 
-          span.d = Date.now() - span.ts;
-          span.transmit();
-          return error;
-        });
+            span.d = Date.now() - span.ts;
+            span.transmit();
+            throw error;
+          });
+      }
+
       return resultPromise;
     }
 
@@ -238,12 +241,16 @@ function shimGetConnection(original) {
 
 function shimPromiseConnection(original) {
   return function getConnection() {
-    return original.apply(this, arguments).then(connection => {
-      shimmer.wrap(connection, 'query', shimPromiseQuery);
-      shimmer.wrap(connection, 'execute', shimPromiseExecute);
+    const promise = original.apply(this, arguments);
+    if (typeof promise?.then === 'function') {
+      return promise.then(connection => {
+        shimmer.wrap(connection, 'query', shimPromiseQuery);
+        shimmer.wrap(connection, 'execute', shimPromiseExecute);
 
-      return connection;
-    });
+        return connection;
+      });
+    }
+    return promise;
   };
 }
 
