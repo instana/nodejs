@@ -457,7 +457,7 @@ function handleCallbackOrPromise(ctx, originalArgs, originalFunction, span) {
 
   const resultPromise = originalFunction.apply(ctx, originalArgs);
 
-  if (resultPromise && resultPromise.then) {
+  if (resultPromise && typeof resultPromise.then === 'function') {
     resultPromise
       .then(result => {
         span.d = Date.now() - span.ts;
