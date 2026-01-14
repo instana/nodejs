@@ -820,6 +820,85 @@ describe('tracing/tracingUtil', () => {
 
         expect(span.data.test.error).to.equal('Error: The message failed to send');
       });
+
+      it('should use cause stack when cause is an Error instance with stack', () => {
+        const span = {
+          data: { test: {} }
+        };
+
+        const rootCause = new Error('Root cause error');
+        rootCause.stack =
+          'Error: Root cause error\n' +
+          '    at rootCauseFunction (/path/to/root.js:10:5)\n' +
+          '    at deepFunction (/path/to/deep.js:20:10)';
+
+        const wrappedError = new Error('Wrapped error', { cause: rootCause });
+        wrappedError.stack =
+          'Error: Wrapped error\n' +
+          '    at wrapperFunction (/path/to/wrapper.js:5:3)\n' +
+          '    at mainFunction (/path/to/main.js:15:7)';
+
+        setErrorDetails(span, wrappedError, 'test');
+
+        expect(span.data.test.error).to.equal('Error: Root cause error');
+        expect(span.stack).to.be.an('array');
+        expect(span.stack.length).to.be.greaterThan(0);
+        expect(span.stack[0].c).to.include('root.js');
+        expect(span.stack[0].m).to.equal('rootCauseFunction');
+      });
+
+      it('should fallback to main error stack when cause has no stack', () => {
+        const span = {
+          data: { test: {} }
+        };
+
+        const causeWithoutStack = new Error('Cause without stack');
+        delete causeWithoutStack.stack;
+
+        const wrappedError = new Error('Wrapped error', { cause: causeWithoutStack });
+        wrappedError.stack =
+          'Error: Wrapped error\n' +
+          '    at mainErrorFunction (/path/to/main.js:10:5)\n' +
+          '    at callerFunction (/path/to/caller.js:20:10)';
+
+        setErrorDetails(span, wrappedError, 'test');
+
+        expect(span.data.test.error).to.equal('Error: Cause without stack');
+        expect(span.stack).to.be.an('array');
+        expect(span.stack.length).to.be.greaterThan(0);
+        expect(span.stack[0].c).to.include('main.js');
+        expect(span.stack[0].m).to.equal('mainErrorFunction');
+      });
+
+      it('should use main error stack when cause is not an Error instance', () => {
+        const span = {
+          data: { test: {} }
+        };
+
+        const error = new Error('Main error', { cause: 'string cause' });
+
+        setErrorDetails(span, error, 'test');
+
+        expect(span.data.test.error).to.equal('Error: Main error');
+        expect(span.stack).to.be.an('array');
+        expect(span.stack.length).to.be.greaterThan(0);
+      });
+
+      it('should handle cause with empty stack string', () => {
+        const span = {
+          data: { test: {} }
+        };
+
+        const causeWithEmptyStack = new Error('Cause error');
+        causeWithEmptyStack.stack = '';
+        const wrappedError = new Error('Wrapped error', { cause: causeWithEmptyStack });
+
+        setErrorDetails(span, wrappedError, 'test');
+
+        expect(span.data.test.error).to.equal('Error: Cause error');
+        expect(span.stack).to.be.an('array');
+        expect(span.stack.length).to.be.greaterThan(0);
+      });
     });
 
     describe('setErrorDetails with stackTraceMode filtering', () => {

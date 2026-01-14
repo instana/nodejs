@@ -393,9 +393,16 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
       return;
     }
 
-    // If the mode is error or all and an error occurred, generate and overwrite the stack trace with the error
-    if (normalizedError.stack) {
-      const stackArray = stackTrace.parseStackTraceFromString(normalizedError.stack);
+    // If stack trace collection is set to 'error' or 'all' and an error occurs,
+    // generate a stack trace from the error and overwrite any existing stack.
+    // If the error has a `cause` property and it is an Error instance, prefer
+    // the cause’s stack trace, as it represents the root cause.
+    // See: https://nodejs.org/api/errors.html#errorcause
+    const stackToUse =
+      (normalizedError?.cause instanceof Error && normalizedError.cause.stack) || normalizedError.stack;
+
+    if (stackToUse) {
+      const stackArray = stackTrace.parseStackTraceFromString(stackToUse);
       span.stack = stackArray.length > 0 ? stackArray.slice(0, stackTraceLength) : span.stack || [];
     } else {
       span.stack = span.stack || [];
