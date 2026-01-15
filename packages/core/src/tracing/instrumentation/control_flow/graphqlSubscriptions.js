@@ -62,18 +62,23 @@ function shimPushValue(originalFunction) {
 function shimPullValue(originalFunction) {
   return function () {
     const pullPromise = originalFunction.apply(this, arguments);
-    return pullPromise.then(result => {
-      if (result && result.value && result.value[CLS_CONTEXT_SYMBOL]) {
-        const clsContext = result.value[CLS_CONTEXT_SYMBOL];
-        if (isActive && clsContext) {
-          cls.ns.enter(clsContext);
-          setImmediate(() => {
-            cls.ns.exit(clsContext);
-          });
+
+    if (pullPromise && typeof pullPromise.then === 'function') {
+      return pullPromise.then(result => {
+        if (result && result.value && result.value[CLS_CONTEXT_SYMBOL]) {
+          const clsContext = result.value[CLS_CONTEXT_SYMBOL];
+          if (isActive && clsContext) {
+            cls.ns.enter(clsContext);
+            setImmediate(() => {
+              cls.ns.exit(clsContext);
+            });
+          }
         }
-      }
-      return result;
-    });
+        return result;
+      });
+    }
+
+    return pullPromise;
   };
 }
 
