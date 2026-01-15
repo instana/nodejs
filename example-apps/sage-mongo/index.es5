@@ -1,0 +1,80 @@
+'use strict';
+
+const express = require('express');
+const mongo = require('./mongoConnection.es5');
+
+const app = express();
+app.use(express.json());
+
+let client;
+let db;
+
+/**
+ * Start application and MongoDB connection
+ */
+async function start() {
+  const options = {
+    hostname: 'localhost',
+    port: 27017,
+    database: 'testdb',
+  };
+
+  client = await mongo.connectClient(options, 'tenant1');
+  db = client.db();
+
+  console.log('Connected to MongoDB');
+  console.log('Server is starting...');
+}
+
+/**
+ * GET endpoint - fetch users
+ */
+app.get('/users', async (req, res) => {
+  try {
+    const users = await db.collection('users').find({}).toArray();
+
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST endpoint - insert user
+ */
+app.post('/users', async (req, res) => {
+  try {
+    const result = await db.collection('users').insertOne(req.body);
+
+    res.status(201).json({
+      insertedId: result.insertedId,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Graceful shutdown
+ */
+process.on('SIGINT', async () => {
+  console.log('\nShutting down...');
+  if (client) {
+    await client.close();
+  }
+  process.exit(0);
+});
+
+/**
+ * Start everything
+ */
+start()
+  .then(() => {
+    app.listen(3000, () => {
+      console.log('API listening on http://localhost:3000');
+    });
+  })
+  .catch((err) => {
+    console.error('Startup failed:', err);
+    process.exit(1);
+  });
