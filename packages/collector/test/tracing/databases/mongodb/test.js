@@ -229,7 +229,15 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
                 agentControls.getSpans().then(spans => {
                   expect(spans).to.have.lengthOf(2);
                   const entrySpan = expectHttpEntry(controls, spans, '/aggregate');
-                  expectMongoExit(controls, spans, entrySpan, 'aggregate', null, null, JSON.stringify([{ $match: { foo: 'bar' } }]));
+                  expectMongoExit(
+                    controls,
+                    spans,
+                    entrySpan,
+                    'aggregate',
+                    null,
+                    null,
+                    JSON.stringify([{ $match: { foo: 'bar' } }])
+                  );
                 })
               )
             ));
