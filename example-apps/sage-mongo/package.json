@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "NODE_OPTIONS='--import ./node_modules/@instana/collector/esm-register.mjs' INSTANA_DEBUG=true node index.es5"
+    "start": "NODE_OPTIONS='--import ./node_modules/@instana/collector/esm-register.mjs' INSTANA_DEBUG=true node -r newrelic --env-file .env index.es5"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +15,7 @@
     "@instana/collector": "^5.1.0",
     "@sage/test": "file:./test-1.0.0.tgz",
     "express": "^5.2.1",
-    "mongodb": "3.6"
+    "mongodb": "3.6",
+    "newrelic": "^13.9.2"
   }
 }
