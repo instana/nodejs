@@ -833,66 +833,6 @@ mochaSuiteFn('opentelemetry tests', function () {
               ));
         });
       });
-
-      describe('mongodb', function () {
-        globalAgent.setUpCleanUpHooks();
-        const agentControls = globalAgent.instance;
-
-        let controls;
-
-        before(async () => {
-          controls = new ProcessControls({
-            appPath: path.join(__dirname, './mongodb-app.js'),
-            useGlobalAgent: true,
-            cwd: __dirname,
-            enableOtelIntegration: true,
-            env: { OTEL_API_VERSION: version }
-          });
-
-          await controls.startAndWaitForAgentConnection();
-        });
-
-        beforeEach(async () => {
-          await agentControls.clearReceivedTraceData();
-        });
-
-        after(async () => {
-          await controls.stop();
-        });
-
-        it('should trace', async () => {
-          await controls.sendRequest({
-            method: 'GET',
-            path: '/insert'
-          });
-
-          await retry(async () => {
-            const spans = await agentControls.getSpans();
-            expect(spans.length).to.equal(2);
-
-            const httpEntry = verifyHttpRootEntry({
-              spans,
-              apiPath: '/insert',
-              pid: String(controls.getPid())
-            });
-
-            verifyExitSpan({
-              spanName: 'otel',
-              spans,
-              parent: httpEntry,
-              withError: false,
-              pid: String(controls.getPid()),
-              dataProperty: 'tags',
-              extraTests: span => {
-                expect(span.data.operation).to.equal('mongodb');
-                expect(span.data.tags.name).to.contain('insert');
-                expect(span.data.tags['db.system']).to.eql('mongodb');
-                checkTelemetryResourceAttrs(span);
-              }
-            });
-          });
-        });
-      });
     });
   });
 

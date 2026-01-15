@@ -22,7 +22,6 @@ const instrumentations = {
   '@opentelemetry/instrumentation-socket.io': { name: 'socket.io' },
   '@opentelemetry/instrumentation-tedious': { name: 'tedious' },
   '@opentelemetry/instrumentation-oracledb': { name: 'oracle' }
-  // '@opentelemetry/instrumentation-mongodb': { name: 'mongodb' }
 };
 
 // NOTE: using a logger might create a recursive execution
@@ -40,18 +39,10 @@ module.exports.init = (_config, cls) => {
     value.module = instrumentation;
   });
 
-  const transformedSpans = new WeakSet();
-
-  const transformToInstanaSpan = (otelSpan, isAlreadyEnded = false) => {
+  const transformToInstanaSpan = otelSpan => {
     if (!otelSpan || !otelSpan.instrumentationLibrary) {
       return;
     }
-
-    if (transformedSpans.has(otelSpan)) {
-      return;
-    }
-
-    transformedSpans.add(otelSpan);
 
     const targetInstrumentionName = otelSpan.instrumentationLibrary.name;
     let kind = constants.EXIT;
@@ -102,36 +93,16 @@ module.exports.init = (_config, cls) => {
           resource: otelSpan.resource.attributes
         };
 
-        if (isAlreadyEnded) {
+        const origEnd = otelSpan.end;
+        otelSpan.end = function instanaOnEnd() {
           instanaSpan.transmit();
-        } else {
-          const origEnd = otelSpan.end;
-          otelSpan.end = function instanaOnEnd() {
-            instanaSpan.transmit();
-            return origEnd.apply(this, arguments);
-          };
-        }
+          return origEnd.apply(this, arguments);
+        };
       });
     } catch (e) {
       // ignore for now
     }
   };
-
-  class InstanaSpanProcessor {
-    onStart() {}
-
-    onEnd(span) {
-      transformToInstanaSpan(span, true);
-    }
-
-    shutdown() {
-      return Promise.resolve();
-    }
-
-    forceFlush() {
-      return Promise.resolve();
-    }
-  }
 
   /**
    * OpenTelemetry initializes with a ProxyTracerProvider as the default global tracer provider
@@ -151,8 +122,6 @@ module.exports.init = (_config, cls) => {
    */
   const provider = new BasicTracerProvider();
   const contextManager = new AsyncHooksContextManager();
-
-  provider.addSpanProcessor(new InstanaSpanProcessor());
 
   api.trace.setGlobalTracerProvider(provider);
   api.context.setGlobalContextManager(contextManager);
