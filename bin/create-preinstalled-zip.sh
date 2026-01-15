@@ -124,10 +124,11 @@ fi
 # Allow a custom postfix passed as first script argument or via ZIP_POSTFIX env var
 # Usage: ./create-preinstalled-zip.sh mypostfix
 POSTFIX="${1:-${ZIP_POSTFIX:-}}"
+DATE=$(date +%d-%m-%Y)
 if [ -n "$POSTFIX" ]; then
-  ZIPNAME="instana-${NAME}-${VERSION}-dev-only-${POSTFIX}.zip"
+  ZIPNAME="instana-${NAME}-${VERSION}-${DATE}-${POSTFIX}.zip"
 else
-  ZIPNAME="instana-${NAME}-${VERSION}-dev-only.zip"
+  ZIPNAME="instana-${NAME}-${VERSION}-${DATE}.zip"
 fi
 
 echo "Creating zip $ZIPNAME..."
