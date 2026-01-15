@@ -53,7 +53,7 @@ let instrumentations = [
   './instrumentation/databases/elasticsearch',
   './instrumentation/databases/ioredis',
   './instrumentation/databases/memcached',
-  // './instrumentation/databases/mongodb',
+  './instrumentation/databases/mongodb',
   './instrumentation/databases/mongoose',
   './instrumentation/databases/mssql',
   './instrumentation/databases/mysql',

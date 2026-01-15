@@ -7,7 +7,6 @@
 
 const shimmer = require('../../shimmer');
 
-const hook = require('../../../util/hook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -34,12 +33,57 @@ exports.batchable = true;
 
 exports.init = function init() {
   // unified topology layer
-  hook.onFileLoad(/\/mongodb\/lib\/cmap\/connection\.js/, instrumentCmapConnection);
+  // hook.onFileLoad(/\/mongodb\/lib\/cmap\/connection\.js/, instrumentCmapConnection);
   // mongodb >= 3.3.x, legacy topology layer
-  hook.onFileLoad(/\/mongodb\/lib\/core\/connection\/pool\.js/, instrumentLegacyTopologyPool);
+  // hook.onFileLoad(/\/mongodb\/lib\/core\/connection\/pool\.js/, instrumentLegacyTopologyPool);
   // mongodb < 3.3.x, legacy topology layer
-  hook.onFileLoad(/\/mongodb-core\/lib\/connection\/pool\.js/, instrumentLegacyTopologyPool);
+  // hook.onFileLoad(/\/mongodb-core\/lib\/connection\/pool\.js/, instrumentLegacyTopologyPool);
+
+  tryPatchMongoDBDirectly();
+
+  setImmediate(() => {
+    tryPatchMongoDBDirectly();
+  });
 };
+
+function tryPatchMongoDBDirectly() {
+  try {
+    require('mongodb');
+  } catch (e) {
+    return;
+  }
+
+  Object.keys(require.cache).forEach(filename => {
+    const normalizedPath = filename.replace(/\\/g, '/');
+
+    if (normalizedPath.includes('/mongodb/lib/cmap/connection.js')) {
+      try {
+        const connection = require.cache[filename].exports;
+        instrumentCmapConnection(connection);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    if (normalizedPath.includes('/mongodb/lib/core/connection/pool.js')) {
+      try {
+        const Pool = require.cache[filename].exports;
+        instrumentLegacyTopologyPool(Pool);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    if (normalizedPath.includes('/mongodb-core/lib/connection/pool.js')) {
+      try {
+        const Pool = require.cache[filename].exports;
+        instrumentLegacyTopologyPool(Pool);
+      } catch (e) {
+        // ignore
+      }
+    }
+  });
+}
 
 function instrumentCmapConnection(connection) {
   if (connection.Connection && connection.Connection.prototype) {
