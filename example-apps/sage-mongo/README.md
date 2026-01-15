@@ -11,6 +11,12 @@ This project demonstrates a **MongoDB connection utility** with a **simple HTTP 
 npm install
 ```
 
+## Start mongo
+
+```
+node bin/start-test-containers.js --mongodb
+```
+
 ## Start the API server
 
 ```bash
@@ -36,10 +42,4 @@ curl -X POST http://localhost:3000/users \
   -d '{"name":"John","email":"john@test.com"}'
 ```
 
-## Notes
-
-* `.es5` extension is **historical**, indicating the file was intended for ES5-compatible environments.
-* Node.js ignores the extension — the code runs as long as syntax is valid.
-* Built-in modules (`crypto`, `os`, `path`, `querystring`) do **not require installation**.
-* `fsHelper` is optional for standalone testing; otherwise it comes from your internal library.
 
