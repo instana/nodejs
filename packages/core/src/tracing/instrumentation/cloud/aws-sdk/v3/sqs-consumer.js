@@ -24,17 +24,22 @@ function instrument(SQSConsumer) {
           span.disableAutoEnd();
           const res = orig.apply(this, arguments);
 
-          res
-            .then(() => {
-              span.d = Date.now() - span.ts;
-              span.transmitManual();
-            })
-            .catch(err => {
-              span.ec = 1;
-              tracingUtil.setErrorDetails(span, err, 'sqs');
-              span.d = Date.now() - span.ts;
-              span.transmitManual();
-            });
+          if (res && typeof res.then === 'function') {
+            res
+              .then(() => {
+                span.d = Date.now() - span.ts;
+                span.transmitManual();
+              })
+              .catch(err => {
+                span.ec = 1;
+                tracingUtil.setErrorDetails(span, err, 'sqs');
+                span.d = Date.now() - span.ts;
+                span.transmitManual();
+              });
+          } else {
+            span.d = Date.now() - span.ts;
+            span.transmitManual();
+          }
 
           return res;
         });
@@ -56,17 +61,22 @@ function instrument(SQSConsumer) {
           span.disableAutoEnd();
           const res = orig.apply(this, arguments);
 
-          res
-            .then(() => {
-              span.d = Date.now() - span.ts;
-              span.transmitManual();
-            })
-            .catch(err => {
-              span.ec = 1;
-              tracingUtil.setErrorDetails(span, err, 'sqs');
-              span.d = Date.now() - span.ts;
-              span.transmitManual();
-            });
+          if (res && typeof res.then === 'function') {
+            res
+              .then(() => {
+                span.d = Date.now() - span.ts;
+                span.transmitManual();
+              })
+              .catch(err => {
+                span.ec = 1;
+                tracingUtil.setErrorDetails(span, err, 'sqs');
+                span.d = Date.now() - span.ts;
+                span.transmitManual();
+              });
+          } else {
+            span.d = Date.now() - span.ts;
+            span.transmitManual();
+          }
 
           return res;
         });
