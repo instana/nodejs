@@ -47,7 +47,7 @@ function tryPatchMongoDBDirectly() {
     const resolvedPath = require.resolve('mongodb');
     const mongodb = require(resolvedPath);
 
-    // v3.x
+    // Works with v7! Works with v3!
     if (mongodb.Collection && mongodb.Collection.prototype) {
       instrumentCollection(mongodb.Collection);
     }

@@ -108,6 +108,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
             .then(() =>
               retry(() =>
                 agentControls.getSpans().then(spans => {
+                  console.log('spans', spans.length);
                   expect(spans).to.have.lengthOf(3);
                   const entrySpan = expectHttpEntry(controls, spans, '/insert-one');
                   expectMongoExit(controls, spans, entrySpan, 'insertOne');

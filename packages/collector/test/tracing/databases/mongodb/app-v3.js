@@ -21,7 +21,15 @@ require('../../../..')({
   }
 });
 
-const MongoClient = require('mongodb').MongoClient;
+const mongodb = require('mongodb');
+const path = require('path');
+const assert = require('assert');
+
+// typeorm in collector installs another mongodb version which is loaded here
+// delete manuelly for now
+assert(path.dirname(require.resolve('mongodb')) === path.join(__dirname, '../../../../../../node_modules/mongodb'));
+
+const MongoClient = mongodb.MongoClient;
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
@@ -60,6 +68,13 @@ if (USE_ATLAS) {
   await client.connect();
   db = client.db('myproject');
   collection = db.collection('mydocs');
+
+  const mongodb = require('mongodb');
+  console.log('Same prototype?', Object.getPrototypeOf(collection) === mongodb.Collection.prototype);
+  console.log('insertOne on prototype wrapped?', mongodb.Collection.prototype.insertOne?.name);
+  console.log('insertOne on instance wrapped?', collection.insertOne?.name);
+  console.log('Has own insertOne?', collection.hasOwnProperty('insertOne'));
+
   log('Connected to MongoDB');
 })();
 
