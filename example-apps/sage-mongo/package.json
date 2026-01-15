@@ -13,7 +13,7 @@
   "type": "commonjs",
   "dependencies": {
     "@instana/collector": "^5.1.0",
-    "@sage/test": "file:./@sage/test-1.0.0.tgz",
+    "@sage/test": "file:./test-1.0.0.tgz",
     "express": "^5.2.1",
     "mongodb": "3.6"
   }
