@@ -1,0 +1,24 @@
+{
+  "name": "abhi-test-bunzl-mongo-app-jsc",
+  "version": "1.0.0",
+  "description": "MongoDB app with V8 bytecode (.jsc) files",
+  "main": "index.jsc",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "node compile.js",
+    "start": "NODE_OPTIONS='--import ./node_modules/@instana/collector/esm-register.mjs' INSTANA_DEBUG=true node -r bytenode index.jsc",
+    "start:bytecode": "node -r bytenode index.jsc",
+    "postinstall": "npm run compile"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@instana/collector": "^5.1.0",
+    "@sage/test": "file:./test-1.0.0.tgz",
+    "bytenode": "^1.3.6",
+    "express": "^5.2.1",
+    "mongodb": "3.6"
+  }
+}

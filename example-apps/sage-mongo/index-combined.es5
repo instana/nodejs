@@ -1,0 +1,318 @@
+'use strict';
+
+// ============================================================================
+// MongoDB Connection Module (inline)
+// ============================================================================
+
+// === Standalone defaults ===
+const autoConfigure = false;
+const conf = { hosts: '', replicaSet: '' };
+const connectionInfo = {};
+
+/**
+ * Required dependencies for MongoDB connection
+ */
+const crypto_1 = require('crypto');
+const fsHelper = require('@sage/test/syracuse-lib/src/utility/fsHelper');
+const os_1 = require('os');
+const fsp = require('path');
+const qs = require('querystring');
+
+/**
+ * Recursively creates a directory (mkdir -p equivalent)
+ */
+function mkdirp(path) {
+  if (!fsHelper.existsSync(path)) {
+    mkdirp(fsp.join(path, '..'));
+    fsHelper.mkdirSync(path);
+  }
+}
+
+/**
+ * MongoDB drivers >= 2.2 no longer support nested option objects
+ * This function flattens deprecated option structures
+ */
+function _fixOptions(options) {
+  const deprecatedOpt = ['db', 'server', 'replSet', 'replset', 'mongos'];
+
+  console.log('[Mongo] Normalizing options');
+
+  return Object.keys(options).reduce((prev, key) => {
+    if (deprecatedOpt.indexOf(key) !== -1) {
+      prev = Object.assign({}, prev, options[key]);
+    } else {
+      prev[key] = options[key];
+    }
+    return prev;
+  }, {});
+}
+
+/**
+ * Wrap deprecated Db methods
+ */
+function deprecated(client, method) {
+  return (...args) => {
+    if (!client[method]) {
+      throw Error(`MongoClient does not define a method '${method}'`);
+    }
+    console.warn(
+      `mongoDB driver: 'Db.${method}' is deprecated. Use 'MongoClient.${method}' instead.`
+    );
+    return client[method].apply(client, args);
+  };
+}
+
+/**
+ * Attempts MongoDB connection
+ */
+async function _tryConnect(uri, opt) {
+  const mongodb = require('mongodb');
+
+  try {
+    console.log('[Mongo] _tryConnect:', uri.replace(/\/\/.*@/, '//***@'));
+    const client = await mongodb.MongoClient.connect(uri, opt);
+
+    const originalDb = client.db;
+    client.db = (name) => {
+      const db = originalDb.call(client, name);
+      if (db) {
+        ['logout', 'close', 'db'].forEach((m) => {
+          db[m] = deprecated(client, m);
+        });
+      }
+      return db;
+    };
+
+    console.log('[Mongo] _tryConnect success');
+    return { client };
+  } catch (e) {
+    console.error('[Mongo] _tryConnect error:', e.message);
+    return { error: e.message };
+  }
+}
+
+/**
+ * Builds MongoDB URI string
+ */
+function _makeUri(mongoUser, hosts, dbname, params) {
+  const query = params ? qs.stringify(params) : '';
+  mongoUser = mongoUser ? mongoUser + '@' : '';
+
+  return `mongodb://${mongoUser}${hosts}/${dbname}${
+    query.length ? '?' + query : ''
+  }`;
+}
+
+/**
+ * Core MongoDB connection logic
+ * Returns a MongoClient
+ */
+async function connectClient(options, tenantId) {
+  console.log('[Mongo] connectClient started');
+
+  /**
+   * Normalize MongoDB options
+   */
+  const opt = _fixOptions(options.options || { w: 1 });
+
+  /**
+   * Determine database name
+   */
+  let dbname = options.databaseName || options.database || 'syracuse';
+  if (tenantId) {
+    dbname = tenantId + '-' + dbname;
+  }
+
+  console.log('[Mongo] Database name resolved:', dbname);
+
+  let mongoUser;
+  let params = {};
+
+  /**
+   * Build hostname:port
+   */
+  let connectionString =
+    options.connectionString ||
+    (options.hostname || 'localhost') + ':' + (options.port || 27017);
+
+  console.log(
+    '[Mongo] Connection host:',
+    connectionString.split('@').pop()
+  );
+
+  /**
+   * Extract username/password if present
+   */
+  const parts = connectionString.split('@');
+  if (parts.length > 1) {
+    mongoUser = parts[0];
+    console.log('[Mongo] Credentials detected in connection string');
+  }
+
+  /**
+   * Build MongoDB URI
+   */
+  let dbUrl = _makeUri(mongoUser, connectionString, dbname, params);
+
+  console.log(
+    '[Mongo] MongoDB URI:',
+    dbUrl.replace(/\/\/.*@/, '//***@')
+  );
+
+  /**
+   * Lazy-load MongoDB driver
+   */
+  const mongodb = require('mongodb');
+
+  /**
+   * Attempt initial connection
+   */
+  console.log('[Mongo] Attempting initial connection');
+  let dbHandle = await _tryConnect(dbUrl, opt);
+
+  /**
+   * Retry with replica members if autoConfigure is enabled
+   */
+  if (
+    autoConfigure &&
+    dbHandle.client == null &&
+    connectionString !== conf.hosts
+  ) {
+    console.log('[Mongo] Auto-configure enabled, retrying replica hosts');
+    delete params.replicaSet;
+
+    conf.hosts
+      .split(',')
+      .filter((h) => h !== connectionString)
+      .some(async (h) => {
+        console.log('[Mongo] Retrying host:', h);
+        dbHandle = await _tryConnect(
+          _makeUri(mongoUser, h, dbname, params),
+          opt
+        );
+        return dbHandle != null;
+      });
+  }
+
+  /**
+   * Fail if connection unsuccessful
+   */
+  if (dbHandle.error || dbHandle.client == null) {
+    console.error('[Mongo] Connection failed:', dbHandle.error);
+    throw new Error(dbHandle.error || 'mongoDB connect error');
+  }
+
+  const client = dbHandle.client;
+  console.log('[Mongo] Connection successful');
+
+  /**
+   * Auto-detect replica set configuration
+   */
+  if (autoConfigure) {
+    console.log('[Mongo] Checking replica set configuration');
+    const db = client.db();
+    const adminDb = db.admin();
+    const status = await adminDb.serverStatus();
+    const replSet = status.replSet;
+
+    if (replSet) {
+      console.log('[Mongo] Replica set detected:', replSet.setName);
+      conf.hosts = replSet.hosts.join(',');
+      conf.replicaSet = replSet.setName;
+
+      if (
+        connectionString !== conf.hosts ||
+        params.replicaSet !== conf.replicaSet
+      ) {
+        params.replicaSet = conf.replicaSet;
+        connectionString = conf.hosts;
+        conf.dirty = true;
+        replSet.hosts.forEach((h) => (connectionInfo[h] = conf));
+      }
+    }
+  }
+
+  return client;
+}
+
+// ============================================================================
+// Express Application
+// ============================================================================
+
+const express = require('express');
+
+const app = express();
+app.use(express.json());
+
+let client;
+let db;
+
+/**
+ * Start application and MongoDB connection
+ */
+async function start() {
+  const options = {
+    hostname: 'localhost',
+    port: 27017,
+    database: 'testdb',
+  };
+
+  client = await connectClient(options, 'tenant1');
+  db = client.db();
+
+  console.log('Connected to MongoDB');
+  console.log('Server is starting...');
+}
+
+/**
+ * GET endpoint - fetch users
+ */
+app.get('/users', async (req, res) => {
+  try {
+    const users = await db.collection('users').find({}).toArray();
+
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST endpoint - insert user
+ */
+app.post('/users', async (req, res) => {
+  try {
+    const result = await db.collection('users').insertOne(req.body);
+
+    res.status(201).json({
+      insertedId: result.insertedId,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Graceful shutdown
+ */
+process.on('SIGINT', async () => {
+  console.log('\nShutting down...');
+  if (client) {
+    await client.close();
+  }
+  process.exit(0);
+});
+
+/**
+ * Start everything
+ */
+start()
+  .then(() => {
+    app.listen(3000, () => {
+      console.log('API listening on http://localhost:3000');
+    });
+  })
+  .catch((err) => {
+    console.error('Startup failed:', err);
+    process.exit(1);
+  });
