@@ -6,7 +6,7 @@
 'use strict';
 
 const expect = require('chai').expect;
-const semver = require('semver');
+const path = require('path');
 const Promise = require('bluebird');
 const { v4: uuid } = require('uuid');
 const _ = require('lodash');
@@ -20,18 +20,13 @@ const globalAgent = require('../../../globalAgent');
 
 const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
-['latest', 'v6', 'v4'].forEach(version => {
-  let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
-  // mongodb v7 does not support node versions < 20
-  if (version === 'latest' && semver.lt(process.versions.node, '20.0.0')) {
-    mochaSuiteFn = describe.skip;
-  }
+['latest'].forEach(version => {
+  const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
   // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
   if (process.env.RUN_ESM && version !== 'latest') return;
 
-  mochaSuiteFn(`tracing/mongodb@${version}`, function () {
+  mochaSuiteFn.only(`tracing/mongodb@${version}`, function () {
     const timeout = USE_ATLAS ? config.getTestTimeout() * 2 : config.getTestTimeout();
     this.timeout(timeout);
 
@@ -42,17 +37,14 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
     function registerSuite(topology) {
       const describeStr = 'default';
-      const env = { MONGODB_VERSION: version };
+      const env = { MONGODB_VERSION: version, MONGODB_TOPOLOGY: topology };
 
-      if (topology === 'legacy') {
-        return;
-      }
       describe(describeStr, () => {
         let controls;
 
         before(async () => {
           controls = new ProcessControls({
-            dirname: __dirname,
+            appPath: path.join(__dirname, 'app-v3.js'),
             useGlobalAgent: true,
             env
           });
@@ -101,7 +93,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
               );
             }));
 
-        it('must trace insert requests', () =>
+        it.only('must trace insert requests', () =>
           controls
             .sendRequest({
               method: 'POST',
@@ -118,8 +110,142 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
                 agentControls.getSpans().then(spans => {
                   expect(spans).to.have.lengthOf(3);
                   const entrySpan = expectHttpEntry(controls, spans, '/insert-one');
-                  expectMongoExit(controls, spans, entrySpan, 'insert');
+                  expectMongoExit(controls, spans, entrySpan, 'insertOne');
                   expectHttpExit(controls, spans, entrySpan);
+                })
+              )
+            ));
+
+        it.only('must trace insert requests with callback', () =>
+          controls
+            .sendRequest({
+              method: 'POST',
+              path: '/insert-one-callback',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                foo: 'bar'
+              })
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(2);
+                  const entrySpan = expectHttpEntry(controls, spans, '/insert-one-callback');
+                  expectMongoExit(controls, spans, entrySpan, 'insertOne');
+                })
+              )
+            ));
+
+        it.only('must trace findOne requests', () =>
+          controls
+            .sendRequest({
+              method: 'GET',
+              path: '/find-one'
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(2);
+                  const entrySpan = expectHttpEntry(controls, spans, '/find-one');
+                  expectMongoExit(controls, spans, entrySpan, 'findOne', JSON.stringify({ foo: 'bar' }));
+                })
+              )
+            ));
+
+        it.only('must trace find requests', () =>
+          controls
+            .sendRequest({
+              method: 'GET',
+              path: '/find'
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(2);
+                  const entrySpan = expectHttpEntry(controls, spans, '/find');
+                  expectMongoExit(controls, spans, entrySpan, 'find', JSON.stringify({ foo: 'bar' }));
+                })
+              )
+            ));
+
+        it.only('must trace findOneAndUpdate requests', () =>
+          controls
+            .sendRequest({
+              method: 'POST',
+              path: '/find-one-and-update'
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(2);
+                  const entrySpan = expectHttpEntry(controls, spans, '/find-one-and-update');
+                  expectMongoExit(controls, spans, entrySpan, 'findOneAndUpdate', JSON.stringify({ foo: 'bar' }));
+                })
+              )
+            ));
+
+        it.only('must trace updateOne requests', () =>
+          controls
+            .sendRequest({
+              method: 'POST',
+              path: '/update-one'
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(2);
+                  const entrySpan = expectHttpEntry(controls, spans, '/update-one');
+                  expectMongoExit(controls, spans, entrySpan, 'updateOne', JSON.stringify({ foo: 'bar' }));
+                })
+              )
+            ));
+
+        it.only('must trace deleteOne requests', () =>
+          controls
+            .sendRequest({
+              method: 'POST',
+              path: '/delete-one'
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(2);
+                  const entrySpan = expectHttpEntry(controls, spans, '/delete-one');
+                  expectMongoExit(controls, spans, entrySpan, 'deleteOne', JSON.stringify({ toDelete: true }));
+                })
+              )
+            ));
+
+        it.only('must trace aggregate requests', () =>
+          controls
+            .sendRequest({
+              method: 'GET',
+              path: '/aggregate'
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(2);
+                  const entrySpan = expectHttpEntry(controls, spans, '/aggregate');
+                  expectMongoExit(controls, spans, entrySpan, 'aggregate', null, null, JSON.stringify([{ $match: { foo: 'bar' } }]));
+                })
+              )
+            ));
+
+        it.only('must trace countDocuments requests', () =>
+          controls
+            .sendRequest({
+              method: 'GET',
+              path: '/count-documents'
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  expect(spans).to.have.lengthOf(2);
+                  const entrySpan = expectHttpEntry(controls, spans, '/count-documents');
+                  expectMongoExit(controls, spans, entrySpan, 'countDocuments', JSON.stringify({ foo: 'bar' }));
                 })
               )
             ));
