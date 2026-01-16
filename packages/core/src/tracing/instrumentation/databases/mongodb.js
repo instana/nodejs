@@ -13,6 +13,7 @@ const constants = require('../../constants');
 const cls = require('../../cls');
 
 let isActive = false;
+let logger;
 
 const commands = [
   //
@@ -32,7 +33,8 @@ const commands = [
 exports.spanName = 'mongo';
 exports.batchable = true;
 
-exports.init = function init() {
+exports.init = function init(config) {
+  logger = config.logger;
   // unified topology layer
   hook.onFileLoad(/\/mongodb\/lib\/cmap\/connection\.js/, instrumentCmapConnection);
   // mongodb >= 3.3.x, legacy topology layer
@@ -42,6 +44,9 @@ exports.init = function init() {
 };
 
 function instrumentCmapConnection(connection) {
+  if (logger) {
+    logger.debug('[MongoDB] Instrumenting CMAP connection (unified topology layer)');
+  }
   if (connection.Connection && connection.Connection.prototype) {
     // v4, v5
     if (!connection.Connection.prototype.query) {
@@ -69,7 +74,13 @@ function instrumentCmapConnection(connection) {
 
 function shimCmapQuery(original) {
   return function tmp() {
-    if (cls.skipExitTracing({ isActive })) {
+    // Only use checkReducedSpan if there's no active current span
+    // This ensures we only use reduced spans for background queries, not for normal queries
+    const currentSpan = cls.getCurrentSpan();
+    const useReducedSpan = !currentSpan;
+    const skipResult = cls.skipExitTracing({ isActive, extendedResponse: true, checkReducedSpan: useReducedSpan });
+
+    if (skipResult.skip) {
       return original.apply(this, arguments);
     }
 
@@ -78,17 +89,37 @@ function shimCmapQuery(original) {
       originalArgs[i] = arguments[i];
     }
 
-    return instrumentedCmapQuery(this, original, originalArgs);
+    // Extract trace ID and parent span ID from parent span if available (including reduced spans)
+    const parentSpan = skipResult.parentSpan;
+    const traceId = parentSpan ? parentSpan.t : undefined;
+    const parentSpanId = parentSpan ? parentSpan.s : undefined;
+
+    return instrumentedCmapQuery(this, original, originalArgs, traceId, parentSpanId);
   };
 }
 
 function shimCmapCommand(original) {
   return function () {
-    if (cls.skipExitTracing({ isActive })) {
-      return original.apply(this, arguments);
-    }
+    // Only use checkReducedSpan if there's no active current span
+    // This ensures we only use reduced spans for background queries, not for normal queries
+    const currentSpan = cls.getCurrentSpan();
+    const useReducedSpan = !currentSpan;
 
     const command = arguments[1] && commands.find(c => arguments[1][c]);
+
+    // Skip parent span check for getMore because it should create a span even if find span is still active
+    // getMore is a separate operation that should be traced independently
+    const skipParentSpanCheckForGetMore = command === 'getMore' || command === 'getmore';
+    const skipResult = cls.skipExitTracing({
+      isActive,
+      extendedResponse: true,
+      checkReducedSpan: useReducedSpan,
+      skipParentSpanCheck: skipParentSpanCheckForGetMore
+    });
+
+    if (skipResult.skip) {
+      return original.apply(this, arguments);
+    }
 
     if (!command) {
       return original.apply(this, arguments);
@@ -99,13 +130,23 @@ function shimCmapCommand(original) {
       originalArgs[i] = arguments[i];
     }
 
-    return instrumentedCmapMethod(this, original, originalArgs, command);
+    // Extract trace ID and parent span ID from parent span if available (including reduced spans)
+    const parentSpan = skipResult.parentSpan;
+    const traceId = parentSpan ? parentSpan.t : undefined;
+    const parentSpanId = parentSpan ? parentSpan.s : undefined;
+
+    return instrumentedCmapMethod(this, original, originalArgs, command, traceId, parentSpanId);
   };
 }
 
 function shimCmapMethod(fnName, original) {
   return function () {
-    if (cls.skipExitTracing({ isActive })) {
+    // Only use checkReducedSpan if there's no active current span
+    // This ensures we only use reduced spans for background queries, not for normal queries
+    const currentSpan = cls.getCurrentSpan();
+    const useReducedSpan = !currentSpan;
+    const skipResult = cls.skipExitTracing({ isActive, extendedResponse: true, checkReducedSpan: useReducedSpan });
+    if (skipResult.skip) {
       return original.apply(this, arguments);
     }
 
@@ -114,13 +155,30 @@ function shimCmapMethod(fnName, original) {
       originalArgs[i] = arguments[i];
     }
 
-    return instrumentedCmapMethod(this, original, originalArgs, fnName);
+    // Extract trace ID and parent span ID from parent span if available (including reduced spans)
+    const parentSpan = skipResult.parentSpan;
+    const traceId = parentSpan ? parentSpan.t : undefined;
+    const parentSpanId = parentSpan ? parentSpan.s : undefined;
+
+    return instrumentedCmapMethod(this, original, originalArgs, fnName, traceId, parentSpanId);
   };
 }
 
 function shimCmapGetMore(original) {
   return function () {
-    if (cls.skipExitTracing({ isActive })) {
+    // Only use checkReducedSpan if there's no active current span
+    // This ensures we only use reduced spans for background queries, not for normal queries
+    const currentSpan = cls.getCurrentSpan();
+    const useReducedSpan = !currentSpan;
+    // Skip parent span check for getMore because it should create a span even if find span is still active
+    // getMore is a separate operation that should be traced independently
+    const skipResult = cls.skipExitTracing({
+      isActive,
+      extendedResponse: true,
+      checkReducedSpan: useReducedSpan,
+      skipParentSpanCheck: true
+    });
+    if (skipResult.skip) {
       return original.apply(this, arguments);
     }
 
@@ -129,15 +187,22 @@ function shimCmapGetMore(original) {
       originalArgs[i] = arguments[i];
     }
 
-    return instrumentedCmapGetMore(this, original, originalArgs);
+    // Extract trace ID and parent span ID from parent span if available (including reduced spans)
+    const parentSpan = skipResult.parentSpan;
+    const traceId = parentSpan ? parentSpan.t : undefined;
+    const parentSpanId = parentSpan ? parentSpan.s : undefined;
+
+    return instrumentedCmapGetMore(this, original, originalArgs, traceId, parentSpanId);
   };
 }
 
-function instrumentedCmapQuery(ctx, originalQuery, originalArgs) {
+function instrumentedCmapQuery(ctx, originalQuery, originalArgs, traceId, parentSpanId) {
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan({
       spanName: exports.spanName,
-      kind: constants.EXIT
+      kind: constants.EXIT,
+      traceId: traceId,
+      parentSpanId: parentSpanId
     });
     span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
 
@@ -161,16 +226,26 @@ function instrumentedCmapQuery(ctx, originalQuery, originalArgs) {
       namespace
     };
 
+    if (logger && command) {
+      logger.debug(
+        `[MongoDB] Executing command: ${normalizeCommandName(command)}, namespace: ${
+          namespace || 'unknown'
+        }, service: ${service || 'unknown'}`
+      );
+    }
+
     readJsonOrFilter(cmd, span);
     return handleCallbackOrPromise(ctx, originalArgs, originalQuery, span);
   });
 }
 
-function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command) {
+function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command, traceId, parentSpanId) {
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan({
       spanName: exports.spanName,
-      kind: constants.EXIT
+      kind: constants.EXIT,
+      traceId: traceId,
+      parentSpanId: parentSpanId
     });
     span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
 
@@ -200,6 +275,14 @@ function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command) {
       namespace
     };
 
+    if (logger && command) {
+      logger.debug(
+        `[MongoDB] Executing command: ${normalizeCommandName(command)}, namespace: ${
+          namespace || 'unknown'
+        }, service: ${service || 'unknown'}`
+      );
+    }
+
     if (command && command.indexOf('insert') < 0) {
       // we do not capture the document for insert commands
       readJsonOrFilter(originalArgs[1], span);
@@ -209,18 +292,13 @@ function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command) {
   });
 }
 
-function instrumentedCmapGetMore(ctx, originalMethod, originalArgs) {
+function instrumentedCmapGetMore(ctx, originalMethod, originalArgs, traceId, parentSpanId) {
   return cls.ns.runAndReturn(() => {
-    // Skip creating a span for getMore if there's already a MongoDB span in the current context
-    // getMore is a continuation of the same logical operation (e.g., find().toArray())
-    const currentSpan = cls.getCurrentSpan();
-    if (currentSpan && currentSpan.n === exports.spanName && currentSpan.data && currentSpan.data.mongo) {
-      return originalMethod.apply(ctx, originalArgs);
-    }
-
     const span = cls.startSpan({
       spanName: exports.spanName,
-      kind: constants.EXIT
+      kind: constants.EXIT,
+      traceId: traceId,
+      parentSpanId: parentSpanId
     });
     span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
 
@@ -238,17 +316,36 @@ function instrumentedCmapGetMore(ctx, originalMethod, originalArgs) {
       namespace
     };
 
+    if (logger) {
+      logger.debug(
+        `[MongoDB] Executing command: getMore, namespace: ${namespace || 'unknown'}, service: ${service || 'unknown'}`
+      );
+    }
+
     return handleCallbackOrPromise(ctx, originalArgs, originalMethod, span);
   });
 }
 
 function instrumentLegacyTopologyPool(Pool) {
+  if (logger) {
+    logger.debug('[MongoDB] Instrumenting Legacy Topology Pool');
+  }
   shimmer.wrap(Pool.prototype, 'write', shimLegacyWrite);
 }
 
 function shimLegacyWrite(original) {
   return function () {
-    if (cls.skipExitTracing({ isActive })) {
+    // Only use checkReducedSpan if there's no active current span
+    // This ensures we only use reduced spans for background queries, not for normal queries
+    const currentSpan = cls.getCurrentSpan();
+    const useReducedSpan = !currentSpan;
+    // Try with checkReducedSpan only if no active span exists
+    const skipResult = cls.skipExitTracing({
+      isActive,
+      extendedResponse: true,
+      checkReducedSpan: useReducedSpan
+    });
+    if (skipResult.skip) {
       return original.apply(this, arguments);
     }
 
@@ -257,11 +354,16 @@ function shimLegacyWrite(original) {
       originalArgs[i] = arguments[i];
     }
 
-    return instrumentedLegacyWrite(this, original, originalArgs);
+    // Extract trace ID and parent span ID from parent span if available
+    const parentSpan = skipResult.parentSpan;
+    const traceId = parentSpan ? parentSpan.t : undefined;
+    const parentSpanId = parentSpan ? parentSpan.s : undefined;
+
+    return instrumentedLegacyWrite(this, original, originalArgs, traceId, parentSpanId);
   };
 }
 
-function instrumentedLegacyWrite(ctx, originalWrite, originalArgs) {
+function instrumentedLegacyWrite(ctx, originalWrite, originalArgs, traceId, parentSpanId) {
   return cls.ns.runAndReturn(() => {
     const message = originalArgs[0];
     let command;
@@ -288,7 +390,9 @@ function instrumentedLegacyWrite(ctx, originalWrite, originalArgs) {
 
     const span = cls.startSpan({
       spanName: exports.spanName,
-      kind: constants.EXIT
+      kind: constants.EXIT,
+      traceId: traceId,
+      parentSpanId: parentSpanId
     });
     span.stack = tracingUtil.getStackTrace(instrumentedLegacyWrite);
 
@@ -405,6 +509,14 @@ function instrumentedLegacyWrite(ctx, originalWrite, originalArgs) {
       namespace
     };
 
+    if (logger && command) {
+      logger.debug(
+        `[MongoDB] Executing command: ${normalizeCommandName(command)}, namespace: ${
+          namespace || 'unknown'
+        }, service: ${service || 'unknown'}`
+      );
+    }
+
     readJsonOrFilterFromMessage(message, span);
     return handleCallbackOrPromise(ctx, originalArgs, originalWrite, span);
   });
@@ -481,46 +593,36 @@ function readJsonOrFilter(cmdObj, span) {
     return;
   }
 
-  // For bulk update operations, extract filter from first update
-  if (Array.isArray(cmdObj.updates) && cmdObj.updates.length >= 1) {
-    const firstUpdate = cmdObj.updates[0];
-    if (firstUpdate && (firstUpdate.q || firstUpdate.query || firstUpdate.filter)) {
-      span.data.mongo.filter = stringifyWhenNecessary(firstUpdate.q || firstUpdate.query || firstUpdate.filter);
-      return;
-    }
+  // Prioritize json over filter to match original behavior and test expectations
+  let json;
+  if (Array.isArray(cmdObj) && cmdObj.length >= 1) {
+    json = cmdObj;
+  } else if (Array.isArray(cmdObj.updates) && cmdObj.updates.length >= 1) {
+    // Clean up update objects to only include q and u fields (remove upsert, multi, etc.)
+    json = cmdObj.updates.map(update => {
+      const cleaned = {};
+      if (update.q) cleaned.q = update.q;
+      if (update.query) cleaned.q = update.query;
+      if (update.filter) cleaned.q = update.filter;
+      if (update.u) cleaned.u = update.u;
+      if (update.update) cleaned.u = update.update;
+      return cleaned;
+    });
+  } else if (Array.isArray(cmdObj.deletes) && cmdObj.deletes.length >= 1) {
+    json = cmdObj.deletes;
+  } else if (Array.isArray(cmdObj.pipeline) && cmdObj.pipeline.length >= 1) {
+    json = cmdObj.pipeline;
   }
 
-  // For bulk delete operations, extract filter from first delete
-  if (Array.isArray(cmdObj.deletes) && cmdObj.deletes.length >= 1) {
-    const firstDelete = cmdObj.deletes[0];
-    if (firstDelete && (firstDelete.q || firstDelete.query || firstDelete.filter)) {
-      span.data.mongo.filter = stringifyWhenNecessary(firstDelete.q || firstDelete.query || firstDelete.filter);
-      return;
-    }
-  }
-
-  // Prefer filter/query over json to satisfy test expectations
-  if (cmdObj.filter || cmdObj.query) {
+  // The back end will process exactly one of json, query, or filter, so it does not matter too much which one we
+  // provide. Prioritize json when available.
+  if (json) {
+    span.data.mongo.json = stringifyWhenNecessary(json);
+  } else if (cmdObj.filter || cmdObj.query) {
     span.data.mongo.filter = stringifyWhenNecessary(cmdObj.filter || cmdObj.query);
   } else if (cmdObj.q) {
     // For update/delete commands in wire protocol, the filter/query is in 'q' (short for query)
     span.data.mongo.filter = stringifyWhenNecessary(cmdObj.q);
-  } else {
-    // Only set json if no filter/query is available and it's not an aggregate operation
-    // Aggregate operations should not have json set (test expectation)
-    let json;
-    if (Array.isArray(cmdObj) && cmdObj.length >= 1) {
-      json = cmdObj;
-    } else if (Array.isArray(cmdObj.updates) && cmdObj.updates.length >= 1) {
-      json = cmdObj.updates;
-    } else if (Array.isArray(cmdObj.deletes) && cmdObj.deletes.length >= 1) {
-      json = cmdObj.deletes;
-    }
-    // Skip setting json for pipeline (aggregate operations) to satisfy test expectations
-
-    if (json) {
-      span.data.mongo.json = stringifyWhenNecessary(json);
-    }
   }
 }
 

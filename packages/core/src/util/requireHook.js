@@ -51,6 +51,11 @@ exports.init = function (config) {
  * @param {string} moduleName
  */
 function patchedModuleLoad(moduleName) {
+  // if moduleName contains mongo, log the moduleName
+  if (moduleName.includes('mongo')) {
+    logger.debug(`[MongoDB Debug] moduleName: ${moduleName}`);
+  }
+
   // CASE: when using ESM, the Node runtime passes a full path to Module._load
   //       We aim to extract the module name to apply our instrumentation.
   // CASE: we ignore all file endings, which we are not interested in. Any module can load any file.
@@ -95,6 +100,10 @@ function patchedModuleLoad(moduleName) {
   /** @type {string} */
   const filename = /** @type {*} */ (Module)._resolveFilename.apply(Module, arguments);
 
+  if (moduleName.includes('mongo')) {
+    logger.debug(`[MongoDB Debug] filename: ${filename}`);
+  }
+
   // We are not directly manipulating the global module cache because there might be other tools fiddling with
   // Module._load. We don't want to break any of them.
   const cacheEntry = (executedHooks[filename] = executedHooks[filename] || {
@@ -126,6 +135,9 @@ function patchedModuleLoad(moduleName) {
       const transformerFn = applicableByModuleNameTransformers[i];
       if (typeof transformerFn === 'function') {
         try {
+          if (moduleName.includes('mongo')) {
+            logger.debug(`[MongoDB Debug] transformerFn: ${transformerFn.name}`);
+          }
           cacheEntry.moduleExports = transformerFn(cacheEntry.moduleExports, filename) || cacheEntry.moduleExports;
         } catch (e) {
           logger.error(

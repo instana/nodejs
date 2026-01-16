@@ -133,12 +133,9 @@ exports.init = function init(userConfig = {}) {
 
           if (fileStream) {
             try {
-              const logEntry = JSON.parse(chunk.toString());
-              if (logEntry.level >= 40) {
-                fileStream.write(chunk);
-              }
+              fileStream.write(chunk);
             } catch (error) {
-              // If parsing fails, skip file write
+              // If file write fails, skip file write
             }
           }
         }
