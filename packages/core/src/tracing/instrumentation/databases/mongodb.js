@@ -44,7 +44,7 @@ exports.init = function init() {
 
 function tryPatchMongoDBDirectly() {
   try {
-    const resolvedPath = require.resolve('mongodb');
+    const resolvedPath = require.resolve('mongodb', { paths: [process.cwd()] });
     const mongodb = require(resolvedPath);
 
     // Works with v7! Works with v3!
