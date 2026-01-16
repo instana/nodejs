@@ -20,7 +20,7 @@ const globalAgent = require('../../../globalAgent');
 
 const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
-['latest'].forEach(version => {
+['latest', 'v6'].forEach(version => {
   const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
   // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.

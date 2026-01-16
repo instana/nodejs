@@ -105,7 +105,10 @@ function shimCmapCommand(original) {
     const currentSpan = cls.getCurrentSpan();
     const useReducedSpan = !currentSpan;
 
-    const command = arguments[1] && commands.find(c => arguments[1][c]);
+    const command =
+      arguments[1] && typeof arguments[1] === 'object' && arguments[1] !== null
+        ? commands.find(c => arguments[1][c])
+        : undefined;
 
     // Skip parent span check for getMore because it should create a span even if find span is still active
     // getMore is a separate operation that should be traced independently
@@ -206,16 +209,16 @@ function instrumentedCmapQuery(ctx, originalQuery, originalArgs, traceId, parent
     });
     span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
 
-    const namespace = originalArgs[0];
-    const cmd = originalArgs[1];
+    const namespace = originalArgs && originalArgs.length > 0 ? originalArgs[0] : undefined;
+    const cmd = originalArgs && originalArgs.length > 1 ? originalArgs[1] : undefined;
 
     let command;
-    if (cmd) {
+    if (cmd && typeof cmd === 'object' && cmd !== null) {
       command = findCommand(cmd);
     }
 
     let service;
-    if (ctx.address) {
+    if (ctx && ctx.address) {
       service = ctx.address;
       span.data.peer = splitIntoHostAndPort(ctx.address);
     }
@@ -249,13 +252,18 @@ function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command, trac
     });
     span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
 
-    let namespace = originalArgs[0];
+    let namespace = originalArgs && originalArgs.length > 0 ? originalArgs[0] : undefined;
 
-    if (typeof namespace === 'object') {
+    if (namespace && typeof namespace === 'object' && namespace !== null) {
       // NOTE: Sometimes the collection name is "$cmd"
       if (namespace.collection !== '$cmd') {
         namespace = `${namespace.db}.${namespace.collection}`;
-      } else if (originalArgs[1] && typeof originalArgs[1] === 'object') {
+      } else if (
+        originalArgs.length > 1 &&
+        originalArgs[1] &&
+        typeof originalArgs[1] === 'object' &&
+        originalArgs[1] !== null
+      ) {
         const collName = originalArgs[1][command];
         namespace = `${namespace.db}.${collName}`;
       } else {
@@ -264,7 +272,7 @@ function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command, trac
     }
 
     let service;
-    if (ctx.address) {
+    if (ctx && ctx.address) {
       service = ctx.address;
       span.data.peer = splitIntoHostAndPort(ctx.address);
     }
@@ -283,7 +291,7 @@ function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command, trac
       );
     }
 
-    if (command && command.indexOf('insert') < 0) {
+    if (command && command.indexOf('insert') < 0 && originalArgs && originalArgs.length > 1) {
       // we do not capture the document for insert commands
       readJsonOrFilter(originalArgs[1], span);
     }
@@ -302,10 +310,10 @@ function instrumentedCmapGetMore(ctx, originalMethod, originalArgs, traceId, par
     });
     span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
 
-    const namespace = originalArgs[0];
+    const namespace = originalArgs && originalArgs.length > 0 ? originalArgs[0] : undefined;
 
     let service;
-    if (ctx.address) {
+    if (ctx && ctx.address) {
       service = ctx.address;
       span.data.peer = splitIntoHostAndPort(ctx.address);
     }
@@ -330,7 +338,11 @@ function instrumentLegacyTopologyPool(Pool) {
   if (logger) {
     logger.debug('[MongoDB] Instrumenting Legacy Topology Pool');
   }
-  shimmer.wrap(Pool.prototype, 'write', shimLegacyWrite);
+  if (Pool && Pool.prototype) {
+    shimmer.wrap(Pool.prototype, 'write', shimLegacyWrite);
+  } else if (logger) {
+    logger.debug('[MongoDB] Cannot instrument Legacy Topology Pool: Pool or Pool.prototype is missing');
+  }
 }
 
 function shimLegacyWrite(original) {
@@ -365,13 +377,13 @@ function shimLegacyWrite(original) {
 
 function instrumentedLegacyWrite(ctx, originalWrite, originalArgs, traceId, parentSpanId) {
   return cls.ns.runAndReturn(() => {
-    const message = originalArgs[0];
+    const message = originalArgs && originalArgs.length > 0 ? originalArgs[0] : undefined;
     let command;
     let database;
     let collection;
 
     // Extract command early to check if we should skip getMore
-    if (message && typeof message === 'object') {
+    if (message && typeof message === 'object' && message !== null) {
       let cmdObj = message.command;
       if (!cmdObj) {
         cmdObj = message.query;
@@ -401,7 +413,7 @@ function instrumentedLegacyWrite(ctx, originalWrite, originalArgs, traceId, pare
     let service;
     let namespace;
 
-    if (message && typeof message === 'object') {
+    if (message && typeof message === 'object' && message !== null) {
       if (
         message.options &&
         message.options.session &&
@@ -413,7 +425,7 @@ function instrumentedLegacyWrite(ctx, originalWrite, originalArgs, traceId, pare
         port = message.options.session.topology.s.port;
       }
 
-      if ((!hostname || !port) && ctx.options) {
+      if ((!hostname || !port) && ctx && ctx.options) {
         // fallback for older versions of mongodb package
         if (!hostname) {
           hostname = ctx.options.host;
@@ -523,6 +535,9 @@ function instrumentedLegacyWrite(ctx, originalWrite, originalArgs, traceId, pare
 }
 
 function findCollection(cmdObj) {
+  if (!cmdObj || typeof cmdObj !== 'object' || cmdObj === null) {
+    return undefined;
+  }
   for (let j = 0; j < commands.length; j++) {
     if (cmdObj[commands[j]] && typeof cmdObj[commands[j]] === 'string') {
       // most commands (except for getMore) add the collection as the value for the command-specific key
@@ -532,6 +547,9 @@ function findCollection(cmdObj) {
 }
 
 function findCommand(cmdObj) {
+  if (!cmdObj || typeof cmdObj !== 'object' || cmdObj === null) {
+    return undefined;
+  }
   for (let j = 0; j < commands.length; j++) {
     if (cmdObj[commands[j]]) {
       return commands[j];
@@ -589,7 +607,10 @@ function readJsonOrFilterFromMessage(message, span) {
 }
 
 function readJsonOrFilter(cmdObj, span) {
-  if (!cmdObj) {
+  if (!cmdObj || !span || !span.data) {
+    if (logger && (!cmdObj || !span || !span.data)) {
+      logger.debug('[MongoDB] Cannot read JSON/filter: missing cmdObj, span, or span.data');
+    }
     return;
   }
 
@@ -597,7 +618,7 @@ function readJsonOrFilter(cmdObj, span) {
   let json;
   if (Array.isArray(cmdObj) && cmdObj.length >= 1) {
     json = cmdObj;
-  } else if (Array.isArray(cmdObj.updates) && cmdObj.updates.length >= 1) {
+  } else if (cmdObj && typeof cmdObj === 'object' && Array.isArray(cmdObj.updates) && cmdObj.updates.length >= 1) {
     // Clean up update objects to only include q and u fields (remove upsert, multi, etc.)
     json = cmdObj.updates.map(update => {
       const cleaned = {};
@@ -616,11 +637,17 @@ function readJsonOrFilter(cmdObj, span) {
 
   // The back end will process exactly one of json, query, or filter, so it does not matter too much which one we
   // provide. Prioritize json when available.
+  if (!span.data.mongo) {
+    if (logger) {
+      logger.debug('[MongoDB] Cannot set JSON/filter: span.data.mongo is missing');
+    }
+    return;
+  }
   if (json) {
     span.data.mongo.json = stringifyWhenNecessary(json);
-  } else if (cmdObj.filter || cmdObj.query) {
+  } else if (cmdObj && typeof cmdObj === 'object' && (cmdObj.filter || cmdObj.query)) {
     span.data.mongo.filter = stringifyWhenNecessary(cmdObj.filter || cmdObj.query);
-  } else if (cmdObj.q) {
+  } else if (cmdObj && typeof cmdObj === 'object' && cmdObj.q) {
     // For update/delete commands in wire protocol, the filter/query is in 'q' (short for query)
     span.data.mongo.filter = stringifyWhenNecessary(cmdObj.q);
   }
@@ -632,24 +659,52 @@ function stringifyWhenNecessary(obj) {
   } else if (typeof obj === 'string') {
     return tracingUtil.shortenDatabaseStatement(obj);
   }
-  return tracingUtil.shortenDatabaseStatement(JSON.stringify(obj));
+  try {
+    return tracingUtil.shortenDatabaseStatement(JSON.stringify(obj));
+  } catch (e) {
+    // JSON.stringify can throw on circular references or other issues
+    // Return undefined to avoid breaking customer code
+    if (logger) {
+      logger.debug(`[MongoDB] Failed to stringify object: ${e.message || e}`);
+    }
+    return undefined;
+  }
 }
 
 function createWrappedCallback(span, originalCallback) {
-  return cls.ns.bind(function (error) {
-    if (error) {
-      span.ec = 1;
-      tracingUtil.setErrorDetails(span, error, 'mongo');
+  if (!span || !originalCallback) {
+    if (logger && (!span || !originalCallback)) {
+      logger.debug('[MongoDB] Cannot create wrapped callback: missing span or originalCallback');
     }
+    return originalCallback;
+  }
+  return cls.ns.bind(function (error) {
+    if (span) {
+      if (error) {
+        span.ec = 1;
+        tracingUtil.setErrorDetails(span, error, 'mongo');
+      }
 
-    span.d = Date.now() - span.ts;
-    span.transmit();
+      span.d = Date.now() - span.ts;
+      span.transmit();
+    }
 
     return originalCallback.apply(this, arguments);
   });
 }
 
 function handleCallbackOrPromise(ctx, originalArgs, originalFunction, span) {
+  if (!originalArgs || !Array.isArray(originalArgs) || !originalFunction || !span) {
+    if (logger && (!originalArgs || !Array.isArray(originalArgs) || !originalFunction || !span)) {
+      logger.debug(
+        '[MongoDB] Cannot handle callback/promise: missing or invalid arguments ' +
+          `(originalArgs: ${!!originalArgs}, isArray: ${Array.isArray(originalArgs)}, ` +
+          `originalFunction: ${!!originalFunction}, span: ${!!span})`
+      );
+    }
+    return originalFunction.apply(ctx, originalArgs);
+  }
+
   const { originalCallback, callbackIndex } = tracingUtil.findCallback(originalArgs);
   if (callbackIndex !== -1) {
     originalArgs[callbackIndex] = createWrappedCallback(span, originalCallback);
@@ -661,15 +716,19 @@ function handleCallbackOrPromise(ctx, originalArgs, originalFunction, span) {
   if (resultPromise && resultPromise.then) {
     resultPromise
       .then(result => {
-        span.d = Date.now() - span.ts;
-        span.transmit();
+        if (span) {
+          span.d = Date.now() - span.ts;
+          span.transmit();
+        }
         return result;
       })
       .catch(err => {
-        span.ec = 1;
-        tracingUtil.setErrorDetails(span, err, 'mongo');
-        span.d = Date.now() - span.ts;
-        span.transmit();
+        if (span) {
+          span.ec = 1;
+          tracingUtil.setErrorDetails(span, err, 'mongo');
+          span.d = Date.now() - span.ts;
+          span.transmit();
+        }
         return err;
       });
   }
