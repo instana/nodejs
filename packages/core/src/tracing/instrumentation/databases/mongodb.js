@@ -9,36 +9,14 @@ const shimmer = require('../../shimmer');
 
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
-// const hook = require('../../../util/hook');
 const cls = require('../../cls');
 
 let isActive = false;
-
-// const commands = [
-//   //
-//   'aggregate',
-//   'count',
-//   'delete',
-//   'distinct',
-//   'find',
-//   'findAndModify',
-//   'findandmodify',
-//   'getMore',
-//   'getmore',
-//   'insert',
-//   'update'
-// ];
 
 exports.spanName = 'mongo';
 exports.batchable = true;
 
 exports.init = function init() {
-  // unified topology layer
-  // hook.onFileLoad(/\/mongodb\/lib\/cmap\/connection\.js/, instrumentCmapConnection);
-  // mongodb >= 3.3.x, legacy topology layer
-  // hook.onFileLoad(/\/mongodb\/lib\/core\/connection\/pool\.js/, instrumentLegacyTopologyPool);
-  // mongodb < 3.3.x, legacy topology layer
-  // hook.onFileLoad(/\/mongodb-core\/lib\/connection\/pool\.js/, instrumentLegacyTopologyPool);
   tryPatchMongoDBDirectly();
 };
 
@@ -47,7 +25,6 @@ function tryPatchMongoDBDirectly() {
     const resolvedPath = require.resolve('mongodb', { paths: [process.cwd()] });
     const mongodb = require(resolvedPath);
 
-    // Works with v7! Works with v3!
     if (mongodb.Collection && mongodb.Collection.prototype) {
       instrumentCollection(mongodb.Collection);
     }
@@ -123,15 +100,11 @@ function shimFindMethod(original) {
     const ctx = this;
     const cursor = original.apply(this, originalArgs);
 
-    // Wrap toArray to capture the span
-    const originalToArray = cursor.toArray;
-    cursor.toArray = function (callback) {
-      if (cls.skipExitTracing({ isActive })) {
-        return originalToArray.apply(this, arguments);
-      }
+    if (!cursor) {
+      return cursor;
+    }
 
-      return instrumentedCursorToArray(ctx, cursor, originalToArray, originalArgs, 'find', callback);
-    };
+    wrapCursorMethods(cursor, ctx, originalArgs, 'find');
 
     return cursor;
   };
@@ -151,106 +124,381 @@ function shimAggregateMethod(original) {
     const ctx = this;
     const cursor = original.apply(this, originalArgs);
 
-    // Wrap toArray to capture the span
-    const originalToArray = cursor.toArray;
-    cursor.toArray = function (callback) {
-      if (cls.skipExitTracing({ isActive })) {
-        return originalToArray.apply(this, arguments);
-      }
+    if (!cursor) {
+      return cursor;
+    }
 
-      return instrumentedCursorToArray(ctx, cursor, originalToArray, originalArgs, 'aggregate', callback);
-    };
+    wrapCursorMethods(cursor, ctx, originalArgs, 'aggregate');
 
     return cursor;
   };
 }
 
-function instrumentedCursorToArray(collectionCtx, cursor, originalToArray, originalArgs, command, callback) {
-  return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan({
-      spanName: exports.spanName,
-      kind: constants.EXIT
+function wrapCursorMethods(cursor, collectionCtx, originalArgs, command) {
+  if (!cursor) {
+    return;
+  }
+  if (typeof cursor.toArray === 'function') {
+    const originalToArray = cursor.toArray;
+    cursor.toArray = function (callback) {
+      if (cls.skipExitTracing({ isActive })) {
+        if (!originalToArray) {
+          return cursor.toArray.apply(this, arguments);
+        }
+        return originalToArray.apply(this, arguments);
+      }
+      return instrumentedCursorMethod(
+        collectionCtx,
+        cursor,
+        originalToArray,
+        originalArgs,
+        command,
+        'toArray',
+        callback
+      );
+    };
+  }
+
+  if (typeof cursor.forEach === 'function') {
+    const originalForEach = cursor.forEach;
+    cursor.forEach = function () {
+      if (cls.skipExitTracing({ isActive })) {
+        if (!originalForEach) {
+          return cursor.forEach.apply(this, arguments);
+        }
+        return originalForEach.apply(this, arguments);
+      }
+      // Mark that forEach is running to prevent next() from creating its own span
+      cursor.__instanaForEachRunning = true;
+      // forEach signature: forEach(iterator, callback?) - iterator is first param, callback is optional second
+      const actualIterator = arguments[0];
+      const actualCallback = arguments.length > 1 && typeof arguments[1] === 'function' ? arguments[1] : undefined;
+      const result = instrumentedCursorMethod(
+        collectionCtx,
+        cursor,
+        originalForEach,
+        originalArgs,
+        command,
+        'forEach',
+        actualCallback,
+        actualIterator
+      );
+      if (result && typeof result.then === 'function') {
+        result
+          .finally(() => {
+            cursor.__instanaForEachRunning = false;
+          })
+          .catch(() => {
+            cursor.__instanaForEachRunning = false;
+          });
+      } else {
+        cursor.__instanaForEachRunning = false;
+      }
+      return result;
+    };
+  }
+
+  if (typeof cursor.next === 'function') {
+    const originalNext = cursor.next;
+    cursor.next = function (callback) {
+      if (cls.skipExitTracing({ isActive })) {
+        if (!originalNext) {
+          return cursor.next.apply(this, arguments);
+        }
+        return originalNext.apply(this, arguments);
+      }
+      if (cursor.__instanaForEachRunning || cursor.__instanaAsyncIterationRunning) {
+        return originalNext.apply(this, arguments);
+      }
+      if (!cursor.__instanaSpanCreated) {
+        cursor.__instanaSpanCreated = true;
+        return instrumentedCursorMethod(collectionCtx, cursor, originalNext, originalArgs, command, 'next', callback);
+      }
+      return originalNext.apply(this, arguments);
+    };
+  }
+
+  if (typeof cursor.hasNext === 'function') {
+    const originalHasNext = cursor.hasNext;
+    cursor.hasNext = function (callback) {
+      if (cls.skipExitTracing({ isActive })) {
+        if (!originalHasNext) {
+          return cursor.hasNext.apply(this, arguments);
+        }
+        return originalHasNext.apply(this, arguments);
+      }
+      if (cursor.__instanaForEachRunning || cursor.__instanaAsyncIterationRunning) {
+        return originalHasNext.apply(this, arguments);
+      }
+      if (!cursor.__instanaSpanCreated) {
+        cursor.__instanaSpanCreated = true;
+        return instrumentedCursorMethod(
+          collectionCtx,
+          cursor,
+          originalHasNext,
+          originalArgs,
+          command,
+          'hasNext',
+          callback
+        );
+      }
+      return originalHasNext.apply(this, arguments);
+    };
+  }
+
+  if (typeof cursor.stream === 'function') {
+    const originalStream = cursor.stream;
+    cursor.stream = function () {
+      if (cls.skipExitTracing({ isActive })) {
+        if (!originalStream) {
+          return cursor.stream.apply(this, arguments);
+        }
+        return originalStream.apply(this, arguments);
+      }
+      const stream = originalStream.apply(this, arguments);
+      wrapStreamEvents(stream, collectionCtx, originalArgs, command);
+      return stream;
+    };
+  }
+
+  if (cursor[Symbol.asyncIterator]) {
+    const originalAsyncIterator = cursor[Symbol.asyncIterator];
+    cursor[Symbol.asyncIterator] = function () {
+      if (cls.skipExitTracing({ isActive })) {
+        return originalAsyncIterator.apply(this, arguments);
+      }
+      cursor.__instanaAsyncIterationRunning = true;
+      const iterator = originalAsyncIterator.apply(this, arguments);
+      wrapAsyncIterator(iterator, collectionCtx, originalArgs, command, cursor);
+      return iterator;
+    };
+  }
+}
+
+function wrapStreamEvents(stream, collectionCtx, originalArgs, command) {
+  const span = cls.ns.runAndReturn(() => createMongoSpan(collectionCtx, originalArgs, command));
+  let spanTransmitted = false;
+
+  const transmitSpan = error => {
+    if (spanTransmitted) return;
+    spanTransmitted = true;
+    if (error) {
+      span.ec = 1;
+      span.data.mongo.error = tracingUtil.getErrorDetails(error);
+    }
+    span.d = Date.now() - span.ts;
+    span.transmit();
+  };
+
+  const originalOn = stream.on;
+  stream.on = function (event, handler) {
+    if (event === 'end') {
+      const originalHandler = handler;
+      handler = function () {
+        transmitSpan();
+        return originalHandler.apply(this, arguments);
+      };
+    } else if (event === 'error') {
+      const originalHandler = handler;
+      handler = function (error) {
+        transmitSpan(error);
+        return originalHandler.apply(this, arguments);
+      };
+    }
+    return originalOn.call(this, event, handler);
+  };
+}
+
+function wrapAsyncIterator(iterator, collectionCtx, originalArgs, command, cursor) {
+  const span = cls.ns.runAndReturn(() => createMongoSpan(collectionCtx, originalArgs, command));
+  const originalNext = iterator.next;
+  let spanTransmitted = false;
+
+  const transmitSpan = error => {
+    if (spanTransmitted) return;
+    spanTransmitted = true;
+    if (error) {
+      span.ec = 1;
+      span.data.mongo.error = tracingUtil.getErrorDetails(error);
+    }
+    span.d = Date.now() - span.ts;
+    span.transmit();
+  };
+
+  iterator.next = function () {
+    return cls.ns.runAndReturn(() => {
+      const result = originalNext.apply(this, arguments);
+      if (result && result.then) {
+        return result
+          .then(value => {
+            if (value && value.done) {
+              transmitSpan();
+              if (cursor) {
+                cursor.__instanaAsyncIterationRunning = false;
+              }
+            }
+            return value;
+          })
+          .catch(err => {
+            transmitSpan(err);
+            if (cursor) {
+              cursor.__instanaAsyncIterationRunning = false;
+            }
+            throw err;
+          });
+      }
+      return result;
     });
+  };
+}
 
-    span.stack = tracingUtil.getStackTrace(instrumentedCursorToArray, 1);
+function createMongoSpan(collectionCtx, originalArgs, command) {
+  const span = cls.startSpan({
+    spanName: exports.spanName,
+    kind: constants.EXIT
+  });
 
-    let hostname;
-    let port;
-    let service;
-    let database;
-    let collection;
-    let namespace;
+  span.stack = tracingUtil.getStackTrace(createMongoSpan, 1);
 
-    try {
-      database = collectionCtx.s?.db?.databaseName || collectionCtx.dbName;
-      collection = collectionCtx.collectionName || collectionCtx.s?.namespace?.collection;
-    } catch (e) {
-      // ignore
-    }
+  let hostname;
+  let port;
+  let service;
+  let database;
+  let collection;
+  let namespace;
 
-    if (database && collection) {
-      namespace = `${database}.${collection}`;
-    } else if (database) {
-      namespace = `${database}.?`;
-    } else if (collection) {
-      namespace = `?.${collection}`;
-    }
+  try {
+    database = collectionCtx.s?.db?.databaseName || collectionCtx.dbName;
+    collection = collectionCtx.collectionName || collectionCtx.s?.namespace?.collection;
+  } catch (e) {
+    // ignore
+  }
 
-    try {
-      const topology =
-        collectionCtx.s?.db?.serverConfig ||
-        collectionCtx.s?.db?.s?.topology ||
-        collectionCtx.s?.topology ||
-        collectionCtx.s?.db?.s?.client?.topology;
+  if (database && collection) {
+    namespace = `${database}.${collection}`;
+  } else if (database) {
+    namespace = `${database}.?`;
+  } else if (collection) {
+    namespace = `?.${collection}`;
+  }
 
-      if (topology) {
-        if (topology.s?.options) {
-          hostname = topology.s.options.host;
-          port = topology.s.options.port;
+  try {
+    const topology =
+      collectionCtx.s?.db?.serverConfig ||
+      collectionCtx.s?.db?.s?.topology ||
+      collectionCtx.s?.topology ||
+      collectionCtx.s?.db?.s?.client?.topology;
 
-          if (!hostname && topology.s.options.servers && topology.s.options.servers[0]) {
-            hostname = topology.s.options.servers[0].host;
-            port = topology.s.options.servers[0].port;
-          }
-        }
+    if (topology) {
+      if (topology.s?.options) {
+        hostname = topology.s.options.host;
+        port = topology.s.options.port;
 
-        if (!hostname && topology.host) {
-          hostname = topology.host;
-        }
-        if (!port && topology.port) {
-          port = topology.port;
+        if (!hostname && topology.s.options.servers && topology.s.options.servers[0]) {
+          hostname = topology.s.options.servers[0].host;
+          port = topology.s.options.servers[0].port;
         }
       }
-    } catch (e) {
-      // ignore
-    }
 
-    if (hostname || port) {
-      span.data.peer = { hostname, port };
+      if (!hostname && topology.host) {
+        hostname = topology.host;
+      }
+      if (!port && topology.port) {
+        port = topology.port;
+      }
     }
+  } catch (e) {
+    // ignore
+  }
 
-    if (hostname && port) {
-      service = `${hostname}:${port}`;
-    } else if (hostname) {
-      service = `${hostname}:27017`;
-    } else if (port) {
-      service = `?:${port}`;
-    }
-
-    span.data.mongo = {
-      command,
-      service,
-      namespace
+  if (hostname || port) {
+    span.data.peer = {
+      hostname,
+      port
     };
+  }
 
-    if (command === 'find' && originalArgs[0]) {
-      span.data.mongo.filter = stringifyWhenNecessary(originalArgs[0]);
-    } else if (command === 'aggregate' && originalArgs[0]) {
-      span.data.mongo.json = stringifyWhenNecessary(originalArgs[0]);
+  if (hostname && port) {
+    service = `${hostname}:${port}`;
+  } else if (hostname) {
+    service = `${hostname}:27017`;
+  } else if (port) {
+    service = `?:${port}`;
+  }
+
+  span.data.mongo = {
+    command,
+    service,
+    namespace
+  };
+
+  if (command === 'find' && originalArgs[0]) {
+    span.data.mongo.filter = stringifyWhenNecessary(originalArgs[0]);
+  } else if (command === 'aggregate' && originalArgs[0]) {
+    span.data.mongo.json = stringifyWhenNecessary(originalArgs[0]);
+  }
+
+  return span;
+}
+
+function instrumentedCursorMethod(
+  collectionCtx,
+  cursor,
+  originalMethod,
+  originalArgs,
+  command,
+  methodName,
+  callback,
+  iterator
+) {
+  return cls.ns.runAndReturn(() => {
+    const span = createMongoSpan(collectionCtx, originalArgs, command);
+
+    if (!originalMethod || typeof originalMethod !== 'function') {
+      if (typeof callback === 'function') {
+        return callback(new Error(`MongoDB cursor.${methodName} is not available`));
+      }
+      return Promise.reject(new Error(`MongoDB cursor.${methodName} is not available`));
+    }
+
+    // Handle forEach separately (has iterator as first param, callback as second)
+    if (methodName === 'forEach') {
+      if (typeof callback === 'function') {
+        return originalMethod.call(
+          cursor,
+          iterator,
+          cls.ns.bind(function (error) {
+            if (error) {
+              span.ec = 1;
+              span.data.mongo.error = tracingUtil.getErrorDetails(error);
+            }
+            span.d = Date.now() - span.ts;
+            span.transmit();
+            return callback.apply(this, arguments);
+          })
+        );
+      }
+      const promise = originalMethod.call(cursor, iterator);
+      if (promise && promise.then) {
+        promise
+          .then(result => {
+            span.d = Date.now() - span.ts;
+            span.transmit();
+            return result;
+          })
+          .catch(err => {
+            span.ec = 1;
+            span.data.mongo.error = tracingUtil.getErrorDetails(err);
+            span.d = Date.now() - span.ts;
+            span.transmit();
+            throw err;
+          });
+      }
+      return promise;
     }
 
     if (typeof callback === 'function') {
-      return originalToArray.call(
+      return originalMethod.call(
         cursor,
         cls.ns.bind(function (error) {
           if (error) {
@@ -264,7 +512,7 @@ function instrumentedCursorToArray(collectionCtx, cursor, originalToArray, origi
       );
     }
 
-    const promise = originalToArray.call(cursor);
+    const promise = originalMethod.call(cursor);
     if (promise && promise.then) {
       promise
         .then(result => {
@@ -277,7 +525,7 @@ function instrumentedCursorToArray(collectionCtx, cursor, originalToArray, origi
           span.data.mongo.error = tracingUtil.getErrorDetails(err);
           span.d = Date.now() - span.ts;
           span.transmit();
-          return err;
+          throw err;
         });
     }
 
@@ -316,7 +564,6 @@ function instrumentedCollectionMethod(ctx, originalMethod, originalArgs, method)
       namespace = `?.${collection}`;
     }
 
-    // v3.x: get host/port from topology
     try {
       const topology =
         ctx.s?.db?.serverConfig || ctx.s?.db?.s?.topology || ctx.s?.topology || ctx.s?.db?.s?.client?.topology;
@@ -364,7 +611,7 @@ function instrumentedCollectionMethod(ctx, originalMethod, originalArgs, method)
       namespace
     };
 
-    if (method.indexOf('insert') < 0 && originalArgs[0]) {
+    if (method && method.indexOf('insert') < 0 && originalArgs[0]) {
       span.data.mongo.filter = stringifyWhenNecessary(originalArgs[0]);
     }
 

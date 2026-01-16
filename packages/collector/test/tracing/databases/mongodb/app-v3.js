@@ -69,12 +69,6 @@ if (USE_ATLAS) {
   db = client.db('myproject');
   collection = db.collection('mydocs');
 
-  const mongodb = require('mongodb');
-  console.log('Same prototype?', Object.getPrototypeOf(collection) === mongodb.Collection.prototype);
-  console.log('insertOne on prototype wrapped?', mongodb.Collection.prototype.insertOne?.name);
-  console.log('insertOne on instance wrapped?', collection.insertOne?.name);
-  console.log('Has own insertOne?', collection.hasOwnProperty('insertOne'));
-
   log('Connected to MongoDB');
 })();
 
@@ -196,6 +190,85 @@ app.get('/count-documents', (req, res) => {
     })
     .catch(e => {
       log('Failed to countDocuments', e);
+      res.sendStatus(500);
+    });
+});
+
+app.get('/find-forEach', (req, res) => {
+  const results = [];
+  collection
+    .find({ foo: 'bar' })
+    .forEach(doc => {
+      results.push(doc);
+    })
+    .then(() => {
+      res.json(results);
+    })
+    .catch(e => {
+      log('Failed to find with forEach', e);
+      res.sendStatus(500);
+    });
+});
+
+app.get('/find-next', (req, res) => {
+  const results = [];
+  const cursor = collection.find({ foo: 'bar' });
+  const iterate = async () => {
+    while (await cursor.hasNext()) {
+      const doc = await cursor.next();
+      if (doc) {
+        results.push(doc);
+      }
+    }
+    res.json(results);
+  };
+  iterate().catch(e => {
+    log('Failed to find with next/hasNext', e);
+    res.sendStatus(500);
+  });
+});
+
+app.get('/find-stream', (req, res) => {
+  const results = [];
+  const stream = collection.find({ foo: 'bar' }).stream();
+  stream.on('data', doc => {
+    results.push(doc);
+  });
+  stream.on('end', () => {
+    res.json(results);
+  });
+  stream.on('error', e => {
+    log('Failed to find with stream', e);
+    res.sendStatus(500);
+  });
+});
+
+app.get('/find-async-iteration', async (req, res) => {
+  try {
+    const results = [];
+    const cursor = collection.find({ foo: 'bar' });
+    for await (const doc of cursor) {
+      results.push(doc);
+    }
+    res.json(results);
+  } catch (e) {
+    log('Failed to find with async iteration', e);
+    res.sendStatus(500);
+  }
+});
+
+app.get('/aggregate-forEach', (req, res) => {
+  const results = [];
+  collection
+    .aggregate([{ $match: { foo: 'bar' } }])
+    .forEach(doc => {
+      results.push(doc);
+    })
+    .then(() => {
+      res.json(results);
+    })
+    .catch(e => {
+      log('Failed to aggregate with forEach', e);
       res.sendStatus(500);
     });
 });

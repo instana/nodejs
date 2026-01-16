@@ -259,6 +259,102 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
               )
             ));
 
+        it.only('must trace find with forEach', () =>
+          controls
+            .sendRequest({
+              method: 'GET',
+              path: '/find-forEach'
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  // Currently NOT SUPPORTED: forEach is not instrumented
+                  // Only toArray() is currently supported for cursors
+                  // Expected: 2 spans (HTTP entry + MongoDB exit)
+                  // Actual: 1 span (only HTTP entry, no MongoDB span)
+                  expect(spans).to.have.lengthOf(2);
+                  const entrySpan = expectHttpEntry(controls, spans, '/find-forEach');
+                  expectMongoExit(controls, spans, entrySpan, 'find', JSON.stringify({ foo: 'bar' }));
+                })
+              )
+            ));
+
+        it.only('must trace find with next/hasNext', () =>
+          controls
+            .sendRequest({
+              method: 'GET',
+              path: '/find-next'
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  // Currently NOT SUPPORTED: next/hasNext is not instrumented
+                  expect(spans).to.have.lengthOf(2);
+                  const entrySpan = expectHttpEntry(controls, spans, '/find-next');
+                  expectMongoExit(controls, spans, entrySpan, 'find', JSON.stringify({ foo: 'bar' }));
+                })
+              )
+            ));
+
+        it.only('must trace find with stream', () =>
+          controls
+            .sendRequest({
+              method: 'GET',
+              path: '/find-stream'
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  // Currently NOT SUPPORTED: stream is not instrumented
+                  expect(spans).to.have.lengthOf(2);
+                  const entrySpan = expectHttpEntry(controls, spans, '/find-stream');
+                  expectMongoExit(controls, spans, entrySpan, 'find', JSON.stringify({ foo: 'bar' }));
+                })
+              )
+            ));
+
+        it.only('must trace find with async iteration', () =>
+          controls
+            .sendRequest({
+              method: 'GET',
+              path: '/find-async-iteration'
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  // Currently NOT SUPPORTED: async iteration is not instrumented
+                  expect(spans).to.have.lengthOf(2);
+                  const entrySpan = expectHttpEntry(controls, spans, '/find-async-iteration');
+                  expectMongoExit(controls, spans, entrySpan, 'find', JSON.stringify({ foo: 'bar' }));
+                })
+              )
+            ));
+
+        it.only('must trace aggregate with forEach', () =>
+          controls
+            .sendRequest({
+              method: 'GET',
+              path: '/aggregate-forEach'
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  // Currently NOT SUPPORTED: aggregate forEach is not instrumented
+                  expect(spans).to.have.lengthOf(2);
+                  const entrySpan = expectHttpEntry(controls, spans, '/aggregate-forEach');
+                  expectMongoExit(
+                    controls,
+                    spans,
+                    entrySpan,
+                    'aggregate',
+                    null,
+                    null,
+                    JSON.stringify([{ $match: { foo: 'bar' } }])
+                  );
+                })
+              )
+            ));
+
         it('must trace update requests', () => {
           const unique = uuid();
           return insertDoc(controls, unique)
