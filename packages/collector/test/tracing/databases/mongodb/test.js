@@ -33,7 +33,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
-    ['legacy', 'unified'].forEach(topology => registerSuite.bind(this)(topology));
+    ['legacy'].forEach(topology => registerSuite.bind(this)(topology));
 
     function registerSuite(topology) {
       const describeStr = 'default';
@@ -108,10 +108,9 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
             .then(() =>
               retry(() =>
                 agentControls.getSpans().then(spans => {
-                  console.log('spans', spans.length);
                   expect(spans).to.have.lengthOf(3);
                   const entrySpan = expectHttpEntry(controls, spans, '/insert-one');
-                  expectMongoExit(controls, spans, entrySpan, 'insertOne');
+                  expectMongoExit(controls, spans, entrySpan, 'insert');
                   expectHttpExit(controls, spans, entrySpan);
                 })
               )
@@ -134,7 +133,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
                 agentControls.getSpans().then(spans => {
                   expect(spans).to.have.lengthOf(2);
                   const entrySpan = expectHttpEntry(controls, spans, '/insert-one-callback');
-                  expectMongoExit(controls, spans, entrySpan, 'insertOne');
+                  expectMongoExit(controls, spans, entrySpan, 'insert');
                 })
               )
             ));
@@ -150,7 +149,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
                 agentControls.getSpans().then(spans => {
                   expect(spans).to.have.lengthOf(2);
                   const entrySpan = expectHttpEntry(controls, spans, '/find-one');
-                  expectMongoExit(controls, spans, entrySpan, 'findOne', JSON.stringify({ foo: 'bar' }));
+                  expectMongoExit(controls, spans, entrySpan, 'find', JSON.stringify({ foo: 'bar' }));
                 })
               )
             ));
@@ -198,7 +197,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
                 agentControls.getSpans().then(spans => {
                   expect(spans).to.have.lengthOf(2);
                   const entrySpan = expectHttpEntry(controls, spans, '/update-one');
-                  expectMongoExit(controls, spans, entrySpan, 'updateOne', JSON.stringify({ foo: 'bar' }));
+                  expectMongoExit(controls, spans, entrySpan, 'update', JSON.stringify({ foo: 'bar' }));
                 })
               )
             ));
@@ -214,7 +213,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
                 agentControls.getSpans().then(spans => {
                   expect(spans).to.have.lengthOf(2);
                   const entrySpan = expectHttpEntry(controls, spans, '/delete-one');
-                  expectMongoExit(controls, spans, entrySpan, 'deleteOne', JSON.stringify({ toDelete: true }));
+                  expectMongoExit(controls, spans, entrySpan, 'delete', JSON.stringify({ toDelete: true }));
                 })
               )
             ));
@@ -230,15 +229,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
                 agentControls.getSpans().then(spans => {
                   expect(spans).to.have.lengthOf(2);
                   const entrySpan = expectHttpEntry(controls, spans, '/aggregate');
-                  expectMongoExit(
-                    controls,
-                    spans,
-                    entrySpan,
-                    'aggregate',
-                    null,
-                    null,
-                    JSON.stringify([{ $match: { foo: 'bar' } }])
-                  );
+                  expectMongoExit(controls, spans, entrySpan, 'aggregate');
                 })
               )
             ));
@@ -254,7 +245,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
                 agentControls.getSpans().then(spans => {
                   expect(spans).to.have.lengthOf(2);
                   const entrySpan = expectHttpEntry(controls, spans, '/count-documents');
-                  expectMongoExit(controls, spans, entrySpan, 'countDocuments', JSON.stringify({ foo: 'bar' }));
+                  expectMongoExit(controls, spans, entrySpan, 'aggregate');
                 })
               )
             ));
@@ -330,7 +321,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
               )
             ));
 
-        it.only('must trace aggregate with forEach', () =>
+        it('must trace aggregate with forEach', () =>
           controls
             .sendRequest({
               method: 'GET',

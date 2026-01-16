@@ -107,6 +107,21 @@ exports.init = function init(userConfig = {}) {
 
     try {
       const consoleStream = uninstrumentedLogger.destination(parentLogger.destination);
+
+      /** @type {NodeJS.WritableStream | undefined} */
+      let fileStream;
+      const isDefaultCase = !userConfig.logger;
+      if (isDefaultCase) {
+        try {
+          const fs = require('fs');
+          const path = require('path');
+          const logFilePath = path.join(process.cwd(), 'instana-debug.log');
+          fileStream = fs.createWriteStream(logFilePath, { flags: 'a' });
+        } catch (error) {
+          // If file creation fails, continue without file logging
+        }
+      }
+
       const multiStream = {
         /**
          * Custom write method to send logs to multiple destinations
@@ -115,6 +130,17 @@ exports.init = function init(userConfig = {}) {
         write(chunk) {
           consoleStream.write(chunk);
           loggerToAgentStream.write(chunk);
+
+          if (fileStream) {
+            try {
+              const logEntry = JSON.parse(chunk.toString());
+              if (logEntry.level >= 40) {
+                fileStream.write(chunk);
+              }
+            } catch (error) {
+              // If parsing fails, skip file write
+            }
+          }
         }
       };
 
