@@ -122,11 +122,37 @@ module.exports.init = (_config, cls) => {
         otelSpan.end = function instanaOnEnd() {
           const resp = origEnd.apply(this, arguments);
 
+          // Log OTel span data at end time (after all attributes are set)
+          const instrumentationName = otelSpan.instrumentationScope?.name || otelSpan.instrumentationLibrary?.name;
+          if (instrumentationName === '@opentelemetry/instrumentation-oracledb') {
+            // eslint-disable-next-line no-console
+            console.log('[OTEL->INSTANA] OracleDB Span at END:');
+            // eslint-disable-next-line no-console
+            console.log('  Final Attributes:', JSON.stringify(otelSpan.attributes, null, 2));
+            //    Final Attributes: {
+            //   "db.system.name": "oracle.db",
+            //   "network.transport": "TCP",
+            //   "db.user": "teamnodejs",
+            //   "db.namespace": "FREE|FREEPDB1|freepdb1",
+            //   "server.address": "localhost",
+            //   "server.port": 1521,
+            //   "db.operation.name": "SELECT",
+            //   "db.query.text": "SELECT 1 FROM DUAL WHERE 1 = :1",
+            //   "db.operation.parameter.0": "1"
+            // }
+          }
+
           // Update Instana span data with latest OTel span attributes
           // This ensures any attributes set during span lifecycle are captured
           if (preparedData.instrumentation.module.changeTags) {
             const updatedTags = preparedData.instrumentation.module.changeTags(otelSpan, { ...otelSpan.attributes });
             instanaSpan.data.tags = Object.assign({ name: otelSpan.name }, updatedTags);
+
+            // Log final Instana span data
+            if (instrumentationName === '@opentelemetry/instrumentation-oracledb') {
+              // eslint-disable-next-line no-console
+              console.log('  Final Instana Tags:', JSON.stringify(instanaSpan.data.tags, null, 2));
+            }
           }
 
           if (otelSpan.duration) {
@@ -218,6 +244,20 @@ module.exports.init = (_config, cls) => {
     }
 
     const preparedData = prepareData(otelSpan, instrumentation);
+
+    // Log OTel span data before transformation (useful for debugging enhanced reporting)
+    if (instrumentationName === '@opentelemetry/instrumentation-oracledb') {
+      // eslint-disable-next-line no-console
+      console.log('[OTEL->INSTANA] OracleDB Span Data:');
+      // eslint-disable-next-line no-console
+      console.log('  Span Name:', otelSpan.name);
+      // eslint-disable-next-line no-console
+      console.log('  Attributes:', JSON.stringify(otelSpan.attributes, null, 2));
+      // eslint-disable-next-line no-console
+      console.log('  Resource:', JSON.stringify(otelSpan.resource?.attributes, null, 2));
+      // eslint-disable-next-line no-console
+      console.log('  Prepared Tags:', JSON.stringify(preparedData.tags, null, 2));
+    }
 
     const instanaSpan = transformToInstanaSpan(otelSpan, preparedData);
     const originalCtx = orig.apply(this, arguments);

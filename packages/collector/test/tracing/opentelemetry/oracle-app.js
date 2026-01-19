@@ -51,8 +51,23 @@ app.get('/', (req, res) => {
 });
 
 app.get('/trace', async (req, res) => {
-  await connection.execute('SELECT 1 FROM DUAL');
-  log('Executed query');
+  // Test with positional bind variables
+  await connection.execute('SELECT 1 FROM DUAL WHERE 1 = :1', [1]);
+  log('Executed query with positional bind variable');
+  res.sendStatus(200);
+});
+
+app.get('/trace-named', async (req, res) => {
+  // Test with named bind variables
+  await connection.execute('SELECT :value FROM DUAL WHERE 1 = :condition', { value: 1, condition: 1 });
+  log('Executed query with named bind variables');
+  res.sendStatus(200);
+});
+
+app.get('/trace-multiple', async (req, res) => {
+  // Test with multiple positional bind variables
+  await connection.execute('SELECT :1 as col1, :2 as col2, :3 as col3 FROM DUAL', [123, 'test string', null]);
+  log('Executed query with multiple bind variables');
   res.sendStatus(200);
 });
 
