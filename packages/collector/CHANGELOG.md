@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.2.0](https://github.com/instana/nodejs/compare/v5.1.0...v5.2.0) (2026-01-19)
+
+
+### Bug Fixes
+
+* resolved duration for confluent kafka, oracle, restify and tedious spans ([#2276](https://github.com/instana/nodejs/issues/2276)) ([f3fab4f](https://github.com/instana/nodejs/commit/f3fab4f36ca285ab13bc9f03867189408032b58f))
+
+
+### Features
+
+* **console:** included error cause in messages when available ([#2286](https://github.com/instana/nodejs/issues/2286)) ([70915a0](https://github.com/instana/nodejs/commit/70915a03c0d5e323f1191b92c4b07bf8ec0709e8))
+
+
+
+
+
 # [5.1.0](https://github.com/instana/nodejs/compare/v5.0.2...v5.1.0) (2026-01-13)
 
 

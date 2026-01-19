@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.2.0](https://github.com/instana/nodejs/compare/v5.1.0...v5.2.0) (2026-01-19)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/core from 2.2.0 to 2.3.0 ([#2271](https://github.com/instana/nodejs/issues/2271)) ([04a0bb1](https://github.com/instana/nodejs/commit/04a0bb1a622a348d2274583936c587f32c8b4ab0))
+* bumped @opentelemetry/sdk-trace-base from 2.2.0 to 2.3.0 ([#2270](https://github.com/instana/nodejs/issues/2270)) ([6868af3](https://github.com/instana/nodejs/commit/6868af3937210b8a13b0006dd1f16b813d3c83f9))
+* prioritized error.cause.stack for span.stack if available ([#2280](https://github.com/instana/nodejs/issues/2280)) ([257ed74](https://github.com/instana/nodejs/commit/257ed742bfbb75d4a3502a20a698c64e7ea3b284))
+* resolved duration for confluent kafka, oracle, restify and tedious spans ([#2276](https://github.com/instana/nodejs/issues/2276)) ([f3fab4f](https://github.com/instana/nodejs/commit/f3fab4f36ca285ab13bc9f03867189408032b58f))
+* transmitted span immediately after receiving response ([#2284](https://github.com/instana/nodejs/issues/2284)) ([d0fe277](https://github.com/instana/nodejs/commit/d0fe2774b99c6ba5934bb98d9a013bd34a381c60))
+
+
+### Features
+
+* **console:** included error cause in messages when available ([#2286](https://github.com/instana/nodejs/issues/2286)) ([70915a0](https://github.com/instana/nodejs/commit/70915a03c0d5e323f1191b92c4b07bf8ec0709e8))
+
+
+
+
+
 # [5.1.0](https://github.com/instana/nodejs/compare/v5.0.2...v5.1.0) (2026-01-13)
 
 

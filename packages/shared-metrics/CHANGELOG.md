@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.2.0](https://github.com/instana/nodejs/compare/v5.1.0...v5.2.0) (2026-01-19)
+
+
+### Bug Fixes
+
+* **shared-metrics:** bumped tar dependency from 7.5.2 to 7.5.3 ([#2291](https://github.com/instana/nodejs/issues/2291)) ([885e6ab](https://github.com/instana/nodejs/commit/885e6ab816a962e4b7279be93d31b9b17e1eb57e))
+
+
+
+
+
 # [5.1.0](https://github.com/instana/nodejs/compare/v5.0.2...v5.1.0) (2026-01-13)
 
 **Note:** Version bump only for package @instana/shared-metrics
