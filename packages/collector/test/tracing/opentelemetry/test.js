@@ -1015,7 +1015,7 @@ mochaSuiteFn('opentelemetry tests', function () {
         });
       });
 
-      let runOracleDb = describe;
+      let runOracleDb = describe.only;
       if (process.env.RUN_ESM === 'true') {
         runOracleDb = describe.skip;
       }
@@ -1046,7 +1046,7 @@ mochaSuiteFn('opentelemetry tests', function () {
             await controls.stop();
           });
 
-          it('should trace', async () => {
+          it.only('should trace', async () => {
             await controls.sendRequest({
               method: 'GET',
               path: '/trace'
@@ -1075,6 +1075,8 @@ mochaSuiteFn('opentelemetry tests', function () {
                   expect(span.data.tags['db.system.name']).to.eql('oracle.db');
                   expect(span.data.tags['server.address']).to.eql('localhost');
                   checkTelemetryResourceAttrs(span);
+
+                  console.log('\nSPAN DATA COLLECTED: ', JSON.stringify(span, null, 2), '\n');
                 }
               });
             });

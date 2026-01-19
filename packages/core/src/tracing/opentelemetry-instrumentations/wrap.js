@@ -122,6 +122,13 @@ module.exports.init = (_config, cls) => {
         otelSpan.end = function instanaOnEnd() {
           const resp = origEnd.apply(this, arguments);
 
+          // Update Instana span data with latest OTel span attributes
+          // This ensures any attributes set during span lifecycle are captured
+          if (preparedData.instrumentation.module.changeTags) {
+            const updatedTags = preparedData.instrumentation.module.changeTags(otelSpan, { ...otelSpan.attributes });
+            instanaSpan.data.tags = Object.assign({ name: otelSpan.name }, updatedTags);
+          }
+
           if (otelSpan.duration) {
             instanaSpan.d = Math.round(hrTimeToMilliseconds(otelSpan.duration));
           } else if (otelSpan.startTime && otelSpan.endTime) {
