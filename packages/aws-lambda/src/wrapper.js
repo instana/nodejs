@@ -322,7 +322,6 @@ function init(event, arnInfo, _config) {
   logger.debug(`[PERF] Config normalization took ${Date.now() - configStart}ms`);
 
   if (!config.tracing.enabled) {
-    isInitialized = true;
     return false;
   }
 
@@ -381,7 +380,6 @@ function init(event, arnInfo, _config) {
   tracing.activate();
   logger.debug(`[PERF] Final setup (spanBuffer, metrics, tracing) took ${Date.now() - finalSetupStart}ms`);
 
-  isInitialized = true;
   logger.debug(`[PERF] TOTAL init() took ${Date.now() - initTotalStart}ms`);
   return true;
 }
