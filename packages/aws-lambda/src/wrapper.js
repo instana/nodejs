@@ -296,18 +296,11 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   });
 }
 
-let isInitialized = false;
-
 /**
  * Initialize the wrapper.
  */
 function init(event, arnInfo, _config) {
   const initTotalStart = Date.now();
-
-  if (isInitialized) {
-    logger.debug('[PERF] Skipping init - already initialized (warm start)');
-    return config.tracing.enabled;
-  }
 
   logger.debug('[PERF] Starting full initialization (cold start)');
   const userConfig = _config || {};
