@@ -182,7 +182,9 @@ function instrument(redis) {
           addressUrl = 'localhost:6379';
         }
 
-        shimAllCommands(redisClient, addressUrl, false, redisCommandList);
+        const isLegacyMode = redisClient.options?.legacyMode === true;
+        const cbStyle = !!isLegacyMode;
+        shimAllCommands(redisClient, addressUrl, cbStyle, redisCommandList);
 
         if (redisClient.multi) {
           shimmer.wrap(redisClient, 'multi', wrapMulti(addressUrl, false));
@@ -357,7 +359,7 @@ function instrumentCommand(original, command, address, cbStyle) {
               return error;
             });
         } else {
-          // No promise returned, call onResult immediately to close the span
+          // UNKNOWN CASE
           onResult();
         }
         return promise;

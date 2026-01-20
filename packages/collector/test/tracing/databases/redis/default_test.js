@@ -6,6 +6,9 @@
 
 const setupType = 'default';
 
-describe(`tracing/redis/${setupType}`, function () {
+describe.only(`tracing/redis/${setupType}`, function () {
   require('./test_definition').call(this, setupType);
+
+  // legacy mode
+  require('./test_definition').call(this, setupType, true);
 });
