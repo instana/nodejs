@@ -291,6 +291,18 @@ app.post('/two-different-target-hosts', async (req, res) => {
   }
 });
 
+app.get('/legacy-mode', async (req, res) => {
+  // legacy mode is redis v4 with callback style
+  connection.get('xxxx', (err, result) => {
+    if (err) {
+      log('Get with key xxxx failed', err);
+      res.sendStatus(500);
+    } else {
+      res.send(result);
+    }
+  });
+});
+
 app.listen(port, () => {
   log(`Listening on port: ${port}`);
 });

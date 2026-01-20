@@ -49,7 +49,7 @@ const versionsSinceV5 = ['latest', 'v5.8.3'];
  *        node bin/start-test-containers.js --redis --redis-slave --redis-sentinel
  */
 
-module.exports = function (setupType) {
+module.exports = function (setupType, legacyMode = false) {
   const allVersions = ['latest', 'v5.8.3', 'v4', 'v3'];
 
   let versionsToRun;
@@ -78,7 +78,7 @@ module.exports = function (setupType) {
         }
 
         // The allowRootExitSpanApp is compatable with Redis v4 and v5 (latest).
-        if (redisVersion !== legacyVersion) {
+        if (redisVersion !== legacyVersion && legacyMode === false) {
           mochaSuiteFn('When allowRootExitSpan: true is set', function () {
             globalAgent.setUpCleanUpHooks();
             let controls;
@@ -126,7 +126,7 @@ module.exports = function (setupType) {
           // In v5, Redis moved "Isolation Pool" into RedisClientPool.
           // see: https://github.com/redis/node-redis/blob/master/docs/pool.md
           // Only for this test the connection is established via the pool.
-          if (versionsSinceV5.includes(redisVersion) && setupType === 'default') {
+          if (versionsSinceV5.includes(redisVersion) && setupType === 'default' && legacyMode === false) {
             mochaSuiteFn('When connected via clientpool', function () {
               globalAgent.setUpCleanUpHooks();
               let controls;
@@ -174,7 +174,8 @@ module.exports = function (setupType) {
               env: {
                 REDIS_VERSION: redisVersion,
                 REDIS_PKG: redisPkg,
-                REDIS_SETUP_TYPE: setupType
+                REDIS_SETUP_TYPE: setupType,
+                REDIS_LEGACY_MODE: legacyMode
               }
             });
 
@@ -199,6 +200,34 @@ module.exports = function (setupType) {
           afterEach(async () => {
             await controls.clearIpcMessages();
           });
+
+          if (redisVersion === 'v4' && legacyMode === true) {
+            it('must trace legacy mode', async () => {
+              await controls.sendRequest({
+                method: 'GET',
+                path: '/legacy-mode'
+              });
+
+              return retry(() =>
+                agentControls.getSpans().then(spans => {
+                  expect(spans.length).to.be.eql(2);
+
+                  expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('redis'),
+                    span => expect(span.k).to.equal(constants.EXIT),
+                    span => expect(span.f.e).to.equal(String(controls.getPid())),
+                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                    span => expect(span.async).to.not.exist,
+                    span => expect(span.error).to.not.exist,
+                    span => expect(span.ec).to.equal(0),
+                    span => expect(span.d).to.be.greaterThan(1)
+                  ]);
+                })
+              );
+            });
+
+            return;
+          }
 
           it('must trace set/get calls', () =>
             controls
