@@ -36,9 +36,6 @@ function instrument(SQSConsumer) {
                 span.d = Date.now() - span.ts;
                 span.transmitManual();
               });
-          } else {
-            span.d = Date.now() - span.ts;
-            span.transmitManual();
           }
 
           return res;
@@ -73,9 +70,6 @@ function instrument(SQSConsumer) {
                 span.d = Date.now() - span.ts;
                 span.transmitManual();
               });
-          } else {
-            span.d = Date.now() - span.ts;
-            span.transmitManual();
           }
 
           return res;

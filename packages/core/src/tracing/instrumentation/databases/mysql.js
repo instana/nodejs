@@ -250,7 +250,6 @@ function shimPromiseConnection(original) {
         return connection;
       });
     }
-    return promise;
   };
 }
 

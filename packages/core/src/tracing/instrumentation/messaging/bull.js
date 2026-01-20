@@ -111,9 +111,6 @@ function instrumentedJobCreate(ctx, originalJobCreate, originalArgs, options) {
           return err;
         });
     }
-
-    finishSpan(null, null, span);
-    return promise;
   });
 }
 
@@ -279,10 +276,6 @@ function instrumentedProcessJob(ctx, originalProcessJob, originalArgs) {
           throw err;
         });
     }
-
-    finishSpan(null, null, span);
-    delete options.X_INSTANA_L;
-    return promise;
   });
 }
 
