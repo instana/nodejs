@@ -21,7 +21,12 @@ const { tracing, coreConfig } = instanaCore;
 const { tracingHeaders, constants, spanBuffer } = tracing;
 
 const lambdaConfigDefaults = {
-  tracing: { forceTransmissionStartingAt: 25, transmissionDelay: 100, initialTransmissionDelay: 100 }
+  tracing: {
+    forceTransmissionStartingAt: 25,
+    transmissionDelay: 100,
+    initialTransmissionDelay: 100,
+    useOpentelemetry: false
+  }
 };
 
 // Node.js 24+ removed support for callback-based handlers (3 parameters).
@@ -34,7 +39,9 @@ let coldStart = true;
 
 // Initialize instrumentations early to allow for require statements after our
 // package has been required but before the actual instana.wrap(...) call.
+const corepreInit = Date.now();
 instanaCore.preInit(config);
+logger.debug(`[PERF] instanaCore.preInit took ${Date.now() - corepreInit}ms`);
 
 /**
  * Wraps an AWS Lambda handler so that metrics and traces are reported to Instana. This function will figure out if the
@@ -77,6 +84,9 @@ exports.wrap = function wrap(_config, originalHandler) {
 };
 
 function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
+  const perfStart = Date.now();
+  logger.debug('[PERF] shimmedHandler started');
+
   const event = originalArgs[0];
   const context = originalArgs[1];
   const lambdaCallback = originalArgs[2];
@@ -94,12 +104,19 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
     return originalHandler.apply(originalThis, originalArgs);
   }
 
+  const arnParseStart = Date.now();
   const arnInfo = arnParser(context);
+  logger.debug(`[PERF] ARN parsing took ${Date.now() - arnParseStart}ms`);
+
+  const initStart = Date.now();
   const tracingEnabled = init(event, arnInfo, _config);
+  logger.debug(`[PERF] init() took ${Date.now() - initStart}ms`);
 
   if (!tracingEnabled) {
     return originalHandler.apply(originalThis, originalArgs);
   }
+
+  logger.debug(`[PERF] Pre-handler setup took ${Date.now() - perfStart}ms`);
 
   // The AWS lambda runtime does not seem to inspect the number of arguments the handler function expects. Instead, it
   // always call the handler with three arguments (event, context, callback), no matter if the handler will use the
@@ -111,8 +128,14 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   //
   // Note: In Node.js 24+, the runtime only passes 2 parameters (event, context) and doesn't provide a callback.
   let handlerHasFinished = false;
+
+  const clsStart = Date.now();
   return tracing.getCls().ns.runPromiseOrRunAndReturn(() => {
+    logger.debug(`[PERF] CLS setup took ${Date.now() - clsStart}ms`);
+
+    const traceReadStart = Date.now();
     const traceCorrelationData = triggers.readTraceCorrelationData(event, context);
+    logger.debug(`[PERF] readTraceCorrelationData took ${Date.now() - traceReadStart}ms`);
     const tracingSuppressed = traceCorrelationData.level === '0';
     const w3cTraceContext = traceCorrelationData.w3cTraceContext;
 
@@ -126,11 +149,14 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
     }
 
     if (tracingSuppressed) {
+      const suppressStart = Date.now();
       tracing.getCls().setTracingLevel('0');
       if (w3cTraceContext) {
         w3cTraceContext.disableSampling();
       }
+      logger.debug(`[PERF] Tracing suppression took ${Date.now() - suppressStart}ms`);
     } else {
+      const spanStart = Date.now();
       entrySpan = tracing.getCls().startSpan({
         spanName: 'aws.lambda.entry',
         kind: constants.ENTRY,
@@ -152,7 +178,10 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
         entrySpan.data.lambda.coldStart = true;
         coldStart = false;
       }
+      const enrichStart = Date.now();
       triggers.enrichSpanWithTriggerData(event, context, entrySpan);
+      logger.debug(`[PERF] enrichSpanWithTriggerData took ${Date.now() - enrichStart}ms`);
+      logger.debug(`[PERF] Entry span creation took ${Date.now() - spanStart}ms`);
     }
 
     originalArgs[2] = function wrapper(originalError, originalResult) {
@@ -223,7 +252,11 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
 
     let handlerPromise;
     try {
+      const handlerStart = Date.now();
+      logger.debug('[PERF] Calling original handler');
       handlerPromise = originalHandler.apply(originalThis, originalArgs);
+      logger.debug(`[PERF] Original handler call took ${Date.now() - handlerStart}ms`);
+
       if (handlerPromise && typeof handlerPromise.then === 'function') {
         return handlerPromise.then(
           value => {
@@ -263,15 +296,27 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   });
 }
 
+let isInitialized = false;
+
 /**
  * Initialize the wrapper.
  */
 function init(event, arnInfo, _config) {
+  const initTotalStart = Date.now();
+
+  if (isInitialized) {
+    logger.debug('[PERF] Skipping init - already initialized (warm start)');
+    return config.tracing.enabled;
+  }
+
+  logger.debug('[PERF] Starting full initialization (cold start)');
   const userConfig = _config || {};
 
   // CASE: customer provides a custom logger or custom level
   if (userConfig.logger || userConfig.level) {
+    const loggerStart = Date.now();
     serverlessLogger.init(userConfig);
+    logger.debug(`[PERF] Logger init took ${Date.now() - loggerStart}ms`);
   }
 
   // NOTE: We SHOULD renormalize because of:
@@ -279,13 +324,19 @@ function init(event, arnInfo, _config) {
   //         - late env variables (less likely)
   //         - custom logger
   //         - we always renormalize unconditionally to ensure safety.
+  const configStart = Date.now();
   config = coreConfig.normalize(userConfig, lambdaConfigDefaults);
+  logger.debug(`[PERF] Config normalization took ${Date.now() - configStart}ms`);
 
   if (!config.tracing.enabled) {
+    isInitialized = true;
     return false;
   }
 
+  const extensionCheckStart = Date.now();
   const useLambdaExtension = shouldUseLambdaExtension();
+  logger.debug(`[PERF] Lambda extension check took ${Date.now() - extensionCheckStart}ms`);
+
   if (useLambdaExtension) {
     logger.info('@instana/aws-lambda will use the Instana Lambda extension to send data to the Instana back end.');
   } else {
@@ -295,32 +346,50 @@ function init(event, arnInfo, _config) {
     );
   }
 
+  const identityStart = Date.now();
   identityProvider.init(arnInfo);
+  logger.debug(`[PERF] identityProvider.init took ${Date.now() - identityStart}ms`);
+
+  const triggersStart = Date.now();
   triggers.init(config);
+  logger.debug(`[PERF] triggers.init took ${Date.now() - triggersStart}ms`);
+
+  const optimizedTimeout = useLambdaExtension ? 500 : 300;
+
+  const backendStart = Date.now();
   backendConnector.init({
     config,
     identityProvider,
-    defaultTimeout: 500,
+    defaultTimeout: optimizedTimeout,
     useLambdaExtension,
     isLambdaRequest: true,
     // NOTE: We only retry for the extension, because if the extenion is not used, the time to transmit
     //       the data to the serverless acceptor directly takes too long.
     retries: !!useLambdaExtension
   });
+  logger.debug(`[PERF] backendConnector.init took ${Date.now() - backendStart}ms`);
 
+  const coreStart = Date.now();
   instanaCore.init(config, backendConnector, identityProvider);
+  logger.debug(`[PERF] instanaCore.init took ${Date.now() - coreStart}ms`);
 
   // After core init, because ssm requires require('@aws-sdk/client-ssm'), which triggers
   // the requireHook + shimmer. Any module which requires another external module has to be
   // initialized after the core.
+  const ssmStart = Date.now();
   ssm.init(config, coldStart);
+  logger.debug(`[PERF] ssm.init took ${Date.now() - ssmStart}ms`);
 
+  const finalSetupStart = Date.now();
   spanBuffer.setIsFaaS(true);
   captureHeaders.init(config);
   metrics.init(config);
   metrics.activate();
   tracing.activate();
+  logger.debug(`[PERF] Final setup (spanBuffer, metrics, tracing) took ${Date.now() - finalSetupStart}ms`);
 
+  isInitialized = true;
+  logger.debug(`[PERF] TOTAL init() took ${Date.now() - initTotalStart}ms`);
   return true;
 }
 
@@ -470,6 +539,9 @@ function sendToBackend({ spans, metricsPayload, finalLambdaRequest, callback }) 
  * current process).
  */
 function postHandler(entrySpan, error, result, postHandlerDone) {
+  const postHandlerStart = Date.now();
+  logger.debug('[PERF] postHandler started');
+
   // entrySpan is null when tracing is suppressed due to X-Instana-L
   if (entrySpan) {
     if (entrySpan.transmitted) {
@@ -494,14 +566,22 @@ function postHandler(entrySpan, error, result, postHandlerDone) {
       }
     }
 
+    const processResultStart = Date.now();
     processResult(result, entrySpan);
+    logger.debug(`[PERF] processResult took ${Date.now() - processResultStart}ms`);
 
     entrySpan.d = Date.now() - entrySpan.ts;
 
+    const transmitStart = Date.now();
     entrySpan.transmit();
+    logger.debug(`[PERF] entrySpan.transmit took ${Date.now() - transmitStart}ms`);
   }
 
+  const spanBufferStart = Date.now();
   const spans = spanBuffer.getAndResetSpans();
+  logger.debug(
+    `[PERF] spanBuffer.getAndResetSpans took ${Date.now() - spanBufferStart}ms, spans count: ${spans.length}`
+  );
 
   // We want that all upcoming spans are send immediately to the BE.
   // Span collection happens all the time, but for AWS Lambda sending spans early via spanBuffer
@@ -512,16 +592,23 @@ function postHandler(entrySpan, error, result, postHandlerDone) {
   // We need to rework the default behavior via https://jsw.ibm.com/browse/INSTA-13498
   spanBuffer.setTransmitImmediate(true);
 
+  const metricsStart = Date.now();
   const metricsData = metrics.gatherData();
+  logger.debug(`[PERF] metrics.gatherData took ${Date.now() - metricsStart}ms`);
+
   const metricsPayload = {
     plugins: [{ name: 'com.instana.plugin.aws.lambda', entityId: identityProvider.getEntityId(), data: metricsData }]
   };
 
+  const sendStart = Date.now();
+  logger.debug('[PERF] Calling sendToBackend');
   sendToBackend({
     spans,
     metricsPayload,
     finalLambdaRequest: true,
     callback: () => {
+      logger.debug(`[PERF] sendToBackend completed in ${Date.now() - sendStart}ms`);
+      logger.debug(`[PERF] TOTAL postHandler took ${Date.now() - postHandlerStart}ms`);
       // We don't process or care if there is an error returned from the backend connector right now.
       postHandlerDone();
     }
