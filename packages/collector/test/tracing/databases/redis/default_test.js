@@ -6,7 +6,7 @@
 
 const setupType = 'default';
 
-describe.only(`tracing/redis/${setupType}`, function () {
+describe(`tracing/redis/${setupType}`, function () {
   require('./test_definition').call(this, setupType);
 
   // legacy mode
