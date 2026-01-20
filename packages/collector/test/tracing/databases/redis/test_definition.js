@@ -220,7 +220,6 @@ module.exports = function (setupType, legacyMode = false) {
                     span => expect(span.async).to.not.exist,
                     span => expect(span.error).to.not.exist,
                     span => expect(span.ec).to.equal(0),
-                    // check duration
                     span => expect(span.d).to.be.greaterThan(1)
                   ]);
                 })
