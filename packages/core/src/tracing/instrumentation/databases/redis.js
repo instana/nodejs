@@ -182,6 +182,7 @@ function instrument(redis) {
           addressUrl = 'localhost:6379';
         }
 
+        // legacyMode is a Redis v4 option used to maintain backward-compatible command behavior
         const isLegacyMode = redisClient.options?.legacyMode === true;
         const cbStyle = !!isLegacyMode;
         shimAllCommands(redisClient, addressUrl, cbStyle, redisCommandList);
