@@ -303,7 +303,6 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
         return result;
       });
     }
-    return promise;
   });
 }
 

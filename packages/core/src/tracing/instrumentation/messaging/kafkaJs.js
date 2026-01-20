@@ -112,7 +112,6 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
           throw error;
         });
     }
-    return promise;
   });
 }
 
@@ -194,7 +193,6 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
           throw error;
         });
     }
-    return promise;
   });
 }
 
