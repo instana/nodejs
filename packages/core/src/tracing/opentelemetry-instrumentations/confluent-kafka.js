@@ -8,13 +8,27 @@ const constants = require('../constants');
 const W3cTraceContext = require('../w3c_trace_context/W3cTraceContext');
 
 module.exports.init = () => {
+  const initStart = Date.now();
+
+  const requireStart = Date.now();
   const { ConfluentKafkaInstrumentation } = require('@instana/instrumentation-confluent-kafka-javascript');
+  // eslint-disable-next-line no-console
+  console.debug(`[PERF] [OTEL] [KAFKA] ConfluentKafkaInstrumentation require: ${Date.now() - requireStart}ms`);
 
+  const createStart = Date.now();
   const instrumentation = new ConfluentKafkaInstrumentation({});
+  // eslint-disable-next-line no-console
+  console.debug(`[PERF] [OTEL] [KAFKA] ConfluentKafkaInstrumentation creation: ${Date.now() - createStart}ms`);
 
+  const enableStart = Date.now();
   if (!instrumentation.getConfig().enabled) {
     instrumentation.enable();
   }
+  // eslint-disable-next-line no-console
+  console.debug(`[PERF] [OTEL] [KAFKA] enable: ${Date.now() - enableStart}ms`);
+
+  // eslint-disable-next-line no-console
+  console.debug(`[PERF] [OTEL] [KAFKA] TOTAL init: ${Date.now() - initStart}ms`);
 };
 
 module.exports.getKind = otelSpan => {

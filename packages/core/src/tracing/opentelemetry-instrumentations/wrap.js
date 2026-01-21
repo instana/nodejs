@@ -5,13 +5,34 @@
 
 'use strict';
 
+const moduleLoadStart = Date.now();
+
+const asyncHooksStart = Date.now();
 const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks');
+// eslint-disable-next-line no-console
+console.debug(`[PERF] [OTEL] [MODULE] @opentelemetry/context-async-hooks loaded in ${Date.now() - asyncHooksStart}ms`);
+
+const coreStart = Date.now();
 const { W3CTraceContextPropagator, hrTimeDuration, hrTimeToMilliseconds } = require('@opentelemetry/core');
+// eslint-disable-next-line no-console
+console.debug(`[PERF] [OTEL] [MODULE] @opentelemetry/core loaded in ${Date.now() - coreStart}ms`);
+
+const apiStart = Date.now();
 const api = require('@opentelemetry/api');
+// eslint-disable-next-line no-console
+console.debug(`[PERF] [OTEL] [MODULE] @opentelemetry/api loaded in ${Date.now() - apiStart}ms`);
+
+const sdkStart = Date.now();
 const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
+// eslint-disable-next-line no-console
+console.debug(`[PERF] [OTEL] [MODULE] @opentelemetry/sdk-trace-base loaded in ${Date.now() - sdkStart}ms`);
+
 const utils = require('./utils');
 const constants = require('../constants');
 const supportedVersion = require('../supportedVersion');
+
+// eslint-disable-next-line no-console
+console.debug(`[PERF] [OTEL] [MODULE] Total module loading took ${Date.now() - moduleLoadStart}ms`);
 
 // NOTE: Please refrain from utilizing third-party instrumentations.
 //       Instead, opt for officially released instrumentations available in the OpenTelemetry
@@ -35,11 +56,33 @@ module.exports.init = (_config, cls) => {
     return;
   }
 
+  const otelInitStart = Date.now();
+  // eslint-disable-next-line no-console
+  console.debug('[PERF] [OTEL] Starting OpenTelemetry instrumentations initialization');
+
   Object.keys(instrumentations).forEach(k => {
     const value = instrumentations[k];
-    const instrumentation = require(`./${value.name}`);
-    instrumentation.init({ cls, api: api });
-    value.module = instrumentation;
+    const instrStart = Date.now();
+
+    try {
+      const instrumentation = require(`./${value.name}`);
+      const requireTime = Date.now() - instrStart;
+
+      const initStart = Date.now();
+      instrumentation.init({ cls, api: api });
+      const initTime = Date.now() - initStart;
+
+      value.module = instrumentation;
+
+      const totalTime = Date.now() - instrStart;
+      // eslint-disable-next-line no-console
+      console.debug(
+        `[PERF] [OTEL] ${k} (${value.name}): require=${requireTime}ms, init=${initTime}ms, total=${totalTime}ms`
+      );
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(`[PERF] [OTEL] Failed to load ${k}:`, e.message);
+    }
   });
 
   const prepareData = (otelSpan, instrumentation) => {
@@ -169,14 +212,27 @@ module.exports.init = (_config, cls) => {
    * The same approach applies to the global context manager.
    *
    */
+  const providerStart = Date.now();
   const provider = new BasicTracerProvider();
-  const contextManager = new AsyncHooksContextManager();
+  // eslint-disable-next-line no-console
+  console.debug(`[PERF] [OTEL] BasicTracerProvider creation took ${Date.now() - providerStart}ms`);
 
+  const contextManagerStart = Date.now();
+  const contextManager = new AsyncHooksContextManager();
+  // eslint-disable-next-line no-console
+  console.debug(`[PERF] [OTEL] AsyncHooksContextManager creation took ${Date.now() - contextManagerStart}ms`);
+
+  const setupStart = Date.now();
   api.trace.setGlobalTracerProvider(provider);
   api.context.setGlobalContextManager(contextManager);
   // NOTE: Required for EXIT -> ENTRY (e.g. Kafka) correlation. W3CTraceContextPropagator will extract
   //       the w3c trace context from the incoming request and set it to the CLS context.
   api.propagation.setGlobalPropagator(new W3CTraceContextPropagator());
+  // eslint-disable-next-line no-console
+  console.debug(`[PERF] [OTEL] Global setup took ${Date.now() - setupStart}ms`);
+
+  // eslint-disable-next-line no-console
+  console.debug(`[PERF] [OTEL] Total OpenTelemetry init took ${Date.now() - otelInitStart}ms`);
 
   const orig = api.trace.setSpan;
   api.trace.setSpan = function instanaSetSpan(otelCtx, otelSpan) {

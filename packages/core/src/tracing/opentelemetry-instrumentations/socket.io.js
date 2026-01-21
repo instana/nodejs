@@ -18,12 +18,27 @@ const isOnEvent = otelSpan => otelSpan.name.indexOf('receive') !== -1;
  * headers or meta data, only payload!
  */
 exports.init = () => {
-  const { SocketIoInstrumentation } = require('@opentelemetry/instrumentation-socket.io');
-  const instrumentation = new SocketIoInstrumentation();
+  const initStart = Date.now();
 
+  const requireStart = Date.now();
+  const { SocketIoInstrumentation } = require('@opentelemetry/instrumentation-socket.io');
+  // eslint-disable-next-line no-console
+  console.debug(`[PERF] [OTEL] [SOCKET.IO] SocketIoInstrumentation require: ${Date.now() - requireStart}ms`);
+
+  const createStart = Date.now();
+  const instrumentation = new SocketIoInstrumentation();
+  // eslint-disable-next-line no-console
+  console.debug(`[PERF] [OTEL] [SOCKET.IO] SocketIoInstrumentation creation: ${Date.now() - createStart}ms`);
+
+  const enableStart = Date.now();
   if (!instrumentation.getConfig().enabled) {
     instrumentation.enable();
   }
+  // eslint-disable-next-line no-console
+  console.debug(`[PERF] [OTEL] [SOCKET.IO] enable: ${Date.now() - enableStart}ms`);
+
+  // eslint-disable-next-line no-console
+  console.debug(`[PERF] [OTEL] [SOCKET.IO] TOTAL init: ${Date.now() - initStart}ms`);
 };
 
 exports.getKind = otelSpan => {

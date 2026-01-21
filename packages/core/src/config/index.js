@@ -153,6 +153,11 @@ module.exports.init = _logger => {
 module.exports.normalize = (userConfig, defaultsOverride = {}) => {
   if (defaultsOverride && typeof defaultsOverride === 'object') {
     defaults = deepMerge(defaults, defaultsOverride);
+    console.log(
+      'Using custom defaultsOverride configuration for Instana core package.',
+      JSON.stringify(defaultsOverride)
+    );
+    console.log('Using custom default configuration for Instana core package.', JSON.stringify(defaults));
   }
 
   /** @type InstanaConfig */

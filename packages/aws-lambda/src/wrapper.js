@@ -24,8 +24,7 @@ const lambdaConfigDefaults = {
   tracing: {
     forceTransmissionStartingAt: 25,
     transmissionDelay: 100,
-    initialTransmissionDelay: 100,
-    useOpentelemetry: false
+    initialTransmissionDelay: 100
   }
 };
 
