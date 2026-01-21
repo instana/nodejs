@@ -30,7 +30,7 @@ spec:
       default: ""
     - name: npm-version
       value: $(params.npm-version)
-      default: ""      
+      default: ""
     - name: pl-name
       value: $(event.pull_request.number)
     - name: pipeline-ref
@@ -51,6 +51,8 @@ apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener
 metadata:
   name: github-pr-listener
+  annotations:
+    pipeline.tekton.dev/max-concurrent-runs: "3"
 spec:
   triggers:
     - bindings:

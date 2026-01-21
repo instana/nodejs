@@ -10,7 +10,7 @@ spec:
     - name: branch
       value: "main"
     - name: target-branch
-      value: "main"  
+      value: "main"
     - name: type
       value: "main"
     - name: repository
@@ -28,7 +28,7 @@ spec:
     - name: pipeline-ref
       value: "default-pipeline"
     - name: skip-cache
-      value: $(params.skip-cache)      
+      value: $(params.skip-cache)
     - name: context
       value: "node-dev"
 ---
@@ -37,6 +37,8 @@ apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener
 metadata:
   name: main-listener
+  annotations:
+    pipeline.tekton.dev/max-concurrent-runs: "3"
 spec:
   triggers:
     - bindings:

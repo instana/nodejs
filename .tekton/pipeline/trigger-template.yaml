@@ -30,7 +30,7 @@ spec:
     - name: node-version
       value: $(params.node-version)
     - name: npm-version
-      value: $(params.npm-version)      
+      value: $(params.npm-version)
     - name: target-branch
       description: "Either pr branch or any other branch."
     - name: pl-name
@@ -50,7 +50,7 @@ spec:
       default: "node-$(params.node-version)"
       value: $(params.context)
     - name: prerelease
-      value: $(params.prerelease)   
+      value: $(params.prerelease)
       default: "false"
     - name: prod-deps-pr-limit
       value: $(params.prod-deps-pr-limit)
@@ -73,15 +73,6 @@ spec:
         volumeMode: Filesystem
         accessModes:
           - ReadWriteOnce
-    - apiVersion: tekton.dev/v1alpha1
-      kind: ConcurrencyControl
-      metadata:
-        name: cc
-        namespace: concurrency
-      spec:
-        selector:
-          matchLabels:
-            type: pull-request
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
       podTemplate:
@@ -89,7 +80,7 @@ spec:
           fsGroup: 65532
       metadata:
         name: pl-$(params.target-branch)-$(params.pl-name)
-        namespace: concurrency
+        namespace: default
         labels:
           type: pull-request
         annotations:
@@ -121,7 +112,7 @@ spec:
           - name: node-version
             value: $(params.node-version)
           - name: npm-version
-            value: $(params.npm-version)             
+            value: $(params.npm-version)
           - name: target-branch
             value: $(params.target-branch)
           - name: type
@@ -133,7 +124,7 @@ spec:
           - name: context
             value: $(params.context)
           - name: skip-cache
-            value: $(params.skip-cache)         
+            value: $(params.skip-cache)
           - name: prerelease
             value: $(params.prerelease)
           - name: prod-deps-pr-limit
