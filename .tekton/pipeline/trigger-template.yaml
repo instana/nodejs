@@ -78,6 +78,12 @@ spec:
       podTemplate:
         securityContext:
           fsGroup: 65532
+        resourceRequests:
+          cpu: "300m"
+          memory: "500Mi"
+        resourceLimits:
+          cpu: "8000m"
+          memory: "16Gi"
         affinity:
           podAntiAffinity:
             preferredDuringSchedulingIgnoredDuringExecution:
