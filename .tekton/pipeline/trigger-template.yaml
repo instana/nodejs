@@ -79,7 +79,7 @@ spec:
         securityContext:
           fsGroup: 65532
         resourceRequests:
-          cpu: "1000m"
+          cpu: "2000m"
           memory: "1Gi"
         resourceLimits:
           cpu: "8000m"
