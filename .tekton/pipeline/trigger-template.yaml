@@ -79,11 +79,11 @@ spec:
         securityContext:
           fsGroup: 65532
         resourceRequests:
-          cpu: "2000m"
-          memory: "1Gi"
+          cpu: "300m"
+          memory: "512Mi"
         resourceLimits:
           cpu: "8000m"
-          memory: "16Gi"
+          memory: "12Gi"
       metadata:
         name: pl-$(params.target-branch)-$(params.pl-name)
         namespace: default
