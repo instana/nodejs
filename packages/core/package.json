@@ -68,7 +68,7 @@
     "@opentelemetry/instrumentation-tedious": "0.28.0",
     "@opentelemetry/sdk-trace-base": "2.3.0",
     "cls-bluebird": "^2.1.0",
-    "import-in-the-middle": "2.0.1",
+    "import-in-the-middle": "2.0.5",
     "lru-cache": "^10.1.0",
     "methods": "^1.1.2",
     "opentracing": "^0.14.5",
