@@ -84,15 +84,6 @@ spec:
         resourceLimits:
           cpu: "8000m"
           memory: "16Gi"
-        affinity:
-          podAntiAffinity:
-            preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    type: pull-request
-                topologyKey: kubernetes.io/hostname
       metadata:
         name: pl-$(params.target-branch)-$(params.pl-name)
         namespace: default

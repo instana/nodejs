@@ -5,9 +5,8 @@
 - Strong hardware
 - We cannot use scheduing technique "isolated-pipeline" (1 pipeline per node),
   because we use PVC, ReadOnce and Workspaces.
-- Its better to have very strong hardware (120 CPU, 360 MEM), which
-  can handle multiple pipelines on a single node.
-- Limit 1 pipeline per node (not reliable, but its running okay):
+- Limit 1 pipeline per node (not reliable, but its running okay).
+- We need ~96 CPU for 1 pipeline run.
 
 ```sh
 cat <<'EOF' | kubectl -n tekton-pipelines apply -f -
@@ -29,6 +28,12 @@ EOF
 
 $ kubectl -n tekton-pipelines rollout restart deploy tekton-pipelines-controller
 $ kubectl -n tekton-pipelines rollout restart deploy tekton-pipelines-webhook
+```
+
+```sh
+$ kubectl patch cm feature-flags -n tekton-pipelines \
+→   -p '{"data":{"max-concurrent-runs":"6"}}'
+configmap/feature-flags patched
 ```
 
 ## Restrictions

@@ -37,8 +37,6 @@ apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener
 metadata:
   name: main-listener
-  annotations:
-    pipeline.tekton.dev/max-concurrent-runs: "3"
 spec:
   triggers:
     - bindings:
