@@ -8,6 +8,7 @@ const path = require('path');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const semver = require('semver');
 const { execSync } = require('child_process');
+const fs = require('fs');
 const currencies = require(path.join(__dirname, '..', '..', '..', 'currencies.json'));
 const utils = require('../utils');
 const MAJOR_UPDATES_MODE = process.env.MAJOR_UPDATES_MODE ? process.env.MAJOR_UPDATES_MODE === 'true' : false;
@@ -28,6 +29,10 @@ if (!MAJOR_UPDATES_MODE) {
 }
 
 currencies.forEach(currency => {
+  if (!currency.name.includes('mssql')) {
+    return;
+  }
+
   console.log(`Checking currency update for ${currency.name}`);
 
   if (currency.ignoreUpdates) {
@@ -35,27 +40,13 @@ currencies.forEach(currency => {
     return;
   }
 
-  let isDevDependency = true;
-  let isRootDependency = true;
-  let installedVersion = utils.getDevDependencyVersion(currency.name);
-
-  if (!installedVersion) {
-    installedVersion = utils.getOptionalDependencyVersion(currency.name);
-    isDevDependency = false;
-  }
-
-  if (!installedVersion) {
-    installedVersion = utils.getPackageDependencyVersion(currency.name);
-    isRootDependency = false;
-    isDevDependency = true;
-  }
+  const installedVersion = currency.versions[0];
 
   if (!installedVersion) {
     console.log(`Skipping ${currency.name}. Seems to be a core dependency.`);
     return;
   }
 
-  installedVersion = utils.cleanVersionString(installedVersion);
   const latestVersion = utils.getLatestVersion({
     pkgName: currency.name,
     installedVersion: installedVersion,
@@ -91,24 +82,12 @@ currencies.forEach(currency => {
     utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main');
   }
 
-  if (isRootDependency) {
-    const saveFlag = isDevDependency ? '--save-dev' : '--save-optional';
-    utils.installPackage({
-      packageName: currency.name,
-      version: latestVersion,
-      cwd,
-      saveFlag
-    });
-  } else {
-    const subpkg = utils.getPackageName(currency.name);
-    utils.installPackage({
-      packageName: currency.name,
-      version: latestVersion,
-      cwd,
-      saveFlag: '--save-dev',
-      workspaceFlag: subpkg
-    });
-  }
+  // 1. update currencies.json versions array
+  currency.versions.push(latestVersion);
+  fs.writeFileSync(path.join(__dirname, '..', '..', '..', 'currencies.json'), JSON.stringify(currencies, null, 2));
+
+  // 2. regenerate version folders
+  execSync('node bin/create-version-test-folders.js', { cwd });
 
   if (MAJOR_UPDATES_MODE) {
     utils.commitAndCreatePR({
@@ -121,8 +100,6 @@ currencies.forEach(currency => {
       prTitle: `[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}`
     });
   } else {
-    // For non-major updates, just commit the changes but don't push yet
-    execSync("git add '*package.json' package-lock.json", { cwd });
     execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
   }
 });
