@@ -58,7 +58,7 @@ module.exports = function (version) {
         await controls.clearIpcMessages();
       });
 
-      it.only('must trace the pipe API', () =>
+      it('must trace the pipe API', () =>
         controls
           .sendRequest({
             method: 'GET',
