@@ -4,6 +4,8 @@
 
 Please install [nvm](https://github.com/nvm-sh/nvm) to manage multiple Node.js versions. The current development version is defined in our [.nvmrc](https://github.com/instana/nodejs/blob/main/.nvmrc).
 
+Please run `bin/install-npm.sh` to install the correct version of NPM.
+
 Python3 (< 3.11) is required, otherwise the db2 package won't build, see https://github.com/nodejs/node-gyp/issues/2219.
 If you're having issues with distutils module, then double check the python3 version (python3 --version) and make sure that the version pointing to is < 3.12
 The error can be something like: ModuleNotFoundError: No module named 'distutils'
@@ -26,7 +28,7 @@ Install the [`aws-cli`](https://docs.aws.amazon.com/cli/latest/userguide/getting
 
 ## Executing Tests Locally
 
-Some of the tests require infrastructure components (databases etc.) to run locally. The easiest way to run required components locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/). 
+Some of the tests require infrastructure components (databases etc.) to run locally. The easiest way to run required components locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/).
 
 ```sh
 node bin/start-test-containers.js --mongo --redis
@@ -65,7 +67,7 @@ See https://github.com/instana/nodejs/pull/672
 
 Not all of the current test apps have an `.mjs` variant, because the effort is high. If you are adding a new test, please consider to also generate an `.mjs` file for it. If you are modifying an existing application under test, and it has an accompanying `.mjs` file, you need to update that as well (by regenerating it).
 
-You can use the script `bin/convert-test-app-to-es6.sh` for both purposes, it generates an equivalent `.mjs` file from a given `.js` file. 
+You can use the script `bin/convert-test-app-to-es6.sh` for both purposes, it generates an equivalent `.mjs` file from a given `.js` file.
 
 For example, run `bin/convert-test-app-to-es6.sh packages/collector/test/tracing/databases/ioredis/app.js` to regenerate the ES6 variant of the `ioredis` test application, when you have made changes to `packages/collector/test/tracing/databases/ioredis/app.js`.
 
@@ -78,7 +80,7 @@ Example: Consider a directory containing the following files, each representing 
  - sender.js
  - app.js
  - rootExitSpanApp.js
- 
+
 If you add an ESM application for `sender.js`, you must also ensure that equivalent `.mjs` ESM applications exist for `app.js` and `rootExitSpanApp.js`.
 See https://github.com/instana/nodejs/pull/1561.
 
@@ -154,7 +156,7 @@ When creating a development branch, please follow these guidelines:
   - Those will be automatically deleted after 60 days.
   - We do not delete branches after merge.
   - Branches who do not use the prefix won't get cleaned up.
-  
+
 For example:
 
 - Good branch names:
@@ -258,7 +260,7 @@ The process to publish a new minor or patch release (that is, new versions of al
 - you do not need to change any settings (dry run etc.) the default values are fine
 - click on the "Run workflow" button to trigger the action
 
-The Github action will try to publish new versions for all packages from the most recent commit of the `main` branch. 
+The Github action will try to publish new versions for all packages from the most recent commit of the `main` branch.
 
 Parameters for the release Github action:
 * "Use lerna publish from-package": Instead of executing `lerna publish`, the action will execute `lerna publish from-package`. See [below](#separate-lerna-version-and-lerna-publish) for the use case for this parameter. If in doubt, leave it unchanged (that is, `false`).
