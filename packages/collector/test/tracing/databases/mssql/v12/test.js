@@ -16,5 +16,5 @@ describe('tracing/mssql@v12', function () {
     execSync('npm install --no-audit --prefix ./', { cwd: __dirname, stdio: 'inherit' });
   });
 
-  testBase.call(this, '12.0.0');
+  testBase.call(this, '12.2.0');
 });
