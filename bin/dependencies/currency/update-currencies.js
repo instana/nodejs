@@ -15,6 +15,7 @@ const MAJOR_UPDATES_MODE = process.env.MAJOR_UPDATES_MODE ? process.env.MAJOR_UP
 const BRANCH = process.env.BRANCH;
 const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
 const cwd = path.join(__dirname, '..', '..', '..');
+const DRY_RUN = process.env.DRY_RUN === 'true';
 
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
 let branchName = BRANCH;
@@ -25,7 +26,7 @@ console.log(`SKIP_PUSH: ${SKIP_PUSH}`);
 
 if (!MAJOR_UPDATES_MODE) {
   console.log('Preparing patch/minor updates...');
-  utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main');
+  utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main', DRY_RUN);
 }
 
 currencies.forEach(currency => {
@@ -60,6 +61,9 @@ currencies.forEach(currency => {
     return;
   }
 
+  console.log(`Latest version: ${latestVersion}`);
+  console.log(`Installed version: ${installedVersion}`);
+
   if (!MAJOR_UPDATES_MODE && semver.major(latestVersion) !== semver.major(installedVersion)) {
     console.log(`Skipping ${currency.name}. Major updates not allowed.`);
     return;
@@ -82,8 +86,10 @@ currencies.forEach(currency => {
     utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main');
   }
 
-  // 1. update currencies.json versions array
-  currency.versions.push(latestVersion);
+  // 1. remove installed version from currencies.json versions array
+  const installedVersionIndex = currency.versions.indexOf(installedVersion);
+  currency.versions = currency.versions.filter(version => version !== installedVersion);
+  currency.versions.splice(installedVersionIndex, 0, latestVersion);
   fs.writeFileSync(path.join(__dirname, '..', '..', '..', 'currencies.json'), JSON.stringify(currencies, null, 2));
 
   // 2. regenerate version folders
@@ -99,9 +105,12 @@ currencies.forEach(currency => {
       skipPush: SKIP_PUSH,
       prTitle: `[Currency Bot] Bumped ${currency.name} from ${installedVersion} to ${latestVersion}`
     });
-  } else {
-    execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
-  }
+  } else if (!DRY_RUN) {
+      execSync(`git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`, { cwd });
+    } else {
+      // eslint-disable-next-line max-len
+      console.log(`[DRY RUN] git commit -m "build: bumped ${currency.name} from ${installedVersion} to ${latestVersion}"`);
+    }
 });
 
 // For non-major updates, push all changes at once
