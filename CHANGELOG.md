@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.2.1](https://github.com/instana/nodejs/compare/v5.2.0...v5.2.1) (2026-01-22)
+
+
+### Bug Fixes
+
+* bumped tar from v7.5.3 to v7.5.6 ([5ea5a38](https://github.com/instana/nodejs/commit/5ea5a38667caba55cb5c2429507ad5104b3487c2))
+* **redis:** improved data capturing for legacy mode ([#2295](https://github.com/instana/nodejs/issues/2295)) ([f9d1654](https://github.com/instana/nodejs/commit/f9d16543a7da97daaa4ccee99cf55e77bcc50892))
+* resolved RunTree is not a constructor ([#2298](https://github.com/instana/nodejs/issues/2298)) ([c046cca](https://github.com/instana/nodejs/commit/c046ccabd449357bd71c859594440db7083e3d87))
+
+
+### Reverts
+
+* Revert "build: bumped @azure/storage-blob from 12.29.1 to 12.30.0" ([894087d](https://github.com/instana/nodejs/commit/894087db8c484c6b80f4525b7ca172994104aa76))
+
+
+
+
+
 # [5.2.0](https://github.com/instana/nodejs/compare/v5.1.0...v5.2.0) (2026-01-19)
 
 

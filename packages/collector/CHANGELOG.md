@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.2.1](https://github.com/instana/nodejs/compare/v5.2.0...v5.2.1) (2026-01-22)
+
+
+### Bug Fixes
+
+* **redis:** improved data capturing for legacy mode ([#2295](https://github.com/instana/nodejs/issues/2295)) ([f9d1654](https://github.com/instana/nodejs/commit/f9d16543a7da97daaa4ccee99cf55e77bcc50892))
+
+
+
+
+
 # [5.2.0](https://github.com/instana/nodejs/compare/v5.1.0...v5.2.0) (2026-01-19)
 
 
