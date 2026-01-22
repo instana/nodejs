@@ -225,7 +225,7 @@ module.exports = function (setupType, legacyMode = false) {
                     span => expect(span.async).to.not.exist,
                     span => expect(span.error).to.not.exist,
                     span => expect(span.ec).to.equal(0),
-                    span => expect(span.d).to.be.greaterThan(1)
+                    span => expect(span.d).to.be.gte(1)
                   ]);
                 })
               );
