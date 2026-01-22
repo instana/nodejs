@@ -13,18 +13,19 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('@instana/collector')();
+// eslint-disable-next-line no-eval
+const findRootFolder = eval(`(${process.env.FIND_ROOT_FOLDER_FN})`);
+const root = findRootFolder();
+const path = require('path');
+const requireAndVerify = require(path.join(root, 'packages', 'collector', 'test', 'test_util', 'require-and-verify'));
+
+requireAndVerify('@instana/collector')();
+const sql = requireAndVerify('mssql', process.env.LIBRARY_VERSION);
 
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const sql = require('mssql');
-const path = require('path');
 const devNull = require('dev-null');
-
-// eslint-disable-next-line no-eval
-const findRootFolder = eval(`(${process.env.FIND_ROOT_FOLDER_FN})`);
-const root = findRootFolder();
 const port = require(path.join(root, 'packages', 'collector', 'test', 'test_util', 'app-port'))();
 const { delay } = require(path.join(root, 'packages', 'core', 'test', 'test_util'));
 
@@ -99,6 +100,7 @@ async function connectWithRetry() {
   try {
     await connect();
     ready = true;
+    log('Connected to database. Ready.');
   } catch (err) {
     log('Failed to connect. Retrying in a couple of seconds.', err.message);
     await delay(5000);

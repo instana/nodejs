@@ -7,6 +7,7 @@
 
 const path = require('path');
 const uuid = require('uuid').v4;
+const semver = require('semver');
 const expect = require('chai').expect;
 const root = global.findRootFolder();
 
@@ -19,7 +20,7 @@ const globalAgent = require(path.join(root, 'packages', 'collector', 'test', 'gl
 const userTable = `UserTable_${uuid()}`.replace(/-/g, '_');
 const procedureName = `testProcedure_${uuid()}`.replace(/-/g, '_');
 
-module.exports = function () {
+module.exports = function (version) {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
 
@@ -27,15 +28,17 @@ module.exports = function () {
 
       before(async () => {
         controls = new ProcessControls({
-          dirname: __dirname,
+          appPath: path.join(__dirname, `v${semver.major(version)}`, 'app.js'),
+          cwd: path.join(__dirname, `v${semver.major(version)}`),
           useGlobalAgent: true,
           env: {
             AZURE_USER_TABLE: userTable,
-            AZURE_PROCEDURE_NAME: procedureName
+            AZURE_PROCEDURE_NAME: procedureName,
+            LIBRARY_VERSION: version
           }
         });
 
-        await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout() * 3);
+        await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
       });
 
       beforeEach(async () => {

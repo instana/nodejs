@@ -16,5 +16,5 @@ describe('tracing/mssql@v10', function () {
     execSync('npm install --no-audit --prefix ./', { cwd: __dirname, stdio: 'inherit' });
   });
 
-  testBase.call(this);
+  testBase.call(this, '10.0.4');
 });
