@@ -53,13 +53,8 @@ function main() {
 
     console.log(`Found test directory: ${testDir}`);
 
-    const majorVersions = new Set();
     currency.versions.forEach(version => {
       const majorVersion = semver.major(version);
-      majorVersions.add(majorVersion);
-    });
-
-    majorVersions.forEach(majorVersion => {
       const versionDir = path.join(testDir, `v${majorVersion}`);
 
       if (!fs.existsSync(versionDir)) {
@@ -86,7 +81,7 @@ describe('tracing/${currency.name}@v${majorVersion}', function () {
     execSync('npm install --no-audit --prefix ./', { cwd: __dirname, stdio: 'inherit' });
   });
 
-  testBase.call(this);
+  testBase.call(this, '${version}');
 });
 `;
       fs.writeFileSync(path.join(versionDir, 'test.js'), testContent);

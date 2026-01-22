@@ -83,33 +83,16 @@ function timestamp() {
 }
 
 async function setupTestInstallation() {
-  if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS === 'true') {
+  if (process.env.SKIP_TGZ === 'true') {
     return;
   }
 
   const testDir = __dirname;
-  const tgzDir = path.join(testDir, 'instana-tgz');
   const preinstallScript = path.join(testDir, 'preinstall.sh');
-  const collectorTgz = path.join(tgzDir, 'collector.tgz');
-  const coreTgz = path.join(tgzDir, 'core.tgz');
-  const sharedMetricsTgz = path.join(tgzDir, 'shared-metrics.tgz');
 
   if (fs.existsSync(preinstallScript)) {
-    const tgzNeedsUpdate =
-      !fs.existsSync(collectorTgz) ||
-      !fs.existsSync(coreTgz) ||
-      (fs.existsSync(sharedMetricsTgz) &&
-        (fs.statSync(preinstallScript).mtime > fs.statSync(collectorTgz).mtime ||
-          fs.statSync(preinstallScript).mtime > fs.statSync(coreTgz).mtime ||
-          fs.statSync(preinstallScript).mtime > fs.statSync(sharedMetricsTgz).mtime)) ||
-      (!fs.existsSync(sharedMetricsTgz) &&
-        (fs.statSync(preinstallScript).mtime > fs.statSync(collectorTgz).mtime ||
-          fs.statSync(preinstallScript).mtime > fs.statSync(coreTgz).mtime));
-
-    if (tgzNeedsUpdate) {
       // eslint-disable-next-line no-console
       console.log('Generating tgz files...');
       execSync(`bash "${preinstallScript}"`, { cwd: testDir, stdio: 'inherit' });
-    }
   }
 }

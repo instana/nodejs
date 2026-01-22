@@ -9,12 +9,12 @@ const path = require('path');
 const testBase = require('./test_base');
 const root = global.findRootFolder();
 const config = require(path.join(root, 'packages', 'core', 'test', 'config'));
-describe.only('tracing/mssql@v12', function () {
+describe('tracing/mssql@v12', function () {
   this.timeout(config.getTestTimeout());
   before(() => {
     execSync('rm -rf node_modules', { cwd: __dirname, stdio: 'inherit' });
     execSync('npm install --no-audit --prefix ./', { cwd: __dirname, stdio: 'inherit' });
   });
 
-  testBase.call(this);
+  testBase.call(this, '12.2.0');
 });
