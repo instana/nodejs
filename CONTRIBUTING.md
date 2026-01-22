@@ -4,7 +4,7 @@
 
 Please install [nvm](https://github.com/nvm-sh/nvm) to manage multiple Node.js versions. The current development version is defined in our [.nvmrc](https://github.com/instana/nodejs/blob/main/.nvmrc).
 
-Please run `bin/install-npm.sh` to install the correct version of NPM.
+The current NPM version is defined in the [.npm](https://github.com/instana/nodejs/blob/main/.npm) file.
 
 Python3 (< 3.11) is required, otherwise the db2 package won't build, see https://github.com/nodejs/node-gyp/issues/2219.
 If you're having issues with distutils module, then double check the python3 version (python3 --version) and make sure that the version pointing to is < 3.12
