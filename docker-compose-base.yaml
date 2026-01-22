@@ -82,7 +82,7 @@ services:
       - "2181:2181"
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:7.9.0
+    image: confluentinc/cp-schema-registry:8.0.3
     hostname: schema-registry
     depends_on:
       - kafka
@@ -97,7 +97,7 @@ services:
   kafka:
     # v7 = Kafka v3.9.x
     # https://docs.confluent.io/platform/current/installation/versions-interoperability.html
-    image: confluentinc/cp-kafka:7.9.0
+    image: confluentinc/cp-kafka:8.0.3
     hostname: kafka
     ports:
       - "9092:9092"
@@ -114,7 +114,7 @@ services:
       KAFKA_DEFAULT_REPLICATION_FACTOR: 1
 
   kafka-topics:
-    image: confluentinc/cp-kafka:7.9.0
+    image: confluentinc/cp-kafka:8.0.3
     entrypoint: "/bin/bash"
     command:
       - -lc

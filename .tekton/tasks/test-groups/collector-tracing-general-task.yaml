@@ -34,7 +34,7 @@ spec:
           - name: "APP_USER_PASSWORD"
             value: "teamnodejspassword"
     - name: zookeeper
-      image: confluentinc/cp-zookeeper:7.9.1
+      image: confluentinc/cp-zookeeper:8.0.3
       imagePullPolicy: IfNotPresent
       env:
           - name: "ZOOKEEPER_CLIENT_PORT"
@@ -46,7 +46,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 30
     - name: kafka
-      image: confluentinc/cp-kafka:7.9.1
+      image: confluentinc/cp-kafka:8.0.3
       imagePullPolicy: IfNotPresent
       env:
           - name: "KAFKA_BROKER_ID"
@@ -70,7 +70,7 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 60
     - name: kafka-topics
-      image: confluentinc/cp-kafka:7.9.1
+      image: confluentinc/cp-kafka:8.0.3
       imagePullPolicy: IfNotPresent
       args:
           - "-lc"

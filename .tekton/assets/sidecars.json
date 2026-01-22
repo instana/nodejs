@@ -35,7 +35,7 @@
     },
     {
       "name": "zookeeper",
-      "image": "confluentinc/cp-zookeeper:7.9.1",
+      "image": "confluentinc/cp-zookeeper:8.0.3",
       "env": [{ "name": "ZOOKEEPER_CLIENT_PORT", "value": "2181" }],
       "readinessProbe": {
         "tcpSocket": {
@@ -71,7 +71,7 @@
     },
     {
       "name": "kafka",
-      "image": "confluentinc/cp-kafka:7.9.1",
+      "image": "confluentinc/cp-kafka:8.0.3",
       "env": [
         { "name": "KAFKA_BROKER_ID", "value": "1" },
         { "name": "KAFKA_ZOOKEEPER_CONNECT", "value": "localhost:2181" },
@@ -101,7 +101,7 @@
     },
     {
       "name": "kafka-topics",
-      "image": "confluentinc/cp-kafka:7.9.1",
+      "image": "confluentinc/cp-kafka:8.0.3",
       "command": ["/bin/bash"],
       "args": [
         "-lc",
