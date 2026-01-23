@@ -50,7 +50,7 @@
     "latestVersion": "",
     "cloudNative": true,
     "isBeta": false,
-    "ignoreUpdates": false,
+    "ignoreUpdates": true,
     "note": "",
     "core": false
   },
@@ -61,7 +61,7 @@
     "latestVersion": "",
     "cloudNative": true,
     "isBeta": false,
-    "ignoreUpdates": false,
+    "ignoreUpdates": true,
     "note": "",
     "core": false
   },
