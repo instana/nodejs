@@ -536,7 +536,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      "12.2.0",
+      "10.0.4",
+      "9.3.0"
+    ]
   },
   {
     "name": "mysql",

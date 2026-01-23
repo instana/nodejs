@@ -51,3 +51,5 @@ Object.keys(DEFAULT_ENV_VALUES).forEach(key => {
     process.env[key] = DEFAULT_ENV_VALUES[key];
   }
 });
+
+global.findRootFolder = require('./test_util/findRootFolder');

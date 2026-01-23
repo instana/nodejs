@@ -5,24 +5,22 @@
 
 'use strict';
 
+const path = require('path');
 const uuid = require('uuid').v4;
+const semver = require('semver');
 const expect = require('chai').expect;
-const constants = require('@instana/core').tracing.constants;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
-const { expectAtLeastOneMatching, retry } = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../../test_util/ProcessControls');
-const globalAgent = require('../../../globalAgent');
+const root = global.findRootFolder();
+
+const constants = require(path.join(root, 'packages', 'core', 'src', 'tracing', 'constants'));
+const config = require(path.join(root, 'packages', 'core', 'test', 'config'));
+const { expectAtLeastOneMatching, retry } = require(path.join(root, 'packages', 'core', 'test', 'test_util'));
+const ProcessControls = require(path.join(root, 'packages', 'collector', 'test', 'test_util', 'ProcessControls'));
+const globalAgent = require(path.join(root, 'packages', 'collector', 'test', 'globalAgent'));
 
 const userTable = `UserTable_${uuid()}`.replace(/-/g, '_');
 const procedureName = `testProcedure_${uuid()}`.replace(/-/g, '_');
 
-describe('tracing/mssql', function () {
-  ['latest', 'v10'].forEach(mssqlVersion => {
-    const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-    mochaSuiteFn(`mssql@${mssqlVersion}`, function () {
-      this.timeout(config.getTestTimeout() * 5);
-
+module.exports = function (version) {
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
 
@@ -30,16 +28,17 @@ describe('tracing/mssql', function () {
 
       before(async () => {
         controls = new ProcessControls({
-          dirname: __dirname,
+          appPath: path.join(__dirname, `v${semver.major(version)}`, 'app.js'),
+          cwd: path.join(__dirname, `v${semver.major(version)}`),
           useGlobalAgent: true,
           env: {
-            MSSQL_VERSION: mssqlVersion,
             AZURE_USER_TABLE: userTable,
-            AZURE_PROCEDURE_NAME: procedureName
+            AZURE_PROCEDURE_NAME: procedureName,
+            LIBRARY_VERSION: version
           }
         });
 
-        await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout() * 3);
+        await controls.startAndWaitForAgentConnection(5000, Date.now() + config.getTestTimeout());
       });
 
       beforeEach(async () => {
@@ -694,11 +693,15 @@ describe('tracing/mssql', function () {
         expect(span.ec).to.equal(error ? 1 : 0);
         expect(span.data).to.exist;
         expect(span.data.mssql).to.exist;
-        expect(span.data.mssql.host).to.contain('nodejs-team-db-server.database.window');
         expect(span.data.mssql.port).to.equal(1433);
-        expect(span.data.mssql.user).to.equal('admin@instana@nodejs-team-db-server');
-        expect(span.data.mssql.db).to.equal('azure-nodejs-test');
-      }
-    });
-  });
-});
+        if (process.env.AZURE_SQL_SERVER) {
+          expect(span.data.mssql.host).to.contain('nodejs-team-db-server.database.window');
+          expect(span.data.mssql.user).to.equal('admin@instana@nodejs-team-db-server');
+          expect(span.data.mssql.db).to.equal('azure-nodejs-test');
+        } else {
+          expect(span.data.mssql.host).to.match(/^(localhost|127\.0\.0\.1)$/);
+          expect(span.data.mssql.user).to.equal('sa');
+          expect(span.data.mssql.db === undefined || span.data.mssql.db === 'master').to.be.true;
+        }
+    }
+};

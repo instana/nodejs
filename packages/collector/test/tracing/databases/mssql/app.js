@@ -13,18 +13,21 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('./mockVersion');
+// eslint-disable-next-line no-eval
+const findRootFolder = eval(`(${process.env.FIND_ROOT_FOLDER_FN})`);
+const root = findRootFolder();
+const path = require('path');
+const requireAndVerify = require(path.join(root, 'packages', 'collector', 'test', 'test_util', 'require-and-verify'));
 
-require('../../../..')();
+requireAndVerify('@instana/collector')();
+const sql = requireAndVerify('mssql', process.env.LIBRARY_VERSION);
 
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const sql = require('mssql');
 const devNull = require('dev-null');
-const port = require('../../../test_util/app-port')();
-
-const { delay } = require('@instana/core/test/test_util');
+const port = require(path.join(root, 'packages', 'collector', 'test', 'test_util', 'app-port'))();
+const { delay } = require(path.join(root, 'packages', 'core', 'test', 'test_util'));
 
 let pool;
 const app = express();
@@ -34,12 +37,13 @@ sql.on('error', err => {
   log(err);
 });
 
-const dbHost = process.env.AZURE_SQL_SERVER;
-const dbUser = process.env.AZURE_SQL_USERNAME;
-const dbPassword = process.env.AZURE_SQL_PWD;
-const userTable = process.env.AZURE_USER_TABLE;
-const procedureName = process.env.AZURE_PROCEDURE_NAME;
+const dbHost = process.env.AZURE_SQL_SERVER || process.env.MSSQL_HOST;
+const dbUser = process.env.AZURE_SQL_USERNAME || process.env.MSSQL_USER;
+const dbPassword = process.env.AZURE_SQL_PWD || process.env.MSSQL_PW;
+const userTable = process.env.AZURE_USER_TABLE || process.env.MSSQL_USER_TABLE;
+const procedureName = process.env.AZURE_PROCEDURE_NAME || process.env.MSSQL_PROCEDURE_NAME;
 
+const isLocalHost = dbHost === 'localhost' || dbHost === '127.0.0.1';
 const connectConfigBase = {
   user: dbUser,
   password: dbPassword,
@@ -48,7 +52,7 @@ const connectConfigBase = {
   database: process.env.AZURE_SQL_DATABASE,
   options: {
     encrypt: true,
-    trustServerCertificate: false
+    trustServerCertificate: isLocalHost
   }
 };
 
@@ -96,6 +100,7 @@ async function connectWithRetry() {
   try {
     await connect();
     ready = true;
+    log('Connected to database. Ready.');
   } catch (err) {
     log('Failed to connect. Retrying in a couple of seconds.', err.message);
     await delay(5000);

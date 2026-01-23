@@ -15,3 +15,7 @@ test/tracing/misc/esbuild-external/.env
 
 test/tracing/opentelemetry/package-lock.json
 test/tracing/opentelemetry/package.json
+
+test/instana-tgz
+
+test/**/package-lock.json

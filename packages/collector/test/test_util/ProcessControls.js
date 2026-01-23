@@ -184,6 +184,9 @@ class ProcessControls {
       forkConfig.execArgv = this.execArgv;
     }
 
+    const findRootFolderFn = global.findRootFolder.toString();
+    forkConfig.env.FIND_ROOT_FOLDER_FN = findRootFolderFn;
+
     this.process = this.args ? fork(this.appPath, this.args || [], forkConfig) : fork(this.appPath, forkConfig);
 
     this.process.on('message', message => {
