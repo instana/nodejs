@@ -164,14 +164,13 @@ services:
       POSTGRES_DB: nodedb
 
   mssql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    platform: linux/amd64
+    image: mcr.microsoft.com/azure-sql-edge:1.0.7
+    platform: linux/arm64
     ports:
       - 1433:1433
     environment:
       ACCEPT_EULA: Y
-      SA_PASSWORD: stanCanHazMsSQL1
-      MSSQL_PID: Express
+      MSSQL_SA_PASSWORD: stanCanHazMsSQL1
 
   rabbitmq:
     image: rabbitmq:3.7.8-alpine
