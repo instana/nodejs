@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 const instana = require('../../../../../..')();
 
 const express = require('express');
-const fetch = require('node-fetch-v2');
+
 const { sendToParent } = require('../../../../../../../core/test/test_util');
 const delay = require('../../../../../../../core/test/test_util/delay');
 const CollectingLogger = require('../../../../../test_util/CollectingLogger');

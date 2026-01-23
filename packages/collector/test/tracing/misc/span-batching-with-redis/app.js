@@ -20,7 +20,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const redis = require('redis');
-const fetch = require('node-fetch-v2');
+
 const port = require('../../../test_util/app-port')();
 const app = express();
 const logPrefix = `Redis Batching App (${process.pid}):\t`;

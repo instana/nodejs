@@ -471,23 +471,6 @@ function registerTests(agentControls, appUsesHttps, useHttp2CompatApi) {
         )
       ));
 
-  it(`must not collect credentials embedded in URLs (HTTPS: ${appUsesHttps})`, () =>
-    controls
-      .sendRequest({
-        method: 'GET',
-        path: '/',
-        embedCredentialsInUrl: 'user:password@'
-      })
-      .then(() =>
-        retry(() =>
-          agentControls.getSpans().then(spans => {
-            const span = verifyThereIsExactlyOneHttpEntry(spans, controls, '/', 'GET', 200, false, false);
-            expect(span.data.http.host).to.not.include('user');
-            expect(span.data.http.host).to.not.include('password');
-          })
-        )
-      ));
-
   it('must not touch headers set by the application', () => {
     const expectedCookie = 'sessionId=42';
     return controls
@@ -549,7 +532,11 @@ function registerTests(agentControls, appUsesHttps, useHttp2CompatApi) {
         fail('Expected the HTTP connection to be closed by the server.');
       })
       .catch(err => {
-        if ((err.error && err.error.code === 'ECONNRESET') || err.code === 'ECONNRESET') {
+        if (
+          (err.error && err.error.code === 'ECONNRESET') ||
+          err.code === 'ECONNRESET' ||
+          err?.cause.code === 'UND_ERR_SOCKET'
+        ) {
           // We actually expect the request to time out. But we still want to verify that an entry span has been created
           // for it.
           return retry(() =>

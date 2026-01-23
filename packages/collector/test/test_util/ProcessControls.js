@@ -11,7 +11,6 @@ const _ = require('lodash');
 const fork = require('child_process').fork;
 const fs = require('fs');
 const path = require('path');
-const fetch = require('node-fetch-v2');
 
 const config = require('../../../core/test/config');
 const http2Promise = require('./http2Promise');
@@ -346,34 +345,66 @@ class ProcessControls {
         requestOpts.headers['Content-Type'] = 'application/json';
       }
 
+      // Handle timeout using AbortController (native fetch doesn't support timeout option directly)
+      let timeoutId;
+      if (requestOpts.timeout) {
+        const controller = new AbortController();
+        requestOpts.signal = controller.signal;
+
+        timeoutId = setTimeout(() => {
+          controller.abort();
+        }, requestOpts.timeout);
+      }
+
       let response;
-      const result = await fetch(requestOpts.url, requestOpts);
-      const contentType = result.headers.get('content-type');
+      try {
+        const result = await fetch(requestOpts.url, requestOpts);
 
-      if (contentType && contentType.includes('application/json')) {
-        response = await result.json();
-      } else if (contentType && (contentType.includes('text/html') || contentType.includes('text/plain'))) {
-        response = await result.text();
-      } else {
-        // CASE: Some tests do not use express and then the header is missing
-        //       Some tests use `res.send`, which is not a JSON response.
-        response = await result.text();
-      }
-
-      if (checkStatusCode) {
-        if (result.status < 200 || result.status >= 300) {
-          throw new Error(response);
+        // Clear timeout if request completes successfully
+        if (timeoutId) {
+          clearTimeout(timeoutId);
         }
-      }
 
-      if (resolveWithFullResponse) {
-        return {
-          headers: result.headers,
-          body: response
-        };
-      }
+        const contentType = result.headers.get('content-type');
 
-      return response;
+        if (contentType && contentType.includes('application/json')) {
+          response = await result.json();
+        } else if (contentType && (contentType.includes('text/html') || contentType.includes('text/plain'))) {
+          response = await result.text();
+        } else {
+          // CASE: Some tests do not use express and then the header is missing
+          //       Some tests use `res.send`, which is not a JSON response.
+          response = await result.text();
+        }
+
+        if (checkStatusCode) {
+          if (result.status < 200 || result.status >= 300) {
+            throw new Error(response);
+          }
+        }
+
+        if (resolveWithFullResponse) {
+          return {
+            headers: result.headers,
+            body: response
+          };
+        }
+
+        return response;
+      } catch (err) {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+
+        if (err.name === 'AbortError') {
+          const timeoutError = new Error('Request timeout');
+          timeoutError.type = 'request-timeout';
+          timeoutError.error = { code: 'ETIMEDOUT' };
+          throw timeoutError;
+        }
+
+        throw err;
+      }
     }
   }
 

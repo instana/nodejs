@@ -20,7 +20,7 @@ const express = require('express');
 const fs = require('fs');
 const morgan = require('morgan');
 const path = require('path');
-const fetch = require('node-fetch-v2');
+
 const port = require('../../../../test_util/app-port')();
 
 const httpModule = process.env.APP_USES_HTTPS === 'true' ? require('https') : require('http');
@@ -146,15 +146,27 @@ app.get('/get-options-only', (req, res) => {
 });
 
 app.get('/timeout', (req, res) => {
-  fetch(`${baseUrl}/timeout`, {
+  // Native fetch doesn't support credentials in URL, we use Authorization header
+  const urlWithoutCreds = `${protocol}://localhost:${process.env.SERVER_PORT}/timeout`;
+  const auth = Buffer.from('user:password').toString('base64');
+
+  // Native fetch doesn't support timeout option, so we use AbortController
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 500);
+
+  fetch(urlWithoutCreds, {
     method: 'GET',
-    timeout: 500,
-    ca: cert
+    signal: controller.signal,
+    headers: {
+      Authorization: `Basic ${auth}`
+    }
   })
     .then(() => {
+      clearTimeout(timeoutId);
       res.sendStatus(200);
     })
     .catch(() => {
+      clearTimeout(timeoutId);
       res.sendStatus(500);
     });
 });

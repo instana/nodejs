@@ -6,7 +6,7 @@
 'use strict';
 
 const spawn = require('child_process').spawn;
-const fetch = require('node-fetch-v2');
+
 const portFinder = require('../test_util/portfinder');
 const path = require('path');
 const _ = require('lodash');

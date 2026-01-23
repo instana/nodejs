@@ -20,7 +20,7 @@ const Pool = _pg.Pool;
 const Client = _pg.Client;
 import express from 'express';
 import morgan from 'morgan';
-import fetch from 'node-fetch';
+
 import bodyParser from 'body-parser';
 import getAppPort from '../../../test_util/app-port.js';
 const port = getAppPort();

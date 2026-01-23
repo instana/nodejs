@@ -9,7 +9,6 @@ const { expect } = require('chai');
 const { spawn } = require('child_process');
 const _ = require('lodash');
 const portfinder = require('../test_util/portfinder');
-const fetch = require('node-fetch-v2');
 
 const config = require('../../../core/test/config');
 const { delay, retry } = require('../../../core/test/test_util');

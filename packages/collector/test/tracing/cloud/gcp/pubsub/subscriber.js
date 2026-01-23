@@ -18,7 +18,6 @@ const instana = require('../../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const fetch = require('node-fetch-v2');
 
 const { sendToParent } = require('../../../../../../core/test/test_util');
 const { createTopicAndSubscription } = require('./pubsubUtil');

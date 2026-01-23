@@ -18,7 +18,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 const app = express();
 const logPrefix = `Express / azure blob App (${process.pid}):\t`;
 const fs = require('fs');
-const fetch = require('node-fetch-v2');
+
 const filePath = `${__dirname}/sample.pdf`;
 const localFilePath = `${__dirname}/out.pdf`;
 const binaryData = fs.readFileSync(filePath);

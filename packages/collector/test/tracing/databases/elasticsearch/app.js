@@ -22,7 +22,7 @@ require('../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const fetch = require('node-fetch-v2');
+
 const { Client } = require('@elastic/elasticsearch');
 const port = require('../../../test_util/app-port')();
 

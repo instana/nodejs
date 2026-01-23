@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 require('../../../../../..')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
-const fetch = require('node-fetch-v2');
+
 const delay = require('@instana/core/test/test_util/delay');
 
 const AWS = require('aws-sdk');

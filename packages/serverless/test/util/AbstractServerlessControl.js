@@ -10,7 +10,6 @@ const {
   assert: { fail }
 } = require('chai');
 const path = require('path');
-const fetch = require('node-fetch-v2');
 
 const retry = require('@instana/core/test/test_util/retry');
 // const delay = require('@instana/core/test/test_util/delay');
