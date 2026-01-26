@@ -27,7 +27,7 @@ let connection;
 (async function connect() {
   try {
     connection = await oracledb.getConnection({
-      user: 'teamnodejs',
+      user: 'SYSTEM',
       password: 'teamnodejspassword',
       connectString: `${process.env.ORACLEDB}/FREEPDB1`
     });
