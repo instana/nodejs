@@ -210,7 +210,7 @@
     "node-gyp": "11.2.0",
     "node-nats-streaming": "0.3.2",
     "oracledb": "6.10.0",
-    "pg": "8.17.1",
+    "pg": "8.17.2",
     "pino": "10.2.0",
     "pino-http": "9.0.0",
     "pino-v8": "npm:pino@8.21.0",
