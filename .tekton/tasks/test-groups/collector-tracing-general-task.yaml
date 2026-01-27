@@ -24,14 +24,10 @@ spec:
           periodSeconds: 2
           timeoutSeconds: 10
     - name: oracledb
-      image: gvenzl/oracle-free:23-slim
+      image: container-registry.oracle.com/database/free:23.6.0.0-lite
       imagePullPolicy: IfNotPresent
       env:
-          - name: "ORACLE_PASSWORD"
-            value: "teamnodejstest"
-          - name: "APP_USER"
-            value: "teamnodejs"
-          - name: "APP_USER_PASSWORD"
+          - name: "ORACLE_PWD"
             value: "teamnodejspassword"
     - name: zookeeper
       image: confluentinc/cp-zookeeper:7.9.1
