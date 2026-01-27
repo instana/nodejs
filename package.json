@@ -260,7 +260,7 @@
     "ibm_db": "3.3.4",
     "node-rdkafka": "3.6.1",
     "pg-native": "3.5.2",
-    "prisma": "7.2.0"
+    "prisma": "7.3.0"
   },
   "overrides": {
     "kafka-node": {
