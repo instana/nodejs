@@ -155,10 +155,14 @@ function instrumentApi(client, actionPath, clusterInfo) {
       } else {
         // eslint-disable-next-line no-useless-catch
         try {
-          return originalFunction.apply(ctx, originalArgs).then(onSuccess.bind(null, span), error => {
-            onError(span, error);
-            throw error;
-          });
+          const promise = originalFunction.apply(ctx, originalArgs);
+          if (typeof promise?.then === 'function') {
+            return promise.then(onSuccess.bind(null, span), error => {
+              onError(span, error);
+              throw error;
+            });
+          }
+          return promise;
         } catch (e) {
           // Immediately cleanup on synchronous errors.
           throw e;
@@ -448,10 +452,14 @@ function instrumentedRequest(ctx, origEsReq, originalArgs) {
     } else {
       // eslint-disable-next-line no-useless-catch
       try {
-        return origEsReq.apply(ctx, originalArgs).then(onSuccess.bind(null, span), error => {
-          onError(span, error);
-          throw error;
-        });
+        const promise = origEsReq.apply(ctx, originalArgs);
+        if (typeof promise?.then === 'function') {
+          return promise.then(onSuccess.bind(null, span), error => {
+            onError(span, error);
+            throw error;
+          });
+        }
+        return promise;
       } catch (e) {
         // Immediately cleanup on synchronous errors.
         throw e;

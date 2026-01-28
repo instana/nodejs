@@ -97,11 +97,13 @@ function instrumentSendCommand(original) {
       span.stack = tracingUtil.getStackTrace(wrappedInternalSendCommand);
 
       callback = cls.ns.bind(onResult);
-      command.promise.then(
-        // make sure that the first parameter is never truthy
-        callback.bind(null, null),
-        callback
-      );
+      if (typeof command.promise?.then === 'function') {
+        command.promise.then(
+          // make sure that the first parameter is never truthy
+          callback.bind(null, null),
+          callback
+        );
+      }
 
       return original.apply(client, argsForOriginal);
 
@@ -190,7 +192,7 @@ function instrumentMultiOrPipelineExec(clsContextForMultiOrPipeline, commandName
     span.ts = Date.now();
 
     const result = original.apply(this, arguments);
-    if (result.then) {
+    if (typeof result?.then === 'function') {
       result.then(
         results => {
           endCallback.call(null, clsContextForMultiOrPipeline, span, null, results);

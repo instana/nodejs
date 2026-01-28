@@ -77,7 +77,7 @@ function instrumentConnect(originalConnect) {
 
     const prom = originalConnect.apply(originalThis, originalArgs);
 
-    if (prom && prom.then) {
+    if (prom && typeof prom.then === 'function') {
       prom.then(cluster => {
         instrumentCluster(cluster, connectionStr);
         return cluster;
@@ -488,7 +488,7 @@ function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sql, 
       if (callbackIndex < 0) {
         const prom = original.apply(originalThis, originalArgs);
 
-        if (prom.then && prom.catch) {
+        if (typeof prom?.then === 'function' && typeof prom?.catch === 'function') {
           prom
             .then(result => {
               if (resultHandler) {
