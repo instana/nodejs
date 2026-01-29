@@ -4,19 +4,4 @@ Use Instana’s **generic serverless** collector to monitor your Node.js applica
 
 **Note:** This package is currently under development and marked as **beta**. Before you proceed with updating to a newer version, please ensure to review the release notes for any upcoming changes that could potentially cause compatibility issues.
 
-## Restrictions
-
-The serverless collector **does not** support autotracing and metrics.
-
-## Installation
-
-```sh
-npm i @instana/serverless-collector --save
-```
-
-```js
-// NOTE: The package auto initializes itself.
-require('@instana/serverless-collector');
-```
-
-For more in-depth documentation, refer to this [page](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-agentless-monitoring-public-preview).
+Follow our [documentation](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-agentless-monitoring-public-preview) for more information.
