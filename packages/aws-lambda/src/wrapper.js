@@ -37,6 +37,10 @@ coreConfig.init(logger);
 let config = coreConfig.normalize({}, lambdaConfigDefaults);
 let coldStart = true;
 
+// Preload OpenTelemetry instrumentations before core init to avoid lazy loading overhead
+// This improves Lambda cold start performance
+instanaCore.tracing.otelInstrumentations.preloadOtelInstrumentations();
+
 // Initialize instrumentations early to allow for require statements after our
 // package has been required but before the actual instana.wrap(...) call.
 instanaCore.preInit(config);
@@ -313,6 +317,10 @@ function init(event, arnInfo, _config) {
     //       the data to the serverless acceptor directly takes too long.
     retries: !!useLambdaExtension
   });
+
+  // Preload OpenTelemetry instrumentations before core init to avoid lazy loading overhead
+  // Package names are retrieved from the instrumentations registry
+  instanaCore.tracing.otelInstrumentations.preloadOtelInstrumentations();
 
   instanaCore.init(config, backendConnector, identityProvider);
 
