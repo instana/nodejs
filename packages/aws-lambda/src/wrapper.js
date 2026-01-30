@@ -21,7 +21,12 @@ const { tracing, coreConfig } = instanaCore;
 const { tracingHeaders, constants, spanBuffer } = tracing;
 
 const lambdaConfigDefaults = {
-  tracing: { forceTransmissionStartingAt: 25, transmissionDelay: 100, initialTransmissionDelay: 100 }
+  tracing: {
+    forceTransmissionStartingAt: 25,
+    transmissionDelay: 100,
+    initialTransmissionDelay: 100,
+    isAwsLambda: true
+  }
 };
 
 // Node.js 24+ removed support for callback-based handlers (3 parameters).
@@ -279,6 +284,7 @@ function init(event, arnInfo, _config) {
   //         - late env variables (less likely)
   //         - custom logger
   //         - we always renormalize unconditionally to ensure safety.
+  // The isAwsLambda flag is set in lambdaConfigDefaults and will be merged during normalization
   config = coreConfig.normalize(userConfig, lambdaConfigDefaults);
 
   if (!config.tracing.enabled) {
