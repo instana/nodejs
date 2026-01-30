@@ -95,7 +95,7 @@
     "@aws-sdk/lib-dynamodb": "3.978.0",
     "@aws-sdk/middleware-retry": "3.370.0",
     "@aws-sdk/util-retry": "3.370.0",
-    "@azure/storage-blob": "12.29.1",
+    "@azure/storage-blob": "12.30.0",
     "@azure/storage-blob-v12.27.0": "npm:@azure/storage-blob@12.27.0",
     "@commitlint/cli": "14.1.0",
     "@commitlint/config-conventional": "14.1.0",
