@@ -36,6 +36,7 @@ const { validateStackTraceMode, validateStackTraceLength } = require('./configVa
  * @property {boolean} [ignoreEndpointsDisableSuppression]
  * @property {boolean} [disableEOLEvents]
  * @property {globalStackTraceConfig} [global]
+ * @property {boolean} [isAwsLambda]
  */
 
 /**
@@ -120,7 +121,8 @@ let defaults = {
     },
     ignoreEndpoints: {},
     ignoreEndpointsDisableSuppression: false,
-    disableEOLEvents: false
+    disableEOLEvents: false,
+    isAwsLambda: false
   },
   secrets: {
     matcherMode: 'contains-ignore-case',
