@@ -353,3 +353,4 @@ exports._debugCurrentSpanName = function _debugCurrentSpanName() {
 };
 
 exports.shimmer = require('./shimmer');
+exports.otelInstrumentations = require('./opentelemetry-instrumentations');

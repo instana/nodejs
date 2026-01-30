@@ -12,25 +12,9 @@ const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
 const utils = require('./utils');
 const constants = require('../constants');
 const supportedVersion = require('../supportedVersion');
-const { preloadOtelInstrumentations } = require('./preload');
+const { getInstrumentations } = require('./instrumentations');
 
-// NOTE: Please refrain from utilizing third-party instrumentations.
-//       Instead, opt for officially released instrumentations available in the OpenTelemetry
-//       repository at https://github.com/open-telemetry/opentelemetry-js-contrib.
-//       Third-party instrumentations typically bypass a review process,
-//       resulting in suboptimal code coverage and potential vulnerabilities.
-const instrumentations = {
-  '@opentelemetry/instrumentation-fs': { name: 'fs' },
-  '@opentelemetry/instrumentation-restify': { name: 'restify' },
-  '@opentelemetry/instrumentation-socket.io': { name: 'socket.io' },
-  '@opentelemetry/instrumentation-tedious': { name: 'tedious' },
-  '@opentelemetry/instrumentation-oracledb': { name: 'oracle' },
-  '@instana/instrumentation-confluent-kafka-javascript': { name: 'confluent-kafka' }
-};
-
-function getInstrumentationPackageNames() {
-  return Object.keys(instrumentations);
-}
+const instrumentations = getInstrumentations();
 
 // NOTE: using a logger might create a recursive execution
 //       logger.debug -> creates fs call -> calls transformToInstanaSpan -> calls logger.debug
@@ -38,13 +22,6 @@ function getInstrumentationPackageNames() {
 module.exports.init = (_config, cls) => {
   if (!supportedVersion(process.versions.node)) {
     return;
-  }
-
-  // Preload OpenTelemetry instrumentation packages in AWS Lambda environment
-  // to avoid lazy loading overhead during cold starts
-  if (_config && _config.tracing && _config.tracing.isAwsLambda) {
-    const packageNames = getInstrumentationPackageNames();
-    preloadOtelInstrumentations(packageNames);
   }
 
   Object.keys(instrumentations).forEach(k => {
