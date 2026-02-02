@@ -29,23 +29,11 @@ exports.getInstrumentations = () => {
 
 /**
  * Preloads OpenTelemetry instrumentation packages to avoid lazy loading overhead.
- * This is particularly useful in AWS Lambda environments where cold start performance is critical.
+ * This is particularly useful in AWS Lambda environments where cold start performance is affected by the lazy loading.
  */
 exports.preload = () => {
   const packageNames = Object.keys(instrumentations);
-
-  // eslint-disable-next-line no-console
-  console.log(`[Instana] Preloading ${packageNames.length} OpenTelemetry instrumentations...`);
-
   packageNames.forEach(packageName => {
-    const pkgStart = Date.now();
-    try {
-      require(packageName);
-      // eslint-disable-next-line no-console
-      console.debug(`[PERF] [OTEL] [EARLY-PRELOAD] ${packageName} loaded in ${Date.now() - pkgStart}ms`);
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.debug(`[PERF] [OTEL] [EARLY-PRELOAD] ${packageName} failed: ${e.message}`);
-    }
+    require(packageName);
   });
 };
