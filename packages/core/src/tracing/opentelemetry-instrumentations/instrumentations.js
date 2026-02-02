@@ -34,7 +34,6 @@ exports.getInstrumentationPackageNames = () => {
 /**
  * Preloads OpenTelemetry instrumentation packages to avoid lazy loading overhead.
  * This is particularly useful in AWS Lambda environments where cold start performance is critical.
- * Uses the package names from the instrumentations registry defined in this file.
  */
 exports.preloadOtelInstrumentations = () => {
   const packageNames = Object.keys(instrumentations);

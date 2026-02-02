@@ -38,7 +38,6 @@ let config = coreConfig.normalize({}, lambdaConfigDefaults);
 let coldStart = true;
 
 // Preload OpenTelemetry instrumentations before core init to avoid lazy loading overhead
-// This improves Lambda cold start performance
 instanaCore.tracing.otelInstrumentations.preloadOtelInstrumentations();
 
 // Initialize instrumentations early to allow for require statements after our
@@ -288,7 +287,6 @@ function init(event, arnInfo, _config) {
   //         - late env variables (less likely)
   //         - custom logger
   //         - we always renormalize unconditionally to ensure safety.
-  // The isAwsLambda flag is set in lambdaConfigDefaults and will be merged during normalization
   config = coreConfig.normalize(userConfig, lambdaConfigDefaults);
 
   if (!config.tracing.enabled) {
@@ -318,8 +316,6 @@ function init(event, arnInfo, _config) {
     retries: !!useLambdaExtension
   });
 
-  // Preload OpenTelemetry instrumentations before core init to avoid lazy loading overhead
-  // Package names are retrieved from the instrumentations registry
   instanaCore.tracing.otelInstrumentations.preloadOtelInstrumentations();
 
   instanaCore.init(config, backendConnector, identityProvider);
