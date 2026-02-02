@@ -943,6 +943,32 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.ignoreEndpoints).to.deep.equal({});
   });
 
+  it('preloadOtelInstrumentations should default to false', () => {
+    const config = coreConfig.normalize({});
+    expect(config.tracing.preloadOtelInstrumentations).to.be.false;
+  });
+
+  it('preloadOtelInstrumentations should accept true value', () => {
+    const config = coreConfig.normalize({
+      tracing: {
+        preloadOtelInstrumentations: true
+      }
+    });
+    expect(config.tracing.preloadOtelInstrumentations).to.be.true;
+  });
+
+  it('preloadOtelInstrumentations should work with custom defaults', () => {
+    const customDefaults = {
+      tracing: {
+        preloadOtelInstrumentations: true,
+        forceTransmissionStartingAt: 25
+      }
+    };
+    const config = coreConfig.normalize({}, customDefaults);
+    expect(config.tracing.preloadOtelInstrumentations).to.be.true;
+    expect(config.tracing.forceTransmissionStartingAt).to.equal(25);
+  });
+
   describe('when testing ignore endpoints reading from INSTANA_IGNORE_ENDPOINTS_PATH env variable', () => {
     let filePaths;
 
@@ -1047,6 +1073,7 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.kafka.traceCorrelation).to.be.true;
     expect(config.tracing.useOpentelemetry).to.equal(true);
     expect(config.tracing.allowRootExitSpan).to.equal(false);
+    expect(config.tracing.preloadOtelInstrumentations).to.equal(false);
 
     expect(config.secrets).to.be.an('object');
     expect(config.secrets.matcherMode).to.equal('contains-ignore-case');

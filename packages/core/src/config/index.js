@@ -36,6 +36,7 @@ const { validateStackTraceMode, validateStackTraceLength } = require('./configVa
  * @property {boolean} [ignoreEndpointsDisableSuppression]
  * @property {boolean} [disableEOLEvents]
  * @property {globalStackTraceConfig} [global]
+ * @property {boolean} [preloadOtelInstrumentations]
  */
 
 /**
@@ -120,7 +121,8 @@ let defaults = {
     },
     ignoreEndpoints: {},
     ignoreEndpointsDisableSuppression: false,
-    disableEOLEvents: false
+    disableEOLEvents: false,
+    preloadOtelInstrumentations: false
   },
   secrets: {
     matcherMode: 'contains-ignore-case',
@@ -171,6 +173,7 @@ module.exports.normalize = (userConfig, defaultsOverride = {}) => {
   normalizeMetricsConfig(targetConfig);
   normalizeTracingConfig(targetConfig);
   normalizeSecrets(targetConfig);
+  normalizePreloadOtelInstrumentations(targetConfig);
   return targetConfig;
 };
 
@@ -814,4 +817,15 @@ function normalizeDisableEOLEvents(config) {
   }
 
   config.tracing.disableEOLEvents = defaults.tracing.disableEOLEvents;
+}
+
+/**
+ * @param {InstanaConfig} config
+ */
+function normalizePreloadOtelInstrumentations(config) {
+  if (config.tracing.preloadOtelInstrumentations === true) {
+    return;
+  }
+
+  config.tracing.preloadOtelInstrumentations = defaults.tracing.preloadOtelInstrumentations;
 }
