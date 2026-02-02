@@ -945,27 +945,25 @@ describe('config.normalizeConfig', () => {
 
   it('preloadOtelInstrumentations should default to false', () => {
     const config = coreConfig.normalize({});
-    expect(config.tracing.preloadOtelInstrumentations).to.be.false;
+    expect(config.preloadOtelInstrumentations).to.be.false;
   });
 
   it('preloadOtelInstrumentations should accept true value', () => {
     const config = coreConfig.normalize({
-      tracing: {
-        preloadOtelInstrumentations: true
-      }
+      preloadOtelInstrumentations: true
     });
-    expect(config.tracing.preloadOtelInstrumentations).to.be.true;
+    expect(config.preloadOtelInstrumentations).to.be.true;
   });
 
   it('preloadOtelInstrumentations should work with custom defaults', () => {
     const customDefaults = {
+      preloadOtelInstrumentations: true,
       tracing: {
-        preloadOtelInstrumentations: true,
         forceTransmissionStartingAt: 25
       }
     };
     const config = coreConfig.normalize({}, customDefaults);
-    expect(config.tracing.preloadOtelInstrumentations).to.be.true;
+    expect(config.preloadOtelInstrumentations).to.be.true;
     expect(config.tracing.forceTransmissionStartingAt).to.equal(25);
   });
 
@@ -1073,7 +1071,8 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.kafka.traceCorrelation).to.be.true;
     expect(config.tracing.useOpentelemetry).to.equal(true);
     expect(config.tracing.allowRootExitSpan).to.equal(false);
-    expect(config.tracing.preloadOtelInstrumentations).to.equal(false);
+
+    expect(config.preloadOtelInstrumentations).to.equal(false);
 
     expect(config.secrets).to.be.an('object');
     expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
