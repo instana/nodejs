@@ -36,7 +36,6 @@ const { validateStackTraceMode, validateStackTraceLength } = require('./configVa
  * @property {boolean} [ignoreEndpointsDisableSuppression]
  * @property {boolean} [disableEOLEvents]
  * @property {globalStackTraceConfig} [global]
- * @property {boolean} [isAwsLambda]
  */
 
 /**
@@ -121,8 +120,7 @@ let defaults = {
     },
     ignoreEndpoints: {},
     ignoreEndpointsDisableSuppression: false,
-    disableEOLEvents: false,
-    isAwsLambda: false
+    disableEOLEvents: false
   },
   secrets: {
     matcherMode: 'contains-ignore-case',
@@ -249,7 +247,6 @@ function normalizeTracingConfig(config) {
   normalizeIgnoreEndpoints(config);
   normalizeIgnoreEndpointsDisableSuppression(config);
   normalizeDisableEOLEvents(config);
-  normalizeIsAwsLambda(config);
 }
 
 /**
@@ -817,17 +814,4 @@ function normalizeDisableEOLEvents(config) {
   }
 
   config.tracing.disableEOLEvents = defaults.tracing.disableEOLEvents;
-}
-/**
- * @param {InstanaConfig} config
- */
-function normalizeIsAwsLambda(config) {
-  if (config.tracing.isAwsLambda === false) {
-    return;
-  }
-  if (config.tracing.isAwsLambda === true) {
-    return;
-  }
-
-  config.tracing.isAwsLambda = defaults.tracing.isAwsLambda;
 }
