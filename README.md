@@ -43,7 +43,7 @@ Checkout our [breaking changes documentation](https://www.ibm.com/docs/en/instan
 
 ## Filing Issues
 
-If something is not working as expected or you have a question, instead of opening an issue in this repository, please open a ticket at <https://www.ibm.com/mysupport> instead. Please refrain from filing issues or tickets if your audit tool (npm audit, Snyk, etc.) reported a CVE for a dependency or a transitive dependency of `@instana/collector` -- we run these audits with every build and take appropriate action automatically.
+If something is not working as expected or you have a question, instead of opening an issue in this repository, please open a ticket at <https://www.ibm.com/mysupport> instead. Please refrain from filing issues or tickets if your audit tool (npm audit, Snyk, etc.) reported a CVE for the Instana dependencies or a transitive dependencies -- we run these audits with every build and take appropriate action automatically.
 
 ## Documentation
 
