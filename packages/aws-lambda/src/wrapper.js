@@ -24,8 +24,7 @@ const lambdaConfigDefaults = {
   tracing: {
     forceTransmissionStartingAt: 25,
     transmissionDelay: 100,
-    initialTransmissionDelay: 100,
-    isAwsLambda: true
+    initialTransmissionDelay: 100
   }
 };
 
@@ -315,8 +314,6 @@ function init(event, arnInfo, _config) {
     //       the data to the serverless acceptor directly takes too long.
     retries: !!useLambdaExtension
   });
-
-  instanaCore.tracing.otelInstrumentations.preloadOtelInstrumentations();
 
   instanaCore.init(config, backendConnector, identityProvider);
 
