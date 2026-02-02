@@ -35,9 +35,8 @@ const logger = serverlessLogger.init();
 coreConfig.init(logger);
 let config = coreConfig.normalize({}, lambdaConfigDefaults);
 let coldStart = true;
-
 // Preload OpenTelemetry instrumentations to avoid lazy loading overhead
-instanaCore.tracing.otelInstrumentations.preload();
+config.tracing.preloadOtelInstrumentations = true;
 
 // Initialize instrumentations early to allow for require statements after our
 // package has been required but before the actual instana.wrap(...) call.
