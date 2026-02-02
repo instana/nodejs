@@ -249,6 +249,7 @@ function normalizeTracingConfig(config) {
   normalizeIgnoreEndpoints(config);
   normalizeIgnoreEndpointsDisableSuppression(config);
   normalizeDisableEOLEvents(config);
+  normalizeIsAwsLambda(config);
 }
 
 /**
@@ -816,4 +817,17 @@ function normalizeDisableEOLEvents(config) {
   }
 
   config.tracing.disableEOLEvents = defaults.tracing.disableEOLEvents;
+}
+/**
+ * @param {InstanaConfig} config
+ */
+function normalizeIsAwsLambda(config) {
+  if (config.tracing.isAwsLambda === false) {
+    return;
+  }
+  if (config.tracing.isAwsLambda === true) {
+    return;
+  }
+
+  config.tracing.isAwsLambda = defaults.tracing.isAwsLambda;
 }
