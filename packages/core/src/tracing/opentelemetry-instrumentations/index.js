@@ -10,8 +10,5 @@ module.exports = {
   },
   get preloadOtelInstrumentations() {
     return require('./instrumentations').preloadOtelInstrumentations;
-  },
-  get getInstrumentationPackageNames() {
-    return require('./instrumentations').getInstrumentationPackageNames;
   }
 };
