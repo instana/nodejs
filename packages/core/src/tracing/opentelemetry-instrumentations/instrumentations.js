@@ -27,10 +27,6 @@ exports.getInstrumentations = () => {
   return instrumentations;
 };
 
-exports.getInstrumentationPackageNames = () => {
-  return Object.keys(instrumentations);
-};
-
 /**
  * Preloads OpenTelemetry instrumentation packages to avoid lazy loading overhead.
  * This is particularly useful in AWS Lambda environments where cold start performance is critical.

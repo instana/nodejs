@@ -45,44 +45,6 @@ describe('OpenTelemetry instrumentations registry', () => {
     });
   });
 
-  describe('getInstrumentationPackageNames', () => {
-    it('should return an array', () => {
-      const packageNames = instrumentationsModule.getInstrumentationPackageNames();
-      expect(packageNames).to.be.an('array');
-    });
-
-    it('should return all package names', () => {
-      const packageNames = instrumentationsModule.getInstrumentationPackageNames();
-      expect(packageNames).to.have.lengthOf(6);
-    });
-
-    it('should include all expected package names', () => {
-      const packageNames = instrumentationsModule.getInstrumentationPackageNames();
-      const expected = [
-        '@opentelemetry/instrumentation-fs',
-        '@opentelemetry/instrumentation-restify',
-        '@opentelemetry/instrumentation-socket.io',
-        '@opentelemetry/instrumentation-tedious',
-        '@opentelemetry/instrumentation-oracledb',
-        '@instana/instrumentation-confluent-kafka-javascript'
-      ];
-
-      expected.forEach(pkg => {
-        expect(packageNames).to.include(pkg);
-      });
-    });
-
-    it('should match the keys from getInstrumentations', () => {
-      const instrumentations = instrumentationsModule.getInstrumentations();
-      const packageNames = instrumentationsModule.getInstrumentationPackageNames();
-
-      expect(packageNames).to.have.lengthOf(Object.keys(instrumentations).length);
-      packageNames.forEach(name => {
-        expect(instrumentations).to.have.property(name);
-      });
-    });
-  });
-
   describe('preloadOtelInstrumentations', () => {
     let consoleLogStub;
 
