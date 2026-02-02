@@ -36,7 +36,6 @@ const { validateStackTraceMode, validateStackTraceLength } = require('./configVa
  * @property {boolean} [ignoreEndpointsDisableSuppression]
  * @property {boolean} [disableEOLEvents]
  * @property {globalStackTraceConfig} [global]
- * @property {boolean} [preloadOtelInstrumentations]
  */
 
 /**
@@ -83,6 +82,7 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
  * @property {InstanaTracingOption} [tracing]
  * @property {InstanaSecretsOption} [secrets]
  * @property {number} [timeBetweenHealthcheckCalls]
+ * @property {boolean} [preloadOtelInstrumentations]
  */
 
 /** @type {import('../core').GenericLogger} */
@@ -121,9 +121,9 @@ let defaults = {
     },
     ignoreEndpoints: {},
     ignoreEndpointsDisableSuppression: false,
-    disableEOLEvents: false,
-    preloadOtelInstrumentations: false
+    disableEOLEvents: false
   },
+  preloadOtelInstrumentations: false,
   secrets: {
     matcherMode: 'contains-ignore-case',
     keywords: ['key', 'pass', 'secret']
@@ -823,9 +823,9 @@ function normalizeDisableEOLEvents(config) {
  * @param {InstanaConfig} config
  */
 function normalizePreloadOtelInstrumentations(config) {
-  if (config.tracing.preloadOtelInstrumentations === true) {
+  if (config.preloadOtelInstrumentations === true) {
     return;
   }
 
-  config.tracing.preloadOtelInstrumentations = defaults.tracing.preloadOtelInstrumentations;
+  config.preloadOtelInstrumentations = defaults.preloadOtelInstrumentations;
 }

@@ -62,9 +62,6 @@ function registerAdditionalInstrumentations(additionalInstrumentationModules) {
  * @param {import('./config').InstanaConfig} preliminaryConfig
  */
 function preInit(preliminaryConfig) {
-  if (preliminaryConfig.tracing.preloadOtelInstrumentations) {
-    tracing.otelInstrumentations.preload();
-  }
   util.init(preliminaryConfig);
   util.hasThePackageBeenInitializedTooLate.activate();
   tracing.preInit(preliminaryConfig);
