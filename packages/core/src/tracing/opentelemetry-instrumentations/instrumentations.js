@@ -31,7 +31,7 @@ exports.getInstrumentations = () => {
  * Preloads OpenTelemetry instrumentation packages to avoid lazy loading overhead.
  * This is particularly useful in AWS Lambda environments where cold start performance is critical.
  */
-exports.preloadOtelInstrumentations = () => {
+exports.preload = () => {
   const packageNames = Object.keys(instrumentations);
 
   // eslint-disable-next-line no-console
