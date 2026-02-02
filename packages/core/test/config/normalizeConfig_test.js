@@ -943,6 +943,32 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.ignoreEndpoints).to.deep.equal({});
   });
 
+  it('should default to false', () => {
+    const config = coreConfig.normalize({});
+    expect(config.tracing.isAwsLambda).to.be.false;
+  });
+
+  it('should accept true value', () => {
+    const config = coreConfig.normalize({
+      tracing: {
+        isAwsLambda: true
+      }
+    });
+    expect(config.tracing.isAwsLambda).to.be.true;
+  });
+
+  it('should work with custom defaults', () => {
+    const customDefaults = {
+      tracing: {
+        isAwsLambda: true,
+        forceTransmissionStartingAt: 25
+      }
+    };
+    const config = coreConfig.normalize({}, customDefaults);
+    expect(config.tracing.isAwsLambda).to.be.true;
+    expect(config.tracing.forceTransmissionStartingAt).to.equal(25);
+  });
+
   describe('when testing ignore endpoints reading from INSTANA_IGNORE_ENDPOINTS_PATH env variable', () => {
     let filePaths;
 
@@ -1047,6 +1073,7 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.kafka.traceCorrelation).to.be.true;
     expect(config.tracing.useOpentelemetry).to.equal(true);
     expect(config.tracing.allowRootExitSpan).to.equal(false);
+    expect(config.tracing.isAwsLambda).to.equal(false);
 
     expect(config.secrets).to.be.an('object');
     expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
