@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.2.2](https://github.com/instana/nodejs/compare/v5.2.1...v5.2.2) (2026-02-02)
+
+
+### Bug Fixes
+
+* bumped @opentelemetry/instrumentation-oracledb from 0.34.1 to 0.36.0 ([#2308](https://github.com/instana/nodejs/issues/2308)) ([14b316c](https://github.com/instana/nodejs/commit/14b316cf9d6282fca0a3fc65e98b45f252d67b80))
+* bumped @opentelemetry/instrumentation-restify from 0.53.0 to 0.56.0 ([#2309](https://github.com/instana/nodejs/issues/2309)) ([85a2501](https://github.com/instana/nodejs/commit/85a250165ddb3df651a061a25b169e0f2d12dfd3))
+
+
+
+
+
 ## [5.2.1](https://github.com/instana/nodejs/compare/v5.2.0...v5.2.1) (2026-01-22)
 
 
