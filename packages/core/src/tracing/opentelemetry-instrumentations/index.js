@@ -8,7 +8,7 @@ module.exports = {
   get otelInstrumentations() {
     return require('./wrap');
   },
-  get preloadOtelInstrumentations() {
-    return require('./instrumentations').preloadOtelInstrumentations;
+  get preload() {
+    return require('./instrumentations').preload;
   }
 };
