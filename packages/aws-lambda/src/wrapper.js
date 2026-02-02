@@ -21,6 +21,8 @@ const { tracing, coreConfig } = instanaCore;
 const { tracingHeaders, constants, spanBuffer } = tracing;
 
 const lambdaConfigDefaults = {
+  // Preload OpenTelemetry instrumentations to avoid lazy loading overhead
+  preloadOtelInstrumentations: true,
   tracing: {
     forceTransmissionStartingAt: 25,
     transmissionDelay: 100,
@@ -35,8 +37,6 @@ const logger = serverlessLogger.init();
 coreConfig.init(logger);
 let config = coreConfig.normalize({}, lambdaConfigDefaults);
 let coldStart = true;
-// Preload OpenTelemetry instrumentations to avoid lazy loading overhead
-config.tracing.preloadOtelInstrumentations = true;
 
 // Initialize instrumentations early to allow for require statements after our
 // package has been required but before the actual instana.wrap(...) call.
