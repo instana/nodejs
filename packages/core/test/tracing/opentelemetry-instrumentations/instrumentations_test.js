@@ -45,7 +45,7 @@ describe('OpenTelemetry instrumentations registry', () => {
     });
   });
 
-  describe('preloadOtelInstrumentations', () => {
+  describe('preload', () => {
     let consoleLogStub;
 
     beforeEach(() => {
@@ -57,18 +57,18 @@ describe('OpenTelemetry instrumentations registry', () => {
     });
 
     it('should be a function', () => {
-      expect(instrumentationsModule.preloadOtelInstrumentations).to.be.a('function');
+      expect(instrumentationsModule.preload).to.be.a('function');
     });
 
     it('should not throw when called', () => {
       expect(() => {
-        instrumentationsModule.preloadOtelInstrumentations();
+        instrumentationsModule.preload();
       }).to.not.throw();
     });
 
     it('should complete in reasonable time', () => {
       const startTime = Date.now();
-      instrumentationsModule.preloadOtelInstrumentations();
+      instrumentationsModule.preload();
       const duration = Date.now() - startTime;
 
       expect(duration).to.be.lessThan(1000);
