@@ -7,6 +7,11 @@
 const constants = require('../constants');
 
 const isOnEvent = otelSpan => otelSpan.name.indexOf('receive') !== -1;
+
+exports.preInit = () => {
+  require('@opentelemetry/instrumentation-socket.io');
+};
+
 /**
  * socket.io-client is not instrumented.
  * We can easily instrument socket.io-client by instrumenting @socket.io/component-emitter

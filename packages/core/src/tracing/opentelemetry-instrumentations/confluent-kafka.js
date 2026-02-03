@@ -7,6 +7,10 @@
 const constants = require('../constants');
 const W3cTraceContext = require('../w3c_trace_context/W3cTraceContext');
 
+module.exports.preInit = () => {
+  require('@instana/instrumentation-confluent-kafka-javascript');
+};
+
 module.exports.init = () => {
   const { ConfluentKafkaInstrumentation } = require('@instana/instrumentation-confluent-kafka-javascript');
 

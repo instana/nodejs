@@ -6,6 +6,10 @@
 
 const constants = require('../constants');
 
+module.exports.preInit = () => {
+  require('@opentelemetry/instrumentation-restify');
+};
+
 module.exports.init = () => {
   const { RestifyInstrumentation } = require('@opentelemetry/instrumentation-restify');
 

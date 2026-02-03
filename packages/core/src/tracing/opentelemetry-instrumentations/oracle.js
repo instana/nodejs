@@ -6,6 +6,10 @@
 
 const constants = require('../constants');
 
+module.exports.preInit = () => {
+  require('@opentelemetry/instrumentation-oracledb');
+};
+
 module.exports.init = () => {
   const { OracleInstrumentation } = require('@opentelemetry/instrumentation-oracledb');
 

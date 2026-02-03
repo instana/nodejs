@@ -8,9 +8,39 @@
 const utils = require('./utils');
 const constants = require('../constants');
 const supportedVersion = require('../supportedVersion');
-const { getInstrumentations } = require('./instrumentations');
 
-const instrumentations = getInstrumentations();
+const instrumentations = {
+  '@opentelemetry/instrumentation-fs': { name: 'fs' },
+  '@opentelemetry/instrumentation-restify': { name: 'restify' },
+  '@opentelemetry/instrumentation-socket.io': { name: 'socket.io' },
+  '@opentelemetry/instrumentation-tedious': { name: 'tedious' },
+  '@opentelemetry/instrumentation-oracledb': { name: 'oracle' },
+  '@instana/instrumentation-confluent-kafka-javascript': { name: 'confluent-kafka' }
+};
+
+/**
+ * Preloads OpenTelemetry dependencies when preloadOpentelemetry config is enabled.
+ * @param {import('../../config').InstanaConfig} config
+ */
+module.exports.preInit = config => {
+  if (!config.preloadOpentelemetry) {
+    return;
+  }
+
+  require('@opentelemetry/context-async-hooks');
+  require('@opentelemetry/core');
+  require('@opentelemetry/api');
+  require('@opentelemetry/sdk-trace-base');
+
+  Object.keys(instrumentations).forEach(k => {
+    const value = instrumentations[k];
+    const instrumentation = require(`./${value.name}`);
+
+    if (instrumentation.preInit) {
+      instrumentation.preInit();
+    }
+  });
+};
 
 // NOTE: using a logger might create a recursive execution
 //       logger.debug -> creates fs call -> calls transformToInstanaSpan -> calls logger.debug
