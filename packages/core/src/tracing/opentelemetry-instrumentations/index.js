@@ -8,7 +8,7 @@ module.exports = {
   get init() {
     return require('./wrap').init;
   },
-  get preload() {
-    return require('./instrumentations').preload;
+  get preInit() {
+    return require('./wrap').preInit;
   }
 };
