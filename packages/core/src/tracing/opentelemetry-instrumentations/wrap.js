@@ -18,27 +18,37 @@ const instrumentations = {
   '@instana/instrumentation-confluent-kafka-javascript': { name: 'confluent-kafka' }
 };
 
-/**
- * Preloads OpenTelemetry dependencies when preloadOpentelemetry config is enabled.
- * @param {import('../../config').InstanaConfig} config
- */
+let AsyncHooksContextManager;
+let W3CTraceContextPropagator;
+let hrTimeDuration;
+let hrTimeToMilliseconds;
+let api;
+let BasicTracerProvider;
+let coreModule;
+
+function loadOtelDependencies() {
+  api = api || require('@opentelemetry/api');
+  coreModule = coreModule || require('@opentelemetry/core');
+  AsyncHooksContextManager =
+    AsyncHooksContextManager || require('@opentelemetry/context-async-hooks').AsyncHooksContextManager;
+  BasicTracerProvider = BasicTracerProvider || require('@opentelemetry/sdk-trace-base').BasicTracerProvider;
+
+  W3CTraceContextPropagator = coreModule.W3CTraceContextPropagator;
+  hrTimeDuration = coreModule.hrTimeDuration;
+  hrTimeToMilliseconds = coreModule.hrTimeToMilliseconds;
+}
+
 module.exports.preInit = config => {
-  if (!config.preloadOpentelemetry) {
+  if (!supportedVersion(process.versions.node)) {
     return;
   }
+  if (!config?.preloadOpentelemetry) return;
 
-  require('@opentelemetry/context-async-hooks');
-  require('@opentelemetry/core');
-  require('@opentelemetry/api');
-  require('@opentelemetry/sdk-trace-base');
+  loadOtelDependencies();
 
-  Object.keys(instrumentations).forEach(k => {
-    const value = instrumentations[k];
-    const instrumentation = require(`./${value.name}`);
-
-    if (instrumentation.preInit) {
-      instrumentation.preInit();
-    }
+  Object.values(instrumentations).forEach(instr => {
+    const instrumentation = require(`./${instr.name}`);
+    if (instrumentation.preInit) instrumentation.preInit();
   });
 };
 
@@ -46,14 +56,11 @@ module.exports.preInit = config => {
 //       logger.debug -> creates fs call -> calls transformToInstanaSpan -> calls logger.debug
 //       use uninstrumented logger, but useless for production
 module.exports.init = (_config, cls) => {
-  const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks');
-  const { W3CTraceContextPropagator, hrTimeDuration, hrTimeToMilliseconds } = require('@opentelemetry/core');
-  const api = require('@opentelemetry/api');
-  const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
-
   if (!supportedVersion(process.versions.node)) {
     return;
   }
+
+  loadOtelDependencies();
 
   Object.keys(instrumentations).forEach(k => {
     const value = instrumentations[k];
