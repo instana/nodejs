@@ -5,10 +5,10 @@
 'use strict';
 
 module.exports = {
-  get otelInstrumentations() {
-    return require('./wrap');
+  get init() {
+    return require('./wrap').init;
   },
-  get otelInstrumentationsPreload() {
+  get preload() {
     return require('./instrumentations').preload;
   }
 };

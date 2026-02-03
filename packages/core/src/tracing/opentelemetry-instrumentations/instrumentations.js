@@ -28,10 +28,15 @@ exports.getInstrumentations = () => {
 };
 
 /**
- * Preloads OpenTelemetry instrumentation packages to avoid lazy loading overhead.
+ * Preloads OpenTelemetry instrumentation packages and core dependencies to avoid lazy loading overhead.
  * This is particularly useful in AWS Lambda environments where cold start performance is affected by the lazy loading.
  */
 exports.preload = () => {
+  require('@opentelemetry/context-async-hooks');
+  require('@opentelemetry/core');
+  require('@opentelemetry/api');
+  require('@opentelemetry/sdk-trace-base');
+
   const packageNames = Object.keys(instrumentations);
   packageNames.forEach(packageName => {
     require(packageName);
