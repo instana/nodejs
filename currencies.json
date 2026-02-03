@@ -140,7 +140,8 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "peerDependencies": ["@aws-sdk/client-dynamodb"]
   },
   {
     "name": "@elastic/elasticsearch",

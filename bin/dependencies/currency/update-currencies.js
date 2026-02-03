@@ -91,6 +91,24 @@ currencies.forEach(currency => {
     utils.prepareGitEnvironment(branchName, cwd, BRANCH === 'main');
   }
 
+  // If package has peer dependencies, update them first
+  if (currency.peerDependencies && Array.isArray(currency.peerDependencies)) {
+    console.log(`Updating peer dependencies for ${currency.name}: ${currency.peerDependencies.join(', ')}`);
+    currency.peerDependencies.forEach(peerDep => {
+      const peerInstalledVersion =
+        utils.getDevDependencyVersion(peerDep) || utils.getOptionalDependencyVersion(peerDep);
+      if (peerInstalledVersion && utils.cleanVersionString(peerInstalledVersion) !== latestVersion) {
+        console.log(`Updating peer dependency ${peerDep} to ${latestVersion}`);
+        utils.installPackage({
+          packageName: peerDep,
+          version: latestVersion,
+          cwd,
+          saveFlag: '--save-dev'
+        });
+      }
+    });
+  }
+
   if (isRootDependency) {
     const saveFlag = isDevDependency ? '--save-dev' : '--save-optional';
     utils.installPackage({
