@@ -9,6 +9,11 @@ const utils = require('./utils');
 const constants = require('../constants');
 const supportedVersion = require('../supportedVersion');
 
+// NOTE: Please refrain from utilizing third-party instrumentations.
+//       Instead, opt for officially released instrumentations available in the OpenTelemetry
+//       repository at https://github.com/open-telemetry/opentelemetry-js-contrib.
+//       Third-party instrumentations typically bypass a review process,
+//       resulting in suboptimal code coverage and potential vulnerabilities.
 const instrumentations = {
   '@opentelemetry/instrumentation-fs': { name: 'fs' },
   '@opentelemetry/instrumentation-restify': { name: 'restify' },
