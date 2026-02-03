@@ -15,7 +15,7 @@ const tracingUtil = require('./tracingUtil');
 const spanBuffer = require('./spanBuffer');
 const shimmer = require('./shimmer');
 const supportedVersion = require('./supportedVersion');
-const { otelInstrumentations, otelInstrumentationsPreload } = require('./opentelemetry-instrumentations');
+const otelInstrumentations = require('./opentelemetry-instrumentations');
 const cls = require('./cls');
 const coreUtil = require('../util');
 
@@ -162,9 +162,9 @@ exports.preInit = function preInit(preliminaryConfig) {
    * Another possible use case is, that its theoretically possible that the customer
    * can already start using the SDK although we are not fully initialized.
    */
-  if (preliminaryConfig.preloadOtelInstrumentations) {
+  if (preliminaryConfig.preloadOpentelemetry) {
     // Preload OpenTelemetry instrumentations to avoid lazy loading overhead
-    otelInstrumentationsPreload();
+    otelInstrumentations.preload();
   }
   spanHandle.init(preliminaryConfig);
   shimmer.init(preliminaryConfig);

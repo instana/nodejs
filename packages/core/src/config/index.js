@@ -82,7 +82,7 @@ const allowedSecretMatchers = ['equals', 'equals-ignore-case', 'contains', 'cont
  * @property {InstanaTracingOption} [tracing]
  * @property {InstanaSecretsOption} [secrets]
  * @property {number} [timeBetweenHealthcheckCalls]
- * @property {boolean} [preloadOtelInstrumentations]
+ * @property {boolean} [preloadOpentelemetry]
  */
 
 /** @type {import('../core').GenericLogger} */
@@ -123,7 +123,7 @@ let defaults = {
     ignoreEndpointsDisableSuppression: false,
     disableEOLEvents: false
   },
-  preloadOtelInstrumentations: false,
+  preloadOpentelemetry: false,
   secrets: {
     matcherMode: 'contains-ignore-case',
     keywords: ['key', 'pass', 'secret']
@@ -173,7 +173,7 @@ module.exports.normalize = (userConfig, defaultsOverride = {}) => {
   normalizeMetricsConfig(targetConfig);
   normalizeTracingConfig(targetConfig);
   normalizeSecrets(targetConfig);
-  normalizePreloadOtelInstrumentations(targetConfig);
+  normalizePreloadOpentelemetry(targetConfig);
   return targetConfig;
 };
 
@@ -822,10 +822,10 @@ function normalizeDisableEOLEvents(config) {
 /**
  * @param {InstanaConfig} config
  */
-function normalizePreloadOtelInstrumentations(config) {
-  if (config.preloadOtelInstrumentations === true) {
+function normalizePreloadOpentelemetry(config) {
+  if (config.preloadOpentelemetry === true) {
     return;
   }
 
-  config.preloadOtelInstrumentations = defaults.preloadOtelInstrumentations;
+  config.preloadOpentelemetry = defaults.preloadOpentelemetry;
 }

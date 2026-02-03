@@ -21,8 +21,9 @@ const { tracing, coreConfig } = instanaCore;
 const { tracingHeaders, constants, spanBuffer } = tracing;
 
 const lambdaConfigDefaults = {
-  // Preload OpenTelemetry instrumentations to avoid lazy loading overhead
-  preloadOtelInstrumentations: true,
+  // Preload OpenTelemetry deps to avoid lazy loading overhead
+  // See https://jsw.ibm.com/browse/INSTA-71262
+  preloadOpentelemetry: true,
   tracing: {
     forceTransmissionStartingAt: 25,
     transmissionDelay: 100,

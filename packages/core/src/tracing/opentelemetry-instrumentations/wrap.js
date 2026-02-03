@@ -5,10 +5,6 @@
 
 'use strict';
 
-const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks');
-const { W3CTraceContextPropagator, hrTimeDuration, hrTimeToMilliseconds } = require('@opentelemetry/core');
-const api = require('@opentelemetry/api');
-const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
 const utils = require('./utils');
 const constants = require('../constants');
 const supportedVersion = require('../supportedVersion');
@@ -20,6 +16,11 @@ const instrumentations = getInstrumentations();
 //       logger.debug -> creates fs call -> calls transformToInstanaSpan -> calls logger.debug
 //       use uninstrumented logger, but useless for production
 module.exports.init = (_config, cls) => {
+  const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks');
+  const { W3CTraceContextPropagator, hrTimeDuration, hrTimeToMilliseconds } = require('@opentelemetry/core');
+  const api = require('@opentelemetry/api');
+  const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
+
   if (!supportedVersion(process.versions.node)) {
     return;
   }
