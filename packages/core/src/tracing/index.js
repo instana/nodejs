@@ -162,10 +162,7 @@ exports.preInit = function preInit(preliminaryConfig) {
    * Another possible use case is, that its theoretically possible that the customer
    * can already start using the SDK although we are not fully initialized.
    */
-  if (preliminaryConfig.preloadOpentelemetry) {
-    // Preload OpenTelemetry instrumentations to avoid lazy loading overhead
-    otelInstrumentations.preload();
-  }
+  otelInstrumentations.preInit(preliminaryConfig);
   spanHandle.init(preliminaryConfig);
   shimmer.init(preliminaryConfig);
   cls.init(preliminaryConfig);

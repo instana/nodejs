@@ -6,6 +6,10 @@
 
 const constants = require('../constants');
 
+module.exports.preInit = () => {
+  require('@opentelemetry/instrumentation-tedious');
+};
+
 module.exports.init = () => {
   // Opentelemetry only supports tedious version >=1.11.0 and <=15, please refer the following link
   // for more details: https://www.npmjs.com/package/@opentelemetry/instrumentation-tedious#supported-versions
