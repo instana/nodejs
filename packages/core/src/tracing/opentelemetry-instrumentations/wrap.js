@@ -42,13 +42,18 @@ module.exports.preInit = config => {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
-  if (!config?.preloadOpentelemetry) return;
+
+  if (!config?.preloadOpentelemetry) {
+    return;
+  }
 
   loadOtelDependencies();
 
   Object.values(instrumentations).forEach(instr => {
     const instrumentation = require(`./${instr.name}`);
-    if (instrumentation.preInit) instrumentation.preInit();
+    if (instrumentation.preInit) {
+      instrumentation.preInit();
+    }
   });
 };
 
