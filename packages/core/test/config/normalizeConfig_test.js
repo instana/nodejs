@@ -943,27 +943,27 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.ignoreEndpoints).to.deep.equal({});
   });
 
-  it('preloadOtelInstrumentations should default to false', () => {
+  it('preloadOpentelemetry should default to false', () => {
     const config = coreConfig.normalize({});
-    expect(config.preloadOtelInstrumentations).to.be.false;
+    expect(config.preloadOpentelemetry).to.be.false;
   });
 
-  it('preloadOtelInstrumentations should accept true value', () => {
+  it('preloadOpentelemetry should accept true value', () => {
     const config = coreConfig.normalize({
-      preloadOtelInstrumentations: true
+      preloadOpentelemetry: true
     });
-    expect(config.preloadOtelInstrumentations).to.be.true;
+    expect(config.preloadOpentelemetry).to.be.true;
   });
 
-  it('preloadOtelInstrumentations should work with custom defaults', () => {
+  it('preloadOpentelemetry should work with custom defaults', () => {
     const customDefaults = {
-      preloadOtelInstrumentations: true,
+      preloadOpentelemetry: true,
       tracing: {
         forceTransmissionStartingAt: 25
       }
     };
     const config = coreConfig.normalize({}, customDefaults);
-    expect(config.preloadOtelInstrumentations).to.be.true;
+    expect(config.preloadOpentelemetry).to.be.true;
     expect(config.tracing.forceTransmissionStartingAt).to.equal(25);
   });
 
@@ -1072,7 +1072,7 @@ describe('config.normalizeConfig', () => {
     expect(config.tracing.useOpentelemetry).to.equal(true);
     expect(config.tracing.allowRootExitSpan).to.equal(false);
 
-    expect(config.preloadOtelInstrumentations).to.equal(false);
+    expect(config.preloadOpentelemetry).to.equal(false);
 
     expect(config.secrets).to.be.an('object');
     expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
