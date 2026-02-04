@@ -31,7 +31,7 @@ let api;
 let BasicTracerProvider;
 let coreModule;
 
-function loadOtelDependencies() {
+function initOtelCoreDependencies() {
   api = api || require('@opentelemetry/api');
   coreModule = coreModule || require('@opentelemetry/core');
   AsyncHooksContextManager =
@@ -43,6 +43,15 @@ function loadOtelDependencies() {
   hrTimeToMilliseconds = coreModule.hrTimeToMilliseconds;
 }
 
+function initInstrumentations() {
+  Object.values(instrumentations).forEach(instr => {
+    const instrumentation = require(`./${instr.name}`);
+    if (instrumentation.preInit) {
+      instrumentation.preInit();
+    }
+  });
+}
+
 module.exports.preInit = config => {
   if (!supportedVersion(process.versions.node)) {
     return;
@@ -52,14 +61,8 @@ module.exports.preInit = config => {
     return;
   }
 
-  loadOtelDependencies();
-
-  Object.values(instrumentations).forEach(instr => {
-    const instrumentation = require(`./${instr.name}`);
-    if (instrumentation.preInit) {
-      instrumentation.preInit();
-    }
-  });
+  initOtelCoreDependencies();
+  initInstrumentations();
 };
 
 // NOTE: using a logger might create a recursive execution
@@ -70,7 +73,7 @@ module.exports.init = (_config, cls) => {
     return;
   }
 
-  loadOtelDependencies();
+  initOtelCoreDependencies();
 
   Object.keys(instrumentations).forEach(k => {
     const value = instrumentations[k];
