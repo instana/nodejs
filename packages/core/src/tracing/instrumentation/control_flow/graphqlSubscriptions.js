@@ -8,6 +8,7 @@
 const shimmer = require('../../shimmer');
 
 const hook = require('../../../util/hook');
+const tracingUtil = require('../../tracingUtil');
 const cls = require('../../cls');
 
 let isActive = false;
@@ -76,6 +77,12 @@ function shimPullValue(originalFunction) {
         }
         return result;
       });
+    } else {
+      // will the context change ? Maybe check and remove this case
+      const span = cls.getCurrentSpan();
+      if (span) {
+        tracingUtil.handleUnexpectedReturnValue(pullPromise, span, 'graphql.subscription', 'pull value');
+      }
     }
 
     return pullPromise;

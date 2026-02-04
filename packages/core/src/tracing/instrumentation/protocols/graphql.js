@@ -349,6 +349,15 @@ function shimApolloGatewayExecuteQueryPlanFunction(originalFunction) {
           throw err;
         }
       );
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(
+        resultPromise,
+        activeEntrySpan,
+        'graphql.execute',
+        'Apollo Gateway query plan'
+      );
+      delete activeEntrySpan.postponeTransmitApolloGateway;
+      finishSpan(activeEntrySpan, {});
     }
     return resultPromise;
   };

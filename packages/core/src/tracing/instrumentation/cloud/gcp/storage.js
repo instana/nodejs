@@ -421,6 +421,9 @@ function instrumentedOperation(operation, extractorPre, extractorPost, ctx, orig
         result => finishSpan(null, Array.isArray(result) ? result[0] : result, span, extractorPost),
         e => finishSpan(e, null, span, extractorPost)
       );
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(promise, span, 'gcs', operation);
+      finishSpan(null, null, span, extractorPost);
     }
     return promise;
   });

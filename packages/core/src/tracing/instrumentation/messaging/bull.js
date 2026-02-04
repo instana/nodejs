@@ -110,7 +110,11 @@ function instrumentedJobCreate(ctx, originalJobCreate, originalArgs, options) {
           finishSpan(err, null, span);
           return err;
         });
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(promise, span, 'bull', 'job.create');
+      finishSpan(null, null, span);
     }
+    return promise;
   });
 }
 
@@ -275,7 +279,12 @@ function instrumentedProcessJob(ctx, originalProcessJob, originalArgs) {
           delete options.X_INSTANA_L;
           throw err;
         });
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(promise, span, 'bull', 'job.process');
+      finishSpan(null, null, span);
+      delete options.X_INSTANA_L;
     }
+    return promise;
   });
 }
 

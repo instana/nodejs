@@ -132,6 +132,9 @@ function instrumentedPublishMessage(ctx, originalPublishMessage, originalArgs) {
           throw err;
         }
       );
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(thenable, span, 'gcps', 'publish message');
+      finishSpan(null, null, span);
     }
     return thenable;
   });

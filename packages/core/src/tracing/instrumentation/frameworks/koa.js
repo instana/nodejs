@@ -8,6 +8,7 @@
 const shimmer = require('../../shimmer');
 
 const hook = require('../../../util/hook');
+const tracingUtil = require('../../tracingUtil');
 const httpServer = require('../protocols/httpServer');
 const cls = require('../../cls');
 
@@ -71,7 +72,14 @@ function instrumentedRoutes(thisContext, originalRoutes, originalArgs) {
           }
           return resolvedValue;
         });
+      } else {
+        // context same ? check
+        const span = cls.getCurrentSpan();
+        if (span) {
+          tracingUtil.handleUnexpectedReturnValue(dispatchResult, span, 'http', 'koa router dispatch');
+        }
       }
+      return dispatchResult;
     } else {
       return dispatch.apply(this, arguments);
     }

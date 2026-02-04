@@ -103,6 +103,9 @@ function instrumentSendCommand(original) {
           callback.bind(null, null),
           callback
         );
+      } else {
+        tracingUtil.handleUnexpectedReturnValue(command.promise, span, 'redis', `command "${command.name}"`);
+        callback(null);
       }
 
       return original.apply(client, argsForOriginal);
@@ -201,6 +204,9 @@ function instrumentMultiOrPipelineExec(clsContextForMultiOrPipeline, commandName
           endCallback.call(null, clsContextForMultiOrPipeline, span, error, []);
         }
       );
+    } else if (result !== undefined) {
+      tracingUtil.handleUnexpectedReturnValue(result, span, 'redis', `${commandName} exec`);
+      endCallback.call(null, clsContextForMultiOrPipeline, span, null, []);
     }
     return result;
   };

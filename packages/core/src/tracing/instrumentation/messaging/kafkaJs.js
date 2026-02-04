@@ -111,7 +111,12 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
           span.transmit();
           throw error;
         });
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(promise, span, 'kafka', 'producer.send');
+      span.d = Date.now() - span.ts;
+      span.transmit();
     }
+    return promise;
   });
 }
 
@@ -192,7 +197,12 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
           span.transmit();
           throw error;
         });
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(promise, span, 'kafka', 'producer.sendBatch');
+      span.d = Date.now() - span.ts;
+      span.transmit();
     }
+    return promise;
   });
 }
 

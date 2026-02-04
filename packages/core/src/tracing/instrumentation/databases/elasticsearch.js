@@ -161,6 +161,9 @@ function instrumentApi(client, actionPath, clusterInfo) {
               onError(span, error);
               throw error;
             });
+          } else {
+            tracingUtil.handleUnexpectedReturnValue(promise, span, 'elasticsearch', `action "${action}"`);
+            onSuccess(span, {});
           }
           return promise;
         } catch (e) {
@@ -458,6 +461,9 @@ function instrumentedRequest(ctx, origEsReq, originalArgs) {
             onError(span, error);
             throw error;
           });
+        } else {
+          tracingUtil.handleUnexpectedReturnValue(promise, span, 'elasticsearch', 'transport request');
+          onSuccess(span, {});
         }
         return promise;
       } catch (e) {

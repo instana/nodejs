@@ -302,7 +302,11 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
         });
         return result;
       });
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(promise, span, 'rabbitmq', 'channel.get');
+      span.cancel();
     }
+    return promise;
   });
 }
 

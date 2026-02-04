@@ -36,6 +36,10 @@ function instrument(SQSConsumer) {
                 span.d = Date.now() - span.ts;
                 span.transmitManual();
               });
+          } else {
+            tracingUtil.handleUnexpectedReturnValue(res, span, 'sqs', 'consumer handler');
+            span.d = Date.now() - span.ts;
+            span.transmitManual();
           }
 
           return res;
@@ -70,6 +74,10 @@ function instrument(SQSConsumer) {
                 span.d = Date.now() - span.ts;
                 span.transmitManual();
               });
+          } else if (res !== undefined) {
+            tracingUtil.handleUnexpectedReturnValue(res, span, 'sqs', 'consumer batch handler');
+            span.d = Date.now() - span.ts;
+            span.transmitManual();
           }
 
           return res;

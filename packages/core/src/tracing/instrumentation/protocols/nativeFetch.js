@@ -195,6 +195,10 @@ function instrument() {
             span.d = Date.now() - span.ts;
             span.transmit();
           });
+      } else {
+        tracingUtil.handleUnexpectedReturnValue(fetchPromise, span, 'http', 'fetch');
+        span.d = Date.now() - span.ts;
+        span.transmit();
       }
 
       return fetchPromise;
