@@ -14,6 +14,9 @@ const MAJOR_UPDATES_MODE = process.env.MAJOR_UPDATES_MODE ? process.env.MAJOR_UP
 const BRANCH = process.env.BRANCH;
 const SKIP_PUSH = process.env.SKIP_PUSH === 'true';
 const cwd = path.join(__dirname, '..', '..', '..');
+const PREDEPENDENCIES = [['@aws-sdk/client-dynamodb', '@aws-sdk/lib-dynamodb']];
+
+const updatedPredeps = new Set();
 
 if (!BRANCH) throw new Error('Please set env variable "BRANCH".');
 let branchName = BRANCH;
@@ -66,6 +69,30 @@ currencies.forEach(currency => {
     console.log(
       `Skipping ${currency.name}. Installed version is ${installedVersion}. Latest version is ${latestVersion}`
     );
+    return;
+  }
+  const relatedGroup = PREDEPENDENCIES.find(g => g.includes(currency.name));
+  if (relatedGroup) {
+    if (updatedPredeps.has(currency.name)) return;
+
+    const currentVersion = utils.cleanVersionString(utils.getDevDependencyVersion(currency.name));
+
+    const targetVersion = utils.getLatestVersion({
+      pkgName: currency.name,
+      installedVersion: currentVersion
+    });
+
+    const packagesToUpdate = relatedGroup.filter(pkg => !updatedPredeps.has(pkg));
+
+    execSync(`npm i --save-dev ${packagesToUpdate.map(pkg => `${pkg}@${targetVersion}`).join(' ')} --save-exact`, {
+      cwd,
+      stdio: 'inherit'
+    });
+
+    execSync("git add '*package.json' package-lock.json", { cwd });
+    execSync(`git commit -m "build: bumped ${packagesToUpdate.join(', ')} to ${targetVersion}"`, { cwd });
+
+    packagesToUpdate.forEach(pkg => updatedPredeps.add(pkg));
     return;
   }
 
