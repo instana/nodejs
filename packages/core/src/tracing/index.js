@@ -167,7 +167,7 @@ exports.preInit = function preInit(preliminaryConfig) {
   cls.init(preliminaryConfig);
   sdk.init(preliminaryConfig, cls);
 
-  initInstrumenations(preliminaryConfig);
+  initInstanaInstrumentations(preliminaryConfig);
 };
 
 /**
@@ -205,7 +205,7 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
     opentracing.init(config, automaticTracingEnabled, processIdentityProvider);
 
     if (automaticTracingEnabled) {
-      initInstrumenations(config);
+      initInstanaInstrumentations(config);
 
       if (_config.tracing.useOpentelemetry) {
         otelInstrumentations.init(config, cls);
@@ -225,7 +225,7 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
 /**
  * @param {import('../config').InstanaConfig} _config
  */
-function initInstrumenations(_config) {
+function initInstanaInstrumentations(_config) {
   // initialize all instrumentations
   if (!instrumenationsInitialized) {
     instrumentations.forEach(instrumentationKey => {
