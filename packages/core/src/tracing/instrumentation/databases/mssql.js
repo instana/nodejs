@@ -88,6 +88,7 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
     }
 
     const promise = originalFunction.apply(ctx, originalArgs);
+
     if (typeof promise?.then === 'function') {
       promise
         .then(value => {
@@ -98,6 +99,9 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
           finishSpan(error, span);
           return error;
         });
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(promise, span, 'mssql', 'query/execute');
+      finishSpan(null, span);
     }
     return promise;
   });

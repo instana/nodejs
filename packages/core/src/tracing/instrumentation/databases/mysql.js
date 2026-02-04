@@ -197,6 +197,11 @@ function instrumentedAccessFunction(
             span.transmit();
             throw error;
           });
+      } else {
+        tracingUtil.handleUnexpectedReturnValue(resultPromise, span, 'mysql', 'query/execute');
+
+        span.d = Date.now() - span.ts;
+        span.transmit();
       }
 
       return resultPromise;

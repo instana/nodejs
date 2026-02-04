@@ -410,4 +410,41 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
   } catch (err) {
     logger.error('Failed to set error details on span:', err);
   }
+
+  /**
+   * Handles unexpected return values from instrumented functions (Case 5: Unsupported/Bug case).
+   * Logs a debug message and marks the span as incomplete when the return value is not a promise.
+   *
+   * @param {*} returnValue - The return value from the instrumented function
+   * @param {import('../core').InstanaBaseSpan} targetSpan - The span to mark as incomplete
+   * @param {string} spanName - The name of the span (e.g., 'redis', 'postgres', 'mysql')
+   * @param {string} operationContext - Additional context about the operation (e.g., 'query', 'command')
+   * @returns {boolean} - Returns true if the return value was unexpected (not a promise), false otherwise
+   */
+  exports.handleUnexpectedReturnValue = function handleUnexpectedReturnValue(
+    returnValue,
+    targetSpan,
+    spanName,
+    operationContext
+  ) {
+    if (typeof returnValue?.then === 'function') {
+      return false;
+    }
+
+    // Case: This is the unexpected case where returnValue is not a promise
+    logger.debug(
+      `${spanName} instrumentation: Unexpected return value from ${operationContext}. ` +
+        `Expected a promise but got: ${typeof returnValue}. ` +
+        'This may indicate an instrumentation bug or unsupported library behavior.'
+    );
+
+    // Mark span with incomplete instrumentation info
+    // This is currently a custom tag, will move to sdk custom tag
+    if (targetSpan.data && targetSpan.data[spanName]) {
+      targetSpan.data[spanName].incomplete = true;
+      targetSpan.data[spanName].incompleteReason = 'unexpected_return_type';
+    }
+
+    return true;
+  };
 };

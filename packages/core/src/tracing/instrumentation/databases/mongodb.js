@@ -471,6 +471,11 @@ function handleCallbackOrPromise(ctx, originalArgs, originalFunction, span) {
         span.transmit();
         return err;
       });
+  } else {
+    tracingUtil.handleUnexpectedReturnValue(resultPromise, span, 'mongo', 'command');
+
+    span.d = Date.now() - span.ts;
+    span.transmit();
   }
 
   return resultPromise;
