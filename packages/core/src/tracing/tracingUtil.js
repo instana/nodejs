@@ -412,7 +412,7 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
   }
 
   /**
-   * Handles unexpected return values from instrumented functions (Case 5: Unsupported/Bug case).
+   * Handles unexpected return values from instrumented functions 
    * Logs a debug message and marks the span as incomplete when the return value is unsupported
    *
    * @param {*} returnValue - The return value from the instrumented function
