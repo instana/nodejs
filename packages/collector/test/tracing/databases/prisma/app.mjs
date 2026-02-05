@@ -14,7 +14,7 @@ import { PrismaClient } from '@prisma/client';
 import express from 'express';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
-import getAppPort from '../../../test_util/app-port.js';
+import getAppPort from '@_instana/collector/test/test_util/app-port.js';
 const port = getAppPort();
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,10 +35,11 @@ app.use(bodyParser.json());
 let prisma;
 
 try {
-  const version = process.env.PRISMA_VERSION || 'latest';
+  const version = process.env.LIBRARY_VERSION;
+  const isLatest = process.env.LIBRARY_LATEST === 'true';
   const provider = process.env.PROVIDER;
 
-  const useAdapter = version === 'latest';
+  const useAdapter = isLatest;
   let adapter = null;
 
   if (useAdapter) {

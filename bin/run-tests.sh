@@ -118,7 +118,7 @@ if [ -n "$PACKAGE" ]; then
     fi
 
   else
-    HIGHEST_VERSION=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sed 's/.*_v//' | sort -n | tail -1)
+    HIGHEST_VERSION=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sed 's/.*_v//' | sort -V | tail -1)
     if [ -n "$HIGHEST_VERSION" ]; then
       GREP_PATTERN="tracing/$ACTUAL_PACKAGE@v$HIGHEST_VERSION"
       

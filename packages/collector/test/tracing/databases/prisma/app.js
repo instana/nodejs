@@ -10,13 +10,13 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')();
+require('@instana/collector')();
 
 const { PrismaClient } = require('@prisma/client');
 const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
-const port = require('../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 const path = require('node:path');
 
 const app = express();
@@ -34,10 +34,11 @@ app.use(bodyParser.json());
 let prisma;
 
 try {
-  const version = process.env.PRISMA_VERSION || 'latest';
+  const version = process.env.LIBRARY_VERSION;
+  const isLatest = process.env.LIBRARY_LATEST === 'true';
   const provider = process.env.PROVIDER;
 
-  const useAdapter = version === 'latest';
+  const useAdapter = isLatest;
   let adapter = null;
 
   if (useAdapter) {
