@@ -10,7 +10,7 @@ const { workerData } = require('worker_threads');
 
 console.log('Worker thread: Starting', workerData);
 
-const instana = require('../../../..')({
+const instana = require('@instana/collector')({
   agentPort: workerData.agentPort
 });
 

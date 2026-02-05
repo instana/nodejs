@@ -13,13 +13,13 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')();
+require('@instana/collector')();
 
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const log4js = require('log4js');
-const port = require('../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 log4js.configure({

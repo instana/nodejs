@@ -17,7 +17,7 @@ const createCustomLogSpans = process.env.CREATE_CUSTOM_LOG_SPANS === 'true';
 const extendedLoggerConfig = process.env.EXTENDED_LOGGER_CONFIG === 'true';
 const pinoExtendedFormat = require('@elastic/ecs-pino-format');
 
-const instana = require('../../../..')({
+const instana = require('@instana/collector')({
   agentPort,
   // Supress any eary Instana logs when using extendedLoggerConfig because
   // of https://jsw.ibm.com/browse/INSTA-24679. These early logs are not useful for this extend config test.
@@ -45,12 +45,12 @@ if (extendedLoggerConfig) {
 
 instana.setLogger(pinoInstance);
 
-const instanaLogger = require('../../../../src/logger').getLogger();
+const instanaLogger = require('@_instana/collector/src/logger').getLogger();
 
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const port = require('../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 const app = express();
 const logPrefix = `Pino App [Instana receives Pino logger] (${process.pid}):\t`;
 

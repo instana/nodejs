@@ -19,13 +19,13 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
 import bunyan from 'bunyan';
-import getAppPort from '../../../test_util/app-port.js';
+const { default: getAppPort } = await import('@_instana/collector/test/test_util/app-port.js');
 const port = getAppPort();
 
 const bunyanLogger = bunyan.createLogger({ name: 'test-logger-console' });
 
 const app = express();
-const logPrefix = `Console App (${process.pid}):\t`;
+const logPrefix = `Console App ESM (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

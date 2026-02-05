@@ -18,7 +18,7 @@ const express = require('express');
 const morgan = require('morgan');
 const { Worker } = require('worker_threads');
 
-const port = require('../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 const app = express();
 const logPrefix = `Instana threads app (${process.pid}):\t`;
 

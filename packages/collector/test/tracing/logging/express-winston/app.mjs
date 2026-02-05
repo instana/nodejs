@@ -20,7 +20,7 @@ import morgan from 'morgan';
 import semver from 'semver';
 import expressWinston from 'express-winston';
 import { createRequire } from 'module';
-import getAppPort from '../../../test_util/app-port.js';
+const { default: getAppPort } = await import('@_instana/collector/test/test_util/app-port.js');
 const port = getAppPort();
 
 const require = createRequire(import.meta.url);

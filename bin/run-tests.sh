@@ -44,7 +44,11 @@ fi
 npm_command="npm run test:debug"
 
 if [ -n "$PACKAGE" ]; then
-  PACKAGE_DIR=$(find "packages/collector/test/tracing" -mindepth 2 -maxdepth 2 -type d -name "$PACKAGE" 2>/dev/null | head -1)
+  if [ -d "packages/collector/test/tracing/$PACKAGE" ]; then
+    PACKAGE_DIR="packages/collector/test/tracing/$PACKAGE"
+  else
+    PACKAGE_DIR=$(find "packages/collector/test/tracing" -mindepth 2 -maxdepth 2 -type d -name "$PACKAGE" 2>/dev/null | head -1)
+  fi
   
   if [ -z "$PACKAGE_DIR" ]; then
     echo "Error: Package '$PACKAGE' not found in any tracing category"

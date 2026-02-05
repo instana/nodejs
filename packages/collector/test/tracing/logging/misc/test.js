@@ -6,11 +6,11 @@
 
 const expect = require('chai').expect;
 const path = require('path');
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
-const globalAgent = require('../../../globalAgent');
-const ProcessControls = require('../../../test_util/ProcessControls');
+const supportedVersion = require('@_instana/core').tracing.supportedVersion;
+const config = require('@_instana/core/test/config');
+const testUtils = require('@_instana/core/test/test_util');
+const globalAgent = require('@_instana/collector/test/globalAgent');
+const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
@@ -226,7 +226,8 @@ mochaSuiteFn('tracing/logging/misc', function () {
       await agentControls.clearReceivedTraceData();
 
       controls = new ProcessControls({
-        appPath: path.join(__dirname, 'app-threads.js'),
+        dirname: __dirname,
+        appName: 'app-threads',
         useGlobalAgent: true,
         pipeSubprocessLogs: true,
         env: {

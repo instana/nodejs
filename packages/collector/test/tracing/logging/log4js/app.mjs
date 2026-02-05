@@ -17,7 +17,7 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
 import log4js from 'log4js';
-import getAppPort from '../../../test_util/app-port.js';
+const { default: getAppPort } = await import('@_instana/collector/test/test_util/app-port.js');
 const port = getAppPort();
 
 const agentPort = process.env.INSTANA_AGENT_PORT;

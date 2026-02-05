@@ -15,7 +15,7 @@ process.on('SIGTERM', () => {
 
 const agentPort = process.env.AGENT_PORT;
 
-const instana = require('../../../..')({
+const instana = require('@instana/collector')({
   agentPort,
   level: 'info',
   tracing: {
@@ -37,12 +37,12 @@ const dummyLogger = {
 
 instana.setLogger(dummyLogger);
 
-const instanaLogger = require('../../../../src/logger').getLogger();
+const instanaLogger = require('@_instana/collector/src/logger').getLogger();
 
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const port = require('../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 const app = express();
 const logPrefix = `Pino App [Instana receives custom dummy logger] (${process.pid}):\t`;
 

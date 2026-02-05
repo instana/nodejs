@@ -14,7 +14,7 @@ process.on('SIGTERM', () => {
 });
 
 const agentPort = process.env.AGENT_PORT;
-const instana = require('../../../..')({
+const instana = require('@instana/collector')({
   agentPort,
   level: 'info',
   tracing: {
@@ -30,12 +30,12 @@ const buynan = require('bunyan');
 // See https://jsw.ibm.com/browse/INSTA-24679
 instana.setLogger(buynan.createLogger({ name: 'app-logger', level: 'warn' }));
 
-const instanaLogger = require('../../../../src/logger').getLogger();
+const instanaLogger = require('@_instana/collector/src/logger').getLogger();
 
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const port = require('../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 const app = express();
 const logPrefix = `Bunyan App [Instana receives Bunyan logger] (${process.pid}):\t`;
 

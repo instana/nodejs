@@ -32,6 +32,9 @@ function main() {
       for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
         if (entry.isDirectory()) {
+          if (entry.name === 'node_modules') {
+            return null;
+          }
           if (entry.name === currency.name) {
             return path.join(dir, entry.name);
           }
