@@ -1,0 +1,9 @@
+{
+  "name": "memcached-v2",
+  "dependencies": {
+    "@instana/collector": "file:../../../../instana-tgz/collector.tgz",
+    "@instana/core": "file:../../../../instana-tgz/core.tgz",
+    "@instana/shared-metrics": "file:../../../../instana-tgz/shared-metrics.tgz",
+    "memcached": "2.2.2"
+  }
+}

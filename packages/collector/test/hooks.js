@@ -11,6 +11,8 @@
 //
 // The globalAgent module manages an agent stub instance that can be used globally for all tests.
 const path = require('path');
+const fs = require('fs');
+const { execSync } = require('child_process');
 const isCI = require('@instana/core/test/test_util/is_ci');
 const config = require('@instana/core/test/config');
 const { checkESMApp } = require('@instana/core/test/test_util');
@@ -28,6 +30,7 @@ exports.mochaHooks = {
     console.log(`@instana/collector test suite starting at ${timestamp()}.`);
     this.timeout(config.getTestTimeout());
 
+    await setupTestInstallation();
     await startGlobalAgent();
   },
 
@@ -77,4 +80,36 @@ exports.mochaHooks = {
 function timestamp() {
   const d = new Date();
   return `UTC: ${d.toISOString()} (${d.getTime()})`;
+}
+
+async function setupTestInstallation() {
+  if (process.env.INSTANA_TEST_SKIP_INSTALLING_DEPS === 'true') {
+    return;
+  }
+
+  const testDir = __dirname;
+  const tgzDir = path.join(testDir, 'instana-tgz');
+  const preinstallScript = path.join(testDir, 'preinstall.sh');
+  const collectorTgz = path.join(tgzDir, 'collector.tgz');
+  const coreTgz = path.join(tgzDir, 'core.tgz');
+  const sharedMetricsTgz = path.join(tgzDir, 'shared-metrics.tgz');
+
+  if (fs.existsSync(preinstallScript)) {
+    const tgzNeedsUpdate =
+      !fs.existsSync(collectorTgz) ||
+      !fs.existsSync(coreTgz) ||
+      (fs.existsSync(sharedMetricsTgz) &&
+        (fs.statSync(preinstallScript).mtime > fs.statSync(collectorTgz).mtime ||
+          fs.statSync(preinstallScript).mtime > fs.statSync(coreTgz).mtime ||
+          fs.statSync(preinstallScript).mtime > fs.statSync(sharedMetricsTgz).mtime)) ||
+      (!fs.existsSync(sharedMetricsTgz) &&
+        (fs.statSync(preinstallScript).mtime > fs.statSync(collectorTgz).mtime ||
+          fs.statSync(preinstallScript).mtime > fs.statSync(coreTgz).mtime));
+
+    if (tgzNeedsUpdate) {
+      // eslint-disable-next-line no-console
+      console.log('Generating tgz files...');
+      execSync(`bash "${preinstallScript}"`, { cwd: testDir, stdio: 'inherit' });
+    }
+  }
 }
