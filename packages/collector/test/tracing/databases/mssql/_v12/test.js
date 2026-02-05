@@ -10,8 +10,10 @@ const { execSync } = require('child_process');
 const path = require('path');
 const testBase = require('./test_base');
 const config = require('@_instana/core/test/config');
+const supportedVersion = require('@_instana/core').tracing.supportedVersion;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-describe('tracing/mssql@v12', function () {
+mochaSuiteFn('tracing/mssql@v12', function () {
   this.timeout(config.getTestTimeout());
 
   before(() => {

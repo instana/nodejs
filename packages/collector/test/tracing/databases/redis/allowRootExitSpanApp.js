@@ -10,19 +10,16 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('./mockVersion');
-
-require('../../../..')({
+require('@instana/collector')({
   tracing: {
     allowRootExitSpan: true
   }
 });
 
 const redis = require(process.env.REDIS_PKG);
-const { delay } = require('@instana/core/test/test_util');
-
+const { delay } = require('@_instana/core/test/test_util');
 const connect = require('./connect-via');
-const redisVersion = process.env.REDIS_VERSION;
+const redisVersion = process.env.LIBRARY_VERSION;
 const logPrefix =
   `Redis allowRootExitSpan App (version: ${redisVersion}, require: ${process.env.REDIS_PKG}, ` +
   `setup type: ${process.env.REDIS_SETUP_TYPE}, pid: ${process.pid}):\t`;

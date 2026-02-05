@@ -11,26 +11,25 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const isLegacy = process.env.MONGODB_VERSION === 'v4';
-const agentPort = process.env.INSTANA_AGENT_PORT;
-
-process.env.INSTANA_LOG_LEVEL = 'warn';
-process.env.INSTANA_TRACING_DISABLE = process.env.TRACING_ENABLED !== 'false';
-process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT = 1;
-
+import semver from 'semver';
 import MongoClient from 'mongodb';
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
 import assert from 'assert';
+import getAppPort from '@_instana/collector/test/test_util/app-port.js';
 
-import getAppPort from '../../../test_util/app-port.js';
+const isLegacy = semver.major(process.env.LIBRARY_VERSION) <= 4;
+const agentPort = process.env.INSTANA_AGENT_PORT;
+process.env.INSTANA_LOG_LEVEL = 'warn';
+process.env.INSTANA_TRACING_DISABLE = process.env.TRACING_ENABLED !== 'false';
+process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT = 1;
+
 const port = getAppPort();
-
 const app = express();
 let db;
 let collection;
-const logPrefix = `Express / MongoDB App (${process.pid}):\t`;
+const logPrefix = `Express / MongoDB ESM App (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

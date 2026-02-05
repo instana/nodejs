@@ -12,6 +12,7 @@ PACKAGE=""
 VERSION=""
 GREP_PATTERN=""
 TEST_FILES=""
+TEST_NAME_FILTER=""
 
 for arg in "$@"; do
   case $arg in
@@ -27,6 +28,8 @@ for arg in "$@"; do
     if [[ $arg == *"@"* ]]; then
       PACKAGE="${arg%@*}"
       VERSION="${arg#*@}"
+    elif [ -n "$PACKAGE" ]; then
+      TEST_NAME_FILTER="$arg"
     else
       PACKAGE="$arg"
     fi
@@ -72,8 +75,13 @@ if [ -n "$PACKAGE" ]; then
     GREP_PATTERN="tracing/$ACTUAL_PACKAGE@$VERSION"
     
     # Check for test files in the version directory
-    if [ -f "$PACKAGE_DIR/_${VERSION}/test.js" ]; then
-        TEST_FILES="$PACKAGE_DIR/_${VERSION}/test.js"
+    SEARCH_PATTERN="test*.js"
+    if [ -n "$TEST_NAME_FILTER" ]; then
+        SEARCH_PATTERN="test*${TEST_NAME_FILTER}*.js"
+    fi
+    FOUND_FILES=$(find "$PACKAGE_DIR/_${VERSION}" -maxdepth 1 -name "$SEARCH_PATTERN" ! -name "test_base.js")
+    if [ -n "$FOUND_FILES" ]; then
+        TEST_FILES=$(echo "$FOUND_FILES" | tr '\n' ' ')
     elif [ -f "$PACKAGE_DIR/_${VERSION}/${ACTUAL_PACKAGE}_test.js" ]; then
         TEST_FILES="$PACKAGE_DIR/_${VERSION}/${ACTUAL_PACKAGE}_test.js"
     fi
@@ -84,8 +92,13 @@ if [ -n "$PACKAGE" ]; then
       GREP_PATTERN="tracing/$ACTUAL_PACKAGE@v$HIGHEST_VERSION"
       
       # Check for test files in the highest version directory
-      if [ -f "$PACKAGE_DIR/_v${HIGHEST_VERSION}/test.js" ]; then
-          TEST_FILES="$PACKAGE_DIR/_v${HIGHEST_VERSION}/test.js"
+      SEARCH_PATTERN="test*.js"
+      if [ -n "$TEST_NAME_FILTER" ]; then
+          SEARCH_PATTERN="test*${TEST_NAME_FILTER}*.js"
+      fi
+      FOUND_FILES=$(find "$PACKAGE_DIR/_v${HIGHEST_VERSION}" -maxdepth 1 -name "$SEARCH_PATTERN" ! -name "test_base.js")
+      if [ -n "$FOUND_FILES" ]; then
+          TEST_FILES=$(echo "$FOUND_FILES" | tr '\n' ' ')
       elif [ -f "$PACKAGE_DIR/_v${HIGHEST_VERSION}/${ACTUAL_PACKAGE}_test.js" ]; then
           TEST_FILES="$PACKAGE_DIR/_v${HIGHEST_VERSION}/${ACTUAL_PACKAGE}_test.js"
       fi

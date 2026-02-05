@@ -199,14 +199,6 @@ class ProcessControls {
     forkConfig.execArgv.push('--preserve-symlinks');
     forkConfig.execArgv.push('--preserve-symlinks-main');
 
-    if (process.env.RUN_ESM) {
-      forkConfig.execArgv.push('--import');
-      forkConfig.execArgv.push(path.join(__dirname, 'importHelper.mjs'));
-    } else {
-      forkConfig.execArgv.push('--require');
-      forkConfig.execArgv.push(path.join(__dirname, 'requireHelper.js'));
-    }
-
     this.process = this.args ? fork(this.appPath, this.args || [], forkConfig) : fork(this.appPath, forkConfig);
 
     this.process.on('message', message => {

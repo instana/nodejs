@@ -14,11 +14,9 @@ process.on('SIGTERM', () => {
 });
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
-if (process.env.MYSQL2_VERSION) {
-  require('./mockVersion');
-}
 
-const instana = require('../../../..')();
+
+const instana = require('@instana/collector')();
 
 const accessFunction = process.env.USE_EXECUTE ? 'execute' : 'query';
 const driverModeEnvVar = process.env.DRIVER_MODE;
@@ -44,7 +42,7 @@ const mysql = require(driver);
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const port = require('../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 
 const app = express();
 const logPrefix = `Express / MySQL App (${process.pid}):\t`;

@@ -11,20 +11,20 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('./mockVersion');
-
-require('../../../..')();
+require('@instana/collector')();
 
 const redis = require(process.env.REDIS_PKG);
+const semver = require('semver');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 
-const port = require('../../../test_util/app-port')();
-
-const cls = require('../../../../../core/src/tracing/cls');
+const port = require('@_instana/collector/test/test_util/app-port')();
+const cls = require('@_instana/core/src/tracing/cls');
 const app = express();
-const redisVersion = process.env.REDIS_VERSION;
+
+const isLatest = process.env.LIBRARY_LATEST === 'true';
+const redisVersion = process.env.LIBRARY_VERSION;
 const isConnectedViaPool = process.env.REDIS_SETUP_TYPE === 'pool';
 const logPrefix =
   `Redis App (version: ${redisVersion}, require: ${process.env.REDIS_PKG}, ` +
@@ -147,7 +147,7 @@ app.get('/blocking', async (req, res) => {
 
 app.get('/scan-iterator', async (req, res) => {
   // v5: SCAN iterators return collection of keys, enabling multi-key commands like mGet
-  if (redisVersion === 'latest' || redisVersion === 'v5.8.3') {
+  if (isLatest || semver.major(redisVersion) === 5) {
     // eslint-disable-next-line no-restricted-syntax
     for await (const keys of connection.scanIterator()) {
       try {

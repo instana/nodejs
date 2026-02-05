@@ -11,13 +11,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('./mockVersion');
 
-const isLegacy = process.env.MONGODB_VERSION === 'v4';
-
-const agentPort = process.env.INSTANA_AGENT_PORT;
-
-require('../../../..')({
+require('@instana/collector')({
   level: 'warn',
   tracing: {
     enabled: process.env.TRACING_ENABLED !== 'false',
@@ -30,8 +25,10 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const assert = require('assert');
-
-const port = require('../../../test_util/app-port')();
+const semver = require('semver');
+const port = require('@_instana/collector/test/test_util/app-port')();
+const isLegacy = semver.major(process.env.LIBRARY_VERSION) <= 4;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 
 const app = express();
 let db;

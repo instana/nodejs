@@ -48,9 +48,42 @@ function main() {
       return null;
     }
 
+    function createSymlink(sourcePath, targetPath) {
+      if (fs.existsSync(targetPath)) {
+        if (fs.lstatSync(targetPath).isDirectory() || !fs.lstatSync(targetPath).isSymbolicLink()) {
+          return;
+        }
+        fs.unlinkSync(targetPath);
+      }
+      fs.symlinkSync(path.relative(path.dirname(targetPath), sourcePath), targetPath);
+    }
+
+    function symlinkContents(sourceDir, targetDir) {
+      const entries = fs.readdirSync(sourceDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.name === 'node_modules' || entry.name.startsWith('_v')) {
+          continue;
+        }
+
+        const sourceEntryPath = path.join(sourceDir, entry.name);
+        const targetEntryPath = path.join(targetDir, entry.name);
+
+        if (entry.isDirectory()) {
+          if (!fs.existsSync(targetEntryPath)) {
+            fs.mkdirSync(targetEntryPath);
+          }
+          symlinkContents(sourceEntryPath, targetEntryPath);
+        } else if (entry.isFile()) {
+          const ext = path.extname(entry.name);
+          if (ext === '.js' || ext === '.mjs') {
+            createSymlink(sourceEntryPath, targetEntryPath);
+          }
+        }
+      }
+    }
+
     const testDir = findTestDirectory(collectorTestDir);
     if (!testDir) {
-      console.log(`Test directory not found for ${currency.name}, skipping...`);
       return;
     }
 
@@ -65,19 +98,65 @@ function main() {
     const sortedVersions = currency.versions.map(v => (typeof v === 'string' ? v : v.v)).sort(semver.rcompare);
     const latestVersion = sortedVersions[0];
 
+
+    const usedDirs = new Set();
+    const versionToDir = new Map();
+
+    sortedVersions.forEach(v => {
+      const versionStr = typeof v === 'string' ? v : v.v;
+      const major = semver.major(versionStr);
+      const minor = semver.minor(versionStr);
+      const patch = semver.patch(versionStr);
+
+      let versionDirName = `_v${major}`;
+
+      if (usedDirs.has(versionDirName)) {
+        versionDirName = `_v${major}.${minor}`;
+      }
+
+      if (usedDirs.has(versionDirName)) {
+        versionDirName = `_v${major}.${minor}.${patch}`;
+      }
+
+      if (usedDirs.has(versionDirName)) {
+        console.warn(`Could not find a unique directory name for version ${versionStr} of ${currency.name}. Skipping.`);
+        return;
+      }
+
+      usedDirs.add(versionDirName);
+      versionToDir.set(versionStr, versionDirName);
+    });
+
     currency.versions.forEach(versionObj => {
       const version = typeof versionObj === 'string' ? versionObj : versionObj.v;
       const isLatest = version === latestVersion;
       const majorVersion = semver.major(version);
-      const versionDir = path.join(testDir, `_v${majorVersion}`);
+
+      const dirName = versionToDir.get(version);
+      if (!dirName) {
+        return;
+      }
+
+      const versionDir = path.join(testDir, dirName);
 
       if (!fs.existsSync(versionDir)) {
         fs.mkdirSync(versionDir, { recursive: true });
       }
 
-      const currentYear = new Date().getFullYear();
+      const modesPath = path.join(testDir, 'modes.json');
+      let modes = [null];
+      if (fs.existsSync(modesPath)) {
+        try {
+          modes = JSON.parse(fs.readFileSync(modesPath, 'utf8'));
+        } catch (err) {
+          console.error(`Failed to parse ${modesPath}:`, err);
+        }
+      }
 
-      const testContent = `/*
+      modes.forEach(mode => {
+        const currentYear = new Date().getFullYear();
+
+        const testContent = `/*
  * (c) Copyright IBM Corp. ${currentYear}
  */
 
@@ -89,8 +168,10 @@ const { execSync } = require('child_process');
 const path = require('path');
 const testBase = require('./test_base');
 const config = require('@_instana/core/test/config');
+const supportedVersion = require('@_instana/core').tracing.supportedVersion;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-describe('tracing/${currency.name}@v${majorVersion}', function () {
+mochaSuiteFn('tracing/${currency.name}@${dirName.substring(1)}${mode ? ` (${mode})` : ''}', function () {
   this.timeout(config.getTestTimeout());
 
   before(() => {
@@ -98,10 +179,12 @@ describe('tracing/${currency.name}@v${majorVersion}', function () {
     execSync('npm install --no-audit --prefix ./', { cwd: __dirname, stdio: 'inherit' });
   });
 
-  testBase.call(this, '${currency.name}', '${version}', ${isLatest});
+  testBase.call(this, '${currency.name}', '${version}', ${isLatest}${mode ? `, '${mode}'` : ''});
 });
 `;
-      fs.writeFileSync(path.join(versionDir, 'test.js'), testContent);
+        const fileName = mode ? `test_${mode}.js` : 'test.js';
+        fs.writeFileSync(path.join(versionDir, fileName), testContent);
+      });
 
       const packageJsonPath = path.join(testDir, 'package.json');
       let versionPackageJson = {
@@ -136,56 +219,7 @@ describe('tracing/${currency.name}@v${majorVersion}', function () {
 
       fs.writeFileSync(path.join(versionDir, 'package.json'), `${JSON.stringify(versionPackageJson, null, 2)}\n`);
 
-      let appJsName = 'app.js';
-      let appJsPath = path.join(testDir, appJsName);
-
-      if (!fs.existsSync(appJsPath)) {
-        const files = fs.readdirSync(testDir);
-        const customAppJs = files.find(f => f.endsWith('.js') && f !== 'test_base.js' && f !== 'package.json');
-
-        if (customAppJs) {
-          appJsName = customAppJs;
-          appJsPath = path.join(testDir, appJsName);
-        }
-      }
-
-      if (fs.existsSync(appJsPath)) {
-        const symlinkPath = path.join(versionDir, appJsName);
-        if (fs.existsSync(symlinkPath)) {
-          fs.unlinkSync(symlinkPath);
-        }
-        fs.symlinkSync(path.relative(versionDir, appJsPath), symlinkPath);
-      }
-
-      let appMjsName = 'app.mjs';
-      let appMjsPath = path.join(testDir, appMjsName);
-
-      if (!fs.existsSync(appMjsPath)) {
-        const files = fs.readdirSync(testDir);
-        const customAppMjs = files.find(f => f.endsWith('.mjs') && f !== 'test_base.mjs');
-
-        if (customAppMjs) {
-          appMjsName = customAppMjs;
-          appMjsPath = path.join(testDir, appMjsName);
-        }
-      }
-
-      if (fs.existsSync(appMjsPath)) {
-        const symlinkPath = path.join(versionDir, appMjsName);
-        if (fs.existsSync(symlinkPath)) {
-          fs.unlinkSync(symlinkPath);
-        }
-        fs.symlinkSync(path.relative(versionDir, appMjsPath), symlinkPath);
-      }
-
-      const testBasePath = path.join(testDir, 'test_base.js');
-      if (fs.existsSync(testBasePath)) {
-        const symlinkPath = path.join(versionDir, 'test_base.js');
-        if (fs.existsSync(symlinkPath)) {
-          fs.unlinkSync(symlinkPath);
-        }
-        fs.symlinkSync(path.relative(versionDir, testBasePath), symlinkPath);
-      }
+      symlinkContents(testDir, versionDir);
     });
   });
 }
