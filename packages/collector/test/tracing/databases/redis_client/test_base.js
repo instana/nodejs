@@ -54,6 +54,18 @@ module.exports = function (name, version, isLatest, mode) {
   const isCluster = mode === 'cluster';
   const isSentinel = mode === 'sentinel';
 
+  const redisVersion = version;
+  const isLegacyVersion = semver.major(redisVersion) <= legacyVersion;
+  const isV4 = semver.major(redisVersion) === 4;
+  const isV3 = semver.major(redisVersion) === 3;
+  const greaterThanV4 = semver.major(redisVersion) > 4;
+
+  let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+
+  if (redisVersion === legacyVersion) {
+    mochaSuiteFn = describe.skip;
+  }
+
   if (isCluster && semver.major(version) < 4) {
     console.log(`Cluster not supported for version ${version}`);
     return;
@@ -64,18 +76,8 @@ module.exports = function (name, version, isLatest, mode) {
     return;
   }
 
-  const redisVersion = version;
-  const isLegacyVersion = semver.major(redisVersion) <= legacyVersion;
-  const isV4 = semver.major(redisVersion) === 4;
-  const isV3 = semver.major(redisVersion) === 3;
-  const greaterThanV4 = semver.major(redisVersion) > 4;
-
-
   this.timeout(config.getTestTimeout() * 4);
   const agentControls = globalAgent.instance;
-
-
-  let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
   // Legacy mode is only supported in Redis v4, skip tests for other versions
   if (isLegacyMode && !isV4) {
@@ -1272,7 +1274,6 @@ module.exports = function (name, version, isLatest, mode) {
     }
   });
 
-
   function verifyHttpExit(controls, spans, parent) {
     expectExactlyOneMatching(spans, [
       span => expect(span.t).to.equal(parent.t),
@@ -1328,6 +1329,5 @@ module.exports = function (name, version, isLatest, mode) {
         })
       )
     );
-  }
-}
-
+  };
+};

@@ -17,7 +17,7 @@ import Sequelize from 'sequelize';
 import express from 'express';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
-import getAppPort from '../../../test_util/app-port.js';
+import getAppPort from '@_instana/collector/test/test_util/app-port.js';
 const port = getAppPort();
 
 const sequelize = new Sequelize(process.env.POSTGRES_DB, process.env.POSTGRES_USER, process.env.POSTGRES_PASSWORD, {

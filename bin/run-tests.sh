@@ -14,6 +14,12 @@ GREP_PATTERN=""
 TEST_FILES=""
 TEST_NAME_FILTER=""
 
+# Helper function to normalize package names to folder names
+# e.g., '@redis/client' becomes 'redis_client'
+normalize_folder_name() {
+  echo "$1" | sed 's|^@||' | sed 's|/|_|g'
+}
+
 for arg in "$@"; do
   case $arg in
   --watch)
@@ -25,7 +31,19 @@ for arg in "$@"; do
     shift
     ;;
   *)
-    if [[ $arg == *"@"* ]]; then
+    # Check if arg contains @ but NOT at the beginning (version separator)
+    # If @ is at the beginning, it's a scoped package name
+    if [[ $arg == @* ]]; then
+      # Scoped package - check if there's a version separator after the package name
+      # Pattern: @scope/name@version
+      if [[ $arg =~ ^(@[^@]+)@(.+)$ ]]; then
+        PACKAGE="${BASH_REMATCH[1]}"
+        VERSION="${BASH_REMATCH[2]}"
+      else
+        PACKAGE="$arg"
+      fi
+    elif [[ $arg == *"@"* ]]; then
+      # Non-scoped package with version
       PACKAGE="${arg%@*}"
       VERSION="${arg#*@}"
     elif [ -n "$PACKAGE" ]; then
@@ -47,10 +65,16 @@ fi
 npm_command="npm run test:debug"
 
 if [ -n "$PACKAGE" ]; then
+  # Normalize package name for scoped packages (e.g., @redis/client -> redis_client)
+  NORMALIZED_PACKAGE=$(normalize_folder_name "$PACKAGE")
+  
   if [ -d "packages/collector/test/tracing/$PACKAGE" ]; then
     PACKAGE_DIR="packages/collector/test/tracing/$PACKAGE"
+  elif [ -d "packages/collector/test/tracing/$NORMALIZED_PACKAGE" ]; then
+    PACKAGE_DIR="packages/collector/test/tracing/$NORMALIZED_PACKAGE"
   else
-    PACKAGE_DIR=$(find "packages/collector/test/tracing" -mindepth 2 -maxdepth 2 -type d -name "$PACKAGE" 2>/dev/null | head -1)
+    # Search for the package or normalized package name
+    PACKAGE_DIR=$(find "packages/collector/test/tracing" -mindepth 2 -maxdepth 2 -type d \( -name "$PACKAGE" -o -name "$NORMALIZED_PACKAGE" \) 2>/dev/null | head -1)
   fi
   
   if [ -z "$PACKAGE_DIR" ]; then

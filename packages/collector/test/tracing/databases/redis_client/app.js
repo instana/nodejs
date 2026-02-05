@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 require('@instana/collector')();
 
-const redis = require('redis');
+const redis = require('@redis/client');
 const semver = require('semver');
 const bodyParser = require('body-parser');
 const express = require('express');
@@ -27,7 +27,7 @@ const isLatest = process.env.LIBRARY_LATEST === 'true';
 const redisVersion = process.env.LIBRARY_VERSION;
 const isConnectedViaPool = process.env.REDIS_SETUP_TYPE === 'pool';
 const logPrefix =
-  `Redis App (version: ${redisVersion}, ` +
+  `Redis App (version: ${redisVersion}, require: ${process.env.REDIS_PKG}, ` +
   `setup type: ${process.env.REDIS_SETUP_TYPE}, pid: ${process.pid}):\t`;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 

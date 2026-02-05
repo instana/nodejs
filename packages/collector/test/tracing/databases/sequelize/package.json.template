@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "pg": "latest"
+  },
+  "optionalDependencies": {
+    "pg-native": "latest"
+  }
+}
