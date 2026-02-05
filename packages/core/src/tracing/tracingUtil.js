@@ -438,12 +438,18 @@ exports.setErrorDetails = function setErrorDetails(span, error, technology) {
         'This may indicate an instrumentation bug or unsupported library behavior.'
     );
 
-    // Mark span with incomplete instrumentation info
-    // This is currently a custom tag, will move to sdk custom tag
-    if (targetSpan.data && targetSpan.data[spanName]) {
-      targetSpan.data[spanName].incomplete = true;
-      targetSpan.data[spanName].incompleteReason = 'unexpected_return_type';
+    // using sdk custom tags, we mark this span as incomplete
+    if (!targetSpan.data.sdk) {
+      targetSpan.data.sdk = {};
     }
+    if (!targetSpan.data.sdk.custom) {
+      targetSpan.data.sdk.custom = {};
+    }
+    if (!targetSpan.data.sdk.custom.tags) {
+      targetSpan.data.sdk.custom.tags = {};
+    }
+    targetSpan.data.sdk.custom.tags.incomplete = true;
+    targetSpan.data.sdk.custom.tags.incompleteReason = 'unexpected_return_type';
 
     return true;
   };
