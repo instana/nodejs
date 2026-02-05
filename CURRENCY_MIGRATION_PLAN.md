@@ -42,7 +42,7 @@ All currencies in currencies.json must use the new test structure:
 
 #### 4a. Prepare
 
-Review and study the mssql and pg test structure first!! And read the test base and app.js and app.mjs. We always follow these patterns.
+Review and study the mssql and pg test structure first!! And read the test base and app.js and app.mjs. We always follow these patterns. Read ProcessControls.js as well.
 Then search for the test folder of the current currency. If the test folder is too complex, skip and pick another currency. Complex test structures require manual refactoring.
 
 You always find the test folder by searching for `require(currency)` in the test directory!
