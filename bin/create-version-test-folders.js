@@ -53,7 +53,8 @@ function main() {
 
     console.log(`Found test directory: ${testDir}`);
 
-    currency.versions.forEach(version => {
+    currency.versions.forEach(versionObj => {
+      const version = typeof versionObj === 'string' ? versionObj : versionObj.v;
       const majorVersion = semver.major(version);
       const versionDir = path.join(testDir, `_v${majorVersion}`);
 
@@ -108,12 +109,14 @@ describe('tracing/${currency.name}@v${majorVersion}', function () {
       versionPackageJson.dependencies['@instana/core'] = `file:${relativeTgzPath}/core.tgz`;
       versionPackageJson.dependencies['@instana/shared-metrics'] = `file:${relativeTgzPath}/shared-metrics.tgz`;
 
-      const matchingVersion = currency.versions.find(v => {
+      const matchingVersion = currency.versions.find(vObj => {
+        const v = typeof vObj === 'string' ? vObj : vObj.v;
         const parsed = semver.parse(v);
         return parsed && parsed.major === majorVersion;
       });
       if (matchingVersion) {
-        versionPackageJson.dependencies[currency.name] = matchingVersion;
+        const actualVersion = typeof matchingVersion === 'string' ? matchingVersion : matchingVersion.v;
+        versionPackageJson.dependencies[currency.name] = actualVersion;
       }
 
       fs.writeFileSync(path.join(versionDir, 'package.json'), `${JSON.stringify(versionPackageJson, null, 2)}\n`);

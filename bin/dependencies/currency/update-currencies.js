@@ -41,7 +41,8 @@ currencies.forEach(currency => {
     return;
   }
 
-  const installedVersion = currency.versions[0];
+  const installedVersionObj = currency.versions[0];
+  const installedVersion = typeof installedVersionObj === 'string' ? installedVersionObj : installedVersionObj.v;
 
   if (!installedVersion) {
     console.log(`Skipping ${currency.name}. Seems to be a core dependency.`);
@@ -89,13 +90,23 @@ currencies.forEach(currency => {
   }
 
   // 1. update currencies.json versions array
-  const installedVersionIndex = currency.versions.indexOf(installedVersion);
+  const installedVersionIndex = currency.versions.findIndex(vObj => {
+    const v = typeof vObj === 'string' ? vObj : vObj.v;
+    return v === installedVersion;
+  });
 
   if (MAJOR_UPDATES_MODE && isMajorUpdate) {
-    currency.versions.unshift(latestVersion);
+    const newVersionObj =
+      typeof installedVersionObj === 'string' ? latestVersion : { ...installedVersionObj, v: latestVersion };
+    currency.versions.unshift(newVersionObj);
   } else {
-    currency.versions = currency.versions.filter(version => version !== installedVersion);
-    currency.versions.splice(installedVersionIndex, 0, latestVersion);
+    currency.versions = currency.versions.filter(vObj => {
+      const v = typeof vObj === 'string' ? vObj : vObj.v;
+      return v !== installedVersion;
+    });
+    const newVersionObj =
+      typeof installedVersionObj === 'string' ? latestVersion : { ...installedVersionObj, v: latestVersion };
+    currency.versions.splice(installedVersionIndex, 0, newVersionObj);
   }
 
   fs.writeFileSync(path.join(__dirname, '..', '..', '..', 'currencies.json'), JSON.stringify(currencies, null, 2));

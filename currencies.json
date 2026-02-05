@@ -537,7 +537,7 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
-    "versions": ["12.2.0", "10.0.4", "9.3.0"]
+    "versions": [{ "v": "12.2.0" }, { "v": "10.0.4" }, { "v": "9.3.0" }]
   },
   {
     "name": "mysql",
@@ -615,7 +615,7 @@
     "ignoreUpdates": false,
     "note": "",
     "core": false,
-    "versions": ["8.17.1"]
+    "versions": [{ "v": "8.17.1" }]
   },
   {
     "name": "pg-native",
