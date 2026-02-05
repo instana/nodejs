@@ -41,12 +41,15 @@ if [ "$WATCH" = true ]; then
 fi
 
 if [ -n "$PACKAGE" ]; then
-  PACKAGE_DIR=$(find "packages/collector/test/tracing" -mindepth 2 -maxdepth 2 -type d -name "$PACKAGE" 2>/dev/null | head -1)
+  PACKAGE_DIR=$(find "packages/collector/test/tracing" -mindepth 2 -maxdepth 2 -type d -name "*$PACKAGE*" 2>/dev/null | head -1)
   
   if [ -z "$PACKAGE_DIR" ]; then
     echo "Error: Package '$PACKAGE' not found in any tracing category"
     exit 1
   fi
+  
+  # Extract the actual package name from the matched directory
+  ACTUAL_PACKAGE=$(basename "$PACKAGE_DIR")
   
   AVAILABLE_VERSIONS=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sed 's/.*_v/v/' | sort -V | tr '\n' ', ' | sed 's/,$//')
 
@@ -60,17 +63,17 @@ if [ -n "$PACKAGE" ]; then
       exit 1
     fi
 
-    GREP_PATTERN="tracing/$PACKAGE@$VERSION"
+    GREP_PATTERN="tracing/$ACTUAL_PACKAGE@$VERSION"
   else
     HIGHEST_VERSION=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sed 's/.*_v//' | sort -n | tail -1)
     if [ -n "$HIGHEST_VERSION" ]; then
-      GREP_PATTERN="tracing/$PACKAGE@v$HIGHEST_VERSION"
+      GREP_PATTERN="tracing/$ACTUAL_PACKAGE@v$HIGHEST_VERSION"
     else
-      GREP_PATTERN="tracing/$PACKAGE@v"
+      GREP_PATTERN="tracing/$ACTUAL_PACKAGE@v"
     fi
   fi
   args="-- --grep \"$GREP_PATTERN\" $args"
-  echo "Running tests for $PACKAGE${VERSION:+ version $VERSION} (grep pattern: $GREP_PATTERN)"
+  echo "Running tests for $ACTUAL_PACKAGE${VERSION:+ version $VERSION} (grep pattern: $GREP_PATTERN)"
 else
   echo "Running all tests with $SCOPE $args"
 fi

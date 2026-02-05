@@ -514,7 +514,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "2.2.2"
+      }
+    ]
   },
   {
     "name": "mongodb",

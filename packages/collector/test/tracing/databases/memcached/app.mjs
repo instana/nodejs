@@ -11,14 +11,15 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+import Memcached from 'memcached';
 import express from 'express';
+
+const { default: getAppPort } = await import('@_instana/collector/test/test_util/app-port.js');
+const { default: logger } = await import('@_instana/core/test/test_util/log.js');
+
 const app = express();
-import getAppPort from '../../../test_util/app-port.js';
 const port = getAppPort();
 const agentPort = process.env.INSTANA_AGENT_PORT;
-
-import logger from '@instana/core/test/test_util/log.js';
-import Memcached from 'memcached';
 
 const logPrefix = `Memcached (${process.pid}):\t`;
 const log = logger.getLogger(logPrefix);

@@ -82,3 +82,13 @@ Automatically generates:
 - [ ] `test_base.js` exists
 - [ ] Symlinks work
 
+
+## Important Notes
+
+### RequireHelper Pattern
+Both `app.js` and `app.mjs` must be updated to use the requireHelper pattern:
+- **app.js**: Add `require('@_instana/collector/test/test_util/requireHelper');` and use `global.library`
+- **app.mjs**: Import library directly (e.g., `import Memcached from 'memcached';`)
+- All paths must use `@_instana` prefix (not `@instana`)
+
+This allows version-specific dependencies via `LIBRARY_NAME` and `LIBRARY_VERSION` env vars.

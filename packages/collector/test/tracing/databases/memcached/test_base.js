@@ -8,11 +8,10 @@
 const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
-const { retry, stringifyItems, delay } = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../../test_util/ProcessControls');
-const globalAgent = require('../../../globalAgent');
+const config = require('@instana/core/test/config');
+const { retry, stringifyItems, delay } = require('@instana/core/test/test_util');
+const ProcessControls = require('@instana/collector/test/test_util/ProcessControls');
+const globalAgent = require('@instana/collector/test/globalAgent');
 const expectAtLeastOneMatching = require('@instana/core/test/test_util/expectAtLeastOneMatching');
 const expectExactlyOneMatching = require('@instana/core/test/test_util/expectExactlyOneMatching');
 const {
@@ -20,8 +19,6 @@ const {
   verifyHttpExit,
   verifyExitSpan
 } = require('@instana/core/test/test_util/common_verifications');
-
-let mochaSuiteFn;
 
 const SPAN_NAME = 'memcached';
 
@@ -47,17 +44,9 @@ const parallelOps = [
 
 const availableOperations = sequentialOps.concat(parallelOps);
 
-if (!supportedVersion(process.versions.node)) {
-  mochaSuiteFn = describe.skip;
-} else {
-  mochaSuiteFn = describe;
-}
-
 const retryTime = 1000;
 
-mochaSuiteFn('tracing/cache/memcached', function () {
-  this.timeout(config.getTestTimeout());
-
+module.exports = function (name, version, isLatest) {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
@@ -68,7 +57,11 @@ mochaSuiteFn('tracing/cache/memcached', function () {
       appControls = new ProcessControls({
         dirname: __dirname,
         useGlobalAgent: true,
-        env: {}
+        env: {
+          LIBRARY_LATEST: isLatest,
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name
+        }
       });
 
       await appControls.startAndWaitForAgentConnection();
@@ -185,15 +178,18 @@ mochaSuiteFn('tracing/cache/memcached', function () {
   });
 
   describe('tracing disabled', () => {
-    this.timeout(config.getTestTimeout() / 2);
     let appControls;
 
     before(async () => {
       appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
+        dirname: __dirname,
         useGlobalAgent: true,
         tracingEnabled: false,
-        env: {}
+        env: {
+          LIBRARY_LATEST: isLatest,
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name
+        }
       });
 
       await appControls.startAndWaitForAgentConnection();
@@ -258,9 +254,13 @@ mochaSuiteFn('tracing/cache/memcached', function () {
 
     before(async () => {
       appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
+        dirname: __dirname,
         useGlobalAgent: true,
-        env: {}
+        env: {
+          LIBRARY_LATEST: isLatest,
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name
+        }
       });
 
       await appControls.startAndWaitForAgentConnection();
@@ -321,4 +321,4 @@ mochaSuiteFn('tracing/cache/memcached', function () {
         ));
     });
   });
-});
+};
