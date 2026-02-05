@@ -7,12 +7,20 @@
 const constants = require('../constants');
 const W3cTraceContext = require('../w3c_trace_context/W3cTraceContext');
 
+let ConfluentKafkaInstrumentation;
+
+function initInstrumentation() {
+  ConfluentKafkaInstrumentation =
+    ConfluentKafkaInstrumentation ||
+    require('@instana/instrumentation-confluent-kafka-javascript').ConfluentKafkaInstrumentation;
+}
+
 module.exports.preInit = () => {
-  require('@instana/instrumentation-confluent-kafka-javascript');
+  initInstrumentation();
 };
 
 module.exports.init = () => {
-  const { ConfluentKafkaInstrumentation } = require('@instana/instrumentation-confluent-kafka-javascript');
+  initInstrumentation();
 
   const instrumentation = new ConfluentKafkaInstrumentation({});
 

@@ -6,10 +6,17 @@
 
 const constants = require('../constants');
 
+let SocketIoInstrumentation;
+
+function initInstrumentation() {
+  SocketIoInstrumentation =
+    SocketIoInstrumentation || require('@opentelemetry/instrumentation-socket.io').SocketIoInstrumentation;
+}
+
 const isOnEvent = otelSpan => otelSpan.name.indexOf('receive') !== -1;
 
 exports.preInit = () => {
-  require('@opentelemetry/instrumentation-socket.io');
+  initInstrumentation();
 };
 
 /**
@@ -23,7 +30,7 @@ exports.preInit = () => {
  * headers or meta data, only payload!
  */
 exports.init = () => {
-  const { SocketIoInstrumentation } = require('@opentelemetry/instrumentation-socket.io');
+  initInstrumentation();
   const instrumentation = new SocketIoInstrumentation();
 
   if (!instrumentation.getConfig().enabled) {

@@ -4,15 +4,21 @@
 
 'use strict';
 
+let FsInstrumentation;
+
+function initInstrumentation() {
+  FsInstrumentation = FsInstrumentation || require('@opentelemetry/instrumentation-fs').FsInstrumentation;
+}
+
 module.exports.preInit = () => {
-  require('@opentelemetry/instrumentation-fs');
+  initInstrumentation();
 };
 
 // NOTE: otel fs instrumentation does not capture the file name currently
 module.exports.init = ({ cls, api }) => {
+  initInstrumentation();
   const constants = require('../constants');
   const { NonRecordingSpan } = require('./files/NonRecordingSpan');
-  const { FsInstrumentation } = require('@opentelemetry/instrumentation-fs');
 
   // eslint-disable-next-line max-len
   // https://github.com/open-telemetry/opentelemetry-js-contrib/pull/1335/files#diff-9a2f445c78d964623d07987299501cbc3101cbe0f76f9e18d2d75787601539daR428
