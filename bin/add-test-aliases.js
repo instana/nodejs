@@ -25,7 +25,7 @@ const addAliasIfNotExists = (aliasCommand, configFile) => {
   }
 };
 
-const output = execSync('lerna list --json', { encoding: 'utf-8' });
+const output = execSync('npx lerna list --json', { encoding: 'utf-8' });
 const packages = JSON.parse(output);
 const scopeNames = packages.map(pkg => pkg.name);
 const shellArg = process.argv[2];
