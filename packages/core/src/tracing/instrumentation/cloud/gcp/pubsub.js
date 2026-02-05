@@ -132,7 +132,9 @@ function instrumentedPublishMessage(ctx, originalPublishMessage, originalArgs) {
           throw err;
         }
       );
-    } else {
+    } else if (!originalCallback) {
+      // If there's no callback and no promise, we need to finish the span
+      // This can happen in some edge cases
       tracingUtil.handleUnexpectedReturnValue(thenable, span, 'gcps', 'publish message');
       finishSpan(null, null, span);
     }
