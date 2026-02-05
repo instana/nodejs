@@ -55,7 +55,7 @@ function main() {
 
     currency.versions.forEach(version => {
       const majorVersion = semver.major(version);
-      const versionDir = path.join(testDir, `v${majorVersion}`);
+      const versionDir = path.join(testDir, `_v${majorVersion}`);
 
       if (!fs.existsSync(versionDir)) {
         fs.mkdirSync(versionDir, { recursive: true });
@@ -92,9 +92,9 @@ describe('tracing/${currency.name}@v${majorVersion}', function () {
       };
 
       if (fs.existsSync(packageJsonPath)) {
-      const templatePackageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-       versionPackageJson = Object.assign(versionPackageJson, templatePackageJson);
-    }
+        const templatePackageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+        versionPackageJson = Object.assign(versionPackageJson, templatePackageJson);
+      }
 
       if (!versionPackageJson.dependencies) {
         versionPackageJson.dependencies = {};
@@ -115,10 +115,7 @@ describe('tracing/${currency.name}@v${majorVersion}', function () {
         versionPackageJson.dependencies[currency.name] = matchingVersion;
       }
 
-      fs.writeFileSync(
-        path.join(versionDir, 'package.json'),
-        `${JSON.stringify(versionPackageJson, null, 2)}\n`
-      );
+      fs.writeFileSync(path.join(versionDir, 'package.json'), `${JSON.stringify(versionPackageJson, null, 2)}\n`);
 
       const appJsPath = path.join(testDir, 'app.js');
       const appMjsPath = path.join(testDir, 'app.mjs');
@@ -148,7 +145,7 @@ describe('tracing/${currency.name}@v${majorVersion}', function () {
         fs.symlinkSync(path.relative(versionDir, testBasePath), symlinkPath);
       }
     });
-    });
+  });
 }
 
 main();

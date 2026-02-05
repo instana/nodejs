@@ -17,5 +17,5 @@ test/tracing/opentelemetry/package-lock.json
 test/tracing/opentelemetry/package.json
 
 test/instana-tgz
-
+test/**/_v*
 test/**/package-lock.json
