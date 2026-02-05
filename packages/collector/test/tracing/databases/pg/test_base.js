@@ -8,32 +8,29 @@
 const path = require('path');
 const semver = require('semver');
 const expect = require('chai').expect;
-const root = global.findRootFolder();
 
-const constants = require(path.join(root, 'packages', 'core', 'src', 'tracing', 'constants'));
-const config = require(path.join(root, 'packages', 'core', 'test', 'config'));
+const constants = require(path.join(global.corePath, 'src', 'tracing', 'constants'));
+const config = require(path.join(global.corePath, 'test', 'config'));
 const { retry, getSpansByName, expectAtLeastOneMatching, expectExactlyOneMatching } = require(path.join(
-  root,
-  'packages',
-  'core',
+  global.corePath,
   'test',
   'test_util'
 ));
-const ProcessControls = require(path.join(root, 'packages', 'collector', 'test', 'test_util', 'ProcessControls'));
-const globalAgent = require(path.join(root, 'packages', 'collector', 'test', 'globalAgent'));
+const ProcessControls = require(path.join(global.collectorPath, 'test', 'test_util', 'ProcessControls'));
+const globalAgent = require(path.join(global.collectorPath, 'test', 'globalAgent'));
 
-module.exports = function (version) {
+module.exports = function (name, version) {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
   let controls;
 
   before(async () => {
     controls = new ProcessControls({
-      appPath: path.join(__dirname, `_v${semver.major(version)}`, 'app.js'),
-      cwd: path.join(__dirname, `_v${semver.major(version)}`),
+      dirname: __dirname,
       useGlobalAgent: true,
       env: {
-        LIBRARY_VERSION: version
+        LIBRARY_VERSION: version,
+        LIBRARY_NAME: name
       }
     });
 

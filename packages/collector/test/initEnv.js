@@ -5,6 +5,8 @@
 
 'use strict';
 
+const path = require('path');
+
 // NOTE: default docker compose hosts, ports and credentials
 const DEFAULT_ENV_VALUES = {
   MONGODB: '127.0.0.1:27017',
@@ -52,4 +54,6 @@ Object.keys(DEFAULT_ENV_VALUES).forEach(key => {
   }
 });
 
-global.findRootFolder = require('./test_util/findRootFolder');
+const root = path.join(__dirname, '..', '..', '..');
+global.corePath = path.join(root, 'packages', 'core');
+global.collectorPath = path.join(root, 'packages', 'collector');

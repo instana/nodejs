@@ -30,10 +30,6 @@ if (!MAJOR_UPDATES_MODE) {
 }
 
 currencies.forEach(currency => {
-  if (!currency.name.includes('mssql')) {
-    return;
-  }
-
   console.log(`Checking currency update for ${currency.name}`);
 
   if (currency.ignoreUpdates) {

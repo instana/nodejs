@@ -14,18 +14,17 @@ process.on('SIGTERM', () => {
 });
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
+const _pg = global.library;
 
-require('../../../..')();
-
-const _pg = require('pg');
-const Pool = _pg.Pool;
-const Client = _pg.Client;
+const path = require('path');
 const express = require('express');
 const morgan = require('morgan');
 
 const bodyParser = require('body-parser');
-const port = require('../../../test_util/app-port')();
+const port = require(path.join(collectorPath, 'test', 'test_util', 'app-port'))();
 
+const Pool = _pg.Pool;
+const Client = _pg.Client;
 const app = express();
 const logPrefix = `Express / Postgres App (${process.pid}):\t`;
 const pool = new Pool({

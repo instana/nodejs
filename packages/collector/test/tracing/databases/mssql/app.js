@@ -13,21 +13,14 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-// eslint-disable-next-line no-eval
-const findRootFolder = eval(`(${process.env.FIND_ROOT_FOLDER_FN})`);
-const root = findRootFolder();
+const sql = global.library;
 const path = require('path');
-const requireAndVerify = require(path.join(root, 'packages', 'collector', 'test', 'test_util', 'require-and-verify'));
-
-requireAndVerify('@instana/collector')();
-const sql = requireAndVerify('mssql', process.env.LIBRARY_VERSION);
-
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const devNull = require('dev-null');
-const port = require(path.join(root, 'packages', 'collector', 'test', 'test_util', 'app-port'))();
-const { delay } = require(path.join(root, 'packages', 'core', 'test', 'test_util'));
+const port = require(path.join(collectorPath, 'test', 'test_util', 'app-port'))();
+const { delay } = require(path.join(corePath, 'test', 'test_util'));
 
 let pool;
 const app = express();

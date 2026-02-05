@@ -27,10 +27,6 @@ currencies = currencies.sort(function (a, b) {
 });
 
 currencies = currencies.map(currency => {
-  if (!currency.name.includes('mssql')) {
-    return currency;
-  }
-
   console.log('\n###############################################');
   console.log(`Checking ${currency.name}...`);
 

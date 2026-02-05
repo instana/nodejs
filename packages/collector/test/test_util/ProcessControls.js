@@ -11,7 +11,6 @@ const _ = require('lodash');
 const fork = require('child_process').fork;
 const fs = require('fs');
 const path = require('path');
-
 const config = require('../../../core/test/config');
 const http2Promise = require('./http2Promise');
 const testUtils = require('../../../core/test/test_util');
@@ -43,40 +42,36 @@ class ProcessControls {
    * @param {ProcessControlsOptions} opts
    */
   constructor(opts = {}) {
-    if (!opts.appPath && !opts.dirname) {
-      throw new Error('Missing mandatory config option, either appPath or dirname needs to be provided.');
-    }
-    if (opts.appPath && opts.dirname) {
-      throw new Error('Invalid config, appPath and dirname are mutually exclusive.');
+    if (!opts.dirname) {
+      throw new Error('dirname is required');
     }
 
-    if (!opts.appPath && opts.dirname) {
-      opts.appPath = path.join(opts.dirname, 'app.js');
+    opts.cwd = path.join(opts.dirname, `_v${semver.major(opts.env.LIBRARY_VERSION)}`);
+
+    if (!process.env.RUN_ESM) {
+      opts.appPath = path.join(opts.dirname, `_v${semver.major(opts.env.LIBRARY_VERSION)}`, 'app.js');
     }
 
     if (process.env.RUN_ESM && !opts.execArgv) {
       const esmLoader = [
-        `--import=${opts.esmLoaderPath ? opts.esmLoaderPath : path.join(__dirname, '..', '..', 'esm-register.mjs')}`
+        `--import=${opts.esmLoaderPath ? opts.esmLoaderPath : path.join(opts.cwd, 'node_modules', '@instana', 'collector', 'esm-register.mjs')}`
       ];
 
       try {
-        // Custom appPath is provided, use that. here we check the exact file name for esm app
-        if (opts?.appPath) {
-          const updatedPath = opts.appPath.endsWith('.js')
-            ? opts.appPath.replace(/\.js$/, '.mjs')
-            : `${opts.appPath}.mjs`;
-
-          const esmApp = testUtils.checkESMApp({ appPath: updatedPath });
+        if (opts?.appName) {
+          const appPath = path.join(opts.cwd, opts.appName);
+          const esmApp = testUtils.checkESMApp({ appPath });
 
           if (esmApp) {
             opts.execArgv = esmLoader;
-            opts.appPath = updatedPath;
+            opts.appPath = appPath;
           }
-        } else if (opts?.dirname) {
-          const esmApp = testUtils.checkESMApp({ appPath: path.join(opts.dirname, 'app.mjs') });
+        } else {
+          const appPath = path.join(opts.cwd, 'app.mjs');
+          const esmApp = testUtils.checkESMApp({ appPath });
           if (esmApp) {
             opts.execArgv = esmLoader;
-            opts.appPath = path.join(opts.dirname, 'app.mjs');
+            opts.appPath = appPath;
           }
         }
       } catch (err) {
@@ -140,6 +135,7 @@ class ProcessControls {
       process.env,
       {
         APP_PORT: this.port,
+        APP_CWD: this.cwd,
         INSTANA_AGENT_PORT: agentPort,
         INSTANA_LOG_LEVEL: 'warn',
         INSTANA_TRACING_DISABLE: !this.tracingEnabled,
@@ -148,7 +144,11 @@ class ProcessControls {
         INSTANA_FIRE_MONITORING_EVENT_DURATION_IN_MS: 500,
         INSTANA_RETRY_AGENT_CONNECTION_IN_MS: 500,
         APP_USES_HTTPS: this.appUsesHttps ? 'true' : 'false',
-        INSTANA_DISABLE_USE_OPENTELEMETRY: !this.enableOtelIntegration
+        INSTANA_DISABLE_USE_OPENTELEMETRY: !this.enableOtelIntegration,
+        LIBRARY_VERSION: process.env.LIBRARY_VERSION,
+        LIBRARY_NAME: process.env.LIBRARY_NAME,
+        CORE_PATH: global.corePath,
+        COLLECTOR_PATH: global.collectorPath
       },
       opts.env
     );
@@ -184,8 +184,20 @@ class ProcessControls {
       forkConfig.execArgv = this.execArgv;
     }
 
-    const findRootFolderFn = global.findRootFolder.toString();
-    forkConfig.env.FIND_ROOT_FOLDER_FN = findRootFolderFn;
+    if (!forkConfig.execArgv) {
+      forkConfig.execArgv = [];
+    }
+
+    forkConfig.execArgv.push('--preserve-symlinks');
+    forkConfig.execArgv.push('--preserve-symlinks-main');
+
+    if (process.env.RUN_ESM) {
+      forkConfig.execArgv.push('--import');
+      forkConfig.execArgv.push(path.join(__dirname, 'importHelper.mjs'));
+    } else {
+      forkConfig.execArgv.push('--require');
+      forkConfig.execArgv.push(path.join(__dirname, 'requireHelper.js'));
+    }
 
     this.process = this.args ? fork(this.appPath, this.args || [], forkConfig) : fork(this.appPath, forkConfig);
 
@@ -252,8 +264,7 @@ class ProcessControls {
   async startAndWaitForAgentConnection(retryTime, until) {
     // eslint-disable-next-line no-console
     console.log(
-      `[ProcessControls] start with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()}, appPath: ${
-        this.appPath
+      `[ProcessControls] start with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()}, appPath: ${this.appPath
       }`
     );
 
@@ -263,8 +274,7 @@ class ProcessControls {
 
     // eslint-disable-next-line no-console
     console.log(
-      `[ProcessControls] started with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()}, appPath: ${
-        this.appPath
+      `[ProcessControls] started with port: ${this.getPort()}, agentPort: ${this.agentControls.getPort()}, appPath: ${this.appPath
       }, pid: ${this.process.pid}`
     );
   }
@@ -415,7 +425,7 @@ class ProcessControls {
     return `${this.appUsesHttps || this.http2 ? 'https' : 'http'}://${
       // eslint-disable-next-line no-unneeded-ternary
       embedCredentialsInUrl ? embedCredentialsInUrl : ''
-    }localhost:${this.port}`;
+      }localhost:${this.port}`;
   }
 
   sendViaIpc(message) {
@@ -436,8 +446,7 @@ class ProcessControls {
 
     // eslint-disable-next-line no-console
     console.log(
-      `[ProcessControls] stopping with port: ${this.getPort()}, agentPort: ${
-        this.agentControls && this.agentControls.getPort && this.agentControls.getPort()
+      `[ProcessControls] stopping with port: ${this.getPort()}, agentPort: ${this.agentControls && this.agentControls.getPort && this.agentControls.getPort()
       }, appPath: ${this.appPath}, pid: ${this.process.pid}`
     );
 
@@ -447,8 +456,7 @@ class ProcessControls {
 
         // eslint-disable-next-line no-console
         console.log(
-          `[ProcessControls] stopped with port: ${this.getPort()}, agentPort: ${
-            this.agentControls && this.agentControls.getPort && this.agentControls.getPort()
+          `[ProcessControls] stopped with port: ${this.getPort()}, agentPort: ${this.agentControls && this.agentControls.getPort && this.agentControls.getPort()
           }, appPath: ${this.appPath}, pid: ${this.process.pid}`
         );
 

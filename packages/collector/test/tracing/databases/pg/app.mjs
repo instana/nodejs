@@ -13,16 +13,16 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const agentPort = process.env.INSTANA_AGENT_PORT;
+import path from 'path';
+import express from 'express';
+import morgan from 'morgan';
+import bodyParser from 'body-parser';
+const { default: getAppPort } = await import(path.join(global.collectorPath, 'test', 'test_util', 'app-port.js'));
 
+const agentPort = process.env.INSTANA_AGENT_PORT;
 import _pg from 'pg';
 const Pool = _pg.Pool;
 const Client = _pg.Client;
-import express from 'express';
-import morgan from 'morgan';
-
-import bodyParser from 'body-parser';
-import getAppPort from '../../../test_util/app-port.js';
 const port = getAppPort();
 
 const app = express();
