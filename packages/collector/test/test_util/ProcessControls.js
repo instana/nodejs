@@ -47,15 +47,19 @@ class ProcessControls {
       throw new Error('dirname is required');
     }
 
-    if (opts.env?.LIBRARY_VERSION) {
-      opts.cwd = path.join(opts.dirname, `_v${semver.major(opts.env.LIBRARY_VERSION)}`);
-    } else {
-      opts.cwd = opts.dirname;
+    const versionFolder = `_v${opts.env.LIBRARY_VERSION}`;
+
+    if (!opts.cwd) {
+      if (opts.env?.LIBRARY_VERSION) {
+        opts.cwd = path.join(opts.dirname, versionFolder);
+      } else {
+        opts.cwd = opts.dirname;
+      }
     }
 
-    if (!process.env.RUN_ESM) {
+    if (!process.env.RUN_ESM && !opts.appPath) {
       if (opts.env?.LIBRARY_VERSION) {
-        opts.appPath = path.join(opts.dirname, `_v${semver.major(opts.env.LIBRARY_VERSION)}`, opts.appName ? opts.appName : 'app.js');
+        opts.appPath = path.join(opts.dirname, versionFolder, opts.appName ? opts.appName : 'app.js');
       } else {
         opts.appPath = path.join(opts.dirname, opts.appName ? opts.appName : 'app.js');
       }

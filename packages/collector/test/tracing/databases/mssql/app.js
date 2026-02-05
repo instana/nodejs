@@ -36,6 +36,7 @@ const dbUser = process.env.AZURE_SQL_USERNAME || process.env.MSSQL_USER;
 const dbPassword = process.env.AZURE_SQL_PWD || process.env.MSSQL_PW;
 const userTable = process.env.AZURE_USER_TABLE || process.env.MSSQL_USER_TABLE;
 const procedureName = process.env.AZURE_PROCEDURE_NAME || process.env.MSSQL_PROCEDURE_NAME;
+const database = process.env.AZURE_SQL_DATABASE || process.env.MSSQL_DB;
 
 const isLocalHost = dbHost === 'localhost' || dbHost === '127.0.0.1';
 const connectConfigBase = {

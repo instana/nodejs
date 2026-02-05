@@ -98,30 +98,21 @@ function main() {
     const sortedVersions = currency.versions.map(v => (typeof v === 'string' ? v : v.v)).sort(semver.rcompare);
     const latestVersion = sortedVersions[0];
 
+    // cleanup
+    const versionDirs = fs.readdirSync(testDir).filter(name => name.startsWith('_v'));
+    versionDirs.forEach(dir => {
+      const dirPath = path.join(testDir, dir);
+      console.log(`Deleting ${dirPath}`);
+      fs.rmSync(dirPath, { recursive: true, force: true });
+    });
+
 
     const usedDirs = new Set();
     const versionToDir = new Map();
 
     sortedVersions.forEach(v => {
       const versionStr = typeof v === 'string' ? v : v.v;
-      const major = semver.major(versionStr);
-      const minor = semver.minor(versionStr);
-      const patch = semver.patch(versionStr);
-
-      let versionDirName = `_v${major}`;
-
-      if (usedDirs.has(versionDirName)) {
-        versionDirName = `_v${major}.${minor}`;
-      }
-
-      if (usedDirs.has(versionDirName)) {
-        versionDirName = `_v${major}.${minor}.${patch}`;
-      }
-
-      if (usedDirs.has(versionDirName)) {
-        console.warn(`Could not find a unique directory name for version ${versionStr} of ${currency.name}. Skipping.`);
-        return;
-      }
+      const versionDirName = `_v${versionStr}`;
 
       usedDirs.add(versionDirName);
       versionToDir.set(versionStr, versionDirName);

@@ -107,8 +107,6 @@ currencies.forEach(currency => {
 
   fs.writeFileSync(path.join(__dirname, '..', '..', '..', 'currencies.json'), JSON.stringify(currencies, null, 2));
 
-  // 2. regenerate version folders
-  execSync('node bin/create-version-test-folders.js', { cwd });
 
   if (MAJOR_UPDATES_MODE) {
     utils.commitAndCreatePR({

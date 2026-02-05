@@ -1,9 +1,0 @@
-{
-  "name": "fastify-v3",
-  "dependencies": {
-    "@instana/collector": "file:../../../../instana-tgz/collector.tgz",
-    "@instana/core": "file:../../../../instana-tgz/core.tgz",
-    "@instana/shared-metrics": "file:../../../../instana-tgz/shared-metrics.tgz",
-    "fastify": "3.29.5"
-  }
-}
