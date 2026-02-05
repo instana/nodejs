@@ -11,16 +11,17 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-require('../../../..')();
+require('@instana/collector')();
 
 const Client = require('pg-native');
 const express = require('express');
 const morgan = require('morgan');
 
 const bodyParser = require('body-parser');
-const port = require('../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 
 const app = express();
 const logPrefix = `Express / Postgres App (${process.pid}):\t`;
@@ -28,8 +29,7 @@ let connected = false;
 
 const client = new Client();
 client.connect(
-  `host=${process.env.POSTGRES_HOST || 'localhost'} port=5432 dbname=${process.env.POSTGRES_DB} user=${
-    process.env.POSTGRES_USER
+  `host=${process.env.POSTGRES_HOST || 'localhost'} port=5432 dbname=${process.env.POSTGRES_DB} user=${process.env.POSTGRES_USER
   } password=${process.env.POSTGRES_PASSWORD}`,
   err => {
     if (err) {

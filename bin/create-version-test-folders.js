@@ -205,7 +205,16 @@ mochaSuiteFn('tracing/${currency.name}@${dirName.substring(1)}${mode ? ` (${mode
       });
       if (matchingVersion) {
         const actualVersion = typeof matchingVersion === 'string' ? matchingVersion : matchingVersion.v;
-        versionPackageJson.dependencies[currency.name] = actualVersion;
+        const isOptional = typeof matchingVersion === 'object' && matchingVersion.optional === true;
+
+        if (isOptional) {
+          if (!versionPackageJson.optionalDependencies) {
+            versionPackageJson.optionalDependencies = {};
+          }
+          versionPackageJson.optionalDependencies[currency.name] = actualVersion;
+        } else {
+          versionPackageJson.dependencies[currency.name] = actualVersion;
+        }
       }
 
       fs.writeFileSync(path.join(versionDir, 'package.json'), `${JSON.stringify(versionPackageJson, null, 2)}\n`);

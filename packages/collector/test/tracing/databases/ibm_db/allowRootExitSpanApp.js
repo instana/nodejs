@@ -10,7 +10,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')({
+require('@instana/collector')({
   tracing: {
     allowRootExitSpan: true
   }
@@ -18,7 +18,7 @@ require('../../../..')({
 
 const { promisify } = require('util');
 const ibmdb = require('ibm_db');
-const { delay } = require('@instana/core/test/test_util');
+const { delay } = require('@_instana/core/test/test_util');
 
 const logPrefix = `DB2 Allow Root Exit Span App (${process.pid}):\t`;
 

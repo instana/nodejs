@@ -53,3 +53,6 @@ Object.keys(DEFAULT_ENV_VALUES).forEach(key => {
     process.env[key] = DEFAULT_ENV_VALUES[key];
   }
 });
+
+// Only regenerate folders if never generated or currencies.json versions !== package.json versions in test folder.
+// execSync('node bin/create-version-test-folders.js', { stdio: 'inherit', cwd: path.join(__dirname, '..', '..', '..') });
