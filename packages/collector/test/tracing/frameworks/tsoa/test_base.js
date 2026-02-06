@@ -4,30 +4,30 @@
 
 'use strict';
 
-const path = require('path');
 const expect = require('chai').expect;
 
-const constants = require('@instana/core').tracing.constants;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../../test_util/ProcessControls');
-const globalAgent = require('../../../globalAgent');
+const constants = require('@_instana/core').tracing.constants;
+const config = require('@_instana/core/test/config');
+const testUtils = require('@_instana/core/test/test_util');
+const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_instana/collector/test/globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
-mochaSuiteFn('tracing/tsoa', function () {
-  this.timeout(config.getTestTimeout());
-
-  const agentControls = globalAgent.instance;
+module.exports = function (name, version, isLatest) {
   globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   let controls;
 
   before(async () => {
     controls = new ProcessControls({
-      appPath: path.join(__dirname, 'build/src/server'),
-      useGlobalAgent: true
+      dirname: __dirname,
+      appName: 'build/src/server.js',
+      useGlobalAgent: true,
+      env: {
+        LIBRARY_LATEST: isLatest,
+        LIBRARY_VERSION: version,
+        LIBRARY_NAME: name
+      }
     });
 
     await controls.startAndWaitForAgentConnection();
@@ -171,4 +171,4 @@ mochaSuiteFn('tracing/tsoa', function () {
         );
     });
   });
-});
+};
