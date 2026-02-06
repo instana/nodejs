@@ -6,8 +6,6 @@
 'use strict';
 
 const expect = require('chai').expect;
-const supportedVersion = require('@_instana/core').tracing.supportedVersion;
-const config = require('@_instana/core/test/config');
 const testUtils = require('@_instana/core/test/test_util');
 const {
     verifyHttpRootEntry,
@@ -16,12 +14,9 @@ const {
 } = require('@_instana/core/test/test_util/common_verifications');
 const globalAgent = require('@_instana/collector/test/globalAgent');
 const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
+const { AgentStubControls } = require('@_instana/collector/test/apps/agentStubControls');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
-mochaSuiteFn('tracing/logging/console', function () {
-    this.timeout(config.getTestTimeout());
-
+module.exports = function (name, version, isLatest) {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
@@ -30,7 +25,12 @@ mochaSuiteFn('tracing/logging/console', function () {
     before(async () => {
         controls = new ProcessControls({
             dirname: __dirname,
-            useGlobalAgent: true
+            useGlobalAgent: true,
+            env: {
+                LIBRARY_LATEST: isLatest,
+                LIBRARY_VERSION: version,
+                LIBRARY_NAME: name
+            }
         });
 
         await controls.startAndWaitForAgentConnection();
@@ -158,7 +158,10 @@ mochaSuiteFn('tracing/logging/console', function () {
                         useGlobalAgent: true,
                         dirname: __dirname,
                         env: {
-                            INSTANA_TRACING_DISABLE_INSTRUMENTATIONS: ['console']
+                            INSTANA_TRACING_DISABLE_INSTRUMENTATIONS: ['console'],
+                            LIBRARY_LATEST: isLatest,
+                            LIBRARY_VERSION: version,
+                            LIBRARY_NAME: name
                         }
                     });
                     await envVarControls.startAndWaitForAgentConnection();
@@ -197,7 +200,10 @@ mochaSuiteFn('tracing/logging/console', function () {
                         useGlobalAgent: true,
                         dirname: __dirname,
                         env: {
-                            INSTANA_TRACING_DISABLE_GROUPS: ['LOGGING']
+                            INSTANA_TRACING_DISABLE_GROUPS: ['LOGGING'],
+                            LIBRARY_LATEST: isLatest,
+                            LIBRARY_VERSION: version,
+                            LIBRARY_NAME: name
                         }
                     });
                     await envVarControls.startAndWaitForAgentConnection();
@@ -236,7 +242,10 @@ mochaSuiteFn('tracing/logging/console', function () {
                         useGlobalAgent: true,
                         dirname: __dirname,
                         env: {
-                            INSTANA_TRACING_DISABLE: ['logging']
+                            INSTANA_TRACING_DISABLE: ['logging'],
+                            LIBRARY_LATEST: isLatest,
+                            LIBRARY_VERSION: version,
+                            LIBRARY_NAME: name
                         }
                     });
                     await envVarControls.startAndWaitForAgentConnection();
@@ -272,7 +281,6 @@ mochaSuiteFn('tracing/logging/console', function () {
 
         describe('through agent configuration', () => {
             describe('when logging group is disabled', () => {
-                const { AgentStubControls } = require('../../../apps/agentStubControls');
                 let customAgentControls;
                 let agentConfigControls;
 
@@ -284,7 +292,12 @@ mochaSuiteFn('tracing/logging/console', function () {
 
                     agentConfigControls = new ProcessControls({
                         agentControls: customAgentControls,
-                        dirname: __dirname
+                        dirname: __dirname,
+                        env: {
+                            LIBRARY_LATEST: isLatest,
+                            LIBRARY_VERSION: version,
+                            LIBRARY_NAME: name
+                        }
                     });
                     await agentConfigControls.startAndWaitForAgentConnection();
                 });
@@ -318,7 +331,6 @@ mochaSuiteFn('tracing/logging/console', function () {
             });
 
             describe('when logging is disabled but console is explicitly enabled', () => {
-                const { AgentStubControls } = require('../../../apps/agentStubControls');
                 let customAgentControls;
                 let agentConfigControls;
 
@@ -330,7 +342,12 @@ mochaSuiteFn('tracing/logging/console', function () {
 
                     agentConfigControls = new ProcessControls({
                         agentControls: customAgentControls,
-                        dirname: __dirname
+                        dirname: __dirname,
+                        env: {
+                            LIBRARY_LATEST: isLatest,
+                            LIBRARY_VERSION: version,
+                            LIBRARY_NAME: name
+                        }
                     });
                     await agentConfigControls.startAndWaitForAgentConnection();
                 });
@@ -422,5 +439,4 @@ mochaSuiteFn('tracing/logging/console', function () {
             )
         );
     }
-});
-
+};
