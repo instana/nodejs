@@ -13,14 +13,13 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-// Here, we're using the SDK for testing, so importing the collector directly.
-import instanaFactory from '../../../../src/index.js';
+import instanaFactory from '@instana/collector/src/index.js';
 const instana = instanaFactory();
 
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
-import getAppPort from '../../../test_util/app-port.js';
+import getAppPort from '@_instana/collector/test/test_util/app-port.js';
 const port = getAppPort();
 
 const app = express();
