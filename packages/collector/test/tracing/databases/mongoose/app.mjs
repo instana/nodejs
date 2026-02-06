@@ -16,7 +16,7 @@ import mongoose from 'mongoose';
 import express from 'express';
 import morgan from 'morgan';
 import { v4 as uuid } from 'uuid';
-import getAppPort from '../../../test_util/app-port.js';
+import getAppPort from '@_instana/collector/test/test_util/app-port.js';
 const port = getAppPort();
 
 const app = express();
@@ -30,7 +30,7 @@ const ATLAS_USER = process.env.ATLAS_USER || '';
 const ATLAS_PASSWORD = process.env.ATLAS_PASSWORD || '';
 const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
-const isLatestMajor = process.env.MONGOOSE_VERSION === 'latest';
+const isLatestMajor = parseInt(process.env.LIBRARY_VERSION, 10) >= 7;
 
 let connectString;
 if (USE_ATLAS) {
