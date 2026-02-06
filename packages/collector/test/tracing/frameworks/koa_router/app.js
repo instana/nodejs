@@ -11,15 +11,13 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('./mockVersion');
-
-require('../../../..')();
+require('@instana/collector')();
 
 const Koa = require('koa');
 const Router = require('@koa/router');
 const bodyParser = require('koa-bodyparser');
 const morgan = require('koa-morgan');
-const port = require('../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 const logPrefix = `Koa Server: (${process.pid}):\t`;
 
 const app = new Koa();
