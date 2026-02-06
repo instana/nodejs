@@ -13,144 +13,115 @@ const rootDir = path.resolve(__dirname, '..');
 const currenciesPath = path.join(rootDir, 'currencies.json');
 const collectorTestDir = path.join(rootDir, 'packages', 'collector', 'test');
 
-function main() {
-  const currencies = JSON.parse(fs.readFileSync(currenciesPath, 'utf8'));
+function createSymlink(sourcePath, targetPath) {
+  if (fs.existsSync(targetPath)) {
+    if (fs.lstatSync(targetPath).isDirectory() || !fs.lstatSync(targetPath).isSymbolicLink()) {
+      return;
+    }
+    fs.unlinkSync(targetPath);
+  }
+  fs.symlinkSync(path.relative(path.dirname(targetPath), sourcePath), targetPath);
+}
 
-  currencies.forEach(currency => {
-    if (!currency.versions || currency.versions.length === 0) {
+function symlinkContents(sourceDir, targetDir) {
+  const entries = fs.readdirSync(sourceDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.name === 'node_modules' || entry.name.startsWith('_v')) {
+      continue;
+    }
+
+    const sourceEntryPath = path.join(sourceDir, entry.name);
+    const targetEntryPath = path.join(targetDir, entry.name);
+
+    if (entry.isDirectory()) {
+      if (!fs.existsSync(targetEntryPath)) {
+        fs.mkdirSync(targetEntryPath);
+      }
+      symlinkContents(sourceEntryPath, targetEntryPath);
+    } else if (entry.isFile()) {
+      const ext = path.extname(entry.name);
+      if (ext === '.js' || ext === '.mjs') {
+        createSymlink(sourceEntryPath, targetEntryPath);
+      }
+    }
+  }
+}
+
+/**
+ * Returns ALL directories under baseDir whose name matches name or normalizedName.
+ */
+function findTestDirectories(baseDir, name, normalizedName) {
+  const results = [];
+
+  function search(dir) {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch (err) {
       return;
     }
 
-    // @scope/name -> scope_name (e.g. @hapi/hapi -> hapi_hapi, @redis/client -> redis_client)
-    const normalizedName = currency.name.replace(/^@/, '').replace(/\//g, '_');
+    for (const entry of entries) {
+      if (!entry.isDirectory() || entry.name === 'node_modules') continue;
 
-    function findTestDirectory(dir) {
-      let entries;
-      try {
-        entries = fs.readdirSync(dir, { withFileTypes: true });
-      } catch (err) {
-        return null;
-      }
-
-      for (let i = 0; i < entries.length; i++) {
-        const entry = entries[i];
-        if (entry.isDirectory()) {
-          if (entry.name === 'node_modules') {
-            return null;
-          }
-          if (entry.name === currency.name || entry.name === normalizedName) {
-            return path.join(dir, entry.name);
-          }
-
-          const found = findTestDirectory(path.join(dir, entry.name));
-          if (found) {
-            return found;
-          }
-        }
-      }
-      return null;
-    }
-
-    function createSymlink(sourcePath, targetPath) {
-      if (fs.existsSync(targetPath)) {
-        if (fs.lstatSync(targetPath).isDirectory() || !fs.lstatSync(targetPath).isSymbolicLink()) {
-          return;
-        }
-        fs.unlinkSync(targetPath);
-      }
-      fs.symlinkSync(path.relative(path.dirname(targetPath), sourcePath), targetPath);
-    }
-
-    function symlinkContents(sourceDir, targetDir) {
-      const entries = fs.readdirSync(sourceDir, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.name === 'node_modules' || entry.name.startsWith('_v')) {
-          continue;
-        }
-
-        const sourceEntryPath = path.join(sourceDir, entry.name);
-        const targetEntryPath = path.join(targetDir, entry.name);
-
-        if (entry.isDirectory()) {
-          if (!fs.existsSync(targetEntryPath)) {
-            fs.mkdirSync(targetEntryPath);
-          }
-          symlinkContents(sourceEntryPath, targetEntryPath);
-        } else if (entry.isFile()) {
-          const ext = path.extname(entry.name);
-          if (ext === '.js' || ext === '.mjs') {
-            createSymlink(sourceEntryPath, targetEntryPath);
-          }
-        }
+      if (entry.name === name || entry.name === normalizedName) {
+        results.push(path.join(dir, entry.name));
+      } else {
+        search(path.join(dir, entry.name));
       }
     }
+  }
 
-    const testDir = findTestDirectory(collectorTestDir);
-    if (!testDir) {
+  search(baseDir);
+  return results;
+}
+
+/**
+ * Returns directories that have test_base.js + package.json.template but were not processed as currencies.
+ */
+function findNonCurrencyTestDirs(baseDir, processedDirs) {
+  const results = [];
+
+  function search(dir) {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch (err) {
       return;
     }
 
-    console.log(`Found test directory: ${testDir}`);
+    const hasTestBase = entries.some(e => e.isFile() && e.name === 'test_base.js');
+    const hasTemplate = entries.some(e => e.isFile() && e.name === 'package.json.template');
 
-    const testBasePath = path.join(testDir, 'test_base.js');
-    if (!fs.existsSync(testBasePath)) {
-      console.log(`test_base.js not found in ${testDir}, skipping generation...`);
+    if (hasTestBase && hasTemplate && !processedDirs.has(dir)) {
+      results.push(dir);
       return;
     }
 
-    const sortedVersions = currency.versions.map(v => (typeof v === 'string' ? v : v.v)).sort(semver.rcompare);
-    const latestVersion = sortedVersions[0];
-
-    // cleanup
-    const versionDirs = fs.readdirSync(testDir).filter(name => name.startsWith('_v'));
-    versionDirs.forEach(dir => {
-      const dirPath = path.join(testDir, dir);
-      console.log(`Deleting ${dirPath}`);
-      fs.rmSync(dirPath, { recursive: true, force: true });
-    });
-
-    const usedDirs = new Set();
-    const versionToDir = new Map();
-
-    sortedVersions.forEach(v => {
-      const versionStr = typeof v === 'string' ? v : v.v;
-      const versionDirName = `_v${versionStr}`;
-
-      usedDirs.add(versionDirName);
-      versionToDir.set(versionStr, versionDirName);
-    });
-
-    currency.versions.forEach(versionObj => {
-      const version = typeof versionObj === 'string' ? versionObj : versionObj.v;
-      const isLatest = version === latestVersion;
-      const esmOnly = typeof versionObj === 'object' && versionObj.esmOnly === true;
-      const majorVersion = semver.major(version);
-
-      const dirName = versionToDir.get(version);
-      if (!dirName) {
-        return;
+    for (const entry of entries) {
+      if (entry.isDirectory() && entry.name !== 'node_modules' && !entry.name.startsWith('_v')) {
+        search(path.join(dir, entry.name));
       }
+    }
+  }
 
-      const versionDir = path.join(testDir, dirName);
+  search(baseDir);
+  return results;
+}
 
-      if (!fs.existsSync(versionDir)) {
-        fs.mkdirSync(versionDir, { recursive: true });
-      }
+function cleanVersionDirs(testDir) {
+  const versionDirs = fs.readdirSync(testDir).filter(name => name.startsWith('_v'));
+  versionDirs.forEach(dir => {
+    const dirPath = path.join(testDir, dir);
+    console.log(`Deleting ${dirPath}`);
+    fs.rmSync(dirPath, { recursive: true, force: true });
+  });
+}
 
-      const modesPath = path.join(testDir, 'modes.json');
-      let modes = [null];
-      if (fs.existsSync(modesPath)) {
-        try {
-          modes = JSON.parse(fs.readFileSync(modesPath, 'utf8'));
-        } catch (err) {
-          console.error(`Failed to parse ${modesPath}:`, err);
-        }
-      }
+function generateTestWrapper({ suiteName, displayVersion, rawVersion, isLatest, esmOnly, mode }) {
+  const currentYear = new Date().getFullYear();
 
-      modes.forEach(mode => {
-        const currentYear = new Date().getFullYear();
-
-        const testContent = `/*
+  return `/*
  * (c) Copyright IBM Corp. ${currentYear}
  */
 
@@ -166,11 +137,11 @@ const supportedVersion = require('@_instana/core').tracing.supportedVersion;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 ${esmOnly ? `if (!process.env.RUN_ESM) {
-  console.log('Skipping ${currency.name}@${version} because it is ESM-only. Set RUN_ESM=true to run.');
+  console.log('Skipping ${suiteName}@${displayVersion} because it is ESM-only. Set RUN_ESM=true to run.');
   return;
 }
 
-` : ''}mochaSuiteFn('tracing/${currency.name}@${dirName.substring(1)}${mode ? ` (${mode})` : ''}', function () {
+` : ''}mochaSuiteFn('tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}', function () {
   this.timeout(config.getTestTimeout());
 
   before(() => {
@@ -178,57 +149,178 @@ ${esmOnly ? `if (!process.env.RUN_ESM) {
     execSync('npm install --no-audit --prefix ./', { cwd: __dirname, stdio: 'inherit' });
   });
 
-  testBase.call(this, '${currency.name}', '${version}', ${isLatest}${mode ? `, '${mode}'` : ''});
+  testBase.call(this, '${suiteName}', '${rawVersion}', ${isLatest}${mode ? `, '${mode}'` : ''});
 });
 `;
-        const fileName = mode ? `test_${mode}.js` : 'test.js';
-        fs.writeFileSync(path.join(versionDir, fileName), testContent);
-      });
+}
 
-      const packageJsonPath = path.join(testDir, 'package.json');
-      let versionPackageJson = {
-        name: `${currency.name}-v${majorVersion}`
-      };
+function generatePackageJson({ testDir, versionDir, pkgName, currencyName, currencyVersion, isOptional }) {
+  const packageJsonTemplatePath = path.join(testDir, 'package.json.template');
+  const packageJsonPath = path.join(testDir, 'package.json');
+  let versionPackageJson = { name: pkgName };
 
-      if (fs.existsSync(packageJsonPath)) {
-        const templatePackageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-        versionPackageJson = Object.assign(versionPackageJson, templatePackageJson);
+  if (fs.existsSync(packageJsonTemplatePath)) {
+    const templatePackageJson = JSON.parse(fs.readFileSync(packageJsonTemplatePath, 'utf8'));
+    versionPackageJson = Object.assign(versionPackageJson, templatePackageJson);
+  } else if (fs.existsSync(packageJsonPath)) {
+    const templatePackageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    versionPackageJson = Object.assign(versionPackageJson, templatePackageJson);
+  }
+
+  if (!versionPackageJson.dependencies) {
+    versionPackageJson.dependencies = {};
+  }
+
+  const tgzDir = path.join(collectorTestDir, 'instana-tgz');
+  const relativeTgzPath = path.relative(versionDir, tgzDir).replace(/\\/g, '/');
+
+  versionPackageJson.dependencies['@instana/collector'] = `file:${relativeTgzPath}/collector.tgz`;
+  versionPackageJson.dependencies['@instana/core'] = `file:${relativeTgzPath}/core.tgz`;
+  versionPackageJson.dependencies['@instana/shared-metrics'] = `file:${relativeTgzPath}/shared-metrics.tgz`;
+
+  if (currencyName && currencyVersion) {
+    if (isOptional) {
+      if (!versionPackageJson.optionalDependencies) {
+        versionPackageJson.optionalDependencies = {};
+      }
+      versionPackageJson.optionalDependencies[currencyName] = currencyVersion;
+    } else {
+      versionPackageJson.dependencies[currencyName] = currencyVersion;
+    }
+  }
+
+  fs.writeFileSync(path.join(versionDir, 'package.json'), `${JSON.stringify(versionPackageJson, null, 2)}\n`);
+}
+
+function main() {
+  const currencies = JSON.parse(fs.readFileSync(currenciesPath, 'utf8'));
+  const processedDirs = new Set();
+
+  // Pass 1: Currency test directories
+  currencies.forEach(currency => {
+    if (!currency.versions || currency.versions.length === 0) return;
+
+    const normalizedName = currency.name.replace(/^@/, '').replace(/\//g, '_');
+    const testDirs = findTestDirectories(collectorTestDir, currency.name, normalizedName);
+
+    testDirs.forEach(testDir => {
+      console.log(`Found test directory: ${testDir}`);
+      processedDirs.add(testDir);
+
+      const testBasePath = path.join(testDir, 'test_base.js');
+      if (!fs.existsSync(testBasePath)) {
+        console.log(`test_base.js not found in ${testDir}, skipping generation...`);
+        return;
       }
 
-      if (!versionPackageJson.dependencies) {
-        versionPackageJson.dependencies = {};
-      }
+      const sortedVersions = currency.versions.map(v => (typeof v === 'string' ? v : v.v)).sort(semver.rcompare);
+      const latestVersion = sortedVersions[0];
 
-      const tgzDir = path.join(collectorTestDir, 'instana-tgz');
-      const relativeTgzPath = path.relative(versionDir, tgzDir).replace(/\\/g, '/');
+      cleanVersionDirs(testDir);
 
-      versionPackageJson.dependencies['@instana/collector'] = `file:${relativeTgzPath}/collector.tgz`;
-      versionPackageJson.dependencies['@instana/core'] = `file:${relativeTgzPath}/core.tgz`;
-      versionPackageJson.dependencies['@instana/shared-metrics'] = `file:${relativeTgzPath}/shared-metrics.tgz`;
-
-      const matchingVersion = currency.versions.find(vObj => {
-        const v = typeof vObj === 'string' ? vObj : vObj.v;
-        const parsed = semver.parse(v);
-        return parsed && parsed.major === majorVersion;
+      const versionToDir = new Map();
+      sortedVersions.forEach(v => {
+        versionToDir.set(v, `_v${v}`);
       });
-      if (matchingVersion) {
-        const actualVersion = typeof matchingVersion === 'string' ? matchingVersion : matchingVersion.v;
+
+      currency.versions.forEach(versionObj => {
+        const version = typeof versionObj === 'string' ? versionObj : versionObj.v;
+        const isLatest = version === latestVersion;
+        const esmOnly = typeof versionObj === 'object' && versionObj.esmOnly === true;
+        const majorVersion = semver.major(version);
+
+        const dirName = versionToDir.get(version);
+        if (!dirName) return;
+
+        const versionDir = path.join(testDir, dirName);
+        if (!fs.existsSync(versionDir)) {
+          fs.mkdirSync(versionDir, { recursive: true });
+        }
+
+        // Generate test.js (with modes support)
+        const modesPath = path.join(testDir, 'modes.json');
+        let modes = [null];
+        if (fs.existsSync(modesPath)) {
+          try {
+            modes = JSON.parse(fs.readFileSync(modesPath, 'utf8'));
+          } catch (err) {
+            console.error(`Failed to parse ${modesPath}:`, err);
+          }
+        }
+
+        modes.forEach(mode => {
+          const testContent = generateTestWrapper({
+            suiteName: currency.name,
+            displayVersion: dirName.substring(1),
+            rawVersion: version,
+            isLatest,
+            esmOnly,
+            mode
+          });
+          const fileName = mode ? `test_${mode}.js` : 'test.js';
+          fs.writeFileSync(path.join(versionDir, fileName), testContent);
+        });
+
+        // Generate package.json
+        const matchingVersion = currency.versions.find(vObj => {
+          const v = typeof vObj === 'string' ? vObj : vObj.v;
+          const parsed = semver.parse(v);
+          return parsed && parsed.major === majorVersion;
+        });
+        const actualVersion = matchingVersion
+          ? (typeof matchingVersion === 'string' ? matchingVersion : matchingVersion.v)
+          : null;
         const isOptional = typeof matchingVersion === 'object' && matchingVersion.optional === true;
 
-        if (isOptional) {
-          if (!versionPackageJson.optionalDependencies) {
-            versionPackageJson.optionalDependencies = {};
-          }
-          versionPackageJson.optionalDependencies[currency.name] = actualVersion;
-        } else {
-          versionPackageJson.dependencies[currency.name] = actualVersion;
-        }
-      }
+        generatePackageJson({
+          testDir,
+          versionDir,
+          pkgName: `${currency.name}-v${majorVersion}`,
+          currencyName: currency.name,
+          currencyVersion: actualVersion,
+          isOptional
+        });
 
-      fs.writeFileSync(path.join(versionDir, 'package.json'), `${JSON.stringify(versionPackageJson, null, 2)}\n`);
-
-      symlinkContents(testDir, versionDir);
+        symlinkContents(testDir, versionDir);
+      });
     });
+  });
+
+  // Pass 2: Non-currency test directories (test_base.js + package.json.template)
+  const nonCurrencyDirs = findNonCurrencyTestDirs(collectorTestDir, processedDirs);
+
+  nonCurrencyDirs.forEach(testDir => {
+    const dirName = path.basename(testDir);
+    console.log(`Found non-currency test directory: ${testDir}`);
+
+    cleanVersionDirs(testDir);
+
+    const version = '1.0.0';
+    const versionDir = path.join(testDir, `_v${version}`);
+    if (!fs.existsSync(versionDir)) {
+      fs.mkdirSync(versionDir, { recursive: true });
+    }
+
+    const testContent = generateTestWrapper({
+      suiteName: dirName,
+      displayVersion: version,
+      rawVersion: version,
+      isLatest: true,
+      esmOnly: false,
+      mode: null
+    });
+    fs.writeFileSync(path.join(versionDir, 'test.js'), testContent);
+
+    generatePackageJson({
+      testDir,
+      versionDir,
+      pkgName: `${dirName}-v1`,
+      currencyName: null,
+      currencyVersion: null,
+      isOptional: false
+    });
+
+    symlinkContents(testDir, versionDir);
   });
 }
 

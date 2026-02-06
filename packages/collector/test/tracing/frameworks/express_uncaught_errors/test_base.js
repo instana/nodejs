@@ -5,25 +5,14 @@
 
 'use strict';
 
-const path = require('path');
-const fs = require('fs');
 const expect = require('chai').expect;
 const constants = require('@_instana/core').tracing.constants;
-const supportedVersion = require('@_instana/core').tracing.supportedVersion;
 const tracingUtil = require('@_instana/core/src/tracing/tracingUtil');
-const config = require('@_instana/core/test/config');
 const testUtils = require('@_instana/core/test/test_util');
 const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_instana/collector/test/globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
-const expressVersions = fs.readdirSync(path.join(__dirname, '../express')).filter(f => f.startsWith('_v'));
-const cwd = path.join(__dirname, '../express', expressVersions[expressVersions.length - 1]);
-
-mochaSuiteFn('tracing/express with uncaught errors', function () {
-  this.timeout(config.getTestTimeout());
-
+module.exports = function (name, version, isLatest) {
   const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
 
@@ -32,8 +21,12 @@ mochaSuiteFn('tracing/express with uncaught errors', function () {
   before(async () => {
     controls = new ProcessControls({
       dirname: __dirname,
-      cwd,
-      useGlobalAgent: true
+      useGlobalAgent: true,
+      env: {
+        LIBRARY_LATEST: isLatest,
+        LIBRARY_VERSION: version,
+        LIBRARY_NAME: name
+      }
     });
 
     await controls.startAndWaitForAgentConnection();
@@ -88,7 +81,7 @@ mochaSuiteFn('tracing/express with uncaught errors', function () {
         );
       }));
   }
-});
+};
 
 function createRequest(customErrorHandler, isRootSpan) {
   const request = {

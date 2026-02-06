@@ -4,18 +4,14 @@
 
 'use strict';
 
-const expect = require('chai').expect;
 const path = require('path');
-const supportedVersion = require('@_instana/core').tracing.supportedVersion;
-const config = require('@_instana/core/test/config');
+const expect = require('chai').expect;
 const testUtils = require('@_instana/core/test/test_util');
 const globalAgent = require('@_instana/collector/test/globalAgent');
 const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
-mochaSuiteFn('tracing/logging/misc', function () {
-  this.timeout(config.getTestTimeout());
+module.exports = function (name, version, isLatest) {
+  const versionDir = path.join(__dirname, `_v${version}`);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
@@ -34,6 +30,7 @@ mochaSuiteFn('tracing/logging/misc', function () {
         beforeEach(async () => {
           appControls = new AppControls({
             instanaLoggingMode: 'receives-pino-logger',
+            versionDir,
             env: {
               CREATE_CUSTOM_LOG_SPANS: 'true'
             }
@@ -61,6 +58,7 @@ mochaSuiteFn('tracing/logging/misc', function () {
         beforeEach(async () => {
           appControls = new AppControls({
             instanaLoggingMode: 'receives-pino-logger',
+            versionDir,
             pipeSubprocessLogs: true,
             env: {
               CREATE_CUSTOM_LOG_SPANS: 'true',
@@ -97,7 +95,8 @@ mochaSuiteFn('tracing/logging/misc', function () {
 
       beforeEach(async () => {
         appControls = new AppControls({
-          instanaLoggingMode: 'uses-default-logger'
+          instanaLoggingMode: 'uses-default-logger',
+          versionDir
         });
 
         await appControls.start();
@@ -117,7 +116,8 @@ mochaSuiteFn('tracing/logging/misc', function () {
 
       beforeEach(async () => {
         appControls = new AppControls({
-          instanaLoggingMode: 'receives-pino-logger'
+          instanaLoggingMode: 'receives-pino-logger',
+          versionDir
         });
 
         await appControls.start();
@@ -137,7 +137,8 @@ mochaSuiteFn('tracing/logging/misc', function () {
 
       beforeEach(async () => {
         appControls = new AppControls({
-          instanaLoggingMode: 'receives-custom-dummy-logger'
+          instanaLoggingMode: 'receives-custom-dummy-logger',
+          versionDir
         });
 
         await appControls.start();
@@ -159,7 +160,8 @@ mochaSuiteFn('tracing/logging/misc', function () {
 
       beforeEach(async () => {
         appControls = new AppControls({
-          instanaLoggingMode: 'receives-log4js-logger'
+          instanaLoggingMode: 'receives-log4js-logger',
+          versionDir
         });
 
         await appControls.start();
@@ -181,7 +183,8 @@ mochaSuiteFn('tracing/logging/misc', function () {
 
       beforeEach(async () => {
         appControls = new AppControls({
-          instanaLoggingMode: 'receives-bunyan-logger'
+          instanaLoggingMode: 'receives-bunyan-logger',
+          versionDir
         });
 
         await appControls.start();
@@ -201,7 +204,8 @@ mochaSuiteFn('tracing/logging/misc', function () {
 
       beforeEach(async () => {
         appControls = new AppControls({
-          instanaLoggingMode: 'receives-winston-logger'
+          instanaLoggingMode: 'receives-winston-logger',
+          versionDir
         });
 
         await appControls.start();
@@ -231,6 +235,9 @@ mochaSuiteFn('tracing/logging/misc', function () {
         useGlobalAgent: true,
         pipeSubprocessLogs: true,
         env: {
+          LIBRARY_LATEST: isLatest,
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name,
           // NOTE: ProcessControls default log level is 'warn' to not flood the test output.
           //       Force level info to assert against the threadId.
           INSTANA_LOG_LEVEL: 'info'
@@ -349,4 +356,4 @@ mochaSuiteFn('tracing/logging/misc', function () {
       );
     });
   }
-});
+};
