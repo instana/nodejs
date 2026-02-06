@@ -12,22 +12,17 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')();
+require('@instana/collector')();
 const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 
-const port = require('../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 const app = express();
 const logPrefix = `Got App (${process.pid}):\t`;
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
-/**
- * NOTE: got v12 has dropped support for commonjs.
- * See https://github.com/sindresorhus/got/releases/tag/v12.0.0.
- * In CJS test, we use the v11 to test the got module.
- */
-const got = require('got-v11');
+const got = require('got');
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
 }

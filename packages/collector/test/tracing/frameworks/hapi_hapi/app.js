@@ -11,11 +11,11 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-import Hapi from '@hapi/hapi';
-import getAppPort from '../../../test_util/app-port.js';
-const port = getAppPort();
+require('@instana/collector')();
 
+const Hapi = require('@hapi/hapi');
 const logPrefix = `Hapi Server: (${process.pid}):\t`;
+const port = require('@_instana/collector/test/test_util/app-port')();
 
 const init = async () => {
   const server = Hapi.server({

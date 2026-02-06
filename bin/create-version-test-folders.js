@@ -21,6 +21,9 @@ function main() {
       return;
     }
 
+    // @scope/name -> scope_name (e.g. @hapi/hapi -> hapi_hapi, @redis/client -> redis_client)
+    const normalizedName = currency.name.replace(/^@/, '').replace(/\//g, '_');
+
     function findTestDirectory(dir) {
       let entries;
       try {
@@ -35,7 +38,7 @@ function main() {
           if (entry.name === 'node_modules') {
             return null;
           }
-          if (entry.name === currency.name) {
+          if (entry.name === currency.name || entry.name === normalizedName) {
             return path.join(dir, entry.name);
           }
 
@@ -121,6 +124,7 @@ function main() {
     currency.versions.forEach(versionObj => {
       const version = typeof versionObj === 'string' ? versionObj : versionObj.v;
       const isLatest = version === latestVersion;
+      const esmOnly = typeof versionObj === 'object' && versionObj.esmOnly === true;
       const majorVersion = semver.major(version);
 
       const dirName = versionToDir.get(version);
@@ -162,7 +166,12 @@ const config = require('@_instana/core/test/config');
 const supportedVersion = require('@_instana/core').tracing.supportedVersion;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/${currency.name}@${dirName.substring(1)}${mode ? ` (${mode})` : ''}', function () {
+${esmOnly ? `if (!process.env.RUN_ESM) {
+  console.log('Skipping ${currency.name}@${version} because it is ESM-only. Set RUN_ESM=true to run.');
+  return;
+}
+
+` : ''}mochaSuiteFn('tracing/${currency.name}@${dirName.substring(1)}${mode ? ` (${mode})` : ''}', function () {
   this.timeout(config.getTestTimeout());
 
   before(() => {

@@ -6,27 +6,26 @@
 'use strict';
 
 const expect = require('chai').expect;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const constants = require('@instana/core').tracing.constants;
-const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../../test_util/ProcessControls');
-const globalAgent = require('../../../globalAgent');
+const constants = require('@_instana/core').tracing.constants;
+const testUtils = require('@_instana/core/test/test_util');
+const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_instana/collector/test/globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
-mochaSuiteFn('tracing/hapi', function () {
-  this.timeout(config.getTestTimeout());
-
-  const agentControls = globalAgent.instance;
+module.exports = function (name, version, isLatest) {
   globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   let controls;
 
   before(async () => {
     controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true
+      useGlobalAgent: true,
+      env: {
+        LIBRARY_LATEST: isLatest,
+        LIBRARY_VERSION: version,
+        LIBRARY_NAME: name
+      }
     });
 
     await controls.startAndWaitForAgentConnection();
@@ -73,4 +72,4 @@ mochaSuiteFn('tracing/hapi', function () {
           }));
     }
   });
-});
+};

@@ -539,7 +539,8 @@
     "core": false,
     "versions": [
       {
-        "v": "14.6.6"
+        "v": "14.6.6",
+        "esmOnly": true
       },
       {
         "v": "11.8.6"

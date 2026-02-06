@@ -5,18 +5,11 @@
 'use strict';
 
 const expect = require('chai').expect;
+const { retry, verifyHttpRootEntry, verifyExitSpan } = require('@_instana/core/test/test_util');
+const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_instana/collector/test/globalAgent');
 
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
-const { retry, verifyHttpRootEntry, verifyExitSpan } = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../../test_util/ProcessControls');
-const globalAgent = require('../../../globalAgent');
-
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
-mochaSuiteFn('tracing/got', function () {
-  this.timeout(config.getTestTimeout());
-
+module.exports = function (name, version, isLatest) {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
@@ -25,7 +18,12 @@ mochaSuiteFn('tracing/got', function () {
   before(async () => {
     controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true
+      useGlobalAgent: true,
+      env: {
+        LIBRARY_LATEST: isLatest,
+        LIBRARY_VERSION: version,
+        LIBRARY_NAME: name
+      }
     });
 
     await controls.startAndWaitForAgentConnection();
@@ -78,4 +76,4 @@ mochaSuiteFn('tracing/got', function () {
           })
         )
       ));
-});
+};
