@@ -5,90 +5,89 @@
 
 'use strict';
 
+const path = require('path');
+const fs = require('fs');
 const expect = require('chai').expect;
-const constants = require('@instana/core').tracing.constants;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const tracingUtil = require('../../../../../core/src/tracing/tracingUtil');
-const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../../test_util/ProcessControls');
-const globalAgent = require('../../../globalAgent');
+const constants = require('@_instana/core').tracing.constants;
+const supportedVersion = require('@_instana/core').tracing.supportedVersion;
+const tracingUtil = require('@_instana/core/src/tracing/tracingUtil');
+const config = require('@_instana/core/test/config');
+const testUtils = require('@_instana/core/test/test_util');
+const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_instana/collector/test/globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-['latest', 'v4'].forEach(version => {
-  mochaSuiteFn(`tracing/express@${version} with uncaught errors`, function () {
-    this.timeout(config.getTestTimeout());
+const expressVersions = fs.readdirSync(path.join(__dirname, '../express')).filter(f => f.startsWith('_v'));
+const cwd = path.join(__dirname, '../express', expressVersions[expressVersions.length - 1]);
 
-    const agentControls = globalAgent.instance;
-    globalAgent.setUpCleanUpHooks();
+mochaSuiteFn('tracing/express with uncaught errors', function () {
+  this.timeout(config.getTestTimeout());
 
-    // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
-    // TODO: Support for mocking `import` in ESM apps is planned under INSTA-788.
-    if (process.env.RUN_ESM && version !== 'latest') return;
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
 
-    let controls;
+  let controls;
 
-    before(async () => {
-      controls = new ProcessControls({
-        dirname: __dirname,
-        useGlobalAgent: true,
-        env: { EXPRESS_VERSION: version }
-      });
-
-      await controls.startAndWaitForAgentConnection();
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      cwd,
+      useGlobalAgent: true
     });
 
-    beforeEach(async () => {
-      await agentControls.clearReceivedTraceData();
-    });
-
-    after(async () => {
-      await controls.stop();
-    });
-
-    afterEach(async () => {
-      await controls.clearIpcMessages();
-    });
-
-    [false, true].forEach(isRootSpan => registerTests(isRootSpan));
-
-    function registerTests(isRootSpan) {
-      it(`must record result of default express uncaught error function (root span: ${isRootSpan})`, () =>
-        controls.sendRequest(createRequest(false, isRootSpan)).then(() => {
-          return testUtils.retry(() =>
-            agentControls.getSpans().then(spans => {
-              testUtils.expectAtLeastOneMatching(spans, [
-                span => expect(span.n).to.equal('node.http.server'),
-                span => expect(span.k).to.equal(constants.ENTRY),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(1),
-                span => expect(span.data.http.error).to.match(/To be caught by default error handler/)
-              ]);
-            })
-          );
-        }));
-
-      it(`must record result of custom express uncaught error function (root span: ${isRootSpan})`, () =>
-        controls.sendRequest(createRequest(true, isRootSpan)).then(() => {
-          return testUtils.retry(() =>
-            agentControls.getSpans().then(spans => {
-              testUtils.expectAtLeastOneMatching(spans, [
-                span => expect(span.n).to.equal('node.http.server'),
-                span => expect(span.k).to.equal(constants.ENTRY),
-                span => expect(span.f.e).to.equal(String(controls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                span => expect(span.error).to.not.exist,
-                span => expect(span.ec).to.equal(0),
-                span => expect(span.data.http.error).to.match(/To be caught by custom error handler/)
-              ]);
-            })
-          );
-        }));
-    }
+    await controls.startAndWaitForAgentConnection();
   });
+
+  beforeEach(async () => {
+    await agentControls.clearReceivedTraceData();
+  });
+
+  after(async () => {
+    await controls.stop();
+  });
+
+  afterEach(async () => {
+    await controls.clearIpcMessages();
+  });
+
+  [false, true].forEach(isRootSpan => registerTests(isRootSpan));
+
+  function registerTests(isRootSpan) {
+    it(`must record result of default express uncaught error function (root span: ${isRootSpan})`, () =>
+      controls.sendRequest(createRequest(false, isRootSpan)).then(() => {
+        return testUtils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(1),
+              span => expect(span.data.http.error).to.match(/To be caught by default error handler/)
+            ]);
+          })
+        );
+      }));
+
+    it(`must record result of custom express uncaught error function (root span: ${isRootSpan})`, () =>
+      controls.sendRequest(createRequest(true, isRootSpan)).then(() => {
+        return testUtils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.http.error).to.match(/To be caught by custom error handler/)
+            ]);
+          })
+        );
+      }));
+  }
 });
 
 function createRequest(customErrorHandler, isRootSpan) {

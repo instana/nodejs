@@ -109,7 +109,6 @@ function main() {
       fs.rmSync(dirPath, { recursive: true, force: true });
     });
 
-
     const usedDirs = new Set();
     const versionToDir = new Map();
 

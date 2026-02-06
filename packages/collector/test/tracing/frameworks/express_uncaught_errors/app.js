@@ -13,14 +13,12 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('./mockVersion');
-
-require('../../../..')();
+require('@instana/collector')();
 
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const port = require('../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 
 const app = express();
 const logPrefix = `Express uncaughtErrors App (${process.pid}):\t`;

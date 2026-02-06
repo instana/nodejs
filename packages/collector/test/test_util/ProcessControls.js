@@ -47,10 +47,11 @@ class ProcessControls {
       throw new Error('dirname is required');
     }
 
-    const versionFolder = `_v${opts.env.LIBRARY_VERSION}`;
+    let versionFolder;
 
     if (!opts.cwd) {
       if (opts.env?.LIBRARY_VERSION) {
+        versionFolder = `_v${opts.env.LIBRARY_VERSION}`;
         opts.cwd = path.join(opts.dirname, versionFolder);
       } else {
         opts.cwd = opts.dirname;
