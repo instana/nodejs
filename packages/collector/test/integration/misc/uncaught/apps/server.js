@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 // Deliberately not using Express.js here to avoid conflicts with Express.js' error handling.
 
-const instana = require('../../..');
+const instana = require('@instana/collector');
 const config = {
   // Overriding the default setting of INSTANA_FORCE_TRANSMISSION_STARTING_AT=1 that we usually use for all other
   // tests. This is done to verify that the uncaught exception handler actually transmits the erroneous span before
@@ -30,7 +30,7 @@ if (process.env.ENABLE_REPORT_UNHANDLED_REJECTIONS) {
 instana(config);
 
 const http = require('http');
-const port = require('../../test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 
 const requestHandler = (request, response) => {
   if (request.url === '/') {

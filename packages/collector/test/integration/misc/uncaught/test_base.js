@@ -9,17 +9,14 @@ const path = require('path');
 const chai = require('chai');
 const expect = chai.expect;
 
-const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('@_local/core/test/config');
 const testUtils = require('@_local/core/test/test_util');
-const ProcessControls = require('../test_util/ProcessControls');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
-mochaSuiteFn('unhandled promise rejections', function () {
+module.exports = function () {
   this.timeout(config.getTestTimeout());
 
-  const { AgentStubControls } = require('../apps/agentStubControls');
   const agentControls = new AgentStubControls();
 
   let serverControls;
@@ -161,4 +158,4 @@ mochaSuiteFn('unhandled promise rejections', function () {
           })
         );
       }));
-});
+};
