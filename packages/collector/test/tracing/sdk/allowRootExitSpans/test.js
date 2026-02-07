@@ -7,12 +7,12 @@
 const { expect } = require('chai');
 const path = require('path');
 
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('@instana/core/test/config');
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
+const config = require('@_local/core/test/config');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
-const { retry, delay, expectExactlyOneMatching } = require('@instana/core/test/test_util');
-const constants = require('@instana/core').tracing.constants;
+const { retry, delay, expectExactlyOneMatching } = require('@_local/core/test/test_util');
+const constants = require('@_local/core').tracing.constants;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 

@@ -9,13 +9,13 @@ const path = require('path');
 const { expect } = require('chai');
 const querystring = require('querystring');
 
-const constants = require('@instana/core').tracing.constants;
+const constants = require('@_local/core').tracing.constants;
 
 const Control = require('../Control');
-const config = require('@instana/core/test/config');
+const config = require('@_local/core/test/config');
 const delay = require('../../../core/test/test_util/delay');
 const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
-const retry = require('@instana/core/test/test_util/retry');
+const retry = require('@_local/core/test/test_util/retry');
 
 const { fail } = expect;
 

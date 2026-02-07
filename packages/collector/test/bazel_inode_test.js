@@ -7,7 +7,7 @@
 const { expect } = require('chai');
 const proxyquire = require('proxyquire');
 const EventEmitter = require('events');
-const testUtils = require('@instana/core/test/test_util');
+const testUtils = require('@_local/core/test/test_util');
 
 class MockRequestEmitter extends EventEmitter {
   setTimeout() {}
@@ -31,7 +31,7 @@ describe('agent connection/bazel', function () {
     before(() => {
       agentConnection = proxyquire('../src/agentConnection', {
         // stub out the http communication part of the announce request
-        '@instana/core': mockInstanaCoreHttp()
+        '@_local/core': mockInstanaCoreHttp()
       });
 
       agentConnection.init({ logger: testUtils.createFakeLogger() }, { pid: 1234 });
@@ -56,7 +56,7 @@ describe('agent connection/bazel', function () {
         fs: mockFs('socket:[12345]'),
 
         // stub out the http communication part of the announce request
-        '@instana/core': mockInstanaCoreHttp()
+        '@_local/core': mockInstanaCoreHttp()
       });
 
       agentConnection.init({ logger: testUtils.createFakeLogger() }, { pid: 1234 });

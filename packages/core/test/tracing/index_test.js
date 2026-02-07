@@ -9,8 +9,8 @@ const proxyquire = require('proxyquire');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 
-const testUtils = require('@instana/core/test/test_util');
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const testUtils = require('@_local/core/test/test_util');
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const coreConfig = require('../../src/config');
 const kafkaJs = require('../../src/tracing/instrumentation/messaging/kafkaJs');
 const rdKafka = require('../../src/tracing/instrumentation/messaging/rdkafka');

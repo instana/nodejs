@@ -6,8 +6,8 @@
 
 const { v4: uuid } = require('uuid');
 const expect = require('chai').expect;
-const constants = require('@instana/core').tracing.constants;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const constants = require('@_local/core').tracing.constants;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
 const {
   verifyHttpRootEntry,
@@ -21,7 +21,7 @@ const globalAgent = require('../../../../globalAgent');
 const { fail } = expect;
 const { createContainer, deleteContainer } = require('./util');
 const { BlobServiceClient } = require('@azure/storage-blob');
-const expectExactlyOneMatching = require('@instana/core/test/test_util/expectExactlyOneMatching');
+const expectExactlyOneMatching = require('@_local/core/test/test_util/expectExactlyOneMatching');
 const containerName = `nodejs-team-${uuid()}`;
 const storageAccount = process.env.AZURE_STORAGE_ACCOUNT_NAME;
 const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;

@@ -14,9 +14,11 @@ import express from 'express';
 import Queue from 'bull';
 
 const app = express();
-import portFactory from '../../../test_util/app-port.js';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const portFactory = require('@_local/collector/test/test_util/app-port');
 const port = portFactory();
-const { sendToParent } = (await import('@instana/core/test/test_util/index.js')).default;
+const { sendToParent } = require('@_local/core/test/test_util');
 
 import { ProcessTypes, buildReceiver } from './util.js';
 
@@ -29,7 +31,7 @@ const bullJobName = process.env.BULL_JOB_NAME || 'steve';
 const jobNameEnabled = process.env.BULL_JOB_NAME_ENABLED === 'true';
 const concurrencyEnabled = process.env.BULL_CONCURRENCY_ENABLED === 'true';
 
-import { getLogger } from '@instana/core/test/test_util/log.js';
+const { getLogger } = require('@_local/core/test/test_util/log');
 const log = getLogger(logPrefix);
 
 /**

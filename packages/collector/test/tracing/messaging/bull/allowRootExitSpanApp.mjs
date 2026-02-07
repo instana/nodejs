@@ -10,7 +10,9 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-import delay from '../../../../../core/test/test_util/delay.js';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const delay = require('@_local/core/test/test_util/delay');
 import Queue from 'bull';
 
 const logPrefix = `Bull Allow Root Exit Span App (${process.pid}):\t`;

@@ -7,8 +7,8 @@
 
 const expect = require('chai').expect;
 
-const config = require('@instana/core/test/config');
-const { delay, retry, isCI, isCILongRunning } = require('@instana/core/test/test_util');
+const config = require('@_local/core/test/config');
+const { delay, retry, isCI, isCILongRunning } = require('@_local/core/test/test_util');
 const globalAgent = require('./globalAgent');
 const { isNodeVersionEOL } = require('../src/util/eol');
 let expressControls;

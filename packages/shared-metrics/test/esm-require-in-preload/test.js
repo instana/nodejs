@@ -6,11 +6,11 @@
 
 const path = require('path');
 const _ = require('lodash');
-const { supportedVersion } = require('@instana/core').tracing;
+const { supportedVersion } = require('@_local/core').tracing;
 const expect = require('chai').expect;
 
-const testUtils = require('@instana/core/test/test_util');
-const config = require('@instana/core/test/config');
+const testUtils = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
 
 const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
 
@@ -45,7 +45,7 @@ mochaSuiteFn('ejs require collector in preload', function () {
     await testUtils.retry(() =>
       controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
         const name = findMetric(metrics, ['name']);
-        expect(name).to.equal('@instana/shared-metrics');
+        expect(name).to.equal('@_local/shared-metrics');
       })
     );
   });

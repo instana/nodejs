@@ -15,8 +15,8 @@ const path = require('path');
 const rimraf = require('rimraf');
 const { satisfies } = require('semver');
 
-const config = require('@instana/core/test/config');
-const { retry, runCommandSync } = require('@instana/core/test/test_util');
+const config = require('@_local/core/test/config');
+const { retry, runCommandSync } = require('@_local/core/test/test_util');
 const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
 const globalAgent = require('../../../collector/test/globalAgent');
 
@@ -94,7 +94,7 @@ describe('dependencies', function () {
       const instanaPath = path.join(tmpDir, 'node_modules', '@instana');
       mkdirp.sync(instanaPath);
       const collectorPath = path.join(instanaPath, 'collector');
-      // We create a symlink to this repo for the @instana/collector package to be able to test with the current code
+      // We create a symlink to this repo for the @_local/collector package to be able to test with the current code
       // base.
       symlinkSync(path.join(repoRootDir, 'packages', 'collector'), collectorPath);
       unlinkSync(path.join(tmpDir, 'package.json'));
@@ -134,11 +134,11 @@ describe('dependencies', function () {
           expect(deps).to.be.an('object');
 
           // npm workspaces installs most of the deps on the root
-          expect(deps['@instana/shared-metrics']).to.not.exist;
-          expect(deps['@instana/core']).to.not.exist;
-          expect(deps['@instana/autoprofile']).to.not.exist;
+          expect(deps['@_local/shared-metrics']).to.not.exist;
+          expect(deps['@_local/core']).to.not.exist;
+          expect(deps['@_local/autoprofile']).to.not.exist;
 
-          expect(deps['@instana/collector']).to.exist;
+          expect(deps['@_local/collector']).to.exist;
 
           expectVersion(deps.fastify, '^3.20.2');
           expectVersion(deps.express, '^4.17.1');
@@ -160,7 +160,7 @@ describe('dependencies', function () {
       const instanaPath = path.join(tmpDir, 'node_modules', '@instana');
       mkdirp.sync(instanaPath);
       const collectorPath = path.join(instanaPath, 'collector');
-      // We create a symlink to this repo for the @instana/collector package to be able to test with the current code
+      // We create a symlink to this repo for the @_local/collector package to be able to test with the current code
       // base.
       symlinkSync(path.join(repoRootDir, 'packages', 'collector'), collectorPath);
     });
@@ -200,11 +200,11 @@ describe('dependencies', function () {
           expect(deps).to.be.an('object');
 
           // npm workspaces installs most of the deps on the root
-          expect(deps['@instana/shared-metrics']).to.not.exist;
-          expect(deps['@instana/core']).to.not.exist;
-          expect(deps['@instana/autoprofile']).to.not.exist;
+          expect(deps['@_local/shared-metrics']).to.not.exist;
+          expect(deps['@_local/core']).to.not.exist;
+          expect(deps['@_local/autoprofile']).to.not.exist;
 
-          expect(deps['@instana/collector']).to.exist;
+          expect(deps['@_local/collector']).to.exist;
 
           expectVersion(deps.fastify, '^3.20.2');
           expectVersion(deps.express, '^4.17.1');

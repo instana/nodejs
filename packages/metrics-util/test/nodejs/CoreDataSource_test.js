@@ -8,9 +8,9 @@
 const { expect } = require('chai');
 const semver = require('semver');
 
-const core = require('@instana/core');
+const core = require('@_local/core');
 const { delay, retry, createFakeLogger } = require('../../../core/test/test_util');
-const testConfig = require('@instana/core/test/config');
+const testConfig = require('@_local/core/test/config');
 const CoreDataSource = require('../../src/nodejs/CoreDataSource');
 
 describe('core data source', function () {

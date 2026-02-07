@@ -12,10 +12,10 @@ const sinonChai = require('sinon-chai');
 const expect = chai.expect;
 chai.use(sinonChai);
 
-const { secrets, tracing } = require('@instana/core');
+const { secrets, tracing } = require('@_local/core');
 const { constants } = tracing;
 const agentConnection = require('../../src/agentConnection');
-const testUtils = require('@instana/core/test/test_util');
+const testUtils = require('@_local/core/test/test_util');
 
 describe('unannounced state', () => {
   let unannouncedState;
@@ -35,7 +35,7 @@ describe('unannounced state', () => {
       pidStoreStub = sinon.stub();
 
       unannouncedState = proxyquire('../../src/announceCycle/unannounced', {
-        '@instana/core': {
+        '@_local/core': {
           secrets: secretsStub,
           tracing: tracingStub
         },

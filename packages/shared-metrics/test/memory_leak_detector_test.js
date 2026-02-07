@@ -7,8 +7,8 @@
 const { expect } = require('chai');
 const gcStats = require('../src/gc');
 const nativeModuleRetry = require('../src/util/nativeModuleRetry');
-const { createFakeLogger } = require('@instana/core/test/test_util');
-const config = require('@instana/core/test/config');
+const { createFakeLogger } = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
 
 describe('shared-metrics/memory_leak_detector', function () {
   this.timeout(config.getTestTimeout() * 2);

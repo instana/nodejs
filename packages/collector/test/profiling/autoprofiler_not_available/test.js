@@ -7,7 +7,7 @@
 const os = require('os');
 const { expect } = require('chai');
 const { execSync } = require('child_process');
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const { retry } = require('../../../../core/test/test_util');
 const config = require('../../../../core/test/config');
 const ProcessControls = require('../../test_util/ProcessControls');
@@ -39,7 +39,7 @@ mochaSuiteFn('tracing/autoprofiler: not available', function () {
       stdio: 'inherit'
     });
 
-    execSync('rm -rf node_modules/@instana/autoprofile', { cwd: tmpDir, stdio: 'inherit' });
+    execSync('rm -rf node_modules/@_local/autoprofile', { cwd: tmpDir, stdio: 'inherit' });
 
     await agentControls.startAgent();
 

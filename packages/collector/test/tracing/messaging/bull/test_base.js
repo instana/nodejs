@@ -11,23 +11,17 @@ const semver = require('semver');
 const { expect } = require('chai');
 const { v4: uuid } = require('uuid');
 const { fail } = expect;
-const constants = require('@instana/core').tracing.constants;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
+const constants = require('@_local/core').tracing.constants;
+const config = require('@_local/core/test/config');
 const {
   expectExactlyOneMatching,
   expectAtLeastOneMatching,
   retry,
   delay,
   stringifyItems
-} = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../../test_util/ProcessControls');
-const { AgentStubControls } = require('../../../apps/agentStubControls');
-
-/**
- * !!! In order to test Bull, Redis must be running.
- * Run `node bin/start-test-containers.js --redis`
- */
+} = require('@_local/core/test/test_util');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
 
 let queueName = 'nodejs-team';
 
@@ -35,23 +29,30 @@ if (process.env.BULL_QUEUE_NAME) {
   queueName = `${process.env.BULL_QUEUE_NAME}${semver.major(process.versions.node)}`;
 }
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 const retryTime = 1000;
 
-mochaSuiteFn('tracing/messaging/bull', function () {
+module.exports = function (name, version, isLatest) {
   this.timeout(config.getTestTimeout() * 3);
+
+  const versionDir = path.join(__dirname, `_v${version}`);
+
+  const commonEnv = {
+    LIBRARY_LATEST: isLatest,
+    LIBRARY_VERSION: version,
+    LIBRARY_NAME: name
+  };
+
   const customAgentControls = new AgentStubControls();
 
   before(async () => {
-    const files = fs.readdirSync(__dirname);
+    const files = fs.readdirSync(versionDir);
     files.forEach(f => {
       if (f.startsWith('file-created-by-job') && f.endsWith('.json')) {
-        fs.unlinkSync(path.join(__dirname, f));
+        fs.unlinkSync(path.join(versionDir, f));
       }
     });
 
     await customAgentControls.startAgent({
-      // To ensure parent and child process are getting unique uuids from the agent stub!
       uniqueAgentUuids: true
     });
   });
@@ -65,9 +66,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
     before(async () => {
       senderControls = new ProcessControls({
-        appPath: path.join(__dirname, 'sender'),
+        dirname: __dirname,
+        appName: 'sender.js',
         agentControls: customAgentControls,
         env: {
+          ...commonEnv,
           REDIS_SERVER: 'redis://127.0.0.1:6379',
           BULL_QUEUE_NAME: queueName,
           BULL_JOB_NAME: 'steve'
@@ -89,9 +92,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       await senderControls.clearIpcMessages();
     });
 
-    // NOTE: Bull doesn't officially support Process API when using processor with ES module syntax
-    //       See: https://github.com/OptimalBits/bull/blob/489c6ab8466c1db122f92af3ddef12eacc54179e/lib/queue.js#L712
-    //       Related issue: https://github.com/OptimalBits/bull/issues/924
     if (!process.env.RUN_ESM) {
       describe('receiving via "Process" API', function () {
         let receiverControls;
@@ -99,9 +99,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
         before(async () => {
           receiverControls = new ProcessControls({
-            appPath: path.join(__dirname, 'receiver'),
+            dirname: __dirname,
+            appName: 'receiver.js',
             agentControls: customAgentControls,
             env: {
+              ...commonEnv,
               REDIS_SERVER: 'redis://127.0.0.1:6379',
               BULL_QUEUE_NAME: queueName,
               BULL_RECEIVE_TYPE: receiveMethod,
@@ -153,11 +155,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
                 response,
                 apiPath,
                 testId,
-                // 1 x node.http.server 1
-                // 1 x bull receive
-                // 1 x node.http.client (?)
-                // 1 x redis
-                // 1 x bull sender
                 spanLength: 5,
                 withError,
                 isRepeatable: sendOption === 'repeat=true',
@@ -187,10 +184,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
                 response,
                 apiPath,
                 testId,
-                // 2 x bull
-                // 1 x http entry
-                // 1 x http exit
-                // 4 x redis
                 spanLength: 8,
                 withError,
                 isRepeatable: sendOption === 'repeat=true',
@@ -232,12 +225,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
                 response,
                 apiPath,
                 testId,
-                // TODO: all other bull tests also produce a huge number of spans
-                //       https://jsw.ibm.com/browse/INSTA-15029
-                // 6 x bull
-                // 1 x http server
-                // 3 x redis
-                // 3 x http client
                 spanLength: 13,
                 withError,
                 isRepeatable: sendOption === 'repeat=true',
@@ -268,10 +255,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
                 apiPath,
                 testId,
                 withError,
-                // 6 x bull
-                // 12 x redis
-                // 1 x http server
-                // 3 x http client
                 spanLength: 22,
                 isRepeatable: sendOption === 'repeat=true',
                 isBulk: sendOption === 'bulk=true'
@@ -313,11 +296,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
                 apiPath,
                 testId,
                 withError,
-                // 1 x http entry
-                // 2 x bull exit
-                // 2 x bull entry
-                // 2 x http exit
-                // 2 x redis
                 spanLength: 9,
                 isRepeatable: sendOption === 'repeat=true',
                 isBulk: sendOption === 'bulk=true'
@@ -345,10 +323,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
                 receiveMethod,
                 response,
                 apiPath,
-                // 4 x bull
-                // 1 x http server
-                // 8 x redis
-                // 2 x http client
                 spanLength: 15,
                 testId,
                 withError,
@@ -367,9 +341,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
       before(async () => {
         receiverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'receiver'),
+          dirname: __dirname,
+          appName: 'receiver.js',
           agentControls: customAgentControls,
           env: {
+            ...commonEnv,
             REDIS_SERVER: 'redis://127.0.0.1:6379',
             BULL_QUEUE_NAME: queueName,
             BULL_RECEIVE_TYPE: receiveMethod,
@@ -424,10 +400,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               receiveMethod,
               response,
               apiPath,
-              // 2 x bull
-              // 1 x http server
-              // 1 x redis
-              // 1 x http client
               spanLength: 5,
               testId,
               withError,
@@ -456,10 +428,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               receiverControls,
               receiveMethod,
               response,
-              // 2 x bull
-              // 1 x http server
-              // 4 x redis
-              // 1 x http client
               spanLength: 8,
               apiPath,
               testId,
@@ -504,10 +472,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               apiPath,
               testId,
               withError,
-              // 6 x bull
-              // 1 x http server
-              // 3 x redis
-              // 3 x http client
               spanLength: 13,
               isRepeatable: sendOption === 'repeat=true',
               isBulk: sendOption === 'bulk=true'
@@ -535,10 +499,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               receiveMethod,
               response,
               apiPath,
-              // 6 x bull
-              // 1 x http server
-              // 12 x redis
-              // 3 x http client
               spanLength: 22,
               testId,
               withError,
@@ -580,10 +540,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               receiveMethod,
               response,
               apiPath,
-              // 4 x bull
-              // 1 x http server
-              // 2 x redis
-              // 2 x http client
               spanLength: 9,
               testId,
               withError,
@@ -612,10 +568,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
               receiverControls,
               receiveMethod,
               response,
-              // 4 x bull
-              // 1 x http server
-              // 8 x redis
-              // 2 x http client
               spanLength: 15,
               apiPath,
               testId,
@@ -629,7 +581,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     });
 
     async function verify({
-      //
       receiverControls,
       receiveMethod,
       response,
@@ -641,10 +592,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       isBulk
     }) {
       return retry(async () => {
-        /**
-         * The receiver.js test app sends errors via IPC messages to receiverControls.
-         * If we catch any, we just throw them so the test fails and we can check what is wrong.
-         */
         const ipcErrorMessage = receiverControls.getIpcMessages().find(m => m.hasError);
 
         if (ipcErrorMessage) {
@@ -692,7 +639,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         withError
       });
 
-      // This is the http exit from the forked bull to the agent!
       verifyHttpExit({
         spans,
         parent: bullEntry,
@@ -744,7 +690,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         return expectAtLeastOneMatching(spans, [
           span => expect(span.n).to.equal('bull'),
           span => expect(span.k).to.equal(constants.EXIT),
-          // Bulk cannot have repeatable jobs
           span => expect(span.t).to.equal(parent.t),
           span => expect(span.p).to.equal(parent.s),
           span => expect(span.f.e).to.equal(String(senderControls.getPid())),
@@ -760,7 +705,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         return expectExactlyOneMatching(spans, [
           span => expect(span.n).to.equal('bull'),
           span => expect(span.k).to.equal(constants.EXIT),
-          // When a job is repeatable, the span is a root span
           span => expect(span.t).to.equal(isRepeatable ? span.t : parent.t),
           span => expect(span.p).to.equal(isRepeatable ? undefined : parent.s),
           span => expect(span.f.e).to.equal(String(senderControls.getPid())),
@@ -781,8 +725,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         span => expect(span.k).to.equal(constants.ENTRY),
         span => expect(span.t).to.equal(parent.t),
         span => expect(span.p).to.equal(parent.s),
-        // TODO: We forward INSTANA_AGENT_UUID in childProcess instrumentation, but the uuid is not used!
-        // TODO: We expect that the bull entry has the PID from the child forked bull process!
         span => expect(span.f.e).to.equal(String(receiverControls.getPid())),
         span => expect(span.f.h).to.equal(`agent-stub-uuid-${receiverControls.getPid()}`),
         span => expect(span.error).to.not.exist,
@@ -796,9 +738,6 @@ mochaSuiteFn('tracing/messaging/bull', function () {
     }
   });
 
-  // NOTE: Bull doesn't officially support Process API when using processor with ES module syntax
-  // See: https://github.com/OptimalBits/bull/blob/489c6ab8466c1db122f92af3ddef12eacc54179e/lib/queue.js#L712
-  // Related issue: https://github.com/OptimalBits/bull/issues/924
   if (!process.env.RUN_ESM) {
     describe('tracing disabled', function () {
       this.timeout(config.getTestTimeout() * 2);
@@ -807,10 +746,12 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
       before(async () => {
         senderControls = new ProcessControls({
-          appPath: path.join(__dirname, 'sender'),
+          dirname: __dirname,
+          appName: 'sender.js',
           agentControls: customAgentControls,
           tracingEnabled: false,
           env: {
+            ...commonEnv,
             REDIS_SERVER: 'redis://127.0.0.1:6379',
             BULL_QUEUE_NAME: queueName,
             BULL_JOB_NAME: 'steve'
@@ -838,10 +779,12 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
         before(async () => {
           receiverControls = new ProcessControls({
-            appPath: path.join(__dirname, 'receiver'),
+            dirname: __dirname,
+            appName: 'receiver.js',
             agentControls: customAgentControls,
             tracingEnabled: false,
             env: {
+              ...commonEnv,
               REDIS_SERVER: 'redis://127.0.0.1:6379',
               BULL_QUEUE_NAME: queueName,
               BULL_RECEIVE_TYPE: receiveMethod,
@@ -903,9 +846,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
     before(async () => {
       senderControls = new ProcessControls({
-        appPath: path.join(__dirname, 'sender'),
+        dirname: __dirname,
+        appName: 'sender.js',
         agentControls: customAgentControls,
         env: {
+          ...commonEnv,
           REDIS_SERVER: 'redis://127.0.0.1:6379',
           BULL_QUEUE_NAME: queueName,
           BULL_JOB_NAME: 'steve'
@@ -933,9 +878,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
       before(async () => {
         receiverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'receiver'),
+          dirname: __dirname,
+          appName: 'receiver.js',
           agentControls: customAgentControls,
           env: {
+            ...commonEnv,
             REDIS_SERVER: 'redis://127.0.0.1:6379',
             BULL_QUEUE_NAME: queueName,
             BULL_RECEIVE_TYPE: receiveMethod,
@@ -994,9 +941,11 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
     before(async () => {
       controls = new ProcessControls({
+        dirname: __dirname,
+        appName: 'allowRootExitSpanApp.js',
         agentControls: customAgentControls,
-        appPath: path.join(__dirname, 'allowRootExitSpanApp'),
         env: {
+          ...commonEnv,
           REDIS_SERVER: `redis://${process.env.REDIS}`,
           BULL_QUEUE_NAME: queueName,
           BULL_JOB_NAME: 'steve',
@@ -1019,70 +968,67 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         expect(spans.length).to.be.eql(2);
 
         expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('bull'), span => expect(span.k).to.equal(2)]);
-        expectExactlyOneMatching(spans, [span => expect(span.n).to.equal('redis'), span => expect(span.k).to.equal(2)]);
+        expectExactlyOneMatching(spans, [
+          span => expect(span.n).to.equal('redis'),
+          span => expect(span.k).to.equal(2)
+        ]);
       });
     });
   });
-});
 
-async function verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk }) {
-  expect(response).to.be.an('object');
+  async function verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk }) {
+    expect(response).to.be.an('object');
 
-  if (isRepeatable || isBulk) {
-    expect(response.status).to.equal('Jobs sent');
-  } else {
-    expect(response.status).to.equal('Job sent');
-  }
-
-  // We need some mechanism to verify that the job was actually received and processed. Usually, we use IPC for
-  // that. With the Bull framework, this is a bit cumbersome, because Bull can start child processes to process
-  // jobs. In such a child process worker, process.send refers to a different parent process (it is then the
-  // application under test instead of the test process). Thus, instead of IPC, we let the job processing create a
-  // file with known file name and context. The existence of the file together with a unique ID in its content
-  // verifies that the job has been processed.
-  try {
-    if (isBulk) {
-      const firstJobContent = await verifyJobCreatedAFile('file-created-by-job-1.json', testId);
-      const secondJobContent = await verifyJobCreatedAFile('file-created-by-job-2.json', testId);
-      return [firstJobContent, secondJobContent];
-    } else if (isRepeatable) {
-      try {
-        const firstJobContent = await verifyJobCreatedAFile(`file-created-by-job-repeat-${testId}-1.json`, testId);
-        const secondJobContent = await verifyJobCreatedAFile(`file-created-by-job-repeat-${testId}-2.json`, testId);
-        return [firstJobContent, secondJobContent];
-      } catch (e) {
-        throw new Error('Not Ready yet.');
-      }
+    if (isRepeatable || isBulk) {
+      expect(response.status).to.equal('Jobs sent');
     } else {
-      return [await verifyJobCreatedAFile('file-created-by-job.json', testId)];
+      expect(response.status).to.equal('Job sent');
     }
-  } catch (ex) {
-    fail(ex);
-  }
-}
 
-async function verifyJobCreatedAFile(filename, testId) {
-  const readFilePromise = new Promise((resolve, reject) => {
-    fs.readFile(path.join(__dirname, filename), (err, data) => {
-      if (err) {
-        return reject(err);
+    try {
+      if (isBulk) {
+        const firstJobContent = await verifyJobCreatedAFile('file-created-by-job-1.json', testId);
+        const secondJobContent = await verifyJobCreatedAFile('file-created-by-job-2.json', testId);
+        return [firstJobContent, secondJobContent];
+      } else if (isRepeatable) {
+        try {
+          const firstJobContent = await verifyJobCreatedAFile(`file-created-by-job-repeat-${testId}-1.json`, testId);
+          const secondJobContent = await verifyJobCreatedAFile(`file-created-by-job-repeat-${testId}-2.json`, testId);
+          return [firstJobContent, secondJobContent];
+        } catch (e) {
+          throw new Error('Not Ready yet.');
+        }
+      } else {
+        return [await verifyJobCreatedAFile('file-created-by-job.json', testId)];
       }
-      return resolve(data);
-    });
-  });
-
-  let fileCreatedByJob;
-  try {
-    fileCreatedByJob = await readFilePromise;
-  } catch (ex) {
-    fail(ex);
+    } catch (ex) {
+      fail(ex);
+    }
   }
 
-  expect(fileCreatedByJob.toString(), 'All Instana data must be removed from original Job data').to.not.match(
-    /X_INSTANA_/
-  );
-  const contentCreatedByJob = JSON.parse(fileCreatedByJob.toString());
-  expect(contentCreatedByJob.data.testId).to.equal(testId);
+  async function verifyJobCreatedAFile(filename, testId) {
+    const readFilePromise = new Promise((resolve, reject) => {
+      fs.readFile(path.join(versionDir, filename), (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(data);
+      });
+    });
 
-  return contentCreatedByJob;
-}
+    let fileCreatedByJob;
+    try {
+      fileCreatedByJob = await readFilePromise;
+    } catch (ex) {
+      fail(ex);
+    }
+
+    expect(fileCreatedByJob.toString(), 'All Instana data must be removed from original Job data').to.not.match(
+      /X_INSTANA_/
+    );
+    const contentCreatedByJob = JSON.parse(fileCreatedByJob.toString());
+    expect(contentCreatedByJob.data.testId).to.equal(testId);
+
+    return contentCreatedByJob;
+  }
+};

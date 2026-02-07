@@ -10,7 +10,7 @@ const assert = require('assert');
 const http = require('http');
 const fs = require('fs');
 const AsyncSampler = require('../../lib/samplers/async_sampler').AsyncSampler;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 class DevNull extends Writable {

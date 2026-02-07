@@ -9,14 +9,14 @@ const { expect } = require('chai');
 const chai = require('chai');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
-const { getTestTimeout } = require('@instana/core/test/config');
-const { supportedVersion } = require('@instana/core').tracing;
-const { delay, retry } = require('@instana/core/test/test_util');
-const expectExactlyNMatching = require('@instana/core/test/test_util/expectExactlyNMatching');
+const { getTestTimeout } = require('@_local/core/test/config');
+const { supportedVersion } = require('@_local/core').tracing;
+const { delay, retry } = require('@_local/core/test/test_util');
+const expectExactlyNMatching = require('@_local/core/test/test_util/expectExactlyNMatching');
 const { spans: otelSpans } = require('./otel_spans');
 const { InstanaExporter } = require('../src/index');
 const { Control } = require('./Control');
-const { environment: instanaEnvironment } = require('@instana/serverless');
+const { environment: instanaEnvironment } = require('@_local/serverless');
 
 chai.use(sinonChai);
 

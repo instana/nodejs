@@ -9,11 +9,11 @@ const path = require('path');
 const { fork } = require('child_process');
 const { expect } = require('chai');
 
-const { HttpDataSource } = require('@instana/metrics-util');
-const portfinder = require('@instana/collector/test/test_util/portfinder');
+const { HttpDataSource } = require('@_local/metrics-util');
+const portfinder = require('@_local/collector/test/test_util/portfinder');
 
 const { delay, retry } = require('../../../../core/test/test_util');
-const config = require('@instana/core/test/config');
+const config = require('@_local/core/test/config');
 
 const InstrumentedDockerProcessor = require('../../../src/metrics/docker/InstrumentedDockerProcessor');
 

@@ -10,7 +10,7 @@ const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 
 const { FakeRequestHandler, FakeRequest, FakeResponse } = require('../test_util/fake_http');
-const testUtils = require('@instana/core/test/test_util');
+const testUtils = require('@_local/core/test/test_util');
 
 const { expect } = chai;
 chai.use(sinonChai);
@@ -98,7 +98,7 @@ describe('agent host lookup state', () => {
 
     agentHostLookupState = proxyquire('../../src/announceCycle/agentHostLookup', {
       '../agent/opts': agentOptsMock,
-      '@instana/core': {
+      '@_local/core': {
         uninstrumentedHttp: {
           http: httpStub
         }

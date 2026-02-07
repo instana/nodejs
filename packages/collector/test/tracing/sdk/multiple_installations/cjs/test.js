@@ -10,9 +10,9 @@ const os = require('os');
 const { mkdtempSync } = require('fs');
 const rimraf = require('rimraf');
 
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('@instana/core/test/config');
-const testUtils = require('@instana/core/test/test_util');
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
+const config = require('@_local/core/test/config');
+const testUtils = require('@_local/core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 

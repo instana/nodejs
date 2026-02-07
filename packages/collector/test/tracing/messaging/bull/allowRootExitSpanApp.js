@@ -10,13 +10,13 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')({
+require('@instana/collector')({
   tracing: {
     allowRootExitSpan: true
   }
 });
 
-const { delay } = require('@instana/core/test/test_util');
+const { delay } = require('@_local/core/test/test_util');
 const Queue = require('bull');
 
 const logPrefix = `Bull Allow Root Exit Span App (${process.pid}):\t`;

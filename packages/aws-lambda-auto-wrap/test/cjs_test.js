@@ -7,7 +7,7 @@
 const sinon = require('sinon');
 const semver = require('semver');
 const expect = require('chai').expect;
-const instana = require('@instana/aws-lambda');
+const instana = require('@_local/aws-lambda');
 
 describe('cjs wrapper', function () {
   before(() => {

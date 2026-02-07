@@ -8,7 +8,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');

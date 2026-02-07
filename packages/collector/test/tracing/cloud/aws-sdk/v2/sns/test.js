@@ -11,17 +11,17 @@ const semver = require('semver');
 const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
-const constants = require('@instana/core').tracing.constants;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('@instana/core/test/config');
-const { retry, stringifyItems, delay, expectExactlyOneMatching } = require('@instana/core/test/test_util');
+const constants = require('@_local/core').tracing.constants;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
+const config = require('@_local/core/test/config');
+const { retry, stringifyItems, delay, expectExactlyOneMatching } = require('@_local/core/test/test_util');
 const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
 const {
   verifyHttpRootEntry,
   verifyExitSpan,
   verifyHttpExit
-} = require('@instana/core/test/test_util/common_verifications');
+} = require('@_local/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 
 const topicAndQueueName = `nodejs-team-${semver.major(process.versions.node)}-${uuid()}`;
@@ -33,7 +33,7 @@ let mochaSuiteFn;
 const withErrorOptions = [false, true];
 const requestMethods = ['Callback', 'Promise', 'Async'];
 const availableOperations = ['publish'];
-const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
+const getNextCallMethod = require('@_local/core/test/test_util/circular_list').getCircularList(requestMethods);
 
 if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe.skip;

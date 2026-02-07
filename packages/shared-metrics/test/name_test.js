@@ -10,7 +10,7 @@ const sinon = require('sinon');
 const path = require('path');
 const testUtils = require('../../core/test/test_util');
 const name = require('../src/name');
-const { applicationUnderMonitoring } = require('@instana/core').util;
+const { applicationUnderMonitoring } = require('@_local/core').util;
 
 describe('metrics.name', () => {
   before(() => {

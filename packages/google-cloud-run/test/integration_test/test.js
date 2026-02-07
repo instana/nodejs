@@ -8,12 +8,12 @@
 const { expect, assert } = require('chai');
 const { fail } = assert;
 const path = require('path');
-const constants = require('@instana/core').tracing.constants;
+const constants = require('@_local/core').tracing.constants;
 
 const Control = require('../Control');
 const { delay, expectExactlyOneMatching } = require('../../../core/test/test_util');
-const config = require('@instana/core/test/config');
-const retry = require('@instana/core/test/test_util/retry');
+const config = require('@_local/core/test/config');
+const retry = require('@_local/core/test/test_util/retry');
 
 const region = 'us-central1';
 const instanceId =
@@ -457,7 +457,7 @@ describe('Google Cloud Run integration test', function () {
     expect(nodeJsData.versions.uv).to.match(/^\d+\.\d+\.\d+/);
     expect(nodeJsData.versions.zlib).to.match(/^\d+\.\d+\.\d+/);
 
-    expect(nodeJsData.name).to.equal('@instana/google-cloud-run');
+    expect(nodeJsData.name).to.equal('@_local/google-cloud-run');
     expect(nodeJsData.description).to.equal(
       'Instana tracing and monitoring for Node.js based Google Cloud Run services'
     );

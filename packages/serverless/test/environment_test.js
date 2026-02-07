@@ -7,7 +7,7 @@
 
 const expect = require('chai').expect;
 const environmentUtil = require('../src/environment');
-const testUtil = require('@instana/core/test/test_util');
+const testUtil = require('@_local/core/test/test_util');
 
 describe('environment util', () => {
   const valuesBeforeTest = {};

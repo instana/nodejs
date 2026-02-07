@@ -9,8 +9,8 @@ const { expect } = require('chai');
 const path = require('path');
 const rimraf = require('rimraf');
 
-const constants = require('@instana/core').tracing.constants;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const constants = require('@_local/core').tracing.constants;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
@@ -40,11 +40,11 @@ mochaSuiteFn('tracing a babel/typescript setup', function () {
       // might take longer than the the timeout on CI, and they are not relevant for this test suite.
 
       // The lock file collector/test/apps/babel-typescript/package-lock.json has some arbitrary (and probably outdated)
-      // version of @instana/collector. We always update to the latest version before actually running the test.
+      // version of @_local/collector. We always update to the latest version before actually running the test.
       const latestCollectorVersion = require(path.join(__dirname, '..', '..', '..', '..', 'package.json')).version;
 
       executeCallback(
-        `npm install --no-save --omit=optional --no-audit @instana/collector@${latestCollectorVersion} && ` +
+        `npm install --no-save --omit=optional --no-audit @_local/collector@${latestCollectorVersion} && ` +
           'npm install --omit=optional --no-audit && ' +
           'npm run build',
         babelAppDir,
@@ -85,7 +85,7 @@ mochaSuiteFn('tracing a babel/typescript setup', function () {
     await controls.clearIpcMessages();
   });
 
-  describe('@instana/collector used in a babel-transpiled typescript app', function () {
+  describe('@_local/collector used in a babel-transpiled typescript app', function () {
     it('should trace when imported with workaround according to our docs', () =>
       controls
         .sendRequest({

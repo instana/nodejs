@@ -10,12 +10,12 @@ const os = require('os');
 const path = require('path');
 const rimraf = require('rimraf');
 
-const config = require('@instana/core/test/config');
-const { delay, retry, runCommandSync } = require('@instana/core/test/test_util');
+const config = require('@_local/core/test/config');
+const { delay, retry, runCommandSync } = require('@_local/core/test/test_util');
 const globalAgent = require('../globalAgent');
 const ProcessControls = require('../test_util/ProcessControls');
 
-describe('prevent initializing @instana/collector multiple times', function () {
+describe('prevent initializing @_local/collector multiple times', function () {
   const timeout = config.getTestTimeout() * 6;
   this.timeout(timeout);
 

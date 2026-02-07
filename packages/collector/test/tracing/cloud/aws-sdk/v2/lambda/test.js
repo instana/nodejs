@@ -7,12 +7,12 @@
 
 const { expect } = require('chai');
 const { fail } = expect;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('../../../../../../../core/test/config');
 const { retry, stringifyItems, delay } = require('../../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
-const { verifyHttpRootEntry, verifyExitSpan } = require('@instana/core/test/test_util/common_verifications');
+const { verifyHttpRootEntry, verifyExitSpan } = require('@_local/core/test/test_util/common_verifications');
 
 const SPAN_NAME = 'aws.lambda.invoke';
 const functionName = 'nodejs-tracer-lambda';
@@ -23,7 +23,7 @@ const availableCtx = [null, '{"Custom": {"awesome_company": "Instana"}}', '{"Cus
 const requestMethods = ['Callback', 'Promise'];
 const availableOperations = ['invoke', 'invokeAsync'];
 
-const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
+const getNextCallMethod = require('@_local/core/test/test_util/circular_list').getCircularList(requestMethods);
 
 if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe.skip;

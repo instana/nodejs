@@ -7,10 +7,10 @@
 
 const { expect } = require('chai');
 const path = require('path');
-const constants = require('@instana/core').tracing.constants;
+const constants = require('@_local/core').tracing.constants;
 
 const Control = require('../Control');
-const config = require('@instana/core/test/config');
+const config = require('@_local/core/test/config');
 const { expectExactlyOneMatching, retry } = require('../../../core/test/test_util');
 
 const { fail } = expect;

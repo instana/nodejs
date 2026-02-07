@@ -7,8 +7,8 @@
 const expect = require('chai').expect;
 const path = require('path');
 const semver = require('semver');
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const constants = require('@instana/core').tracing.constants;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
+const constants = require('@_local/core').tracing.constants;
 const config = require('../../../../core/test/config');
 const portfinder = require('../../test_util/portfinder');
 const { execSync } = require('child_process');

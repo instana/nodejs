@@ -7,7 +7,7 @@
 const semver = require('semver');
 const path = require('path');
 const expect = require('chai').expect;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const { retry } = require('../../../../../core/test/test_util');

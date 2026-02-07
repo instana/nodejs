@@ -13,7 +13,7 @@ const {
   _parseFile,
   init
 } = require('../../src/announceCycle/defaultGatewayParser');
-const testUtils = require('@instana/core/test/test_util');
+const testUtils = require('@_local/core/test/test_util');
 
 const { expect } = chai;
 

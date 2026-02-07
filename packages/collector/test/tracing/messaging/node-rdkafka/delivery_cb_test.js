@@ -18,7 +18,7 @@
 
 const {
   tracing: { supportedVersion }
-} = require('@instana/core');
+} = require('@_local/core');
 
 // TODO: 3.4.0 introduces some bugs
 // https://github.com/Blizzard/node-rdkafka/issues/1128

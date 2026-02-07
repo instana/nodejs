@@ -8,12 +8,12 @@
 const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('@instana/core/test/config');
-const { retry, stringifyItems, delay } = require('@instana/core/test/test_util');
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
+const config = require('@_local/core/test/config');
+const { retry, stringifyItems, delay } = require('@_local/core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
-const { verifyHttpRootEntry, verifyExitSpan } = require('@instana/core/test/test_util/common_verifications');
+const { verifyHttpRootEntry, verifyExitSpan } = require('@_local/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('./promisify_non_sequential');
 
 // We are using a single function, 'nodejs-tracer-lambda', for our Lambda testing since we invoke an existing function.
@@ -26,7 +26,7 @@ const withErrorOptions = [false, true];
 const requestMethods = ['Callback', 'Promise', 'Async'];
 const availableOperations = ['invoke', 'listBuckets', 'listTables', 'listStreams'];
 
-const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
+const getNextCallMethod = require('@_local/core/test/test_util/circular_list').getCircularList(requestMethods);
 
 function getSpanName(operation) {
   switch (operation) {

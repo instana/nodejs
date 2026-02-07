@@ -8,7 +8,7 @@
 const proxyquire = require('proxyquire');
 const expect = require('chai').expect;
 const sinon = require('sinon');
-const testUtils = require('@instana/core/test/test_util');
+const testUtils = require('@_local/core/test/test_util');
 
 describe('pidStore', () => {
   let pidStore;
@@ -31,7 +31,7 @@ describe('pidStore', () => {
 
   function doRequire() {
     pidStore = proxyquire('../../src/pidStore', {
-      '@instana/core': {
+      '@_local/core': {
         uninstrumentedFs: { readFileSync }
       },
       './internalPidStore': {

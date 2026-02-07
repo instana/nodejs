@@ -8,7 +8,7 @@
 const assert = require('assert');
 const async = require('async');
 const AllocationSampler = require('../../lib/samplers/allocation_sampler').AllocationSampler;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('AllocationSampler', () => {

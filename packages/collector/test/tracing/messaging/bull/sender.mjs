@@ -16,7 +16,9 @@ import express from 'express';
 import Queue from 'bull';
 
 const app = express();
-import portFactory from '../../../test_util/app-port.js';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const portFactory = require('@_local/collector/test/test_util/app-port');
 const port = portFactory();
 
 const redisServer = process.env.REDIS_SERVER || 'redis://127.0.0.1:6379';
@@ -42,7 +44,7 @@ function getJobData(testId, bulkIndex, withError) {
   };
 }
 
-import { getLogger } from '@instana/core/test/test_util/log.js';
+const { getLogger } = require('@_local/core/test/test_util/log');
 const log = getLogger(logPrefix);
 
 /**

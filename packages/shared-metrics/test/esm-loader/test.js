@@ -7,9 +7,9 @@
 const path = require('path');
 const _ = require('lodash');
 const expect = require('chai').expect;
-const { supportedVersion } = require('@instana/core').tracing;
-const testUtils = require('@instana/core/test/test_util');
-const config = require('@instana/core/test/config');
+const { supportedVersion } = require('@_local/core').tracing;
+const testUtils = require('@_local/core/test/test_util');
+const config = require('@_local/core/test/config');
 
 const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
 const loaderPath = ['--import', '../../../../collector/esm-register.mjs'];

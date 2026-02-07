@@ -8,7 +8,7 @@ const expect = require('chai').expect;
 const fail = require('chai').assert.fail;
 const path = require('path');
 
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('../../../../core/test/config');
 const { retry } = require('../../../../core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');

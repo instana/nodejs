@@ -7,10 +7,10 @@
 
 const { expect } = require('chai');
 
-const constants = require('@instana/core').tracing.constants;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('@instana/core/test/config');
-const { getSpansByName, expectExactlyOneMatching, retry, stringifyItems } = require('@instana/core/test/test_util');
+const constants = require('@_local/core').tracing.constants;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
+const config = require('@_local/core/test/config');
+const { getSpansByName, expectExactlyOneMatching, retry, stringifyItems } = require('@_local/core/test/test_util');
 
 const ProcessControls = require('../../../test_util/ProcessControls');
 

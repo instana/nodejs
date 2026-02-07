@@ -8,7 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const { delay } = require('../../../../../core/test/test_util');
+const { delay } = require('@_local/core/test/test_util');
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 

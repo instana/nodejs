@@ -5,12 +5,12 @@
 'use strict';
 
 const expect = require('chai').expect;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('../../../../core/test/config');
 const { retry, verifyEntrySpan } = require('../../../../core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
-const constants = require('@instana/core').tracing.constants;
+const constants = require('@_local/core').tracing.constants;
 const path = require('path');
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 

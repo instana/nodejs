@@ -7,7 +7,7 @@
 
 const expect = require('chai').expect;
 
-const constants = require('@instana/core').tracing.constants;
+const constants = require('@_local/core').tracing.constants;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 

@@ -141,7 +141,7 @@ mochaSuiteFn('retry loading native addons', function () {
         // Currently we do not ship darwin prebuilds via shared-metrics
         // See package.json
         execSync(
-          `cp -R ../../../shared-metrics/addons/darwin ${tmpFolder}/node_modules/@instana/shared-metrics/addons/`,
+          `cp -R ../../../shared-metrics/addons/darwin ${tmpFolder}/node_modules/@_local/shared-metrics/addons/`,
           {
             cwd: __dirname,
             stdio: 'inherit'

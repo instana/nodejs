@@ -10,7 +10,7 @@ const { checkTableExistence, cleanup } = require('./util');
 const semver = require('semver');
 const { expect } = require('chai');
 const { fail } = expect;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('../../../../../../../core/test/config');
 const { retry, stringifyItems, delay, expectAtLeastOneMatching } = require('../../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../../test_util/ProcessControls');
@@ -19,7 +19,7 @@ const {
   verifyHttpRootEntry,
   verifyExitSpan,
   verifyHttpExit
-} = require('@instana/core/test/test_util/common_verifications');
+} = require('@_local/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 
 const tablePrefix = 'nodejs-team';
@@ -52,7 +52,7 @@ const availableOperations = [
   'deleteItem'
 ];
 
-const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
+const getNextCallMethod = require('@_local/core/test/test_util/circular_list').getCircularList(requestMethods);
 
 if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe.skip;

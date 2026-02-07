@@ -12,8 +12,8 @@ const sinonChai = require('sinon-chai');
 const expect = chai.expect;
 chai.use(sinonChai);
 
-const { tracing } = require('@instana/core');
-const testUtils = require('@instana/core/test/test_util');
+const { tracing } = require('@_local/core');
+const testUtils = require('@_local/core/test/test_util');
 const agentConnection = require('../../src/agentConnection');
 const initializedTooLate = require('../../src/util/initializedTooLate');
 const metrics = require('../../src/metrics');
@@ -49,7 +49,7 @@ describe('agent ready state', () => {
     eolStub = sinon.stub(eol);
 
     agentReadyState = proxyquire('../../src/announceCycle/agentready', {
-      '@instana/core': {
+      '@_local/core': {
         tracing: tracingStub
       },
       '../agent/opts': agentOptsStub,
