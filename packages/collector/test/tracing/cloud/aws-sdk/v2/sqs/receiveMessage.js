@@ -50,7 +50,7 @@ const receiveParams = {
   WaitTimeSeconds: sqsPollDelay
 };
 
-const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 
 const app = express();
 

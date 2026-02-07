@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const mock = require('@instana/core/test/test_util/mockRequire');
+const mock = require('@_local/core/test/test_util/mockRequire');
 
 // NOTE: Version sqs-consumer >= v6.0 requires AWS SDK v3.
 // We're explicitly using v5 to to test against AWS SDK v2.

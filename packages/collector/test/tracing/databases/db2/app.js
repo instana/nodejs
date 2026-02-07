@@ -20,7 +20,7 @@ const express = require('express');
 const fs = require('fs');
 const morgan = require('morgan');
 const ibmdb = require('ibm_db');
-const { delay } = require('@instana/core/test/test_util');
+const { delay } = require('@_local/core/test/test_util');
 
 const app = express();
 const port = require('@_local/collector/test/test_util/app-port')();

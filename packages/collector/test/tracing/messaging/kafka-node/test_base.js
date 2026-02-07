@@ -9,25 +9,25 @@ const path = require('path');
 const expect = require('chai').expect;
 
 const constants = require('@_local/core').tracing.constants;
-const supportedVersion = require('@_local/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../../test_util/ProcessControls');
-const globalAgent = require('../../../globalAgent');
+const config = require('@_local/core/test/config');
+const testUtils = require('@_local/core/test/test_util');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
 
 const agentControls = globalAgent.instance;
-
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 // FYI: officially deprecated. No release since 6 years. But still very
 //      high usage on npm trends. We will drop in any upcoming major release.
 
 // node bin/start-test-containers.js --zookeeper --kafka --schema-registry --kafka-topics
-mochaSuiteFn('tracing/kafka-node', function () {
-  // Too many moving parts with Kafka involved. Increase the default timeout.
-  // This is especially important since the Kafka client has an
-  // exponential backoff implemented.
+module.exports = function (name, version, isLatest) {
   this.timeout(config.getTestTimeout() * 2);
+
+  const commonEnv = {
+    LIBRARY_LATEST: isLatest,
+    LIBRARY_VERSION: version,
+    LIBRARY_NAME: name
+  };
 
   globalAgent.setUpCleanUpHooks();
 
@@ -38,23 +38,25 @@ mochaSuiteFn('tracing/kafka-node', function () {
 
       before(async () => {
         producerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'producer'),
+          dirname: __dirname,
+          appName: 'producer.js',
           useGlobalAgent: true,
           env: {
+            ...commonEnv,
             PRODUCER_TYPE: producerType
           }
         });
         consumerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'consumer'),
-          useGlobalAgent: true
+          dirname: __dirname,
+          appName: 'consumer.js',
+          useGlobalAgent: true,
+          env: {
+            ...commonEnv
+          }
         });
 
         await consumerControls.startAndWaitForAgentConnection();
         await producerControls.startAndWaitForAgentConnection();
-      });
-
-      beforeEach(async () => {
-        await agentControls.clearReceivedTraceData();
       });
 
       beforeEach(async () => {
@@ -120,10 +122,6 @@ mochaSuiteFn('tracing/kafka-node', function () {
     });
   });
 
-  // REMARK: HighLevelConsumer has been removed in kafka-node@4.0.0, so we no longer test the highLevel option in
-  // the regular test suite. The consumerGroup test became flaky on CI (but not locally) with the upgrade to
-  // kafka-node@4.0.0. Both can be quickly reactivated if kafka-node < 4.0.0 needs to be tested, see remark in
-  // ../consumer.js
   // eslint-disable-next-line array-bracket-spacing
   ['plain' /* 'highLevel', 'consumerGroup' */].forEach(consumerType => {
     describe(`consuming via: ${consumerType}`, () => {
@@ -132,16 +130,20 @@ mochaSuiteFn('tracing/kafka-node', function () {
 
       before(async () => {
         producerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'producer'),
+          dirname: __dirname,
+          appName: 'producer.js',
           useGlobalAgent: true,
           env: {
+            ...commonEnv,
             PRODUCER_TYPE: 'plain'
           }
         });
         consumerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'consumer'),
+          dirname: __dirname,
+          appName: 'consumer.js',
           useGlobalAgent: true,
           env: {
+            ...commonEnv,
             CONSUMER_TYPE: consumerType
           }
         });
@@ -199,11 +201,6 @@ mochaSuiteFn('tracing/kafka-node', function () {
                   span => expect(span.data.kafka.service).to.equal('test')
                 ]);
 
-                // Actually, we would want the trace started at the HTTP entry to continue here but as of 2019-07-31,
-                // version 4.1.3, kafka-node _still_ has no support for message headers, so we are out of luck in
-                // Node.js/kafka. See
-                // https://github.com/SOHU-Co/kafka-node/issues/763
-                // So for now, span.p is undefined (new root span) and span.t is not equal to entrySpan.t.
                 const kafkaConsumeEntry = testUtils.expectAtLeastOneMatching(spans, [
                   span => expect(span.p).to.equal(undefined),
                   span => expect(span.n).to.equal('kafka'),
@@ -230,23 +227,26 @@ mochaSuiteFn('tracing/kafka-node', function () {
   });
 
   // kafka-node does not support headers: https://github.com/SOHU-Co/kafka-node/issues/1309
-  // We cannot inject our Instana headers.
   describe.skip('Suppression', () => {
     let producerControls;
     let consumerControls;
 
     before(async () => {
       producerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'producer'),
+        dirname: __dirname,
+        appName: 'producer.js',
         useGlobalAgent: true,
         env: {
+          ...commonEnv,
           PRODUCER_TYPE: 'plain'
         }
       });
       consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
+        dirname: __dirname,
+        appName: 'consumer.js',
         useGlobalAgent: true,
         env: {
+          ...commonEnv,
           CONSUMER_TYPE: 'plain'
         }
       });
@@ -298,4 +298,4 @@ mochaSuiteFn('tracing/kafka-node', function () {
   function getErrors(consumerControls) {
     return consumerControls.sendRequest({ path: '/errors', suppressTracing: true });
   }
-});
+};

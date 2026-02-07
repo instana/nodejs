@@ -20,7 +20,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 
 const AWS = require('aws-sdk');
 const logPrefix = `AWS SDK v2 Kinesis (${process.pid}):\t`;
-const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 AWS.config.update({ region: 'us-east-2' });
 const kinesis = new AWS.Kinesis();
 

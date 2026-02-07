@@ -6,9 +6,9 @@
 'use strict';
 
 const { fork } = require('child_process');
-const portfinder = require('@instana/collector/test/test_util/portfinder');
-const retry = require('@instana/core/test/test_util/retry');
-const config = require('@instana/core/test/config');
+const portfinder = require('@_local/collector/test/test_util/portfinder');
+const retry = require('@_local/core/test/test_util/retry');
+const config = require('@_local/core/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 
 function Control(opts) {

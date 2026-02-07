@@ -16,7 +16,7 @@ require('@instana/collector')();
 
 const oracledb = require('oracledb');
 const port = require('../../test_util/app-port')();
-const delay = require('@instana/core/test/test_util/delay');
+const delay = require('@_local/core/test/test_util/delay');
 const logPrefix = `Oracle App (${process.pid}):\t`;
 const express = require('express');
 const app = express();

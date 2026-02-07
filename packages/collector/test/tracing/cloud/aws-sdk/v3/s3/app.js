@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const mock = require('@instana/core/test/test_util/mockRequire');
+const mock = require('@_local/core/test/test_util/mockRequire');
 
 /**
  * NOTE:
@@ -26,7 +26,7 @@ const express = require('express');
 
 const awsSdk3 = require('@aws-sdk/client-s3');
 const logPrefix = `AWS SDK v3 S3 (${process.pid}):\t`;
-const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 const port = require('../../../../../test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const app = express();

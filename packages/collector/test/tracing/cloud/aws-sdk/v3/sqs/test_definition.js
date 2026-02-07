@@ -9,8 +9,8 @@ const semver = require('semver');
 const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
-const constants = require('@instana/core').tracing.constants;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const constants = require('@_local/core').tracing.constants;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('../../../../../../../core/test/config');
 const {
   expectExactlyOneMatching,
@@ -22,7 +22,7 @@ const {
 } = require('../../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
-const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
+const { verifyHttpRootEntry, verifyHttpExit } = require('@_local/core/test/test_util/common_verifications');
 const defaultPrefix = 'https://sqs.us-east-2.amazonaws.com/767398002385/';
 const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
 
@@ -31,8 +31,8 @@ const { createQueues, deleteQueues, sendSnsNotificationToSqsQueue } = require('.
 const sendingMethods = ['v3', 'cb', 'v2'];
 const receivingMethods = ['v3', 'cb', 'v2'];
 
-const getNextSendMethod = require('@instana/core/test/test_util/circular_list').getCircularList(sendingMethods);
-const getNextReceiveMethod = require('@instana/core/test/test_util/circular_list').getCircularList(receivingMethods);
+const getNextSendMethod = require('@_local/core/test/test_util/circular_list').getCircularList(sendingMethods);
+const getNextReceiveMethod = require('@_local/core/test/test_util/circular_list').getCircularList(receivingMethods);
 
 function start(version) {
   const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;

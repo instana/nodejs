@@ -623,7 +623,12 @@
     "isBeta": false,
     "ignoreUpdates": false,
     "note": "",
-    "core": false
+    "core": false,
+    "versions": [
+      {
+        "v": "5.0.0"
+      }
+    ]
   },
   {
     "name": "kafkajs",

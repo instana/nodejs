@@ -9,7 +9,7 @@ const semver = require('semver');
 const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('../../../../../../../core/test/config');
 const { retry, stringifyItems, delay } = require('../../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../../test_util/ProcessControls');
@@ -18,7 +18,7 @@ const {
   verifyHttpRootEntry,
   verifyHttpExit,
   verifyExitSpan
-} = require('@instana/core/test/test_util/common_verifications');
+} = require('@_local/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 const cleanup = require('./util').cleanup;
 const withErrorOptions = [false, true];
@@ -36,7 +36,7 @@ const availableOperations = [
   'deleteBucket'
 ];
 
-const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
+const getNextCallMethod = require('@_local/core/test/test_util/circular_list').getCircularList(requestMethods);
 
 function start(version) {
   const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;

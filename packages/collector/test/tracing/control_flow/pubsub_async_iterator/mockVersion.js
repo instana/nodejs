@@ -4,7 +4,7 @@
 
 'use strict';
 
-const mock = require('@instana/core/test/test_util/mockRequire');
+const mock = require('@_local/core/test/test_util/mockRequire');
 const hook = require('../../../../../core/src/util/hook');
 
 const GRAPHQL_SUBSCRIPTIONS_VERSION = process.env.GRAPHQL_SUBSCRIPTIONS_VERSION;

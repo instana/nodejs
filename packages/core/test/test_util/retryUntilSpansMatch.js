@@ -5,7 +5,7 @@
 
 'use strict';
 
-const retry = require('@instana/core/test/test_util/retry');
+const retry = require('@_local/core/test/test_util/retry');
 
 // Ideally, we should use the type above for the agentConrols, but this is currently out of the scope for this ticket
 module.exports = function retryUntilSpansMatch(agentControls, fn) {

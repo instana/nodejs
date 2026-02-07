@@ -20,7 +20,7 @@ const sns = require('@aws-sdk/client-sns');
 const { StandardRetryStrategy } = require('@aws-sdk/middleware-retry');
 
 const logPrefix = `AWS SDK v3 SNS (${process.pid}):\t`;
-const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 
 const maxAttempts = 6;
 const customRetryStrategy = new StandardRetryStrategy(async () => maxAttempts, {

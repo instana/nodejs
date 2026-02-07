@@ -29,7 +29,7 @@ const {
   PutRecordsCommand
 } = require('@aws-sdk/client-kinesis');
 const logPrefix = `AWS SDK v3 Kinesis (${process.pid}):\t`;
-const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 
 const kinesis = new KinesisClient({ region: 'us-east-2' });
 const kinesisV2 = new Kinesis({ region: 'us-east-2' });

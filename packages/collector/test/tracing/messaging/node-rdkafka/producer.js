@@ -16,7 +16,7 @@ const Kafka = require('node-rdkafka');
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const logPrefix = `rdkafka Producer (${process.pid}):\t`;
-const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 const express = require('express');
 const port = require('../../../test_util/app-port')();
 const enableDeliveryCb = process.env.RDKAFKA_PRODUCER_DELIVERY_CB === 'true';

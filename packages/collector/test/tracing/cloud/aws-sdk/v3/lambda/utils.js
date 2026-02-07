@@ -11,7 +11,7 @@ const {
   GetFunctionConfigurationCommand
 } = require('@aws-sdk/client-lambda');
 const AdmZip = require('adm-zip');
-const { isCI } = require('@instana/core/test/test_util');
+const { isCI } = require('@_local/core/test/test_util');
 /**
  * Lambda invocation has not yet been tested on Tekton(CI environment).
  * TODO: Implement support for running Lambda function tests on LocalStack with Tekton (INSTA-771).

@@ -8,7 +8,7 @@ const { expect } = require('chai');
 const { fail } = expect;
 const qs = require('querystring');
 const path = require('path');
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('../../../../../../../core/test/config');
 const { retry, delay, stringifyItems, expectExactlyOneMatching } = require('../../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../../test_util/ProcessControls');
@@ -17,8 +17,8 @@ const {
   verifyHttpRootEntry,
   verifyExitSpan,
   verifyHttpExit
-} = require('@instana/core/test/test_util/common_verifications');
-const constants = require('@instana/core').tracing.constants;
+} = require('@_local/core/test/test_util/common_verifications');
+const constants = require('@_local/core').tracing.constants;
 let utils;
 
 let topicArn;

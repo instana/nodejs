@@ -4,7 +4,7 @@
 
 'use strict';
 
-const mock = require('@instana/core/test/test_util/mockRequire');
+const mock = require('@_local/core/test/test_util/mockRequire');
 
 const REDIS_VERSION = process.env.REDIS_VERSION;
 const REDIS_REQUIRE = process.env.REDIS_VERSION === 'latest' ? 'redis' : `redis-${REDIS_VERSION}`;

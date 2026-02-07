@@ -19,7 +19,7 @@ const express = require('express');
 
 const NATS = require('nats');
 
-const log = require('@instana/core/test/test_util/log').getLogger('NATS Subscriber: ');
+const log = require('@_local/core/test/test_util/log').getLogger('NATS Subscriber: ');
 
 const app = express();
 const port = require('../../../test_util/app-port')();

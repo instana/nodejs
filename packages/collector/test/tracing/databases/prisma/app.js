@@ -22,7 +22,7 @@ const path = require('node:path');
 const app = express();
 const logPrefix = `Prisma App (${process.pid}):\t`;
 
-const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

@@ -25,7 +25,7 @@ const s3 = new AWS.S3();
 const app = express();
 const port = require('../../../../../test_util/app-port')();
 
-const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 
 const bucketName = process.env.AWS_S3_BUCKET_NAME || 'nodejs-team';
 

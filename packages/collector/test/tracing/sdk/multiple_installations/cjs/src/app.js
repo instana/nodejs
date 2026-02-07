@@ -23,8 +23,8 @@ const instana = require('../../../../../../src')({ agentPort: process.env.INSTAN
 //       was never initialized.
 // const instana = require('../../../../../src');
 const express = require('express');
-const testUtils = require('@instana/core/test/test_util');
-const getAppPort = require('@instana/collector/test/test_util/app-port');
+const testUtils = require('@_local/core/test/test_util');
+const getAppPort = require('@_local/collector/test/test_util/app-port');
 const port = getAppPort();
 const app = express();
 const logPrefix = `CJS SDK multiple installations: (${process.pid}):\t`;

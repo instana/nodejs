@@ -7,7 +7,7 @@
 
 const semver = require('semver');
 const path = require('path');
-const mock = require('@instana/core/test/test_util/mockRequire');
+const mock = require('@_local/core/test/test_util/mockRequire');
 const hook = require('../../../../../core/src/util/hook');
 
 const graphqlMajorDefault = semver.major(require(`${path.dirname(require.resolve('graphql'))}/package.json`).version);

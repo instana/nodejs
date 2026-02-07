@@ -10,16 +10,16 @@ const { v4: uuid } = require('uuid');
 const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('@instana/core/test/config');
-const { retry, stringifyItems, delay, expectAtLeastOneMatching } = require('@instana/core/test/test_util');
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
+const config = require('@_local/core/test/config');
+const { retry, stringifyItems, delay, expectAtLeastOneMatching } = require('@_local/core/test/test_util');
 const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
 const {
   verifyHttpRootEntry,
   verifyExitSpan,
   verifyHttpExit
-} = require('@instana/core/test/test_util/common_verifications');
+} = require('@_local/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 
 const availableOperations = [

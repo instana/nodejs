@@ -15,7 +15,7 @@ require('@instana/collector')();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { isCI } = require('@instana/core/test/test_util');
+const { isCI } = require('@_local/core/test/test_util');
 const port = require('../../test_util/app-port')();
 const tedious = require('tedious');
 

@@ -13,10 +13,10 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const port = require('../../../test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-const instana = require('../../../..')();
+const instana = require('@instana/collector')();
 const express = require('express');
 const kafka = require('kafka-node');
 

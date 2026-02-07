@@ -5,7 +5,7 @@
 
 'use strict';
 
-const { isCI } = require('@instana/core/test/test_util');
+const { isCI } = require('@_local/core/test/test_util');
 
 exports.getAppStdio = function getAppStdio() {
   if (process.env.WITH_STDOUT || isCI()) {

@@ -11,9 +11,9 @@ const {
 } = require('chai');
 const path = require('path');
 
-const retry = require('@instana/core/test/test_util/retry');
-// const delay = require('@instana/core/test/test_util/delay');
-const config = require('@instana/core/test/config');
+const retry = require('@_local/core/test/test_util/retry');
+// const delay = require('@_local/core/test/test_util/delay');
+const config = require('@_local/core/test/config');
 
 function AbstractServerlessControl(opts = {}) {
   this.opts = opts;

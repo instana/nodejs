@@ -13,9 +13,9 @@
 const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
-const isCI = require('@instana/core/test/test_util/is_ci');
-const config = require('@instana/core/test/config');
-const { checkESMApp } = require('@instana/core/test/test_util');
+const isCI = require('@_local/core/test/test_util/is_ci');
+const config = require('@_local/core/test/config');
+const { checkESMApp } = require('@_local/core/test/test_util');
 
 exports.mochaHooks = {
   async beforeAll() {

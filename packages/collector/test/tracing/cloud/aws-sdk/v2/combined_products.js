@@ -8,7 +8,7 @@
 require('../../../../../src')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-const delay = require('@instana/core/test/test_util/delay');
+const delay = require('@_local/core/test/test_util/delay');
 
 const AWS = require('aws-sdk');
 const express = require('express');
@@ -22,7 +22,7 @@ const kinesis = new AWS.Kinesis();
 const app = express();
 const port = require('../../../../test_util/app-port')();
 
-const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 
 const lambdaFunctionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'team-nodejs-invoke-function';
 

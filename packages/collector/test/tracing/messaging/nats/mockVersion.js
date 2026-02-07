@@ -4,7 +4,7 @@
 
 'use strict';
 
-const mock = require('@instana/core/test/test_util/mockRequire');
+const mock = require('@_local/core/test/test_util/mockRequire');
 const NATS_VERSION = process.env.NATS_VERSION === 'latest' ? 'nats' : `nats-${process.env.NATS_VERSION}`;
 
 if (NATS_VERSION !== 'nats') {

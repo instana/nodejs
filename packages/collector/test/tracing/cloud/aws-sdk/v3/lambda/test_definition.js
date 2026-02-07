@@ -7,12 +7,12 @@
 const { expect } = require('chai');
 const { fail } = expect;
 const path = require('path');
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('@instana/core/test/config');
-const { retry, stringifyItems, delay } = require('@instana/core/test/test_util');
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
+const config = require('@_local/core/test/config');
+const { retry, stringifyItems, delay } = require('@_local/core/test/test_util');
 const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
-const { verifyHttpRootEntry, verifyExitSpan } = require('@instana/core/test/test_util/common_verifications');
+const { verifyHttpRootEntry, verifyExitSpan } = require('@_local/core/test/test_util/common_verifications');
 const SPAN_NAME = 'aws.lambda.invoke';
 // We are using a single function, 'nodejs-tracer-lambda', for our Lambda testing since we invoke an existing function.
 // Our tests focus on invoking function and retrieving details of the function, rather than creating new ones.
@@ -24,7 +24,7 @@ const availableCtx = [null, '{"Custom": {"awesome_company": "Instana"}}', '{"Cus
 const requestMethods = ['async', 'promise', 'cb', 'promise-v2', 'cb-v2'];
 const availableOperations = ['invoke', 'getFunction'];
 let envConfig = {};
-const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
+const getNextCallMethod = require('@_local/core/test/test_util/circular_list').getCircularList(requestMethods);
 async function start(version) {
   this.timeout(config.getTestTimeout() * 20);
 

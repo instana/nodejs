@@ -10,8 +10,8 @@ const { expect } = require('chai');
 const { fail } = expect;
 const config = require('@_local/core/test/config');
 const { retry, stringifyItems, delay } = require('@_local/core/test/test_util');
-const ProcessControls = require('@instana/collector/test/test_util/ProcessControls');
-const globalAgent = require('@instana/collector/test/globalAgent');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
 const expectAtLeastOneMatching = require('@_local/core/test/test_util/expectAtLeastOneMatching');
 const expectExactlyOneMatching = require('@_local/core/test/test_util/expectExactlyOneMatching');
 const {

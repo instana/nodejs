@@ -5,8 +5,8 @@
 
 'use strict';
 
-const AbstractServerlessControl = require('@instana/serverless/test/util/AbstractServerlessControl');
-const portfinder = require('@instana/collector/test/test_util/portfinder');
+const AbstractServerlessControl = require('@_local/serverless/test/util/AbstractServerlessControl');
+const portfinder = require('@_local/collector/test/test_util/portfinder');
 const { fork } = require('child_process');
 
 class Control extends AbstractServerlessControl {
