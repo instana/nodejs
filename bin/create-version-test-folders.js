@@ -39,10 +39,10 @@ function symlinkContents(sourceDir, targetDir) {
       }
       symlinkContents(sourceEntryPath, targetEntryPath);
     } else if (entry.isFile()) {
-      const ext = path.extname(entry.name);
-      if (ext === '.js' || ext === '.mjs') {
-        createSymlink(sourceEntryPath, targetEntryPath);
+      if (entry.name === 'package.json' || entry.name === 'package.json.template' || entry.name === 'modes.json') {
+        continue;
       }
+      createSymlink(sourceEntryPath, targetEntryPath);
     }
   }
 }
@@ -262,22 +262,14 @@ function main() {
         });
 
         // Generate package.json
-        const matchingVersion = currency.versions.find(vObj => {
-          const v = typeof vObj === 'string' ? vObj : vObj.v;
-          const parsed = semver.parse(v);
-          return parsed && parsed.major === majorVersion;
-        });
-        const actualVersion = matchingVersion
-          ? (typeof matchingVersion === 'string' ? matchingVersion : matchingVersion.v)
-          : null;
-        const isOptional = typeof matchingVersion === 'object' && matchingVersion.optional === true;
+        const isOptional = typeof versionObj === 'object' && versionObj.optional === true;
 
         generatePackageJson({
           testDir,
           versionDir,
           pkgName: `${currency.name}-v${majorVersion}`,
           currencyName: currency.name,
-          currencyVersion: actualVersion,
+          currencyVersion: version,
           isOptional
         });
 

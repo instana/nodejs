@@ -10,10 +10,9 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('./mockVersion');
-const port = require('../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 
-require('../../../..')();
+require('@instana/collector')();
 const express = require('express');
 const morgan = require('morgan');
 const path = require('path');

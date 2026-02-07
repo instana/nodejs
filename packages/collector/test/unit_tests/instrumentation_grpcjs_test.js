@@ -5,9 +5,21 @@
 'use strict';
 
 const expect = require('chai').expect;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const grpc = require('../../../../../core/src/tracing/instrumentation/protocols/grpcJs');
-const { Metadata } = require('@grpc/grpc-js');
+const supportedVersion = require('@_instana/core').tracing.supportedVersion;
+const grpc = require('@_instana/core/src/tracing/instrumentation/protocols/grpcJs');
+class Metadata {
+  constructor() {
+    this._data = {};
+  }
+
+  set(key, value) {
+    this._data[key] = [String(value)];
+  }
+
+  get(key) {
+    return this._data[key] || [];
+  }
+}
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
