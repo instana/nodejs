@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
 });
 
 const instana = require('@instana/collector')();
-const { delay } = require('@instana/core/test/test_util');
+const { delay } = require('@_instana/core/test/test_util');
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
