@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-require('../../../..')();
+require('@instana/collector')();
 
 const express = require('express');
 const natsStreaming = require('node-nats-streaming');
@@ -25,7 +25,7 @@ const client = natsStreaming.connect('test-cluster', 'test-client-publisher-1', 
 const client2 = natsStreaming.connect('test-cluster', 'test-client-publisher-2', {
   url: process.env.NATS_STREAMING_ALTERNATIVE
 });
-const port = require('../../../test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 
 let connected = false;
 let client1Connected = false;

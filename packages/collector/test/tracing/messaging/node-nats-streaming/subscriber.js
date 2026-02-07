@@ -13,13 +13,13 @@ process.on('SIGTERM', () => {
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-const instana = require('../../../..')();
+const instana = require('@instana/collector')();
 const express = require('express');
 
 const natsStreaming = require('node-nats-streaming');
 
 const app = express();
-const port = require('../../../test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const client = natsStreaming.connect('test-cluster', 'test-client-subscriber', {
   url: process.env.NATS_STREAMING
 });

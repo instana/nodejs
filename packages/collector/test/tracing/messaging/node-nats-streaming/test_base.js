@@ -5,30 +5,31 @@
 
 'use strict';
 
-const path = require('path');
 const expect = require('chai').expect;
 const { v4: uuid } = require('uuid');
 
 const constants = require('@_local/core').tracing.constants;
-const supportedVersion = require('@_local/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
+const config = require('@_local/core/test/config');
 const {
   delay,
   stringifyItems,
   expectExactlyOneMatching,
   expectAtLeastOneMatching,
   retry
-} = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../../test_util/ProcessControls');
-const globalAgent = require('../../../globalAgent');
+} = require('@_local/core/test/test_util');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
 
 const agentControls = globalAgent.instance;
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 // Note: nats-streaming is in the process of being deprecated.
 // https://docs.nats.io/legacy/stan#warning-deprecation-notice
 
-mochaSuiteFn('tracing/nats-streaming', function () {
+module.exports = function (name, version, isLatest) {
+  process.env.LIBRARY_LATEST = isLatest;
+  process.env.LIBRARY_VERSION = version;
+  process.env.LIBRARY_NAME = name;
+
   describe('tracing is enabled', function () {
     this.timeout(config.getTestTimeout() * 2);
 
@@ -39,11 +40,13 @@ mochaSuiteFn('tracing/nats-streaming', function () {
 
     before(async () => {
       publisherControls = new ProcessControls({
-        appPath: path.join(__dirname, 'publisher'),
+        dirname: __dirname,
+        appName: 'publisher.js',
         useGlobalAgent: true
       });
       subscriberControls = new ProcessControls({
-        appPath: path.join(__dirname, 'subscriber'),
+        dirname: __dirname,
+        appName: 'subscriber.js',
         useGlobalAgent: true
       });
 
@@ -297,12 +300,14 @@ mochaSuiteFn('tracing/nats-streaming', function () {
 
     before(async () => {
       publisherControls = new ProcessControls({
-        appPath: path.join(__dirname, 'publisher'),
+        dirname: __dirname,
+        appName: 'publisher.js',
         useGlobalAgent: true,
         tracingEnabled: false
       });
       subscriberControls = new ProcessControls({
-        appPath: path.join(__dirname, 'subscriber'),
+        dirname: __dirname,
+        appName: 'subscriber.js',
         useGlobalAgent: true,
         tracingEnabled: false
       });
@@ -341,4 +346,4 @@ mochaSuiteFn('tracing/nats-streaming', function () {
           })
         ));
   });
-});
+};
