@@ -195,7 +195,7 @@ spec:
           workspace: artifacts
     - name: autoprofile-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: autoprofile
       params:
@@ -220,7 +220,7 @@ spec:
           workspace: artifacts
     - name: aws-fargate-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: aws-fargate
       params:
@@ -245,7 +245,7 @@ spec:
           workspace: artifacts
     - name: aws-lambda-split-2-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: aws-lambda-split-2
       params:
@@ -270,7 +270,7 @@ spec:
           workspace: artifacts
     - name: aws-lambda-split-3-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: aws-lambda-split-3
       params:
@@ -295,7 +295,7 @@ spec:
           workspace: artifacts
     - name: aws-lambda-split-4-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: aws-lambda-split-4
       params:
@@ -320,7 +320,7 @@ spec:
           workspace: artifacts
     - name: aws-lambda-split-5-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: aws-lambda-split-5
       params:
@@ -345,7 +345,7 @@ spec:
           workspace: artifacts
     - name: aws-lambda-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: aws-lambda
       params:
@@ -370,7 +370,7 @@ spec:
           workspace: artifacts
     - name: azure-container-services-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: azure-container-services
       params:
@@ -395,7 +395,7 @@ spec:
           workspace: artifacts
     - name: collector-general-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-general
       params:
@@ -420,7 +420,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-cloud-aws-v2-split-2-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-cloud-aws-v2-split-2
       params:
@@ -445,7 +445,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-cloud-aws-v2-split-3-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-cloud-aws-v2-split-3
       params:
@@ -470,7 +470,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-cloud-aws-v2-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-cloud-aws-v2
       params:
@@ -495,7 +495,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-cloud-aws-v3-split-2-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-cloud-aws-v3-split-2
       params:
@@ -520,7 +520,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-cloud-aws-v3-split-3-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-cloud-aws-v3-split-3
       params:
@@ -545,7 +545,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-cloud-aws-v3-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-cloud-aws-v3
       params:
@@ -570,7 +570,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-cloud-azure-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-cloud-azure
       params:
@@ -595,7 +595,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-cloud-gcp-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-cloud-gcp
       params:
@@ -620,7 +620,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-database-split-10-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-database-split-10
       params:
@@ -645,7 +645,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-database-split-2-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-database-split-2
       params:
@@ -670,7 +670,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-database-split-3-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-database-split-3
       params:
@@ -695,7 +695,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-database-split-4-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-database-split-4
       params:
@@ -720,7 +720,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-database-split-5-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-database-split-5
       params:
@@ -745,7 +745,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-database-split-6-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-database-split-6
       params:
@@ -770,7 +770,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-database-split-7-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-database-split-7
       params:
@@ -795,7 +795,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-database-split-8-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-database-split-8
       params:
@@ -820,7 +820,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-database-split-9-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-database-split-9
       params:
@@ -845,7 +845,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-database-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-database
       params:
@@ -870,7 +870,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-frameworks-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-frameworks
       params:
@@ -895,7 +895,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-general-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-general
       params:
@@ -920,7 +920,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-logging-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-logging
       params:
@@ -945,7 +945,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-messaging-split-2-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-messaging-split-2
       params:
@@ -970,7 +970,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-messaging-split-3-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-messaging-split-3
       params:
@@ -995,7 +995,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-messaging-split-4-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-messaging-split-4
       params:
@@ -1020,7 +1020,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-messaging-split-5-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-messaging-split-5
       params:
@@ -1045,7 +1045,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-messaging-split-6-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-messaging-split-6
       params:
@@ -1070,7 +1070,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-messaging-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-messaging
       params:
@@ -1095,7 +1095,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-misc-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-misc
       params:
@@ -1120,7 +1120,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-protocols-split-2-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-protocols-split-2
       params:
@@ -1145,7 +1145,7 @@ spec:
           workspace: artifacts
     - name: collector-tracing-protocols-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: collector-tracing-protocols
       params:
@@ -1170,7 +1170,7 @@ spec:
           workspace: artifacts
     - name: core-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: core
       params:
@@ -1195,7 +1195,7 @@ spec:
           workspace: artifacts
     - name: google-cloud-run-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: google-cloud-run
       params:
@@ -1220,7 +1220,7 @@ spec:
           workspace: artifacts
     - name: metrics-util-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: metrics-util
       params:
@@ -1245,7 +1245,7 @@ spec:
           workspace: artifacts
     - name: opentelemetry-exporter-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: opentelemetry-exporter
       params:
@@ -1270,7 +1270,7 @@ spec:
           workspace: artifacts
     - name: opentelemetry-sampler-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: opentelemetry-sampler
       params:
@@ -1295,7 +1295,7 @@ spec:
           workspace: artifacts
     - name: serverless-collector-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: serverless-collector
       params:
@@ -1320,7 +1320,7 @@ spec:
           workspace: artifacts
     - name: serverless-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: serverless
       params:
@@ -1345,7 +1345,7 @@ spec:
           workspace: artifacts
     - name: shared-metrics-task
       runAfter:
-        - install-npm-dependencies
+        - execute-tools
       taskRef:
         name: shared-metrics
       params:
