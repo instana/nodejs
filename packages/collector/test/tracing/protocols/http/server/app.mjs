@@ -20,9 +20,12 @@ import https from 'https';
 import http2 from 'http2';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import getAppPort from '../../../../test_util/app-port.js';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const getAppPort = require('@_instana/collector/test/test_util/app-port');
 const port = getAppPort();
-import readSymbolProperty from '../../../../../../core/src/util/readSymbolProperty.js';
+const readSymbolProperty = require('@_instana/core/src/util/readSymbolProperty');
 
 const streamSymbol = 'Symbol(stream)';
 
@@ -37,7 +40,7 @@ const __dirname = dirname(__filename);
 
 let server;
 if (process.env.APP_USES_HTTPS === 'true') {
-  const sslDir = path.join(__dirname, '..', '..', '..', '..', 'apps', 'ssl');
+  const sslDir = path.join(path.dirname(require.resolve('@_instana/collector/package.json')), 'test', 'apps', 'ssl');
   const createServer = process.env.APP_USES_HTTP2 === 'true' ? http2.createSecureServer : https.createServer;
   server = createServer({
     key: fs.readFileSync(path.join(sslDir, 'key')),

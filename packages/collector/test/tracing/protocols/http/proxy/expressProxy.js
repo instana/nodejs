@@ -11,8 +11,6 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('./mockVersion');
-
 // This is a tiny express app which responds to all methods and has configurable
 // latency and response codes. This can be used a baselines for many tests, e.g.
 // to test distributed tracing.
@@ -27,10 +25,10 @@ const instanaConfig = {
   }
 };
 
-require('../../../../..')(instanaConfig);
+require('@instana/collector')(instanaConfig);
 const express = require('express');
 const http = require('http');
-const port = require('../../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 const app = express();
 
 app.get('/', (req, res) => {

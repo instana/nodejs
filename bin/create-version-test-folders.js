@@ -91,9 +91,8 @@ function findNonCurrencyTestDirs(baseDir, processedDirs) {
     }
 
     const hasTestBase = entries.some(e => e.isFile() && e.name === 'test_base.js');
-    const hasTemplate = entries.some(e => e.isFile() && e.name === 'package.json.template');
 
-    if (hasTestBase && hasTemplate && !processedDirs.has(dir)) {
+    if (hasTestBase && !processedDirs.has(dir)) {
       results.push(dir);
       return;
     }
