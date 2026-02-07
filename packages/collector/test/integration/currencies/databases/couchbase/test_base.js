@@ -11,8 +11,7 @@ const {
   retry,
   delay,
   expectExactlyOneMatching,
-  expectExactlyNMatching,
-  isCI
+  expectExactlyNMatching
 } = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');

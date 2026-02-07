@@ -5,7 +5,6 @@
 'use strict';
 
 const expect = require('chai').expect;
-const config = require('@_local/core/test/config');
 const {
   retry,
   verifyHttpRootEntry,

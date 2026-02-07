@@ -5,7 +5,6 @@
 'use strict';
 
 const expect = require('chai').expect;
-const path = require('path');
 const semver = require('semver');
 const constants = require('@_local/core').tracing.constants;
 const config = require('@_local/core/test/config');

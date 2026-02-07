@@ -4,7 +4,6 @@
 
 'use strict';
 
-const path = require('path');
 const childProcess = require('child_process');
 const expect = require('chai').expect;
 const config = require('@_local/core/test/config');
