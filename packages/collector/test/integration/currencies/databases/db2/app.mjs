@@ -16,7 +16,7 @@ import express from 'express';
 import fs from 'fs';
 import morgan from 'morgan';
 import ibmdb from 'ibm_db';
-import testUtil from '@instana/core/test/test_util/index.js';
+import testUtil from '@_local/core/test/test_util/index.js';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import getAppPort from '@_local/collector/test/test_util/app-port.js';

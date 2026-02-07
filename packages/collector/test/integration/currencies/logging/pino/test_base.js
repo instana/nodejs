@@ -117,7 +117,7 @@ module.exports = function (name, version, isLatest) {
                         LIBRARY_NAME: name,
                         PINO_WORKER_MODE: 'transport',
                         PINO_EXPRESS: 'false',
-                        NODE_OPTIONS: `--require ${path.join(__dirname, '../../../..', 'src', 'immediate.js')}`,
+                        NODE_OPTIONS: `--require ${require.resolve('@_local/collector/src/immediate.js')}`,
                         INSTANA_DISABLE_WORKER_THREADS: 'true'
                     }
                 });

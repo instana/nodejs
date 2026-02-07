@@ -76,7 +76,8 @@ function start() {
     describe('tracing enabled, no suppression', function () {
       before(async () => {
         receiverControls = new ProcessControls({
-          appPath: path.join(__dirname, '../client-sqs/receiver'),
+          dirname: path.join(__dirname, '../client-sqs'),
+          appName: 'receiver.js',
           useGlobalAgent: true,
           env: {
             AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
@@ -166,7 +167,8 @@ function start() {
     describe('tracing enabled, but suppressed', function () {
       before(async () => {
         receiverControls = new ProcessControls({
-          appPath: path.join(__dirname, '../client-sqs/receiver'),
+          dirname: path.join(__dirname, '../client-sqs'),
+          appName: 'receiver.js',
           useGlobalAgent: true,
           env: {
             AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
@@ -229,7 +231,8 @@ function start() {
     describe('tracing disabled', function () {
       before(async () => {
         receiverControls = new ProcessControls({
-          appPath: path.join(__dirname, '../client-sqs/receiver'),
+          dirname: path.join(__dirname, '../client-sqs'),
+          appName: 'receiver.js',
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {

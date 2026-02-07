@@ -16,12 +16,12 @@ require('@instana/collector')({
   }
 });
 
-const redis = require(process.env.REDIS_PKG);
+const redis = require('redis');
 const { delay } = require('@_local/core/test/test_util');
 const connect = require('./connect-via');
 const redisVersion = process.env.LIBRARY_VERSION;
 const logPrefix =
-  `Redis allowRootExitSpan App (version: ${redisVersion}, require: ${process.env.REDIS_PKG}, ` +
+  `Redis allowRootExitSpan App (version: ${redisVersion}, ` +
   `setup type: ${process.env.REDIS_SETUP_TYPE}, pid: ${process.pid}):\t`;
 
 log(logPrefix);
