@@ -25,7 +25,7 @@ let connected = false;
 let sc;
 let nats;
 
-const IS_LATEST = parseInt(process.env.LIBRARY_VERSION) >= 2;
+const IS_LATEST = process.env.LIBRARY_LATEST === 'true';
 
 if (IS_LATEST) {
   sc = NATS.StringCodec();

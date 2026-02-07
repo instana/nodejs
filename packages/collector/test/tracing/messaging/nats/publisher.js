@@ -23,7 +23,7 @@ const log = require('@_local/core/test/test_util/log').getLogger('NATS Publisher
 const app = express();
 const port = require('@_local/collector/test/test_util/app-port')();
 const connectionError = process.env.CONNECT_ERROR === 'true';
-const IS_LATEST = parseInt(process.env.LIBRARY_VERSION) >= 2;
+const IS_LATEST = process.env.LIBRARY_LATEST === 'true';
 
 let sc;
 let natsClient;
