@@ -25,26 +25,23 @@ function createSymlink(sourcePath, targetPath) {
 
 function symlinkContents(sourceDir, targetDir) {
   const entries = fs.readdirSync(sourceDir, { withFileTypes: true });
-  for (const entry of entries) {
-    if (entry.name === 'node_modules' || entry.name.startsWith('_v')) {
-      continue;
-    }
+  entries
+    .filter(entry => entry.name !== 'node_modules' && !entry.name.startsWith('_v'))
+    .forEach(entry => {
+      const sourceEntryPath = path.join(sourceDir, entry.name);
+      const targetEntryPath = path.join(targetDir, entry.name);
 
-    const sourceEntryPath = path.join(sourceDir, entry.name);
-    const targetEntryPath = path.join(targetDir, entry.name);
-
-    if (entry.isDirectory()) {
-      if (!fs.existsSync(targetEntryPath)) {
-        fs.mkdirSync(targetEntryPath);
+      if (entry.isDirectory()) {
+        if (!fs.existsSync(targetEntryPath)) {
+          fs.mkdirSync(targetEntryPath);
+        }
+        symlinkContents(sourceEntryPath, targetEntryPath);
+      } else if (entry.isFile()) {
+        if (entry.name !== 'package.json' && entry.name !== 'package.json.template' && entry.name !== 'modes.json') {
+          createSymlink(sourceEntryPath, targetEntryPath);
+        }
       }
-      symlinkContents(sourceEntryPath, targetEntryPath);
-    } else if (entry.isFile()) {
-      if (entry.name === 'package.json' || entry.name === 'package.json.template' || entry.name === 'modes.json') {
-        continue;
-      }
-      createSymlink(sourceEntryPath, targetEntryPath);
-    }
-  }
+    });
 }
 
 /**
@@ -63,20 +60,20 @@ function findTestDirectories(baseDir, name) {
       return;
     }
 
-    for (const entry of entries) {
-      if (!entry.isDirectory() || entry.name === 'node_modules') continue;
-
-      if (scopeMatch && entry.name === scopeMatch[1]) {
-        const pkgDir = path.join(dir, entry.name, scopeMatch[2]);
-        if (fs.existsSync(pkgDir) && fs.statSync(pkgDir).isDirectory()) {
-          results.push(pkgDir);
+    entries
+      .filter(entry => entry.isDirectory() && entry.name !== 'node_modules')
+      .forEach(entry => {
+        if (scopeMatch && entry.name === scopeMatch[1]) {
+          const pkgDir = path.join(dir, entry.name, scopeMatch[2]);
+          if (fs.existsSync(pkgDir) && fs.statSync(pkgDir).isDirectory()) {
+            results.push(pkgDir);
+          }
+        } else if (!scopeMatch && entry.name === name) {
+          results.push(path.join(dir, entry.name));
+        } else {
+          search(path.join(dir, entry.name));
         }
-      } else if (!scopeMatch && entry.name === name) {
-        results.push(path.join(dir, entry.name));
-      } else {
-        search(path.join(dir, entry.name));
-      }
-    }
+      });
   }
 
   search(baseDir);
@@ -104,11 +101,11 @@ function findNonCurrencyTestDirs(baseDir, processedDirs) {
       return;
     }
 
-    for (const entry of entries) {
-      if (entry.isDirectory() && entry.name !== 'node_modules' && !entry.name.startsWith('_v')) {
+    entries
+      .filter(entry => entry.isDirectory() && entry.name !== 'node_modules' && !entry.name.startsWith('_v'))
+      .forEach(entry => {
         search(path.join(dir, entry.name));
-      }
-    }
+      });
   }
 
   search(baseDir);

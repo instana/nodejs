@@ -53,18 +53,18 @@ module.exports = function (name, version, isLatest) {
   });
 
   describe('http', function () {
-    registerTests.call(this, agentControls, false, false);
+    registerTests.call(this, false, false);
   });
 
   describe('https', function () {
-    registerTests.call(this, agentControls, true, false);
+    registerTests.call(this, true, false);
   });
 
   describe('http2 compat mode', function () {
-    registerTests.call(this, agentControls, true, true);
+    registerTests.call(this, true, true);
   });
 
-  function registerTests(agentControls, appUsesHttps, useHttp2CompatApi) {
+  function registerTests(appUsesHttps, useHttp2CompatApi) {
     let controls;
 
     before(async () => {

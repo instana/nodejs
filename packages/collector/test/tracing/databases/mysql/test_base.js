@@ -29,11 +29,11 @@ module.exports = function (name, version, isLatest) {
 
     drivers.forEach(driverMode => {
         executionModes.forEach(useExecute => {
-            registerSuite.call(this, agentControls, driverMode, useExecute);
+            registerSuite.call(this, driverMode, useExecute);
         });
     });
 
-    function registerSuite(agentControls, driverMode, useExecute) {
+    function registerSuite(driverMode, useExecute) {
         if ((driverMode === 'mysql' || driverMode === 'mysql-cluster') && useExecute) {
             // Not applicable, mysql does not provide an execute function, only the query function whereas mysql2 provides both.
             return;
@@ -51,7 +51,7 @@ module.exports = function (name, version, isLatest) {
                 env.USE_EXECUTE = 'true';
             }
 
-            test(env, agentControls);
+            test(env);
         });
 
         describe('suppressed', function () {
@@ -110,7 +110,7 @@ module.exports = function (name, version, isLatest) {
         });
     }
 
-    function test(env, agentControls) {
+    function test(env) {
         let controls;
 
         before(async () => {

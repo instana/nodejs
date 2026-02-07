@@ -7,7 +7,7 @@
 
 const expect = require('chai').expect;
 
-const normalizeConfig = require('../../src/util/normalizeConfig');
+const normalizeConfig = require('@_local/collector/src/util/normalizeConfig');
 
 describe('util.normalizeConfig', () => {
   beforeEach(resetEnv);

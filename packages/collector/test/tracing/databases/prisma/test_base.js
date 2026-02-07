@@ -135,7 +135,7 @@ module.exports = function (name, version, isLatest, mode) {
                 path: requestPath
             });
 
-            verifyReadResponse(response, version, withError, isLatest);
+            verifyReadResponse(response, withError);
 
             await retry(async () => {
                 const spans = await agentControls.getSpans();
@@ -145,15 +145,11 @@ module.exports = function (name, version, isLatest, mode) {
                     pid: String(controls.getPid())
                 });
                 verifyPrismaExit({
-                    controls,
                     spans,
-                    version,
                     parent: httpEntry,
                     model: 'Person',
                     action: withError ? 'findFirst' : 'findMany',
-                    provider,
-                    withError,
-                    isLatest
+                    withError
                 });
             });
         });
@@ -175,39 +171,27 @@ module.exports = function (name, version, isLatest, mode) {
                 pid: String(controls.getPid())
             });
             verifyPrismaExit({
-                controls,
                 spans,
-                version,
                 parent: httpEntry,
                 model: 'Person',
-                action: 'create',
-                provider,
-                isLatest
+                action: 'create'
             });
             verifyPrismaExit({
-                controls,
                 spans,
-                version,
                 parent: httpEntry,
                 model: 'Person',
-                action: 'update',
-                provider,
-                isLatest
+                action: 'update'
             });
             verifyPrismaExit({
-                controls,
                 spans,
-                version,
                 parent: httpEntry,
                 model: 'Person',
-                action: 'deleteMany',
-                provider,
-                isLatest
+                action: 'deleteMany'
             });
         });
     });
 
-    function verifyReadResponse(response, version, withError, isLatest) {
+    function verifyReadResponse(response, withError) {
         if (withError) {
             // Latest versions have different error messages
             if (isLatest) {
@@ -231,7 +215,7 @@ module.exports = function (name, version, isLatest, mode) {
         expect(deleteResult.count).to.equal(1);
     }
 
-    function verifyPrismaExit({ controls, spans, parent, model, action, provider, withError, version, isLatest }) {
+    function verifyPrismaExit({ spans, parent, model, action, withError }) {
         let expectedUrl;
         switch (provider) {
             case 'sqlite':

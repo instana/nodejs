@@ -6,7 +6,7 @@
 
 const { expect } = require('chai');
 
-const { isNodeVersionEOL } = require('../../src/util/eol');
+const { isNodeVersionEOL } = require('@_local/collector/src/util/eol');
 
 describe('util/eol', () => {
   let originalPropertyDescriptor;

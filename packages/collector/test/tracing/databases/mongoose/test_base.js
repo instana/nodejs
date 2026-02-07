@@ -65,8 +65,8 @@ module.exports = function (name, version, isLatest) {
         retry(() =>
           agentControls.getSpans().then(spans => {
             expect(spans).to.have.lengthOf(2);
-            const entrySpan = expectEntry(controls, spans, '/insert');
-            expectMongoExit(controls, spans, entrySpan, 'insert');
+            const entrySpan = expectEntry(spans, '/insert');
+            expectMongoExit(spans, entrySpan, 'insert');
           })
         )
       ));
@@ -102,8 +102,8 @@ module.exports = function (name, version, isLatest) {
         retry(() =>
           agentControls.getSpans().then(spans => {
             expect(spans).to.have.lengthOf(4);
-            const entrySpan = expectEntry(controls, spans, '/find');
-            const mongoExit = expectMongoExit(controls, spans, entrySpan, 'find');
+            const entrySpan = expectEntry(spans, '/find');
+            const mongoExit = expectMongoExit(spans, entrySpan, 'find');
             expect(mongoExit.data.mongo.filter).to.contain('"age":42');
             expect(mongoExit.data.mongo.filter).to.contain(`"name":"${randomName}"`);
           })
@@ -127,8 +127,8 @@ module.exports = function (name, version, isLatest) {
         expect(group2.totalAge).to.equal(77);
         return retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = expectEntry(controls, spans, '/aggregate');
-            const mongoExit = expectMongoExit(controls, spans, entrySpan, 'aggregate');
+            const entrySpan = expectEntry(spans, '/aggregate');
+            const mongoExit = expectMongoExit(spans, entrySpan, 'aggregate');
             expect(mongoExit.data.mongo.json).to.contain('"$match"');
             expect(mongoExit.data.mongo.json).to.contain('"$group"');
             expect(mongoExit.data.mongo.json).to.contain('"$project"');
@@ -136,7 +136,7 @@ module.exports = function (name, version, isLatest) {
         );
       }));
 
-  function expectEntry(controls, spans, url) {
+  function expectEntry(spans, url) {
     return expectExactlyOneMatching(spans, [
       span => expect(span.n).to.equal('node.http.server'),
       span => expect(span.data.http.url).to.equal(url),
@@ -148,7 +148,7 @@ module.exports = function (name, version, isLatest) {
     ]);
   }
 
-  function expectMongoExit(controls, spans, parent, command) {
+  function expectMongoExit(spans, parent, command) {
     return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.equal(parent.t);
       expect(span.p).to.equal(parent.s);

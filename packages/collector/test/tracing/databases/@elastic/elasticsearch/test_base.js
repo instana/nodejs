@@ -51,10 +51,10 @@ module.exports = function (name, version, isLatest) {
 
   versionDescribe(
     // eslint-disable-next-line no-useless-concat
-    `@elastic/elasticsearch@${elasticVersion}/` + `instrumentation flavor: ${instrumentationFlavor}`,
+    `@elastic/elasticsearch@${version}/` + `instrumentation flavor: ${instrumentationFlavor}`,
     function () {
       this.timeout(Math.max(config.getTestTimeout() * 4, 30000));
-      const indicesKey = elasticVersion === 'latest' ? 'Indices.refresh' : 'indices.refresh';
+      const indicesKey = version === 'latest' ? 'Indices.refresh' : 'indices.refresh';
 
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
@@ -68,7 +68,7 @@ module.exports = function (name, version, isLatest) {
             LIBRARY_VERSION: version,
             LIBRARY_NAME: name,
             LIBRARY_LATEST: isLatest,
-            ELASTIC_VERSION: elasticVersion
+            ELASTIC_VERSION: version
           }
         });
 
@@ -164,7 +164,7 @@ module.exports = function (name, version, isLatest) {
             expect(res1.error).to.not.exist;
             expect(res1.response).to.exist;
 
-            if (elasticVersion === 'latest') {
+            if (version === 'latest') {
               expect(res1.response.body.result).to.equal('created');
             } else {
               expect(res1.response.statusCode).to.equal(201);
@@ -518,7 +518,7 @@ module.exports = function (name, version, isLatest) {
           }
         });
 
-        if (elasticVersion === 'latest') {
+        if (version === 'latest') {
           expect(response.response1).to.equal('created');
           expect(response.response2).to.equal('created');
         } else {

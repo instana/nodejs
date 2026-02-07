@@ -94,7 +94,7 @@ module.exports = function (name, version, isLatest) {
           return retry(() =>
             agentControls
               .getSpans()
-              .then(spans => verifySpans(spans, 'GET', false, withQuery, serverControls, clientControls))
+              .then(spans => verifySpans(spans, 'GET', false, withQuery))
           );
         }));
   });
@@ -116,7 +116,7 @@ module.exports = function (name, version, isLatest) {
           return retry(() =>
             agentControls
               .getSpans()
-              .then(spans => verifySpans(spans, method, false, false, serverControls, clientControls))
+              .then(spans => verifySpans(spans, method, false, false))
           );
         }));
   });
@@ -135,7 +135,7 @@ module.exports = function (name, version, isLatest) {
         expect(responsePayload.message).to.equal('Oops!');
 
         return retry(() =>
-          agentControls.getSpans().then(spans => verifySpans(spans, 'GET', true, false, serverControls, clientControls))
+          agentControls.getSpans().then(spans => verifySpans(spans, 'GET', true, false))
         );
       }));
 
@@ -429,7 +429,7 @@ module.exports = function (name, version, isLatest) {
     }
   }
 
-  function verifySpans(spans, method, erroneous, withQuery, serverControls, clientControls) {
+  function verifySpans(spans, method, erroneous, withQuery) {
     const entryInClient = verifyRootHttpEntry({
       spans,
       host: `localhost:${clientControls.getPort()}`,

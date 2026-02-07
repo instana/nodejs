@@ -13,16 +13,16 @@ process.on('SIGTERM', () => {
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-require('../../../../..')();
+require('@instana/collector')();
 
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 
-const asyncRoute = require('../../../../test_util/asyncExpressRoute');
+const asyncRoute = require('@_local/collector/test/test_util/asyncExpressRoute');
 const { createTopic } = require('./pubsubUtil');
 
-const port = require('../../../../test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const logPrefix = `Google Cloud Pub/Sub Publisher (${process.pid}):\t`;
 
 let topic;

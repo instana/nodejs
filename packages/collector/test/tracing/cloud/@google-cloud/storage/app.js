@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../../..')();
+require('@instana/collector')();
 
 const async_ = require('async');
 const bodyParser = require('body-parser');
@@ -34,7 +34,7 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT) {
 
 const storage = new Storage(options);
 
-const port = require('../../../../test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const bucketName = 'nodejs-tracer-test-bucket';
 const fileName = 'test-file.txt';
 const localFileName = path.join(__dirname, fileName);

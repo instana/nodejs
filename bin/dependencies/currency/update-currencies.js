@@ -107,7 +107,6 @@ currencies.forEach(currency => {
 
   fs.writeFileSync(path.join(__dirname, '..', '..', '..', 'currencies.json'), JSON.stringify(currencies, null, 2));
 
-
   if (MAJOR_UPDATES_MODE) {
     utils.commitAndCreatePR({
       packageName: currency.name,

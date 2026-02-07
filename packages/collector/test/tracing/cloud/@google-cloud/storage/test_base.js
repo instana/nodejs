@@ -10,7 +10,6 @@ const { fail } = expect;
 const semver = require('semver');
 
 const constants = require('@_local/core').tracing.constants;
-const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('@_local/core/test/config');
 const {
   expectAtLeastOneMatching,
@@ -20,9 +19,9 @@ const {
   stringifyItems
 } = require('@_local/core/test/test_util');
 
-const ProcessControls = require('../../../../test_util/ProcessControls');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const testUtils = require('@_local/core/test/test_util');
-const globalAgent = require('../../../../globalAgent');
+const globalAgent = require('@_local/collector/test/globalAgent');
 
 const bucketName = 'nodejs-tracer-test-bucket';
 const bucketPrefixRegex = new RegExp(`^${bucketName}-.*$`);
@@ -36,45 +35,44 @@ const bucketPrefixRegex = new RegExp(`^${bucketName}-.*$`);
  *
  * You can find the credentials in 1pwd.
  */
-if (
-  !process.env.GCP_PROJECT ||
-  !(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT)
-) {
-  describe('tracing/cloud/gcp/storage', function () {
-    it('configuration for Google Cloud Platform is missing', () => {
-      fail(
-        'Please set GCP_PROJECT and GOOGLE_APPLICATION_CREDENTIALS (or GOOGLE_APPLICATION_CREDENTIALS_CONTENT)' +
-          ' to enable GCP tests.'
-      );
+let libraryEnv;
+
+function start() {
+  if (
+    !process.env.GCP_PROJECT ||
+    !(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT)
+  ) {
+    describe('tracing/cloud/gcp/storage', function () {
+      it('configuration for Google Cloud Platform is missing', () => {
+        fail(
+          'Please set GCP_PROJECT and GOOGLE_APPLICATION_CREDENTIALS (or GOOGLE_APPLICATION_CREDENTIALS_CONTENT)' +
+            ' to enable GCP tests.'
+        );
+      });
     });
-  });
-} else {
-  let mochaSuiteFn;
+    return;
+  }
 
   // Note: Skipping test for node v24 as the library is broken
   //       see Issue: https://github.com/googleapis/google-auth-library-nodejs/issues/1964
-  if (
-    !supportedVersion(process.versions.node) ||
-    semver.satisfies(process.versions.node, '>=24.x') ||
-    !process.env.GCP_PROJECT
-  ) {
-    mochaSuiteFn = describe.skip;
-  } else {
-    mochaSuiteFn = describe;
+  if (semver.satisfies(process.versions.node, '>=24.x')) {
+    return;
   }
 
-  mochaSuiteFn('tracing/cloud/gcp/storage', function () {
-    this.timeout(config.getTestTimeout() * 2);
+  this.timeout(config.getTestTimeout() * 2);
 
-    globalAgent.setUpCleanUpHooks();
-    const agentControls = globalAgent.instance;
-    let controls;
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
+  let controls;
 
-    before(async () => {
-      controls = new ProcessControls({
-        dirname: __dirname,
-        useGlobalAgent: true
-      });
+  before(async () => {
+    controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true,
+      env: {
+        ...libraryEnv
+      }
+    });
 
       await controls.startAndWaitForAgentConnection();
     });
@@ -823,5 +821,9 @@ if (
       const matchingFunction = unique === false ? expectAtLeastOneMatching : expectExactlyOneMatching;
       return matchingFunction(spans, expectations);
     }
-  });
 }
+
+module.exports = function (name, version, isLatest) {
+  libraryEnv = { LIBRARY_VERSION: version, LIBRARY_NAME: name, LIBRARY_LATEST: isLatest };
+  return start.call(this);
+};

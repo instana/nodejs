@@ -943,7 +943,7 @@ module.exports = function (name, version, isLatest, mode) {
 
   mochaSuiteFn('ignore-endpoints:', function () {
     describe('when ignore-endpoints is enabled via agent configuration', () => {
-      const { AgentStubControls } = require('../../../apps/agentStubControls');
+      const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
       const customAgentControls = new AgentStubControls();
       let controls;
 

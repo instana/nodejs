@@ -262,10 +262,10 @@ module.exports = function (name, version, isLatest) {
         expect(response[0].now).to.be.a('string');
     }
 
-    function verifyInsertResponse(response, name = 'beaker', email = 'beaker@muppets.com') {
+    function verifyInsertResponse(response, expectedName = 'beaker', email = 'beaker@muppets.com') {
         expect(response).to.be.an('array');
         expect(response).to.have.lengthOf(1);
-        expect(response[0].name).to.equal(name);
+        expect(response[0].name).to.equal(expectedName);
         expect(response[0].email).to.equal(email);
     }
 

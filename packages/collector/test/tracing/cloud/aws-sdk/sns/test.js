@@ -9,7 +9,6 @@ module.exports = function (libraryEnv) {
 const { v4: uuid } = require('uuid');
 const { cleanup, createTopic } = require('./util');
 const semver = require('semver');
-const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
 const constants = require('@_local/core').tracing.constants;

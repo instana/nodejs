@@ -9,8 +9,8 @@ const expect = require('chai').expect;
 
 const config = require('@_local/core/test/config');
 const { delay, retry, isCI, isCILongRunning } = require('@_local/core/test/test_util');
-const globalAgent = require('./globalAgent');
-const { isNodeVersionEOL } = require('../src/util/eol');
+const globalAgent = require('@_local/collector/test/globalAgent');
+const { isNodeVersionEOL } = require('@_local/collector/src/util/eol');
 let expressControls;
 let agentControls;
 
@@ -25,7 +25,7 @@ mochaSuiteFn1('agentCommunication: lots of retries with exponential backoff', fu
 
   globalAgent.setUpCleanUpHooks();
   agentControls = globalAgent.instance;
-  expressControls = require('./apps/expressControls');
+  expressControls = require('@_local/collector/test/apps/expressControls');
 
   before(async () => {
     await expressControls.start({ useGlobalAgent: true });
@@ -53,7 +53,7 @@ mochaSuiteFn2('agentCommunication: default', function () {
 
   globalAgent.setUpCleanUpHooks();
   agentControls = globalAgent.instance;
-  expressControls = require('./apps/expressControls');
+  expressControls = require('@_local/collector/test/apps/expressControls');
 
   before(async () => {
     await expressControls.start({ useGlobalAgent: true });

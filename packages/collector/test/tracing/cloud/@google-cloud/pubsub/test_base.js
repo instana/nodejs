@@ -5,17 +5,15 @@
 
 'use strict';
 
-const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
 const semver = require('semver');
 
 const constants = require('@_local/core').tracing.constants;
-const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('@_local/core/test/config');
 const { delay, expectExactlyOneMatching, retry, stringifyItems } = require('@_local/core/test/test_util');
-const ProcessControls = require('../../../../test_util/ProcessControls');
-const globalAgent = require('../../../../globalAgent');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
 // We use different topics/subscriptions per Node.js major version so tests on CI run independently of each other.
 const defaultTopicName = `nodejs-test-topic-${semver.parse(process.version).major}`;
 const defaultSubscriptionName = `nodejs-test-subscription-${semver.parse(process.version).major}`;
@@ -30,64 +28,69 @@ const defaultSubscriptionName = `nodejs-test-subscription-${semver.parse(process
  * You can find the credentials in 1pwd.
  */
 
-if (
-  !process.env.GCP_PROJECT ||
-  !(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT)
-) {
-  describe('tracing/cloud/gcp/pubsub', function () {
-    it('configuration for Google Cloud Platform is missing', () => {
-      fail(
-        'Please set GCP_PROJECT and GOOGLE_APPLICATION_CREDENTIALS (or GOOGLE_APPLICATION_CREDENTIALS_CONTENT)' +
-          ' to enable GCP tests.'
-      );
+let libraryEnv;
+
+function start() {
+  if (
+    !process.env.GCP_PROJECT ||
+    !(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT)
+  ) {
+    describe('tracing/cloud/gcp/pubsub', function () {
+      it('configuration for Google Cloud Platform is missing', () => {
+        fail(
+          'Please set GCP_PROJECT and GOOGLE_APPLICATION_CREDENTIALS (or GOOGLE_APPLICATION_CREDENTIALS_CONTENT)' +
+            ' to enable GCP tests.'
+        );
+      });
     });
-  });
-} else {
-  let mochaSuiteFn;
+    return;
+  }
+
   const projectId = process.env.GCP_PROJECT;
 
   // Note: Skipping test for node v24 as the library is broken
   //       see Issue: https://github.com/googleapis/google-auth-library-nodejs/issues/1964
-  if (semver.satisfies(process.versions.node, '>=24.x') || !supportedVersion(process.versions.node) || !projectId) {
-    mochaSuiteFn = describe.skip;
-  } else {
-    mochaSuiteFn = describe;
+  if (semver.satisfies(process.versions.node, '>=24.x')) {
+    return;
   }
 
   const retryTime = 1000;
 
-  mochaSuiteFn('tracing/cloud/gcp/pubsub', function () {
-    this.timeout(config.getTestTimeout() * 3);
+  this.timeout(config.getTestTimeout() * 3);
 
-    globalAgent.setUpCleanUpHooks();
-    const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
-    describe('tracing enabled, no suppression', function () {
-      const topicName = defaultTopicName;
-      const subscriptionName = defaultSubscriptionName;
+  describe('tracing enabled, no suppression', function () {
+    const topicName = defaultTopicName;
+    const subscriptionName = defaultSubscriptionName;
 
-      let publisherControls;
-      let subscriberControls;
+    let publisherControls;
+    let subscriberControls;
 
-      before(async () => {
-        publisherControls = new ProcessControls({
-          appPath: path.join(__dirname, 'publisher'),
-          useGlobalAgent: true,
-          env: {
-            GCP_PROJECT: projectId,
-            GCP_PUBSUB_TOPIC: topicName,
-            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-          }
-        });
-        subscriberControls = new ProcessControls({
-          appPath: path.join(__dirname, 'subscriber'),
-          useGlobalAgent: true,
-          env: {
-            GCP_PROJECT: projectId,
-            GCP_PUBSUB_TOPIC: topicName,
-            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-          }
-        });
+    before(async () => {
+      publisherControls = new ProcessControls({
+        dirname: __dirname,
+        appName: 'publisher.js',
+        useGlobalAgent: true,
+        env: {
+          GCP_PROJECT: projectId,
+          GCP_PUBSUB_TOPIC: topicName,
+          GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
+          ...libraryEnv
+        }
+      });
+      subscriberControls = new ProcessControls({
+        dirname: __dirname,
+        appName: 'subscriber.js',
+        useGlobalAgent: true,
+        env: {
+          GCP_PROJECT: projectId,
+          GCP_PUBSUB_TOPIC: topicName,
+          GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
+          ...libraryEnv
+        }
+      });
 
         await publisherControls.startAndWaitForAgentConnection();
         await subscriberControls.startAndWaitForAgentConnection();
@@ -218,32 +221,36 @@ if (
       }
     });
 
-    describe('tracing enabled but suppressed', () => {
-      const topicName = `${defaultTopicName}-suppression`;
-      const subscriptionName = `${defaultSubscriptionName}-suppression`;
+  describe('tracing enabled but suppressed', () => {
+    const topicName = `${defaultTopicName}-suppression`;
+    const subscriptionName = `${defaultSubscriptionName}-suppression`;
 
-      let publisherControls;
-      let subscriberControls;
+    let publisherControls;
+    let subscriberControls;
 
-      before(async () => {
-        publisherControls = new ProcessControls({
-          appPath: path.join(__dirname, 'publisher'),
-          useGlobalAgent: true,
-          env: {
-            GCP_PROJECT: projectId,
-            GCP_PUBSUB_TOPIC: topicName,
-            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-          }
-        });
-        subscriberControls = new ProcessControls({
-          appPath: path.join(__dirname, 'subscriber'),
-          useGlobalAgent: true,
-          env: {
-            GCP_PROJECT: projectId,
-            GCP_PUBSUB_TOPIC: topicName,
-            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-          }
-        });
+    before(async () => {
+      publisherControls = new ProcessControls({
+        dirname: __dirname,
+        appName: 'publisher.js',
+        useGlobalAgent: true,
+        env: {
+          GCP_PROJECT: projectId,
+          GCP_PUBSUB_TOPIC: topicName,
+          GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
+          ...libraryEnv
+        }
+      });
+      subscriberControls = new ProcessControls({
+        dirname: __dirname,
+        appName: 'subscriber.js',
+        useGlobalAgent: true,
+        env: {
+          GCP_PROJECT: projectId,
+          GCP_PUBSUB_TOPIC: topicName,
+          GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
+          ...libraryEnv
+        }
+      });
 
         await publisherControls.startAndWaitForAgentConnection();
         await subscriberControls.startAndWaitForAgentConnection();
@@ -284,36 +291,40 @@ if (
           ));
     });
 
-    describe('tracing disabled', function () {
-      this.timeout(config.getTestTimeout() * 2);
+  describe('tracing disabled', function () {
+    this.timeout(config.getTestTimeout() * 2);
 
-      const topicName = defaultTopicName;
-      const subscriptionName = defaultSubscriptionName;
+    const topicName = defaultTopicName;
+    const subscriptionName = defaultSubscriptionName;
 
-      let publisherControls;
-      let subscriberControls;
+    let publisherControls;
+    let subscriberControls;
 
-      before(async () => {
-        publisherControls = new ProcessControls({
-          appPath: path.join(__dirname, 'publisher'),
-          useGlobalAgent: true,
-          tracingEnabled: false,
-          env: {
-            GCP_PROJECT: projectId,
-            GCP_PUBSUB_TOPIC: topicName,
-            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-          }
-        });
-        subscriberControls = new ProcessControls({
-          appPath: path.join(__dirname, 'subscriber'),
-          useGlobalAgent: true,
-          tracingEnabled: false,
-          env: {
-            GCP_PROJECT: projectId,
-            GCP_PUBSUB_TOPIC: topicName,
-            GCP_PUBSUB_SUBSCRIPTION: subscriptionName
-          }
-        });
+    before(async () => {
+      publisherControls = new ProcessControls({
+        dirname: __dirname,
+        appName: 'publisher.js',
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {
+          GCP_PROJECT: projectId,
+          GCP_PUBSUB_TOPIC: topicName,
+          GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
+          ...libraryEnv
+        }
+      });
+      subscriberControls = new ProcessControls({
+        dirname: __dirname,
+        appName: 'subscriber.js',
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {
+          GCP_PROJECT: projectId,
+          GCP_PUBSUB_TOPIC: topicName,
+          GCP_PUBSUB_SUBSCRIPTION: subscriptionName,
+          ...libraryEnv
+        }
+      });
 
         await publisherControls.startAndWaitForAgentConnection();
         await subscriberControls.startAndWaitForAgentConnection();
@@ -349,7 +360,6 @@ if (
                 }
               })
           ));
-    });
   });
 }
 
@@ -365,3 +375,8 @@ function verifyResponseAndMessage(response, subscriberControls) {
   expect(message.content).to.equal('test message');
   return messageId;
 }
+
+module.exports = function (name, version, isLatest) {
+  libraryEnv = { LIBRARY_VERSION: version, LIBRARY_NAME: name, LIBRARY_LATEST: isLatest };
+  return start.call(this);
+};

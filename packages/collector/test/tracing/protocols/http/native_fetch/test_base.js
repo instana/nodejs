@@ -705,9 +705,7 @@ module.exports = function (name, version, isLatest) {
     expectedHeadersOnExitSpan = null,
     withClientError = null,
     withServerError = false,
-    withTimeout = false,
-    serverControls,
-    clientControls
+    withTimeout = false
   }) {
     let expectedRootHttpEntryStatusCode = 200;
     if (withClientError || withTimeout) {
@@ -723,7 +721,7 @@ module.exports = function (name, version, isLatest) {
       withError: withClientError || withServerError || withTimeout
     });
 
-    let expectedUrlInHttpExit = serverUrl(serverEndpoint, serverControls);
+    let expectedUrlInHttpExit = serverUrl(serverEndpoint);
     if (withClientError === 'unreachable') {
       expectedUrlInHttpExit = 'http://localhost:1023/unreachable';
     } else if (withClientError === 'malformed-url') {
@@ -849,7 +847,7 @@ module.exports = function (name, version, isLatest) {
     return expectExactlyOneMatching(spans, expectations);
   }
 
-  function serverUrl(path_, serverControls) {
+  function serverUrl(path_) {
     return `http://localhost:${serverControls.getPort()}${path_}`;
   }
 

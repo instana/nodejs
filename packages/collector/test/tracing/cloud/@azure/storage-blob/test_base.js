@@ -385,11 +385,11 @@ function start() {
       });
     });
 
-    async function verify({ spanName, dataProperty, path, withError, spans, op, totalspans }) {
+    async function verify({ spanName, dataProperty, path: apiPath, withError, spans, op, totalspans }) {
       const _pid = String(controls.getPid());
       const parent = verifyHttpRootEntry({
         spans,
-        apiPath: path,
+        apiPath,
         pid: _pid
       });
       expectExactlyOneMatching(spans, [

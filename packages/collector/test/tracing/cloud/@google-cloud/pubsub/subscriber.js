@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-const instana = require('../../../../..')();
+const instana = require('@instana/collector')();
 
 const bodyParser = require('body-parser');
 const express = require('express');
@@ -22,7 +22,7 @@ const morgan = require('morgan');
 const { sendToParent } = require('@_local/core/test/test_util');
 const { createTopicAndSubscription } = require('./pubsubUtil');
 
-const port = require('../../../../test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const logPrefix = `Google Cloud Pub/Sub Subscriber (${process.pid}):\t`;
 
 let connected = false;
