@@ -14,7 +14,7 @@ chai.use(sinonChai);
 
 const { secrets, tracing } = require('@_local/core');
 const { constants } = tracing;
-const agentConnection = require('../../src/agentConnection');
+const agentConnection = require('@_local/collector/src/agentConnection');
 const testUtils = require('@_local/core/test/test_util');
 
 describe('unannounced state', () => {

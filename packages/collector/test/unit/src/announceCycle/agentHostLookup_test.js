@@ -9,7 +9,7 @@ const proxyquire = require('proxyquire');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 
-const { FakeRequestHandler, FakeRequest, FakeResponse } = require('../test_util/fake_http');
+const { FakeRequestHandler, FakeRequest, FakeResponse } = require('@_local/collector/test/test_util/fake_http');
 const testUtils = require('@_local/core/test/test_util');
 
 const { expect } = chai;

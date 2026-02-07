@@ -12,7 +12,7 @@ const {
   _isDefaultGatewayLine,
   _parseFile,
   init
-} = require('../../src/announceCycle/defaultGatewayParser');
+} = require('@_local/collector/src/announceCycle/defaultGatewayParser');
 const testUtils = require('@_local/core/test/test_util');
 
 const { expect } = chai;

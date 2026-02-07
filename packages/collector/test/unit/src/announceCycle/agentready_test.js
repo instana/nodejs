@@ -14,13 +14,13 @@ chai.use(sinonChai);
 
 const { tracing } = require('@_local/core');
 const testUtils = require('@_local/core/test/test_util');
-const agentConnection = require('../../src/agentConnection');
-const initializedTooLate = require('../../src/util/initializedTooLate');
-const metrics = require('../../src/metrics');
-const requestHandler = require('../../src/agent/requestHandler');
-const transmissionCycle = require('../../src/metrics/transmissionCycle');
-const uncaught = require('../../src/uncaught');
-const eol = require('../../src/util/eol');
+const agentConnection = require('@_local/collector/src/agentConnection');
+const initializedTooLate = require('@_local/collector/src/util/initializedTooLate');
+const metrics = require('@_local/collector/src/metrics');
+const requestHandler = require('@_local/collector/src/agent/requestHandler');
+const transmissionCycle = require('@_local/collector/src/metrics/transmissionCycle');
+const uncaught = require('@_local/collector/src/uncaught');
+const eol = require('@_local/collector/src/util/eol');
 
 describe('agent ready state', () => {
   let agentReadyState;
