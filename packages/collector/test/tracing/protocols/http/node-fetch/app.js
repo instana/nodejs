@@ -15,18 +15,17 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-import express from 'express';
-import morgan from 'morgan';
-import bodyParser from 'body-parser';
-import getAppPort from '../../../test_util/app-port.js';
-const port = getAppPort();
+require('@instana/collector')();
+const express = require('express');
+const morgan = require('morgan');
+const bodyParser = require('body-parser');
 
-import fetch from 'node-fetch';
-
+const port = require('@_local/collector/test/test_util/app-port')();
 const app = express();
 const logPrefix = `fetch App (${process.pid}):\t`;
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
+const fetch = require('node-fetch');
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -40,7 +39,6 @@ app.get('/', async (req, res) => {
 
 app.get('/request', async (req, res) => {
   await fetch(`http://127.0.0.1:${agentPort}/ping`);
-
   res.json({});
 });
 

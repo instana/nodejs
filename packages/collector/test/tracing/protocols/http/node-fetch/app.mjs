@@ -15,19 +15,19 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')();
-const express = require('express');
-const morgan = require('morgan');
-const bodyParser = require('body-parser');
+import express from 'express';
+import morgan from 'morgan';
+import bodyParser from 'body-parser';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const port = require('@_local/collector/test/test_util/app-port')();
 
-const port = require('../../../test_util/app-port')();
+import fetch from 'node-fetch';
+
 const app = express();
 const logPrefix = `fetch App (${process.pid}):\t`;
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
-// From v3 onwards, node-fetch is a pure ESM module and does not support require().
-const fetchVersion = process.env.NODE_FETCH_VERSION || 'v2';
-const fetch = fetchVersion === 'latest' ? require('node-fetch') : require(`node-fetch-${fetchVersion}`);
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -41,6 +41,7 @@ app.get('/', async (req, res) => {
 
 app.get('/request', async (req, res) => {
   await fetch(`http://127.0.0.1:${agentPort}/ping`);
+
   res.json({});
 });
 

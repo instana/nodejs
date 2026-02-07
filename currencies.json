@@ -880,7 +880,8 @@
     "core": false,
     "versions": [
       {
-        "v": "3.3.2"
+        "v": "3.3.2",
+        "esmOnly": true
       },
       {
         "v": "2.7.0"
