@@ -19,3 +19,4 @@ test/tracing/opentelemetry/package.json
 test/instana-tgz
 test/**/_v*
 test/**/package-lock.json
+test/.currencies-checksum
