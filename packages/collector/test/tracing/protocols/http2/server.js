@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')();
+require('@instana/collector')();
 
 const fs = require('fs');
 const http2 = require('http2');
@@ -19,11 +19,11 @@ const path = require('path');
 
 const { HTTP2_HEADER_STATUS } = http2.constants;
 
-const router = require('../../../test_util/simpleHttp2Router');
+const router = require('@_instana/collector/test/test_util/simpleHttp2Router');
 
 const logPrefix = `HTTP2: Server (${process.pid}):\t`;
-const port = require('../../../test_util/app-port')();
-const sslDir = path.join(__dirname, '..', '..', '..', 'apps', 'ssl');
+const port = require('@_instana/collector/test/test_util/app-port')();
+const sslDir = path.join(path.dirname(require.resolve('@_instana/collector/package.json')), 'test', 'apps', 'ssl');
 
 const server = http2.createSecureServer({
   key: fs.readFileSync(path.join(sslDir, 'key')),
