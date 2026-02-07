@@ -10,9 +10,9 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const instana = require('../../../..')();
+const instana = require('@instana/collector')();
 
-const delay = require('../../../../../core/test/test_util/delay');
+const delay = require('@_local/core/test/test_util/delay');
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const { sendToParent } = require('@_local/core/test/test_util');
 const Kafka = require('node-rdkafka');
@@ -20,7 +20,7 @@ const { v4: uuid } = require('uuid');
 const logPrefix = `Node rdkafka Consumer (${process.pid}):\t`;
 const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);
 const express = require('express');
-const port = require('../../../test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const isStream = process.env.RDKAFKA_CONSUMER_AS_STREAM === 'true';
 
 const app = express();

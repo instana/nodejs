@@ -4,18 +4,17 @@
 
 'use strict';
 
-const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
 const {
   tracing: { constants }
 } = require('@_local/core');
 
-const config = require('../../../../../core/test/config');
-const { expectExactlyOneMatching, retry, delay, stringifyItems } = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../../test_util/ProcessControls');
-const globalAgent = require('../../../globalAgent');
-const { AgentStubControls } = require('../../../apps/agentStubControls');
+const config = require('@_local/core/test/config');
+const { expectExactlyOneMatching, retry, delay, stringifyItems } = require('@_local/core/test/test_util');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
+const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@_local/core/test/test_util/common_verifications');
 
 const checkStartedEvery = 5000;
@@ -60,7 +59,8 @@ module.exports.run = function ({
             describe(`object mode: ${objectMode}`, function () {
               beforeEach(async () => {
                 consumerControls = new ProcessControls({
-                  appPath: path.join(__dirname, 'consumer'),
+                  dirname: __dirname,
+                  appName: 'consumer.js',
                   useGlobalAgent: true,
                   env: {
                     RDKAFKA_CONSUMER_AS_STREAM: consumerMethod === 'stream' ? 'true' : 'false',
@@ -69,7 +69,8 @@ module.exports.run = function ({
                 });
 
                 producerControls = new ProcessControls({
-                  appPath: path.join(__dirname, 'producer'),
+                  dirname: __dirname,
+                  appName: 'producer.js',
                   useGlobalAgent: true,
                   env: {
                     RDKAFKA_OBJECT_MODE: objectMode,
@@ -286,11 +287,13 @@ module.exports.run = function ({
 
     before(async () => {
       producerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'producer'),
+        dirname: __dirname,
+        appName: 'producer.js',
         useGlobalAgent: true
       });
       consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
+        dirname: __dirname,
+        appName: 'consumer.js',
         useGlobalAgent: true
       });
 
@@ -344,11 +347,13 @@ module.exports.run = function ({
       await customAgentControls.startAgent();
 
       producerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'producer'),
+        dirname: __dirname,
+        appName: 'producer.js',
         agentControls: customAgentControls
       });
       consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
+        dirname: __dirname,
+        appName: 'consumer.js',
         agentControls: customAgentControls
       });
 
@@ -400,14 +405,16 @@ module.exports.run = function ({
 
     before(async () => {
       producerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'producer'),
+        dirname: __dirname,
+        appName: 'producer.js',
         useGlobalAgent: true,
         env: {
           INSTANA_KAFKA_TRACE_CORRELATION: 'false'
         }
       });
       consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
+        dirname: __dirname,
+        appName: 'consumer.js',
         useGlobalAgent: true
       });
 
@@ -463,11 +470,13 @@ module.exports.run = function ({
       });
 
       producerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'producer'),
+        dirname: __dirname,
+        appName: 'producer.js',
         agentControls: customAgentControls
       });
       consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
+        dirname: __dirname,
+        appName: 'consumer.js',
         agentControls: customAgentControls
       });
 
@@ -518,7 +527,8 @@ module.exports.run = function ({
 
     before(async () => {
       producerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'producer'),
+        dirname: __dirname,
+        appName: 'producer.js',
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
@@ -546,7 +556,8 @@ module.exports.run = function ({
 
       before(async () => {
         consumerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'consumer'),
+          dirname: __dirname,
+        appName: 'consumer.js',
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
@@ -592,7 +603,8 @@ module.exports.run = function ({
 
     before(async () => {
       producerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'producer'),
+        dirname: __dirname,
+        appName: 'producer.js',
         useGlobalAgent: true,
         env: {
           RDKAFKA_PRODUCER_DELIVERY_CB: 'false'
@@ -618,7 +630,8 @@ module.exports.run = function ({
 
       before(async () => {
         receiverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'consumer'),
+          dirname: __dirname,
+        appName: 'consumer.js',
           useGlobalAgent: true,
           env: {
             RDKAFKA_CONSUMER_AS_STREAM: 'false'
@@ -678,11 +691,13 @@ module.exports.run = function ({
           });
 
           producerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'producer'),
+            dirname: __dirname,
+        appName: 'producer.js',
             agentControls: customAgentControls
           });
           consumerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'consumer'),
+            dirname: __dirname,
+        appName: 'consumer.js',
             agentControls: customAgentControls
           });
 
@@ -746,11 +761,13 @@ module.exports.run = function ({
         await customAgentControls.startAgent({ ignoreEndpoints: { kafka: ['consume'] } });
 
         producerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'producer'),
+          dirname: __dirname,
+        appName: 'producer.js',
           agentControls: customAgentControls
         });
         consumerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'consumer'),
+          dirname: __dirname,
+        appName: 'consumer.js',
           agentControls: customAgentControls
         });
 
