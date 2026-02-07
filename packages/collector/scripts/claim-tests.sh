@@ -14,7 +14,7 @@ OUTPUT_FILE="$ARTIFACTS_PATH/my-tests-$$.txt"
 touch "$CLAIMED_FILE"
 
 # Find all test files matching pattern and randomize order (portable shuffle)
-ALL_TESTS=$(find . -path "$TEST_PATTERN" -name "*.js" | awk 'BEGIN{srand();}{print rand()"\t"$0}' | sort -k1 -n | cut -f2-)
+ALL_TESTS=$(find . -path "*$TEST_PATTERN" -name "*test.js" -not -path "*/node_modules/*" | awk 'BEGIN{srand();}{print rand()"\t"$0}' | sort -k1 -n | cut -f2-)
 TOTAL_TEST_COUNT=$(echo "$ALL_TESTS" | wc -l | xargs)
 
 # Calculate how many tests this task should claim (Soft Limit)
@@ -29,6 +29,8 @@ if [ -z "$KNOWN_ENVS" ]; then
   fi
 fi
 
+
+
 # Pre-process tests to sort by priority (Priority > Generic) AND calculate Quotas
 PRIO_TESTS=""
 GENERIC_TESTS=""
@@ -39,8 +41,10 @@ GENERIC_TESTS=""
 for test_file in $ALL_TESTS; do
   REQUIRED_SIDECARS=""
   
-  # Optimization: First get all INSTANA_CONNECT matches from file
-  USED_ENVS=$(grep -o "INSTANA_CONNECT_[A-Z0-9_]*" "$test_file" | sort | uniq)
+  # Optimization: Scan the test file AND any sibling js/mjs files (app.js, test_base.js) for requirements
+  TEST_DIR=$(dirname "$test_file")
+  USED_ENVS=$(find -L "$TEST_DIR" -maxdepth 1 \( -name "*.js" -o -name "*.mjs" \) -exec grep -h -o "INSTANA_CONNECT_[A-Z0-9_]*" {} + 2>/dev/null | sort | uniq)
+
   
   if [ -n "$USED_ENVS" ]; then
     for env_var in $USED_ENVS; do
@@ -51,6 +55,7 @@ for test_file in $ALL_TESTS; do
         REQUIRED_SIDECARS="$REQUIRED_SIDECARS $service"
       fi
     done
+    REQUIRED_SIDECARS=$(echo "$REQUIRED_SIDECARS" | tr -s ' ' '\n' | sort -u | tr '\n' ' ')
   fi
 
   # Check availability
@@ -139,27 +144,34 @@ for test_file in $FINAL_LIST; do
   
   # Check Sidecar Quota
   # Re-parsing requirements
-  USED_ENVS_CHECK=$(grep -o "INSTANA_CONNECT_[A-Z0-9_]*" "$test_file" | sort | uniq)
+  TEST_DIR_CHECK=$(dirname "$test_file")
+  USED_ENVS_CHECK=$(find -L "$TEST_DIR_CHECK" -maxdepth 1 \( -name "*.js" -o -name "*.mjs" \) -exec grep -h -o "INSTANA_CONNECT_[A-Z0-9_]*" {} + 2>/dev/null | sort | uniq)
   
   QUOTA_EXCEEDED=false
   QUOTA_CHECK_REQ=""
   
   if [ -n "$USED_ENVS_CHECK" ]; then
+    # Resolve unique services first
+    SERVICES_CHECK=""
     for env_var in $USED_ENVS_CHECK; do
         if echo "$KNOWN_ENVS" | grep -q "^$env_var$"; then
            suffix=${env_var#INSTANA_CONNECT_}
            service_upper=$(echo "$suffix" | cut -d'_' -f1)
            service=$(echo "$service_upper" | tr '[:upper:]' '[:lower:]')
-           
-           quote=$(eval echo "\${SIDECAR_QUOTAS_${service}:-0}")
-           if [ "$quote" -gt 0 ]; then
-             usage=$(eval echo "\${MY_REQ_USAGE_${service}:-0}")
-             if [ "$usage" -ge "$quote" ]; then
-                QUOTA_EXCEEDED=true
-                break
-             fi
-             QUOTA_CHECK_REQ="$QUOTA_CHECK_REQ $service"
-           fi
+           SERVICES_CHECK="$SERVICES_CHECK $service"
+        fi
+    done
+    SERVICES_CHECK=$(echo "$SERVICES_CHECK" | tr -s ' ' '\n' | sort -u | tr '\n' ' ')
+
+    for service in $SERVICES_CHECK; do
+        quote=$(eval echo "\${SIDECAR_QUOTAS_${service}:-0}")
+        if [ "$quote" -gt 0 ]; then
+          usage=$(eval echo "\${MY_REQ_USAGE_${service}:-0}")
+          if [ "$usage" -ge "$quote" ]; then
+             QUOTA_EXCEEDED=true
+             break
+          fi
+          QUOTA_CHECK_REQ="$QUOTA_CHECK_REQ $service"
         fi
     done
   fi
