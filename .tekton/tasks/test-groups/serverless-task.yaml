@@ -125,7 +125,7 @@ spec:
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
             if [ "false" == "true" ]; then
-              npm run coverage-ci --npm_command="test:ci:serverless" --report_dir="serverless" -- $CLAIMED_TESTS
+              npm run coverage-ci --npm_command="test:ci:serverless" --report_dir="serverless" --test_files="$CLAIMED_TESTS"
             else
               npm run coverage-ci --npm_command="test:ci:serverless" --report_dir="serverless"
             fi

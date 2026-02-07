@@ -125,7 +125,7 @@ spec:
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
             if [ "false" == "true" ]; then
-              npm run coverage-ci --npm_command="test:ci:azure-container-services" --report_dir="azure-container-services" -- $CLAIMED_TESTS
+              npm run coverage-ci --npm_command="test:ci:azure-container-services" --report_dir="azure-container-services" --test_files="$CLAIMED_TESTS"
             else
               npm run coverage-ci --npm_command="test:ci:azure-container-services" --report_dir="azure-container-services"
             fi

@@ -125,7 +125,7 @@ spec:
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
             if [ "false" == "true" ]; then
-              npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-5" -- $CLAIMED_TESTS
+              npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-5" --test_files="$CLAIMED_TESTS"
             else
               npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-5"
             fi

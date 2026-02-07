@@ -138,7 +138,7 @@ spec:
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
             if [ "{{claimTests}}" == "true" ]; then
-              npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}" -- $CLAIMED_TESTS
+              npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}" --test_files="$CLAIMED_TESTS"
             else
               npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
             fi

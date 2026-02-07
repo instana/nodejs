@@ -40,7 +40,7 @@ echo "==================================================="
 echo "Phase 1: Analyze all *test.js files for env dependencies"
 echo "==================================================="
 
-ALL_INTEGRATION=$(find . -path "*$PATTERN" -name "*test.js" -not -path "*/node_modules/*" | sort)
+ALL_INTEGRATION=$(find . -path "*$PATTERN" -name "*test.js" -not -path "*/node_modules/*" -not -path "*/long_*/*" | sort)
 TOTAL_INTEGRATION=$(echo "$ALL_INTEGRATION" | wc -l | tr -d ' ')
 echo "Found $TOTAL_INTEGRATION integration test files"
 echo ""

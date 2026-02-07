@@ -57,7 +57,7 @@ function generateScope(groupName) {
 
 function generateSubname(groupName, config) {
   if (config.sidecars && typeof config.sidecars === 'object' && !Array.isArray(config.sidecars)) {
-    return groupName;
+    return 'test:ci';
   }
   if (config.split) {
     return 'test:ci';
