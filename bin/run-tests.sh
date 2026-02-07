@@ -139,7 +139,7 @@ if [ -n "$PACKAGE" ]; then
           TEST_FILES="$PACKAGE_DIR/test.js"
       else
           # Fallback: all test.js files in that package directory
-          TEST_FILES=$(find "$PACKAGE_DIR" -name "*test.js")
+          TEST_FILES=$(find "$PACKAGE_DIR" -name "*test.js" ! -path "*/node_modules/*" ! -name "test_base.js" | tr '\n' ' ')
       fi
     fi
   fi
