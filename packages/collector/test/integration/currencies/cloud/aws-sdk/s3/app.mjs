@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-import delay from '../../../../../../../core/test/test_util/delay.js';
+import delay from '@_local/core/test/test_util/delay.js';
 import AWS from 'aws-sdk';
 import express from 'express';
 
@@ -22,10 +22,10 @@ AWS.config.update({ region: 'us-east-2' });
 const s3 = new AWS.S3();
 
 const app = express();
-import getAppPort from '../../../../../test_util/app-port.js';
+import getAppPort from '@_local/collector/test/test_util/app-port.js';
 const port = getAppPort();
 
-import log from '@instana/core/test/test_util/log.js';
+import log from '@_local/core/test/test_util/log.js';
 const logger = log.getLogger(logPrefix);
 
 const bucketName = process.env.AWS_S3_BUCKET_NAME || 'nodejs-team';

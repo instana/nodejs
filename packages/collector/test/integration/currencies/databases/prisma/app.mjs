@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 const app = express();
 const logPrefix = `Prisma App (${process.pid}):\t`;
 
-import log from '@instana/core/test/test_util/log.js';
+import log from '@_local/core/test/test_util/log.js';
 
 const logger = log.getLogger(logPrefix);
 
