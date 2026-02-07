@@ -48,10 +48,12 @@ function symlinkContents(sourceDir, targetDir) {
 }
 
 /**
- * Returns ALL directories under baseDir whose name matches name or normalizedName.
+ * Returns ALL directories under baseDir whose name matches the currency name.
+ * Supports scoped packages: @scope/pkg is matched as a @scope directory containing a pkg subdirectory.
  */
-function findTestDirectories(baseDir, name, normalizedName) {
+function findTestDirectories(baseDir, name) {
   const results = [];
+  const scopeMatch = name.match(/^(@[^/]+)\/(.+)$/);
 
   function search(dir) {
     let entries;
@@ -64,7 +66,12 @@ function findTestDirectories(baseDir, name, normalizedName) {
     for (const entry of entries) {
       if (!entry.isDirectory() || entry.name === 'node_modules') continue;
 
-      if (entry.name === name || entry.name === normalizedName) {
+      if (scopeMatch && entry.name === scopeMatch[1]) {
+        const pkgDir = path.join(dir, entry.name, scopeMatch[2]);
+        if (fs.existsSync(pkgDir) && fs.statSync(pkgDir).isDirectory()) {
+          results.push(pkgDir);
+        }
+      } else if (!scopeMatch && entry.name === name) {
         results.push(path.join(dir, entry.name));
       } else {
         search(path.join(dir, entry.name));
@@ -199,8 +206,7 @@ function main() {
   currencies.forEach(currency => {
     if (!currency.versions || currency.versions.length === 0) return;
 
-    const normalizedName = currency.name.replace(/^@/, '').replace(/\//g, '_');
-    const testDirs = findTestDirectories(collectorTestDir, currency.name, normalizedName);
+    const testDirs = findTestDirectories(collectorTestDir, currency.name);
 
     testDirs.forEach(testDir => {
       console.log(`Found test directory: ${testDir}`);
