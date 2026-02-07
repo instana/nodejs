@@ -14,13 +14,13 @@ process.on('SIGTERM', () => {
 // Deliberately requiring superagent before instana to test experimental on-demand instrumentation for it.
 const superagent = require('superagent');
 
-const instana = require('../../../../..')();
+const instana = require('@instana/collector')();
 
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const port = require('../../../../test_util/app-port')();
-const asyncRoute = require('../../../../test_util/asyncExpressRoute');
+const port = require('@_instana/collector/test/test_util/app-port')();
+const asyncRoute = require('@_instana/collector/test/test_util/asyncExpressRoute');
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const baseUrl = `http://localhost:${process.env.SERVER_PORT}`;

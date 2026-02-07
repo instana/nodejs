@@ -64,18 +64,15 @@ fi
 
 npm_command="npm run test:debug"
 
+# Derive test base directory from SCOPE (e.g., @instana/collector -> packages/collector/test)
+SCOPE_PKG_NAME="${SCOPE#@instana/}"
+TEST_BASE_DIR="packages/${SCOPE_PKG_NAME}/test"
+
 if [ -n "$PACKAGE" ]; then
   # Normalize package name for scoped packages (e.g., @redis/client -> redis_client)
   NORMALIZED_PACKAGE=$(normalize_folder_name "$PACKAGE")
   
-  if [ -d "packages/collector/test/tracing/$PACKAGE" ]; then
-    PACKAGE_DIR="packages/collector/test/tracing/$PACKAGE"
-  elif [ -d "packages/collector/test/tracing/$NORMALIZED_PACKAGE" ]; then
-    PACKAGE_DIR="packages/collector/test/tracing/$NORMALIZED_PACKAGE"
-  else
-    # Search for the package or normalized package name
-    PACKAGE_DIR=$(find "packages/collector/test/tracing" -mindepth 2 -maxdepth 2 -type d \( -name "$PACKAGE" -o -name "$NORMALIZED_PACKAGE" \) 2>/dev/null | head -1)
-  fi
+  PACKAGE_DIR=$(find "$TEST_BASE_DIR" -type d \( -path "*/$PACKAGE" -o -path "*/$NORMALIZED_PACKAGE" \) ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null | head -1)
   
   if [ -z "$PACKAGE_DIR" ]; then
     echo "Error: Package '$PACKAGE' not found in any tracing category"
@@ -103,7 +100,7 @@ if [ -n "$PACKAGE" ]; then
       exit 1
     fi
 
-    GREP_PATTERN="tracing/$ACTUAL_PACKAGE@$VERSION"
+    GREP_PATTERN="$ACTUAL_PACKAGE@$VERSION"
     
     # Check for test files in the version directory
     SEARCH_PATTERN="test*.js"
@@ -120,7 +117,7 @@ if [ -n "$PACKAGE" ]; then
   else
     HIGHEST_VERSION=$(find "$PACKAGE_DIR" -maxdepth 1 -type d -name "_v*" 2>/dev/null | sed 's/.*_v//' | sort -V | tail -1)
     if [ -n "$HIGHEST_VERSION" ]; then
-      GREP_PATTERN="tracing/$ACTUAL_PACKAGE@v$HIGHEST_VERSION"
+      GREP_PATTERN="$ACTUAL_PACKAGE@v$HIGHEST_VERSION"
       
       # Check for test files in the highest version directory
       SEARCH_PATTERN="test*.js"
@@ -135,7 +132,7 @@ if [ -n "$PACKAGE" ]; then
       fi
 
     else
-      GREP_PATTERN="tracing/$ACTUAL_PACKAGE@v"
+      GREP_PATTERN="$ACTUAL_PACKAGE@v"
       
       # Fallback for non-versioned packages
       if [ -f "$PACKAGE_DIR/test.js" ]; then
@@ -148,16 +145,12 @@ if [ -n "$PACKAGE" ]; then
   fi
   
   if [ -n "$TEST_FILES" ]; then
-      # Make paths relative to packages/collector for the npm script
-      RELATIVE_TEST_FILES=$(echo "$TEST_FILES" | sed 's|packages/collector/||g')
+      # Make paths relative to the package directory for the npm script
+      RELATIVE_TEST_FILES=$(echo "$TEST_FILES" | sed "s|packages/${SCOPE_PKG_NAME}/||g")
       
       # Use test:debug:files to run only the specific files
       npm_command="npm run test:debug:files -- $RELATIVE_TEST_FILES"
       
-      # If specific files are found (which are in collector), default scope to collector if not set
-      if [ -z "$SCOPE" ]; then
-        SCOPE="@instana/collector"
-      fi
       
       # We still pass grep pattern just in case, though mocha might not need it if we pass specific files
       # But usually filtering by file is enough.

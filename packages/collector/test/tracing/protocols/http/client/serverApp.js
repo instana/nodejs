@@ -13,14 +13,14 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../../..')();
+require('@instana/collector')();
 
 const bodyParser = require('body-parser');
 const express = require('express');
 const fs = require('fs');
 const morgan = require('morgan');
 const path = require('path');
-const port = require('../../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 const protocol = process.env.APP_USES_HTTPS === 'true' ? 'https' : 'http';
 const logPrefix = `Express/${protocol} Server (${process.pid}):\t`;
 
@@ -68,7 +68,7 @@ app.put('/continue', (req, res) => {
 });
 
 if (process.env.APP_USES_HTTPS === 'true') {
-  const sslDir = path.join(__dirname, '..', '..', '..', '..', 'apps', 'ssl');
+  const sslDir = path.join(path.dirname(require.resolve('@_instana/collector/package.json')), 'test', 'apps', 'ssl');
   require('https')
     .createServer(
       {

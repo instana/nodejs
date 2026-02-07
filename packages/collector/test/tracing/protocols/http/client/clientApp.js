@@ -11,31 +11,25 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const instana = require('../../../../..')();
+const instana = require('@instana/collector')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-const AWS = require('aws-sdk');
 const bodyParser = require('body-parser');
 const express = require('express');
 const fs = require('fs');
 const morgan = require('morgan');
 const path = require('path');
 
-const port = require('../../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 
 const httpModule = process.env.APP_USES_HTTPS === 'true' ? require('https') : require('http');
 const protocol = process.env.APP_USES_HTTPS === 'true' ? 'https' : 'http';
 const baseUrl = `${protocol}://user:password@localhost:${process.env.SERVER_PORT}`;
-const sslDir = path.join(__dirname, '..', '..', '..', '..', 'apps', 'ssl');
+const sslDir = path.join(path.dirname(require.resolve('@_instana/collector/package.json')), 'test', 'apps', 'ssl');
 const key = fs.readFileSync(path.join(sslDir, 'key'));
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
 
 const app = express();
-
-// Use the wrong region (a different region from where the bucket is located) to force an error and a retry in the
-// aws-sdk.
-const awsRegion = process.env.AWS_REGION || 'eu-central-1';
-const s3 = new AWS.S3({ apiVersion: '2006-03-01', region: awsRegion });
 
 const logPrefix = `Express/${protocol} Client (${process.pid}):\t`;
 
@@ -279,42 +273,6 @@ if (process.env.APP_USES_HTTPS === 'true') {
   });
 }
 
-app.post('/upload-s3', (req, res) => {
-  if (!process.env.AWS_ACCESS_KEY_ID) {
-    // eslint-disable-next-line no-console
-    console.error('ERROR: AWS_ACCESS_KEY_ID is not set.');
-    return res.sendStatus(500);
-  }
-  if (!process.env.AWS_SECRET_ACCESS_KEY) {
-    // eslint-disable-next-line no-console
-    console.error('ERROR: AWS_SECRET_ACCESS_KEY is not set.');
-    return res.sendStatus(500);
-  }
-  if (!process.env.AWS_S3_BUCKET_NAME) {
-    // eslint-disable-next-line no-console
-    console.error('ERROR: AWS_S3_BUCKET_NAME is not set.');
-    return res.sendStatus(500);
-  }
-
-  const testFilePath = path.join(
-    __dirname,
-    'upload',
-    'Verdi_Messa_da_requiem_Section_7.2_Libera_me_Dies_irae_Markevitch_1959.mp3'
-  );
-  const readStream = fs.createReadStream(testFilePath);
-  const bucketName = process.env.AWS_S3_BUCKET_NAME;
-  const params = { Bucket: process.env.AWS_S3_BUCKET_NAME, Key: 'test-file', Body: readStream };
-  log(`Uploading to bucket ${bucketName} in region ${awsRegion}`);
-  s3.upload(params, (err, result) => {
-    if (err) {
-      // eslint-disable-next-line no-console
-      console.error(err);
-      return res.sendStatus(500);
-    } else {
-      return res.send(result);
-    }
-  });
-});
 app.get('/matrix-params/:params', (req, res) => {
   res.sendStatus(200);
 });

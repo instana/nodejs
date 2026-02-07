@@ -10,11 +10,11 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const instana = require('../../../../..')();
+const instana = require('@instana/collector')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const port = require('../../../../test_util/app-port')();
+const port = require('@_instana/collector/test/test_util/app-port')();
 
 const app = express();
 const logPrefix = 'SDK App 2\t';
