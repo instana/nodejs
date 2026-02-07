@@ -10,7 +10,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../../..')();
+require('@instana/collector')();
 
 const bodyParser = require('body-parser');
 const express = require('express');
@@ -18,10 +18,11 @@ const morgan = require('morgan');
 
 const logPrefix = `Native Fetch Server (${process.pid}):\t`;
 
-const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+const log = require('@_instana/core/test/test_util/log').getLogger(logPrefix);
+const port = require('@_instana/collector/test/test_util/app-port')();
 
 const app = express();
-const port = require('../../../../test_util/app-port')();
+
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

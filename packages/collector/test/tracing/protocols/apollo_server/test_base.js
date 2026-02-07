@@ -6,9 +6,9 @@
 
 const { expect } = require('chai');
 
-const constants = require('@instana/core').tracing.constants;
-const config = require('@instana/core/test/config');
-const testUtils = require('@instana/core/test/test_util');
+const constants = require('@_instana/core').tracing.constants;
+const config = require('@_instana/core/test/config');
+const testUtils = require('@_instana/core/test/test_util');
 const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_instana/collector/test/globalAgent');
 

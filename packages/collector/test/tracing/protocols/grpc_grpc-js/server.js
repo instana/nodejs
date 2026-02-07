@@ -20,7 +20,7 @@ const pinoLogger = require('pino')();
 const app = express();
 
 const logPrefix = `GRPC-JS Server (${process.pid}):\t`;
-const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+const log = require('@_instana/core/test/test_util/log').getLogger(logPrefix);
 
 const PROTO_PATH = path.join(__dirname, 'protos/test.proto');
 let server;

@@ -6,10 +6,10 @@
 
 const expect = require('chai').expect;
 
-const constants = require('@instana/core').tracing.constants;
-const config = require('@instana/core/test/config');
-const delay = require('@instana/core/test/test_util/delay');
-const { expectExactlyOneMatching, getSpansByName, retry } = require('@instana/core/test/test_util');
+const constants = require('@_instana/core').tracing.constants;
+const config = require('@_instana/core/test/config');
+const delay = require('@_instana/core/test/test_util/delay');
+const { expectExactlyOneMatching, getSpansByName, retry } = require('@_instana/core/test/test_util');
 const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_instana/collector/test/globalAgent');
 

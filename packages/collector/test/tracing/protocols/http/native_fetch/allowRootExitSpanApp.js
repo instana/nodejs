@@ -10,8 +10,8 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../../..')();
-const { delay } = require('../../../../../../core/test/test_util');
+require('@instana/collector')();
+const { delay } = require('@_instana/core/test/test_util');
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 // eslint-disable-next-line no-console
