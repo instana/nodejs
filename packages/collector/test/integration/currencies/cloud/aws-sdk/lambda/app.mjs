@@ -17,10 +17,10 @@ const logPrefix = `AWS SDK v2 Lambda (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const lambda = new AWS.Lambda();
 const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'nodejs-tracer-lambda';
-import getAppPort from '../../../../../test_util/app-port.js';
+import getAppPort from '@_local/collector/test/test_util/app-port.js';
 const port = getAppPort();
 
-import log from '@instana/core/test/test_util/log.js';
+import log from '@_local/core/test/test_util/log.js';
 const logger = log.getLogger(logPrefix);
 
 const operations = {

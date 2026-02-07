@@ -11,11 +11,13 @@ const {
   retry,
   delay,
   expectExactlyOneMatching,
-  expectExactlyNMatching
+  expectExactlyNMatching,
+  isCI
 } = require('@_local/core/test/test_util');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
 
+const DELAY_TIMEOUT_IN_MS = 500;
 const connStr1 = process.env.COUCHBASE;
 const connStr2 = process.env.COUCHBASE_ALTERNATIVE;
 const webUi = process.env.COUCHBASE_WEB_UI;
@@ -145,6 +147,7 @@ async function configureCouchbase() {
 }
 
 module.exports = function (name, version, isLatest) {
+  const isLegacy = !isLatest;
   this.timeout(config.getTestTimeout() * 4);
 
   globalAgent.setUpCleanUpHooks();
@@ -519,7 +522,7 @@ module.exports = function (name, version, isLatest) {
                     verifyCouchbaseSpan(controls, entrySpan, {
                       bucket: '',
                       type: '',
-                      sql: version === 'v4.4.3' ? 'SELECT ' : 'GET ALL INDEXES'
+                      sql: isLegacy ? 'SELECT ' : 'GET ALL INDEXES'
                     })
                   );
                   expectExactlyOneMatching(
@@ -527,7 +530,7 @@ module.exports = function (name, version, isLatest) {
                     verifyCouchbaseSpan(controls, entrySpan, {
                       bucket: 'projects',
                       type: 'membase',
-                      sql: version === 'v4.4.3' ? 'SELECT ' : 'GET ALL DATASETS '
+                      sql: isLegacy ? 'SELECT ' : 'GET ALL DATASETS '
                     })
                   );
                 }
@@ -783,6 +786,7 @@ module.exports = function (name, version, isLatest) {
                       spans,
                       verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: '',
+                        hostname: connStr2,
                         type: '',
                         sql: 'SELECT * FROM'
                       })
@@ -805,7 +809,7 @@ module.exports = function (name, version, isLatest) {
               );
             }));
 
-        it('[datastructures] must trace queue, list and map', () =>
+        it('[datastructures list] must trace', () =>
           controls
             .sendRequest({
               method: 'get',
@@ -820,7 +824,7 @@ module.exports = function (name, version, isLatest) {
 
               return retry(() =>
                 verifySpans(agentControls, controls, {
-                  spanLength: 8,
+                  spanLength: 9,
                   verifyCustom: (entrySpan, spans) => {
                     expectExactlyNMatching(
                       spans,
@@ -838,7 +842,7 @@ module.exports = function (name, version, isLatest) {
                     );
                     expectExactlyNMatching(
                       spans,
-                      2,
+                      3,
                       verifyCouchbaseSpan(controls, entrySpan, {
                         sql: 'GET'
                       })
@@ -847,7 +851,83 @@ module.exports = function (name, version, isLatest) {
                 })
               );
             }));
-      }
+
+          it('[datastructures map] must trace', () =>
+            controls
+              .sendRequest({
+                method: 'get',
+                path: `/datastructures-map-${apiType}`
+              })
+              .then(resp => {
+                if (resp.err) {
+                  throw new Error(resp.err);
+                }
+
+                expect(resp.iteratedItems).to.eql(['test1', 'test2']);
+
+                return retry(() =>
+                  verifySpans(agentControls, controls, {
+                    spanLength: 9,
+                    verifyCustom: (entrySpan, spans) => {
+                      expectExactlyNMatching(
+                        spans,
+                        3,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          sql: 'MUTATE IN'
+                        })
+                      );
+                      expectExactlyNMatching(
+                        spans,
+                        3,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          sql: 'LOOKUP IN'
+                        })
+                      );
+                      expectExactlyNMatching(
+                        spans,
+                        2,
+                        verifyCouchbaseSpan(controls, entrySpan, {
+                          sql: 'GET'
+                        })
+                      );
+                    }
+                  })
+                );
+              }));
+
+          // Error handling in callback is affected with v4.4.4,
+          // see issue here: https://github.com/couchbase/couchnode/issues/123
+          it('[error] must trace remove', () =>
+            controls
+              .sendRequest({
+                method: 'post',
+                path: `/remove-${apiType}?error=true`
+              })
+              .then(resp => {
+                if (resp.err) {
+                  throw new Error(resp.err);
+                }
+
+                expect(resp.errMsg).to.eql(apiType === 'promise' ? 'invalid argument' : 'document not found');
+
+                return retry(() =>
+                  verifySpans(agentControls, controls, {
+                    sql: 'REMOVE',
+                    error: apiType === 'promise' ? 'invalid argument' : 'document not found'
+                  })
+                );
+              }));
+        }
+
+        it('[supressed] must not trace', () =>
+          controls
+            .sendRequest({
+              method: 'post',
+              path: `/upsert-${apiType}`,
+              suppressTracing: true
+            })
+            .then(() => delay(DELAY_TIMEOUT_IN_MS))
+            .then(() => retry(() => verifySpans(agentControls, controls, { expectSpans: false }))));
     });
   });
 };

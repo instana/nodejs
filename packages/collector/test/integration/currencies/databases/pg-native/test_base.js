@@ -6,6 +6,7 @@
 'use strict';
 
 const expect = require('chai').expect;
+const semver = require('semver');
 
 const constants = require('@_local/core').tracing.constants;
 const config = require('@_local/core/test/config');
@@ -20,6 +21,10 @@ const ProcessControls = require('@_local/collector/test/test_util/ProcessControl
 const globalAgent = require('@_local/collector/test/globalAgent');
 
 module.exports = function (name, version, isLatest) {
+    // pg-native is not supported on Node.js >= 25
+    const suiteFn = semver.lt(process.versions.node, '25.0.0') ? describe : describe.skip;
+
+    suiteFn('pg-native', function () {
     this.timeout(config.getTestTimeout());
 
     globalAgent.setUpCleanUpHooks();
@@ -331,4 +336,5 @@ module.exports = function (name, version, isLatest) {
             span => expect(span.data.http.status).to.equal(200)
         ]);
     }
+    });
 };
