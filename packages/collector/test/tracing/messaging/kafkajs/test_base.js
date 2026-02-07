@@ -31,9 +31,7 @@ const retryTimeUntil = () => {
 module.exports = function (name, version, isLatest) {
   this.timeout(config.getTestTimeout() * 5);
 
-  process.env.LIBRARY_LATEST = isLatest;
-  process.env.LIBRARY_VERSION = version;
-  process.env.LIBRARY_NAME = name;
+  const libraryEnv = { LIBRARY_VERSION: version, LIBRARY_NAME: name, LIBRARY_LATEST: isLatest };
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
@@ -57,13 +55,15 @@ module.exports = function (name, version, isLatest) {
             consumerControls = new ProcessControls({
               dirname: __dirname,
               appName: 'consumer.js',
-              useGlobalAgent: true
+              useGlobalAgent: true,
+              env: { ...libraryEnv }
             });
 
             producerControls = new ProcessControls({
               dirname: __dirname,
               appName: 'producer.js',
-              useGlobalAgent: true
+              useGlobalAgent: true,
+              env: { ...libraryEnv }
             });
 
             await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
@@ -173,7 +173,8 @@ module.exports = function (name, version, isLatest) {
             producerControls = new ProcessControls({
               dirname: __dirname,
               appName: 'producer.js',
-              useGlobalAgent: true
+              useGlobalAgent: true,
+              env: { ...libraryEnv }
             });
 
             await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
@@ -238,13 +239,15 @@ module.exports = function (name, version, isLatest) {
           consumerControls = new ProcessControls({
             dirname: __dirname,
               appName: 'consumer.js',
-            useGlobalAgent: true
+            useGlobalAgent: true,
+            env: { ...libraryEnv }
           });
           producerControls = new ProcessControls({
             dirname: __dirname,
               appName: 'producer.js',
             useGlobalAgent: true,
             env: {
+              ...libraryEnv,
               INSTANA_KAFKA_TRACE_CORRELATION: 'false'
             }
           });
@@ -352,12 +355,14 @@ module.exports = function (name, version, isLatest) {
       consumerControls = new ProcessControls({
         dirname: __dirname,
               appName: 'consumer.js',
-        agentControls: customAgentControls
+        agentControls: customAgentControls,
+        env: { ...libraryEnv }
       });
       producerControls = new ProcessControls({
         dirname: __dirname,
               appName: 'producer.js',
-        agentControls: customAgentControls
+        agentControls: customAgentControls,
+        env: { ...libraryEnv }
       });
 
       await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
@@ -414,13 +419,15 @@ module.exports = function (name, version, isLatest) {
         dirname: __dirname,
               appName: 'consumer.js',
         useGlobalAgent: true,
-        tracingEnabled: false
+        tracingEnabled: false,
+        env: { ...libraryEnv }
       });
       producerControls = new ProcessControls({
         dirname: __dirname,
               appName: 'producer.js',
         useGlobalAgent: true,
-        tracingEnabled: false
+        tracingEnabled: false,
+        env: { ...libraryEnv }
       });
 
       await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
@@ -488,12 +495,14 @@ module.exports = function (name, version, isLatest) {
       consumerControls = new ProcessControls({
         dirname: __dirname,
               appName: 'consumer.js',
-        useGlobalAgent: true
+        useGlobalAgent: true,
+        env: { ...libraryEnv }
       });
       producerControls = new ProcessControls({
         dirname: __dirname,
               appName: 'producer.js',
-        useGlobalAgent: true
+        useGlobalAgent: true,
+        env: { ...libraryEnv }
       });
 
       await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
@@ -560,12 +569,14 @@ module.exports = function (name, version, isLatest) {
           producerControls = new ProcessControls({
             dirname: __dirname,
               appName: 'producer.js',
-            agentControls: customAgentControls
+            agentControls: customAgentControls,
+            env: { ...libraryEnv }
           });
           consumerControls = new ProcessControls({
             dirname: __dirname,
               appName: 'consumer.js',
-            agentControls: customAgentControls
+            agentControls: customAgentControls,
+            env: { ...libraryEnv }
           });
 
           await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
@@ -621,12 +632,14 @@ module.exports = function (name, version, isLatest) {
           producerControls = new ProcessControls({
             dirname: __dirname,
               appName: 'producer.js',
-            agentControls: customAgentControls
+            agentControls: customAgentControls,
+            env: { ...libraryEnv }
           });
           consumerControls = new ProcessControls({
             dirname: __dirname,
               appName: 'consumer.js',
-            agentControls: customAgentControls
+            agentControls: customAgentControls,
+            env: { ...libraryEnv }
           });
 
           await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
@@ -688,12 +701,14 @@ module.exports = function (name, version, isLatest) {
           producerControls = new ProcessControls({
             dirname: __dirname,
               appName: 'producer.js',
-            agentControls: customAgentControls
+            agentControls: customAgentControls,
+            env: { ...libraryEnv }
           });
           consumerControls = new ProcessControls({
             dirname: __dirname,
               appName: 'consumer.js',
-            agentControls: customAgentControls
+            agentControls: customAgentControls,
+            env: { ...libraryEnv }
           });
 
           await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
@@ -751,12 +766,14 @@ module.exports = function (name, version, isLatest) {
             producerControls = new ProcessControls({
               dirname: __dirname,
               appName: 'producer.js',
-              agentControls: customAgentControls
+              agentControls: customAgentControls,
+              env: { ...libraryEnv }
             });
             consumerControls = new ProcessControls({
               dirname: __dirname,
               appName: 'consumer.js',
-              agentControls: customAgentControls
+              agentControls: customAgentControls,
+              env: { ...libraryEnv }
             });
 
             await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
@@ -834,12 +851,14 @@ module.exports = function (name, version, isLatest) {
             producerControls = new ProcessControls({
               dirname: __dirname,
               appName: 'producer.js',
-              agentControls: customAgentControls
+              agentControls: customAgentControls,
+              env: { ...libraryEnv }
             });
             consumerControls = new ProcessControls({
               dirname: __dirname,
               appName: 'consumer.js',
-              agentControls: customAgentControls
+              agentControls: customAgentControls,
+              env: { ...libraryEnv }
             });
 
             await producerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
@@ -898,14 +917,14 @@ module.exports = function (name, version, isLatest) {
           dirname: __dirname,
               appName: 'consumer.js',
           useGlobalAgent: true,
-          env: { INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml') }
+          env: { ...libraryEnv, INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml') }
         });
 
         producerControls = new ProcessControls({
           dirname: __dirname,
               appName: 'producer.js',
           useGlobalAgent: true,
-          env: { INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml') }
+          env: { ...libraryEnv, INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml') }
         });
 
         await Promise.all([
@@ -956,6 +975,7 @@ module.exports = function (name, version, isLatest) {
               appName: 'consumer.js',
           useGlobalAgent: true,
           env: {
+            ...libraryEnv,
             // basic ignoring config for consume
             INSTANA_IGNORE_ENDPOINTS: 'kafka:consume'
           }
@@ -964,7 +984,8 @@ module.exports = function (name, version, isLatest) {
         producerControls = new ProcessControls({
           dirname: __dirname,
               appName: 'producer.js',
-          useGlobalAgent: true
+          useGlobalAgent: true,
+          env: { ...libraryEnv }
         });
 
         await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
@@ -1055,6 +1076,7 @@ module.exports = function (name, version, isLatest) {
               appName: 'consumer.js',
           useGlobalAgent: true,
           env: {
+            ...libraryEnv,
             // basic ignoring config for consume
             INSTANA_IGNORE_ENDPOINTS: 'kafka:consume'
           }
@@ -1063,7 +1085,8 @@ module.exports = function (name, version, isLatest) {
         producerControls = new ProcessControls({
           dirname: __dirname,
               appName: 'producer.js',
-          useGlobalAgent: true
+          useGlobalAgent: true,
+          env: { ...libraryEnv }
         });
 
         await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());
@@ -1141,7 +1164,8 @@ module.exports = function (name, version, isLatest) {
           consumerControls = new ProcessControls({
             dirname: __dirname,
               appName: 'consumer.js',
-            useGlobalAgent: true
+            useGlobalAgent: true,
+            env: { ...libraryEnv }
           });
 
           producerControls = new ProcessControls({
@@ -1149,6 +1173,7 @@ module.exports = function (name, version, isLatest) {
               appName: 'producer.js',
             useGlobalAgent: true,
             env: {
+              ...libraryEnv,
               // basic ignoring config for send
               INSTANA_IGNORE_ENDPOINTS: 'kafka:send',
               INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION: true
@@ -1232,6 +1257,7 @@ module.exports = function (name, version, isLatest) {
               appName: 'consumer.js',
             useGlobalAgent: true,
             env: {
+              ...libraryEnv,
               // basic ignoring config for consume
               INSTANA_IGNORE_ENDPOINTS: 'kafka:consume',
               INSTANA_IGNORE_ENDPOINTS_DISABLE_SUPPRESSION: true
@@ -1241,7 +1267,8 @@ module.exports = function (name, version, isLatest) {
           producerControls = new ProcessControls({
             dirname: __dirname,
               appName: 'producer.js',
-            useGlobalAgent: true
+            useGlobalAgent: true,
+            env: { ...libraryEnv }
           });
 
           await consumerControls.startAndWaitForAgentConnection(retryTime, retryTimeUntil());

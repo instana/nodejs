@@ -26,10 +26,6 @@ const agentControls = globalAgent.instance;
 // https://docs.nats.io/legacy/stan#warning-deprecation-notice
 
 module.exports = function (name, version, isLatest) {
-  process.env.LIBRARY_LATEST = isLatest;
-  process.env.LIBRARY_VERSION = version;
-  process.env.LIBRARY_NAME = name;
-
   describe('tracing is enabled', function () {
     this.timeout(config.getTestTimeout() * 2);
 
@@ -42,12 +38,22 @@ module.exports = function (name, version, isLatest) {
       publisherControls = new ProcessControls({
         dirname: __dirname,
         appName: 'publisher.js',
-        useGlobalAgent: true
+        useGlobalAgent: true,
+        env: {
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name,
+          LIBRARY_LATEST: isLatest
+        }
       });
       subscriberControls = new ProcessControls({
         dirname: __dirname,
         appName: 'subscriber.js',
-        useGlobalAgent: true
+        useGlobalAgent: true,
+        env: {
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name,
+          LIBRARY_LATEST: isLatest
+        }
       });
 
       await publisherControls.startAndWaitForAgentConnection();
@@ -303,13 +309,23 @@ module.exports = function (name, version, isLatest) {
         dirname: __dirname,
         appName: 'publisher.js',
         useGlobalAgent: true,
-        tracingEnabled: false
+        tracingEnabled: false,
+        env: {
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name,
+          LIBRARY_LATEST: isLatest
+        }
       });
       subscriberControls = new ProcessControls({
         dirname: __dirname,
         appName: 'subscriber.js',
         useGlobalAgent: true,
-        tracingEnabled: false
+        tracingEnabled: false,
+        env: {
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name,
+          LIBRARY_LATEST: isLatest
+        }
       });
 
       await publisherControls.startAndWaitForAgentConnection();

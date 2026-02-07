@@ -24,6 +24,9 @@ const checkStartedUntil = () => Date.now() + 1000 * 120;
 const topic = 'rdkafka-topic';
 
 module.exports.run = function ({
+  version,
+  name,
+  isLatest,
   producerEnableDeliveryCb,
   producerApiMethods,
   consumerApiMethods,
@@ -32,6 +35,8 @@ module.exports.run = function ({
   RUN_SINGLE_TEST,
   SINGLE_TEST_PROPS
 }) {
+  const libraryEnv = { LIBRARY_VERSION: version, LIBRARY_NAME: name, LIBRARY_LATEST: isLatest };
+
   this.timeout(config.getTestTimeout() * 20);
 
   globalAgent.setUpCleanUpHooks();
@@ -63,6 +68,7 @@ module.exports.run = function ({
                   appName: 'consumer.js',
                   useGlobalAgent: true,
                   env: {
+                    ...libraryEnv,
                     RDKAFKA_CONSUMER_AS_STREAM: consumerMethod === 'stream' ? 'true' : 'false',
                     RDKAFKA_CONSUMER_ERROR: withError
                   }
@@ -73,6 +79,7 @@ module.exports.run = function ({
                   appName: 'producer.js',
                   useGlobalAgent: true,
                   env: {
+                    ...libraryEnv,
                     RDKAFKA_OBJECT_MODE: objectMode,
                     RDKAFKA_PRODUCER_AS_STREAM: producerMethod === 'stream' ? 'true' : 'false',
                     RDKAFKA_PRODUCER_DELIVERY_CB: producerEnableDeliveryCb === 'true'
@@ -289,12 +296,14 @@ module.exports.run = function ({
       producerControls = new ProcessControls({
         dirname: __dirname,
         appName: 'producer.js',
-        useGlobalAgent: true
+        useGlobalAgent: true,
+        env: { ...libraryEnv }
       });
       consumerControls = new ProcessControls({
         dirname: __dirname,
         appName: 'consumer.js',
-        useGlobalAgent: true
+        useGlobalAgent: true,
+        env: { ...libraryEnv }
       });
 
       await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
@@ -349,12 +358,14 @@ module.exports.run = function ({
       producerControls = new ProcessControls({
         dirname: __dirname,
         appName: 'producer.js',
-        agentControls: customAgentControls
+        agentControls: customAgentControls,
+        env: { ...libraryEnv }
       });
       consumerControls = new ProcessControls({
         dirname: __dirname,
         appName: 'consumer.js',
-        agentControls: customAgentControls
+        agentControls: customAgentControls,
+        env: { ...libraryEnv }
       });
 
       await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
@@ -409,13 +420,15 @@ module.exports.run = function ({
         appName: 'producer.js',
         useGlobalAgent: true,
         env: {
+          ...libraryEnv,
           INSTANA_KAFKA_TRACE_CORRELATION: 'false'
         }
       });
       consumerControls = new ProcessControls({
         dirname: __dirname,
         appName: 'consumer.js',
-        useGlobalAgent: true
+        useGlobalAgent: true,
+        env: { ...libraryEnv }
       });
 
       await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
@@ -472,12 +485,14 @@ module.exports.run = function ({
       producerControls = new ProcessControls({
         dirname: __dirname,
         appName: 'producer.js',
-        agentControls: customAgentControls
+        agentControls: customAgentControls,
+        env: { ...libraryEnv }
       });
       consumerControls = new ProcessControls({
         dirname: __dirname,
         appName: 'consumer.js',
-        agentControls: customAgentControls
+        agentControls: customAgentControls,
+        env: { ...libraryEnv }
       });
 
       await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
@@ -532,6 +547,7 @@ module.exports.run = function ({
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
+          ...libraryEnv,
           RDKAFKA_PRODUCER_DELIVERY_CB: 'false'
         }
       });
@@ -561,6 +577,7 @@ module.exports.run = function ({
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
+            ...libraryEnv,
             RDKAFKA_CONSUMER_AS_STREAM: 'false'
           }
         });
@@ -607,6 +624,7 @@ module.exports.run = function ({
         appName: 'producer.js',
         useGlobalAgent: true,
         env: {
+          ...libraryEnv,
           RDKAFKA_PRODUCER_DELIVERY_CB: 'false'
         }
       });
@@ -634,6 +652,7 @@ module.exports.run = function ({
         appName: 'consumer.js',
           useGlobalAgent: true,
           env: {
+            ...libraryEnv,
             RDKAFKA_CONSUMER_AS_STREAM: 'false'
           }
         });
@@ -693,12 +712,14 @@ module.exports.run = function ({
           producerControls = new ProcessControls({
             dirname: __dirname,
         appName: 'producer.js',
-            agentControls: customAgentControls
+            agentControls: customAgentControls,
+            env: { ...libraryEnv }
           });
           consumerControls = new ProcessControls({
             dirname: __dirname,
         appName: 'consumer.js',
-            agentControls: customAgentControls
+            agentControls: customAgentControls,
+            env: { ...libraryEnv }
           });
 
           await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());
@@ -763,12 +784,14 @@ module.exports.run = function ({
         producerControls = new ProcessControls({
           dirname: __dirname,
         appName: 'producer.js',
-          agentControls: customAgentControls
+          agentControls: customAgentControls,
+          env: { ...libraryEnv }
         });
         consumerControls = new ProcessControls({
           dirname: __dirname,
         appName: 'consumer.js',
-          agentControls: customAgentControls
+          agentControls: customAgentControls,
+          env: { ...libraryEnv }
         });
 
         await producerControls.startAndWaitForAgentConnection(checkStartedEvery, checkStartedUntil());

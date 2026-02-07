@@ -14,10 +14,6 @@ const { AgentStubControls } = require('@_local/collector/test/apps/agentStubCont
 module.exports = function (name, version, isLatest) {
   this.timeout(config.getTestTimeout());
 
-  process.env.LIBRARY_LATEST = isLatest;
-  process.env.LIBRARY_VERSION = version;
-  process.env.LIBRARY_NAME = name;
-
   let customAgent;
   let appControls;
 
@@ -34,6 +30,9 @@ module.exports = function (name, version, isLatest) {
       agentControls: customAgent,
       collectorUninitialized: true,
       env: {
+        LIBRARY_VERSION: version,
+        LIBRARY_NAME: name,
+        LIBRARY_LATEST: isLatest,
         INSTANA_TRACE_IMMEDIATELY: 'true',
         INSTANA_AGENT_REQUEST_TIMEOUT: '6000'
       }

@@ -21,10 +21,6 @@ module.exports = function (name, version, isLatest) {
 
   const isV2 = semver.major(version) >= 2;
 
-  process.env.LIBRARY_LATEST = isLatest;
-  process.env.LIBRARY_VERSION = version;
-  process.env.LIBRARY_NAME = name;
-
   describe('tracing is enabled', function () {
     globalAgent.setUpCleanUpHooks();
 
@@ -35,12 +31,22 @@ module.exports = function (name, version, isLatest) {
       publisherControls = new ProcessControls({
         dirname: __dirname,
         appName: 'publisher.js',
-        useGlobalAgent: true
+        useGlobalAgent: true,
+        env: {
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name,
+          LIBRARY_LATEST: isLatest
+        }
       });
       subscriberControls = new ProcessControls({
         dirname: __dirname,
         appName: 'subscriber.js',
-        useGlobalAgent: true
+        useGlobalAgent: true,
+        env: {
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name,
+          LIBRARY_LATEST: isLatest
+        }
       });
 
       await publisherControls.startAndWaitForAgentConnection();
@@ -459,6 +465,9 @@ module.exports = function (name, version, isLatest) {
         appName: 'publisher.js',
         useGlobalAgent: true,
         env: {
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name,
+          LIBRARY_LATEST: isLatest,
           CONNECT_ERROR: true
         }
       });
@@ -506,13 +515,23 @@ module.exports = function (name, version, isLatest) {
         dirname: __dirname,
         appName: 'publisher.js',
         useGlobalAgent: true,
-        tracingEnabled: false
+        tracingEnabled: false,
+        env: {
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name,
+          LIBRARY_LATEST: isLatest
+        }
       });
       subscriberControls = new ProcessControls({
         dirname: __dirname,
         appName: 'subscriber.js',
         useGlobalAgent: true,
-        tracingEnabled: false
+        tracingEnabled: false,
+        env: {
+          LIBRARY_VERSION: version,
+          LIBRARY_NAME: name,
+          LIBRARY_LATEST: isLatest
+        }
       });
 
       await publisherControls.startAndWaitForAgentConnection();

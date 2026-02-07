@@ -25,12 +25,11 @@ const withErrorMethods = [false, 'bufferErrorSender', 'deliveryErrorSender', 'st
 const RUN_SINGLE_TEST = false;
 
 module.exports = function (name, version, isLatest) {
-  process.env.LIBRARY_LATEST = isLatest;
-  process.env.LIBRARY_VERSION = version;
-  process.env.LIBRARY_NAME = name;
-
   describe('with delivery-cb', function () {
     testDefinition.run.bind(this)({
+      version,
+      name,
+      isLatest,
       producerEnableDeliveryCb: 'true',
       producerApiMethods,
       consumerApiMethods,
@@ -49,6 +48,9 @@ module.exports = function (name, version, isLatest) {
 
   describe('without delivery-cb', function () {
     testDefinition.run.bind(this)({
+      version,
+      name,
+      isLatest,
       producerEnableDeliveryCb: 'false',
       producerApiMethods,
       consumerApiMethods,

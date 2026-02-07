@@ -19,10 +19,6 @@ const globalAgent = require('@_local/collector/test/globalAgent');
 module.exports = function (name, version, isLatest) {
   this.timeout(config.getTestTimeout());
 
-  process.env.LIBRARY_LATEST = isLatest;
-  process.env.LIBRARY_VERSION = version;
-  process.env.LIBRARY_NAME = name;
-
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
@@ -31,7 +27,12 @@ module.exports = function (name, version, isLatest) {
   before(async () => {
     controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true
+      useGlobalAgent: true,
+      env: {
+        LIBRARY_VERSION: version,
+        LIBRARY_NAME: name,
+        LIBRARY_LATEST: isLatest
+      }
     });
 
     await controls.startAndWaitForAgentConnection();
