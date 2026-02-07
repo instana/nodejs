@@ -5,58 +5,27 @@
 'use strict';
 
 const expect = require('chai').expect;
-const { mkdtempSync } = require('fs');
-const os = require('os');
 const path = require('path');
-const rimraf = require('rimraf');
 
 const config = require('@_local/core/test/config');
-const { delay, retry, runCommandSync } = require('@_local/core/test/test_util');
+const { delay, retry } = require('@_local/core/test/test_util');
 const globalAgent = require('@_local/collector/test/globalAgent');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 
-module.exports = function () {
+module.exports = function (name, version) {
   const timeout = config.getTestTimeout() * 6;
   this.timeout(timeout);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  const tmpDir = mkdtempSync(path.join(os.tmpdir(), '@instana-collector-test-prevent-multiple-init'));
-  const pathToSeparateInstanaCollector = path.join(tmpDir, 'node_modules', '@instana', 'collector', 'src', 'immediate');
+  const versionDir = path.join(__dirname, `_v${version}`);
+  const pathToSeparateInstanaCollector = path.join(versionDir, 'node_modules', '@instana', 'collector', 'src', 'immediate');
   let controls;
 
   before(async () => {
-    const copath = path.join(__dirname, '..', '..', '..', '..', '..', 'collector');
-    runCommandSync('npm pack', copath);
-
-    const coversion = require(`${copath}/package.json`).version;
-    runCommandSync(
-      `npm install --production --no-optional --no-audit ${copath}/instana-collector-${coversion}.tgz`,
-      tmpDir
-    );
-
-    const corepath = path.join(__dirname, '..', '..', '..', '..', '..', 'core');
-    runCommandSync('npm pack', corepath);
-
-    const coreversion = require(`${copath}/package.json`).version;
-    runCommandSync(
-      `npm install --production --no-optional --no-audit ${corepath}/instana-core-${coreversion}.tgz`,
-      tmpDir
-    );
-
-    const sharedMetrics = path.join(__dirname, '..', '..', '..', '..', '..', 'shared-metrics');
-    runCommandSync('npm pack', sharedMetrics);
-
-    const sharedMetricsVersion = require(`${copath}/package.json`).version;
-    runCommandSync(
-      // eslint-disable-next-line max-len
-      `npm install --production --no-optional --no-audit ${sharedMetrics}/instana-shared-metrics-${sharedMetricsVersion}.tgz`,
-      tmpDir
-    );
-
     controls = new ProcessControls({
-      appPath: path.join(__dirname, '..', '..', '..', '..', 'apps', 'express'),
+      appPath: require.resolve('@_local/collector/test/apps/express'),
       execArgv: ['--require', pathToSeparateInstanaCollector],
       useGlobalAgent: true,
       env: {
@@ -70,10 +39,6 @@ module.exports = function () {
 
   beforeEach(async () => {
     await agentControls.clearReceivedTraceData();
-  });
-
-  after(done => {
-    rimraf(tmpDir, done);
   });
 
   after(async () => {

@@ -98,7 +98,6 @@ function findNonCurrencyTestDirs(baseDir, processedDirs) {
 
     if (hasTestBase && !processedDirs.has(dir)) {
       results.push(dir);
-      return;
     }
 
     entries

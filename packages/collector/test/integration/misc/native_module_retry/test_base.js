@@ -97,28 +97,28 @@ module.exports = function () {
           console.log('Running npm install in', tmpFolder);
           execSync('rm -rf node_modules', { cwd: tmpFolder, stdio: 'inherit' });
 
-          const copath = path.join(__dirname, '..', '..', '..', '..', '..', 'collector');
+          const copath = path.dirname(require.resolve('@_local/collector/package.json'));
           runCommandSync('npm pack', copath);
 
-          const coversion = require(`${copath}/package.json`).version;
+          const coversion = require('@_local/collector/package.json').version;
           runCommandSync(
             `npm install --production --no-optional --no-audit ${copath}/instana-collector-${coversion}.tgz`,
             tmpFolder
           );
 
-          const corepath = path.join(__dirname, '..', '..', '..', '..', '..', 'core');
+          const corepath = path.dirname(require.resolve('@_local/core/package.json'));
           runCommandSync('npm pack', corepath);
 
-          const coreversion = require(`${copath}/package.json`).version;
+          const coreversion = require('@_local/core/package.json').version;
           runCommandSync(
             `npm install  --prefix ./ --production --no-optional --no-audit ${corepath}/instana-core-${coreversion}.tgz`,
             tmpFolder
           );
 
-          const sharedMetricsPath = path.join(__dirname, '..', '..', '..', '..', '..', 'shared-metrics');
+          const sharedMetricsPath = path.dirname(require.resolve('@_local/shared-metrics/package.json'));
           runCommandSync('npm pack', sharedMetricsPath);
 
-          const sharedMetricsVersion = require(`${copath}/package.json`).version;
+          const sharedMetricsVersion = require('@_local/shared-metrics/package.json').version;
           runCommandSync(
             // eslint-disable-next-line max-len
             `npm install  --prefix ./ --production --no-optional --no-audit ${sharedMetricsPath}/instana-shared-metrics-${sharedMetricsVersion}.tgz`,
@@ -133,10 +133,10 @@ module.exports = function () {
           }
 
           // Currently we do not ship darwin prebuilds via shared-metrics
+          const sharedMetricsAddons = path.join(sharedMetricsPath, 'addons', 'darwin');
           execSync(
-            `cp -R ../../../../../shared-metrics/addons/darwin ${tmpFolder}/node_modules/@_local/shared-metrics/addons/`,
+            `cp -R ${sharedMetricsAddons} ${tmpFolder}/node_modules/@_local/shared-metrics/addons/`,
             {
-              cwd: __dirname,
               stdio: 'inherit'
             }
           );
