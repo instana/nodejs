@@ -48,12 +48,13 @@ if (needsRegen) {
   fs.writeFileSync(checksumPath, currentHash);
 }
 
-function hashTemplates(dir, hash) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === 'node_modules' || entry.name.startsWith('_v')) continue;
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) hashTemplates(full, hash);
-    else if (entry.name === 'package.json.template' || entry.name === 'modes.json') hash.update(fs.readFileSync(full, 'utf8'));
-    else if (entry.name === 'test_base.js') hash.update(full);
-  }
+function hashTemplates(dir, h) {
+  fs.readdirSync(dir, { withFileTypes: true })
+    .filter(entry => entry.name !== 'node_modules' && !entry.name.startsWith('_v'))
+    .forEach(entry => {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) hashTemplates(full, h);
+      else if (entry.name === 'package.json.template' || entry.name === 'modes.json') h.update(fs.readFileSync(full, 'utf8'));
+      else if (entry.name === 'test_base.js') h.update(full);
+    });
 }
