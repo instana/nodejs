@@ -1295,9 +1295,9 @@ module.exports = function (name, version, isLatest, mode) {
     if (type === 'cluster') {
       expect(span.data.redis.connection).to.contain(process.env.AZURE_REDIS_CLUSTER);
     } else if (type === 'sentinel') {
-      expect(span.data.redis.connection).to.contain(process.env.REDIS_SENTINEL_HOST);
+      expect(span.data.redis.connection).to.contain(process.env.INSTANA_CONNECT_REDIS_SENTINEL_HOST);
     } else {
-      expect(span.data.redis.connection).to.contain(process.env.REDIS);
+      expect(span.data.redis.connection).to.contain(process.env.INSTANA_CONNECT_REDIS);
     }
   }
 

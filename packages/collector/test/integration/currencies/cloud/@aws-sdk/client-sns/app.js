@@ -37,7 +37,7 @@ const clientOpts = {
     accessKeyId: 'test',
     secretAccessKey: 'test'
   },
-  endpoint: process.env.LOCALSTACK_AWS,
+  endpoint: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
   region: 'us-east-2',
   retryStrategy: customRetryStrategy
 };

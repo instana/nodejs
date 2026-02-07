@@ -139,7 +139,7 @@ module.exports = function (name, version, isLatest) {
                     } else {
                       expect(span.data.nats.subject).to.equal('publish-test-subject');
                     }
-                    expect(span.data.nats.address).to.equal(process.env.NATS_STREAMING);
+                    expect(span.data.nats.address).to.equal(process.env.INSTANA_CONNECT_NATS_STREAMING);
                     if (withError) {
                       expect(span.data.nats.error).to.equal('Error: stan: invalid publish request');
                     } else {
@@ -180,7 +180,7 @@ module.exports = function (name, version, isLatest) {
             span => expect(span.k).to.equal(constants.EXIT),
             span => expect(span.n).to.equal('nats.streaming'),
             span => expect(span.data.nats.sort).to.equal('publish'),
-            span => expect(span.data.nats.address).to.equal(process.env.NATS_STREAMING)
+            span => expect(span.data.nats.address).to.equal(process.env.INSTANA_CONNECT_NATS_STREAMING)
           ]);
           expectExactlyOneMatching(spans, [
             span => expect(span.t).to.equal(entrySpan.t),
@@ -188,7 +188,7 @@ module.exports = function (name, version, isLatest) {
             span => expect(span.k).to.equal(constants.EXIT),
             span => expect(span.n).to.equal('nats.streaming'),
             span => expect(span.data.nats.sort).to.equal('publish'),
-            span => expect(span.data.nats.address).to.equal(process.env.NATS_STREAMING_ALTERNATIVE)
+            span => expect(span.data.nats.address).to.equal(process.env.INSTANA_CONNECT_NATS_STREAMING_ALTERNATIVE)
           ]);
         });
       });
@@ -253,7 +253,7 @@ module.exports = function (name, version, isLatest) {
                     expect(span.data.nats).to.be.an('object');
                     expect(span.data.nats.sort).to.equal('consume');
                     expect(span.data.nats.subject).to.equal('subscribe-test-subject');
-                    expect(span.data.nats.address).to.equal(process.env.NATS_STREAMING);
+                    expect(span.data.nats.address).to.equal(process.env.INSTANA_CONNECT_NATS_STREAMING);
                     if (withError) {
                       expect(span.data.nats.error).to.equal(`Error: Boom: ${uniqueId}`);
                     } else {

@@ -26,13 +26,13 @@ const app = express();
 let client;
 if (kafka.Client) {
   // kafka-node < 4.0.0, client connects via zookeeper
-  client = new kafka.Client(`${process.env.ZOOKEEPER}/`);
+  client = new kafka.Client(`${process.env.INSTANA_CONNECT_KAFKA_ZOOKEEPER}/`);
   client.on('error', error => {
     log('Got a client error: %s', error);
   });
 } else {
   // kafka-node >= 4.0.0, they dropped Zookeeper support, client connects directly to kafka
-  client = new kafka.KafkaClient({ kafkaHost: process.env.KAFKA });
+  client = new kafka.KafkaClient({ kafkaHost: process.env.INSTANA_CONNECT_KAFKA });
   client.on('error', error => {
     log('Got a client error: %s', error);
   });

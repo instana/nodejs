@@ -35,10 +35,10 @@ if (process.env.WITH_STDOUT) {
 app.use(bodyParser.json());
 
 const client = new Client({
-  node: `http://${process.env.ELASTICSEARCH}`
+  node: `http://${process.env.INSTANA_CONNECT_ELASTICSEARCH}`
 });
 const client2 = new Client({
-  node: `http://${process.env.ELASTICSEARCH_ALTERNATIVE}`
+  node: `http://${process.env.INSTANA_CONNECT_ELASTICSEARCH_ALTERNATIVE}`
 });
 
 // v7 & v8 have a different return value

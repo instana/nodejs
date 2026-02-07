@@ -31,9 +31,9 @@ sql.on('error', err => {
   log(err);
 });
 
-const dbHost = process.env.AZURE_SQL_SERVER || process.env.MSSQL_HOST;
-const dbUser = process.env.AZURE_SQL_USERNAME || process.env.MSSQL_USER;
-const dbPassword = process.env.AZURE_SQL_PWD || process.env.MSSQL_PW;
+const dbHost = process.env.AZURE_SQL_SERVER || process.env.INSTANA_CONNECT_MSSQL_HOST;
+const dbUser = process.env.AZURE_SQL_USERNAME || process.env.INSTANA_CONNECT_MSSQL_USER;
+const dbPassword = process.env.AZURE_SQL_PWD || process.env.INSTANA_CONNECT_MSSQL_PW;
 const userTable = process.env.AZURE_USER_TABLE || process.env.MSSQL_USER_TABLE;
 const procedureName = process.env.AZURE_PROCEDURE_NAME || process.env.MSSQL_PROCEDURE_NAME;
 const database = process.env.AZURE_SQL_DATABASE || process.env.MSSQL_DB;

@@ -31,7 +31,7 @@ if (IS_LATEST) {
   sc = NATS.StringCodec();
 
   (async function () {
-    nats = await NATS.connect({ servers: process.env.NATS });
+    nats = await NATS.connect({ servers: process.env.INSTANA_CONNECT_NATS });
     connected = true;
 
     const sub = nats.subscribe('publish-test-subject');
@@ -122,7 +122,7 @@ if (IS_LATEST) {
     });
   })();
 } else {
-  nats = NATS.connect({ servers: [process.env.NATS] });
+  nats = NATS.connect({ servers: [process.env.INSTANA_CONNECT_NATS] });
   nats.on('connect', () => {
     connected = true;
 

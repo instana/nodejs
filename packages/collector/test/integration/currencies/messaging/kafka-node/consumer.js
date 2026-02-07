@@ -32,14 +32,14 @@ const receivedErrors = [];
 let client;
 if (kafka.Client) {
   // kafka-node < 4.0.0, client connects via zookeeper
-  client = new kafka.Client(`${process.env.ZOOKEEPER}/`);
+  client = new kafka.Client(`${process.env.INSTANA_CONNECT_KAFKA_ZOOKEEPER}/`);
   client.on('error', error => {
     receivedErrors.push(error);
     log('Got a client error: %s', error);
   });
 } else {
   // kafka-node >= 4.0.0, they dropped Zookeeper support, client connects directly to kafka
-  client = new kafka.KafkaClient({ kafkaHost: process.env.KAFKA });
+  client = new kafka.KafkaClient({ kafkaHost: process.env.INSTANA_CONNECT_KAFKA });
   client.on('error', error => {
     receivedErrors.push(error);
     log('Got a client error: %s', error);
@@ -51,7 +51,7 @@ if (process.env.CONSUMER_TYPE === 'consumerGroup') {
   log('Using ConsumerGroup');
   consumer = new kafka.ConsumerGroup(
     {
-      host: process.env.ZOOKEEPER,
+      host: process.env.INSTANA_CONNECT_KAFKA_ZOOKEEPER,
       fromOffset: 'latest',
       groupId: uuid()
     },

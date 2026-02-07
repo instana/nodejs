@@ -26,7 +26,7 @@ const app = express();
 const logPrefix = `Redis Batching App (${process.pid}):\t`;
 let connectedToRedis = false;
 const agentPort = process.env.INSTANA_AGENT_PORT;
-const client = redis.createClient(`//${process.env.REDIS}`);
+const client = redis.createClient(`//${process.env.INSTANA_CONNECT_REDIS}`);
 
 client.on('ready', () => {
   connectedToRedis = true;

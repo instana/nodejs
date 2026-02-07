@@ -24,7 +24,7 @@ function checkConnection(span, setupType) {
   if (setupType === 'cluster') {
     expect(span.data.redis.connection).to.exist;
   } else {
-    expect(span.data.redis.connection).to.equal(process.env.REDIS);
+    expect(span.data.redis.connection).to.equal(process.env.INSTANA_CONNECT_REDIS);
   }
 }
 

@@ -21,7 +21,7 @@ import KafkaLib from '@confluentinc/kafka-javascript';
 const app = express();
 app.use(bodyParser.json());
 
-const broker = process.env.KAFKA;
+const broker = process.env.INSTANA_CONNECT_KAFKA;
 const topic = process.env.CONFLUENT_KAFKA_TOPIC;
 const clientType = (process.env.KAFKA_CLIENT_TYPE || 'kafkajs').toLowerCase();
 

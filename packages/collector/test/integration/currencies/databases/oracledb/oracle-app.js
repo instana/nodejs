@@ -29,7 +29,7 @@ let connection;
     connection = await oracledb.getConnection({
       user: 'SYSTEM',
       password: 'teamnodejspassword',
-      connectString: `${process.env.ORACLEDB}/FREEPDB1`
+      connectString: `${process.env.INSTANA_CONNECT_ORACLEDB}/FREEPDB1`
     });
 
     connected = true;

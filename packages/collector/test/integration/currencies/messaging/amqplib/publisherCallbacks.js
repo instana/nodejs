@@ -212,7 +212,7 @@ app.listen(port, () => {
   log(`Listening on port: ${port}`);
 });
 
-amqp.connect(process.env.AMQP, (err, conn) => {
+amqp.connect(process.env.INSTANA_CONNECT_RABBITMQ_AMQP, (err, conn) => {
   if (err) {
     return bail(err);
   }

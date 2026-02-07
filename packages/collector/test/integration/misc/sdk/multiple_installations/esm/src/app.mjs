@@ -20,7 +20,7 @@ process.on('SIGTERM', () => {
 //       For ESM it works because our collector is CJS.
 // TODO: #125683
 import instana from '@instana/collector/src/index.js';
-import getAppPort from '@instana/collector/test/test_util/app-port.js';
+import getAppPort from '@_local/collector/test/test_util/app-port.js';
 const initializedInstana = instana();
 
 // NOTE: Does not work, because this is a new instance in the require cache and this code
@@ -28,7 +28,7 @@ const initializedInstana = instana();
 // import instana from '@instana/collector/src/index.js';
 
 import express from 'express';
-import delay from '@instana/core/test/test_util/delay.js';
+import delay from '@_local/core/test/test_util/delay.js';
 
 const port = getAppPort();
 const app = express();

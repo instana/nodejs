@@ -203,7 +203,7 @@ function consumerConfirm(conn) {
   }
 }
 
-amqp.connect(process.env.AMQP, (err, conn) => {
+amqp.connect(process.env.INSTANA_CONNECT_RABBITMQ_AMQP, (err, conn) => {
   if (err != null) {
     return bail(err);
   }

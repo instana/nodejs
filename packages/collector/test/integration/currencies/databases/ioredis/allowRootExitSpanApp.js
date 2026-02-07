@@ -27,14 +27,14 @@ log(logPrefix);
   await delay(1000);
 
   try {
-    const client = new ioredis(`//${process.env.REDIS}`);
+    const client = new ioredis(`//${process.env.INSTANA_CONNECT_REDIS}`);
 
     client.on('error', err => {
       log('IORedis client error:', err);
     });
 
     client.on('ready', () => {
-      log(`Connected to client 1 (${process.env.REDIS}).`);
+      log(`Connected to client 1 (${process.env.INSTANA_CONNECT_REDIS}).`);
     });
 
     const multi = await client.multi().set('key', 'value').get('key').exec();

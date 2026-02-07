@@ -39,7 +39,7 @@ const app = express();
 
 // promise based amqp publisher
 amqp
-  .connect(process.env.AMQP)
+  .connect(process.env.INSTANA_CONNECT_RABBITMQ_AMQP)
   .then(_connection => {
     connection = _connection;
     return connection.createChannel();

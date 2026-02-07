@@ -44,7 +44,7 @@ try {
   if (useAdapter) {
     if (provider === 'postgresql') {
       const { PrismaPg } = require('@prisma/adapter-pg');
-      adapter = new PrismaPg({ connectionString: process.env.PRISMA_POSTGRES_URL });
+      adapter = new PrismaPg({ connectionString: process.env.INSTANA_CONNECT_POSTGRES_PRISMA_URL });
       log(`Initialized Prisma ${version} with PostgreSQL adapter`);
     } else {
       const { PrismaBetterSqlite3 } = require('@prisma/adapter-better-sqlite3');

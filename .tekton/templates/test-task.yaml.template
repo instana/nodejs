@@ -69,6 +69,7 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
+        AVAILABLE_SIDECARS="{{availableSidecars}}"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
@@ -115,46 +116,44 @@ spec:
           export RUN_ESM=true
 
           if ! echo "{{groupName}}" | grep -q 'ci:collector'; then
-            echo "Skipping tests because groupName does not contain 'ci:collector'."
+            echo "Skipping tests because group does not support ESM."
             touch "{{groupName}}.succeeded"
             exit 0
           fi
         fi
 
+        if [ "{{claimTests}}" == "true" ]; then
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*test.js" "{{totalTasks}}" "$ARTIFACTS_PATH")
+          
+          if [ -z "$CLAIMED_TESTS" ]; then
+            echo "No tests to claim for this task"
+            touch "{{groupName}}.succeeded"
+            exit 0
+          fi
+          
+          echo "Claimed tests: $CLAIMED_TESTS"
+        fi
+
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            if [[ {{split}} =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT={{split}} CI_TEST_SPLIT_CURRENT={{splitNumber}} npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
+            if [ "{{claimTests}}" == "true" ]; then
+              npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}" -- $CLAIMED_TESTS
             else
-               npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
+              npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
             fi
           else
-            if [[ {{split}} =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT={{split}} CI_TEST_SPLIT_CURRENT={{splitNumber}} npx lerna run "{{subname}}" --stream --scope="{{scope}}"
+            if [ "{{claimTests}}" == "true" ]; then
+              npx lerna run "{{subname}}" --stream --scope="{{scope}}" -- $CLAIMED_TESTS
             else
               npm run "{{groupName}}"
             fi
           fi          
 
           if [ $? -eq 0 ]; then
-            if [[ {{split}} =~ ^[0-9]+$ ]]; then
-              touch "{{subname}}.succeeded"
-            else
-              touch "{{groupName}}.succeeded"
-            fi
-
+            touch "{{groupName}}.succeeded"
             break
           else
-            if [ $retry -eq 3 ]; then
-              if [[ {{split}} =~ ^[0-9]+$ ]]; then
-                touch "{{subname}}.failed"
-              else
-                touch "{{groupName}}.failed"
-              fi
-
-              exit 1
-            fi
 
             retry=$((retry + 1))
           fi

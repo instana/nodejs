@@ -20,10 +20,10 @@ const natsStreaming = require('node-nats-streaming');
 
 const app = express();
 const client = natsStreaming.connect('test-cluster', 'test-client-publisher-1', {
-  url: process.env.NATS_STREAMING
+  url: process.env.INSTANA_CONNECT_NATS_STREAMING
 });
 const client2 = natsStreaming.connect('test-cluster', 'test-client-publisher-2', {
-  url: process.env.NATS_STREAMING_ALTERNATIVE
+  url: process.env.INSTANA_CONNECT_NATS_STREAMING_ALTERNATIVE
 });
 const port = require('@_local/collector/test/test_util/app-port')();
 

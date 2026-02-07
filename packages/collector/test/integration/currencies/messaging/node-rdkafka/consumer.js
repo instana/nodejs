@@ -34,7 +34,7 @@ function setupConsumer() {
   let _consumer;
 
   const consumerOptions = {
-    'metadata.broker.list': process.env.KAFKA,
+    'metadata.broker.list': process.env.INSTANA_CONNECT_KAFKA,
     'group.id': uuid(),
     'enable.auto.commit': false
   };

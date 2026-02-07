@@ -47,8 +47,8 @@ if (IS_LATEST) {
         connectionErrorMsg = connErr.message;
       }
     } else {
-      natsClient = await NATS.connect({ servers: process.env.NATS });
-      natsClient2 = await NATS.connect({ servers: process.env.NATS_ALTERNATIVE });
+      natsClient = await NATS.connect({ servers: process.env.INSTANA_CONNECT_NATS });
+      natsClient2 = await NATS.connect({ servers: process.env.INSTANA_CONNECT_NATS_ALTERNATIVE });
       connected = true;
     }
   })();
@@ -56,9 +56,9 @@ if (IS_LATEST) {
   if (connectionError) {
     natsClient = NATS.connect({ servers: ['deno.nats.io:4323'] });
   } else {
-    natsClient = NATS.connect({ servers: [process.env.NATS] });
+    natsClient = NATS.connect({ servers: [process.env.INSTANA_CONNECT_NATS] });
   }
-  natsClient2 = NATS.connect({ servers: [process.env.NATS_ALTERNATIVE] });
+  natsClient2 = NATS.connect({ servers: [process.env.INSTANA_CONNECT_NATS_ALTERNATIVE] });
 
   let client1Connected = false;
   let client2Connected = false;

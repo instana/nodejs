@@ -60,19 +60,19 @@ if (useCluster) {
   const poolCluster = client.createPoolCluster({});
   poolCluster.add({
     connectionLimit: 5,
-    host: process.env.MYSQL_HOST,
-    user: process.env.MYSQL_USER,
-    password: process.env.MYSQL_PW,
-    database: process.env.MYSQL_DB
+    host: process.env.INSTANA_CONNECT_MYSQL_HOST,
+    user: process.env.INSTANA_CONNECT_MYSQL_USER,
+    password: process.env.INSTANA_CONNECT_MYSQL_PW,
+    database: process.env.INSTANA_CONNECT_MYSQL_DB
   });
   pool = poolCluster.of('*');
 } else {
   pool = client.createPool({
     connectionLimit: 5,
-    host: process.env.MYSQL_HOST,
-    user: process.env.MYSQL_USER,
-    password: process.env.MYSQL_PW,
-    database: process.env.MYSQL_DB
+    host: process.env.INSTANA_CONNECT_MYSQL_HOST,
+    user: process.env.INSTANA_CONNECT_MYSQL_USER,
+    password: process.env.INSTANA_CONNECT_MYSQL_PW,
+    database: process.env.INSTANA_CONNECT_MYSQL_DB
   });
 }
 

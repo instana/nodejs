@@ -4,9 +4,9 @@
 
 'use strict';
 
-const sentinelHost = process.env.REDIS_SENTINEL_HOST;
-const sentinelPort = process.env.REDIS_SENTINEL_PORT;
-const masterName = process.env.REDIS_SENTINEL_MASTER_NAME;
+const sentinelHost = process.env.INSTANA_CONNECT_REDIS_SENTINEL_HOST;
+const sentinelPort = process.env.INSTANA_CONNECT_REDIS_SENTINEL_PORT;
+const masterName = process.env.INSTANA_CONNECT_REDIS_SENTINEL_MASTER_NAME;
 
 module.exports = async function initializeSentinelConnection(redis, log) {
   const sentinelNodes = [{ host: sentinelHost, port: sentinelPort }];

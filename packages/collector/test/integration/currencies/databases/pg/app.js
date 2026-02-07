@@ -27,16 +27,16 @@ const Client = _pg.Client;
 const app = express();
 const logPrefix = `Express / Postgres App (${process.pid}):\t`;
 const pool = new Pool({
-  user: process.env.POSTGRES_USER,
-  host: process.env.POSTGRES_HOST,
-  database: process.env.POSTGRES_DB,
-  password: process.env.POSTGRES_PASSWORD
+  user: process.env.INSTANA_CONNECT_POSTGRES_USER,
+  host: process.env.INSTANA_CONNECT_POSTGRES_HOST,
+  database: process.env.INSTANA_CONNECT_POSTGRES_DB,
+  password: process.env.INSTANA_CONNECT_POSTGRES_PASSWORD
 });
 const client = new Client({
-  user: process.env.POSTGRES_USER,
-  host: process.env.POSTGRES_HOST,
-  database: process.env.POSTGRES_DB,
-  password: process.env.POSTGRES_PASSWORD
+  user: process.env.INSTANA_CONNECT_POSTGRES_USER,
+  host: process.env.INSTANA_CONNECT_POSTGRES_HOST,
+  database: process.env.INSTANA_CONNECT_POSTGRES_DB,
+  password: process.env.INSTANA_CONNECT_POSTGRES_PASSWORD
 });
 client.connect();
 

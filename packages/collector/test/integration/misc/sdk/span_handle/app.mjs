@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-import instanaFactory from '@instana/collector/src/index.js';
+import instanaFactory from '@_local/collector/src/index.js';
 const instana = instanaFactory();
 
 import getAppPort from '@_local/collector/test/test_util/app-port.js';

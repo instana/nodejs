@@ -169,7 +169,7 @@ module.exports = function (name, version, isLatest) {
       } else {
         expect(span.data.peer.hostname).to.equal('127.0.0.1');
         expect(span.data.peer.port).to.equal(27017);
-        expect(span.data.mongo.service).to.equal(process.env.MONGODB);
+        expect(span.data.mongo.service).to.equal(process.env.INSTANA_CONNECT_MONGODB);
       }
     });
   }

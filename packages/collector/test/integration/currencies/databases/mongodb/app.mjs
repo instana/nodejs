@@ -49,7 +49,7 @@ if (USE_ATLAS) {
     `mongodb+srv://${ATLAS_USER}:${ATLAS_PASSWORD}@${ATLAS_CLUSTER}/myproject?retryWrites=true&w=majority`;
   log(`Using MongoDB Atlas: ${connectString}`);
 } else {
-  connectString = `mongodb://${process.env.MONGODB}/myproject`;
+  connectString = `mongodb://${process.env.INSTANA_CONNECT_MONGODB}/myproject`;
   log(`Using local MongoDB: ${connectString}`);
 }
 

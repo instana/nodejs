@@ -69,6 +69,7 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
+        AVAILABLE_SIDECARS=""
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
@@ -106,42 +107,39 @@ spec:
         if [ "$(params.esm)" == "true" ]; then
           export RUN_ESM=true
           if ! echo "test:ci:aws-lambda" | grep -q 'ci:collector'; then
-            echo "Skipping tests because groupName does not contain 'ci:collector'."
+            echo "Skipping tests because group does not support ESM."
             touch "test:ci:aws-lambda.succeeded"
             exit 0
           fi
         fi
+        if [ "false" == "true" ]; then
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*test.js" "5" "$ARTIFACTS_PATH")
+          if [ -z "$CLAIMED_TESTS" ]; then
+            echo "No tests to claim for this task"
+            touch "test:ci:aws-lambda.succeeded"
+            exit 0
+          fi
+          echo "Claimed tests: $CLAIMED_TESTS"
+        fi
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            if [[ 5 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=3 npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-3"
+            if [ "false" == "true" ]; then
+              npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-3" -- $CLAIMED_TESTS
             else
-               npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-3"
+              npm run coverage-ci --npm_command="test:ci:aws-lambda" --report_dir="aws-lambda-split-3"
             fi
           else
-            if [[ 5 =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=5 CI_TEST_SPLIT_CURRENT=3 npx lerna run "test:ci" --stream --scope="@instana/aws-lambda"
+            if [ "false" == "true" ]; then
+              npx lerna run "test:ci" --stream --scope="@instana/aws-lambda" -- $CLAIMED_TESTS
             else
               npm run "test:ci:aws-lambda"
             fi
           fi          
           if [ $? -eq 0 ]; then
-            if [[ 5 =~ ^[0-9]+$ ]]; then
-              touch "test:ci.succeeded"
-            else
-              touch "test:ci:aws-lambda.succeeded"
-            fi
+            touch "test:ci:aws-lambda.succeeded"
             break
           else
-            if [ $retry -eq 3 ]; then
-              if [[ 5 =~ ^[0-9]+$ ]]; then
-                touch "test:ci.failed"
-              else
-                touch "test:ci:aws-lambda.failed"
-              fi
-              exit 1
-            fi
             retry=$((retry + 1))
           fi
         done

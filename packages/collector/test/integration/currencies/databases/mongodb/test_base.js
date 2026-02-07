@@ -487,7 +487,7 @@ module.exports = function (name, version, isLatest) {
             expectations = expectations.concat([
                 span => expect(span.data.peer.hostname).to.equal('127.0.0.1'),
                 span => expect(span.data.peer.port).to.equal(27017),
-                span => expect(span.data.mongo.service).to.equal(process.env.MONGODB)
+                span => expect(span.data.mongo.service).to.equal(process.env.INSTANA_CONNECT_MONGODB)
             ]);
         }
         if (filter != null) {

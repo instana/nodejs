@@ -393,11 +393,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-general-task
+    - name: collector-split-1-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-general
+        name: collector-split-1
       params:
         - name: node-version
           value: $(params.node-version)
@@ -418,11 +418,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-aws-v2-split-2-task
+    - name: collector-split-10-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-cloud-aws-v2-split-2
+        name: collector-split-10
       params:
         - name: node-version
           value: $(params.node-version)
@@ -443,11 +443,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-aws-v2-split-3-task
+    - name: collector-split-11-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-cloud-aws-v2-split-3
+        name: collector-split-11
       params:
         - name: node-version
           value: $(params.node-version)
@@ -468,11 +468,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-aws-v2-task
+    - name: collector-split-12-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-cloud-aws-v2
+        name: collector-split-12
       params:
         - name: node-version
           value: $(params.node-version)
@@ -493,11 +493,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-aws-v3-split-2-task
+    - name: collector-split-13-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-cloud-aws-v3-split-2
+        name: collector-split-13
       params:
         - name: node-version
           value: $(params.node-version)
@@ -518,11 +518,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-aws-v3-split-3-task
+    - name: collector-split-14-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-cloud-aws-v3-split-3
+        name: collector-split-14
       params:
         - name: node-version
           value: $(params.node-version)
@@ -543,11 +543,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-aws-v3-task
+    - name: collector-split-15-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-cloud-aws-v3
+        name: collector-split-15
       params:
         - name: node-version
           value: $(params.node-version)
@@ -568,11 +568,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-azure-task
+    - name: collector-split-16-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-cloud-azure
+        name: collector-split-16
       params:
         - name: node-version
           value: $(params.node-version)
@@ -593,11 +593,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-cloud-gcp-task
+    - name: collector-split-17-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-cloud-gcp
+        name: collector-split-17
       params:
         - name: node-version
           value: $(params.node-version)
@@ -618,11 +618,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-10-task
+    - name: collector-split-18-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-database-split-10
+        name: collector-split-18
       params:
         - name: node-version
           value: $(params.node-version)
@@ -643,11 +643,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-2-task
+    - name: collector-split-19-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-database-split-2
+        name: collector-split-19
       params:
         - name: node-version
           value: $(params.node-version)
@@ -668,11 +668,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-3-task
+    - name: collector-split-2-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-database-split-3
+        name: collector-split-2
       params:
         - name: node-version
           value: $(params.node-version)
@@ -693,11 +693,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-4-task
+    - name: collector-split-20-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-database-split-4
+        name: collector-split-20
       params:
         - name: node-version
           value: $(params.node-version)
@@ -718,11 +718,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-5-task
+    - name: collector-split-21-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-database-split-5
+        name: collector-split-21
       params:
         - name: node-version
           value: $(params.node-version)
@@ -743,11 +743,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-6-task
+    - name: collector-split-22-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-database-split-6
+        name: collector-split-22
       params:
         - name: node-version
           value: $(params.node-version)
@@ -768,11 +768,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-7-task
+    - name: collector-split-23-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-database-split-7
+        name: collector-split-23
       params:
         - name: node-version
           value: $(params.node-version)
@@ -793,11 +793,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-8-task
+    - name: collector-split-24-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-database-split-8
+        name: collector-split-24
       params:
         - name: node-version
           value: $(params.node-version)
@@ -818,11 +818,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-split-9-task
+    - name: collector-split-25-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-database-split-9
+        name: collector-split-25
       params:
         - name: node-version
           value: $(params.node-version)
@@ -843,11 +843,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-database-task
+    - name: collector-split-26-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-database
+        name: collector-split-26
       params:
         - name: node-version
           value: $(params.node-version)
@@ -868,11 +868,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-frameworks-task
+    - name: collector-split-27-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-frameworks
+        name: collector-split-27
       params:
         - name: node-version
           value: $(params.node-version)
@@ -893,11 +893,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-general-task
+    - name: collector-split-28-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-general
+        name: collector-split-28
       params:
         - name: node-version
           value: $(params.node-version)
@@ -918,11 +918,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-logging-task
+    - name: collector-split-29-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-logging
+        name: collector-split-29
       params:
         - name: node-version
           value: $(params.node-version)
@@ -943,11 +943,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-messaging-split-2-task
+    - name: collector-split-3-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-messaging-split-2
+        name: collector-split-3
       params:
         - name: node-version
           value: $(params.node-version)
@@ -968,11 +968,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-messaging-split-3-task
+    - name: collector-split-30-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-messaging-split-3
+        name: collector-split-30
       params:
         - name: node-version
           value: $(params.node-version)
@@ -993,11 +993,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-messaging-split-4-task
+    - name: collector-split-31-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-messaging-split-4
+        name: collector-split-31
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1018,11 +1018,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-messaging-split-5-task
+    - name: collector-split-32-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-messaging-split-5
+        name: collector-split-32
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1043,11 +1043,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-messaging-split-6-task
+    - name: collector-split-33-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-messaging-split-6
+        name: collector-split-33
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1068,11 +1068,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-messaging-task
+    - name: collector-split-34-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-messaging
+        name: collector-split-34
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1093,11 +1093,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-misc-task
+    - name: collector-split-35-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-misc
+        name: collector-split-35
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1118,11 +1118,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-protocols-split-2-task
+    - name: collector-split-36-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-protocols-split-2
+        name: collector-split-36
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1143,11 +1143,236 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-tracing-protocols-task
+    - name: collector-split-37-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-tracing-protocols
+        name: collector-split-37
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-split-38-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-split-38
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-split-39-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-split-39
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-split-4-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-split-4
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-split-40-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-split-40
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-split-5-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-split-5
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-split-6-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-split-6
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-split-7-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-split-7
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-split-8-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-split-8
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-split-9-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-split-9
       params:
         - name: node-version
           value: $(params.node-version)

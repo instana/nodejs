@@ -36,7 +36,7 @@ function getProducer() {
 
   const producerOptions = {
     'client.id': 'rdkafka-producer',
-    'metadata.broker.list': process.env.KAFKA,
+    'metadata.broker.list': process.env.INSTANA_CONNECT_KAFKA,
     // Enable to receive message payload in "delivery reports" event. This is the only way to know when a message
     // was successfully sent. But we cannot rely on it, nor set this option without the customer's knowledge.
     dr_cb: enableDeliveryCb

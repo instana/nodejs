@@ -69,6 +69,7 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
+        AVAILABLE_SIDECARS=""
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
@@ -106,42 +107,39 @@ spec:
         if [ "$(params.esm)" == "true" ]; then
           export RUN_ESM=true
           if ! echo "test:ci:opentelemetry-exporter" | grep -q 'ci:collector'; then
-            echo "Skipping tests because groupName does not contain 'ci:collector'."
+            echo "Skipping tests because group does not support ESM."
             touch "test:ci:opentelemetry-exporter.succeeded"
             exit 0
           fi
         fi
+        if [ "false" == "true" ]; then
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*test.js" "false" "$ARTIFACTS_PATH")
+          if [ -z "$CLAIMED_TESTS" ]; then
+            echo "No tests to claim for this task"
+            touch "test:ci:opentelemetry-exporter.succeeded"
+            exit 0
+          fi
+          echo "Claimed tests: $CLAIMED_TESTS"
+        fi
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
-            if [[ false =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npm run coverage-ci --npm_command="test:ci:opentelemetry-exporter" --report_dir="opentelemetry-exporter"
+            if [ "false" == "true" ]; then
+              npm run coverage-ci --npm_command="test:ci:opentelemetry-exporter" --report_dir="opentelemetry-exporter" -- $CLAIMED_TESTS
             else
-               npm run coverage-ci --npm_command="test:ci:opentelemetry-exporter" --report_dir="opentelemetry-exporter"
+              npm run coverage-ci --npm_command="test:ci:opentelemetry-exporter" --report_dir="opentelemetry-exporter"
             fi
           else
-            if [[ false =~ ^[0-9]+$ ]]; then
-              CI_TEST_SPLIT=false CI_TEST_SPLIT_CURRENT=1 npx lerna run "false" --stream --scope="false"
+            if [ "false" == "true" ]; then
+              npx lerna run "false" --stream --scope="@instana/opentelemetry-exporter" -- $CLAIMED_TESTS
             else
               npm run "test:ci:opentelemetry-exporter"
             fi
           fi          
           if [ $? -eq 0 ]; then
-            if [[ false =~ ^[0-9]+$ ]]; then
-              touch "false.succeeded"
-            else
-              touch "test:ci:opentelemetry-exporter.succeeded"
-            fi
+            touch "test:ci:opentelemetry-exporter.succeeded"
             break
           else
-            if [ $retry -eq 3 ]; then
-              if [[ false =~ ^[0-9]+$ ]]; then
-                touch "false.failed"
-              else
-                touch "test:ci:opentelemetry-exporter.failed"
-              fi
-              exit 1
-            fi
             retry=$((retry + 1))
           fi
         done

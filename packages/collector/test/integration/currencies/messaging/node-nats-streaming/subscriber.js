@@ -21,7 +21,7 @@ const natsStreaming = require('node-nats-streaming');
 const app = express();
 const port = require('@_local/collector/test/test_util/app-port')();
 const client = natsStreaming.connect('test-cluster', 'test-client-subscriber', {
-  url: process.env.NATS_STREAMING
+  url: process.env.INSTANA_CONNECT_NATS_STREAMING
 });
 let connected = false;
 

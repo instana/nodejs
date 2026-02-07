@@ -8,6 +8,6 @@ const { defineConfig } = require('prisma/config');
 
 module.exports = defineConfig({
   datasource: {
-    url: process.env.PRISMA_POSTGRES_URL
+    url: process.env.INSTANA_CONNECT_POSTGRES_PRISMA_URL
   }
 });

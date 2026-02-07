@@ -53,7 +53,7 @@ const amqpResponseHandlers = {};
 
 // We establish an AMQP connection to test GraphQL queries over non-HTTP protocols.
 amqp
-  .connect(process.env.AMQP)
+  .connect(process.env.INSTANA_CONNECT_RABBITMQ_AMQP)
   .then(connection => connection.createChannel())
   .then(_channel => {
     channel = _channel;

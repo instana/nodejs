@@ -38,7 +38,7 @@ if (USE_ATLAS) {
   connectString = `mongodb+srv://${ATLAS_USER}:${ATLAS_PASSWORD}@${ATLAS_CLUSTER}/mongoose?retryWrites=true&w=majority`;
   log(`Using MongoDB Atlas: ${connectString}`);
 } else {
-  connectString = `mongodb://${process.env.MONGODB}/mongoose`;
+  connectString = `mongodb://${process.env.INSTANA_CONNECT_MONGODB}/mongoose`;
   log(`Using local MongoDB: ${connectString}`);
 }
 

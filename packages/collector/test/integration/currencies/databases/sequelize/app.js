@@ -21,8 +21,8 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const port = require('@_local/collector/test/test_util/app-port')();
 
-const sequelize = new Sequelize(process.env.POSTGRES_DB, process.env.POSTGRES_USER, process.env.POSTGRES_PASSWORD, {
-  host: process.env.POSTGRES_HOST,
+const sequelize = new Sequelize(process.env.INSTANA_CONNECT_POSTGRES_DB, process.env.INSTANA_CONNECT_POSTGRES_USER, process.env.INSTANA_CONNECT_POSTGRES_PASSWORD, {
+  host: process.env.INSTANA_CONNECT_POSTGRES_HOST,
   dialect: 'postgres',
   // whether to use pg-native under the hood
   native: process.env.USE_PG_NATIVE,

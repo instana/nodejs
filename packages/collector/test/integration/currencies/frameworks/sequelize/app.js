@@ -24,10 +24,10 @@ const logPrefix = `Sequilize App (${process.pid}):\t`;
 const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = new Sequelize({
   dialect: 'postgres',
-  host: process.env.POSTGRES_HOST,
-  username: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  database: process.env.POSTGRES_DB
+  host: process.env.INSTANA_CONNECT_POSTGRES_HOST,
+  username: process.env.INSTANA_CONNECT_POSTGRES_USER,
+  password: process.env.INSTANA_CONNECT_POSTGRES_PASSWORD,
+  database: process.env.INSTANA_CONNECT_POSTGRES_DB
 });
 
 let connected = false;

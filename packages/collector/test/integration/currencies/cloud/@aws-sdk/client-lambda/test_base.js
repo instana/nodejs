@@ -44,7 +44,7 @@ async function start() {
   } else {
     envConfig = {
       AWS_LAMBDA_FUNCTION_NAME: functionName,
-      AWS_ENDPOINT: process.env.LOCALSTACK_AWS
+      AWS_ENDPOINT: process.env.INSTANA_CONNECT_LOCALSTACK_AWS
     };
   }
 

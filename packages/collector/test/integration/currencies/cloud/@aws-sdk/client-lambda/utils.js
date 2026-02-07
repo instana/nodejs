@@ -27,7 +27,7 @@ exports.getClientConfig = function () {
     };
   } else {
     return {
-      endpoint: process.env.LOCALSTACK_AWS,
+      endpoint: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
       region: 'us-east-2'
     };
   }

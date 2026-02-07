@@ -6,11 +6,11 @@
 
 module.exports = async function (redis, log) {
   const pool = await redis.createClientPool({
-    url: `redis://${process.env.REDIS}`
+    url: `redis://${process.env.INSTANA_CONNECT_REDIS}`
   });
   // eslint-disable-next-line no-console
   pool.on('error', err => console.error('Redis Client Pool Error', err));
   await pool.connect();
-  log(`Connected to pool(${process.env.REDIS}).`);
+  log(`Connected to pool(${process.env.INSTANA_CONNECT_REDIS}).`);
   return { connection1: pool };
 };

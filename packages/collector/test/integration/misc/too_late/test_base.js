@@ -25,7 +25,7 @@ module.exports = function () {
 
     const EXAMPLE_MODULE = 'mysql';
 
-    describe(`@_local/collector is initialized too late (choosing ${EXAMPLE_MODULE} as an example)`, function () {
+    describe(`@instana/collector is initialized too late (choosing ${EXAMPLE_MODULE} as an example)`, function () {
       let controls;
 
       before(async () => {
@@ -48,7 +48,7 @@ module.exports = function () {
         await controls.stop();
       });
 
-      it(`should warn when module ${EXAMPLE_MODULE} has been require before @_local/collector`, () =>
+      it(`should warn when module ${EXAMPLE_MODULE} has been require before @instana/collector`, () =>
         controls
           .sendRequest({
             path: '/'
@@ -109,7 +109,7 @@ module.exports = function () {
           ));
     });
 
-    describe('@_local/collector is initialized properly', () => {
+    describe('@instana/collector is initialized properly', () => {
       let controls;
 
       before(async () => {

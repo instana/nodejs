@@ -946,7 +946,7 @@ module.exports = function (name, version, isLatest) {
         agentControls: customAgentControls,
         env: {
           ...commonEnv,
-          REDIS_SERVER: `redis://${process.env.REDIS}`,
+          REDIS_SERVER: `redis://${process.env.INSTANA_CONNECT_REDIS}`,
           BULL_QUEUE_NAME: queueName,
           BULL_JOB_NAME: 'steve',
           INSTANA_ALLOW_ROOT_EXIT_SPAN: 1

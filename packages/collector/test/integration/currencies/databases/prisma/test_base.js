@@ -25,7 +25,7 @@ module.exports = function (name, version, isLatest, mode) {
 
     const provider = mode; // mode is either 'sqlite' or 'postgresql'
 
-    if (provider === 'postgresql' && !process.env.PRISMA_POSTGRES_URL) {
+    if (provider === 'postgresql' && !process.env.INSTANA_CONNECT_POSTGRES_PRISMA_URL) {
         throw new Error('PRISMA_POSTGRES_URL is not set.');
     }
 
@@ -222,7 +222,7 @@ module.exports = function (name, version, isLatest, mode) {
                 expectedUrl = 'file:./dev.db';
                 break;
             case 'postgresql':
-                expectedUrl = process.env.PRISMA_POSTGRES_URL.replace('nodepw', '_redacted_');
+                expectedUrl = process.env.INSTANA_CONNECT_POSTGRES_PRISMA_URL.replace('nodepw', '_redacted_');
                 break;
             default:
                 throw new Error(`Unknown provider: ${provider}`);

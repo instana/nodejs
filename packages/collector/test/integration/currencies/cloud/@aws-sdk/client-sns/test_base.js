@@ -80,7 +80,7 @@ function start() {
           appName: 'receiver.js',
           useGlobalAgent: true,
           env: {
-            AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
+            AWS_ENDPOINT: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
             AWS_SQS_QUEUE_URL: queueUrl,
             SQS_POLL_DELAY: 5
           }
@@ -171,7 +171,7 @@ function start() {
           appName: 'receiver.js',
           useGlobalAgent: true,
           env: {
-            AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
+            AWS_ENDPOINT: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
             AWS_SQS_QUEUE_URL: queueUrl,
             SQS_POLL_DELAY: 5
           }
@@ -236,7 +236,7 @@ function start() {
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
-            AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
+            AWS_ENDPOINT: process.env.INSTANA_CONNECT_LOCALSTACK_AWS,
             AWS_SQS_QUEUE_URL: queueUrl,
             SQS_POLL_DELAY: 5
           }

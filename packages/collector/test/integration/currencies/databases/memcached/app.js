@@ -20,7 +20,7 @@ const express = require('express');
 const app = express();
 const port = require('@_local/collector/test/test_util/app-port')();
 const log = require('@_local/core/test/test_util/log').getLogger(`Memcached (${process.pid}):\t`);
-const memcached = new Memcached(process.env.MEMCACHED || 'localhost:11211');
+const memcached = new Memcached(process.env.INSTANA_CONNECT_MEMCACHED || 'localhost:11211');
 
 /**
  * These arrays are used to build the call to the memcached lib, by using apply + a callback function

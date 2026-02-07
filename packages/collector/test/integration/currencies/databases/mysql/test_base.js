@@ -213,10 +213,10 @@ module.exports = function (name, version, isLatest) {
                                 span => expect(span.error).to.not.exist,
                                 span => expect(span.ec).to.equal(0),
                                 span => expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)'),
-                                span => expect(span.data.mysql.host).to.equal(process.env.MYSQL_HOST),
-                                span => expect(span.data.mysql.port).to.equal(Number(process.env.MYSQL_PORT)),
-                                span => expect(span.data.mysql.user).to.equal(process.env.MYSQL_USER),
-                                span => expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB)
+                                span => expect(span.data.mysql.host).to.equal(process.env.INSTANA_CONNECT_MYSQL_HOST),
+                                span => expect(span.data.mysql.port).to.equal(Number(process.env.INSTANA_CONNECT_MYSQL_PORT)),
+                                span => expect(span.data.mysql.user).to.equal(process.env.INSTANA_CONNECT_MYSQL_USER),
+                                span => expect(span.data.mysql.db).to.equal(process.env.INSTANA_CONNECT_MYSQL_DB)
                             ]);
                             const getEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
                                 span => expect(span.n).to.equal('node.http.server'),
@@ -235,10 +235,10 @@ module.exports = function (name, version, isLatest) {
                                 span => expect(span.error).to.not.exist,
                                 span => expect(span.ec).to.equal(0),
                                 span => expect(span.data.mysql.stmt).to.equal('SELECT value FROM random_values'),
-                                span => expect(span.data.mysql.host).to.equal(process.env.MYSQL_HOST),
-                                span => expect(span.data.mysql.port).to.equal(Number(process.env.MYSQL_PORT)),
-                                span => expect(span.data.mysql.user).to.equal(process.env.MYSQL_USER),
-                                span => expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB)
+                                span => expect(span.data.mysql.host).to.equal(process.env.INSTANA_CONNECT_MYSQL_HOST),
+                                span => expect(span.data.mysql.port).to.equal(Number(process.env.INSTANA_CONNECT_MYSQL_PORT)),
+                                span => expect(span.data.mysql.user).to.equal(process.env.INSTANA_CONNECT_MYSQL_USER),
+                                span => expect(span.data.mysql.db).to.equal(process.env.INSTANA_CONNECT_MYSQL_DB)
                             ]);
                         })
                     );
@@ -283,10 +283,10 @@ module.exports = function (name, version, isLatest) {
                                 span => expect(span.error).to.not.exist,
                                 span => expect(span.ec).to.equal(0),
                                 span => expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)'),
-                                span => expect(span.data.mysql.host).to.equal(process.env.MYSQL_HOST),
-                                span => expect(span.data.mysql.port).to.equal(Number(process.env.MYSQL_PORT)),
-                                span => expect(span.data.mysql.user).to.equal(process.env.MYSQL_USER),
-                                span => expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB)
+                                span => expect(span.data.mysql.host).to.equal(process.env.INSTANA_CONNECT_MYSQL_HOST),
+                                span => expect(span.data.mysql.port).to.equal(Number(process.env.INSTANA_CONNECT_MYSQL_PORT)),
+                                span => expect(span.data.mysql.user).to.equal(process.env.INSTANA_CONNECT_MYSQL_USER),
+                                span => expect(span.data.mysql.db).to.equal(process.env.INSTANA_CONNECT_MYSQL_DB)
                             ]);
 
                             testUtils.expectAtLeastOneMatching(spans, [

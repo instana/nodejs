@@ -18,9 +18,9 @@ const ProcessControls = require('@_local/collector/test/test_util/ProcessControl
 const globalAgent = require('@_local/collector/test/globalAgent');
 
 const DELAY_TIMEOUT_IN_MS = 500;
-const connStr1 = process.env.COUCHBASE;
-const connStr2 = process.env.COUCHBASE_ALTERNATIVE;
-const webUi = process.env.COUCHBASE_WEB_UI;
+const connStr1 = process.env.INSTANA_CONNECT_COUCHBASE;
+const connStr2 = process.env.INSTANA_CONNECT_COUCHBASE_ALTERNATIVE;
+const webUi = process.env.INSTANA_CONNECT_COUCHBASE_WEB_UI;
 
 const verifyCouchbaseSpan = (controls, entrySpan, options = {}) => [
   span => expect(span.t).to.equal(entrySpan.t),
