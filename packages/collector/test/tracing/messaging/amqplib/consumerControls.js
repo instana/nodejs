@@ -7,9 +7,9 @@
 
 const spawn = require('child_process').spawn;
 const path = require('path');
-const testUtils = require('../../../../../core/test/test_util');
-const config = require('../../../../../core/test/config');
-const agentPort = require('../../../globalAgent').instance.agentPort;
+const testUtils = require('@_instana/core/test/test_util');
+const config = require('@_instana/core/test/config');
+const agentPort = require('@_instana/collector/test/globalAgent').instance.agentPort;
 
 let app;
 
@@ -20,7 +20,6 @@ exports.registerTestHooks = opts => {
     const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
     env.TRACING_ENABLED = opts.enableTracing !== false;
-    env.AMQPLIB_VERSION = opts.version;
     env.INSTANA_RETRY_AGENT_CONNECTION_IN_MS = 100;
 
     app = spawn('node', [path.join(__dirname, `consumer${opts.apiType}.js`)], {

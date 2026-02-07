@@ -8,9 +8,7 @@
 'use strict';
 
 const agentPort = process.env.AGENT_PORT;
-require('./mockVersion');
-
-const instana = require('../../../..')({
+const instana = require('@instana/collector')({
   agentPort,
   level: 'warn',
   tracing: {

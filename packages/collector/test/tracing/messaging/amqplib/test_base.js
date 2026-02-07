@@ -6,13 +6,12 @@
 'use strict';
 
 const expect = require('chai').expect;
-const path = require('path');
-const constants = require('@instana/core').tracing.constants;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
-const ProcessControls = require('../../../test_util/ProcessControls');
-const { delay, expectExactlyOneMatching, retry } = require('../../../../../core/test/test_util');
-const globalAgent = require('../../../globalAgent');
+
+const constants = require('@_instana/core').tracing.constants;
+const config = require('@_instana/core/test/config');
+const ProcessControls = require('@_instana/collector/test/test_util/ProcessControls');
+const { delay, expectExactlyOneMatching, retry } = require('@_instana/core/test/test_util');
+const globalAgent = require('@_instana/collector/test/globalAgent');
 
 const exchange = require('./amqpUtil').exchange;
 const queueName = require('./amqpUtil').queueName;
@@ -23,71 +22,65 @@ const agentControls = globalAgent.instance;
 let publisherControls;
 let consumerControls;
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+module.exports = function (name, version, isLatest) {
+  this.timeout(config.getTestTimeout());
 
-['latest', 'v0.8.0'].forEach(version => {
-  mochaSuiteFn(`tracing/amqp: ${version}`, function () {
-    this.timeout(config.getTestTimeout());
+  globalAgent.setUpCleanUpHooks();
 
-    globalAgent.setUpCleanUpHooks();
+  const commonEnv = {
+    LIBRARY_LATEST: isLatest,
+    LIBRARY_VERSION: version,
+    LIBRARY_NAME: name
+  };
 
-    // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
-    // TODO: Support for mocking `import` in ESM apps is planned under INSTA-788.
-    if (process.env.RUN_ESM && version !== 'latest') return;
+  publisherControls = require('./publisherControls');
+  consumerControls = require('./consumerControls');
 
-    publisherControls = require('./publisherControls');
-    consumerControls = require('./consumerControls');
-
-    ['Promises', 'Callbacks'].forEach(apiType => {
-      describe(apiType, function () {
-        registerTests.call(this, apiType);
-      });
+  ['Promises', 'Callbacks'].forEach(apiType => {
+    describe(apiType, function () {
+      registerTests.call(this, apiType);
     });
-
-    if (version === 'latest') {
-      describe('allowRootExitSpan', function () {
-        let controls;
-
-        before(async () => {
-          controls = new ProcessControls({
-            useGlobalAgent: true,
-            appPath: path.join(__dirname, 'allowRootExitSpanApp'),
-            env: {
-              INSTANA_ALLOW_ROOT_EXIT_SPAN: 1
-            }
-          });
-
-          await controls.start(null, null, true);
-        });
-
-        beforeEach(async () => {
-          await agentControls.clearReceivedTraceData();
-        });
-
-        it('must trace', async function () {
-          await retry(async () => {
-            const spans = await agentControls.getSpans();
-            expect(spans.length).to.be.eql(1);
-
-            expectExactlyOneMatching(spans, [
-              span => expect(span.n).to.equal('rabbitmq'),
-              span => expect(span.k).to.equal(2)
-            ]);
-          });
-        });
-      });
-    }
   });
 
+  if (isLatest) {
+    describe('allowRootExitSpan', function () {
+      let controls;
+
+      before(async () => {
+        controls = new ProcessControls({
+          dirname: __dirname,
+          appName: 'allowRootExitSpanApp.js',
+          useGlobalAgent: true,
+          env: {
+            ...commonEnv,
+            INSTANA_ALLOW_ROOT_EXIT_SPAN: 1
+          }
+        });
+
+        await controls.start(null, null, true);
+      });
+
+      beforeEach(async () => {
+        await agentControls.clearReceivedTraceData();
+      });
+
+      it('must trace', async function () {
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          expect(spans.length).to.be.eql(1);
+
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('rabbitmq'),
+            span => expect(span.k).to.equal(2)
+          ]);
+        });
+      });
+    });
+  }
+
   function registerTests(apiType) {
-    publisherControls.registerTestHooks({
-      apiType,
-      version
-    });
-    consumerControls.registerTestHooks({
-      apiType,
-      version
-    });
+    publisherControls.registerTestHooks({ apiType });
+    consumerControls.registerTestHooks({ apiType });
 
     beforeEach(async () => {
       await agentControls.clearReceivedTraceData();
@@ -181,7 +174,6 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
         )
       ));
 
-    // `sendToQueue` calls .publish internally
     it('must record an exit span for ConfirmChannel#sendToQueue', () =>
       publisherControls.sendToConfirmQueue('Ohai!').then(() =>
         retry(() =>
@@ -270,7 +262,6 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
     }
 
     function verifyHttpExit(spans, parentSpan) {
-      // verify that subsequent calls are correctly traced
       return expectExactlyOneMatching(spans, [
         span => expect(span.n).to.equal('node.http.client'),
         span => expect(span.t).to.equal(parentSpan.t),
@@ -279,4 +270,4 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
       ]);
     }
   }
-});
+};

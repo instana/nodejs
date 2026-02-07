@@ -14,9 +14,7 @@ process.on('SIGTERM', () => {
 });
 
 const agentPort = process.env.AGENT_PORT;
-require('./mockVersion');
-
-require('../../../..')({
+require('@instana/collector')({
   agentPort,
   level: 'warn',
   tracing: {

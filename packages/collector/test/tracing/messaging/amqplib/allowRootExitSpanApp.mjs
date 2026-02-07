@@ -1,5 +1,5 @@
 /*
- * (c) Copyright IBM Corp. 2024
+ * (c) Copyright IBM Corp. 2025
  */
 
 'use strict';
@@ -10,15 +10,11 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')({
-  tracing: {
-    allowRootExitSpan: true
-  }
-});
-
-const { delay } = require('@instana/core/test/test_util');
-const amqp = require('amqplib');
-const exchange = require('./amqpUtil').exchange;
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const delay = require('@_instana/core/test/test_util/delay');
+import amqp from 'amqplib';
+import { exchange } from './amqpUtil.js';
 
 const logPrefix = `amqp Allow Root Exit Span App (${process.pid}):\t`;
 let connection;
