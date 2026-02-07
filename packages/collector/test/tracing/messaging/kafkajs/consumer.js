@@ -11,13 +11,13 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const instana = require('../../../..')();
+const instana = require('@instana/collector')();
 const express = require('express');
 const { Kafka } = require('kafkajs');
 
 const { v4: uuid } = require('uuid');
 
-const delay = require('../../../../../core/test/test_util/delay');
+const delay = require('@_local/core/test/test_util/delay');
 
 const appPort = process.env.APP_PORT;
 const agentPort = process.env.INSTANA_AGENT_PORT;

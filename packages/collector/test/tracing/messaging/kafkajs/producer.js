@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')();
+require('@instana/collector')();
 
 const bodyParser = require('body-parser');
 const express = require('express');

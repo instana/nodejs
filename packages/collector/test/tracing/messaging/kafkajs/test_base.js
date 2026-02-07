@@ -9,7 +9,6 @@ const path = require('path');
 const expect = require('chai').expect;
 
 const constants = require('@_local/core').tracing.constants;
-const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('@_local/core/test/config');
 const {
   delay,
@@ -19,11 +18,9 @@ const {
   getSpansByName,
   retry
 } = require('@_local/core/test/test_util');
-const ProcessControls = require('../../../test_util/ProcessControls');
-const globalAgent = require('../../../globalAgent');
-const { AgentStubControls } = require('../../../apps/agentStubControls');
-
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
+const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
 
 const retryTime = 5000;
 const retryTimeUntil = () => {
@@ -31,8 +28,12 @@ const retryTimeUntil = () => {
 };
 
 // node bin/start-test-containers.js --zookeeper --kafka --schema-registry --kafka-topics
-mochaSuiteFn('tracing/kafkajs', function () {
+module.exports = function (name, version, isLatest) {
   this.timeout(config.getTestTimeout() * 5);
+
+  process.env.LIBRARY_LATEST = isLatest;
+  process.env.LIBRARY_VERSION = version;
+  process.env.LIBRARY_NAME = name;
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
@@ -54,12 +55,14 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
           before(async () => {
             consumerControls = new ProcessControls({
-              appPath: path.join(__dirname, 'consumer'),
+              dirname: __dirname,
+              appName: 'consumer.js',
               useGlobalAgent: true
             });
 
             producerControls = new ProcessControls({
-              appPath: path.join(__dirname, 'producer'),
+              dirname: __dirname,
+              appName: 'producer.js',
               useGlobalAgent: true
             });
 
@@ -168,7 +171,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
           before(async () => {
             producerControls = new ProcessControls({
-              appPath: path.join(__dirname, 'producer'),
+              dirname: __dirname,
+              appName: 'producer.js',
               useGlobalAgent: true
             });
 
@@ -232,11 +236,13 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
         before(async () => {
           consumerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'consumer'),
+            dirname: __dirname,
+              appName: 'consumer.js',
             useGlobalAgent: true
           });
           producerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'producer'),
+            dirname: __dirname,
+              appName: 'producer.js',
             useGlobalAgent: true,
             env: {
               INSTANA_KAFKA_TRACE_CORRELATION: 'false'
@@ -344,11 +350,13 @@ mochaSuiteFn('tracing/kafkajs', function () {
       });
 
       consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
+        dirname: __dirname,
+              appName: 'consumer.js',
         agentControls: customAgentControls
       });
       producerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'producer'),
+        dirname: __dirname,
+              appName: 'producer.js',
         agentControls: customAgentControls
       });
 
@@ -403,12 +411,14 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
     before(async () => {
       consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
+        dirname: __dirname,
+              appName: 'consumer.js',
         useGlobalAgent: true,
         tracingEnabled: false
       });
       producerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'producer'),
+        dirname: __dirname,
+              appName: 'producer.js',
         useGlobalAgent: true,
         tracingEnabled: false
       });
@@ -476,11 +486,13 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
     before(async () => {
       consumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'consumer'),
+        dirname: __dirname,
+              appName: 'consumer.js',
         useGlobalAgent: true
       });
       producerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'producer'),
+        dirname: __dirname,
+              appName: 'producer.js',
         useGlobalAgent: true
       });
 
@@ -546,11 +558,13 @@ mochaSuiteFn('tracing/kafkajs', function () {
           await customAgentControls.startAgent({ ignoreEndpoints: { kafka: ['send'] } });
 
           producerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'producer'),
+            dirname: __dirname,
+              appName: 'producer.js',
             agentControls: customAgentControls
           });
           consumerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'consumer'),
+            dirname: __dirname,
+              appName: 'consumer.js',
             agentControls: customAgentControls
           });
 
@@ -605,11 +619,13 @@ mochaSuiteFn('tracing/kafkajs', function () {
           await customAgentControls.startAgent({ ignoreEndpoints: { kafka: ['consume'] } });
 
           producerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'producer'),
+            dirname: __dirname,
+              appName: 'producer.js',
             agentControls: customAgentControls
           });
           consumerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'consumer'),
+            dirname: __dirname,
+              appName: 'consumer.js',
             agentControls: customAgentControls
           });
 
@@ -670,11 +686,13 @@ mochaSuiteFn('tracing/kafkajs', function () {
           await customAgentControls.startAgent({ ignoreEndpoints: { kafka: [{ endpoints: ['*'] }] } });
 
           producerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'producer'),
+            dirname: __dirname,
+              appName: 'producer.js',
             agentControls: customAgentControls
           });
           consumerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'consumer'),
+            dirname: __dirname,
+              appName: 'consumer.js',
             agentControls: customAgentControls
           });
 
@@ -731,11 +749,13 @@ mochaSuiteFn('tracing/kafkajs', function () {
             });
 
             producerControls = new ProcessControls({
-              appPath: path.join(__dirname, 'producer'),
+              dirname: __dirname,
+              appName: 'producer.js',
               agentControls: customAgentControls
             });
             consumerControls = new ProcessControls({
-              appPath: path.join(__dirname, 'consumer'),
+              dirname: __dirname,
+              appName: 'consumer.js',
               agentControls: customAgentControls
             });
 
@@ -812,11 +832,13 @@ mochaSuiteFn('tracing/kafkajs', function () {
             });
 
             producerControls = new ProcessControls({
-              appPath: path.join(__dirname, 'producer'),
+              dirname: __dirname,
+              appName: 'producer.js',
               agentControls: customAgentControls
             });
             consumerControls = new ProcessControls({
-              appPath: path.join(__dirname, 'consumer'),
+              dirname: __dirname,
+              appName: 'consumer.js',
               agentControls: customAgentControls
             });
 
@@ -873,13 +895,15 @@ mochaSuiteFn('tracing/kafkajs', function () {
     describe('via INSTANA_IGNORE_ENDPOINTS_PATH', () => {
       before(async () => {
         consumerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'consumer'),
+          dirname: __dirname,
+              appName: 'consumer.js',
           useGlobalAgent: true,
           env: { INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml') }
         });
 
         producerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'producer'),
+          dirname: __dirname,
+              appName: 'producer.js',
           useGlobalAgent: true,
           env: { INSTANA_IGNORE_ENDPOINTS_PATH: path.join(__dirname, 'files', 'tracing.yaml') }
         });
@@ -928,7 +952,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
     describe('SDK: ignore entry spans(consume)', function () {
       before(async () => {
         consumerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'consumer'),
+          dirname: __dirname,
+              appName: 'consumer.js',
           useGlobalAgent: true,
           env: {
             // basic ignoring config for consume
@@ -937,7 +962,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
         });
 
         producerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'producer'),
+          dirname: __dirname,
+              appName: 'producer.js',
           useGlobalAgent: true
         });
 
@@ -1025,7 +1051,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
     describe('when consumer having an aditional HTTP entry call', function () {
       before(async () => {
         consumerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'consumer'),
+          dirname: __dirname,
+              appName: 'consumer.js',
           useGlobalAgent: true,
           env: {
             // basic ignoring config for consume
@@ -1034,7 +1061,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
         });
 
         producerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'producer'),
+          dirname: __dirname,
+              appName: 'producer.js',
           useGlobalAgent: true
         });
 
@@ -1111,12 +1139,14 @@ mochaSuiteFn('tracing/kafkajs', function () {
       describe('when send method is ignored', function () {
         before(async () => {
           consumerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'consumer'),
+            dirname: __dirname,
+              appName: 'consumer.js',
             useGlobalAgent: true
           });
 
           producerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'producer'),
+            dirname: __dirname,
+              appName: 'producer.js',
             useGlobalAgent: true,
             env: {
               // basic ignoring config for send
@@ -1198,7 +1228,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
       describe('when consume method is ignored', function () {
         before(async () => {
           consumerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'consumer'),
+            dirname: __dirname,
+              appName: 'consumer.js',
             useGlobalAgent: true,
             env: {
               // basic ignoring config for consume
@@ -1208,7 +1239,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
           });
 
           producerControls = new ProcessControls({
-            appPath: path.join(__dirname, 'producer'),
+            dirname: __dirname,
+              appName: 'producer.js',
             useGlobalAgent: true
           });
 
@@ -1575,4 +1607,4 @@ mochaSuiteFn('tracing/kafkajs', function () {
   function getTopicPrefix(useEachBatch) {
     return useEachBatch ? 'test-batch-topic' : 'test-topic';
   }
-});
+};
