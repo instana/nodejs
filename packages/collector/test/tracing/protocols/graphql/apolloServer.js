@@ -20,16 +20,7 @@ const morgan = require('morgan');
 const { WebSocketServer } = require('ws');
 const { useServer } = require('graphql-ws/use/ws');
 
-// In Apollo Server v5, use @as-integrations/express5; otherwise, fall back to the built-in v4 middleware.
-const apolloServerVersion = process.env.APOLLO_SERVER_VERSION || 'latest';
-
-let expressMiddleware;
-
-if (apolloServerVersion === 'latest') {
-  ({ expressMiddleware } = require('@as-integrations/express5'));
-} else {
-  ({ expressMiddleware } = require('@apollo/server-v4/express4'));
-}
+const { expressMiddleware } = require('@as-integrations/express5');
 
 const { schema, pubsub, pinoLogger } = require('./schema')();
 const data = require('./data');
