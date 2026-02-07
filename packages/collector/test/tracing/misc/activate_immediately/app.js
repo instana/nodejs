@@ -10,10 +10,10 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')();
+require('@instana/collector')();
 
 const logPrefix = `Activate Immediately App (${process.pid}):\t`;
-const port = require('../../../test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const express = require('express');
 const app = express();
 const agentPort = process.env.INSTANA_AGENT_PORT;

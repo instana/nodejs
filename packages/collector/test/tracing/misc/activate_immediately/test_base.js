@@ -6,15 +6,17 @@
 
 const expect = require('chai').expect;
 const constants = require('@_local/core').tracing.constants;
-const supportedVersion = require('@_local/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../../test_util/ProcessControls');
-const { AgentStubControls } = require('../../../apps/agentStubControls');
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const config = require('@_local/core/test/config');
+const testUtils = require('@_local/core/test/test_util');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const { AgentStubControls } = require('@_local/collector/test/apps/agentStubControls');
 
-mochaSuiteFn('tracing/activateImmediately', function () {
+module.exports = function (name, version, isLatest) {
   this.timeout(config.getTestTimeout());
+
+  process.env.LIBRARY_LATEST = isLatest;
+  process.env.LIBRARY_VERSION = version;
+  process.env.LIBRARY_NAME = name;
 
   let customAgent;
   let appControls;
@@ -76,4 +78,4 @@ mochaSuiteFn('tracing/activateImmediately', function () {
       })
     );
   });
-});
+};
