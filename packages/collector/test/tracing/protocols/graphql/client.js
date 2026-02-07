@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')();
+require('@instana/collector')();
 
 const amqp = require('amqplib');
 const bodyParser = require('body-parser');
@@ -41,7 +41,7 @@ const serverGraphQLEndpoint = `${serverBaseUrl}/graphql`;
 const serverWsGraphQLUrl = `ws://127.0.0.1:${serverPort}/graphql`;
 
 const app = express();
-const port = require('../../../test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const logPrefix = `GraphQL Client (${process.pid}):\t`;
 
 let channel;

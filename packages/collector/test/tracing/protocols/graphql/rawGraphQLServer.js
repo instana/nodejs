@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')();
+require('@instana/collector')();
 
 const bodyParser = require('body-parser');
 const express = require('express');
@@ -23,7 +23,7 @@ const { schema } = require('./schema')();
 
 const graphql = graphQL.graphql;
 
-const port = require('../../../test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const app = express();
 
 const logPrefix = `GraphQL (raw) Server (${process.pid}):\t`;

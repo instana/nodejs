@@ -11,7 +11,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-require('../../../..')();
+require('@instana/collector')();
 
 const { ApolloServer } = require('@apollo/server');
 const bodyParser = require('body-parser');
@@ -34,7 +34,7 @@ if (apolloServerVersion === 'latest') {
 const { schema, pubsub, pinoLogger } = require('./schema')();
 const data = require('./data');
 
-const port = require('../../../test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const app = express();
 
 const logPrefix = `GraphQL/Apollo Server (${process.pid}):\t`;

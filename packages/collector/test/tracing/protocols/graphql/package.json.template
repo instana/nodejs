@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "amqplib": "latest",
+    "graphql-subscriptions": "latest",
+    "graphql-ws": "latest",
+    "pino": "latest"
+  }
+}

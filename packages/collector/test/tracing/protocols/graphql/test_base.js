@@ -4,32 +4,31 @@
 
 'use strict';
 
-const path = require('path');
 const expect = require('chai').expect;
 
 const constants = require('@_local/core').tracing.constants;
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
-const delay = require('../../../../../core/test/test_util/delay');
+const config = require('@_local/core/test/config');
+const delay = require('@_local/core/test/test_util/delay');
 const {
   getSpansByName,
   expectAtLeastOneMatching,
   expectExactlyOneMatching,
   retry
-} = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../../test_util/ProcessControls');
-const globalAgent = require('../../../globalAgent');
+} = require('@_local/core/test/test_util');
+const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
+const globalAgent = require('@_local/collector/test/globalAgent');
 
 const agentControls = globalAgent.instance;
 
-function start(graphqlVersion) {
+module.exports = function (name, version, isLatest) {
   this.timeout(config.getTestTimeout() * 5);
 
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  describe(`${graphqlVersion}`, () => {
+  describe('graphql', () => {
     globalAgent.setUpCleanUpHooks();
 
     const useAlias = Math.random >= 0.5;
@@ -52,18 +51,24 @@ function start(graphqlVersion) {
 
                 before(async () => {
                   serverControls = new ProcessControls({
-                    appPath: path.join(__dirname, type === 'raw' ? 'rawGraphQLServer' : 'apolloServer'),
+                    dirname: __dirname,
+                    appName: type === 'raw' ? 'rawGraphQLServer.js' : 'apolloServer.js',
                     useGlobalAgent: true,
                     env: {
-                      GRAPHQL_VERSION: graphqlVersion
+                      LIBRARY_VERSION: version,
+                      LIBRARY_NAME: name,
+                      LIBRARY_LATEST: isLatest
                     }
                   });
                   clientControls = new ProcessControls({
-                    appPath: path.join(__dirname, 'client'),
+                    dirname: __dirname,
+                    appName: 'client.js',
                     useGlobalAgent: true,
                     env: {
-                      SERVER_PORT: serverControls.getPort(),
-                      GRAPHQL_VERSION: graphqlVersion
+                      LIBRARY_VERSION: version,
+                      LIBRARY_NAME: name,
+                      LIBRARY_LATEST: isLatest,
+                      SERVER_PORT: serverControls.getPort()
                     }
                   });
 
@@ -261,18 +266,24 @@ function start(graphqlVersion) {
 
           before(async () => {
             serverControls = new ProcessControls({
-              appPath: path.join(__dirname, type === 'raw' ? 'rawGraphQLServer' : 'apolloServer'),
+              dirname: __dirname,
+              appName: type === 'raw' ? 'rawGraphQLServer.js' : 'apolloServer.js',
               useGlobalAgent: true,
               env: {
-                GRAPHQL_VERSION: graphqlVersion
+                LIBRARY_VERSION: version,
+                LIBRARY_NAME: name,
+                LIBRARY_LATEST: isLatest
               }
             });
             clientControls = new ProcessControls({
-              appPath: path.join(__dirname, 'client'),
+              dirname: __dirname,
+              appName: 'client.js',
               useGlobalAgent: true,
               env: {
-                SERVER_PORT: serverControls.getPort(),
-                GRAPHQL_VERSION: graphqlVersion
+                LIBRARY_VERSION: version,
+                LIBRARY_NAME: name,
+                LIBRARY_LATEST: isLatest,
+                SERVER_PORT: serverControls.getPort()
               }
             });
 
@@ -310,19 +321,25 @@ function start(graphqlVersion) {
 
           before(async () => {
             serverControls = new ProcessControls({
-              appPath: path.join(__dirname, type === 'raw' ? 'rawGraphQLServer' : 'apolloServer'),
+              dirname: __dirname,
+              appName: type === 'raw' ? 'rawGraphQLServer.js' : 'apolloServer.js',
               useGlobalAgent: true,
               env: {
-                GRAPHQL_VERSION: graphqlVersion
+                LIBRARY_VERSION: version,
+                LIBRARY_NAME: name,
+                LIBRARY_LATEST: isLatest
               }
             });
 
             clientControls = new ProcessControls({
-              appPath: path.join(__dirname, 'client'),
+              dirname: __dirname,
+              appName: 'client.js',
               useGlobalAgent: true,
               env: {
-                SERVER_PORT: serverControls.getPort(),
-                GRAPHQL_VERSION: graphqlVersion
+                LIBRARY_VERSION: version,
+                LIBRARY_NAME: name,
+                LIBRARY_LATEST: isLatest,
+                SERVER_PORT: serverControls.getPort()
               }
             });
 
@@ -365,27 +382,36 @@ function start(graphqlVersion) {
 
         before(async () => {
           serverControls = new ProcessControls({
-            appPath: path.join(__dirname, 'apolloServer'),
+            dirname: __dirname,
+            appName: 'apolloServer.js',
             useGlobalAgent: true,
             env: {
-              GRAPHQL_VERSION: graphqlVersion
+              LIBRARY_VERSION: version,
+              LIBRARY_NAME: name,
+              LIBRARY_LATEST: isLatest
             }
           });
           clientControls1 = new ProcessControls({
-            appPath: path.join(__dirname, 'client'),
+            dirname: __dirname,
+            appName: 'client.js',
             useGlobalAgent: true,
             env: {
-              SERVER_PORT: serverControls.getPort(),
-              GRAPHQL_VERSION: graphqlVersion
+              LIBRARY_VERSION: version,
+              LIBRARY_NAME: name,
+              LIBRARY_LATEST: isLatest,
+              SERVER_PORT: serverControls.getPort()
             }
           });
 
           clientControls2 = new ProcessControls({
-            appPath: path.join(__dirname, 'client'),
+            dirname: __dirname,
+            appName: 'client.js',
             useGlobalAgent: true,
             env: {
-              SERVER_PORT: serverControls.getPort(),
-              GRAPHQL_VERSION: graphqlVersion
+              LIBRARY_VERSION: version,
+              LIBRARY_NAME: name,
+              LIBRARY_LATEST: isLatest,
+              SERVER_PORT: serverControls.getPort()
             }
           });
 
@@ -458,18 +484,24 @@ function start(graphqlVersion) {
 
       before(async () => {
         serverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'apolloServer'),
+          dirname: __dirname,
+          appName: 'apolloServer.js',
           useGlobalAgent: true,
           env: {
-            GRAPHQL_VERSION: graphqlVersion
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name,
+            LIBRARY_LATEST: isLatest
           }
         });
         clientControls = new ProcessControls({
-          appPath: path.join(__dirname, 'client'),
+          dirname: __dirname,
+          appName: 'client.js',
           useGlobalAgent: true,
           env: {
-            SERVER_PORT: serverControls.getPort(),
-            GRAPHQL_VERSION: graphqlVersion
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name,
+            LIBRARY_LATEST: isLatest,
+            SERVER_PORT: serverControls.getPort()
           }
         });
 
@@ -526,19 +558,25 @@ function start(graphqlVersion) {
 
       before(async () => {
         serverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'apolloServer'),
+          dirname: __dirname,
+          appName: 'apolloServer.js',
           useGlobalAgent: true,
           env: {
-            GRAPHQL_VERSION: graphqlVersion
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name,
+            LIBRARY_LATEST: isLatest
           }
         });
 
         clientControls = new ProcessControls({
-          appPath: path.join(__dirname, 'client'),
+          dirname: __dirname,
+          appName: 'client.js',
           useGlobalAgent: true,
           env: {
-            SERVER_PORT: serverControls.getPort(),
-            GRAPHQL_VERSION: graphqlVersion
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name,
+            LIBRARY_LATEST: isLatest,
+            SERVER_PORT: serverControls.getPort()
           }
         });
 
@@ -580,20 +618,26 @@ function start(graphqlVersion) {
 
       before(async () => {
         serverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'rawGraphQLServer'),
+          dirname: __dirname,
+          appName: 'rawGraphQLServer.js',
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
-            GRAPHQL_VERSION: graphqlVersion
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name,
+            LIBRARY_LATEST: isLatest
           }
         });
         clientControls = new ProcessControls({
-          appPath: path.join(__dirname, 'client'),
+          dirname: __dirname,
+          appName: 'client.js',
           useGlobalAgent: true,
           tracingEnabled: false,
           env: {
-            SERVER_PORT: serverControls.getPort(),
-            GRAPHQL_VERSION: graphqlVersion
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name,
+            LIBRARY_LATEST: isLatest,
+            SERVER_PORT: serverControls.getPort()
           }
         });
 
@@ -634,19 +678,25 @@ function start(graphqlVersion) {
 
       before(async () => {
         serverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'rawGraphQLServer'),
+          dirname: __dirname,
+          appName: 'rawGraphQLServer.js',
           useGlobalAgent: true,
           env: {
-            INSTANA_TRACING_DISABLE: 'graphQL',
-            GRAPHQL_VERSION: graphqlVersion
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name,
+            LIBRARY_LATEST: isLatest,
+            INSTANA_TRACING_DISABLE: 'graphQL'
           }
         });
         clientControls = new ProcessControls({
-          appPath: path.join(__dirname, 'client'),
+          dirname: __dirname,
+          appName: 'client.js',
           useGlobalAgent: true,
           env: {
-            SERVER_PORT: serverControls.getPort(),
-            GRAPHQL_VERSION: graphqlVersion
+            LIBRARY_VERSION: version,
+            LIBRARY_NAME: name,
+            LIBRARY_LATEST: isLatest,
+            SERVER_PORT: serverControls.getPort()
           }
         });
 
@@ -689,7 +739,7 @@ function start(graphqlVersion) {
       });
     });
   });
-}
+};
 
 function checkQueryResponse(entityNameWithAlias, withError, multipleEntities, response) {
   expect(response.data).to.exist;
@@ -1051,7 +1101,3 @@ function verifyFollowUpLogExit(parentSpan, expectedMessage, spans) {
     span => expect(span.data.log.message).to.equal(expectedMessage)
   ]);
 }
-
-module.exports = function (graphqlVersion) {
-  return start.bind(this)(graphqlVersion);
-};
