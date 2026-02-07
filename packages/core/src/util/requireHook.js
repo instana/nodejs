@@ -136,10 +136,11 @@ function patchedModuleLoad(moduleName) {
       } else {
         logger.error(
           `A requireHook invariant has been violated for module name ${moduleName}, index ${i}. ` +
-          `The transformer is not a function but of type "${typeof transformerFn}" (details:  ${transformerFn == null ? 'null/undefined' : transformerFn
-          }). The most likely cause is that something has messed with Node.js' ` +
-          'module cache. This can result in limited tracing and health check functionality (for example, missing ' +
-          'calls in Instana).'
+            `The transformer is not a function but of type "${typeof transformerFn}" (details:  ${
+              transformerFn == null ? 'null/undefined' : transformerFn
+            }). The most likely cause is that something has messed with Node.js' ` +
+            'module cache. This can result in limited tracing and health check functionality (for example, missing ' +
+            'calls in Instana).'
         );
       }
     }
