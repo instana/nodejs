@@ -15,20 +15,20 @@ const sidecarGroups = {
 
 const packages = {
   'test:ci:collector': {
-    splits: 40,
+    splits: 30,
     sidecars: {
       postgres: 4,
       mysql: 4,
-      mongodb: 4,
+      mongodb: 6,
       memcached: 2,
-      elasticsearch: 8,
-      couchbase: 7,
-      oracledb: 7,
-      redis: 6,
-      kafka: 18,
-      nats: 6,
+      elasticsearch: 3,
+      couchbase: 2,
+      oracledb: 2,
+      redis: 10,
+      kafka: 10,
+      nats: 3,
       rabbitmq: 3,
-      localstack: 4
+      localstack: 6
     }
   },
 

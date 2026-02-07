@@ -4,16 +4,9 @@ metadata:
   name: collector-split-12
 spec:
   sidecars:
-    - name: elasticsearch
-      image: public.ecr.aws/elastic/elasticsearch:9.0.0
+    - name: mongodb
+      image: public.ecr.aws/docker/library/mongo:8.0.8
       imagePullPolicy: IfNotPresent
-      env:
-          - name: "discovery.type"
-            value: "single-node"
-          - name: "ES_JAVA_OPTS"
-            value: "-Xms500m -Xmx500m"
-          - name: "xpack.security.enabled"
-            value: "false"
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -79,7 +72,7 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS="elasticsearch"
+        AVAILABLE_SIDECARS="mongodb"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
@@ -123,7 +116,7 @@ spec:
           fi
         fi
         if [ "true" == "true" ]; then
-          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*test.js" "40" "$ARTIFACTS_PATH")
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*test.js" "30" "$ARTIFACTS_PATH")
           if [ -z "$CLAIMED_TESTS" ]; then
             echo "No tests to claim for this task"
             touch "test:ci:collector.succeeded"

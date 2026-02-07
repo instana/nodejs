@@ -4,39 +4,9 @@ metadata:
   name: collector-split-27
 spec:
   sidecars:
-    - name: nats
-      image: nats:2.9.14-linux
+    - name: memcached
+      image: public.ecr.aws/docker/library/memcached:1.6.9
       imagePullPolicy: IfNotPresent
-    - name: nats-streaming
-      image: nats-streaming:0.25.3-linux
-      imagePullPolicy: IfNotPresent
-      args:
-          - "-p"
-          - "4223"
-          - "-m"
-          - "8223"
-      readinessProbe:
-          httpGet:
-            path: /healthz 
-            port: 8223 
-          initialDelaySeconds: 5
-          periodSeconds: 2
-          timeoutSeconds: 15
-    - name: nats-streaming-2
-      image: nats-streaming:0.25.3-linux
-      imagePullPolicy: IfNotPresent
-      args:
-          - "-p"
-          - "4224"
-          - "-m"
-          - "8224"
-      readinessProbe:
-          httpGet:
-            path: /healthz 
-            port: 8224 
-          initialDelaySeconds: 5
-          periodSeconds: 2
-          timeoutSeconds: 15
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -102,7 +72,7 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS="nats,nats-streaming,nats-streaming-2"
+        AVAILABLE_SIDECARS="memcached"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
@@ -146,7 +116,7 @@ spec:
           fi
         fi
         if [ "true" == "true" ]; then
-          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*test.js" "40" "$ARTIFACTS_PATH")
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*test.js" "30" "$ARTIFACTS_PATH")
           if [ -z "$CLAIMED_TESTS" ]; then
             echo "No tests to claim for this task"
             touch "test:ci:collector.succeeded"

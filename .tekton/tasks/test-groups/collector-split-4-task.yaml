@@ -4,71 +4,32 @@ metadata:
   name: collector-split-4
 spec:
   sidecars:
-    - name: zookeeper
-      image: confluentinc/cp-zookeeper:7.9.1
+    - name: redis
+      image: public.ecr.aws/docker/library/redis:7.4.3
       imagePullPolicy: IfNotPresent
-      env:
-          - name: "ZOOKEEPER_CLIENT_PORT"
-            value: "2181"
-      readinessProbe:
-          tcpSocket:
-            port: 2181 
-          initialDelaySeconds: 5
-          periodSeconds: 2
-          timeoutSeconds: 30
-    - name: kafka
-      image: confluentinc/cp-kafka:7.9.1
-      imagePullPolicy: IfNotPresent
-      env:
-          - name: "KAFKA_BROKER_ID"
-            value: "1"
-          - name: "KAFKA_ZOOKEEPER_CONNECT"
-            value: "localhost:2181"
-          - name: "KAFKA_ADVERTISED_LISTENERS"
-            value: "PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092"
-          - name: "KAFKA_LISTENERS"
-            value: "EXTERNAL://:9092,PLAINTEXT://:29092"
-          - name: "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR"
-            value: "1"
-          - name: "KAFKA_DEFAULT_REPLICATION_FACTOR"
-            value: "1"
-          - name: "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP"
-            value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT"
-      readinessProbe:
-          tcpSocket:
-            port: 9092 
-          initialDelaySeconds: 90
-          periodSeconds: 2
-          timeoutSeconds: 60
-    - name: kafka-topics
-      image: confluentinc/cp-kafka:7.9.1
+    - name: redis-slave
+      image: public.ecr.aws/docker/library/redis:7.4.3
       imagePullPolicy: IfNotPresent
       args:
-          - "-lc"
-          - "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
-      command:
-          - "/bin/bash"
-    - name: schema-registry
-      image: confluentinc/cp-schema-registry:7.9.0
+          - "redis-server"
+          - "--replicaof"
+          - "127.0.0.1"
+          - "6379"
+          - "--port"
+          - "6380"
+    - name: redis-sentinel
+      image: public.ecr.aws/docker/library/redis:7.4.3
       imagePullPolicy: IfNotPresent
-      env:
-          - name: "SCHEMA_REGISTRY_HOST_NAME"
-            value: "schema-registry"
-          - name: "SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL"
-            value: "0.0.0.0:2181"
-          - name: "SCHEMA_REGISTRY_LISTENERS"
-            value: "http://0.0.0.0:8081"
-          - name: "SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS"
-            value: "PLAINTEXT://0.0.0.0:29092"
-          - name: "SCHEMA_REGISTRY_DEBUG"
-            value: "true"
-      readinessProbe:
-          httpGet:
-            path: / 
-            port: 8081 
-          initialDelaySeconds: 5
-          periodSeconds: 2
-          timeoutSeconds: 60
+      args:
+          - "sh"
+          - "-c"
+          - |
+            echo "sentinel monitor mymaster 127.0.0.1 6379 2" > /etc/sentinel.conf
+            echo "sentinel down-after-milliseconds mymaster 1000" >> /etc/sentinel.conf
+            echo "sentinel failover-timeout mymaster 5000" >> /etc/sentinel.conf
+            echo "sentinel parallel-syncs mymaster 1" >> /etc/sentinel.conf
+            echo "sentinel resolve-hostnames no" >> /etc/sentinel.conf
+            redis-server /etc/sentinel.conf --sentinel --port 26379
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -134,7 +95,7 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS="zookeeper,kafka,kafka-topics,schema-registry"
+        AVAILABLE_SIDECARS="redis,redis-slave,redis-sentinel"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
@@ -178,7 +139,7 @@ spec:
           fi
         fi
         if [ "true" == "true" ]; then
-          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*test.js" "40" "$ARTIFACTS_PATH")
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*test.js" "30" "$ARTIFACTS_PATH")
           if [ -z "$CLAIMED_TESTS" ]; then
             echo "No tests to claim for this task"
             touch "test:ci:collector.succeeded"
