@@ -80,7 +80,7 @@ spec:
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
         CIRCLE_COMPARE_URL=""
-        MODIFIED_FILES=""
+        # MODIFIED_FILES=""
         GIT_COMMIT_DESC=""
         if [ "$(params.prerelease)" == "true" ]; then
           source bin/install-prerelease.sh
@@ -91,12 +91,12 @@ spec:
         fi
         if [ -n "$(params.revision)" ]; then
           CIRCLE_COMPARE_URL="$(params.repository)/compare/$BASE_REVISION..$(params.revision)"
-          MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
+          # MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r $(echo ${CIRCLE_COMPARE_URL} | cut -d/ -f 7))
           GIT_COMMIT_DESC=$(git log --format=%B -n 1 $(params.revision))
         fi
         echo "BASE_REVISION: $BASE_REVISION"
         echo "CIRCLE_COMPARE_URL: $CIRCLE_COMPARE_URL"
-        echo "MODIFIED_FILES: $MODIFIED_FILES"
+        # echo "MODIFIED_FILES: $MODIFIED_FILES"
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
         if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && true; then
           echo "Skipping group."
