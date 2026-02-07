@@ -96,20 +96,27 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
     }
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
 
-    return originalSend
-      .apply(ctx, originalArgs)
-      .then(result => {
-        span.d = Date.now() - span.ts;
-        span.transmit();
-        return result;
-      })
-      .catch(error => {
-        span.ec = 1;
-        tracingUtil.setErrorDetails(span, error, 'kafka');
-        span.d = Date.now() - span.ts;
-        span.transmit();
-        throw error;
-      });
+    const promise = originalSend.apply(ctx, originalArgs);
+    if (typeof promise?.then === 'function') {
+      return promise
+        .then(result => {
+          span.d = Date.now() - span.ts;
+          span.transmit();
+          return result;
+        })
+        .catch(error => {
+          span.ec = 1;
+          tracingUtil.setErrorDetails(span, error, 'kafka');
+          span.d = Date.now() - span.ts;
+          span.transmit();
+          throw error;
+        });
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(promise, span, 'kafka', 'producer.send');
+      span.d = Date.now() - span.ts;
+      span.transmit();
+    }
+    return promise;
   });
 }
 
@@ -175,20 +182,27 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
       span.b = { s: messageCount };
     }
 
-    return originalSendBatch
-      .apply(ctx, originalArgs)
-      .then(result => {
-        span.d = Date.now() - span.ts;
-        span.transmit();
-        return result;
-      })
-      .catch(error => {
-        span.ec = 1;
-        tracingUtil.setErrorDetails(span, error, 'kafka');
-        span.d = Date.now() - span.ts;
-        span.transmit();
-        throw error;
-      });
+    const promise = originalSendBatch.apply(ctx, originalArgs);
+    if (typeof promise?.then === 'function') {
+      return promise
+        .then(result => {
+          span.d = Date.now() - span.ts;
+          span.transmit();
+          return result;
+        })
+        .catch(error => {
+          span.ec = 1;
+          tracingUtil.setErrorDetails(span, error, 'kafka');
+          span.d = Date.now() - span.ts;
+          span.transmit();
+          throw error;
+        });
+    } else {
+      tracingUtil.handleUnexpectedReturnValue(promise, span, 'kafka', 'producer.sendBatch');
+      span.d = Date.now() - span.ts;
+      span.transmit();
+    }
+    return promise;
   });
 }
 

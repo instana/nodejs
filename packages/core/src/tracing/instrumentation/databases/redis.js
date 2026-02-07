@@ -342,11 +342,10 @@ function instrumentCommand(original, command, address, cbStyle) {
         if (typeof userProvidedCallback !== 'function') {
           userProvidedCallback = null;
           modifiedArgs.push(callback);
-          return original.apply(origCtx, modifiedArgs);
         } else {
           modifiedArgs[modifiedArgs.length - 1] = callback;
-          return original.apply(origCtx, modifiedArgs);
         }
+        return original.apply(origCtx, modifiedArgs);
       } else {
         const promise = original.apply(origCtx, origArgs);
         if (typeof promise?.then === 'function') {
@@ -360,7 +359,8 @@ function instrumentCommand(original, command, address, cbStyle) {
               return error;
             });
         } else {
-          // UNKNOWN CASE
+          // Case 5: Unsupported/unknown case - use utility function
+          tracingUtil.handleUnexpectedReturnValue(promise, span, 'redis', `command "${command}"`);
           onResult();
         }
         return promise;
@@ -492,6 +492,10 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
               onResult(error);
               return error;
             });
+        } else {
+          // Case 5: Unsupported/unknown case - use utility function
+          tracingUtil.handleUnexpectedReturnValue(promise, span, 'redis', 'multi/pipeline operation');
+          onResult();
         }
 
         return promise;
