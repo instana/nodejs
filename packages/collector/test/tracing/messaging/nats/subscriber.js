@@ -12,9 +12,7 @@ process.on('SIGTERM', () => {
 });
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
-require('./mockVersion');
-
-const instana = require('../../../..')();
+const instana = require('@instana/collector')();
 const express = require('express');
 
 const NATS = require('nats');
@@ -22,12 +20,14 @@ const NATS = require('nats');
 const log = require('@_local/core/test/test_util/log').getLogger('NATS Subscriber: ');
 
 const app = express();
-const port = require('../../../test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 let connected = false;
 let sc;
 let nats;
 
-if (process.env.NATS_VERSION === 'latest') {
+const IS_LATEST = parseInt(process.env.LIBRARY_VERSION) >= 2;
+
+if (IS_LATEST) {
   sc = NATS.StringCodec();
 
   (async function () {

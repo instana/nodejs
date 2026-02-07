@@ -13,8 +13,7 @@ process.on('SIGTERM', () => {
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-require('./mockVersion');
-require('../../../..')();
+require('@instana/collector')();
 
 const express = require('express');
 const NATS = require('nats');
@@ -22,9 +21,9 @@ const NATS = require('nats');
 const log = require('@_local/core/test/test_util/log').getLogger('NATS Publisher');
 
 const app = express();
-const port = require('../../../test_util/app-port')();
+const port = require('@_local/collector/test/test_util/app-port')();
 const connectionError = process.env.CONNECT_ERROR === 'true';
-const IS_LATEST = process.env.NATS_VERSION === 'latest';
+const IS_LATEST = parseInt(process.env.LIBRARY_VERSION) >= 2;
 
 let sc;
 let natsClient;
@@ -205,7 +204,7 @@ app.post('/request', async (req, res) => {
   };
 
   const natsPublishMethod =
-    requestOne && process.env.NATS_VERSION === 'v1'
+    requestOne && !IS_LATEST
       ? natsClient.requestOne.bind(natsClient)
       : natsClient.request.bind(natsClient);
 
