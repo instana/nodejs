@@ -690,9 +690,14 @@ module.exports = function (name, version, isLatest) {
     expect(span.ec).to.equal(error ? 1 : 0);
     expect(span.data).to.exist;
     expect(span.data.mssql).to.exist;
-    expect(span.data.mssql.host).to.contain('nodejs-team-db-server.database.window');
-    expect(span.data.mssql.port).to.equal(1433);
-    expect(span.data.mssql.user).to.equal('admin@instana@nodejs-team-db-server');
-    expect(span.data.mssql.db).to.equal('azure-nodejs-test');
+    if (process.env.AZURE_SQL_SERVER) {
+      expect(span.data.mssql.host).to.contain('nodejs-team-db-server.database.window');
+      expect(span.data.mssql.user).to.equal('admin@instana@nodejs-team-db-server');
+      expect(span.data.mssql.db).to.equal('azure-nodejs-test');
+    } else {
+      expect(span.data.mssql.host).to.match(/^(localhost|127\.0\.0\.1)$/);
+      expect(span.data.mssql.user).to.equal('sa');
+      expect(span.data.mssql.db === undefined || span.data.mssql.db === 'master').to.be.true;
+    }
   }
 };

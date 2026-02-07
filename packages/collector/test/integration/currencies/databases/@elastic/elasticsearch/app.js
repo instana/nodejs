@@ -26,7 +26,7 @@ const port = require('@_local/collector/test/test_util/app-port')();
 
 const app = express();
 const logPrefix = `Elasticsearch ${process.env.ELASTIC_VERSION} (${process.pid}):\t`;
-const isLatest = process.env.ELASTIC_VERSION === 'latest';
+const isLatest = process.env.LIBRARY_LATEST === 'true';
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

@@ -10,6 +10,7 @@ const { fail } = expect;
 const semver = require('semver');
 
 const constants = require('@_local/core').tracing.constants;
+const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const config = require('@_local/core/test/config');
 const {
   expectAtLeastOneMatching,
@@ -55,7 +56,7 @@ function start() {
 
   // Note: Skipping test for node v24 as the library is broken
   //       see Issue: https://github.com/googleapis/google-auth-library-nodejs/issues/1964
-  if (semver.satisfies(process.versions.node, '>=24.x')) {
+  if (!supportedVersion(process.versions.node) || semver.satisfies(process.versions.node, '>=24.x')) {
     return;
   }
 

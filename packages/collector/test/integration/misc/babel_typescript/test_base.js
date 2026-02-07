@@ -39,11 +39,11 @@ module.exports = function () {
         // might take longer than the the timeout on CI, and they are not relevant for this test suite.
 
         // The lock file collector/test/apps/babel-typescript/package-lock.json has some arbitrary (and probably outdated)
-        // version of @_local/collector. We always update to the latest version before actually running the test.
+        // version of @instana/collector. We always update to the latest version before actually running the test.
         const latestCollectorVersion = require('@_local/collector/package.json').version;
 
         executeCallback(
-          `npm install --no-save --omit=optional --no-audit @_local/collector@${latestCollectorVersion} && ` +
+          `npm install --no-save --omit=optional --no-audit @instana/collector@${latestCollectorVersion} && ` +
             'npm install --omit=optional --no-audit && ' +
             'npm run build',
           babelAppDir,
@@ -84,7 +84,7 @@ module.exports = function () {
       await controls.clearIpcMessages();
     });
 
-    describe('@_local/collector used in a babel-transpiled typescript app', function () {
+    describe('@instana/collector used in a babel-transpiled typescript app', function () {
       it('should trace when imported with workaround according to our docs', () =>
         controls
           .sendRequest({
