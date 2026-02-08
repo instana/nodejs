@@ -8,6 +8,7 @@ ARTIFACTS_PATH="${4:-/artifacts}"
 
 # Always run from the collector package directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+CONFIG_PATH="$SCRIPT_DIR/../../../hosts_config.json"
 cd "$SCRIPT_DIR/.." || exit 1
 
 LOCK_FILE="$ARTIFACTS_PATH/.test-claim.lock"
@@ -26,8 +27,6 @@ TESTS_PER_TASK=$(( (TOTAL_TEST_COUNT + TOTAL_TASKS - 1) / TOTAL_TASKS ))
 
 # Load all known env vars from hosts_config.json
 if [ -z "$KNOWN_ENVS" ]; then
-  SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-  CONFIG_PATH="$SCRIPT_DIR/../../../hosts_config.json"
   if [ -f "$CONFIG_PATH" ]; then
     KNOWN_ENVS=$(node -e "console.log(Object.keys(require('$CONFIG_PATH')).join('\n'))")
   fi
@@ -45,7 +44,7 @@ GENERIC_TESTS=""
 for test_file in $ALL_TESTS; do
   REQUIRED_SIDECARS=""
   
-  # Optimization: Scan the test file AND any sibling js/mjs files (app.js, test_base.js) for requirements
+  # Scan the test file AND any sibling js/mjs files (app.js, test_base.js) for requirements
   TEST_DIR=$(dirname "$test_file")
   USED_ENVS=$(find -L "$TEST_DIR" -maxdepth 1 \( -name "*.js" -o -name "*.mjs" \) -exec grep -h -o "INSTANA_CONNECT_[A-Z0-9_]*" {} + 2>/dev/null | sort | uniq)
 
@@ -147,7 +146,6 @@ for test_file in $FINAL_LIST; do
   fi
   
   # Check Sidecar Quota
-  # Re-parsing requirements
   TEST_DIR_CHECK=$(dirname "$test_file")
   USED_ENVS_CHECK=$(find -L "$TEST_DIR_CHECK" -maxdepth 1 \( -name "*.js" -o -name "*.mjs" \) -exec grep -h -o "INSTANA_CONNECT_[A-Z0-9_]*" {} + 2>/dev/null | sort | uniq)
   
