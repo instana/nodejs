@@ -156,7 +156,7 @@ mochaSuiteFn(suiteTitle, function () {
 
   try {
     console.log('[INFO] Installing dependencies for ${suiteName}@${displayVersion}...');
-    execSync('rm -rf node_modules', { cwd: __dirname, stdio: 'inherit' });
+    try { fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true }); } catch (_) {}
     execSync('npm install --no-package-lock --no-audit --prefix ./ --no-progress', {
       cwd: __dirname, stdio: 'inherit', timeout: 60000
     });
