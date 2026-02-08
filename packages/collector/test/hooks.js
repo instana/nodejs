@@ -11,8 +11,6 @@
 //
 // The globalAgent module manages an agent stub instance that can be used globally for all tests.
 const path = require('path');
-const fs = require('fs');
-const { execSync } = require('child_process');
 const isCI = require('@_local/core/test/test_util/is_ci');
 const config = require('@_local/core/test/config');
 const { checkESMApp } = require('@_local/core/test/test_util');

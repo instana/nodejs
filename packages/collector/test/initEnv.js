@@ -42,7 +42,6 @@ try {
 }
 
 if (needsRegen) {
-  const { execSync } = require('child_process');
   // eslint-disable-next-line no-console
   console.log('Test folders out of date — regenerating...');
   execSync('node bin/create-version-test-folders.js', { cwd: rootDir, stdio: 'inherit' });
