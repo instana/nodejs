@@ -41,6 +41,12 @@ spec:
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 
+        # Not generic yet. We only support claimed tests for the collector package.
+        echo ""
+        echo "=== Post-flight: Verify claimed tests ==="
+        bash ./packages/collector/scripts/verify-all-claimed.sh "$ARTIFACTS_PATH" || true
+        echo ""
+
         if find "$ARTIFACTS_PATH" -maxdepth 1 -type f -name '*.failed' | grep -q .; then
           echo "PIPELINE_RESULT=Failed"
           echo "PIPELINE_RESULT=Failed" >> $ARTIFACTS_PATH/$PROPERTIES_FILE

@@ -19,7 +19,7 @@ OUTPUT_FILE="$ARTIFACTS_PATH/my-tests-$$.txt"
 touch "$CLAIMED_FILE"
 
 # Find all test files matching pattern and randomize order (portable shuffle)
-ALL_TESTS=$(find . -path "*$TEST_PATTERN" -name "*test.js" -not -path "*/node_modules/*" -not -path "*/long_*/*" | awk 'BEGIN{srand();}{print rand()"\t"$0}' | sort -k1 -n | cut -f2-)
+ALL_TESTS=$(find "$(pwd)" -path "*$TEST_PATTERN" -name "*test.js" -not -path "*/node_modules/*" -not -path "*/long_*/*" | awk 'BEGIN{srand();}{print rand()"\t"$0}' | sort -k1 -n | cut -f2-)
 TOTAL_TEST_COUNT=$(echo "$ALL_TESTS" | wc -l | xargs)
 
 # Calculate how many tests this task should claim (Soft Limit)

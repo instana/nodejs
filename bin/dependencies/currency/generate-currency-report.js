@@ -30,8 +30,7 @@ currencies = currencies.map(currency => {
   console.log('\n###############################################');
   console.log(`Checking ${currency.name}...`);
 
-  const versionObj = currency.versions[0];
-  let installedVersion = typeof versionObj === 'string' ? versionObj : versionObj.v;
+  let installedVersion = utils.getLatestInstalledVersion(currency).version;
   let latestVersion;
   let upToDate;
   let latestVersionPublishedAt = 'N/A';

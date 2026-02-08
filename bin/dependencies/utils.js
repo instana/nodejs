@@ -93,6 +93,27 @@ const getHighestMajorVersion = versions => {
   return highestMajorVersion;
 };
 
+/**
+ * Returns the highest version from a currency entry's versions array.
+ * @param {Object} currency - A currency entry from currencies.json
+ * @returns {{ version: string|null, versionObj: *}} The highest semver version string and its raw entry
+ */
+exports.getLatestInstalledVersion = currency => {
+  const versions = currency.versions || [];
+  if (versions.length === 0) return { version: null, versionObj: null };
+
+  const sorted = [...versions].sort((a, b) => {
+    const vA = typeof a === 'string' ? a : a.v;
+    const vB = typeof b === 'string' ? b : b.v;
+    if (!vA || !vB) return 0;
+    return semver.rcompare(vA, vB);
+  });
+
+  const versionObj = sorted[0];
+  const version = typeof versionObj === 'string' ? versionObj : versionObj.v;
+  return { version: version || null, versionObj };
+};
+
 exports.getLatestVersion = ({ pkgName, installedVersion, isBeta, fromInstalledMajor }) => {
   let latestVersion;
 

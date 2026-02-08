@@ -37,8 +37,7 @@ currencies.forEach(currency => {
     return;
   }
 
-  const installedVersionObj = currency.versions[0];
-  const installedVersion = typeof installedVersionObj === 'string' ? installedVersionObj : installedVersionObj.v;
+  const { version: installedVersion, versionObj: installedVersionObj } = utils.getLatestInstalledVersion(currency);
 
   if (!installedVersion) {
     console.log(`Skipping ${currency.name}. Seems to be a core dependency.`);
