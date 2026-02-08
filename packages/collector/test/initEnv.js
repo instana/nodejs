@@ -39,7 +39,7 @@ if (!isCI()) {
 
   if (needsRegen) {
     // eslint-disable-next-line no-console
-    console.log('Test folders out of date — regenerating...');
+    console.log('[INFO] Test folders out of date — regenerating...');
     execSync('node bin/create-version-test-folders.js', { cwd: rootDir, stdio: 'inherit' });
     fs.writeFileSync(checksumPath, currentHash);
   }
@@ -63,12 +63,12 @@ if (process.env.SKIP_TGZ !== 'true') {
 
     if (needsTgzRegen) {
       // eslint-disable-next-line no-console
-      console.log('Source changed — regenerating tgz packages...');
+      console.log('[INFO] Source changed — regenerating tgz packages...');
       execSync(`bash "${preinstallScript}"`, { cwd: testDir, stdio: 'inherit' });
       fs.writeFileSync(tgzChecksumPath, tgzHash);
     } else {
       // eslint-disable-next-line no-console
-      console.log('tgz packages up to date, skipping generation.');
+      console.log('[INFO] tgz packages up to date, skipping generation.');
     }
   }
 }

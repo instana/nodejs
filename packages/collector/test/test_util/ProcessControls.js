@@ -46,23 +46,12 @@ class ProcessControls {
       throw new Error('dirname is required');
     }
 
-    let versionFolder;
-
     if (!opts.cwd) {
-      if (opts.env?.LIBRARY_VERSION) {
-        versionFolder = `_v${opts.env.LIBRARY_VERSION}`;
-        opts.cwd = path.join(opts.dirname, versionFolder);
-      } else {
-        opts.cwd = opts.dirname;
-      }
+      opts.cwd = opts.dirname;
     }
 
     if (!process.env.RUN_ESM && !opts.appPath) {
-      if (opts.env?.LIBRARY_VERSION) {
-        opts.appPath = path.join(opts.dirname, versionFolder, opts.appName ? opts.appName : 'app.js');
-      } else {
-        opts.appPath = path.join(opts.dirname, opts.appName ? opts.appName : 'app.js');
-      }
+      opts.appPath = path.join(opts.dirname, opts.appName ? opts.appName : 'app.js');
     }
 
     if (process.env.RUN_ESM && !opts.execArgv) {
@@ -199,9 +188,6 @@ class ProcessControls {
     if (!forkConfig.execArgv) {
       forkConfig.execArgv = [];
     }
-
-    forkConfig.execArgv.push('--preserve-symlinks');
-    forkConfig.execArgv.push('--preserve-symlinks-main');
 
     this.process = this.args ? fork(this.appPath, this.args || [], forkConfig) : fork(this.appPath, forkConfig);
 
