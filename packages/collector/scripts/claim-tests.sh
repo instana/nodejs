@@ -6,6 +6,10 @@ TEST_PATTERN="$2"
 TOTAL_TASKS="${3:-40}"
 ARTIFACTS_PATH="${4:-/artifacts}"
 
+# Always run from the collector package directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+cd "$SCRIPT_DIR/.." || exit 1
+
 LOCK_FILE="$ARTIFACTS_PATH/.test-claim.lock"
 CLAIMED_FILE="$ARTIFACTS_PATH/claimed-tests.txt"
 OUTPUT_FILE="$ARTIFACTS_PATH/my-tests-$$.txt"

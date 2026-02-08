@@ -22,7 +22,7 @@ const { fail } = expect;
 const instanaAgentKey = 'aws-lambda-dummy-key';
 
 // eslint-disable-next-line max-len
-const allTestCases = require('@_local/collector/test/tracing/misc/specification_compliance/tracer_compliance_test_cases.json');
+const allTestCases = require('@_local/collector/test/integration/misc/specification_compliance/tracer_compliance_test_cases.json');
 
 const testCasesWithW3cTraceCorrelation = [];
 const testCasesWithoutW3cTraceCorrelation = [];
