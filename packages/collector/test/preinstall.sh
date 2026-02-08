@@ -14,7 +14,6 @@ TGZ_DIR="${TEST_DIR}/instana-tgz"
 mkdir -p "${TGZ_DIR}"
 
 cd "${COLLECTOR_DIR}"
-echo "Running npm pack in $(pwd)"
 npm pack
 
 version=$(node -p "require('./package.json').version")
@@ -22,7 +21,6 @@ tarball="instana-collector-${version}.tgz"
 cp "${COLLECTOR_DIR}/${tarball}" "${TGZ_DIR}/collector.tgz"
 
 cd "${CORE_DIR}"
-echo "Running npm pack in $(pwd)"
 npm pack
 
 version=$(node -p "require('./package.json').version")
@@ -30,7 +28,6 @@ tarball="instana-core-${version}.tgz"
 cp "${CORE_DIR}/${tarball}" "${TGZ_DIR}/core.tgz"
 
 cd "${SHARED_METRICS_DIR}"
-echo "Running npm pack in $(pwd)"
 npm pack
 
 version=$(node -p "require('./package.json').version")

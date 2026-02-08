@@ -7,6 +7,7 @@
 
 const path = require('path');
 const fs = require('fs');
+const { execSync } = require('child_process');
 const crypto = require('crypto');
 const isCI = require('@_local/core/test/test_util/is_ci');
 
@@ -58,3 +59,52 @@ function hashTemplates(dir, h) {
       else if (entry.name === 'test_base.js') h.update(full);
     });
 }
+
+if (process.env.SKIP_TGZ !== 'true') {
+  const testDir = __dirname;
+  const preinstallScript = path.join(testDir, 'preinstall.sh');
+
+  if (fs.existsSync(preinstallScript)) {
+    const tgzChecksumPath = path.join(testDir, '.tgz-checksum');
+    const srcDirs = ['collector', 'core', 'shared-metrics'].map(p => path.join(rootDir, 'packages', p, 'src'));
+    const tgzHash = hashDirectories(srcDirs);
+
+    let needsTgzRegen = true;
+    try {
+      needsTgzRegen = fs.readFileSync(tgzChecksumPath, 'utf8').trim() !== tgzHash;
+    } catch (_) {
+      // first run
+    }
+
+    if (needsTgzRegen) {
+      // eslint-disable-next-line no-console
+      console.log('Source changed — regenerating tgz packages...');
+      execSync(`bash "${preinstallScript}"`, { cwd: testDir, stdio: 'inherit' });
+      fs.writeFileSync(tgzChecksumPath, tgzHash);
+    } else {
+      // eslint-disable-next-line no-console
+      console.log('tgz packages up to date, skipping generation.');
+    }
+  }
+}
+
+function hashDirectories(dirs) {
+  const h = crypto.createHash('md5');
+  for (const dir of dirs) {
+    hashDir(dir, h);
+  }
+  return h.digest('hex');
+}
+
+function hashDir(dir, h) {
+  if (!fs.existsSync(dir)) return;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      hashDir(full, h);
+    } else {
+      h.update(fs.readFileSync(full));
+    }
+  }
+}
+

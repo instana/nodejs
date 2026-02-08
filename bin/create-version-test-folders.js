@@ -133,7 +133,6 @@ function generateTestWrapper({ suiteName, displayVersion, rawVersion, isLatest, 
 
 const { execSync } = require('child_process');
 const path = require('path');
-const testBase = require('./test_base');
 const config = require('@_local/core/test/config');
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
@@ -146,11 +145,12 @@ ${esmOnly ? `if (!process.env.RUN_ESM) {
 ` : ''}mochaSuiteFn('tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}', function () {
   this.timeout(config.getTestTimeout());
 
-  before(() => {
-    execSync('rm -rf node_modules', { cwd: __dirname, stdio: 'inherit' });
-    execSync('npm install --no-audit --prefix ./', { cwd: __dirname, stdio: 'inherit' });
-  });
+  console.log('Installing dependencies for ${suiteName}@${displayVersion}...');
+  execSync('rm -rf node_modules', { cwd: __dirname, stdio: 'inherit' });
+  execSync('npm install --no-package-lock --no-audit --prefix ./', { cwd: __dirname, stdio: 'inherit' });
+  console.log('[Done] Installing dependencies for ${suiteName}@${displayVersion}');
 
+  const testBase = require('./test_base');
   testBase.call(this, '${suiteName}', '${rawVersion}', ${isLatest}${mode ? `, '${mode}'` : ''});
 });
 `;

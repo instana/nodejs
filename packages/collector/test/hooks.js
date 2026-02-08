@@ -30,7 +30,6 @@ exports.mochaHooks = {
     console.log(`@instana/collector test suite starting at ${timestamp()}.`);
     this.timeout(config.getTestTimeout());
 
-    await setupTestInstallation();
     await startGlobalAgent();
   },
 
@@ -80,19 +79,4 @@ exports.mochaHooks = {
 function timestamp() {
   const d = new Date();
   return `UTC: ${d.toISOString()} (${d.getTime()})`;
-}
-
-async function setupTestInstallation() {
-  if (process.env.SKIP_TGZ === 'true') {
-    return;
-  }
-
-  const testDir = __dirname;
-  const preinstallScript = path.join(testDir, 'preinstall.sh');
-
-  if (fs.existsSync(preinstallScript)) {
-      // eslint-disable-next-line no-console
-      console.log('Generating tgz files...');
-      execSync(`bash "${preinstallScript}"`, { cwd: testDir, stdio: 'inherit' });
-  }
 }
