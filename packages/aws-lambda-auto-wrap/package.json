@@ -67,6 +67,6 @@
   "dependencies": {
     "@instana/aws-lambda": "5.2.2",
     "@instana/core": "5.2.2",
-    "semver": "^7.7.3"
+    "semver": "^7.7.4"
   }
 }

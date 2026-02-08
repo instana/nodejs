@@ -53,7 +53,7 @@
     "detect-libc": "^2.1.2",
     "nan": "^2.25.0",
     "node-gyp-build": "^4.8.4",
-    "semver": "^7.7.3"
+    "semver": "^7.7.4"
   },
   "engines": {
     "node": ">=18.19.0"
