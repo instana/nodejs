@@ -154,15 +154,21 @@ mochaSuiteFn(suiteTitle, function () {
   process.on('SIGINT', () => { cleanup(); process.exit(130); });
   process.on('SIGTERM', () => { cleanup(); process.exit(143); });
 
-  console.log('[INFO] Installing dependencies for ${suiteName}@${displayVersion}...');
-  execSync('rm -rf node_modules', { cwd: __dirname, stdio: 'inherit' });
-  execSync('npm install --no-package-lock --no-audit --prefix ./ --no-progress', {
-    cwd: __dirname, stdio: 'inherit', timeout: 60000
-  });
-  console.log('[INFO] Done installing dependencies for ${suiteName}@${displayVersion}');
+  try {
+    console.log('[INFO] Installing dependencies for ${suiteName}@${displayVersion}...');
+    execSync('rm -rf node_modules', { cwd: __dirname, stdio: 'inherit' });
+    execSync('npm install --no-package-lock --no-audit --prefix ./ --no-progress', {
+      cwd: __dirname, stdio: 'inherit', timeout: 60000
+    });
+    console.log('[INFO] Done installing dependencies for ${suiteName}@${displayVersion}');
 
-  const testBase = require('./test_base');
-  testBase.call(this, '${suiteName}', '${rawVersion}', ${isLatest}${mode ? `, '${mode}'` : ''});
+    const testBase = require('./test_base');
+    testBase.call(this, '${suiteName}', '${rawVersion}', ${isLatest}${mode ? `, '${mode}'` : ''});
+  } catch (err) {
+    it('should set up dependencies', function () {
+      throw err;
+    });
+  }
 });
 `;
 }
