@@ -143,3 +143,7 @@ spec:
             retry=$((retry + 1))
           fi
         done
+        if [ ! -f "test:ci:aws-lambda.succeeded" ]; then
+          echo "All retries failed for test:ci:aws-lambda"
+          exit 1
+        fi

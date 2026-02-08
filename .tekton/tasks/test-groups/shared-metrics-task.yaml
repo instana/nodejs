@@ -143,3 +143,7 @@ spec:
             retry=$((retry + 1))
           fi
         done
+        if [ ! -f "test:ci:shared-metrics.succeeded" ]; then
+          echo "All retries failed for test:ci:shared-metrics"
+          exit 1
+        fi

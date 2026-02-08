@@ -143,3 +143,7 @@ spec:
             retry=$((retry + 1))
           fi
         done
+        if [ ! -f "test:ci:core.succeeded" ]; then
+          echo "All retries failed for test:ci:core"
+          exit 1
+        fi

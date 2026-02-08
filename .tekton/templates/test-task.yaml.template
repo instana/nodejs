@@ -154,7 +154,11 @@ spec:
             touch "{{groupName}}.succeeded"
             break
           else
-
             retry=$((retry + 1))
           fi
         done
+
+        if [ ! -f "{{groupName}}.succeeded" ]; then
+          echo "All retries failed for {{groupName}}"
+          exit 1
+        fi

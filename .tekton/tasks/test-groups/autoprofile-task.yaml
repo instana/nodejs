@@ -143,3 +143,7 @@ spec:
             retry=$((retry + 1))
           fi
         done
+        if [ ! -f "test:ci:autoprofile.succeeded" ]; then
+          echo "All retries failed for test:ci:autoprofile"
+          exit 1
+        fi
