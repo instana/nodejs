@@ -89,21 +89,18 @@ if (process.env.SKIP_TGZ !== 'true') {
 
 function hashDirectories(dirs) {
   const h = crypto.createHash('md5');
-  for (const dir of dirs) {
-    hashDir(dir, h);
-  }
+  dirs.forEach(dir => hashDir(dir, h));
   return h.digest('hex');
 }
 
 function hashDir(dir, h) {
   if (!fs.existsSync(dir)) return;
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+  fs.readdirSync(dir, { withFileTypes: true }).forEach(entry => {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       hashDir(full, h);
     } else {
       h.update(fs.readFileSync(full));
     }
-  }
+  });
 }
-
