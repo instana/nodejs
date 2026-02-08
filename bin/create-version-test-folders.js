@@ -13,7 +13,6 @@ const rootDir = path.resolve(__dirname, '..');
 const currenciesPath = path.join(rootDir, 'currencies.json');
 const collectorTestDir = path.join(rootDir, 'packages', 'collector', 'test');
 
-
 /**
  * Returns ALL directories under baseDir whose name matches the currency name.
  * Supports scoped packages: @scope/pkg is matched as a @scope directory containing a pkg subdirectory.
@@ -112,7 +111,13 @@ function copyParentFiles(dir) {
   const parentDir = path.resolve(dir, '..');
   const copied = [];
   fs.readdirSync(parentDir, { withFileTypes: true })
-    .filter(e => !e.name.startsWith('_v') && e.name !== 'node_modules' && e.name !== 'package.json' && e.name !== 'package.json.template' && e.name !== 'modes.json')
+    .filter(e =>
+      !e.name.startsWith('_v') &&
+      e.name !== 'node_modules' &&
+      e.name !== 'package.json' &&
+      e.name !== 'package.json.template' &&
+      e.name !== 'modes.json'
+    )
     .forEach(e => {
       const src = path.join(parentDir, e.name);
       const dest = path.join(dir, e.name);
@@ -138,7 +143,8 @@ ${esmOnly ? `if (!process.env.RUN_ESM) {
   return;
 }
 
-` : ''}const suiteTitle = (process.env.RUN_ESM ? '[ESM] ' : '') + 'tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}';
+` : ''}const esmPrefix = process.env.RUN_ESM ? '[ESM] ' : '';
+const suiteTitle = esmPrefix + 'tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}';
 mochaSuiteFn(suiteTitle, function () {
   this.timeout(config.getTestTimeout());
 
@@ -150,14 +156,15 @@ mochaSuiteFn(suiteTitle, function () {
 
   console.log('[INFO] Installing dependencies for ${suiteName}@${displayVersion}...');
   execSync('rm -rf node_modules', { cwd: __dirname, stdio: 'inherit' });
-  execSync('npm install --no-package-lock --no-audit --prefix ./ --no-progress --verbose', { cwd: __dirname, stdio: 'inherit', timeout: 60000 });
+  execSync('npm install --no-package-lock --no-audit --prefix ./ --no-progress', {
+    cwd: __dirname, stdio: 'inherit', timeout: 60000
+  });
   console.log('[INFO] Done installing dependencies for ${suiteName}@${displayVersion}');
 
   const testBase = require('./test_base');
   testBase.call(this, '${suiteName}', '${rawVersion}', ${isLatest}${mode ? `, '${mode}'` : ''});
 });
 `;
-
 }
 
 function generatePackageJson({ testDir, versionDir, pkgName, currencyName, currencyVersion, isOptional }) {
@@ -277,7 +284,6 @@ function main() {
           currencyVersion: version,
           isOptional
         });
-
       });
     });
   });
