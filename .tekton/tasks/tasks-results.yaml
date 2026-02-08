@@ -44,7 +44,9 @@ spec:
         # Not generic yet. We only support claimed tests for the collector package.
         echo ""
         echo "=== Post-flight: Verify claimed tests ==="
-        bash ./packages/collector/scripts/verify-all-claimed.sh "$ARTIFACTS_PATH" || true
+        if ! bash ./packages/collector/scripts/verify-all-claimed.sh "$ARTIFACTS_PATH"; then
+          touch "$ARTIFACTS_PATH/verify-claimed-tests.failed"
+        fi
         echo ""
 
         if find "$ARTIFACTS_PATH" -maxdepth 1 -type f -name '*.failed' | grep -q .; then
