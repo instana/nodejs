@@ -147,7 +147,7 @@ ${esmOnly ? `if (!process.env.RUN_ESM) {
 
   console.log('Installing dependencies for ${suiteName}@${displayVersion}...');
   execSync('rm -rf node_modules', { cwd: __dirname, stdio: 'inherit' });
-  execSync('npm install --no-package-lock --no-audit --prefix ./', { cwd: __dirname, stdio: 'inherit' });
+  execSync('npm install --no-package-lock --no-audit --prefix ./ --no-progress', { cwd: __dirname, stdio: 'inherit' });
   console.log('[Done] Installing dependencies for ${suiteName}@${displayVersion}');
 
   const testBase = require('./test_base');
