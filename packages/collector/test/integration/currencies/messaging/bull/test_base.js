@@ -34,7 +34,7 @@ const retryTime = 1000;
 module.exports = function (name, version, isLatest) {
   this.timeout(config.getTestTimeout() * 3);
 
-  const versionDir = path.join(__dirname, `_v${version}`);
+  const versionDir = path.basename(__dirname).startsWith('_v') ? __dirname : path.join(__dirname, `_v${version}`);
 
   const commonEnv = {
     LIBRARY_LATEST: isLatest,

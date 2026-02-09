@@ -11,7 +11,7 @@ const globalAgent = require('@_local/collector/test/globalAgent');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 
 module.exports = function (name, version, isLatest) {
-  const versionDir = path.join(__dirname, `_v${version}`);
+  const versionDir = path.basename(__dirname).startsWith('_v') ? __dirname : path.join(__dirname, `_v${version}`);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;

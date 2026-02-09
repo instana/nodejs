@@ -39,8 +39,9 @@ function start() {
   const connStr = `DefaultEndpointsProtocol=https;AccountName=${storageAccount};AccountKey=${accountKey};${endPoint}`;
 
   // Resolve @azure/storage-blob from the version folder's node_modules
+  const versionBase = path.basename(__dirname).startsWith('_v') ? __dirname : path.join(__dirname, `_v${libraryEnv.LIBRARY_VERSION}`);
   const versionRequire = createRequire(
-    path.join(__dirname, `_v${libraryEnv.LIBRARY_VERSION}`, 'package.json')
+    path.join(versionBase, 'package.json')
   );
   const { BlobServiceClient } = versionRequire('@azure/storage-blob');
 
