@@ -52,10 +52,11 @@ spec:
 
         # Not generic yet. We only support claimed tests for the collector package.
         echo "=== Post-flight: Verify claimed tests ==="
-        bash ./packages/collector/scripts/verify-all-claimed.sh "$ARTIFACTS_PATH"
+        VERIFY_EXIT=0
+        bash ./packages/collector/scripts/verify-all-claimed.sh "$ARTIFACTS_PATH" || VERIFY_EXIT=$?
         echo ""
 
-        if find "$ARTIFACTS_PATH" -maxdepth 1 -type f -name '*.failed' | grep -q .; then
+        if [ $VERIFY_EXIT -ne 0 ] || find "$ARTIFACTS_PATH" -maxdepth 1 -type f -name '*.failed' | grep -q .; then
           echo "PIPELINE_RESULT=Failed"
           echo "PIPELINE_RESULT=Failed" >> $ARTIFACTS_PATH/$PROPERTIES_FILE
         else
