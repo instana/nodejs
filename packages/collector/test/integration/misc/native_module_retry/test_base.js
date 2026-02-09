@@ -135,7 +135,7 @@ module.exports = function () {
           // Currently we do not ship darwin prebuilds via shared-metrics
           const sharedMetricsAddons = path.join(sharedMetricsPath, 'addons', 'darwin');
           execSync(
-            `cp -R ${sharedMetricsAddons} ${tmpFolder}/node_modules/@_local/shared-metrics/addons/`,
+            `cp -R ${sharedMetricsAddons} ${tmpFolder}/node_modules/@instana/shared-metrics/addons/`,
             {
               stdio: 'inherit'
             }

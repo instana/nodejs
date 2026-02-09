@@ -48,8 +48,8 @@ describe('agent ready state', () => {
     uncaughtStub = sinon.stub(uncaught);
     eolStub = sinon.stub(eol);
 
-    agentReadyState = proxyquire('../../src/announceCycle/agentready', {
-      '@_local/core': {
+    agentReadyState = proxyquire('@_local/collector/src/announceCycle/agentready', {
+      '@instana/core': {
         tracing: tracingStub
       },
       '../agent/opts': agentOptsStub,
