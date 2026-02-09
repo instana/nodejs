@@ -6,6 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const sidecarGroups = {
   redis: ['redis', 'redis-slave', 'redis-sentinel'],
@@ -13,23 +14,89 @@ const sidecarGroups = {
   nats: ['nats', 'nats-streaming', 'nats-streaming-2']
 };
 
+/**
+ * Scan collector test files to count how many tests need each sidecar.
+ * Uses the same INSTANA_CONNECT_* detection as claim-tests.sh.
+ */
+function countTestsPerSidecar(packageName) {
+  const hostsConfig = require(path.join(__dirname, '..', 'hosts_config.json'));
+  const knownEnvVars = new Set(Object.keys(hostsConfig));
+
+  const sidecarsJson = require(path.join(__dirname, 'assets', 'sidecars.json'));
+  const validSidecars = new Set(Object.keys(sidecarGroups));
+  for (const sc of sidecarsJson.sidecars) {
+    if (!Object.values(sidecarGroups).some(g => g.includes(sc.name))) {
+      validSidecars.add(sc.name);
+    }
+  }
+
+  const packageDir = path.join(__dirname, '..', 'packages', packageName);
+  let allTests;
+  try {
+    const raw = execSync(
+      'find . -path "*/test/**/*test.js" -name "*test.js"' +
+      ' -not -path "*/node_modules/*" -not -path "*/long_*/*"',
+      { cwd: packageDir, encoding: 'utf8' }
+    );
+    allTests = raw.trim().split('\n').filter(Boolean);
+  } catch (e) {
+    console.warn('Warning: could not scan test files, using empty counts');
+    return {};
+  }
+
+  // Same filter as claim-tests.sh: _v* dirs only accept test.js / test_*.js
+  const filtered = allTests.filter(f => {
+    if (!/_v[0-9]/.test(f)) return true;
+    return /\/_v[^/]+\/test(_[^/]+)?\.js$/.test(f);
+  });
+
+  const counts = {};
+
+  for (const testFile of filtered) {
+    const testDir = path.dirname(path.join(packageDir, testFile));
+    const scanDir = /_v[^/\\]*$/.test(testDir) ? path.dirname(testDir) : testDir;
+
+    let grepResult = '';
+    try {
+      grepResult = execSync(
+        'find -L . -maxdepth 1 \\( -name "*.js" -o -name "*.mjs" \\)' +
+        ' -exec grep -h -o "INSTANA_CONNECT_[A-Z0-9_]*" {} + 2>/dev/null',
+        { cwd: scanDir, encoding: 'utf8' }
+      );
+    } catch (e) {
+      // no matches
+    }
+
+    const envVars = [...new Set(grepResult.trim().split('\n').filter(Boolean))];
+    const sidecars = new Set();
+
+    for (const envVar of envVars) {
+      if (knownEnvVars.has(envVar)) {
+        const sidecar = envVar.replace('INSTANA_CONNECT_', '').split('_')[0].toLowerCase();
+        if (validSidecars.has(sidecar)) {
+          sidecars.add(sidecar);
+        }
+      }
+    }
+
+    for (const s of sidecars) {
+      counts[s] = (counts[s] || 0) + 1;
+    }
+  }
+
+  console.log('\nAuto-detected sidecar weights (tests per sidecar):');
+  for (const [name, count] of Object.entries(counts).sort((a, b) => b[1] - a[1])) {
+    console.log(`  ${name}: ${count}`);
+  }
+  console.log(`  (generic tests without sidecars: ${filtered.length - Object.values(counts).reduce((a, b) => a + b, 0)})`);
+
+  return counts;
+}
+
 const packages = {
   'test:ci:collector': {
     splits: 30,
-    sidecars: {
-      postgres: 4,
-      mysql: 4,
-      mongodb: 6,
-      memcached: 2,
-      elasticsearch: 3,
-      couchbase: 2,
-      oracledb: 2,
-      redis: 10,
-      kafka: 10,
-      nats: 3,
-      rabbitmq: 3,
-      localstack: 6
-    }
+    sidecars: countTestsPerSidecar('collector')
   },
 
   'test:ci:autoprofile': {},

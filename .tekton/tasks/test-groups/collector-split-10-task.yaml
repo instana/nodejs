@@ -4,71 +4,25 @@ metadata:
   name: collector-split-10
 spec:
   sidecars:
-    - name: zookeeper
-      image: confluentinc/cp-zookeeper:7.9.1
+    - name: postgres
+      image: public.ecr.aws/docker/library/postgres:15.15
       imagePullPolicy: IfNotPresent
       env:
-          - name: "ZOOKEEPER_CLIENT_PORT"
-            value: "2181"
+          - name: "POSTGRES_USER"
+            value: "node"
+          - name: "POSTGRES_PASSWORD"
+            value: "nodepw"
+          - name: "POSTGRES_DB"
+            value: "nodedb"
       readinessProbe:
-          tcpSocket:
-            port: 2181 
-          initialDelaySeconds: 5
+          exec:
+            command:
+            - "sh"
+            - "-c"
+            - "pg_isready --host 127.0.0.1 --port 5432 --dbname=nodedb"
+          initialDelaySeconds: 3
           periodSeconds: 2
-          timeoutSeconds: 30
-    - name: kafka
-      image: confluentinc/cp-kafka:7.9.1
-      imagePullPolicy: IfNotPresent
-      env:
-          - name: "KAFKA_BROKER_ID"
-            value: "1"
-          - name: "KAFKA_ZOOKEEPER_CONNECT"
-            value: "localhost:2181"
-          - name: "KAFKA_ADVERTISED_LISTENERS"
-            value: "PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092"
-          - name: "KAFKA_LISTENERS"
-            value: "EXTERNAL://:9092,PLAINTEXT://:29092"
-          - name: "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR"
-            value: "1"
-          - name: "KAFKA_DEFAULT_REPLICATION_FACTOR"
-            value: "1"
-          - name: "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP"
-            value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,EXTERNAL:PLAINTEXT"
-      readinessProbe:
-          tcpSocket:
-            port: 9092 
-          initialDelaySeconds: 90
-          periodSeconds: 2
-          timeoutSeconds: 60
-    - name: kafka-topics
-      image: confluentinc/cp-kafka:7.9.1
-      imagePullPolicy: IfNotPresent
-      args:
-          - "-lc"
-          - "kafka_server=\"0.0.0.0:9092\"; kafka_topics=\"test test-topic test-batch-topic rdkafka-topic confluent-kafka-topic\"; until kafka-topics --bootstrap-server \"$kafka_server\" --list >/dev/null 2>&1; do echo 'waiting for Kafka...'; sleep 2; done; for t in $kafka_topics; do kafka-topics --bootstrap-server \"$kafka_server\" --create --if-not-exists --topic \"$t\"; done; echo 'All topics created.'"
-      command:
-          - "/bin/bash"
-    - name: schema-registry
-      image: confluentinc/cp-schema-registry:7.9.0
-      imagePullPolicy: IfNotPresent
-      env:
-          - name: "SCHEMA_REGISTRY_HOST_NAME"
-            value: "schema-registry"
-          - name: "SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL"
-            value: "0.0.0.0:2181"
-          - name: "SCHEMA_REGISTRY_LISTENERS"
-            value: "http://0.0.0.0:8081"
-          - name: "SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS"
-            value: "PLAINTEXT://0.0.0.0:29092"
-          - name: "SCHEMA_REGISTRY_DEBUG"
-            value: "true"
-      readinessProbe:
-          httpGet:
-            path: / 
-            port: 8081 
-          initialDelaySeconds: 5
-          periodSeconds: 2
-          timeoutSeconds: 60
+          timeoutSeconds: 10
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -134,8 +88,8 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS="zookeeper,kafka,kafka-topics,schema-registry"
-        SIDECAR_COUNTS="redis=6,redis-slave=6,redis-sentinel=6,zookeeper=5,kafka=5,kafka-topics=5,schema-registry=5,mongodb=3,localstack=3,postgres=2,mysql=2,elasticsearch=2,nats=2,nats-streaming=2,nats-streaming-2=2,rabbitmq=2,memcached=1,couchbase=1,oracledb=1"
+        AVAILABLE_SIDECARS="postgres"
+        SIDECAR_COUNTS="mongodb=5,postgres=5,zookeeper=4,kafka=4,kafka-topics=4,schema-registry=4,elasticsearch=3,nats=3,nats-streaming=3,nats-streaming-2=3,rabbitmq=3,redis=2,redis-slave=2,redis-sentinel=2,oracledb=1,couchbase=2,localstack=2,memcached=1,mysql=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
@@ -193,7 +147,7 @@ spec:
         rm -f "test:ci:collector.succeeded" "test:ci:collector.failed"
         retry=1
         LAST_EXIT=1
-        while [ $retry -le 3 ]; do
+        while [ $retry -le 2 ]; do
           LAST_EXIT=0
           if [ "$(params.coverage)" == "true" ]; then
             if [ "true" == "true" ]; then

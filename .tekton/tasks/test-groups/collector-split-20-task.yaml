@@ -4,31 +4,39 @@ metadata:
   name: collector-split-20
 spec:
   sidecars:
-    - name: mysql
-      image: public.ecr.aws/docker/library/mysql:8.0.26
+    - name: nats
+      image: nats:2.9.14-linux
+      imagePullPolicy: IfNotPresent
+    - name: nats-streaming
+      image: nats-streaming:0.25.3-linux
       imagePullPolicy: IfNotPresent
       args:
-          - "--default-authentication-plugin=mysql_native_password"
-      env:
-          - name: "MYSQL_ROOT_PASSWORD"
-            value: "nodepw"
-          - name: "MYSQL_DATABASE"
-            value: "nodedb"
-          - name: "MYSQL_USER"
-            value: "node"
-          - name: "MYSQL_PASSWORD"
-            value: "nodepw"
-          - name: "MYSQL_ROOT_HOST"
-            value: "0.0.0.0"
+          - "-p"
+          - "4223"
+          - "-m"
+          - "8223"
       readinessProbe:
-          exec:
-            command:
-            - "sh"
-            - "-c"
-            - "mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1'"
-          initialDelaySeconds: 3
+          httpGet:
+            path: /healthz 
+            port: 8223 
+          initialDelaySeconds: 5
           periodSeconds: 2
-          timeoutSeconds: 10
+          timeoutSeconds: 15
+    - name: nats-streaming-2
+      image: nats-streaming:0.25.3-linux
+      imagePullPolicy: IfNotPresent
+      args:
+          - "-p"
+          - "4224"
+          - "-m"
+          - "8224"
+      readinessProbe:
+          httpGet:
+            path: /healthz 
+            port: 8224 
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 15
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -94,8 +102,8 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS="mysql"
-        SIDECAR_COUNTS="redis=6,redis-slave=6,redis-sentinel=6,zookeeper=5,kafka=5,kafka-topics=5,schema-registry=5,mongodb=3,localstack=3,postgres=2,mysql=2,elasticsearch=2,nats=2,nats-streaming=2,nats-streaming-2=2,rabbitmq=2,memcached=1,couchbase=1,oracledb=1"
+        AVAILABLE_SIDECARS="nats,nats-streaming,nats-streaming-2"
+        SIDECAR_COUNTS="mongodb=5,postgres=5,zookeeper=4,kafka=4,kafka-topics=4,schema-registry=4,elasticsearch=3,nats=3,nats-streaming=3,nats-streaming-2=3,rabbitmq=3,redis=2,redis-slave=2,redis-sentinel=2,oracledb=1,couchbase=2,localstack=2,memcached=1,mysql=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
@@ -153,7 +161,7 @@ spec:
         rm -f "test:ci:collector.succeeded" "test:ci:collector.failed"
         retry=1
         LAST_EXIT=1
-        while [ $retry -le 3 ]; do
+        while [ $retry -le 2 ]; do
           LAST_EXIT=0
           if [ "$(params.coverage)" == "true" ]; then
             if [ "true" == "true" ]; then

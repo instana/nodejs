@@ -4,32 +4,9 @@ metadata:
   name: collector-split-4
 spec:
   sidecars:
-    - name: redis
-      image: public.ecr.aws/docker/library/redis:7.4.3
+    - name: mongodb
+      image: public.ecr.aws/docker/library/mongo:8.0.8
       imagePullPolicy: IfNotPresent
-    - name: redis-slave
-      image: public.ecr.aws/docker/library/redis:7.4.3
-      imagePullPolicy: IfNotPresent
-      args:
-          - "redis-server"
-          - "--replicaof"
-          - "127.0.0.1"
-          - "6379"
-          - "--port"
-          - "6380"
-    - name: redis-sentinel
-      image: public.ecr.aws/docker/library/redis:7.4.3
-      imagePullPolicy: IfNotPresent
-      args:
-          - "sh"
-          - "-c"
-          - |
-            echo "sentinel monitor mymaster 127.0.0.1 6379 2" > /etc/sentinel.conf
-            echo "sentinel down-after-milliseconds mymaster 1000" >> /etc/sentinel.conf
-            echo "sentinel failover-timeout mymaster 5000" >> /etc/sentinel.conf
-            echo "sentinel parallel-syncs mymaster 1" >> /etc/sentinel.conf
-            echo "sentinel resolve-hostnames no" >> /etc/sentinel.conf
-            redis-server /etc/sentinel.conf --sentinel --port 26379
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -95,8 +72,8 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS="redis,redis-slave,redis-sentinel"
-        SIDECAR_COUNTS="redis=6,redis-slave=6,redis-sentinel=6,zookeeper=5,kafka=5,kafka-topics=5,schema-registry=5,mongodb=3,localstack=3,postgres=2,mysql=2,elasticsearch=2,nats=2,nats-streaming=2,nats-streaming-2=2,rabbitmq=2,memcached=1,couchbase=1,oracledb=1"
+        AVAILABLE_SIDECARS="mongodb"
+        SIDECAR_COUNTS="mongodb=5,postgres=5,zookeeper=4,kafka=4,kafka-topics=4,schema-registry=4,elasticsearch=3,nats=3,nats-streaming=3,nats-streaming-2=3,rabbitmq=3,redis=2,redis-slave=2,redis-sentinel=2,oracledb=1,couchbase=2,localstack=2,memcached=1,mysql=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
@@ -154,7 +131,7 @@ spec:
         rm -f "test:ci:collector.succeeded" "test:ci:collector.failed"
         retry=1
         LAST_EXIT=1
-        while [ $retry -le 3 ]; do
+        while [ $retry -le 2 ]; do
           LAST_EXIT=0
           if [ "$(params.coverage)" == "true" ]; then
             if [ "true" == "true" ]; then

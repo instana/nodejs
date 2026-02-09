@@ -128,7 +128,7 @@ spec:
         rm -f "test:ci:opentelemetry-sampler.succeeded" "test:ci:opentelemetry-sampler.failed"
         retry=1
         LAST_EXIT=1
-        while [ $retry -le 3 ]; do
+        while [ $retry -le 2 ]; do
           LAST_EXIT=0
           if [ "$(params.coverage)" == "true" ]; then
             if [ "false" == "true" ]; then
