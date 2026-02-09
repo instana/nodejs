@@ -36,7 +36,7 @@ const logger = log4js.getLogger();
 instana.setLogger(logger);
 
 let instanaLogger;
-instanaLogger = require('@_local/collector/src/logger').getLogger('test-module-name', newLogger => {
+instanaLogger = require('@instana/collector/src/logger').getLogger('test-module-name', newLogger => {
   instanaLogger = newLogger;
 });
 

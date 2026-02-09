@@ -30,7 +30,7 @@ const buynan = require('bunyan');
 // See https://jsw.ibm.com/browse/INSTA-24679
 instana.setLogger(buynan.createLogger({ name: 'app-logger', level: 'warn' }));
 
-const instanaLogger = require('@_local/collector/src/logger').getLogger();
+const instanaLogger = require('@instana/collector/src/logger').getLogger();
 
 const bodyParser = require('body-parser');
 const express = require('express');

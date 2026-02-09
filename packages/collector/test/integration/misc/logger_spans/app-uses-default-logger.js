@@ -25,7 +25,7 @@ instana({
   }
 });
 
-const instanaLogger = require('@_local/collector/src/logger').getLogger();
+const instanaLogger = require('@instana/collector/src/logger').getLogger();
 
 const bodyParser = require('body-parser');
 const express = require('express');
