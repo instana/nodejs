@@ -159,7 +159,7 @@ mochaSuiteFn(suiteTitle, function () {
     this.timeout(installTimeout);
     console.log('[INFO] Installing dependencies for ${suiteName}@${displayVersion}...');
     execSync('npm install --no-package-lock --no-audit --prefix ./ --no-progress', {
-      cwd: __dirname, stdio: 'inherit', timeout: installTimeout
+      cwd: __dirname, stdio: 'inherit', timeout: installTimeout - 1000
     });
     console.log('[INFO] Done installing dependencies for ${suiteName}@${displayVersion}');
   });
