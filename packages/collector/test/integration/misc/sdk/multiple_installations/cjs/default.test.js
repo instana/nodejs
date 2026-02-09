@@ -57,6 +57,7 @@ describe('[CJS] sdk/multiple_installations', function () {
     );
 
     controls = new ProcessControls({
+      dirname: __dirname,
       useGlobalAgent: true,
       cwd: path.join(__dirname, 'src'),
       appPath: path.join(__dirname, 'src', 'app'),

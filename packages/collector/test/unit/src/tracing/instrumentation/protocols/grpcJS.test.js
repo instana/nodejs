@@ -13,11 +13,11 @@ class Metadata {
   }
 
   set(key, value) {
-    this._data[key] = [String(value)];
+    this._data[key.toLowerCase()] = [String(value)];
   }
 
   get(key) {
-    return this._data[key] || [];
+    return this._data[key.toLowerCase()] || [];
   }
 }
 

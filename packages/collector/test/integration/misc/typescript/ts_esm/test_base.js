@@ -6,6 +6,7 @@
 
 const expect = require('chai').expect;
 const path = require('path');
+const fs = require('fs');
 const { execSync } = require('child_process');
 const config = require('@_local/core/test/config');
 const testUtils = require('@_local/core/test/test_util');
@@ -29,14 +30,12 @@ module.exports = function () {
     });
 
     before(async () => {
-      execSync('rm -rf ./dist', { cwd: __dirname, stdio: 'inherit' });
-      execSync('rm -rf ./node_modules', { cwd: __dirname, stdio: 'inherit' });
-      execSync('npm install --verbose', { cwd: __dirname, stdio: 'inherit' });
       execSync('npm run build', { cwd: __dirname, stdio: 'inherit' });
-      execSync('cp ./package.json.tmp ./dist/package.json', { cwd: __dirname, stdio: 'inherit' });
+      fs.writeFileSync(path.join(__dirname, 'dist', 'package.json'), '{"type":"module"}\n');
 
       controls = new ProcessControls({
-        appPath: path.join(__dirname, 'dist', 'app_1.js'),
+        dirname: __dirname,
+        appName: 'dist/app_1',
         useGlobalAgent: true,
         execArgv: loaderPath
       });
@@ -72,14 +71,14 @@ module.exports = function () {
     });
 
     before(async () => {
-      execSync('rm -rf ./dist', { cwd: __dirname, stdio: 'inherit' });
       execSync('rm -rf ./node_modules', { cwd: __dirname, stdio: 'inherit' });
       execSync('npm install --verbose', { cwd: __dirname, stdio: 'inherit' });
       execSync('npm run build', { cwd: __dirname, stdio: 'inherit' });
-      execSync('cp ./package.json.tmp ./dist/package.json', { cwd: __dirname, stdio: 'inherit' });
+      fs.writeFileSync(path.join(__dirname, 'dist', 'package.json'), '{"type":"module"}\n');
 
       controls = new ProcessControls({
-        appPath: path.join(__dirname, 'dist', 'app_2.js'),
+        dirname: __dirname,
+        appName: 'dist/app_2',
         useGlobalAgent: true,
         execArgv: loaderPath
       });

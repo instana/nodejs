@@ -151,6 +151,7 @@ mochaSuiteFn(suiteTitle, function () {
   try { fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true }); } catch (_) {}
   const copiedFiles = copyParentFiles(__dirname, sourceDir);
   const cleanup = () => cleanupCopiedFiles(copiedFiles);
+  after(() => cleanup());
   process.once('exit', cleanup);
   process.once('SIGINT', () => { cleanup(); process.exit(130); });
   process.once('SIGTERM', () => { cleanup(); process.exit(143); });

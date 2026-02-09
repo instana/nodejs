@@ -27,12 +27,11 @@ module.exports = function () {
     });
 
     before(async () => {
-      execSync('rm -rf ./node_modules', { cwd: __dirname, stdio: 'inherit' });
-      execSync('npm install --verbose', { cwd: __dirname, stdio: 'inherit' });
       execSync('npm run build', { cwd: __dirname, stdio: 'inherit' });
 
       controls = new ProcessControls({
-        appPath: path.join(__dirname, 'dist', 'app_1.js'),
+        dirname: __dirname,
+        appName: 'dist/app_1',
         useGlobalAgent: true,
         execArgv: ['--require', path.join(__dirname, 'node_modules', '@instana', 'collector', 'src', 'immediate.js')]
       });
@@ -68,12 +67,11 @@ module.exports = function () {
     });
 
     before(async () => {
-      execSync('rm -rf ./node_modules', { cwd: __dirname, stdio: 'inherit' });
-      execSync('npm install --verbose', { cwd: __dirname, stdio: 'inherit' });
       execSync('npm run build', { cwd: __dirname, stdio: 'inherit' });
 
       controls = new ProcessControls({
-        appPath: path.join(__dirname, 'dist', 'app_2.js'),
+        dirname: __dirname,
+        appName: 'dist/app_2',
         useGlobalAgent: true,
         execArgv: ['--require', path.join(__dirname, 'node_modules', '@instana', 'collector', 'src', 'immediate.js')]
       });

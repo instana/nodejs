@@ -2,7 +2,7 @@
 import * as instana from '@instana/collector';
 import express from 'express';
 import bodyParser from 'body-parser';
-import portFactory from '../../../../../test_util/app-port.js';
+import portFactory from '../../../../../../test_util/app-port.js';
 
 const port = portFactory();
 
