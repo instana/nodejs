@@ -17,7 +17,7 @@ const pathToEdgemicroDir = path.join(__dirname, 'edgemicroResources');
 const pathOfOriginal = path.join(pathToEdgemicroDir, 'cli', 'edgemicro.original');
 const pathOfFileToInstrument = path.join(pathToEdgemicroDir, 'cli', 'edgemicro');
 const pathOfBackup = `${pathOfFileToInstrument}.backup`;
-const pathToCollector = path.resolve(__dirname, '..', '..');
+const pathToCollector = path.resolve(__dirname, '..', '..', '..', '..');
 const anotherPathToCollector = `${pathToCollector}/../collector`;
 
 describe('binary to statically instrument the edgemicro cli', () => {
