@@ -23,7 +23,7 @@ class MockResponseEmitter extends EventEmitter {
   setEncoding() {}
 }
 
-describe.only('agent connection/bazel', function () {
+describe('agent connection/bazel', function () {
   let agentConnection;
   let lastRequest;
 
