@@ -154,10 +154,12 @@ mochaSuiteFn(suiteTitle, function () {
   process.once('SIGINT', () => { cleanup(); process.exit(130); });
   process.once('SIGTERM', () => { cleanup(); process.exit(143); });
   
-  before(() => {
+  before(function () {
+   const installTimeout = 180000;
+    this.timeout(installTimeout);
     console.log('[INFO] Installing dependencies for ${suiteName}@${displayVersion}...');
     execSync('npm install --no-package-lock --no-audit --prefix ./ --no-progress', {
-      cwd: __dirname, stdio: 'inherit', timeout: 180000
+      cwd: __dirname, stdio: 'inherit', timeout: installTimeout
     });
     console.log('[INFO] Done installing dependencies for ${suiteName}@${displayVersion}');
   });
