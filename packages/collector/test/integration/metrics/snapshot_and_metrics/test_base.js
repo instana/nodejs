@@ -5,11 +5,8 @@
 
 'use strict';
 
-/* eslint-disable no-console */
-
 const _ = require('lodash');
 const expect = require('chai').expect;
-const { execSync } = require('child_process');
 const path = require('path');
 
 const config = require('@_local/core/test/config');
@@ -27,11 +24,8 @@ module.exports = function (name, version) {
   let controls;
 
   before(async () => {
-    console.log(`Running npm install in ${versionDir}.`);
-    const npmInstallOutput = execSync('npm install --no-audit', { cwd: versionDir });
-    console.log(`Done with running npm install in ${versionDir}: ${npmInstallOutput}`);
-
     controls = new ProcessControls({
+      dirname: __dirname,
       appPath: path.join(__dirname, 'app'),
       args: ['foo', 'bar', 'baz'],
       useGlobalAgent: true

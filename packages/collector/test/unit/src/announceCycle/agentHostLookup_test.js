@@ -96,9 +96,9 @@ describe('agent host lookup state', () => {
       parseProcSelfNetRouteFile: parseProcSelfNetRouteFileStub
     };
 
-    agentHostLookupState = proxyquire('../../src/announceCycle/agentHostLookup', {
+    agentHostLookupState = proxyquire('@_local/collector/src/announceCycle/agentHostLookup', {
       '../agent/opts': agentOptsMock,
-      '@_local/core': {
+      '@instana/core': {
         uninstrumentedHttp: {
           http: httpStub
         }

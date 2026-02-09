@@ -367,6 +367,82 @@ function writeTask(fileName, content) {
   console.log(`Generated ${fileName}`);
 }
 
+function cleanupOldCollectorTasks() {
+  const taskDir = path.join(__dirname, 'tasks', 'test-groups');
+  const oldFiles = fs.readdirSync(taskDir).filter(f => f.startsWith('collector-'));
+  for (const f of oldFiles) {
+    fs.unlinkSync(path.join(taskDir, f));
+  }
+  if (oldFiles.length > 0) {
+    console.log(`Cleaned up ${oldFiles.length} old collector task files`);
+  }
+}
+
+function updatePipelineCollectorEntries(taskNames) {
+  const pipelinePath = path.join(__dirname, 'pipeline', 'default-pipeline.yaml');
+  const lines = fs.readFileSync(pipelinePath, 'utf-8').split('\n');
+
+  let firstCollectorLine = -1;
+  let afterLastCollectorLine = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (/^\s{4}- name: collector-/.test(lines[i])) {
+      if (firstCollectorLine === -1) firstCollectorLine = i;
+      let j = i + 1;
+      while (j < lines.length && !/^\s{4}- name: /.test(lines[j]) && !/^\s{2}finally:/.test(lines[j])) {
+        j++;
+      }
+      afterLastCollectorLine = j;
+      i = j - 1;
+    }
+  }
+
+  if (firstCollectorLine === -1) {
+    console.warn('Warning: could not find collector entries in pipeline YAML');
+    return;
+  }
+
+  const newEntries = [];
+  for (const name of taskNames) {
+    newEntries.push(
+      `    - name: ${name}-task`,
+      '      runAfter:',
+      '        - execute-tools',
+      '      taskRef:',
+      `        name: ${name}`,
+      '      params:',
+      '        - name: node-version',
+      '          value: $(params.node-version)',
+      '        - name: npm-version',
+      '          value: $(params.npm-version)          ',
+      '        - name: repository',
+      '          value: $(params.repository)',
+      '        - name: revision',
+      '          value: $(params.commit-id)',
+      '        - name: continuous-delivery-context-secret',
+      '          value: "secure-properties"',
+      '        - name: esm',
+      '          value: $(params.esm)',
+      '        - name: coverage',
+      '          value: $(params.coverage)',
+      '        - name: prerelease',
+      '          value: $(params.prerelease)   ',
+      '      workspaces:',
+      '        - name: output',
+      '          workspace: artifacts'
+    );
+  }
+
+  const result = [
+    ...lines.slice(0, firstCollectorLine),
+    ...newEntries,
+    ...lines.slice(afterLastCollectorLine)
+  ];
+
+  fs.writeFileSync(pipelinePath, result.join('\n'));
+  console.log(`Updated pipeline with ${taskNames.length} collector task entries`);
+}
+
 // =============================================================================
 // MAIN: Generate all tasks
 // =============================================================================
@@ -376,6 +452,8 @@ console.log('\n=== Generating Tasks ===\n');
 for (const [groupName, config] of Object.entries(packages)) {
   if (config.sidecars && typeof config.sidecars === 'object' && !Array.isArray(config.sidecars)) {
     console.log(`\nDistributing ${Object.keys(config.sidecars).length} sidecar groups across ${config.splits} collector tasks:\n`);
+
+    cleanupOldCollectorTasks();
 
     const collectorTasks = distributeSidecars(config.sidecars, config.splits);
 
@@ -387,9 +465,13 @@ for (const [groupName, config] of Object.entries(packages)) {
     });
     const sidecarCountsStr = Object.entries(sidecarCounts).map(([k, v]) => `${k}=${v}`).join(',');
 
-    for (const task of collectorTasks) {
-      const taskName = `collector-split-${task.index}`;
+    const collectorTaskNames = [];
 
+    for (const task of collectorTasks) {
+      const sidecarSuffix = task.sidecarNames.join('-');
+      const taskName = `collector-${task.index}-${sidecarSuffix}`;
+
+      collectorTaskNames.push(taskName);
       console.log(`  ${taskName}: [${task.sidecars.join(', ')}] (weight: ${task.weight})`);
 
       const content = generateTask(taskName, task.sidecars, {
@@ -404,6 +486,8 @@ for (const [groupName, config] of Object.entries(packages)) {
 
       writeTask(`${taskName}-task.yaml`, content);
     }
+
+    updatePipelineCollectorEntries(collectorTaskNames);
   } else {
     const runs = config.split ? Array.from({ length: config.split }, (_, i) => i + 1) : [1];
 
