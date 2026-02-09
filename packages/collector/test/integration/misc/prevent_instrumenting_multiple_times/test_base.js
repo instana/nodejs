@@ -25,6 +25,7 @@ module.exports = function (name, version) {
 
   before(async () => {
     controls = new ProcessControls({
+      dirname: __dirname,
       appPath: require.resolve('@_local/collector/test/apps/express'),
       execArgv: ['--require', pathToSeparateInstanaCollector],
       useGlobalAgent: true,

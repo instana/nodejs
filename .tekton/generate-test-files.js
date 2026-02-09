@@ -192,11 +192,14 @@ function distributeSidecars(sidecarConfig, numTasks) {
     index: i + 1,
     sidecars: [],
     sidecarSet: new Set(),
+    sidecarNames: new Set(),
     weight: 0
   }));
 
   for (const item of items) {
     const minTask = tasks.reduce((min, t) => (t.weight < min.weight ? t : min), tasks[0]);
+
+    minTask.sidecarNames.add(item.name);
 
     for (const sc of item.sidecars) {
       if (!minTask.sidecarSet.has(sc)) {
@@ -211,6 +214,7 @@ function distributeSidecars(sidecarConfig, numTasks) {
   return tasks.map(t => ({
     index: t.index,
     sidecars: t.sidecars,
+    sidecarNames: [...t.sidecarNames],
     weight: t.weight
   }));
 }
