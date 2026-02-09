@@ -61,7 +61,7 @@ describe('transmission cycle', function () {
     onReadyPayload = null;
     onReadyError = null;
     transmissionCycle = proxyquire('../../src/metrics/transmissionCycle', {
-      '@_local/serverless': {
+      '@instana/serverless': {
         backendConnector: { sendMetrics }
       }
     });

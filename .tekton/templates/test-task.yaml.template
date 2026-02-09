@@ -102,7 +102,7 @@ spec:
 
         if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]'{{condition}}; then
           echo "Skipping group."
-          touch "{{groupName}}.succeeded"
+          touch "{{sanitizedGroupName}}.succeeded"
           exit 0
         fi
         
@@ -119,7 +119,7 @@ spec:
 
           if ! echo "{{groupName}}" | grep -q 'ci:collector'; then
             echo "Skipping tests because group does not support ESM."
-            touch "{{groupName}}.succeeded"
+            touch "{{sanitizedGroupName}}.succeeded"
             exit 0
           fi
         fi
@@ -129,7 +129,7 @@ spec:
           
           if [ -z "$CLAIMED_TESTS" ]; then
             echo "No tests to claim for this task"
-            touch "{{groupName}}.succeeded"
+            touch "{{sanitizedGroupName}}.succeeded"
             exit 0
           fi
           
@@ -140,7 +140,7 @@ spec:
           echo "{{sanitizedGroupName}}: $SHORT_NAMES" >> "$ARTIFACTS_PATH/test-mapping.txt"
         fi
 
-        rm -f "{{groupName}}.succeeded" "{{groupName}}.failed"
+        rm -f "{{sanitizedGroupName}}.succeeded" "{{sanitizedGroupName}}.failed"
 
         retry=1
         LAST_EXIT=1
@@ -161,7 +161,7 @@ spec:
           fi
 
           if [ $LAST_EXIT -eq 0 ]; then
-            touch "{{groupName}}.succeeded"
+            touch "{{sanitizedGroupName}}.succeeded"
             break
           else
             echo "Attempt $retry failed with exit code $LAST_EXIT"
@@ -169,8 +169,8 @@ spec:
           fi
         done
 
-        if [ ! -f "{{groupName}}.succeeded" ]; then
-          echo "All $((retry - 1)) retries failed for {{groupName}}"
-          touch "{{groupName}}.failed"
+        if [ ! -f "{{sanitizedGroupName}}.succeeded" ]; then
+          echo "All $((retry - 1)) retries failed for {{sanitizedGroupName}}"
+          touch "{{sanitizedGroupName}}.failed"
           exit 1
         fi

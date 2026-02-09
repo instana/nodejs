@@ -20,24 +20,31 @@ module.exports = function (name, version, isLatest) {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
-    const drivers = ['mysql', 'mysql-cluster'];
+    const drivers = ['mysql2', 'mysql2/promises'];
+    const executionModes = [false, true];
 
     // NOTE: There is no need to run the ESM APP for all versions.
     // TODO: Support for mocking `import` in ESM apps is planned under INSTA-788.
     if (process.env.RUN_ESM && !isLatest) return;
 
     drivers.forEach(driverMode => {
-        registerSuite.call(this, driverMode);
+        executionModes.forEach(useExecute => {
+            registerSuite.call(this, driverMode, useExecute);
+        });
     });
 
-    function registerSuite(driverMode) {
-        describe(`driver mode: ${driverMode}`, () => {
+    function registerSuite(driverMode, useExecute) {
+        describe(`driver mode: ${driverMode}, access function: ${useExecute ? 'execute' : 'query'}`, () => {
             const env = {
                 DRIVER_MODE: driverMode,
                 LIBRARY_VERSION: version,
                 LIBRARY_NAME: name,
                 LIBRARY_LATEST: isLatest
             };
+
+            if (useExecute) {
+                env.USE_EXECUTE = 'true';
+            }
 
             test(env);
         });
@@ -49,6 +56,9 @@ module.exports = function (name, version, isLatest) {
                 LIBRARY_NAME: name,
                 LIBRARY_LATEST: isLatest
             };
+            if (useExecute) {
+                env.USE_EXECUTE = 'true';
+            }
             let controls;
 
             before(async () => {
@@ -132,9 +142,6 @@ module.exports = function (name, version, isLatest) {
                 .then(() =>
                     testUtils.retry(() =>
                         agentControls.getSpans().then(spans => {
-                            // 1 x mysql
-                            // 1 x httpserver
-                            // Expect 2 spans if OTEL is disabled, or 3 if enabled — except when driverMode is 'mysql2/promises'.
                             expect(spans.length).to.equal(2);
                             const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
                                 span => expect(span.n).to.equal('node.http.server'),
@@ -178,8 +185,6 @@ module.exports = function (name, version, isLatest) {
 
                     return testUtils.retry(() =>
                         agentControls.getSpans().then(spans => {
-                            // 2 x mysql
-                            // 2 x httpserver
                             expect(spans.length).to.equal(4);
                             const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
                                 span => expect(span.n).to.equal('node.http.server'),
@@ -245,10 +250,6 @@ module.exports = function (name, version, isLatest) {
 
                     return testUtils.retry(() =>
                         agentControls.getSpans().then(spans => {
-                            // 1 x mysql
-                            // 1 x httpserver
-                            // 1 x httpclient
-                            // Expect 3 spans if OTEL is disabled, or 4 if enabled — except when driverMode is 'mysql2/promises'.
                             expect(spans.length).to.equal(3);
                             const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
                                 span => expect(span.n).to.equal('node.http.server'),

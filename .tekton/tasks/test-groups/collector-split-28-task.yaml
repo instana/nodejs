@@ -4,9 +4,16 @@ metadata:
   name: collector-split-28
 spec:
   sidecars:
-    - name: localstack
-      image: public.ecr.aws/localstack/localstack:4.5
+    - name: couchbase
+      image: couchbase/server:7.6.7
       imagePullPolicy: IfNotPresent
+      readinessProbe:
+          httpGet:
+            path: / 
+            port: 8091 
+          initialDelaySeconds: 15
+          periodSeconds: 2
+          timeoutSeconds: 60
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -72,8 +79,8 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS="localstack"
-        SIDECAR_COUNTS="mongodb=5,postgres=5,zookeeper=4,kafka=4,kafka-topics=4,schema-registry=4,elasticsearch=3,nats=3,nats-streaming=3,nats-streaming-2=3,rabbitmq=3,redis=2,redis-slave=2,redis-sentinel=2,oracledb=1,couchbase=2,localstack=2,memcached=1,mysql=1"
+        AVAILABLE_SIDECARS="couchbase"
+        SIDECAR_COUNTS="mongodb=4,postgres=4,zookeeper=4,kafka=4,kafka-topics=4,schema-registry=4,elasticsearch=3,mysql=3,nats=3,nats-streaming=3,nats-streaming-2=3,rabbitmq=3,redis=2,redis-slave=2,redis-sentinel=2,memcached=1,oracledb=1,couchbase=2,localstack=2"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
@@ -98,7 +105,7 @@ spec:
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
         if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && true; then
           echo "Skipping group."
-          touch "test:ci:collector.succeeded"
+          touch "collector-split-28.succeeded"
           exit 0
         fi
         export CI=true
@@ -112,7 +119,7 @@ spec:
           export RUN_ESM=true
           if ! echo "test:ci:collector" | grep -q 'ci:collector'; then
             echo "Skipping tests because group does not support ESM."
-            touch "test:ci:collector.succeeded"
+            touch "collector-split-28.succeeded"
             exit 0
           fi
         fi
@@ -120,7 +127,7 @@ spec:
           CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*test.js" "30" "$ARTIFACTS_PATH")
           if [ -z "$CLAIMED_TESTS" ]; then
             echo "No tests to claim for this task"
-            touch "test:ci:collector.succeeded"
+            touch "collector-split-28.succeeded"
             exit 0
           fi
           echo "Claimed tests: $CLAIMED_TESTS"
@@ -128,7 +135,7 @@ spec:
           SHORT_NAMES=$(echo "$CLAIMED_TESTS" | tr ' ' '\n' | sed 's|.*/currencies/||; s|.*/misc/||; s|.*/unit/||; s|/test\.js$||' | tr '\n' ', ' | sed 's/,$//')
           echo "collector-split-28: $SHORT_NAMES" >> "$ARTIFACTS_PATH/test-mapping.txt"
         fi
-        rm -f "test:ci:collector.succeeded" "test:ci:collector.failed"
+        rm -f "collector-split-28.succeeded" "collector-split-28.failed"
         retry=1
         LAST_EXIT=1
         while [ $retry -le 2 ]; do
@@ -147,15 +154,15 @@ spec:
             fi
           fi
           if [ $LAST_EXIT -eq 0 ]; then
-            touch "test:ci:collector.succeeded"
+            touch "collector-split-28.succeeded"
             break
           else
             echo "Attempt $retry failed with exit code $LAST_EXIT"
             retry=$((retry + 1))
           fi
         done
-        if [ ! -f "test:ci:collector.succeeded" ]; then
-          echo "All $((retry - 1)) retries failed for test:ci:collector"
-          touch "test:ci:collector.failed"
+        if [ ! -f "collector-split-28.succeeded" ]; then
+          echo "All $((retry - 1)) retries failed for collector-split-28"
+          touch "collector-split-28.failed"
           exit 1
         fi

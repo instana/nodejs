@@ -95,7 +95,7 @@ spec:
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
         if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && ! echo "$MODIFIED_FILES" | grep -q "packages/opentelemetry-sampler"; then
           echo "Skipping group."
-          touch "test:ci:opentelemetry-sampler.succeeded"
+          touch "opentelemetry-sampler.succeeded"
           exit 0
         fi
         export CI=true
@@ -109,7 +109,7 @@ spec:
           export RUN_ESM=true
           if ! echo "test:ci:opentelemetry-sampler" | grep -q 'ci:collector'; then
             echo "Skipping tests because group does not support ESM."
-            touch "test:ci:opentelemetry-sampler.succeeded"
+            touch "opentelemetry-sampler.succeeded"
             exit 0
           fi
         fi
@@ -117,7 +117,7 @@ spec:
           CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*test.js" "false" "$ARTIFACTS_PATH")
           if [ -z "$CLAIMED_TESTS" ]; then
             echo "No tests to claim for this task"
-            touch "test:ci:opentelemetry-sampler.succeeded"
+            touch "opentelemetry-sampler.succeeded"
             exit 0
           fi
           echo "Claimed tests: $CLAIMED_TESTS"
@@ -125,7 +125,7 @@ spec:
           SHORT_NAMES=$(echo "$CLAIMED_TESTS" | tr ' ' '\n' | sed 's|.*/currencies/||; s|.*/misc/||; s|.*/unit/||; s|/test\.js$||' | tr '\n' ', ' | sed 's/,$//')
           echo "opentelemetry-sampler: $SHORT_NAMES" >> "$ARTIFACTS_PATH/test-mapping.txt"
         fi
-        rm -f "test:ci:opentelemetry-sampler.succeeded" "test:ci:opentelemetry-sampler.failed"
+        rm -f "opentelemetry-sampler.succeeded" "opentelemetry-sampler.failed"
         retry=1
         LAST_EXIT=1
         while [ $retry -le 2 ]; do
@@ -144,15 +144,15 @@ spec:
             fi
           fi
           if [ $LAST_EXIT -eq 0 ]; then
-            touch "test:ci:opentelemetry-sampler.succeeded"
+            touch "opentelemetry-sampler.succeeded"
             break
           else
             echo "Attempt $retry failed with exit code $LAST_EXIT"
             retry=$((retry + 1))
           fi
         done
-        if [ ! -f "test:ci:opentelemetry-sampler.succeeded" ]; then
-          echo "All $((retry - 1)) retries failed for test:ci:opentelemetry-sampler"
-          touch "test:ci:opentelemetry-sampler.failed"
+        if [ ! -f "opentelemetry-sampler.succeeded" ]; then
+          echo "All $((retry - 1)) retries failed for opentelemetry-sampler"
+          touch "opentelemetry-sampler.failed"
           exit 1
         fi
