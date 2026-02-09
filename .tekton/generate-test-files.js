@@ -496,11 +496,10 @@ for (const [groupName, config] of Object.entries(packages)) {
 
     for (const task of collectorTasks) {
       const sidecarSuffix = task.sidecarNames.join('-');
-      const taskName = `collector-${task.index}`;
-      const displayName = `collector-${task.index}-${sidecarSuffix}`;
+      const taskName = `collector-${task.index}-${sidecarSuffix}`;
 
-      collectorTasks_.push({ taskName, displayName });
-      console.log(`  ${displayName}: [${task.sidecars.join(', ')}] (weight: ${task.weight})`);
+      collectorTasks_.push({ taskName, displayName: taskName });
+      console.log(`  ${taskName}: [${task.sidecars.join(', ')}] (weight: ${task.weight})`);
 
       const content = generateTask(taskName, task.sidecars, {
         groupName,
