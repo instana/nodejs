@@ -112,6 +112,25 @@ mochaSuiteFn('tracing/logging/bunyan', function () {
     it('must trace child logger error', () =>
       runTest('child-error', true, 'Child logger error message - should be traced.', controls));
 
+    it('must trace an error with cause property', () =>
+      runTest('error-with-cause', true, 'Error: This is the cause error', controls));
+
+    it('must trace an error with cause property and extra string', () =>
+      runTest(
+        'error-with-cause-and-extra-string',
+        true,
+        'Error: This is the cause error -- Error message - should be traced.',
+        controls
+      ));
+
+    it('must trace a nested error with cause property and extra string', () =>
+      runTest(
+        'nested-error-with-cause',
+        true,
+        'Error: This is the cause error -- Error message - should be traced.',
+        controls
+      ));
+
     it('[suppression] should not trace', async function () {
       await trigger('warn', controls, { 'X-INSTANA-L': '0' });
 
