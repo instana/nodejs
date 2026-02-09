@@ -73,6 +73,7 @@ spec:
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="localstack"
+        SIDECAR_COUNTS="redis=6,redis-slave=6,redis-sentinel=6,zookeeper=5,kafka=5,kafka-topics=5,schema-registry=5,mongodb=3,localstack=3,postgres=2,mysql=2,elasticsearch=2,nats=2,nats-streaming=2,nats-streaming-2=2,rabbitmq=2,memcached=1,couchbase=1,oracledb=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)

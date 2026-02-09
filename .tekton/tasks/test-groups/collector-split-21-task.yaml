@@ -4,16 +4,31 @@ metadata:
   name: collector-split-21
 spec:
   sidecars:
-    - name: elasticsearch
-      image: public.ecr.aws/elastic/elasticsearch:9.0.0
+    - name: mysql
+      image: public.ecr.aws/docker/library/mysql:8.0.26
       imagePullPolicy: IfNotPresent
+      args:
+          - "--default-authentication-plugin=mysql_native_password"
       env:
-          - name: "discovery.type"
-            value: "single-node"
-          - name: "ES_JAVA_OPTS"
-            value: "-Xms500m -Xmx500m"
-          - name: "xpack.security.enabled"
-            value: "false"
+          - name: "MYSQL_ROOT_PASSWORD"
+            value: "nodepw"
+          - name: "MYSQL_DATABASE"
+            value: "nodedb"
+          - name: "MYSQL_USER"
+            value: "node"
+          - name: "MYSQL_PASSWORD"
+            value: "nodepw"
+          - name: "MYSQL_ROOT_HOST"
+            value: "0.0.0.0"
+      readinessProbe:
+          exec:
+            command:
+            - "sh"
+            - "-c"
+            - "mysql -h 0.0.0.0 -u node -p'nodepw' -e 'SELECT 1'"
+          initialDelaySeconds: 3
+          periodSeconds: 2
+          timeoutSeconds: 10
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -79,7 +94,8 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS="elasticsearch"
+        AVAILABLE_SIDECARS="mysql"
+        SIDECAR_COUNTS="redis=6,redis-slave=6,redis-sentinel=6,zookeeper=5,kafka=5,kafka-topics=5,schema-registry=5,mongodb=3,localstack=3,postgres=2,mysql=2,elasticsearch=2,nats=2,nats-streaming=2,nats-streaming-2=2,rabbitmq=2,memcached=1,couchbase=1,oracledb=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)

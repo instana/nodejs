@@ -4,16 +4,9 @@ metadata:
   name: collector-split-28
 spec:
   sidecars:
-    - name: couchbase
-      image: couchbase/server:7.6.7
+    - name: memcached
+      image: public.ecr.aws/docker/library/memcached:1.6.9
       imagePullPolicy: IfNotPresent
-      readinessProbe:
-          httpGet:
-            path: / 
-            port: 8091 
-          initialDelaySeconds: 15
-          periodSeconds: 2
-          timeoutSeconds: 60
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -79,7 +72,8 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS="couchbase"
+        AVAILABLE_SIDECARS="memcached"
+        SIDECAR_COUNTS="redis=6,redis-slave=6,redis-sentinel=6,zookeeper=5,kafka=5,kafka-topics=5,schema-registry=5,mongodb=3,localstack=3,postgres=2,mysql=2,elasticsearch=2,nats=2,nats-streaming=2,nats-streaming-2=2,rabbitmq=2,memcached=1,couchbase=1,oracledb=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)

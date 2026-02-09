@@ -4,39 +4,16 @@ metadata:
   name: collector-split-23
 spec:
   sidecars:
-    - name: nats
-      image: nats:2.9.14-linux
+    - name: elasticsearch
+      image: public.ecr.aws/elastic/elasticsearch:9.0.0
       imagePullPolicy: IfNotPresent
-    - name: nats-streaming
-      image: nats-streaming:0.25.3-linux
-      imagePullPolicy: IfNotPresent
-      args:
-          - "-p"
-          - "4223"
-          - "-m"
-          - "8223"
-      readinessProbe:
-          httpGet:
-            path: /healthz 
-            port: 8223 
-          initialDelaySeconds: 5
-          periodSeconds: 2
-          timeoutSeconds: 15
-    - name: nats-streaming-2
-      image: nats-streaming:0.25.3-linux
-      imagePullPolicy: IfNotPresent
-      args:
-          - "-p"
-          - "4224"
-          - "-m"
-          - "8224"
-      readinessProbe:
-          httpGet:
-            path: /healthz 
-            port: 8224 
-          initialDelaySeconds: 5
-          periodSeconds: 2
-          timeoutSeconds: 15
+      env:
+          - name: "discovery.type"
+            value: "single-node"
+          - name: "ES_JAVA_OPTS"
+            value: "-Xms500m -Xmx500m"
+          - name: "xpack.security.enabled"
+            value: "false"
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -102,7 +79,8 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS="nats,nats-streaming,nats-streaming-2"
+        AVAILABLE_SIDECARS="elasticsearch"
+        SIDECAR_COUNTS="redis=6,redis-slave=6,redis-sentinel=6,zookeeper=5,kafka=5,kafka-topics=5,schema-registry=5,mongodb=3,localstack=3,postgres=2,mysql=2,elasticsearch=2,nats=2,nats-streaming=2,nats-streaming-2=2,rabbitmq=2,memcached=1,couchbase=1,oracledb=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)

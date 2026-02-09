@@ -70,6 +70,7 @@ spec:
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="{{availableSidecars}}"
+        SIDECAR_COUNTS="{{sidecarCounts}}"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
 

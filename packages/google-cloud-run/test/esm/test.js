@@ -223,7 +223,7 @@ if (supportedVersion(process.versions.node)) {
       expect(nodeJsData.versions.uv).to.match(/^\d+\.\d+\.\d+/);
       expect(nodeJsData.versions.zlib).to.match(/^\d+\.\d+\.\d+/);
 
-      expect(nodeJsData.name).to.equal('@_local/google-cloud-run');
+      expect(nodeJsData.name).to.equal('@instana/google-cloud-run');
       expect(nodeJsData.description).to.equal(
         'Instana tracing and monitoring for Node.js based Google Cloud Run services'
       );

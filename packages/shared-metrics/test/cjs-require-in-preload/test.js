@@ -43,7 +43,7 @@ describe('cjs require collector in preload phase', function () {
     await testUtils.retry(() =>
       controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
         const name = findMetric(metrics, ['name']);
-        expect(name).to.equal('@_local/shared-metrics');
+        expect(name).to.equal('@instana/shared-metrics');
       })
     );
   });

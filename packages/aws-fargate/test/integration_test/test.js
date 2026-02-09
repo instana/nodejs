@@ -819,7 +819,7 @@ describe('AWS fargate integration test', function () {
     expect(nodeJsData.versions.uv).to.match(/^\d+\.\d+\.\d+/);
     expect(nodeJsData.versions.zlib).to.match(/^\d+\.\d+\.\d+/);
 
-    expect(nodeJsData.name).to.equal('@_local/aws-fargate');
+    expect(nodeJsData.name).to.equal('@instana/aws-fargate');
     expect(nodeJsData.description).to.equal('Instana tracing and monitoring for Node.js based AWS Fargate tasks');
 
     expect(nodeJsData.activeHandles).to.exist;

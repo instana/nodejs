@@ -113,6 +113,12 @@ function distributeSidecars(sidecarConfig, numTasks) {
     }
   }
 
+  // Ensure we have at least numTasks items so every task gets a sidecar group
+  while (items.length < numTasks) {
+    const heaviest = sidecarData.reduce((max, d) => (d.weight > max.weight ? d : max), sidecarData[0]);
+    items.push({ name: heaviest.name, sidecars: heaviest.sidecars, weight: heaviest.weight });
+  }
+
   items.sort((a, b) => b.weight - a.weight);
 
   const tasks = Array.from({ length: numTasks }, (_, i) => ({
