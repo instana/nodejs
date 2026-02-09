@@ -15,8 +15,6 @@ require('@instana/collector')();
 
 const fs = require('fs');
 const http2 = require('http2');
-const path = require('path');
-
 const { HTTP2_HEADER_STATUS } = http2.constants;
 
 const router = require('@_local/collector/test/test_util/simpleHttp2Router');
