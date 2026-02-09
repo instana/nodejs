@@ -121,6 +121,7 @@ spec:
           fi
           echo "Claimed tests: $CLAIMED_TESTS"
         fi
+        rm -f "test:ci:opentelemetry-sampler.succeeded" "test:ci:opentelemetry-sampler.failed"
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then

@@ -147,6 +147,7 @@ ${esmOnly ? `if (!process.env.RUN_ESM) {
 const suiteTitle = esmPrefix + 'tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}';
 mochaSuiteFn(suiteTitle, function () {
   this.timeout(config.getTestTimeout());
+  try { fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true }); } catch (_) {}
   const copiedFiles = copyParentFiles(__dirname);
   const cleanup = () => cleanupCopiedFiles(copiedFiles);
   process.once('exit', cleanup);
@@ -155,9 +156,8 @@ mochaSuiteFn(suiteTitle, function () {
   
   before(() => {
     console.log('[INFO] Installing dependencies for ${suiteName}@${displayVersion}...');
-    try { fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true }); } catch (_) {}
     execSync('npm install --no-package-lock --no-audit --prefix ./ --no-progress', {
-      cwd: __dirname, stdio: 'inherit'
+      cwd: __dirname, stdio: 'inherit', timeout: 180000
     });
     console.log('[INFO] Done installing dependencies for ${suiteName}@${displayVersion}');
   });

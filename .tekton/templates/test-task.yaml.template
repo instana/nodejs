@@ -134,6 +134,8 @@ spec:
           echo "Claimed tests: $CLAIMED_TESTS"
         fi
 
+        rm -f "{{groupName}}.succeeded" "{{groupName}}.failed"
+
         retry=1
         while [ $retry -le 3 ]; do
           if [ "$(params.coverage)" == "true" ]; then
