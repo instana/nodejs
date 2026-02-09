@@ -75,8 +75,8 @@ if [ -n "$PACKAGE" ]; then
   PACKAGE_DIR=$(find "$TEST_BASE_DIR" -type d \( -path "*/$PACKAGE" -o -path "*/$NORMALIZED_PACKAGE" \) ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null | head -1)
   
   if [ -z "$PACKAGE_DIR" ]; then
-    # No directory found — try matching a test file by name (e.g. cmdline -> cmdline_test.js)
-    MATCH_FILE=$(find "$TEST_BASE_DIR" -type f \( -name "${PACKAGE}_test.js" -o -name "${PACKAGE}_test.mjs" -o -name "${PACKAGE}.test.js" \) ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null | head -1)
+    # No directory found — try matching a test file by name (e.g. cmdline -> cmdline.test.js or cmdline_test.js)
+    MATCH_FILE=$(find "$TEST_BASE_DIR" -type f \( -name "${PACKAGE}.test.js" -o -name "${PACKAGE}_test.js" -o -name "${PACKAGE}.test.mjs" -o -name "${PACKAGE}_test.mjs" \) ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null | head -1)
     if [ -n "$MATCH_FILE" ]; then
       RELATIVE_FILE=$(echo "$MATCH_FILE" | sed "s|packages/${SCOPE_PKG_NAME}/||g")
       echo "Running test file: $RELATIVE_FILE"
@@ -112,15 +112,13 @@ if [ -n "$PACKAGE" ]; then
     GREP_PATTERN="$ACTUAL_PACKAGE@$VERSION"
     
     # Check for test files in the version directory
-    SEARCH_PATTERN="test*.js"
+    SEARCH_PATTERN="*.test.js"
     if [ -n "$TEST_NAME_FILTER" ]; then
-        SEARCH_PATTERN="test*${TEST_NAME_FILTER}*.js"
+        SEARCH_PATTERN="*${TEST_NAME_FILTER}*.test.js"
     fi
     FOUND_FILES=$(find "$PACKAGE_DIR/_${VERSION}" -maxdepth 1 -name "$SEARCH_PATTERN" ! -name "test_base.js")
     if [ -n "$FOUND_FILES" ]; then
         TEST_FILES=$(echo "$FOUND_FILES" | tr '\n' ' ')
-    elif [ -f "$PACKAGE_DIR/_${VERSION}/${ACTUAL_PACKAGE}_test.js" ]; then
-        TEST_FILES="$PACKAGE_DIR/_${VERSION}/${ACTUAL_PACKAGE}_test.js"
     fi
 
   else
@@ -129,26 +127,25 @@ if [ -n "$PACKAGE" ]; then
       GREP_PATTERN="$ACTUAL_PACKAGE@v$HIGHEST_VERSION"
       
       # Check for test files in the highest version directory
-      SEARCH_PATTERN="test*.js"
+      SEARCH_PATTERN="*.test.js"
       if [ -n "$TEST_NAME_FILTER" ]; then
-          SEARCH_PATTERN="test*${TEST_NAME_FILTER}*.js"
+          SEARCH_PATTERN="*${TEST_NAME_FILTER}*.test.js"
       fi
       FOUND_FILES=$(find "$PACKAGE_DIR/_v${HIGHEST_VERSION}" -maxdepth 1 -name "$SEARCH_PATTERN" ! -name "test_base.js")
       if [ -n "$FOUND_FILES" ]; then
           TEST_FILES=$(echo "$FOUND_FILES" | tr '\n' ' ')
-      elif [ -f "$PACKAGE_DIR/_v${HIGHEST_VERSION}/${ACTUAL_PACKAGE}_test.js" ]; then
-          TEST_FILES="$PACKAGE_DIR/_v${HIGHEST_VERSION}/${ACTUAL_PACKAGE}_test.js"
       fi
 
     else
       GREP_PATTERN="$ACTUAL_PACKAGE@v"
       
-      # Fallback for non-versioned packages
-      if [ -f "$PACKAGE_DIR/test.js" ]; then
+      # Fallback for non-versioned packages (supports both *.test.js and *_test.js conventions)
+      if [ -f "$PACKAGE_DIR/default.test.js" ]; then
+          TEST_FILES="$PACKAGE_DIR/default.test.js"
+      elif [ -f "$PACKAGE_DIR/test.js" ]; then
           TEST_FILES="$PACKAGE_DIR/test.js"
       else
-          # Fallback: all test.js files in that package directory
-          TEST_FILES=$(find "$PACKAGE_DIR" -name "*test.js" ! -path "*/node_modules/*" ! -name "test_base.js" | tr '\n' ' ')
+          TEST_FILES=$(find "$PACKAGE_DIR" \( -name "*.test.js" -o -name "*_test.js" \) ! -path "*/node_modules/*" ! -name "test_base.js" | tr '\n' ' ')
       fi
     fi
   fi

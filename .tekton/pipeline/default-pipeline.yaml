@@ -393,7 +393,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-1-redis-task
+    - name: collector-1-task
       runAfter:
         - execute-tools
       taskRef:
@@ -418,207 +418,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-2-redis-task
-      runAfter:
-        - execute-tools
-      taskRef:
-        name: collector-2
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: collector-3-redis-task
-      runAfter:
-        - execute-tools
-      taskRef:
-        name: collector-3
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: collector-4-redis-task
-      runAfter:
-        - execute-tools
-      taskRef:
-        name: collector-4
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: collector-5-redis-task
-      runAfter:
-        - execute-tools
-      taskRef:
-        name: collector-5
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: collector-6-redis-task
-      runAfter:
-        - execute-tools
-      taskRef:
-        name: collector-6
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: collector-7-redis-task
-      runAfter:
-        - execute-tools
-      taskRef:
-        name: collector-7
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: collector-8-redis-task
-      runAfter:
-        - execute-tools
-      taskRef:
-        name: collector-8
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: collector-9-redis-task
-      runAfter:
-        - execute-tools
-      taskRef:
-        name: collector-9
-      params:
-        - name: node-version
-          value: $(params.node-version)
-        - name: npm-version
-          value: $(params.npm-version)          
-        - name: repository
-          value: $(params.repository)
-        - name: revision
-          value: $(params.commit-id)
-        - name: continuous-delivery-context-secret
-          value: "secure-properties"
-        - name: esm
-          value: $(params.esm)
-        - name: coverage
-          value: $(params.coverage)
-        - name: prerelease
-          value: $(params.prerelease)   
-      workspaces:
-        - name: output
-          workspace: artifacts
-    - name: collector-10-redis-task
+    - name: collector-10-task
       runAfter:
         - execute-tools
       taskRef:
@@ -643,7 +443,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-11-redis-task
+    - name: collector-11-task
       runAfter:
         - execute-tools
       taskRef:
@@ -668,7 +468,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-12-postgres-task
+    - name: collector-12-task
       runAfter:
         - execute-tools
       taskRef:
@@ -693,7 +493,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-13-postgres-task
+    - name: collector-13-task
       runAfter:
         - execute-tools
       taskRef:
@@ -718,7 +518,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-14-postgres-task
+    - name: collector-14-task
       runAfter:
         - execute-tools
       taskRef:
@@ -743,7 +543,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-15-postgres-task
+    - name: collector-15-task
       runAfter:
         - execute-tools
       taskRef:
@@ -768,7 +568,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-16-postgres-task
+    - name: collector-16-task
       runAfter:
         - execute-tools
       taskRef:
@@ -793,7 +593,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-17-postgres-task
+    - name: collector-17-task
       runAfter:
         - execute-tools
       taskRef:
@@ -818,7 +618,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-18-mongodb-task
+    - name: collector-18-task
       runAfter:
         - execute-tools
       taskRef:
@@ -843,7 +643,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-19-mongodb-task
+    - name: collector-19-task
       runAfter:
         - execute-tools
       taskRef:
@@ -868,7 +668,32 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-20-kafka-task
+    - name: collector-2-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-2
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-20-task
       runAfter:
         - execute-tools
       taskRef:
@@ -893,7 +718,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-21-kafka-task
+    - name: collector-21-task
       runAfter:
         - execute-tools
       taskRef:
@@ -918,7 +743,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-22-elasticsearch-task
+    - name: collector-22-task
       runAfter:
         - execute-tools
       taskRef:
@@ -943,7 +768,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-23-elasticsearch-task
+    - name: collector-23-task
       runAfter:
         - execute-tools
       taskRef:
@@ -968,7 +793,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-24-mysql-task
+    - name: collector-24-task
       runAfter:
         - execute-tools
       taskRef:
@@ -993,7 +818,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-25-nats-task
+    - name: collector-25-task
       runAfter:
         - execute-tools
       taskRef:
@@ -1018,7 +843,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-26-rabbitmq-task
+    - name: collector-26-task
       runAfter:
         - execute-tools
       taskRef:
@@ -1043,7 +868,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-27-couchbase-task
+    - name: collector-27-task
       runAfter:
         - execute-tools
       taskRef:
@@ -1068,7 +893,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-28-localstack-task
+    - name: collector-28-task
       runAfter:
         - execute-tools
       taskRef:
@@ -1093,7 +918,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-29-memcached-task
+    - name: collector-29-task
       runAfter:
         - execute-tools
       taskRef:
@@ -1118,11 +943,186 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-30-oracledb-task
+    - name: collector-3-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-3
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-30-task
       runAfter:
         - execute-tools
       taskRef:
         name: collector-30
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-4-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-4
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-5-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-5
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-6-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-6
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-7-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-7
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-8-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-8
+      params:
+        - name: node-version
+          value: $(params.node-version)
+        - name: npm-version
+          value: $(params.npm-version)          
+        - name: repository
+          value: $(params.repository)
+        - name: revision
+          value: $(params.commit-id)
+        - name: continuous-delivery-context-secret
+          value: "secure-properties"
+        - name: esm
+          value: $(params.esm)
+        - name: coverage
+          value: $(params.coverage)
+        - name: prerelease
+          value: $(params.prerelease)   
+      workspaces:
+        - name: output
+          workspace: artifacts
+    - name: collector-9-task
+      runAfter:
+        - execute-tools
+      taskRef:
+        name: collector-9
       params:
         - name: node-version
           value: $(params.node-version)
