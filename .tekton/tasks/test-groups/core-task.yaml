@@ -123,29 +123,32 @@ spec:
         fi
         rm -f "test:ci:core.succeeded" "test:ci:core.failed"
         retry=1
+        LAST_EXIT=1
         while [ $retry -le 3 ]; do
+          LAST_EXIT=0
           if [ "$(params.coverage)" == "true" ]; then
             if [ "false" == "true" ]; then
-              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:core" --report_dir="core"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:core" --report_dir="core" || LAST_EXIT=$?
             else
-              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:core" --report_dir="core"
+              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:core" --report_dir="core" || LAST_EXIT=$?
             fi
           else
             if [ "false" == "true" ]; then
-              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:core"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:core" || LAST_EXIT=$?
             else
-              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:core"
+              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:core" || LAST_EXIT=$?
             fi
-          fi          
-          if [ $? -eq 0 ]; then
+          fi
+          if [ $LAST_EXIT -eq 0 ]; then
             touch "test:ci:core.succeeded"
             break
           else
+            echo "Attempt $retry failed with exit code $LAST_EXIT"
             retry=$((retry + 1))
           fi
         done
         if [ ! -f "test:ci:core.succeeded" ]; then
-          echo "All retries failed for test:ci:core"
+          echo "All $((retry - 1)) retries failed for test:ci:core"
           touch "test:ci:core.failed"
           exit 1
         fi

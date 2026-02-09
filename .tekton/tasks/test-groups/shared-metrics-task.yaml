@@ -123,29 +123,32 @@ spec:
         fi
         rm -f "test:ci:shared-metrics.succeeded" "test:ci:shared-metrics.failed"
         retry=1
+        LAST_EXIT=1
         while [ $retry -le 3 ]; do
+          LAST_EXIT=0
           if [ "$(params.coverage)" == "true" ]; then
             if [ "false" == "true" ]; then
-              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:shared-metrics" --report_dir="shared-metrics"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:shared-metrics" --report_dir="shared-metrics" || LAST_EXIT=$?
             else
-              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:shared-metrics" --report_dir="shared-metrics"
+              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run coverage-ci --npm_command="test:ci:shared-metrics" --report_dir="shared-metrics" || LAST_EXIT=$?
             fi
           else
             if [ "false" == "true" ]; then
-              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:shared-metrics"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:shared-metrics" || LAST_EXIT=$?
             else
-              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:shared-metrics"
+              CI_TEST_SPLIT="false" CI_TEST_SPLIT_CURRENT="1" npm run "test:ci:shared-metrics" || LAST_EXIT=$?
             fi
-          fi          
-          if [ $? -eq 0 ]; then
+          fi
+          if [ $LAST_EXIT -eq 0 ]; then
             touch "test:ci:shared-metrics.succeeded"
             break
           else
+            echo "Attempt $retry failed with exit code $LAST_EXIT"
             retry=$((retry + 1))
           fi
         done
         if [ ! -f "test:ci:shared-metrics.succeeded" ]; then
-          echo "All retries failed for test:ci:shared-metrics"
+          echo "All $((retry - 1)) retries failed for test:ci:shared-metrics"
           touch "test:ci:shared-metrics.failed"
           exit 1
         fi

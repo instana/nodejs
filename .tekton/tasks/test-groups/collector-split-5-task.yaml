@@ -149,29 +149,32 @@ spec:
         fi
         rm -f "test:ci:collector.succeeded" "test:ci:collector.failed"
         retry=1
+        LAST_EXIT=1
         while [ $retry -le 3 ]; do
+          LAST_EXIT=0
           if [ "$(params.coverage)" == "true" ]; then
             if [ "true" == "true" ]; then
-              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="5" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-split-5"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="5" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-split-5" || LAST_EXIT=$?
             else
-              CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="5" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-split-5"
+              CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="5" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-split-5" || LAST_EXIT=$?
             fi
           else
             if [ "true" == "true" ]; then
-              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="5" npm run "test:ci:collector"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="5" npm run "test:ci:collector" || LAST_EXIT=$?
             else
-              CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="5" npm run "test:ci:collector"
+              CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="5" npm run "test:ci:collector" || LAST_EXIT=$?
             fi
-          fi          
-          if [ $? -eq 0 ]; then
+          fi
+          if [ $LAST_EXIT -eq 0 ]; then
             touch "test:ci:collector.succeeded"
             break
           else
+            echo "Attempt $retry failed with exit code $LAST_EXIT"
             retry=$((retry + 1))
           fi
         done
         if [ ! -f "test:ci:collector.succeeded" ]; then
-          echo "All retries failed for test:ci:collector"
+          echo "All $((retry - 1)) retries failed for test:ci:collector"
           touch "test:ci:collector.failed"
           exit 1
         fi
