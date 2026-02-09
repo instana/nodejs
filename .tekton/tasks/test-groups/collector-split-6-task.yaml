@@ -186,6 +186,9 @@ spec:
             exit 0
           fi
           echo "Claimed tests: $CLAIMED_TESTS"
+          # Write mapping to shared file (printed by tasks-results)
+          SHORT_NAMES=$(echo "$CLAIMED_TESTS" | tr ' ' '\n' | sed 's|.*/currencies/||; s|.*/misc/||; s|.*/unit/||; s|/test\.js$||' | tr '\n' ', ' | sed 's/,$//')
+          echo "collector-split-6: $SHORT_NAMES" >> "$ARTIFACTS_PATH/test-mapping.txt"
         fi
         rm -f "test:ci:collector.succeeded" "test:ci:collector.failed"
         retry=1
