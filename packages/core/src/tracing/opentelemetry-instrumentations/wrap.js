@@ -43,7 +43,7 @@ function initOtelCoreDependencies() {
   hrTimeToMilliseconds = coreModule.hrTimeToMilliseconds;
 }
 
-function initInstrumentations() {
+function preInitInstrumentations() {
   Object.values(instrumentations).forEach(instr => {
     const instrumentation = require(`./${instr.name}`);
     if (instrumentation.preInit) {
@@ -62,7 +62,7 @@ module.exports.preInit = config => {
   }
 
   initOtelCoreDependencies();
-  initInstrumentations();
+  preInitInstrumentations();
 };
 
 // NOTE: using a logger might create a recursive execution
