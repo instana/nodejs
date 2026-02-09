@@ -43,12 +43,24 @@ function initOtelCoreDependencies() {
   hrTimeToMilliseconds = coreModule.hrTimeToMilliseconds;
 }
 
+function getInstrumentation(instr) {
+  if (!instr.module) {
+    instr.module = require(`./${instr.name}`);
+  }
+  return instr.module;
+}
+
 function preInitInstrumentations() {
   Object.values(instrumentations).forEach(instr => {
-    const instrumentation = require(`./${instr.name}`);
-    if (instrumentation.preInit) {
-      instrumentation.preInit();
-    }
+    const instrumentation = getInstrumentation(instr);
+    instrumentation.preInit?.();
+  });
+}
+
+function initInstrumentations(cls) {
+  Object.values(instrumentations).forEach(instr => {
+    const instrumentation = getInstrumentation(instr);
+    instrumentation.init?.({ cls, api: api });
   });
 }
 
@@ -74,13 +86,7 @@ module.exports.init = (_config, cls) => {
   }
 
   initOtelCoreDependencies();
-
-  Object.keys(instrumentations).forEach(k => {
-    const value = instrumentations[k];
-    const instrumentation = require(`./${value.name}`);
-    instrumentation.init({ cls, api: api });
-    value.module = instrumentation;
-  });
+  initInstrumentations(cls);
 
   const prepareData = (otelSpan, instrumentation) => {
     const obj = {
