@@ -209,9 +209,9 @@ function distributeSidecars(sidecarConfig, numTasks, totalTests) {
     sidecarData.push({ name, sidecars, weight, replicas: minReplicas });
   }
 
-  console.log(`\n  Quota per task: ${quota.toFixed(1)} tests (${totalTests} total / ${numTasks} tasks)`);
+  console.log(`\n  Quota per task: ${quota.toFixed(1)} (${totalTests} total weight / ${numTasks} tasks)`);
   for (const d of sidecarData.sort((a, b) => b.weight - a.weight)) {
-    console.log(`  ${d.name}: ${d.weight} tests → ${d.replicas} tasks needed`);
+    console.log(`  ${d.name}: weight ${d.weight} → ${d.replicas} tasks needed`);
   }
 
   // Track allocated replicas per sidecar

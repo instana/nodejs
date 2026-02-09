@@ -2,11 +2,12 @@
 
 ENV_PREFIX="INSTANA_CONNECT_"
 
-# Args: $1 = available sidecars (comma-separated), $2 = test pattern, $3 = total tasks, $4 = artifacts path
+# Args: $1 = available sidecars (comma-separated), $2 = test pattern, $3 = total tasks, $4 = artifacts path, $5 = sidecar counts
 AVAILABLE_SIDECARS="$1"
 TEST_PATTERN="$2"
 TOTAL_TASKS="${3:-40}"
 ARTIFACTS_PATH="${4:-/artifacts}"
+SIDECAR_COUNTS="${5:-$SIDECAR_COUNTS}"
 
 # Always run from the collector package directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"

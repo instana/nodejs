@@ -23,11 +23,10 @@ const router = require('@_local/collector/test/test_util/simpleHttp2Router');
 
 const logPrefix = `HTTP2: Server (${process.pid}):\t`;
 const port = require('@_local/collector/test/test_util/app-port')();
-const sslDir = path.join(path.dirname(require.resolve('@_local/collector/package.json')), 'test', 'apps', 'ssl');
 
 const server = http2.createSecureServer({
-  key: fs.readFileSync(path.join(sslDir, 'key')),
-  cert: fs.readFileSync(path.join(sslDir, 'cert'))
+  key: fs.readFileSync(require.resolve('@_local/collector/test/apps/ssl/key')),
+  cert: fs.readFileSync(require.resolve('@_local/collector/test/apps/ssl/cert'))
 });
 
 server.on('error', err => {

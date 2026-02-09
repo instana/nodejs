@@ -89,7 +89,7 @@ spec:
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="postgres"
-        SIDECAR_COUNTS="redis=11,redis-slave=11,redis-sentinel=11,postgres=6,mongodb=2,zookeeper=2,kafka=2,kafka-topics=2,schema-registry=2,elasticsearch=2,mysql=1,nats=1,nats-streaming=1,nats-streaming-2=1,rabbitmq=1,couchbase=1,localstack=1,memcached=1,oracledb=1"
+        SIDECAR_COUNTS="redis=14,redis-slave=14,redis-sentinel=14,postgres=2,zookeeper=2,kafka=2,kafka-topics=2,schema-registry=2,mongodb=2,couchbase=2,rabbitmq=2,elasticsearch=1,mysql=1,nats=1,nats-streaming=1,nats-streaming-2=1,localstack=1,memcached=1,oracledb=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
@@ -133,7 +133,7 @@ spec:
           fi
         fi
         if [ "true" == "true" ]; then
-          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*.test.js" "30" "$ARTIFACTS_PATH")
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*.test.js" "30" "$ARTIFACTS_PATH" "$SIDECAR_COUNTS")
           if [ -z "$CLAIMED_TESTS" ]; then
             echo "No tests to claim for this task"
             touch "collector-15-postgres.succeeded"
