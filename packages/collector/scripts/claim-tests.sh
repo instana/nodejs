@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ENV_PREFIX="INSTANA_CONNECT_"
+
 # Args: $1 = available sidecars (comma-separated), $2 = test pattern, $3 = total tasks, $4 = artifacts path
 AVAILABLE_SIDECARS="$1"
 TEST_PATTERN="$2"
@@ -19,8 +21,8 @@ OUTPUT_FILE="$ARTIFACTS_PATH/my-tests-$$.txt"
 touch "$CLAIMED_FILE"
 
 # Find all test files matching pattern and randomize order (portable shuffle)
-# Inside _v* directories, only accept generated files (test.js / test_*.js) — filter out stale copies from previous runs.
-ALL_TESTS=$(find "$(pwd)" -path "*$TEST_PATTERN" -name "*test.js" -not -path "*/node_modules/*" -not -path "*/long_*/*" | awk '!/_v[0-9]/ || /\/_v[^\/]+\/test(_[^\/]+)?\.js$/' | awk 'BEGIN{srand();}{print rand()"\t"$0}' | sort -k1 -n | cut -f2-)
+# Inside _v* directories, only accept generated files (*.test.js) — filter out stale copies from previous runs.
+ALL_TESTS=$(find "$(pwd)" -path "*$TEST_PATTERN" -name "*.test.js" -not -path "*/node_modules/*" -not -path "*/long_*/*" | awk '!/_v[0-9]/ || /\/_v[^\/]+\/[^\/]+\.test\.js$/' | awk 'BEGIN{srand();}{print rand()"\t"$0}' | sort -k1 -n | cut -f2-)
 TOTAL_TEST_COUNT=$(echo "$ALL_TESTS" | wc -l | xargs)
 
 # Calculate how many tests this task should claim (Soft Limit)
@@ -51,13 +53,13 @@ for test_file in $ALL_TESTS; do
   if echo "$TEST_DIR" | grep -q '/_v[^/]*$'; then
     SCAN_DIR="$(dirname "$TEST_DIR")"
   fi
-  USED_ENVS=$(find -L "$SCAN_DIR" -maxdepth 1 \( -name "*.js" -o -name "*.mjs" \) -exec grep -h -o "INSTANA_CONNECT_[A-Z0-9_]*" {} + 2>/dev/null | sort | uniq)
+  USED_ENVS=$(find -L "$SCAN_DIR" -maxdepth 1 \( -name "*.js" -o -name "*.mjs" \) -exec grep -h -o "${ENV_PREFIX}[A-Z0-9_]*" {} + 2>/dev/null | sort | uniq)
 
   
   if [ -n "$USED_ENVS" ]; then
     for env_var in $USED_ENVS; do
       if echo "$KNOWN_ENVS" | grep -q "^$env_var$"; then
-        suffix=${env_var#INSTANA_CONNECT_}
+        suffix=${env_var#$ENV_PREFIX}
         service_upper=$(echo "$suffix" | cut -d'_' -f1)
         service=$(echo "$service_upper" | tr '[:upper:]' '[:lower:]')
         REQUIRED_SIDECARS="$REQUIRED_SIDECARS $service"
@@ -156,7 +158,7 @@ for test_file in $FINAL_LIST; do
   if echo "$TEST_DIR_CHECK" | grep -q '/_v[^/]*$'; then
     SCAN_DIR_CHECK="$(dirname "$TEST_DIR_CHECK")"
   fi
-  USED_ENVS_CHECK=$(find -L "$SCAN_DIR_CHECK" -maxdepth 1 \( -name "*.js" -o -name "*.mjs" \) -exec grep -h -o "INSTANA_CONNECT_[A-Z0-9_]*" {} + 2>/dev/null | sort | uniq)
+  USED_ENVS_CHECK=$(find -L "$SCAN_DIR_CHECK" -maxdepth 1 \( -name "*.js" -o -name "*.mjs" \) -exec grep -h -o "${ENV_PREFIX}[A-Z0-9_]*" {} + 2>/dev/null | sort | uniq)
   
   QUOTA_EXCEEDED=false
   QUOTA_CHECK_REQ=""
@@ -166,7 +168,7 @@ for test_file in $FINAL_LIST; do
     SERVICES_CHECK=""
     for env_var in $USED_ENVS_CHECK; do
         if echo "$KNOWN_ENVS" | grep -q "^$env_var$"; then
-           suffix=${env_var#INSTANA_CONNECT_}
+           suffix=${env_var#$ENV_PREFIX}
            service_upper=$(echo "$suffix" | cut -d'_' -f1)
            service=$(echo "$service_upper" | tr '[:upper:]' '[:lower:]')
            SERVICES_CHECK="$SERVICES_CHECK $service"

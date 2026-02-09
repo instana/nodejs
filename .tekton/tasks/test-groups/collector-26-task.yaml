@@ -4,38 +4,15 @@ metadata:
   name: collector-26
 spec:
   sidecars:
-    - name: redis
-      image: public.ecr.aws/docker/library/redis:7.4.3
+    - name: rabbitmq
+      image: public.ecr.aws/docker/library/rabbitmq:3.13.0
       imagePullPolicy: IfNotPresent
-    - name: redis-slave
-      image: public.ecr.aws/docker/library/redis:7.4.3
-      imagePullPolicy: IfNotPresent
-      args:
-          - "redis-server"
-          - "--replicaof"
-          - "127.0.0.1"
-          - "6379"
-          - "--port"
-          - "6380"
-    - name: redis-sentinel
-      image: public.ecr.aws/docker/library/redis:7.4.3
-      imagePullPolicy: IfNotPresent
-      args:
-          - "sh"
-          - "-c"
-          - |
-            echo "sentinel monitor mymaster 127.0.0.1 6379 2" > /etc/sentinel.conf
-            echo "sentinel down-after-milliseconds mymaster 1000" >> /etc/sentinel.conf
-            echo "sentinel failover-timeout mymaster 5000" >> /etc/sentinel.conf
-            echo "sentinel parallel-syncs mymaster 1" >> /etc/sentinel.conf
-            echo "sentinel resolve-hostnames no" >> /etc/sentinel.conf
-            redis-server /etc/sentinel.conf --sentinel --port 26379
-    - name: oracledb
-      image: container-registry.oracle.com/database/free:23.6.0.0-lite
-      imagePullPolicy: IfNotPresent
-      env:
-          - name: "ORACLE_PWD"
-            value: "teamnodejspassword"
+      readinessProbe:
+          tcpSocket:
+            port: 5672 
+          initialDelaySeconds: 7
+          periodSeconds: 2
+          timeoutSeconds: 60
   envFrom:
     - configMapRef:
         name: environment-properties  
@@ -101,8 +78,8 @@ spec:
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
-        AVAILABLE_SIDECARS="redis,redis-slave,redis-sentinel,oracledb"
-        SIDECAR_COUNTS="mongodb=4,postgres=4,zookeeper=4,kafka=4,kafka-topics=4,schema-registry=4,elasticsearch=3,mysql=3,nats=3,nats-streaming=3,nats-streaming-2=3,rabbitmq=3,redis=2,redis-slave=2,redis-sentinel=2,memcached=1,oracledb=1,couchbase=2,localstack=2"
+        AVAILABLE_SIDECARS="rabbitmq"
+        SIDECAR_COUNTS="redis=11,redis-slave=11,redis-sentinel=11,postgres=6,mongodb=2,zookeeper=2,kafka=2,kafka-topics=2,schema-registry=2,elasticsearch=2,mysql=1,nats=1,nats-streaming=1,nats-streaming-2=1,rabbitmq=1,couchbase=1,localstack=1,memcached=1,oracledb=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
@@ -146,7 +123,7 @@ spec:
           fi
         fi
         if [ "true" == "true" ]; then
-          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*test.js" "30" "$ARTIFACTS_PATH")
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*.test.js" "30" "$ARTIFACTS_PATH")
           if [ -z "$CLAIMED_TESTS" ]; then
             echo "No tests to claim for this task"
             touch "collector-26.succeeded"

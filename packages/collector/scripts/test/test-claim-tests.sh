@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
+BASE_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 SCRIPT_DIR="$(dirname "$0")"
 ARTIFACTS_DIR="$BASE_DIR/.artifacts_real"
 CONFIG_PATH="$BASE_DIR/hosts_config.json"
@@ -37,10 +37,10 @@ resolve_services_for_dir() {
 PATTERN="test/integration/*"
 
 echo "==================================================="
-echo "Phase 1: Analyze all *test.js files for env dependencies"
+echo "Phase 1: Analyze all *.test.js files for env dependencies"
 echo "==================================================="
 
-ALL_INTEGRATION=$(find . -path "*$PATTERN" -name "*test.js" -not -path "*/node_modules/*" -not -path "*/long_*/*" | sort)
+ALL_INTEGRATION=$(find . -path "*$PATTERN" -name "*.test.js" -not -path "*/node_modules/*" -not -path "*/long_*/*" | sort)
 TOTAL_INTEGRATION=$(echo "$ALL_INTEGRATION" | wc -l | tr -d ' ')
 echo "Found $TOTAL_INTEGRATION integration test files"
 echo ""

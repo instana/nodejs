@@ -8,6 +8,8 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
+const ENV_PREFIX = 'INSTANA_CONNECT_';
+
 const sidecarGroups = {
   redis: ['redis', 'redis-slave', 'redis-sentinel'],
   kafka: ['zookeeper', 'kafka', 'kafka-topics', 'schema-registry'],
@@ -34,7 +36,7 @@ function countTestsPerSidecar(packageName) {
   let allTests;
   try {
     const raw = execSync(
-      'find . -path "*/test/**/*test.js" -name "*test.js"' +
+      'find . -path "*/test/**" -name "*.test.js"' +
       ' -not -path "*/node_modules/*" -not -path "*/long_*/*"',
       { cwd: packageDir, encoding: 'utf8' }
     );
@@ -44,10 +46,10 @@ function countTestsPerSidecar(packageName) {
     return {};
   }
 
-  // Same filter as claim-tests.sh: _v* dirs only accept test.js / test_*.js
+  // Same filter as claim-tests.sh: _v* dirs only accept *.test.js
   const filtered = allTests.filter(f => {
     if (!/_v[0-9]/.test(f)) return true;
-    return /\/_v[^/]+\/test(_[^/]+)?\.js$/.test(f);
+    return /\/_v[^/]+\/[^/]+\.test\.js$/.test(f);
   });
 
   const counts = {};
@@ -60,7 +62,7 @@ function countTestsPerSidecar(packageName) {
     try {
       grepResult = execSync(
         'find -L . -maxdepth 1 \\( -name "*.js" -o -name "*.mjs" \\)' +
-        ' -exec grep -h -o "INSTANA_CONNECT_[A-Z0-9_]*" {} + 2>/dev/null',
+        ` -exec grep -h -o "${ENV_PREFIX}[A-Z0-9_]*" {} + 2>/dev/null`,
         { cwd: scanDir, encoding: 'utf8' }
       );
     } catch (e) {
@@ -72,7 +74,7 @@ function countTestsPerSidecar(packageName) {
 
     for (const envVar of envVars) {
       if (knownEnvVars.has(envVar)) {
-        const sidecar = envVar.replace('INSTANA_CONNECT_', '').split('_')[0].toLowerCase();
+        const sidecar = envVar.replace(ENV_PREFIX, '').split('_')[0].toLowerCase();
         if (validSidecars.has(sidecar)) {
           sidecars.add(sidecar);
         }
@@ -84,19 +86,25 @@ function countTestsPerSidecar(packageName) {
     }
   }
 
+  const sidecarTestCount = Object.values(counts).reduce((a, b) => a + b, 0);
+
   console.log('\nAuto-detected sidecar weights (tests per sidecar):');
   for (const [name, count] of Object.entries(counts).sort((a, b) => b[1] - a[1])) {
     console.log(`  ${name}: ${count}`);
   }
-  console.log(`  (generic tests without sidecars: ${filtered.length - Object.values(counts).reduce((a, b) => a + b, 0)})`);
+  console.log(`  (generic tests without sidecars: ${filtered.length - sidecarTestCount})`);
+  console.log(`  (total test files: ${filtered.length})`);
 
-  return counts;
+  return { counts, totalTests: filtered.length };
 }
+
+const collectorSidecarData = countTestsPerSidecar('collector');
 
 const packages = {
   'test:ci:collector': {
     splits: 30,
-    sidecars: countTestsPerSidecar('collector')
+    sidecars: collectorSidecarData.counts,
+    totalTests: collectorSidecarData.totalTests
   },
 
   'test:ci:autoprofile': {},
@@ -159,31 +167,50 @@ function calculateWeight(sidecars) {
 }
 
 /**
- * Distribute sidecars across N tasks, balanced by weight
- * Uses greedy algorithm: assign each sidecar(group) to the task with lowest current weight
+ * Distribute sidecars across N tasks based on how many tasks each sidecar actually needs.
+ * quota = totalTests / numTasks (how many tests each task handles)
+ * replicas per sidecar = ceil(testCount / quota) (minimum tasks needed to cover all tests)
+ * Remaining tasks go to the heaviest sidecars.
  */
-function distributeSidecars(sidecarConfig, numTasks) {
+function distributeSidecars(sidecarConfig, numTasks, totalTests) {
+  const quota = totalTests / numTasks;
   const sidecarData = [];
-  let totalWeight = 0;
 
   for (const [name, weight] of Object.entries(sidecarConfig)) {
     const sidecars = expandSidecar(name);
-    sidecarData.push({ name, sidecars, weight });
-    totalWeight += weight;
+    const minReplicas = Math.max(1, Math.ceil(weight / quota));
+    sidecarData.push({ name, sidecars, weight, replicas: minReplicas });
+  }
+
+  console.log(`\n  Quota per task: ${quota.toFixed(1)} tests (${totalTests} total / ${numTasks} tasks)`);
+  for (const d of sidecarData.sort((a, b) => b.weight - a.weight)) {
+    console.log(`  ${d.name}: ${d.weight} tests → ${d.replicas} tasks needed`);
+  }
+
+  // Track allocated replicas per sidecar
+  const allocated = new Map(sidecarData.map(d => [d.name, d.replicas]));
+
+  // Fill remaining tasks: give each extra to the sidecar with the worst tests-per-task ratio
+  const totalAllocated = () => [...allocated.values()].reduce((a, b) => a + b, 0);
+  while (totalAllocated() < numTasks) {
+    let worst = null;
+    let worstRatio = 0;
+    for (const d of sidecarData) {
+      const ratio = d.weight / allocated.get(d.name);
+      if (ratio > worstRatio) {
+        worstRatio = ratio;
+        worst = d;
+      }
+    }
+    allocated.set(worst.name, allocated.get(worst.name) + 1);
   }
 
   const items = [];
   for (const data of sidecarData) {
-    const replicas = Math.max(1, Math.round((data.weight / totalWeight) * numTasks));
+    const replicas = allocated.get(data.name);
     for (let i = 0; i < replicas; i++) {
       items.push({ name: data.name, sidecars: data.sidecars, weight: data.weight });
     }
-  }
-
-  // Ensure we have at least numTasks items so every task gets a sidecar group
-  while (items.length < numTasks) {
-    const heaviest = sidecarData.reduce((max, d) => (d.weight > max.weight ? d : max), sidecarData[0]);
-    items.push({ name: heaviest.name, sidecars: heaviest.sidecars, weight: heaviest.weight });
   }
 
   items.sort((a, b) => b.weight - a.weight);
@@ -455,7 +482,7 @@ for (const [groupName, config] of Object.entries(packages)) {
 
     cleanupOldCollectorTasks();
 
-    const collectorTasks = distributeSidecars(config.sidecars, config.splits);
+    const collectorTasks = distributeSidecars(config.sidecars, config.splits, config.totalTests);
 
     const sidecarCounts = {};
     collectorTasks.forEach(t => {

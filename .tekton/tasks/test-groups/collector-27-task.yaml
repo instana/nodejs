@@ -80,7 +80,7 @@ spec:
       script: |
         #!/bin/bash
         AVAILABLE_SIDECARS="couchbase"
-        SIDECAR_COUNTS="mongodb=4,postgres=4,zookeeper=4,kafka=4,kafka-topics=4,schema-registry=4,elasticsearch=3,mysql=3,nats=3,nats-streaming=3,nats-streaming-2=3,rabbitmq=3,redis=2,redis-slave=2,redis-sentinel=2,memcached=1,oracledb=1,couchbase=2,localstack=2"
+        SIDECAR_COUNTS="redis=11,redis-slave=11,redis-sentinel=11,postgres=6,mongodb=2,zookeeper=2,kafka=2,kafka-topics=2,schema-registry=2,elasticsearch=2,mysql=1,nats=1,nats-streaming=1,nats-streaming-2=1,rabbitmq=1,couchbase=1,localstack=1,memcached=1,oracledb=1"
         ARTIFACTS_PATH="$(workspaces.output.path)"
         cd $ARTIFACTS_PATH
         BASE_REVISION=$(git rev-parse origin/main)
@@ -124,7 +124,7 @@ spec:
           fi
         fi
         if [ "true" == "true" ]; then
-          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*test.js" "30" "$ARTIFACTS_PATH")
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*.test.js" "30" "$ARTIFACTS_PATH")
           if [ -z "$CLAIMED_TESTS" ]; then
             echo "No tests to claim for this task"
             touch "collector-27.succeeded"

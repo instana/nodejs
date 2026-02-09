@@ -125,7 +125,7 @@ spec:
         fi
 
         if [ "{{claimTests}}" == "true" ]; then
-          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*test.js" "{{totalTasks}}" "$ARTIFACTS_PATH")
+          CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*.test.js" "{{totalTasks}}" "$ARTIFACTS_PATH")
           
           if [ -z "$CLAIMED_TESTS" ]; then
             echo "No tests to claim for this task"

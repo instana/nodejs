@@ -270,7 +270,7 @@ function main() {
             esmOnly,
             mode
           });
-          const fileName = mode ? `test_${mode}.js` : 'test.js';
+          const fileName = mode ? `${mode}.test.js` : 'default.test.js';
           fs.writeFileSync(path.join(versionDir, fileName), testContent);
         });
 
@@ -312,7 +312,7 @@ function main() {
       esmOnly: false,
       mode: null
     });
-    fs.writeFileSync(path.join(versionDir, 'test.js'), testContent);
+    fs.writeFileSync(path.join(versionDir, 'default.test.js'), testContent);
 
     generatePackageJson({
       testDir,

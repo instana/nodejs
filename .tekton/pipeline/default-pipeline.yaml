@@ -393,7 +393,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-1-mongodb-task
+    - name: collector-1-redis-task
       runAfter:
         - execute-tools
       taskRef:
@@ -418,7 +418,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-2-mongodb-task
+    - name: collector-2-redis-task
       runAfter:
         - execute-tools
       taskRef:
@@ -443,7 +443,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-3-mongodb-task
+    - name: collector-3-redis-task
       runAfter:
         - execute-tools
       taskRef:
@@ -468,7 +468,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-4-mongodb-task
+    - name: collector-4-redis-task
       runAfter:
         - execute-tools
       taskRef:
@@ -493,7 +493,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-5-postgres-task
+    - name: collector-5-redis-task
       runAfter:
         - execute-tools
       taskRef:
@@ -518,7 +518,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-6-postgres-task
+    - name: collector-6-redis-task
       runAfter:
         - execute-tools
       taskRef:
@@ -543,7 +543,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-7-postgres-task
+    - name: collector-7-redis-task
       runAfter:
         - execute-tools
       taskRef:
@@ -568,7 +568,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-8-postgres-task
+    - name: collector-8-redis-task
       runAfter:
         - execute-tools
       taskRef:
@@ -593,7 +593,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-9-kafka-task
+    - name: collector-9-redis-task
       runAfter:
         - execute-tools
       taskRef:
@@ -618,7 +618,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-10-kafka-task
+    - name: collector-10-redis-task
       runAfter:
         - execute-tools
       taskRef:
@@ -643,7 +643,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-11-kafka-task
+    - name: collector-11-redis-task
       runAfter:
         - execute-tools
       taskRef:
@@ -668,7 +668,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-12-kafka-task
+    - name: collector-12-postgres-task
       runAfter:
         - execute-tools
       taskRef:
@@ -693,7 +693,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-13-elasticsearch-task
+    - name: collector-13-postgres-task
       runAfter:
         - execute-tools
       taskRef:
@@ -718,7 +718,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-14-elasticsearch-task
+    - name: collector-14-postgres-task
       runAfter:
         - execute-tools
       taskRef:
@@ -743,7 +743,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-15-elasticsearch-task
+    - name: collector-15-postgres-task
       runAfter:
         - execute-tools
       taskRef:
@@ -768,7 +768,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-16-mysql-task
+    - name: collector-16-postgres-task
       runAfter:
         - execute-tools
       taskRef:
@@ -793,7 +793,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-17-mysql-task
+    - name: collector-17-postgres-task
       runAfter:
         - execute-tools
       taskRef:
@@ -818,7 +818,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-18-mysql-task
+    - name: collector-18-mongodb-task
       runAfter:
         - execute-tools
       taskRef:
@@ -843,7 +843,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-19-nats-task
+    - name: collector-19-mongodb-task
       runAfter:
         - execute-tools
       taskRef:
@@ -868,7 +868,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-20-nats-task
+    - name: collector-20-kafka-task
       runAfter:
         - execute-tools
       taskRef:
@@ -893,7 +893,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-21-nats-task
+    - name: collector-21-kafka-task
       runAfter:
         - execute-tools
       taskRef:
@@ -918,7 +918,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-22-rabbitmq-task
+    - name: collector-22-elasticsearch-task
       runAfter:
         - execute-tools
       taskRef:
@@ -943,7 +943,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-23-rabbitmq-task
+    - name: collector-23-elasticsearch-task
       runAfter:
         - execute-tools
       taskRef:
@@ -968,7 +968,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-24-rabbitmq-task
+    - name: collector-24-mysql-task
       runAfter:
         - execute-tools
       taskRef:
@@ -993,7 +993,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-25-redis-memcached-task
+    - name: collector-25-nats-task
       runAfter:
         - execute-tools
       taskRef:
@@ -1018,7 +1018,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-26-redis-oracledb-task
+    - name: collector-26-rabbitmq-task
       runAfter:
         - execute-tools
       taskRef:
@@ -1068,7 +1068,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-28-couchbase-task
+    - name: collector-28-localstack-task
       runAfter:
         - execute-tools
       taskRef:
@@ -1093,7 +1093,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-29-localstack-task
+    - name: collector-29-memcached-task
       runAfter:
         - execute-tools
       taskRef:
@@ -1118,7 +1118,7 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-30-localstack-task
+    - name: collector-30-oracledb-task
       runAfter:
         - execute-tools
       taskRef:
