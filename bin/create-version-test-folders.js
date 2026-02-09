@@ -155,9 +155,16 @@ mochaSuiteFn(suiteTitle, function () {
   process.once('SIGINT', () => { cleanup(); process.exit(130); });
   process.once('SIGTERM', () => { cleanup(); process.exit(143); });
   
-  before(function () {
+  before(async function () {
     const installTimeout = config.getNPMInstallTimeout();
-    this.timeout(installTimeout);
+    const staggerDelay = process.env.CI ? Math.floor(Math.random() * 1000 * 30) : 0;
+    this.timeout(installTimeout + staggerDelay);
+
+    if (staggerDelay > 0) {
+      console.log('[INFO] Staggering npm install by ' + (staggerDelay / 1000).toFixed(1) + 's...');
+      await new Promise(resolve => setTimeout(resolve, staggerDelay));
+    }
+
     console.log('[INFO] Installing dependencies for ${suiteName}@${displayVersion}...');
     execSync('npm install --no-package-lock --no-audit --prefix ./ --no-progress', {
       cwd: __dirname, stdio: 'inherit', timeout: installTimeout - 1000
