@@ -21,6 +21,11 @@ const {
 const constants = require('@_local/core').tracing.constants;
 let utils;
 
+// Resolve the base directory (works from both the original dir and _v* copies)
+const inVersionDir = path.basename(__dirname).startsWith('_v')
+  || path.basename(path.dirname(__dirname)).startsWith('_v');
+const baseDir = inVersionDir ? path.resolve(__dirname, '..') : __dirname;
+
 let topicArn;
 const topicName = 'MyNodeTopicArn';
 const availableStyles = ['default', 'callback', 'v2'];
@@ -76,7 +81,7 @@ function start() {
     describe('tracing enabled, no suppression', function () {
       before(async () => {
         receiverControls = new ProcessControls({
-          dirname: path.join(__dirname, '../client-sqs'),
+          dirname: path.join(baseDir, '../client-sqs'),
           appName: 'receiver.js',
           useGlobalAgent: true,
           env: {
@@ -167,7 +172,7 @@ function start() {
     describe('tracing enabled, but suppressed', function () {
       before(async () => {
         receiverControls = new ProcessControls({
-          dirname: path.join(__dirname, '../client-sqs'),
+          dirname: path.join(baseDir, '../client-sqs'),
           appName: 'receiver.js',
           useGlobalAgent: true,
           env: {
@@ -231,7 +236,7 @@ function start() {
     describe('tracing disabled', function () {
       before(async () => {
         receiverControls = new ProcessControls({
-          dirname: path.join(__dirname, '../client-sqs'),
+          dirname: path.join(baseDir, '../client-sqs'),
           appName: 'receiver.js',
           useGlobalAgent: true,
           tracingEnabled: false,
