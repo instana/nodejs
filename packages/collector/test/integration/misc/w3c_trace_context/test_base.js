@@ -43,6 +43,7 @@ module.exports = function () {
           otherVendorAppPort = portfinder();
 
           instanaAppControls = new ProcessControls({
+            dirname: __dirname,
             appPath: path.join(__dirname, 'app'),
             useGlobalAgent: true,
             http2,
@@ -53,6 +54,7 @@ module.exports = function () {
             }
           });
           otherVendorAppControls = new ProcessControls({
+            dirname: __dirname,
             appPath: path.join(__dirname, 'app'),
             port: otherVendorAppPort,
             http2,

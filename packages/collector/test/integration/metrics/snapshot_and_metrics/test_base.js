@@ -53,7 +53,7 @@ module.exports = function () {
         expect(args).to.be.an('array');
         expect(args).to.have.lengthOf(5);
         expect(args[0]).to.contain('node');
-        expect(args[1]).to.contain('packages/collector/test/metrics/app/app');
+        expect(args[1]).to.match(/snapshot_and_metrics.*\/app$/);
         expect(args[2]).to.equal('foo');
         expect(args[3]).to.equal('bar');
         expect(args[4]).to.equal('baz');
