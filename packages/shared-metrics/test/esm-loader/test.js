@@ -23,6 +23,7 @@ mochaSuiteFn('ESM loader', function () {
     let controls;
     before(async () => {
       controls = new ProcessControls({
+        dirname: __dirname,
         useGlobalAgent: true,
         cwd: path.join(__dirname, 'module'),
         appPath: path.join(__dirname, 'module', 'src', 'app'),
@@ -56,6 +57,7 @@ mochaSuiteFn('ESM loader', function () {
 
     before(async () => {
       controls = new ProcessControls({
+        dirname: __dirname,
         useGlobalAgent: true,
         cwd: path.join(__dirname, 'module'),
         appPath: path.join(__dirname, 'module-2', 'src', 'app.mjs'),
@@ -89,6 +91,7 @@ mochaSuiteFn('ESM loader', function () {
 
     before(async () => {
       controls = new ProcessControls({
+        dirname: __dirname,
         useGlobalAgent: true,
         cwd: path.join(__dirname, 'module'),
         appPath: path.join(__dirname, 'module-3', 'node_modules', 'my-app', 'server.mjs'),
@@ -123,6 +126,7 @@ mochaSuiteFn('ESM loader', function () {
 
     before(async () => {
       controls = new ProcessControls({
+        dirname: __dirname,
         env: {
           NODE_OPTIONS: nodeOption
         },

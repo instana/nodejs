@@ -22,6 +22,7 @@ mochaSuiteFn('ejs require collector in preload', function () {
 
   before(async () => {
     controls = new ProcessControls({
+      dirname: __dirname,
       useGlobalAgent: true,
       cwd: path.join(__dirname, 'module'),
       appPath: path.join(__dirname, 'module', 'src', 'app'),

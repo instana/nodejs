@@ -53,6 +53,24 @@ function countTestsPerSidecar(packageName) {
   });
 
   const counts = {};
+  const contentWeightCache = new Map();
+
+  // Content weight per scanDir: sum of all .js/.mjs file sizes in KB (min 1)
+  function getContentWeight(scanDir) {
+    if (contentWeightCache.has(scanDir)) return contentWeightCache.get(scanDir);
+    let totalBytes = 0;
+    try {
+      const files = fs.readdirSync(scanDir).filter(f => f.endsWith('.js') || f.endsWith('.mjs'));
+      for (const f of files) {
+        totalBytes += fs.statSync(path.join(scanDir, f)).size;
+      }
+    } catch (_) {}
+    const weight = Math.max(1, Math.round(totalBytes / 1024));
+    contentWeightCache.set(scanDir, weight);
+    return weight;
+  }
+
+  let totalWeight = 0;
 
   for (const testFile of filtered) {
     const testDir = path.dirname(path.join(packageDir, testFile));
@@ -63,6 +81,9 @@ function countTestsPerSidecar(packageName) {
     } else if (/_v[^/\\]*$/.test(path.dirname(scanDir))) {
       scanDir = path.dirname(path.dirname(scanDir));
     }
+
+    const weight = getContentWeight(scanDir);
+    totalWeight += weight;
 
     let grepResult = '';
     try {
@@ -88,20 +109,20 @@ function countTestsPerSidecar(packageName) {
     }
 
     for (const s of sidecars) {
-      counts[s] = (counts[s] || 0) + 1;
+      counts[s] = (counts[s] || 0) + weight;
     }
   }
 
   const sidecarTestCount = Object.values(counts).reduce((a, b) => a + b, 0);
 
-  console.log('\nAuto-detected sidecar weights (tests per sidecar):');
+  console.log('\nAuto-detected sidecar weights (content-weighted, KB):');
   for (const [name, count] of Object.entries(counts).sort((a, b) => b[1] - a[1])) {
     console.log(`  ${name}: ${count}`);
   }
-  console.log(`  (generic tests without sidecars: ${filtered.length - sidecarTestCount})`);
-  console.log(`  (total test files: ${filtered.length})`);
+  console.log(`  (generic tests without sidecars: ${totalWeight - sidecarTestCount})`);
+  console.log(`  (total weight: ${totalWeight}, files: ${filtered.length})`);
 
-  return { counts, totalTests: filtered.length };
+  return { counts, totalTests: totalWeight };
 }
 
 const collectorSidecarData = countTestsPerSidecar('collector');

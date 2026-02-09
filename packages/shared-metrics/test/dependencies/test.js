@@ -134,11 +134,11 @@ describe('dependencies', function () {
           expect(deps).to.be.an('object');
 
           // npm workspaces installs most of the deps on the root
-          expect(deps['@_local/shared-metrics']).to.not.exist;
-          expect(deps['@_local/core']).to.not.exist;
-          expect(deps['@_local/autoprofile']).to.not.exist;
+          expect(deps['@instana/shared-metrics']).to.not.exist;
+          expect(deps['@instana/core']).to.not.exist;
+          expect(deps['@instana/autoprofile']).to.not.exist;
 
-          expect(deps['@_local/collector']).to.exist;
+          expect(deps['@instana/collector']).to.exist;
 
           expectVersion(deps.fastify, '^3.20.2');
           expectVersion(deps.express, '^4.17.1');
@@ -200,11 +200,11 @@ describe('dependencies', function () {
           expect(deps).to.be.an('object');
 
           // npm workspaces installs most of the deps on the root
-          expect(deps['@_local/shared-metrics']).to.not.exist;
-          expect(deps['@_local/core']).to.not.exist;
-          expect(deps['@_local/autoprofile']).to.not.exist;
+          expect(deps['@instana/shared-metrics']).to.not.exist;
+          expect(deps['@instana/core']).to.not.exist;
+          expect(deps['@instana/autoprofile']).to.not.exist;
 
-          expect(deps['@_local/collector']).to.exist;
+          expect(deps['@instana/collector']).to.exist;
 
           expectVersion(deps.fastify, '^3.20.2');
           expectVersion(deps.express, '^4.17.1');
