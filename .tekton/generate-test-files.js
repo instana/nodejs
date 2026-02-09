@@ -378,7 +378,7 @@ function cleanupOldCollectorTasks() {
   }
 }
 
-function updatePipelineCollectorEntries(taskNames) {
+function updatePipelineCollectorEntries(tasks) {
   const pipelinePath = path.join(__dirname, 'pipeline', 'default-pipeline.yaml');
   const lines = fs.readFileSync(pipelinePath, 'utf-8').split('\n');
 
@@ -403,13 +403,13 @@ function updatePipelineCollectorEntries(taskNames) {
   }
 
   const newEntries = [];
-  for (const name of taskNames) {
+  for (const { taskName, displayName } of tasks) {
     newEntries.push(
-      `    - name: ${name}-task`,
+      `    - name: ${displayName}-task`,
       '      runAfter:',
       '        - execute-tools',
       '      taskRef:',
-      `        name: ${name}`,
+      `        name: ${taskName}`,
       '      params:',
       '        - name: node-version',
       '          value: $(params.node-version)',
@@ -440,7 +440,7 @@ function updatePipelineCollectorEntries(taskNames) {
   ];
 
   fs.writeFileSync(pipelinePath, result.join('\n'));
-  console.log(`Updated pipeline with ${taskNames.length} collector task entries`);
+  console.log(`Updated pipeline with ${tasks.length} collector task entries`);
 }
 
 // =============================================================================
@@ -465,15 +465,15 @@ for (const [groupName, config] of Object.entries(packages)) {
     });
     const sidecarCountsStr = Object.entries(sidecarCounts).map(([k, v]) => `${k}=${v}`).join(',');
 
-    const collectorTaskNames = [];
+    const collectorTasks_ = [];
 
     for (const task of collectorTasks) {
       const sidecarSuffix = task.sidecarNames.join('-');
-      const taskName = `collector-${task.index}-${sidecarSuffix}`;
-      const fileName = `collector-${task.index}`;
+      const taskName = `collector-${task.index}`;
+      const displayName = `collector-${task.index}-${sidecarSuffix}`;
 
-      collectorTaskNames.push(taskName);
-      console.log(`  ${taskName}: [${task.sidecars.join(', ')}] (weight: ${task.weight})`);
+      collectorTasks_.push({ taskName, displayName });
+      console.log(`  ${displayName}: [${task.sidecars.join(', ')}] (weight: ${task.weight})`);
 
       const content = generateTask(taskName, task.sidecars, {
         groupName,
@@ -485,10 +485,10 @@ for (const [groupName, config] of Object.entries(packages)) {
         sidecarCounts: sidecarCountsStr
       });
 
-      writeTask(`${fileName}-task.yaml`, content);
+      writeTask(`${taskName}-task.yaml`, content);
     }
 
-    updatePipelineCollectorEntries(collectorTaskNames);
+    updatePipelineCollectorEntries(collectorTasks_);
   } else {
     const runs = config.split ? Array.from({ length: config.split }, (_, i) => i + 1) : [1];
 

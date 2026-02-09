@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: collector-18-mysql
+  name: collector-18
 spec:
   sidecars:
     - name: mysql
@@ -120,7 +120,7 @@ spec:
         echo "GIT_COMMIT_DESC: $GIT_COMMIT_DESC"
         if echo "$GIT_COMMIT_DESC" | grep -q '\[ci reduced\]' && true; then
           echo "Skipping group."
-          touch "collector-18-mysql.succeeded"
+          touch "collector-18.succeeded"
           exit 0
         fi
         export CI=true
@@ -134,7 +134,7 @@ spec:
           export RUN_ESM=true
           if ! echo "test:ci:collector" | grep -q 'ci:collector'; then
             echo "Skipping tests because group does not support ESM."
-            touch "collector-18-mysql.succeeded"
+            touch "collector-18.succeeded"
             exit 0
           fi
         fi
@@ -142,24 +142,24 @@ spec:
           CLAIMED_TESTS=$(bash ./packages/collector/scripts/claim-tests.sh "$AVAILABLE_SIDECARS" "test/**/*test.js" "30" "$ARTIFACTS_PATH")
           if [ -z "$CLAIMED_TESTS" ]; then
             echo "No tests to claim for this task"
-            touch "collector-18-mysql.succeeded"
+            touch "collector-18.succeeded"
             exit 0
           fi
           echo "Claimed tests: $CLAIMED_TESTS"
           # Write mapping to shared file (printed by tasks-results)
           SHORT_NAMES=$(echo "$CLAIMED_TESTS" | tr ' ' '\n' | sed 's|.*/currencies/||; s|.*/misc/||; s|.*/unit/||; s|/test\.js$||' | tr '\n' ', ' | sed 's/,$//')
-          echo "collector-18-mysql: $SHORT_NAMES" >> "$ARTIFACTS_PATH/test-mapping.txt"
+          echo "collector-18: $SHORT_NAMES" >> "$ARTIFACTS_PATH/test-mapping.txt"
         fi
-        rm -f "collector-18-mysql.succeeded" "collector-18-mysql.failed"
+        rm -f "collector-18.succeeded" "collector-18.failed"
         retry=1
         LAST_EXIT=1
         while [ $retry -le 2 ]; do
           LAST_EXIT=0
           if [ "$(params.coverage)" == "true" ]; then
             if [ "true" == "true" ]; then
-              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="18" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-18-mysql" || LAST_EXIT=$?
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="18" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-18" || LAST_EXIT=$?
             else
-              CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="18" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-18-mysql" || LAST_EXIT=$?
+              CI_TEST_SPLIT="30" CI_TEST_SPLIT_CURRENT="18" npm run coverage-ci --npm_command="test:ci:collector" --report_dir="collector-18" || LAST_EXIT=$?
             fi
           else
             if [ "true" == "true" ]; then
@@ -169,15 +169,15 @@ spec:
             fi
           fi
           if [ $LAST_EXIT -eq 0 ]; then
-            touch "collector-18-mysql.succeeded"
+            touch "collector-18.succeeded"
             break
           else
             echo "Attempt $retry failed with exit code $LAST_EXIT"
             retry=$((retry + 1))
           fi
         done
-        if [ ! -f "collector-18-mysql.succeeded" ]; then
-          echo "All $((retry - 1)) retries failed for collector-18-mysql"
-          touch "collector-18-mysql.failed"
+        if [ ! -f "collector-18.succeeded" ]; then
+          echo "All $((retry - 1)) retries failed for collector-18"
+          touch "collector-18.failed"
           exit 1
         fi
