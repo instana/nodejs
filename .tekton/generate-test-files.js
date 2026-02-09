@@ -470,6 +470,7 @@ for (const [groupName, config] of Object.entries(packages)) {
     for (const task of collectorTasks) {
       const sidecarSuffix = task.sidecarNames.join('-');
       const taskName = `collector-${task.index}-${sidecarSuffix}`;
+      const fileName = `collector-${task.index}`;
 
       collectorTaskNames.push(taskName);
       console.log(`  ${taskName}: [${task.sidecars.join(', ')}] (weight: ${task.weight})`);
@@ -484,7 +485,7 @@ for (const [groupName, config] of Object.entries(packages)) {
         sidecarCounts: sidecarCountsStr
       });
 
-      writeTask(`${taskName}-task.yaml`, content);
+      writeTask(`${fileName}-task.yaml`, content);
     }
 
     updatePipelineCollectorEntries(collectorTaskNames);
