@@ -17,7 +17,9 @@ const ProcessControls = require('@_local/collector/test/test_util/ProcessControl
 const globalAgent = require('@_local/collector/test/globalAgent');
 
 module.exports = function (name, version) {
-  const versionDir = path.basename(__dirname).startsWith('_v') ? __dirname : path.join(__dirname, `_v${version}`);
+  const inVersionDir = path.basename(__dirname).startsWith('_v')
+    || path.basename(path.dirname(__dirname)).startsWith('_v');
+  const versionDir = inVersionDir ? __dirname : path.join(__dirname, `_v${version}`);
   const agentControls = globalAgent.instance;
   let controls;
 

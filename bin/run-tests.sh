@@ -116,7 +116,7 @@ if [ -n "$PACKAGE" ]; then
     if [ -n "$TEST_NAME_FILTER" ]; then
         SEARCH_PATTERN="*${TEST_NAME_FILTER}*.test.js"
     fi
-    FOUND_FILES=$(find "$PACKAGE_DIR/_${VERSION}" -maxdepth 1 -name "$SEARCH_PATTERN" ! -name "test_base.js")
+    FOUND_FILES=$(find "$PACKAGE_DIR/_${VERSION}" -maxdepth 2 -name "$SEARCH_PATTERN" ! -name "test_base.js")
     if [ -n "$FOUND_FILES" ]; then
         TEST_FILES=$(echo "$FOUND_FILES" | tr '\n' ' ')
     fi
@@ -131,7 +131,7 @@ if [ -n "$PACKAGE" ]; then
       if [ -n "$TEST_NAME_FILTER" ]; then
           SEARCH_PATTERN="*${TEST_NAME_FILTER}*.test.js"
       fi
-      FOUND_FILES=$(find "$PACKAGE_DIR/_v${HIGHEST_VERSION}" -maxdepth 1 -name "$SEARCH_PATTERN" ! -name "test_base.js")
+      FOUND_FILES=$(find "$PACKAGE_DIR/_v${HIGHEST_VERSION}" -maxdepth 2 -name "$SEARCH_PATTERN" ! -name "test_base.js")
       if [ -n "$FOUND_FILES" ]; then
           TEST_FILES=$(echo "$FOUND_FILES" | tr '\n' ' ')
       fi

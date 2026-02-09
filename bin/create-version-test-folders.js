@@ -89,8 +89,9 @@ function cleanVersionDirs(testDir) {
   });
 }
 
-function generateTestWrapper({ suiteName, displayVersion, rawVersion, isLatest, esmOnly, mode }) {
+function generateTestWrapper({ suiteName, displayVersion, rawVersion, isLatest, esmOnly, mode, sourceDepth }) {
   const currentYear = new Date().getFullYear();
+  const relSourcePath = sourceDepth === 2 ? '../..' : '..';
 
   return `/*
  * (c) Copyright IBM Corp. ${currentYear}
@@ -107,10 +108,9 @@ const config = require('@_local/core/test/config');
 const supportedVersion = require('@_local/core').tracing.supportedVersion;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-function copyParentFiles(dir) {
-  const parentDir = path.resolve(dir, '..');
+function copyParentFiles(dir, sourceDir) {
   const copied = [];
-  fs.readdirSync(parentDir, { withFileTypes: true })
+  fs.readdirSync(sourceDir, { withFileTypes: true })
     .filter(e =>
       !e.name.startsWith('_v') &&
       e.name !== 'node_modules' &&
@@ -119,7 +119,7 @@ function copyParentFiles(dir) {
       e.name !== 'modes.json'
     )
     .forEach(e => {
-      const src = path.join(parentDir, e.name);
+      const src = path.join(sourceDir, e.name);
       const dest = path.join(dir, e.name);
       if (e.isFile()) {
         fs.copyFileSync(src, dest);
@@ -147,8 +147,9 @@ ${esmOnly ? `if (!process.env.RUN_ESM) {
 const suiteTitle = esmPrefix + 'tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}';
 mochaSuiteFn(suiteTitle, function () {
   this.timeout(config.getTestTimeout());
+  const sourceDir = path.resolve(__dirname, '${relSourcePath}');
   try { fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true }); } catch (_) {}
-  const copiedFiles = copyParentFiles(__dirname);
+  const copiedFiles = copyParentFiles(__dirname, sourceDir);
   const cleanup = () => cleanupCopiedFiles(copiedFiles);
   process.once('exit', cleanup);
   process.once('SIGINT', () => { cleanup(); process.exit(130); });
@@ -263,29 +264,36 @@ function main() {
           }
         }
 
+        const hasModes = modes.length > 1 || (modes.length === 1 && modes[0] !== null);
+        const isOptional = typeof versionObj === 'object' && versionObj.optional === true;
+
         modes.forEach(mode => {
+          // When modes exist, each mode gets its own subdirectory for isolation
+          const targetDir = hasModes ? path.join(versionDir, mode) : versionDir;
+          if (hasModes && !fs.existsSync(targetDir)) {
+            fs.mkdirSync(targetDir, { recursive: true });
+          }
+
           const testContent = generateTestWrapper({
             suiteName: currency.name,
             displayVersion: dirName.substring(1),
             rawVersion: version,
             isLatest,
             esmOnly,
-            mode
+            mode,
+            sourceDepth: hasModes ? 2 : 1
           });
           const fileName = mode ? `${mode}.test.js` : 'default.test.js';
-          fs.writeFileSync(path.join(versionDir, fileName), testContent);
-        });
+          fs.writeFileSync(path.join(targetDir, fileName), testContent);
 
-        // Generate package.json
-        const isOptional = typeof versionObj === 'object' && versionObj.optional === true;
-
-        generatePackageJson({
-          testDir,
-          versionDir,
-          pkgName: `${currency.name}-v${majorVersion}`,
-          currencyName: currency.name,
-          currencyVersion: version,
-          isOptional
+          generatePackageJson({
+            testDir,
+            versionDir: targetDir,
+            pkgName: `${currency.name}-v${majorVersion}`,
+            currencyName: currency.name,
+            currencyVersion: version,
+            isOptional
+          });
         });
       });
     });
@@ -312,7 +320,8 @@ function main() {
       rawVersion: version,
       isLatest: true,
       esmOnly: false,
-      mode: null
+      mode: null,
+      sourceDepth: 1
     });
     fs.writeFileSync(path.join(versionDir, 'default.test.js'), testContent);
 

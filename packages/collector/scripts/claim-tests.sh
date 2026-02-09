@@ -22,7 +22,7 @@ touch "$CLAIMED_FILE"
 
 # Find all test files matching pattern and randomize order (portable shuffle)
 # Inside _v* directories, only accept generated files (*.test.js) — filter out stale copies from previous runs.
-ALL_TESTS=$(find "$(pwd)" -path "*$TEST_PATTERN" -name "*.test.js" -not -path "*/node_modules/*" -not -path "*/long_*/*" | awk '!/_v[0-9]/ || /\/_v[^\/]+\/[^\/]+\.test\.js$/' | awk 'BEGIN{srand();}{print rand()"\t"$0}' | sort -k1 -n | cut -f2-)
+ALL_TESTS=$(find "$(pwd)" -path "*$TEST_PATTERN" -name "*.test.js" -not -path "*/node_modules/*" -not -path "*/long_*/*" | awk '!/_v[0-9]/ || /\/_v[^\/]+\/([^\/]+\/)?[^\/]+\.test\.js$/' | awk 'BEGIN{srand();}{print rand()"\t"$0}' | sort -k1 -n | cut -f2-)
 TOTAL_TEST_COUNT=$(echo "$ALL_TESTS" | wc -l | xargs)
 
 # Calculate how many tests this task should claim (Soft Limit)
@@ -47,11 +47,13 @@ GENERIC_TESTS=""
 for test_file in $ALL_TESTS; do
   REQUIRED_SIDECARS=""
   
-  # Scan the test directory AND parent (for _v* dirs where app.js lives in the parent) for requirements
+  # Scan the test package directory for sidecar requirements (navigate past _v* and optional mode subdir)
   TEST_DIR=$(dirname "$test_file")
   SCAN_DIR="$TEST_DIR"
   if echo "$TEST_DIR" | grep -q '/_v[^/]*$'; then
     SCAN_DIR="$(dirname "$TEST_DIR")"
+  elif echo "$(dirname "$TEST_DIR")" | grep -q '/_v[^/]*$'; then
+    SCAN_DIR="$(dirname "$(dirname "$TEST_DIR")")"
   fi
   USED_ENVS=$(find -L "$SCAN_DIR" -maxdepth 1 \( -name "*.js" -o -name "*.mjs" \) -exec grep -h -o "${ENV_PREFIX}[A-Z0-9_]*" {} + 2>/dev/null | sort | uniq)
 
@@ -157,6 +159,8 @@ for test_file in $FINAL_LIST; do
   SCAN_DIR_CHECK="$TEST_DIR_CHECK"
   if echo "$TEST_DIR_CHECK" | grep -q '/_v[^/]*$'; then
     SCAN_DIR_CHECK="$(dirname "$TEST_DIR_CHECK")"
+  elif echo "$(dirname "$TEST_DIR_CHECK")" | grep -q '/_v[^/]*$'; then
+    SCAN_DIR_CHECK="$(dirname "$(dirname "$TEST_DIR_CHECK")")"
   fi
   USED_ENVS_CHECK=$(find -L "$SCAN_DIR_CHECK" -maxdepth 1 \( -name "*.js" -o -name "*.mjs" \) -exec grep -h -o "${ENV_PREFIX}[A-Z0-9_]*" {} + 2>/dev/null | sort | uniq)
   

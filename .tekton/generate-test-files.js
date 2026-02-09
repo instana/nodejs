@@ -46,17 +46,23 @@ function countTestsPerSidecar(packageName) {
     return {};
   }
 
-  // Same filter as claim-tests.sh: _v* dirs only accept *.test.js
+  // Same filter as claim-tests.sh: _v* dirs only accept *.test.js (flat or mode subdir)
   const filtered = allTests.filter(f => {
     if (!/_v[0-9]/.test(f)) return true;
-    return /\/_v[^/]+\/[^/]+\.test\.js$/.test(f);
+    return /\/_v[^/]+\/([^/]+\/)?[^/]+\.test\.js$/.test(f);
   });
 
   const counts = {};
 
   for (const testFile of filtered) {
     const testDir = path.dirname(path.join(packageDir, testFile));
-    const scanDir = /_v[^/\\]*$/.test(testDir) ? path.dirname(testDir) : testDir;
+    // Navigate up to the test package dir (past _v* and optional mode subdir)
+    let scanDir = testDir;
+    if (/_v[^/\\]*$/.test(scanDir)) {
+      scanDir = path.dirname(scanDir);
+    } else if (/_v[^/\\]*$/.test(path.dirname(scanDir))) {
+      scanDir = path.dirname(path.dirname(scanDir));
+    }
 
     let grepResult = '';
     try {
