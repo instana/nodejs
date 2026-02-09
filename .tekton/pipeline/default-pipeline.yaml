@@ -393,11 +393,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-1-mongodb-task
+    - name: collector-1-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-1-mongodb
+        name: collector-1
       params:
         - name: node-version
           value: $(params.node-version)
@@ -418,11 +418,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-2-mongodb-task
+    - name: collector-10-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-2-mongodb
+        name: collector-10
       params:
         - name: node-version
           value: $(params.node-version)
@@ -443,11 +443,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-3-mongodb-task
+    - name: collector-11-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-3-mongodb
+        name: collector-11
       params:
         - name: node-version
           value: $(params.node-version)
@@ -468,11 +468,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-4-mongodb-task
+    - name: collector-12-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-4-mongodb
+        name: collector-12
       params:
         - name: node-version
           value: $(params.node-version)
@@ -493,11 +493,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-5-postgres-task
+    - name: collector-13-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-5-postgres
+        name: collector-13
       params:
         - name: node-version
           value: $(params.node-version)
@@ -518,11 +518,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-6-postgres-task
+    - name: collector-14-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-6-postgres
+        name: collector-14
       params:
         - name: node-version
           value: $(params.node-version)
@@ -543,11 +543,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-7-postgres-task
+    - name: collector-15-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-7-postgres
+        name: collector-15
       params:
         - name: node-version
           value: $(params.node-version)
@@ -568,11 +568,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-8-postgres-task
+    - name: collector-16-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-8-postgres
+        name: collector-16
       params:
         - name: node-version
           value: $(params.node-version)
@@ -593,11 +593,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-9-kafka-task
+    - name: collector-17-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-9-kafka
+        name: collector-17
       params:
         - name: node-version
           value: $(params.node-version)
@@ -618,11 +618,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-10-kafka-task
+    - name: collector-18-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-10-kafka
+        name: collector-18
       params:
         - name: node-version
           value: $(params.node-version)
@@ -643,11 +643,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-11-kafka-task
+    - name: collector-19-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-11-kafka
+        name: collector-19
       params:
         - name: node-version
           value: $(params.node-version)
@@ -668,11 +668,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-12-kafka-task
+    - name: collector-2-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-12-kafka
+        name: collector-2
       params:
         - name: node-version
           value: $(params.node-version)
@@ -693,11 +693,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-13-elasticsearch-task
+    - name: collector-20-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-13-elasticsearch
+        name: collector-20
       params:
         - name: node-version
           value: $(params.node-version)
@@ -718,11 +718,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-14-elasticsearch-task
+    - name: collector-21-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-14-elasticsearch
+        name: collector-21
       params:
         - name: node-version
           value: $(params.node-version)
@@ -743,11 +743,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-15-elasticsearch-task
+    - name: collector-22-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-15-elasticsearch
+        name: collector-22
       params:
         - name: node-version
           value: $(params.node-version)
@@ -768,11 +768,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-16-mysql-task
+    - name: collector-23-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-16-mysql
+        name: collector-23
       params:
         - name: node-version
           value: $(params.node-version)
@@ -793,11 +793,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-17-mysql-task
+    - name: collector-24-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-17-mysql
+        name: collector-24
       params:
         - name: node-version
           value: $(params.node-version)
@@ -818,11 +818,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-18-mysql-task
+    - name: collector-25-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-18-mysql
+        name: collector-25
       params:
         - name: node-version
           value: $(params.node-version)
@@ -843,11 +843,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-19-nats-task
+    - name: collector-26-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-19-nats
+        name: collector-26
       params:
         - name: node-version
           value: $(params.node-version)
@@ -868,11 +868,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-20-nats-task
+    - name: collector-27-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-20-nats
+        name: collector-27
       params:
         - name: node-version
           value: $(params.node-version)
@@ -893,11 +893,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-21-nats-task
+    - name: collector-28-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-21-nats
+        name: collector-28
       params:
         - name: node-version
           value: $(params.node-version)
@@ -918,11 +918,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-22-rabbitmq-task
+    - name: collector-29-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-22-rabbitmq
+        name: collector-29
       params:
         - name: node-version
           value: $(params.node-version)
@@ -943,11 +943,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-23-rabbitmq-task
+    - name: collector-3-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-23-rabbitmq
+        name: collector-3
       params:
         - name: node-version
           value: $(params.node-version)
@@ -968,11 +968,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-24-rabbitmq-task
+    - name: collector-30-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-24-rabbitmq
+        name: collector-30
       params:
         - name: node-version
           value: $(params.node-version)
@@ -993,11 +993,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-25-redis-memcached-task
+    - name: collector-4-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-25-redis-memcached
+        name: collector-4
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1018,11 +1018,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-26-redis-oracledb-task
+    - name: collector-5-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-26-redis-oracledb
+        name: collector-5
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1043,11 +1043,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-27-couchbase-task
+    - name: collector-6-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-27-couchbase
+        name: collector-6
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1068,11 +1068,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-28-couchbase-task
+    - name: collector-7-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-28-couchbase
+        name: collector-7
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1093,11 +1093,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-29-localstack-task
+    - name: collector-8-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-29-localstack
+        name: collector-8
       params:
         - name: node-version
           value: $(params.node-version)
@@ -1118,11 +1118,11 @@ spec:
       workspaces:
         - name: output
           workspace: artifacts
-    - name: collector-30-localstack-task
+    - name: collector-9-task
       runAfter:
         - execute-tools
       taskRef:
-        name: collector-30-localstack
+        name: collector-9
       params:
         - name: node-version
           value: $(params.node-version)
