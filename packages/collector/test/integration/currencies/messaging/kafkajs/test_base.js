@@ -28,7 +28,7 @@ const retryTimeUntil = () => {
 };
 
 // node bin/start-test-containers.js --zookeeper --kafka --schema-registry --kafka-topics
-module.exports = function (name, version, isLatest) {
+module.exports = function (name, version, isLatest, mode) {
   this.timeout(config.getTestTimeout() * 5);
 
   const libraryEnv = { LIBRARY_VERSION: version, LIBRARY_NAME: name, LIBRARY_LATEST: isLatest };
@@ -36,6 +36,7 @@ module.exports = function (name, version, isLatest) {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
+  if (!mode || mode === 'default') {
   describe('tracing enabled ', function () {
     const nextUseEachBatch = getCircularList([false, true]);
     const nextError = getCircularList([false, 'consumer']);
@@ -555,6 +556,9 @@ module.exports = function (name, version, isLatest) {
       });
     });
   });
+  } // end mode: default
+
+  if (!mode || mode === 'ignoreEndpoints') {
   describe('ignore endpoints configuration', () => {
     let producerControls;
     let consumerControls;
@@ -1345,6 +1349,7 @@ module.exports = function (name, version, isLatest) {
       });
     });
   });
+  } // end mode: ignoreEndpoints
 
   function resetMessages(consumer) {
     return consumer.sendRequest({

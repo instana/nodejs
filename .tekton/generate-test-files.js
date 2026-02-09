@@ -55,17 +55,19 @@ function countTestsPerSidecar(packageName) {
   const counts = {};
   const contentWeightCache = new Map();
 
-  // Content weight per scanDir: sum of all .js/.mjs file sizes in KB (min 1)
+  // Content weight per scanDir: test_base.js size with superlinear scaling (KB^1.5)
+  // Longer tests are disproportionally heavier (more setup/teardown cycles, retries, I/O waits)
   function getContentWeight(scanDir) {
     if (contentWeightCache.has(scanDir)) return contentWeightCache.get(scanDir);
     let totalBytes = 0;
     try {
-      const files = fs.readdirSync(scanDir).filter(f => f.endsWith('.js') || f.endsWith('.mjs'));
-      for (const f of files) {
-        totalBytes += fs.statSync(path.join(scanDir, f)).size;
+      const testBase = path.join(scanDir, 'test_base.js');
+      if (fs.existsSync(testBase)) {
+        totalBytes = fs.statSync(testBase).size;
       }
     } catch (_) {}
-    const weight = Math.max(1, Math.round(totalBytes / 1024));
+    const kb = totalBytes / 1024;
+    const weight = Math.max(1, Math.round(Math.pow(kb, 1.5)));
     contentWeightCache.set(scanDir, weight);
     return weight;
   }
@@ -129,7 +131,7 @@ const collectorSidecarData = countTestsPerSidecar('collector');
 
 const packages = {
   'test:ci:collector': {
-    splits: 30,
+    splits: 35,
     sidecars: collectorSidecarData.counts,
     totalTests: collectorSidecarData.totalTests
   },

@@ -24,46 +24,50 @@ const objectModeMethods = ['true', 'false'];
 const withErrorMethods = [false, 'bufferErrorSender', 'deliveryErrorSender', 'streamErrorReceiver'];
 const RUN_SINGLE_TEST = false;
 
-module.exports = function (name, version, isLatest) {
-  describe('with delivery-cb', function () {
-    testDefinition.run.bind(this)({
-      version,
-      name,
-      isLatest,
-      producerEnableDeliveryCb: 'true',
-      producerApiMethods,
-      consumerApiMethods,
-      objectModeMethods,
-      withErrorMethods,
-      RUN_SINGLE_TEST,
-      SINGLE_TEST_PROPS: {
-        producerMethod: 'stream',
-        consumerMethod: 'stream',
-        objectMode: 'false',
-        deliveryCbEnabled: 'true',
-        withError: false
-      }
+module.exports = function (name, version, isLatest, mode) {
+  if (!mode || mode === 'withDeliveryCb') {
+    describe('with delivery-cb', function () {
+      testDefinition.run.bind(this)({
+        version,
+        name,
+        isLatest,
+        producerEnableDeliveryCb: 'true',
+        producerApiMethods,
+        consumerApiMethods,
+        objectModeMethods,
+        withErrorMethods,
+        RUN_SINGLE_TEST,
+        SINGLE_TEST_PROPS: {
+          producerMethod: 'stream',
+          consumerMethod: 'stream',
+          objectMode: 'false',
+          deliveryCbEnabled: 'true',
+          withError: false
+        }
+      });
     });
-  });
+  }
 
-  describe('without delivery-cb', function () {
-    testDefinition.run.bind(this)({
-      version,
-      name,
-      isLatest,
-      producerEnableDeliveryCb: 'false',
-      producerApiMethods,
-      consumerApiMethods,
-      objectModeMethods,
-      withErrorMethods,
-      RUN_SINGLE_TEST,
-      SINGLE_TEST_PROPS: {
-        producerMethod: 'stream',
-        consumerMethod: 'stream',
-        objectMode: 'false',
-        deliveryCbEnabled: 'false',
-        withError: false
-      }
+  if (!mode || mode === 'withoutDeliveryCb') {
+    describe('without delivery-cb', function () {
+      testDefinition.run.bind(this)({
+        version,
+        name,
+        isLatest,
+        producerEnableDeliveryCb: 'false',
+        producerApiMethods,
+        consumerApiMethods,
+        objectModeMethods,
+        withErrorMethods,
+        RUN_SINGLE_TEST,
+        SINGLE_TEST_PROPS: {
+          producerMethod: 'stream',
+          consumerMethod: 'stream',
+          objectMode: 'false',
+          deliveryCbEnabled: 'false',
+          withError: false
+        }
+      });
     });
-  });
+  }
 };
