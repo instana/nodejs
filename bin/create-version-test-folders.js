@@ -157,7 +157,7 @@ mochaSuiteFn(suiteTitle, function () {
   
   before(async function () {
     const installTimeout = config.getNPMInstallTimeout();
-    const staggerDelay = process.env.CI ? Math.floor(Math.random() * 1000 * 30) : 0;
+    const staggerDelay = process.env.CI ? Math.floor(Math.random() * 1000 * 15) : 0;
     this.timeout(installTimeout + staggerDelay);
 
     if (staggerDelay > 0) {
