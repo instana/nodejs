@@ -26,6 +26,13 @@ exports.getTestTimeout = () => {
   return 4 * 5000;
 };
 
+exports.getNPMInstallTimeout = () => {
+  if (isCI()) {
+    return 180 * 1000;
+  }
+  return 60 * 1000;
+};
+
 // The retry needs to end before the mocha timeout!
 // Otherwise we won't see the error message.
 exports.getRetryTimeout = () => {

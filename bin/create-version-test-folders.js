@@ -155,7 +155,7 @@ mochaSuiteFn(suiteTitle, function () {
   process.once('SIGTERM', () => { cleanup(); process.exit(143); });
   
   before(function () {
-   const installTimeout = 180000;
+    const installTimeout = config.getNPMInstallTimeout();
     this.timeout(installTimeout);
     console.log('[INFO] Installing dependencies for ${suiteName}@${displayVersion}...');
     execSync('npm install --no-package-lock --no-audit --prefix ./ --no-progress', {
