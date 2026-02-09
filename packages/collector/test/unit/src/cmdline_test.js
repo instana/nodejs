@@ -57,7 +57,7 @@ describe('cmdline', () => {
 
   function req() {
     result = proxyquire('@_local/collector/src/cmdline', {
-      '@_local/core': {
+      '@instana/core': {
         uninstrumentedFs: fs
       },
 

@@ -137,31 +137,34 @@ spec:
         rm -f "{{groupName}}.succeeded" "{{groupName}}.failed"
 
         retry=1
+        LAST_EXIT=1
         while [ $retry -le 3 ]; do
+          LAST_EXIT=0
           if [ "$(params.coverage)" == "true" ]; then
             if [ "{{claimTests}}" == "true" ]; then
-              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}" || LAST_EXIT=$?
             else
-              CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}"
+              CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run coverage-ci --npm_command="{{groupName}}" --report_dir="{{sanitizedGroupName}}" || LAST_EXIT=$?
             fi
           else
             if [ "{{claimTests}}" == "true" ]; then
-              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run "{{groupName}}"
+              TEST_FILES="$CLAIMED_TESTS" CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run "{{groupName}}" || LAST_EXIT=$?
             else
-              CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run "{{groupName}}"
+              CI_TEST_SPLIT="{{split}}" CI_TEST_SPLIT_CURRENT="{{splitNumber}}" npm run "{{groupName}}" || LAST_EXIT=$?
             fi
-          fi          
+          fi
 
-          if [ $? -eq 0 ]; then
+          if [ $LAST_EXIT -eq 0 ]; then
             touch "{{groupName}}.succeeded"
             break
           else
+            echo "Attempt $retry failed with exit code $LAST_EXIT"
             retry=$((retry + 1))
           fi
         done
 
         if [ ! -f "{{groupName}}.succeeded" ]; then
-          echo "All retries failed for {{groupName}}"
+          echo "All $((retry - 1)) retries failed for {{groupName}}"
           touch "{{groupName}}.failed"
           exit 1
         fi

@@ -75,7 +75,16 @@ if [ -n "$PACKAGE" ]; then
   PACKAGE_DIR=$(find "$TEST_BASE_DIR" -type d \( -path "*/$PACKAGE" -o -path "*/$NORMALIZED_PACKAGE" \) ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null | head -1)
   
   if [ -z "$PACKAGE_DIR" ]; then
-    echo "Error: Package '$PACKAGE' not found in any tracing category"
+    # No directory found — try matching a test file by name (e.g. cmdline -> cmdline_test.js)
+    MATCH_FILE=$(find "$TEST_BASE_DIR" -type f \( -name "${PACKAGE}_test.js" -o -name "${PACKAGE}_test.mjs" -o -name "${PACKAGE}.test.js" \) ! -path "*/node_modules/*" ! -path "*/_v*" 2>/dev/null | head -1)
+    if [ -n "$MATCH_FILE" ]; then
+      RELATIVE_FILE=$(echo "$MATCH_FILE" | sed "s|packages/${SCOPE_PKG_NAME}/||g")
+      echo "Running test file: $RELATIVE_FILE"
+      npm_command="npm run test:debug:files -- $RELATIVE_FILE"
+      npx lerna exec --scope="$SCOPE" "$npm_command $args"
+      exit $?
+    fi
+    echo "Error: Test folder or file for '$PACKAGE' not found"
     exit 1
   fi
   

@@ -23,7 +23,7 @@ class MockResponseEmitter extends EventEmitter {
   setEncoding() {}
 }
 
-describe('agent connection/bazel', function () {
+describe.only('agent connection/bazel', function () {
   let agentConnection;
   let lastRequest;
 
@@ -31,7 +31,7 @@ describe('agent connection/bazel', function () {
     before(() => {
       agentConnection = proxyquire('@_local/collector/src/agentConnection', {
         // stub out the http communication part of the announce request
-        '@_local/core': mockInstanaCoreHttp()
+        '@instana/core': mockInstanaCoreHttp()
       });
 
       agentConnection.init({ logger: testUtils.createFakeLogger() }, { pid: 1234 });
@@ -56,7 +56,7 @@ describe('agent connection/bazel', function () {
         fs: mockFs('socket:[12345]'),
 
         // stub out the http communication part of the announce request
-        '@_local/core': mockInstanaCoreHttp()
+        '@instana/core': mockInstanaCoreHttp()
       });
 
       agentConnection.init({ logger: testUtils.createFakeLogger() }, { pid: 1234 });

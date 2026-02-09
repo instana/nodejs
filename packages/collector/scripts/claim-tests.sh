@@ -45,9 +45,13 @@ GENERIC_TESTS=""
 for test_file in $ALL_TESTS; do
   REQUIRED_SIDECARS=""
   
-  # Scan the test file AND any sibling js/mjs files (app.js, test_base.js) for requirements
+  # Scan the test directory AND parent (for _v* dirs where app.js lives in the parent) for requirements
   TEST_DIR=$(dirname "$test_file")
-  USED_ENVS=$(find -L "$TEST_DIR" -maxdepth 1 \( -name "*.js" -o -name "*.mjs" \) -exec grep -h -o "INSTANA_CONNECT_[A-Z0-9_]*" {} + 2>/dev/null | sort | uniq)
+  SCAN_DIR="$TEST_DIR"
+  if echo "$TEST_DIR" | grep -q '/_v[^/]*$'; then
+    SCAN_DIR="$(dirname "$TEST_DIR")"
+  fi
+  USED_ENVS=$(find -L "$SCAN_DIR" -maxdepth 1 \( -name "*.js" -o -name "*.mjs" \) -exec grep -h -o "INSTANA_CONNECT_[A-Z0-9_]*" {} + 2>/dev/null | sort | uniq)
 
   
   if [ -n "$USED_ENVS" ]; then
@@ -148,7 +152,11 @@ for test_file in $FINAL_LIST; do
   
   # Check Sidecar Quota
   TEST_DIR_CHECK=$(dirname "$test_file")
-  USED_ENVS_CHECK=$(find -L "$TEST_DIR_CHECK" -maxdepth 1 \( -name "*.js" -o -name "*.mjs" \) -exec grep -h -o "INSTANA_CONNECT_[A-Z0-9_]*" {} + 2>/dev/null | sort | uniq)
+  SCAN_DIR_CHECK="$TEST_DIR_CHECK"
+  if echo "$TEST_DIR_CHECK" | grep -q '/_v[^/]*$'; then
+    SCAN_DIR_CHECK="$(dirname "$TEST_DIR_CHECK")"
+  fi
+  USED_ENVS_CHECK=$(find -L "$SCAN_DIR_CHECK" -maxdepth 1 \( -name "*.js" -o -name "*.mjs" \) -exec grep -h -o "INSTANA_CONNECT_[A-Z0-9_]*" {} + 2>/dev/null | sort | uniq)
   
   QUOTA_EXCEEDED=false
   QUOTA_CHECK_REQ=""
