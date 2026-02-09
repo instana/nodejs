@@ -661,7 +661,8 @@ module.exports = function (name, version, isLatest) {
             }));
       }
 
-      it('[queryindexes] must trace', () =>
+      // https://github.com/couchbase/couchnode/issues/138
+      it.skip('[queryindexes] must trace', () =>
         controls
           .sendRequest({
             method: 'post',
@@ -756,7 +757,8 @@ module.exports = function (name, version, isLatest) {
           }));
 
       if (apiType === 'promise') {
-        it('[multiple connections] must trace', () =>
+        // https://github.com/couchbase/couchnode/issues/138
+        it.skip('[multiple connections] must trace', () =>
           controls
             .sendRequest({
               method: 'get',
@@ -912,7 +914,7 @@ module.exports = function (name, version, isLatest) {
                 return retry(() =>
                   verifySpans(agentControls, controls, {
                     sql: 'REMOVE',
-                    error: apiType === 'promise' ? 'invalid argument' : 'document not found'
+                    error: apiType === 'promise' ? 'invalid_argument' : 'document not found'
                   })
                 );
               }));

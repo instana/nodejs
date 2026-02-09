@@ -110,13 +110,14 @@ if [ -n "$SIDECAR_COUNTS" ]; then
   for entry in "${ADDR[@]}"; do
     sidecar="${entry%%=*}"
     count="${entry##*=}"
-    if [ -n "$sidecar" ] && [ -n "$count" ] && [ "$count" -gt 0 ]; then
-       total_req=$(eval echo "\${REQ_COUNTS_${sidecar}:-0}")
+    # Sanitize: bash variable names cannot contain hyphens
+    sidecar_var=$(echo "$sidecar" | tr '-' '_')
+    if [ -n "$sidecar_var" ] && [ -n "$count" ] && [ "$count" -gt 0 ]; then
+       total_req=$(eval echo "\${REQ_COUNTS_${sidecar_var}:-0}")
        
        if [ "$total_req" -gt 0 ]; then
          quota=$(( (total_req + count - 1) / count ))
-         eval "SIDECAR_QUOTAS_${sidecar}=$quota"
-         # echo "DEBUG: Quota for $sidecar: $total_req / $count = $quota"
+         eval "SIDECAR_QUOTAS_${sidecar_var}=$quota"
        fi
     fi
   done
