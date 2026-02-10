@@ -89,15 +89,30 @@ _runcollector_get_modes() {
   fi
 }
 
+_runcollector_maybe_refresh_cache() {
+  if [ ! -s "$_RUNCOLLECTOR_CACHE_FILE" ]; then
+    _runcollector_build_cache
+    return
+  fi
+
+  # Rebuild in background if cache is older than 5 minutes
+  local max_age=300
+  local now
+  now=$(date +%s)
+  local file_mod
+  file_mod=$(stat -f %m "$_RUNCOLLECTOR_CACHE_FILE" 2>/dev/null || stat -c %Y "$_RUNCOLLECTOR_CACHE_FILE" 2>/dev/null)
+  if [ -n "$file_mod" ] && [ $((now - file_mod)) -gt $max_age ]; then
+    (_runcollector_build_cache &) 2>/dev/null
+  fi
+}
+
 _runcollector_completions() {
   local old_wordbreaks="$COMP_WORDBREAKS"
   COMP_WORDBREAKS="${COMP_WORDBREAKS//@/}"
 
   local cur="${COMP_WORDS[COMP_CWORD]}"
 
-  if [ ! -s "$_RUNCOLLECTOR_CACHE_FILE" ]; then
-    _runcollector_build_cache
-  fi
+  _runcollector_maybe_refresh_cache
 
   # Determine which argument we're completing (skip flags like -nw)
   local arg_index=0
