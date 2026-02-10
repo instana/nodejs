@@ -52,12 +52,13 @@ if (process.env.SKIP_TGZ !== 'true') {
   if (fs.existsSync(preinstallScript)) {
     const tgzChecksumPath = path.join(testDir, '.tgz-checksum');
     const tgzLockPath = path.join(testDir, '.tgz-lock');
+    const preinstalledArchive = path.join(testDir, 'preinstalled-node-modules', 'node_modules.tar.gz');
     const srcDirs = ['collector', 'core', 'shared-metrics'].map(p => path.join(rootDir, 'packages', p, 'src'));
     const tgzHash = hashDirectories(srcDirs);
 
     let needsTgzRegen = true;
     try {
-      needsTgzRegen = fs.readFileSync(tgzChecksumPath, 'utf8').trim() !== tgzHash;
+      needsTgzRegen = fs.readFileSync(tgzChecksumPath, 'utf8').trim() !== tgzHash || !fs.existsSync(preinstalledArchive);
     } catch (_) {
       // first run
     }
