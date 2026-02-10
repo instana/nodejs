@@ -20,17 +20,34 @@ _runcollector_build_cache() {
   local test_base="$_RUNCOLLECTOR_REPO_ROOT/packages/collector/test"
 
   {
+    # Directories containing test_base.js
     find "$test_base" -name node_modules -prune -o -path "*/_v*" -prune -o -name "test_base.js" -print 2>/dev/null | while IFS= read -r f; do
-      local d name parent
+      local d name parent grandparent
       d=$(dirname "$f")
       name=$(basename "$d")
       parent=$(basename "$(dirname "$d")")
       [[ "$parent" == @* ]] && name="$parent/$name"
       echo "$name"
+      # Also store parent/name for nested directories (e.g. sdk/allowRootExitSpans)
+      grandparent=$(basename "$(dirname "$(dirname "$d")")")
+      if [[ "$parent" != @* && "$parent" != "test" && "$parent" != "integration" && "$parent" != "unit" && "$parent" != "misc" && "$parent" != "metrics" && "$parent" != "currencies" && "$parent" != "databases" && "$parent" != "messaging" && "$parent" != "protocols" && "$parent" != "logging" && "$parent" != "frameworks" && "$parent" != "cloud" ]]; then
+        echo "$parent/$name"
+      fi
     done
 
+    # Directories containing *.test.js directly (non-generated, non-versioned)
     find "$test_base" -name node_modules -prune -o -path "*/_v*" -prune -o -name "*.test.js" -print 2>/dev/null | while IFS= read -r f; do
-      basename "$f" .test.js
+      local d name parent
+      d=$(dirname "$f")
+      name=$(basename "$d")
+      parent=$(basename "$(dirname "$d")")
+      # Skip if directory is directly under a known category
+      if [[ "$name" != "test" && "$name" != "integration" && "$name" != "unit" ]]; then
+        echo "$name"
+        if [[ "$parent" != @* && "$parent" != "test" && "$parent" != "integration" && "$parent" != "unit" && "$parent" != "misc" && "$parent" != "metrics" && "$parent" != "currencies" && "$parent" != "databases" && "$parent" != "messaging" && "$parent" != "protocols" && "$parent" != "logging" && "$parent" != "frameworks" && "$parent" != "cloud" ]]; then
+          echo "$parent/$name"
+        fi
+      fi
     done
   } | sort -u > "$_RUNCOLLECTOR_CACHE_FILE"
 }

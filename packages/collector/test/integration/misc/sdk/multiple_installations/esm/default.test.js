@@ -40,6 +40,7 @@ describe('[ESM] sdk/multiple_installations', function () {
     const nodeOptions = '--import ./load-instana.mjs';
     controls = new ProcessControls({
       dirname: __dirname,
+      appPath: path.join(__dirname, 'src', 'app.mjs'),
       useGlobalAgent: true,
       cwd: path.join(__dirname, 'src'),
       env: {
