@@ -72,21 +72,15 @@ if (process.env.SKIP_TGZ !== 'true') {
       };
 
       if (isCI()) {
-        acquireLock(tgzLockPath, () => {
-          // Double-check: another process might have already generated it
+        const isStillNeeded = () => {
           try {
-            const currentChecksum = fs.readFileSync(tgzChecksumPath, 'utf8').trim();
-            if (currentChecksum === tgzHash) {
-              // eslint-disable-next-line no-console
-              console.log('[INFO] Another process already regenerated tgz packages.');
-              return;
-            }
+            return fs.readFileSync(tgzChecksumPath, 'utf8').trim() !== tgzHash || !fs.existsSync(preinstalledArchive);
           } catch (_) {
-            // Checksum doesn't exist, proceed with generation
+            return true;
           }
+        };
 
-          regenerate();
-        });
+        acquireLock(tgzLockPath, regenerate, isStillNeeded);
       } else {
         regenerate();
       }
@@ -136,8 +130,9 @@ function hashTemplates(dir, h) {
  *
  * @param {string} lockPath - Path to the lock file
  * @param {Function} callback - Function to execute while holding the lock
+ * @param {Function} [isStillNeeded] - If provided, checked after waiting. Skips lock acquisition if returns false.
  */
-function acquireLock(lockPath, callback) {
+function acquireLock(lockPath, callback, isStillNeeded) {
   const maxWaitTime = 10 * 60 * 1000;
   const checkInterval = 1000 * 5;
   const startTime = Date.now();
@@ -172,6 +167,13 @@ function acquireLock(lockPath, callback) {
       console.log('[INFO] Waiting for another process to finish generation...');
       execSync(`sleep ${checkInterval / 1000}`);
       continue;
+    }
+
+    // After waiting, check if work is still needed before acquiring
+    if (isStillNeeded && !isStillNeeded()) {
+      // eslint-disable-next-line no-console
+      console.log('[INFO] Another process already completed the generation.');
+      return;
     }
 
     // Try to acquire lock
