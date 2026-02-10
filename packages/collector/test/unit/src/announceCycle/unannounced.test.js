@@ -34,8 +34,8 @@ describe('unannounced state', () => {
       secretsStub = sinon.stub(secrets);
       pidStoreStub = sinon.stub();
 
-      unannouncedState = proxyquire('../../src/announceCycle/unannounced', {
-        '@_local/core': {
+      unannouncedState = proxyquire('../../../../src/announceCycle/unannounced', {
+        '@instana/core': {
           secrets: secretsStub,
           tracing: tracingStub
         },
