@@ -158,7 +158,7 @@ module.exports = function (name, version, isLatest, mode) {
     }
   }
 
-  mochaSuiteFn(`redis@${redisVersion}`, function () {
+  mochaSuiteFn(`redis@${version}`, function () {
     globalAgent.setUpCleanUpHooks();
     let controls;
 
