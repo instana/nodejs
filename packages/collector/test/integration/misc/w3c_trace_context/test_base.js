@@ -5,7 +5,6 @@
 
 'use strict';
 
-const path = require('path');
 const { expect } = require('chai');
 
 const portfinder = require('@_local/collector/test/test_util/portfinder');

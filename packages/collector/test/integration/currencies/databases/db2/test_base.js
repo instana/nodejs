@@ -5,7 +5,6 @@
 'use strict';
 
 const dns = require('dns').promises;
-const path = require('path');
 const expect = require('chai').expect;
 
 const { supportedVersion, constants } = require('@_local/core').tracing;

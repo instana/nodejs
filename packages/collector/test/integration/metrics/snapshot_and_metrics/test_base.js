@@ -7,7 +7,6 @@
 
 const _ = require('lodash');
 const expect = require('chai').expect;
-const path = require('path');
 
 const config = require('@_local/core/test/config');
 const { retry } = require('@_local/core/test/test_util');

@@ -5,7 +5,6 @@
 'use strict';
 
 const expect = require('chai').expect;
-const path = require('path');
 
 const config = require('@_local/core/test/config');
 const { delay, retry } = require('@_local/core/test/test_util');

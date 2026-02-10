@@ -5,7 +5,6 @@
 'use strict';
 
 const { expect } = require('chai');
-const path = require('path');
 
 const config = require('@_local/core/test/config');
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
