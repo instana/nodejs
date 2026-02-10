@@ -101,7 +101,7 @@ app.post('/subscription', (req, res) => establishSubscription(req, res));
 
 app.post('/publish-update-via-http', async (req, res) => {
   try {
-    await fetch(`${serverBaseUrl}/publish-update`, {
+    const response = await fetch(`${serverBaseUrl}/publish-update`, {
       method: 'POST',
       url: `${serverBaseUrl}/publish-update`,
       body: JSON.stringify({
@@ -118,7 +118,7 @@ app.post('/publish-update-via-http', async (req, res) => {
       throw new Error(`Failed to publish update: ${response.statusText}`);
     }
 
-    res.sendStatus(200);
+    res.send(response.json());
   } catch (err) {
     log(err);
     res.status(500).send(err.message);
