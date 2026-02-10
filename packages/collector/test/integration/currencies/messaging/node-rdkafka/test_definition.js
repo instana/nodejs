@@ -33,6 +33,7 @@ module.exports.run = function ({
   objectModeMethods,
   withErrorMethods,
   RUN_SINGLE_TEST,
+  runOtherTests = true,
   SINGLE_TEST_PROPS
 }) {
   const libraryEnv = { LIBRARY_VERSION: version, LIBRARY_NAME: name, LIBRARY_LATEST: isLatest };
@@ -287,6 +288,8 @@ module.exports.run = function ({
           : ''
     ]);
   }
+
+  if (!runOtherTests) return;
 
   describe('tracing enabled, header format string', function () {
     let producerControls;

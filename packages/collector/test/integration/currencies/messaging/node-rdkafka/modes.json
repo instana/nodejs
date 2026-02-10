@@ -1,1 +1,1 @@
-["withDeliveryCb", "withoutDeliveryCb"]
+["withDeliveryCbAndStandardProducer", "withDeliveryCbAndStreamProducer", "withoutDeliveryCbAndStandardProducer", "withoutDeliveryCbAndStreamProducer", "other"]
