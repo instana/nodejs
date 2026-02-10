@@ -178,6 +178,7 @@ mochaSuiteFn(suiteTitle, function () {
     const preinstalledMod = require('@_local/collector/test/test_util/preinstalled-node-modules');
     preinstalledMod.extractPreinstalledPackages(__dirname, { timeout: installTimeout - 1000 });
 
+    log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
     execSync('npm install --no-package-lock --no-audit --prefix ./ --no-progress', {
       cwd: __dirname,
       stdio: 'inherit',

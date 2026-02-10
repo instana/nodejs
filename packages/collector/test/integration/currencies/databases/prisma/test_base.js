@@ -24,6 +24,7 @@ module.exports = function (name, version, isLatest, mode) {
     this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
 
     const provider = mode; // mode is either 'sqlite' or 'postgresql'
+    const majorVersion = parseInt(version, 10);
 
     if (provider === 'postgresql' && !process.env.INSTANA_CONNECT_POSTGRES_PRISMA_URL) {
         throw new Error('PRISMA_POSTGRES_URL is not set.');
@@ -239,11 +240,11 @@ module.exports = function (name, version, isLatest, mode) {
                 span =>
                     // Explanation in https://github.com/instana/nodejs/pull/1114
                     // In v7, SQLite adapter doesn't expose the URL
-                    !(version === 'v4' || (provider === 'sqlite' && isLatest))
+                    !(majorVersion === 4 || (provider === 'sqlite' && isLatest))
                         ? expect(span.data.prisma.url).to.equal(expectedUrl)
                         : expect(span.data.prisma.url).to.equal(''),
                 span => {
-                    if (provider !== 'sqlite' && version !== 'v4') {
+                    if (provider !== 'sqlite' && majorVersion !== 4) {
                         expect(span.data.prisma.url).to.contain('_redacted_');
                     }
                 },

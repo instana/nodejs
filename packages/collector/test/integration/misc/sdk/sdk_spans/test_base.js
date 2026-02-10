@@ -718,7 +718,7 @@ module.exports = function () {
       span => expect(span.data.sdk.name).to.equal('custom-entry'),
       span => expect(span.data.sdk.type).to.equal(constants.SDK.ENTRY),
       span => {
-        expect(span.stack[0].c).to.match(/sdk_spans\/app.js$/);
+        expect(span.stack[0].c).to.match(/sdk_spans\/(_v[^/]+\/)?app.js$/);
         if (functionName && !error) {
           expect(span.stack[0].m).to.match(functionName);
         } else if (error) {
@@ -830,7 +830,7 @@ module.exports = function () {
           : expect(span.data.sdk.name).to.equal(kind === 'INTERMEDIATE' ? 'intermediate-file-access' : 'file-access'),
       span => expect(span.data.sdk.type).to.equal(constants.SDK[kind]),
       span => {
-        expect(span.stack[0].c).to.match(/sdk_spans\/app.js$/);
+        expect(span.stack[0].c).to.match(/sdk_spans\/(_v[^/]+\/)?app.js$/);
         if (functionName) {
           expect(span.stack[0].m).to.match(functionName);
         }
@@ -858,7 +858,7 @@ module.exports = function () {
       span => expect(span.f.e).to.equal(String(pid)),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
       span => expect(span.ec).to.equal(0),
-      span => (checkStack ? expect(span.stack[0].c).to.match(/sdk_spans\/app.js$/) : true),
+      span => (checkStack ? expect(span.stack[0].c).to.match(/sdk_spans\/(_v[^/]+\/)?app.js$/) : true),
       span =>
         checkStack
           ? expect(span.stack[0].m).to.match(apiType === 'async' ? /^nestIntermediatesAsync$/ : /createIntermediate/)
@@ -881,7 +881,7 @@ module.exports = function () {
       span => expect(span.f.e).to.equal(String(pid)),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
       span => expect(span.ec).to.equal(0),
-      span => expect(span.stack[0].c).to.match(/sdk_spans\/app.js$/),
+      span => expect(span.stack[0].c).to.match(/sdk_spans\/(_v[^/]+\/)?app.js$/),
       span => expect(span.stack[0].m).to.match(apiType === 'async' ? /^nest.*Async$/ : /createExit/),
       span => expect(span.data.sdk).to.exist,
       span => expect(span.data.sdk.name).to.equal('custom-exit'),

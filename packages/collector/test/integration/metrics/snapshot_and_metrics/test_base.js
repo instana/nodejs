@@ -59,8 +59,9 @@ module.exports = function () {
 
         const deps = findMetric(allMetrics, ['dependencies']);
         expect(deps).to.be.an('object');
-
-        expect(Object.keys(deps)).to.have.lengthOf(1);
+        // The generated _v1.0.0/ package.json includes @instana/* tgz dependencies
+        // in addition to the app's own dependencies, so we check for at least 1.
+        expect(Object.keys(deps)).to.have.lengthOf.at.least(1);
         expect(deps['node-fetch']).to.equal('2.6.0');
 
         expect(findMetric(allMetrics, ['description'])).to.equal(
