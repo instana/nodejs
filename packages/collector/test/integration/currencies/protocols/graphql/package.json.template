@@ -1,8 +1,11 @@
 {
   "dependencies": {
+    "@apollo/server": "latest",
+    "@as-integrations/express5": "latest",
     "amqplib": "latest",
     "graphql-subscriptions": "latest",
     "graphql-ws": "latest",
-    "pino": "latest"
+    "pino": "latest",
+    "ws": "latest"
   }
 }

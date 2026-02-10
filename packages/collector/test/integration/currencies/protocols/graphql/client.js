@@ -99,28 +99,31 @@ app.post('/mutation', (req, res) =>
 
 app.post('/subscription', (req, res) => establishSubscription(req, res));
 
-app.post('/publish-update-via-http', (req, res) =>
-  fetch(`${serverBaseUrl}/publish-update`, {
-    method: 'POST',
-    url: `${serverBaseUrl}/publish-update`,
-    body: JSON.stringify({
-      id: req.body.id || 1,
-      name: req.body.name || 'Updated Name',
-      profession: req.body.profession || 'Updated Profession'
-    }),
-    headers: {
-      'Content-Type': 'application/json'
+app.post('/publish-update-via-http', async (req, res) => {
+  try {
+    await fetch(`${serverBaseUrl}/publish-update`, {
+      method: 'POST',
+      url: `${serverBaseUrl}/publish-update`,
+      body: JSON.stringify({
+        id: req.body?.id || 1,
+        name: req.body?.name || 'Updated Name',
+        profession: req.body?.profession || 'Updated Profession'
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to publish update: ${response.statusText}`);
     }
-  })
-    .then(response => response.json())
-    .then(response => {
-      res.send(response);
-    })
-    .catch(e => {
-      log(e);
-      res.sendStatus(500);
-    })
-);
+
+    res.sendStatus(200);
+  } catch (err) {
+    log(err);
+    res.status(500).send(err.message);
+  }
+});
 
 app.post('/publish-update-via-graphql', (req, res) =>
   runMutation(req, res, {

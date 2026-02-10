@@ -243,7 +243,7 @@ class ProcessControls {
       console.log('[ProcessControls] server is up.');
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.log(`[ProcessControls] error: ${err}`);
+      console.log(`[ProcessControls] error: ${err}${err.cause ? ` | cause: ${err.cause}` : ''}`);
       throw err;
     }
   }
