@@ -88,7 +88,7 @@ class AgentStubControls {
   }
 
   async waitUntilAgentHasStarted() {
-    const url = `http://127.0.0.1:${this.agentPort}/ping`;
+    const url = `http://127.0.0.1:${this.agentPort}`;
 
     // eslint-disable-next-line no-console
     console.log(`[AgentStubControls] starting: ${url}`);
@@ -97,7 +97,7 @@ class AgentStubControls {
       await retry(() =>
         fetch(url, {
           method: 'GET',
-          url
+          url: `${url}/ping`
         })
       );
 
