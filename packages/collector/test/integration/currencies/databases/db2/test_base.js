@@ -1248,7 +1248,8 @@ module.exports = function (name, version, isLatest) {
 
         controls = new ProcessControls({
           useGlobalAgent: true,
-          appPath: path.join(__dirname, 'allowRootExitSpanApp'),
+          dirname: __dirname,
+          appName: 'allowRootExitSpanApp',
           env: {
             DB2_CONN_STR,
             DB2_DATABASE_NAME,

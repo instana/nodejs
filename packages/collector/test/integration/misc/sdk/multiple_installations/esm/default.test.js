@@ -42,7 +42,6 @@ describe('[ESM] sdk/multiple_installations', function () {
       dirname: __dirname,
       useGlobalAgent: true,
       cwd: path.join(__dirname, 'src'),
-      appPath: path.join(__dirname, 'src', 'app.mjs'),
       env: {
         NODE_OPTIONS: nodeOptions,
         INSTANA_COLLECTOR_PATH: pathToSeparateInstanaCollector

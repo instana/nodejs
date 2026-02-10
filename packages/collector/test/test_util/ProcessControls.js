@@ -23,6 +23,7 @@ class ProcessControls {
   /**
    * @typedef {Object} ProcessControlsOptions
    * @property {string} [appPath]
+   * @property {string} [appName]
    * @property {string} [cwd]
    * @property {number} [port]
    * @property {string} [dirname]

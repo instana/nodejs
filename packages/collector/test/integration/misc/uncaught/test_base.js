@@ -25,7 +25,8 @@ module.exports = function () {
     await agentControls.startAgent();
 
     serverControls = new ProcessControls({
-      appPath: path.join(__dirname, 'apps', 'server'),
+      dirname: __dirname,
+      appName: 'server',
       dontKillInAfterHook: false,
       agentControls,
       env: {

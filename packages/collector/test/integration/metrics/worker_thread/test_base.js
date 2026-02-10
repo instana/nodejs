@@ -23,7 +23,7 @@ module.exports = function () {
 
     before(async () => {
       controls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
+        dirname: __dirname,
         cwd: __dirname,
         useGlobalAgent: true
       });
@@ -52,7 +52,7 @@ module.exports = function () {
 
     before(async () => {
       controls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
+        dirname: __dirname,
         cwd: __dirname,
         useGlobalAgent: true,
         env: {
@@ -84,7 +84,7 @@ module.exports = function () {
 
     before(async () => {
       controls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
+        dirname: __dirname,
         cwd: __dirname,
         useGlobalAgent: true,
         env: {

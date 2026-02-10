@@ -60,7 +60,6 @@ describe('[CJS] sdk/multiple_installations', function () {
       dirname: __dirname,
       useGlobalAgent: true,
       cwd: path.join(__dirname, 'src'),
-      appPath: path.join(__dirname, 'src', 'app'),
       env: {
         NODE_OPTIONS: '--require ./load-instana.js',
         INSTANA_COLLECTOR_PATH: pathToSeparateInstanaCollector

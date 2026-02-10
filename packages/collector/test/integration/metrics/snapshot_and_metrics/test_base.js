@@ -24,7 +24,7 @@ module.exports = function () {
   before(async () => {
     controls = new ProcessControls({
       dirname: __dirname,
-      appPath: path.join(__dirname, 'app'),
+      appName: 'app',
       args: ['foo', 'bar', 'baz'],
       useGlobalAgent: true
     });

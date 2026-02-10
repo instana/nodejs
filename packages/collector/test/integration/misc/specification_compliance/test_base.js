@@ -65,7 +65,7 @@ module.exports = function () {
         before(async () => {
           downstreamTarget = new ProcessControls({
             dirname: __dirname,
-            appPath: path.join(__dirname, 'downstreamTarget'),
+            appName: 'downstreamTarget',
             useGlobalAgent: true,
             http2,
             env: {

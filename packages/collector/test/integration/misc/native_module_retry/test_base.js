@@ -142,6 +142,7 @@ module.exports = function () {
           );
 
           controls = new ProcessControls({
+            dirname: __dirname,
             appPath: path.join(tmpFolder, 'app'),
             agentControls,
             useGlobalAgent: true,

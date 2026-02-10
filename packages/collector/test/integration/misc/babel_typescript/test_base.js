@@ -62,6 +62,7 @@ module.exports = function () {
 
     before(async () => {
       controls = new ProcessControls({
+        dirname: __dirname,
         appPath: babelAppDir,
         useGlobalAgent: true,
         env: {

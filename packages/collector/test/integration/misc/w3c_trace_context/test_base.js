@@ -44,7 +44,6 @@ module.exports = function () {
 
           instanaAppControls = new ProcessControls({
             dirname: __dirname,
-            appPath: path.join(__dirname, 'app'),
             useGlobalAgent: true,
             http2,
             env: {
@@ -55,7 +54,6 @@ module.exports = function () {
           });
           otherVendorAppControls = new ProcessControls({
             dirname: __dirname,
-            appPath: path.join(__dirname, 'app'),
             port: otherVendorAppPort,
             http2,
             // not passing agent controls because this app will not connect to the agent
