@@ -51,6 +51,7 @@ if (process.env.SKIP_TGZ !== 'true') {
 
   if (fs.existsSync(preinstallScript)) {
     const tgzChecksumPath = path.join(testDir, '.tgz-checksum');
+    const tgzLockPath = path.join(testDir, '.tgz-lock');
     const srcDirs = ['collector', 'core', 'shared-metrics'].map(p => path.join(rootDir, 'packages', p, 'src'));
     const tgzHash = hashDirectories(srcDirs);
 
@@ -62,13 +63,28 @@ if (process.env.SKIP_TGZ !== 'true') {
     }
 
     if (needsTgzRegen) {
-      // eslint-disable-next-line no-console
-      console.log('[INFO] Source changed — regenerating tgz packages...');
-      execSync(`bash "${preinstallScript}"`, { cwd: testDir, stdio: 'inherit' });
-      fs.writeFileSync(tgzChecksumPath, tgzHash);
+      // Acquire lock for TGZ generation
+      acquireLock(tgzLockPath, () => {
+        // Double-check: another process might have already generated it
+        try {
+          const currentChecksum = fs.readFileSync(tgzChecksumPath, 'utf8').trim();
+          if (currentChecksum === tgzHash) {
+            // eslint-disable-next-line no-console
+            console.log('[INFO] Another process already regenerated tgz packages.');
+            return;
+          }
+        } catch (_) {
+          // Checksum doesn't exist, proceed with generation
+        }
+
+        // eslint-disable-next-line no-console
+        console.log('[INFO] Source changed — regenerating tgz packages and preinstalled node_modules...');
+        execSync(`bash "${preinstallScript}"`, { cwd: testDir, stdio: 'inherit' });
+        fs.writeFileSync(tgzChecksumPath, tgzHash);
+      });
     } else {
       // eslint-disable-next-line no-console
-      console.log('[INFO] tgz packages up to date, skipping generation.');
+      console.log('[INFO] tgz packages and preinstalled node_modules up to date, skipping generation.');
     }
   }
 }
@@ -97,7 +113,99 @@ function hashTemplates(dir, h) {
     .forEach(entry => {
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) hashTemplates(full, h);
-      else if (entry.name === 'package.json.template' || entry.name === 'modes.json') h.update(fs.readFileSync(full, 'utf8'));
+      else if (entry.name === 'package.json.template' || entry.name === 'modes.json')
+        h.update(fs.readFileSync(full, 'utf8'));
       else if (entry.name === 'test_base.js') h.update(full);
     });
+}
+
+/**
+ * Acquires a file-based lock for exclusive access.
+ * If lock is held by another process, waits until it's released.
+ *
+ * @param {string} lockPath - Path to the lock file
+ * @param {Function} callback - Function to execute while holding the lock
+ */
+function acquireLock(lockPath, callback) {
+  const maxWaitTime = 10 * 60 * 1000; // 10 minutes max wait
+  const checkInterval = 500; // Check every 500ms
+  const startTime = Date.now();
+  const lockTimeout = 15 * 60 * 1000; // Lock expires after 15 minutes (stale lock detection)
+
+  function tryAcquire() {
+    const lockExists = fs.existsSync(lockPath);
+
+    if (lockExists) {
+      try {
+        const lockData = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+        const lockAge = Date.now() - lockData.timestamp;
+
+        // If lock is stale (older than 15 min), remove it
+        if (lockAge > lockTimeout) {
+          // eslint-disable-next-line no-console
+          console.log('[WARN] Removing stale lock file');
+          try {
+            fs.unlinkSync(lockPath);
+          } catch (_) {
+            // Another process might have already removed it
+            // eslint-disable-next-line no-empty
+          }
+          return tryAcquire();
+        }
+
+        // Lock is held by another process
+        if (Date.now() - startTime > maxWaitTime) {
+          throw new Error(`Timeout waiting for lock at ${lockPath}`);
+        }
+
+        // eslint-disable-next-line no-console
+        console.log('[INFO] Waiting for another process to finish generation...');
+        setTimeout(tryAcquire, checkInterval);
+      } catch (err) {
+        if (err instanceof SyntaxError) {
+          // Corrupted lock file, try again
+          try {
+            fs.unlinkSync(lockPath);
+          } catch (_) {
+            // eslint-disable-next-line no-empty
+          }
+          return tryAcquire();
+        }
+        throw err;
+      }
+      return;
+    }
+
+    // Try to acquire lock
+    try {
+      const lockData = { timestamp: Date.now(), pid: process.pid };
+      fs.writeFileSync(lockPath, JSON.stringify(lockData), { flag: 'wx' }); // 'wx' = write exclusive
+      // eslint-disable-next-line no-console
+      console.log('[INFO] Lock acquired, starting generation...');
+    } catch (err) {
+      // Another process acquired it first
+      if (Date.now() - startTime > maxWaitTime) {
+        throw new Error(`Timeout waiting for lock at ${lockPath}`);
+      }
+      setTimeout(tryAcquire, checkInterval);
+      return;
+    }
+
+    // Execute callback while holding lock
+    try {
+      callback();
+    } finally {
+      // Release lock
+      try {
+        fs.unlinkSync(lockPath);
+        // eslint-disable-next-line no-console
+        console.log('[INFO] Lock released');
+      } catch (_) {
+        // Lock might have been removed already
+        // eslint-disable-next-line no-empty
+      }
+    }
+  }
+
+  tryAcquire();
 }

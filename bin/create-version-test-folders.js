@@ -138,42 +138,54 @@ function cleanupCopiedFiles(files) {
   });
 }
 
-${esmOnly ? `if (!process.env.RUN_ESM) {
+${
+  esmOnly
+    ? `if (!process.env.RUN_ESM) {
   it.skip('tracing/${suiteName}@${displayVersion} (ESM-only, set RUN_ESM=true)');
   return;
 }
 
-` : ''}const esmPrefix = process.env.RUN_ESM ? '[ESM] ' : '';
+`
+    : ''
+}const esmPrefix = process.env.RUN_ESM ? '[ESM] ' : '';
 const suiteTitle = esmPrefix + 'tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}';
 mochaSuiteFn(suiteTitle, function () {
   this.timeout(config.getTestTimeout());
-  const sourceDir = path.resolve(__dirname, '${relSourcePath}');
   try { fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true }); } catch (_) {}
-  const copiedFiles = copyParentFiles(__dirname, sourceDir);
+  const copiedFiles = copyParentFiles(__dirname, path.resolve(__dirname, '${relSourcePath}'));
   const cleanup = () => cleanupCopiedFiles(copiedFiles);
   after(() => cleanup());
   process.once('exit', cleanup);
   process.once('SIGINT', () => { cleanup(); process.exit(130); });
   process.once('SIGTERM', () => { cleanup(); process.exit(143); });
-  
+
   before(async function () {
     const installTimeout = config.getNPMInstallTimeout();
     const staggerDelay = process.env.CI ? Math.floor(Math.random() * 1000 * 15) : 0;
     this.timeout(installTimeout + staggerDelay);
 
     if (staggerDelay > 0) {
-      console.log('[INFO] Staggering npm install by ' + (staggerDelay / 1000).toFixed(1) + 's...');
+      console.log(\`[INFO] Staggering dependency setup by \${(staggerDelay / 1000).toFixed(1)}s...\`);
       await new Promise(resolve => setTimeout(resolve, staggerDelay));
     }
 
-    console.log('[INFO] Installing dependencies for ${suiteName}@${displayVersion}...');
+    console.log('[INFO] Setting up dependencies for ${suiteName}@${displayVersion}...');
     execSync('rm -rf node_modules', { cwd: __dirname });
+
+    // eslint-disable-next-line global-require,import/no-dynamic-require
+    const preinstalledMod = require('@_local/collector/test/test_util/preinstalled-node-modules');
+    preinstalledMod.extractPreinstalledPackages(__dirname, { timeout: installTimeout - 1000 });
+
     execSync('npm install --no-package-lock --no-audit --prefix ./ --no-progress', {
-      cwd: __dirname, stdio: 'inherit', timeout: installTimeout - 1000
+      cwd: __dirname,
+      stdio: 'inherit',
+      timeout: installTimeout - 1000
     });
-    console.log('[INFO] Done installing dependencies for ${suiteName}@${displayVersion}');
+
+    console.log('[INFO] Done setting up dependencies for ${suiteName}@${displayVersion}');
   });
 
+  // eslint-disable-next-line global-require,import/no-dynamic-require,import/extensions
   const testBase = require('./test_base');
   testBase.call(this, '${suiteName}', '${rawVersion}', ${isLatest}${mode ? `, '${mode}'` : ''});
 });
