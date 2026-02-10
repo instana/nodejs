@@ -39,7 +39,7 @@ if (vendor === 'instana') {
 let cls;
 if (isInstana()) {
   require('@instana/collector')();
-  cls = require('@_local/core/src/tracing/cls');
+  cls = require('@instana/core/src/tracing/cls');
 }
 
 const fs = require('fs');
