@@ -11,7 +11,16 @@ const { retry, expectAtLeastOneMatching, getSpansByName, delay, stringifyItems }
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
 
-module.exports = function (name, version, isLatest) {
+module.exports = function (name, version, isLatest, mode) {
+    const modeConfig = {
+        logMethod: { useGlobalLogger: false, useLevelMethod: false },
+        levelMethod: { useGlobalLogger: false, useLevelMethod: true },
+        globalLogMethod: { useGlobalLogger: true, useLevelMethod: false },
+        globalLevelMethod: { useGlobalLogger: true, useLevelMethod: true }
+    };
+
+    const activeMode = modeConfig[mode];
+
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
@@ -44,7 +53,10 @@ module.exports = function (name, version, isLatest) {
     });
 
     [false, true].forEach(useGlobalLogger =>
-        [false, true].forEach(useLevelMethod =>
+        [false, true].forEach(useLevelMethod => {
+            if (useGlobalLogger !== activeMode.useGlobalLogger) return;
+            if (useLevelMethod !== activeMode.useLevelMethod) return;
+
             [
                 'string-only',
                 'string-plus-additional-message',
@@ -73,8 +85,8 @@ module.exports = function (name, version, isLatest) {
                                 });
                         });
                     })
-                )
-        )
+                );
+        })
     );
 
     function runTests(useGlobalLogger, useLevelMethod, variant, level) {
