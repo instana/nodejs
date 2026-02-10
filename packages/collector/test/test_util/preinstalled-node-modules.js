@@ -9,6 +9,11 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const testDir = path.join(__dirname, '..');
+
+function log(msg) {
+  // eslint-disable-next-line no-console
+  console.log(`[${new Date().toISOString()}] ${msg}`);
+}
 const preinstalledArchive = path.join(testDir, 'preinstalled-node-modules', 'node_modules.tar.gz');
 
 /**
@@ -22,22 +27,22 @@ function extractPreinstalledPackages(targetDir, options = {}) {
   const timeout = options.timeout || 30000;
 
   if (!fs.existsSync(preinstalledArchive)) {
-    console.log('[INFO] Preinstalled packages archive not found');
+    log('[INFO] Preinstalled packages archive not found');
     return false;
   }
 
   try {
-    console.log('[INFO] Extracting preinstalled Instana packages...');
+    log('[INFO] Extracting preinstalled Instana packages...');
     execSync(`tar -xzf "${preinstalledArchive}"`, {
       cwd: targetDir,
       stdio: 'inherit',
       timeout
     });
-    console.log('[INFO] Successfully extracted preinstalled Instana packages');
+    log('[INFO] Successfully extracted preinstalled Instana packages');
     return true;
   } catch (err) {
-    console.warn('[WARN] Failed to extract preinstalled packages');
-    console.warn(err.message);
+    log('[WARN] Failed to extract preinstalled packages');
+    log(err.message);
     return false;
   }
 }

@@ -13,6 +13,11 @@ const isCI = require('@_local/core/test/test_util/is_ci');
 
 const rootDir = path.join(__dirname, '..', '..', '..');
 
+function log(msg) {
+  // eslint-disable-next-line no-console
+  console.log(`[${new Date().toISOString()}] ${msg}`);
+}
+
 // NOTE: default docker compose hosts, ports and credentials
 const configPath = path.join(rootDir, 'hosts_config.json');
 const hostsConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -38,8 +43,7 @@ if (!isCI()) {
   }
 
   if (needsRegen) {
-    // eslint-disable-next-line no-console
-    console.log('[INFO] Test folders out of date — regenerating...');
+    log('[INFO] Test folders out of date — regenerating...');
     execSync('node bin/create-version-test-folders.js', { cwd: rootDir, stdio: 'inherit' });
     fs.writeFileSync(checksumPath, currentHash);
   }
@@ -65,8 +69,7 @@ if (process.env.SKIP_TGZ !== 'true') {
 
     if (needsTgzRegen) {
       const regenerate = () => {
-        // eslint-disable-next-line no-console
-        console.log('[INFO] Source changed — regenerating tgz packages and preinstalled node_modules...');
+        log('[INFO] Source changed — regenerating tgz packages and preinstalled node_modules...');
         execSync(`bash "${preinstallScript}"`, { cwd: testDir, stdio: 'inherit' });
         fs.writeFileSync(tgzChecksumPath, tgzHash);
       };
@@ -85,8 +88,7 @@ if (process.env.SKIP_TGZ !== 'true') {
         regenerate();
       }
     } else {
-      // eslint-disable-next-line no-console
-      console.log('[INFO] tgz packages and preinstalled node_modules up to date, skipping generation.');
+      log('[INFO] tgz packages and preinstalled node_modules up to date, skipping generation.');
     }
   }
 }
@@ -150,8 +152,7 @@ function acquireLock(lockPath, callback, isStillNeeded) {
         const lockAge = Date.now() - lockData.timestamp;
 
         if (lockAge > lockTimeout) {
-          // eslint-disable-next-line no-console
-          console.log('[WARN] Removing stale lock file');
+          log('[WARN] Removing stale lock file');
           try { fs.unlinkSync(lockPath); } catch (_) { /* already removed */ }
           continue;
         }
@@ -163,24 +164,21 @@ function acquireLock(lockPath, callback, isStillNeeded) {
         throw err;
       }
 
-      // eslint-disable-next-line no-console
-      console.log('[INFO] Waiting for another process to finish generation...');
+      log('[INFO] Waiting for another process to finish generation...');
       execSync(`sleep ${checkInterval / 1000}`);
       continue;
     }
 
     // After waiting, check if work is still needed before acquiring
     if (isStillNeeded && !isStillNeeded()) {
-      // eslint-disable-next-line no-console
-      console.log('[INFO] Another process already completed the generation.');
+      log('[INFO] Another process already completed the generation.');
       return;
     }
 
     // Try to acquire lock
     try {
       fs.writeFileSync(lockPath, JSON.stringify({ timestamp: Date.now(), pid: process.pid }), { flag: 'wx' });
-      // eslint-disable-next-line no-console
-      console.log('[INFO] Lock acquired, starting generation...');
+      log('[INFO] Lock acquired, starting generation...');
     } catch (_) {
       // Another process acquired it first, retry
       continue;
@@ -191,8 +189,7 @@ function acquireLock(lockPath, callback, isStillNeeded) {
     } finally {
       try {
         fs.unlinkSync(lockPath);
-        // eslint-disable-next-line no-console
-        console.log('[INFO] Lock released.');
+        log('[INFO] Lock released.');
       } catch (_) { /* already removed */ }
     }
 

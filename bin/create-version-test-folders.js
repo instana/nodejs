@@ -147,7 +147,9 @@ ${
 
 `
     : ''
-}const esmPrefix = process.env.RUN_ESM ? '[ESM] ' : '';
+}function log(msg) { console.log(\`[\${new Date().toISOString()}] \${msg}\`); }
+
+const esmPrefix = process.env.RUN_ESM ? '[ESM] ' : '';
 const suiteTitle = esmPrefix + 'tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}';
 mochaSuiteFn(suiteTitle, function () {
   this.timeout(config.getTestTimeout());
@@ -165,11 +167,11 @@ mochaSuiteFn(suiteTitle, function () {
     this.timeout(installTimeout + staggerDelay);
 
     if (staggerDelay > 0) {
-      console.log(\`[INFO] Staggering dependency setup by \${(staggerDelay / 1000).toFixed(1)}s...\`);
+      log(\`[INFO] Staggering dependency setup by \${(staggerDelay / 1000).toFixed(1)}s...\`);
       await new Promise(resolve => setTimeout(resolve, staggerDelay));
     }
 
-    console.log('[INFO] Setting up dependencies for ${suiteName}@${displayVersion}...');
+    log('[INFO] Setting up dependencies for ${suiteName}@${displayVersion}...');
     execSync('rm -rf node_modules', { cwd: __dirname });
 
     // eslint-disable-next-line global-require,import/no-dynamic-require
@@ -182,7 +184,7 @@ mochaSuiteFn(suiteTitle, function () {
       timeout: installTimeout - 1000
     });
 
-    console.log('[INFO] Done setting up dependencies for ${suiteName}@${displayVersion}');
+    log('[INFO] Done setting up dependencies for ${suiteName}@${displayVersion}');
   });
 
   // eslint-disable-next-line global-require,import/no-dynamic-require,import/extensions
