@@ -112,10 +112,13 @@ function hashTemplates(dir, h) {
     .filter(entry => entry.name !== 'node_modules' && !entry.name.startsWith('_v'))
     .forEach(entry => {
       const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) hashTemplates(full, h);
-      else if (entry.name === 'package.json.template' || entry.name === 'modes.json')
+      if (entry.isDirectory()) {
+        hashTemplates(full, h);
+      } else if (entry.name === 'package.json.template' || entry.name === 'modes.json') {
         h.update(fs.readFileSync(full, 'utf8'));
-      else if (entry.name === 'test_base.js') h.update(full);
+      } else if (entry.name === 'test_base.js') {
+        h.update(full);
+      }
     });
 }
 
