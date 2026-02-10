@@ -147,7 +147,7 @@ module.exports = function () {
             agentControls,
             useGlobalAgent: true,
             env: {
-              DEV_PATH: __dirname
+              APP_PORT_MODULE: require.resolve('@_local/collector/test/test_util/app-port')
             }
           });
 

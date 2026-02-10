@@ -16,10 +16,8 @@ require('@instana/collector')({
 });
 
 const http = require('http');
-const path = require('path');
 
-const devPath = process.env.DEV_PATH;
-const port = require(path.join(devPath, '..', 'test_util', 'app-port'))();
+const port = require(process.env.APP_PORT_MODULE)();
 
 const requestHandler = (request, response) => {
   if (request.url === '/') {
