@@ -150,7 +150,7 @@ ${
 }function log(msg) { console.log(\`[\${new Date().toISOString()}] \${msg}\`); }
 
 const esmPrefix = process.env.RUN_ESM ? '[ESM] ' : '';
-const suiteTitle = esmPrefix + 'tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}';
+const suiteTitle = esmPrefix + \`[\${new Date().toISOString()}] tracing/${suiteName}@${displayVersion}${mode ? ` (${mode})` : ''}\`;
 mochaSuiteFn(suiteTitle, function () {
   this.timeout(config.getTestTimeout());
   try { fs.rmSync(path.join(__dirname, 'node_modules'), { recursive: true, force: true }); } catch (_) {}
