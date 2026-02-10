@@ -244,7 +244,7 @@
     "square-calc-v2": "npm:square-calc@2.4.0",
     "stealthy-require": "1.1.1",
     "superagent": "10.3.0",
-    "tedious": "19.2.0",
+    "tedious": "19.2.1",
     "tsoa": "6.6.0",
     "typescript": "5.9.3",
     "underscore": "1.13.1",
