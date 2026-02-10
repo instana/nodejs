@@ -63,25 +63,32 @@ if (process.env.SKIP_TGZ !== 'true') {
     }
 
     if (needsTgzRegen) {
-      // Acquire lock for TGZ generation
-      acquireLock(tgzLockPath, () => {
-        // Double-check: another process might have already generated it
-        try {
-          const currentChecksum = fs.readFileSync(tgzChecksumPath, 'utf8').trim();
-          if (currentChecksum === tgzHash) {
-            // eslint-disable-next-line no-console
-            console.log('[INFO] Another process already regenerated tgz packages.');
-            return;
-          }
-        } catch (_) {
-          // Checksum doesn't exist, proceed with generation
-        }
-
+      const regenerate = () => {
         // eslint-disable-next-line no-console
         console.log('[INFO] Source changed — regenerating tgz packages and preinstalled node_modules...');
         execSync(`bash "${preinstallScript}"`, { cwd: testDir, stdio: 'inherit' });
         fs.writeFileSync(tgzChecksumPath, tgzHash);
-      });
+      };
+
+      if (isCI()) {
+        acquireLock(tgzLockPath, () => {
+          // Double-check: another process might have already generated it
+          try {
+            const currentChecksum = fs.readFileSync(tgzChecksumPath, 'utf8').trim();
+            if (currentChecksum === tgzHash) {
+              // eslint-disable-next-line no-console
+              console.log('[INFO] Another process already regenerated tgz packages.');
+              return;
+            }
+          } catch (_) {
+            // Checksum doesn't exist, proceed with generation
+          }
+
+          regenerate();
+        });
+      } else {
+        regenerate();
+      }
     } else {
       // eslint-disable-next-line no-console
       console.log('[INFO] tgz packages and preinstalled node_modules up to date, skipping generation.');
@@ -131,7 +138,7 @@ function hashTemplates(dir, h) {
  */
 function acquireLock(lockPath, callback) {
   const maxWaitTime = 10 * 60 * 1000;
-  const checkInterval = 500;
+  const checkInterval = 1000 * 5;
   const startTime = Date.now();
   const lockTimeout = 15 * 60 * 1000;
 
