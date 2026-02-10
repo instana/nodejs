@@ -130,85 +130,62 @@ function hashTemplates(dir, h) {
  * @param {Function} callback - Function to execute while holding the lock
  */
 function acquireLock(lockPath, callback) {
-  const maxWaitTime = 10 * 60 * 1000; // 10 minutes max wait
-  const checkInterval = 500; // Check every 500ms
+  const maxWaitTime = 10 * 60 * 1000;
+  const checkInterval = 500;
   const startTime = Date.now();
-  const lockTimeout = 15 * 60 * 1000; // Lock expires after 15 minutes (stale lock detection)
+  const lockTimeout = 15 * 60 * 1000;
 
-  function tryAcquire() {
-    const lockExists = fs.existsSync(lockPath);
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    if (Date.now() - startTime > maxWaitTime) {
+      throw new Error(`Timeout waiting for lock at ${lockPath}`);
+    }
 
-    if (lockExists) {
+    if (fs.existsSync(lockPath)) {
       try {
         const lockData = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
         const lockAge = Date.now() - lockData.timestamp;
 
-        // If lock is stale (older than 15 min), remove it
         if (lockAge > lockTimeout) {
           // eslint-disable-next-line no-console
           console.log('[WARN] Removing stale lock file');
-          try {
-            fs.unlinkSync(lockPath);
-          } catch (_) {
-            // Another process might have already removed it
-            // eslint-disable-next-line no-empty
-          }
-          return tryAcquire();
+          try { fs.unlinkSync(lockPath); } catch (_) { /* already removed */ }
+          continue;
         }
-
-        // Lock is held by another process
-        if (Date.now() - startTime > maxWaitTime) {
-          throw new Error(`Timeout waiting for lock at ${lockPath}`);
-        }
-
-        // eslint-disable-next-line no-console
-        console.log('[INFO] Waiting for another process to finish generation...');
-        setTimeout(tryAcquire, checkInterval);
       } catch (err) {
         if (err instanceof SyntaxError) {
-          // Corrupted lock file, try again
-          try {
-            fs.unlinkSync(lockPath);
-          } catch (_) {
-            // eslint-disable-next-line no-empty
-          }
-          return tryAcquire();
+          try { fs.unlinkSync(lockPath); } catch (_) { /* already removed */ }
+          continue;
         }
         throw err;
       }
-      return;
+
+      // eslint-disable-next-line no-console
+      console.log('[INFO] Waiting for another process to finish generation...');
+      execSync(`sleep ${checkInterval / 1000}`);
+      continue;
     }
 
     // Try to acquire lock
     try {
-      const lockData = { timestamp: Date.now(), pid: process.pid };
-      fs.writeFileSync(lockPath, JSON.stringify(lockData), { flag: 'wx' }); // 'wx' = write exclusive
+      fs.writeFileSync(lockPath, JSON.stringify({ timestamp: Date.now(), pid: process.pid }), { flag: 'wx' });
       // eslint-disable-next-line no-console
       console.log('[INFO] Lock acquired, starting generation...');
-    } catch (err) {
-      // Another process acquired it first
-      if (Date.now() - startTime > maxWaitTime) {
-        throw new Error(`Timeout waiting for lock at ${lockPath}`);
-      }
-      setTimeout(tryAcquire, checkInterval);
-      return;
+    } catch (_) {
+      // Another process acquired it first, retry
+      continue;
     }
 
-    // Execute callback while holding lock
     try {
       callback();
     } finally {
-      // Release lock
       try {
         fs.unlinkSync(lockPath);
         // eslint-disable-next-line no-console
-        console.log('[INFO] Lock released');
-      } catch (_) {
-        // Lock might have been removed already
-        // eslint-disable-next-line no-empty
-      }
+        console.log('[INFO] Lock released.');
+      } catch (_) { /* already removed */ }
     }
-  }
 
-  tryAcquire();
+    return;
+  }
 }
