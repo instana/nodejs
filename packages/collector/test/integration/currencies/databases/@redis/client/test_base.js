@@ -22,13 +22,6 @@ const {
 const ProcessControls = require('@_local/collector/test/test_util/ProcessControls');
 const globalAgent = require('@_local/collector/test/globalAgent');
 
-// v3 is considered the legacy version.
-// - It does not support Redis clustering.
-// - It does not support the newer `@redis/client` package.
-// Clustering support was officially introduced in v4
-// Redis Sentinel support was added in v5.
-const legacyVersion = '3';
-
 /**
  * Supported Redis setups for local testing:
  *
@@ -54,17 +47,10 @@ module.exports = function (name, version, isLatest, mode) {
   const isCluster = mode === 'cluster';
   const isSentinel = mode === 'sentinel';
 
-  const redisVersion = version;
-  const isLegacyVersion = semver.major(redisVersion) <= legacyVersion;
-  const isV4 = semver.major(redisVersion) === 4;
-  const isV3 = semver.major(redisVersion) === 3;
-  const greaterThanV4 = semver.major(redisVersion) > 4;
+  const isV4 = semver.major(version) === 4;
+  const greaterThanV4 = semver.major(version) > 4;
 
   let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
-  if (redisVersion === legacyVersion) {
-    mochaSuiteFn = describe.skip;
-  }
 
   if (isCluster && semver.major(version) < 4) {
     console.log(`Cluster not supported for version ${version}`);
@@ -85,7 +71,7 @@ module.exports = function (name, version, isLatest, mode) {
   }
 
   // The allowRootExitSpanApp is compatable with Redis v4 and v5 (latest).
-  if (!isLegacyVersion && isLegacyMode) {
+  if (isLegacyMode) {
     mochaSuiteFn('When allowRootExitSpan: true is set', function () {
       globalAgent.setUpCleanUpHooks();
       let controls;
@@ -180,8 +166,7 @@ module.exports = function (name, version, isLatest, mode) {
       controls = new ProcessControls({
         dirname: __dirname,
         useGlobalAgent: true,
-        appName:
-          isLegacyVersion ? 'legacyApp' : 'app',
+        appName: 'app',
         env: {
           LIBRARY_LATEST: isLatest,
           LIBRARY_VERSION: version,
@@ -343,10 +328,7 @@ module.exports = function (name, version, isLatest, mode) {
                 span => expect(span.error).to.not.exist,
                 span => expect(span.ec).to.equal(0),
                 span => verifyConnection(mode, span),
-                span =>
-                  isLegacyVersion
-                    ? expect(span.data.redis.command).to.equal('hset')
-                    : expect(span.data.redis.command).to.equal('hSet')
+                span => expect(span.data.redis.command).to.equal('hSet')
               ]);
 
               expectAtLeastOneMatching(spans, [
@@ -360,10 +342,7 @@ module.exports = function (name, version, isLatest, mode) {
                 span => expect(span.error).to.not.exist,
                 span => expect(span.ec).to.equal(0),
                 span => verifyConnection(mode, span),
-                span =>
-                  isLegacyVersion
-                    ? expect(span.data.redis.command).to.equal('hget')
-                    : expect(span.data.redis.command).to.equal('hGetAll')
+                span => expect(span.data.redis.command).to.equal('hGetAll')
               ]);
 
               verifyHttpExit(controls, spans, entrySpan);
@@ -512,69 +491,13 @@ module.exports = function (name, version, isLatest, mode) {
                 span => expect(span.b.u).to.not.exist,
                 span => verifyConnection(mode, span),
                 span => expect(span.data.redis.command).to.equal('multi'),
-                span =>
-                  isLegacyVersion
-                    ? expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
-                    : expect(span.data.redis.subCommands).to.deep.equal(['SET', 'GET'])
+                span => expect(span.data.redis.subCommands).to.deep.equal(['SET', 'GET'])
               ]);
 
               verifyHttpExit(controls, spans, writeEntrySpan);
             })
           )
         ));
-
-    if (isLegacyVersion) {
-      it('must trace multi calls with sub callbacks', () =>
-        controls
-          .sendRequest({
-            method: 'GET',
-            path: '/multi-sub-cb'
-          })
-          .then(() =>
-            retry(() =>
-              agentControls.getSpans().then(spans => {
-                const writeEntrySpan = expectAtLeastOneMatching(spans, [
-                  span => expect(span.n).to.equal('node.http.server'),
-                  span => expect(span.data.http.method).to.equal('GET')
-                ]);
-
-                expectAtLeastOneMatching(spans, [
-                  span => expect(span.t).to.equal(writeEntrySpan.t),
-                  span => expect(span.p).to.equal(writeEntrySpan.s),
-                  span => expect(span.n).to.equal('redis'),
-                  span => expect(span.k).to.equal(constants.EXIT),
-                  span => expect(span.f.e).to.equal(String(controls.getPid())),
-                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                  span => expect(span.async).to.not.exist,
-                  span => expect(span.error).to.not.exist,
-                  span => expect(span.ec).to.equal(1),
-                  // contains two batched span
-                  span => expect(span.b).to.be.an('object'),
-                  span => expect(span.b.s).to.equal(2),
-                  span => expect(span.b.u).to.not.exist,
-                  span => verifyConnection(mode, span),
-                  span =>
-                    isV3
-                      ? expect(span.data.redis.error).to.contain(
-                        "ERR wrong number of arguments for 'hget' command"
-                      )
-                      : expect(span.data.redis.error).to.contain(
-                        'EXECABORT Transaction discarded because of previous errors.'
-                      ),
-                  span => expect(span.data.redis.command).to.equal('multi'),
-                  span =>
-                    isLegacyVersion
-                      ? expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
-                      : expect(span.data.redis.subCommands).to.deep.equal(['SET', 'GET'])
-                ]);
-
-                verifyHttpExit(controls, spans, writeEntrySpan);
-
-                expect(spans.length).to.be.eql(3);
-              })
-            )
-          ));
-    }
 
     it('must trace multi calls without exec waiting', () =>
       controls
@@ -608,10 +531,7 @@ module.exports = function (name, version, isLatest, mode) {
                 span => expect(span.b.u).to.not.exist,
                 span => verifyConnection(mode, span),
                 span => expect(span.data.redis.command).to.equal('multi'),
-                span =>
-                  isLegacyVersion
-                    ? expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
-                    : expect(span.data.redis.subCommands).to.deep.equal(['SET', 'GET'])
+                span => expect(span.data.redis.subCommands).to.deep.equal(['SET', 'GET'])
               ]);
 
               verifyHttpExit(controls, spans, writeEntrySpan);
@@ -650,10 +570,7 @@ module.exports = function (name, version, isLatest, mode) {
                 span => expect(span.b.u).to.not.exist,
                 span => verifyConnection(mode, span),
                 span => expect(span.data.redis.command).to.equal('multi'),
-                span =>
-                  isLegacyVersion
-                    ? expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
-                    : expect(span.data.redis.subCommands).to.deep.equal(['SET', 'GET'])
+                span => expect(span.data.redis.subCommands).to.deep.equal(['SET', 'GET'])
               ]);
 
               verifyHttpExit(controls, spans, writeEntrySpan);
@@ -692,10 +609,7 @@ module.exports = function (name, version, isLatest, mode) {
                 span => expect(span.b.u).to.not.exist,
                 span => verifyConnection(mode, span),
                 span => expect(span.data.redis.command).to.equal('pipeline'),
-                span =>
-                  isLegacyVersion
-                    ? expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
-                    : expect(span.data.redis.subCommands).to.deep.equal(['GET', 'SET'])
+                span => expect(span.data.redis.subCommands).to.deep.equal(['GET', 'SET'])
               ]);
 
               verifyHttpExit(controls, spans, writeEntrySpan);
@@ -734,10 +648,7 @@ module.exports = function (name, version, isLatest, mode) {
                 span => expect(span.b.u).to.not.exist,
                 span => verifyConnection(mode, span),
                 span => expect(span.data.redis.command).to.equal('pipeline'),
-                span =>
-                  isLegacyVersion
-                    ? expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
-                    : expect(span.data.redis.subCommands).to.deep.equal(['GET', 'SET'])
+                span => expect(span.data.redis.subCommands).to.deep.equal(['GET', 'SET'])
               ]);
 
               verifyHttpExit(controls, spans, writeEntrySpan);
@@ -786,12 +697,48 @@ module.exports = function (name, version, isLatest, mode) {
           )
         ));
 
-    if (!isLegacyVersion) {
-      it('must trace hvals', () =>
+    it('must trace hvals', () =>
+      controls
+        .sendRequest({
+          method: 'GET',
+          path: '/hvals'
+        })
+        .then(() =>
+          retry(() =>
+            agentControls.getSpans().then(spans => {
+              const entrySpan = expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.data.http.method).to.equal('GET')
+              ]);
+
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.t).to.equal(entrySpan.t),
+                span => expect(span.p).to.equal(entrySpan.s),
+                span => expect(span.n).to.equal('redis'),
+                span => expect(span.k).to.equal(constants.EXIT),
+                span => expect(span.f.e).to.equal(String(controls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.async).to.not.exist,
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(0),
+                span => verifyConnection(mode, span),
+                span => expect(span.data.redis.command).to.equal('hVals')
+              ]);
+
+              verifyHttpExit(controls, spans, entrySpan);
+
+              expect(spans.length).to.be.eql(3);
+            })
+          )
+        ));
+
+    // scanIterator not available on cluster and sentinel
+    if (mode === 'default') {
+      it('must trace scan iterator usage', () =>
         controls
           .sendRequest({
             method: 'GET',
-            path: '/hvals'
+            path: '/scan-iterator'
           })
           .then(() =>
             retry(() =>
@@ -800,8 +747,12 @@ module.exports = function (name, version, isLatest, mode) {
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET')
                 ]);
+                // NOTE: v5 SCAN iterators yield collection of keys, enabling multi-key commands like MGET.
+                // See: https://github.com/redis/node-redis/blob/master/docs/v4-to-v5.md#scan-iterators
+                const expectedSpanCount = greaterThanV4 ? 1 : 4;
+                const expectedRedisCommand = greaterThanV4 ? 'mGet' : 'get';
 
-                expectAtLeastOneMatching(spans, [
+                expectExactlyNMatching(spans, expectedSpanCount, [
                   span => expect(span.t).to.equal(entrySpan.t),
                   span => expect(span.p).to.equal(entrySpan.s),
                   span => expect(span.n).to.equal('redis'),
@@ -812,63 +763,21 @@ module.exports = function (name, version, isLatest, mode) {
                   span => expect(span.error).to.not.exist,
                   span => expect(span.ec).to.equal(0),
                   span => verifyConnection(mode, span),
-                  span => expect(span.data.redis.command).to.equal('hVals')
+                  span => expect(span.data.redis.command).to.equal(expectedRedisCommand)
                 ]);
 
                 verifyHttpExit(controls, spans, entrySpan);
-
-                expect(spans.length).to.be.eql(3);
               })
             )
           ));
+    }
 
-      // scanIterator not available on cluster and sentinel
-      if (mode === 'default') {
-        it('must trace scan iterator usage', () =>
-          controls
-            .sendRequest({
-              method: 'GET',
-              path: '/scan-iterator'
-            })
-            .then(() =>
-              retry(() =>
-                agentControls.getSpans().then(spans => {
-                  const entrySpan = expectAtLeastOneMatching(spans, [
-                    span => expect(span.n).to.equal('node.http.server'),
-                    span => expect(span.data.http.method).to.equal('GET')
-                  ]);
-                  // NOTE: v5 SCAN iterators yield collection of keys, enabling multi-key commands like MGET.
-                  // See: https://github.com/redis/node-redis/blob/master/docs/v4-to-v5.md#scan-iterators
-                  const expectedSpanCount = greaterThanV4 ? 1 : 4;
-                  const expectedRedisCommand = greaterThanV4 ? 'mGet' : 'get';
-
-                  expectExactlyNMatching(spans, expectedSpanCount, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('redis'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    span => expect(span.async).to.not.exist,
-                    span => expect(span.error).to.not.exist,
-                    span => expect(span.ec).to.equal(0),
-                    span => verifyConnection(mode, span),
-                    span => expect(span.data.redis.command).to.equal(expectedRedisCommand)
-                  ]);
-
-                  verifyHttpExit(controls, spans, entrySpan);
-                })
-              )
-            ));
-      }
-
-      // See https://redis.js.org/#node-redis-usage-basic-example blocking commands
-      // The "Isolation Pool" was introduced via RedisClientPool in v5.
-      // This new pool type requires a different connection mechanism.
-      // As a result, this test is being skipped.
-      if (!greaterThanV4) {
-        it('blocking', () => testBlockingCommand(controls, mode));
-      }
+    // See https://redis.js.org/#node-redis-usage-basic-example blocking commands
+    // The "Isolation Pool" was introduced via RedisClientPool in v5.
+    // This new pool type requires a different connection mechanism.
+    // As a result, this test is being skipped.
+    if (!greaterThanV4) {
+      it('blocking', () => testBlockingCommand(controls, mode));
     }
 
     it('[suppressed] should not trace', async function () {
@@ -959,10 +868,7 @@ module.exports = function (name, version, isLatest, mode) {
         controls = new ProcessControls({
           agentControls: customAgentControls,
           dirname: __dirname,
-          appName:
-            isLegacyVersion
-              ? 'legacyApp'
-              : 'app',
+          appName: 'app',
           env: {
             LIBRARY_LATEST: isLatest,
             LIBRARY_VERSION: version,
@@ -1014,10 +920,7 @@ module.exports = function (name, version, isLatest, mode) {
         controls = new ProcessControls({
           dirname: __dirname,
           useGlobalAgent: true,
-          appName:
-            isLegacyVersion
-              ? 'legacyApp'
-              : 'app',
+          appName: 'app',
           env: {
             LIBRARY_LATEST: isLatest,
             LIBRARY_VERSION: version,
@@ -1121,10 +1024,7 @@ module.exports = function (name, version, isLatest, mode) {
         controls = new ProcessControls({
           dirname: __dirname,
           useGlobalAgent: true,
-          appName:
-            isLegacyVersion
-              ? 'legacyApp'
-              : 'app',
+          appName: 'app',
           env: {
             LIBRARY_LATEST: isLatest,
             LIBRARY_VERSION: version,
@@ -1211,10 +1111,7 @@ module.exports = function (name, version, isLatest, mode) {
           controls = new ProcessControls({
             dirname: __dirname,
             useGlobalAgent: true,
-            appName:
-              isLegacyVersion
-                ? 'legacyApp'
-                : 'app',
+            appName: 'app',
             env: {
               LIBRARY_LATEST: isLatest,
               LIBRARY_VERSION: version,
