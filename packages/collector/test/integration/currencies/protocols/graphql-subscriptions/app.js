@@ -13,7 +13,7 @@ process.on('SIGTERM', () => {
 
 require('@instana/collector')();
 
-const cls = require('@_local/core/src/tracing/cls');
+const cls = require('@instana/core/src/tracing/cls');
 const express = require('express');
 const morgan = require('morgan');
 const graphqlSubscriptions = require('graphql-subscriptions');

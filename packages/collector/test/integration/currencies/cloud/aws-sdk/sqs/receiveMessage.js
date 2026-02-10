@@ -21,7 +21,7 @@ const CollectingLogger = require('@_local/collector/test/test_util/CollectingLog
 const TeeLogger = require('@_local/collector/test/test_util/TeeLogger');
 const { sqs } = require('./sqsUtil');
 
-const instanaLogger = require('@_local/collector/src/logger').getLogger();
+const instanaLogger = require('@instana/collector/src/logger').getLogger();
 const collectingLogger = new CollectingLogger();
 const teeLogger = new TeeLogger(instanaLogger.logger, collectingLogger);
 instana.setLogger(teeLogger);

@@ -38,7 +38,7 @@ if (process.env.USE_LIB_DYNAMODB) {
 }
 
 const dynamoDBv2 = new awsSdk3.DynamoDB({ region: awsRegion });
-const cls = require('@_local/core/src/tracing/cls');
+const cls = require('@instana/core/src/tracing/cls');
 
 const logPrefix = `AWS SDK v3 DynamoDB (${process.pid}):\t`;
 const log = require('@_local/core/test/test_util/log').getLogger(logPrefix);

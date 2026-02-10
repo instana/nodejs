@@ -20,7 +20,7 @@ const express = require('express');
 const morgan = require('morgan');
 
 const port = require('@_local/collector/test/test_util/app-port')();
-const cls = require('@_local/core/src/tracing/cls');
+const cls = require('@instana/core/src/tracing/cls');
 const app = express();
 
 const isLatest = process.env.LIBRARY_LATEST === 'true';

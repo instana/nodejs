@@ -22,7 +22,7 @@ const { sendToParent } = require('@_local/core/test/test_util');
 const CollectingLogger = require('@_local/collector/test/test_util/CollectingLogger');
 const TeeLogger = require('@_local/collector/test/test_util/TeeLogger');
 
-const instanaLogger = require('@_local/collector/src/logger').getLogger();
+const instanaLogger = require('@instana/collector/src/logger').getLogger();
 const collectingLogger = new CollectingLogger();
 const teeLogger = new TeeLogger(instanaLogger.logger, collectingLogger);
 instana.setLogger(teeLogger);
