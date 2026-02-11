@@ -90,7 +90,7 @@ function cleanVersionDirs(testDir) {
 }
 
 function generateTestWrapper({
-  suiteName, displayVersion, rawVersion, isLatest, esmOnly, mode, sourceDepth, nodeConstraint
+  suiteName, displayVersion, rawVersion, isLatest, esmOnly, mode, sourceDepth, nodeConstraint, isOptional
 }) {
   const currentYear = new Date().getFullYear();
   const relSourcePath = sourceDepth === 2 ? '../..' : '..';
@@ -196,10 +196,14 @@ mochaSuiteFn(suiteTitle, function () {
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
         const timeout = (60 + attempt * 30) * 1000;
         try {
-          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });
+          execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });${
+    isOptional
+      ? `
           if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
             throw new Error('${suiteName} not found after install');
-          }
+          }`
+      : ''
+  }
           break;
         } catch (err) {
           if (attempt === maxRetries) throw err;
@@ -334,7 +338,8 @@ function main() {
             esmOnly,
             mode,
             sourceDepth: hasModes ? 2 : 1,
-            nodeConstraint
+            nodeConstraint,
+            isOptional
           });
           const fileName = mode ? `${mode}.test.js` : 'default.test.js';
           fs.writeFileSync(path.join(targetDir, fileName), testContent);
