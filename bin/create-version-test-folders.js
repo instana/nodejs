@@ -190,7 +190,8 @@ mochaSuiteFn(suiteTitle, function () {
         break;
       } catch (err) {
         if (attempt === maxRetries) throw err;
-        log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (timeout: \${timeout / 1000}s)...\`);
+        const secs = timeout / 1000;
+        log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (\${secs}s)...\`);
         execSync('rm -rf node_modules', { cwd: __dirname });
       }
     }
