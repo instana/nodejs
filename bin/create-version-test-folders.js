@@ -165,15 +165,9 @@ mochaSuiteFn(suiteTitle, function () {
 
   before(async function () {
     const installTimeout = config.getNPMInstallTimeout();
-    const staggerDelay = process.env.CI ? Math.floor(Math.random() * 1000 * 15) : 0;
     const maxRetries = 2;
     const semaphoreWait = process.env.CI ? 10 * 60 * 1000 : 0;
-    this.timeout(installTimeout * 15 + staggerDelay + semaphoreWait);
-
-    if (staggerDelay > 0) {
-      log(\`[INFO] Staggering dependency setup by \${(staggerDelay / 1000).toFixed(1)}s...\`);
-      await new Promise(resolve => setTimeout(resolve, staggerDelay));
-    }
+    this.timeout(installTimeout * 15 + semaphoreWait);
 
     log('[INFO] Setting up dependencies for ${suiteName}@${displayVersion}...');
     const slot = process.env.CI ? await installSemaphore.acquireSlot(log) : undefined;
