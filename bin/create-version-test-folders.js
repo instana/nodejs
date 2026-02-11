@@ -89,7 +89,7 @@ function cleanVersionDirs(testDir) {
   });
 }
 
-function generateTestWrapper({ suiteName, displayVersion, rawVersion, isLatest, esmOnly, mode, sourceDepth }) {
+function generateTestWrapper({ suiteName, displayVersion, rawVersion, isLatest, esmOnly, mode, sourceDepth, nodeConstraint }) {
   const currentYear = new Date().getFullYear();
   const relSourcePath = sourceDepth === 2 ? '../..' : '..';
 
@@ -143,6 +143,16 @@ ${
   esmOnly
     ? `if (!process.env.RUN_ESM) {
   it.skip('tracing/${suiteName}@${displayVersion} (ESM-only, set RUN_ESM=true)');
+  return;
+}
+
+`
+    : ''
+}${
+  nodeConstraint
+    ? `// eslint-disable-next-line global-require
+if (!require('semver').satisfies(process.versions.node, '${nodeConstraint}')) {
+  it.skip('tracing/${suiteName}@${displayVersion} skipped (requires node ${nodeConstraint})');
   return;
 }
 
@@ -305,6 +315,7 @@ function main() {
 
         const hasModes = modes.length > 1 || (modes.length === 1 && modes[0] !== null);
         const isOptional = typeof versionObj === 'object' && versionObj.optional === true;
+        const nodeConstraint = typeof versionObj === 'object' ? versionObj.node || '' : '';
 
         modes.forEach(mode => {
           // When modes exist, each mode gets its own subdirectory for isolation
@@ -320,7 +331,8 @@ function main() {
             isLatest,
             esmOnly,
             mode,
-            sourceDepth: hasModes ? 2 : 1
+            sourceDepth: hasModes ? 2 : 1,
+            nodeConstraint
           });
           const fileName = mode ? `${mode}.test.js` : 'default.test.js';
           fs.writeFileSync(path.join(targetDir, fileName), testContent);
