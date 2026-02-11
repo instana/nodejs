@@ -126,6 +126,7 @@ fi
 # Combine lists: Priority first, then Generic
 FINAL_LIST="$PRIO_TESTS $GENERIC_TESTS"
 FINAL_LIST=$(echo "$FINAL_LIST" | xargs)
+PRIO_COUNT=$(echo "$PRIO_TESTS" | wc -w | xargs)
 
 # Acquire lock and claim tests
 LOCK_DIR="$ARTIFACTS_PATH/.test-claim.lock.dir"
@@ -146,9 +147,15 @@ trap 'rmdir "$LOCK_DIR" 2>/dev/null' EXIT
 # Read already claimed tests
 CLAIMED=$(cat "$CLAIMED_FILE" 2>/dev/null || echo "")
 CLAIMED_COUNT=0
+PROCESSED=0
 
 for test_file in $FINAL_LIST; do
-  if [ $CLAIMED_COUNT -ge $TESTS_PER_TASK ]; then
+  PROCESSED=$((PROCESSED + 1))
+
+  # Only enforce the per-task limit for generic tests.
+  # Priority tests (requiring specific sidecars) must always be claimable
+  # because no other runner can execute them.
+  if [ $PROCESSED -gt $PRIO_COUNT ] && [ $CLAIMED_COUNT -ge $TESTS_PER_TASK ]; then
     break
   fi
   
