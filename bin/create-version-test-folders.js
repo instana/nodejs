@@ -189,6 +189,7 @@ mochaSuiteFn(suiteTitle, function () {
       } catch (err) {
         if (attempt === 3) throw err;
         log(\`[WARN] npm install failed (\${err.message}), retry \${attempt}/2...\`);
+        execSync('rm -rf node_modules', { cwd: __dirname });
       }
     }
 
