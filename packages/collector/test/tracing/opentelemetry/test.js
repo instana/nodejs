@@ -1015,7 +1015,7 @@ mochaSuiteFn('opentelemetry tests', function () {
         });
       });
 
-      let runOracleDb = describe;
+      let runOracleDb = describe.only;
       if (process.env.RUN_ESM === 'true') {
         runOracleDb = describe.skip;
       }
@@ -1046,7 +1046,7 @@ mochaSuiteFn('opentelemetry tests', function () {
             await controls.stop();
           });
 
-          it('should trace', async () => {
+          it.only('should trace', async () => {
             await controls.sendRequest({
               method: 'GET',
               path: '/trace'
@@ -1054,6 +1054,8 @@ mochaSuiteFn('opentelemetry tests', function () {
 
             await retry(async () => {
               const spans = await agentControls.getSpans();
+
+              console.log('-----', JSON.stringify(spans, 0, 2));
               expect(spans.length).to.equal(2);
 
               const httpEntry = verifyHttpRootEntry({

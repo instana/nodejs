@@ -51,8 +51,8 @@ app.get('/', (req, res) => {
 });
 
 app.get('/trace', async (req, res) => {
-  await connection.execute('SELECT 1 FROM DUAL');
-  log('Executed query');
+  await connection.execute('SELECT 1 FROM DUAL WHERE 1 = :1', [1]);
+  log('Executed query with positional bind variable');
   res.sendStatus(200);
 });
 

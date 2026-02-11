@@ -129,6 +129,9 @@ module.exports.init = (_config, cls) => {
             instanaSpan.d = Math.round(hrTimeToMilliseconds(durationHrTime));
           }
 
+          // Update tags with any attributes that were added after span creation (e.g., via requestHook)
+          instanaSpan.data.tags = Object.assign(instanaSpan.data.tags, otelSpan.attributes);
+
           instanaSpan.transmit();
 
           if (clsContext) {
