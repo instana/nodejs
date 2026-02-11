@@ -165,7 +165,7 @@ mochaSuiteFn(suiteTitle, function () {
   before(async function () {
     const installTimeout = config.getNPMInstallTimeout();
     const staggerDelay = process.env.CI ? Math.floor(Math.random() * 1000 * 15) : 0;
-    this.timeout(installTimeout + staggerDelay);
+    this.timeout(installTimeout * 2 + staggerDelay);
 
     if (staggerDelay > 0) {
       log(\`[INFO] Staggering dependency setup by \${(staggerDelay / 1000).toFixed(1)}s...\`);
@@ -180,11 +180,14 @@ mochaSuiteFn(suiteTitle, function () {
     preinstalledMod.extractPreinstalledPackages(__dirname, { timeout: installTimeout - 1000 });
 
     log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
-    execSync('npm install --no-package-lock --no-audit --prefix ./ --no-progress', {
-      cwd: __dirname,
-      stdio: 'inherit',
-      timeout: installTimeout - 1000
-    });
+    const npmCmd = 'npm install --no-package-lock --no-audit --prefix ./ --no-progress';
+    const npmOpts = { cwd: __dirname, stdio: 'inherit', timeout: installTimeout - 1000 };
+    try {
+      execSync(npmCmd, npmOpts);
+    } catch (err) {
+      log(\`[WARN] npm install failed (\${err.message}), retrying...\`);
+      execSync(npmCmd, npmOpts);
+    }
 
     log('[INFO] Done setting up dependencies for ${suiteName}@${displayVersion}');
   });

@@ -35,10 +35,30 @@ while IFS= read -r test_file; do
   fi
 done <<< "$ALL_TESTS"
 
-if [ "$MISSING" -eq 0 ]; then
-  echo "✅ All $TOTAL collector tests were claimed and executed"
+# Check for duplicates (a test claimed by multiple runners)
+DUPES=$(sort "$CLAIMED_FILE" | uniq -d)
+DUPE_COUNT=0
+if [ -n "$DUPES" ]; then
+  while IFS= read -r dupe; do
+    COUNT=$(grep -cF "$dupe" "$CLAIMED_FILE")
+    echo "  DUPLICATE ($COUNT×): $dupe"
+    DUPE_COUNT=$((DUPE_COUNT + 1))
+  done <<< "$DUPES"
+fi
+
+FAILED=0
+if [ "$MISSING" -gt 0 ]; then
+  echo "❌ $MISSING/$TOTAL collector tests were NOT claimed — these tests were never executed!"
+  FAILED=1
+fi
+if [ "$DUPE_COUNT" -gt 0 ]; then
+  echo "❌ $DUPE_COUNT test(s) were claimed by multiple runners!"
+  FAILED=1
+fi
+
+if [ "$FAILED" -eq 0 ]; then
+  echo "✅ All $TOTAL collector tests were claimed exactly once"
   exit 0
 else
-  echo "❌ $MISSING/$TOTAL collector tests were NOT claimed — these tests were never executed!"
   exit 1
 fi

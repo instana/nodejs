@@ -27,9 +27,6 @@ exports.getTestTimeout = () => {
 };
 
 exports.getNPMInstallTimeout = () => {
-  if (isCI()) {
-    return 180 * 1000;
-  }
   return 60 * 1000;
 };
 
