@@ -185,6 +185,9 @@ mochaSuiteFn(suiteTitle, function () {
         const timeout = (60 + attempt * 30) * 1000;
         try {
           execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });
+          if (!fs.existsSync(path.join(__dirname, 'node_modules', '${suiteName}'))) {
+            throw new Error('${suiteName} not found after install');
+          }
           break;
         } catch (err) {
           if (attempt === maxRetries) throw err;
