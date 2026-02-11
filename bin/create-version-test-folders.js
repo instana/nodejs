@@ -166,7 +166,8 @@ mochaSuiteFn(suiteTitle, function () {
     const installTimeout = config.getNPMInstallTimeout();
     const staggerDelay = process.env.CI ? Math.floor(Math.random() * 1000 * 15) : 0;
     const maxRetries = 3;
-    this.timeout(installTimeout * (maxRetries + 1) + staggerDelay);
+    // Budget: 15s + 30s + 60s + 120s = 225s worst case
+    this.timeout(installTimeout * 15 + staggerDelay);
 
     if (staggerDelay > 0) {
       log(\`[INFO] Staggering dependency setup by \${(staggerDelay / 1000).toFixed(1)}s...\`);
@@ -182,14 +183,14 @@ mochaSuiteFn(suiteTitle, function () {
 
     log('[INFO] Running npm install for ${suiteName}@${displayVersion}...');
     const npmCmd = 'npm install --no-package-lock --no-audit --prefix ./ --no-progress';
-    const npmOpts = { cwd: __dirname, stdio: 'inherit', timeout: installTimeout - 1000 };
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      const timeout = installTimeout * Math.pow(2, attempt);
       try {
-        execSync(npmCmd, npmOpts);
+        execSync(npmCmd, { cwd: __dirname, stdio: 'inherit', timeout });
         break;
       } catch (err) {
         if (attempt === maxRetries) throw err;
-        log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries}...\`);
+        log(\`[WARN] npm install failed (\${err.message}), retry \${attempt + 1}/\${maxRetries} (timeout: \${timeout / 1000}s)...\`);
         execSync('rm -rf node_modules', { cwd: __dirname });
       }
     }
