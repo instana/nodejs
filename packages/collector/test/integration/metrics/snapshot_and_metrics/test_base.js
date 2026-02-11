@@ -62,7 +62,7 @@ module.exports = function () {
         // The generated _v1.0.0/ package.json includes @instana/* tgz dependencies
         // in addition to the app's own dependencies, so we check for at least 1.
         expect(Object.keys(deps)).to.have.lengthOf.at.least(1);
-        expect(deps['node-fetch']).to.equal('2.6.0');
+        expect(deps['node-fetch']).to.equal('2.7.0');
 
         expect(findMetric(allMetrics, ['description'])).to.equal(
           'This is a test application to test snapshot and metrics data.'

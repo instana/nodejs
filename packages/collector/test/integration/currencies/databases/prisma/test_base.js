@@ -25,9 +25,15 @@ module.exports = function (name, version, isLatest, mode) {
 
     const provider = mode; // mode is either 'sqlite' or 'postgresql'
     const majorVersion = parseInt(version, 10);
+    const isV7 = majorVersion >= 7;
 
     if (provider === 'postgresql' && !process.env.INSTANA_CONNECT_POSTGRES_PRISMA_URL) {
         throw new Error('PRISMA_POSTGRES_URL is not set.');
+    }
+
+    // Legacy prisma schemas (< v7) read the URL via env("PRISMA_POSTGRES_URL")
+    if (provider === 'postgresql' && !isV7) {
+        process.env.PRISMA_POSTGRES_URL = process.env.INSTANA_CONNECT_POSTGRES_PRISMA_URL;
     }
 
     before(async () => {
@@ -50,7 +56,7 @@ module.exports = function (name, version, isLatest, mode) {
 
         // Install db adapters for Prisma v7+
         // https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-7
-        if (isLatest) {
+        if (isV7) {
             const adapter =
                 provider === 'postgresql'
                     ? `@prisma/adapter-pg@${versionToInstall}`
@@ -68,7 +74,7 @@ module.exports = function (name, version, isLatest, mode) {
     before(async () => {
         // Starting with v7, the migrations no longer reads the url directly from the schema.
         // Instead, it expects the url to be defined in prisma.config files
-        const schemaSuffix = !isLatest ? `${provider}.legacy` : provider;
+        const schemaSuffix = !isV7 ? `${provider}.legacy` : provider;
         const schemaSourceFile = path.join(appDir, 'prisma', `schema.prisma.${schemaSuffix}`);
 
         await fs.rm(schemaTargetFile, { force: true });
@@ -80,7 +86,7 @@ module.exports = function (name, version, isLatest, mode) {
 
         // Run the prisma client tooling to generate the database client access code.
         // See https://www.prisma.io/docs/reference/api-reference/command-reference#generate
-        const prismaConfig = isLatest ? `--config prisma-${provider}.config.js` : '';
+        const prismaConfig = isV7 ? `--config prisma-${provider}.config.js` : '';
         await executeAsync(`npx prisma generate ${prismaConfig}`, appDir);
 
         // Run database migrations to create the table
@@ -100,7 +106,7 @@ module.exports = function (name, version, isLatest, mode) {
         const env = {
             LIBRARY_VERSION: version,
             LIBRARY_NAME: name,
-            LIBRARY_LATEST: isLatest,
+            LIBRARY_LATEST: isV7,
             PROVIDER: provider
         };
 
@@ -194,8 +200,7 @@ module.exports = function (name, version, isLatest, mode) {
 
     function verifyReadResponse(response, withError) {
         if (withError) {
-            // Latest versions have different error messages
-            if (isLatest) {
+            if (majorVersion >= 5) {
                 expect(response).to.include('PrismaClientValidationError');
             } else {
                 expect(response).to.include('Unknown arg `email` in where.email');
@@ -240,7 +245,7 @@ module.exports = function (name, version, isLatest, mode) {
                 span =>
                     // Explanation in https://github.com/instana/nodejs/pull/1114
                     // In v7, SQLite adapter doesn't expose the URL
-                    !(majorVersion === 4 || (provider === 'sqlite' && isLatest))
+                    !(majorVersion === 4 || (provider === 'sqlite' && isV7))
                         ? expect(span.data.prisma.url).to.equal(expectedUrl)
                         : expect(span.data.prisma.url).to.equal(''),
                 span => {

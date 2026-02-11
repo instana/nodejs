@@ -328,6 +328,7 @@ app.delete('/', (req, res) => {
   receivedData = resetReceivedData();
   discoveries = {};
   requests = {};
+  agentLogs.length = 0;
   res.sendStatus(200);
 });
 
